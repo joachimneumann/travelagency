@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Van travels | Custom Vietnam, Thailand & Cambodia Tours</title>
+    <meta
+      name="description"
+      content="Custom SE Asia trips designed by local experts. Private drivers, vetted hotels, clear inclusions. Book a free discovery call."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Manrope", "ui-sans-serif", "system-ui"],
+            },
+            colors: {
+              ink: {
+                900: "#0f172a",
+                700: "#1e293b",
+                600: "#334155",
+                500: "#475569",
+              },
+              sunrise: "#ff8a3d",
+              lagoon: "#10b981",
+              lotus: "#ff5ea8",
+              sand: "#fff6e8",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-white text-ink-700">
+    <div class="relative overflow-hidden">
+      <div class="absolute inset-x-0 -top-32 -z-10 h-96 bg-gradient-to-r from-sand via-white to-amber-50"></div>
+      <div class="absolute -right-24 top-24 -z-10 h-72 w-72 rounded-full bg-lagoon/10 blur-3xl"></div>
+      <div class="absolute -left-24 top-64 -z-10 h-72 w-72 rounded-full bg-lotus/10 blur-3xl"></div>
+
+      <header class="sticky top-0 z-30 border-b border-slate-100 bg-white/80 backdrop-blur">
+        <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+          <div class="flex items-center gap-2 text-lg font-semibold text-ink-900">
+            <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-sunrise to-lotus"></div>
+            <span>Van travels</span>
+          </div>
+          <nav class="hidden items-center gap-8 text-sm font-medium text-ink-600 md:flex">
+            <a class="hover:text-ink-900" href="#styles">Travel styles</a>
+            <a class="hover:text-ink-900" href="#journeys">Sample trips</a>
+            <a class="hover:text-ink-900" href="#why">Why us</a>
+            <a class="hover:text-ink-900" href="#faq">FAQ</a>
+          </nav>
+          <div class="hidden md:flex">
+            <a
+              class="rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-ink-900/20 transition hover:-translate-y-0.5"
+              href="#book"
+            >
+              Book a free discovery call
+            </a>
+          </div>
+          <button
+            id="menuButton"
+            class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-ink-700 md:hidden"
+            aria-label="Open menu"
+          >
+            <span class="text-xl">☰</span>
+          </button>
+        </div>
+        <div id="mobileMenu" class="hidden border-t border-slate-100 bg-white px-6 py-4 md:hidden">
+          <div class="flex flex-col gap-3 text-sm font-medium text-ink-600">
+            <a href="#styles">Travel styles</a>
+            <a href="#journeys">Sample trips</a>
+            <a href="#why">Why us</a>
+            <a href="#faq">FAQ</a>
+          </div>
+        </div>
+      </header>
+
+      <main class="mx-auto w-full max-w-6xl px-6">
+        <section class="grid gap-10 pb-16 pt-14 md:grid-cols-[1.1fr_0.9fr] md:items-center md:pb-24">
+          <div class="space-y-6">
+            <p class="inline-flex items-center gap-2 rounded-full bg-sand px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">
+              Custom holidays in Southeast Asia
+            </p>
+            <h1 class="text-4xl font-semibold text-ink-900 md:text-5xl">
+              Van travels — Custom Vietnam, Thailand & Cambodia Holidays
+            </h1>
+            <p class="text-lg text-ink-600">
+              Travel Vietnam, Thailand, and Cambodia with a plan that fits your pace, comfort level, and
+              interests — without stressful logistics.
+            </p>
+            <div class="flex flex-wrap items-center gap-4">
+              <a
+                class="rounded-full bg-ink-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-ink-900/20 transition hover:-translate-y-0.5"
+                href="#book"
+              >
+                Book a free discovery call
+              </a>
+              <a class="text-sm font-semibold text-ink-700 underline-offset-4 hover:underline" href="#journeys">
+                See sample journeys
+              </a>
+            </div>
+            <div class="grid gap-3 text-sm text-ink-600 md:grid-cols-3">
+              <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">13+ years designing trips for Western travelers</div>
+              <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">Local team + vetted partners across VN/TH/KH</div>
+              <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">Transparent inclusions, no surprise costs</div>
+            </div>
+            <p class="text-sm text-ink-500">
+              “Tell us what matters to you — we’ll tell you what’s realistic, what it costs, and what to skip.”
+            </p>
+          </div>
+          <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl">
+            <div class="space-y-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Free 15–20 minute call</p>
+              <h2 class="text-2xl font-semibold text-ink-900">Get a tailor-made route in days, not weeks</h2>
+              <p class="text-sm text-ink-600">
+                Share your travel window and style. We reply with 1–2 route options, clear inclusions, and
+                upgrade choices.
+              </p>
+              <form class="grid gap-3">
+                <input
+                  class="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-ink-900 focus:outline-none"
+                  type="text"
+                  placeholder="Full name"
+                />
+                <input
+                  class="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-ink-900 focus:outline-none"
+                  type="email"
+                  placeholder="Email"
+                />
+                <input
+                  class="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-ink-900 focus:outline-none"
+                  type="text"
+                  placeholder="Trip window (e.g., Oct 2026)"
+                />
+                <button
+                  class="rounded-xl bg-sunrise px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sunrise/30"
+                  type="button"
+                >
+                  Request itinerary ideas
+                </button>
+              </form>
+              <p class="text-xs text-ink-500">No pressure. We only share realistic routes and clear pricing.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-100 bg-white px-6 py-8 shadow-sm">
+          <div class="grid gap-6 md:grid-cols-4">
+            <div>
+              <p class="text-sm font-semibold text-ink-900">★★★★★ 4.9 rating</p>
+              <p class="text-xs text-ink-500">Based on 320+ traveler reviews</p>
+            </div>
+            <div class="text-sm text-ink-600">“They planned every detail and were responsive on WhatsApp.”</div>
+            <div class="text-sm text-ink-600">“We felt supported when weather changed our Ha Long cruise.”</div>
+            <div class="flex flex-wrap gap-2 text-xs font-semibold text-ink-600">
+              <span class="rounded-full border border-slate-200 px-3 py-1">Licensed tour operator</span>
+              <span class="rounded-full border border-slate-200 px-3 py-1">13+ years experience</span>
+              <span class="rounded-full border border-slate-200 px-3 py-1">24/7 on-trip support</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="py-16 md:py-24">
+          <div class="grid gap-10 md:grid-cols-2">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">How it works</p>
+              <h2 class="mt-3 text-3xl font-semibold text-ink-900">How planning with Van travels works</h2>
+              <p class="mt-4 text-sm text-ink-600">
+                From discovery call to departure, we keep the path clear: fast options, real customization,
+                and local support.
+              </p>
+            </div>
+            <div class="grid gap-4">
+              <div class="flex gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-sand text-sm font-semibold text-ink-700">1</div>
+                <div>
+                  <p class="text-sm font-semibold text-ink-900">Discovery call</p>
+                  <p class="text-sm text-ink-600">We learn your style, pace, and budget.</p>
+                </div>
+              </div>
+              <div class="flex gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-sand text-sm font-semibold text-ink-700">2</div>
+                <div>
+                  <p class="text-sm font-semibold text-ink-900">We design 1–2 route options</p>
+                  <p class="text-sm text-ink-600">Clear inclusions + upgrade choices.</p>
+                </div>
+              </div>
+              <div class="flex gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-sand text-sm font-semibold text-ink-700">3</div>
+                <div>
+                  <p class="text-sm font-semibold text-ink-900">You choose + we refine</p>
+                  <p class="text-sm text-ink-600">Hotels, experiences, and comfort level.</p>
+                </div>
+              </div>
+              <div class="flex gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-sand text-sm font-semibold text-ink-700">4</div>
+                <div>
+                  <p class="text-sm font-semibold text-ink-900">You travel supported</p>
+                  <p class="text-sm text-ink-600">Local help, quick fixes, smooth logistics.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="styles" class="py-16 md:py-24">
+          <div class="flex flex-col gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Travel styles</p>
+            <h2 class="text-3xl font-semibold text-ink-900">Pick a vibe — we’ll tailor everything around it</h2>
+          </div>
+          <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Food & Culture</h3>
+              <p class="mt-2 text-sm text-ink-600">Street food tours, cooking classes, heritage walks.</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Hoi An market to table</li>
+                <li>Bangkok night markets</li>
+                <li>Khmer culinary heritage</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Nature & Adventure</h3>
+              <p class="mt-2 text-sm text-ink-600">Jungle treks, river cruises, eco stays.</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Ha Giang loop by car</li>
+                <li>Phong Nha cave day</li>
+                <li>Mekong cycling trails</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Beach & Slow Travel</h3>
+              <p class="mt-2 text-sm text-ink-600">Longer stays, gentle pacing, island time.</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Phu Quoc resorts</li>
+                <li>Krabi cliffs + lagoons</li>
+                <li>Koh Rong escapes</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Family-Friendly Comfort</h3>
+              <p class="mt-2 text-sm text-ink-600">Easy transfers, flexible days, vetted hotels.</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Private drivers daily</li>
+                <li>Kid-friendly guides</li>
+                <li>Rest days baked in</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Honeymoon & Romance</h3>
+              <p class="mt-2 text-sm text-ink-600">Boutique stays, sunset cruises, privacy.</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Lan Ha Bay private boat</li>
+                <li>Beachfront dinners</li>
+                <li>Wellness retreats</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Premium & Luxury</h3>
+              <p class="mt-2 text-sm text-ink-600">Five-star comfort, top guides, signature stays.</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Luxury river cruises</li>
+                <li>Michelin dining options</li>
+                <li>Private jets on request</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="journeys" class="py-16 md:py-24">
+          <div class="flex flex-col gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Sample journeys</p>
+            <h2 class="text-3xl font-semibold text-ink-900">Sample journeys (fully customizable)</h2>
+            <p class="text-sm text-ink-600">Use these as starting points — we adjust route, hotels, and pace.</p>
+          </div>
+
+          <div class="mt-10 grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Vietnam Essentials — 10–12 days</h3>
+              <p class="mt-2 text-sm text-ink-600">Best for first timers and couples.</p>
+              <p class="mt-2 text-sm text-ink-500">Hanoi → Ha Long Bay → Hoi An → Ho Chi Minh City</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Food tour and hidden alleys</li>
+                <li>Overnight bay cruise</li>
+                <li>Cu Chi or Mekong day trip</li>
+              </ul>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-ink-600">
+                <span class="rounded-full border border-slate-200 px-3 py-1">Private driver</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Select guided days</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Vetted hotels</span>
+              </div>
+              <a class="mt-4 inline-flex text-sm font-semibold text-ink-900 underline-offset-4 hover:underline" href="#book">
+                Book a free discovery call to tailor this
+              </a>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Northern Vietnam Focus — 8–10 days</h3>
+              <p class="mt-2 text-sm text-ink-600">Best for culture lovers and photographers.</p>
+              <p class="mt-2 text-sm text-ink-500">Hanoi → Ninh Binh → Ha Giang → Sapa</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Scenic mountain drives</li>
+                <li>Village homestay options</li>
+                <li>Hidden waterfall treks</li>
+              </ul>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-ink-600">
+                <span class="rounded-full border border-slate-200 px-3 py-1">Private driver</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Local guide days</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Boutique hotels</span>
+              </div>
+              <a class="mt-4 inline-flex text-sm font-semibold text-ink-900 underline-offset-4 hover:underline" href="#book">
+                Book a free discovery call to tailor this
+              </a>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Vietnam + Cambodia — 12–14 days</h3>
+              <p class="mt-2 text-sm text-ink-600">Best for history and families.</p>
+              <p class="mt-2 text-sm text-ink-500">Hanoi → Hoi An → Ho Chi Minh City → Siem Reap</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Angkor sunrise tour</li>
+                <li>Mekong delta boating</li>
+                <li>Central Vietnam heritage sites</li>
+              </ul>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-ink-600">
+                <span class="rounded-full border border-slate-200 px-3 py-1">Private driver</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Key tickets</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Comfort hotels</span>
+              </div>
+              <a class="mt-4 inline-flex text-sm font-semibold text-ink-900 underline-offset-4 hover:underline" href="#book">
+                Book a free discovery call to tailor this
+              </a>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Vietnam + Thailand — 12–15 days</h3>
+              <p class="mt-2 text-sm text-ink-600">Best for beaches + city balance.</p>
+              <p class="mt-2 text-sm text-ink-500">Hanoi → Hoi An → Bangkok → Phuket/Krabi</p>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Bangkok food crawl</li>
+                <li>Island hopping day cruise</li>
+                <li>Slow days by the sea</li>
+              </ul>
+              <div class="mt-4 flex flex-wrap gap-2 text-xs text-ink-600">
+                <span class="rounded-full border border-slate-200 px-3 py-1">Private driver</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Beach resorts</span>
+                <span class="rounded-full border border-slate-200 px-3 py-1">Airport transfers</span>
+              </div>
+              <a class="mt-4 inline-flex text-sm font-semibold text-ink-900 underline-offset-4 hover:underline" href="#book">
+                Book a free discovery call to tailor this
+              </a>
+            </div>
+          </div>
+          <p class="mt-8 text-sm text-ink-500">
+            Private multi-day tours often ladder by hotel grade, transport mode, and activity density. We show
+            clear “from” pricing once your route is defined.
+          </p>
+        </section>
+
+        <section id="why" class="py-16 md:py-24">
+          <div class="flex flex-col gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Why Van travels</p>
+            <h2 class="text-3xl font-semibold text-ink-900">Why travelers book with Van travels</h2>
+          </div>
+          <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Transparent inclusions</h3>
+              <p class="mt-3 text-sm text-ink-600">
+                Clear inclusions and exclusions, so you never wonder what’s covered.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Modular planning</h3>
+              <p class="mt-3 text-sm text-ink-600">
+                Drivers, guides, hotels, and experiences tailored to your comfort level.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Local problem-solving</h3>
+              <p class="mt-3 text-sm text-ink-600">
+                When weather or routing changes, we adjust quickly with local partners.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Comfort calibrated</h3>
+              <p class="mt-3 text-sm text-ink-600">
+                Smart comfort for your budget: boutique hotels, smoother transfers, and space to breathe.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Human-first service</h3>
+              <p class="mt-3 text-sm text-ink-600">
+                We tell you what to skip if it’s not a fit — even if it lowers the quote.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="py-16 md:py-24">
+          <div class="grid gap-8 md:grid-cols-2">
+            <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 class="text-2xl font-semibold text-ink-900">What’s included (typical)</h2>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>Private transport + airport transfers</li>
+                <li>Vetted hotels by comfort tier</li>
+                <li>Guides on key days (not over-guided)</li>
+                <li>Signature experiences (food, culture, nature)</li>
+                <li>Support before + during trip</li>
+              </ul>
+            </div>
+            <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 class="text-2xl font-semibold text-ink-900">What’s not included (typical)</h2>
+              <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>International flights</li>
+                <li>Travel insurance</li>
+                <li>Visas (guidance available)</li>
+                <li>Optional upgrades (clearly priced)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="py-16 md:py-24">
+          <div class="flex flex-col gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Destination confidence</p>
+            <h2 class="text-3xl font-semibold text-ink-900">Vietnam, Thailand, Cambodia — how to choose</h2>
+          </div>
+          <div class="mt-10 grid gap-6 md:grid-cols-3">
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Vietnam</h3>
+              <p class="mt-3 text-sm text-ink-600">Best for culture, food, and varied landscapes.</p>
+              <p class="mt-4 text-xs text-ink-500">Best time: Oct–Apr for cooler north and clear skies.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Thailand</h3>
+              <p class="mt-3 text-sm text-ink-600">Best for beaches and smooth travel infrastructure.</p>
+              <p class="mt-4 text-xs text-ink-500">Best time: Nov–Mar for sun and calm seas.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-ink-900">Cambodia</h3>
+              <p class="mt-3 text-sm text-ink-600">Best for heritage and meaningful history.</p>
+              <p class="mt-4 text-xs text-ink-500">Best time: Nov–Feb for Angkor and cooler evenings.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="py-16 md:py-24">
+          <div class="flex flex-col gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Trips we’ve built</p>
+            <h2 class="text-3xl font-semibold text-ink-900">Trips we’ve built (real moments)</h2>
+          </div>
+          <div class="mt-10 grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4">
+              <div class="aspect-[4/3] rounded-2xl bg-sand"></div>
+              <div class="aspect-[4/3] rounded-2xl bg-amber-50"></div>
+            </div>
+            <div class="grid gap-4">
+              <div class="aspect-[4/3] rounded-2xl bg-emerald-50"></div>
+              <div class="aspect-[4/3] rounded-2xl bg-orange-50"></div>
+            </div>
+            <div class="grid gap-4">
+              <div class="aspect-[4/3] rounded-2xl bg-rose-50"></div>
+              <div class="aspect-[4/3] rounded-2xl bg-lime-50"></div>
+            </div>
+          </div>
+          <div class="mt-10 grid gap-6 md:grid-cols-3">
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <p class="text-sm font-semibold text-ink-900">Couple — 12 days — food focus</p>
+              <p class="mt-2 text-sm text-ink-600">Hanoi, Hoi An, Saigon, and a private delta cruise.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <p class="text-sm font-semibold text-ink-900">Family — 14 days — comfortable pacing</p>
+              <p class="mt-2 text-sm text-ink-600">Short travel days and boutique hotels with pools.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <p class="text-sm font-semibold text-ink-900">Friends — 10 days — adventure + beach</p>
+              <p class="mt-2 text-sm text-ink-600">Ha Giang, Hue, and island time in Phuket.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="faq" class="py-16 md:py-24">
+          <div class="flex flex-col gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">FAQ</p>
+            <h2 class="text-3xl font-semibold text-ink-900">Frequently asked questions</h2>
+          </div>
+          <div class="mt-10 space-y-4">
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                Is $500/week enough for a comfortable trip?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                It can be, depending on hotel category and activity density. We’ll show a realistic comfort
+                range based on your route and season.
+              </p>
+            </div>
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                Private vs group — what’s best?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                Private is best for flexibility and comfort. Group tours suit tighter budgets or fixed dates.
+              </p>
+            </div>
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                How fast do you deliver an itinerary?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                We usually send 1–2 route options within 2–3 business days after the discovery call.
+              </p>
+            </div>
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                What happens if weather disrupts plans?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                We adjust quickly with local partners, offering alternatives or route tweaks.
+              </p>
+            </div>
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                Do you help with visas or entry rules?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                Yes, we provide guidance on the latest requirements and trusted processing partners.
+              </p>
+            </div>
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                How do payments work?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                We take a deposit to confirm hotels and services, then staged payments before travel.
+              </p>
+            </div>
+            <div class="faq-item rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <button class="faq-question flex w-full items-center justify-between text-left text-sm font-semibold text-ink-900">
+                Can we combine Vietnam + Thailand + Cambodia smoothly?
+                <span class="faq-icon text-xl">+</span>
+              </button>
+              <p class="faq-answer mt-3 hidden text-sm text-ink-600">
+                Absolutely. We coordinate flights, transfers, and pacing so multi-country trips feel seamless.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="book" class="py-16 md:py-24">
+          <div class="rounded-3xl border border-slate-100 bg-white p-8 shadow-xl">
+            <div class="grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">Book your call</p>
+                <h2 class="mt-3 text-3xl font-semibold text-ink-900">Book your free discovery call</h2>
+                <p class="mt-4 text-sm text-ink-600">
+                  In 15–20 minutes you’ll know the best route, the realistic budget, and what to skip.
+                </p>
+                <p class="mt-4 text-sm text-ink-500">
+                  No pressure. If we’re not the right fit, we’ll say so — and still point you in the right
+                  direction.
+                </p>
+              </div>
+              <div class="rounded-2xl border border-slate-100 bg-sand p-6">
+                <div class="space-y-4">
+                  <div class="rounded-2xl border border-dashed border-amber-200 bg-white p-6 text-sm text-ink-600">
+                    Embed your Calendly or Cal.com widget here.
+                  </div>
+                  <button class="w-full rounded-xl bg-ink-900 px-5 py-3 text-sm font-semibold text-white">Book a free discovery call</button>
+                  <p class="text-xs text-ink-500">Not ready to schedule? Email us and we’ll suggest options.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="border-t border-slate-100 bg-white py-12">
+        <div class="mx-auto w-full max-w-6xl px-6">
+          <div class="grid gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
+            <div>
+              <p class="text-lg font-semibold text-ink-900">Van travels</p>
+              <p class="mt-3 text-sm text-ink-600">Custom Vietnam, Thailand & Cambodia holidays by local experts.</p>
+            </div>
+            <div class="text-sm text-ink-600">
+              <p class="font-semibold text-ink-900">Contact</p>
+              <p>75 Nguyen Hue, District 1, Ho Chi Minh City</p>
+              <p>+84 90 000 0000 (WhatsApp)</p>
+              <p>hello@vantravels.vn</p>
+            </div>
+            <div class="text-sm text-ink-600">
+              <p class="font-semibold text-ink-900">Compliance</p>
+              <p>Tour operator license: VN-TR-2026-001</p>
+              <div class="mt-2 flex gap-3 text-xs font-semibold text-ink-600">
+                <a href="#">Privacy policy</a>
+                <a href="#">Terms</a>
+                <a href="#">Instagram</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/90 px-6 py-3 backdrop-blur md:hidden">
+        <div class="flex items-center justify-between gap-3 text-sm">
+          <span class="font-semibold text-ink-900">Ready to plan your trip?</span>
+          <a class="rounded-full bg-ink-900 px-4 py-2 text-xs font-semibold text-white" href="#book">Book free call</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TravelAgency",
+        "name": "Van travels",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "75 Nguyen Hue, District 1",
+          "addressLocality": "Ho Chi Minh City",
+          "addressCountry": "VN"
+        },
+        "telephone": "+84 90 000 0000",
+        "areaServed": ["Vietnam", "Thailand", "Cambodia"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is $500/week enough for a comfortable trip?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It can be, depending on hotel category and activity density. We’ll show a realistic comfort range based on your route and season."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Private vs group — what’s best?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Private is best for flexibility and comfort. Group tours suit tighter budgets or fixed dates."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How fast do you deliver an itinerary?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We usually send 1–2 route options within 2–3 business days after the discovery call."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens if weather disrupts plans?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We adjust quickly with local partners, offering alternatives or route tweaks."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do you help with visas or entry rules?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, we provide guidance on the latest requirements and trusted processing partners."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do payments work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We take a deposit to confirm hotels and services, then staged payments before travel."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can we combine Vietnam + Thailand + Cambodia smoothly?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Absolutely. We coordinate flights, transfers, and pacing so multi-country trips feel seamless."
+            }
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>
