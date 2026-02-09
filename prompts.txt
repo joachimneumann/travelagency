@@ -1,0 +1,28 @@
+research
+========
+ a deep research on travel agencies in Vietnam. Analyze market demand and offers. Provide me a full, deep report in PDF
+Look at web pages like https://www.wideeyedtours.com/
+
+
+structure
+=========
+ a marketing and web design expert. I need you to create a landing page structure for my business - a travel agency in Vietnam.
+I'm an expert with over 13 years of experience. 
+Travel locations: Vietnam, Thailand, Cambodia
+Target audience: western tourist with a budget above 500 USD per week. 
+
+Analyze the report to get a better understanding on the topic and provide the most effective strategy and landing page structure.
+
+Goal: create effective structure that would motivate potential clients to book a holiday with us. Call to action: book a free discovery call.
+
+Output: markdown (MD) landing page structure, responsive, SEO optimized. 
+Use the company / web page name "Van travels"
+Tone of voice: friendly, human, no robotic
+
+
+Code
+====
+Use the provided landing page structure in structure.md to create an effective static landing page for my business -
+a travel agency in Vietnam.
+Use Tailwind classes and components for design style. Landing page should be responsive and mobile friendly. Use light theme with bright accent colors. Design should have professional, minimal, clean layout.
+The output should be structured in easy to understand folders and the content should be ready for editing by a beginner level HTTP / CSS / Javascript programmer.
