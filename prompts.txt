@@ -1,28 +1,49 @@
 research
 ========
- a deep research on travel agencies in Vietnam. Analyze market demand and offers. Provide me a full, deep report in PDF
-Look at web pages like https://www.wideeyedtours.com/
+You are a professional tourism consultant. Execute a deep research on travel agencies with destinations in South East Asia (Vietnam, Thailand, Coambodia, Laos). 
+Analyze market demand and offers. 
+Look at web pages like https://www.wideeyedtours.com/, https://www.asiacolortravel.com/
+Maybe also https://www.tui.co.uk/destinations/asia/vietnam/holidays-vietnam.html
 
+Take your time and provide me a full, deep report in PDF
+
+TUI Group
+DER Touristik
+Kuoni Travel
+Thomas Cook
+Flight Centre Travel Group
+
+Adventure & Experience Travel
+G Adventures
+Intrepid Travel
+Contiki
+Exodus Travels
+
+Luxury Travel Companies
+Abercrombie & Kent
+Scott Dunn
+Butterfield & Robinson
 
 structure
 =========
- a marketing and web design expert. I need you to create a landing page structure for my business - a travel agency in Vietnam.
-I'm an expert with over 13 years of experience. 
-Travel locations: Vietnam, Thailand, Cambodia
+You are a marketing and web design expert with over 13 years of experience. I need you to create a landing page structure for my business - a travel agency in Vietnam.
+Travel locations: Vietnam, Thailand, Cambodia, Laos
 Target audience: western tourist with a budget above 500 USD per week. 
 
-Analyze the report to get a better understanding on the topic and provide the most effective strategy and landing page structure.
+Analyze the report (research.pdf) and the content of the file sea_travel_agency_market_report_2026-02-22.txt to get a better understanding on the topic and provide the most effective strategy and landing page structure.
 
 Goal: create effective structure that would motivate potential clients to book a holiday with us. Call to action: book a free discovery call.
 
+Use the already existing content of structure.md and improve on it.
+
 Output: markdown (MD) landing page structure, responsive, SEO optimized. 
-Use the company / web page name "Van travels"
+Change the name of the company to "Chapter 2" and the name of the web page to chapter2.live
 Tone of voice: friendly, human, no robotic
 
 
 Code
 ====
-Use the provided landing page structure in structure.md to create an effective static landing page for my business -
+Use the provided Web page structure in structure.md to create an effective static landing page for my business -
 a travel agency in Vietnam.
-Use Tailwind classes and components for design style. Landing page should be responsive and mobile friendly. Use light theme with bright accent colors. Design should have professional, minimal, clean layout.
+The Web page should have a menu that allows customers to either select their destination country or to select a travel style. The web page should be responsive and mobile friendly. Use light theme with bright accent colors. Design should have professional, minimal, clean layout.
 The output should be structured in easy to understand folders and the content should be ready for editing by a beginner level HTTP / CSS / Javascript programmer.

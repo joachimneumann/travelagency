@@ -1,0 +1,3 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
+<defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='#9ae5ff'/><stop offset='100%' stop-color='#2aa6d8'/></linearGradient></defs>
+<rect width='1200' height='800' fill='url(#g)'/><rect y='500' width='1200' height='300' fill='#f8df9a'/><path d='M0 510 C260 460 430 550 620 500 C760 465 950 520 1200 490 L1200 560 L0 560 Z' fill='#1e8fb5' opacity='0.8'/><circle cx='940' cy='150' r='72' fill='#fff2bb'/><path d='M250 520 l110 -220 l26 0 l-65 220 z' fill='#75604b'/><path d='M280 335 C380 260 485 280 560 360 C460 365 380 380 280 335 z' fill='#27a56d'/><text x='70' y='760' font-size='42' fill='#1e4f66' font-family='Arial, sans-serif'>Thailand Beach Escape</text></svg>

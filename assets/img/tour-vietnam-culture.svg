@@ -1,0 +1,3 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
+<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffedc8'/><stop offset='100%' stop-color='#ff9b6b'/></linearGradient></defs>
+<rect width='1200' height='800' fill='url(#g)'/><circle cx='980' cy='160' r='90' fill='#fff1ca'/><path d='M0 560 L250 420 L430 510 L620 370 L820 510 L1020 420 L1200 550 L1200 800 L0 800 Z' fill='#285c68'/><rect x='120' y='340' width='170' height='220' fill='#324c5a'/><rect x='330' y='300' width='200' height='260' fill='#3b5b69'/><rect x='560' y='320' width='180' height='240' fill='#3a5260'/><text x='70' y='760' font-size='42' fill='#ffffff' font-family='Arial, sans-serif'>Vietnam Culture Route</text></svg>
