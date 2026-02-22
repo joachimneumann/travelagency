@@ -13,6 +13,19 @@
     "rating": 4.9
   },
   {
+    "id": "trip-vn-food-week",
+    "title": "Vietnam Food and Culture Week",
+    "shortDescription": "Street food, local kitchens, and heritage neighborhoods with private pacing.",
+    "destinationCountry": "Vietnam",
+    "styles": ["Food", "Culture", "Budget"],
+    "durationDays": 8,
+    "priceFrom": 720,
+    "image": "assets/img/tour-vietnam-food.svg",
+    "highlights": ["Hanoi food alleys", "Hue royal cuisine", "Saigon market tastings"],
+    "seasonality": "Best Sep-Apr",
+    "rating": 4.8
+  },
+  {
     "id": "trip-th-beach",
     "title": "Thailand Beach Escape",
     "shortDescription": "Bangkok city energy followed by island relaxation and easy logistics.",
@@ -26,6 +39,19 @@
     "rating": 4.8
   },
   {
+    "id": "trip-th-family",
+    "title": "Thailand Family Comfort Route",
+    "shortDescription": "Kid-friendly pace, easy logistics, and balanced city plus beach days.",
+    "destinationCountry": "Thailand",
+    "styles": ["Family", "Beach", "Culture"],
+    "durationDays": 12,
+    "priceFrom": 1280,
+    "image": "assets/img/tour-thailand-family.svg",
+    "highlights": ["Chiang Mai elephants sanctuary", "Bangkok family activities", "Phuket resort days"],
+    "seasonality": "Best Nov-Mar",
+    "rating": 4.9
+  },
+  {
     "id": "trip-kh-heritage",
     "title": "Cambodia Heritage Trail",
     "shortDescription": "Meaningful history, temple artistry, and relaxed private pacing.",
@@ -37,6 +63,19 @@
     "highlights": ["Angkor sunrise", "Phnom Penh history day", "Local market tasting"],
     "seasonality": "Best Nov-Feb",
     "rating": 4.9
+  },
+  {
+    "id": "trip-cambodia-laos",
+    "title": "Cambodia and Laos Heritage Trail",
+    "shortDescription": "Temple heritage plus Mekong slow travel in one calm, meaningful route.",
+    "destinationCountry": "Cambodia",
+    "styles": ["Culture", "Adventure", "Family"],
+    "durationDays": 11,
+    "priceFrom": 1040,
+    "image": "assets/img/tour-cambodia-laos.svg",
+    "highlights": ["Angkor highlights", "Luang Prabang old town", "Mekong river segment"],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
   },
   {
     "id": "trip-laos-slow",
@@ -102,5 +141,18 @@
     "highlights": ["Chiang Mai temples", "Luang Prabang old town", "Scenic boat segment"],
     "seasonality": "Best Nov-Feb",
     "rating": 4.7
+  },
+  {
+    "id": "trip-honeymoon-luxury",
+    "title": "Southeast Asia Honeymoon Luxury",
+    "shortDescription": "Romantic private route with premium stays and curated signature moments.",
+    "destinationCountry": "Vietnam",
+    "styles": ["Luxury", "Beach", "Food"],
+    "durationDays": 14,
+    "priceFrom": 2450,
+    "image": "assets/img/tour-honeymoon-luxury.svg",
+    "highlights": ["Lan Ha bay private cruise", "Beach villa nights", "Fine dining and spa days"],
+    "seasonality": "Best Nov-Apr",
+    "rating": 5.0
   }
 ]

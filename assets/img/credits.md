@@ -24,3 +24,7 @@
 - Unsplash: https://unsplash.com/s/photos/cambodia-angkor
 - Unsplash: https://unsplash.com/s/photos/laos-landscape
 - Pexels: https://www.pexels.com/search/vietnam%20travel/
+- `tour-vietnam-food.svg` - locally created placeholder
+- `tour-thailand-family.svg` - locally created placeholder
+- `tour-cambodia-laos.svg` - locally created placeholder
+- `tour-honeymoon-luxury.svg` - locally created placeholder
