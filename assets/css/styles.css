@@ -439,6 +439,15 @@ textarea:focus-visible {
   padding-left: 1.1rem;
 }
 
+.video-panel video {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #0f1418;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

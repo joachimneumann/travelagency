@@ -18,6 +18,15 @@
 - `support-local-team.svg` - locally created placeholder
 - `support-happy-travelers.svg` - locally created placeholder
 
+## Flickr sources used by prototype
+- Hero image:
+- `https://live.staticflickr.com/4205/35071348993_39e6733199_b.jpg`
+- Dynamic trip-card image feeds (loaded at runtime by destination tags):
+- `https://www.flickr.com/services/feeds/photos_public.gne?tags=vietnam,travel,landscape&format=json&nojsoncallback=1`
+- `https://www.flickr.com/services/feeds/photos_public.gne?tags=thailand,travel,beach&format=json&nojsoncallback=1`
+- `https://www.flickr.com/services/feeds/photos_public.gne?tags=cambodia,travel,temple&format=json&nojsoncallback=1`
+- `https://www.flickr.com/services/feeds/photos_public.gne?tags=laos,travel,nature&format=json&nojsoncallback=1`
+
 ## Suggested photo sources to replace placeholders
 - Unsplash: https://unsplash.com/s/photos/vietnam-travel
 - Unsplash: https://unsplash.com/s/photos/thailand-beach

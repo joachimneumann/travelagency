@@ -167,7 +167,14 @@ function renderTrips(trips) {
 
       return `
         <article class="tour-card">
-          <img src="${escapeAttr(trip.image)}" alt="${escapeAttr(trip.title)} in ${escapeAttr(trip.destinationCountry)}" loading="lazy" width="1200" height="800" />
+          <img
+            src="${escapeAttr(trip.image)}"
+            data-fallback="${escapeAttr(trip.fallbackImage || trip.image)}"
+            alt="${escapeAttr(trip.title)} in ${escapeAttr(trip.destinationCountry)}"
+            loading="lazy"
+            width="1200"
+            height="800"
+          />
           <div class="tour-body">
             <div class="tour-topline">
               <span class="tour-country">${escapeHTML(trip.destinationCountry)}</span>
@@ -188,6 +195,15 @@ function renderTrips(trips) {
     .join("");
 
   els.tourGrid.innerHTML = cards;
+
+  els.tourGrid.querySelectorAll("img[data-fallback]").forEach((img) => {
+    img.addEventListener("error", () => {
+      const fallback = img.getAttribute("data-fallback");
+      if (fallback && img.src !== fallback) {
+        img.src = fallback;
+      }
+    });
+  });
 
   // Re-bind modal opener buttons created after rendering cards.
   els.tourGrid.querySelectorAll("[data-open-modal]").forEach((btn) => {
