@@ -54,15 +54,6 @@
         </button>
 
         <nav class="nav" id="siteNav" aria-label="Main navigation">
-          <ul class="nav-list">
-            <li><a href="#tours">Featured tours</a></li>
-            <li><a href="#how-it-works">How it works</a></li>
-            <li><a href="#why">Why us</a></li>
-            <li><a href="#trust">Trust</a></li>
-            <li><a href="#faq">FAQ</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-
           <div class="filter-menu" aria-label="Primary browse menu">
             <div class="select-wrap">
               <label for="navDestination">Destinations</label>
@@ -78,66 +69,42 @@
             </div>
             <button id="clearFilters" class="btn btn-ghost" type="button">Clear filters</button>
           </div>
+
+          <ul class="nav-list">
+            <li><a href="#why">Why us</a></li>
+            <li><a href="#trust">Trust</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
         </nav>
       </div>
     </header>
 
     <main id="main-content">
-      <section class="hero" id="hero">
-        <div class="container hero-grid">
-          <div class="hero-copy">
-            <span class="hero-eyebrow">chapter2.live • Local experts in Southeast Asia</span>
-            <h1>Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
-            <p>
-              We design routes around your pace, comfort, and budget. You get clear inclusions,
-              practical guidance, and support from a local team that knows the region deeply.
-            </p>
-            <div class="hero-actions">
-              <button class="btn btn-primary" id="openLeadModal" type="button">Book a free discovery call</button>
-              <a class="btn btn-secondary" href="#tours">See sample journeys</a>
-            </div>
-            <ul class="hero-trust">
-              <li>Licensed travel operator with vetted partners across VN, TH, KH, and LA.</li>
-              <li>First route options delivered in 48 to 72 hours.</li>
-              <li>Transparent inclusions and exclusions before booking.</li>
-            </ul>
-          </div>
-          <figure class="hero-image-card hero-media">
-            <img
-              src="assets/img/flickr/hero-flickr.jpg"
-              alt="Scenic Southeast Asia landscape"
-              width="2000"
-              height="1125"
-            />
-            <figcaption class="microcopy">
-              Friendly planning call, clear quote ladder, and practical support during your trip.
-            </figcaption>
-          </figure>
+      <section class="hero hero-video" id="hero">
+        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="assets/img/flickr/hero-flickr.jpg">
+          <source src="assets/video/rice field.mp4" type="video/mp4" />
+          Your browser does not support HTML5 video.
+        </video>
+        <div class="hero-scrim" aria-hidden="true"></div>
+        <div class="container hero-content">
+          <h1 class="hero-title-only">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
         </div>
       </section>
 
-      <section class="container section media-highlight" aria-label="Travel media highlight">
-        <div class="split">
-          <article class="panel">
-            <h2 class="section-title">See the experience style we design</h2>
-            <p class="section-lead">
-              Cinematic routes, local immersion, and private comfort. This prototype uses Flickr-sourced
-              travel imagery for visual direction.
-            </p>
-            <div class="contact-row">
-              <a class="btn btn-primary" href="#tours">Browse sample journeys</a>
-              <button class="btn btn-secondary" type="button" data-open-modal>Plan my route</button>
-            </div>
-          </article>
-          <article class="panel video-panel">
-            <video controls playsinline preload="metadata" poster="assets/img/flickr/hero-flickr.jpg">
-              <source src="assets/video/ha long bay.mp4" type="video/mp4" />
-              Your browser does not support HTML5 video.
-            </video>
-            <p class="micro">
-              Playing local video file: <code>assets/video/ha long bay.mp4</code>.
-            </p>
-          </article>
+      <section class="section" id="tours">
+        <div class="container">
+          <h2 class="section-title" id="toursTitle">Featured tours you can tailor</h2>
+          <p class="section-lead" id="toursLead">
+            Browse by destination and style. Filters update instantly and can be shared by URL.
+          </p>
+
+          <div class="filters-toolbar" id="activeFilters" aria-live="polite"></div>
+
+          <div class="tour-grid" id="tourGrid" aria-live="polite"></div>
+          <p id="noResultsMessage" class="section-lead" hidden>
+            No tours match these filters yet. Try "All destinations" or "All styles".
+          </p>
         </div>
       </section>
 
@@ -171,22 +138,6 @@
               <p class="section-lead">Our local team helps before and during your trip, including rerouting if needed.</p>
             </article>
           </div>
-        </div>
-      </section>
-
-      <section class="section" id="tours">
-        <div class="container">
-          <h2 class="section-title">Featured tours you can tailor</h2>
-          <p class="section-lead">
-            Browse by destination and style. Filters update instantly and can be shared by URL.
-          </p>
-
-          <div class="filters-toolbar" id="activeFilters" aria-live="polite"></div>
-
-          <div class="tour-grid" id="tourGrid" aria-live="polite"></div>
-          <p id="noResultsMessage" class="section-lead" hidden>
-            No tours match these filters yet. Try "All destinations" or "All styles".
-          </p>
         </div>
       </section>
 

@@ -21,6 +21,8 @@ const els = {
   navStyle: document.getElementById("navStyle"),
   clearFilters: document.getElementById("clearFilters"),
   activeFilters: document.getElementById("activeFilters"),
+  toursTitle: document.getElementById("toursTitle"),
+  toursLead: document.getElementById("toursLead"),
   tourGrid: document.getElementById("tourGrid"),
   noResultsMessage: document.getElementById("noResultsMessage"),
   faqList: document.getElementById("faqList"),
@@ -132,6 +134,7 @@ function applyFilters() {
   });
 
   renderFilterSummary();
+  updateTitlesForFilters();
   renderTrips(state.filteredTrips);
 }
 
@@ -146,6 +149,33 @@ function renderChip(label, value) {
   const active = value !== "all";
   const text = active ? value : `All ${label.toLowerCase()}s`;
   return `<span class="filter-pill ${active ? "active" : ""}">${label}: ${text}</span>`;
+}
+
+function updateTitlesForFilters() {
+  const dest = state.filters.dest;
+  const style = state.filters.style;
+
+  let heading = "Featured tours you can tailor";
+  let lead = "Browse by destination and style. Filters update instantly and can be shared by URL.";
+  let pageTitle = "Chapter 2 | Custom Southeast Asia Holidays";
+
+  if (dest !== "all" && style !== "all") {
+    heading = `${style} tours in ${dest}`;
+    lead = `Showing ${style.toLowerCase()} journeys in ${dest}. Clear filters to see all options.`;
+    pageTitle = `Chapter 2 | ${style} Tours in ${dest}`;
+  } else if (dest !== "all") {
+    heading = `Featured tours in ${dest}`;
+    lead = `Showing all travel styles available in ${dest}.`;
+    pageTitle = `Chapter 2 | Tours in ${dest}`;
+  } else if (style !== "all") {
+    heading = `${style} travel styles across Southeast Asia`;
+    lead = `Showing ${style.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
+    pageTitle = `Chapter 2 | ${style} Southeast Asia Tours`;
+  }
+
+  if (els.toursTitle) els.toursTitle.textContent = heading;
+  if (els.toursLead) els.toursLead.textContent = lead;
+  document.title = pageTitle;
 }
 
 function renderTrips(trips) {
