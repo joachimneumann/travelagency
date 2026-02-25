@@ -39,13 +39,12 @@
                 <input id="customersSearch" type="text" placeholder="id, name, email, phone..." />
               </div>
               <button class="btn btn-ghost" id="customersSearchBtn" type="button">Search</button>
-              <button class="btn btn-ghost" id="customersPrev" type="button">Previous</button>
-              <button class="btn btn-ghost" id="customersNext" type="button">Next</button>
-              <span id="customersPageInfo" class="micro">Page 1 / 1</span>
+              <span id="customersCountInfo" class="micro"></span>
             </div>
             <div class="backend-table-wrap">
               <table class="backend-table" id="customersTable"></table>
             </div>
+            <div class="backend-pagination" id="customersPagination" aria-label="Customers pagination"></div>
           </article>
 
           <article class="panel" style="padding: 1rem;">
@@ -56,13 +55,12 @@
                 <input id="leadsSearch" type="text" placeholder="id, customer, destination, owner..." />
               </div>
               <button class="btn btn-ghost" id="leadsSearchBtn" type="button">Search</button>
-              <button class="btn btn-ghost" id="leadsPrev" type="button">Previous</button>
-              <button class="btn btn-ghost" id="leadsNext" type="button">Next</button>
-              <span id="leadsPageInfo" class="micro">Page 1 / 1</span>
+              <span id="leadsCountInfo" class="micro"></span>
             </div>
             <div class="backend-table-wrap">
               <table class="backend-table" id="leadsTable"></table>
             </div>
+            <div class="backend-pagination" id="leadsPagination" aria-label="Leads pagination"></div>
           </article>
         </div>
       </section>

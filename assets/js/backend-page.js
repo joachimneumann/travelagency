@@ -8,16 +8,14 @@ const els = {
 
   customersSearch: document.getElementById("customersSearch"),
   customersSearchBtn: document.getElementById("customersSearchBtn"),
-  customersPrev: document.getElementById("customersPrev"),
-  customersNext: document.getElementById("customersNext"),
-  customersPageInfo: document.getElementById("customersPageInfo"),
+  customersCountInfo: document.getElementById("customersCountInfo"),
+  customersPagination: document.getElementById("customersPagination"),
   customersTable: document.getElementById("customersTable"),
 
   leadsSearch: document.getElementById("leadsSearch"),
   leadsSearchBtn: document.getElementById("leadsSearchBtn"),
-  leadsPrev: document.getElementById("leadsPrev"),
-  leadsNext: document.getElementById("leadsNext"),
-  leadsPageInfo: document.getElementById("leadsPageInfo"),
+  leadsCountInfo: document.getElementById("leadsCountInfo"),
+  leadsPagination: document.getElementById("leadsPagination"),
   leadsTable: document.getElementById("leadsTable")
 };
 
@@ -29,12 +27,14 @@ const state = {
     page: 1,
     pageSize: 10,
     totalPages: 1,
+    total: 0,
     search: ""
   },
   leads: {
     page: 1,
     pageSize: 10,
     totalPages: 1,
+    total: 0,
     search: ""
   }
 };
@@ -77,22 +77,6 @@ function bindControls() {
     });
   }
 
-  if (els.customersPrev) {
-    els.customersPrev.addEventListener("click", () => {
-      if (state.customers.page <= 1) return;
-      state.customers.page -= 1;
-      loadCustomers();
-    });
-  }
-
-  if (els.customersNext) {
-    els.customersNext.addEventListener("click", () => {
-      if (state.customers.page >= state.customers.totalPages) return;
-      state.customers.page += 1;
-      loadCustomers();
-    });
-  }
-
   if (els.leadsSearchBtn) {
     els.leadsSearchBtn.addEventListener("click", () => {
       state.leads.page = 1;
@@ -107,22 +91,6 @@ function bindControls() {
       event.preventDefault();
       state.leads.page = 1;
       state.leads.search = (els.leadsSearch?.value || "").trim();
-      loadLeads();
-    });
-  }
-
-  if (els.leadsPrev) {
-    els.leadsPrev.addEventListener("click", () => {
-      if (state.leads.page <= 1) return;
-      state.leads.page -= 1;
-      loadLeads();
-    });
-  }
-
-  if (els.leadsNext) {
-    els.leadsNext.addEventListener("click", () => {
-      if (state.leads.page >= state.leads.totalPages) return;
-      state.leads.page += 1;
       loadLeads();
     });
   }
@@ -144,7 +112,9 @@ async function loadCustomers() {
   if (!payload) return;
 
   state.customers.totalPages = Math.max(1, Number(payload.total_pages || 1));
-  updateCustomersPaginationUi(payload);
+  state.customers.total = Number(payload.total || 0);
+  state.customers.page = Number(payload.page || state.customers.page);
+  updateCustomersPaginationUi();
   renderCustomers(payload.items || []);
 }
 
@@ -165,32 +135,117 @@ async function loadLeads() {
   if (!payload) return;
 
   state.leads.totalPages = Math.max(1, Number(payload.total_pages || 1));
-  updateLeadsPaginationUi(payload);
+  state.leads.total = Number(payload.total || 0);
+  state.leads.page = Number(payload.page || state.leads.page);
+  updateLeadsPaginationUi();
   renderLeads(payload.items || []);
 }
 
-function updateCustomersPaginationUi(payload) {
-  if (els.customersPageInfo) {
-    els.customersPageInfo.textContent = `Page ${payload.page || state.customers.page} / ${payload.total_pages || 1}`;
+function updateCustomersPaginationUi() {
+  if (els.customersCountInfo) {
+    els.customersCountInfo.textContent = `${state.customers.total} total · page ${state.customers.page} of ${state.customers.totalPages}`;
   }
-  if (els.customersPrev) {
-    els.customersPrev.disabled = state.customers.page <= 1;
-  }
-  if (els.customersNext) {
-    els.customersNext.disabled = state.customers.page >= state.customers.totalPages;
+  if (els.customersPagination) {
+    renderPagination(els.customersPagination, state.customers, (page) => {
+      state.customers.page = page;
+      loadCustomers();
+    });
   }
 }
 
-function updateLeadsPaginationUi(payload) {
-  if (els.leadsPageInfo) {
-    els.leadsPageInfo.textContent = `Page ${payload.page || state.leads.page} / ${payload.total_pages || 1}`;
+function updateLeadsPaginationUi() {
+  if (els.leadsCountInfo) {
+    els.leadsCountInfo.textContent = `${state.leads.total} total · page ${state.leads.page} of ${state.leads.totalPages}`;
   }
-  if (els.leadsPrev) {
-    els.leadsPrev.disabled = state.leads.page <= 1;
+  if (els.leadsPagination) {
+    renderPagination(els.leadsPagination, state.leads, (page) => {
+      state.leads.page = page;
+      loadLeads();
+    });
   }
-  if (els.leadsNext) {
-    els.leadsNext.disabled = state.leads.page >= state.leads.totalPages;
+}
+
+function renderPagination(container, pager, onPageChange) {
+  const current = pager.page;
+  const total = pager.totalPages;
+
+  const parts = [];
+
+  parts.push(
+    buttonHtml({
+      label: "Previous",
+      disabled: current <= 1,
+      page: current - 1,
+      cls: "backend-page-btn"
+    })
+  );
+
+  for (const page of visiblePages(current, total)) {
+    if (page === "...") {
+      parts.push(`<span class="backend-page-ellipsis">...</span>`);
+      continue;
+    }
+
+    parts.push(
+      buttonHtml({
+        label: String(page),
+        disabled: page === current,
+        page,
+        current: page === current,
+        cls: "backend-page-btn"
+      })
+    );
   }
+
+  parts.push(
+    buttonHtml({
+      label: "Next",
+      disabled: current >= total,
+      page: current + 1,
+      cls: "backend-page-btn"
+    })
+  );
+
+  container.innerHTML = parts.join("");
+
+  container.querySelectorAll("button[data-page]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = Number(btn.getAttribute("data-page"));
+      if (!Number.isFinite(page)) return;
+      if (page < 1 || page > total) return;
+      onPageChange(page);
+    });
+  });
+}
+
+function visiblePages(current, total) {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  if (start > 2) pages.push("...");
+  for (let page = start; page <= end; page += 1) pages.push(page);
+  if (end < total - 1) pages.push("...");
+
+  pages.push(total);
+  return pages;
+}
+
+function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
+  const attrs = [
+    `class="${cls}"`,
+    `type="button"`,
+    `data-page="${page}"`,
+    disabled ? "disabled" : "",
+    current ? 'aria-current="page"' : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return `<button ${attrs}>${escapeHtml(label)}</button>`;
 }
 
 async function fetchApi(path) {

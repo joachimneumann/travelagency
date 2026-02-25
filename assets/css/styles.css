@@ -795,6 +795,47 @@ textarea:focus-visible {
   margin-bottom: 0;
 }
 
+.backend-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.8rem;
+}
+
+.backend-page-btn {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0 0.6rem;
+  cursor: pointer;
+}
+
+.backend-page-btn:hover {
+  background: #f7fbfd;
+}
+
+.backend-page-btn[aria-current="page"] {
+  background: var(--accent-soft);
+  border-color: #f1b7a7;
+  color: #8a2e13;
+}
+
+.backend-page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.backend-page-ellipsis {
+  color: var(--muted);
+  padding: 0 0.2rem;
+}
+
 .backend-table {
   width: 100%;
   border-collapse: collapse;
