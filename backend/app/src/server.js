@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import { createAuth } from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +12,6 @@ const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
-const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "change-me-local";
 
 const STAGES = {
   NEW: "NEW",
@@ -54,8 +54,10 @@ const SLA_HOURS = {
 };
 
 let writeQueue = Promise.resolve();
+const auth = createAuth({ port: PORT });
 
 const routes = [
+  ...auth.routes,
   { method: "GET", pattern: /^\/health$/, handler: handleHealth },
   { method: "POST", pattern: /^\/public\/v1\/leads$/, handler: handleCreateLead },
   { method: "GET", pattern: /^\/api\/v1\/leads$/, handler: handleListLeads },
@@ -75,7 +77,8 @@ const routes = [
 
 createServer(async (req, res) => {
   try {
-    withCors(res);
+    auth.pruneState();
+    withCors(req, res);
 
     if (req.method === "OPTIONS") {
       res.writeHead(204);
@@ -86,9 +89,20 @@ createServer(async (req, res) => {
     const requestUrl = new URL(req.url, "http://localhost");
     const pathname = requestUrl.pathname;
 
-    if (pathname.startsWith("/api/v1/") && !isAuthorizedAdminRequest(req, requestUrl)) {
-      sendJson(res, 401, { error: "Unauthorized" });
-      return;
+    if (pathname.startsWith("/admin") && auth.isKeycloakEnabled()) {
+      if (!auth.hasSession(req)) {
+        const returnTo = `${pathname}${requestUrl.search || ""}`;
+        redirect(res, auth.getLoginRedirect(returnTo));
+        return;
+      }
+    }
+
+    if (pathname.startsWith("/api/v1/")) {
+      const authz = await auth.authorizeApiRequest(req, requestUrl);
+      if (!authz.ok) {
+        sendJson(res, 401, { error: "Unauthorized" });
+        return;
+      }
     }
 
     for (const route of routes) {
@@ -108,19 +122,25 @@ createServer(async (req, res) => {
   console.log(`Chapter2 backend listening on http://localhost:${PORT}`);
 });
 
-function withCors(res) {
-  res.setHeader("Access-Control-Allow-Origin", CORS_ORIGIN);
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Idempotency-Key, Authorization");
+function withCors(req, res) {
+  const requestOrigin = normalizeText(req.headers.origin);
+  const allowAny = CORS_ORIGIN === "*";
+  const allowThisOrigin = allowAny ? requestOrigin || "*" : CORS_ORIGIN;
+
+  if (allowThisOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowThisOrigin);
+  }
+  if (requestOrigin) {
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Idempotency-Key, Authorization, X-Requested-With");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
 }
 
-function isAuthorizedAdminRequest(req, requestUrl) {
-  const authHeader = normalizeText(req.headers.authorization);
-  const bearerPrefix = "Bearer ";
-  const headerToken = authHeader.startsWith(bearerPrefix) ? authHeader.slice(bearerPrefix.length).trim() : "";
-  const queryToken = normalizeText(requestUrl.searchParams.get("api_token"));
-  const candidateToken = headerToken || queryToken;
-  return candidateToken && candidateToken === ADMIN_API_TOKEN;
+function redirect(res, location) {
+  res.writeHead(302, { Location: location });
+  res.end();
 }
 
 function sendJson(res, status, payload) {
@@ -712,13 +732,6 @@ async function handleGetCustomer(_req, res, [customerId]) {
 }
 
 async function handleAdminHome(req, res) {
-  const requestUrl = new URL(req.url, "http://localhost");
-  const token = normalizeText(requestUrl.searchParams.get("api_token"));
-  const tokenHint = token || "YOUR_ADMIN_API_TOKEN";
-  const leadsHref = token ? `/admin/leads?api_token=${encodeURIComponent(token)}` : "/admin/leads";
-  const customersUiHref = token ? `/admin/customers?api_token=${encodeURIComponent(token)}` : "/admin/customers";
-  const customersHref = token ? `/api/v1/customers?api_token=${encodeURIComponent(token)}` : "/api/v1/customers";
-
   sendHtml(
     res,
     200,
@@ -734,11 +747,10 @@ async function handleAdminHome(req, res) {
 </head>
 <body>
   <h1>Chapter2 Admin</h1>
-  <p>Use <code>?api_token=${escapeHtml(tokenHint)}</code> in admin URLs so UI actions can call protected APIs.</p>
   <ul>
-    <li><a href="${escapeHtml(leadsHref)}">Lead pipeline view</a></li>
-    <li><a href="${escapeHtml(customersUiHref)}">Customers UI</a></li>
-    <li>Customers API: <a href="${escapeHtml(customersHref)}"><code>${escapeHtml(customersHref)}</code></a></li>
+    <li><a href="/admin/leads">Lead pipeline view</a></li>
+    <li><a href="/admin/customers">Customers UI</a></li>
+    <li>Customers API: <a href="/api/v1/customers"><code>/api/v1/customers</code></a></li>
   </ul>
 </body>
 </html>`
@@ -749,7 +761,6 @@ async function handleAdminCustomersPage(req, res) {
   const store = await readStore();
   const requestUrl = new URL(req.url, "http://localhost");
   const params = requestUrl.searchParams;
-  const token = normalizeText(params.get("api_token"));
   const search = normalizeText(params.get("search")).toLowerCase();
   const pageSize = String(clamp(safeInt(params.get("page_size")) || 25, 1, 100));
 
@@ -800,8 +811,8 @@ async function handleAdminCustomersPage(req, res) {
   const nextLink =
     paged.page < paged.total_pages ? `<a href="${escapeHtml(pageLink(paged.page + 1))}">Next</a>` : "";
 
-  const leadsHref = token ? `/admin/leads?api_token=${encodeURIComponent(token)}` : "/admin/leads";
-  const homeHref = token ? `/admin?api_token=${encodeURIComponent(token)}` : "/admin";
+  const leadsHref = "/admin/leads";
+  const homeHref = "/admin";
 
   sendHtml(
     res,
@@ -830,7 +841,6 @@ async function handleAdminCustomersPage(req, res) {
     <a href="${escapeHtml(leadsHref)}">Lead pipeline</a>
   </div>
   <form method="get" action="/admin/customers">
-    <input type="hidden" name="api_token" value="${escapeHtml(token)}" />
     <label>Search
       <input type="text" name="search" value="${escapeHtml(params.get("search") || "")}" placeholder="id, name, email, phone..." />
     </label>
@@ -929,9 +939,8 @@ async function handleAdminLeadsPage(req, res) {
   const prevLink = paged.page > 1 ? `<a href="${escapeHtml(pageLink(paged.page - 1))}">Previous</a>` : "";
   const nextLink =
     paged.page < paged.total_pages ? `<a href="${escapeHtml(pageLink(paged.page + 1))}">Next</a>` : "";
-  const token = normalizeText(params.get("api_token"));
-  const customersHref = token ? `/admin/customers?api_token=${encodeURIComponent(token)}` : "/admin/customers";
-  const homeHref = token ? `/admin?api_token=${encodeURIComponent(token)}` : "/admin";
+  const customersHref = "/admin/customers";
+  const homeHref = "/admin";
 
   sendHtml(
     res,
@@ -1169,22 +1178,14 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
     const leadId = ${JSON.stringify(lead.id)};
     const currentStage = ${JSON.stringify(lead.stage)};
     const currentOwnerId = ${JSON.stringify(lead.owner_id || "")};
-    const params = new URLSearchParams(window.location.search);
-    const apiToken = params.get("api_token") || "";
     document.getElementById("stageSelect").value = currentStage;
     document.getElementById("ownerSelect").value = currentOwnerId;
-
-    function authHeaders(extra = {}) {
-      const headers = { ...extra };
-      if (apiToken) headers.Authorization = "Bearer " + apiToken;
-      return headers;
-    }
 
     async function updateStage() {
       const stage = document.getElementById("stageSelect").value;
       const response = await fetch('/api/v1/leads/' + leadId + '/stage', {
         method: 'PATCH',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage, actor: 'admin_ui' })
       });
       const payload = await response.json();
@@ -1199,7 +1200,7 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
       const owner_id = document.getElementById("ownerSelect").value;
       const response = await fetch('/api/v1/leads/' + leadId + '/owner', {
         method: 'PATCH',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id, actor: 'admin_ui' })
       });
       const payload = await response.json();
@@ -1215,7 +1216,7 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
       if (!detail) return;
       const response = await fetch('/api/v1/leads/' + leadId + '/activities', {
         method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'NOTE', detail, actor: 'admin_ui' })
       });
       const payload = await response.json();

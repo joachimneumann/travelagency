@@ -4,12 +4,12 @@ const apiBase = (window.CHAPTER2_API_BASE || "").replace(/\/$/, "");
 const state = {
   type: qs.get("type") || "lead",
   id: qs.get("id") || "",
-  user: qs.get("user") || "admin",
-  token: qs.get("api_token") || localStorage.getItem("chapter2_api_token") || "dev-secret-token"
+  user: qs.get("user") || "admin"
 };
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
+  logoutLink: document.getElementById("backendLogoutLink"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
   error: document.getElementById("detailError"),
@@ -22,15 +22,18 @@ const els = {
 init();
 
 function init() {
-  localStorage.setItem("chapter2_api_token", state.token);
-
   if (els.homeLink) {
-    const homeParams = new URLSearchParams({ user: state.user, api_token: state.token });
+    const homeParams = new URLSearchParams({ user: state.user });
     els.homeLink.href = `backend.html?${homeParams.toString()}`;
   }
+  if (els.logoutLink) {
+    const returnTo = `${window.location.origin}/index.html`;
+    els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
+  }
+  loadBackendAuthStatus();
 
   if (els.back) {
-    const backParams = new URLSearchParams({ user: state.user, api_token: state.token });
+    const backParams = new URLSearchParams({ user: state.user });
     els.back.href = `backend.html?${backParams.toString()}`;
   }
 
@@ -45,6 +48,15 @@ function init() {
   }
 
   loadLead();
+}
+
+async function loadBackendAuthStatus() {
+  // Detail page currently has no visible user label; this keeps behavior consistent if added later.
+  try {
+    await fetch(`${apiBase}/auth/me`, { credentials: "include" });
+  } catch {
+    // ignore
+  }
 }
 
 async function loadLead() {
@@ -118,9 +130,8 @@ async function loadCustomer() {
 async function fetchApi(path) {
   try {
     const response = await fetch(`${apiBase}${path}`, {
-      headers: {
-        Authorization: `Bearer ${state.token}`
-      }
+      credentials: "include",
+      headers: {}
     });
     const payload = await response.json();
     if (!response.ok) {
@@ -139,8 +150,7 @@ function buildDetailHref(type, id) {
   const params = new URLSearchParams({
     type,
     id,
-    user: state.user,
-    api_token: state.token
+    user: state.user
   });
   return `backend-detail.html?${params.toString()}`;
 }

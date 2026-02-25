@@ -21,14 +21,15 @@ const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
 const LEAD_API_ENDPOINT =
   (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
+const BACKEND_BASE_URL = window.CHAPTER2_API_BASE ? window.CHAPTER2_API_BASE.replace(/\/$/, "") : "";
 
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
   navDestination: document.getElementById("navDestination"),
   navStyle: document.getElementById("navStyle"),
-  backendUser: document.getElementById("backendUser"),
   backendLoginBtn: document.getElementById("backendLoginBtn"),
+  websiteAuthStatus: document.getElementById("websiteAuthStatus"),
   clearFilters: document.getElementById("clearFilters"),
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
@@ -63,6 +64,7 @@ async function init() {
   setupFAQ();
   setupHeroScroll();
   setupBackendLogin();
+  loadWebsiteAuthStatus();
   setupModal();
   setupFormNavigation();
 
@@ -133,17 +135,45 @@ function setupHeroScroll() {
 }
 
 function setupBackendLogin() {
-  if (!els.backendLoginBtn || !els.backendUser) return;
+  if (!els.backendLoginBtn) return;
 
-  els.backendLoginBtn.addEventListener("click", () => {
-    const selectedUser = els.backendUser.value || "admin";
-    const token = localStorage.getItem("chapter2_api_token") || "dev-secret-token";
-    const params = new URLSearchParams({
-      user: selectedUser,
-      api_token: token
-    });
-    window.location.href = `backend.html?${params.toString()}`;
+  els.backendLoginBtn.addEventListener("click", async () => {
+    const backendUrl = `${window.location.origin}/backend.html`;
+    const returnTo = `${window.location.origin}/backend.html`;
+    const loginUrl = `${BACKEND_BASE_URL}/auth/login?return_to=${encodeURIComponent(returnTo)}`;
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/auth/me`, {
+        credentials: "include"
+      });
+      const payload = await response.json();
+      if (response.ok && payload?.authenticated) {
+        window.location.href = backendUrl;
+        return;
+      }
+    } catch {
+      // Fall through to login redirect.
+    }
+    window.location.href = loginUrl;
   });
+}
+
+async function loadWebsiteAuthStatus() {
+  if (!els.websiteAuthStatus) return;
+
+  try {
+    const response = await fetch(`${BACKEND_BASE_URL}/auth/me`, {
+      credentials: "include"
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload?.authenticated) {
+      els.websiteAuthStatus.textContent = "";
+      return;
+    }
+    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
+    els.websiteAuthStatus.textContent = `Logged in as: ${user}`;
+  } catch {
+    els.websiteAuthStatus.textContent = "";
+  }
 }
 
 function setupFilterEvents() {

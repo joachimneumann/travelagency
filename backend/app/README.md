@@ -21,13 +21,42 @@ Default URL: `http://localhost:8787`
 Environment variables:
 - `PORT` (default `8787`)
 - `CORS_ORIGIN` (default `*`)
-- `ADMIN_API_TOKEN` (default `change-me-local`) for all `/api/v1/*` endpoints
+- `KEYCLOAK_ENABLED` (`true`/`false`, default `false`)
+- `KEYCLOAK_BASE_URL` (example: `http://localhost:8081`)
+- `KEYCLOAK_REALM` (example: `chapter2`)
+- `KEYCLOAK_CLIENT_ID` (example: `chapter2-backend`)
+- `KEYCLOAK_CLIENT_SECRET` (Keycloak confidential client secret)
+- `KEYCLOAK_REDIRECT_URI` (default `http://localhost:8787/auth/callback`)
+- `KEYCLOAK_POST_LOGOUT_REDIRECT_URI` (optional; must be allowed by Keycloak client if set)
+- `KEYCLOAK_ALLOWED_ROLES` (comma-separated, default `admin,staff_joachim,staff_van`)
+- `KEYCLOAK_FORCE_LOGIN_PROMPT` (`true`/`false`, default `false`)
+- `KEYCLOAK_GLOBAL_LOGOUT` (`true`/`false`, default `false`)
+- `RETURN_TO_ALLOWED_ORIGINS` (comma-separated absolute origins allowed for `return_to`; default `http://localhost:8080,http://localhost:8787`)
+
+Cross-origin browser usage note:
+- When frontend is served from `http://localhost:8080` and backend from `http://localhost:8787`, use:
+  - `CORS_ORIGIN='http://localhost:8080'`
+- Backend sends `Access-Control-Allow-Credentials: true`, and frontend backend pages send `credentials: "include"` so Keycloak session cookies are used for `/api/v1/*`.
 
 ## Data Storage
 
 JSON files are used for local persistence:
 - `data/store.json`
 - `config/staff.json`
+
+## Auth Module Split
+
+Authentication internals are now isolated in:
+- `src/auth.js`
+
+`src/server.js` now only wires auth at the route and request-gate level:
+- `const auth = createAuth({ port, adminApiToken })`
+- `...auth.routes` for `/auth/*` handlers
+- `auth.pruneState()` on each request
+- `auth.isKeycloakEnabled()` + `auth.hasSession(req)` for `/admin*` gate
+- `auth.authorizeApiRequest(req, requestUrl)` for `/api/v1/*` gate
+
+This keeps backend business logic (leads/customers/pipeline) separate from OIDC/session internals.
 
 ## API Endpoints
 
@@ -45,8 +74,13 @@ Admin API:
 - `GET /api/v1/customers/:customerId`
 
 `/api/v1/*` authentication:
-- `Authorization: Bearer <ADMIN_API_TOKEN>`
-- For browser-only local admin usage, `?api_token=<ADMIN_API_TOKEN>` query param is also accepted.
+- Keycloak backend session cookie (browser flows)
+- Or `Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>`
+
+When Keycloak is enabled:
+- `/admin*` requires browser session login via Keycloak.
+- `/api/v1/*` accepts either authenticated backend session cookie or Keycloak bearer token.
+- If `KEYCLOAK_ENABLED=false`, `/api/v1/*` requests are rejected with `401`.
 
 Lead list query params (`GET /api/v1/leads`):
 - `page` (default `1`)
@@ -67,8 +101,25 @@ Admin UI:
 - `GET /admin/customers`
 - `GET /admin/customers/:customerId`
 
+Branded frontend backoffice pages (served by website):
+- `/backend.html`: chapter-branded dashboard with:
+  - paginated searchable Customers table
+  - paginated searchable Leads table
+- `backend.html` header includes `Website` and `Logout` actions.
+- `/backend-detail.html`: detail pages for lead/customer records
+
+Website header integration:
+- Main site has a `backend` button (no dropdown) that redirects to `/auth/login`.
+- Main site shows `Logged in as: ...` below the backend button using `/auth/me` and session cookies.
+
 Health:
 - `GET /health`
+
+Auth:
+- `GET /auth/login`
+- `GET /auth/callback`
+- `GET /auth/logout`
+- `GET /auth/me`
 
 ## Example Lead Request
 
@@ -102,3 +153,21 @@ curl -X POST http://localhost:8787/public/v1/leads \
 cd backend/app
 npm run seed -- --count 40
 ```
+
+## Enable Keycloak Auth (Example)
+
+```bash
+cd backend/app
+npm install
+KEYCLOAK_ENABLED=true \
+KEYCLOAK_BASE_URL='http://localhost:8081' \
+KEYCLOAK_REALM='chapter2' \
+KEYCLOAK_CLIENT_ID='chapter2-backend' \
+KEYCLOAK_CLIENT_SECRET='YOUR_CLIENT_SECRET' \
+KEYCLOAK_REDIRECT_URI='http://localhost:8787/auth/callback' \
+KEYCLOAK_ALLOWED_ROLES='admin,staff_joachim,staff_van' \
+npm start
+```
+
+Open:
+- `http://localhost:8787/auth/login?return_to=/admin`

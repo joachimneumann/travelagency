@@ -3,6 +3,7 @@ const apiBase = (window.CHAPTER2_API_BASE || "").replace(/\/$/, "");
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
+  logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
 
@@ -21,8 +22,6 @@ const els = {
 
 const state = {
   user: qs.get("user") || "admin",
-  token: qs.get("api_token") || localStorage.getItem("chapter2_api_token") || "dev-secret-token",
-
   customers: {
     page: 1,
     pageSize: 10,
@@ -42,20 +41,35 @@ const state = {
 init();
 
 function init() {
-  localStorage.setItem("chapter2_api_token", state.token);
-
   if (els.homeLink) {
-    const params = new URLSearchParams({ user: state.user, api_token: state.token });
+    const params = new URLSearchParams({ user: state.user });
     els.homeLink.href = `backend.html?${params.toString()}`;
   }
-
-  if (els.userLabel) {
-    els.userLabel.textContent = `Logged in as: ${state.user}`;
+  if (els.logoutLink) {
+    const returnTo = `${window.location.origin}/index.html`;
+    els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
   }
+  loadBackendAuthStatus();
 
   bindControls();
   loadCustomers();
   loadLeads();
+}
+
+async function loadBackendAuthStatus() {
+  if (!els.userLabel) return;
+  try {
+    const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
+    const payload = await response.json();
+    if (!response.ok || !payload?.authenticated) {
+      els.userLabel.textContent = "";
+      return;
+    }
+    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
+    els.userLabel.textContent = user ? `Logged in as: ${user}` : "";
+  } catch {
+    els.userLabel.textContent = "";
+  }
 }
 
 function bindControls() {
@@ -251,9 +265,8 @@ function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
 async function fetchApi(path) {
   try {
     const response = await fetch(`${apiBase}${path}`, {
-      headers: {
-        Authorization: `Bearer ${state.token}`
-      }
+      credentials: "include",
+      headers: {}
     });
 
     const payload = await response.json();
@@ -332,8 +345,7 @@ function buildDetailHref(type, id) {
   const params = new URLSearchParams({
     type,
     id,
-    user: state.user,
-    api_token: state.token
+    user: state.user
   });
   return `backend-detail.html?${params.toString()}`;
 }

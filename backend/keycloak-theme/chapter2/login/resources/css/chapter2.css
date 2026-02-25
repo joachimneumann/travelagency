@@ -1,0 +1,169 @@
+:root {
+  --c2-bg: #fdfdfd;
+  --c2-surface: #ffffff;
+  --c2-text: #1c2b35;
+  --c2-muted: #5c6c76;
+  --c2-line: #deeaef;
+  --c2-accent: #ff6f4d;
+  --c2-accent-soft: #ffe3d9;
+  --c2-secondary: #1fa7a0;
+}
+
+html,
+body {
+  background: #ffffff !important;
+  background-image: none !important;
+  color: var(--c2-text);
+  font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+}
+
+body.login-pf,
+body.kcBodyClass {
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+#kc-page-title {
+  color: var(--c2-text);
+  text-align: center;
+}
+
+.card-pf,
+.pf-c-login__main,
+.pf-c-card {
+  background: var(--c2-surface) !important;
+  border: 1px solid var(--c2-line) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 30px rgba(19, 52, 68, 0.1) !important;
+}
+
+#kc-header-wrapper {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  height: 76px;
+  width: 320px;
+  margin: 0 auto 20px auto;
+  background: url("../img/logo-chapter2.svg") center center / contain no-repeat;
+}
+
+.pf-c-button.pf-m-primary,
+#kc-login,
+input[type="submit"] {
+  background: var(--c2-accent) !important;
+  border-color: var(--c2-accent) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+}
+
+.pf-c-button.pf-m-primary:hover,
+#kc-login:hover {
+  filter: brightness(0.95);
+}
+
+.pf-c-form-control {
+  border: 1px solid var(--c2-line) !important;
+  border-radius: 10px !important;
+}
+
+.pf-c-form-control:focus {
+  outline: 2px solid var(--c2-secondary) !important;
+  outline-offset: 0 !important;
+}
+
+a {
+  color: var(--c2-secondary) !important;
+}
+
+/* Keycloak legacy login layout */
+.login-pf-page {
+  background: #ffffff !important;
+  background-image: none !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.login-pf-page .card-pf {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+#kc-header,
+#kc-header-wrapper,
+#kc-content-wrapper {
+  max-width: 420px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.login-pf-page .login-pf-signup,
+.login-pf-page .login-pf-page-header {
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+/* Keycloak modern (PatternFly) login layout */
+.pf-c-login,
+.pf-c-login__container,
+.pf-c-login__main {
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#kc-form,
+#kc-form-wrapper,
+.pf-c-login__main-body {
+  width: 100%;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Keycloak PFv5 classnames (newer versions) */
+.pf-v5-c-login,
+.pf-v5-c-login__container,
+.pf-v5-c-login__main,
+.pf-v5-c-page,
+.pf-v5-c-page__main,
+.pf-v5-c-page__main-section {
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.pf-v5-c-login__container,
+.pf-v5-c-login__main {
+  max-width: 420px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.pf-v5-c-login__main-body,
+.pf-v5-c-form,
+.pf-v5-c-form__group,
+#kc-form,
+#kc-form-wrapper {
+  max-width: 360px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.pf-v5-c-form-control,
+#username,
+#password {
+  width: 100% !important;
+  max-width: 360px !important;
+}
+
+#kc-form-buttons,
+.pf-v5-c-login__main-footer,
+.pf-c-login__main-footer {
+  max-width: 360px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
