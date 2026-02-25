@@ -14,9 +14,6 @@ const state = {
   formStep: 1
 };
 
-const TRIPS_CACHE_KEY = "chapter2_trips_cache_v4";
-const TRIPS_CACHE_TTL_MS = 60 * 60 * 1000;
-
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
@@ -308,53 +305,19 @@ function getFiltersFromURL() {
 }
 
 async function loadTrips() {
-  const cachedTrips = readTripsCache();
-  if (cachedTrips) return cachedTrips;
-
   try {
-    const response = await fetch("data/trips.json");
+    const response = await fetch("data/trips.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Trip JSON request failed.");
-    const trips = await response.json();
-    writeTripsCache(trips);
-    return trips;
+    return await response.json();
   } catch (error) {
     // file:// fallback: update this embedded JSON for full offline open support
     const fallbackScript = document.getElementById("tripsFallback");
     if (!fallbackScript) return [];
     try {
-      const trips = JSON.parse(fallbackScript.textContent.trim() || "[]");
-      writeTripsCache(trips);
-      return trips;
+      return JSON.parse(fallbackScript.textContent.trim() || "[]");
     } catch {
       return [];
     }
-  }
-}
-
-function readTripsCache() {
-  try {
-    const raw = localStorage.getItem(TRIPS_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.trips) || typeof parsed.cachedAt !== "number") return null;
-    if (Date.now() - parsed.cachedAt > TRIPS_CACHE_TTL_MS) return null;
-    return parsed.trips;
-  } catch {
-    return null;
-  }
-}
-
-function writeTripsCache(trips) {
-  try {
-    localStorage.setItem(
-      TRIPS_CACHE_KEY,
-      JSON.stringify({
-        cachedAt: Date.now(),
-        trips
-      })
-    );
-  } catch {
-    // Ignore storage quota/privacy-mode failures.
   }
 }
 
