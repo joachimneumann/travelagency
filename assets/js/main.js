@@ -142,15 +142,30 @@ function saveFilters() {
 }
 
 function applyFilters() {
-  state.filteredTrips = state.trips.filter((trip) => {
+  const matchingTrips = state.trips.filter((trip) => {
     const matchDest = state.filters.dest === "all" || trip.destinationCountry === state.filters.dest;
     const matchStyle = state.filters.style === "all" || trip.styles.includes(state.filters.style);
     return matchDest && matchStyle;
   });
+  state.filteredTrips = rankTripsByPriorityAndRandom(matchingTrips);
 
   renderFilterSummary();
   updateTitlesForFilters();
   renderVisibleTrips();
+}
+
+function rankTripsByPriorityAndRandom(trips) {
+  return trips
+    .map((trip) => {
+      const basePriority = Number.isFinite(Number(trip.priority)) ? Number(trip.priority) : 50;
+      const randomBoost = Math.floor(Math.random() * 51);
+      return {
+        trip,
+        score: basePriority + randomBoost
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .map((entry) => entry.trip);
 }
 
 function renderVisibleTrips() {

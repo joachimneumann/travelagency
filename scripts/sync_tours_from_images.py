@@ -137,6 +137,7 @@ def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str
         'shortDescription': short_description,
         'destinationCountry': country_name,
         'styles': [style_name],
+        'priority': 50,
         'durationDays': duration,
         'priceFrom': price,
         'image': image_rel,

@@ -63,6 +63,7 @@ Behavior from JS:
 - Filter state from URL params/localStorage (`chapter2_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and section copy based on filters
+- On each new filter application, tours are ranked by `priority + random(0..50)` before display
 - Active filter summary remains visible above the grid with italic text and color-highlighted active filter values (not button-styled)
 - Spacing between the section subtitle and active filter summary is intentionally tight
 - Initially up to 3 tours are shown
@@ -77,6 +78,7 @@ Current inventory:
 - Styles include: Adventure, Beach, Budget, Culture, Family, Food, Luxury
 - Multiple tours per country/style are supported with IDs in the form `trip-<country>-<style>-<variant>`
 - Tour images follow `assets/tours/<country>/<style>/<country>-<style>-<variant>.webp`
+- Each tour entry includes `priority` (initially `50`; intended range `0-100`)
 - Embedded `tripsFallback` JSON in `index.html` is synchronized to the same dataset
 - Maintenance helper script available at `assets/tours/to_webp.sh` for non-WebP conversion and cleanup
 - Dataset sync script available at `scripts/sync_tours_from_images.py` to infer and generate JSON tour content from image variant names
