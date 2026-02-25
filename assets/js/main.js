@@ -30,6 +30,7 @@ const els = {
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
   toursLead: document.getElementById("toursLead"),
+  heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
   tourGrid: document.getElementById("tourGrid"),
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
@@ -270,6 +271,7 @@ function updateTitlesForFilters() {
 
   if (els.toursTitle) els.toursTitle.textContent = heading;
   if (els.toursLead) els.toursLead.textContent = lead;
+  if (els.heroDynamicSubtitle) els.heroDynamicSubtitle.textContent = heading;
   document.title = pageTitle;
 }
 

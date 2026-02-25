@@ -48,6 +48,9 @@
 - Poster image (`assets/video/rice field.webp`)
 - Video container has outer margin and rounded corners
 - No dark scrim over video; hero title uses a semi-transparent white background for legibility
+- Hero includes dynamic subtitle text under the main H1, mirroring the current tours title (e.g., `Beach tours in Thailand`)
+- Hero includes a down-arrow inside the dynamic subtitle box; the whole box links to `#tours`
+- Hero title tile remains centered; dynamic subtitle tile is horizontally centered near the bottom of the hero
 - H1:
   - `Private holidays in Vietnam, Thailand, Cambodia and Laos`
 
