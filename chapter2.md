@@ -24,7 +24,7 @@
 - Main JS bundle: `assets/js/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
 - All `.webp` images in the project are normalized to a maximum bounding box of `600x600` while preserving aspect ratio
-- Cache headers config file present at `_headers` (asset caching + 1h trips JSON)
+- Cache headers config file present at `_headers` (long-lived assets + `no-store` for `data/trips.json`)
 
 ## 3) Header and navigation (`#top`)
 
@@ -59,7 +59,7 @@
 
 Behavior from JS:
 - Trips loaded from `data/trips.json` (fallback from embedded JSON)
-- Trip data is cached in `localStorage` for 1 hour before refresh
+- Trip data is fetched without client-side caching (`cache: no-store`)
 - Filter state from URL params/localStorage (`chapter2_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and section copy based on filters
