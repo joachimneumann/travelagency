@@ -11,10 +11,14 @@ const state = {
     dest: "all",
     style: "all"
   },
-  formStep: 1
+  formStep: 1,
+  visibleToursCount: 3,
+  showMoreUsed: false
 };
 
 const TRIPS_REQUEST_VERSION = Date.now();
+const INITIAL_VISIBLE_TOURS = 3;
+const SHOW_MORE_BATCH = 3;
 
 const els = {
   navToggle: document.getElementById("navToggle"),
@@ -26,6 +30,9 @@ const els = {
   toursTitle: document.getElementById("toursTitle"),
   toursLead: document.getElementById("toursLead"),
   tourGrid: document.getElementById("tourGrid"),
+  tourActions: document.getElementById("tourActions"),
+  showMoreTours: document.getElementById("showMoreTours"),
+  showAllTours: document.getElementById("showAllTours"),
   noResultsMessage: document.getElementById("noResultsMessage"),
   faqList: document.getElementById("faqList"),
   leadModal: document.getElementById("leadModal"),
@@ -101,17 +108,23 @@ function setupFilterEvents() {
 
   els.navDestination.addEventListener("change", () => {
     state.filters.dest = els.navDestination.value;
+    state.visibleToursCount = INITIAL_VISIBLE_TOURS;
+    state.showMoreUsed = false;
     onFilterChange();
   });
 
   els.navStyle.addEventListener("change", () => {
     state.filters.style = els.navStyle.value;
+    state.visibleToursCount = INITIAL_VISIBLE_TOURS;
+    state.showMoreUsed = false;
     onFilterChange();
   });
 
   els.clearFilters.addEventListener("click", () => {
     state.filters.dest = "all";
     state.filters.style = "all";
+    state.visibleToursCount = INITIAL_VISIBLE_TOURS;
+    state.showMoreUsed = false;
     syncFilterInputs();
     onFilterChange();
   });
@@ -135,21 +148,55 @@ function applyFilters() {
     return matchDest && matchStyle;
   });
 
-  const tripsForGrid = selectTripsForGrid(state.filteredTrips, 6);
-
   renderFilterSummary();
   updateTitlesForFilters();
-  renderTrips(tripsForGrid);
+  renderVisibleTrips();
 }
 
-function selectTripsForGrid(trips, maxCards = 6) {
-  if (trips.length <= maxCards) return trips;
-  const shuffled = [...trips];
-  for (let i = shuffled.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+function renderVisibleTrips() {
+  const visibleTrips = state.filteredTrips.slice(0, state.visibleToursCount);
+  renderTrips(visibleTrips);
+  updateTourActions();
+}
+
+function updateTourActions() {
+  if (!els.tourActions || !els.showMoreTours || !els.showAllTours) return;
+
+  const total = state.filteredTrips.length;
+  const remaining = Math.max(0, total - state.visibleToursCount);
+
+  if (total === 0 || remaining === 0) {
+    els.tourActions.hidden = true;
+    els.showMoreTours.hidden = true;
+    els.showAllTours.hidden = true;
+    return;
   }
-  return shuffled.slice(0, maxCards);
+
+  const moreCount = Math.min(SHOW_MORE_BATCH, remaining);
+  const showMoreAvailable = !state.showMoreUsed && moreCount > 0;
+  const showAllAvailable = state.showMoreUsed && remaining > 0;
+  const filterContext = `${formatFilterValue(state.filters.dest, "destination")}, ${formatFilterValue(state.filters.style, "style")}`;
+
+  els.tourActions.hidden = !(showMoreAvailable || showAllAvailable);
+
+  if (showMoreAvailable) {
+    els.showMoreTours.hidden = false;
+    els.showMoreTours.textContent = `show more tours (${filterContext})`;
+  } else {
+    els.showMoreTours.hidden = true;
+  }
+
+  if (showAllAvailable) {
+    els.showAllTours.hidden = false;
+    els.showAllTours.textContent = remaining === 1 ? "There is one more tour" : `show the remaining ${remaining} tours`;
+  } else {
+    els.showAllTours.hidden = true;
+  }
+}
+
+function formatFilterValue(value, kind) {
+  if (value !== "all") return value;
+  return kind === "destination" ? "All destinations" : "All styles";
 }
 
 function renderFilterSummary() {
@@ -382,6 +429,24 @@ function setupFormNavigation() {
   });
 
   renderFormStep();
+}
+
+if (els.showMoreTours) {
+  els.showMoreTours.addEventListener("click", () => {
+    const remaining = Math.max(0, state.filteredTrips.length - state.visibleToursCount);
+    const toShow = Math.min(SHOW_MORE_BATCH, remaining);
+    if (!toShow) return;
+    state.visibleToursCount += toShow;
+    state.showMoreUsed = true;
+    renderVisibleTrips();
+  });
+}
+
+if (els.showAllTours) {
+  els.showAllTours.addEventListener("click", () => {
+    state.visibleToursCount = state.filteredTrips.length;
+    renderVisibleTrips();
+  });
 }
 
 function renderFormStep() {

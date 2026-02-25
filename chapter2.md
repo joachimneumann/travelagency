@@ -65,8 +65,10 @@ Behavior from JS:
 - Dynamic page title and section copy based on filters
 - Active filter summary remains visible above the grid with italic text and color-highlighted active filter values (not button-styled)
 - Spacing between the section subtitle and active filter summary is intentionally tight
-- Maximum of 6 tour cards shown at once
-- If filtered results are more than 6, tours are randomized and 6 are selected per render
+- Initially up to 3 tours are shown
+- If more tours exist, a contextual `show more tours (<destination>, <style>)` button appears (first reveal capped at 3)
+- Only after clicking `Show more`, a `Show the remaining X tours` button can appear to reveal the rest
+- If exactly one tour remains, the second button label becomes `There is one more tour`
 - Card CTA opens lead modal and pre-fills destination/style
 
 Current inventory:
