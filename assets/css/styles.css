@@ -238,6 +238,9 @@ textarea:focus-visible {
   display: flex;
   align-items: stretch;
   padding: 0;
+  margin: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   overflow: hidden;
 }
 
@@ -252,9 +255,7 @@ textarea:focus-visible {
 .hero-scrim {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(6, 18, 24, 0.3) 0%, rgba(6, 18, 24, 0.58) 58%, rgba(6, 18, 24, 0.82) 100%),
-    linear-gradient(90deg, rgba(8, 24, 31, 0.7) 0%, rgba(8, 24, 31, 0.18) 55%, rgba(8, 24, 31, 0.05) 100%);
+  background: transparent;
 }
 
 .hero-content {
@@ -271,11 +272,16 @@ textarea:focus-visible {
 
 .hero-title-only {
   margin: 0;
-  color: #ffffff;
+  color: #163040;
   font-size: clamp(1.9rem, 4vw, 3.4rem);
   line-height: 1.15;
   max-width: 24ch;
-  text-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  text-shadow: none;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 14px;
+  padding: 0.6rem 0.9rem;
+  backdrop-filter: blur(2px);
 }
 
 .hero-eyebrow {

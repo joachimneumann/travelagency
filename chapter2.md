@@ -46,6 +46,8 @@
 
 - Full-width background video (primary `assets/video/rice field.webm` with `assets/video/rice field.mp4` fallback)
 - Poster image (`assets/video/rice field.webp`)
+- Video container has outer margin and rounded corners
+- No dark scrim over video; hero title uses a semi-transparent white background for legibility
 - H1:
   - `Private holidays in Vietnam, Thailand, Cambodia and Laos`
 
