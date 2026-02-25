@@ -96,7 +96,7 @@ def parse_image(path: Path):
     return country, style, variant
 
 
-def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str):
+def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str, existing_priority: int | None = None):
     country = COUNTRIES[country_slug]
     style = STYLES[style_slug]
     p1, p2, p3 = country['places']
@@ -131,13 +131,17 @@ def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str
     variant_id = variant_slug.replace('_', '-').lower()
     image_rel = str(path.relative_to(ROOT)).replace('\\', '/')
 
+    priority = existing_priority if isinstance(existing_priority, int) else 50
+
     return {
         'id': f"trip-{country_slug}-{style_slug}-{variant_id}",
         'title': title,
         'shortDescription': short_description,
         'destinationCountry': country_name,
         'styles': [style_name],
-        'priority': 50,
+        # Human-writable field: preserve existing values from data/trips.json.
+        # New tours default to 50.
+        'priority': priority,
         'durationDays': duration,
         'priceFrom': price,
         'image': image_rel,
@@ -149,13 +153,35 @@ def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str
 
 
 def main():
+    existing_priorities_by_id: dict[str, int] = {}
+    existing_priorities_by_image: dict[str, int] = {}
+    if DATA_JSON.exists():
+        try:
+            existing_trips = json.loads(DATA_JSON.read_text(encoding='utf-8'))
+            for trip in existing_trips:
+                priority = trip.get('priority')
+                if isinstance(priority, int):
+                    trip_id = trip.get('id')
+                    image = trip.get('image')
+                    if isinstance(trip_id, str):
+                        existing_priorities_by_id[trip_id] = priority
+                    if isinstance(image, str):
+                        existing_priorities_by_image[image] = priority
+        except Exception:
+            # If existing JSON is malformed, fall back to defaults.
+            pass
+
     entries = []
     for path in sorted(TOURS_DIR.rglob('*.webp')):
         parsed = parse_image(path)
         if not parsed:
             continue
         country, style, variant = parsed
-        entries.append(build_trip(path, country, style, variant))
+        variant_id = variant.replace('_', '-').lower()
+        trip_id = f"trip-{country}-{style}-{variant_id}"
+        image_rel = str(path.relative_to(ROOT)).replace('\\', '/')
+        existing_priority = existing_priorities_by_id.get(trip_id, existing_priorities_by_image.get(image_rel))
+        entries.append(build_trip(path, country, style, variant, existing_priority))
 
     if not entries:
         raise SystemExit('No valid tour images found with country-style-variant.webp format.')

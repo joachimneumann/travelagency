@@ -81,7 +81,8 @@ Current inventory:
 - Styles include: Adventure, Beach, Budget, Culture, Family, Food, Luxury
 - Multiple tours per country/style are supported with IDs in the form `trip-<country>-<style>-<variant>`
 - Tour images follow `assets/tours/<country>/<style>/<country>-<style>-<variant>.webp`
-- Each tour entry includes `priority` (initially `50`; intended range `0-100`)
+- Each tour entry includes `priority` (human-writable, intended range `0-100`)
+- Sync script never overwrites existing `priority`; only brand-new tours default to `50`
 - Embedded `tripsFallback` JSON in `index.html` is synchronized to the same dataset
 - Maintenance helper script available at `assets/tours/to_webp.sh` for non-WebP conversion and cleanup
 - Dataset sync script available at `scripts/sync_tours_from_images.py` to infer and generate JSON tour content from image variant names
