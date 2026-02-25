@@ -59,7 +59,7 @@
 
 Behavior from JS:
 - Trips loaded from `data/trips.json` (fallback from embedded JSON)
-- Trip data is fetched without client-side caching (`cache: no-store`)
+- Trip data is fetched with cache-busting query versioning and `cache: reload`
 - Filter state from URL params/localStorage (`chapter2_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and section copy based on filters

@@ -23,5 +23,5 @@ jobs:
           static_site_generator: "none"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: .
       - uses: actions/deploy-pages@v4

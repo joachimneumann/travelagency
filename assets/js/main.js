@@ -14,6 +14,8 @@ const state = {
   formStep: 1
 };
 
+const TRIPS_REQUEST_VERSION = Date.now();
+
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
@@ -306,7 +308,7 @@ function getFiltersFromURL() {
 
 async function loadTrips() {
   try {
-    const response = await fetch("data/trips.json", { cache: "no-store" });
+    const response = await fetch(`data/trips.json?v=${TRIPS_REQUEST_VERSION}`, { cache: "reload" });
     if (!response.ok) throw new Error("Trip JSON request failed.");
     return await response.json();
   } catch (error) {
