@@ -133,9 +133,21 @@ function applyFilters() {
     return matchDest && matchStyle;
   });
 
+  const tripsForGrid = selectTripsForGrid(state.filteredTrips, 6);
+
   renderFilterSummary();
   updateTitlesForFilters();
-  renderTrips(state.filteredTrips);
+  renderTrips(tripsForGrid);
+}
+
+function selectTripsForGrid(trips, maxCards = 6) {
+  if (trips.length <= maxCards) return trips;
+  const shuffled = [...trips];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, maxCards);
 }
 
 function renderFilterSummary() {
