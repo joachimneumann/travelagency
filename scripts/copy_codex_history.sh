@@ -19,9 +19,9 @@ SRC_DIR="$HOME/.codex"
 DST_DIR="~/.codex"
 
 # Ensure destination directory exists
-ssh "${USER_B}@${HOST_B}" "mkdir -p ${DST_DIR}/sessions"
+#ssh "${USER_B}@${HOST_B}" "mkdir -p ${DST_DIR}/sessions"
 
-echo "Copying Codex sessions to ${USER_B}@${HOST_B}:${DST_DIR} ..."
+echo "Copying Codex sessions to ${USER_B}@${HOST_B}: ${DST_DIR}/sessions ..."
 
 # Copy sessions (history)
 rsync -avh --progress \
@@ -30,12 +30,12 @@ rsync -avh --progress \
   "${USER_B}@${HOST_B}:${DST_DIR}/sessions/"
 
 # Optional: also copy config.toml if it exists
-if [[ -f "${SRC_DIR}/config.toml" ]]; then
-  rsync -avh --progress \
-    --chmod=Fu+rw \
-    "${SRC_DIR}/config.toml" \
-    "${USER_B}@${HOST_B}:${DST_DIR}/config.toml"
-fi
+# if [[ -f "${SRC_DIR}/config.toml" ]]; then
+#   rsync -avh --progress \
+#     --chmod=Fu+rw \
+#     "${SRC_DIR}/config.toml" \
+#     "${USER_B}@${HOST_B}:${DST_DIR}/config.toml"
+# fi
 
 echo "Done."
 echo "On Mac B you can try: codex resume --all"

@@ -110,7 +110,7 @@
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
           <h1 class="hero-title-only">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
-          <a class="hero-subtitle-only hero-subtitle-link" href="#tours" aria-label="Scroll to tours">
+          <a id="heroScrollLink" class="hero-subtitle-only hero-subtitle-link" href="#tours" aria-label="Scroll to tours">
             <span id="heroDynamicSubtitle">Featured tours you can tailor</span>
             <span class="hero-subtitle-arrow" aria-hidden="true">↓</span>
           </a>
@@ -119,12 +119,12 @@
 
       <section class="section" id="tours">
         <div class="container">
-          <h2 class="section-title" id="toursTitle">Featured tours you can tailor</h2>
-          <p class="section-lead" id="toursLead">
+          <h2 class="section-title" id="toursTitle" hidden>Featured tours you can tailor</h2>
+          <p class="section-lead" id="toursLead" hidden>
             Browse by destination and style. Filters update instantly and can be shared by URL.
           </p>
 
-          <div class="filters-toolbar" id="activeFilters" aria-live="polite"></div>
+          <div class="filters-toolbar" id="activeFilters" aria-live="polite" hidden></div>
 
           <div class="tour-grid" id="tourGrid" aria-live="polite"></div>
           <div class="tour-actions" id="tourActions" hidden>

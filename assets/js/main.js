@@ -31,6 +31,7 @@ const els = {
   toursTitle: document.getElementById("toursTitle"),
   toursLead: document.getElementById("toursLead"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
+  heroScrollLink: document.getElementById("heroScrollLink"),
   tourGrid: document.getElementById("tourGrid"),
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
@@ -57,6 +58,7 @@ init();
 async function init() {
   setupMobileNav();
   setupFAQ();
+  setupHeroScroll();
   setupModal();
   setupFormNavigation();
 
@@ -103,6 +105,25 @@ function setupFAQ() {
       button.setAttribute("aria-expanded", String(!open));
       const icon = button.querySelector("span");
       if (icon) icon.textContent = open ? "+" : "−";
+    });
+  });
+}
+
+function setupHeroScroll() {
+  if (!els.heroScrollLink) return;
+
+  els.heroScrollLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    const toursSection = document.getElementById("tours");
+    if (!toursSection) return;
+
+    const header = document.querySelector(".header");
+    const headerHeight = header ? header.getBoundingClientRect().height : 0;
+    const targetTop = toursSection.getBoundingClientRect().top + window.scrollY - headerHeight;
+
+    window.scrollTo({
+      top: Math.max(0, targetTop),
+      behavior: "smooth"
     });
   });
 }
@@ -210,13 +231,17 @@ function updateTourActions() {
   const moreCount = Math.min(SHOW_MORE_BATCH, remaining);
   const showMoreAvailable = !state.showMoreUsed && moreCount > 0;
   const showAllAvailable = state.showMoreUsed && remaining > 0;
-  const filterContext = `${formatFilterValue(state.filters.dest, "destination")}, ${formatFilterValue(state.filters.style, "style")}`;
+  const noFilterSelected = state.filters.dest === "all" && state.filters.style === "all";
 
   els.tourActions.hidden = !(showMoreAvailable || showAllAvailable);
 
   if (showMoreAvailable) {
     els.showMoreTours.hidden = false;
-    els.showMoreTours.textContent = `show more tours (${filterContext})`;
+    if (noFilterSelected) {
+      els.showMoreTours.textContent = "show more tours";
+    } else {
+      els.showMoreTours.textContent = buildShowMoreToursLabel(moreCount);
+    }
   } else {
     els.showMoreTours.hidden = true;
   }
@@ -227,6 +252,22 @@ function updateTourActions() {
   } else {
     els.showAllTours.hidden = true;
   }
+}
+
+function buildShowMoreToursLabel(moreCount) {
+  const style = state.filters.style;
+  const destination = state.filters.dest;
+  const countText = `${moreCount}`;
+
+  if (style !== "all") {
+    return `show ${countText} more ${style.toLowerCase()} tours`;
+  }
+
+  if (destination !== "all") {
+    return `show ${countText} more tours in ${destination}`;
+  }
+
+  return moreCount === 1 ? "show more 1 tour" : `show more ${countText} tours`;
 }
 
 function formatFilterValue(value, kind) {
@@ -271,7 +312,11 @@ function updateTitlesForFilters() {
 
   if (els.toursTitle) els.toursTitle.textContent = heading;
   if (els.toursLead) els.toursLead.textContent = lead;
-  if (els.heroDynamicSubtitle) els.heroDynamicSubtitle.textContent = heading;
+  if (els.heroDynamicSubtitle) {
+    els.heroDynamicSubtitle.textContent = heading;
+    const noFilterSelected = dest === "all" && style === "all";
+    els.heroDynamicSubtitle.hidden = noFilterSelected;
+  }
   document.title = pageTitle;
 }
 

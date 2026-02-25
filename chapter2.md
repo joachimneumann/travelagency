@@ -48,33 +48,36 @@
 - Poster image (`assets/video/rice field.webp`)
 - Video container has outer margin and rounded corners
 - No dark scrim over video; hero title uses a semi-transparent white background for legibility
-- Hero includes dynamic subtitle text under the main H1, mirroring the current tours title (e.g., `Beach tours in Thailand`)
-- Hero includes a down-arrow inside the dynamic subtitle box; the whole box links to `#tours`
+- Hero hides subtitle text below the H1 only when both filters are `All`; otherwise it shows the active filter title
+- Hero shows only a centered down-arrow link to `#tours`
 - Hero title tile remains centered; dynamic subtitle tile is horizontally centered near the bottom of the hero
+- Hover/focus interaction at hero bottom highlights only the arrow circle (not the full subtitle link area)
+- Arrow click uses smooth scrolling with sticky-header offset so the hero exits view while top spacing in the tours section remains visible
 - H1:
   - `Private holidays in Vietnam, Thailand, Cambodia and Laos`
 
 ### 4.2 Tours (`#tours`)
 
-- H2: `Featured tours you can tailor`
-- Intro text for filtering behavior
-- Active filter summary area (`#activeFilters`)
 - Dynamic card grid (`#tourGrid`)
 - Empty-state message (`#noResultsMessage`)
+- The tours title, subtitle, and active filter summary are present in markup but hidden from display
+- Tour card thumbnails use `aspect-ratio: 1/1` (square) with full width and `object-fit: cover`
 
 Behavior from JS:
 - Trips loaded from `data/trips.json` (fallback from embedded JSON)
 - Trip data is fetched with cache-busting query versioning and `cache: reload`
 - Filter state from URL params/localStorage (`chapter2_filters`)
 - URL sync with `?dest=...&style=...`
-- Dynamic page title and section copy based on filters
+- Dynamic page title and hidden tours heading/subtitle still update based on filters
 - On each new filter application, tours are ranked by `priority + random(0..50)` before display
-- Active filter summary remains visible above the grid with italic text and color-highlighted active filter values (not button-styled)
-- Spacing between the section subtitle and active filter summary is intentionally tight
 - Initially up to 3 tours are shown
-- If more tours exist, a contextual `show more tours (<destination>, <style>)` button appears (first reveal capped at 3)
+- If more tours exist, the first reveal button appears (capped at 3):
+- No active filters: `show more tours`
+- Style filter active: `show X more <style> tours` (example: `show 3 more adventure tours`)
+- Destination-only filter active: `show X more tours in <destination>`
 - Only after clicking `Show more`, a `Show the remaining X tours` button can appear to reveal the rest
 - If exactly one tour remains, the second button label becomes `There is one more tour`
+- Progressive reveal buttons are horizontally centered below the tour grid
 - Card CTA opens lead modal and pre-fills destination/style
 - A bottom-page `Debug priority` button reveals per-tour ranking diagnostics for the current filter (`priority`, `random`, `sum`) in display order
 
@@ -185,7 +188,7 @@ Two JSON-LD blocks:
 
 - Mobile menu toggle
 - Filterable tours with URL/localStorage persistence
-- Tour grid capped at 6 cards with random selection when more than 6 match filters
+- Tour list progressive reveal (up to 3 initially, then incremental show-more controls)
 - Dynamic tours section heading/lead and document title
 - FAQ accordion
 - Image fallback handling on card thumbnails
