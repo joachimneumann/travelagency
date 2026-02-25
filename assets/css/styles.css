@@ -676,6 +676,22 @@ textarea:focus-visible {
   width: 100%;
 }
 
+.debug-priority-wrap {
+  padding: 1rem 0 1.4rem;
+}
+
+.debug-priority-output {
+  margin-top: 0.7rem;
+  padding: 0.9rem;
+  background: #f7fbfd;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #33444e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+}
+
 .modal {
   position: fixed;
   inset: 0;

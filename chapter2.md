@@ -71,6 +71,7 @@ Behavior from JS:
 - Only after clicking `Show more`, a `Show the remaining X tours` button can appear to reveal the rest
 - If exactly one tour remains, the second button label becomes `There is one more tour`
 - Card CTA opens lead modal and pre-fills destination/style
+- A bottom-page `Debug priority` button reveals per-tour ranking diagnostics for the current filter (`priority`, `random`, `sum`) in display order
 
 Current inventory:
 - 32 trip entries in `data/trips.json` (includes multiple variants within the same country/style)

@@ -11,6 +11,7 @@ const state = {
     dest: "all",
     style: "all"
   },
+  rankedTripsDebug: [],
   formStep: 1,
   visibleToursCount: 3,
   showMoreUsed: false
@@ -33,6 +34,8 @@ const els = {
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
   showAllTours: document.getElementById("showAllTours"),
+  debugPriorityBtn: document.getElementById("debugPriorityBtn"),
+  debugPriorityOutput: document.getElementById("debugPriorityOutput"),
   noResultsMessage: document.getElementById("noResultsMessage"),
   faqList: document.getElementById("faqList"),
   leadModal: document.getElementById("leadModal"),
@@ -147,11 +150,14 @@ function applyFilters() {
     const matchStyle = state.filters.style === "all" || trip.styles.includes(state.filters.style);
     return matchDest && matchStyle;
   });
-  state.filteredTrips = rankTripsByPriorityAndRandom(matchingTrips);
+  const rankedEntries = rankTripsByPriorityAndRandom(matchingTrips);
+  state.rankedTripsDebug = rankedEntries;
+  state.filteredTrips = rankedEntries.map((entry) => entry.trip);
 
   renderFilterSummary();
   updateTitlesForFilters();
   renderVisibleTrips();
+  renderPriorityDebug();
 }
 
 function rankTripsByPriorityAndRandom(trips) {
@@ -161,11 +167,24 @@ function rankTripsByPriorityAndRandom(trips) {
       const randomBoost = Math.floor(Math.random() * 51);
       return {
         trip,
+        priority: basePriority,
+        randomBoost,
         score: basePriority + randomBoost
       };
     })
     .sort((a, b) => b.score - a.score)
-    .map((entry) => entry.trip);
+    .map((entry) => entry);
+}
+
+function renderPriorityDebug() {
+  if (!els.debugPriorityOutput) return;
+  const lines = state.rankedTripsDebug.map((entry, idx) => {
+    return `${idx + 1}. ${entry.trip.id} | priority: ${entry.priority} | random: ${entry.randomBoost} | sum: ${entry.score}`;
+  });
+  const destLabel = formatFilterValue(state.filters.dest, "destination");
+  const styleLabel = formatFilterValue(state.filters.style, "style");
+  const header = `Filter: ${destLabel}, ${styleLabel}`;
+  els.debugPriorityOutput.textContent = `${header}\n${lines.join("\n") || "No tours in current filter."}`;
 }
 
 function renderVisibleTrips() {
@@ -461,6 +480,14 @@ if (els.showAllTours) {
   els.showAllTours.addEventListener("click", () => {
     state.visibleToursCount = state.filteredTrips.length;
     renderVisibleTrips();
+  });
+}
+
+if (els.debugPriorityBtn && els.debugPriorityOutput) {
+  els.debugPriorityBtn.addEventListener("click", () => {
+    const isHidden = els.debugPriorityOutput.hidden;
+    els.debugPriorityOutput.hidden = !isHidden;
+    if (isHidden) renderPriorityDebug();
   });
 }
 
