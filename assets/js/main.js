@@ -14,7 +14,7 @@ const state = {
   formStep: 1
 };
 
-const TRIPS_CACHE_KEY = "chapter2_trips_cache_v1";
+const TRIPS_CACHE_KEY = "chapter2_trips_cache_v4";
 const TRIPS_CACHE_TTL_MS = 60 * 60 * 1000;
 
 const els = {

@@ -70,13 +70,14 @@ Behavior from JS:
 - Card CTA opens lead modal and pre-fills destination/style
 
 Current inventory:
-- 28 trip entries in `data/trips.json` (4 countries x 7 travel styles)
+- 32 trip entries in `data/trips.json` (includes multiple variants within the same country/style)
 - Destinations represented: Vietnam, Thailand, Cambodia, Laos
 - Styles include: Adventure, Beach, Budget, Culture, Family, Food, Luxury
-- One tour per country/style combination with IDs in the form `trip-<country>-<style>`
-- Tour images now come from `assets/tours/<country>/<style>/<country>-<style>.webp`
-- Embedded `tripsFallback` JSON in `index.html` is synchronized to the same 28 records
+- Multiple tours per country/style are supported with IDs in the form `trip-<country>-<style>-<variant>`
+- Tour images follow `assets/tours/<country>/<style>/<country>-<style>-<variant>.webp`
+- Embedded `tripsFallback` JSON in `index.html` is synchronized to the same dataset
 - Maintenance helper script available at `assets/tours/to_webp.sh` for non-WebP conversion and cleanup
+- Dataset sync script available at `scripts/sync_tours_from_images.py` to infer and generate JSON tour content from image variant names
 
 ### 4.3 Trust strip (after tours)
 
