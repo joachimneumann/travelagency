@@ -80,9 +80,8 @@ Inside `index.html`, in the lead form section, there is a commented placeholder 
 
 ## Images and replacements
 
-Current assets in `assets/img/` are local SVG placeholders for offline prototyping.
-Trip cards also attempt to load Flickr images dynamically by destination tags at runtime.
-If Flickr is blocked, cards fall back to local SVG placeholders.
+Current tour card images are local WebP files under `assets/tours/`.
+The hero section uses local media from `assets/video/`.
 
 To download prototype media locally in one pass:
 
@@ -91,7 +90,7 @@ bash scripts/download_prototype_media.sh
 ```
 
 This saves files under:
-- `assets/img/flickr/`
+- `assets/tours/`
 - `assets/video/`
 
 To replace with real photos later:

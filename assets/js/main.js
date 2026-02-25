@@ -440,6 +440,7 @@ function submitLeadForm() {
     `Destination: ${entries.destination || ""}`,
     `Travel style: ${entries.style || ""}`,
     `Travel month: ${entries.travelMonth || ""}`,
+    `Travel duration: ${entries.duration || ""}`,
     `Travelers: ${entries.travelers || ""}`,
     `Budget: ${entries.budget || ""}`,
     `Name: ${entries.name || ""}`,

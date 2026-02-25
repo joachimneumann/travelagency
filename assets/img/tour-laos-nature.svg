@@ -1,3 +1,0 @@
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
-<defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='#d5f4ff'/><stop offset='100%' stop-color='#8ecdbf'/></linearGradient></defs>
-<rect width='1200' height='800' fill='url(#g)'/><path d='M0 620 C190 410 330 500 510 380 C650 280 860 380 1200 250 L1200 800 L0 800 Z' fill='#4b8165'/><path d='M0 680 C230 620 430 730 680 660 C850 610 1020 690 1200 650 L1200 800 L0 800 Z' fill='#2f5b49'/><path d='M560 0 L660 0 L760 800 L660 800 Z' fill='#9dd6f0' opacity='0.35'/><text x='70' y='760' font-size='42' fill='#ffffff' font-family='Arial, sans-serif'>Laos Nature & Slow Travel</text></svg>

@@ -20,6 +20,7 @@
 - Trips fallback JSON script
 - Main JS bundle: `assets/js/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
+- All `.webp` images in the project are normalized to a maximum bounding box of `1000x1000` while preserving aspect ratio
 
 ## 3) Header and navigation (`#top`)
 
@@ -40,7 +41,7 @@
 ### 4.1 Hero (`#hero`)
 
 - Full-width background video (`assets/video/rice field.mp4`)
-- Poster image (`assets/img/flickr/hero-flickr.jpg`)
+- Poster image (`assets/video/rice field.webp`)
 - H1:
   - `Private holidays in Vietnam, Thailand, Cambodia and Laos`
 
@@ -57,6 +58,10 @@ Behavior from JS:
 - Filter state from URL params/localStorage (`chapter2_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and section copy based on filters
+- Active filter summary remains visible above the grid with italic text and color-highlighted active filter values (not button-styled)
+- Spacing between the section subtitle and active filter summary is intentionally tight
+- Maximum of 6 tour cards shown at once
+- If filtered results are more than 6, tours are randomized and 6 are selected per render
 - Card CTA opens lead modal and pre-fills destination/style
 
 Current inventory:
@@ -64,7 +69,7 @@ Current inventory:
 - Destinations represented: Vietnam, Thailand, Cambodia, Laos
 - Styles include: Adventure, Beach, Budget, Culture, Family, Food, Luxury
 - One tour per country/style combination with IDs in the form `trip-<country>-<style>`
-- Tour images now come from `assets/tours/<country>/<style>/<country>-<style>.jpg`
+- Tour images now come from `assets/tours/<country>/<style>/<country>-<style>.webp`
 - Embedded `tripsFallback` JSON in `index.html` is synchronized to the same 28 records
 
 ### 4.3 Trust strip (after tours)
@@ -87,7 +92,7 @@ Current inventory:
 ### 4.5 Why us (`#why`)
 
 - H2 + bullet-point value proposition
-- Supporting illustration (`assets/img/support-local-team.svg`)
+- Supporting illustration (`assets/img/tourist_guides.webp`)
 
 ### 4.6 Trust and reviews (`#trust`)
 
@@ -115,7 +120,7 @@ Current inventory:
   - Secondary: `Email us directly` (`mailto:hello@chapter2.live`)
 - Response-time microcopy
 - 3 additional review cards
-- Supporting image (`assets/img/support-happy-travelers.svg`)
+- Supporting image (`assets/img/happy_tourists.webp`)
 
 ## 5) Footer
 
@@ -137,13 +142,13 @@ Current inventory:
 - Multi-step form (`#leadForm`) with validation
 
 Step 1: Trip basics
-- destination, style, month, travelers, budget
+- destination, style, month, travelers, travel duration, budget
 
 Step 2: Contact details
 - name, email, phone/WhatsApp, language
 
-Step 3: Notes and consent
-- optional notes + required consent checkbox
+Step 3: Notes
+- optional notes
 
 Form UX behavior from JS:
 - next/back step controls
@@ -162,6 +167,7 @@ Two JSON-LD blocks:
 
 - Mobile menu toggle
 - Filterable tours with URL/localStorage persistence
+- Tour grid capped at 6 cards with random selection when more than 6 match filters
 - Dynamic tours section heading/lead and document title
 - FAQ accordion
 - Image fallback handling on card thumbnails

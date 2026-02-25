@@ -17,7 +17,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://chapter2.live/" />
-    <meta property="og:image" content="https://chapter2.live/assets/img/flickr/hero-flickr.webp" />
+    <meta property="og:image" content="https://chapter2.live/assets/video/rice%20field.webp?v=2" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Chapter 2 | Custom Southeast Asia Holidays" />
@@ -25,7 +25,7 @@
       name="twitter:description"
       content="Private Vietnam, Thailand, Cambodia and Laos holidays with clear pricing and local support."
     />
-    <meta name="twitter:image" content="https://chapter2.live/assets/img/flickr/hero-flickr.webp" />
+    <meta name="twitter:image" content="https://chapter2.live/assets/video/rice%20field.webp?v=2" />
 
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="site.webmanifest" />
@@ -87,7 +87,7 @@
 
     <main id="main-content">
       <section class="hero hero-video" id="hero">
-        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="assets/img/flickr/hero-flickr.webp">
+        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="assets/video/rice field.webp?v=2">
           <source src="assets/video/rice field.mp4" type="video/mp4" />
           Your browser does not support HTML5 video.
         </video>
@@ -159,7 +159,7 @@
           </article>
 
           <figure class="panel">
-            <img src="assets/img/support-local-team.svg" alt="Illustration of local travel planning team" width="1200" height="800" />
+            <img class="why-local-team-image" src="assets/img/tourist_guides.webp" alt="Local travel planning team" width="6000" height="4000" />
             <figcaption class="micro">Local experts in Vietnam, Thailand, Cambodia, and Laos.</figcaption>
           </figure>
         </div>
@@ -283,10 +283,11 @@
 
           <figure class="contact-card">
             <img
-              src="assets/img/support-happy-travelers.svg"
+              class="contact-happy-tourists-image"
+              src="assets/img/happy_tourists.webp"
               alt="Happy travelers during a Southeast Asia holiday"
-              width="1200"
-              height="800"
+              width="6081"
+              height="4054"
             />
             <figcaption class="micro">Real itinerary support from before departure to your return flight.</figcaption>
           </figure>
@@ -381,6 +382,18 @@
                   <input id="leadTravelers" name="travelers" type="number" min="1" max="20" required />
                   <span class="error">Please enter travelers.</span>
                 </div>
+                <div class="field">
+                  <label for="leadDuration">Travel duration</label>
+                  <select id="leadDuration" name="duration" required>
+                    <option value="">Select duration</option>
+                    <option>3-5 days</option>
+                    <option>6-8 days</option>
+                    <option>9-12 days</option>
+                    <option>13-16 days</option>
+                    <option>17+ days</option>
+                  </select>
+                  <span class="error">Please choose a duration.</span>
+                </div>
                 <div class="field full">
                   <label for="leadBudget">Budget range (USD per person)</label>
                   <select id="leadBudget" name="budget" required>
@@ -429,18 +442,11 @@
             </section>
 
             <section class="step" data-step="3">
-              <h3>Step 3: Notes and consent</h3>
+              <h3>Step 3: Notes</h3>
               <div class="field-grid">
                 <div class="field full">
                   <label for="leadNotes">Trip notes (optional)</label>
                   <textarea id="leadNotes" name="notes" placeholder="Tell us interests, pace preferences, or special requests."></textarea>
-                </div>
-                <div class="field full">
-                  <label>
-                    <input id="leadConsent" name="consent" type="checkbox" required />
-                    I agree to be contacted about my trip inquiry.
-                  </label>
-                  <span class="error">Please give consent to continue.</span>
                 </div>
               </div>
             </section>
@@ -1043,7 +1049,7 @@
         "name": "Chapter 2",
         "url": "https://chapter2.live/",
         "logo": "https://chapter2.live/assets/img/logo-chapter2.svg",
-        "image": "https://chapter2.live/assets/img/hero-vietnam.svg",
+        "image": "https://chapter2.live/assets/video/rice%20field.webp",
         "description": "Private travel agency in Vietnam creating custom holidays across Vietnam, Thailand, Cambodia and Laos.",
         "address": {
           "@type": "PostalAddress",

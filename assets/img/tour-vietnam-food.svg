@@ -1,3 +1,0 @@
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
-<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffe6c3'/><stop offset='100%' stop-color='#ff9f66'/></linearGradient></defs>
-<rect width='1200' height='800' fill='url(#g)'/><rect y='560' width='1200' height='240' fill='#356a73'/><circle cx='970' cy='160' r='78' fill='#fff0c9'/><ellipse cx='420' cy='520' rx='180' ry='80' fill='#f9e3c6'/><ellipse cx='420' cy='520' rx='145' ry='55' fill='#f2bd7e'/><circle cx='360' cy='500' r='16' fill='#69a56a'/><circle cx='450' cy='535' r='14' fill='#d45a4b'/><circle cx='500' cy='500' r='12' fill='#5b8f5a'/><text x='70' y='760' font-size='42' fill='#fff8ef' font-family='Arial, sans-serif'>Vietnam Food and Culture Week</text></svg>

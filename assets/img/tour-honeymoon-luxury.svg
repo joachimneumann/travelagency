@@ -1,3 +1,0 @@
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
-<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffdbe8'/><stop offset='100%' stop-color='#ff9eb8'/></linearGradient></defs>
-<rect width='1200' height='800' fill='url(#g)'/><rect y='560' width='1200' height='240' fill='#5f7398'/><path d='M0 600 C180 550 360 650 560 590 C760 530 960 640 1200 580 L1200 640 L0 640 Z' fill='#9fc4df'/><circle cx='420' cy='350' r='70' fill='#fff3f7'/><circle cx='500' cy='350' r='70' fill='#fff3f7'/><path d='M350 360 Q460 470 570 360 Q460 620 350 360 Z' fill='#f57395'/><text x='70' y='760' font-size='42' fill='#fdf8ff' font-family='Arial, sans-serif'>Southeast Asia Honeymoon Luxury</text></svg>
