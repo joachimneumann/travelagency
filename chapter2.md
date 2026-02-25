@@ -40,7 +40,7 @@
 
 ### 4.1 Hero (`#hero`)
 
-- Full-width background video (`assets/video/rice field.mp4`)
+- Full-width background video (primary `assets/video/rice field.webm` with `assets/video/rice field.mp4` fallback)
 - Poster image (`assets/video/rice field.webp`)
 - H1:
   - `Private holidays in Vietnam, Thailand, Cambodia and Laos`
