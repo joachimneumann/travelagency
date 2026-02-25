@@ -114,6 +114,21 @@ img {
   gap: 1rem;
 }
 
+.backend-login {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.backend-login select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.86rem;
+  padding: 0.45rem 0.55rem;
+}
+
 .nav-list {
   list-style: none;
   margin: 0;
@@ -735,6 +750,90 @@ textarea:focus-visible {
   padding: 1rem 0 1.4rem;
 }
 
+.backend-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.backend-toolbar .field {
+  min-width: 220px;
+}
+
+.backend-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.backend-nav-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.backend-user-chip {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.backend-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: end;
+  margin-bottom: 0.9rem;
+}
+
+.backend-controls .field {
+  min-width: 240px;
+  margin-bottom: 0;
+}
+
+.backend-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.backend-table th,
+.backend-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.6rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.backend-table th {
+  background: #f7fbfd;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #4d616d;
+}
+
+.backend-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.backend-message {
+  border: 1px solid #e4a6a2;
+  background: #fff2f1;
+  color: #7f1f1b;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+.backend-message.show {
+  display: block;
+}
+
 .debug-priority-output {
   margin-top: 0.7rem;
   padding: 0.9rem;
@@ -867,6 +966,20 @@ textarea:focus-visible {
   gap: 0.6rem;
 }
 
+.form-error {
+  display: none;
+  border: 1px solid #e4a6a2;
+  background: #fff2f1;
+  color: #7f1f1b;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-top: 1rem;
+}
+
+.form-error.show {
+  display: block;
+}
+
 .micro {
   color: var(--muted);
   font-size: 0.82rem;
@@ -949,6 +1062,15 @@ textarea:focus-visible {
   .nav-list {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .backend-login {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .backend-login .btn {
+    width: 100%;
   }
 
   .filter-menu {

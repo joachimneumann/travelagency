@@ -1,0 +1,75 @@
+{
+  "customers": [
+    {
+      "id": "cust_79126306-1553-45fc-82ef-170016aad956",
+      "name": "Joachim Neumann",
+      "email": "joachim@joachimneumann.com",
+      "phone": "0337942446",
+      "language": "French",
+      "created_at": "2026-02-25T15:58:41.450Z",
+      "updated_at": "2026-02-25T15:58:41.450Z",
+      "tags": []
+    }
+  ],
+  "leads": [
+    {
+      "id": "lead_d4cec0dd-5041-496e-940d-7003e768df84",
+      "customer_id": "cust_79126306-1553-45fc-82ef-170016aad956",
+      "stage": "NEW",
+      "owner_id": "staff_joachim",
+      "owner_name": "Joachim Neumann",
+      "sla_due_at": "2026-02-25T17:58:41.451Z",
+      "destination": "Vietnam",
+      "style": "Culture",
+      "travel_month": "2026-04",
+      "travelers": 2,
+      "duration": "9-12 days",
+      "budget": "$900-$1,400 / week",
+      "notes": "xxx",
+      "source": {
+        "page_url": "http://localhost:8080/",
+        "utm_source": "",
+        "utm_medium": "",
+        "utm_campaign": "",
+        "referrer": ""
+      },
+      "idempotency_key": "lead_1772035121436_hm0pg6hu",
+      "created_at": "2026-02-25T15:58:41.451Z",
+      "updated_at": "2026-02-25T16:11:05.507Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "act_27f0fcf9-e7de-4e3a-9c35-f7c8a9679962",
+      "lead_id": "lead_d4cec0dd-5041-496e-940d-7003e768df84",
+      "type": "LEAD_CREATED",
+      "actor": "public_api",
+      "detail": "Lead created from website form",
+      "created_at": "2026-02-25T15:58:41.451Z"
+    },
+    {
+      "id": "act_61da4152-d446-4ec6-889a-efff80701b81",
+      "lead_id": "lead_d4cec0dd-5041-496e-940d-7003e768df84",
+      "type": "OWNER_ASSIGNED",
+      "actor": "system",
+      "detail": "Assigned to Joachim Neumann",
+      "created_at": "2026-02-25T15:58:41.451Z"
+    },
+    {
+      "id": "act_6132b9cc-9288-49b3-8b6d-f3788fee5bd2",
+      "lead_id": "lead_d4cec0dd-5041-496e-940d-7003e768df84",
+      "type": "OWNER_CHANGED",
+      "actor": "admin_ui",
+      "detail": "Owner set to Joachim Neumann",
+      "created_at": "2026-02-25T16:10:27.826Z"
+    },
+    {
+      "id": "act_1d3b4119-4b8b-451b-827b-f4653bc1ef58",
+      "lead_id": "lead_d4cec0dd-5041-496e-940d-7003e768df84",
+      "type": "NOTE",
+      "actor": "admin_ui",
+      "detail": "very angry man",
+      "created_at": "2026-02-25T16:11:05.507Z"
+    }
+  ]
+}

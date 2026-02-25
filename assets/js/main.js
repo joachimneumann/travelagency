@@ -1,7 +1,6 @@
 /*
   Beginner-editable configuration:
   - Update destination/style labels in data/trips.json
-  - Update email target in buildMailtoLink()
 */
 
 const state = {
@@ -20,12 +19,16 @@ const state = {
 const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
+const LEAD_API_ENDPOINT =
+  (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
 
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
   navDestination: document.getElementById("navDestination"),
   navStyle: document.getElementById("navStyle"),
+  backendUser: document.getElementById("backendUser"),
+  backendLoginBtn: document.getElementById("backendLoginBtn"),
   clearFilters: document.getElementById("clearFilters"),
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
@@ -49,8 +52,8 @@ const els = {
   stepNext: document.getElementById("stepNext"),
   progressSteps: document.querySelectorAll(".progress-step"),
   formSteps: document.querySelectorAll(".step"),
-  success: document.getElementById("leadSuccess"),
-  manualMailto: document.getElementById("manualMailto")
+  error: document.getElementById("leadError"),
+  success: document.getElementById("leadSuccess")
 };
 
 init();
@@ -59,6 +62,7 @@ async function init() {
   setupMobileNav();
   setupFAQ();
   setupHeroScroll();
+  setupBackendLogin();
   setupModal();
   setupFormNavigation();
 
@@ -125,6 +129,20 @@ function setupHeroScroll() {
       top: Math.max(0, targetTop),
       behavior: "smooth"
     });
+  });
+}
+
+function setupBackendLogin() {
+  if (!els.backendLoginBtn || !els.backendUser) return;
+
+  els.backendLoginBtn.addEventListener("click", () => {
+    const selectedUser = els.backendUser.value || "admin";
+    const token = localStorage.getItem("chapter2_api_token") || "dev-secret-token";
+    const params = new URLSearchParams({
+      user: selectedUser,
+      api_token: token
+    });
+    window.location.href = `backend.html?${params.toString()}`;
   });
 }
 
@@ -474,6 +492,7 @@ function setupModal() {
 
 function openLeadModal() {
   prefillLeadFormWithFilters();
+  clearLeadFeedback();
   els.leadModal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
   const firstInput = els.leadForm.querySelector(".step.active input, .step.active select, .step.active textarea");
@@ -586,38 +605,74 @@ function validateCurrentStep() {
   return isValid;
 }
 
-function submitLeadForm() {
+async function submitLeadForm() {
+  clearLeadFeedback();
+  els.stepNext.disabled = true;
+  els.stepBack.disabled = true;
+
   const formData = new FormData(els.leadForm);
   const entries = Object.fromEntries(formData.entries());
 
-  const bodyLines = [
-    "New Chapter 2 Trip Inquiry",
-    "",
-    `Destination: ${entries.destination || ""}`,
-    `Travel style: ${entries.style || ""}`,
-    `Travel month: ${entries.travelMonth || ""}`,
-    `Travel duration: ${entries.duration || ""}`,
-    `Travelers: ${entries.travelers || ""}`,
-    `Budget: ${entries.budget || ""}`,
-    `Name: ${entries.name || ""}`,
-    `Email: ${entries.email || ""}`,
-    `Phone/WhatsApp: ${entries.phone || ""}`,
-    `Language: ${entries.language || ""}`,
-    "",
-    `Notes: ${entries.notes || ""}`
-  ];
+  const payload = {
+    destination: entries.destination || "",
+    style: entries.style || "",
+    travelMonth: entries.travelMonth || "",
+    duration: entries.duration || "",
+    travelers: entries.travelers || "",
+    budget: entries.budget || "",
+    name: entries.name || "",
+    email: entries.email || "",
+    phone: entries.phone || "",
+    language: entries.language || "",
+    notes: entries.notes || "",
+    pageUrl: window.location.href,
+    referrer: document.referrer || "",
+    utm_source: getQueryParam("utm_source"),
+    utm_medium: getQueryParam("utm_medium"),
+    utm_campaign: getQueryParam("utm_campaign")
+  };
 
-  const mailtoHref = buildMailtoLink("hello@chapter2.live", "New discovery call request", bodyLines.join("\n"));
+  const idempotencyKey = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
-  els.manualMailto.href = mailtoHref;
-  els.success.classList.add("show");
+  try {
+    const response = await fetch(LEAD_API_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey
+      },
+      body: JSON.stringify(payload)
+    });
 
-  // Trigger mail app for static-site fallback submission.
-  window.location.href = mailtoHref;
+    if (!response.ok) throw new Error("Lead API request failed");
+    els.success.classList.add("show");
+    return;
+  } catch (error) {
+    if (els.error) {
+      els.error.textContent = "We could not submit your request right now. Please try again in a few minutes.";
+      els.error.classList.add("show");
+    }
+    els.stepNext.disabled = false;
+    els.stepBack.disabled = false;
+    console.error(error);
+  }
 }
 
-function buildMailtoLink(to, subject, body) {
-  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+function clearLeadFeedback() {
+  if (els.error) {
+    els.error.textContent = "";
+    els.error.classList.remove("show");
+  }
+  if (els.success) {
+    els.success.classList.remove("show");
+  }
+  if (els.stepNext) els.stepNext.disabled = false;
+  if (els.stepBack) els.stepBack.disabled = state.formStep === 1;
+}
+
+function getQueryParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name) || "";
 }
 
 function prefillLeadFormWithFilters() {

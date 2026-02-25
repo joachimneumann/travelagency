@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chapter 2 Backend</title>
+    <meta name="description" content="Chapter 2 backend workspace" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+  </head>
+  <body>
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="Chapter 2 backend home">
+          <img class="brand-logo" src="assets/img/logo-chapter2.svg" alt="Chapter 2" width="320" height="76" />
+        </a>
+
+        <nav class="nav" aria-label="Backend navigation">
+          <div class="backend-nav-meta">
+            <ul class="nav-list">
+              <li><a href="index.html">Website</a></li>
+            </ul>
+            <p class="backend-user-chip" id="backendUserLabel">Logged in as: -</p>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <article class="panel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.2rem;">Customers</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="customersSearch">Search customers</label>
+                <input id="customersSearch" type="text" placeholder="id, name, email, phone..." />
+              </div>
+              <button class="btn btn-ghost" id="customersSearchBtn" type="button">Search</button>
+              <button class="btn btn-ghost" id="customersPrev" type="button">Previous</button>
+              <button class="btn btn-ghost" id="customersNext" type="button">Next</button>
+              <span id="customersPageInfo" class="micro">Page 1 / 1</span>
+            </div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customersTable"></table>
+            </div>
+          </article>
+
+          <article class="panel" style="padding: 1rem;">
+            <h2 class="section-title" style="font-size: 1.2rem;">Leads</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="leadsSearch">Search leads</label>
+                <input id="leadsSearch" type="text" placeholder="id, customer, destination, owner..." />
+              </div>
+              <button class="btn btn-ghost" id="leadsSearchBtn" type="button">Search</button>
+              <button class="btn btn-ghost" id="leadsPrev" type="button">Previous</button>
+              <button class="btn btn-ghost" id="leadsNext" type="button">Next</button>
+              <span id="leadsPageInfo" class="micro">Page 1 / 1</span>
+            </div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="leadsTable"></table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      if (!window.CHAPTER2_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.CHAPTER2_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <script src="assets/js/backend-page.js" defer></script>
+  </body>
+</html>

@@ -96,6 +96,15 @@
             <li><a href="#faq">FAQ</a></li>
             <li><a href="#contact">Contact</a></li>
           </ul>
+          <div class="backend-login" aria-label="Backend login">
+            <label class="visually-hidden" for="backendUser">Backend user</label>
+            <select id="backendUser" name="backendUser">
+              <option value="admin">admin</option>
+              <option value="staff_joachim">staff_joachim</option>
+              <option value="staff_van">staff_van</option>
+            </select>
+            <button id="backendLoginBtn" class="btn btn-ghost" type="button">Open backend</button>
+          </div>
         </nav>
       </div>
     </header>
@@ -487,13 +496,13 @@
               <button class="btn btn-primary" id="stepNext" type="button">Next</button>
             </div>
 
+            <div class="form-error" id="leadError" role="alert" aria-live="assertive"></div>
+
             <div class="success" id="leadSuccess" role="status" aria-live="polite">
               <strong>Thank you. Your trip request is ready.</strong>
               <p>
-                We will contact you on WhatsApp/email. If your mail app did not open automatically,
-                use this link:
+                Your request has been submitted to our planning team. We will contact you on WhatsApp/email.
               </p>
-              <a id="manualMailto" href="mailto:hello@chapter2.live" class="btn btn-secondary">Send inquiry email</a>
             </div>
 
             <!--
@@ -1182,6 +1191,12 @@
   }
 ]
 
+    </script>
+    <script>
+      // Local dev default: send lead form submissions to the local backend API.
+      if (!window.CHAPTER2_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.CHAPTER2_API_BASE = "http://localhost:8787";
+      }
     </script>
     <script src="assets/js/main.js" defer></script>
 

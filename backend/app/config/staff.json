@@ -1,0 +1,16 @@
+[
+  {
+    "id": "staff_joachim",
+    "name": "Joachim Neumann",
+    "active": true,
+    "destinations": ["Vietnam"],
+    "languages": ["English", "Spanish", "German"]
+  },
+  {
+    "id": "staff_minh",
+    "name": "Vân Nguyễn",
+    "active": true,
+    "destinations": ["Vietnam", "Thailand", "Laos", "Cambodia"],
+    "languages": ["English", "Vietnamese"]
+  }
+]

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chapter 2 Backend Detail</title>
+    <meta name="description" content="Chapter 2 backend detail view" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+  </head>
+  <body>
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="Chapter 2 backend home">
+          <img class="brand-logo" src="assets/img/logo-chapter2.svg" alt="Chapter 2" width="320" height="76" />
+        </a>
+
+        <nav class="nav" aria-label="Backend navigation">
+          <ul class="nav-list">
+            <li><a id="backToBackend" href="backend.html">Backend</a></li>
+            <li><a href="index.html">Website</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <h1 class="section-title" id="detailTitle">Details</h1>
+          <p class="section-lead" id="detailSubTitle">Loading...</p>
+
+          <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <article class="panel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.1rem;">Record</h2>
+            <pre id="detailJson" style="background:#f7fbfd; border:1px solid var(--line); border-radius:12px; padding:1rem; overflow:auto;"></pre>
+          </article>
+
+          <article class="panel" style="padding: 1rem;">
+            <h2 class="section-title" id="relatedTitle" style="font-size: 1.1rem;">Related</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="relatedTable"></table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      if (!window.CHAPTER2_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.CHAPTER2_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <script src="assets/js/backend-detail.js" defer></script>
+  </body>
+</html>
