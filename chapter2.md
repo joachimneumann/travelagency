@@ -72,6 +72,7 @@ Current inventory:
 - One tour per country/style combination with IDs in the form `trip-<country>-<style>`
 - Tour images now come from `assets/tours/<country>/<style>/<country>-<style>.webp`
 - Embedded `tripsFallback` JSON in `index.html` is synchronized to the same 28 records
+- Maintenance helper script available at `assets/tours/to_webp.sh` for non-WebP conversion and cleanup
 
 ### 4.3 Trust strip (after tours)
 
