@@ -1,170 +1,562 @@
 [
   {
-    "id": "trip-vn-essentials",
-    "title": "Vietnam Essentials",
-    "shortDescription": "Classic first-time route with food, culture, and smooth private transfers.",
+    "id": "trip-vietnam-adventure",
+    "title": "Vietnam Adventure Journey",
+    "shortDescription": "A Vietnam itinerary with active days with soft trekking, scenic transfers, and practical local guidance.",
     "destinationCountry": "Vietnam",
-    "styles": ["Culture", "Food", "Family"],
-    "durationDays": 11,
+    "styles": [
+      "Adventure"
+    ],
+    "durationDays": 10,
     "priceFrom": 980,
-    "image": "assets/img/flickr/vietnam-1.jpg",
-    "fallbackImage": "assets/img/tour-vietnam-culture.svg",
-    "highlights": ["Hanoi old quarter walk", "Ha Long overnight cruise", "Hoi An cooking class"],
+    "image": "assets/tours/vietnam/adventure/vietnam-adventure.jpg",
+    "fallbackImage": "assets/tours/vietnam/adventure/vietnam-adventure.jpg",
+    "highlights": [
+      "Guided nature trail near Hoi An",
+      "Scenic boat segment around Ha Long Bay",
+      "Local village experience from Hanoi"
+    ],
+    "seasonality": "Best Oct-Apr",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-vietnam-beach",
+    "title": "Vietnam Beach Escape",
+    "shortDescription": "A Vietnam itinerary with a balanced itinerary mixing relaxed coast time with light culture and smooth logistics.",
+    "destinationCountry": "Vietnam",
+    "styles": [
+      "Beach"
+    ],
+    "durationDays": 9,
+    "priceFrom": 1040,
+    "image": "assets/tours/vietnam/beach/vietnam-beach.jpg",
+    "fallbackImage": "assets/tours/vietnam/beach/vietnam-beach.jpg",
+    "highlights": [
+      "Sunset beach session near Ha Long Bay",
+      "Easy private transfer from Hanoi",
+      "Seafood dinner and waterfront walk"
+    ],
+    "seasonality": "Best Oct-Apr",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-vietnam-budget",
+    "title": "Vietnam Budget Smart Route",
+    "shortDescription": "A Vietnam itinerary with great value planning with handpicked stays, efficient routing, and clear inclusions.",
+    "destinationCountry": "Vietnam",
+    "styles": [
+      "Budget"
+    ],
+    "durationDays": 8,
+    "priceFrom": 690,
+    "image": "assets/tours/vietnam/budget/vietnam-budget.jpg",
+    "fallbackImage": "assets/tours/vietnam/budget/vietnam-budget.jpg",
+    "highlights": [
+      "Best-value stays around Hanoi",
+      "Street-level local experiences in Hoi An",
+      "Cost-smart transport planning to Ha Long Bay"
+    ],
+    "seasonality": "Best Oct-Apr",
+    "rating": 4.6
+  },
+  {
+    "id": "trip-vietnam-culture",
+    "title": "Vietnam Culture Discovery",
+    "shortDescription": "A Vietnam itinerary with history, local life, and signature heritage moments paced for comfort.",
+    "destinationCountry": "Vietnam",
+    "styles": [
+      "Culture"
+    ],
+    "durationDays": 9,
+    "priceFrom": 860,
+    "image": "assets/tours/vietnam/culture/vietnam-culture.jpg",
+    "fallbackImage": "assets/tours/vietnam/culture/vietnam-culture.jpg",
+    "highlights": [
+      "Heritage landmarks in Hanoi",
+      "Guided old-quarter walk in Hoi An",
+      "Local artisan visit near Ha Long Bay"
+    ],
+    "seasonality": "Best Oct-Apr",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-vietnam-family",
+    "title": "Vietnam Family Comfort Tour",
+    "shortDescription": "A Vietnam itinerary with family-friendly pacing with flexible activity blocks and dependable on-ground support.",
+    "destinationCountry": "Vietnam",
+    "styles": [
+      "Family"
+    ],
+    "durationDays": 11,
+    "priceFrom": 1180,
+    "image": "assets/tours/vietnam/family/vietnam-family.jpg",
+    "fallbackImage": "assets/tours/vietnam/family/vietnam-family.jpg",
+    "highlights": [
+      "Kid-friendly day in Hanoi",
+      "Balanced travel time between Hanoi and Hoi An",
+      "Comfort-focused family stay near Ha Long Bay"
+    ],
     "seasonality": "Best Oct-Apr",
     "rating": 4.9
   },
   {
-    "id": "trip-vn-food-week",
-    "title": "Vietnam Food and Culture Week",
-    "shortDescription": "Street food, local kitchens, and heritage neighborhoods with private pacing.",
+    "id": "trip-vietnam-food",
+    "title": "Vietnam Food and Flavor Trail",
+    "shortDescription": "A Vietnam itinerary with market visits, local tasting stops, and culinary experiences tailored to your pace.",
     "destinationCountry": "Vietnam",
-    "styles": ["Food", "Culture", "Budget"],
+    "styles": [
+      "Food"
+    ],
     "durationDays": 8,
-    "priceFrom": 720,
-    "image": "assets/img/flickr/vietnam-2.jpg",
-    "fallbackImage": "assets/img/tour-vietnam-food.svg",
-    "highlights": ["Hanoi food alleys", "Hue royal cuisine", "Saigon market tastings"],
-    "seasonality": "Best Sep-Apr",
+    "priceFrom": 790,
+    "image": "assets/tours/vietnam/food/vietnam-food.jpg",
+    "fallbackImage": "assets/tours/vietnam/food/vietnam-food.jpg",
+    "highlights": [
+      "Street food tasting in Hanoi",
+      "Market-to-table experience in Hoi An",
+      "Regional specialty dinner near Ha Long Bay"
+    ],
+    "seasonality": "Best Oct-Apr",
     "rating": 4.8
   },
   {
-    "id": "trip-th-beach",
-    "title": "Thailand Beach Escape",
-    "shortDescription": "Bangkok city energy followed by island relaxation and easy logistics.",
-    "destinationCountry": "Thailand",
-    "styles": ["Beach", "Luxury", "Family"],
-    "durationDays": 10,
-    "priceFrom": 1120,
-    "image": "assets/img/flickr/thailand-1.jpg",
-    "fallbackImage": "assets/img/tour-thailand-beach.svg",
-    "highlights": ["Bangkok canal tour", "Island hopping day", "Beachfront resort stay"],
-    "seasonality": "Best Nov-Mar",
-    "rating": 4.8
-  },
-  {
-    "id": "trip-th-family",
-    "title": "Thailand Family Comfort Route",
-    "shortDescription": "Kid-friendly pace, easy logistics, and balanced city plus beach days.",
-    "destinationCountry": "Thailand",
-    "styles": ["Family", "Beach", "Culture"],
+    "id": "trip-vietnam-luxury",
+    "title": "Vietnam Luxury Signature Tour",
+    "shortDescription": "A Vietnam itinerary with premium stays, private services, and curated experiences designed for high comfort.",
+    "destinationCountry": "Vietnam",
+    "styles": [
+      "Luxury"
+    ],
     "durationDays": 12,
-    "priceFrom": 1280,
-    "image": "assets/img/flickr/thailand-2.jpg",
-    "fallbackImage": "assets/img/tour-thailand-family.svg",
-    "highlights": ["Chiang Mai elephants sanctuary", "Bangkok family activities", "Phuket resort days"],
-    "seasonality": "Best Nov-Mar",
-    "rating": 4.9
+    "priceFrom": 1980,
+    "image": "assets/tours/vietnam/luxury/vietnam-luxury.jpg",
+    "fallbackImage": "assets/tours/vietnam/luxury/vietnam-luxury.jpg",
+    "highlights": [
+      "Boutique premium stay in Hanoi",
+      "Private guided experience in Hoi An",
+      "Signature fine-dining evening near Ha Long Bay"
+    ],
+    "seasonality": "Best Oct-Apr",
+    "rating": 5.0
   },
   {
-    "id": "trip-kh-heritage",
-    "title": "Cambodia Heritage Trail",
-    "shortDescription": "Meaningful history, temple artistry, and relaxed private pacing.",
-    "destinationCountry": "Cambodia",
-    "styles": ["Culture", "Luxury", "Food"],
-    "durationDays": 8,
-    "priceFrom": 760,
-    "image": "assets/img/flickr/cambodia-1.jpg",
-    "fallbackImage": "assets/img/tour-cambodia-heritage.svg",
-    "highlights": ["Angkor sunrise", "Phnom Penh history day", "Local market tasting"],
-    "seasonality": "Best Nov-Feb",
-    "rating": 4.9
-  },
-  {
-    "id": "trip-cambodia-laos",
-    "title": "Cambodia and Laos Heritage Trail",
-    "shortDescription": "Temple heritage plus Mekong slow travel in one calm, meaningful route.",
-    "destinationCountry": "Cambodia",
-    "styles": ["Culture", "Adventure", "Family"],
+    "id": "trip-thailand-adventure",
+    "title": "Thailand Adventure Journey",
+    "shortDescription": "A Thailand itinerary with active days with soft trekking, scenic transfers, and practical local guidance.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Adventure"
+    ],
     "durationDays": 11,
-    "priceFrom": 1040,
-    "image": "assets/img/flickr/cambodia-2.jpg",
-    "fallbackImage": "assets/img/tour-cambodia-laos.svg",
-    "highlights": ["Angkor highlights", "Luang Prabang old town", "Mekong river segment"],
-    "seasonality": "Best Nov-Feb",
+    "priceFrom": 1100,
+    "image": "assets/tours/thailand/adventure/thailand-adventure.jpg",
+    "fallbackImage": "assets/tours/thailand/adventure/thailand-adventure.jpg",
+    "highlights": [
+      "Guided nature trail near Chiang Mai",
+      "Scenic boat segment around Phuket",
+      "Local village experience from Bangkok"
+    ],
+    "seasonality": "Best Nov-Mar",
     "rating": 4.8
   },
   {
-    "id": "trip-laos-slow",
-    "title": "Laos Nature and Slow Travel",
-    "shortDescription": "River calm, mountain scenery, and authentic local experiences.",
-    "destinationCountry": "Laos",
-    "styles": ["Adventure", "Culture", "Budget"],
-    "durationDays": 9,
-    "priceFrom": 690,
-    "image": "assets/img/flickr/laos-1.jpg",
-    "fallbackImage": "assets/img/tour-laos-nature.svg",
-    "highlights": ["Luang Prabang temples", "Kuang Si waterfall", "Mekong sunset cruise"],
-    "seasonality": "Best Nov-Feb",
-    "rating": 4.7
+    "id": "trip-thailand-beach",
+    "title": "Thailand Beach Escape",
+    "shortDescription": "A Thailand itinerary with a balanced itinerary mixing relaxed coast time with light culture and smooth logistics.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Beach"
+    ],
+    "durationDays": 10,
+    "priceFrom": 1160,
+    "image": "assets/tours/thailand/beach/thailand-beach.jpg",
+    "fallbackImage": "assets/tours/thailand/beach/thailand-beach.jpg",
+    "highlights": [
+      "Sunset beach session near Phuket",
+      "Easy private transfer from Bangkok",
+      "Seafood dinner and waterfront walk"
+    ],
+    "seasonality": "Best Nov-Mar",
+    "rating": 4.8
   },
   {
-    "id": "trip-vn-th-combo",
-    "title": "Vietnam and Thailand Highlights",
-    "shortDescription": "Perfect mix of culture, city life, and beach downtime.",
-    "destinationCountry": "Vietnam",
-    "styles": ["Culture", "Beach", "Luxury"],
-    "durationDays": 13,
-    "priceFrom": 1450,
-    "image": "assets/img/flickr/vietnam-1.jpg",
-    "fallbackImage": "assets/img/tour-vietnam-thailand.svg",
-    "highlights": ["Hanoi and Hoi An", "Bangkok food evening", "Phuket beach days"],
+    "id": "trip-thailand-budget",
+    "title": "Thailand Budget Smart Route",
+    "shortDescription": "A Thailand itinerary with great value planning with handpicked stays, efficient routing, and clear inclusions.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Budget"
+    ],
+    "durationDays": 9,
+    "priceFrom": 810,
+    "image": "assets/tours/thailand/budget/thailand-budget.jpg",
+    "fallbackImage": "assets/tours/thailand/budget/thailand-budget.jpg",
+    "highlights": [
+      "Best-value stays around Bangkok",
+      "Street-level local experiences in Chiang Mai",
+      "Cost-smart transport planning to Phuket"
+    ],
+    "seasonality": "Best Nov-Mar",
+    "rating": 4.6
+  },
+  {
+    "id": "trip-thailand-culture",
+    "title": "Thailand Culture Discovery",
+    "shortDescription": "A Thailand itinerary with history, local life, and signature heritage moments paced for comfort.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Culture"
+    ],
+    "durationDays": 10,
+    "priceFrom": 980,
+    "image": "assets/tours/thailand/culture/thailand-culture.jpg",
+    "fallbackImage": "assets/tours/thailand/culture/thailand-culture.jpg",
+    "highlights": [
+      "Heritage landmarks in Bangkok",
+      "Guided old-quarter walk in Chiang Mai",
+      "Local artisan visit near Phuket"
+    ],
+    "seasonality": "Best Nov-Mar",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-thailand-family",
+    "title": "Thailand Family Comfort Tour",
+    "shortDescription": "A Thailand itinerary with family-friendly pacing with flexible activity blocks and dependable on-ground support.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Family"
+    ],
+    "durationDays": 12,
+    "priceFrom": 1300,
+    "image": "assets/tours/thailand/family/thailand-family.jpg",
+    "fallbackImage": "assets/tours/thailand/family/thailand-family.jpg",
+    "highlights": [
+      "Kid-friendly day in Bangkok",
+      "Balanced travel time between Bangkok and Chiang Mai",
+      "Comfort-focused family stay near Phuket"
+    ],
     "seasonality": "Best Nov-Mar",
     "rating": 4.9
   },
   {
-    "id": "trip-vn-kh-combo",
-    "title": "Vietnam and Cambodia Discovery",
-    "shortDescription": "Balanced route for first-timers who want iconic and local experiences.",
-    "destinationCountry": "Cambodia",
-    "styles": ["Culture", "Family", "Food"],
-    "durationDays": 12,
-    "priceFrom": 1240,
-    "image": "assets/img/flickr/cambodia-1.jpg",
-    "fallbackImage": "assets/img/tour-vietnam-cambodia.svg",
-    "highlights": ["Mekong delta day", "Siem Reap by tuk tuk", "Street food with guide"],
-    "seasonality": "Best Oct-Mar",
+    "id": "trip-thailand-food",
+    "title": "Thailand Food and Flavor Trail",
+    "shortDescription": "A Thailand itinerary with market visits, local tasting stops, and culinary experiences tailored to your pace.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Food"
+    ],
+    "durationDays": 9,
+    "priceFrom": 910,
+    "image": "assets/tours/thailand/food/thailand-food.jpg",
+    "fallbackImage": "assets/tours/thailand/food/thailand-food.jpg",
+    "highlights": [
+      "Street food tasting in Bangkok",
+      "Market-to-table experience in Chiang Mai",
+      "Regional specialty dinner near Phuket"
+    ],
+    "seasonality": "Best Nov-Mar",
     "rating": 4.8
   },
   {
-    "id": "trip-grand-indochina",
-    "title": "Grand Indochina Explorer",
-    "shortDescription": "Vietnam, Cambodia, and Laos in one seamless private itinerary.",
-    "destinationCountry": "Vietnam",
-    "styles": ["Adventure", "Culture", "Luxury"],
-    "durationDays": 16,
-    "priceFrom": 1890,
-    "image": "assets/img/flickr/laos-2.jpg",
-    "fallbackImage": "assets/img/tour-grand-indochina.svg",
-    "highlights": ["Ha Long bay cruise", "Angkor heritage days", "Laos river slow travel"],
+    "id": "trip-thailand-luxury",
+    "title": "Thailand Luxury Signature Tour",
+    "shortDescription": "A Thailand itinerary with premium stays, private services, and curated experiences designed for high comfort.",
+    "destinationCountry": "Thailand",
+    "styles": [
+      "Luxury"
+    ],
+    "durationDays": 13,
+    "priceFrom": 2100,
+    "image": "assets/tours/thailand/luxury/thailand-luxury.jpg",
+    "fallbackImage": "assets/tours/thailand/luxury/thailand-luxury.jpg",
+    "highlights": [
+      "Boutique premium stay in Bangkok",
+      "Private guided experience in Chiang Mai",
+      "Signature fine-dining evening near Phuket"
+    ],
+    "seasonality": "Best Nov-Mar",
+    "rating": 5.0
+  },
+  {
+    "id": "trip-cambodia-adventure",
+    "title": "Cambodia Adventure Journey",
+    "shortDescription": "A Cambodia itinerary with active days with soft trekking, scenic transfers, and practical local guidance.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Adventure"
+    ],
+    "durationDays": 10,
+    "priceFrom": 900,
+    "image": "assets/tours/cambodia/adventure/cambodia-adventure.jpg",
+    "fallbackImage": "assets/tours/cambodia/adventure/cambodia-adventure.jpg",
+    "highlights": [
+      "Guided nature trail near Phnom Penh",
+      "Scenic boat segment around Tonle Sap",
+      "Local village experience from Siem Reap"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-cambodia-beach",
+    "title": "Cambodia Beach Escape",
+    "shortDescription": "A Cambodia itinerary with a balanced itinerary mixing relaxed coast time with light culture and smooth logistics.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Beach"
+    ],
+    "durationDays": 9,
+    "priceFrom": 960,
+    "image": "assets/tours/cambodia/beach/cambodia-beach.jpg",
+    "fallbackImage": "assets/tours/cambodia/beach/cambodia-beach.jpg",
+    "highlights": [
+      "Sunset beach session near Tonle Sap",
+      "Easy private transfer from Siem Reap",
+      "Seafood dinner and waterfront walk"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-cambodia-budget",
+    "title": "Cambodia Budget Smart Route",
+    "shortDescription": "A Cambodia itinerary with great value planning with handpicked stays, efficient routing, and clear inclusions.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Budget"
+    ],
+    "durationDays": 8,
+    "priceFrom": 610,
+    "image": "assets/tours/cambodia/budget/cambodia-budget.jpg",
+    "fallbackImage": "assets/tours/cambodia/budget/cambodia-budget.jpg",
+    "highlights": [
+      "Best-value stays around Siem Reap",
+      "Street-level local experiences in Phnom Penh",
+      "Cost-smart transport planning to Tonle Sap"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.6
+  },
+  {
+    "id": "trip-cambodia-culture",
+    "title": "Cambodia Culture Discovery",
+    "shortDescription": "A Cambodia itinerary with history, local life, and signature heritage moments paced for comfort.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Culture"
+    ],
+    "durationDays": 9,
+    "priceFrom": 780,
+    "image": "assets/tours/cambodia/culture/cambodia-culture.jpg",
+    "fallbackImage": "assets/tours/cambodia/culture/cambodia-culture.jpg",
+    "highlights": [
+      "Heritage landmarks in Siem Reap",
+      "Guided old-quarter walk in Phnom Penh",
+      "Local artisan visit near Tonle Sap"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-cambodia-family",
+    "title": "Cambodia Family Comfort Tour",
+    "shortDescription": "A Cambodia itinerary with family-friendly pacing with flexible activity blocks and dependable on-ground support.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Family"
+    ],
+    "durationDays": 11,
+    "priceFrom": 1100,
+    "image": "assets/tours/cambodia/family/cambodia-family.jpg",
+    "fallbackImage": "assets/tours/cambodia/family/cambodia-family.jpg",
+    "highlights": [
+      "Kid-friendly day in Siem Reap",
+      "Balanced travel time between Siem Reap and Phnom Penh",
+      "Comfort-focused family stay near Tonle Sap"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.9
+  },
+  {
+    "id": "trip-cambodia-food",
+    "title": "Cambodia Food and Flavor Trail",
+    "shortDescription": "A Cambodia itinerary with market visits, local tasting stops, and culinary experiences tailored to your pace.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Food"
+    ],
+    "durationDays": 8,
+    "priceFrom": 710,
+    "image": "assets/tours/cambodia/food/cambodia-food.jpg",
+    "fallbackImage": "assets/tours/cambodia/food/cambodia-food.jpg",
+    "highlights": [
+      "Street food tasting in Siem Reap",
+      "Market-to-table experience in Phnom Penh",
+      "Regional specialty dinner near Tonle Sap"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-cambodia-luxury",
+    "title": "Cambodia Luxury Signature Tour",
+    "shortDescription": "A Cambodia itinerary with premium stays, private services, and curated experiences designed for high comfort.",
+    "destinationCountry": "Cambodia",
+    "styles": [
+      "Luxury"
+    ],
+    "durationDays": 12,
+    "priceFrom": 1900,
+    "image": "assets/tours/cambodia/luxury/cambodia-luxury.jpg",
+    "fallbackImage": "assets/tours/cambodia/luxury/cambodia-luxury.jpg",
+    "highlights": [
+      "Boutique premium stay in Siem Reap",
+      "Private guided experience in Phnom Penh",
+      "Signature fine-dining evening near Tonle Sap"
+    ],
     "seasonality": "Best Nov-Feb",
     "rating": 5.0
   },
   {
-    "id": "trip-th-la-combo",
-    "title": "Thailand and Laos Slow Journey",
-    "shortDescription": "A softer pace with cultural depth and nature-led moments.",
-    "destinationCountry": "Thailand",
-    "styles": ["Adventure", "Beach", "Budget"],
-    "durationDays": 11,
-    "priceFrom": 970,
-    "image": "assets/img/flickr/thailand-2.jpg",
-    "fallbackImage": "assets/img/tour-thailand-laos.svg",
-    "highlights": ["Chiang Mai temples", "Luang Prabang old town", "Scenic boat segment"],
+    "id": "trip-laos-adventure",
+    "title": "Laos Adventure Journey",
+    "shortDescription": "A Laos itinerary with active days with soft trekking, scenic transfers, and practical local guidance.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Adventure"
+    ],
+    "durationDays": 10,
+    "priceFrom": 840,
+    "image": "assets/tours/laos/adventure/laos-adventure.jpg",
+    "fallbackImage": "assets/tours/laos/adventure/laos-adventure.jpg",
+    "highlights": [
+      "Guided nature trail near Vang Vieng",
+      "Scenic boat segment around Mekong River",
+      "Local village experience from Luang Prabang"
+    ],
     "seasonality": "Best Nov-Feb",
-    "rating": 4.7
+    "rating": 4.8
   },
   {
-    "id": "trip-honeymoon-luxury",
-    "title": "Southeast Asia Honeymoon Luxury",
-    "shortDescription": "Romantic private route with premium stays and curated signature moments.",
-    "destinationCountry": "Vietnam",
-    "styles": ["Luxury", "Beach", "Food"],
-    "durationDays": 14,
-    "priceFrom": 2450,
-    "image": "assets/img/flickr/hero-flickr.jpg",
-    "fallbackImage": "assets/img/tour-honeymoon-luxury.svg",
-    "highlights": ["Lan Ha bay private cruise", "Beach villa nights", "Fine dining and spa days"],
-    "seasonality": "Best Nov-Apr",
+    "id": "trip-laos-beach",
+    "title": "Laos Beach Escape",
+    "shortDescription": "A Laos itinerary with a balanced itinerary mixing relaxed coast time with light culture and smooth logistics.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Beach"
+    ],
+    "durationDays": 9,
+    "priceFrom": 900,
+    "image": "assets/tours/laos/beach/laos-beach.jpg",
+    "fallbackImage": "assets/tours/laos/beach/laos-beach.jpg",
+    "highlights": [
+      "Sunset beach session near Mekong River",
+      "Easy private transfer from Luang Prabang",
+      "Seafood dinner and waterfront walk"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-laos-budget",
+    "title": "Laos Budget Smart Route",
+    "shortDescription": "A Laos itinerary with great value planning with handpicked stays, efficient routing, and clear inclusions.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Budget"
+    ],
+    "durationDays": 8,
+    "priceFrom": 550,
+    "image": "assets/tours/laos/budget/laos-budget.jpg",
+    "fallbackImage": "assets/tours/laos/budget/laos-budget.jpg",
+    "highlights": [
+      "Best-value stays around Luang Prabang",
+      "Street-level local experiences in Vang Vieng",
+      "Cost-smart transport planning to Mekong River"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.6
+  },
+  {
+    "id": "trip-laos-culture",
+    "title": "Laos Culture Discovery",
+    "shortDescription": "A Laos itinerary with history, local life, and signature heritage moments paced for comfort.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Culture"
+    ],
+    "durationDays": 9,
+    "priceFrom": 720,
+    "image": "assets/tours/laos/culture/laos-culture.jpg",
+    "fallbackImage": "assets/tours/laos/culture/laos-culture.jpg",
+    "highlights": [
+      "Heritage landmarks in Luang Prabang",
+      "Guided old-quarter walk in Vang Vieng",
+      "Local artisan visit near Mekong River"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-laos-family",
+    "title": "Laos Family Comfort Tour",
+    "shortDescription": "A Laos itinerary with family-friendly pacing with flexible activity blocks and dependable on-ground support.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Family"
+    ],
+    "durationDays": 11,
+    "priceFrom": 1040,
+    "image": "assets/tours/laos/family/laos-family.jpg",
+    "fallbackImage": "assets/tours/laos/family/laos-family.jpg",
+    "highlights": [
+      "Kid-friendly day in Luang Prabang",
+      "Balanced travel time between Luang Prabang and Vang Vieng",
+      "Comfort-focused family stay near Mekong River"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.9
+  },
+  {
+    "id": "trip-laos-food",
+    "title": "Laos Food and Flavor Trail",
+    "shortDescription": "A Laos itinerary with market visits, local tasting stops, and culinary experiences tailored to your pace.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Food"
+    ],
+    "durationDays": 8,
+    "priceFrom": 650,
+    "image": "assets/tours/laos/food/laos-food.jpg",
+    "fallbackImage": "assets/tours/laos/food/laos-food.jpg",
+    "highlights": [
+      "Street food tasting in Luang Prabang",
+      "Market-to-table experience in Vang Vieng",
+      "Regional specialty dinner near Mekong River"
+    ],
+    "seasonality": "Best Nov-Feb",
+    "rating": 4.8
+  },
+  {
+    "id": "trip-laos-luxury",
+    "title": "Laos Luxury Signature Tour",
+    "shortDescription": "A Laos itinerary with premium stays, private services, and curated experiences designed for high comfort.",
+    "destinationCountry": "Laos",
+    "styles": [
+      "Luxury"
+    ],
+    "durationDays": 12,
+    "priceFrom": 1840,
+    "image": "assets/tours/laos/luxury/laos-luxury.jpg",
+    "fallbackImage": "assets/tours/laos/luxury/laos-luxury.jpg",
+    "highlights": [
+      "Boutique premium stay in Luang Prabang",
+      "Private guided experience in Vang Vieng",
+      "Signature fine-dining evening near Mekong River"
+    ],
+    "seasonality": "Best Nov-Feb",
     "rating": 5.0
   }
 ]
