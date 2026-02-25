@@ -7,7 +7,10 @@
 - Canonical URL: `https://chapter2.live/`
 - Open Graph + Twitter metadata present
 - Favicon + web manifest linked
-- Main stylesheet: `assets/css/styles.css`
+- Main stylesheet: `assets/css/styles.css` loaded with preload + non-blocking apply (`?v=3`)
+- LCP hero poster preloaded from `assets/video/rice field.webp?v=2`
+- Hero video preloaded from `assets/video/rice field.webm`
+- Small inline critical CSS block included for initial header/hero paint
 
 ## 2) Global layout
 
@@ -21,6 +24,7 @@
 - Main JS bundle: `assets/js/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
 - All `.webp` images in the project are normalized to a maximum bounding box of `600x600` while preserving aspect ratio
+- Cache headers config file present at `_headers` (asset caching + 1h trips JSON)
 
 ## 3) Header and navigation (`#top`)
 
