@@ -15,6 +15,7 @@ Current implemented code lives in:
 - `backend/app/src/server.js`
 - `backend/app/src/auth.js`
 - `backend/app/data/store.json`
+- `backend/app/data/tours.json`
 - `backend/app/config/staff.json`
 - `backend/app/scripts/seed.js`
 
@@ -26,7 +27,8 @@ Implemented now:
 - Keycloak OIDC auth flow implemented for backend (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`) with role gating
 - Auth internals refactored into dedicated module `src/auth.js` (route handlers, session state, OIDC discovery/token verification, API auth checks)
 - Branded website backoffice pages implemented:
-  - `backend.html`: paginated searchable customers + leads tables (default newest 10 each)
+  - `backend.html`: paginated searchable customers + leads + tours tables (default newest 10 each)
+  - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
   - `backend-detail.html`: linked details for leads/customers
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions

@@ -96,9 +96,14 @@
             <li><a href="#faq">FAQ</a></li>
             <li><a href="#contact">Contact</a></li>
           </ul>
-          <div class="backend-login" aria-label="Backend login">
-            <button id="backendLoginBtn" class="btn btn-ghost" type="button">backend</button>
-            <p class="backend-user-chip" id="websiteAuthStatus"></p>
+          <div id="headerBackendLoginMount">
+            <div class="backend-login" id="backendLoginContainer" aria-label="Backend login">
+              <button id="backendLoginBtn" class="btn btn-ghost" type="button">
+                <span id="backendLoginBtnTitle">backend</span>
+                <span id="backendLoginBtnSubtitle"></span>
+              </button>
+              <p class="backend-user-chip" id="websiteAuthStatus" hidden></p>
+            </div>
           </div>
         </nav>
       </div>
@@ -329,6 +334,7 @@
           <h3>Chapter 2</h3>
           <p>Custom Southeast Asia travel planning from Vietnam with transparent scope and local support.</p>
           <p>Website: chapter2.live</p>
+          <div id="footerBackendLoginMount"></div>
         </section>
         <section>
           <h3>Contact</h3>

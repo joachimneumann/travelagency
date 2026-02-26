@@ -2,13 +2,14 @@ import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createAuth } from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
+const TOURS_PATH = path.join(APP_ROOT, "data", "tours.json");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -59,6 +60,7 @@ const auth = createAuth({ port: PORT });
 const routes = [
   ...auth.routes,
   { method: "GET", pattern: /^\/health$/, handler: handleHealth },
+  { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
   { method: "POST", pattern: /^\/public\/v1\/leads$/, handler: handleCreateLead },
   { method: "GET", pattern: /^\/api\/v1\/leads$/, handler: handleListLeads },
   { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)$/, handler: handleGetLead },
@@ -68,6 +70,10 @@ const routes = [
   { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleCreateActivity },
   { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
   { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
+  { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
+  { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
+  { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
+  { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
   { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
   { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
   { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
@@ -143,8 +149,8 @@ function redirect(res, location) {
   res.end();
 }
 
-function sendJson(res, status, payload) {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+function sendJson(res, status, payload, extraHeaders = {}) {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", ...extraHeaders });
   res.end(JSON.stringify(payload));
 }
 
@@ -178,6 +184,20 @@ async function persistStore(store) {
   await writeQueue;
 }
 
+async function readTours() {
+  const raw = await readFile(TOURS_PATH, "utf8");
+  const parsed = JSON.parse(raw);
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+async function persistTours(tours) {
+  writeQueue = writeQueue.then(async () => {
+    const next = `${JSON.stringify(tours, null, 2)}\n`;
+    await writeFile(TOURS_PATH, next, "utf8");
+  });
+  await writeQueue;
+}
+
 async function loadStaff() {
   const raw = await readFile(STAFF_PATH, "utf8");
   const parsed = JSON.parse(raw);
@@ -205,6 +225,11 @@ function safeInt(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function safeFloat(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function computeSlaDueAt(stage, from = new Date()) {
   const hours = SLA_HOURS[stage] ?? 0;
   if (!hours) return null;
@@ -218,6 +243,30 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function normalizeStringArray(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeText(item)).filter(Boolean);
+  }
+  const text = normalizeText(value);
+  if (!text) return [];
+  return text
+    .split(",")
+    .map((item) => normalizeText(item))
+    .filter(Boolean);
+}
+
+function normalizeHighlights(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeText(item)).filter(Boolean);
+  }
+  const text = normalizeText(value);
+  if (!text) return [];
+  return text
+    .split(/\r?\n/)
+    .map((line) => normalizeText(line))
+    .filter(Boolean);
 }
 
 function levenshtein(a, b) {
@@ -731,6 +780,225 @@ async function handleGetCustomer(_req, res, [customerId]) {
   sendJson(res, 200, { customer, leads });
 }
 
+function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
+  const next = existing ? { ...existing } : {};
+
+  if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id);
+  if (isCreate || payload.title !== undefined) next.title = normalizeText(payload.title);
+  if (payload.shortDescription !== undefined) next.shortDescription = normalizeText(payload.shortDescription);
+  if (isCreate || payload.destinationCountry !== undefined) next.destinationCountry = normalizeText(payload.destinationCountry);
+  if (isCreate || payload.styles !== undefined) next.styles = normalizeStringArray(payload.styles);
+  if (payload.image !== undefined) next.image = normalizeText(payload.image);
+  if (payload.fallbackImage !== undefined) next.fallbackImage = normalizeText(payload.fallbackImage);
+  if (payload.seasonality !== undefined) next.seasonality = normalizeText(payload.seasonality);
+  if (payload.highlights !== undefined || isCreate) next.highlights = normalizeHighlights(payload.highlights);
+
+  if (payload.priority !== undefined || isCreate) {
+    const priority = safeInt(payload.priority);
+    next.priority = priority === null ? 50 : priority;
+  }
+  if (payload.durationDays !== undefined || isCreate) {
+    const durationDays = safeInt(payload.durationDays);
+    next.durationDays = durationDays === null ? 0 : durationDays;
+  }
+  if (payload.priceFrom !== undefined || isCreate) {
+    const priceFrom = safeInt(payload.priceFrom);
+    next.priceFrom = priceFrom === null ? 0 : priceFrom;
+  }
+  if (payload.rating !== undefined || isCreate) {
+    const rating = safeFloat(payload.rating);
+    next.rating = rating === null ? 0 : rating;
+  }
+
+  return next;
+}
+
+function validateTourInput(tour, { isCreate = false } = {}) {
+  if (isCreate && !tour.title) return "title is required";
+  if (isCreate && !tour.destinationCountry) return "destinationCountry is required";
+  if (isCreate && (!Array.isArray(tour.styles) || !tour.styles.length)) return "styles is required";
+  return "";
+}
+
+function filterAndSortTours(tours, query) {
+  const search = normalizeText(query.get("search")).toLowerCase();
+  const destination = normalizeText(query.get("destination"));
+  const style = normalizeText(query.get("style"));
+  const sort = normalizeText(query.get("sort")) || "updated_at_desc";
+
+  const filtered = tours.filter((tour) => {
+    const destinationMatch = !destination || normalizeText(tour.destinationCountry) === destination;
+    const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
+    if (!destinationMatch || !styleMatch) return false;
+    if (!search) return true;
+    const haystack = [
+      tour.id,
+      tour.title,
+      tour.shortDescription,
+      tour.destinationCountry,
+      ...(Array.isArray(tour.highlights) ? tour.highlights : []),
+      ...(Array.isArray(tour.styles) ? tour.styles : [])
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(search);
+  });
+
+  const items = [...filtered].sort((a, b) => {
+    if (sort === "title_asc") return String(a.title || "").localeCompare(String(b.title || ""));
+    return String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""));
+  });
+
+  return {
+    items,
+    sort,
+    filters: {
+      destination: destination || null,
+      style: style || null,
+      search: search || null
+    }
+  };
+}
+
+async function handlePublicListTours(req, res) {
+  const tours = await readTours();
+  const requestUrl = new URL(req.url, "http://localhost");
+  const destination = normalizeText(requestUrl.searchParams.get("destination"));
+  const style = normalizeText(requestUrl.searchParams.get("style"));
+  const offset = Math.max(0, safeInt(requestUrl.searchParams.get("offset")) || 0);
+  const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || tours.length || 1000, 1, 5000);
+
+  const filtered = tours.filter((tour) => {
+    const destinationMatch = !destination || normalizeText(tour.destinationCountry) === destination;
+    const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
+    return destinationMatch && styleMatch;
+  });
+
+  const sorted = [...filtered].sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
+  const items = sorted.slice(offset, offset + limit);
+  const payload = { items, total: filtered.length, offset, limit };
+  const payloadText = JSON.stringify(payload);
+  const etag = `W/"${createHash("sha1").update(payloadText).digest("hex")}"`;
+  const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
+
+  const cacheHeaders = {
+    "Cache-Control": "public, max-age=120, must-revalidate",
+    ETag: etag
+  };
+
+  if (ifNoneMatch === etag) {
+    res.writeHead(304, cacheHeaders);
+    res.end();
+    return;
+  }
+
+  sendJson(res, 200, payload, cacheHeaders);
+}
+
+async function handleListTours(req, res) {
+  const tours = await readTours();
+  const requestUrl = new URL(req.url, "http://localhost");
+  const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams);
+  const paged = paginate(filtered, requestUrl.searchParams);
+  const availableDestinations = Array.from(new Set(tours.map((tour) => normalizeText(tour.destinationCountry)).filter(Boolean))).sort(
+    (a, b) => a.localeCompare(b)
+  );
+  const availableStyles = Array.from(
+    new Set(
+      tours
+        .flatMap((tour) => (Array.isArray(tour.styles) ? tour.styles : []))
+        .map((style) => normalizeText(style))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  sendJson(res, 200, {
+    items: paged.items,
+    total: paged.total,
+    page: paged.page,
+    page_size: paged.page_size,
+    total_pages: paged.total_pages,
+    sort,
+    filters,
+    available_destinations: availableDestinations,
+    available_styles: availableStyles
+  });
+}
+
+async function handleGetTour(_req, res, [tourId]) {
+  const tours = await readTours();
+  const tour = tours.find((item) => item.id === tourId);
+  if (!tour) {
+    sendJson(res, 404, { error: "Tour not found" });
+    return;
+  }
+  sendJson(res, 200, { tour });
+}
+
+async function handleCreateTour(req, res) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const tours = await readTours();
+  const now = nowIso();
+  const tour = buildTourPayload(payload, { isCreate: true });
+  tour.id = `tour_${randomUUID()}`;
+  tour.created_at = now;
+  tour.updated_at = now;
+
+  const validationError = validateTourInput(tour, { isCreate: true });
+  if (validationError) {
+    sendJson(res, 422, { error: validationError });
+    return;
+  }
+
+  tours.push(tour);
+  await persistTours(tours);
+  sendJson(res, 201, { tour });
+}
+
+async function handlePatchTour(req, res, [tourId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const tours = await readTours();
+  const index = tours.findIndex((item) => item.id === tourId);
+  if (index < 0) {
+    sendJson(res, 404, { error: "Tour not found" });
+    return;
+  }
+
+  const current = tours[index];
+  const idChange = normalizeText(payload.id);
+  if (idChange && idChange !== tourId) {
+    sendJson(res, 422, { error: "Tour id cannot be changed" });
+    return;
+  }
+
+  const updated = buildTourPayload(payload, { existing: current, isCreate: false });
+  updated.updated_at = nowIso();
+
+  const validationError = validateTourInput(updated, { isCreate: false });
+  if (validationError) {
+    sendJson(res, 422, { error: validationError });
+    return;
+  }
+
+  tours[index] = updated;
+  await persistTours(tours);
+  sendJson(res, 200, { tour: updated });
+}
+
 async function handleAdminHome(req, res) {
   sendHtml(
     res,
@@ -751,6 +1019,7 @@ async function handleAdminHome(req, res) {
     <li><a href="/admin/leads">Lead pipeline view</a></li>
     <li><a href="/admin/customers">Customers UI</a></li>
     <li>Customers API: <a href="/api/v1/customers"><code>/api/v1/customers</code></a></li>
+    <li>Tours API: <a href="/api/v1/tours"><code>/api/v1/tours</code></a></li>
   </ul>
 </body>
 </html>`

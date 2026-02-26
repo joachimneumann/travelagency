@@ -42,6 +42,7 @@ Cross-origin browser usage note:
 
 JSON files are used for local persistence:
 - `data/store.json`
+- `data/tours.json`
 - `config/staff.json`
 
 ## Auth Module Split
@@ -50,7 +51,7 @@ Authentication internals are now isolated in:
 - `src/auth.js`
 
 `src/server.js` now only wires auth at the route and request-gate level:
-- `const auth = createAuth({ port, adminApiToken })`
+- `const auth = createAuth({ port })`
 - `...auth.routes` for `/auth/*` handlers
 - `auth.pruneState()` on each request
 - `auth.isKeycloakEnabled()` + `auth.hasSession(req)` for `/admin*` gate
@@ -62,6 +63,7 @@ This keeps backend business logic (leads/customers/pipeline) separate from OIDC/
 
 Public:
 - `POST /public/v1/leads`
+- `GET /public/v1/tours`
 
 Admin API:
 - `GET /api/v1/leads`
@@ -72,6 +74,14 @@ Admin API:
 - `POST /api/v1/leads/:leadId/activities`
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
+- `GET /api/v1/tours`
+- `GET /api/v1/tours/:tourId`
+- `POST /api/v1/tours`
+- `PATCH /api/v1/tours/:tourId`
+
+Tour ID format:
+- Tours now use generated IDs like `tour_<uuid>` (same pattern style as leads/customers).
+- `POST /api/v1/tours` always generates the tour ID server-side.
 
 `/api/v1/*` authentication:
 - Keycloak backend session cookie (browser flows)
@@ -105,6 +115,8 @@ Branded frontend backoffice pages (served by website):
 - `/backend.html`: chapter-branded dashboard with:
   - paginated searchable Customers table
   - paginated searchable Leads table
+  - paginated searchable Tours table
+- `/backend-tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
 - `backend.html` header includes `Website` and `Logout` actions.
 - `/backend-detail.html`: detail pages for lead/customer records
 

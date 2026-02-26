@@ -10,11 +10,13 @@ This guide explains:
 Local backend implementation (Milestone 1) is in:
 - `backend/app/src/server.js`
 - `backend/app/data/store.json`
+- `backend/app/data/tours.json`
 - `backend/app/config/staff.json`
 - `backend/app/scripts/seed.js`
 
 Features available now:
 - Public lead ingestion (`POST /public/v1/leads`)
+- Public tours catalog (`GET /public/v1/tours`)
 - Lead pipeline and stage transitions
 - Customer deduplication
 - Lead ownership assignment + SLA due timestamps
@@ -23,6 +25,8 @@ Features available now:
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
 - Lightweight admin pages (`/admin`, `/admin/leads`, `/admin/leads/:id`, `/admin/customers`, `/admin/customers/:id`)
 - Branded frontend backoffice pages (`backend.html`, `backend-detail.html`)
+  - `backend.html` lists tours
+  - clicking a tour ID opens `backend-tour.html` for editing
 
 ## 2) Start the backend locally
 
@@ -121,11 +125,17 @@ It uses:
 - `window.CHAPTER2_API_BASE` if defined
 - otherwise relative `/public/v1/leads`
 
+Tours source:
+- Website tour cards are loaded from backend `GET /public/v1/tours` when `window.CHAPTER2_API_BASE` is set.
+- Backend persists tours in `backend/app/data/tours.json`.
+
 Branded backend web UI:
 - `backend.html` provides a Chapter2-styled backend workspace page.
 - It shows:
   - paginated searchable Customers table (newest first, page size 10)
   - paginated searchable Leads table (newest first, page size 10)
+  - paginated searchable Tours table
+  - Tour form for create/update
 - Lead/customer IDs link to `backend-detail.html`.
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).

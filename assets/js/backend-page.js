@@ -17,25 +17,23 @@ const els = {
   leadsSearchBtn: document.getElementById("leadsSearchBtn"),
   leadsCountInfo: document.getElementById("leadsCountInfo"),
   leadsPagination: document.getElementById("leadsPagination"),
-  leadsTable: document.getElementById("leadsTable")
+  leadsTable: document.getElementById("leadsTable"),
+
+  toursSearch: document.getElementById("toursSearch"),
+  toursDestination: document.getElementById("toursDestination"),
+  toursStyle: document.getElementById("toursStyle"),
+  toursClearFiltersBtn: document.getElementById("toursClearFiltersBtn"),
+  toursSearchBtn: document.getElementById("toursSearchBtn"),
+  toursCountInfo: document.getElementById("toursCountInfo"),
+  toursPagination: document.getElementById("toursPagination"),
+  toursTable: document.getElementById("toursTable")
 };
 
 const state = {
   user: qs.get("user") || "admin",
-  customers: {
-    page: 1,
-    pageSize: 10,
-    totalPages: 1,
-    total: 0,
-    search: ""
-  },
-  leads: {
-    page: 1,
-    pageSize: 10,
-    totalPages: 1,
-    total: 0,
-    search: ""
-  }
+  customers: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
+  leads: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
+  tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" }
 };
 
 init();
@@ -45,15 +43,18 @@ function init() {
     const params = new URLSearchParams({ user: state.user });
     els.homeLink.href = `backend.html?${params.toString()}`;
   }
+
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/index.html`;
     els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
   }
-  loadBackendAuthStatus();
 
+  loadBackendAuthStatus();
   bindControls();
+
   loadCustomers();
   loadLeads();
+  loadTours();
 }
 
 async function loadBackendAuthStatus() {
@@ -73,39 +74,54 @@ async function loadBackendAuthStatus() {
 }
 
 function bindControls() {
-  if (els.customersSearchBtn) {
-    els.customersSearchBtn.addEventListener("click", () => {
-      state.customers.page = 1;
-      state.customers.search = (els.customersSearch?.value || "").trim();
-      loadCustomers();
+  bindSearch(els.customersSearchBtn, els.customersSearch, state.customers, loadCustomers);
+  bindSearch(els.leadsSearchBtn, els.leadsSearch, state.leads, loadLeads);
+  bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
+
+  if (els.toursDestination) {
+    els.toursDestination.addEventListener("change", () => {
+      state.tours.destination = els.toursDestination.value || "all";
+      state.tours.page = 1;
+      loadTours();
     });
   }
 
-  if (els.customersSearch) {
-    els.customersSearch.addEventListener("keydown", (event) => {
+  if (els.toursStyle) {
+    els.toursStyle.addEventListener("change", () => {
+      state.tours.style = els.toursStyle.value || "all";
+      state.tours.page = 1;
+      loadTours();
+    });
+  }
+
+  if (els.toursClearFiltersBtn) {
+    els.toursClearFiltersBtn.addEventListener("click", () => {
+      state.tours.destination = "all";
+      state.tours.style = "all";
+      state.tours.page = 1;
+      if (els.toursDestination) els.toursDestination.value = "all";
+      if (els.toursStyle) els.toursStyle.value = "all";
+      loadTours();
+    });
+  }
+}
+
+function bindSearch(searchBtn, searchInput, model, reloadFn) {
+  if (searchBtn) {
+    searchBtn.addEventListener("click", () => {
+      model.page = 1;
+      model.search = (searchInput?.value || "").trim();
+      reloadFn();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
-      state.customers.page = 1;
-      state.customers.search = (els.customersSearch?.value || "").trim();
-      loadCustomers();
-    });
-  }
-
-  if (els.leadsSearchBtn) {
-    els.leadsSearchBtn.addEventListener("click", () => {
-      state.leads.page = 1;
-      state.leads.search = (els.leadsSearch?.value || "").trim();
-      loadLeads();
-    });
-  }
-
-  if (els.leadsSearch) {
-    els.leadsSearch.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      state.leads.page = 1;
-      state.leads.search = (els.leadsSearch?.value || "").trim();
-      loadLeads();
+      model.page = 1;
+      model.search = (searchInput?.value || "").trim();
+      reloadFn();
     });
   }
 }
@@ -117,10 +133,7 @@ async function loadCustomers() {
     page: String(state.customers.page),
     page_size: String(state.customers.pageSize)
   });
-
-  if (state.customers.search) {
-    params.set("search", state.customers.search);
-  }
+  if (state.customers.search) params.set("search", state.customers.search);
 
   const payload = await fetchApi(`/api/v1/customers?${params.toString()}`);
   if (!payload) return;
@@ -128,7 +141,7 @@ async function loadCustomers() {
   state.customers.totalPages = Math.max(1, Number(payload.total_pages || 1));
   state.customers.total = Number(payload.total || 0);
   state.customers.page = Number(payload.page || state.customers.page);
-  updateCustomersPaginationUi();
+  updatePaginationUi("customers");
   renderCustomers(payload.items || []);
 }
 
@@ -140,10 +153,7 @@ async function loadLeads() {
     page_size: String(state.leads.pageSize),
     sort: "created_at_desc"
   });
-
-  if (state.leads.search) {
-    params.set("search", state.leads.search);
-  }
+  if (state.leads.search) params.set("search", state.leads.search);
 
   const payload = await fetchApi(`/api/v1/leads?${params.toString()}`);
   if (!payload) return;
@@ -151,30 +161,73 @@ async function loadLeads() {
   state.leads.totalPages = Math.max(1, Number(payload.total_pages || 1));
   state.leads.total = Number(payload.total || 0);
   state.leads.page = Number(payload.page || state.leads.page);
-  updateLeadsPaginationUi();
+  updatePaginationUi("leads");
   renderLeads(payload.items || []);
 }
 
-function updateCustomersPaginationUi() {
-  if (els.customersCountInfo) {
-    els.customersCountInfo.textContent = `${state.customers.total} total · page ${state.customers.page} of ${state.customers.totalPages}`;
+async function loadTours() {
+  clearError();
+
+  const params = new URLSearchParams({
+    page: String(state.tours.page),
+    page_size: String(state.tours.pageSize),
+    sort: "updated_at_desc"
+  });
+  if (state.tours.search) params.set("search", state.tours.search);
+  if (state.tours.destination && state.tours.destination !== "all") params.set("destination", state.tours.destination);
+  if (state.tours.style && state.tours.style !== "all") params.set("style", state.tours.style);
+
+  const payload = await fetchApi(`/api/v1/tours?${params.toString()}`);
+  if (!payload) return;
+
+  state.tours.totalPages = Math.max(1, Number(payload.total_pages || 1));
+  state.tours.total = Number(payload.total || 0);
+  state.tours.page = Number(payload.page || state.tours.page);
+  populateTourFilterOptions(payload);
+  updatePaginationUi("tours");
+  renderTours(payload.items || []);
+}
+
+function populateTourFilterOptions(payload) {
+  const destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
+  const styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
+
+  if (els.toursDestination) {
+    const current = state.tours.destination || "all";
+    const options = ['<option value="all">All destinations</option>']
+      .concat(destinations.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+      .join("");
+    els.toursDestination.innerHTML = options;
+    els.toursDestination.value = destinations.includes(current) ? current : "all";
+    state.tours.destination = els.toursDestination.value;
   }
-  if (els.customersPagination) {
-    renderPagination(els.customersPagination, state.customers, (page) => {
-      state.customers.page = page;
-      loadCustomers();
-    });
+
+  if (els.toursStyle) {
+    const current = state.tours.style || "all";
+    const options = ['<option value="all">All styles</option>']
+      .concat(styles.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+      .join("");
+    els.toursStyle.innerHTML = options;
+    els.toursStyle.value = styles.includes(current) ? current : "all";
+    state.tours.style = els.toursStyle.value;
   }
 }
 
-function updateLeadsPaginationUi() {
-  if (els.leadsCountInfo) {
-    els.leadsCountInfo.textContent = `${state.leads.total} total · page ${state.leads.page} of ${state.leads.totalPages}`;
+function updatePaginationUi(section) {
+  const model = state[section];
+  const countInfo = els[`${section}CountInfo`];
+  const pagination = els[`${section}Pagination`];
+
+  if (countInfo) {
+    countInfo.textContent = `${model.total} total · page ${model.page} of ${model.totalPages}`;
   }
-  if (els.leadsPagination) {
-    renderPagination(els.leadsPagination, state.leads, (page) => {
-      state.leads.page = page;
-      loadLeads();
+
+  if (pagination) {
+    renderPagination(pagination, model, (page) => {
+      model.page = page;
+      if (section === "customers") loadCustomers();
+      if (section === "leads") loadLeads();
+      if (section === "tours") loadTours();
     });
   }
 }
@@ -183,16 +236,9 @@ function renderPagination(container, pager, onPageChange) {
   const current = pager.page;
   const total = pager.totalPages;
 
-  const parts = [];
-
-  parts.push(
-    buttonHtml({
-      label: "Previous",
-      disabled: current <= 1,
-      page: current - 1,
-      cls: "backend-page-btn"
-    })
-  );
+  const parts = [
+    buttonHtml({ label: "Previous", disabled: current <= 1, page: current - 1, cls: "backend-page-btn" })
+  ];
 
   for (const page of visiblePages(current, total)) {
     if (page === "...") {
@@ -211,15 +257,7 @@ function renderPagination(container, pager, onPageChange) {
     );
   }
 
-  parts.push(
-    buttonHtml({
-      label: "Next",
-      disabled: current >= total,
-      page: current + 1,
-      cls: "backend-page-btn"
-    })
-  );
-
+  parts.push(buttonHtml({ label: "Next", disabled: current >= total, page: current + 1, cls: "backend-page-btn" }));
   container.innerHTML = parts.join("");
 
   container.querySelectorAll("button[data-page]").forEach((btn) => {
@@ -252,7 +290,7 @@ function visiblePages(current, total) {
 function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
   const attrs = [
     `class="${cls}"`,
-    `type="button"`,
+    'type="button"',
     `data-page="${page}"`,
     disabled ? "disabled" : "",
     current ? 'aria-current="page"' : ""
@@ -290,21 +328,19 @@ function renderLeads(items) {
       const leadHref = buildDetailHref("lead", lead.id);
       const customerHref = buildDetailHref("customer", lead.customer_id || "");
       return `<tr>
-        <td><a href="${escapeHtml(leadHref)}">${escapeHtml(lead.id)}</a></td>
+        <td><a href="${escapeHtml(leadHref)}">${escapeHtml(shortId(lead.id))}</a></td>
         <td>${escapeHtml(lead.stage)}</td>
-        <td>${lead.customer_id ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(lead.customer_id)}</a>` : "-"}</td>
+        <td>${lead.customer_id ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(lead.customer_id))}</a>` : "-"}</td>
         <td>${escapeHtml(lead.destination || "-")}</td>
         <td>${escapeHtml(lead.style || "-")}</td>
         <td>${escapeHtml(lead.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(lead.sla_due_at || "-")}</td>
+        <td>${escapeHtml(formatDateTime(lead.sla_due_at))}</td>
       </tr>`;
     })
     .join("");
 
   const body = rows || `<tr><td colspan="7">No leads found</td></tr>`;
-  if (els.leadsTable) {
-    els.leadsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  }
+  if (els.leadsTable) els.leadsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function renderCustomers(items) {
@@ -313,20 +349,50 @@ function renderCustomers(items) {
     .map((customer) => {
       const customerHref = buildDetailHref("customer", customer.id);
       return `<tr>
-        <td><a href="${escapeHtml(customerHref)}">${escapeHtml(customer.id)}</a></td>
+        <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.id))}</a></td>
         <td>${escapeHtml(customer.name || "-")}</td>
         <td>${escapeHtml(customer.email || "-")}</td>
         <td>${escapeHtml(customer.phone || "-")}</td>
         <td>${escapeHtml(customer.language || "-")}</td>
-        <td>${escapeHtml(customer.updated_at || "-")}</td>
+        <td>${escapeHtml(formatDateTime(customer.updated_at))}</td>
       </tr>`;
     })
     .join("");
 
   const body = rows || `<tr><td colspan="6">No customers found</td></tr>`;
-  if (els.customersTable) {
-    els.customersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  }
+  if (els.customersTable) els.customersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+function renderTours(items) {
+  const header = `<thead><tr><th>ID</th><th>Title</th><th>Country</th><th>Styles</th><th>Days</th><th>Price</th><th>Updated</th></tr></thead>`;
+  const rows = items
+    .map((tour) => {
+      const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
+      const href = buildTourEditHref(tour.id);
+      return `<tr>
+        <td><a href="${escapeHtml(href)}" title="${escapeHtml(tour.id)}">${escapeHtml(shortId(tour.id))}</a></td>
+        <td>${escapeHtml(tour.title || "-")}</td>
+        <td>${escapeHtml(tour.destinationCountry || "-")}</td>
+        <td>${escapeHtml(styles || "-")}</td>
+        <td>${escapeHtml(String(tour.durationDays ?? "-"))}</td>
+        <td>${escapeHtml(String(tour.priceFrom ?? "-"))}</td>
+        <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const body = rows || `<tr><td colspan="7">No tours found</td></tr>`;
+  if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+function buildDetailHref(type, id) {
+  const params = new URLSearchParams({ type, id, user: state.user });
+  return `backend-detail.html?${params.toString()}`;
+}
+
+function buildTourEditHref(id) {
+  const params = new URLSearchParams({ id, user: state.user });
+  return `backend-tour.html?${params.toString()}`;
 }
 
 function showError(message) {
@@ -341,13 +407,21 @@ function clearError() {
   els.error.classList.remove("show");
 }
 
-function buildDetailHref(type, id) {
-  const params = new URLSearchParams({
-    type,
-    id,
-    user: state.user
-  });
-  return `backend-detail.html?${params.toString()}`;
+function shortId(value) {
+  const id = String(value || "");
+  return id.length > 6 ? id.slice(-6) : id;
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(d.getFullYear());
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
 }
 
 function escapeHtml(value) {

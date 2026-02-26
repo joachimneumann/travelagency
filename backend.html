@@ -63,6 +63,35 @@
             </div>
             <div class="backend-pagination" id="leadsPagination" aria-label="Leads pagination"></div>
           </article>
+
+          <article class="panel" style="padding: 1rem; margin-top: 1rem;">
+            <h2 class="section-title" style="font-size: 1.2rem;">Tours</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="toursDestination">Destination</label>
+                <select id="toursDestination">
+                  <option value="all">All destinations</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="toursStyle">Style</label>
+                <select id="toursStyle">
+                  <option value="all">All styles</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button">Clear filters</button>
+              <div class="field">
+                <label for="toursSearch">Search tours</label>
+                <input id="toursSearch" type="text" placeholder="id, title, country, style..." />
+              </div>
+              <button class="btn btn-ghost" id="toursSearchBtn" type="button">Search</button>
+              <span id="toursCountInfo" class="micro"></span>
+            </div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="toursTable"></table>
+            </div>
+            <div class="backend-pagination" id="toursPagination" aria-label="Tours pagination"></div>
+          </article>
         </div>
       </section>
     </main>

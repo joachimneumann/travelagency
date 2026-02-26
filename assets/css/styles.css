@@ -120,6 +120,20 @@ img {
   align-items: center;
 }
 
+#backendLoginBtn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+#backendLoginBtnSubtitle {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-top: 0.16rem;
+}
+
 .backend-login select {
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -720,6 +734,10 @@ textarea:focus-visible {
   font-size: 0.9rem;
 }
 
+.footer p {
+  margin: 0;
+}
+
 .footer h3 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
@@ -728,6 +746,37 @@ textarea:focus-visible {
 .footer ul {
   margin: 0;
   padding-left: 1rem;
+}
+
+#footerBackendLoginMount {
+  margin-top: 0;
+}
+
+#footerBackendLoginMount .backend-login {
+  justify-content: flex-start;
+}
+
+#footerBackendLoginMount #backendLoginBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 0;
+  align-items: flex-start;
+}
+
+#footerBackendLoginMount #backendLoginBtnSubtitle {
+  display: none;
+}
+
+#footerBackendLoginMount #backendLoginBtn:hover,
+#footerBackendLoginMount #backendLoginBtn:focus-visible {
+  background: transparent;
+  color: var(--text);
 }
 
 .mobile-cta {
@@ -859,6 +908,27 @@ textarea:focus-visible {
 
 .backend-table tr:last-child td {
   border-bottom: 0;
+}
+
+.backend-table a {
+  color: #1565c0;
+}
+
+.backend-table a:hover,
+.backend-table a:focus-visible {
+  color: #0d47a1;
+}
+
+.backend-tour-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.backend-tour-form .field:last-of-type,
+.backend-tour-form .field:nth-last-of-type(2),
+.backend-tour-form .backend-controls {
+  grid-column: 1 / -1;
 }
 
 .backend-message {

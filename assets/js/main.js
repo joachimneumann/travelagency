@@ -1,6 +1,6 @@
 /*
   Beginner-editable configuration:
-  - Update destination/style labels in data/trips.json
+  - Tour catalog is loaded from backend endpoint /public/v1/tours
 */
 
 const state = {
@@ -19,6 +19,8 @@ const state = {
 const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
+const TOURS_CACHE_KEY = "chapter2_tours_cache_v1";
+const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const LEAD_API_ENDPOINT =
   (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
 const BACKEND_BASE_URL = window.CHAPTER2_API_BASE ? window.CHAPTER2_API_BASE.replace(/\/$/, "") : "";
@@ -28,7 +30,12 @@ const els = {
   siteNav: document.getElementById("siteNav"),
   navDestination: document.getElementById("navDestination"),
   navStyle: document.getElementById("navStyle"),
+  backendLoginContainer: document.getElementById("backendLoginContainer"),
+  headerBackendLoginMount: document.getElementById("headerBackendLoginMount"),
+  footerBackendLoginMount: document.getElementById("footerBackendLoginMount"),
   backendLoginBtn: document.getElementById("backendLoginBtn"),
+  backendLoginBtnTitle: document.getElementById("backendLoginBtnTitle"),
+  backendLoginBtnSubtitle: document.getElementById("backendLoginBtnSubtitle"),
   websiteAuthStatus: document.getElementById("websiteAuthStatus"),
   clearFilters: document.getElementById("clearFilters"),
   activeFilters: document.getElementById("activeFilters"),
@@ -166,14 +173,41 @@ async function loadWebsiteAuthStatus() {
     });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
-      els.websiteAuthStatus.textContent = "";
+      placeBackendLogin(false);
+      updateBackendButtonLabel({ authenticated: false, user: "" });
       return;
     }
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
-    els.websiteAuthStatus.textContent = `Logged in as: ${user}`;
+    placeBackendLogin(true);
+    updateBackendButtonLabel({ authenticated: true, user });
   } catch {
-    els.websiteAuthStatus.textContent = "";
+    placeBackendLogin(false);
+    updateBackendButtonLabel({ authenticated: false, user: "" });
   }
+}
+
+function placeBackendLogin(authenticated) {
+  if (!els.backendLoginContainer) return;
+  const target = authenticated ? els.headerBackendLoginMount : els.footerBackendLoginMount;
+  if (!target) return;
+  if (els.backendLoginContainer.parentElement !== target) {
+    target.appendChild(els.backendLoginContainer);
+  }
+}
+
+function updateBackendButtonLabel({ authenticated, user }) {
+  if (!els.backendLoginBtnTitle || !els.backendLoginBtnSubtitle) return;
+
+  if (authenticated) {
+    els.backendLoginBtnTitle.textContent = "backend";
+    els.backendLoginBtnSubtitle.textContent = user || "";
+    els.backendLoginBtnSubtitle.hidden = !Boolean(user);
+    return;
+  }
+
+  els.backendLoginBtnTitle.textContent = "Chapter2 backend";
+  els.backendLoginBtnSubtitle.textContent = "";
+  els.backendLoginBtnSubtitle.hidden = true;
 }
 
 function setupFilterEvents() {
@@ -484,6 +518,18 @@ function getFiltersFromURL() {
 
 async function loadTrips() {
   try {
+    if (BACKEND_BASE_URL) {
+      const cached = getCachedTours();
+      if (cached) return cached;
+
+      const response = await fetch(`${BACKEND_BASE_URL}/public/v1/tours?v=${TRIPS_REQUEST_VERSION}`);
+      if (!response.ok) throw new Error("Backend tours request failed.");
+      const payload = await response.json();
+      const items = Array.isArray(payload) ? payload : payload.items || [];
+      setCachedTours(items);
+      return items;
+    }
+
     const response = await fetch(`data/trips.json?v=${TRIPS_REQUEST_VERSION}`, { cache: "reload" });
     if (!response.ok) throw new Error("Trip JSON request failed.");
     return await response.json();
@@ -496,6 +542,35 @@ async function loadTrips() {
     } catch {
       return [];
     }
+  }
+}
+
+function getCachedTours() {
+  try {
+    const raw = localStorage.getItem(TOURS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const ts = Number(parsed?.ts || 0);
+    const items = parsed?.items;
+    if (!Array.isArray(items)) return null;
+    if (Date.now() - ts > TOURS_CACHE_TTL_MS) return null;
+    return items;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedTours(items) {
+  try {
+    localStorage.setItem(
+      TOURS_CACHE_KEY,
+      JSON.stringify({
+        ts: Date.now(),
+        items: Array.isArray(items) ? items : []
+      })
+    );
+  } catch {
+    // ignore cache write issues
   }
 }
 
