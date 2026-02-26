@@ -1,0 +1,23 @@
+{
+  "id": "tour_26031665-e7c4-442a-8597-e82f0e422c22",
+  "title": "Vietnam Food Journey",
+  "shortDescription": "A Vietnam food itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+  "styles": [
+    "Food"
+  ],
+  "priority": 50,
+  "durationDays": 8,
+  "priceFrom": 790,
+  "image": "/public/v1/tour-images/tour_26031665-e7c4-442a-8597-e82f0e422c22/tour_26031665-e7c4-442a-8597-e82f0e422c22.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.8,
+  "legacy_id": "trip-vietnam-food-classic",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

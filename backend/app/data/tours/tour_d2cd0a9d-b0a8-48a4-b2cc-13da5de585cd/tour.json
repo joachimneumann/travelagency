@@ -1,0 +1,23 @@
+{
+  "id": "tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd",
+  "title": "Laos Beach Journey",
+  "shortDescription": "A Laos beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+  "styles": [
+    "Beach"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 900,
+  "image": "/public/v1/tour-images/tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd/tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd.webp",
+  "highlights": [
+    "Signature stop in Luang Prabang",
+    "Route highlight around Vang Vieng",
+    "Smooth transfer planning via Mekong River"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-laos-beach-classic",
+  "destinationCountries": [
+    "Laos"
+  ]
+}

@@ -9,6 +9,9 @@
   --secondary: #1fa7a0;
   --radius: 14px;
   --shadow: 0 12px 30px rgba(19, 52, 68, 0.1);
+  --menu-font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  --menu-font-size-main: 0.92rem;
+  --menu-font-size-sub: 0.78rem;
 }
 
 * {
@@ -171,6 +174,68 @@ img {
   align-items: center;
 }
 
+/* Top header menu typography: single font, two sizes only */
+.header .nav,
+.header .nav a,
+.header .nav button,
+.header .nav label,
+.header .nav select {
+  font-family: var(--menu-font-family);
+}
+
+.header .nav .nav-list a,
+.header .nav #backendLoginBtn,
+.header .nav #backendLoginBtnTitle,
+.header .nav #clearFilters,
+.header .nav .select-wrap select {
+  font-size: var(--menu-font-size-main);
+}
+
+.header .nav #backendLoginBtnSubtitle,
+.header .nav .select-wrap label {
+  font-size: var(--menu-font-size-sub);
+}
+
+/* Match "Why us" typography for selected top-menu controls */
+.header .nav #clearFilters,
+.header .nav .select-wrap select,
+.header .nav #backendLoginBtnTitle {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Make clear-filters and backend (top menu) behave like nav links */
+.header .nav #clearFilters.btn,
+.header .nav #backendLoginBtn.btn {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  transform: none;
+}
+
+.header .nav #backendLoginBtn.btn {
+  align-items: center;
+  justify-content: center;
+}
+
+.header .nav #clearFilters.btn:hover,
+.header .nav #clearFilters.btn:focus-visible,
+.header .nav #backendLoginBtn.btn:hover,
+.header .nav #backendLoginBtn.btn:focus-visible {
+  background: var(--accent-soft);
+}
+
+/* Match "Logged in as" typography for filter labels */
+.header .nav .select-wrap label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
 .select-wrap {
   display: flex;
   align-items: center;
@@ -202,9 +267,10 @@ img {
 
 .btn {
   border: 0;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.7rem 1.1rem;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   font-size: 0.9rem;
@@ -931,6 +997,53 @@ textarea:focus-visible {
   grid-column: 1 / -1;
 }
 
+.tour-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 0.5rem 0 0.75rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.tour-hero-image {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 10px;
+  border: 1px solid #d7e5eb;
+  display: none;
+}
+
+.tour-hero-actions {
+  display: grid;
+  gap: 0.35rem;
+  align-items: start;
+}
+
+.tour-hero-actions .micro {
+  margin: 0;
+  max-width: 220px;
+}
+
+.backend-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.45rem 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.backend-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.backend-checkbox-item input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+
 .backend-message {
   border: 1px solid #e4a6a2;
   background: #fff2f1;
@@ -1214,6 +1327,38 @@ textarea:focus-visible {
   .info-grid,
   .field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .backend-tour-form {
+    grid-template-columns: 1fr;
+  }
+
+  .backend-tour-form .backend-controls {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .backend-tour-form .backend-controls .btn {
+    width: 100%;
+  }
+
+  .tour-hero-row {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.4rem 0 0.55rem;
+    margin: 0.1rem 0 0.35rem;
+  }
+
+  .tour-hero-image {
+    max-width: 100%;
+  }
+
+  .tour-hero-actions .micro {
+    max-width: 100%;
+  }
+
+  #tourChangeImageBtn {
+    width: 100%;
   }
 
   .mobile-cta {

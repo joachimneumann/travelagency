@@ -1,0 +1,23 @@
+{
+  "id": "tour_9b305e56-0901-4c9f-ab12-9b08b3985c41",
+  "title": "Thailand Beach - Island Escape",
+  "shortDescription": "A Thailand beach itinerary focused on an island-focused rhythm with extra beach downtime, with relaxed coast time balanced with easy local discovery.",
+  "styles": [
+    "Beach"
+  ],
+  "priority": 50,
+  "durationDays": 11,
+  "priceFrom": 1250,
+  "image": "/public/v1/tour-images/tour_9b305e56-0901-4c9f-ab12-9b08b3985c41/tour_9b305e56-0901-4c9f-ab12-9b08b3985c41.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 4.8,
+  "legacy_id": "trip-thailand-beach-island-escape",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

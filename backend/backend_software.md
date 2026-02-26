@@ -15,7 +15,7 @@ Current implemented code lives in:
 - `backend/app/src/server.js`
 - `backend/app/src/auth.js`
 - `backend/app/data/store.json`
-- `backend/app/data/tours.json`
+- `backend/app/data/tours/`
 - `backend/app/config/staff.json`
 - `backend/app/scripts/seed.js`
 
@@ -32,6 +32,15 @@ Implemented now:
   - `backend-detail.html`: linked details for leads/customers
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
+- Tours are fully backend-driven:
+  - website reads tours from `GET /public/v1/tours`
+  - tour images are backend-hosted under `/public/v1/tour-images/...`
+  - `GET /public/v1/tours` provides HTTP caching (`ETag`, `Cache-Control`)
+  - frontend applies local cache + image prewarm for faster load
+- Tour editor supports:
+  - destination countries selection via checkbox group (multi selection)
+  - styles selection via checkbox group (multi selection)
+  - image upload with backend ImageMagick conversion to WebP (max 1000px)
 
 Note on stack:
 - Planned stack remains NestJS + Postgres + Redis for production rollout.

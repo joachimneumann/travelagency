@@ -1,0 +1,23 @@
+{
+  "id": "tour_33b3d80f-72d6-4889-b219-7424a1e4e9a9",
+  "title": "Vietnam Family Journey",
+  "shortDescription": "A Vietnam family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+  "styles": [
+    "Family"
+  ],
+  "priority": 50,
+  "durationDays": 11,
+  "priceFrom": 1180,
+  "image": "/public/v1/tour-images/tour_33b3d80f-72d6-4889-b219-7424a1e4e9a9/tour_33b3d80f-72d6-4889-b219-7424a1e4e9a9.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.9,
+  "legacy_id": "trip-vietnam-family-classic",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

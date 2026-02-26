@@ -1,0 +1,23 @@
+{
+  "id": "tour_cb31c7fa-e0a4-476c-acf8-649ba32fc61f",
+  "title": "Cambodia Food Journey",
+  "shortDescription": "A Cambodia food itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+  "styles": [
+    "Food"
+  ],
+  "priority": 50,
+  "durationDays": 8,
+  "priceFrom": 710,
+  "image": "/public/v1/tour-images/tour_cb31c7fa-e0a4-476c-acf8-649ba32fc61f/tour_cb31c7fa-e0a4-476c-acf8-649ba32fc61f.webp",
+  "highlights": [
+    "Signature stop in Siem Reap",
+    "Route highlight around Phnom Penh",
+    "Smooth transfer planning via Tonle Sap"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-cambodia-food-classic",
+  "destinationCountries": [
+    "Cambodia"
+  ]
+}

@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chapter 2 Tour Editor</title>
-    <meta name="description" content="Chapter 2 backend tour editor" />
+    <title>Chapter 2 Tour</title>
+    <meta name="description" content="Chapter 2 backend tour details" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/css/styles.css?v=3" />
   </head>
@@ -28,73 +28,74 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <h1 class="section-title" id="tourTitle">Tour Editor</h1>
+          <h1 class="section-title" id="tourTitle">Tour</h1>
           <p class="section-lead" id="tourSubtitle">Loading tour...</p>
 
           <div id="tourError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <article class="panel" style="padding: 1rem;">
-            <h2 class="section-title" style="font-size: 1.1rem;">Edit Tour</h2>
-            <form id="tourForm" class="backend-tour-form">
-              <div class="field">
-                <label for="tourId">ID</label>
-                <input id="tourId" name="id" type="text" readonly />
+          <form id="tourForm" class="backend-tour-form">
+            <div class="field full">
+              <div class="tour-hero-row">
+                <img id="tourHeroImage" src="" alt="Tour hero" class="tour-hero-image" />
+                <div class="tour-hero-actions">
+                  <button class="btn btn-ghost" id="tourChangeImageBtn" type="button">Change image</button>
+                  <p class="micro">Image is converted to WebP and resized to max 1000px automatically.</p>
+                </div>
               </div>
-              <div class="field">
-                <label for="tourTitleInput">Title</label>
-                <input id="tourTitleInput" name="title" type="text" required />
-              </div>
-              <div class="field">
-                <label for="tourDestinationCountry">Destination Country</label>
-                <input id="tourDestinationCountry" name="destinationCountry" type="text" required />
-              </div>
-              <div class="field">
-                <label for="tourStyles">Styles (comma-separated)</label>
-                <input id="tourStyles" name="styles" type="text" placeholder="Adventure, Culture" required />
-              </div>
-              <div class="field">
-                <label for="tourDurationDays">Duration Days</label>
-                <input id="tourDurationDays" name="durationDays" type="number" min="1" step="1" />
-              </div>
-              <div class="field">
-                <label for="tourPriceFrom">Price From</label>
-                <input id="tourPriceFrom" name="priceFrom" type="number" min="0" step="1" />
-              </div>
-              <div class="field">
-                <label for="tourPriority">Priority</label>
-                <input id="tourPriority" name="priority" type="number" min="0" max="1000" step="1" />
-              </div>
-              <div class="field">
-                <label for="tourRating">Rating</label>
-                <input id="tourRating" name="rating" type="number" min="0" max="5" step="0.1" />
-              </div>
-              <div class="field">
-                <label for="tourImage">Image Path</label>
-                <input id="tourImage" name="image" type="text" />
-              </div>
-              <div class="field">
-                <label for="tourFallbackImage">Fallback Image Path</label>
-                <input id="tourFallbackImage" name="fallbackImage" type="text" />
-              </div>
-              <div class="field">
-                <label for="tourSeasonality">Seasonality</label>
-                <input id="tourSeasonality" name="seasonality" type="text" />
-              </div>
-              <div class="field">
-                <label for="tourShortDescription">Short Description</label>
-                <textarea id="tourShortDescription" name="shortDescription" rows="3"></textarea>
-              </div>
-              <div class="field">
-                <label for="tourHighlights">Highlights (one per line)</label>
-                <textarea id="tourHighlights" name="highlights" rows="4"></textarea>
-              </div>
-              <div class="backend-controls">
-                <button class="btn btn-primary" id="tourSaveBtn" type="submit">Save Changes</button>
-                <a class="btn btn-ghost" id="tourCancelBtn" href="backend.html">Cancel</a>
-                <span id="tourFormStatus" class="micro"></span>
-              </div>
-            </form>
-          </article>
+              <input id="tourImageUpload" name="tourImageUpload" type="file" accept="image/*" style="display: none;" />
+            </div>
+            <div class="field full">
+              <label for="tourShortDescription">Description</label>
+              <textarea id="tourShortDescription" name="shortDescription" rows="3"></textarea>
+            </div>
+            <div class="field full">
+              <label for="tourHighlights">Highlights (one per line)</label>
+              <textarea id="tourHighlights" name="highlights" rows="4"></textarea>
+            </div>
+            <div class="field">
+              <label for="tourSeasonality">Seasonality</label>
+              <input id="tourSeasonality" name="seasonality" type="text" />
+            </div>
+            <div class="field">
+              <label for="tourTitleInput">Title</label>
+              <input id="tourTitleInput" name="title" type="text" required />
+            </div>
+            <div class="field">
+              <label for="tourDestinationCountries">Destinations</label>
+              <input id="tourDestinationCountries" name="destinationCountries" type="hidden" required />
+              <div id="tourDestinationChoices" class="backend-checkbox-grid"></div>
+            </div>
+            <div class="field">
+              <label for="tourStyles">Tour Styles</label>
+              <input id="tourStyles" name="styles" type="hidden" required />
+              <div id="tourStyleChoices" class="backend-checkbox-grid"></div>
+            </div>
+            <div class="field">
+              <label for="tourDurationDays">Duration (Days)</label>
+              <input id="tourDurationDays" name="durationDays" type="number" min="1" step="1" />
+            </div>
+            <div class="field">
+              <label for="tourPriceFrom">Price from</label>
+              <input id="tourPriceFrom" name="priceFrom" type="number" min="0" step="1" />
+            </div>
+            <div class="field">
+              <label for="tourPriority">Web page ranking priority (0-100)</label>
+              <input id="tourPriority" name="priority" type="number" min="0" max="100" step="1" />
+            </div>
+            <div class="field">
+              <label for="tourRating">Rating</label>
+              <input id="tourRating" name="rating" type="number" min="0" max="5" step="0.1" />
+            </div>
+            <div class="field full">
+              <label for="tourId">ID (read-only)</label>
+              <input id="tourId" name="id" type="text" readonly />
+            </div>
+            <div class="backend-controls">
+              <button class="btn btn-primary" id="tourSaveBtn" type="submit">Save Changes</button>
+              <a class="btn btn-ghost" id="tourCancelBtn" href="backend.html">Cancel</a>
+              <span id="tourFormStatus" class="micro"></span>
+            </div>
+          </form>
         </div>
       </section>
     </main>

@@ -1,0 +1,23 @@
+{
+  "id": "tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2",
+  "title": "Cambodia Culture Journey",
+  "shortDescription": "A Cambodia culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+  "styles": [
+    "Culture"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 780,
+  "image": "/public/v1/tour-images/tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2/tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2.webp",
+  "highlights": [
+    "Signature stop in Siem Reap",
+    "Route highlight around Phnom Penh",
+    "Smooth transfer planning via Tonle Sap"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-cambodia-culture-classic",
+  "destinationCountries": [
+    "Cambodia"
+  ]
+}

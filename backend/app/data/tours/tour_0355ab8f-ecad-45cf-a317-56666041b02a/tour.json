@@ -1,0 +1,23 @@
+{
+  "id": "tour_0355ab8f-ecad-45cf-a317-56666041b02a",
+  "title": "Laos Luxury Journey",
+  "shortDescription": "A Laos luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
+  "styles": [
+    "Luxury"
+  ],
+  "priority": 50,
+  "durationDays": 12,
+  "priceFrom": 1840,
+  "image": "/public/v1/tour-images/tour_0355ab8f-ecad-45cf-a317-56666041b02a/tour_0355ab8f-ecad-45cf-a317-56666041b02a.webp",
+  "highlights": [
+    "Signature stop in Luang Prabang",
+    "Route highlight around Vang Vieng",
+    "Smooth transfer planning via Mekong River"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 5,
+  "legacy_id": "trip-laos-luxury-classic",
+  "destinationCountries": [
+    "Laos"
+  ]
+}

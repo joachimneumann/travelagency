@@ -1,0 +1,23 @@
+{
+  "id": "tour_8b140623-15c7-4194-874d-5c3db30cc13c",
+  "title": "Thailand Luxury Journey",
+  "shortDescription": "A Thailand luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
+  "styles": [
+    "Luxury"
+  ],
+  "priority": 50,
+  "durationDays": 13,
+  "priceFrom": 2100,
+  "image": "/public/v1/tour-images/tour_8b140623-15c7-4194-874d-5c3db30cc13c/tour_8b140623-15c7-4194-874d-5c3db30cc13c.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 5,
+  "legacy_id": "trip-thailand-luxury-classic",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

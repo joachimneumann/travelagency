@@ -1,0 +1,23 @@
+{
+  "id": "tour_96731cc5-44b2-4440-b205-dca8f3131d6b",
+  "title": "Laos Budget Journey",
+  "shortDescription": "A Laos budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+  "styles": [
+    "Budget"
+  ],
+  "priority": 50,
+  "durationDays": 8,
+  "priceFrom": 550,
+  "image": "/public/v1/tour-images/tour_96731cc5-44b2-4440-b205-dca8f3131d6b/tour_96731cc5-44b2-4440-b205-dca8f3131d6b.webp",
+  "highlights": [
+    "Signature stop in Luang Prabang",
+    "Route highlight around Vang Vieng",
+    "Smooth transfer planning via Mekong River"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.6,
+  "legacy_id": "trip-laos-budget-classic",
+  "destinationCountries": [
+    "Laos"
+  ]
+}

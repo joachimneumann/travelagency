@@ -137,7 +137,7 @@ def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str
         'id': f"trip-{country_slug}-{style_slug}-{variant_id}",
         'title': title,
         'shortDescription': short_description,
-        'destinationCountry': country_name,
+        'destinationCountries': [country_name],
         'styles': [style_name],
         # Human-writable field: preserve existing values from data/trips.json.
         # New tours default to 50.
@@ -145,7 +145,6 @@ def build_trip(path: Path, country_slug: str, style_slug: str, variant_slug: str
         'durationDays': duration,
         'priceFrom': price,
         'image': image_rel,
-        'fallbackImage': image_rel,
         'highlights': highlights,
         'seasonality': country['season'],
         'rating': style['rating']

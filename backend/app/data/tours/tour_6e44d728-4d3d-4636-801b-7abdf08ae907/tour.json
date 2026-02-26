@@ -1,0 +1,23 @@
+{
+  "id": "tour_6e44d728-4d3d-4636-801b-7abdf08ae907",
+  "title": "Thailand Food Journey",
+  "shortDescription": "A Thailand food itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+  "styles": [
+    "Food"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 910,
+  "image": "/public/v1/tour-images/tour_6e44d728-4d3d-4636-801b-7abdf08ae907/tour_6e44d728-4d3d-4636-801b-7abdf08ae907.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 4.8,
+  "legacy_id": "trip-thailand-food-classic",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

@@ -81,6 +81,7 @@ async function init() {
   state.filters.style = urlFilters.style || savedFilters?.style || "all";
 
   state.trips = await loadTrips();
+  prewarmTourImages(state.trips);
 
   populateFilterOptions(state.trips);
   syncFilterInputs();
@@ -199,13 +200,13 @@ function updateBackendButtonLabel({ authenticated, user }) {
   if (!els.backendLoginBtnTitle || !els.backendLoginBtnSubtitle) return;
 
   if (authenticated) {
-    els.backendLoginBtnTitle.textContent = "backend";
+    els.backendLoginBtnTitle.textContent = "Backend";
     els.backendLoginBtnSubtitle.textContent = user || "";
     els.backendLoginBtnSubtitle.hidden = !Boolean(user);
     return;
   }
 
-  els.backendLoginBtnTitle.textContent = "Chapter2 backend";
+  els.backendLoginBtnTitle.textContent = "Chapter2 Backend";
   els.backendLoginBtnSubtitle.textContent = "";
   els.backendLoginBtnSubtitle.hidden = true;
 }
@@ -250,7 +251,8 @@ function saveFilters() {
 
 function applyFilters() {
   const matchingTrips = state.trips.filter((trip) => {
-    const matchDest = state.filters.dest === "all" || trip.destinationCountry === state.filters.dest;
+    const destinationCountries = tourDestinationCountries(trip);
+    const matchDest = state.filters.dest === "all" || destinationCountries.includes(state.filters.dest);
     const matchStyle = state.filters.style === "all" || trip.styles.includes(state.filters.style);
     return matchDest && matchStyle;
   });
@@ -414,24 +416,28 @@ function renderTrips(trips) {
   els.noResultsMessage.hidden = true;
 
   const cards = trips
-    .map((trip) => {
+    .map((trip, index) => {
       const tags = trip.styles.map((style) => `<span class="tag">${escapeHTML(style)}</span>`).join("");
+      const countries = tourDestinationCountries(trip);
+      const countriesLabel = countries.join(", ");
       const price = typeof trip.priceFrom === "number" ? `From $${trip.priceFrom}` : "Custom quote";
       const rating = typeof trip.rating === "number" ? `★ ${trip.rating.toFixed(1)}` : "";
+      const loading = index < 3 ? "eager" : "lazy";
+      const fetchpriority = index < 3 ? "high" : "auto";
 
       return `
         <article class="tour-card">
           <img
             src="${escapeAttr(trip.image)}"
-            data-fallback="${escapeAttr(trip.fallbackImage || trip.image)}"
-            alt="${escapeAttr(trip.title)} in ${escapeAttr(trip.destinationCountry)}"
-            loading="lazy"
+            alt="${escapeAttr(trip.title)} in ${escapeAttr(countriesLabel)}"
+            loading="${loading}"
+            fetchpriority="${fetchpriority}"
             width="1200"
             height="800"
           />
           <div class="tour-body">
             <div class="tour-topline">
-              <span class="tour-country">${escapeHTML(trip.destinationCountry)}</span>
+              <span class="tour-country">${escapeHTML(countriesLabel)}</span>
               <span class="rating">${escapeHTML(rating)}</span>
             </div>
             <h3 class="tour-title">${escapeHTML(trip.title)}</h3>
@@ -449,23 +455,14 @@ function renderTrips(trips) {
     .join("");
 
   els.tourGrid.innerHTML = cards;
-
-  els.tourGrid.querySelectorAll("img[data-fallback]").forEach((img) => {
-    img.addEventListener("error", () => {
-      const fallback = img.getAttribute("data-fallback");
-      if (fallback && img.src !== fallback) {
-        img.src = fallback;
-      }
-    });
-  });
-
   // Re-bind modal opener buttons created after rendering cards.
   els.tourGrid.querySelectorAll("[data-open-modal]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const tripId = btn.getAttribute("data-trip-id");
       const selected = state.trips.find((t) => t.id === tripId);
       if (selected) {
-        setLeadField("leadDestination", selected.destinationCountry);
+        const firstDestination = tourDestinationCountries(selected)[0] || "";
+        setLeadField("leadDestination", firstDestination);
         setLeadField("leadStyle", selected.styles[0] || "");
       }
       openLeadModal();
@@ -474,7 +471,7 @@ function renderTrips(trips) {
 }
 
 function populateFilterOptions(trips) {
-  const destinations = Array.from(new Set(trips.map((trip) => trip.destinationCountry))).sort();
+  const destinations = Array.from(new Set(trips.flatMap((trip) => tourDestinationCountries(trip)))).sort();
   const styles = Array.from(new Set(trips.flatMap((trip) => trip.styles))).sort();
 
   for (const destination of destinations) {
@@ -484,6 +481,13 @@ function populateFilterOptions(trips) {
   for (const style of styles) {
     els.navStyle.insertAdjacentHTML("beforeend", `<option>${escapeHTML(style)}</option>`);
   }
+}
+
+function tourDestinationCountries(trip) {
+  if (Array.isArray(trip?.destinationCountries) && trip.destinationCountries.length) {
+    return trip.destinationCountries.map((value) => String(value || "").trim()).filter(Boolean);
+  }
+  return [];
 }
 
 function syncFilterInputs() {
@@ -525,7 +529,7 @@ async function loadTrips() {
       const response = await fetch(`${BACKEND_BASE_URL}/public/v1/tours?v=${TRIPS_REQUEST_VERSION}`);
       if (!response.ok) throw new Error("Backend tours request failed.");
       const payload = await response.json();
-      const items = Array.isArray(payload) ? payload : payload.items || [];
+      const items = normalizeToursForFrontend(Array.isArray(payload) ? payload : payload.items || []);
       setCachedTours(items);
       return items;
     }
@@ -545,6 +549,25 @@ async function loadTrips() {
   }
 }
 
+function normalizeToursForFrontend(items) {
+  return (Array.isArray(items) ? items : []).map((item) => {
+    const image = absolutizeBackendUrl(item.image);
+    return {
+      ...item,
+      image
+    };
+  });
+}
+
+function absolutizeBackendUrl(urlValue) {
+  const value = String(urlValue || "").trim();
+  if (!value) return value;
+  if (!BACKEND_BASE_URL) return value;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (value.startsWith("/")) return `${BACKEND_BASE_URL}${value}`;
+  return `${BACKEND_BASE_URL}/${value}`;
+}
+
 function getCachedTours() {
   try {
     const raw = localStorage.getItem(TOURS_CACHE_KEY);
@@ -554,7 +577,7 @@ function getCachedTours() {
     const items = parsed?.items;
     if (!Array.isArray(items)) return null;
     if (Date.now() - ts > TOURS_CACHE_TTL_MS) return null;
-    return items;
+    return normalizeToursForFrontend(items);
   } catch {
     return null;
   }
@@ -572,6 +595,28 @@ function setCachedTours(items) {
   } catch {
     // ignore cache write issues
   }
+}
+
+function prewarmTourImages(tours) {
+  const seen = new Set();
+  const urls = [];
+
+  for (const tour of tours) {
+    const primary = String(tour.image || "").trim();
+    for (const url of [primary]) {
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      urls.push(url);
+    }
+    if (urls.length >= 12) break;
+  }
+
+  urls.forEach((url) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.loading = "eager";
+    img.src = url;
+  });
 }
 
 function setupModal() {

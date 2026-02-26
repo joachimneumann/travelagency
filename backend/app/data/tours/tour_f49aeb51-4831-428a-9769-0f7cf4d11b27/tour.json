@@ -1,0 +1,23 @@
+{
+  "id": "tour_f49aeb51-4831-428a-9769-0f7cf4d11b27",
+  "title": "Vietnam Culture - Hoi An",
+  "shortDescription": "A Vietnam culture itinerary focused on a route shaped around Hoi An, with heritage depth, local life, and meaningful guided visits.",
+  "styles": [
+    "Culture"
+  ],
+  "priority": 80,
+  "durationDays": 10,
+  "priceFrom": 950,
+  "image": "/public/v1/tour-images/tour_f49aeb51-4831-428a-9769-0f7cf4d11b27/tour_f49aeb51-4831-428a-9769-0f7cf4d11b27.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.8,
+  "legacy_id": "trip-vietnam-culture-hoi-an",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

@@ -42,7 +42,8 @@ Cross-origin browser usage note:
 
 JSON files are used for local persistence:
 - `data/store.json`
-- `data/tours.json`
+- `data/tours/<tour_id>/tour.json`
+- `data/tours/<tour_id>/tour_<uuid>.webp`
 - `config/staff.json`
 
 ## Auth Module Split
@@ -64,6 +65,7 @@ This keeps backend business logic (leads/customers/pipeline) separate from OIDC/
 Public:
 - `POST /public/v1/leads`
 - `GET /public/v1/tours`
+- `GET /public/v1/tour-images/:path`
 
 Admin API:
 - `GET /api/v1/leads`
@@ -78,10 +80,26 @@ Admin API:
 - `GET /api/v1/tours/:tourId`
 - `POST /api/v1/tours`
 - `PATCH /api/v1/tours/:tourId`
+- `POST /api/v1/tours/:tourId/image`
 
 Tour ID format:
 - Tours now use generated IDs like `tour_<uuid>` (same pattern style as leads/customers).
 - `POST /api/v1/tours` always generates the tour ID server-side.
+
+Tour image handling:
+- Tour images are stored per tour under `backend/app/data/tours/<tour_id>/`.
+- `POST /api/v1/tours/:tourId/image` accepts JSON:
+  - `filename`
+  - `data_base64`
+- Backend uses ImageMagick to:
+  - auto-orient image
+  - resize to max `1000x1000`
+  - strip metadata
+  - convert to optimized `.webp`
+- Public image URLs are served from `/public/v1/tour-images/...` with long-lived immutable cache headers.
+Tour API caching:
+- `GET /public/v1/tours` returns `ETag` and `Cache-Control` (`max-age=120`, `stale-while-revalidate=600`).
+- Website frontend also keeps a short local cache and prewarms visible image URLs.
 
 `/api/v1/*` authentication:
 - Keycloak backend session cookie (browser flows)

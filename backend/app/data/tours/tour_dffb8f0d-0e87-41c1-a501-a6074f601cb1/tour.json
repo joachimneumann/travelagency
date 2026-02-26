@@ -1,0 +1,23 @@
+{
+  "id": "tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1",
+  "title": "Vietnam Beach Journey",
+  "shortDescription": "A Vietnam beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+  "styles": [
+    "Beach"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 1040,
+  "image": "/public/v1/tour-images/tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1/tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.8,
+  "legacy_id": "trip-vietnam-beach-classic",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

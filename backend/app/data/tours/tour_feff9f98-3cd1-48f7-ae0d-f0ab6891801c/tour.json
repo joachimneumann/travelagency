@@ -1,0 +1,23 @@
+{
+  "id": "tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c",
+  "title": "Vietnam Adventure - Caves",
+  "shortDescription": "A Vietnam adventure itinerary focused on a route shaped around Caves, with active days, scenic routes, and practical local support.",
+  "styles": [
+    "Adventure"
+  ],
+  "priority": 50,
+  "durationDays": 11,
+  "priceFrom": 1070,
+  "image": "/public/v1/tour-images/tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c/tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.8,
+  "legacy_id": "trip-vietnam-adventure-caves",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

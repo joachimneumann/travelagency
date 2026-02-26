@@ -1,0 +1,23 @@
+{
+  "id": "tour_194593e9-d64d-4ebd-9f49-9823b70e2b82",
+  "title": "Thailand Culture Journey",
+  "shortDescription": "A Thailand culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+  "styles": [
+    "Culture"
+  ],
+  "priority": 50,
+  "durationDays": 10,
+  "priceFrom": 980,
+  "image": "/public/v1/tour-images/tour_194593e9-d64d-4ebd-9f49-9823b70e2b82/tour_194593e9-d64d-4ebd-9f49-9823b70e2b82.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 4.8,
+  "legacy_id": "trip-thailand-culture-classic",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

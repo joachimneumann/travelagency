@@ -1,0 +1,23 @@
+{
+  "id": "tour_603a63c1-2967-4d78-ae35-13b638c405df",
+  "title": "Thailand Family Journey",
+  "shortDescription": "A Thailand family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+  "styles": [
+    "Family"
+  ],
+  "priority": 50,
+  "durationDays": 12,
+  "priceFrom": 1300,
+  "image": "/public/v1/tour-images/tour_603a63c1-2967-4d78-ae35-13b638c405df/tour_603a63c1-2967-4d78-ae35-13b638c405df.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 4.9,
+  "legacy_id": "trip-thailand-family-classic",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

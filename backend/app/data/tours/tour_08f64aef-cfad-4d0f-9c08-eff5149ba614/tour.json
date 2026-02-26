@@ -1,0 +1,23 @@
+{
+  "id": "tour_08f64aef-cfad-4d0f-9c08-eff5149ba614",
+  "title": "Thailand Adventure Journey",
+  "shortDescription": "A Thailand adventure itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+  "styles": [
+    "Adventure"
+  ],
+  "priority": 50,
+  "durationDays": 11,
+  "priceFrom": 1100,
+  "image": "/public/v1/tour-images/tour_08f64aef-cfad-4d0f-9c08-eff5149ba614/tour_08f64aef-cfad-4d0f-9c08-eff5149ba614.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 4.8,
+  "legacy_id": "trip-thailand-adventure-classic",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "tour_cd79d9f1-3cd4-41a2-89be-7caf8d1b1f3e",
+  "title": "Thailand Budget Journey",
+  "shortDescription": "A Thailand budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+  "styles": [
+    "Budget"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 810,
+  "image": "/public/v1/tour-images/tour_cd79d9f1-3cd4-41a2-89be-7caf8d1b1f3e/tour_cd79d9f1-3cd4-41a2-89be-7caf8d1b1f3e.webp",
+  "highlights": [
+    "Signature stop in Bangkok",
+    "Route highlight around Chiang Mai",
+    "Smooth transfer planning via Phuket"
+  ],
+  "seasonality": "Best Nov-Mar",
+  "rating": 4.6,
+  "legacy_id": "trip-thailand-budget-classic",
+  "destinationCountries": [
+    "Thailand"
+  ]
+}

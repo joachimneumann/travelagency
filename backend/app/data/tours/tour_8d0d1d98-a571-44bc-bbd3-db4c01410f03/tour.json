@@ -1,0 +1,23 @@
+{
+  "id": "tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03",
+  "title": "Cambodia Family Journey",
+  "shortDescription": "A Cambodia family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+  "styles": [
+    "Family"
+  ],
+  "priority": 50,
+  "durationDays": 11,
+  "priceFrom": 1100,
+  "image": "/public/v1/tour-images/tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03/tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03.webp",
+  "highlights": [
+    "Signature stop in Siem Reap",
+    "Route highlight around Phnom Penh",
+    "Smooth transfer planning via Tonle Sap"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.9,
+  "legacy_id": "trip-cambodia-family-classic",
+  "destinationCountries": [
+    "Cambodia"
+  ]
+}

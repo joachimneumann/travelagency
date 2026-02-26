@@ -1,0 +1,23 @@
+{
+  "id": "tour_dea67b11-a783-4d32-a2b6-964ec86c5bef",
+  "title": "Laos Adventure Journey",
+  "shortDescription": "A Laos adventure itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+  "styles": [
+    "Adventure"
+  ],
+  "priority": 50,
+  "durationDays": 10,
+  "priceFrom": 840,
+  "image": "/public/v1/tour-images/tour_dea67b11-a783-4d32-a2b6-964ec86c5bef/tour_dea67b11-a783-4d32-a2b6-964ec86c5bef.webp",
+  "highlights": [
+    "Signature stop in Luang Prabang",
+    "Route highlight around Vang Vieng",
+    "Smooth transfer planning via Mekong River"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-laos-adventure-classic",
+  "destinationCountries": [
+    "Laos"
+  ]
+}

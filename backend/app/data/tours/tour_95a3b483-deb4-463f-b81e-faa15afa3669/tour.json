@@ -1,0 +1,23 @@
+{
+  "id": "tour_95a3b483-deb4-463f-b81e-faa15afa3669",
+  "title": "Cambodia Beach Journey",
+  "shortDescription": "A Cambodia beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+  "styles": [
+    "Beach"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 960,
+  "image": "/public/v1/tour-images/tour_95a3b483-deb4-463f-b81e-faa15afa3669/tour_95a3b483-deb4-463f-b81e-faa15afa3669.webp",
+  "highlights": [
+    "Signature stop in Siem Reap",
+    "Route highlight around Phnom Penh",
+    "Smooth transfer planning via Tonle Sap"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-cambodia-beach-classic",
+  "destinationCountries": [
+    "Cambodia"
+  ]
+}

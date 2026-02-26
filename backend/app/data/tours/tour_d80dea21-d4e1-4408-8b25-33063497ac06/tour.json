@@ -1,0 +1,23 @@
+{
+  "id": "tour_d80dea21-d4e1-4408-8b25-33063497ac06",
+  "title": "Laos Culture Journey",
+  "shortDescription": "A Laos culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+  "styles": [
+    "Culture"
+  ],
+  "priority": 50,
+  "durationDays": 9,
+  "priceFrom": 720,
+  "image": "/public/v1/tour-images/tour_d80dea21-d4e1-4408-8b25-33063497ac06/tour_d80dea21-d4e1-4408-8b25-33063497ac06.webp",
+  "highlights": [
+    "Signature stop in Luang Prabang",
+    "Route highlight around Vang Vieng",
+    "Smooth transfer planning via Mekong River"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-laos-culture-classic",
+  "destinationCountries": [
+    "Laos"
+  ]
+}

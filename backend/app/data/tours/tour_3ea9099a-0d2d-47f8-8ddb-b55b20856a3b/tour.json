@@ -1,0 +1,23 @@
+{
+  "id": "tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b",
+  "title": "Vietnam Luxury Journey",
+  "shortDescription": "A Vietnam luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
+  "styles": [
+    "Luxury"
+  ],
+  "priority": 50,
+  "durationDays": 12,
+  "priceFrom": 1980,
+  "image": "/public/v1/tour-images/tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b/tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 5,
+  "legacy_id": "trip-vietnam-luxury-classic",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

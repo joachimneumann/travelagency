@@ -1,0 +1,23 @@
+{
+  "id": "tour_a8c7a855-fe51-4a4d-aed6-c4fafbb668a9",
+  "title": "Cambodia Luxury Journey",
+  "shortDescription": "A Cambodia luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
+  "styles": [
+    "Luxury"
+  ],
+  "priority": 50,
+  "durationDays": 12,
+  "priceFrom": 1900,
+  "image": "/public/v1/tour-images/tour_a8c7a855-fe51-4a4d-aed6-c4fafbb668a9/tour_a8c7a855-fe51-4a4d-aed6-c4fafbb668a9.webp",
+  "highlights": [
+    "Signature stop in Siem Reap",
+    "Route highlight around Phnom Penh",
+    "Smooth transfer planning via Tonle Sap"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 5,
+  "legacy_id": "trip-cambodia-luxury-classic",
+  "destinationCountries": [
+    "Cambodia"
+  ]
+}

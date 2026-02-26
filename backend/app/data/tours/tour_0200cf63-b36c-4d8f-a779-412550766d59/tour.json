@@ -1,0 +1,23 @@
+{
+  "id": "tour_0200cf63-b36c-4d8f-a779-412550766d59",
+  "title": "Vietnam Adventure - Ha Giang Loop",
+  "shortDescription": "A Vietnam adventure itinerary focused on a mountain-loop focus through Ha Giang, with active days, scenic routes, and practical local support.",
+  "styles": [
+    "Adventure"
+  ],
+  "priority": 50,
+  "durationDays": 11,
+  "priceFrom": 1070,
+  "image": "/public/v1/tour-images/tour_0200cf63-b36c-4d8f-a779-412550766d59/tour_0200cf63-b36c-4d8f-a779-412550766d59.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.8,
+  "legacy_id": "trip-vietnam-adventure-ha-giang-loop",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

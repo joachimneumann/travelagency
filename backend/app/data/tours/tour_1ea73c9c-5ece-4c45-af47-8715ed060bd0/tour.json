@@ -1,0 +1,23 @@
+{
+  "id": "tour_1ea73c9c-5ece-4c45-af47-8715ed060bd0",
+  "title": "Laos Food Journey",
+  "shortDescription": "A Laos food itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+  "styles": [
+    "Food"
+  ],
+  "priority": 50,
+  "durationDays": 8,
+  "priceFrom": 650,
+  "image": "/public/v1/tour-images/tour_1ea73c9c-5ece-4c45-af47-8715ed060bd0/tour_1ea73c9c-5ece-4c45-af47-8715ed060bd0.webp",
+  "highlights": [
+    "Signature stop in Luang Prabang",
+    "Route highlight around Vang Vieng",
+    "Smooth transfer planning via Mekong River"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.8,
+  "legacy_id": "trip-laos-food-classic",
+  "destinationCountries": [
+    "Laos"
+  ]
+}

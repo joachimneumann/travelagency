@@ -1,7 +1,10 @@
 import { createServer } from "node:http";
-import { readFile, writeFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { execFile as execFileCb } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { createAuth } from "./auth.js";
 
@@ -9,10 +12,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
-const TOURS_PATH = path.join(APP_ROOT, "data", "tours.json");
+const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
+const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const execFile = promisify(execFileCb);
 
 const STAGES = {
   NEW: "NEW",
@@ -61,6 +66,7 @@ const routes = [
   ...auth.routes,
   { method: "GET", pattern: /^\/health$/, handler: handleHealth },
   { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
+  { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlePublicTourImage },
   { method: "POST", pattern: /^\/public\/v1\/leads$/, handler: handleCreateLead },
   { method: "GET", pattern: /^\/api\/v1\/leads$/, handler: handleListLeads },
   { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)$/, handler: handleGetLead },
@@ -74,12 +80,15 @@ const routes = [
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
   { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
   { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
+  { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handleUploadTourImage },
   { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
   { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
   { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
   { method: "GET", pattern: /^\/admin\/leads$/, handler: handleAdminLeadsPage },
   { method: "GET", pattern: /^\/admin\/leads\/([^/]+)$/, handler: handleAdminLeadDetailPage }
 ];
+
+await ensureStorage();
 
 createServer(async (req, res) => {
   try {
@@ -128,6 +137,11 @@ createServer(async (req, res) => {
   console.log(`Chapter2 backend listening on http://localhost:${PORT}`);
 });
 
+async function ensureStorage() {
+  await mkdir(TOURS_DIR, { recursive: true });
+  await mkdir(TEMP_UPLOAD_DIR, { recursive: true });
+}
+
 function withCors(req, res) {
   const requestOrigin = normalizeText(req.headers.origin);
   const allowAny = CORS_ORIGIN === "*";
@@ -159,6 +173,58 @@ function sendHtml(res, status, html) {
   res.end(html);
 }
 
+function getMimeTypeFromExt(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".png") return "image/png";
+  if (ext === ".avif") return "image/avif";
+  return "application/octet-stream";
+}
+
+async function sendFileWithCache(req, res, filePath, cacheControl) {
+  let fileStats;
+  try {
+    fileStats = await stat(filePath);
+  } catch {
+    sendJson(res, 404, { error: "Not found" });
+    return;
+  }
+
+  if (!fileStats.isFile()) {
+    sendJson(res, 404, { error: "Not found" });
+    return;
+  }
+
+  const etag = `W/"${fileStats.size}-${Number(fileStats.mtimeMs)}"`;
+  const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
+  if (ifNoneMatch === etag) {
+    res.writeHead(304, {
+      "Cache-Control": cacheControl,
+      ETag: etag
+    });
+    res.end();
+    return;
+  }
+
+  res.writeHead(200, {
+    "Content-Type": getMimeTypeFromExt(filePath),
+    "Cache-Control": cacheControl,
+    ETag: etag,
+    "Content-Length": String(fileStats.size)
+  });
+
+  const stream = createReadStream(filePath);
+  stream.on("error", () => {
+    if (!res.headersSent) {
+      sendJson(res, 500, { error: "Unable to read file" });
+    } else {
+      res.end();
+    }
+  });
+  stream.pipe(res);
+}
+
 async function readBodyJson(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
@@ -185,15 +251,39 @@ async function persistStore(store) {
 }
 
 async function readTours() {
-  const raw = await readFile(TOURS_PATH, "utf8");
-  const parsed = JSON.parse(raw);
-  return Array.isArray(parsed) ? parsed : [];
+  const items = [];
+  const entries = await readdir(TOURS_DIR, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const tourPath = path.join(TOURS_DIR, entry.name, "tour.json");
+    try {
+      const raw = await readFile(tourPath, "utf8");
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && normalizeText(parsed.id)) {
+        items.push(parsed);
+      }
+    } catch {
+      // Ignore unreadable tour folders.
+    }
+  }
+
+  return items;
 }
 
-async function persistTours(tours) {
+function tourFolderPath(tourId) {
+  return path.join(TOURS_DIR, tourId);
+}
+
+function tourJsonPath(tourId) {
+  return path.join(tourFolderPath(tourId), "tour.json");
+}
+
+async function persistTour(tour) {
   writeQueue = writeQueue.then(async () => {
-    const next = `${JSON.stringify(tours, null, 2)}\n`;
-    await writeFile(TOURS_PATH, next, "utf8");
+    const id = normalizeText(tour?.id);
+    if (!id) throw new Error("Tour id is required");
+    await mkdir(tourFolderPath(id), { recursive: true });
+    await writeFile(tourJsonPath(id), `${JSON.stringify(tour, null, 2)}\n`, "utf8");
   });
   await writeQueue;
 }
@@ -267,6 +357,55 @@ function normalizeHighlights(value) {
     .split(/\r?\n/)
     .map((line) => normalizeText(line))
     .filter(Boolean);
+}
+
+function tourDestinationCountries(tour) {
+  const fromArray = Array.isArray(tour?.destinationCountries) ? tour.destinationCountries : [];
+  return Array.from(new Set(fromArray.map((value) => normalizeText(value)).filter(Boolean)));
+}
+
+function toTourImagePublicUrl(imageValue) {
+  const text = normalizeText(imageValue);
+  if (!text) return "";
+  if (text.startsWith("http://") || text.startsWith("https://")) return text;
+  if (text.startsWith("/public/v1/tour-images/")) return text;
+  if (text.startsWith("/")) return text;
+  return `/public/v1/tour-images/${text}`;
+}
+
+function normalizeTourForRead(tour) {
+  const destinationCountries = tourDestinationCountries(tour);
+  const image = toTourImagePublicUrl(tour.image);
+  return {
+    ...tour,
+    destinationCountries,
+    image
+  };
+}
+
+function collectTourOptions(tours) {
+  const destinations = Array.from(
+    new Set(tours.flatMap((tour) => tourDestinationCountries(tour)).map((value) => normalizeText(value)).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+  const styles = Array.from(
+    new Set(
+      tours
+        .flatMap((tour) => (Array.isArray(tour.styles) ? tour.styles : []))
+        .map((style) => normalizeText(style))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  return { destinations, styles };
+}
+
+function resolveTourImageDiskPath(relativePath) {
+  const decoded = decodeURIComponent(normalizeText(relativePath));
+  if (!decoded || decoded.includes("\0")) return "";
+  const normalized = path.posix.normalize(decoded.replaceAll("\\", "/")).replace(/^\/+/, "");
+  if (!normalized || normalized.startsWith("..") || normalized.includes("/../")) return "";
+  const absolute = path.resolve(TOURS_DIR, normalized);
+  if (!absolute.startsWith(TOURS_DIR)) return "";
+  return absolute;
 }
 
 function levenshtein(a, b) {
@@ -786,10 +925,12 @@ function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
   if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id);
   if (isCreate || payload.title !== undefined) next.title = normalizeText(payload.title);
   if (payload.shortDescription !== undefined) next.shortDescription = normalizeText(payload.shortDescription);
-  if (isCreate || payload.destinationCountry !== undefined) next.destinationCountry = normalizeText(payload.destinationCountry);
+  if (isCreate || payload.destinationCountries !== undefined) {
+    const destinationCountries = normalizeStringArray(payload.destinationCountries);
+    next.destinationCountries = destinationCountries;
+  }
   if (isCreate || payload.styles !== undefined) next.styles = normalizeStringArray(payload.styles);
-  if (payload.image !== undefined) next.image = normalizeText(payload.image);
-  if (payload.fallbackImage !== undefined) next.fallbackImage = normalizeText(payload.fallbackImage);
+  if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
   if (payload.seasonality !== undefined) next.seasonality = normalizeText(payload.seasonality);
   if (payload.highlights !== undefined || isCreate) next.highlights = normalizeHighlights(payload.highlights);
 
@@ -815,7 +956,7 @@ function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
 
 function validateTourInput(tour, { isCreate = false } = {}) {
   if (isCreate && !tour.title) return "title is required";
-  if (isCreate && !tour.destinationCountry) return "destinationCountry is required";
+  if (isCreate && !tourDestinationCountries(tour).length) return "destinationCountries is required";
   if (isCreate && (!Array.isArray(tour.styles) || !tour.styles.length)) return "styles is required";
   return "";
 }
@@ -827,7 +968,7 @@ function filterAndSortTours(tours, query) {
   const sort = normalizeText(query.get("sort")) || "updated_at_desc";
 
   const filtered = tours.filter((tour) => {
-    const destinationMatch = !destination || normalizeText(tour.destinationCountry) === destination;
+    const destinationMatch = !destination || tourDestinationCountries(tour).includes(destination);
     const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
     if (!destinationMatch || !styleMatch) return false;
     if (!search) return true;
@@ -835,7 +976,7 @@ function filterAndSortTours(tours, query) {
       tour.id,
       tour.title,
       tour.shortDescription,
-      tour.destinationCountry,
+      ...tourDestinationCountries(tour),
       ...(Array.isArray(tour.highlights) ? tour.highlights : []),
       ...(Array.isArray(tour.styles) ? tour.styles : [])
     ]
@@ -870,20 +1011,20 @@ async function handlePublicListTours(req, res) {
   const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || tours.length || 1000, 1, 5000);
 
   const filtered = tours.filter((tour) => {
-    const destinationMatch = !destination || normalizeText(tour.destinationCountry) === destination;
+    const destinationMatch = !destination || tourDestinationCountries(tour).includes(destination);
     const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
     return destinationMatch && styleMatch;
   });
 
   const sorted = [...filtered].sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
-  const items = sorted.slice(offset, offset + limit);
+  const items = sorted.slice(offset, offset + limit).map(normalizeTourForRead);
   const payload = { items, total: filtered.length, offset, limit };
   const payloadText = JSON.stringify(payload);
   const etag = `W/"${createHash("sha1").update(payloadText).digest("hex")}"`;
   const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
 
   const cacheHeaders = {
-    "Cache-Control": "public, max-age=120, must-revalidate",
+    "Cache-Control": "public, max-age=120, stale-while-revalidate=600, must-revalidate",
     ETag: etag
   };
 
@@ -901,27 +1042,17 @@ async function handleListTours(req, res) {
   const requestUrl = new URL(req.url, "http://localhost");
   const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams);
   const paged = paginate(filtered, requestUrl.searchParams);
-  const availableDestinations = Array.from(new Set(tours.map((tour) => normalizeText(tour.destinationCountry)).filter(Boolean))).sort(
-    (a, b) => a.localeCompare(b)
-  );
-  const availableStyles = Array.from(
-    new Set(
-      tours
-        .flatMap((tour) => (Array.isArray(tour.styles) ? tour.styles : []))
-        .map((style) => normalizeText(style))
-        .filter(Boolean)
-    )
-  ).sort((a, b) => a.localeCompare(b));
+  const options = collectTourOptions(tours);
   sendJson(res, 200, {
-    items: paged.items,
+    items: paged.items.map(normalizeTourForRead),
     total: paged.total,
     page: paged.page,
     page_size: paged.page_size,
     total_pages: paged.total_pages,
     sort,
     filters,
-    available_destinations: availableDestinations,
-    available_styles: availableStyles
+    available_destinations: options.destinations,
+    available_styles: options.styles
   });
 }
 
@@ -932,7 +1063,14 @@ async function handleGetTour(_req, res, [tourId]) {
     sendJson(res, 404, { error: "Tour not found" });
     return;
   }
-  sendJson(res, 200, { tour });
+  const options = collectTourOptions(tours);
+  sendJson(res, 200, {
+    tour: normalizeTourForRead(tour),
+    options: {
+      destinations: options.destinations,
+      styles: options.styles
+    }
+  });
 }
 
 async function handleCreateTour(req, res) {
@@ -944,10 +1082,10 @@ async function handleCreateTour(req, res) {
     return;
   }
 
-  const tours = await readTours();
   const now = nowIso();
   const tour = buildTourPayload(payload, { isCreate: true });
   tour.id = `tour_${randomUUID()}`;
+  tour.image = toTourImagePublicUrl(tour.image);
   tour.created_at = now;
   tour.updated_at = now;
 
@@ -957,9 +1095,8 @@ async function handleCreateTour(req, res) {
     return;
   }
 
-  tours.push(tour);
-  await persistTours(tours);
-  sendJson(res, 201, { tour });
+  await persistTour(tour);
+  sendJson(res, 201, { tour: normalizeTourForRead(tour) });
 }
 
 async function handlePatchTour(req, res, [tourId]) {
@@ -995,8 +1132,88 @@ async function handlePatchTour(req, res, [tourId]) {
   }
 
   tours[index] = updated;
-  await persistTours(tours);
-  sendJson(res, 200, { tour: updated });
+  await persistTour(updated);
+  sendJson(res, 200, { tour: normalizeTourForRead(updated) });
+}
+
+async function handlePublicTourImage(req, res, [rawRelativePath]) {
+  const absolutePath = resolveTourImageDiskPath(rawRelativePath);
+  if (!absolutePath) {
+    sendJson(res, 404, { error: "Not found" });
+    return;
+  }
+  await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+}
+
+async function processTourImageToWebp(inputPath, outputPath) {
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await execFile("magick", [
+    inputPath,
+    "-auto-orient",
+    "-resize",
+    "1000x1000>",
+    "-strip",
+    "-quality",
+    "82",
+    outputPath
+  ]);
+}
+
+async function handleUploadTourImage(req, res, [tourId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const filename = normalizeText(payload.filename) || `${tourId}.upload`;
+  const base64 = normalizeText(payload.data_base64);
+  if (!base64) {
+    sendJson(res, 422, { error: "data_base64 is required" });
+    return;
+  }
+
+  const tours = await readTours();
+  const index = tours.findIndex((item) => item.id === tourId);
+  if (index < 0) {
+    sendJson(res, 404, { error: "Tour not found" });
+    return;
+  }
+
+  const now = nowIso();
+  const sourceBuffer = Buffer.from(base64, "base64");
+  if (!sourceBuffer.length) {
+    sendJson(res, 422, { error: "Invalid base64 image payload" });
+    return;
+  }
+
+  const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${tourId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+  const outputName = `${tourId}.webp`;
+  const outputRelativePath = `${tourId}/${outputName}`;
+  const outputPath = path.join(TOURS_DIR, outputRelativePath);
+
+  try {
+    await writeFile(tempInputPath, sourceBuffer);
+    await processTourImageToWebp(tempInputPath, outputPath);
+  } catch (error) {
+    sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
+    return;
+  } finally {
+    await rm(tempInputPath, { force: true });
+  }
+
+  const publicPath = `/public/v1/tour-images/${outputRelativePath}`;
+  const updated = {
+    ...tours[index],
+    image: publicPath,
+    updated_at: now
+  };
+  tours[index] = updated;
+  await persistTour(updated);
+
+  sendJson(res, 200, { tour: normalizeTourForRead(updated) });
 }
 
 async function handleAdminHome(req, res) {

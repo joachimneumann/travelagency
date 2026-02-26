@@ -1,0 +1,23 @@
+{
+  "id": "tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5",
+  "title": "Vietnam Budget Journey",
+  "shortDescription": "A Vietnam budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+  "styles": [
+    "Budget"
+  ],
+  "priority": 50,
+  "durationDays": 8,
+  "priceFrom": 690,
+  "image": "/public/v1/tour-images/tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5/tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5.webp",
+  "highlights": [
+    "Signature stop in Hanoi",
+    "Route highlight around Hoi An",
+    "Smooth transfer planning via Ha Long Bay"
+  ],
+  "seasonality": "Best Oct-Apr",
+  "rating": 4.6,
+  "legacy_id": "trip-vietnam-budget-classic",
+  "destinationCountries": [
+    "Vietnam"
+  ]
+}

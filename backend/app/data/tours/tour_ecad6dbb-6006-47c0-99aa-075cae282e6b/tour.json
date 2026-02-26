@@ -1,0 +1,23 @@
+{
+  "id": "tour_ecad6dbb-6006-47c0-99aa-075cae282e6b",
+  "title": "Cambodia Budget Journey",
+  "shortDescription": "A Cambodia budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+  "styles": [
+    "Budget"
+  ],
+  "priority": 50,
+  "durationDays": 8,
+  "priceFrom": 610,
+  "image": "/public/v1/tour-images/tour_ecad6dbb-6006-47c0-99aa-075cae282e6b/tour_ecad6dbb-6006-47c0-99aa-075cae282e6b.webp",
+  "highlights": [
+    "Signature stop in Siem Reap",
+    "Route highlight around Phnom Penh",
+    "Smooth transfer planning via Tonle Sap"
+  ],
+  "seasonality": "Best Nov-Feb",
+  "rating": 4.6,
+  "legacy_id": "trip-cambodia-budget-classic",
+  "destinationCountries": [
+    "Cambodia"
+  ]
+}
