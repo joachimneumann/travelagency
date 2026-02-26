@@ -9,7 +9,7 @@ Scope decision:
 Primary goal:
 - Move Chapter2 from static lead capture to a production backend that runs the full lead -> quote -> booking -> trip operations lifecycle.
 
-## 1.1 Implementation Status (Updated February 25, 2026)
+## 1.1 Implementation Status (Updated February 26, 2026)
 
 Current implemented code lives in:
 - `backend/app/src/server.js`
@@ -29,7 +29,7 @@ Implemented now:
 - Branded website backoffice pages implemented:
   - `backend.html`: paginated searchable customers + leads + tours tables (default newest 10 each)
   - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
-  - `backend-detail.html`: linked details for leads/customers
+  - `backend-lead.html`: detail page for leads/customers with lead actions (owner/stage updates + notes)
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
 - Tours are fully backend-driven:
@@ -41,6 +41,8 @@ Implemented now:
   - destination countries selection via checkbox group (multi selection)
   - styles selection via checkbox group (multi selection)
   - image upload with backend ImageMagick conversion to WebP (max 1000px)
+- Admin API includes staff directory endpoint used by lead assignment controls:
+  - `GET /api/v1/staff`
 
 Note on stack:
 - Planned stack remains NestJS + Postgres + Redis for production rollout.
@@ -221,7 +223,7 @@ Exit criteria:
 ## 6) Detailed Website Integration Plan
 
 Current site context:
-- Static frontend with modal lead form and `data/trips.json` source.
+- Frontend with modal lead form and backend-powered tours source (`/public/v1/tours`).
 - No server-side runtime today.
 
 Integration objective:
@@ -251,16 +253,12 @@ Operational behavior:
 ## 6.2 Tour Catalog Integration (`#tourGrid`)
 
 Current:
-- `data/trips.json` fetched by frontend.
+- Frontend fetches tours from `GET /public/v1/tours`.
 
 Target:
 - Frontend reads catalog from backend-managed feed.
 
-Two-step rollout:
-1. Compatibility mode:
-- Backend publishes static JSON to `data/trips.json` via CI job.
-- Frontend remains unchanged.
-2. API mode:
+Current rollout mode:
 - Frontend calls `GET /public/v1/tours?dest=&style=&limit=&offset=`.
 - Backend applies filtering/sorting and returns normalized card payload.
 
@@ -329,11 +327,9 @@ Backend:
 ## 6.8 Migration Plan (No Frontend Downtime)
 
 1. Add backend APIs in staging and wire frontend feature flags.
-2. Run dual-write period for leads (existing fallback + backend) for 1 week.
-3. Switch production lead submit to backend API.
-4. Move catalog to backend publish mode.
-5. Introduce quote/payment public pages.
-6. Remove legacy mailto-only fallback after stable period.
+2. Leads are already switched to backend API (no mailto fallback in current implementation).
+3. Move catalog to backend publish mode.
+4. Introduce quote/payment public pages.
 
 ## 7) Quality, Security, and Delivery Standards
 

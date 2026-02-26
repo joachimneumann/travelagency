@@ -20,11 +20,11 @@
 - Footer
 - Sticky mobile CTA
 - Modal lead form (3-step)
-- Trips fallback JSON script
+- Backend-only tours API integration script
 - Main JS bundle: `assets/js/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
-- All `.webp` images in the project are normalized to a maximum bounding box of `600x600` while preserving aspect ratio
-- Cache headers config file present at `_headers` (long-lived assets + `no-store` for `data/trips.json`)
+- Tour hero images managed by backend are converted to WebP and resized to a maximum bounding box of `1000x1000`
+- Cache headers config file present at `_headers` (long-lived assets)
 
 ## 3) Header and navigation (`#top`)
 
@@ -64,8 +64,9 @@
 - Tour card thumbnails use `aspect-ratio: 1/1` (square) with full width and `object-fit: cover`
 
 Behavior from JS:
-- Trips loaded from `data/trips.json` (fallback from embedded JSON)
-- Trip data is fetched with cache-busting query versioning and `cache: reload`
+- Trips loaded from backend `GET /public/v1/tours` (primary source)
+- Backend responses are cached in localStorage (`chapter2_tours_cache_v1`) with TTL
+- If backend is unavailable, frontend falls back to static `data/trips.json` (for GitHub/static deployment compatibility)
 - Filter state from URL params/localStorage (`chapter2_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and hidden tours heading/subtitle still update based on filters
@@ -82,16 +83,14 @@ Behavior from JS:
 - A bottom-page `Debug priority` button reveals per-tour ranking diagnostics for the current filter (`priority`, `random`, `sum`) in display order
 
 Current inventory:
-- 32 trip entries in `data/trips.json` (includes multiple variants within the same country/style)
+- 32 trip entries in backend tour storage (`backend/app/data/tours/<tour_id>/tour.json`)
 - Destinations represented: Vietnam, Thailand, Cambodia, Laos
 - Styles include: Adventure, Beach, Budget, Culture, Family, Food, Luxury
 - Multiple tours per country/style are supported with IDs in the form `trip-<country>-<style>-<variant>`
-- Tour images follow `assets/tours/<country>/<style>/<country>-<style>-<variant>.webp`
+- Tour images are served by backend under `/public/v1/tour-images/<tour_id>/<tour_id>.webp`
 - Each tour entry includes `priority` (human-writable, intended range `0-100`)
 - Sync script never overwrites existing `priority`; only brand-new tours default to `50`
-- Embedded `tripsFallback` JSON in `index.html` is synchronized to the same dataset
 - Maintenance helper script available at `assets/tours/to_webp.sh` for non-WebP conversion and cleanup
-- Dataset sync script available at `scripts/sync_tours_from_images.py` to infer and generate JSON tour content from image variant names
 
 ### 4.3 Trust strip (after tours)
 
@@ -176,7 +175,7 @@ Form UX behavior from JS:
 - per-field required validation
 - modal open/close + ESC handling
 - success block shown after submit flow
-- fallback mailto link (`hello@chapter2.live`)
+- inline error message shown when backend submission fails
 
 ## 8) Structured data
 
@@ -191,5 +190,5 @@ Two JSON-LD blocks:
 - Tour list progressive reveal (up to 3 initially, then incremental show-more controls)
 - Dynamic tours section heading/lead and document title
 - FAQ accordion
-- Image fallback handling on card thumbnails
+- Tour image prewarm for faster first render
 - Modal lead capture with 3-step progression

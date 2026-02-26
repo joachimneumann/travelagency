@@ -388,7 +388,7 @@ function renderTours(items) {
 
 function buildDetailHref(type, id) {
   const params = new URLSearchParams({ type, id, user: state.user });
-  return `backend-detail.html?${params.toString()}`;
+  return `backend-lead.html?${params.toString()}`;
 }
 
 function buildTourEditHref(id) {

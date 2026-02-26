@@ -76,6 +76,7 @@ Admin API:
 - `POST /api/v1/leads/:leadId/activities`
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
+- `GET /api/v1/staff`
 - `GET /api/v1/tours`
 - `GET /api/v1/tours/:tourId`
 - `POST /api/v1/tours`
@@ -136,7 +137,11 @@ Branded frontend backoffice pages (served by website):
   - paginated searchable Tours table
 - `/backend-tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
 - `backend.html` header includes `Website` and `Logout` actions.
-- `/backend-detail.html`: detail pages for lead/customer records
+- `/backend-lead.html`: read-only lead/customer detail page with lead actions
+  - lead activities list
+  - change owner
+  - change stage
+  - add note activity
 
 Website header integration:
 - Main site has a `backend` button (no dropdown) that redirects to `/auth/login`.

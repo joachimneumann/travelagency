@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chapter 2 Lead</title>
+    <meta name="description" content="Chapter 2 lead detail" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+  </head>
+  <body>
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="Chapter 2 backend home">
+          <img class="brand-logo" src="assets/img/logo-chapter2.svg" alt="Chapter 2" width="320" height="76" />
+        </a>
+
+        <nav class="nav" aria-label="Backend navigation">
+          <ul class="nav-list">
+            <li><a id="backToBackend" href="backend.html">Backend</a></li>
+            <li><a href="index.html">Website</a></li>
+            <li><a id="backendLogoutLink" href="#">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <h1 class="section-title" id="detailTitle">Lead</h1>
+          <p class="section-lead" id="detailSubTitle">Loading...</p>
+
+          <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <article class="panel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Lead Data</h2>
+            <div id="leadDataView"></div>
+          </article>
+
+          <article class="panel" id="leadActionsPanel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Lead Actions</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="leadOwnerSelect">Owner</label>
+                <select id="leadOwnerSelect"></select>
+              </div>
+              <button class="btn btn-ghost" id="leadOwnerSaveBtn" type="button">Change owner</button>
+
+              <div class="field">
+                <label for="leadStageSelect">Stage</label>
+                <select id="leadStageSelect"></select>
+              </div>
+              <button class="btn btn-ghost" id="leadStageSaveBtn" type="button">Change stage</button>
+            </div>
+
+            <div class="field">
+              <label for="leadNoteInput">Add Note (Call notes, qualification details, customer preferences...)</label>
+              <textarea id="leadNoteInput" rows="4" placeholder="Write a note..."></textarea>
+            </div>
+            <div class="backend-controls">
+              <button class="btn btn-primary" id="leadNoteSaveBtn" type="button">Add note</button>
+              <span id="leadActionStatus" class="micro"></span>
+            </div>
+          </article>
+
+          <article class="panel" style="padding: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Activities</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="activitiesTable"></table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      if (!window.CHAPTER2_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.CHAPTER2_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <script src="assets/js/backend-lead.js" defer></script>
+  </body>
+</html>

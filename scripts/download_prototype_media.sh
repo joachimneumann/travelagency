@@ -64,4 +64,4 @@ else
   echo "  yt-dlp -f mp4 -o '$VID_DIR/hero-reel.%(ext)s' https://vimeo.com/950383325"
 fi
 
-echo "Done. Update index.html/data/trips.json to point to local files in assets/img/flickr and assets/video."
+echo "Done. Update frontend assets under index.html and backend tour records as needed."

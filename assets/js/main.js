@@ -19,8 +19,11 @@ const state = {
 const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
-const TOURS_CACHE_KEY = "chapter2_tours_cache_v1";
+const TOURS_CACHE_KEY = "chapter2_tours_cache_v2";
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
+const TOURS_API_ENDPOINT =
+  (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/tours` : "/public/v1/tours");
+const TOURS_STATIC_FALLBACK_ENDPOINT = "data/trips.json";
 const LEAD_API_ENDPOINT =
   (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
 const BACKEND_BASE_URL = window.CHAPTER2_API_BASE ? window.CHAPTER2_API_BASE.replace(/\/$/, "") : "";
@@ -80,7 +83,12 @@ async function init() {
   state.filters.dest = urlFilters.dest || savedFilters?.dest || "all";
   state.filters.style = urlFilters.style || savedFilters?.style || "all";
 
-  state.trips = await loadTrips();
+  try {
+    state.trips = await loadTrips();
+  } catch (error) {
+    console.error("Failed to load tours from backend API.", error);
+    state.trips = [];
+  }
   prewarmTourImages(state.trips);
 
   populateFilterOptions(state.trips);
@@ -521,37 +529,33 @@ function getFiltersFromURL() {
 }
 
 async function loadTrips() {
+  const cached = getCachedTours();
+  if (cached) return cached;
+
   try {
-    if (BACKEND_BASE_URL) {
-      const cached = getCachedTours();
-      if (cached) return cached;
-
-      const response = await fetch(`${BACKEND_BASE_URL}/public/v1/tours?v=${TRIPS_REQUEST_VERSION}`);
-      if (!response.ok) throw new Error("Backend tours request failed.");
-      const payload = await response.json();
-      const items = normalizeToursForFrontend(Array.isArray(payload) ? payload : payload.items || []);
-      setCachedTours(items);
-      return items;
+    const response = await fetch(`${TOURS_API_ENDPOINT}?v=${TRIPS_REQUEST_VERSION}`, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Backend tours request failed with status ${response.status}.`);
     }
-
-    const response = await fetch(`data/trips.json?v=${TRIPS_REQUEST_VERSION}`, { cache: "reload" });
-    if (!response.ok) throw new Error("Trip JSON request failed.");
-    return await response.json();
+    const payload = await response.json();
+    const items = normalizeToursForFrontend(Array.isArray(payload) ? payload : payload.items || []);
+    setCachedTours(items);
+    return items;
   } catch (error) {
-    // file:// fallback: update this embedded JSON for full offline open support
-    const fallbackScript = document.getElementById("tripsFallback");
-    if (!fallbackScript) return [];
-    try {
-      return JSON.parse(fallbackScript.textContent.trim() || "[]");
-    } catch {
-      return [];
+    const fallbackResponse = await fetch(`${TOURS_STATIC_FALLBACK_ENDPOINT}?v=${TRIPS_REQUEST_VERSION}`, { cache: "no-store" });
+    if (!fallbackResponse.ok) {
+      throw error;
     }
+    const fallbackPayload = await fallbackResponse.json();
+    const items = normalizeToursForFrontend(Array.isArray(fallbackPayload) ? fallbackPayload : fallbackPayload.items || []);
+    setCachedTours(items);
+    return items;
   }
 }
 
 function normalizeToursForFrontend(items) {
   return (Array.isArray(items) ? items : []).map((item) => {
-    const image = absolutizeBackendUrl(item.image);
+    const image = resolveTourImage(item);
     return {
       ...item,
       image
@@ -559,9 +563,40 @@ function normalizeToursForFrontend(items) {
   });
 }
 
+function resolveTourImage(item) {
+  const raw = String(item?.image || "").trim();
+  if (!raw) return raw;
+
+  const backendImagePath = raw.startsWith("/public/v1/tour-images/") || raw.startsWith("public/v1/tour-images/");
+  if (!BACKEND_BASE_URL && backendImagePath) {
+    const legacyId = String(item?.legacy_id || "").trim();
+    const local = localAssetPathFromLegacyId(legacyId);
+    if (local) return local;
+  }
+
+  return absolutizeBackendUrl(raw);
+}
+
+function localAssetPathFromLegacyId(legacyId) {
+  if (!legacyId.startsWith("trip-")) return "";
+  const parts = legacyId.slice(5).split("-");
+  if (parts.length < 3) return "";
+
+  const country = (parts.shift() || "").toLowerCase();
+  const style = (parts.shift() || "").toLowerCase();
+  const variant = parts.join("-").toLowerCase();
+  if (!country || !style || !variant) return "";
+
+  const variantUnderscored = variant.replace(/-/g, "_");
+  return `assets/tours/${country}/${style}/${country}-${style}-${variantUnderscored}.webp`;
+}
+
 function absolutizeBackendUrl(urlValue) {
   const value = String(urlValue || "").trim();
   if (!value) return value;
+  if (value.startsWith("assets/")) return value;
+  if (value.startsWith("/assets/")) return value;
+  if (value.startsWith("./assets/")) return value.replace(/^\.\//, "");
   if (!BACKEND_BASE_URL) return value;
   if (value.startsWith("http://") || value.startsWith("https://")) return value;
   if (value.startsWith("/")) return `${BACKEND_BASE_URL}${value}`;

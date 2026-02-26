@@ -113,3 +113,165 @@ Agencies best positioned to defend margins are likely to do one or more of the f
 - Exploit policy windows and official programs to create time-bound, high-conversion bundles while maintaining compliance and traceability
 
 Vietnam wraps up 2025 with 21.2 million foreign arrivals.
+
+---
+
+## Southeast Asia Deep-Dive Addendum (Merged from 2026-02-22 Report)
+
+### Scope
+
+This addendum expands the research from Vietnam-only into a four-country focus relevant for Chapter2 positioning:
+- Vietnam
+- Thailand
+- Cambodia
+- Laos
+
+It also adds a structured competitor benchmark across global integrated operators, adventure specialists, and luxury specialists.
+
+### Executive Synthesis
+
+The core competitive shift in Southeast Asia is from selling "a trip" to selling confidence and execution quality:
+- Fast quote cycles and clear proposal logic
+- Transparent inclusions and exclusions
+- Strong multi-country routing competence
+- Visible on-trip support and contingency handling
+
+Competitive pressure is strongest at two ends:
+- Scale-led packaging and distribution (large integrated groups and OTA ecosystems)
+- Highly differentiated specialist products (adventure and luxury leaders)
+
+### Regional Demand Snapshot (VN/TH/KH/LA)
+
+Indicative 2024 demand scale in focus markets:
+- Vietnam: ~17.6 million international arrivals (with ~21.2 million in 2025)
+- Thailand: ~35.54 million foreign tourists
+- Cambodia: ~6.7 million international tourists
+- Laos: ~4.12 million visitors
+
+Cross-market demand patterns:
+- Multi-country combinations are mainstream, not niche
+- Travelers compare trust and transparency, not only headline price
+- Itinerary pace and experience density are core decision criteria
+- Small-group and premium-comfort formats are outperforming generic fixed tours
+
+### Competitor Benchmark Framework
+
+Benchmarked dimensions:
+- Business model (integrated operator, OTA, specialist, luxury specialist)
+- Offer structure (fixed, dynamic, modular custom, small-group guided)
+- Segment focus (value, youth, responsible adventure, premium/luxury)
+- Southeast Asia relevance (VN/TH/KH/LA coverage and route depth)
+- Conversion architecture (instant booking vs consultation-led vs hybrid)
+
+### Competitor Findings by Segment
+
+#### 1) Global Integrated Operators
+
+Key references:
+- TUI Group
+- DERTOUR Group (including Kuoni in several markets)
+- Thomas Cook (current UK OTA model + separate India business context)
+- Flight Centre Travel Group
+
+Observed strengths:
+- Distribution scale and high trust familiarity
+- Broad package inventory and payment convenience
+- Multi-brand segmentation and channel density
+
+Observed weaknesses vs specialist regional players:
+- Lower itinerary personalization depth in complex SEA custom planning
+- Slower perceived consultation quality for nuanced route tailoring
+
+#### 2) Adventure / Experience Specialists
+
+Key references:
+- G Adventures
+- Intrepid Travel
+- Contiki
+- Exodus Travels
+
+Observed strengths:
+- Clear product laddering and segment coding
+- Strong transparency on group format, inclusions, and travel style
+- Distinct narratives (responsible travel, youth social, active formats)
+
+Strategic takeaway:
+- These players set the benchmark for clarity and merchandised route logic
+- Chapter2 should adopt equivalent clarity while differentiating via private customization
+
+#### 3) Luxury Specialists
+
+Key references:
+- Abercrombie & Kent
+- Scott Dunn
+- Butterfield & Robinson
+
+Observed strengths:
+- High-touch consultation model and premium trust anchors
+- Strong format definitions (private, bespoke, small group, self-guided)
+- Ability to monetize through clear service identity and premium operations
+
+Strategic takeaway:
+- Direct competition is avoidable at ultra-luxury extremes
+- Best opportunity is upper-mid to premium custom journeys with stronger local execution clarity
+
+### Cross-Company Patterns That Matter Most
+
+- Clear product ladders outperform generic "custom trip" messaging
+- Explicit trust mechanics convert better (protection, support, policies, proof points)
+- Multi-country itineraries are now core merchandising units
+- Pricing transparency needs structure, not just "from" price
+- Responsible travel messaging is baseline expectation in specialist segments
+
+### Implications for Chapter2 / Hidden Charm Asia
+
+Recommended positioning:
+- Own the upper-mid and premium custom corridor for VN/TH/KH/LA
+- Sell "tailor-made with structure" (personalized but process-driven)
+
+Recommended product system:
+Create three private tiers with fixed service definitions:
+- Smart Comfort
+- Premium Explorer
+- Signature Luxury
+
+Each tier should define:
+- Hotel class range
+- Guide model
+- Transport standard
+- Included experience density
+- Response-time SLAs
+
+Quote system recommendation:
+- Always provide Good/Better/Best proposals
+- Show explicit deltas for +/-15% budget movement
+- Show pace/comfort tradeoffs in plain language
+
+Website conversion requirements:
+- Above-fold CTA for discovery call
+- Visible inclusions/exclusions on all sample journeys
+- Real contingency policy (weather reroute/service recovery)
+- Route templates for common country combinations with transfer logic
+
+### Risk Watchlist
+
+- Paid media pressure from large groups
+- Airfare volatility distorting value perception
+- Policy and entry-rule changes affecting confidence
+- Sustainability claim risk if not evidence-backed
+
+Mitigations:
+- Quarterly competitor audit cadence
+- Date-stamped policy assumptions in offers/content
+- Supplier redundancy across core corridors
+
+### Added Source Set (from SEA Deep-Dive, accessed 2026-02-22)
+
+This merge adds benchmark references for:
+- Market demand context across Vietnam, Thailand, Cambodia, and Laos
+- TUI, DERTOUR, Kuoni, Thomas Cook, Flight Centre
+- G Adventures, Intrepid, Contiki, Exodus
+- Abercrombie & Kent, Scott Dunn, Butterfield & Robinson
+
+Primary source list is preserved in:
+- `/Users/internal_admin/projects/travelagency/output/pdf/sea_travel_agency_market_report_2026-02-22.txt`

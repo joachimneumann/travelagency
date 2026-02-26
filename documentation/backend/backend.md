@@ -289,7 +289,7 @@ Data requirements:
 ## 4.5 Integration Requirements
 
 Required integrations (phased):
-- Website lead ingestion (replace current mailto-only dependency)
+- Website lead ingestion (implemented in current milestone)
 - Email and WhatsApp messaging gateway
 - Payment processor(s)
 - Accounting software

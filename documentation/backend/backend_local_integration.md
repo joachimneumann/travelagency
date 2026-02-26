@@ -22,10 +22,11 @@ Features available now:
 - Customer deduplication
 - Lead ownership assignment + SLA due timestamps
 - Lead activity timeline
+- Staff lookup API for assignment controls (`GET /api/v1/staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
 - Lightweight admin pages (`/admin`, `/admin/leads`, `/admin/leads/:id`, `/admin/customers`, `/admin/customers/:id`)
-- Branded frontend backoffice pages (`backend.html`, `backend-detail.html`)
+- Branded frontend backoffice pages (`backend.html`, `backend-lead.html`)
 - `backend.html` lists tours
 - clicking a tour ID opens `backend-tour.html` for editing
   - destination and styles are edited with checkbox groups
@@ -139,8 +140,8 @@ Branded backend web UI:
   - paginated searchable Customers table (newest first, page size 10)
   - paginated searchable Leads table (newest first, page size 10)
   - paginated searchable Tours table
-  - Tour form for create/update
-- Lead/customer IDs link to `backend-detail.html`.
+- tour IDs open `backend-tour.html` for editing
+- Lead/customer IDs link to `backend-lead.html`.
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
 - Clicking `backend` triggers Keycloak login (`/auth/login`) in the main window and returns to `backend.html`.

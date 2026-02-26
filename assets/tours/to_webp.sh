@@ -30,8 +30,3 @@ while IFS= read -r -d '' src; do
 done < <(find "$ROOT_DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.avif' -o -iname '*.gif' -o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.bmp' \) -print0)
 
 echo "Done. Converted $converted file(s)."
-
-SYNC_SCRIPT="$ROOT_DIR/../../scripts/sync_tours_from_images.py"
-if [ -f "$SYNC_SCRIPT" ]; then
-  python3 "$SYNC_SCRIPT"
-fi

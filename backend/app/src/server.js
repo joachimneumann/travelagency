@@ -76,6 +76,7 @@ const routes = [
   { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleCreateActivity },
   { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
   { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
+  { method: "GET", pattern: /^\/api\/v1\/staff$/, handler: handleListStaff },
   { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
   { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
@@ -917,6 +918,24 @@ async function handleGetCustomer(_req, res, [customerId]) {
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   sendJson(res, 200, { customer, leads });
+}
+
+async function handleListStaff(req, res) {
+  const requestUrl = new URL(req.url, "http://localhost");
+  const onlyActive = normalizeText(requestUrl.searchParams.get("active")) !== "false";
+  const staff = await loadStaff();
+  const items = staff
+    .filter((member) => (onlyActive ? member.active : true))
+    .map((member) => ({
+      id: member.id,
+      name: member.name,
+      active: Boolean(member.active),
+      destinations: Array.isArray(member.destinations) ? member.destinations : [],
+      languages: Array.isArray(member.languages) ? member.languages : []
+    }))
+    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+
+  sendJson(res, 200, { items, total: items.length });
 }
 
 function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
