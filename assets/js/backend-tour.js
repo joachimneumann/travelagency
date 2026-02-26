@@ -18,6 +18,7 @@ const els = {
   title: document.getElementById("tourTitle"),
   subtitle: document.getElementById("tourSubtitle"),
   error: document.getElementById("tourError"),
+  titleError: document.getElementById("tourTitleError"),
   form: document.getElementById("tourForm"),
   status: document.getElementById("tourFormStatus"),
   cancel: document.getElementById("tourCancelBtn"),
@@ -51,6 +52,10 @@ function init() {
 
   if (els.form) {
     els.form.addEventListener("submit", submitForm);
+  }
+  const titleInput = document.getElementById("tourTitleInput");
+  if (titleInput) {
+    titleInput.addEventListener("input", clearTitleError);
   }
   if (els.changeImageBtn && els.imageUpload) {
     els.changeImageBtn.addEventListener("click", () => {
@@ -169,6 +174,7 @@ function getCheckedValues(inputName) {
 async function submitForm(event) {
   event.preventDefault();
   clearError();
+  clearTitleError();
 
   const selectedDestinationCountries = getCheckedValues("destinationCountryChoice");
   const selectedStyles = getCheckedValues("styleChoice");
@@ -188,6 +194,17 @@ async function submitForm(event) {
 
   if (!payload.title || !payload.destinationCountries.length || !payload.styles.length) {
     setStatus("Title, at least one Destination Country, and at least one Style are required.");
+    return;
+  }
+
+  const duplicate = await findDuplicateTourTitle(payload.title, state.id);
+  if (duplicate) {
+    setTitleError(
+      `A tour titled "${duplicate.title || payload.title}" already exists (ID: ${duplicate.id}). Please use a different title.`
+    );
+    setStatus("Save blocked due to duplicate title.");
+    const titleInput = document.getElementById("tourTitleInput");
+    if (titleInput) titleInput.focus();
     return;
   }
 
@@ -262,6 +279,40 @@ async function fetchApi(path, options = {}) {
   }
 }
 
+async function findDuplicateTourTitle(title, currentTourId) {
+  const normalizedTitle = normalizeCompareText(title);
+  if (!normalizedTitle) return null;
+
+  let page = 1;
+  const pageSize = 100;
+  const maxPages = 50;
+
+  while (page <= maxPages) {
+    const query = new URLSearchParams({
+      search: title,
+      page: String(page),
+      page_size: String(pageSize)
+    });
+
+    const payload = await fetchApi(`/api/v1/tours?${query.toString()}`);
+    if (!payload) return null;
+
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const duplicate = items.find((tour) => {
+      const otherId = String(tour?.id || "").trim();
+      if (!otherId || otherId === currentTourId) return false;
+      return normalizeCompareText(tour?.title) === normalizedTitle;
+    });
+    if (duplicate) return duplicate;
+
+    const totalPages = Number(payload.total_pages || 1);
+    if (!Number.isFinite(totalPages) || page >= totalPages) break;
+    page += 1;
+  }
+
+  return null;
+}
+
 function showError(message) {
   if (!els.error) return;
   els.error.textContent = message;
@@ -272,6 +323,18 @@ function clearError() {
   if (!els.error) return;
   els.error.textContent = "";
   els.error.classList.remove("show");
+}
+
+function setTitleError(message) {
+  if (!els.titleError) return;
+  els.titleError.textContent = message;
+  els.titleError.classList.add("show");
+}
+
+function clearTitleError() {
+  if (!els.titleError) return;
+  els.titleError.textContent = "";
+  els.titleError.classList.remove("show");
 }
 
 function setStatus(message) {
@@ -363,6 +426,13 @@ function slugify(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+}
+
+function normalizeCompareText(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 }
 
 function escapeHtml(value) {

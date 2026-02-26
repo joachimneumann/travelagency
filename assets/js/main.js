@@ -23,7 +23,7 @@ const TOURS_CACHE_KEY = "chapter2_tours_cache_v2";
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const TOURS_API_ENDPOINT =
   (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/tours` : "/public/v1/tours");
-const TOURS_STATIC_FALLBACK_ENDPOINT = "data/trips.json";
+const TOURS_STATIC_FALLBACK_ENDPOINT = "data/tours_fallback_data.jspn";
 const LEAD_API_ENDPOINT =
   (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
 const BACKEND_BASE_URL = window.CHAPTER2_API_BASE ? window.CHAPTER2_API_BASE.replace(/\/$/, "") : "";
@@ -569,12 +569,19 @@ function resolveTourImage(item) {
 
   const backendImagePath = raw.startsWith("/public/v1/tour-images/") || raw.startsWith("public/v1/tour-images/");
   if (!BACKEND_BASE_URL && backendImagePath) {
-    const legacyId = String(item?.legacy_id || "").trim();
-    const local = localAssetPathFromLegacyId(legacyId);
-    if (local) return local;
+    const titleSlug = slugify(String(item?.title || "").trim()) || "tour";
+    return `assets/img/tours_fallback_images/${titleSlug}.webp`;
   }
 
   return absolutizeBackendUrl(raw);
+}
+
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function localAssetPathFromLegacyId(legacyId) {

@@ -35,7 +35,7 @@
       },
       "idempotency_key": "lead_1772035121436_hm0pg6hu",
       "created_at": "2026-02-25T15:58:41.451Z",
-      "updated_at": "2026-02-25T16:11:05.507Z"
+      "updated_at": "2026-02-26T15:23:22.139Z"
     }
   ],
   "activities": [
@@ -70,6 +70,14 @@
       "actor": "admin_ui",
       "detail": "very angry man",
       "created_at": "2026-02-25T16:11:05.507Z"
+    },
+    {
+      "id": "act_27265131-e1ba-4d69-8873-980069acdc52",
+      "lead_id": "lead_d4cec0dd-5041-496e-940d-7003e768df84",
+      "type": "OWNER_CHANGED",
+      "actor": "admin",
+      "detail": "Owner set to Joachim Neumann",
+      "created_at": "2026-02-26T15:23:22.139Z"
     }
   ]
 }
