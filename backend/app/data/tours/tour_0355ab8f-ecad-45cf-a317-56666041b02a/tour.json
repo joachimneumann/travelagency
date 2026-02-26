@@ -3,6 +3,7 @@
   "title": "Laos Luxury Journey",
   "shortDescription": "A Laos luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
   "styles": [
+    "Culture",
     "Luxury"
   ],
   "priority": 50,
@@ -19,5 +20,6 @@
   "legacy_id": "trip-laos-luxury-classic",
   "destinationCountries": [
     "Laos"
-  ]
+  ],
+  "updated_at": "2026-02-26T16:06:11.187Z"
 }
