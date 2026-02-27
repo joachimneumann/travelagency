@@ -13,17 +13,27 @@ const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
+const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const execFile = promisify(execFileCb);
+const COMPANY_PROFILE = {
+  name: "Chapter 2 Southeast Asia Travel",
+  website: "chapter2.live",
+  address: "75 Nguyen Hue, District 1, Ho Chi Minh City",
+  whatsapp: "+84 90 000 0000",
+  email: "hello@chapter2.live"
+};
 
 const STAGES = {
   NEW: "NEW",
   QUALIFIED: "QUALIFIED",
   PROPOSAL_SENT: "PROPOSAL_SENT",
   NEGOTIATION: "NEGOTIATION",
+  INVOICE_SENT: "INVOICE_SENT",
+  PAYMENT_RECEIVED: "PAYMENT_RECEIVED",
   WON: "WON",
   LOST: "LOST",
   POST_TRIP: "POST_TRIP"
@@ -34,19 +44,23 @@ const STAGE_ORDER = [
   STAGES.QUALIFIED,
   STAGES.PROPOSAL_SENT,
   STAGES.NEGOTIATION,
+  STAGES.INVOICE_SENT,
+  STAGES.PAYMENT_RECEIVED,
   STAGES.WON,
   STAGES.LOST,
   STAGES.POST_TRIP
 ];
 
 const ALLOWED_STAGE_TRANSITIONS = {
-  [STAGES.NEW]: [STAGES.QUALIFIED, STAGES.LOST],
-  [STAGES.QUALIFIED]: [STAGES.PROPOSAL_SENT, STAGES.LOST],
-  [STAGES.PROPOSAL_SENT]: [STAGES.NEGOTIATION, STAGES.WON, STAGES.LOST],
-  [STAGES.NEGOTIATION]: [STAGES.WON, STAGES.LOST],
-  [STAGES.WON]: [STAGES.POST_TRIP],
-  [STAGES.LOST]: [],
-  [STAGES.POST_TRIP]: []
+  [STAGES.NEW]: STAGE_ORDER,
+  [STAGES.QUALIFIED]: STAGE_ORDER,
+  [STAGES.PROPOSAL_SENT]: STAGE_ORDER,
+  [STAGES.NEGOTIATION]: STAGE_ORDER,
+  [STAGES.INVOICE_SENT]: STAGE_ORDER,
+  [STAGES.PAYMENT_RECEIVED]: STAGE_ORDER,
+  [STAGES.WON]: STAGE_ORDER,
+  [STAGES.LOST]: STAGE_ORDER,
+  [STAGES.POST_TRIP]: STAGE_ORDER
 };
 
 const SLA_HOURS = {
@@ -54,6 +68,8 @@ const SLA_HOURS = {
   [STAGES.QUALIFIED]: 8,
   [STAGES.PROPOSAL_SENT]: 24,
   [STAGES.NEGOTIATION]: 48,
+  [STAGES.INVOICE_SENT]: 24,
+  [STAGES.PAYMENT_RECEIVED]: 0,
   [STAGES.WON]: 24,
   [STAGES.LOST]: 0,
   [STAGES.POST_TRIP]: 0
@@ -74,6 +90,10 @@ const routes = [
   { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/owner$/, handler: handlePatchLeadOwner },
   { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleListActivities },
   { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleCreateActivity },
+  { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices$/, handler: handleListLeadInvoices },
+  { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices$/, handler: handleCreateLeadInvoice },
+  { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchLeadInvoice },
+  { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
   { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
   { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
   { method: "GET", pattern: /^\/api\/v1\/staff$/, handler: handleListStaff },
@@ -140,6 +160,7 @@ createServer(async (req, res) => {
 
 async function ensureStorage() {
   await mkdir(TOURS_DIR, { recursive: true });
+  await mkdir(INVOICES_DIR, { recursive: true });
   await mkdir(TEMP_UPLOAD_DIR, { recursive: true });
 }
 
@@ -176,6 +197,7 @@ function sendHtml(res, status, html) {
 
 function getMimeTypeFromExt(filePath) {
   const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".pdf") return "application/pdf";
   if (ext === ".webp") return "image/webp";
   if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
   if (ext === ".png") return "image/png";
@@ -240,6 +262,7 @@ async function readStore() {
   parsed.customers ||= [];
   parsed.leads ||= [];
   parsed.activities ||= [];
+  parsed.invoices ||= [];
   return parsed;
 }
 
@@ -325,6 +348,213 @@ function computeSlaDueAt(stage, from = new Date()) {
   const hours = SLA_HOURS[stage] ?? 0;
   if (!hours) return null;
   return new Date(from.getTime() + hours * 60 * 60 * 1000).toISOString();
+}
+
+function safeCurrency(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  return /^[A-Z]{3}$/.test(normalized) ? normalized : "USD";
+}
+
+function safeAmountCents(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  const rounded = Math.round(n);
+  return rounded > 0 ? rounded : null;
+}
+
+function formatMoney(amountCents, currency) {
+  const amount = Number(amountCents || 0) / 100;
+  const code = safeCurrency(currency);
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: code }).format(amount);
+  } catch {
+    return `${code} ${amount.toFixed(2)}`;
+  }
+}
+
+function normalizeInvoiceItems(value) {
+  const input = Array.isArray(value) ? value : [];
+  return input
+    .map((item) => {
+      const description = normalizeText(item?.description);
+      const quantity = Math.max(1, safeInt(item?.quantity) || 1);
+      const unitAmountCents = safeAmountCents(item?.unit_amount_cents);
+      if (!description || !unitAmountCents) return null;
+      return {
+        id: normalizeText(item?.id) || `inv_item_${randomUUID()}`,
+        description,
+        quantity,
+        unit_amount_cents: unitAmountCents,
+        total_amount_cents: unitAmountCents * quantity
+      };
+    })
+    .filter(Boolean);
+}
+
+function computeInvoiceTotal(items) {
+  return (Array.isArray(items) ? items : []).reduce((sum, item) => sum + (safeAmountCents(item?.total_amount_cents) || 0), 0);
+}
+
+function safeVatPercentage(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, n));
+}
+
+function nextInvoiceNumber(store) {
+  const max = (store.invoices || []).reduce((acc, invoice) => {
+    const match = String(invoice.invoice_number || "").match(/^CH2-(\d+)$/);
+    if (!match) return acc;
+    const n = Number(match[1]);
+    return Number.isFinite(n) ? Math.max(acc, n) : acc;
+  }, 0);
+  return `CH2-${String(max + 1).padStart(6, "0")}`;
+}
+
+function invoicePdfPath(invoiceId, version) {
+  return path.join(INVOICES_DIR, `${invoiceId}-v${version}.pdf`);
+}
+
+function escapePdfText(value) {
+  return String(value || "")
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)");
+}
+
+function buildMinimalInvoicePdfBuffer(invoice, customer, lead) {
+  const currency = safeCurrency(invoice.currency);
+  const items = Array.isArray(invoice.items) ? invoice.items : [];
+  const subtotalCents = safeAmountCents(invoice.subtotal_amount_cents) ?? computeInvoiceTotal(items);
+  const vatPercentage = safeVatPercentage(invoice.vat_percentage);
+  const vatAmountCents = safeAmountCents(invoice.vat_amount_cents) ?? Math.round(subtotalCents * (vatPercentage / 100));
+  const totalCents = safeAmountCents(invoice.total_amount_cents) ?? subtotalCents + vatAmountCents;
+  const totalMoney = formatMoney(totalCents, currency);
+  const dueMoney = formatMoney(invoice.due_amount_cents || invoice.total_amount_cents, currency);
+
+  const line = (x1, y1, x2, y2) => `${x1} ${y1} m ${x2} ${y2} l S`;
+  const rectFill = (x, y, w, h) => `${x} ${y} ${w} ${h} re f`;
+  const rectStroke = (x, y, w, h) => `${x} ${y} ${w} ${h} re S`;
+  const textAt = (x, y, size, value) => `BT /F1 ${size} Tf 1 0 0 1 ${x} ${y} Tm (${escapePdfText(value)}) Tj ET`;
+
+  const ops = [];
+
+  // Header bar + simple brand mark/logo surrogate.
+  ops.push("0.98 0.44 0.28 rg");
+  ops.push(rectFill(0, 782, 595, 60));
+  ops.push("1 1 1 rg");
+  ops.push(textAt(86, 814, 20, "Chapter 2"));
+  ops.push(textAt(86, 797, 10, "Southeast Asia Travel"));
+  // Simple logo mark (vector, PDF-safe operators).
+  ops.push("1 1 1 rg");
+  ops.push(rectFill(36, 798, 28, 28));
+  ops.push("0.98 0.44 0.28 rg");
+  ops.push(rectFill(42, 804, 16, 16));
+
+  // Meta and contact blocks.
+  ops.push("0.12 0.18 0.22 rg");
+  ops.push(textAt(40, 760, 18, "INVOICE"));
+  ops.push(textAt(40, 742, 10, `Invoice Number: ${invoice.invoice_number || "-"}`));
+  ops.push(textAt(40, 728, 10, `Issue Date: ${invoice.issue_date || "-"}`));
+  ops.push(textAt(40, 714, 10, `Due Date: ${invoice.due_date || "-"}`));
+
+  ops.push(textAt(330, 760, 10, COMPANY_PROFILE.name));
+  ops.push(textAt(330, 746, 9, `Address: ${COMPANY_PROFILE.address}`));
+  ops.push(textAt(330, 732, 9, `WhatsApp: ${COMPANY_PROFILE.whatsapp}`));
+  ops.push(textAt(330, 718, 9, `Email: ${COMPANY_PROFILE.email}`));
+  ops.push(textAt(330, 704, 9, `Website: ${COMPANY_PROFILE.website}`));
+
+  // Bill-to box.
+  ops.push("0.86 0.91 0.94 rg");
+  ops.push(rectFill(40, 634, 515, 42));
+  ops.push("0.12 0.18 0.22 rg");
+  ops.push(rectStroke(40, 634, 515, 42));
+  ops.push(textAt(48, 661, 10, `Bill To: ${normalizeText(customer?.name) || "-"}`));
+  ops.push(textAt(48, 647, 10, `Email: ${normalizeEmail(customer?.email) || "-"}`));
+  ops.push(textAt(300, 661, 10, `Lead: ${normalizeText(lead?.id) || "-"}`));
+  ops.push(textAt(300, 647, 10, `${normalizeText(lead?.destination) || "-"} | ${normalizeText(lead?.style) || "-"}`));
+
+  // Items table header.
+  const tableTop = 600;
+  ops.push("0.95 0.95 0.95 rg");
+  ops.push(rectFill(40, tableTop, 515, 22));
+  ops.push("0.12 0.18 0.22 rg");
+  ops.push(rectStroke(40, tableTop, 515, 22));
+  ops.push(textAt(48, tableTop + 7, 9, "Description"));
+  ops.push(textAt(350, tableTop + 7, 9, "Qty"));
+  ops.push(textAt(410, tableTop + 7, 9, "Unit"));
+  ops.push(textAt(480, tableTop + 7, 9, "Total"));
+
+  // Table rows.
+  let rowY = tableTop - 22;
+  const rowHeight = 18;
+  const maxRows = 16;
+  for (let i = 0; i < Math.min(items.length, maxRows); i += 1) {
+    const item = items[i];
+    ops.push(rectStroke(40, rowY, 515, rowHeight));
+    const desc = normalizeText(item.description).slice(0, 54);
+    ops.push(textAt(48, rowY + 6, 9, desc || "-"));
+    ops.push(textAt(352, rowY + 6, 9, String(item.quantity || 1)));
+    ops.push(textAt(410, rowY + 6, 9, formatMoney(item.unit_amount_cents, currency)));
+    ops.push(textAt(480, rowY + 6, 9, formatMoney(item.total_amount_cents, currency)));
+    rowY -= rowHeight;
+  }
+
+  // Totals block.
+  const totalsY = Math.max(170, rowY - 12);
+  ops.push("0.95 0.97 0.98 rg");
+  ops.push(rectFill(330, totalsY, 225, 78));
+  ops.push("0.12 0.18 0.22 rg");
+  ops.push(rectStroke(330, totalsY, 225, 78));
+  ops.push(textAt(340, totalsY + 58, 10, `Subtotal: ${formatMoney(subtotalCents, currency)}`));
+  ops.push(textAt(340, totalsY + 44, 10, `VAT (${vatPercentage.toFixed(2)}%): ${formatMoney(vatAmountCents, currency)}`));
+  ops.push(textAt(340, totalsY + 30, 10, `Total: ${totalMoney}`));
+  ops.push(textAt(340, totalsY + 16, 10, `Due now: ${dueMoney}`));
+  ops.push(textAt(340, totalsY + 4, 9, `Currency: ${currency}`));
+
+  // Notes and footer.
+  const noteText = normalizeText(invoice.notes) || "-";
+  ops.push(textAt(40, totalsY + 42, 10, "Notes:"));
+  ops.push(textAt(40, totalsY + 28, 9, noteText.slice(0, 95)));
+  ops.push(textAt(40, 42, 8, `Generated ${new Date().toISOString()} | ${COMPANY_PROFILE.website}`));
+  ops.push(line(40, 52, 555, 52));
+
+  const content = ops.join("\n");
+  const contentLength = Buffer.byteLength(content, "utf8");
+
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${contentLength} >>\nstream\n${content}\nendstream`
+  ];
+
+  const chunks = ["%PDF-1.4\n"];
+  const offsets = [0];
+  let offset = Buffer.byteLength(chunks[0], "utf8");
+  for (let i = 0; i < objects.length; i += 1) {
+    offsets.push(offset);
+    const obj = `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
+    chunks.push(obj);
+    offset += Buffer.byteLength(obj, "utf8");
+  }
+
+  const xrefStart = offset;
+  let xref = `xref\n0 ${objects.length + 1}\n`;
+  xref += "0000000000 65535 f \n";
+  for (let i = 1; i < offsets.length; i += 1) {
+    xref += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+  }
+  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  chunks.push(xref);
+  return Buffer.from(chunks.join(""), "utf8");
+}
+
+async function writeInvoicePdf(invoice, customer, lead) {
+  await mkdir(INVOICES_DIR, { recursive: true });
+  const pdf = buildMinimalInvoicePdfBuffer(invoice, customer, lead);
+  await writeFile(invoicePdfPath(invoice.id, invoice.version), pdf);
 }
 
 function escapeHtml(value) {
@@ -879,6 +1109,187 @@ async function handleCreateActivity(req, res, [leadId]) {
   await persistStore(store);
 
   sendJson(res, 201, { activity });
+}
+
+function buildInvoiceReadModel(invoice) {
+  return {
+    ...invoice,
+    sent_to_customer: Boolean(invoice.sent_to_customer),
+    sent_to_customer_at: invoice.sent_to_customer_at || null,
+    pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
+  };
+}
+
+async function handleListLeadInvoices(_req, res, [leadId]) {
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+
+  const items = [...store.invoices]
+    .filter((invoice) => invoice.lead_id === leadId)
+    .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
+    .map(buildInvoiceReadModel);
+  sendJson(res, 200, { items, total: items.length });
+}
+
+async function handleCreateLeadInvoice(req, res, [leadId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  if (!customer) {
+    sendJson(res, 422, { error: "Lead customer not found" });
+    return;
+  }
+
+  const items = normalizeInvoiceItems(payload.items);
+  if (!items.length) {
+    sendJson(res, 422, { error: "At least one invoice item is required" });
+    return;
+  }
+
+  const now = nowIso();
+  const totalAmountCents = computeInvoiceTotal(items);
+  const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
+  const invoice = {
+    id: `inv_${randomUUID()}`,
+    lead_id: leadId,
+    customer_id: customer.id,
+    invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
+    version: 1,
+    status: "DRAFT",
+    currency: safeCurrency(payload.currency),
+    issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
+    due_date: normalizeText(payload.due_date) || null,
+    title: normalizeText(payload.title) || `Invoice for ${normalizeText(customer.name) || "customer"}`,
+    notes: normalizeText(payload.notes),
+    sent_to_customer: false,
+    sent_to_customer_at: null,
+    items,
+    total_amount_cents: totalAmountCents,
+    due_amount_cents: dueAmountCents,
+    created_at: now,
+    updated_at: now
+  };
+
+  await writeInvoicePdf(invoice, customer, lead);
+  store.invoices.push(invoice);
+  await persistStore(store);
+  sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice) });
+}
+
+async function handlePatchLeadInvoice(req, res, [leadId, invoiceId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  if (!customer) {
+    sendJson(res, 422, { error: "Lead customer not found" });
+    return;
+  }
+  const invoice = store.invoices.find((item) => item.id === invoiceId && item.lead_id === leadId);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+
+  const items = payload.items ? normalizeInvoiceItems(payload.items) : invoice.items;
+  if (!items.length) {
+    sendJson(res, 422, { error: "At least one invoice item is required" });
+    return;
+  }
+
+  const isContentUpdate =
+    payload.invoice_number !== undefined ||
+    payload.currency !== undefined ||
+    payload.issue_date !== undefined ||
+    payload.due_date !== undefined ||
+    payload.title !== undefined ||
+    payload.notes !== undefined ||
+    payload.items !== undefined ||
+    payload.due_amount_cents !== undefined;
+
+  if (payload.sent_to_customer !== undefined) {
+    const sent = Boolean(payload.sent_to_customer);
+    invoice.sent_to_customer = sent;
+    invoice.sent_to_customer_at = sent ? invoice.sent_to_customer_at || nowIso() : null;
+    if (invoice.status !== "PAID") {
+      invoice.status = sent ? "INVOICE_SENT" : "DRAFT";
+    }
+  }
+
+  if (isContentUpdate) {
+    const totalAmountCents = computeInvoiceTotal(items);
+    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
+    if (payload.invoice_number !== undefined) {
+      invoice.invoice_number = normalizeText(payload.invoice_number) || invoice.invoice_number;
+    }
+    if (payload.currency !== undefined) {
+      invoice.currency = safeCurrency(payload.currency || invoice.currency);
+    }
+    if (payload.issue_date !== undefined) {
+      invoice.issue_date = normalizeText(payload.issue_date) || invoice.issue_date;
+    }
+    if (payload.due_date !== undefined) {
+      invoice.due_date = normalizeText(payload.due_date) || null;
+    }
+    if (payload.title !== undefined) {
+      invoice.title = normalizeText(payload.title) || invoice.title;
+    }
+    if (payload.notes !== undefined) {
+      invoice.notes = normalizeText(payload.notes);
+    }
+    invoice.items = items;
+    invoice.total_amount_cents = totalAmountCents;
+    invoice.due_amount_cents = dueAmountCents;
+    invoice.version = Number(invoice.version || 1) + 1;
+    await writeInvoicePdf(invoice, customer, lead);
+  }
+  invoice.updated_at = nowIso();
+
+  await persistStore(store);
+  sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice) });
+}
+
+async function handleGetInvoicePdf(req, res, [invoiceId]) {
+  const store = await readStore();
+  const invoice = store.invoices.find((item) => item.id === invoiceId);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+  const lead = store.leads.find((item) => item.id === invoice.lead_id) || null;
+  const customer = store.customers.find((item) => item.id === invoice.customer_id) || null;
+  const pdfPath = invoicePdfPath(invoice.id, invoice.version);
+  // Always regenerate so PDF styling/content updates are reflected immediately.
+  await writeInvoicePdf(invoice, customer, lead);
+  res.setHeader("Content-Disposition", `inline; filename=\"${invoice.invoice_number || invoice.id}.pdf\"`);
+  await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store");
 }
 
 async function handleListCustomers(req, res) {
