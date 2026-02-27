@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { execFile as execFileCb } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createAuth } from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,10 +13,17 @@ const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
+const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const STRIPE_SECRET_KEY = normalizeText(process.env.STRIPE_SECRET_KEY);
+const STRIPE_API_BASE = normalizeText(process.env.STRIPE_API_BASE_URL) || "https://api.stripe.com";
+const STRIPE_WEBHOOK_SECRET = normalizeText(process.env.STRIPE_WEBHOOK_SECRET);
+const STRIPE_CHECKOUT_SUCCESS_URL = normalizeText(process.env.STRIPE_CHECKOUT_SUCCESS_URL);
+const STRIPE_CHECKOUT_CANCEL_URL = normalizeText(process.env.STRIPE_CHECKOUT_CANCEL_URL);
+const PUBLIC_BASE_URL = normalizeText(process.env.PUBLIC_BASE_URL);
 const execFile = promisify(execFileCb);
 
 const STAGES = {
@@ -40,13 +47,13 @@ const STAGE_ORDER = [
 ];
 
 const ALLOWED_STAGE_TRANSITIONS = {
-  [STAGES.NEW]: [STAGES.QUALIFIED, STAGES.LOST],
-  [STAGES.QUALIFIED]: [STAGES.PROPOSAL_SENT, STAGES.LOST],
-  [STAGES.PROPOSAL_SENT]: [STAGES.NEGOTIATION, STAGES.WON, STAGES.LOST],
-  [STAGES.NEGOTIATION]: [STAGES.WON, STAGES.LOST],
-  [STAGES.WON]: [STAGES.POST_TRIP],
-  [STAGES.LOST]: [],
-  [STAGES.POST_TRIP]: []
+  [STAGES.NEW]: STAGE_ORDER,
+  [STAGES.QUALIFIED]: STAGE_ORDER,
+  [STAGES.PROPOSAL_SENT]: STAGE_ORDER,
+  [STAGES.NEGOTIATION]: STAGE_ORDER,
+  [STAGES.WON]: STAGE_ORDER,
+  [STAGES.LOST]: STAGE_ORDER,
+  [STAGES.POST_TRIP]: STAGE_ORDER
 };
 
 const SLA_HOURS = {
@@ -74,14 +81,31 @@ const routes = [
   { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/owner$/, handler: handlePatchLeadOwner },
   { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleListActivities },
   { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleCreateActivity },
+  { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices$/, handler: handleListLeadInvoices },
+  { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices$/, handler: handleCreateLeadInvoice },
+  { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchLeadInvoice },
+  { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices\/([^/]+)\/send$/, handler: handleSendLeadInvoice },
+  { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
+  { method: "GET", pattern: /^\/public\/v1\/invoices\/([^/]+)$/, handler: handleGetPublicInvoice },
+  { method: "GET", pattern: /^\/public\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetPublicInvoicePdf },
+  { method: "POST", pattern: /^\/public\/v1\/invoices\/([^/]+)\/checkout-session$/, handler: handleCreateInvoiceCheckoutSession },
+  { method: "GET", pattern: /^\/public\/invoice\/([^/]+)$/, handler: handlePublicInvoicePage },
   { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
   { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
+  { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)\/offers$/, handler: handleListCustomerOffers },
+  { method: "POST", pattern: /^\/api\/v1\/customers\/([^/]+)\/offers$/, handler: handleCreateCustomerOffer },
   { method: "GET", pattern: /^\/api\/v1\/staff$/, handler: handleListStaff },
   { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
   { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
   { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
   { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handleUploadTourImage },
+  { method: "GET", pattern: /^\/api\/v1\/offers\/([^/]+)$/, handler: handleGetOfferAdmin },
+  { method: "POST", pattern: /^\/api\/v1\/offers\/([^/]+)\/send$/, handler: handleMarkOfferSent },
+  { method: "POST", pattern: /^\/public\/v1\/offers\/([^/]+)\/checkout-session$/, handler: handleCreatePublicCheckoutSession },
+  { method: "GET", pattern: /^\/public\/v1\/offers\/([^/]+)$/, handler: handleGetPublicOffer },
+  { method: "GET", pattern: /^\/public\/offer\/([^/]+)$/, handler: handlePublicOfferPage },
+  { method: "POST", pattern: /^\/webhooks\/stripe$/, handler: handleStripeWebhook },
   { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
   { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
   { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
@@ -140,6 +164,7 @@ createServer(async (req, res) => {
 
 async function ensureStorage() {
   await mkdir(TOURS_DIR, { recursive: true });
+  await mkdir(INVOICES_DIR, { recursive: true });
   await mkdir(TEMP_UPLOAD_DIR, { recursive: true });
 }
 
@@ -240,6 +265,9 @@ async function readStore() {
   parsed.customers ||= [];
   parsed.leads ||= [];
   parsed.activities ||= [];
+  parsed.customer_offers ||= [];
+  parsed.invoices ||= [];
+  parsed.payments ||= [];
   return parsed;
 }
 
@@ -319,6 +347,180 @@ function safeInt(value) {
 function safeFloat(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function safeCurrency(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  return /^[A-Z]{3}$/.test(normalized) ? normalized : "USD";
+}
+
+function safeAmountCents(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  const rounded = Math.round(n);
+  return rounded > 0 ? rounded : null;
+}
+
+function normalizeCompareText(value) {
+  return normalizeText(value).replace(/\s+/g, " ").toLowerCase();
+}
+
+function generatePublicToken() {
+  return `off_${randomBytes(24).toString("hex")}`;
+}
+
+function generateInvoiceToken() {
+  return `inv_${randomBytes(24).toString("hex")}`;
+}
+
+function getPublicBaseUrl(req) {
+  if (PUBLIC_BASE_URL) return PUBLIC_BASE_URL.replace(/\/+$/, "");
+  const host = normalizeText(req.headers.host) || `localhost:${PORT}`;
+  const proto = normalizeText(req.headers["x-forwarded-proto"]) || "http";
+  return `${proto}://${host}`;
+}
+
+function getOfferPublicLink(req, token) {
+  return `${getPublicBaseUrl(req)}/public/offer/${encodeURIComponent(token)}`;
+}
+
+function resolveCheckoutReturnUrl(template, fallbackUrl, token) {
+  const text = normalizeText(template);
+  if (!text) return fallbackUrl;
+  return text.includes("{token}") ? text.replaceAll("{token}", encodeURIComponent(token)) : text;
+}
+
+function formatMoney(amountCents, currency) {
+  const value = Number(amountCents || 0) / 100;
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: safeCurrency(currency) }).format(value);
+  } catch {
+    return `${safeCurrency(currency)} ${value.toFixed(2)}`;
+  }
+}
+
+function normalizeOfferItem(input, tour) {
+  const quantity = Math.max(1, safeInt(input.quantity) || 1);
+  const unitAmountCents = safeAmountCents(input.unit_amount_cents) ?? Math.max(100, Math.round(Number(tour.priceFrom || 0) * 100));
+  const destinationCountries = tourDestinationCountries(tour);
+  const styles = Array.isArray(tour.styles) ? tour.styles.map((s) => normalizeText(s)).filter(Boolean) : [];
+  return {
+    id: `ofi_${randomUUID()}`,
+    tour_id: tour.id,
+    title: normalizeText(input.title) || normalizeText(tour.title),
+    short_description: normalizeText(input.short_description) || normalizeText(tour.shortDescription),
+    destinationCountries,
+    styles,
+    seasonality: normalizeText(tour.seasonality),
+    travelers: Math.max(1, safeInt(input.travelers) || 1),
+    start_date: normalizeText(input.start_date) || null,
+    end_date: normalizeText(input.end_date) || null,
+    customer_notes: normalizeText(input.customer_notes) || "",
+    line_description: normalizeText(input.line_description) || "Private tour package",
+    quantity,
+    unit_amount_cents: unitAmountCents,
+    total_amount_cents: unitAmountCents * quantity
+  };
+}
+
+function computeOfferTotals(offer) {
+  const total = (Array.isArray(offer.items) ? offer.items : []).reduce((sum, item) => sum + (safeAmountCents(item.total_amount_cents) || 0), 0);
+  const deposit = safeAmountCents(offer.payment?.deposit_amount_cents);
+  return {
+    total_amount_cents: total,
+    due_now_amount_cents: deposit && deposit < total ? deposit : total
+  };
+}
+
+function sanitizePublicOffer(offer, customer) {
+  const totals = computeOfferTotals(offer);
+  return {
+    offer: {
+      id: offer.id,
+      token: offer.public_token,
+      status: offer.status,
+      title: offer.title,
+      intro_message: offer.intro_message,
+      items: offer.items,
+      payment: {
+        currency: offer.payment.currency,
+        total_amount_cents: totals.total_amount_cents,
+        due_now_amount_cents: totals.due_now_amount_cents,
+        due_at: offer.payment.due_at || null,
+        allow_partial: Boolean(offer.payment.allow_partial)
+      },
+      created_at: offer.created_at,
+      updated_at: offer.updated_at,
+      sent_at: offer.sent_at || null,
+      paid_at: offer.paid_at || null
+    },
+    customer: {
+      name: normalizeText(customer?.name) || "Guest",
+      email: normalizeEmail(customer?.email),
+      language: normalizeText(customer?.language) || "English"
+    }
+  };
+}
+
+function validateOfferPayload(payload) {
+  if (!payload || typeof payload !== "object") return "Invalid payload";
+  const items = Array.isArray(payload.items) ? payload.items : [];
+  if (!items.length) return "At least one tour item is required";
+  return "";
+}
+
+function parseStripeSignature(headerValue) {
+  const parts = String(headerValue || "").split(",");
+  let timestamp = "";
+  let signature = "";
+  for (const part of parts) {
+    const [k, v] = part.split("=", 2);
+    if (k === "t") timestamp = v;
+    if (k === "v1") signature = v;
+  }
+  return { timestamp, signature };
+}
+
+function verifyStripeWebhookSignature(rawBody, signatureHeader, secret) {
+  const { timestamp, signature } = parseStripeSignature(signatureHeader);
+  if (!timestamp || !signature) return false;
+  const signedPayload = `${timestamp}.${rawBody}`;
+  const digest = createHmac("sha256", secret).update(signedPayload).digest("hex");
+  try {
+    return timingSafeEqual(Buffer.from(digest), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
+
+async function createStripeCheckoutSession({ offer, customer, amountCents, currency, successUrl, cancelUrl }) {
+  const body = new URLSearchParams();
+  body.set("mode", "payment");
+  body.set("success_url", successUrl);
+  body.set("cancel_url", cancelUrl);
+  body.set("customer_email", normalizeEmail(customer.email));
+  body.set("line_items[0][price_data][currency]", safeCurrency(currency).toLowerCase());
+  body.set("line_items[0][price_data][unit_amount]", String(amountCents));
+  body.set("line_items[0][price_data][product_data][name]", normalizeText(offer.title) || "Chapter2 Travel Package");
+  body.set("line_items[0][quantity]", "1");
+  body.set("metadata[offer_id]", offer.id);
+  body.set("metadata[offer_token]", offer.public_token);
+  body.set("metadata[customer_id]", offer.customer_id);
+
+  const response = await fetch(`${STRIPE_API_BASE}/v1/checkout/sessions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    const message = normalizeText(payload?.error?.message) || "Stripe Checkout session creation failed";
+    throw new Error(message);
+  }
+  return payload;
 }
 
 function computeSlaDueAt(stage, from = new Date()) {
@@ -407,6 +609,145 @@ function resolveTourImageDiskPath(relativePath) {
   const absolute = path.resolve(TOURS_DIR, normalized);
   if (!absolute.startsWith(TOURS_DIR)) return "";
   return absolute;
+}
+
+function invoicePdfPath(invoiceId, version) {
+  return path.join(INVOICES_DIR, `${invoiceId}-v${version}.pdf`);
+}
+
+function buildInvoicePublicPdfUrl(token) {
+  return `/public/v1/invoices/${encodeURIComponent(token)}/pdf`;
+}
+
+function getInvoicePublicLink(req, token) {
+  return `${getPublicBaseUrl(req)}/public/invoice/${encodeURIComponent(token)}`;
+}
+
+function normalizeInvoiceItems(items) {
+  const input = Array.isArray(items) ? items : [];
+  return input
+    .map((item) => {
+      const description = normalizeText(item?.description);
+      const quantity = Math.max(1, safeInt(item?.quantity) || 1);
+      const unitAmountCents = safeAmountCents(item?.unit_amount_cents);
+      const totalAmountCents = unitAmountCents ? unitAmountCents * quantity : null;
+      if (!description || !unitAmountCents) return null;
+      return {
+        id: normalizeText(item?.id) || `inv_item_${randomUUID()}`,
+        description,
+        quantity,
+        unit_amount_cents: unitAmountCents,
+        total_amount_cents: totalAmountCents
+      };
+    })
+    .filter(Boolean);
+}
+
+function computeInvoiceTotal(items) {
+  return (Array.isArray(items) ? items : []).reduce((sum, item) => sum + (safeAmountCents(item?.total_amount_cents) || 0), 0);
+}
+
+function nextInvoiceNumber(store) {
+  const prefix = "CH2-";
+  const currentMax = (store.invoices || []).reduce((max, inv) => {
+    const match = String(inv.invoice_number || "").match(/^CH2-(\d+)$/);
+    if (!match) return max;
+    const n = Number(match[1]);
+    return Number.isFinite(n) ? Math.max(max, n) : max;
+  }, 0);
+  return `${prefix}${String(currentMax + 1).padStart(6, "0")}`;
+}
+
+function escapePdfText(value) {
+  return String(value || "")
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)");
+}
+
+function buildMinimalInvoicePdfBuffer(invoice, customer, lead) {
+  const currency = safeCurrency(invoice.currency);
+  const lines = [
+    `Chapter2 Travel Agency - Invoice ${invoice.invoice_number}`,
+    `Invoice ID: ${invoice.id}`,
+    `Version: ${invoice.version}`,
+    `Date: ${invoice.issue_date || ""}`,
+    `Due date: ${invoice.due_date || ""}`,
+    `Status: ${invoice.status}`,
+    "",
+    `Customer: ${normalizeText(customer?.name)}`,
+    `Email: ${normalizeEmail(customer?.email)}`,
+    `Lead ID: ${normalizeText(lead?.id)}`,
+    `Destination: ${normalizeText(lead?.destination)}`,
+    `Style: ${normalizeText(lead?.style)}`,
+    ""
+  ];
+
+  for (const item of invoice.items || []) {
+    const qty = Number(item.quantity || 1);
+    const unit = formatMoney(item.unit_amount_cents, currency);
+    const total = formatMoney(item.total_amount_cents, currency);
+    lines.push(`${item.description} | qty ${qty} | unit ${unit} | total ${total}`);
+  }
+
+  lines.push("");
+  lines.push(`Total: ${formatMoney(invoice.total_amount_cents, currency)}`);
+  lines.push(`Notes: ${normalizeText(invoice.notes) || "-"}`);
+  lines.push(`Payment link token: ${invoice.public_token}`);
+
+  const maxLines = 42;
+  const display = lines.slice(0, maxLines);
+
+  let y = 800;
+  const ops = ["BT", "/F1 11 Tf", "50 810 Td"];
+  for (let i = 0; i < display.length; i += 1) {
+    const text = escapePdfText(display[i]);
+    if (i === 0) {
+      ops.push(`(${text}) Tj`);
+      continue;
+    }
+    y -= 16;
+    ops.push(`1 0 0 1 50 ${y} Tm (${text}) Tj`);
+  }
+  ops.push("ET");
+  const content = ops.join("\n");
+  const contentLength = Buffer.byteLength(content, "utf8");
+
+  const objects = [];
+  const pushObj = (body) => {
+    objects.push(body);
+  };
+
+  pushObj("<< /Type /Catalog /Pages 2 0 R >>");
+  pushObj("<< /Type /Pages /Count 1 /Kids [3 0 R] >>");
+  pushObj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>");
+  pushObj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  pushObj(`<< /Length ${contentLength} >>\nstream\n${content}\nendstream`);
+
+  let offset = 0;
+  const chunks = [];
+  const header = "%PDF-1.4\n";
+  chunks.push(header);
+  offset += Buffer.byteLength(header, "utf8");
+
+  const xref = [0];
+  for (let i = 0; i < objects.length; i += 1) {
+    xref.push(offset);
+    const objStr = `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
+    chunks.push(objStr);
+    offset += Buffer.byteLength(objStr, "utf8");
+  }
+
+  const xrefStart = offset;
+  let xrefStr = `xref\n0 ${objects.length + 1}\n`;
+  xrefStr += "0000000000 65535 f \n";
+  for (let i = 1; i < xref.length; i += 1) {
+    xrefStr += `${String(xref[i]).padStart(10, "0")} 00000 n \n`;
+  }
+  xrefStr += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  chunks.push(xrefStr);
+
+  return Buffer.from(chunks.join(""), "utf8");
 }
 
 function levenshtein(a, b) {
@@ -881,6 +1222,475 @@ async function handleCreateActivity(req, res, [leadId]) {
   sendJson(res, 201, { activity });
 }
 
+function buildInvoiceReadModel(req, invoice, customer, lead) {
+  const publicLink = getInvoicePublicLink(req, invoice.public_token);
+  return {
+    ...invoice,
+    public_link: publicLink,
+    pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`,
+    public_pdf_url: `${getPublicBaseUrl(req)}${buildInvoicePublicPdfUrl(invoice.public_token)}`,
+    customer_name: normalizeText(customer?.name),
+    customer_email: normalizeEmail(customer?.email),
+    lead_id: normalizeText(lead?.id)
+  };
+}
+
+async function writeInvoicePdf(invoice, customer, lead) {
+  const buffer = buildMinimalInvoicePdfBuffer(invoice, customer, lead);
+  await mkdir(INVOICES_DIR, { recursive: true });
+  await writeFile(invoicePdfPath(invoice.id, invoice.version), buffer);
+}
+
+async function handleListLeadInvoices(req, res, [leadId]) {
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === lead.customer_id) || null;
+  const items = [...store.invoices]
+    .filter((invoice) => invoice.lead_id === leadId)
+    .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
+    .map((invoice) => buildInvoiceReadModel(req, invoice, customer, lead));
+  sendJson(res, 200, { items, total: items.length });
+}
+
+async function handleCreateLeadInvoice(req, res, [leadId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  if (!customer) {
+    sendJson(res, 422, { error: "Lead customer not found" });
+    return;
+  }
+
+  const items = normalizeInvoiceItems(payload.items);
+  if (!items.length) {
+    sendJson(res, 422, { error: "At least one valid invoice item is required" });
+    return;
+  }
+
+  const now = nowIso();
+  const totalAmountCents = computeInvoiceTotal(items);
+  const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
+  const invoice = {
+    id: `inv_${randomUUID()}`,
+    lead_id: leadId,
+    customer_id: customer.id,
+    invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
+    version: 1,
+    status: "DRAFT",
+    currency: safeCurrency(payload.currency),
+    issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
+    due_date: normalizeText(payload.due_date) || null,
+    title: normalizeText(payload.title) || `Invoice for ${normalizeText(customer.name) || "customer"}`,
+    notes: normalizeText(payload.notes),
+    items,
+    total_amount_cents: totalAmountCents,
+    due_amount_cents: dueAmountCents,
+    public_token: generateInvoiceToken(),
+    stripe_last_session_id: null,
+    sent_at: null,
+    paid_at: null,
+    created_at: now,
+    updated_at: now
+  };
+
+  await writeInvoicePdf(invoice, customer, lead);
+  store.invoices.push(invoice);
+  await persistStore(store);
+
+  sendJson(res, 201, {
+    invoice: buildInvoiceReadModel(req, invoice, customer, lead),
+    email_preview: {
+      to: customer.email,
+      subject: `${invoice.invoice_number} - Chapter2 Invoice`,
+      body: `Hi ${customer.name || "there"},\n\nPlease review your invoice and payment details here:\n${getInvoicePublicLink(
+        req,
+        invoice.public_token
+      )}\n\nPDF: ${getPublicBaseUrl(req)}${buildInvoicePublicPdfUrl(invoice.public_token)}\n`
+    }
+  });
+}
+
+async function handlePatchLeadInvoice(req, res, [leadId, invoiceId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  if (!customer) {
+    sendJson(res, 422, { error: "Lead customer not found" });
+    return;
+  }
+
+  const invoice = store.invoices.find((item) => item.id === invoiceId && item.lead_id === leadId);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+  if (invoice.status === "PAID") {
+    sendJson(res, 409, { error: "Paid invoice cannot be modified" });
+    return;
+  }
+
+  const nextItems = payload.items ? normalizeInvoiceItems(payload.items) : invoice.items;
+  if (!nextItems.length) {
+    sendJson(res, 422, { error: "At least one valid invoice item is required" });
+    return;
+  }
+
+  const now = nowIso();
+  const totalAmountCents = computeInvoiceTotal(nextItems);
+  const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
+  invoice.invoice_number = normalizeText(payload.invoice_number) || invoice.invoice_number;
+  invoice.currency = safeCurrency(payload.currency || invoice.currency);
+  invoice.issue_date = normalizeText(payload.issue_date) || invoice.issue_date;
+  invoice.due_date = normalizeText(payload.due_date) || null;
+  invoice.title = normalizeText(payload.title) || invoice.title;
+  invoice.notes = normalizeText(payload.notes);
+  invoice.items = nextItems;
+  invoice.total_amount_cents = totalAmountCents;
+  invoice.due_amount_cents = dueAmountCents;
+  invoice.version = Number(invoice.version || 1) + 1;
+  invoice.updated_at = now;
+  invoice.status = "DRAFT";
+  invoice.sent_at = null;
+  invoice.stripe_last_session_id = null;
+
+  await writeInvoicePdf(invoice, customer, lead);
+  await persistStore(store);
+  sendJson(res, 200, { invoice: buildInvoiceReadModel(req, invoice, customer, lead) });
+}
+
+async function handleSendLeadInvoice(req, res, [leadId, invoiceId]) {
+  const store = await readStore();
+  const lead = store.leads.find((item) => item.id === leadId);
+  if (!lead) {
+    sendJson(res, 404, { error: "Lead not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  if (!customer) {
+    sendJson(res, 422, { error: "Lead customer not found" });
+    return;
+  }
+  const invoice = store.invoices.find((item) => item.id === invoiceId && item.lead_id === leadId);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+
+  if (!customer.email) {
+    sendJson(res, 422, { error: "Customer email is required to send invoice" });
+    return;
+  }
+
+  invoice.status = invoice.status === "PAID" ? "PAID" : "SENT";
+  invoice.sent_at = invoice.sent_at || nowIso();
+  invoice.updated_at = nowIso();
+  await persistStore(store);
+
+  const publicLink = getInvoicePublicLink(req, invoice.public_token);
+  const publicPdfLink = `${getPublicBaseUrl(req)}${buildInvoicePublicPdfUrl(invoice.public_token)}`;
+  const emailBody = [
+    `Hi ${customer.name || "there"},`,
+    "",
+    "Please review your invoice and make payment using the secure link below:",
+    publicLink,
+    "",
+    "Invoice PDF:",
+    publicPdfLink
+  ].join("\n");
+
+  sendJson(res, 200, {
+    invoice: buildInvoiceReadModel(req, invoice, customer, lead),
+    email_preview: {
+      to: customer.email,
+      subject: `${invoice.invoice_number} - Chapter2 Invoice`,
+      body: emailBody
+    }
+  });
+}
+
+async function handleGetInvoicePdf(_req, res, [invoiceId]) {
+  const store = await readStore();
+  const invoice = store.invoices.find((item) => item.id === invoiceId);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+
+  const pdfPath = invoicePdfPath(invoice.id, invoice.version);
+  await sendFileWithCache(_req, res, pdfPath, "private, max-age=0, no-store");
+}
+
+async function handleGetPublicInvoice(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const invoice = store.invoices.find((item) => item.public_token === normalizedToken);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === invoice.customer_id) || null;
+  const lead = store.leads.find((item) => item.id === invoice.lead_id) || null;
+
+  sendJson(res, 200, {
+    invoice: buildInvoiceReadModel(req, invoice, customer, lead),
+    customer: {
+      name: normalizeText(customer?.name),
+      email: normalizeEmail(customer?.email)
+    },
+    lead: lead
+      ? {
+          id: lead.id,
+          destination: normalizeText(lead.destination),
+          style: normalizeText(lead.style),
+          travel_month: normalizeText(lead.travel_month)
+        }
+      : null
+  });
+}
+
+async function handleGetPublicInvoicePdf(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const invoice = store.invoices.find((item) => item.public_token === normalizedToken);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+  const pdfPath = invoicePdfPath(invoice.id, invoice.version);
+  await sendFileWithCache(req, res, pdfPath, "public, max-age=120, must-revalidate");
+}
+
+async function createStripeCheckoutSessionForInvoice({ invoice, customer, amountCents, successUrl, cancelUrl }) {
+  const body = new URLSearchParams();
+  body.set("mode", "payment");
+  body.set("success_url", successUrl);
+  body.set("cancel_url", cancelUrl);
+  body.set("customer_email", normalizeEmail(customer.email));
+  body.set("line_items[0][price_data][currency]", safeCurrency(invoice.currency).toLowerCase());
+  body.set("line_items[0][price_data][unit_amount]", String(amountCents));
+  body.set("line_items[0][price_data][product_data][name]", normalizeText(invoice.title) || "Chapter2 Invoice");
+  body.set("line_items[0][quantity]", "1");
+  body.set("metadata[invoice_id]", invoice.id);
+  body.set("metadata[invoice_token]", invoice.public_token);
+  body.set("metadata[lead_id]", invoice.lead_id);
+  body.set("metadata[customer_id]", invoice.customer_id);
+
+  const response = await fetch(`${STRIPE_API_BASE}/v1/checkout/sessions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    const message = normalizeText(payload?.error?.message) || "Stripe Checkout session creation failed";
+    throw new Error(message);
+  }
+  return payload;
+}
+
+async function handleCreateInvoiceCheckoutSession(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const invoice = store.invoices.find((item) => item.public_token === normalizedToken);
+  if (!invoice) {
+    sendJson(res, 404, { error: "Invoice not found" });
+    return;
+  }
+  if (invoice.status === "PAID") {
+    sendJson(res, 409, { error: "Invoice is already paid" });
+    return;
+  }
+  if (!STRIPE_SECRET_KEY) {
+    sendJson(res, 501, { error: "Stripe payments are not configured (missing STRIPE_SECRET_KEY)" });
+    return;
+  }
+
+  const customer = store.customers.find((item) => item.id === invoice.customer_id);
+  if (!customer?.email) {
+    sendJson(res, 422, { error: "Customer email is required for checkout" });
+    return;
+  }
+
+  const amountCents = safeAmountCents(invoice.due_amount_cents) || safeAmountCents(invoice.total_amount_cents);
+  if (!amountCents) {
+    sendJson(res, 422, { error: "Invoice amount is invalid" });
+    return;
+  }
+
+  const invoiceUrl = getInvoicePublicLink(req, invoice.public_token);
+  const successUrl = resolveCheckoutReturnUrl(STRIPE_CHECKOUT_SUCCESS_URL, `${invoiceUrl}?payment=success`, invoice.public_token);
+  const cancelUrl = resolveCheckoutReturnUrl(STRIPE_CHECKOUT_CANCEL_URL, `${invoiceUrl}?payment=cancelled`, invoice.public_token);
+
+  let session;
+  try {
+    session = await createStripeCheckoutSessionForInvoice({
+      invoice,
+      customer,
+      amountCents,
+      successUrl,
+      cancelUrl
+    });
+  } catch (error) {
+    sendJson(res, 502, { error: "Stripe checkout session creation failed", detail: String(error?.message || error) });
+    return;
+  }
+
+  const now = nowIso();
+  invoice.updated_at = now;
+  invoice.stripe_last_session_id = normalizeText(session.id) || null;
+  store.payments.push({
+    id: `pay_${randomUUID()}`,
+    invoice_id: invoice.id,
+    lead_id: invoice.lead_id,
+    customer_id: invoice.customer_id,
+    provider: "stripe",
+    provider_session_id: normalizeText(session.id),
+    provider_payment_intent_id: normalizeText(session.payment_intent),
+    amount_cents: amountCents,
+    currency: safeCurrency(invoice.currency),
+    status: "CHECKOUT_CREATED",
+    created_at: now,
+    updated_at: now
+  });
+  await persistStore(store);
+
+  sendJson(res, 201, {
+    checkout_url: session.url,
+    session_id: session.id,
+    amount_cents: amountCents,
+    currency: safeCurrency(invoice.currency)
+  });
+}
+
+async function handlePublicInvoicePage(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const invoice = store.invoices.find((item) => item.public_token === normalizedToken);
+  if (!invoice) {
+    sendHtml(res, 404, "<!doctype html><html><body><h1>Invoice not found</h1></body></html>");
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === invoice.customer_id) || null;
+  const lead = store.leads.find((item) => item.id === invoice.lead_id) || null;
+  const currency = safeCurrency(invoice.currency);
+  const rows = (invoice.items || [])
+    .map((item) => {
+      return `<tr>
+        <td>${escapeHtml(item.description)}</td>
+        <td style="text-align:right">${escapeHtml(String(item.quantity || 1))}</td>
+        <td style="text-align:right">${escapeHtml(formatMoney(item.unit_amount_cents, currency))}</td>
+        <td style="text-align:right">${escapeHtml(formatMoney(item.total_amount_cents, currency))}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(invoice.invoice_number)} | Chapter2 Invoice</title>
+    <style>
+      body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; background:#f6f9fb; color:#1f2d38; }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+      .card { background:#fff; border:1px solid #dfe9ef; border-radius:14px; padding:20px; margin-bottom:16px; }
+      table { width:100%; border-collapse: collapse; }
+      th, td { padding:10px 8px; border-bottom:1px solid #edf2f6; font-size:14px; text-align:left; vertical-align:top; }
+      .right { text-align:right; }
+      .btn { display:inline-block; border:none; border-radius:10px; background:#ff6f47; color:#fff; padding:12px 16px; font-weight:600; cursor:pointer; margin-right:8px; }
+      .btn-link { display:inline-block; border-radius:10px; border:1px solid #d7e3ea; color:#1f2d38; padding:11px 16px; text-decoration:none; }
+      .muted { color:#607380; font-size:14px; }
+      .sum { font-size:18px; font-weight:700; margin: 6px 0; }
+      .error { color:#9d2d2d; margin-top:10px; min-height:20px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>${escapeHtml(invoice.invoice_number)}</h1>
+        <p class="muted">Prepared for ${escapeHtml(customer?.name || "Guest")} (${escapeHtml(customer?.email || "")})</p>
+        <p class="muted">Lead: ${escapeHtml(lead?.id || "-")} | ${escapeHtml(lead?.destination || "-")} | ${escapeHtml(
+          lead?.style || "-"
+        )}</p>
+        <p class="muted">Issue date: ${escapeHtml(invoice.issue_date || "-")} | Due date: ${escapeHtml(invoice.due_date || "-")}</p>
+        ${invoice.notes ? `<p>${escapeHtml(invoice.notes)}</p>` : ""}
+      </div>
+      <div class="card">
+        <h2>Invoice items</h2>
+        <table>
+          <thead><tr><th>Description</th><th class="right">Qty</th><th class="right">Unit</th><th class="right">Total</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="card">
+        <p class="sum">Total: ${escapeHtml(formatMoney(invoice.total_amount_cents, currency))}</p>
+        <p class="sum">Due now: ${escapeHtml(formatMoney(invoice.due_amount_cents || invoice.total_amount_cents, currency))}</p>
+        <button id="payBtn" class="btn">Pay by credit card</button>
+        <a class="btn-link" href="${escapeHtml(buildInvoicePublicPdfUrl(invoice.public_token))}" target="_blank" rel="noopener">Download invoice PDF</a>
+        <div id="error" class="error"></div>
+      </div>
+    </div>
+    <script>
+      const btn = document.getElementById("payBtn");
+      const error = document.getElementById("error");
+      btn.addEventListener("click", async () => {
+        error.textContent = "";
+        btn.disabled = true;
+        btn.textContent = "Opening checkout...";
+        try {
+          const response = await fetch("/public/v1/invoices/${encodeURIComponent(invoice.public_token)}/checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.checkout_url) {
+            throw new Error(payload.error || "Could not start checkout");
+          }
+          window.location.href = payload.checkout_url;
+        } catch (e) {
+          error.textContent = String(e.message || e);
+          btn.disabled = false;
+          btn.textContent = "Pay by credit card";
+        }
+      });
+    </script>
+  </body>
+</html>`;
+  sendHtml(res, 200, html);
+}
+
 async function handleListCustomers(req, res) {
   const store = await readStore();
   const requestUrl = new URL(req.url, "http://localhost");
@@ -918,6 +1728,401 @@ async function handleGetCustomer(_req, res, [customerId]) {
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   sendJson(res, 200, { customer, leads });
+}
+
+async function handleListCustomerOffers(req, res, [customerId]) {
+  const store = await readStore();
+  const customer = store.customers.find((item) => item.id === customerId);
+  if (!customer) {
+    sendJson(res, 404, { error: "Customer not found" });
+    return;
+  }
+
+  const items = [...store.customer_offers]
+    .filter((offer) => offer.customer_id === customerId)
+    .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
+
+  sendJson(res, 200, { items, total: items.length });
+}
+
+async function handleCreateCustomerOffer(req, res, [customerId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const validationError = validateOfferPayload(payload);
+  if (validationError) {
+    sendJson(res, 422, { error: validationError });
+    return;
+  }
+
+  const store = await readStore();
+  const customer = store.customers.find((item) => item.id === customerId);
+  if (!customer) {
+    sendJson(res, 404, { error: "Customer not found" });
+    return;
+  }
+
+  const tours = await readTours();
+  const items = [];
+  for (const rawItem of payload.items) {
+    const tourId = normalizeText(rawItem?.tour_id);
+    const tour = tours.find((entry) => entry.id === tourId);
+    if (!tour) {
+      sendJson(res, 422, { error: `Tour not found: ${tourId}` });
+      return;
+    }
+    items.push(normalizeOfferItem(rawItem, tour));
+  }
+
+  const currency = safeCurrency(payload.currency);
+  const now = nowIso();
+  const offer = {
+    id: `off_${randomUUID()}`,
+    customer_id: customerId,
+    public_token: generatePublicToken(),
+    status: "DRAFT",
+    title: normalizeText(payload.title) || "Your Chapter2 travel plan",
+    intro_message: normalizeText(payload.intro_message) || "",
+    items,
+    payment: {
+      currency,
+      due_at: normalizeText(payload.due_at) || null,
+      allow_partial: Boolean(payload.allow_partial),
+      deposit_amount_cents: safeAmountCents(payload.deposit_amount_cents)
+    },
+    created_at: now,
+    updated_at: now,
+    sent_at: null,
+    paid_at: null,
+    stripe_last_session_id: null
+  };
+
+  store.customer_offers.push(offer);
+  await persistStore(store);
+
+  sendJson(res, 201, {
+    offer,
+    public_link: getOfferPublicLink(req, offer.public_token)
+  });
+}
+
+async function handleGetOfferAdmin(req, res, [offerId]) {
+  const store = await readStore();
+  const offer = store.customer_offers.find((item) => item.id === offerId);
+  if (!offer) {
+    sendJson(res, 404, { error: "Offer not found" });
+    return;
+  }
+
+  const customer = store.customers.find((item) => item.id === offer.customer_id) || null;
+  sendJson(res, 200, {
+    offer,
+    customer,
+    public_link: getOfferPublicLink(req, offer.public_token)
+  });
+}
+
+async function handleMarkOfferSent(req, res, [offerId]) {
+  const store = await readStore();
+  const offer = store.customer_offers.find((item) => item.id === offerId);
+  if (!offer) {
+    sendJson(res, 404, { error: "Offer not found" });
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === offer.customer_id) || null;
+  if (!customer) {
+    sendJson(res, 422, { error: "Offer customer not found" });
+    return;
+  }
+
+  const now = nowIso();
+  offer.status = offer.status === "PAID" ? "PAID" : "SENT";
+  offer.sent_at = offer.sent_at || now;
+  offer.updated_at = now;
+  await persistStore(store);
+
+  const publicLink = getOfferPublicLink(req, offer.public_token);
+  const emailBody = [
+    `Hi ${customer.name || "there"},`,
+    "",
+    "Your Chapter2 travel proposal is ready.",
+    `Open your private link: ${publicLink}`,
+    "",
+    "This link includes your tailored itinerary and payment details."
+  ].join("\n");
+
+  sendJson(res, 200, {
+    offer,
+    public_link: publicLink,
+    email_preview: {
+      to: customer.email,
+      subject: "Your Chapter2 tour proposal and payment link",
+      body: emailBody
+    }
+  });
+}
+
+async function handleGetPublicOffer(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const offer = store.customer_offers.find((item) => item.public_token === normalizedToken);
+  if (!offer) {
+    sendJson(res, 404, { error: "Offer not found" });
+    return;
+  }
+
+  const customer = store.customers.find((item) => item.id === offer.customer_id);
+  const payload = sanitizePublicOffer(offer, customer);
+  payload.public_link = getOfferPublicLink(req, offer.public_token);
+  sendJson(res, 200, payload);
+}
+
+async function handleCreatePublicCheckoutSession(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const offer = store.customer_offers.find((item) => item.public_token === normalizedToken);
+  if (!offer) {
+    sendJson(res, 404, { error: "Offer not found" });
+    return;
+  }
+
+  if (offer.status === "PAID") {
+    sendJson(res, 409, { error: "Offer is already paid" });
+    return;
+  }
+
+  if (!STRIPE_SECRET_KEY) {
+    sendJson(res, 501, { error: "Stripe payments are not configured (missing STRIPE_SECRET_KEY)" });
+    return;
+  }
+
+  const customer = store.customers.find((item) => item.id === offer.customer_id);
+  if (!customer?.email) {
+    sendJson(res, 422, { error: "Offer customer email is required for Stripe checkout" });
+    return;
+  }
+
+  const totals = computeOfferTotals(offer);
+  const amountCents = totals.due_now_amount_cents;
+  if (!amountCents) {
+    sendJson(res, 422, { error: "Offer amount is invalid" });
+    return;
+  }
+
+  const publicOfferUrl = getOfferPublicLink(req, offer.public_token);
+  const successUrl = resolveCheckoutReturnUrl(STRIPE_CHECKOUT_SUCCESS_URL, `${publicOfferUrl}?payment=success`, offer.public_token);
+  const cancelUrl = resolveCheckoutReturnUrl(STRIPE_CHECKOUT_CANCEL_URL, `${publicOfferUrl}?payment=cancelled`, offer.public_token);
+
+  let session;
+  try {
+    session = await createStripeCheckoutSession({
+      offer,
+      customer,
+      amountCents,
+      currency: offer.payment.currency,
+      successUrl,
+      cancelUrl
+    });
+  } catch (error) {
+    sendJson(res, 502, { error: "Stripe checkout session creation failed", detail: String(error?.message || error) });
+    return;
+  }
+
+  const now = nowIso();
+  offer.updated_at = now;
+  offer.stripe_last_session_id = normalizeText(session.id) || null;
+  store.payments.push({
+    id: `pay_${randomUUID()}`,
+    offer_id: offer.id,
+    customer_id: offer.customer_id,
+    provider: "stripe",
+    provider_session_id: normalizeText(session.id),
+    provider_payment_intent_id: normalizeText(session.payment_intent),
+    amount_cents: amountCents,
+    currency: safeCurrency(offer.payment.currency),
+    status: "CHECKOUT_CREATED",
+    created_at: now,
+    updated_at: now
+  });
+  await persistStore(store);
+
+  sendJson(res, 201, {
+    checkout_url: session.url,
+    session_id: session.id,
+    amount_cents: amountCents,
+    currency: safeCurrency(offer.payment.currency)
+  });
+}
+
+async function handlePublicOfferPage(req, res, [token]) {
+  const normalizedToken = normalizeText(token);
+  const store = await readStore();
+  const offer = store.customer_offers.find((item) => item.public_token === normalizedToken);
+  if (!offer) {
+    sendHtml(res, 404, "<!doctype html><html><body><h1>Offer not found</h1></body></html>");
+    return;
+  }
+  const customer = store.customers.find((item) => item.id === offer.customer_id) || null;
+  const totals = computeOfferTotals(offer);
+  const currency = safeCurrency(offer.payment.currency);
+  const rows = (offer.items || [])
+    .map((item) => {
+      return `<tr>
+        <td>${escapeHtml(item.title)}</td>
+        <td>${escapeHtml((item.destinationCountries || []).join(", "))}</td>
+        <td>${escapeHtml(item.customer_notes || "-")}</td>
+        <td style="text-align:right">${escapeHtml(formatMoney(item.total_amount_cents, currency))}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(offer.title)}</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin:0; background:#f7fafc; color:#1f2d38; }
+      .wrap { max-width: 920px; margin: 0 auto; padding: 24px; }
+      .card { background:#fff; border:1px solid #dfe9ef; border-radius:14px; padding:20px; margin-bottom:16px; }
+      table { width:100%; border-collapse: collapse; }
+      th, td { padding:10px 8px; border-bottom:1px solid #edf2f6; font-size:14px; vertical-align:top; text-align:left; }
+      .btn { display:inline-block; border:none; border-radius:10px; background:#ff6f47; color:#fff; padding:12px 16px; font-weight:600; cursor:pointer; }
+      .muted { color:#607380; font-size:14px; }
+      .error { color:#9d2d2d; margin-top:12px; min-height: 20px; }
+      .sum { font-size:18px; font-weight:700; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>${escapeHtml(offer.title)}</h1>
+        <p class="muted">Prepared for ${escapeHtml(customer?.name || "Guest")} (${escapeHtml(customer?.email || "")})</p>
+        ${offer.intro_message ? `<p>${escapeHtml(offer.intro_message)}</p>` : ""}
+      </div>
+      <div class="card">
+        <h2>Your tours</h2>
+        <table>
+          <thead><tr><th>Tour</th><th>Destinations</th><th>Notes</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="card">
+        <p class="sum">Total: ${escapeHtml(formatMoney(totals.total_amount_cents, currency))}</p>
+        <p class="sum">Due now: ${escapeHtml(formatMoney(totals.due_now_amount_cents, currency))}</p>
+        <p class="muted">${offer.payment.due_at ? `Payment due by ${escapeHtml(offer.payment.due_at)}.` : ""}</p>
+        <button id="payBtn" class="btn">Pay by card</button>
+        <div id="error" class="error"></div>
+      </div>
+    </div>
+    <script>
+      const btn = document.getElementById("payBtn");
+      const error = document.getElementById("error");
+      btn.addEventListener("click", async () => {
+        error.textContent = "";
+        btn.disabled = true;
+        btn.textContent = "Opening checkout...";
+        try {
+          const response = await fetch("/public/v1/offers/${encodeURIComponent(offer.public_token)}/checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.checkout_url) {
+            throw new Error(payload.error || "Could not start checkout");
+          }
+          window.location.href = payload.checkout_url;
+        } catch (e) {
+          error.textContent = String(e.message || e);
+          btn.disabled = false;
+          btn.textContent = "Pay by card";
+        }
+      });
+    </script>
+  </body>
+</html>`;
+  sendHtml(res, 200, html);
+}
+
+async function handleStripeWebhook(req, res) {
+  if (!STRIPE_WEBHOOK_SECRET) {
+    sendJson(res, 501, { error: "Stripe webhook is not configured (missing STRIPE_WEBHOOK_SECRET)" });
+    return;
+  }
+
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const rawBody = Buffer.concat(chunks).toString("utf8");
+  const signature = normalizeText(req.headers["stripe-signature"]);
+
+  const valid = verifyStripeWebhookSignature(rawBody, signature, STRIPE_WEBHOOK_SECRET);
+  if (!valid) {
+    sendJson(res, 400, { error: "Invalid Stripe signature" });
+    return;
+  }
+
+  let event;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  if (event?.type !== "checkout.session.completed") {
+    sendJson(res, 200, { received: true, ignored: true });
+    return;
+  }
+
+  const session = event?.data?.object || {};
+  const offerId = normalizeText(session?.metadata?.offer_id);
+  const store = await readStore();
+  const now = nowIso();
+  let handled = false;
+
+  if (offerId) {
+    const offer = store.customer_offers.find((item) => item.id === offerId);
+    if (offer) {
+      offer.status = "PAID";
+      offer.paid_at = now;
+      offer.updated_at = now;
+      handled = true;
+    }
+  }
+
+  const invoiceId = normalizeText(session?.metadata?.invoice_id);
+  if (invoiceId) {
+    const invoice = store.invoices.find((item) => item.id === invoiceId);
+    if (invoice) {
+      invoice.status = "PAID";
+      invoice.paid_at = now;
+      invoice.updated_at = now;
+      handled = true;
+    }
+  }
+
+  const payment = store.payments.find((item) => normalizeText(item.provider_session_id) === normalizeText(session.id));
+  if (payment) {
+    payment.status = "PAID";
+    payment.provider_payment_intent_id = normalizeText(session.payment_intent) || payment.provider_payment_intent_id;
+    payment.updated_at = now;
+    handled = true;
+  }
+
+  if (!handled) {
+    sendJson(res, 200, { received: true, ignored: true });
+    return;
+  }
+
+  await persistStore(store);
+  sendJson(res, 200, { received: true });
 }
 
 async function handleListStaff(req, res) {

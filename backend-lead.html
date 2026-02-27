@@ -64,6 +64,75 @@
             </div>
           </article>
 
+          <article class="panel" id="invoicePanel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="invoiceSelect">Invoice</label>
+                <select id="invoiceSelect">
+                  <option value="">New invoice</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" id="invoiceNewBtn" type="button">New</button>
+            </div>
+
+            <div class="backend-controls">
+              <div class="field">
+                <label for="invoiceNumberInput">Invoice Number</label>
+                <input id="invoiceNumberInput" type="text" placeholder="Auto-generated if empty" />
+              </div>
+              <div class="field">
+                <label for="invoiceCurrencyInput">Currency</label>
+                <input id="invoiceCurrencyInput" type="text" value="USD" />
+              </div>
+              <div class="field">
+                <label for="invoiceIssueDateInput">Issue Date</label>
+                <input id="invoiceIssueDateInput" type="date" />
+              </div>
+              <div class="field">
+                <label for="invoiceDueDateInput">Due Date</label>
+                <input id="invoiceDueDateInput" type="date" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="invoiceTitleInput">Title</label>
+              <input id="invoiceTitleInput" type="text" placeholder="Invoice title" />
+            </div>
+
+            <div class="field">
+              <label for="invoiceItemsInput">Invoice Items (one per line: Description | Quantity | Unit amount in cents)</label>
+              <textarea id="invoiceItemsInput" rows="5" placeholder="Example: Vietnam private route | 2 | 245000"></textarea>
+            </div>
+
+            <div class="backend-controls">
+              <div class="field">
+                <label for="invoiceDueAmountInput">Due Amount (cents, optional)</label>
+                <input id="invoiceDueAmountInput" type="number" min="1" step="1" placeholder="Defaults to total" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="invoiceNotesInput">Invoice Notes</label>
+              <textarea id="invoiceNotesInput" rows="3"></textarea>
+            </div>
+
+            <div class="backend-controls">
+              <button class="btn btn-primary" id="invoiceCreateBtn" type="button">Create Invoice</button>
+              <button class="btn btn-ghost" id="invoiceSaveBtn" type="button">Save Changes</button>
+              <button class="btn btn-ghost" id="invoiceSendBtn" type="button">Send to Customer</button>
+              <a class="btn btn-ghost" id="invoicePdfLink" href="#" target="_blank" rel="noopener" style="display:none;">Open PDF</a>
+              <a class="btn btn-ghost" id="invoicePublicLink" href="#" target="_blank" rel="noopener" style="display:none;">Open Public Page</a>
+            </div>
+            <div class="backend-controls">
+              <span id="invoiceStatus" class="micro"></span>
+            </div>
+
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="invoicesTable"></table>
+            </div>
+          </article>
+
           <article class="panel" style="padding: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Activities</h2>
             <div class="backend-table-wrap">

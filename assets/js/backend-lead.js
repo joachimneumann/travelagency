@@ -9,7 +9,9 @@ const state = {
   user: qs.get("user") || "admin",
   lead: null,
   customer: null,
-  staff: []
+  staff: [],
+  invoices: [],
+  selectedInvoiceId: ""
 };
 
 const els = {
@@ -29,6 +31,25 @@ const els = {
   noteSaveBtn: document.getElementById("leadNoteSaveBtn"),
   actionStatus: document.getElementById("leadActionStatus"),
   activitiesTable: document.getElementById("activitiesTable")
+  ,
+  invoicePanel: document.getElementById("invoicePanel"),
+  invoiceSelect: document.getElementById("invoiceSelect"),
+  invoiceNewBtn: document.getElementById("invoiceNewBtn"),
+  invoiceNumberInput: document.getElementById("invoiceNumberInput"),
+  invoiceCurrencyInput: document.getElementById("invoiceCurrencyInput"),
+  invoiceIssueDateInput: document.getElementById("invoiceIssueDateInput"),
+  invoiceDueDateInput: document.getElementById("invoiceDueDateInput"),
+  invoiceTitleInput: document.getElementById("invoiceTitleInput"),
+  invoiceItemsInput: document.getElementById("invoiceItemsInput"),
+  invoiceDueAmountInput: document.getElementById("invoiceDueAmountInput"),
+  invoiceNotesInput: document.getElementById("invoiceNotesInput"),
+  invoiceCreateBtn: document.getElementById("invoiceCreateBtn"),
+  invoiceSaveBtn: document.getElementById("invoiceSaveBtn"),
+  invoiceSendBtn: document.getElementById("invoiceSendBtn"),
+  invoicePdfLink: document.getElementById("invoicePdfLink"),
+  invoicePublicLink: document.getElementById("invoicePublicLink"),
+  invoiceStatus: document.getElementById("invoiceStatus"),
+  invoicesTable: document.getElementById("invoicesTable")
 };
 
 init();
@@ -47,6 +68,11 @@ function init() {
   if (els.ownerSaveBtn) els.ownerSaveBtn.addEventListener("click", saveOwner);
   if (els.stageSaveBtn) els.stageSaveBtn.addEventListener("click", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", addNote);
+  if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
+  if (els.invoiceNewBtn) els.invoiceNewBtn.addEventListener("click", resetInvoiceForm);
+  if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
+  if (els.invoiceSaveBtn) els.invoiceSaveBtn.addEventListener("click", saveInvoice);
+  if (els.invoiceSendBtn) els.invoiceSendBtn.addEventListener("click", sendInvoice);
 
   if (!state.id) {
     showError("Missing record id.");
@@ -55,6 +81,7 @@ function init() {
 
   if (state.type === "customer") {
     if (els.actionsPanel) els.actionsPanel.style.display = "none";
+    if (els.invoicePanel) els.invoicePanel.style.display = "none";
     loadCustomer();
     return;
   }
@@ -78,6 +105,7 @@ async function loadLeadPage() {
   renderLeadData();
   renderActionControls();
   await loadActivities();
+  await loadInvoices();
 }
 
 async function loadCustomer() {
@@ -336,6 +364,263 @@ function setStatus(message) {
 
 function clearStatus() {
   setStatus("");
+}
+
+function setInvoiceStatus(message) {
+  if (!els.invoiceStatus) return;
+  els.invoiceStatus.textContent = message;
+}
+
+function clearInvoiceStatus() {
+  setInvoiceStatus("");
+}
+
+async function loadInvoices() {
+  if (!state.lead) return;
+  const payload = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices`);
+  if (!payload) return;
+  state.invoices = Array.isArray(payload.items) ? payload.items : [];
+  renderInvoiceSelect();
+  renderInvoicesTable();
+  if (state.selectedInvoiceId) {
+    const selected = state.invoices.find((item) => item.id === state.selectedInvoiceId);
+    if (selected) {
+      fillInvoiceForm(selected);
+      return;
+    }
+  }
+  resetInvoiceForm();
+}
+
+function renderInvoiceSelect() {
+  if (!els.invoiceSelect) return;
+  const options = ['<option value="">New invoice</option>']
+    .concat(
+      state.invoices.map(
+        (invoice) =>
+          `<option value="${escapeHtml(invoice.id)}">${escapeHtml(invoice.invoice_number || shortId(invoice.id))} (${escapeHtml(
+            invoice.status || "DRAFT"
+          )})</option>`
+      )
+    )
+    .join("");
+  els.invoiceSelect.innerHTML = options;
+  els.invoiceSelect.value = state.selectedInvoiceId || "";
+}
+
+function renderInvoicesTable() {
+  if (!els.invoicesTable) return;
+  const header = `<thead><tr><th>Invoice</th><th>Version</th><th>Status</th><th>Total</th><th>Due</th><th>Updated</th><th>Actions</th></tr></thead>`;
+  const rows = state.invoices
+    .map((invoice) => {
+      const total = formatMoney(invoice.total_amount_cents, invoice.currency);
+      const due = formatMoney(invoice.due_amount_cents || invoice.total_amount_cents, invoice.currency);
+      return `<tr>
+        <td>${escapeHtml(invoice.invoice_number || shortId(invoice.id))}</td>
+        <td>${escapeHtml(String(invoice.version || 1))}</td>
+        <td>${escapeHtml(invoice.status || "DRAFT")}</td>
+        <td>${escapeHtml(total)}</td>
+        <td>${escapeHtml(due)}</td>
+        <td>${escapeHtml(formatDateTime(invoice.updated_at))}</td>
+        <td><button type="button" class="btn btn-ghost" data-invoice-select="${escapeHtml(invoice.id)}">Edit</button></td>
+      </tr>`;
+    })
+    .join("");
+  const body = rows || '<tr><td colspan="7">No invoices yet</td></tr>';
+  els.invoicesTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.invoicesTable.querySelectorAll("[data-invoice-select]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = String(button.getAttribute("data-invoice-select") || "");
+      state.selectedInvoiceId = id;
+      renderInvoiceSelect();
+      const invoice = state.invoices.find((item) => item.id === id);
+      if (invoice) fillInvoiceForm(invoice);
+    });
+  });
+}
+
+function onInvoiceSelectChange() {
+  const id = String(els.invoiceSelect?.value || "");
+  state.selectedInvoiceId = id;
+  clearInvoiceStatus();
+  if (!id) {
+    resetInvoiceForm();
+    return;
+  }
+  const invoice = state.invoices.find((item) => item.id === id);
+  if (invoice) fillInvoiceForm(invoice);
+}
+
+function fillInvoiceForm(invoice) {
+  state.selectedInvoiceId = invoice.id;
+  if (els.invoiceSelect) els.invoiceSelect.value = invoice.id;
+  if (els.invoiceNumberInput) els.invoiceNumberInput.value = invoice.invoice_number || "";
+  if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.value = invoice.currency || "USD";
+  if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = normalizeDateInput(invoice.issue_date);
+  if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = normalizeDateInput(invoice.due_date);
+  if (els.invoiceTitleInput) els.invoiceTitleInput.value = invoice.title || "";
+  if (els.invoiceItemsInput) els.invoiceItemsInput.value = invoiceItemsToText(invoice.items || []);
+  if (els.invoiceDueAmountInput) {
+    els.invoiceDueAmountInput.value = invoice.due_amount_cents ? String(invoice.due_amount_cents) : "";
+  }
+  if (els.invoiceNotesInput) els.invoiceNotesInput.value = invoice.notes || "";
+  if (els.invoicePdfLink) {
+    els.invoicePdfLink.href = `${apiBase}/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`;
+    els.invoicePdfLink.style.display = "inline-block";
+  }
+  if (els.invoicePublicLink) {
+    els.invoicePublicLink.href = invoice.public_link || "#";
+    els.invoicePublicLink.style.display = invoice.public_link ? "inline-block" : "none";
+  }
+}
+
+function resetInvoiceForm() {
+  state.selectedInvoiceId = "";
+  if (els.invoiceSelect) els.invoiceSelect.value = "";
+  if (els.invoiceNumberInput) els.invoiceNumberInput.value = "";
+  if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.value = "USD";
+  if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = "";
+  if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = "";
+  if (els.invoiceTitleInput) els.invoiceTitleInput.value = "";
+  if (els.invoiceItemsInput) els.invoiceItemsInput.value = "";
+  if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = "";
+  if (els.invoiceNotesInput) els.invoiceNotesInput.value = "";
+  if (els.invoicePdfLink) els.invoicePdfLink.style.display = "none";
+  if (els.invoicePublicLink) els.invoicePublicLink.style.display = "none";
+  clearInvoiceStatus();
+}
+
+function invoiceItemsToText(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => `${item.description || ""} | ${Number(item.quantity || 1)} | ${Number(item.unit_amount_cents || 0)}`)
+    .join("\n");
+}
+
+function parseInvoiceItemsText(text) {
+  const lines = String(text || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const items = [];
+  for (const line of lines) {
+    const parts = line.split("|").map((value) => value.trim());
+    if (parts.length < 3) throw new Error(`Invalid line: "${line}". Use "Description | Quantity | Unit amount in cents".`);
+    const description = parts[0];
+    const quantity = Number(parts[1]);
+    const unitAmountCents = Number(parts[2]);
+    if (!description) throw new Error(`Missing description in line: "${line}"`);
+    if (!Number.isFinite(quantity) || quantity < 1) throw new Error(`Invalid quantity in line: "${line}"`);
+    if (!Number.isFinite(unitAmountCents) || unitAmountCents < 1) throw new Error(`Invalid amount in line: "${line}"`);
+    items.push({
+      description,
+      quantity: Math.round(quantity),
+      unit_amount_cents: Math.round(unitAmountCents)
+    });
+  }
+  return items;
+}
+
+function collectInvoicePayload() {
+  const items = parseInvoiceItemsText(els.invoiceItemsInput?.value || "");
+  const dueAmountRaw = String(els.invoiceDueAmountInput?.value || "").trim();
+  const dueAmount = dueAmountRaw ? Number(dueAmountRaw) : null;
+  if (dueAmountRaw && (!Number.isFinite(dueAmount) || dueAmount < 1)) {
+    throw new Error("Due amount must be a positive number.");
+  }
+  return {
+    invoice_number: String(els.invoiceNumberInput?.value || "").trim(),
+    currency: String(els.invoiceCurrencyInput?.value || "USD").trim() || "USD",
+    issue_date: String(els.invoiceIssueDateInput?.value || "").trim(),
+    due_date: String(els.invoiceDueDateInput?.value || "").trim(),
+    title: String(els.invoiceTitleInput?.value || "").trim(),
+    notes: String(els.invoiceNotesInput?.value || "").trim(),
+    due_amount_cents: dueAmount ? Math.round(dueAmount) : null,
+    items
+  };
+}
+
+async function createInvoice() {
+  if (!state.lead) return;
+  clearInvoiceStatus();
+  let payload;
+  try {
+    payload = collectInvoicePayload();
+  } catch (error) {
+    setInvoiceStatus(String(error?.message || error));
+    return;
+  }
+
+  const result = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices`, {
+    method: "POST",
+    body: payload
+  });
+  if (!result?.invoice) return;
+
+  setInvoiceStatus(`Invoice created. Email preview target: ${result.email_preview?.to || "-"}`);
+  state.selectedInvoiceId = result.invoice.id;
+  await loadInvoices();
+}
+
+async function saveInvoice() {
+  if (!state.lead || !state.selectedInvoiceId) {
+    setInvoiceStatus("Select an invoice first.");
+    return;
+  }
+  clearInvoiceStatus();
+
+  let payload;
+  try {
+    payload = collectInvoicePayload();
+  } catch (error) {
+    setInvoiceStatus(String(error?.message || error));
+    return;
+  }
+
+  const result = await fetchApi(
+    `/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices/${encodeURIComponent(state.selectedInvoiceId)}`,
+    {
+      method: "PATCH",
+      body: payload
+    }
+  );
+  if (!result?.invoice) return;
+
+  setInvoiceStatus("Invoice updated.");
+  await loadInvoices();
+}
+
+async function sendInvoice() {
+  if (!state.lead || !state.selectedInvoiceId) {
+    setInvoiceStatus("Select an invoice first.");
+    return;
+  }
+  clearInvoiceStatus();
+  const result = await fetchApi(
+    `/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices/${encodeURIComponent(state.selectedInvoiceId)}/send`,
+    { method: "POST", body: {} }
+  );
+  if (!result?.invoice) return;
+  setInvoiceStatus(`Invoice marked as sent. Email target: ${result.email_preview?.to || "-"}`);
+  await loadInvoices();
+}
+
+function normalizeDateInput(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  const d = new Date(text);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
+function formatMoney(amountCents, currency) {
+  const amount = Number(amountCents || 0) / 100;
+  const code = String(currency || "USD").toUpperCase();
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: code }).format(amount);
+  } catch {
+    return `${code} ${amount.toFixed(2)}`;
+  }
 }
 
 function showError(message) {
