@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { execFile as execFileCb } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { deflateSync, inflateSync } from "node:zlib";
 import { createAuth } from "./auth.js";
 
@@ -21,6 +21,11 @@ const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const execFile = promisify(execFileCb);
+const STAGING_ACCESS_ENABLED = String(process.env.STAGING_ACCESS_ENABLED || "").trim().toLowerCase() === "true";
+const STAGING_ACCESS_PASSWORD = String(process.env.STAGING_ACCESS_PASSWORD || "");
+const STAGING_ACCESS_COOKIE_SECRET = String(process.env.STAGING_ACCESS_COOKIE_SECRET || "");
+const STAGING_ACCESS_COOKIE_NAME = normalizeText(process.env.STAGING_ACCESS_COOKIE_NAME || "asiatravelplan_staging_access");
+const STAGING_ACCESS_MAX_AGE_SECONDS = Math.max(60, Number(process.env.STAGING_ACCESS_MAX_AGE_SECONDS || 60 * 60 * 24 * 30) || 60);
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -83,6 +88,10 @@ const auth = createAuth({ port: PORT });
 const routes = [
   ...auth.routes,
   { method: "GET", pattern: /^\/health$/, handler: handleHealth },
+  { method: "GET", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginPage },
+  { method: "POST", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginSubmit },
+  { method: "GET", pattern: /^\/staging-access\/check$/, handler: handleStagingAccessCheck },
+  { method: "GET", pattern: /^\/staging-access\/logout$/, handler: handleStagingAccessLogout },
   { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
   { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlePublicTourImage },
   { method: "POST", pattern: /^\/public\/v1\/leads$/, handler: handleCreateLead },
@@ -198,6 +207,17 @@ function withCors(req, res) {
 function redirect(res, location) {
   res.writeHead(302, { Location: location });
   res.end();
+}
+
+function appendSetCookie(res, cookieValue) {
+  const previous = res.getHeader("Set-Cookie");
+  if (!previous) {
+    res.setHeader("Set-Cookie", [cookieValue]);
+    return;
+  }
+  const list = Array.isArray(previous) ? previous : [String(previous)];
+  list.push(cookieValue);
+  res.setHeader("Set-Cookie", list);
 }
 
 function sendJson(res, status, payload, extraHeaders = {}) {
@@ -316,6 +336,208 @@ function sendBackendNotFound(res, pathname = "") {
   );
 }
 
+function parseCookies(req) {
+  const cookieHeader = String(req.headers.cookie || "");
+  const cookies = {};
+  for (const segment of cookieHeader.split(";")) {
+    const [rawKey, ...rest] = segment.trim().split("=");
+    if (!rawKey) continue;
+    cookies[rawKey] = decodeURIComponent(rest.join("=") || "");
+  }
+  return cookies;
+}
+
+function signStagingAccessCookie(password) {
+  return createHmac("sha256", STAGING_ACCESS_COOKIE_SECRET).update(String(password || ""), "utf8").digest("hex");
+}
+
+function safeEqualText(a, b) {
+  const left = Buffer.from(String(a || ""), "utf8");
+  const right = Buffer.from(String(b || ""), "utf8");
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
+function hasValidStagingAccess(req) {
+  if (!STAGING_ACCESS_ENABLED) return true;
+  if (!STAGING_ACCESS_PASSWORD || !STAGING_ACCESS_COOKIE_SECRET) return false;
+  const cookies = parseCookies(req);
+  const actual = normalizeText(cookies[STAGING_ACCESS_COOKIE_NAME]);
+  const expected = signStagingAccessCookie(STAGING_ACCESS_PASSWORD);
+  return Boolean(actual && expected && safeEqualText(actual, expected));
+}
+
+function setStagingAccessCookie(res) {
+  const value = signStagingAccessCookie(STAGING_ACCESS_PASSWORD);
+  appendSetCookie(
+    res,
+    `${STAGING_ACCESS_COOKIE_NAME}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${STAGING_ACCESS_MAX_AGE_SECONDS}`
+  );
+}
+
+function clearStagingAccessCookie(res) {
+  appendSetCookie(res, `${STAGING_ACCESS_COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
+}
+
+function normalizeReturnToPath(value, fallback = "/") {
+  const raw = normalizeText(value);
+  if (!raw) return fallback;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+  if (raw.startsWith("/staging-access/")) return fallback;
+  return raw;
+}
+
+function getForwardedPath(req) {
+  const forwardedUri = normalizeText(req.headers["x-forwarded-uri"]);
+  if (forwardedUri) return normalizeReturnToPath(forwardedUri, "/");
+  try {
+    const requestUrl = new URL(req.url, "http://localhost");
+    return normalizeReturnToPath(`${requestUrl.pathname}${requestUrl.search}`, "/");
+  } catch {
+    return "/";
+  }
+}
+
+function renderStagingAccessLogin({ error = "", returnTo = "/" } = {}) {
+  const safeReturnTo = normalizeReturnToPath(returnTo, "/");
+  const errorBlock = error ? `<p class="error">${escapeHtml(error)}</p>` : "";
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staging Access | AsiaTravelPlan</title>
+    <style>
+      :root {
+        --ink: #16222d;
+        --muted: #5f6f7a;
+        --line: #d9e1e6;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(180deg, #f6f9fa 0%, #eef3f5 100%);
+      }
+      .card {
+        width: min(440px, 100%);
+        background: rgba(255,255,255,0.96);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 18px 48px rgba(16, 33, 45, 0.10);
+        padding: 2rem;
+      }
+      h1 { margin: 0 0 0.75rem; font-size: 1.8rem; }
+      p { margin: 0 0 1rem; color: var(--muted); }
+      label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+      input[type="password"] {
+        width: 100%;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        font: inherit;
+      }
+      button {
+        width: 100%;
+        margin-top: 1rem;
+        border: 0;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        background: #163040;
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .error {
+        color: #a33434;
+        background: #fff0f0;
+        border: 1px solid #f0cccc;
+        border-radius: 12px;
+        padding: 0.75rem 0.9rem;
+      }
+      .micro { margin-top: 1rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Staging Access</h1>
+      <p>This environment is password-protected and not intended for public access.</p>
+      ${errorBlock}
+      <form method="post" action="/staging-access/login">
+        <input type="hidden" name="return_to" value="${escapeHtml(safeReturnTo)}" />
+        <label for="stagingAccessPassword">Password</label>
+        <input id="stagingAccessPassword" name="password" type="password" autocomplete="current-password" required />
+        <button type="submit">Continue</button>
+      </form>
+      <p class="micro">Access is remembered with a secure cookie for approximately ${Math.round(
+        STAGING_ACCESS_MAX_AGE_SECONDS / (60 * 60 * 24)
+      )} days.</p>
+    </main>
+  </body>
+</html>`;
+}
+
+async function handleStagingAccessLoginPage(req, res) {
+  if (!STAGING_ACCESS_ENABLED) {
+    redirect(res, "/");
+    return;
+  }
+  const requestUrl = new URL(req.url, "http://localhost");
+  const returnTo = normalizeReturnToPath(requestUrl.searchParams.get("return_to"), "/");
+  if (hasValidStagingAccess(req)) {
+    redirect(res, returnTo);
+    return;
+  }
+  sendHtml(res, 200, renderStagingAccessLogin({ returnTo }));
+}
+
+async function handleStagingAccessLoginSubmit(req, res) {
+  if (!STAGING_ACCESS_ENABLED) {
+    redirect(res, "/");
+    return;
+  }
+  const contentType = normalizeText(req.headers["content-type"]).toLowerCase();
+  if (!contentType.includes("application/x-www-form-urlencoded")) {
+    sendJson(res, 415, { error: "Expected form submission" });
+    return;
+  }
+  const body = await readBodyText(req);
+  const params = new URLSearchParams(body);
+  const password = String(params.get("password") || "");
+  const returnTo = normalizeReturnToPath(params.get("return_to"), "/");
+  if (!STAGING_ACCESS_PASSWORD || !STAGING_ACCESS_COOKIE_SECRET) {
+    sendHtml(res, 500, renderStagingAccessLogin({ error: "Staging access is not configured.", returnTo }));
+    return;
+  }
+  if (!safeEqualText(password, STAGING_ACCESS_PASSWORD)) {
+    sendHtml(res, 401, renderStagingAccessLogin({ error: "Incorrect password.", returnTo }));
+    return;
+  }
+  setStagingAccessCookie(res);
+  redirect(res, returnTo);
+}
+
+async function handleStagingAccessCheck(req, res) {
+  if (!STAGING_ACCESS_ENABLED || hasValidStagingAccess(req)) {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  const returnTo = getForwardedPath(req);
+  redirect(res, `/staging-access/login?return_to=${encodeURIComponent(returnTo)}`);
+}
+
+async function handleStagingAccessLogout(req, res) {
+  clearStagingAccessCookie(res);
+  redirect(res, "/staging-access/login");
+}
+
 function getMimeTypeFromExt(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === ".pdf") return "application/pdf";
@@ -370,11 +592,15 @@ async function sendFileWithCache(req, res, filePath, cacheControl) {
 }
 
 async function readBodyJson(req) {
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  const text = Buffer.concat(chunks).toString("utf8").trim();
+  const text = await readBodyText(req);
   if (!text) return {};
   return JSON.parse(text);
+}
+
+async function readBodyText(req) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8").trim();
 }
 
 async function readStore() {

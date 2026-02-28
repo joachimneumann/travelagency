@@ -23,6 +23,15 @@ staging.asiatravelplan.com {
   encode zstd gzip
   root * /srv
 
+  @staging_access path /staging-access/*
+  handle @staging_access {
+    reverse_proxy backend:8787
+  }
+
+  forward_auth backend:8787 {
+    uri /staging-access/check
+  }
+
   @robots path /robots.txt
   rewrite @robots /robots-staging.txt
 
