@@ -1,0 +1,39 @@
+{
+  email info@asiatravelplan.com
+}
+
+(security_headers) {
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "SAMEORIGIN"
+    Referrer-Policy "strict-origin-when-cross-origin"
+  }
+}
+
+staging.asiatravelplan.com {
+  import security_headers
+  encode zstd gzip
+  root * /srv
+
+  @backend path /auth/* /api/* /public/v1/*
+  handle @backend {
+    reverse_proxy backend:8787
+  }
+
+  file_server {
+    hide .git .gitignore backend deploy documentation scripts docker-compose*.yml .env* README* AGENTS.md
+  }
+}
+
+api-staging.asiatravelplan.com {
+  import security_headers
+  encode zstd gzip
+  reverse_proxy backend:8787
+}
+
+auth-staging.asiatravelplan.com {
+  import security_headers
+  encode zstd gzip
+  reverse_proxy keycloak:8080
+}
