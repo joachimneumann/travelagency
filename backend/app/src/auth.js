@@ -145,7 +145,15 @@ export function createAuth({ port }) {
     const clientRoles = Array.isArray(payload?.resource_access?.[cfg.keycloakClientId]?.roles)
       ? payload.resource_access[cfg.keycloakClientId].roles
       : [];
-    return Array.from(new Set([...realmRoles, ...clientRoles])).filter(Boolean);
+    const mappedRoles = Array.isArray(payload?.roles) ? payload.roles : [];
+    const groups = Array.isArray(payload?.groups) ? payload.groups : [];
+    const groupAliases = groups.flatMap((group) => {
+      const raw = normalizeText(group);
+      if (!raw) return [];
+      const shortName = raw.split("/").filter(Boolean).pop() || raw;
+      return [raw, shortName];
+    });
+    return Array.from(new Set([...realmRoles, ...clientRoles, ...mappedRoles, ...groupAliases])).filter(Boolean);
   }
 
   async function getKeycloakDiscovery() {
@@ -311,6 +319,14 @@ export function createAuth({ port }) {
     const roles = extractRolesFromPayload(verified);
     const hasRole = roles.some((role) => cfg.keycloakAllowedRoles.has(role));
     if (!hasRole) {
+      console.warn(
+        `[auth] denied backend access for ${String(verified.preferred_username || verified.email || verified.sub || "unknown")} with claims: ${JSON.stringify(
+          {
+            roles,
+            groups: Array.isArray(verified.groups) ? verified.groups : []
+          }
+        )}`
+      );
       sendJson(res, 403, { error: "Authenticated but not authorized for backend access" });
       return;
     }

@@ -11,10 +11,25 @@
   }
 }
 
+(noindex_headers) {
+  header {
+    X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
+  }
+}
+
 staging.asiatravelplan.com {
   import security_headers
+  import noindex_headers
   encode zstd gzip
   root * /srv
+
+  @robots path /robots.txt
+  handle @robots {
+    respond <<EOF 200
+User-agent: *
+Disallow: /
+EOF
+  }
 
   @backend path /auth/* /api/* /public/v1/*
   handle @backend {
@@ -28,12 +43,14 @@ staging.asiatravelplan.com {
 
 api-staging.asiatravelplan.com {
   import security_headers
+  import noindex_headers
   encode zstd gzip
   reverse_proxy backend:8787
 }
 
 auth-staging.asiatravelplan.com {
   import security_headers
+  import noindex_headers
   encode zstd gzip
   reverse_proxy keycloak:8080
 }
