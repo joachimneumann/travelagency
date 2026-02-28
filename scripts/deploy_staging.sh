@@ -11,4 +11,4 @@ rsync -avz --delete \
   /Users/internal_admin/projects/travelagency/ \
   "${REMOTE_HOST}:${REMOTE_DIR}/"
 
-ssh "$SSH_TARGET" "cd ${REMOTE_DIR} && docker compose -f docker-compose.staging.yml up -d --build"
+ssh "$SSH_TARGET" "cd ${REMOTE_DIR} && docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build"

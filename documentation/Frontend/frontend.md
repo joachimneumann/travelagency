@@ -1,4 +1,11 @@
-# AsiaTravelPlan.live - Current Page Structure
+# AsiaTravelPlan - Current Page Structure
+
+## 0) Live brand and domain status
+
+- Production domain is owned: `asiatravelplan.com`
+- Primary business mailbox is active via Google Workspace: `info@asiatravelplan.com`
+- Public website and contact copy should use `asiatravelplan.com` and `info@asiatravelplan.com` as the source of truth
+- Registrar/DNS and Google Workspace account setup are no longer placeholders for this project
 
 ## 1) Document head
 
