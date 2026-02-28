@@ -15,18 +15,18 @@ Local backend implementation (Milestone 1) is in:
 - `backend/app/scripts/seed.js`
 
 Features available now:
-- Public lead ingestion (`POST /public/v1/leads`)
+- Public booking ingestion (`POST /public/v1/bookings`)
 - Public tours catalog (`GET /public/v1/tours`)
 - Public backend-hosted tour images (`GET /public/v1/tour-images/:path`)
-- Lead pipeline and stage transitions
+- Booking pipeline and stage transitions
 - Customer deduplication
-- Lead ownership assignment + SLA due timestamps
-- Lead activity timeline
+- Booking ownership assignment + SLA due timestamps
+- Booking activity timeline
 - Staff lookup API for assignment controls (`GET /api/v1/staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
-- Lightweight admin pages (`/admin`, `/admin/leads`, `/admin/leads/:id`, `/admin/customers`, `/admin/customers/:id`)
-- Branded frontend backoffice pages (`backend.html`, `backend-lead.html`)
+- Lightweight admin pages (`/admin`, `/admin/bookings`, `/admin/bookings/:id`, `/admin/customers`, `/admin/customers/:id`)
+- Branded frontend backoffice pages (`backend.html`, `backend-booking.html`)
 - `backend.html` lists tours
 - clicking a tour ID opens `backend-tour.html` for editing
   - destination and styles are edited with checkbox groups
@@ -59,14 +59,14 @@ cd backend/app
 npm run seed -- --count 40
 ```
 
-This appends realistic customers/leads/activities into `backend/app/data/store.json`.
+This appends realistic customers/bookings/activities into `backend/app/data/store.json`.
 
 ## 4) Use the backend APIs
 
-## 4.1 Public lead endpoint
+## 4.1 Public booking endpoint
 
 ```bash
-curl -X POST http://localhost:8787/public/v1/leads \
+curl -X POST http://localhost:8787/public/v1/bookings \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: local-demo-1' \
   -d '{
@@ -97,10 +97,10 @@ Browser session example:
 
 ```bash
 curl -b cookie.txt \
-  'http://localhost:8787/api/v1/leads?page=1&page_size=10&sort=created_at_desc'
+  'http://localhost:8787/api/v1/bookings?page=1&page_size=10&sort=created_at_desc'
 ```
 
-Supported filters on `GET /api/v1/leads`:
+Supported filters on `GET /api/v1/bookings`:
 - `page`, `page_size`
 - `stage`
 - `owner_id`
@@ -111,14 +111,14 @@ Bearer token example (service-to-service):
 
 ```bash
 curl -H 'Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>' \
-  'http://localhost:8787/api/v1/leads?page=1&page_size=10&sort=created_at_desc'
+  'http://localhost:8787/api/v1/bookings?page=1&page_size=10&sort=created_at_desc'
 ```
 
 ## 4.3 Admin web pages
 
 Open in browser:
 - `http://localhost:8787/admin`
-- `http://localhost:8787/admin/leads`
+- `http://localhost:8787/admin/bookings`
 - `http://localhost:8787/admin/customers`
 
 ## 5) Integrate with locally executed AsiaTravelPlan webpage
@@ -127,7 +127,7 @@ The frontend submit logic in `assets/js/main.js` already supports backend integr
 
 It uses:
 - `window.ASIATRAVELPLAN_API_BASE` if defined
-- otherwise relative `/public/v1/leads`
+- otherwise relative `/public/v1/bookings`
 
 Tours source:
 - Website tour cards are loaded from backend `GET /public/v1/tours` when `window.ASIATRAVELPLAN_API_BASE` is set.
@@ -138,10 +138,10 @@ Branded backend web UI:
 - `backend.html` provides a AsiaTravelPlan-styled backend workspace page.
 - It shows:
   - paginated searchable Customers table (newest first, page size 10)
-  - paginated searchable Leads table (newest first, page size 10)
+  - paginated searchable Bookings table (newest first, page size 10)
   - paginated searchable Tours table
 - tour IDs open `backend-tour.html` for editing
-- Lead/customer IDs link to `backend-lead.html`.
+- Booking/customer IDs link to `backend-booking.html`.
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
 - Clicking `backend` triggers Keycloak login (`/auth/login`) in the main window and returns to `backend.html`.
@@ -231,7 +231,7 @@ If you place a reverse proxy in front (for example `http://localhost:8080`) and 
 - `/public/v1/*` and `/api/v1/*` -> backend (`8787`)
 - `/` and static assets -> website static server
 
-then you do not need `window.ASIATRAVELPLAN_API_BASE`, because relative path `/public/v1/leads` works directly.
+then you do not need `window.ASIATRAVELPLAN_API_BASE`, because relative path `/public/v1/bookings` works directly.
 
 ## 5.3 File-open mode (`file://`) note
 
@@ -245,22 +245,22 @@ Use an HTTP static server (`python -m http.server`) so browser behavior matches 
 2. Click `backend`.
 3. Login via Keycloak form.
 4. Verify redirect lands on `http://localhost:8080/backend.html`.
-5. Verify customers and leads tables load.
-6. Fill and submit the lead modal form.
+5. Verify customers and bookings tables load.
+6. Fill and submit the booking modal form.
 7. Confirm success message appears in modal.
 8. Check backend data:
 
 ```bash
 curl -H 'Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>' \
-  'http://localhost:8787/api/v1/leads?sort=created_at_desc&page_size=5'
+  'http://localhost:8787/api/v1/bookings?sort=created_at_desc&page_size=5'
 ```
 
-9. Open lead/customer detail links from `backend.html`.
+9. Open booking/customer detail links from `backend.html`.
 10. Re-query activities:
 
 ```bash
 curl -H 'Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>' \
-  'http://localhost:8787/api/v1/leads/<LEAD_ID>/activities'
+  'http://localhost:8787/api/v1/bookings/<BOOKING_ID>/activities'
 ```
 
 11. Verify tour image upload/transform:
@@ -279,7 +279,7 @@ Confirm `image` values point to `/public/v1/tour-images/...` and open one URL in
   - Ensure backend CORS allows frontend origin and credentials (`CORS_ORIGIN='http://localhost:8080'`).
   - Use a valid Keycloak access token for non-browser calls.
 
-- Lead form opens mail app instead of backend submission
+- Booking form opens mail app instead of backend submission
   - Backend unreachable or wrong API base URL.
   - Check `window.ASIATRAVELPLAN_API_BASE` and backend process status.
 
@@ -289,7 +289,7 @@ Confirm `image` values point to `/public/v1/tour-images/...` and open one URL in
   - Keep backend and frontend on `localhost` to avoid cookie domain mismatch.
   - Or use the local frontend proxy setup and the persistent local Keycloak compose file to avoid brittle split-origin local flows.
 
-- Duplicate lead submissions
+- Duplicate booking submissions
   - Ensure `Idempotency-Key` header is present (frontend already sends it).
 
 ## 8) Current limitations and next step

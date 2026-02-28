@@ -18,7 +18,7 @@ Before deploying to Hetzner, do these steps locally in this order:
 2. Move persistence from JSON files to PostgreSQL locally
 - Recommended before deployment.
 - Keep API endpoints unchanged so frontend behavior stays stable.
-- Migrate at least: tours, leads, customers, activities.
+- Migrate at least: tours, bookings, customers, activities.
 
 3. Add migrations and seed scripts
 - Use a migration system (for example Prisma or Knex).

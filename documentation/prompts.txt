@@ -53,7 +53,7 @@ Code 2
 You are building a static, responsive landing page for my business: a Vietnam-based travel agency. Use the exact layout conventions and required sections from structure.md as the baseline and keep the project framework-free (vanilla HTML/CSS/JS; no build step).
 
 1) Business goals (priority order)
-	1.	Maximize qualified leads (inquiries/booking requests).
+	1.	Maximize qualified bookings (inquiries/booking requests).
 	2.	Let users quickly browse tours by Destination Country or Travel Style.
 	3.	Establish trust (reviews, credentials, local expertise).
 
@@ -79,7 +79,7 @@ Implement all required sections from structure.md, tailored to a Vietnam travel 
 	•	“Why us / local expertise”
 	•	Trust section (reviews, badges, metrics)
 	•	FAQ (5–8 Qs)
-	•	Contact / lead capture section
+	•	Contact / booking capture section
 	•	Footer with business details + social links placeholders
 
 4) Data-driven tours (beginner editable)
@@ -96,12 +96,12 @@ Tours must be stored in data/tours_fallback_data.jspn and rendered dynamically v
 	•	rating (optional)
 Render cards with: image, title, destination, style tags, duration, price (if present), and a “Plan this trip” CTA button.
 
-5) Conversion-focused lead form flow (required)
+5) Conversion-focused booking form flow (required)
 
-Create a high-conversion lead capture experience:
+Create a high-conversion booking capture experience:
 
 Flow
-	•	Primary CTA in hero opens a modal (or scrolls) to a lead form.
+	•	Primary CTA in hero opens a modal (or scrolls) to a booking form.
 	•	Form is multi-step (2–3 steps) with a progress indicator:
 	1.	Trip basics (destination, style, dates or month, number of travelers, budget range)
 	2.	Contact (name, email, WhatsApp/phone, preferred language)

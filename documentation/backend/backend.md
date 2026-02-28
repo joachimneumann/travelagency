@@ -2,10 +2,10 @@
 
 ## 1) Why AsiaTravelPlan Needs a Backend
 
-AsiaTravelPlan currently has a strong marketing site and lead capture UX, but no operational core to manage leads, bookings, trip execution, partners, and field staff at scale.
+AsiaTravelPlan currently has a strong marketing site and booking capture UX, but no operational core to manage bookings, bookings, trip execution, partners, and field staff at scale.
 
 Without a backend, the business will hit limits quickly:
-- Lead loss from manual handoff (modal -> email/manual tracking)
+- Booking loss from manual handoff (modal -> email/manual tracking)
 - Slow quote turnaround and inconsistent pricing
 - No single source of truth for customers, bookings, guides, and suppliers
 - Weak operational control for multi-country trips (Vietnam, Thailand, Cambodia, Laos)
@@ -17,7 +17,7 @@ A backend is required to move AsiaTravelPlan from brochure + form collection int
 ## 2) Scope and User Groups
 
 The backend must support these actor groups:
-- Customers (leads, booked travelers, repeat customers)
+- Customers (bookings, booked travelers, repeat customers)
 - Internal staff (sales, ops coordinators, finance, management)
 - Local guides (freelance or contracted)
 - Business partners (hotels, transport, cruise operators, activity providers, DMC/ground operators)
@@ -25,21 +25,21 @@ The backend must support these actor groups:
 
 ## 3) Core Business Capabilities (Complete Requirement List)
 
-## 3.1 Lead and Customer CRM
+## 3.1 Booking and Customer CRM
 
 Functional requirements:
-- Capture leads from website form, email, WhatsApp, and manual entry
+- Capture bookings from website form, email, WhatsApp, and manual entry
 - De-duplicate customers by email/phone/passport + fuzzy name matching
 - Maintain full customer profile:
   - Identity, contact info, preferred language, travel preferences
   - Household/group relationships (family members, companions)
   - Past trips, quote history, spend and margin contribution
-- Support lead lifecycle stages:
+- Support booking lifecycle stages:
   - New -> Qualified -> Proposal Sent -> Negotiation -> Won/Lost -> Post-Trip
-- Assign owner (sales agent) and SLA deadlines for each lead
+- Assign owner (sales agent) and SLA deadlines for each booking
 - Track interaction timeline:
   - Calls, emails, WhatsApp chats, notes, tasks, documents
-- Store lead source attribution (campaign, referral, direct, partner)
+- Store booking source attribution (campaign, referral, direct, partner)
 - Support segmentation (country, budget band, style, destination interest)
 - Trigger reminders and automations for follow-ups
 - Record consent status for marketing/contact by channel
@@ -54,7 +54,7 @@ Data requirements:
 Functional requirements:
 - Build modular itineraries from reusable components:
   - Accommodation, transfers, activities, guides, meals, flights/trains (optional)
-- Support multiple proposal versions per lead
+- Support multiple proposal versions per booking
 - Price per traveler and per group with occupancy rules
 - Handle multi-currency quotes (USD, VND, THB, etc.)
 - Allow markup rules by product type, partner, route, season
@@ -157,7 +157,7 @@ Functional requirements:
 - Internal user directory with role-based access control
 - Team structures (sales, operations, finance, admin, management)
 - Work queues and task assignment:
-  - New leads, quote deadlines, pending confirmations, pre-departure checks
+  - New bookings, quote deadlines, pending confirmations, pre-departure checks
 - SLA dashboards per team and individual
 - Shift/on-call schedule for emergency support
 - Internal notes, handover logs, and approval flows
@@ -196,7 +196,7 @@ Functional requirements:
 - Ticketing/case management linked to customer and trip
 - Case categories (pre-trip, in-trip, post-trip, complaints, refund)
 - Priority and severity levels with SLA timers
-- Escalation workflow (ops lead -> manager -> emergency)
+- Escalation workflow (ops booking -> manager -> emergency)
 - Resolution notes and compensation tracking
 - Post-resolution customer feedback capture
 
@@ -223,9 +223,9 @@ Data requirements:
 
 Functional requirements:
 - KPI dashboards by day/week/month:
-  - Lead volume, conversion, quote turnaround, booking value, margin
+  - Booking volume, conversion, quote turnaround, booking value, margin
 - Operational KPIs:
-  - Confirmation lead time, incident rate, on-time service delivery
+  - Confirmation booking time, incident rate, on-time service delivery
 - Supplier KPIs:
   - Acceptance rate, SLA compliance, complaint rates
 - Guide KPIs:
@@ -260,7 +260,7 @@ Data requirements:
 - Explicit consent capture and withdrawal handling
 - Data subject rights workflows:
   - Access, correction, deletion, export, processing restriction
-- Retention policies by data class (lead, booking, finance, support)
+- Retention policies by data class (booking, booking, finance, support)
 - Sensitive-data handling policy (passport, health/dietary notes, minors)
 - Cross-border data transfer controls and logging
 - Privacy-by-design defaults in new features
@@ -289,7 +289,7 @@ Data requirements:
 ## 4.5 Integration Requirements
 
 Required integrations (phased):
-- Website lead ingestion (implemented in current milestone)
+- Website booking ingestion (implemented in current milestone)
 - Email and WhatsApp messaging gateway
 - Payment processor(s)
 - Accounting software
@@ -305,7 +305,7 @@ Integration design requirements:
 
 Core entities:
 - `Customer`
-- `Lead`
+- `Booking`
 - `TripPreference`
 - `Quote`
 - `QuoteVersion`
@@ -334,7 +334,7 @@ Core entities:
 
 ## 6) Required Workflow Automations
 
-- New lead auto-routing by destination/style/language
+- New booking auto-routing by destination/style/language
 - Follow-up reminders when SLA thresholds are near breach
 - Auto-create pre-departure checklist at booking confirmation
 - Auto-alert operations on unconfirmed critical services
@@ -356,7 +356,7 @@ Core entities:
 ## 8) Admin and Backoffice UX Requirements
 
 - Unified operations dashboard (today's departures, issues, pending confirmations)
-- Kanban and list views for lead pipeline
+- Kanban and list views for booking pipeline
 - Calendar views for guide and service assignments
 - Rate/contract management screens for partners
 - Booking timeline view with all service components and messages
@@ -366,7 +366,7 @@ Core entities:
 
 ## MVP (must-have to operate reliably)
 
-- CRM lead capture + pipeline
+- CRM booking capture + pipeline
 - Quote builder (versioned)
 - Booking conversion and core service orders
 - Partner directory + basic contracting + confirmations
@@ -388,7 +388,7 @@ Core entities:
 ## 10) Acceptance Criteria (Definition of Done for the Backend Program)
 
 The backend is considered production-ready when:
-- 100% of website leads are captured and trackable in CRM
+- 100% of website bookings are captured and trackable in CRM
 - Quote turnaround meets internal SLA target (for example <= 48-72h)
 - Each confirmed booking has complete service-order traceability
 - Guide and partner assignments are visible and auditable per trip day
@@ -455,7 +455,7 @@ This requirements document is aligned with:
 
 ## 13.3 What to Build In-House (Core Product)
 
-- Lead-to-booking CRM workflow tailored to AsiaTravelPlan (pipeline + SLA routing).
+- Booking-to-booking CRM workflow tailored to AsiaTravelPlan (pipeline + SLA routing).
 - Modular itinerary and quote engine:
   - Versioned proposals
   - Inclusion/exclusion generation
@@ -537,14 +537,14 @@ Deliverable:
 
 ## Phase 1 (Weeks 3-8): MVP Revenue Core
 
-- CRM lead ingestion (website + manual).
+- CRM booking ingestion (website + manual).
 - Quote builder v1 with versioning and PDF generation.
 - Booking conversion + service orders.
 - Partner and guide directories with assignment basics.
 - Core dashboards (pipeline + today operations).
 
 Deliverable:
-- AsiaTravelPlan can run end-to-end lead -> quote -> booking in one system.
+- AsiaTravelPlan can run end-to-end booking -> quote -> booking in one system.
 
 ## Phase 2 (Weeks 9-14): Operational Hardening
 
@@ -569,7 +569,7 @@ Deliverable:
 ## 13.8 Team Plan
 
 Minimum delivery team:
-- 1 Tech lead / architect
+- 1 Tech booking / architect
 - 2 Backend engineers
 - 1 Full-stack engineer (admin UI + API integration)
 - 1 QA automation engineer (shared or part-time)
@@ -591,7 +591,7 @@ Minimum delivery team:
 
 ## 13.10 First 90-Day Success Metrics
 
-- >= 95% leads captured automatically from web channels
+- >= 95% bookings captured automatically from web channels
 - <= 48h median quote turnaround
 - >= 90% confirmed bookings with complete service-order traceability
 - >= 80% guide assignments completed without manual escalation
@@ -609,7 +609,7 @@ Cost notes:
 
 - Early production stage for AsiaTravelPlan (small team, first operational backend rollout).
 - Region baseline: US East where applicable.
-- 3-8 internal users, moderate lead volume, moderate messaging volume.
+- 3-8 internal users, moderate booking volume, moderate messaging volume.
 - Costs shown mostly as monthly recurring; variable transaction fees are called out separately.
 
 ## 14.2 Cost by Purchased Component

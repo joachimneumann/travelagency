@@ -8,8 +8,8 @@
 
 ## Growth Priorities
 
-1. Increase qualified lead volume through SEO + paid search.
-2. Improve lead-to-call and call-to-booking conversion via trust and speed.
+1. Increase qualified booking volume through SEO + paid search.
+2. Improve booking-to-call and call-to-booking conversion via trust and speed.
 3. Build brand defensibility with verified proof (license, real testimonials, real social presence).
 
 ## Funnel Plan
@@ -23,7 +23,7 @@
 ### Mid Funnel (Consideration)
 
 - Use destination/style filters as a trip finder and strengthen route guidance content.
-- Offer a lead magnet: "Southeast Asia Route + Budget Guide".
+- Offer a booking magnet: "Southeast Asia Route + Budget Guide".
 - Retarget users by viewed destination/style.
 
 ### Bottom Funnel (Conversion)
@@ -49,7 +49,7 @@
 ### Weeks 7-12
 
 - A/B test hero messaging, CTA copy, and trust block order.
-- Add route-cost calculator or budget estimator lead tool.
+- Add route-cost calculator or budget estimator booking tool.
 - Start B2B referral channel with foreign travel advisors.
 
 ## Paid Media Mix (Initial)
@@ -61,7 +61,7 @@
 
 ## AI-Based Marketing System
 
-- AI lead scoring to prioritize high-value leads.
+- AI booking scoring to prioritize high-value bookings.
 - AI creative generation by destination x style x budget tier.
 - AI content workflow for SEO briefs and draft production (human-edited).
 - AI assistant/chat for instant qualification and FAQ triage.
@@ -69,8 +69,8 @@
 
 ## KPIs (First 2 Quarters)
 
-- Website lead conversion: 2.5% to 4.0%
-- Lead-to-call booking: 30%+
+- Website booking conversion: 2.5% to 4.0%
+- Booking-to-call booking: 30%+
 - Call-to-proposal: 65%+
 - Proposal-to-booking: 20-25%
 - CAC payback: under 90 days
@@ -80,5 +80,5 @@
 1. Replace trust placeholders with verifiable business data.
 2. Add explicit Included vs Excluded section.
 3. Create route-specific SEO landing pages (beyond one homepage hub).
-4. Integrate CRM automation for follow-up of incomplete leads.
+4. Integrate CRM automation for follow-up of incomplete bookings.
 5. Validate and monitor structured data visibility (TravelAgency/FAQ).

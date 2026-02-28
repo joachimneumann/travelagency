@@ -26,7 +26,7 @@
 - Main content sections (hero to contact)
 - Footer
 - Sticky mobile CTA
-- Modal lead form (3-step)
+- Modal booking form (3-step)
 - Backend-only tours API integration script
 - Main JS bundle: `assets/js/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
@@ -86,7 +86,7 @@ Behavior from JS:
 - Only after clicking `Show more`, a `Show the remaining X tours` button can appear to reveal the rest
 - If exactly one tour remains, the second button label becomes `There is one more tour`
 - Progressive reveal buttons are horizontally centered below the tour grid
-- Card CTA opens lead modal and pre-fills destination/style
+- Card CTA opens booking modal and pre-fills destination/style
 - A bottom-page `Debug priority` button reveals per-tour ranking diagnostics for the current filter (`priority`, `random`, `sum`) in display order
 
 Current inventory:
@@ -123,7 +123,7 @@ Current inventory:
 
 ### 4.6 Trust and reviews (`#trust`)
 
-- H2 + supporting lead text
+- H2 + supporting booking text
 - Metrics row:
   - `96%` proposal-to-booking satisfaction
   - `48-72h` initial proposal time
@@ -160,13 +160,13 @@ Current inventory:
 
 - Sticky bottom CTA button:
   - `Book a free discovery call`
-  - Opens the lead modal
+  - Opens the booking modal
 
-## 7) Lead modal form (`#leadModal`)
+## 7) Booking modal form (`#bookingModal`)
 
 - Modal title: `Plan your trip with AsiaTravelPlan`
 - Progress indicator with 3 steps
-- Multi-step form (`#leadForm`) with validation
+- Multi-step form (`#bookingForm`) with validation
 
 Step 1: Trip basics
 - destination, style, month, travelers, travel duration, budget
@@ -195,7 +195,7 @@ Two JSON-LD blocks:
 - Mobile menu toggle
 - Filterable tours with URL/localStorage persistence
 - Tour list progressive reveal (up to 3 initially, then incremental show-more controls)
-- Dynamic tours section heading/lead and document title
+- Dynamic tours section heading/booking and document title
 - FAQ accordion
 - Tour image prewarm for faster first render
-- Modal lead capture with 3-step progression
+- Modal booking capture with 3-step progression

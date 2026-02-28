@@ -129,7 +129,7 @@
       <section class="section" id="tours">
         <div class="container">
           <h2 class="section-title" id="toursTitle" hidden>Featured tours you can tailor</h2>
-          <p class="section-lead" id="toursLead" hidden>
+          <p class="section-booking" id="toursBooking" hidden>
             Browse by destination and style. Filters update instantly and can be shared by URL.
           </p>
 
@@ -140,7 +140,7 @@
             <button class="btn btn-secondary" id="showMoreTours" type="button">Show more</button>
             <button class="btn btn-secondary" id="showAllTours" type="button">Show all</button>
           </div>
-          <p id="noResultsMessage" class="section-lead" hidden>
+          <p id="noResultsMessage" class="section-booking" hidden>
             No tours match these filters yet. Try "All destinations" or "All styles".
           </p>
         </div>
@@ -161,19 +161,19 @@
           <div class="info-grid">
             <article class="panel">
               <h3>1. Free discovery call</h3>
-              <p class="section-lead">We align on destination mix, travel pace, comfort level, and budget.</p>
+              <p class="section-booking">We align on destination mix, travel pace, comfort level, and budget.</p>
             </article>
             <article class="panel">
               <h3>2. Route options in 48-72h</h3>
-              <p class="section-lead">You receive two practical concepts with transparent inclusions.</p>
+              <p class="section-booking">You receive two practical concepts with transparent inclusions.</p>
             </article>
             <article class="panel">
               <h3>3. Refine and confirm</h3>
-              <p class="section-lead">We tune hotels, activities, and transport until the plan fits you.</p>
+              <p class="section-booking">We tune hotels, activities, and transport until the plan fits you.</p>
             </article>
             <article class="panel">
               <h3>4. Travel with support</h3>
-              <p class="section-lead">Our local team helps before and during your trip, including rerouting if needed.</p>
+              <p class="section-booking">Our local team helps before and during your trip, including rerouting if needed.</p>
             </article>
           </div>
         </div>
@@ -201,7 +201,7 @@
       <section class="section" id="trust">
         <div class="container">
           <h2 class="section-title">Trust, proof, and local expertise</h2>
-          <p class="section-lead">We combine local execution with clear planning standards.</p>
+          <p class="section-booking">We combine local execution with clear planning standards.</p>
 
           <div class="metrics">
             <div class="metric"><strong>96%</strong><span>proposal-to-booking satisfaction</span></div>
@@ -284,7 +284,7 @@
         <div class="container split">
           <div class="contact-card">
             <h2 class="section-title">Book your free discovery call</h2>
-            <p class="section-lead">
+            <p class="section-booking">
               Tell us your destination ideas and budget. We will reply with clear options and next steps.
             </p>
             <ul>
@@ -368,11 +368,11 @@
       <button class="btn btn-primary" type="button" data-open-modal>Book a free discovery call</button>
     </div>
 
-    <div class="modal" id="leadModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+    <div class="modal" id="bookingModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
       <div class="modal-panel" role="document">
         <div class="modal-head">
-          <h2 id="leadTitle">Plan your trip with AsiaTravelPlan</h2>
-          <button class="icon-btn" type="button" id="closeLeadModal" aria-label="Close form">✕</button>
+          <h2 id="bookingTitle">Plan your trip with AsiaTravelPlan</h2>
+          <button class="icon-btn" type="button" id="closeBookingModal" aria-label="Close form">✕</button>
         </div>
 
         <div class="modal-body">
@@ -383,13 +383,13 @@
             <span class="progress-step" data-step="3"></span>
           </div>
 
-          <form id="leadForm" novalidate>
+          <form id="bookingForm" novalidate>
             <section class="step active" data-step="1">
               <h3>Step 1: Trip basics</h3>
               <div class="field-grid">
                 <div class="field">
-                  <label for="leadDestination">Destination country</label>
-                  <select id="leadDestination" name="destination" required>
+                  <label for="bookingDestination">Destination country</label>
+                  <select id="bookingDestination" name="destination" required>
                     <option value="">Select a destination</option>
                     <option>Vietnam</option>
                     <option>Thailand</option>
@@ -400,8 +400,8 @@
                   <span class="error">Please select a destination.</span>
                 </div>
                 <div class="field">
-                  <label for="leadStyle">Travel style</label>
-                  <select id="leadStyle" name="style" required>
+                  <label for="bookingStyle">Travel style</label>
+                  <select id="bookingStyle" name="style" required>
                     <option value="">Select a style</option>
                     <option>Adventure</option>
                     <option>Culture</option>
@@ -414,18 +414,18 @@
                   <span class="error">Please select a travel style.</span>
                 </div>
                 <div class="field">
-                  <label for="leadMonth">Travel month</label>
-                  <input id="leadMonth" name="travelMonth" type="month" required />
+                  <label for="bookingMonth">Travel month</label>
+                  <input id="bookingMonth" name="travelMonth" type="month" required />
                   <span class="error">Please choose a month.</span>
                 </div>
                 <div class="field">
-                  <label for="leadTravelers">Number of travelers</label>
-                  <input id="leadTravelers" name="travelers" type="number" min="1" max="20" required />
+                  <label for="bookingTravelers">Number of travelers</label>
+                  <input id="bookingTravelers" name="travelers" type="number" min="1" max="20" required />
                   <span class="error">Please enter travelers.</span>
                 </div>
                 <div class="field">
-                  <label for="leadDuration">Travel duration</label>
-                  <select id="leadDuration" name="duration" required>
+                  <label for="bookingDuration">Travel duration</label>
+                  <select id="bookingDuration" name="duration" required>
                     <option value="">Select duration</option>
                     <option>3-5 days</option>
                     <option>6-8 days</option>
@@ -436,8 +436,8 @@
                   <span class="error">Please choose a duration.</span>
                 </div>
                 <div class="field full">
-                  <label for="leadBudget">Budget range (USD per person)</label>
-                  <select id="leadBudget" name="budget" required>
+                  <label for="bookingBudget">Budget range (USD per person)</label>
+                  <select id="bookingBudget" name="budget" required>
                     <option value="">Select budget range</option>
                     <option>$500-$900 / week</option>
                     <option>$900-$1,400 / week</option>
@@ -453,23 +453,23 @@
               <h3>Step 2: Contact details</h3>
               <div class="field-grid">
                 <div class="field">
-                  <label for="leadName">Full name</label>
-                  <input id="leadName" name="name" type="text" required />
+                  <label for="bookingName">Full name</label>
+                  <input id="bookingName" name="name" type="text" required />
                   <span class="error">Please enter your name.</span>
                 </div>
                 <div class="field">
-                  <label for="leadEmail">Email</label>
-                  <input id="leadEmail" name="email" type="email" required />
+                  <label for="bookingEmail">Email</label>
+                  <input id="bookingEmail" name="email" type="email" required />
                   <span class="error">Please enter a valid email.</span>
                 </div>
                 <div class="field">
-                  <label for="leadPhone">WhatsApp or phone</label>
-                  <input id="leadPhone" name="phone" type="tel" required />
+                  <label for="bookingPhone">WhatsApp or phone</label>
+                  <input id="bookingPhone" name="phone" type="tel" required />
                   <span class="error">Please add a contact number.</span>
                 </div>
                 <div class="field">
-                  <label for="leadLanguage">Preferred language</label>
-                  <select id="leadLanguage" name="language" required>
+                  <label for="bookingLanguage">Preferred language</label>
+                  <select id="bookingLanguage" name="language" required>
                     <option value="">Select language</option>
                     <option>English</option>
                     <option>French</option>
@@ -486,8 +486,8 @@
               <h3>Step 3: Notes</h3>
               <div class="field-grid">
                 <div class="field full">
-                  <label for="leadNotes">Trip notes (optional)</label>
-                  <textarea id="leadNotes" name="notes" placeholder="Tell us interests, pace preferences, or special requests."></textarea>
+                  <label for="bookingNotes">Trip notes (optional)</label>
+                  <textarea id="bookingNotes" name="notes" placeholder="Tell us interests, pace preferences, or special requests."></textarea>
                 </div>
               </div>
             </section>
@@ -497,9 +497,9 @@
               <button class="btn btn-primary" id="stepNext" type="button">Next</button>
             </div>
 
-            <div class="form-error" id="leadError" role="alert" aria-live="assertive"></div>
+            <div class="form-error" id="bookingError" role="alert" aria-live="assertive"></div>
 
-            <div class="success" id="leadSuccess" role="status" aria-live="polite">
+            <div class="success" id="bookingSuccess" role="status" aria-live="polite">
               <strong>Thank you. Your trip request is ready.</strong>
               <p>
                 Your request has been submitted to our planning team. We will contact you on WhatsApp/email.

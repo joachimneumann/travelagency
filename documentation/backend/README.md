@@ -1,13 +1,16 @@
 # AsiaTravelPlan Backend App (Milestone 1)
 
 This service implements Milestone 1 from `backend/backend_software.md`:
-- Lead ingestion API
+- Booking ingestion API
 - Customer deduplication and profile creation
-- Lead pipeline stages and transitions
+- Booking pipeline stages and transitions
 - Owner assignment with workload balancing
 - SLA due timestamps
-- Lead activity timeline
-- Simple admin pages for pipeline and lead detail
+- Booking activity timeline
+- Simple admin pages for pipeline and booking detail
+
+Related documentation:
+- `mobileApp.md`: how to build a native iPhone app against this backend and Keycloak setup
 
 ## Run
 
@@ -84,22 +87,22 @@ Authentication internals are now isolated in:
 - `auth.isKeycloakEnabled()` + `auth.hasSession(req)` for `/admin*` gate
 - `auth.authorizeApiRequest(req, requestUrl)` for `/api/v1/*` gate
 
-This keeps backend business logic (leads/customers/pipeline) separate from OIDC/session internals.
+This keeps backend business logic (bookings/customers/pipeline) separate from OIDC/session internals.
 
 ## API Endpoints
 
 Public:
-- `POST /public/v1/leads`
+- `POST /public/v1/bookings`
 - `GET /public/v1/tours`
 - `GET /public/v1/tour-images/:path`
 
 Admin API:
-- `GET /api/v1/leads`
-- `GET /api/v1/leads/:leadId`
-- `PATCH /api/v1/leads/:leadId/stage`
-- `PATCH /api/v1/leads/:leadId/owner`
-- `GET /api/v1/leads/:leadId/activities`
-- `POST /api/v1/leads/:leadId/activities`
+- `GET /api/v1/bookings`
+- `GET /api/v1/bookings/:bookingId`
+- `PATCH /api/v1/bookings/:bookingId/stage`
+- `PATCH /api/v1/bookings/:bookingId/owner`
+- `GET /api/v1/bookings/:bookingId/activities`
+- `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
 - `GET /api/v1/staff`
@@ -110,7 +113,7 @@ Admin API:
 - `POST /api/v1/tours/:tourId/image`
 
 Tour ID format:
-- Tours now use generated IDs like `tour_<uuid>` (same pattern style as leads/customers).
+- Tours now use generated IDs like `tour_<uuid>` (same pattern style as bookings/customers).
 - `POST /api/v1/tours` always generates the tour ID server-side.
 
 Tour image handling:
@@ -137,34 +140,34 @@ When Keycloak is enabled:
 - `/api/v1/*` accepts either authenticated backend session cookie or Keycloak bearer token.
 - If `KEYCLOAK_ENABLED=false`, `/api/v1/*` requests are rejected with `401`.
 
-Lead list query params (`GET /api/v1/leads`):
+Booking list query params (`GET /api/v1/bookings`):
 - `page` (default `1`)
 - `page_size` (default `25`, max `100`)
 - `stage` (`NEW|QUALIFIED|PROPOSAL_SENT|NEGOTIATION|WON|LOST|POST_TRIP`)
 - `owner_id` (exact match)
-- `search` (matches lead id, destination, style, owner, notes, customer name/email)
+- `search` (matches booking id, destination, style, owner, notes, customer name/email)
 - `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `sla_due_at_asc`, `sla_due_at_desc`)
 
 Default ordering:
-- Leads: newest first (`created_at desc`)
+- Bookings: newest first (`created_at desc`)
 - Customers: newest first (`created_at desc`, fallback `updated_at`)
 
 Admin UI:
 - `GET /admin`
-- `GET /admin/leads`
-- `GET /admin/leads/:leadId`
+- `GET /admin/bookings`
+- `GET /admin/bookings/:bookingId`
 - `GET /admin/customers`
 - `GET /admin/customers/:customerId`
 
 Branded frontend backoffice pages (served by website):
 - `/backend.html`: chapter-branded dashboard with:
   - paginated searchable Customers table
-  - paginated searchable Leads table
+  - paginated searchable Bookings table
   - paginated searchable Tours table
 - `/backend-tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
 - `backend.html` header includes `Website` and `Logout` actions.
-- `/backend-lead.html`: read-only lead/customer detail page with lead actions
-  - lead activities list
+- `/backend-booking.html`: read-only booking/customer detail page with booking actions
+  - booking activities list
   - change owner
   - change stage
   - add note activity
@@ -182,10 +185,10 @@ Auth:
 - `GET /auth/logout`
 - `GET /auth/me`
 
-## Example Lead Request
+## Example Booking Request
 
 ```bash
-curl -X POST http://localhost:8787/public/v1/leads \
+curl -X POST http://localhost:8787/public/v1/bookings \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: demo-001' \
   -d '{

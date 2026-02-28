@@ -86,7 +86,7 @@ async function main() {
   const activeStaff = staff.filter((s) => s.active);
 
   store.customers ||= [];
-  store.leads ||= [];
+  store.bookings ||= [];
   store.activities ||= [];
 
   for (let i = 0; i < count; i += 1) {
@@ -115,8 +115,8 @@ async function main() {
     };
     store.customers.push(customer);
 
-    const lead = {
-      id: `lead_${randomUUID()}`,
+    const booking = {
+      id: `booking_${randomUUID()}`,
       customer_id: customer.id,
       stage,
       owner_id: owner?.id || null,
@@ -128,7 +128,7 @@ async function main() {
       travelers: randomInt(1, 6),
       duration: pick(DURATIONS),
       budget: pick(BUDGETS),
-      notes: "Seeded test lead",
+      notes: "Seeded test booking",
       source: {
         page_url: "https://asiatravelplan.com/",
         utm_source: "seed",
@@ -140,20 +140,20 @@ async function main() {
       created_at: createdAt,
       updated_at: updatedAt
     };
-    store.leads.push(lead);
+    store.bookings.push(booking);
 
     store.activities.push(
       {
         id: `act_${randomUUID()}`,
-        lead_id: lead.id,
-        type: "LEAD_CREATED",
+        booking_id: booking.id,
+        type: "BOOKING_CREATED",
         actor: "seed_script",
-        detail: "Seeded lead created",
+        detail: "Seeded booking created",
         created_at: createdAt
       },
       {
         id: `act_${randomUUID()}`,
-        lead_id: lead.id,
+        booking_id: booking.id,
         type: "NOTE",
         actor: "seed_script",
         detail: `Customer interested in ${style.toLowerCase()} itinerary in ${destination}`,
@@ -163,7 +163,7 @@ async function main() {
   }
 
   await writeFile(DATA_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-  console.log(`Seed complete: +${count} customers, +${count} leads, +${count * 2} activities`);
+  console.log(`Seed complete: +${count} customers, +${count} bookings, +${count * 2} activities`);
 }
 
 main().catch((error) => {

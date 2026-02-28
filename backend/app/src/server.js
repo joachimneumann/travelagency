@@ -94,16 +94,16 @@ const routes = [
   { method: "GET", pattern: /^\/staging-access\/logout$/, handler: handleStagingAccessLogout },
   { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
   { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlePublicTourImage },
-  { method: "POST", pattern: /^\/public\/v1\/leads$/, handler: handleCreateLead },
-  { method: "GET", pattern: /^\/api\/v1\/leads$/, handler: handleListLeads },
-  { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)$/, handler: handleGetLead },
-  { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/stage$/, handler: handlePatchLeadStage },
-  { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/owner$/, handler: handlePatchLeadOwner },
-  { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleListActivities },
-  { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/activities$/, handler: handleCreateActivity },
-  { method: "GET", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices$/, handler: handleListLeadInvoices },
-  { method: "POST", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices$/, handler: handleCreateLeadInvoice },
-  { method: "PATCH", pattern: /^\/api\/v1\/leads\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchLeadInvoice },
+  { method: "POST", pattern: /^\/public\/v1\/bookings$/, handler: handleCreateBooking },
+  { method: "GET", pattern: /^\/api\/v1\/bookings$/, handler: handleListBookings },
+  { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handleGetBooking },
+  { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlePatchBookingStage },
+  { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
+  { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
+  { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
+  { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
+  { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleCreateBookingInvoice },
+  { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchBookingInvoice },
   { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
   { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
   { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
@@ -116,8 +116,8 @@ const routes = [
   { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
   { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
   { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
-  { method: "GET", pattern: /^\/admin\/leads$/, handler: handleAdminLeadsPage },
-  { method: "GET", pattern: /^\/admin\/leads\/([^/]+)$/, handler: handleAdminLeadDetailPage }
+  { method: "GET", pattern: /^\/admin\/bookings$/, handler: handleAdminBookingsPage },
+  { method: "GET", pattern: /^\/admin\/bookings\/([^/]+)$/, handler: handleAdminBookingDetailPage }
 ];
 
 await ensureStorage();
@@ -282,7 +282,7 @@ function sendBackendNotFound(res, pathname = "") {
         font-size: clamp(2rem, 4vw, 3.2rem);
         line-height: 0.98;
       }
-      .lead {
+      .booking {
         margin: 1rem 0 0;
         max-width: 34ch;
         color: var(--muted);
@@ -323,7 +323,7 @@ function sendBackendNotFound(res, pathname = "") {
     <main class="panel">
       <p class="eyebrow">Backend 404</p>
       <h1>Page not found</h1>
-      <p class="lead">The backend route you requested does not exist or is no longer available.</p>
+      <p class="booking">The backend route you requested does not exist or is no longer available.</p>
       <p class="contact">please contact Joachim</p>
       <div class="actions">
         <a class="btn btn-primary" href="${escapeHtml(backHref)}">${escapeHtml(backLabel)}</a>
@@ -607,7 +607,7 @@ async function readStore() {
   const raw = await readFile(DATA_PATH, "utf8");
   const parsed = JSON.parse(raw);
   parsed.customers ||= [];
-  parsed.leads ||= [];
+  parsed.bookings ||= [];
   parsed.activities ||= [];
   parsed.invoices ||= [];
   return parsed;
@@ -931,14 +931,14 @@ function escapePdfText(value) {
     .replaceAll(")", "\\)");
 }
 
-function abbreviateLeadId(value) {
+function abbreviateBookingId(value) {
   const text = normalizeText(value);
   if (!text) return "-";
   if (text.length <= 13) return text;
   return `${text.slice(0, 13)}...`;
 }
 
-function buildInvoicePdfBuffer(invoice, customer, lead, logoImage) {
+function buildInvoicePdfBuffer(invoice, customer, booking, logoImage) {
   const currency = safeCurrency(invoice.currency);
   const items = Array.isArray(invoice.items) ? invoice.items : [];
   const subtotalCents = safeAmountCents(invoice.subtotal_amount_cents) ?? computeInvoiceTotal(items);
@@ -1084,10 +1084,10 @@ function buildInvoicePdfBuffer(invoice, customer, lead, logoImage) {
   ]);
 }
 
-async function writeInvoicePdf(invoice, customer, lead) {
+async function writeInvoicePdf(invoice, customer, booking) {
   await mkdir(INVOICES_DIR, { recursive: true });
   const logoImage = await getLogoPdfImageData();
-  const pdf = buildInvoicePdfBuffer(invoice, customer, lead, logoImage);
+  const pdf = buildInvoicePdfBuffer(invoice, customer, booking, logoImage);
   await writeFile(invoicePdfPath(invoice.id, invoice.version), pdf);
 }
 
@@ -1196,7 +1196,7 @@ function levenshtein(a, b) {
   return curr[t.length];
 }
 
-function chooseOwner(staffList, leads, destination, language) {
+function chooseOwner(staffList, bookings, destination, language) {
   const activeStaff = staffList.filter((s) => s.active);
   const normalizedDestination = normalizeText(destination);
   const normalizedLanguage = normalizeText(language);
@@ -1221,7 +1221,7 @@ function chooseOwner(staffList, leads, destination, language) {
 
   const byLoad = candidates
     .map((staff) => {
-      const load = leads.filter((lead) => lead.owner_id === staff.id && openStages.has(lead.stage)).length;
+      const load = bookings.filter((booking) => booking.owner_id === staff.id && openStages.has(booking.stage)).length;
       return { staff, load };
     })
     .sort((a, b) => a.load - b.load || a.staff.name.localeCompare(b.staff.name));
@@ -1257,7 +1257,7 @@ function findMatchingCustomer(customers, candidate) {
   return null;
 }
 
-function validateLeadInput(payload) {
+function validateBookingInput(payload) {
   const required = ["name", "email", "destination", "style", "travelMonth", "travelers", "duration"];
   const missing = required.filter((key) => !normalizeText(payload[key]));
   if (missing.length) {
@@ -1276,10 +1276,10 @@ function validateLeadInput(payload) {
   return { ok: true };
 }
 
-function addActivity(store, leadId, type, actor, detail) {
+function addActivity(store, bookingId, type, actor, detail) {
   const activity = {
     id: `act_${randomUUID()}`,
-    lead_id: leadId,
+    booking_id: bookingId,
     type,
     actor: actor || "system",
     detail: detail || "",
@@ -1298,29 +1298,29 @@ function normalizeStageFilter(value) {
   return STAGE_ORDER.includes(stage) ? stage : "";
 }
 
-function getLeadCustomerLookup(store) {
+function getBookingCustomerLookup(store) {
   return new Map(store.customers.map((customer) => [customer.id, customer]));
 }
 
-function filterAndSortLeads(store, query) {
+function filterAndSortBookings(store, query) {
   const stage = normalizeStageFilter(query.get("stage"));
   const ownerId = normalizeText(query.get("owner_id"));
   const search = normalizeText(query.get("search")).toLowerCase();
   const sort = normalizeText(query.get("sort")) || "created_at_desc";
-  const customersById = getLeadCustomerLookup(store);
+  const customersById = getBookingCustomerLookup(store);
 
-  const filtered = store.leads.filter((lead) => {
-    if (stage && lead.stage !== stage) return false;
-    if (ownerId && lead.owner_id !== ownerId) return false;
+  const filtered = store.bookings.filter((booking) => {
+    if (stage && booking.stage !== stage) return false;
+    if (ownerId && booking.owner_id !== ownerId) return false;
     if (!search) return true;
 
-    const customer = customersById.get(lead.customer_id);
+    const customer = customersById.get(booking.customer_id);
     const haystack = [
-      lead.id,
-      lead.destination,
-      lead.style,
-      lead.owner_name,
-      lead.notes,
+      booking.id,
+      booking.destination,
+      booking.style,
+      booking.owner_name,
+      booking.notes,
       customer?.name,
       customer?.email
     ]
@@ -1380,7 +1380,7 @@ async function handleHealth(_req, res) {
   });
 }
 
-async function handleCreateLead(req, res) {
+async function handleCreateBooking(req, res) {
   let payload;
   try {
     payload = await readBodyJson(req);
@@ -1389,7 +1389,7 @@ async function handleCreateLead(req, res) {
     return;
   }
 
-  const check = validateLeadInput(payload);
+  const check = validateBookingInput(payload);
   if (!check.ok) {
     sendJson(res, 422, { error: check.error });
     return;
@@ -1400,14 +1400,14 @@ async function handleCreateLead(req, res) {
   const idempotencyKey = normalizeText(req.headers["idempotency-key"]);
 
   if (idempotencyKey) {
-    const existingByKey = store.leads.find((lead) => lead.idempotency_key === idempotencyKey);
+    const existingByKey = store.bookings.find((booking) => booking.idempotency_key === idempotencyKey);
     if (existingByKey) {
       sendJson(res, 200, {
-        lead_id: existingByKey.id,
+        booking_id: existingByKey.id,
         customer_id: existingByKey.customer_id,
         status: "accepted",
         deduplicated: true,
-        message: "Lead already captured with this idempotency key"
+        message: "Booking already captured with this idempotency key"
       });
       return;
     }
@@ -1441,9 +1441,9 @@ async function handleCreateLead(req, res) {
     store.customers.push(customer);
   }
 
-  const owner = chooseOwner(staff, store.leads, payload.destination, payload.language);
-  const lead = {
-    id: `lead_${randomUUID()}`,
+  const owner = chooseOwner(staff, store.bookings, payload.destination, payload.language);
+  const booking = {
+    id: `booking_${randomUUID()}`,
     customer_id: customer.id,
     stage: STAGES.NEW,
     owner_id: owner?.id || null,
@@ -1468,29 +1468,29 @@ async function handleCreateLead(req, res) {
     updated_at: nowIso()
   };
 
-  store.leads.push(lead);
-  addActivity(store, lead.id, "LEAD_CREATED", "public_api", "Lead created from website form");
-  if (lead.owner_id) {
-    addActivity(store, lead.id, "OWNER_ASSIGNED", "system", `Assigned to ${lead.owner_name}`);
+  store.bookings.push(booking);
+  addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
+  if (booking.owner_id) {
+    addActivity(store, booking.id, "OWNER_ASSIGNED", "system", `Assigned to ${booking.owner_name}`);
   }
 
   await persistStore(store);
 
   sendJson(res, 201, {
-    lead_id: lead.id,
+    booking_id: booking.id,
     customer_id: customer.id,
     status: "accepted",
     deduplicated: Boolean(customerMatch),
-    owner: lead.owner_name,
-    sla_due_at: lead.sla_due_at,
+    owner: booking.owner_name,
+    sla_due_at: booking.sla_due_at,
     next_step_message: "Thanks, we will contact you with route options within 48-72h."
   });
 }
 
-async function handleListLeads(req, res) {
+async function handleListBookings(req, res) {
   const store = await readStore();
   const requestUrl = new URL(req.url, "http://localhost");
-  const { items: filtered, filters, sort } = filterAndSortLeads(store, requestUrl.searchParams);
+  const { items: filtered, filters, sort } = filterAndSortBookings(store, requestUrl.searchParams);
   const paged = paginate(filtered, requestUrl.searchParams);
   sendJson(res, 200, {
     items: paged.items,
@@ -1503,19 +1503,19 @@ async function handleListLeads(req, res) {
   });
 }
 
-async function handleGetLead(_req, res, [leadId]) {
+async function handleGetBooking(_req, res, [bookingId]) {
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
 
-  const customer = store.customers.find((item) => item.id === lead.customer_id) || null;
-  sendJson(res, 200, { lead, customer });
+  const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
+  sendJson(res, 200, { booking, customer });
 }
 
-async function handlePatchLeadStage(req, res, [leadId]) {
+async function handlePatchBookingStage(req, res, [bookingId]) {
   let payload;
   try {
     payload = await readBodyJson(req);
@@ -1532,29 +1532,29 @@ async function handlePatchLeadStage(req, res, [leadId]) {
 
   const actor = normalizeText(payload.actor) || "staff";
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
 
-  const allowed = ALLOWED_STAGE_TRANSITIONS[lead.stage] || [];
+  const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
   if (!allowed.includes(nextStage)) {
-    sendJson(res, 409, { error: `Transition ${lead.stage} -> ${nextStage} is not allowed` });
+    sendJson(res, 409, { error: `Transition ${booking.stage} -> ${nextStage} is not allowed` });
     return;
   }
 
-  lead.stage = nextStage;
-  lead.sla_due_at = computeSlaDueAt(nextStage);
-  lead.updated_at = nowIso();
+  booking.stage = nextStage;
+  booking.sla_due_at = computeSlaDueAt(nextStage);
+  booking.updated_at = nowIso();
 
-  addActivity(store, lead.id, "STAGE_CHANGED", actor, `Stage updated to ${nextStage}`);
+  addActivity(store, booking.id, "STAGE_CHANGED", actor, `Stage updated to ${nextStage}`);
   await persistStore(store);
 
-  sendJson(res, 200, { lead });
+  sendJson(res, 200, { booking });
 }
 
-async function handlePatchLeadOwner(req, res, [leadId]) {
+async function handlePatchBookingOwner(req, res, [bookingId]) {
   let payload;
   try {
     payload = await readBodyJson(req);
@@ -1566,19 +1566,19 @@ async function handlePatchLeadOwner(req, res, [leadId]) {
   const ownerIdRaw = normalizeText(payload.owner_id);
   const actor = normalizeText(payload.actor) || "staff";
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
 
   if (!ownerIdRaw) {
-    lead.owner_id = null;
-    lead.owner_name = null;
-    lead.updated_at = nowIso();
-    addActivity(store, lead.id, "OWNER_CHANGED", actor, "Owner unassigned");
+    booking.owner_id = null;
+    booking.owner_name = null;
+    booking.updated_at = nowIso();
+    addActivity(store, booking.id, "OWNER_CHANGED", actor, "Owner unassigned");
     await persistStore(store);
-    sendJson(res, 200, { lead });
+    sendJson(res, 200, { booking });
     return;
   }
 
@@ -1589,31 +1589,31 @@ async function handlePatchLeadOwner(req, res, [leadId]) {
     return;
   }
 
-  lead.owner_id = owner.id;
-  lead.owner_name = owner.name;
-  lead.updated_at = nowIso();
-  addActivity(store, lead.id, "OWNER_CHANGED", actor, `Owner set to ${owner.name}`);
+  booking.owner_id = owner.id;
+  booking.owner_name = owner.name;
+  booking.updated_at = nowIso();
+  addActivity(store, booking.id, "OWNER_CHANGED", actor, `Owner set to ${owner.name}`);
   await persistStore(store);
 
-  sendJson(res, 200, { lead });
+  sendJson(res, 200, { booking });
 }
 
-async function handleListActivities(_req, res, [leadId]) {
+async function handleListActivities(_req, res, [bookingId]) {
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
 
   const items = store.activities
-    .filter((activity) => activity.lead_id === leadId)
+    .filter((activity) => activity.booking_id === bookingId)
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   sendJson(res, 200, { items, total: items.length });
 }
 
-async function handleCreateActivity(req, res, [leadId]) {
+async function handleCreateActivity(req, res, [bookingId]) {
   let payload;
   try {
     payload = await readBodyJson(req);
@@ -1632,14 +1632,14 @@ async function handleCreateActivity(req, res, [leadId]) {
   }
 
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
 
-  const activity = addActivity(store, lead.id, type, actor, detail);
-  lead.updated_at = nowIso();
+  const activity = addActivity(store, booking.id, type, actor, detail);
+  booking.updated_at = nowIso();
   await persistStore(store);
 
   sendJson(res, 201, { activity });
@@ -1654,22 +1654,22 @@ function buildInvoiceReadModel(invoice) {
   };
 }
 
-async function handleListLeadInvoices(_req, res, [leadId]) {
+async function handleListBookingInvoices(_req, res, [bookingId]) {
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
 
   const items = [...store.invoices]
-    .filter((invoice) => invoice.lead_id === leadId)
+    .filter((invoice) => invoice.booking_id === bookingId)
     .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
     .map(buildInvoiceReadModel);
   sendJson(res, 200, { items, total: items.length });
 }
 
-async function handleCreateLeadInvoice(req, res, [leadId]) {
+async function handleCreateBookingInvoice(req, res, [bookingId]) {
   let payload;
   try {
     payload = await readBodyJson(req);
@@ -1679,14 +1679,14 @@ async function handleCreateLeadInvoice(req, res, [leadId]) {
   }
 
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  const customer = store.customers.find((item) => item.id === booking.customer_id);
   if (!customer) {
-    sendJson(res, 422, { error: "Lead customer not found" });
+    sendJson(res, 422, { error: "Booking customer not found" });
     return;
   }
 
@@ -1701,7 +1701,7 @@ async function handleCreateLeadInvoice(req, res, [leadId]) {
   const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
   const invoice = {
     id: `inv_${randomUUID()}`,
-    lead_id: leadId,
+    booking_id: bookingId,
     customer_id: customer.id,
     invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
     version: 1,
@@ -1720,13 +1720,13 @@ async function handleCreateLeadInvoice(req, res, [leadId]) {
     updated_at: now
   };
 
-  await writeInvoicePdf(invoice, customer, lead);
+  await writeInvoicePdf(invoice, customer, booking);
   store.invoices.push(invoice);
   await persistStore(store);
   sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice) });
 }
 
-async function handlePatchLeadInvoice(req, res, [leadId, invoiceId]) {
+async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
   let payload;
   try {
     payload = await readBodyJson(req);
@@ -1736,17 +1736,17 @@ async function handlePatchLeadInvoice(req, res, [leadId, invoiceId]) {
   }
 
   const store = await readStore();
-  const lead = store.leads.find((item) => item.id === leadId);
-  if (!lead) {
-    sendJson(res, 404, { error: "Lead not found" });
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const customer = store.customers.find((item) => item.id === lead.customer_id);
+  const customer = store.customers.find((item) => item.id === booking.customer_id);
   if (!customer) {
-    sendJson(res, 422, { error: "Lead customer not found" });
+    sendJson(res, 422, { error: "Booking customer not found" });
     return;
   }
-  const invoice = store.invoices.find((item) => item.id === invoiceId && item.lead_id === leadId);
+  const invoice = store.invoices.find((item) => item.id === invoiceId && item.booking_id === bookingId);
   if (!invoice) {
     sendJson(res, 404, { error: "Invoice not found" });
     return;
@@ -1802,7 +1802,7 @@ async function handlePatchLeadInvoice(req, res, [leadId, invoiceId]) {
     invoice.total_amount_cents = totalAmountCents;
     invoice.due_amount_cents = dueAmountCents;
     invoice.version = Number(invoice.version || 1) + 1;
-    await writeInvoicePdf(invoice, customer, lead);
+    await writeInvoicePdf(invoice, customer, booking);
   }
   invoice.updated_at = nowIso();
 
@@ -1817,11 +1817,11 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
     sendJson(res, 404, { error: "Invoice not found" });
     return;
   }
-  const lead = store.leads.find((item) => item.id === invoice.lead_id) || null;
+  const booking = store.bookings.find((item) => item.id === invoice.booking_id) || null;
   const customer = store.customers.find((item) => item.id === invoice.customer_id) || null;
   const pdfPath = invoicePdfPath(invoice.id, invoice.version);
   // Always regenerate so PDF styling/content updates are reflected immediately.
-  await writeInvoicePdf(invoice, customer, lead);
+  await writeInvoicePdf(invoice, customer, booking);
   res.setHeader("Content-Disposition", `inline; filename=\"${invoice.invoice_number || invoice.id}.pdf\"`);
   await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store");
 }
@@ -1858,11 +1858,11 @@ async function handleGetCustomer(_req, res, [customerId]) {
     return;
   }
 
-  const leads = store.leads
-    .filter((lead) => lead.customer_id === customer.id)
+  const bookings = store.bookings
+    .filter((booking) => booking.customer_id === customer.id)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 
-  sendJson(res, 200, { customer, leads });
+  sendJson(res, 200, { customer, bookings });
 }
 
 async function handleListStaff(req, res) {
@@ -2197,7 +2197,7 @@ async function handleAdminHome(req, res) {
 <body>
   <h1>AsiaTravelPlan Admin</h1>
   <ul>
-    <li><a href="/admin/leads">Lead pipeline view</a></li>
+    <li><a href="/admin/bookings">Booking pipeline view</a></li>
     <li><a href="/admin/customers">Customers UI</a></li>
     <li>Customers API: <a href="/api/v1/customers"><code>/api/v1/customers</code></a></li>
     <li>Tours API: <a href="/api/v1/tours"><code>/api/v1/tours</code></a></li>
@@ -2227,9 +2227,9 @@ async function handleAdminCustomersPage(req, res) {
 
   const paged = paginate(filtered, params);
 
-  const customerLeadsCount = new Map();
-  for (const lead of store.leads) {
-    customerLeadsCount.set(lead.customer_id, (customerLeadsCount.get(lead.customer_id) || 0) + 1);
+  const customerBookingsCount = new Map();
+  for (const booking of store.bookings) {
+    customerBookingsCount.set(booking.customer_id, (customerBookingsCount.get(booking.customer_id) || 0) + 1);
   }
 
   const detailBaseQuery = new URLSearchParams(params);
@@ -2245,7 +2245,7 @@ async function handleAdminCustomersPage(req, res) {
         <td>${escapeHtml(customer.email || "-")}</td>
         <td>${escapeHtml(customer.phone || "-")}</td>
         <td>${escapeHtml(customer.language || "-")}</td>
-        <td>${customerLeadsCount.get(customer.id) || 0}</td>
+        <td>${customerBookingsCount.get(customer.id) || 0}</td>
         <td>${escapeHtml(customer.updated_at || "-")}</td>
       </tr>`;
     })
@@ -2261,7 +2261,7 @@ async function handleAdminCustomersPage(req, res) {
   const nextLink =
     paged.page < paged.total_pages ? `<a href="${escapeHtml(pageLink(paged.page + 1))}">Next</a>` : "";
 
-  const leadsHref = "/admin/leads";
+  const bookingsHref = "/admin/bookings";
   const homeHref = "/admin";
 
   sendHtml(
@@ -2288,7 +2288,7 @@ async function handleAdminCustomersPage(req, res) {
   <p>Total customers (filtered): ${paged.total}</p>
   <div class="links">
     <a href="${escapeHtml(homeHref)}">Admin home</a>
-    <a href="${escapeHtml(leadsHref)}">Lead pipeline</a>
+    <a href="${escapeHtml(bookingsHref)}">Booking pipeline</a>
   </div>
   <form method="get" action="/admin/customers">
     <label>Search
@@ -2311,7 +2311,7 @@ async function handleAdminCustomersPage(req, res) {
         <th>Email</th>
         <th>Phone</th>
         <th>Language</th>
-        <th>Leads</th>
+        <th>Bookings</th>
         <th>Updated</th>
       </tr>
     </thead>
@@ -2329,10 +2329,10 @@ async function handleAdminCustomersPage(req, res) {
   );
 }
 
-async function handleAdminLeadsPage(req, res) {
+async function handleAdminBookingsPage(req, res) {
   const store = await readStore();
   const requestUrl = new URL(req.url, "http://localhost");
-  const filtered = filterAndSortLeads(store, requestUrl.searchParams);
+  const filtered = filterAndSortBookings(store, requestUrl.searchParams);
   const paged = paginate(filtered.items, requestUrl.searchParams);
   const params = requestUrl.searchParams;
   const stageValue = normalizeStageFilter(params.get("stage"));
@@ -2345,15 +2345,15 @@ async function handleAdminLeadsPage(req, res) {
   const detailQuery = detailBaseQuery.toString();
 
   const rows = paged.items
-    .map((lead) => {
-      const href = `/admin/leads/${encodeURIComponent(lead.id)}${detailQuery ? `?${detailQuery}` : ""}`;
+    .map((booking) => {
+      const href = `/admin/bookings/${encodeURIComponent(booking.id)}${detailQuery ? `?${detailQuery}` : ""}`;
       return `<tr>
-        <td><a href="${escapeHtml(href)}">${escapeHtml(lead.id)}</a></td>
-        <td>${escapeHtml(lead.stage)}</td>
-        <td>${escapeHtml(lead.destination)}</td>
-        <td>${escapeHtml(lead.style)}</td>
-        <td>${escapeHtml(lead.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(lead.sla_due_at || "-")}</td>
+        <td><a href="${escapeHtml(href)}">${escapeHtml(booking.id)}</a></td>
+        <td>${escapeHtml(booking.stage)}</td>
+        <td>${escapeHtml(booking.destination)}</td>
+        <td>${escapeHtml(booking.style)}</td>
+        <td>${escapeHtml(booking.owner_name || "Unassigned")}</td>
+        <td>${escapeHtml(booking.sla_due_at || "-")}</td>
       </tr>`;
     })
     .join("\n");
@@ -2383,7 +2383,7 @@ async function handleAdminLeadsPage(req, res) {
   function pageLink(targetPage) {
     const next = new URLSearchParams(params);
     next.set("page", String(targetPage));
-    return `/admin/leads?${next.toString()}`;
+    return `/admin/bookings?${next.toString()}`;
   }
 
   const prevLink = paged.page > 1 ? `<a href="${escapeHtml(pageLink(paged.page - 1))}">Previous</a>` : "";
@@ -2399,7 +2399,7 @@ async function handleAdminLeadsPage(req, res) {
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Lead Pipeline</title>
+  <title>Booking Pipeline</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; }
     form { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 0.5rem; align-items: end; margin-bottom: 1rem; }
@@ -2411,11 +2411,11 @@ async function handleAdminLeadsPage(req, res) {
   </style>
 </head>
 <body>
-  <h1>Lead Pipeline</h1>
+  <h1>Booking Pipeline</h1>
   <p><a href="${escapeHtml(homeHref)}">Admin home</a> | <a href="${escapeHtml(customersHref)}">Customers UI</a></p>
-  <p>Total leads (all): ${store.leads.length}</p>
-  <p>Total leads (filtered): ${paged.total}</p>
-  <form method="get" action="/admin/leads">
+  <p>Total bookings (all): ${store.bookings.length}</p>
+  <p>Total bookings (filtered): ${paged.total}</p>
+  <form method="get" action="/admin/bookings">
     <label>Stage
       <select name="stage">${stageOptions}</select>
     </label>
@@ -2446,7 +2446,7 @@ async function handleAdminLeadsPage(req, res) {
       </tr>
     </thead>
     <tbody>
-      ${rows || "<tr><td colspan='6'>No leads yet</td></tr>"}
+      ${rows || "<tr><td colspan='6'>No bookings yet</td></tr>"}
     </tbody>
   </table>
   <div class="pager">
@@ -2475,20 +2475,20 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
     return;
   }
 
-  const relatedLeads = store.leads
-    .filter((lead) => lead.customer_id === customer.id)
+  const relatedBookings = store.bookings
+    .filter((booking) => booking.customer_id === customer.id)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 
-  const leadRows = relatedLeads
-    .map((lead) => {
-      const href = `/admin/leads/${encodeURIComponent(lead.id)}${backQuery ? `?${backQuery}` : ""}`;
+  const bookingRows = relatedBookings
+    .map((booking) => {
+      const href = `/admin/bookings/${encodeURIComponent(booking.id)}${backQuery ? `?${backQuery}` : ""}`;
       return `<tr>
-        <td><a href="${escapeHtml(href)}">${escapeHtml(lead.id)}</a></td>
-        <td>${escapeHtml(lead.stage)}</td>
-        <td>${escapeHtml(lead.destination)}</td>
-        <td>${escapeHtml(lead.style)}</td>
-        <td>${escapeHtml(lead.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(lead.created_at)}</td>
+        <td><a href="${escapeHtml(href)}">${escapeHtml(booking.id)}</a></td>
+        <td>${escapeHtml(booking.stage)}</td>
+        <td>${escapeHtml(booking.destination)}</td>
+        <td>${escapeHtml(booking.style)}</td>
+        <td>${escapeHtml(booking.owner_name || "Unassigned")}</td>
+        <td>${escapeHtml(booking.created_at)}</td>
       </tr>`;
     })
     .join("\n");
@@ -2515,11 +2515,11 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
   <h2>Profile</h2>
   <pre>${escapeHtml(JSON.stringify(customer, null, 2))}</pre>
 
-  <h2>Related Leads (${relatedLeads.length})</h2>
+  <h2>Related Bookings (${relatedBookings.length})</h2>
   <table>
     <thead>
       <tr>
-        <th>Lead ID</th>
+        <th>Booking ID</th>
         <th>Stage</th>
         <th>Destination</th>
         <th>Style</th>
@@ -2528,7 +2528,7 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
       </tr>
     </thead>
     <tbody>
-      ${leadRows || "<tr><td colspan='6'>No related leads</td></tr>"}
+      ${bookingRows || "<tr><td colspan='6'>No related bookings</td></tr>"}
     </tbody>
   </table>
 </body>
@@ -2536,25 +2536,25 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
   );
 }
 
-async function handleAdminLeadDetailPage(req, res, [leadId]) {
+async function handleAdminBookingDetailPage(req, res, [bookingId]) {
   const store = await readStore();
   const staff = await loadStaff();
   const requestUrl = new URL(req.url, "http://localhost");
   const backQuery = requestUrl.searchParams.toString();
-  const lead = store.leads.find((item) => item.id === leadId);
+  const booking = store.bookings.find((item) => item.id === bookingId);
 
-  if (!lead) {
+  if (!booking) {
     sendHtml(
       res,
       404,
-      `<h1>Lead not found</h1><p><a href='/admin/leads${backQuery ? `?${escapeHtml(backQuery)}` : ""}'>Back</a></p>`
+      `<h1>Booking not found</h1><p><a href='/admin/bookings${backQuery ? `?${escapeHtml(backQuery)}` : ""}'>Back</a></p>`
     );
     return;
   }
 
-  const customer = store.customers.find((item) => item.id === lead.customer_id) || null;
+  const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
   const activities = store.activities
-    .filter((item) => item.lead_id === lead.id)
+    .filter((item) => item.booking_id === booking.id)
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 
   const activityRows = activities
@@ -2578,7 +2578,7 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>${escapeHtml(lead.id)}</title>
+  <title>${escapeHtml(booking.id)}</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; max-width: 900px; }
     pre { background: #f6f6f6; padding: 1rem; overflow: auto; }
@@ -2587,14 +2587,14 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
   </style>
 </head>
 <body>
-  <h1>Lead ${escapeHtml(lead.id)}</h1>
-  <p>Stage: <strong>${escapeHtml(lead.stage)}</strong></p>
-  <p>Owner: <strong>${escapeHtml(lead.owner_name || "Unassigned")}</strong></p>
+  <h1>Booking ${escapeHtml(booking.id)}</h1>
+  <p>Stage: <strong>${escapeHtml(booking.stage)}</strong></p>
+  <p>Owner: <strong>${escapeHtml(booking.owner_name || "Unassigned")}</strong></p>
 
   <div class="grid">
     <section>
-      <h2>Lead</h2>
-      <pre>${escapeHtml(JSON.stringify(lead, null, 2))}</pre>
+      <h2>Booking</h2>
+      <pre>${escapeHtml(JSON.stringify(booking, null, 2))}</pre>
     </section>
     <section>
       <h2>Customer</h2>
@@ -2622,18 +2622,18 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
     <button id="noteBtn" type="button">Add Activity</button>
   </section>
 
-  <p><a href="/admin/leads${backQuery ? `?${escapeHtml(backQuery)}` : ""}">Back to pipeline</a></p>
+  <p><a href="/admin/bookings${backQuery ? `?${escapeHtml(backQuery)}` : ""}">Back to pipeline</a></p>
 
   <script>
-    const leadId = ${JSON.stringify(lead.id)};
-    const currentStage = ${JSON.stringify(lead.stage)};
-    const currentOwnerId = ${JSON.stringify(lead.owner_id || "")};
+    const bookingId = ${JSON.stringify(booking.id)};
+    const currentStage = ${JSON.stringify(booking.stage)};
+    const currentOwnerId = ${JSON.stringify(booking.owner_id || "")};
     document.getElementById("stageSelect").value = currentStage;
     document.getElementById("ownerSelect").value = currentOwnerId;
 
     async function updateStage() {
       const stage = document.getElementById("stageSelect").value;
-      const response = await fetch('/api/v1/leads/' + leadId + '/stage', {
+      const response = await fetch('/api/v1/bookings/' + bookingId + '/stage', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage, actor: 'admin_ui' })
@@ -2648,7 +2648,7 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
 
     async function updateOwner() {
       const owner_id = document.getElementById("ownerSelect").value;
-      const response = await fetch('/api/v1/leads/' + leadId + '/owner', {
+      const response = await fetch('/api/v1/bookings/' + bookingId + '/owner', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id, actor: 'admin_ui' })
@@ -2664,7 +2664,7 @@ async function handleAdminLeadDetailPage(req, res, [leadId]) {
     async function addNote() {
       const detail = document.getElementById("note").value.trim();
       if (!detail) return;
-      const response = await fetch('/api/v1/leads/' + leadId + '/activities', {
+      const response = await fetch('/api/v1/bookings/' + bookingId + '/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'NOTE', detail, actor: 'admin_ui' })

@@ -14,10 +14,10 @@ const STAGES = [
 ];
 
 const state = {
-  type: qs.get("type") || "lead",
+  type: qs.get("type") || "booking",
   id: qs.get("id") || "",
   user: qs.get("user") || "admin",
-  lead: null,
+  booking: null,
   customer: null,
   staff: [],
   invoices: [],
@@ -31,15 +31,15 @@ const els = {
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
   error: document.getElementById("detailError"),
-  leadDataView: document.getElementById("leadDataView"),
-  actionsPanel: document.getElementById("leadActionsPanel"),
-  ownerSelect: document.getElementById("leadOwnerSelect"),
-  ownerSaveBtn: document.getElementById("leadOwnerSaveBtn"),
-  stageSelect: document.getElementById("leadStageSelect"),
-  stageSaveBtn: document.getElementById("leadStageSaveBtn"),
-  noteInput: document.getElementById("leadNoteInput"),
-  noteSaveBtn: document.getElementById("leadNoteSaveBtn"),
-  actionStatus: document.getElementById("leadActionStatus"),
+  bookingDataView: document.getElementById("bookingDataView"),
+  actionsPanel: document.getElementById("bookingActionsPanel"),
+  ownerSelect: document.getElementById("bookingOwnerSelect"),
+  ownerSaveBtn: document.getElementById("bookingOwnerSaveBtn"),
+  stageSelect: document.getElementById("bookingStageSelect"),
+  stageSaveBtn: document.getElementById("bookingStageSaveBtn"),
+  noteInput: document.getElementById("bookingNoteInput"),
+  noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
+  actionStatus: document.getElementById("bookingActionStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
   invoicePanel: document.getElementById("invoicePanel"),
   invoiceSelect: document.getElementById("invoiceSelect"),
@@ -100,23 +100,23 @@ function init() {
     return;
   }
 
-  loadLeadPage();
+  loadBookingPage();
 }
 
-async function loadLeadPage() {
+async function loadBookingPage() {
   clearStatus();
-  const [leadPayload, staffPayload] = await Promise.all([
-    fetchApi(`/api/v1/leads/${encodeURIComponent(state.id)}`),
+  const [bookingPayload, staffPayload] = await Promise.all([
+    fetchApi(`/api/v1/bookings/${encodeURIComponent(state.id)}`),
     fetchApi(`/api/v1/staff?active=true`)
   ]);
-  if (!leadPayload) return;
+  if (!bookingPayload) return;
 
-  state.lead = leadPayload.lead || null;
-  state.customer = leadPayload.customer || null;
+  state.booking = bookingPayload.booking || null;
+  state.customer = bookingPayload.customer || null;
   state.staff = Array.isArray(staffPayload?.items) ? staffPayload.items : [];
 
-  renderLeadHeader();
-  renderLeadData();
+  renderBookingHeader();
+  renderBookingData();
   renderActionControls();
   await loadActivities();
   await loadInvoices();
@@ -135,8 +135,8 @@ async function loadCustomer() {
       entries: toEntries(payload.customer || {})
     },
     {
-      title: "Related Leads",
-      entries: [{ key: "count", value: String((payload.leads || []).length) }]
+      title: "Related Bookings",
+      entries: [{ key: "count", value: String((payload.bookings || []).length) }]
     }
   ];
   renderSections(sections);
@@ -144,51 +144,51 @@ async function loadCustomer() {
   renderActivitiesTable([]);
   if (els.activitiesTable) {
     els.activitiesTable.innerHTML =
-      '<thead><tr><th>Lead ID</th><th>Stage</th><th>Destination</th><th>Style</th><th>Owner</th><th>Created</th></tr></thead>' +
-      `<tbody>${(payload.leads || [])
-        .map((lead) => {
-          const href = buildLeadHref(lead.id);
+      '<thead><tr><th>Booking ID</th><th>Stage</th><th>Destination</th><th>Style</th><th>Owner</th><th>Created</th></tr></thead>' +
+      `<tbody>${(payload.bookings || [])
+        .map((booking) => {
+          const href = buildBookingHref(booking.id);
           return `<tr>
-          <td><a href="${escapeHtml(href)}">${escapeHtml(shortId(lead.id))}</a></td>
-          <td>${escapeHtml(lead.stage || "-")}</td>
-          <td>${escapeHtml(lead.destination || "-")}</td>
-          <td>${escapeHtml(lead.style || "-")}</td>
-          <td>${escapeHtml(lead.owner_name || "Unassigned")}</td>
-          <td>${escapeHtml(formatDateTime(lead.created_at))}</td>
+          <td><a href="${escapeHtml(href)}">${escapeHtml(shortId(booking.id))}</a></td>
+          <td>${escapeHtml(booking.stage || "-")}</td>
+          <td>${escapeHtml(booking.destination || "-")}</td>
+          <td>${escapeHtml(booking.style || "-")}</td>
+          <td>${escapeHtml(booking.owner_name || "Unassigned")}</td>
+          <td>${escapeHtml(formatDateTime(booking.created_at))}</td>
         </tr>`;
         })
-        .join("") || '<tr><td colspan="6">No related leads</td></tr>'}</tbody>`;
+        .join("") || '<tr><td colspan="6">No related bookings</td></tr>'}</tbody>`;
   }
 }
 
-function renderLeadHeader() {
-  if (!state.lead) return;
-  if (els.title) els.title.textContent = `Lead ${shortId(state.lead.id)}`;
+function renderBookingHeader() {
+  if (!state.booking) return;
+  if (els.title) els.title.textContent = `Booking ${shortId(state.booking.id)}`;
   if (els.subtitle) {
-    const customerText = state.customer?.name || state.lead.customer_id || "-";
-    els.subtitle.textContent = `${customerText} | ${state.lead.stage || "-"}`;
+    const customerText = state.customer?.name || state.booking.customer_id || "-";
+    els.subtitle.textContent = `${customerText} | ${state.booking.stage || "-"}`;
   }
 }
 
-function renderLeadData() {
-  if (!state.lead) return;
-  const lead = state.lead;
+function renderBookingData() {
+  if (!state.booking) return;
+  const booking = state.booking;
   const sections = [
     {
-      title: "Lead",
+      title: "Booking",
       entries: [
-        ["id", lead.id],
-        ["stage", lead.stage],
-        ["owner", lead.owner_name || "Unassigned"],
-        ["destination", lead.destination],
-        ["style", lead.style],
-        ["travel_month", lead.travel_month],
-        ["travelers", lead.travelers],
-        ["duration", lead.duration],
-        ["budget", lead.budget],
-        ["sla_due_at", formatDateTime(lead.sla_due_at)],
-        ["created_at", formatDateTime(lead.created_at)],
-        ["updated_at", formatDateTime(lead.updated_at)]
+        ["id", booking.id],
+        ["stage", booking.stage],
+        ["owner", booking.owner_name || "Unassigned"],
+        ["destination", booking.destination],
+        ["style", booking.style],
+        ["travel_month", booking.travel_month],
+        ["travelers", booking.travelers],
+        ["duration", booking.duration],
+        ["budget", booking.budget],
+        ["sla_due_at", formatDateTime(booking.sla_due_at)],
+        ["created_at", formatDateTime(booking.created_at)],
+        ["updated_at", formatDateTime(booking.updated_at)]
       ]
         .filter(([, value]) => value !== undefined)
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
@@ -199,7 +199,7 @@ function renderLeadData() {
     },
     {
       title: "Source",
-      entries: toEntries(lead.source || {})
+      entries: toEntries(booking.source || {})
     }
   ];
 
@@ -207,7 +207,7 @@ function renderLeadData() {
 }
 
 function renderSections(sections) {
-  if (!els.leadDataView) return;
+  if (!els.bookingDataView) return;
   const html = sections
     .map((section) => {
       const rows = (section.entries || [])
@@ -225,16 +225,16 @@ function renderSections(sections) {
       `;
     })
     .join("");
-  els.leadDataView.innerHTML = html;
+  els.bookingDataView.innerHTML = html;
 }
 
 function renderActionControls() {
-  if (!state.lead) return;
+  if (!state.booking) return;
 
   if (els.stageSelect) {
     const options = STAGES.map((stage) => `<option value="${escapeHtml(stage)}">${escapeHtml(stage)}</option>`).join("");
     els.stageSelect.innerHTML = options;
-    els.stageSelect.value = state.lead.stage || STAGES[0];
+    els.stageSelect.value = state.booking.stage || STAGES[0];
   }
 
   if (els.ownerSelect) {
@@ -242,53 +242,53 @@ function renderActionControls() {
       .concat((state.staff || []).map((staff) => `<option value="${escapeHtml(staff.id)}">${escapeHtml(staff.name)}</option>`))
       .join("");
     els.ownerSelect.innerHTML = options;
-    els.ownerSelect.value = state.lead.owner_id || "";
+    els.ownerSelect.value = state.booking.owner_id || "";
   }
 }
 
 async function saveOwner() {
-  if (!state.lead || !els.ownerSelect) return;
-  const result = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/owner`, {
+  if (!state.booking || !els.ownerSelect) return;
+  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/owner`, {
     method: "PATCH",
     body: {
       owner_id: els.ownerSelect.value || null,
       actor: state.user
     }
   });
-  if (!result?.lead) return;
-  state.lead = result.lead;
-  renderLeadHeader();
-  renderLeadData();
+  if (!result?.booking) return;
+  state.booking = result.booking;
+  renderBookingHeader();
+  renderBookingData();
   setStatus("Owner updated.");
   await loadActivities();
 }
 
 async function saveStage() {
-  if (!state.lead || !els.stageSelect) return;
-  const result = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/stage`, {
+  if (!state.booking || !els.stageSelect) return;
+  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/stage`, {
     method: "PATCH",
     body: {
       stage: els.stageSelect.value,
       actor: state.user
     }
   });
-  if (!result?.lead) return;
-  state.lead = result.lead;
-  renderLeadHeader();
-  renderLeadData();
+  if (!result?.booking) return;
+  state.booking = result.booking;
+  renderBookingHeader();
+  renderBookingData();
   setStatus("Stage updated.");
   await loadActivities();
 }
 
 async function addNote() {
-  if (!state.lead || !els.noteInput) return;
+  if (!state.booking || !els.noteInput) return;
   const text = String(els.noteInput.value || "").trim();
   if (!text) {
     setStatus("Please enter a note.");
     return;
   }
 
-  const result = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/activities`, {
+  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/activities`, {
     method: "POST",
     body: {
       type: "NOTE",
@@ -304,8 +304,8 @@ async function addNote() {
 }
 
 async function loadActivities() {
-  if (!state.lead) return;
-  const payload = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/activities`);
+  if (!state.booking) return;
+  const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/activities`);
   if (!payload) return;
   renderActivitiesTable(payload.items || []);
 }
@@ -329,8 +329,8 @@ function renderActivitiesTable(items) {
 }
 
 async function loadInvoices() {
-  if (!state.lead) return;
-  const payload = await fetchApi(`/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices`);
+  if (!state.booking) return;
+  const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices`);
   if (!payload) return;
   state.invoices = (Array.isArray(payload.items) ? payload.items : []).sort((a, b) =>
     String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
@@ -495,7 +495,7 @@ function collectInvoicePayload() {
 }
 
 async function createInvoice() {
-  if (!state.lead) return;
+  if (!state.booking) return;
   clearInvoiceStatus();
   let payload;
   try {
@@ -506,8 +506,8 @@ async function createInvoice() {
   }
   const isUpdate = Boolean(state.selectedInvoiceId);
   const path = isUpdate
-    ? `/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices/${encodeURIComponent(state.selectedInvoiceId)}`
-    : `/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices`;
+    ? `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(state.selectedInvoiceId)}`
+    : `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices`;
   const method = isUpdate ? "PATCH" : "POST";
   const result = await fetchApi(path, { method, body: payload });
   if (!result?.invoice) return;
@@ -517,10 +517,10 @@ async function createInvoice() {
 }
 
 async function toggleInvoiceSent(invoiceId, sent) {
-  if (!state.lead || !invoiceId) return;
+  if (!state.booking || !invoiceId) return;
   clearInvoiceStatus();
   const result = await fetchApi(
-    `/api/v1/leads/${encodeURIComponent(state.lead.id)}/invoices/${encodeURIComponent(invoiceId)}`,
+    `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(invoiceId)}`,
     {
       method: "PATCH",
       body: { sent_to_customer: Boolean(sent) }
@@ -618,9 +618,9 @@ async function fetchApi(path, options = {}) {
   }
 }
 
-function buildLeadHref(id) {
-  const params = new URLSearchParams({ type: "lead", id, user: state.user });
-  return `backend-lead.html?${params.toString()}`;
+function buildBookingHref(id) {
+  const params = new URLSearchParams({ type: "booking", id, user: state.user });
+  return `backend-booking.html?${params.toString()}`;
 }
 
 function setStatus(message) {

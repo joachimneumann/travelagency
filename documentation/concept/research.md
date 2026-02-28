@@ -13,7 +13,7 @@ For agencies, this expands the pipeline for:
 - Day tours and transfers sold as add-ons
 - Higher-value specialist themes such as premium cruises, private guides, and curated culinary itineraries
 
-Inbound demand is also structurally shaped by source-market composition and entry-mode flexibility. In the first five months of 2025 alone, Vietnam received 9.2+ million international visitors, with China and South Korea leading by volume; about 85% arrived by air. This tends to concentrate demand into airport-linked hub itineraries (North-Central-South circuits) and increases the value of strong ground-handling capacity and supplier contracting in major entry hubs.
+Inbound demand is also structurally shaped by source-market composition and entry-mode flexibility. In the first five months of 2025 alone, Vietnam received 9.2+ million international visitors, with China and South Korea bookinging by volume; about 85% arrived by air. This tends to concentrate demand into airport-linked hub itineraries (North-Central-South circuits) and increases the value of strong ground-handling capacity and supplier contracting in major entry hubs.
 
 Domestic travel remains a separate, high-volume demand engine that produces predictable peaks, especially around Tet. During the 2025 Lunar New Year holiday window (Jan 25-Feb 2, 2025), Vietnam recorded an estimated 12.5 million domestic tourists, up 19% year-on-year; several provinces and cities reported tourism revenues exceeding VND 1 trillion during that period.
 
@@ -138,7 +138,7 @@ The core competitive shift in Southeast Asia is from selling "a trip" to selling
 
 Competitive pressure is strongest at two ends:
 - Scale-led packaging and distribution (large integrated groups and OTA ecosystems)
-- Highly differentiated specialist products (adventure and luxury leaders)
+- Highly differentiated specialist products (adventure and luxury bookingers)
 
 ### Regional Demand Snapshot (VN/TH/KH/LA)
 

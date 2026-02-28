@@ -24,8 +24,8 @@ const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const TOURS_API_ENDPOINT =
   (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/tours` : "/public/v1/tours");
 const TOURS_STATIC_FALLBACK_ENDPOINT = "data/tours_fallback_data.jspn";
-const LEAD_API_ENDPOINT =
-  (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
+const BOOKING_API_ENDPOINT =
+  (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/bookings` : "/public/v1/bookings");
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 
 const els = {
@@ -43,7 +43,7 @@ const els = {
   clearFilters: document.getElementById("clearFilters"),
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
-  toursLead: document.getElementById("toursLead"),
+  toursBooking: document.getElementById("toursBooking"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
   heroScrollLink: document.getElementById("heroScrollLink"),
   tourGrid: document.getElementById("tourGrid"),
@@ -54,17 +54,17 @@ const els = {
   debugPriorityOutput: document.getElementById("debugPriorityOutput"),
   noResultsMessage: document.getElementById("noResultsMessage"),
   faqList: document.getElementById("faqList"),
-  leadModal: document.getElementById("leadModal"),
-  openLeadModal: document.getElementById("openLeadModal"),
-  closeLeadModal: document.getElementById("closeLeadModal"),
+  bookingModal: document.getElementById("bookingModal"),
+  openBookingModal: document.getElementById("openBookingModal"),
+  closeBookingModal: document.getElementById("closeBookingModal"),
   openModalButtons: document.querySelectorAll("[data-open-modal]"),
-  leadForm: document.getElementById("leadForm"),
+  bookingForm: document.getElementById("bookingForm"),
   stepBack: document.getElementById("stepBack"),
   stepNext: document.getElementById("stepNext"),
   progressSteps: document.querySelectorAll(".progress-step"),
   formSteps: document.querySelectorAll(".step"),
-  error: document.getElementById("leadError"),
-  success: document.getElementById("leadSuccess")
+  error: document.getElementById("bookingError"),
+  success: document.getElementById("bookingSuccess")
 };
 
 init();
@@ -95,7 +95,7 @@ async function init() {
   syncFilterInputs();
   applyFilters();
   setupFilterEvents();
-  prefillLeadFormWithFilters();
+  prefillBookingFormWithFilters();
 }
 
 function setupMobileNav() {
@@ -250,7 +250,7 @@ function onFilterChange() {
   saveFilters();
   updateURLWithFilters();
   applyFilters();
-  prefillLeadFormWithFilters();
+  prefillBookingFormWithFilters();
 }
 
 function saveFilters() {
@@ -385,25 +385,25 @@ function updateTitlesForFilters() {
   const style = state.filters.style;
 
   let heading = "Featured tours you can tailor";
-  let lead = "Browse by destination and style. Filters update instantly and can be shared by URL.";
+  let booking = "Browse by destination and style. Filters update instantly and can be shared by URL.";
   let pageTitle = "AsiaTravelPlan | Custom Southeast Asia Holidays";
 
   if (dest !== "all" && style !== "all") {
     heading = `${style} tours in ${dest}`;
-    lead = `Showing ${style.toLowerCase()} journeys in ${dest}. Clear filters to see all options.`;
+    booking = `Showing ${style.toLowerCase()} journeys in ${dest}. Clear filters to see all options.`;
     pageTitle = `AsiaTravelPlan | ${style} Tours in ${dest}`;
   } else if (dest !== "all") {
     heading = `Featured tours in ${dest}`;
-    lead = `Showing all travel styles available in ${dest}.`;
+    booking = `Showing all travel styles available in ${dest}.`;
     pageTitle = `AsiaTravelPlan | Tours in ${dest}`;
   } else if (style !== "all") {
     heading = `${style} travel styles across Southeast Asia`;
-    lead = `Showing ${style.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
+    booking = `Showing ${style.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
     pageTitle = `AsiaTravelPlan | ${style} Southeast Asia Tours`;
   }
 
   if (els.toursTitle) els.toursTitle.textContent = heading;
-  if (els.toursLead) els.toursLead.textContent = lead;
+  if (els.toursBooking) els.toursBooking.textContent = booking;
   if (els.heroDynamicSubtitle) {
     els.heroDynamicSubtitle.textContent = heading;
     const noFilterSelected = dest === "all" && style === "all";
@@ -470,10 +470,10 @@ function renderTrips(trips) {
       const selected = state.trips.find((t) => t.id === tripId);
       if (selected) {
         const firstDestination = tourDestinationCountries(selected)[0] || "";
-        setLeadField("leadDestination", firstDestination);
-        setLeadField("leadStyle", selected.styles[0] || "");
+        setBookingField("bookingDestination", firstDestination);
+        setBookingField("bookingStyle", selected.styles[0] || "");
       }
-      openLeadModal();
+      openBookingModal();
     });
   });
 }
@@ -662,42 +662,42 @@ function prewarmTourImages(tours) {
 }
 
 function setupModal() {
-  if (!els.leadModal) return;
+  if (!els.bookingModal) return;
 
-  const openButtons = [els.openLeadModal, ...els.openModalButtons].filter(Boolean);
+  const openButtons = [els.openBookingModal, ...els.openModalButtons].filter(Boolean);
   openButtons.forEach((button) => {
-    button.addEventListener("click", openLeadModal);
+    button.addEventListener("click", openBookingModal);
   });
 
-  els.closeLeadModal.addEventListener("click", closeLeadModal);
+  els.closeBookingModal.addEventListener("click", closeBookingModal);
 
-  els.leadModal.addEventListener("click", (event) => {
-    if (event.target === els.leadModal) closeLeadModal();
+  els.bookingModal.addEventListener("click", (event) => {
+    if (event.target === els.bookingModal) closeBookingModal();
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && els.leadModal.getAttribute("aria-hidden") === "false") {
-      closeLeadModal();
+    if (event.key === "Escape" && els.bookingModal.getAttribute("aria-hidden") === "false") {
+      closeBookingModal();
     }
   });
 }
 
-function openLeadModal() {
-  prefillLeadFormWithFilters();
-  clearLeadFeedback();
-  els.leadModal.setAttribute("aria-hidden", "false");
+function openBookingModal() {
+  prefillBookingFormWithFilters();
+  clearBookingFeedback();
+  els.bookingModal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
-  const firstInput = els.leadForm.querySelector(".step.active input, .step.active select, .step.active textarea");
+  const firstInput = els.bookingForm.querySelector(".step.active input, .step.active select, .step.active textarea");
   if (firstInput) firstInput.focus();
 }
 
-function closeLeadModal() {
-  els.leadModal.setAttribute("aria-hidden", "true");
+function closeBookingModal() {
+  els.bookingModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
 }
 
 function setupFormNavigation() {
-  if (!els.leadForm) return;
+  if (!els.bookingForm) return;
 
   els.stepBack.addEventListener("click", () => {
     if (state.formStep > 1) {
@@ -717,7 +717,7 @@ function setupFormNavigation() {
 
     const valid = validateCurrentStep();
     if (!valid) return;
-    submitLeadForm();
+    submitBookingForm();
   });
 
   renderFormStep();
@@ -765,7 +765,7 @@ function renderFormStep() {
 }
 
 function validateCurrentStep() {
-  const activeStep = els.leadForm.querySelector(`.step[data-step="${state.formStep}"]`);
+  const activeStep = els.bookingForm.querySelector(`.step[data-step="${state.formStep}"]`);
   if (!activeStep) return true;
 
   let isValid = true;
@@ -797,12 +797,12 @@ function validateCurrentStep() {
   return isValid;
 }
 
-async function submitLeadForm() {
-  clearLeadFeedback();
+async function submitBookingForm() {
+  clearBookingFeedback();
   els.stepNext.disabled = true;
   els.stepBack.disabled = true;
 
-  const formData = new FormData(els.leadForm);
+  const formData = new FormData(els.bookingForm);
   const entries = Object.fromEntries(formData.entries());
 
   const payload = {
@@ -824,10 +824,10 @@ async function submitLeadForm() {
     utm_campaign: getQueryParam("utm_campaign")
   };
 
-  const idempotencyKey = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const idempotencyKey = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   try {
-    const response = await fetch(LEAD_API_ENDPOINT, {
+    const response = await fetch(BOOKING_API_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -836,7 +836,7 @@ async function submitLeadForm() {
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) throw new Error("Lead API request failed");
+    if (!response.ok) throw new Error("Booking API request failed");
     els.success.classList.add("show");
     return;
   } catch (error) {
@@ -850,7 +850,7 @@ async function submitLeadForm() {
   }
 }
 
-function clearLeadFeedback() {
+function clearBookingFeedback() {
   if (els.error) {
     els.error.textContent = "";
     els.error.classList.remove("show");
@@ -867,12 +867,12 @@ function getQueryParam(name) {
   return params.get(name) || "";
 }
 
-function prefillLeadFormWithFilters() {
-  if (state.filters.dest !== "all") setLeadField("leadDestination", state.filters.dest);
-  if (state.filters.style !== "all") setLeadField("leadStyle", state.filters.style);
+function prefillBookingFormWithFilters() {
+  if (state.filters.dest !== "all") setBookingField("bookingDestination", state.filters.dest);
+  if (state.filters.style !== "all") setBookingField("bookingStyle", state.filters.style);
 }
 
-function setLeadField(id, value) {
+function setBookingField(id, value) {
   const field = document.getElementById(id);
   if (!field || !value) return;
 

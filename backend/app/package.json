@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Milestone 1 backend for AsiaTravelPlan lead and CRM core",
+  "description": "Milestone 1 backend for AsiaTravelPlan booking and CRM core",
   "dependencies": {
     "jose": "^5.9.6"
   },

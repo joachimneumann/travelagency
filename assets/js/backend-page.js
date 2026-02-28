@@ -13,11 +13,11 @@ const els = {
   customersPagination: document.getElementById("customersPagination"),
   customersTable: document.getElementById("customersTable"),
 
-  leadsSearch: document.getElementById("leadsSearch"),
-  leadsSearchBtn: document.getElementById("leadsSearchBtn"),
-  leadsCountInfo: document.getElementById("leadsCountInfo"),
-  leadsPagination: document.getElementById("leadsPagination"),
-  leadsTable: document.getElementById("leadsTable"),
+  bookingsSearch: document.getElementById("bookingsSearch"),
+  bookingsSearchBtn: document.getElementById("bookingsSearchBtn"),
+  bookingsCountInfo: document.getElementById("bookingsCountInfo"),
+  bookingsPagination: document.getElementById("bookingsPagination"),
+  bookingsTable: document.getElementById("bookingsTable"),
 
   toursSearch: document.getElementById("toursSearch"),
   toursDestination: document.getElementById("toursDestination"),
@@ -32,7 +32,7 @@ const els = {
 const state = {
   user: qs.get("user") || "admin",
   customers: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
-  leads: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
+  bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" }
 };
 
@@ -53,7 +53,7 @@ function init() {
   bindControls();
 
   loadCustomers();
-  loadLeads();
+  loadBookings();
   loadTours();
 }
 
@@ -75,7 +75,7 @@ async function loadBackendAuthStatus() {
 
 function bindControls() {
   bindSearch(els.customersSearchBtn, els.customersSearch, state.customers, loadCustomers);
-  bindSearch(els.leadsSearchBtn, els.leadsSearch, state.leads, loadLeads);
+  bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
   bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
 
   if (els.toursDestination) {
@@ -145,24 +145,24 @@ async function loadCustomers() {
   renderCustomers(payload.items || []);
 }
 
-async function loadLeads() {
+async function loadBookings() {
   clearError();
 
   const params = new URLSearchParams({
-    page: String(state.leads.page),
-    page_size: String(state.leads.pageSize),
+    page: String(state.bookings.page),
+    page_size: String(state.bookings.pageSize),
     sort: "created_at_desc"
   });
-  if (state.leads.search) params.set("search", state.leads.search);
+  if (state.bookings.search) params.set("search", state.bookings.search);
 
-  const payload = await fetchApi(`/api/v1/leads?${params.toString()}`);
+  const payload = await fetchApi(`/api/v1/bookings?${params.toString()}`);
   if (!payload) return;
 
-  state.leads.totalPages = Math.max(1, Number(payload.total_pages || 1));
-  state.leads.total = Number(payload.total || 0);
-  state.leads.page = Number(payload.page || state.leads.page);
-  updatePaginationUi("leads");
-  renderLeads(payload.items || []);
+  state.bookings.totalPages = Math.max(1, Number(payload.total_pages || 1));
+  state.bookings.total = Number(payload.total || 0);
+  state.bookings.page = Number(payload.page || state.bookings.page);
+  updatePaginationUi("bookings");
+  renderBookings(payload.items || []);
 }
 
 async function loadTours() {
@@ -226,7 +226,7 @@ function updatePaginationUi(section) {
     renderPagination(pagination, model, (page) => {
       model.page = page;
       if (section === "customers") loadCustomers();
-      if (section === "leads") loadLeads();
+      if (section === "bookings") loadBookings();
       if (section === "tours") loadTours();
     });
   }
@@ -321,26 +321,26 @@ async function fetchApi(path) {
   }
 }
 
-function renderLeads(items) {
+function renderBookings(items) {
   const header = `<thead><tr><th>ID</th><th>Stage</th><th>Customer</th><th>Destination</th><th>Style</th><th>Owner</th><th>SLA due</th></tr></thead>`;
   const rows = items
-    .map((lead) => {
-      const leadHref = buildDetailHref("lead", lead.id);
-      const customerHref = buildDetailHref("customer", lead.customer_id || "");
+    .map((booking) => {
+      const bookingHref = buildDetailHref("booking", booking.id);
+      const customerHref = buildDetailHref("customer", booking.customer_id || "");
       return `<tr>
-        <td><a href="${escapeHtml(leadHref)}">${escapeHtml(shortId(lead.id))}</a></td>
-        <td>${escapeHtml(lead.stage)}</td>
-        <td>${lead.customer_id ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(lead.customer_id))}</a>` : "-"}</td>
-        <td>${escapeHtml(lead.destination || "-")}</td>
-        <td>${escapeHtml(lead.style || "-")}</td>
-        <td>${escapeHtml(lead.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(formatDateTime(lead.sla_due_at))}</td>
+        <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
+        <td>${escapeHtml(booking.stage)}</td>
+        <td>${booking.customer_id ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(booking.customer_id))}</a>` : "-"}</td>
+        <td>${escapeHtml(booking.destination || "-")}</td>
+        <td>${escapeHtml(booking.style || "-")}</td>
+        <td>${escapeHtml(booking.owner_name || "Unassigned")}</td>
+        <td>${escapeHtml(formatDateTime(booking.sla_due_at))}</td>
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="7">No leads found</td></tr>`;
-  if (els.leadsTable) els.leadsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  const body = rows || `<tr><td colspan="7">No bookings found</td></tr>`;
+  if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function renderCustomers(items) {
@@ -388,7 +388,7 @@ function renderTours(items) {
 
 function buildDetailHref(type, id) {
   const params = new URLSearchParams({ type, id, user: state.user });
-  return `backend-lead.html?${params.toString()}`;
+  return `backend-booking.html?${params.toString()}`;
 }
 
 function buildTourEditHref(id) {

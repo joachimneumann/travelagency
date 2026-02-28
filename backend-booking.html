@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AsiaTravelPlan Lead</title>
-    <meta name="description" content="AsiaTravelPlan lead detail" />
+    <title>AsiaTravelPlan Booking</title>
+    <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/css/styles.css?v=3" />
   </head>
@@ -28,39 +28,39 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <h1 class="section-title" id="detailTitle">Lead</h1>
-          <p class="section-lead" id="detailSubTitle">Loading...</p>
+          <h1 class="section-title" id="detailTitle">Booking</h1>
+          <p class="section-booking" id="detailSubTitle">Loading...</p>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <article class="panel" style="padding: 1rem; margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Lead Data</h2>
-            <div id="leadDataView"></div>
+            <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
+            <div id="bookingDataView"></div>
           </article>
 
-          <article class="panel" id="leadActionsPanel" style="padding: 1rem; margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Lead Actions</h2>
+          <article class="panel" id="bookingActionsPanel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Booking Actions</h2>
             <div class="backend-controls">
               <div class="field">
-                <label for="leadOwnerSelect">Owner</label>
-                <select id="leadOwnerSelect"></select>
+                <label for="bookingOwnerSelect">Owner</label>
+                <select id="bookingOwnerSelect"></select>
               </div>
-              <button class="btn btn-ghost" id="leadOwnerSaveBtn" type="button">Change owner</button>
+              <button class="btn btn-ghost" id="bookingOwnerSaveBtn" type="button">Change owner</button>
 
               <div class="field">
-                <label for="leadStageSelect">Stage</label>
-                <select id="leadStageSelect"></select>
+                <label for="bookingStageSelect">Stage</label>
+                <select id="bookingStageSelect"></select>
               </div>
-              <button class="btn btn-ghost" id="leadStageSaveBtn" type="button">Change stage</button>
+              <button class="btn btn-ghost" id="bookingStageSaveBtn" type="button">Change stage</button>
             </div>
 
             <div class="field">
-              <label for="leadNoteInput">Add Note (Call notes, qualification details, customer preferences...)</label>
-              <textarea id="leadNoteInput" rows="4" placeholder="Write a note..."></textarea>
+              <label for="bookingNoteInput">Add Note (Call notes, qualification details, customer preferences...)</label>
+              <textarea id="bookingNoteInput" rows="4" placeholder="Write a note..."></textarea>
             </div>
             <div class="backend-controls">
-              <button class="btn btn-primary" id="leadNoteSaveBtn" type="button">Add note</button>
-              <span id="leadActionStatus" class="micro"></span>
+              <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">Add note</button>
+              <span id="bookingActionStatus" class="micro"></span>
             </div>
           </article>
 
@@ -148,6 +148,6 @@
       </section>
     </main>
 
-    <script src="assets/js/backend-lead.js" defer></script>
+    <script src="assets/js/backend-booking.js" defer></script>
   </body>
 </html>

@@ -7,7 +7,7 @@ Scope decision:
 - **Build in-house** everything else (CRM, quoting, booking, operations, partner/guide management, analytics, compliance workflows, catalog sync).
 
 Primary goal:
-- Move AsiaTravelPlan from static lead capture to a production backend that runs the full lead -> quote -> booking -> trip operations lifecycle.
+- Move AsiaTravelPlan from static booking capture to a production backend that runs the full booking -> quote -> booking -> trip operations lifecycle.
 
 ## 1.1 Implementation Status (Updated February 26, 2026)
 
@@ -20,16 +20,16 @@ Current implemented code lives in:
 - `backend/app/scripts/seed.js`
 
 Implemented now:
-- Milestone 1 core backend (lead ingestion, customer dedup, stage pipeline, owner assignment, SLA timestamps, activity timeline)
-- Frontend lead form integration in `assets/js/main.js` using `POST /public/v1/leads` with idempotency key and inline error handling
+- Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, owner assignment, SLA timestamps, activity timeline)
+- Frontend booking form integration in `assets/js/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling
 - Keycloak-protected `/api/v1/*` access via backend session cookie (browser) or Keycloak bearer token
-- Lead/customer list pagination and filtering
+- Booking/customer list pagination and filtering
 - Keycloak OIDC auth flow implemented for backend (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`) with role gating
 - Auth internals refactored into dedicated module `src/auth.js` (route handlers, session state, OIDC discovery/token verification, API auth checks)
 - Branded website backoffice pages implemented:
-  - `backend.html`: paginated searchable customers + leads + tours tables (default newest 10 each)
+  - `backend.html`: paginated searchable customers + bookings + tours tables (default newest 10 each)
   - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
-  - `backend-lead.html`: detail page for leads/customers with lead actions (owner/stage updates + notes)
+  - `backend-booking.html`: detail page for bookings/customers with booking actions (owner/stage updates + notes)
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
 - Tours are fully backend-driven:
@@ -41,7 +41,7 @@ Implemented now:
   - destination countries selection via checkbox group (multi selection)
   - styles selection via checkbox group (multi selection)
   - image upload with backend ImageMagick conversion to WebP (max 1000px)
-- Admin API includes staff directory endpoint used by lead assignment controls:
+- Admin API includes staff directory endpoint used by booking assignment controls:
   - `GET /api/v1/staff`
 
 Note on stack:
@@ -99,7 +99,7 @@ Note on stack:
   - `catalog`
   - `compliance`
   - `integration`
-- Internal domain events for async workflows (`LeadCreated`, `QuoteAccepted`, `BookingConfirmed`, `ServiceAtRisk`, etc.).
+- Internal domain events for async workflows (`BookingCreated`, `QuoteAccepted`, `BookingConfirmed`, `ServiceAtRisk`, etc.).
 - Clear boundary: external providers only at integration layer adapters.
 
 ## 4) Milestones and Timeline
@@ -123,33 +123,33 @@ Deliverables:
 Exit criteria:
 - Deployable staging environment with secure login and basic module scaffolding.
 
-## Milestone 1: Lead and CRM Core (Weeks 3-5)
+## Milestone 1: Booking and CRM Core (Weeks 3-5)
 
 Status: **Implemented in local backend app**
 
 Deliverables:
-- Lead ingestion API
+- Booking ingestion API
 - Customer profile and deduplication
 - Pipeline stages + ownership + SLA clocks
 - Activity timeline (notes, tasks, contact logs)
-- Admin views for lead triage and follow-up
+- Admin views for booking triage and follow-up
 
 Exit criteria:
-- 100% web leads captured in CRM with no manual copy/paste.
+- 100% web bookings captured in CRM with no manual copy/paste.
 
 Delivered endpoints and features:
-- `POST /public/v1/leads`
-- `GET /api/v1/leads` with `page`, `page_size`, `stage`, `owner_id`, `search`, `sort`
-- `GET /api/v1/leads/:leadId`
-- `PATCH /api/v1/leads/:leadId/stage`
-- `GET /api/v1/leads/:leadId/activities`
-- `POST /api/v1/leads/:leadId/activities`
+- `POST /public/v1/bookings`
+- `GET /api/v1/bookings` with `page`, `page_size`, `stage`, `owner_id`, `search`, `sort`
+- `GET /api/v1/bookings/:bookingId`
+- `PATCH /api/v1/bookings/:bookingId/stage`
+- `GET /api/v1/bookings/:bookingId/activities`
+- `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/customers` with pagination/search
 - Admin UI pages:
-  - `/admin/leads` (filters + pagination)
-  - `/admin/leads/:leadId` (stage update + activity note)
+  - `/admin/bookings` (filters + pagination)
+  - `/admin/bookings/:bookingId` (stage update + activity note)
   - `/admin/customers` (search + pagination)
-  - `/admin/customers/:customerId` (profile + related leads)
+  - `/admin/customers/:customerId` (profile + related bookings)
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)
 
@@ -191,7 +191,7 @@ Exit criteria:
 Deliverables:
 - Backend catalog manager for tours
 - Publishing pipeline to website tour feed
-- KPI dashboards (lead conversion, quote SLA, margin, incident rate)
+- KPI dashboards (booking conversion, quote SLA, margin, incident rate)
 - Data retention and compliance workflows
 
 Exit criteria:
@@ -210,7 +210,7 @@ Exit criteria:
 
 ## 5) Data Model (Core Entities)
 
-- `Customer`, `Lead`, `LeadActivity`, `ConsentRecord`
+- `Customer`, `Booking`, `BookingActivity`, `ConsentRecord`
 - `TripTemplate`, `TripVariant`, `CatalogMedia`
 - `Quote`, `QuoteVersion`, `QuoteLineItem`
 - `Booking`, `Traveler`, `ServiceOrder`, `ItineraryDay`
@@ -223,30 +223,30 @@ Exit criteria:
 ## 6) Detailed Website Integration Plan
 
 Current site context:
-- Frontend with modal lead form and backend-powered tours source (`/public/v1/tours`).
+- Frontend with modal booking form and backend-powered tours source (`/public/v1/tours`).
 - No server-side runtime today.
 
 Integration objective:
 - Keep current frontend UX mostly intact while replacing static/manual flows with backend APIs.
 
-## 6.1 Lead Form Integration (`#leadModal`)
+## 6.1 Booking Form Integration (`#bookingModal`)
 
 Frontend changes:
-- Replace current submit behavior with `POST /public/v1/leads`.
+- Replace current submit behavior with `POST /public/v1/bookings`.
 - Keep current 3-step UX and field validation.
 - Add idempotency token per submission to prevent duplicates on retry.
 
 Backend endpoint:
-- `POST /public/v1/leads`
+- `POST /public/v1/bookings`
 - Accepts:
   - destination, style, month, travelers, duration, budget
   - name, email, phone/whatsapp, language
   - notes, utm_source/utm_medium/utm_campaign, page_url
 - Response:
-  - `lead_id`, `status`, `next_step_message`
+  - `booking_id`, `status`, `next_step_message`
 
 Operational behavior:
-- Lead is stored in CRM and auto-assigned by rules (destination/language/workload).
+- Booking is stored in CRM and auto-assigned by rules (destination/language/workload).
 - System creates follow-up task with SLA timer.
 - Notification sent via Postmark/Twilio to assigned staff.
 
@@ -297,7 +297,7 @@ Critical controls:
 ## 6.5 Messaging and Notifications
 
 Events that trigger messaging:
-- Lead received
+- Booking received
 - Quote sent/viewed/reminder
 - Booking confirmed
 - Payment reminder
@@ -310,24 +310,24 @@ Flow:
 ## 6.6 Tracking and Attribution Integration
 
 Frontend:
-- Capture UTM parameters and referrer into lead payload.
+- Capture UTM parameters and referrer into booking payload.
 - Persist short-lived attribution in local storage/session.
 
 Backend:
-- Store attribution fields on lead/customer records.
+- Store attribution fields on booking/customer records.
 - Expose conversion reporting by channel/campaign.
 
 ## 6.7 Security for Public Endpoints
 
 - Rate limiting on public endpoints (`/public/v1/*`)
-- CAPTCHA (Cloudflare Turnstile or hCaptcha) on lead submission
+- CAPTCHA (Cloudflare Turnstile or hCaptcha) on booking submission
 - Input schema validation and sanitization
 - Abuse monitoring and automatic IP throttling rules
 
 ## 6.8 Migration Plan (No Frontend Downtime)
 
 1. Add backend APIs in staging and wire frontend feature flags.
-2. Leads are already switched to backend API (no mailto fallback in current implementation).
+2. Bookings are already switched to backend API (no mailto fallback in current implementation).
 3. Move catalog to backend publish mode.
 4. Introduce quote/payment public pages.
 
@@ -336,7 +336,7 @@ Backend:
 - Testing:
   - Unit tests for domain logic
   - Integration tests for DB and provider adapters
-  - E2E tests for lead -> quote -> booking happy path
+  - E2E tests for booking -> quote -> booking happy path
 - Security:
   - OWASP ASVS-aligned checks
   - Dependency scanning and container scanning in CI
@@ -348,8 +348,8 @@ Backend:
 
 ## 8) First Production KPIs
 
-- Lead capture success rate >= 99%
-- Median lead assignment time <= 2 minutes
+- Booking capture success rate >= 99%
+- Median booking assignment time <= 2 minutes
 - Median quote turnaround <= 48 hours
 - Booking confirmation traceability = 100%
 - Payment webhook processing success >= 99.9%
@@ -360,4 +360,4 @@ Backend:
 1. Confirm provider choices (Auth0 vs Cognito).
 2. Approve milestone timeline and staffing.
 3. Start Milestone 0 with infra and module scaffolding.
-4. Implement website lead API integration first (highest immediate ROI).
+4. Implement website booking API integration first (highest immediate ROI).
