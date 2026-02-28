@@ -28,7 +28,8 @@ staging.asiatravelplan.com {
     reverse_proxy backend:8787
   }
 
-  forward_auth backend:8787 {
+  @protected not path /staging-access/*
+  forward_auth @protected backend:8787 {
     uri /staging-access/check
   }
 
