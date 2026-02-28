@@ -38,6 +38,32 @@ Cross-origin browser usage note:
   - `CORS_ORIGIN='http://localhost:8080'`
 - Backend sends `Access-Control-Allow-Credentials: true`, and frontend backend pages send `credentials: "include"` so Keycloak session cookies are used for `/api/v1/*`.
 
+## Local Keycloak With Persistent Theme
+
+For local Docker-based Keycloak with the custom login theme mounted persistently, use:
+- `/Users/internal_admin/projects/travelagency/docker-compose.local-keycloak.yml`
+- `/Users/internal_admin/projects/travelagency/backend/keycloak-theme/asiatravelplan`
+
+Helper scripts:
+- `/Users/internal_admin/projects/travelagency/scripts/start_local_keycloak.sh`
+- `/Users/internal_admin/projects/travelagency/scripts/stop_local_keycloak.sh`
+- `/Users/internal_admin/projects/travelagency/scripts/restart_local_keycloak.sh`
+
+Start Keycloak:
+
+```bash
+cd /Users/internal_admin/projects/travelagency
+./scripts/start_local_keycloak.sh
+```
+
+This setup:
+- exposes Keycloak on `http://localhost:8081`
+- mounts the custom theme into `/opt/keycloak/themes/asiatravelplan`
+- disables theme cache for local development
+
+After startup, set the Keycloak realm login theme to `asiatravelplan` in:
+- `Realm settings` -> `Themes` -> `Login theme`
+
 ## Data Storage
 
 JSON files are used for local persistence:

@@ -179,6 +179,52 @@ Then open:
 Set API base before loading `assets/js/main.js`:
 - This is now auto-set in `index.html` for localhost (`localhost`/`127.0.0.1`) to `http://localhost:8787`.
 
+### Persistent local Keycloak theme setup
+
+For local Keycloak on Docker, use the repo-managed compose file so the custom theme is mounted persistently instead of copied into the container manually.
+
+Files:
+- `docker-compose.local-keycloak.yml`
+- `backend/keycloak-theme/asiatravelplan/`
+
+Scripts:
+- `./scripts/start_local_keycloak.sh`
+- `./scripts/stop_local_keycloak.sh`
+- `./scripts/restart_local_keycloak.sh`
+
+Start Keycloak:
+
+```bash
+cd /Users/internal_admin/projects/travelagency
+./scripts/start_local_keycloak.sh
+```
+
+This starts Keycloak on:
+- `http://localhost:8081`
+
+The compose file mounts:
+- host: `/Users/internal_admin/projects/travelagency/backend/keycloak-theme/asiatravelplan`
+- container: `/opt/keycloak/themes/asiatravelplan`
+
+Important behavior:
+- the custom login theme survives container restarts/recreates
+- theme cache is disabled in local dev for faster CSS/theme iteration
+
+After Keycloak is running:
+1. Open Keycloak admin.
+2. Go to `Realm settings`.
+3. Open `Themes`.
+4. Set `Login theme` to `asiatravelplan`.
+5. Save.
+
+If the theme does not appear in the dropdown:
+
+```bash
+docker compose -f docker-compose.local-keycloak.yml restart
+```
+
+Then hard refresh the browser and re-check the theme dropdown.
+
 ## 5.2 Same-origin setup (optional)
 
 If you place a reverse proxy in front (for example `http://localhost:8080`) and route:
@@ -241,6 +287,7 @@ Confirm `image` values point to `/public/v1/tour-images/...` and open one URL in
   - For Keycloak session-based UI across ports, use:
     - `CORS_ORIGIN='http://localhost:8080'`
   - Keep backend and frontend on `localhost` to avoid cookie domain mismatch.
+  - Or use the local frontend proxy setup and the persistent local Keycloak compose file to avoid brittle split-origin local flows.
 
 - Duplicate lead submissions
   - Ensure `Idempotency-Key` header is present (frontend already sends it).
