@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Not Found | AsiaTravelPlan</title>
+    <meta name="description" content="The page you requested could not be found." />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --ink: #163040;
+        --muted: #5b6c78;
+        --line: #d7e0e6;
+        --paper: #f4f7f8;
+        --white: #ffffff;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        min-height: 100vh;
+        font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(22, 48, 64, 0.08), transparent 32%),
+          linear-gradient(180deg, #f8fbfc 0%, #eef3f5 100%);
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+      }
+
+      .shell {
+        width: min(1040px, 100%);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(215, 224, 230, 0.95);
+        border-radius: 28px;
+        box-shadow: 0 24px 70px rgba(22, 48, 64, 0.12);
+        overflow: hidden;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+      }
+
+      .visual {
+        min-height: 520px;
+        background: #dde5e8;
+      }
+
+      .visual img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .copy {
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 4vw, 3.8rem);
+        line-height: 0.95;
+      }
+
+      .lead {
+        margin: 0;
+        max-width: 28ch;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .contact {
+        margin: 0.5rem 0 0;
+        padding: 1rem 1.1rem;
+        border-left: 4px solid var(--ink);
+        background: var(--paper);
+        font-weight: 600;
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+        padding: 0.8rem 1.2rem;
+        font: inherit;
+        text-decoration: none;
+        transition: transform 140ms ease, background-color 140ms ease, color 140ms ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn-primary {
+        background: var(--ink);
+        color: var(--white);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--ink);
+      }
+
+      @media (max-width: 860px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .visual {
+          min-height: 300px;
+        }
+
+        .copy {
+          padding: 2rem 1.4rem 2.2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="grid">
+        <figure class="visual">
+          <img src="assets/img/404.jpg" alt="Travel scene for missing page" width="864" height="578" />
+        </figure>
+        <section class="copy">
+          <p class="eyebrow">404 Error</p>
+          <h1>Page not found</h1>
+          <p class="lead">
+            The page you are looking for is no longer here, or the address is incorrect.
+          </p>
+          <p class="contact">please contact Joachim</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/">Back to homepage</a>
+            <a class="btn btn-secondary" href="mailto:info@asiatravelplan.com">Email us</a>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

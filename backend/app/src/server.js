@@ -152,7 +152,12 @@ createServer(async (req, res) => {
       return;
     }
 
-    sendJson(res, 404, { error: "Not found" });
+    if (pathname.startsWith("/api/")) {
+      sendJson(res, 404, { error: "Not found" });
+      return;
+    }
+
+    sendBackendNotFound(res, pathname);
   } catch (error) {
     sendJson(res, 500, { error: "Internal server error", detail: String(error?.message || error) });
   }
@@ -168,8 +173,16 @@ async function ensureStorage() {
 
 function withCors(req, res) {
   const requestOrigin = normalizeText(req.headers.origin);
-  const allowAny = CORS_ORIGIN === "*";
-  const allowThisOrigin = allowAny ? requestOrigin || "*" : CORS_ORIGIN;
+  const allowedOrigins = String(CORS_ORIGIN || "*")
+    .split(",")
+    .map((value) => normalizeText(value))
+    .filter(Boolean);
+  const allowAny = allowedOrigins.includes("*");
+  const allowThisOrigin = allowAny
+    ? requestOrigin || "*"
+    : allowedOrigins.includes(requestOrigin)
+      ? requestOrigin
+      : allowedOrigins[0] || "";
 
   if (allowThisOrigin) {
     res.setHeader("Access-Control-Allow-Origin", allowThisOrigin);
@@ -195,6 +208,112 @@ function sendJson(res, status, payload, extraHeaders = {}) {
 function sendHtml(res, status, html) {
   res.writeHead(status, { "Content-Type": "text/html; charset=utf-8" });
   res.end(html);
+}
+
+function sendBackendNotFound(res, pathname = "") {
+  const backHref = pathname.startsWith("/admin") ? "/admin" : "/";
+  const backLabel = pathname.startsWith("/admin") ? "Back to backend" : "Back to website";
+
+  sendHtml(
+    res,
+    404,
+    `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Not Found | AsiaTravelPlan Backend</title>
+    <style>
+      :root {
+        --ink: #163040;
+        --muted: #5b6c78;
+        --line: #d7e0e6;
+        --paper: #f4f7f8;
+        --white: #ffffff;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        min-height: 100vh;
+        font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(180deg, #f7fafb 0%, #eef3f5 100%);
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+      }
+      .panel {
+        width: min(760px, 100%);
+        background: rgba(255,255,255,0.92);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: 0 18px 48px rgba(22, 48, 64, 0.10);
+        padding: 2.5rem;
+      }
+      .eyebrow {
+        margin: 0 0 0.75rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 0.98;
+      }
+      .lead {
+        margin: 1rem 0 0;
+        max-width: 34ch;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .contact {
+        margin: 1.25rem 0 0;
+        padding: 0.95rem 1rem;
+        background: var(--paper);
+        border-left: 4px solid var(--ink);
+        font-weight: 600;
+      }
+      .actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+      }
+      .btn {
+        text-decoration: none;
+        border-radius: 999px;
+        padding: 0.8rem 1.15rem;
+        border: 1px solid var(--ink);
+        color: var(--ink);
+      }
+      .btn-primary {
+        background: var(--ink);
+        color: var(--white);
+      }
+      .meta {
+        margin-top: 1.25rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <p class="eyebrow">Backend 404</p>
+      <h1>Page not found</h1>
+      <p class="lead">The backend route you requested does not exist or is no longer available.</p>
+      <p class="contact">please contact Joachim</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="${escapeHtml(backHref)}">${escapeHtml(backLabel)}</a>
+        <a class="btn" href="mailto:info@asiatravelplan.com">Email us</a>
+      </div>
+      <p class="meta">Requested path: <code>${escapeHtml(pathname || "/")}</code></p>
+    </main>
+  </body>
+</html>`
+  );
 }
 
 function getMimeTypeFromExt(filePath) {
