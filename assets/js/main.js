@@ -19,14 +19,14 @@ const state = {
 const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
-const TOURS_CACHE_KEY = "chapter2_tours_cache_v2";
+const TOURS_CACHE_KEY = "asiatravelplan_tours_cache_v2";
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const TOURS_API_ENDPOINT =
-  (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/tours` : "/public/v1/tours");
+  (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/tours` : "/public/v1/tours");
 const TOURS_STATIC_FALLBACK_ENDPOINT = "data/tours_fallback_data.jspn";
 const LEAD_API_ENDPOINT =
-  (window.CHAPTER2_API_BASE ? `${window.CHAPTER2_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
-const BACKEND_BASE_URL = window.CHAPTER2_API_BASE ? window.CHAPTER2_API_BASE.replace(/\/$/, "") : "";
+  (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/leads` : "/public/v1/leads");
+const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 
 const els = {
   navToggle: document.getElementById("navToggle"),
@@ -78,7 +78,7 @@ async function init() {
   setupModal();
   setupFormNavigation();
 
-  const savedFilters = JSON.parse(localStorage.getItem("chapter2_filters") || "null");
+  const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
   const urlFilters = getFiltersFromURL();
   state.filters.dest = urlFilters.dest || savedFilters?.dest || "all";
   state.filters.style = urlFilters.style || savedFilters?.style || "all";
@@ -155,7 +155,7 @@ function setupBackendLogin() {
 
   els.backendLoginBtn.addEventListener("click", async () => {
     const backendUrl = `${window.location.origin}/backend.html`;
-    const returnTo = `${window.location.origin}/backend.html`;
+    const returnTo = backendUrl;
     const loginUrl = `${BACKEND_BASE_URL}/auth/login?return_to=${encodeURIComponent(returnTo)}`;
     try {
       const response = await fetch(`${BACKEND_BASE_URL}/auth/me`, {
@@ -214,7 +214,7 @@ function updateBackendButtonLabel({ authenticated, user }) {
     return;
   }
 
-  els.backendLoginBtnTitle.textContent = "Chapter2 Backend";
+  els.backendLoginBtnTitle.textContent = "AsiaTravelPlan Backend";
   els.backendLoginBtnSubtitle.textContent = "";
   els.backendLoginBtnSubtitle.hidden = true;
 }
@@ -254,7 +254,7 @@ function onFilterChange() {
 }
 
 function saveFilters() {
-  localStorage.setItem("chapter2_filters", JSON.stringify(state.filters));
+  localStorage.setItem("asiatravelplan_filters", JSON.stringify(state.filters));
 }
 
 function applyFilters() {
@@ -386,20 +386,20 @@ function updateTitlesForFilters() {
 
   let heading = "Featured tours you can tailor";
   let lead = "Browse by destination and style. Filters update instantly and can be shared by URL.";
-  let pageTitle = "Chapter 2 | Custom Southeast Asia Holidays";
+  let pageTitle = "AsiaTravelPlan | Custom Southeast Asia Holidays";
 
   if (dest !== "all" && style !== "all") {
     heading = `${style} tours in ${dest}`;
     lead = `Showing ${style.toLowerCase()} journeys in ${dest}. Clear filters to see all options.`;
-    pageTitle = `Chapter 2 | ${style} Tours in ${dest}`;
+    pageTitle = `AsiaTravelPlan | ${style} Tours in ${dest}`;
   } else if (dest !== "all") {
     heading = `Featured tours in ${dest}`;
     lead = `Showing all travel styles available in ${dest}.`;
-    pageTitle = `Chapter 2 | Tours in ${dest}`;
+    pageTitle = `AsiaTravelPlan | Tours in ${dest}`;
   } else if (style !== "all") {
     heading = `${style} travel styles across Southeast Asia`;
     lead = `Showing ${style.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
-    pageTitle = `Chapter 2 | ${style} Southeast Asia Tours`;
+    pageTitle = `AsiaTravelPlan | ${style} Southeast Asia Tours`;
   }
 
   if (els.toursTitle) els.toursTitle.textContent = heading;

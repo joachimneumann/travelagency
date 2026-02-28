@@ -1,11 +1,11 @@
 {
-  "name": "Chapter 2",
-  "short_name": "Chapter2",
+  "name": "AsiaTravelPlan",
+  "short_name": "AsiaTravelPlan",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fdfdfd",
   "theme_color": "#ff6f4d",
-  "description": "Custom Southeast Asia holidays by Chapter 2.",
+  "description": "Custom Southeast Asia holidays by AsiaTravelPlan.",
   "icons": [
     {
       "src": "assets/img/favicon.svg",

@@ -1,5 +1,5 @@
 const qs = new URLSearchParams(window.location.search);
-const apiBase = (window.CHAPTER2_API_BASE || "").replace(/\/$/, "");
+const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 
 const STAGES = [
   "NEW",

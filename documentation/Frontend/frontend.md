@@ -1,10 +1,10 @@
-# Chapter2.live - Current Page Structure
+# AsiaTravelPlan.live - Current Page Structure
 
 ## 1) Document head
 
-- `title`: `Chapter 2 | Custom Southeast Asia Holidays`
+- `title`: `AsiaTravelPlan | Custom Southeast Asia Holidays`
 - `meta description`: private holidays in Vietnam, Thailand, Cambodia, Laos
-- Canonical URL: `https://chapter2.live/`
+- Canonical URL: `https://asiatravelplan.com/`
 - Open Graph + Twitter metadata present
 - Favicon + web manifest linked
 - Main stylesheet: `assets/css/styles.css` loaded with preload + non-blocking apply (`?v=3`)
@@ -28,7 +28,7 @@
 
 ## 3) Header and navigation (`#top`)
 
-- Brand logo (`assets/img/logo-chapter2.svg`)
+- Brand logo (`assets/img/logo-asiatravelplan.svg`)
 - Mobile menu toggle button (`#navToggle`)
 - Filter controls embedded in nav:
   - Destination select (`#navDestination`)
@@ -65,9 +65,9 @@
 
 Behavior from JS:
 - Trips loaded from backend `GET /public/v1/tours` (primary source)
-- Backend responses are cached in localStorage (`chapter2_tours_cache_v1`) with TTL
+- Backend responses are cached in localStorage (`asiatravelplan_tours_cache_v1`) with TTL
 - If backend is unavailable, frontend falls back to static `data/tours_fallback_data.jspn` (for GitHub/static deployment compatibility)
-- Filter state from URL params/localStorage (`chapter2_filters`)
+- Filter state from URL params/localStorage (`asiatravelplan_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and hidden tours heading/subtitle still update based on filters
 - On each new filter application, tours are ranked by `priority + random(0..50)` before display
@@ -137,7 +137,7 @@ Current inventory:
 - Benefits list (local experts, clear inclusions, fast proposal, on-trip support)
 - CTA row:
   - Primary: `Start planning now` (opens modal)
-  - Secondary: `Email us directly` (`mailto:hello@chapter2.live`)
+  - Secondary: `Email us directly` (`mailto:info@asiatravelplan.com`)
 - Response-time microcopy
 - 3 additional review cards
 - Supporting image (`assets/img/happy_tourists.webp`)
@@ -157,7 +157,7 @@ Current inventory:
 
 ## 7) Lead modal form (`#leadModal`)
 
-- Modal title: `Plan your trip with Chapter 2`
+- Modal title: `Plan your trip with AsiaTravelPlan`
 - Progress indicator with 3 steps
 - Multi-step form (`#leadForm`) with validation
 

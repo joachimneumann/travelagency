@@ -1,11 +1,11 @@
-# Hetzner CX32 Staging Deployment Guide (Chapter2)
+# Hetzner CX32 Staging Deployment Guide (AsiaTravelPlan)
 
 This guide is written for non-experts. Follow the steps in order.
 
 Target outcome:
-- Frontend available at `https://staging.chapter2.live`
-- Backend available at `https://api-staging.chapter2.live`
-- Keycloak available at `https://auth-staging.chapter2.live`
+- Frontend available at `https://staging.asiatravelplan.com`
+- Backend available at `https://api-staging.asiatravelplan.com`
+- Keycloak available at `https://auth-staging.asiatravelplan.com`
 
 ## 0) Recommended order: local preparation first, then deployment
 
@@ -61,7 +61,7 @@ After local preparation is done, continue with the Hetzner deployment steps belo
 
 You need:
 - A Hetzner Cloud account
-- Domain DNS control for `chapter2.live`
+- Domain DNS control for `asiatravelplan.com`
 - Your local project files
 - Basic terminal access
 
@@ -85,9 +85,9 @@ You will use:
 ## 3) Point DNS to the server
 
 Create DNS records:
-- `staging.chapter2.live` -> A -> `<SERVER_IP>`
-- `api-staging.chapter2.live` -> A -> `<SERVER_IP>`
-- `auth-staging.chapter2.live` -> A -> `<SERVER_IP>`
+- `staging.asiatravelplan.com` -> A -> `<SERVER_IP>`
+- `api-staging.asiatravelplan.com` -> A -> `<SERVER_IP>`
+- `auth-staging.asiatravelplan.com` -> A -> `<SERVER_IP>`
 
 Optional (if IPv6 used): add AAAA records.
 
@@ -104,24 +104,24 @@ ssh root@<SERVER_IP>
 Create a deploy user:
 
 ```bash
-adduser chapter2
-usermod -aG sudo chapter2
+adduser asiatravelplan
+usermod -aG sudo asiatravelplan
 ```
 
 Copy SSH authorized keys to new user:
 
 ```bash
-mkdir -p /home/chapter2/.ssh
-cp /root/.ssh/authorized_keys /home/chapter2/.ssh/authorized_keys
-chown -R chapter2:chapter2 /home/chapter2/.ssh
-chmod 700 /home/chapter2/.ssh
-chmod 600 /home/chapter2/.ssh/authorized_keys
+mkdir -p /home/asiatravelplan/.ssh
+cp /root/.ssh/authorized_keys /home/asiatravelplan/.ssh/authorized_keys
+chown -R asiatravelplan:asiatravelplan /home/asiatravelplan/.ssh
+chmod 700 /home/asiatravelplan/.ssh
+chmod 600 /home/asiatravelplan/.ssh/authorized_keys
 ```
 
 Switch to new user:
 
 ```bash
-su - chapter2
+su - asiatravelplan
 ```
 
 Install updates:
@@ -168,18 +168,18 @@ docker compose version
 On your local machine, run:
 
 ```bash
-rsync -avz --exclude '.git' /Users/internal_admin/projects/travelagency/ chapter2@<SERVER_IP>:/home/chapter2/travelagency/
+rsync -avz --exclude '.git' /Users/internal_admin/projects/travelagency/ asiatravelplan@<SERVER_IP>:/home/asiatravelplan/travelagency/
 ```
 
 On server:
 
 ```bash
-cd /home/chapter2/travelagency
+cd /home/asiatravelplan/travelagency
 ```
 
 ## 7) Create staging compose file
 
-Create `/home/chapter2/travelagency/docker-compose.staging.yml`:
+Create `/home/asiatravelplan/travelagency/docker-compose.staging.yml`:
 
 ```yaml
 services:
@@ -220,7 +220,7 @@ services:
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME: auth-staging.chapter2.live
+      KC_HOSTNAME: auth-staging.asiatravelplan.com
     depends_on:
       - postgres
 
@@ -242,40 +242,40 @@ volumes:
 
 ## 8) Create Caddy config
 
-Create `/home/chapter2/travelagency/deploy/Caddyfile`:
+Create `/home/asiatravelplan/travelagency/deploy/Caddyfile`:
 
 ```caddy
-staging.chapter2.live {
+staging.asiatravelplan.com {
   root * /srv
   file_server
 }
 
-api-staging.chapter2.live {
+api-staging.asiatravelplan.com {
   reverse_proxy backend:8787
 }
 
-auth-staging.chapter2.live {
+auth-staging.asiatravelplan.com {
   reverse_proxy keycloak:8080
 }
 ```
 
 ## 9) Create staging environment file
 
-Create `/home/chapter2/travelagency/.env.staging`:
+Create `/home/asiatravelplan/travelagency/.env.staging`:
 
 ```env
 PORT=8787
-CORS_ORIGIN=https://staging.chapter2.live
+CORS_ORIGIN=https://staging.asiatravelplan.com
 
 KEYCLOAK_ENABLED=true
-KEYCLOAK_BASE_URL=https://auth-staging.chapter2.live
+KEYCLOAK_BASE_URL=https://auth-staging.asiatravelplan.com
 KEYCLOAK_REALM=master
-KEYCLOAK_CLIENT_ID=chapter2-backend
+KEYCLOAK_CLIENT_ID="asiatravelplan-backend"
 KEYCLOAK_CLIENT_SECRET=CHANGE_ME_CLIENT_SECRET
-KEYCLOAK_REDIRECT_URI=https://api-staging.chapter2.live/auth/callback
+KEYCLOAK_REDIRECT_URI=https://api-staging.asiatravelplan.com/auth/callback
 KEYCLOAK_ALLOWED_ROLES=admin,staff
 KEYCLOAK_GLOBAL_LOGOUT=true
-RETURN_TO_ALLOWED_ORIGINS=https://staging.chapter2.live,https://api-staging.chapter2.live
+RETURN_TO_ALLOWED_ORIGINS=https://staging.asiatravelplan.com,https://api-staging.asiatravelplan.com
 
 KEYCLOAK_ADMIN=admin
 KEYCLOAK_ADMIN_PASSWORD=CHANGE_ME_ADMIN_PASSWORD
@@ -289,7 +289,7 @@ Important:
 ## 10) Start staging services
 
 ```bash
-cd /home/chapter2/travelagency
+cd /home/asiatravelplan/travelagency
 docker compose -f docker-compose.staging.yml up -d
 ```
 
@@ -302,25 +302,25 @@ docker compose -f docker-compose.staging.yml ps
 Check backend health:
 
 ```bash
-curl -i https://api-staging.chapter2.live/health
+curl -i https://api-staging.asiatravelplan.com/health
 ```
 
 ## 11) Configure Keycloak client for backend login
 
-1. Open: `https://auth-staging.chapter2.live`
+1. Open: `https://auth-staging.asiatravelplan.com`
 2. Login with admin user from `.env.staging`
-3. Create or edit client `chapter2-backend`
+3. Create or edit client `asiatravelplan-backend`
 
 Set in Keycloak client:
-- Root URL: `https://api-staging.chapter2.live`
+- Root URL: `https://api-staging.asiatravelplan.com`
 - Valid redirect URIs:
-  - `https://api-staging.chapter2.live/auth/callback`
+  - `https://api-staging.asiatravelplan.com/auth/callback`
 - Valid post logout redirect URIs:
-  - `https://staging.chapter2.live/*`
-  - `https://api-staging.chapter2.live/*`
+  - `https://staging.asiatravelplan.com/*`
+  - `https://api-staging.asiatravelplan.com/*`
 - Web origins:
-  - `https://staging.chapter2.live`
-  - `https://api-staging.chapter2.live`
+  - `https://staging.asiatravelplan.com`
+  - `https://api-staging.asiatravelplan.com`
 
 Copy the client secret and update `.env.staging` (`KEYCLOAK_CLIENT_SECRET`).
 
@@ -332,7 +332,7 @@ docker compose -f docker-compose.staging.yml restart backend
 
 ## 12) Verify full flow
 
-1. Open `https://staging.chapter2.live`
+1. Open `https://staging.asiatravelplan.com`
 2. Click Backend button.
 3. Login through Keycloak.
 4. Verify redirect to backend page and data loads.
@@ -343,7 +343,7 @@ docker compose -f docker-compose.staging.yml restart backend
 Update deployment:
 
 ```bash
-cd /home/chapter2/travelagency
+cd /home/asiatravelplan/travelagency
 # upload changed files from local with rsync again
 docker compose -f docker-compose.staging.yml up -d --build
 ```
@@ -360,7 +360,7 @@ Backup Postgres (daily recommended):
 
 ```bash
 docker compose -f docker-compose.staging.yml exec -T postgres \
-  pg_dump -U "$POSTGRES_USER" keycloak > /home/chapter2/keycloak_backup_$(date +%F).sql
+  pg_dump -U "$POSTGRES_USER" keycloak > /home/asiatravelplan/keycloak_backup_$(date +%F).sql
 ```
 
 ## 14) Common issues
@@ -372,7 +372,7 @@ docker compose -f docker-compose.staging.yml exec -T postgres \
   - Wrong client secret or redirect URI mismatch.
 
 - CORS errors:
-  - Ensure `CORS_ORIGIN=https://staging.chapter2.live`.
+  - Ensure `CORS_ORIGIN=https://staging.asiatravelplan.com`.
 
 - TLS certificate not issued:
   - DNS A record not pointing to correct server IP.

@@ -24,7 +24,7 @@ export function createAuth({ port }) {
         .map((value) => normalizeText(value))
         .filter(Boolean)
     ),
-    sessionCookieName: "chapter2_session",
+    sessionCookieName: "asiatravelplan_session",
     sessionMaxAgeSeconds: 60 * 60 * 8,
     authRequestTtlMs: 10 * 60 * 1000
   };

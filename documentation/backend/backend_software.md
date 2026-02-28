@@ -1,4 +1,4 @@
-# Chapter2 Backend Software Plan
+# AsiaTravelPlan Backend Software Plan
 
 ## 1) Delivery Approach
 
@@ -7,7 +7,7 @@ Scope decision:
 - **Build in-house** everything else (CRM, quoting, booking, operations, partner/guide management, analytics, compliance workflows, catalog sync).
 
 Primary goal:
-- Move Chapter2 from static lead capture to a production backend that runs the full lead -> quote -> booking -> trip operations lifecycle.
+- Move AsiaTravelPlan from static lead capture to a production backend that runs the full lead -> quote -> booking -> trip operations lifecycle.
 
 ## 1.1 Implementation Status (Updated February 26, 2026)
 

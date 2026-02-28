@@ -1,8 +1,8 @@
-# Backend Requirements for Chapter2 Travel Agency
+# Backend Requirements for AsiaTravelPlan
 
-## 1) Why Chapter2 Needs a Backend
+## 1) Why AsiaTravelPlan Needs a Backend
 
-Chapter2 currently has a strong marketing site and lead capture UX, but no operational core to manage leads, bookings, trip execution, partners, and field staff at scale.
+AsiaTravelPlan currently has a strong marketing site and lead capture UX, but no operational core to manage leads, bookings, trip execution, partners, and field staff at scale.
 
 Without a backend, the business will hit limits quickly:
 - Lead loss from manual handoff (modal -> email/manual tracking)
@@ -12,7 +12,7 @@ Without a backend, the business will hit limits quickly:
 - High risk of service quality variance and partner coordination failures
 - Limited ability to track margin, partner performance, and staff productivity
 
-A backend is required to move Chapter2 from brochure + form collection into a true travel operations platform.
+A backend is required to move AsiaTravelPlan from brochure + form collection into a true travel operations platform.
 
 ## 2) Scope and User Groups
 
@@ -411,7 +411,7 @@ This approach minimizes initial complexity while preserving a clean migration pa
 ## 12) Research Basis and External Standards (Reviewed February 25, 2026)
 
 This requirements document is aligned with:
-- Chapter2 operational context (`chapter2.md`) and market analysis (`research.md`) in this repository
+- AsiaTravelPlan operational context (project context) and market analysis (`research.md`) in this repository
 - GDPR legal baseline for personal data processing and territorial scope (EUR-Lex, Regulation (EU) 2016/679)
 - Vietnam personal data protection regime:
   - Decree 13/2023/ND-CP (effective July 1, 2023)
@@ -421,7 +421,7 @@ This requirements document is aligned with:
 - NIST SP 800-63-4 digital identity guidance for authentication, lifecycle, and federation
 - Travel interoperability direction from IATA NDC and OpenTravel standards (for optional future distribution/connectivity integrations)
 
-## 13) Concrete Build-vs-Buy Implementation Proposal for Chapter2
+## 13) Concrete Build-vs-Buy Implementation Proposal for AsiaTravelPlan
 
 ## 13.1 Decision Principles
 
@@ -455,7 +455,7 @@ This requirements document is aligned with:
 
 ## 13.3 What to Build In-House (Core Product)
 
-- Lead-to-booking CRM workflow tailored to Chapter2 (pipeline + SLA routing).
+- Lead-to-booking CRM workflow tailored to AsiaTravelPlan (pipeline + SLA routing).
 - Modular itinerary and quote engine:
   - Versioned proposals
   - Inclusion/exclusion generation
@@ -544,7 +544,7 @@ Deliverable:
 - Core dashboards (pipeline + today operations).
 
 Deliverable:
-- Chapter2 can run end-to-end lead -> quote -> booking in one system.
+- AsiaTravelPlan can run end-to-end lead -> quote -> booking in one system.
 
 ## Phase 2 (Weeks 9-14): Operational Hardening
 
@@ -607,7 +607,7 @@ Cost notes:
 
 ## 14.1 Assumptions Used for "Typical" Estimates
 
-- Early production stage for Chapter2 (small team, first operational backend rollout).
+- Early production stage for AsiaTravelPlan (small team, first operational backend rollout).
 - Region baseline: US East where applicable.
 - 3-8 internal users, moderate lead volume, moderate messaging volume.
 - Costs shown mostly as monthly recurring; variable transaction fees are called out separately.
@@ -633,7 +633,7 @@ Cost notes:
 | Metabase Cloud | Starter $100/month + $6/user (first 5 included); Pro $575/month + $12/user | $100-$250 (Starter usage) |
 | DocuSign (optional) | Business Pro listed at $40/user/month billed annually | $40/user/month (if used) |
 
-## 14.3 Practical Budget Bands for Chapter2
+## 14.3 Practical Budget Bands for AsiaTravelPlan
 
 ## Lean MVP monthly run-rate (recommended start)
 

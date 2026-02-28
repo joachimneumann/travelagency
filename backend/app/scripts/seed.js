@@ -130,7 +130,7 @@ async function main() {
       budget: pick(BUDGETS),
       notes: "Seeded test lead",
       source: {
-        page_url: "https://chapter2.live/",
+        page_url: "https://asiatravelplan.com/",
         utm_source: "seed",
         utm_medium: "script",
         utm_campaign: "milestone_1",

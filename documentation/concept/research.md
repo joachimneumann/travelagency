@@ -120,7 +120,7 @@ Vietnam wraps up 2025 with 21.2 million foreign arrivals.
 
 ### Scope
 
-This addendum expands the research from Vietnam-only into a four-country focus relevant for Chapter2 positioning:
+This addendum expands the research from Vietnam-only into a four-country focus relevant for AsiaTravelPlan positioning:
 - Vietnam
 - Thailand
 - Cambodia
@@ -197,7 +197,7 @@ Observed strengths:
 
 Strategic takeaway:
 - These players set the benchmark for clarity and merchandised route logic
-- Chapter2 should adopt equivalent clarity while differentiating via private customization
+- AsiaTravelPlan should adopt equivalent clarity while differentiating via private customization
 
 #### 3) Luxury Specialists
 
@@ -223,7 +223,7 @@ Strategic takeaway:
 - Pricing transparency needs structure, not just "from" price
 - Responsible travel messaging is baseline expectation in specialist segments
 
-### Implications for Chapter2 / Hidden Charm Asia
+### Implications for AsiaTravelPlan / Hidden Charm Asia
 
 Recommended positioning:
 - Own the upper-mid and premium custom corridor for VN/TH/KH/LA

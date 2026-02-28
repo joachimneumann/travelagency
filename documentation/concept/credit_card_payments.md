@@ -1,4 +1,4 @@
-# Credit Card Payments (Stripe) for Chapter2
+# Credit Card Payments (Stripe) for AsiaTravelPlan
 
 ## 1) Scope and Goal
 

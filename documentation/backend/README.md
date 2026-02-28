@@ -1,4 +1,4 @@
-# Chapter2 Backend App (Milestone 1)
+# AsiaTravelPlan Backend App (Milestone 1)
 
 This service implements Milestone 1 from `backend/backend_software.md`:
 - Lead ingestion API
@@ -23,8 +23,8 @@ Environment variables:
 - `CORS_ORIGIN` (default `*`)
 - `KEYCLOAK_ENABLED` (`true`/`false`, default `false`)
 - `KEYCLOAK_BASE_URL` (example: `http://localhost:8081`)
-- `KEYCLOAK_REALM` (example: `chapter2`)
-- `KEYCLOAK_CLIENT_ID` (example: `chapter2-backend`)
+- `KEYCLOAK_REALM` (example: `asiatravelplan`)
+- `KEYCLOAK_CLIENT_ID` (example: `asiatravelplan-backend`)
 - `KEYCLOAK_CLIENT_SECRET` (Keycloak confidential client secret)
 - `KEYCLOAK_REDIRECT_URI` (default `http://localhost:8787/auth/callback`)
 - `KEYCLOAK_POST_LOGOUT_REDIRECT_URI` (optional; must be allowed by Keycloak client if set)
@@ -177,7 +177,7 @@ curl -X POST http://localhost:8787/public/v1/leads \
     "utm_source": "google",
     "utm_medium": "cpc",
     "utm_campaign": "sea_winter",
-    "pageUrl": "https://chapter2.live/",
+    "pageUrl": "https://asiatravelplan.com/",
     "referrer": "https://google.com"
   }'
 ```
@@ -196,8 +196,8 @@ cd backend/app
 npm install
 KEYCLOAK_ENABLED=true \
 KEYCLOAK_BASE_URL='http://localhost:8081' \
-KEYCLOAK_REALM='chapter2' \
-KEYCLOAK_CLIENT_ID='chapter2-backend' \
+KEYCLOAK_REALM='asiatravelplan' \
+KEYCLOAK_CLIENT_ID='asiatravelplan-backend' \
 KEYCLOAK_CLIENT_SECRET='YOUR_CLIENT_SECRET' \
 KEYCLOAK_REDIRECT_URI='http://localhost:8787/auth/callback' \
 KEYCLOAK_ALLOWED_ROLES='admin,staff_joachim,staff_van' \

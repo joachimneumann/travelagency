@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { execFile as execFileCb } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
+import { deflateSync, inflateSync } from "node:zlib";
 import { createAuth } from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,15 +17,16 @@ const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
 const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
+const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const execFile = promisify(execFileCb);
 const COMPANY_PROFILE = {
-  name: "Chapter 2 Southeast Asia Travel",
-  website: "chapter2.live",
-  address: "75 Nguyen Hue, District 1, Ho Chi Minh City",
-  whatsapp: "+84 90 000 0000",
-  email: "hello@chapter2.live"
+  name: "AsiaTravelPlan",
+  website: "asiatravelplan.com",
+  address: "alley 378 Cua Dai, 550000 Hoi An, Vietnam",
+  whatsapp: "+84 337942446",
+  email: "info@asiatravelplan.com"
 };
 
 const STAGES = {
@@ -155,7 +157,7 @@ createServer(async (req, res) => {
     sendJson(res, 500, { error: "Internal server error", detail: String(error?.message || error) });
   }
 }).listen(PORT, () => {
-  console.log(`Chapter2 backend listening on http://localhost:${PORT}`);
+  console.log(`AsiaTravelPlan backend listening on http://localhost:${PORT}`);
 });
 
 async function ensureStorage() {
@@ -403,16 +405,178 @@ function safeVatPercentage(value) {
 
 function nextInvoiceNumber(store) {
   const max = (store.invoices || []).reduce((acc, invoice) => {
-    const match = String(invoice.invoice_number || "").match(/^CH2-(\d+)$/);
+    const match = String(invoice.invoice_number || "").match(/^ATP-(\d+)$/);
     if (!match) return acc;
     const n = Number(match[1]);
     return Number.isFinite(n) ? Math.max(acc, n) : acc;
   }, 0);
-  return `CH2-${String(max + 1).padStart(6, "0")}`;
+  return `ATP-${String(max + 1).padStart(6, "0")}`;
 }
 
 function invoicePdfPath(invoiceId, version) {
   return path.join(INVOICES_DIR, `${invoiceId}-v${version}.pdf`);
+}
+
+let cachedLogoImagePromise = null;
+
+function paethPredictor(a, b, c) {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) return a;
+  if (pb <= pc) return b;
+  return c;
+}
+
+function decodePngRgba(buffer) {
+  const signature = "89504e470d0a1a0a";
+  if (buffer.subarray(0, 8).toString("hex") !== signature) {
+    throw new Error("Unsupported PNG signature");
+  }
+
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  let bitDepth = 0;
+  let colorType = 0;
+  const idatChunks = [];
+
+  while (offset < buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    offset += 4;
+    const type = buffer.subarray(offset, offset + 4).toString("ascii");
+    offset += 4;
+    const data = buffer.subarray(offset, offset + length);
+    offset += length;
+    offset += 4;
+
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data[8];
+      colorType = data[9];
+    } else if (type === "IDAT") {
+      idatChunks.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+  }
+
+  if (bitDepth !== 8 || colorType !== 6) {
+    throw new Error("Only 8-bit RGBA PNG logos are supported");
+  }
+
+  const bytesPerPixel = 4;
+  const stride = width * bytesPerPixel;
+  const inflated = inflateSync(Buffer.concat(idatChunks));
+  const rgba = Buffer.alloc(width * height * bytesPerPixel);
+  let inOffset = 0;
+  let outOffset = 0;
+  let previousRow = Buffer.alloc(stride);
+
+  for (let y = 0; y < height; y += 1) {
+    const filter = inflated[inOffset];
+    inOffset += 1;
+    const row = Buffer.from(inflated.subarray(inOffset, inOffset + stride));
+    inOffset += stride;
+
+    for (let x = 0; x < stride; x += 1) {
+      const left = x >= bytesPerPixel ? row[x - bytesPerPixel] : 0;
+      const up = previousRow[x] || 0;
+      const upLeft = x >= bytesPerPixel ? previousRow[x - bytesPerPixel] || 0 : 0;
+
+      if (filter === 1) row[x] = (row[x] + left) & 0xff;
+      else if (filter === 2) row[x] = (row[x] + up) & 0xff;
+      else if (filter === 3) row[x] = (row[x] + Math.floor((left + up) / 2)) & 0xff;
+      else if (filter === 4) row[x] = (row[x] + paethPredictor(left, up, upLeft)) & 0xff;
+    }
+
+    row.copy(rgba, outOffset);
+    outOffset += stride;
+    previousRow = row;
+  }
+
+  return { width, height, rgba };
+}
+
+async function getLogoPdfImageData() {
+  if (!cachedLogoImagePromise) {
+    cachedLogoImagePromise = readFile(LOGO_PNG_PATH).then((buffer) => {
+      const { width, height, rgba } = decodePngRgba(buffer);
+      const rgb = Buffer.alloc(width * height * 3);
+      const alpha = Buffer.alloc(width * height);
+      for (let src = 0, rgbOffset = 0, alphaOffset = 0; src < rgba.length; src += 4) {
+        rgb[rgbOffset] = rgba[src];
+        rgb[rgbOffset + 1] = rgba[src + 1];
+        rgb[rgbOffset + 2] = rgba[src + 2];
+        alpha[alphaOffset] = rgba[src + 3];
+        rgbOffset += 3;
+        alphaOffset += 1;
+      }
+      return {
+        width,
+        height,
+        rgb: deflateSync(rgb),
+        alpha: deflateSync(alpha)
+      };
+    });
+  }
+
+  return cachedLogoImagePromise;
+}
+
+function wrapPdfText(value, maxCharsPerLine, maxLines) {
+  const words = String(value || "-").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return ["-"];
+  const lines = [];
+  let current = words[0];
+
+  for (let i = 1; i < words.length; i += 1) {
+    const next = `${current} ${words[i]}`;
+    if (next.length <= maxCharsPerLine) {
+      current = next;
+      continue;
+    }
+    lines.push(current);
+    current = words[i];
+    if (lines.length >= maxLines - 1) break;
+  }
+
+  if (lines.length < maxLines) lines.push(current);
+  if (lines.length > maxLines) return lines.slice(0, maxLines);
+  if (lines.length === maxLines && words.length > 1) {
+    const used = lines.join(" ").split(/\s+/).length;
+    if (used < words.length) {
+      const last = lines[maxLines - 1];
+      lines[maxLines - 1] = `${last.slice(0, Math.max(0, maxCharsPerLine - 1)).trim()}...`;
+    }
+  }
+  return lines;
+}
+
+function buildPdfBuffer(objects) {
+  const chunks = [Buffer.from("%PDF-1.4\n", "utf8")];
+  const offsets = [0];
+  let offset = chunks[0].length;
+
+  for (let i = 0; i < objects.length; i += 1) {
+    offsets.push(offset);
+    const header = Buffer.from(`${i + 1} 0 obj\n`, "utf8");
+    const footer = Buffer.from("\nendobj\n", "utf8");
+    const body = Buffer.isBuffer(objects[i]) ? objects[i] : Buffer.from(objects[i], "utf8");
+    chunks.push(header, body, footer);
+    offset += header.length + body.length + footer.length;
+  }
+
+  const xrefStart = offset;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i < offsets.length; i += 1) {
+    xref += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+  }
+  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  chunks.push(Buffer.from(xref, "utf8"));
+  return Buffer.concat(chunks);
 }
 
 function escapePdfText(value) {
@@ -422,7 +586,14 @@ function escapePdfText(value) {
     .replaceAll(")", "\\)");
 }
 
-function buildMinimalInvoicePdfBuffer(invoice, customer, lead) {
+function abbreviateLeadId(value) {
+  const text = normalizeText(value);
+  if (!text) return "-";
+  if (text.length <= 13) return text;
+  return `${text.slice(0, 13)}...`;
+}
+
+function buildInvoicePdfBuffer(invoice, customer, lead, logoImage) {
   const currency = safeCurrency(invoice.currency);
   const items = Array.isArray(invoice.items) ? invoice.items : [];
   const subtotalCents = safeAmountCents(invoice.subtotal_amount_cents) ?? computeInvoiceTotal(items);
@@ -436,124 +607,142 @@ function buildMinimalInvoicePdfBuffer(invoice, customer, lead) {
   const rectFill = (x, y, w, h) => `${x} ${y} ${w} ${h} re f`;
   const rectStroke = (x, y, w, h) => `${x} ${y} ${w} ${h} re S`;
   const textAt = (x, y, size, value) => `BT /F1 ${size} Tf 1 0 0 1 ${x} ${y} Tm (${escapePdfText(value)}) Tj ET`;
+  const imageAt = (x, y, w, h) => `q ${w} 0 0 ${h} ${x} ${y} cm /ImLogo Do Q`;
 
   const ops = [];
 
-  // Header bar + simple brand mark/logo surrogate.
-  ops.push("0.98 0.44 0.28 rg");
-  ops.push(rectFill(0, 782, 595, 60));
+  // Header.
   ops.push("1 1 1 rg");
-  ops.push(textAt(86, 814, 20, "Chapter 2"));
-  ops.push(textAt(86, 797, 10, "Southeast Asia Travel"));
-  // Simple logo mark (vector, PDF-safe operators).
-  ops.push("1 1 1 rg");
-  ops.push(rectFill(36, 798, 28, 28));
-  ops.push("0.98 0.44 0.28 rg");
-  ops.push(rectFill(42, 804, 16, 16));
-
-  // Meta and contact blocks.
+  ops.push(rectFill(0, 724, 595, 118));
   ops.push("0.12 0.18 0.22 rg");
-  ops.push(textAt(40, 760, 18, "INVOICE"));
-  ops.push(textAt(40, 742, 10, `Invoice Number: ${invoice.invoice_number || "-"}`));
-  ops.push(textAt(40, 728, 10, `Issue Date: ${invoice.issue_date || "-"}`));
-  ops.push(textAt(40, 714, 10, `Due Date: ${invoice.due_date || "-"}`));
-
-  ops.push(textAt(330, 760, 10, COMPANY_PROFILE.name));
-  ops.push(textAt(330, 746, 9, `Address: ${COMPANY_PROFILE.address}`));
-  ops.push(textAt(330, 732, 9, `WhatsApp: ${COMPANY_PROFILE.whatsapp}`));
-  ops.push(textAt(330, 718, 9, `Email: ${COMPANY_PROFILE.email}`));
-  ops.push(textAt(330, 704, 9, `Website: ${COMPANY_PROFILE.website}`));
-
-  // Bill-to box.
-  ops.push("0.86 0.91 0.94 rg");
-  ops.push(rectFill(40, 634, 515, 42));
+  ops.push(imageAt(40, 742, 58, 58));
+  ops.push(textAt(112, 786, 18, COMPANY_PROFILE.name));
+  ops.push("0.35 0.42 0.47 rg");
+  ops.push(textAt(112, 770, 9, "Southeast Asia Travel"));
   ops.push("0.12 0.18 0.22 rg");
-  ops.push(rectStroke(40, 634, 515, 42));
-  ops.push(textAt(48, 661, 10, `Bill To: ${normalizeText(customer?.name) || "-"}`));
-  ops.push(textAt(48, 647, 10, `Email: ${normalizeEmail(customer?.email) || "-"}`));
-  ops.push(textAt(300, 661, 10, `Lead: ${normalizeText(lead?.id) || "-"}`));
-  ops.push(textAt(300, 647, 10, `${normalizeText(lead?.destination) || "-"} | ${normalizeText(lead?.style) || "-"}`));
+  ops.push(textAt(472, 786, 12, "INVOICE"));
+  ops.push("0.35 0.42 0.47 rg");
+  ops.push(textAt(414, 769, 9, `Invoice Number: ${invoice.invoice_number || "-"}`));
+  ops.push(textAt(434, 754, 9, `Issue Date: ${invoice.issue_date || "-"}`));
+  ops.push(textAt(435, 739, 9, `Due Date: ${invoice.due_date || "-"}`));
+  ops.push("0.88 0.90 0.92 rg");
+  ops.push(line(40, 730, 555, 730));
+
+  // Contact / bill-to cards.
+  ops.push("0.97 0.98 0.99 rg");
+  ops.push(rectFill(40, 640, 250, 72));
+  ops.push(rectFill(305, 640, 250, 72));
+  ops.push("0.82 0.85 0.88 RG");
+  ops.push("1 w");
+  ops.push(rectStroke(40, 640, 250, 72));
+  ops.push(rectStroke(305, 640, 250, 72));
+  ops.push("0.35 0.42 0.47 rg");
+  ops.push(textAt(52, 691, 10, "From"));
+  ops.push(textAt(317, 691, 10, "Bill To"));
+  ops.push("0.12 0.18 0.22 rg");
+  ops.push(textAt(52, 674, 11, COMPANY_PROFILE.name));
+  ops.push(textAt(52, 658, 9, COMPANY_PROFILE.address));
+  ops.push(textAt(52, 644, 9, `${COMPANY_PROFILE.email} | ${COMPANY_PROFILE.whatsapp}`));
+  ops.push(textAt(317, 674, 11, normalizeText(customer?.name) || "-"));
+  ops.push(textAt(317, 658, 9, normalizeEmail(customer?.email) || "-"));
 
   // Items table header.
-  const tableTop = 600;
-  ops.push("0.95 0.95 0.95 rg");
-  ops.push(rectFill(40, tableTop, 515, 22));
+  const tableTop = 596;
+  ops.push("0.82 0.85 0.88 RG");
+  ops.push(rectStroke(40, tableTop, 515, 26));
+  ops.push("0.93 0.95 0.96 rg");
+  ops.push(rectFill(40, tableTop, 515, 26));
   ops.push("0.12 0.18 0.22 rg");
-  ops.push(rectStroke(40, tableTop, 515, 22));
-  ops.push(textAt(48, tableTop + 7, 9, "Description"));
-  ops.push(textAt(350, tableTop + 7, 9, "Qty"));
-  ops.push(textAt(410, tableTop + 7, 9, "Unit"));
-  ops.push(textAt(480, tableTop + 7, 9, "Total"));
+  ops.push(textAt(48, tableTop + 10, 9, "Description"));
+  ops.push(textAt(352, tableTop + 10, 9, "Qty"));
+  ops.push(textAt(410, tableTop + 10, 9, "Unit"));
+  ops.push(textAt(485, tableTop + 10, 9, "Total"));
 
   // Table rows.
-  let rowY = tableTop - 22;
-  const rowHeight = 18;
+  let rowY = tableTop - 24;
+  const rowHeight = 24;
   const maxRows = 16;
   for (let i = 0; i < Math.min(items.length, maxRows); i += 1) {
     const item = items[i];
+    ops.push("0.86 0.88 0.90 RG");
     ops.push(rectStroke(40, rowY, 515, rowHeight));
-    const desc = normalizeText(item.description).slice(0, 54);
-    ops.push(textAt(48, rowY + 6, 9, desc || "-"));
-    ops.push(textAt(352, rowY + 6, 9, String(item.quantity || 1)));
-    ops.push(textAt(410, rowY + 6, 9, formatMoney(item.unit_amount_cents, currency)));
-    ops.push(textAt(480, rowY + 6, 9, formatMoney(item.total_amount_cents, currency)));
+    ops.push("0.12 0.18 0.22 rg");
+    const descLines = wrapPdfText(normalizeText(item.description) || "-", 42, 2);
+    ops.push(textAt(48, rowY + 11, 9, descLines[0] || "-"));
+    if (descLines[1]) ops.push(textAt(48, rowY + 2, 9, descLines[1]));
+    ops.push(textAt(356, rowY + 7, 9, String(item.quantity || 1)));
+    ops.push(textAt(408, rowY + 7, 9, formatMoney(item.unit_amount_cents, currency)));
+    ops.push(textAt(476, rowY + 7, 9, formatMoney(item.total_amount_cents, currency)));
     rowY -= rowHeight;
   }
 
-  // Totals block.
-  const totalsY = Math.max(170, rowY - 12);
-  ops.push("0.95 0.97 0.98 rg");
-  ops.push(rectFill(330, totalsY, 225, 78));
-  ops.push("0.12 0.18 0.22 rg");
-  ops.push(rectStroke(330, totalsY, 225, 78));
-  ops.push(textAt(340, totalsY + 58, 10, `Subtotal: ${formatMoney(subtotalCents, currency)}`));
-  ops.push(textAt(340, totalsY + 44, 10, `VAT (${vatPercentage.toFixed(2)}%): ${formatMoney(vatAmountCents, currency)}`));
-  ops.push(textAt(340, totalsY + 30, 10, `Total: ${totalMoney}`));
-  ops.push(textAt(340, totalsY + 16, 10, `Due now: ${dueMoney}`));
-  ops.push(textAt(340, totalsY + 4, 9, `Currency: ${currency}`));
+  // Notes and totals blocks.
+  const sectionTop = Math.max(160, rowY - 18);
+  const notesY = sectionTop - 74;
+  const totalsY = sectionTop - 96;
+  const notesLines = wrapPdfText(normalizeText(invoice.notes) || "-", 44, 3);
 
-  // Notes and footer.
-  const noteText = normalizeText(invoice.notes) || "-";
-  ops.push(textAt(40, totalsY + 42, 10, "Notes:"));
-  ops.push(textAt(40, totalsY + 28, 9, noteText.slice(0, 95)));
+  ops.push("1 1 1 rg");
+  ops.push(rectFill(40, notesY, 285, 74));
+  ops.push("0.82 0.85 0.88 RG");
+  ops.push(rectStroke(40, notesY, 285, 74));
+  ops.push("0.35 0.42 0.47 rg");
+  ops.push(textAt(52, notesY + 54, 10, "Notes"));
+  ops.push("0.12 0.18 0.22 rg");
+  notesLines.forEach((lineText, index) => {
+    ops.push(textAt(52, notesY + 36 - index * 14, 9, lineText));
+  });
+
+  ops.push("0.97 0.98 0.99 rg");
+  ops.push(rectFill(345, totalsY, 210, 96));
+  ops.push("0.82 0.85 0.88 RG");
+  ops.push(rectStroke(345, totalsY, 210, 96));
+  ops.push("0.12 0.18 0.22 rg");
+  ops.push(textAt(357, totalsY + 72, 10, `Subtotal: ${formatMoney(subtotalCents, currency)}`));
+  ops.push(textAt(357, totalsY + 56, 10, `VAT (${vatPercentage.toFixed(2)}%): ${formatMoney(vatAmountCents, currency)}`));
+  ops.push(textAt(357, totalsY + 40, 11, `Total: ${totalMoney}`));
+  ops.push(textAt(357, totalsY + 24, 10, `Due now: ${dueMoney}`));
+  ops.push("0.35 0.42 0.47 rg");
+  ops.push(textAt(357, totalsY + 10, 9, `Currency: ${currency}`));
+
+  ops.push("0.62 0.67 0.72 RG");
   ops.push(textAt(40, 42, 8, `Generated ${new Date().toISOString()} | ${COMPANY_PROFILE.website}`));
   ops.push(line(40, 52, 555, 52));
 
-  const content = ops.join("\n");
-  const contentLength = Buffer.byteLength(content, "utf8");
+  const content = Buffer.from(ops.join("\n"), "utf8");
+  const rgbStream = Buffer.concat([
+    Buffer.from(
+      `<< /Type /XObject /Subtype /Image /Width ${logoImage.width} /Height ${logoImage.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /SMask 6 0 R /Length ${logoImage.rgb.length} >>\nstream\n`,
+      "utf8"
+    ),
+    logoImage.rgb,
+    Buffer.from("\nendstream", "utf8")
+  ]);
+  const alphaStream = Buffer.concat([
+    Buffer.from(
+      `<< /Type /XObject /Subtype /Image /Width ${logoImage.width} /Height ${logoImage.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length ${logoImage.alpha.length} >>\nstream\n`,
+      "utf8"
+    ),
+    logoImage.alpha,
+    Buffer.from("\nendstream", "utf8")
+  ]);
+  const contentStream = Buffer.from(`<< /Length ${content.length} >>\nstream\n${content.toString("utf8")}\nendstream`, "utf8");
 
-  const objects = [
+  return buildPdfBuffer([
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> /XObject << /ImLogo 5 0 R >> >> /Contents 7 0 R >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-    `<< /Length ${contentLength} >>\nstream\n${content}\nendstream`
-  ];
-
-  const chunks = ["%PDF-1.4\n"];
-  const offsets = [0];
-  let offset = Buffer.byteLength(chunks[0], "utf8");
-  for (let i = 0; i < objects.length; i += 1) {
-    offsets.push(offset);
-    const obj = `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
-    chunks.push(obj);
-    offset += Buffer.byteLength(obj, "utf8");
-  }
-
-  const xrefStart = offset;
-  let xref = `xref\n0 ${objects.length + 1}\n`;
-  xref += "0000000000 65535 f \n";
-  for (let i = 1; i < offsets.length; i += 1) {
-    xref += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
-  }
-  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  chunks.push(xref);
-  return Buffer.from(chunks.join(""), "utf8");
+    rgbStream,
+    alphaStream,
+    contentStream
+  ]);
 }
 
 async function writeInvoicePdf(invoice, customer, lead) {
   await mkdir(INVOICES_DIR, { recursive: true });
-  const pdf = buildMinimalInvoicePdfBuffer(invoice, customer, lead);
+  const logoImage = await getLogoPdfImageData();
+  const pdf = buildInvoicePdfBuffer(invoice, customer, lead, logoImage);
   await writeFile(invoicePdfPath(invoice.id, invoice.version), pdf);
 }
 
@@ -840,7 +1029,7 @@ function paginate(items, query) {
 async function handleHealth(_req, res) {
   sendJson(res, 200, {
     ok: true,
-    service: "chapter2-backend",
+    service: "asiatravelplan-backend",
     stage_values: STAGE_ORDER,
     timestamp: nowIso()
   });
@@ -1654,14 +1843,14 @@ async function handleAdminHome(req, res) {
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Chapter2 Admin</title>
+  <title>AsiaTravelPlan Admin</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; }
     a { color: #004f7a; }
   </style>
 </head>
 <body>
-  <h1>Chapter2 Admin</h1>
+  <h1>AsiaTravelPlan Admin</h1>
   <ul>
     <li><a href="/admin/leads">Lead pipeline view</a></li>
     <li><a href="/admin/customers">Customers UI</a></li>

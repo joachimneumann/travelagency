@@ -1,8 +1,8 @@
-# Chapter2 Backend Usage and Local Web Integration Guide
+# AsiaTravelPlan Backend Usage and Local Web Integration Guide
 
 This guide explains:
 - how to run and use the local backend
-- how to connect it to a locally executed Chapter2 website
+- how to connect it to a locally executed AsiaTravelPlan website
 - how to verify the integration end-to-end
 
 ## 1) What is implemented now
@@ -83,7 +83,7 @@ curl -X POST http://localhost:8787/public/v1/leads \
     "notes": "Interested in family-friendly options",
     "utm_source": "google",
     "utm_medium": "cpc",
-    "utm_campaign": "chapter2_local_test",
+    "utm_campaign": "asiatravelplan_local_test",
     "pageUrl": "http://localhost:8080/",
     "referrer": "https://google.com"
   }'
@@ -121,21 +121,21 @@ Open in browser:
 - `http://localhost:8787/admin/leads`
 - `http://localhost:8787/admin/customers`
 
-## 5) Integrate with locally executed Chapter2 webpage
+## 5) Integrate with locally executed AsiaTravelPlan webpage
 
 The frontend submit logic in `assets/js/main.js` already supports backend integration.
 
 It uses:
-- `window.CHAPTER2_API_BASE` if defined
+- `window.ASIATRAVELPLAN_API_BASE` if defined
 - otherwise relative `/public/v1/leads`
 
 Tours source:
-- Website tour cards are loaded from backend `GET /public/v1/tours` when `window.CHAPTER2_API_BASE` is set.
+- Website tour cards are loaded from backend `GET /public/v1/tours` when `window.ASIATRAVELPLAN_API_BASE` is set.
 - Backend persists tours in per-tour folders under `backend/app/data/tours/<tour_id>/tour.json`.
 - Tour images are stored and served by backend from `backend/app/data/tours/<tour_id>/`.
 
 Branded backend web UI:
-- `backend.html` provides a Chapter2-styled backend workspace page.
+- `backend.html` provides a AsiaTravelPlan-styled backend workspace page.
 - It shows:
   - paginated searchable Customers table (newest first, page size 10)
   - paginated searchable Leads table (newest first, page size 10)
@@ -158,7 +158,7 @@ cd backend/app
 KEYCLOAK_ENABLED=true \
 KEYCLOAK_BASE_URL='http://localhost:8081' \
 KEYCLOAK_REALM='master' \
-KEYCLOAK_CLIENT_ID='chapter2-backend' \
+KEYCLOAK_CLIENT_ID='asiatravelplan-backend' \
 KEYCLOAK_CLIENT_SECRET='YOUR_CLIENT_SECRET' \
 KEYCLOAK_REDIRECT_URI='http://localhost:8787/auth/callback' \
 KEYCLOAK_ALLOWED_ROLES='admin,staff_joachim,staff_van' \
@@ -185,7 +185,7 @@ If you place a reverse proxy in front (for example `http://localhost:8080`) and 
 - `/public/v1/*` and `/api/v1/*` -> backend (`8787`)
 - `/` and static assets -> website static server
 
-then you do not need `window.CHAPTER2_API_BASE`, because relative path `/public/v1/leads` works directly.
+then you do not need `window.ASIATRAVELPLAN_API_BASE`, because relative path `/public/v1/leads` works directly.
 
 ## 5.3 File-open mode (`file://`) note
 
@@ -235,7 +235,7 @@ Confirm `image` values point to `/public/v1/tour-images/...` and open one URL in
 
 - Lead form opens mail app instead of backend submission
   - Backend unreachable or wrong API base URL.
-  - Check `window.CHAPTER2_API_BASE` and backend process status.
+  - Check `window.ASIATRAVELPLAN_API_BASE` and backend process status.
 
 - CORS errors in browser console
   - For Keycloak session-based UI across ports, use:

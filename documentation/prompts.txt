@@ -37,7 +37,7 @@ Goal: create effective structure that would motivate potential clients to book a
 Use the already existing content of structure.md and improve on it.
 
 Output: markdown (MD) landing page structure, responsive, SEO optimized. 
-Change the name of the company to "Chapter 2" and the name of the web page to chapter2.live
+Change the name of the company to "AsiaTravelPlan" and the name of the web page to asiatravelplan.com
 Tone of voice: friendly, human, no robotic
 
 
