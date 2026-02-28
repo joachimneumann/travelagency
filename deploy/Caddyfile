@@ -24,9 +24,7 @@ staging.asiatravelplan.com {
   root * /srv
 
   @robots path /robots.txt
-  handle @robots {
-    respond "User-agent: *\nDisallow: /" 200
-  }
+  rewrite @robots /robots-staging.txt
 
   @backend path /auth/* /api/* /public/v1/*
   handle @backend {
