@@ -25,10 +25,7 @@ staging.asiatravelplan.com {
 
   @robots path /robots.txt
   handle @robots {
-    respond <<EOF 200
-User-agent: *
-Disallow: /
-EOF
+    respond "User-agent: *\nDisallow: /" 200
   }
 
   @backend path /auth/* /api/* /public/v1/*
