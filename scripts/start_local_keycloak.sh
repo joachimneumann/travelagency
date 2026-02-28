@@ -9,6 +9,11 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
+if docker container inspect keycloak >/dev/null 2>&1; then
+  echo "Removing stale keycloak container ..."
+  docker rm -f keycloak >/dev/null
+fi
+
 echo "Starting local Keycloak with persistent theme mount ..."
 docker compose -f "$COMPOSE_FILE" up -d
 

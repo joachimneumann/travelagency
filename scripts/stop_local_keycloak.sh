@@ -10,4 +10,9 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 echo "Stopping local Keycloak ..."
-docker compose -f "$COMPOSE_FILE" stop
+docker compose -f "$COMPOSE_FILE" down --remove-orphans
+
+if docker container inspect keycloak >/dev/null 2>&1; then
+  echo "Removing legacy keycloak container ..."
+  docker rm -f keycloak >/dev/null
+fi
