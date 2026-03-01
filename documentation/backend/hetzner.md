@@ -291,6 +291,10 @@ cd /home/asiatravelplan/travelagency
 docker compose -f docker-compose.staging.yml up -d --build
 ```
 
+Live data note:
+- `backend/app/data/store.json` must stay on the server and must not be overwritten by deploy sync.
+- The included staging deploy script excludes that file and creates it only if it does not exist yet.
+
 Logs:
 
 ```bash

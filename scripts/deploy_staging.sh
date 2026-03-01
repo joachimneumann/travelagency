@@ -8,7 +8,8 @@ SSH_TARGET="${SSH_TARGET:-${REMOTE_HOST}}"
 rsync -avz --delete \
   --exclude '.git' \
   --exclude 'backend/app/data/invoices/' \
+  --exclude 'backend/app/data/store.json' \
   /Users/internal_admin/projects/travelagency/ \
   "${REMOTE_HOST}:${REMOTE_DIR}/"
 
-ssh "$SSH_TARGET" "cd ${REMOTE_DIR} && docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build"
+ssh "$SSH_TARGET" "cd ${REMOTE_DIR} && mkdir -p backend/app/data && [ -f backend/app/data/store.json ] || printf '{\\n  \"customers\": [],\\n  \"bookings\": [],\\n  \"activities\": [],\\n  \"invoices\": []\\n}\\n' > backend/app/data/store.json && docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build"

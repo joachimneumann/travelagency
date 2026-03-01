@@ -14,6 +14,11 @@ Local backend implementation (Milestone 1) is in:
 - `backend/app/config/staff.json`
 - `backend/app/scripts/seed.js`
 
+Important persistence note:
+- `backend/app/data/store.json` is runtime data and is no longer tracked in Git.
+- The backend still uses that exact file path.
+- `./scripts/start_local_backend.sh` creates an empty file automatically if it is missing.
+
 Features available now:
 - Public booking ingestion (`POST /public/v1/bookings`)
 - Public tours catalog (`GET /public/v1/tours`)
@@ -66,7 +71,7 @@ cd backend/app
 npm run seed -- --count 40
 ```
 
-This appends realistic customers/bookings/activities into `backend/app/data/store.json`.
+This appends realistic customers/bookings/activities into the local runtime file `backend/app/data/store.json`.
 
 ## 4) Use the backend APIs
 
@@ -315,6 +320,7 @@ Confirm `image` values point to `/public/v1/tour-images/...` and open one URL in
 ## 8) Current limitations and next step
 
 Current persistence is JSON-file based (`store.json`) for local development speed.
+That runtime file is intentionally not tracked in Git.
 
 Next step for production-readiness:
 - migrate Milestone 1 domain to PostgreSQL

@@ -19,6 +19,10 @@ Current implemented code lives in:
 - `backend/app/config/staff.json`
 - `backend/app/scripts/seed.js`
 
+Runtime persistence note:
+- `backend/app/data/store.json` remains the hardwired JSON persistence path in the current backend.
+- It is no longer tracked in Git and must be treated as runtime data.
+
 Implemented now:
 - Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, staff assignment, SLA timestamps, activity timeline)
 - Frontend booking form integration in `assets/js/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling

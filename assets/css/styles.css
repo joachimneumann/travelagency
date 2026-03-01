@@ -299,7 +299,7 @@ textarea:focus-visible {
 .btn.is-submitted,
 .btn.is-submitted:hover,
 .btn.is-submitted:focus-visible {
-  background: #b8c0c5;
+  background: #d9dee2;
   color: #ffffff;
   box-shadow: none;
   transform: none;

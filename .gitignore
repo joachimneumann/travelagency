@@ -1,4 +1,5 @@
 backend/app/data/invoices/
+backend/app/data/store.json
 .env.staging
 backend/app/node_modules/
 *.xcuserstate

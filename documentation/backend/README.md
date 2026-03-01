@@ -79,6 +79,12 @@ JSON files are used for local persistence:
 - `data/tours/<tour_id>/tour_<uuid>.webp`
 - `config/staff.json`
 
+Runtime data note:
+- `backend/app/data/store.json` is no longer tracked in Git.
+- The backend still reads and writes that exact path.
+- Local startup creates an empty `store.json` automatically if it is missing.
+- Staging deploys must preserve the server's existing `backend/app/data/store.json`.
+
 ## Auth Module Split
 
 Authentication internals are now isolated in:

@@ -6,6 +6,7 @@ BACKEND_DIR="${BACKEND_DIR:-$ROOT_DIR/backend/app}"
 BACKEND_PID_FILE="${BACKEND_PID_FILE:-/tmp/asiatravelplan-backend.pid}"
 BACKEND_LOG_FILE="${BACKEND_LOG_FILE:-/tmp/asiatravelplan-backend.log}"
 BACKEND_PORT="${BACKEND_PORT:-8787}"
+STORE_FILE="${STORE_FILE:-$BACKEND_DIR/data/store.json}"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 FRONTEND_BIND="${FRONTEND_BIND:-127.0.0.1}"
@@ -69,6 +70,19 @@ main() {
   if [ ! -f "$BACKEND_DIR/package.json" ]; then
     echo "Error: backend package.json not found in $BACKEND_DIR" >&2
     exit 1
+  fi
+
+  if [ ! -f "$STORE_FILE" ]; then
+    echo "Creating local backend store at ${STORE_FILE} ..."
+    mkdir -p "$(dirname "$STORE_FILE")"
+    cat >"$STORE_FILE" <<'EOF'
+{
+  "customers": [],
+  "bookings": [],
+  "activities": [],
+  "invoices": []
+}
+EOF
   fi
 
   if [ -z "$KEYCLOAK_CLIENT_SECRET" ]; then
