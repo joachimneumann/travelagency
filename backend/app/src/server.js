@@ -756,6 +756,67 @@ function isPrivateOrLocalIp(ip) {
   return false;
 }
 
+function ipv4ToInt(ip) {
+  const parts = normalizeIpAddress(ip)
+    .split(".")
+    .map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return null;
+  }
+  return (((parts[0] * 256 + parts[1]) * 256 + parts[2]) * 256 + parts[3]) >>> 0;
+}
+
+function ipv4CidrContains(ip, cidr) {
+  const [base, prefixText] = String(cidr).split("/");
+  const prefix = Number(prefixText);
+  const ipValue = ipv4ToInt(ip);
+  const baseValue = ipv4ToInt(base);
+  if (ipValue === null || baseValue === null || !Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
+    return false;
+  }
+  if (prefix === 0) return true;
+  const mask = prefix === 32 ? 0xffffffff : (0xffffffff << (32 - prefix)) >>> 0;
+  return (ipValue & mask) === (baseValue & mask);
+}
+
+function guessCountryFromIpRange(ipAddress) {
+  const text = normalizeIpAddress(ipAddress);
+  if (!text || text.includes(":")) return "";
+
+  // Best-effort IPv4 fallback for common Vietnam allocations when no trusted proxy country header exists.
+  const vietnamCidrs = [
+    "14.160.0.0/11",
+    "14.224.0.0/11",
+    "27.64.0.0/12",
+    "42.112.0.0/13",
+    "58.186.0.0/15",
+    "113.160.0.0/11",
+    "115.72.0.0/13",
+    "116.96.0.0/12",
+    "123.16.0.0/12",
+    "171.224.0.0/12",
+    "171.244.0.0/14",
+    "203.162.0.0/16",
+    "203.210.128.0/17",
+    "222.252.0.0/14"
+  ];
+
+  if (vietnamCidrs.some((cidr) => ipv4CidrContains(text, cidr))) {
+    return "VN";
+  }
+
+  return "";
+}
+
+function formatCountryGuessLabel(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  if (!normalized) return "";
+  if (normalized === "VN") return "Vietnam (VN)";
+  if (normalized === "LOCAL/PRIVATE") return "Local/Private";
+  if (normalized === "UNKNOWN") return "Unknown";
+  return normalized;
+}
+
 function guessCountryFromRequest(req, ipAddress) {
   const proxyCountry =
     firstHeaderValue(req.headers["cf-ipcountry"]) ||
@@ -765,11 +826,13 @@ function guessCountryFromRequest(req, ipAddress) {
     firstHeaderValue(req.headers["x-vercel-ip-country"]);
   const normalizedProxyCountry = normalizeText(proxyCountry).toUpperCase();
   if (normalizedProxyCountry && normalizedProxyCountry !== "XX" && normalizedProxyCountry !== "T1") {
-    return normalizedProxyCountry;
+    return formatCountryGuessLabel(normalizedProxyCountry);
   }
-  if (!ipAddress) return "Unknown";
-  if (isPrivateOrLocalIp(ipAddress)) return "Local/Private";
-  return "Unknown";
+  if (!ipAddress) return formatCountryGuessLabel("UNKNOWN");
+  if (isPrivateOrLocalIp(ipAddress)) return formatCountryGuessLabel("LOCAL/PRIVATE");
+  const fallbackCountry = guessCountryFromIpRange(ipAddress);
+  if (fallbackCountry) return formatCountryGuessLabel(fallbackCountry);
+  return formatCountryGuessLabel("UNKNOWN");
 }
 
 function safeInt(value) {

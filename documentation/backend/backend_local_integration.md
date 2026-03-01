@@ -107,7 +107,7 @@ On create, backend also records:
 
 Local requests will usually show:
 - `ip_address`: `127.0.0.1` or similar
-- `ip_country_guess`: `Local/Private`
+- `ip_country_guess`: `Local/Private` (or a display label such as `Vietnam (VN)` for matched public IP ranges)
 
 ## 4.2 Admin API auth
 

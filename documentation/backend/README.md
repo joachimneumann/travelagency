@@ -307,7 +307,7 @@ npm run seed -- --count 40
 Booking source attribution captured on ingest:
 - client-reported `page_url`
 - backend-captured `ip_address`
-- backend `ip_country_guess` from trusted proxy country headers when present, otherwise `Local/Private` or `Unknown`
+- backend `ip_country_guess` as a display label from trusted proxy country headers when present, otherwise `Local/Private` or `Unknown` (for example `Vietnam (VN)`)
 
 ## Enable Keycloak Auth (Example)
 
