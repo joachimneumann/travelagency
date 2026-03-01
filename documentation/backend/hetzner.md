@@ -287,9 +287,22 @@ Update deployment:
 
 ```bash
 cd /home/asiatravelplan/travelagency
-# upload changed files from local with rsync again
-docker compose -f docker-compose.staging.yml up -d --build
+./scripts/update_staging.sh backend
 ```
+
+Other useful variants:
+
+```bash
+./scripts/update_staging.sh caddy
+./scripts/update_staging.sh keycloak
+./scripts/update_staging.sh all
+```
+
+Behavior:
+- fetches from `origin`
+- requires `git pull --ff-only`
+- preserves the untracked runtime `backend/app/data/store.json`
+- recreates only the requested staging services
 
 Live data note:
 - `backend/app/data/store.json` must stay on the server and must not be overwritten by deploy sync.

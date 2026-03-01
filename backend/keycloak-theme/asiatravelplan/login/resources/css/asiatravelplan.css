@@ -187,8 +187,8 @@ a {
   .login-pf-page,
   .pf-v5-c-login,
   .pf-c-login {
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
+    padding-top: 0 !important;
+    padding-bottom: 4px !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
   }
@@ -207,12 +207,13 @@ a {
     justify-content: flex-start !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    margin-top: 0 !important;
   }
 
   #kc-header-wrapper {
-    height: 34px;
-    width: min(180px, calc(100vw - 132px));
-    margin: 6px auto 0 auto;
+    height: 30px;
+    width: min(172px, calc(100vw - 140px));
+    margin: 0 auto 0 auto;
   }
 
   #kc-header,
@@ -240,7 +241,7 @@ a {
   .pf-v5-c-login__main,
   .pf-c-login__main {
     padding-top: 0 !important;
-    padding-bottom: 8px !important;
+    padding-bottom: 6px !important;
   }
 
   #kc-content-wrapper,
@@ -254,7 +255,7 @@ a {
   }
 
   #kc-content-wrapper {
-    margin-top: -2px !important;
+    margin-top: -8px !important;
   }
 
   .pf-v5-c-login__main-body,
@@ -282,7 +283,7 @@ a {
 
   .pf-v5-c-form__group,
   .pf-c-form__group {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
   }
 
   .pf-v5-c-form__group:first-child,

@@ -84,6 +84,11 @@ Runtime data note:
 - The backend still reads and writes that exact path.
 - Local startup creates an empty `store.json` automatically if it is missing.
 - Staging deploys must preserve the server's existing `backend/app/data/store.json`.
+- Preferred staging update command on the server:
+  - `./scripts/update_staging.sh backend`
+  - `./scripts/update_staging.sh keycloak`
+  - `./scripts/update_staging.sh caddy`
+  - `./scripts/update_staging.sh all`
 
 ## Auth Module Split
 
