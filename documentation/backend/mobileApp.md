@@ -82,9 +82,11 @@ Recommended Keycloak client setup:
 - Valid post logout redirect URI: `asiatravelplan://auth/callback`
 
 Logout behavior:
-- clearing the local Keychain session is not enough
-- the mobile app also calls the Keycloak end-session endpoint through `ASWebAuthenticationSession`
-- if the client does not allow `asiatravelplan://auth/callback` as a post-logout redirect URI, remote logout will fail and the next login may silently reuse the Keycloak browser session
+- normal `Sign out` in the app is local only
+- it clears the Keychain session, but keeps the Keycloak SSO browser session alive
+- this is intentional for in-house UX, so the next login can be fast
+- `Sign out everywhere` additionally calls the Keycloak end-session endpoint through `ASWebAuthenticationSession`
+- if the client does not allow `asiatravelplan://auth/callback` as a post-logout redirect URI, remote logout will fail
 
 ## 4) API access model
 

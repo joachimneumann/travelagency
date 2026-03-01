@@ -30,10 +30,17 @@ struct SettingsView: View {
 
                 Section {
                     Button(role: .destructive) {
-                        Task { await sessionStore.logout() }
+                        sessionStore.logout()
                     } label: {
-                        Text("Logout")
+                        Text("Sign out")
                             .font(.subheadline.weight(.semibold))
+                    }
+
+                    Button(role: .destructive) {
+                        Task { await sessionStore.logoutEverywhere() }
+                    } label: {
+                        Text("Sign out everywhere")
+                            .font(.subheadline)
                     }
                 }
             }

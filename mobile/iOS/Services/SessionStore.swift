@@ -82,11 +82,15 @@ final class SessionStore: ObservableObject {
         }
     }
 
-    func logout() async {
-        let currentSession = session
+    func logout() {
         tokenStore.clear()
         session = nil
         authError = nil
+    }
+
+    func logoutEverywhere() async {
+        let currentSession = session
+        logout()
         guard let currentSession else { return }
         do {
             try await authService.logout(session: currentSession)

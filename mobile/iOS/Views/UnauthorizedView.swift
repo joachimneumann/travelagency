@@ -16,7 +16,7 @@ struct UnauthorizedView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             Button("Log out") {
-                Task { await sessionStore.logout() }
+                sessionStore.logout()
             }
             .buttonStyle(.bordered)
             Spacer()

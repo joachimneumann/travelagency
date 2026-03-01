@@ -11,8 +11,6 @@ struct LoginView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 116, height: 116)
-            Text("AsiaTravelPlan")
-                .font(.title2.bold())
 
             Button {
                 Task { await viewModel.login(sessionStore: sessionStore) }
