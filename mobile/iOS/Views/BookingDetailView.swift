@@ -2,9 +2,9 @@ import SwiftUI
 
 struct BookingDetailView: View {
     let bookingID: String
+    let onBack: () -> Void
 
     @EnvironmentObject private var sessionStore: SessionStore
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = BookingDetailViewModel()
     private let roleService = RoleService()
 
@@ -115,27 +115,29 @@ struct BookingDetailView: View {
     private var detailTopBar: some View {
         HStack(spacing: 8) {
             Button {
-                dismiss()
+                onBack()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 11, weight: .semibold))
-                    .frame(width: 20, height: 20)
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 32, height: 32)
             }
             .buttonStyle(.plain)
+            .contentShape(Rectangle())
 
             Spacer()
 
-            Text("Booking")
-                .font(.system(size: 11, weight: .semibold))
+            Text("Details")
+                .font(.system(size: 12, weight: .semibold))
                 .lineLimit(1)
 
             Spacer()
 
             Color.clear
-                .frame(width: 20, height: 20)
+                .frame(width: 32, height: 32)
         }
         .padding(.horizontal, 12)
-        .frame(height: 25)
+        .padding(.top, 16)
+        .frame(height: 48)
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

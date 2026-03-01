@@ -3,9 +3,10 @@ import SwiftUI
 struct BookingsListView: View {
     @EnvironmentObject private var sessionStore: SessionStore
     @StateObject private var viewModel = BookingsViewModel()
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Bookings")
                     .font(.caption.weight(.semibold))
@@ -54,7 +55,11 @@ struct BookingsListView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .modifier(HideRootNavigationBarModifier())
             .navigationDestination(for: String.self) { bookingID in
-                BookingDetailView(bookingID: bookingID)
+                BookingDetailView(bookingID: bookingID) {
+                    if !path.isEmpty {
+                        path.removeLast()
+                    }
+                }
             }
             .task {
                 guard let session = sessionStore.session else { return }

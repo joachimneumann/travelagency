@@ -718,6 +718,60 @@ function normalizeText(value) {
   return String(value || "").trim();
 }
 
+function firstHeaderValue(value) {
+  if (Array.isArray(value)) return normalizeText(value[0]);
+  return normalizeText(value);
+}
+
+function normalizeIpAddress(value) {
+  let text = firstHeaderValue(value);
+  if (!text) return "";
+  if (text.includes(",")) {
+    text = normalizeText(text.split(",")[0]);
+  }
+  if (text.startsWith("::ffff:")) {
+    text = text.slice(7);
+  }
+  return text;
+}
+
+function getRequestIpAddress(req) {
+  return (
+    normalizeIpAddress(req.headers["x-forwarded-for"]) ||
+    normalizeIpAddress(req.headers["x-real-ip"]) ||
+    normalizeIpAddress(req.socket?.remoteAddress) ||
+    ""
+  );
+}
+
+function isPrivateOrLocalIp(ip) {
+  const text = normalizeIpAddress(ip);
+  if (!text) return false;
+  if (text === "127.0.0.1" || text === "::1" || text === "localhost") return true;
+  if (text.startsWith("10.")) return true;
+  if (text.startsWith("192.168.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(text)) return true;
+  if (text.startsWith("fc") || text.startsWith("fd")) return true;
+  if (text.startsWith("fe80:")) return true;
+  return false;
+}
+
+function guessCountryFromRequest(req, ipAddress) {
+  const proxyCountry =
+    firstHeaderValue(req.headers["cf-ipcountry"]) ||
+    firstHeaderValue(req.headers["cloudfront-viewer-country"]) ||
+    firstHeaderValue(req.headers["fastly-country-code"]) ||
+    firstHeaderValue(req.headers["x-country-code"]) ||
+    firstHeaderValue(req.headers["x-vercel-ip-country"]);
+  const normalizedProxyCountry = normalizeText(proxyCountry).toUpperCase();
+  if (normalizedProxyCountry && normalizedProxyCountry !== "XX" && normalizedProxyCountry !== "T1") {
+    return normalizedProxyCountry;
+  }
+  if (!ipAddress) return "Unknown";
+  if (isPrivateOrLocalIp(ipAddress)) return "Local/Private";
+  return "Unknown";
+}
+
 function safeInt(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
@@ -1635,6 +1689,8 @@ async function handleCreateBooking(req, res) {
 
   const store = await readStore();
   const idempotencyKey = normalizeText(req.headers["idempotency-key"]);
+  const ipAddress = getRequestIpAddress(req);
+  const ipCountryGuess = guessCountryFromRequest(req, ipAddress);
 
   if (idempotencyKey) {
     const existingByKey = store.bookings.find((booking) => booking.idempotency_key === idempotencyKey);
@@ -1696,6 +1752,8 @@ async function handleCreateBooking(req, res) {
     notes: normalizeText(payload.notes),
     source: {
       page_url: normalizeText(payload.pageUrl),
+      ip_address: ipAddress || null,
+      ip_country_guess: ipCountryGuess || null,
       utm_source: normalizeText(payload.utm_source),
       utm_medium: normalizeText(payload.utm_medium),
       utm_campaign: normalizeText(payload.utm_campaign),

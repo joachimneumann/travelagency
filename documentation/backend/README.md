@@ -298,6 +298,11 @@ cd backend/app
 npm run seed -- --count 40
 ```
 
+Booking source attribution captured on ingest:
+- client-reported `page_url`
+- backend-captured `ip_address`
+- backend `ip_country_guess` from trusted proxy country headers when present, otherwise `Local/Private` or `Unknown`
+
 ## Enable Keycloak Auth (Example)
 
 ```bash

@@ -96,6 +96,14 @@ curl -X POST http://localhost:8787/public/v1/bookings \
   }'
 ```
 
+On create, backend also records:
+- `source.ip_address`
+- `source.ip_country_guess`
+
+Local requests will usually show:
+- `ip_address`: `127.0.0.1` or similar
+- `ip_country_guess`: `Local/Private`
+
 ## 4.2 Admin API auth
 
 All `/api/v1/*` endpoints require Keycloak auth.

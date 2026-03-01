@@ -264,6 +264,7 @@ Backend endpoint:
   - destination, style, month, travelers, duration, budget
   - name, email, phone/whatsapp, language
   - notes, utm_source/utm_medium/utm_campaign, page_url
+  - backend additionally captures request `ip_address` and `ip_country_guess`
 - Response:
   - `booking_id`, `status`, `next_step_message`
 

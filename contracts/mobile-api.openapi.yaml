@@ -83,6 +83,12 @@ components:
         page_url:
           type: string
           nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        ip_country_guess:
+          type: string
+          nullable: true
         utm_source:
           type: string
           nullable: true
