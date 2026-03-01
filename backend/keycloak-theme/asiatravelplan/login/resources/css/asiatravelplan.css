@@ -36,6 +36,18 @@ body.kcBodyClass {
   display: none !important;
 }
 
+#kc-header img,
+#kc-header-wrapper img,
+.login-pf-page .login-pf-page-header img,
+.pf-v5-c-login__main-header img,
+.pf-c-login__main-header img,
+.login-pf-page-header img,
+.login-pf-page-header,
+.kc-logo-text,
+.kc-logo-image {
+  display: none !important;
+}
+
 .card-pf,
 .pf-c-login__main,
 .pf-c-card {
