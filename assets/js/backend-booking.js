@@ -216,7 +216,17 @@ function renderBookingData() {
     },
     {
       title: "Source",
-      entries: toEntries(booking.source || {})
+      entries: [
+        ["page_url", booking.source?.page_url],
+        ["ip_address", booking.source?.ip_address],
+        ["ip_country_guess", booking.source?.ip_country_guess],
+        ["referrer", booking.source?.referrer],
+        ["utm_source", booking.source?.utm_source],
+        ["utm_medium", booking.source?.utm_medium],
+        ["utm_campaign", booking.source?.utm_campaign]
+      ]
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => ({ key, value: String(value ?? "-") }))
     }
   ];
 

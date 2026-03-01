@@ -296,6 +296,16 @@ textarea:focus-visible {
   transform: translateY(-1px);
 }
 
+.btn.is-submitted,
+.btn.is-submitted:hover,
+.btn.is-submitted:focus-visible {
+  background: #b8c0c5;
+  color: #ffffff;
+  box-shadow: none;
+  transform: none;
+  cursor: default;
+}
+
 .btn-secondary {
   background: transparent;
   color: var(--text);

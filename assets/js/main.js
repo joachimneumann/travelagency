@@ -847,6 +847,7 @@ async function submitBookingForm() {
     els.success.classList.add("show");
     els.stepNext.textContent = "Submitted";
     els.stepNext.disabled = true;
+    els.stepNext.classList.add("is-submitted");
     els.stepBack.disabled = true;
     return;
   } catch (error) {
@@ -855,6 +856,7 @@ async function submitBookingForm() {
       error?.message || "Unknown booking submission error."
     );
     els.stepNext.disabled = false;
+    els.stepNext.classList.remove("is-submitted");
     els.stepBack.disabled = false;
     console.error(error);
   }
@@ -870,6 +872,7 @@ function clearBookingFeedback() {
   }
   if (els.stepNext) {
     els.stepNext.disabled = state.bookingSubmitted;
+    els.stepNext.classList.toggle("is-submitted", state.bookingSubmitted);
   }
   if (els.stepBack) {
     els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;
