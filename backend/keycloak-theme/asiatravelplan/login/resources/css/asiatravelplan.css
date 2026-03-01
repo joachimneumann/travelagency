@@ -211,9 +211,7 @@ a {
   }
 
   #kc-header-wrapper {
-    height: 30px;
-    width: min(172px, calc(100vw - 140px));
-    margin: 0 auto 0 auto;
+    display: none !important;
   }
 
   #kc-header,
@@ -255,7 +253,7 @@ a {
   }
 
   #kc-content-wrapper {
-    margin-top: -8px !important;
+    margin-top: -16px !important;
   }
 
   .pf-v5-c-login__main-body,
@@ -326,7 +324,7 @@ a {
   #kc-form-buttons,
   .pf-v5-c-login__main-footer,
   .pf-c-login__main-footer {
-    margin-top: 8px !important;
+    margin-top: 6px !important;
   }
 
   #kc-login,
