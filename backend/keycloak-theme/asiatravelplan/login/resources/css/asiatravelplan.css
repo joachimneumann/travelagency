@@ -186,8 +186,14 @@ a {
   body.kcBodyClass,
   .login-pf-page,
   .pf-v5-c-login,
-  .pf-c-login {
-    padding: 0 12px 4px 12px !important;
+  .pf-c-login,
+  .pf-v5-c-login__container,
+  .pf-c-login__container {
+    padding: 0 8px 4px 8px !important;
+    min-height: auto !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    margin-top: 0 !important;
   }
 
   .login-pf-page {
@@ -205,101 +211,46 @@ a {
     display: none !important;
   }
 
-  .pf-v5-c-login,
-  .pf-c-login,
-  .pf-v5-c-login__container,
-  .pf-c-login__container {
-    min-height: auto !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    margin-top: 0 !important;
-  }
-
-  #kc-header {
-    display: none !important;
-  }
-
-  #kc-header-wrapper {
-    display: none !important;
-  }
-
-  #kc-header,
-  #kc-header-wrapper,
-  #kc-content-wrapper {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
-
-  .card-pf,
-  .pf-c-login__main,
-  .pf-c-card {
-    border-radius: 12px !important;
-    box-shadow: 0 8px 20px rgba(19, 52, 68, 0.08) !important;
-  }
-
   .card-pf,
   .pf-v5-c-login__main,
   .pf-c-login__main,
   .pf-c-card {
     margin-top: 0 !important;
-    transform: translateY(-160px) !important;
-  }
-
-  .login-pf-page .card-pf,
-  .pf-v5-c-login__main,
-  .pf-c-login__main {
+    transform: translateY(-190px) !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+    box-shadow: none !important;
     padding-top: 0 !important;
-    padding-bottom: 6px !important;
+    padding-bottom: 4px !important;
   }
 
+  .card-pf .card-pf-body,
+  .pf-v5-c-login__main-body,
+  .pf-c-login__main-body,
+  .pf-c-card__body,
+  #kc-content,
   #kc-content-wrapper,
   #kc-form,
   #kc-form-wrapper,
-  .pf-v5-c-login__main-body,
-  .pf-c-login__main-body {
-    max-width: min(344px, calc(100vw - 36px)) !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-  }
-
-  #kc-content-wrapper {
-    margin-top: -36px !important;
-  }
-
-  .pf-v5-c-login__main-body,
-  .pf-c-login__main-body,
-  .card-pf .card-pf-body,
-  .pf-c-card__body,
-  #kc-form-wrapper,
-  #kc-form {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-  }
-
-  #kc-content,
-  .pf-v5-c-login__main-body,
-  .pf-c-login__main-body,
-  .card-pf .card-pf-body,
-  .pf-c-card__body {
-    padding-top: 0 !important;
-  }
-
   .pf-v5-c-form,
   .pf-c-form {
     margin-top: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    max-width: min(344px, calc(100vw - 28px)) !important;
+  }
+
+  #kc-content-wrapper {
+    margin-top: -52px !important;
+    margin-bottom: 0 !important;
   }
 
   .pf-v5-c-form__group,
-  .pf-c-form__group {
-    margin-bottom: 6px !important;
-  }
-
-  .pf-v5-c-login__main-footer,
-  .pf-c-login__main-footer,
-  .login-pf-page .login-pf-signup {
-    display: none !important;
+  .pf-c-form__group,
+  #kc-form .form-group {
+    margin-top: 0 !important;
+    margin-bottom: 4px !important;
+    padding-top: 0 !important;
   }
 
   .pf-v5-c-form__group:first-child,
@@ -310,17 +261,13 @@ a {
     padding-top: 0 !important;
   }
 
-  #kc-form .form-group:first-child label,
-  #kc-form .form-group:first-of-type label {
-    margin-top: 0 !important;
-  }
-
   label,
   .pf-v5-c-form__label,
   .pf-c-form__label {
-    font-size: 0.95rem !important;
-    line-height: 1.2 !important;
-    margin-bottom: 4px !important;
+    font-size: 0.92rem !important;
+    line-height: 1.15 !important;
+    margin-bottom: 3px !important;
+    margin-top: 0 !important;
   }
 
   .pf-v5-c-form-control,
@@ -329,20 +276,18 @@ a {
   #password,
   #kc-login,
   input[type="submit"] {
-    min-height: 40px;
+    min-height: 38px !important;
     font-size: 0.95rem !important;
   }
 
   #password + button,
   .pf-v5-c-input-group__item button,
   .pf-c-input-group__item button {
-    min-height: 40px !important;
+    min-height: 38px !important;
   }
 
-  #kc-form-buttons,
-  .pf-v5-c-login__main-footer,
-  .pf-c-login__main-footer {
-    margin-top: 6px !important;
+  #kc-form-buttons {
+    margin-top: 4px !important;
   }
 
   #kc-login,
