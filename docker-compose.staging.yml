@@ -11,8 +11,10 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - backend
-      - keycloak
+      backend:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
 
   backend:
     image: node:22-alpine
@@ -24,7 +26,10 @@ services:
     env_file:
       - .env.staging
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -40,11 +45,23 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
       KC_HOSTNAME: auth-staging.asiatravelplan.com
     volumes:
       - ./backend/keycloak-theme/asiatravelplan:/opt/keycloak/themes/asiatravelplan:ro
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep '200' <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   postgres:
     image: postgres:16
@@ -55,6 +72,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
 volumes:
   caddy_data:
