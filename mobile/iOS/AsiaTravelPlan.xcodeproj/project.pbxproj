@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -41,6 +41,7 @@
 		1D1654A07B8123B423266BB7 /* TokenStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
 		2E01C85FF240E1D95D828445 /* AuthService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		2F08E8704B77986372792B9F /* BookingDetailViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingDetailViewModel.swift; sourceTree = "<group>"; };
+		3B5D02BA2F5410D40023548C /* AsiaTravelPlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AsiaTravelPlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B9C3078AF749E1B18E2E15C /* AppShellView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
 		3E158E059C1CC2FC54AE5E38 /* LoginViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
 		3FBAB27BED5A102DC50F345D /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -50,7 +51,6 @@
 		74DD1AD7347A24E8D20DF4CA /* LoginView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		74F9168D1C38BA9EB16D652A /* RoleService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RoleService.swift; sourceTree = "<group>"; };
 		7ED794228F17DCBE93DEBF6E /* UpdateRequiredView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpdateRequiredView.swift; sourceTree = "<group>"; };
-		9C9223049A8FF4EA1CA776DA /* AsiaTravelPlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AsiaTravelPlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2D000F64548F8C1EA519F79 /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		A5CF69F5AECDB4348F313CA2 /* UnauthorizedView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnauthorizedView.swift; sourceTree = "<group>"; };
 		B6596F18A94CCC4825B180E5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -85,8 +85,23 @@
 				E7CD5ECF52C5CBA7D2AC9B77 /* AuthSession.swift */,
 				B745ABEFB5A756688035EEAE /* UserProfile.swift */,
 			);
-			name = Models;
 			path = Models;
+			sourceTree = "<group>";
+		};
+		3B5D02B92F5410D40023548C /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				B6596F18A94CCC4825B180E5 /* Foundation.framework */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		3B5D02BB2F5410D40023548C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3B5D02BA2F5410D40023548C /* AsiaTravelPlan.app */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		3E432AEF70508F1A051A16AB /* Services */ = {
@@ -100,7 +115,6 @@
 				CD0B0CE6D394B3D1FF92BE65 /* SessionStore.swift */,
 				1D1654A07B8123B423266BB7 /* TokenStore.swift */,
 			);
-			name = Services;
 			path = Services;
 			sourceTree = "<group>";
 		};
@@ -109,7 +123,6 @@
 			children = (
 				C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */,
 			);
-			name = Resources;
 			path = Resources;
 			sourceTree = "<group>";
 		};
@@ -126,7 +139,6 @@
 				60B42246505A388E042AECBC /* AsiaTravelPlanApp.swift */,
 			);
 			name = AsiaTravelPlan;
-			path = "";
 			sourceTree = "<group>";
 		};
 		6FBB15AF21C746114217F16E /* Generated */ = {
@@ -135,7 +147,6 @@
 				6E18938E237CEF2BC5090239 /* MobileAPIModels.swift */,
 				BCCB9353DD880DDD446D4DF5 /* MobileAPIRequestFactory.swift */,
 			);
-			name = Generated;
 			path = Generated;
 			sourceTree = "<group>";
 		};
@@ -146,7 +157,6 @@
 				F045AAAC8CC5E75837C6A8C1 /* BookingsViewModel.swift */,
 				3E158E059C1CC2FC54AE5E38 /* LoginViewModel.swift */,
 			);
-			name = ViewModels;
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
@@ -154,6 +164,8 @@
 			isa = PBXGroup;
 			children = (
 				6A87D52FAE10564A4678C82A /* AsiaTravelPlan */,
+				3B5D02B92F5410D40023548C /* Recovered References */,
+				3B5D02BB2F5410D40023548C /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -170,7 +182,6 @@
 				A5CF69F5AECDB4348F313CA2 /* UnauthorizedView.swift */,
 				7ED794228F17DCBE93DEBF6E /* UpdateRequiredView.swift */,
 			);
-			name = Views;
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -191,7 +202,7 @@
 			);
 			name = AsiaTravelPlan;
 			productName = AsiaTravelPlan;
-			productReference = 9C9223049A8FF4EA1CA776DA /* AsiaTravelPlan.app */;
+			productReference = 3B5D02BA2F5410D40023548C /* AsiaTravelPlan.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -200,8 +211,9 @@
 		3EAA74631C7EF68695440CAA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2630;
 			};
 			buildConfigurationList = F47BE426393DBE79FA875B8B /* Build configuration list for PBXProject "AsiaTravelPlan" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -212,8 +224,7 @@
 				Base,
 			);
 			mainGroup = AA6BAF242A88CCEAE4E022C3;
-			minimizedProjectReferenceProxies = 0;
-			preferredProjectObjectVersion = 77;
+			productRefGroup = 3B5D02BB2F5410D40023548C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -303,9 +314,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -324,6 +337,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -343,7 +357,10 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.asiatravelplan.ios;
 				PRODUCT_NAME = AsiaTravelPlan;
@@ -366,7 +383,10 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.asiatravelplan.ios;
 				PRODUCT_NAME = AsiaTravelPlan;
@@ -411,9 +431,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -425,6 +447,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;

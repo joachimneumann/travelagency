@@ -9,7 +9,7 @@ struct BookingDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 if let booking = viewModel.booking, let session = sessionStore.session {
                     section("Booking") {
                         LabeledContent("ID", value: booking.id)
@@ -67,7 +67,7 @@ struct BookingDetailView: View {
                                     Text(activity.type)
                                         .font(.caption.weight(.semibold))
                                     Text(activity.detail)
-                                        .font(.subheadline)
+                                        .font(.footnote)
                                     Text("\(activity.actor) • \(activity.createdAt)")
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
@@ -109,12 +109,12 @@ struct BookingDetailView: View {
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.subheadline.bold())
+                .font(.footnote.bold())
             content()
-                .font(.subheadline)
+                .font(.footnote)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
+        .padding(10)
         .background(Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
     }
 }

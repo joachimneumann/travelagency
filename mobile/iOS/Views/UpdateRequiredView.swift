@@ -4,15 +4,14 @@ struct UpdateRequiredView: View {
     let bootstrap: MobileBootstrapResponse
 
     var body: some View {
-        VStack(spacing: 18) {
-            Spacer()
+        VStack(spacing: 14) {
             Image(systemName: "arrow.down.app.fill")
-                .font(.system(size: 40))
+                .font(.system(size: 32))
                 .foregroundStyle(.orange)
             Text("Please update")
-                .font(.title2.bold())
+                .font(.headline.bold())
             Text("This app build is no longer supported. Install the latest version before continuing.")
-                .font(.subheadline)
+                .font(.footnote)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 8) {
@@ -21,10 +20,13 @@ struct UpdateRequiredView: View {
                 LabeledContent("Latest", value: bootstrap.app.latestVersion)
                 LabeledContent("Contract", value: bootstrap.api.contractVersion)
             }
-            .padding(16)
+            .font(.footnote)
+            .padding(12)
             .background(Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-            Spacer()
         }
-        .padding(24)
+        .frame(maxWidth: 340)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, 12)
     }
 }

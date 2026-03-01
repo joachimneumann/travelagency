@@ -30,22 +30,20 @@ struct SettingsView: View {
 
                 Section {
                     Button(role: .destructive) {
-                        sessionStore.logout()
+                        Task { await sessionStore.logoutEverywhere() }
                     } label: {
                         Text("Sign out")
                             .font(.subheadline.weight(.semibold))
                     }
-
-                    Button(role: .destructive) {
-                        Task { await sessionStore.logoutEverywhere() }
-                    } label: {
-                        Text("Sign out everywhere")
-                            .font(.subheadline)
-                    }
                 }
             }
             .listStyle(.inset)
-            .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Settings")
+                        .font(.footnote.weight(.semibold))
+                }
+            }
         }
     }
 
@@ -68,10 +66,10 @@ struct SettingsView: View {
     private func settingRow(_ label: String, value: String) -> some View {
         LabeledContent(label) {
             Text(value)
-                .font(.footnote)
+                .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
         }
-        .font(.subheadline)
+        .font(.footnote)
     }
 }

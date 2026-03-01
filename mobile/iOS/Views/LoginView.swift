@@ -5,12 +5,12 @@ struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        VStack(spacing: 16) {
             Image("BrandLogo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 116, height: 116)
+                .frame(width: 96, height: 96)
+                .padding(.top, 32)
 
             Button {
                 Task { await viewModel.login(sessionStore: sessionStore) }
@@ -20,13 +20,17 @@ struct LoginView: View {
                         .frame(maxWidth: .infinity)
                 } else {
                     Text("Log in")
+                        .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                 }
             }
             .buttonStyle(.borderedProminent)
             .disabled(viewModel.isLoading)
-            Spacer()
+            .controlSize(.small)
         }
-        .padding(24)
+        .frame(maxWidth: 320)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, 12)
     }
 }

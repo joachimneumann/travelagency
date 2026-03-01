@@ -5,21 +5,23 @@ struct StartupFailureView: View {
     let retry: () -> Void
 
     var body: some View {
-        VStack(spacing: 18) {
-            Spacer()
+        VStack(spacing: 14) {
             Image(systemName: "wifi.exclamationmark")
-                .font(.system(size: 40))
+                .font(.system(size: 32))
                 .foregroundStyle(.red)
             Text("Startup failed")
-                .font(.title2.bold())
+                .font(.headline.bold())
             Text(message)
-                .font(.subheadline)
+                .font(.footnote)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             Button("Retry", action: retry)
                 .buttonStyle(.borderedProminent)
-            Spacer()
+                .controlSize(.small)
         }
-        .padding(24)
+        .frame(maxWidth: 340)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, 12)
     }
 }

@@ -23,7 +23,7 @@ Included now:
 - URL scheme registration in `Resources/Info.plist`
 - PKCE authorization code exchange against Keycloak
 - refresh-token based session restoration
-- local sign-out by default, plus optional Keycloak end-session logout via `ASWebAuthenticationSession`
+- Keycloak end-session logout via `ASWebAuthenticationSession`
 - startup call to `/public/v1/mobile/bootstrap`
 - `Please update` screen when backend requires a newer app build
 

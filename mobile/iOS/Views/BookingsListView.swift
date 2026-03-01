@@ -9,19 +9,20 @@ struct BookingsListView: View {
             Group {
                 if viewModel.isLoading && viewModel.bookings.isEmpty {
                     ProgressView("Loading bookings...")
+                        .font(.subheadline)
                 } else {
                     List(viewModel.bookings) { booking in
                         NavigationLink(value: booking.id) {
-                            VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(booking.destination ?? "Untitled booking")
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(.footnote.weight(.semibold))
                                 Text(booking.stage)
-                                    .font(.caption.weight(.semibold))
+                                    .font(.caption2.weight(.semibold))
                                 Text(booking.staffName ?? "Unassigned")
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
-                            .padding(.vertical, 2)
+                            .padding(.vertical, 1)
                         }
                     }
                     .listStyle(.plain)
@@ -32,7 +33,12 @@ struct BookingsListView: View {
                     }
                 }
             }
-            .navigationTitle("Bookings")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Bookings")
+                        .font(.footnote.weight(.semibold))
+                }
+            }
             .navigationDestination(for: String.self) { bookingID in
                 BookingDetailView(bookingID: bookingID)
             }
