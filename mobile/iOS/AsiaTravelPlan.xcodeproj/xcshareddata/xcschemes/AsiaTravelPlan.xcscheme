@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9FA7E0E1243BDD846E14DBD4"
+               BlueprintIdentifier = "B6FCAA37A436E8B5E87152AE"
                BuildableName = "AsiaTravelPlan.app"
                BlueprintName = "AsiaTravelPlan"
                ReferencedContainer = "container:AsiaTravelPlan.xcodeproj">

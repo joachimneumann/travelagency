@@ -14,15 +14,17 @@ struct BookingsListView: View {
                         NavigationLink(value: booking.id) {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(booking.destination ?? "Untitled booking")
-                                    .font(.headline)
-                                Text(booking.stage)
                                     .font(.subheadline.weight(.semibold))
+                                Text(booking.stage)
+                                    .font(.caption.weight(.semibold))
                                 Text(booking.staffName ?? "Unassigned")
-                                    .font(.footnote)
+                                    .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
+                            .padding(.vertical, 2)
                         }
                     }
+                    .listStyle(.plain)
                     .refreshable {
                         if let session = sessionStore.session {
                             await viewModel.load(session: session)
@@ -31,13 +33,6 @@ struct BookingsListView: View {
                 }
             }
             .navigationTitle("Bookings")
-            .toolbar {
-                ToolbarItem {
-                    Button("Logout") {
-                        sessionStore.logout()
-                    }
-                }
-            }
             .navigationDestination(for: String.self) { bookingID in
                 BookingDetailView(bookingID: bookingID)
             }

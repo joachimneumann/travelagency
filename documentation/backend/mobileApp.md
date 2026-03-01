@@ -79,6 +79,12 @@ Recommended Keycloak client setup:
 - Standard flow: `On`
 - PKCE: enabled or required
 - Redirect URI: `asiatravelplan://auth/callback`
+- Valid post logout redirect URI: `asiatravelplan://auth/callback`
+
+Logout behavior:
+- clearing the local Keychain session is not enough
+- the mobile app also calls the Keycloak end-session endpoint through `ASWebAuthenticationSession`
+- if the client does not allow `asiatravelplan://auth/callback` as a post-logout redirect URI, remote logout will fail and the next login may silently reuse the Keycloak browser session
 
 ## 4) API access model
 

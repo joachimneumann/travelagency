@@ -28,7 +28,7 @@ struct RootView: View {
                 } else if !sessionStore.isAuthorized {
                     UnauthorizedView()
                 } else {
-                    BookingsListView()
+                    AppShellView()
                 }
             }
         }

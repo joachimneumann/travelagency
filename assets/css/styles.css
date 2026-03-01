@@ -1204,6 +1204,30 @@ textarea:focus-visible {
   display: block;
 }
 
+.booking-error-summary {
+  margin: 0;
+}
+
+.booking-error-details {
+  margin-top: 0.75rem;
+}
+
+.booking-error-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.booking-error-debug {
+  margin: 0.6rem 0 0;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(127, 31, 27, 0.08);
+  color: #5f1814;
+  font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .micro {
   color: var(--muted);
   font-size: 0.82rem;

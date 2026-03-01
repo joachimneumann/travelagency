@@ -836,14 +836,17 @@ async function submitBookingForm() {
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) throw new Error("Booking API request failed");
+    if (!response.ok) {
+      const responseText = await response.text();
+      throw new Error(buildBookingSubmissionDebugMessage(response.status, response.statusText, responseText));
+    }
     els.success.classList.add("show");
     return;
   } catch (error) {
-    if (els.error) {
-      els.error.textContent = "We could not submit your request right now. Please try again in a few minutes.";
-      els.error.classList.add("show");
-    }
+    renderBookingError(
+      "We could not submit your request right now. Please try again in a few minutes.",
+      error?.message || "Unknown booking submission error."
+    );
     els.stepNext.disabled = false;
     els.stepBack.disabled = false;
     console.error(error);
@@ -852,7 +855,7 @@ async function submitBookingForm() {
 
 function clearBookingFeedback() {
   if (els.error) {
-    els.error.textContent = "";
+    els.error.replaceChildren();
     els.error.classList.remove("show");
   }
   if (els.success) {
@@ -860,6 +863,45 @@ function clearBookingFeedback() {
   }
   if (els.stepNext) els.stepNext.disabled = false;
   if (els.stepBack) els.stepBack.disabled = state.formStep === 1;
+}
+
+function renderBookingError(message, debugMessage) {
+  if (!els.error) return;
+
+  const summary = document.createElement("p");
+  summary.className = "booking-error-summary";
+  summary.textContent = message;
+  els.error.appendChild(summary);
+
+  if (debugMessage) {
+    const details = document.createElement("details");
+    details.className = "booking-error-details";
+
+    const detailsSummary = document.createElement("summary");
+    detailsSummary.textContent = "More";
+    details.appendChild(detailsSummary);
+
+    const debug = document.createElement("pre");
+    debug.className = "booking-error-debug";
+    debug.textContent = debugMessage;
+    details.appendChild(debug);
+
+    els.error.appendChild(details);
+  }
+
+  els.error.classList.add("show");
+}
+
+function buildBookingSubmissionDebugMessage(status, statusText, responseText) {
+  const suffix = normalizeBookingDebugText(responseText);
+  const header = `Booking API request failed with HTTP ${status}${statusText ? ` ${statusText}` : ""}.`;
+  return suffix ? `${header}\n\n${suffix}` : header;
+}
+
+function normalizeBookingDebugText(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return text.length > 4000 ? `${text.slice(0, 4000)}\n\n[truncated]` : text;
 }
 
 function getQueryParam(name) {

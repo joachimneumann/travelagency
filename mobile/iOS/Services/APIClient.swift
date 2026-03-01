@@ -6,6 +6,22 @@ final class APIClient {
         case unauthorized
         case forbidden
         case server(String)
+        case bootstrapUnavailable(URL)
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidResponse:
+                return "The server returned an invalid response."
+            case .unauthorized:
+                return "Authentication is required."
+            case .forbidden:
+                return "You do not have permission to perform this action."
+            case .server(let message):
+                return message
+            case .bootstrapUnavailable(let url):
+                return "Could not reach the mobile bootstrap endpoint at \(url.absoluteString)."
+            }
+        }
     }
 
     func fetchBookings(session: AuthSession, page: Int = 1, pageSize: Int = 20) async throws -> BookingListResponse {
@@ -20,11 +36,18 @@ final class APIClient {
     }
 
     func fetchBootstrap() async throws -> MobileBootstrapResponse {
-        var request = URLRequest(url: MobileAPIRequestFactory.bootstrapURL(baseURL: AppConfig.apiBaseURL))
+        let bootstrapURL = MobileAPIRequestFactory.bootstrapURL(baseURL: AppConfig.apiBaseURL)
+        var request = URLRequest(url: bootstrapURL)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw APIError.bootstrapUnavailable(bootstrapURL)
+        }
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "Request failed"

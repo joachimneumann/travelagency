@@ -5,15 +5,14 @@ struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 20) {
             Spacer()
-            Image(systemName: "airplane.circle.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(.teal)
+            Image("BrandLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 116, height: 116)
             Text("AsiaTravelPlan")
-                .font(.largeTitle.bold())
-            Text("Internal mobile access for bookings")
-                .foregroundStyle(.secondary)
+                .font(.title2.bold())
 
             Button {
                 Task { await viewModel.login(sessionStore: sessionStore) }
@@ -28,11 +27,6 @@ struct LoginView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(viewModel.isLoading)
-
-            Text("Allowed roles: atp_admin, atp_manager, atp_accountant, atp_staff")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
             Spacer()
         }
         .padding(24)

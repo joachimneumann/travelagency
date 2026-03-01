@@ -33,12 +33,13 @@ final class AuthService: NSObject {
         let tokenResponse = try await exchangeCodeForTokens(code: code, pkce: pkce)
         return try buildSession(
             accessToken: tokenResponse.accessToken,
+            idToken: tokenResponse.idToken,
             refreshToken: tokenResponse.refreshToken,
             expiresIn: tokenResponse.expiresIn
         )
     }
 
-    func buildSession(accessToken: String, refreshToken: String?, expiresIn: TimeInterval? = nil) throws -> AuthSession {
+    func buildSession(accessToken: String, idToken: String? = nil, refreshToken: String?, expiresIn: TimeInterval? = nil) throws -> AuthSession {
         let claims = try decoder.decode(accessToken)
         let roles = extractRoles(from: claims)
         let profile = UserProfile(
@@ -48,7 +49,7 @@ final class AuthService: NSObject {
             roles: roles
         )
         let expiresAt = expiresIn.map { Date().addingTimeInterval($0) } ?? claims.exp.map { Date(timeIntervalSince1970: $0) }
-        return AuthSession(accessToken: accessToken, refreshToken: refreshToken, expiresAt: expiresAt, user: profile)
+        return AuthSession(accessToken: accessToken, idToken: idToken, refreshToken: refreshToken, expiresAt: expiresAt, user: profile)
     }
 
     func refresh(session: AuthSession) async throws -> AuthSession {
@@ -75,9 +76,15 @@ final class AuthService: NSObject {
         let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
         return try buildSession(
             accessToken: tokenResponse.accessToken,
+            idToken: tokenResponse.idToken ?? session.idToken,
             refreshToken: tokenResponse.refreshToken ?? refreshToken,
             expiresIn: tokenResponse.expiresIn
         )
+    }
+
+    func logout(session: AuthSession) async throws {
+        let logoutURL = try endSessionURL(idTokenHint: session.idToken)
+        _ = try await authenticate(at: logoutURL)
     }
 
     private func extractRoles(from claims: JWTDecoder.Claims) -> Set<ATPUserRole> {
@@ -102,6 +109,13 @@ final class AuthService: NSObject {
             .appendingPathComponent("protocol/openid-connect/token")
     }
 
+    private var endSessionEndpoint: URL {
+        AppConfig.keycloakBaseURL
+            .appendingPathComponent("realms")
+            .appendingPathComponent(AppConfig.realm)
+            .appendingPathComponent("protocol/openid-connect/logout")
+    }
+
     private func authorizationURL(pkce: PKCE, state: String) throws -> URL {
         guard var components = URLComponents(url: authorizationEndpoint, resolvingAgainstBaseURL: false) else {
             throw AuthServiceError.invalidAuthorizationURL
@@ -117,6 +131,25 @@ final class AuthService: NSObject {
         ]
         guard let url = components.url else {
             throw AuthServiceError.invalidAuthorizationURL
+        }
+        return url
+    }
+
+    private func endSessionURL(idTokenHint: String?) throws -> URL {
+        guard var components = URLComponents(url: endSessionEndpoint, resolvingAgainstBaseURL: false) else {
+            throw AuthServiceError.invalidLogoutURL
+        }
+        var queryItems = [
+            URLQueryItem(name: "client_id", value: AppConfig.clientID),
+            URLQueryItem(name: "post_logout_redirect_uri", value: AppConfig.redirectURI),
+            URLQueryItem(name: "redirect_uri", value: AppConfig.redirectURI)
+        ]
+        if let idTokenHint, !idTokenHint.isEmpty {
+            queryItems.append(URLQueryItem(name: "id_token_hint", value: idTokenHint))
+        }
+        components.queryItems = queryItems
+        guard let url = components.url else {
+            throw AuthServiceError.invalidLogoutURL
         }
         return url
     }
@@ -200,6 +233,7 @@ final class AuthService: NSObject {
 
 enum AuthServiceError: LocalizedError {
     case invalidAuthorizationURL
+    case invalidLogoutURL
     case unableToStartAuthenticationSession
     case invalidCallback
     case authorizationFailed(String)
@@ -214,6 +248,8 @@ enum AuthServiceError: LocalizedError {
         switch self {
         case .invalidAuthorizationURL:
             return "Invalid authorization URL."
+        case .invalidLogoutURL:
+            return "Invalid logout URL."
         case .unableToStartAuthenticationSession:
             return "Unable to start authentication session."
         case .invalidCallback:
@@ -238,11 +274,13 @@ enum AuthServiceError: LocalizedError {
 
 private struct TokenResponse: Decodable {
     let accessToken: String
+    let idToken: String?
     let refreshToken: String?
     let expiresIn: TimeInterval?
 
     private enum CodingKeys: String, CodingKey {
         case accessToken = "access_token"
+        case idToken = "id_token"
         case refreshToken = "refresh_token"
         case expiresIn = "expires_in"
     }

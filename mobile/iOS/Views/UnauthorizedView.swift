@@ -7,15 +7,16 @@ struct UnauthorizedView: View {
         VStack(spacing: 16) {
             Spacer()
             Image(systemName: "lock.slash")
-                .font(.system(size: 48))
+                .font(.system(size: 40))
                 .foregroundStyle(.red)
             Text("Access denied")
-                .font(.title.bold())
+                .font(.title2.bold())
             Text("This mobile app is limited to approved AsiaTravelPlan backend roles.")
+                .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             Button("Log out") {
-                sessionStore.logout()
+                Task { await sessionStore.logout() }
             }
             .buttonStyle(.bordered)
             Spacer()

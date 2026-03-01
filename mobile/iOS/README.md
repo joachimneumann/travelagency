@@ -23,6 +23,7 @@ Included now:
 - URL scheme registration in `Resources/Info.plist`
 - PKCE authorization code exchange against Keycloak
 - refresh-token based session restoration
+- Keycloak end-session logout via `ASWebAuthenticationSession`
 - startup call to `/public/v1/mobile/bootstrap`
 - `Please update` screen when backend requires a newer app build
 
@@ -41,4 +42,5 @@ Suggested next step in Xcode:
 1. open `AsiaTravelPlan.xcodeproj`
 2. set the signing team / bundle settings you want
 3. confirm Keycloak mobile client `asiatravelplan-ios`
-4. run on simulator or device
+4. add `asiatravelplan://auth/callback` to the mobile client post-logout redirect URIs
+5. run on simulator or device

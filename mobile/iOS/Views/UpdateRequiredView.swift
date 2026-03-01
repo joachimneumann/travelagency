@@ -7,11 +7,12 @@ struct UpdateRequiredView: View {
         VStack(spacing: 18) {
             Spacer()
             Image(systemName: "arrow.down.app.fill")
-                .font(.system(size: 48))
+                .font(.system(size: 40))
                 .foregroundStyle(.orange)
             Text("Please update")
-                .font(.title.bold())
+                .font(.title2.bold())
             Text("This app build is no longer supported. Install the latest version before continuing.")
+                .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 8) {

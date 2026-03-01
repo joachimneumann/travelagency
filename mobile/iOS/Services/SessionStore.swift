@@ -82,9 +82,16 @@ final class SessionStore: ObservableObject {
         }
     }
 
-    func logout() {
+    func logout() async {
+        let currentSession = session
         tokenStore.clear()
         session = nil
         authError = nil
+        guard let currentSession else { return }
+        do {
+            try await authService.logout(session: currentSession)
+        } catch {
+            authError = "Signed out locally, but Keycloak logout may not have completed. Check the mobile client post-logout redirect URI."
+        }
     }
 }
