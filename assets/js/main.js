@@ -12,6 +12,7 @@ const state = {
   },
   rankedTripsDebug: [],
   formStep: 1,
+  bookingSubmitted: false,
   visibleToursCount: 3,
   showMoreUsed: false
 };
@@ -700,6 +701,7 @@ function setupFormNavigation() {
   if (!els.bookingForm) return;
 
   els.stepBack.addEventListener("click", () => {
+    if (state.bookingSubmitted) return;
     if (state.formStep > 1) {
       state.formStep -= 1;
       renderFormStep();
@@ -707,6 +709,7 @@ function setupFormNavigation() {
   });
 
   els.stepNext.addEventListener("click", () => {
+    if (state.bookingSubmitted) return;
     if (state.formStep < 3) {
       const valid = validateCurrentStep();
       if (!valid) return;
@@ -840,7 +843,11 @@ async function submitBookingForm() {
       const responseText = await response.text();
       throw new Error(buildBookingSubmissionDebugMessage(response.status, response.statusText, responseText));
     }
+    state.bookingSubmitted = true;
     els.success.classList.add("show");
+    els.stepNext.textContent = "Submitted";
+    els.stepNext.disabled = true;
+    els.stepBack.disabled = true;
     return;
   } catch (error) {
     renderBookingError(
@@ -861,8 +868,12 @@ function clearBookingFeedback() {
   if (els.success) {
     els.success.classList.remove("show");
   }
-  if (els.stepNext) els.stepNext.disabled = false;
-  if (els.stepBack) els.stepBack.disabled = state.formStep === 1;
+  if (els.stepNext) {
+    els.stepNext.disabled = state.bookingSubmitted;
+  }
+  if (els.stepBack) {
+    els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;
+  }
 }
 
 function renderBookingError(message, debugMessage) {

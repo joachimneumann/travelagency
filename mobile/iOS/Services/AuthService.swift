@@ -8,7 +8,7 @@ import UIKit
 final class AuthService: NSObject {
     private var webAuthenticationSession: ASWebAuthenticationSession?
     private let decoder = JWTDecoder()
-    private lazy var presentationContextProvider = WebAuthenticationPresentationContextProvider()
+    @MainActor private lazy var presentationContextProvider = WebAuthenticationPresentationContextProvider()
 
     func startLogin() async throws -> AuthSession {
         let pkce = PKCE.create()
@@ -154,6 +154,7 @@ final class AuthService: NSObject {
         return url
     }
 
+    @MainActor
     private func authenticate(at url: URL) async throws -> URL {
         try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
