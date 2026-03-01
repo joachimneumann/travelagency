@@ -1,181 +1,96 @@
-# AsiaTravelPlan iPhone App Integration Guide
+# AsiaTravelPlan Mobile App Guide
 
-This document explains how to build an iPhone app that uses the AsiaTravelPlan backend.
+This document defines the first iPhone app for AsiaTravelPlan.
 
-The app scope is intentionally limited:
-- log in with Keycloak
-- allow access only for users with one of these roles:
-  - `atp_admin`
-  - `atp_manager`
-  - `atp_accountant`
-  - `atp_staff`
-- allow users to see and edit bookings
+Current implementation scaffold:
+- `/Users/internal_admin/projects/travelagency/mobile/iOS`
+- Xcode project: `/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
+- project generator: `/Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
+
+The app scope is intentionally narrow:
+- allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
+- show bookings
+- allow booking actions according to role
 - later add customer interaction features
 
-The app should not try to reproduce the full website backend immediately.
+The app should not try to reproduce the full website backend.
 
-## 1) Scope
+## 1) App scope
 
-The iPhone app is not a wrapper around `backend.html`.
+The mobile app should be a native iPhone app, not a wrapper around `backend.html`.
 
-It should be a native app that:
-- authenticates directly against Keycloak
-- receives an access token
-- calls `/api/v1/*` with `Authorization: Bearer <access_token>`
-- renders a mobile UI based on the authenticated role
-
-The first version should focus on:
-- login
+Version 1 should include:
+- login with Keycloak
 - booking list
 - booking detail
-- booking actions
-- activity timeline
+- booking stage changes where allowed
+- booking note/activity creation where allowed
+- booking staff assignment only for manager/admin
+- logout
 
-Customer features should come later.
+Later phase:
+- customer interaction workflows
+- customer detail screens
+- direct communication actions
+
+Out of scope for the first mobile version:
+- tour editing
+- staff management UI
+- full finance UI
+- customer administration UI
 
 ## 2) Allowed roles only
 
-The app must allow login only for users whose token contains at least one of these roles:
+The app must allow access only when the authenticated user has at least one of these roles:
 - `atp_admin`
 - `atp_manager`
 - `atp_accountant`
 - `atp_staff`
 
-All other users should be treated as unauthorized for the app.
+All other users must be treated as unauthorized.
 
-This rule should be enforced in two places:
+This should be enforced in two places:
+1. backend authorization
+2. app session gating after login
 
-1. Backend
-- the backend should reject users without one of the allowed roles
+If the token does not contain one of those roles, the app should:
+- clear local session state
+- show an unauthorized message
+- not enter the booking UI
 
-2. App
-- after login, the app should inspect token/user role data
-- if none of the allowed roles are present, the app should log the user out and show an unauthorized message
-
-## 3) Recommended architecture
+## 3) Authentication architecture
 
 Use:
 - Swift
 - SwiftUI
 - `ASWebAuthenticationSession`
 - OpenID Connect Authorization Code Flow with PKCE
-- iOS Keychain for token storage
-
-Backend/API:
-- staging: `https://api-staging.asiatravelplan.com`
-
-Identity:
-- Keycloak
-- separate mobile client in Keycloak
-
-## 4) Important auth rule
+- Keychain for token storage
 
 Do not use the confidential web client `asiatravelplan-backend` inside the iPhone app.
-
-Reason:
-- it uses a client secret
-- mobile apps must not embed confidential client secrets
 
 Create a separate Keycloak client for mobile, for example:
 - `asiatravelplan-ios`
 
-That mobile client should be:
-- OpenID Connect
-- public client
-- PKCE enabled
-- no client secret in the app
-
-## 5) Keycloak setup for mobile
-
-Create a mobile client in Keycloak:
-- Client ID: `asiatravelplan-ios`
+Recommended Keycloak client setup:
 - Client type: `OpenID Connect`
 - Client authentication: `Off`
 - Standard flow: `On`
 - PKCE: enabled or required
+- Redirect URI: `asiatravelplan://auth/callback`
 
-Recommended redirect URI:
-- `asiatravelplan://auth/callback`
+## 4) API access model
 
-Recommended valid redirect URIs:
-- `asiatravelplan://auth/callback`
-
-The mobile client should expose the same business role names used by the backend:
-- `atp_admin`
-- `atp_manager`
-- `atp_accountant`
-- `atp_staff`
-
-## 6) Current backend reality
-
-The backend already supports:
-- bearer token authentication on `/api/v1/*`
-- role extraction from Keycloak token claims
-
-The backend is still evolving and does not yet fully enforce every detailed business permission rule for each role.
-
-Desired role behavior:
-- `atp_staff`
-  - can see only bookings assigned to them
-  - can edit only bookings assigned to them
-- `atp_manager`
-  - can see and edit all bookings
-- `atp_accountant`
-  - can see all bookings
-  - cannot fully edit bookings
-  - can change booking stage only
-- `atp_admin`
-  - full access
-
-This means:
-- login and role detection are possible now
-- fine-grained booking authorization still needs to be enforced completely in backend code
-
-## 7) Recommended mobile login flow
-
-1. User taps `Log in`
-2. App opens Keycloak login with `ASWebAuthenticationSession`
-3. User authenticates
-4. Keycloak redirects to `asiatravelplan://auth/callback?code=...&state=...`
-5. App exchanges the code for tokens using PKCE
-6. App stores:
-   - access token
-   - refresh token
-   - expiry metadata
-7. App inspects the authenticated roles
-8. If none of `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff` is present:
-   - clear session
-   - deny access
-9. If at least one allowed role is present:
-   - continue into the app
-
-## 8) Token handling rules
-
-Store tokens in:
-- iOS Keychain
-
-Do not store tokens in:
-- `UserDefaults`
-- plain files
-
-Use:
-- access token for API calls
-- refresh token to renew access
-
-Recommended behavior:
-- refresh shortly before expiry
-- on refresh failure, force a clean logout
-
-## 9) API usage
-
-Use bearer token requests:
+The mobile app should call backend APIs with bearer tokens:
 
 ```http
 GET /api/v1/bookings?page=1&page_size=20&sort=created_at_desc
 Authorization: Bearer <access_token>
 ```
 
-The first app version should focus on booking endpoints:
+The app should target the same backend API used by the browser backend.
+
+Recommended first endpoints:
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
@@ -184,83 +99,168 @@ The first app version should focus on booking endpoints:
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/bookings/:bookingId/invoices`
 
-Later, add customer endpoints:
-- `GET /api/v1/customers`
-- `GET /api/v1/customers/:customerId`
+Note:
+- the current assignment route path is still `PATCH /api/v1/bookings/:bookingId/owner`
+- semantically this is now a staff assignment endpoint
+- request body may send `owner_id` for compatibility or `staff`
 
-## 10) First-version screens
+## 5) Current backend role behavior
 
-Recommended first-version screens:
+The backend now enforces this booking/tour authorization model.
+
+`atp_staff`
+- can read only bookings assigned to that staff member
+- can edit only bookings assigned to that staff member
+- cannot change staff assignments
+- cannot access tours
+
+`atp_manager`
+- can read all bookings
+- can edit all bookings
+- can change booking staff assignments
+- can create new staff records
+- does not edit tours
+
+`atp_admin`
+- can read all bookings
+- can edit all bookings
+- can change booking staff assignments
+- can create new staff records
+- can read and edit tours
+
+`atp_accountant`
+- can read all bookings
+- cannot edit bookings generally
+- can change booking stage
+- has read-only access to tours
+
+This is the source of truth for the mobile UI.
+The app should reflect these permissions, but the backend must remain authoritative.
+
+## 6) Staff identity mapping
+
+For `atp_staff`, the backend resolves access based on the Keycloak username.
+
+Required mapping rule:
+- Keycloak `preferred_username` must match one of the entries in `backend/app/config/staff.json -> usernames[]`
+
+Example:
+
+```json
+{
+  "id": "staff_123",
+  "name": "Joachim",
+  "active": true,
+  "usernames": ["joachim"]
+}
+```
+
+If the logged-in `atp_staff` user cannot be mapped to a staff record, the backend will not allow staff-scoped booking access.
+
+## 7) Recommended mobile UI behavior by role
+
+`atp_staff`
+- show only assigned bookings
+- allow note creation only on assigned bookings
+- allow stage changes only on assigned bookings
+- hide staff assignment controls
+- hide tours section
+
+`atp_manager`
+- show all bookings
+- allow booking editing
+- show staff assignment controls
+- hide tours section
+
+`atp_admin`
+- show all bookings
+- allow booking editing
+- show staff assignment controls
+- if tours are added later to mobile, allow editing
+
+`atp_accountant`
+- show all bookings
+- allow stage changes only
+- keep other booking actions read-only
+- if tours are added later to mobile, allow read-only viewing only
+
+## 8) First-version screens
+
+Recommended screens:
 - Login
 - Booking list
 - Booking detail
 - Booking stage update
-- Booking owner update
-- Activity timeline
+- Booking activity timeline
 - Add note/activity
+- Staff assignment picker for manager/admin only
 - Settings / logout
 
-Customer-related screens should be a later phase.
+Later screens:
+- customer interaction inbox
+- customer detail
+- customer contact actions
 
-## 11) Role-specific app behavior
+## 9) Token handling rules
 
-`atp_staff`
-- show only assigned bookings
-- allow editing only on assigned bookings
+Store tokens only in:
+- iOS Keychain
 
-`atp_manager`
-- show all bookings
-- allow full booking editing
+Do not store tokens in:
+- `UserDefaults`
+- plain files
 
-`atp_accountant`
-- show all bookings
-- allow stage update
-- keep other booking fields read-only
+Use:
+- access token for API calls
+- refresh token for renewal
 
-`atp_admin`
-- full booking access
+Recommended behavior:
+- refresh shortly before expiry
+- on refresh failure, log out cleanly
 
-The app UI should reflect these differences, but the backend must remain the source of truth.
+## 10) Suggested app structure
 
-## 12) Recommended app structure
-
-Suggested Swift modules:
+Suggested modules:
 - `Auth`
 - `Networking`
 - `Models`
 - `Bookings`
+- `Session`
 - `Settings`
 
 Later:
 - `Customers`
 
-Suggested core services:
+Suggested services:
 - `AuthService`
 - `TokenStore`
 - `APIClient`
 - `SessionStore`
 - `RoleService`
 
-`RoleService` should expose convenience checks:
+`RoleService` should expose:
 - `isATPAdmin`
 - `isATPManager`
 - `isATPAccountant`
 - `isATPStaff`
 - `isAllowedATPUser`
 
-## 13) Backend support recommended for mobile
+## 11) Recommended backend support for mobile
 
-The mobile app will be simpler if the backend adds:
+The mobile app will be simpler if the backend provides:
 
 1. `GET /api/v1/me`
-- return current authenticated identity and roles
+- current identity
+- resolved roles
+- possibly resolved staff record id
 
-Suggested response:
+Suggested response shape:
 
 ```json
 {
+  "authenticated": true,
   "user": {
-    "sub": "uuid",
+    "sub": "...",
     "preferred_username": "joachim",
     "email": "info@asiatravelplan.com",
     "roles": ["atp_admin"]
@@ -268,42 +268,23 @@ Suggested response:
 }
 ```
 
-2. strict role-based authorization on booking endpoints
+2. stable booking payload fields
+- `staff`
+- `staff_name`
+- current stage
+- activities
 
-3. a reliable mapping between Keycloak identity and booking ownership for `atp_staff`
+3. stable staff assignment behavior
+- manager/admin only
+- path compatibility kept even if route name still says `owner`
 
-## 14) Security rules
+## 12) Summary
 
-- use PKCE
-- do not embed confidential secrets in the app
-- store tokens in Keychain only
-- use HTTPS only
-- allow only `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
-- let backend enforce final authorization
-
-## 15) Recommended implementation order
-
-1. Create Keycloak mobile client
-2. Implement OIDC login with PKCE
-3. Implement token storage and refresh
-4. Enforce allowed roles in app login state
-5. Build booking list
-6. Build booking detail
-7. Build booking actions
-8. Add `GET /api/v1/me` on backend
-9. Add customer functionality later
-
-## 16) Summary
-
-The correct first mobile app is:
-- native iPhone app
-- separate Keycloak mobile client
-- OIDC Authorization Code + PKCE
-- bearer token API access
-- access limited to:
-  - `atp_admin`
-  - `atp_manager`
-  - `atp_accountant`
-  - `atp_staff`
+The correct first iPhone app is:
+- native
+- authenticated through Keycloak with PKCE
+- restricted to `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
 - focused on bookings first
-- customer interaction added later
+- prepared for later customer interaction
+
+That will keep the app aligned with the real backend permissions instead of copying the browser backend UI mechanically.

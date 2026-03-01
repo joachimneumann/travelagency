@@ -1,3 +1,7 @@
 backend/app/data/invoices/
 .env.staging
 backend/app/node_modules/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+**/xcuserdata/

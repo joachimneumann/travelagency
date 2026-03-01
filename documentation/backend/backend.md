@@ -2,7 +2,7 @@
 
 ## 1) Why AsiaTravelPlan Needs a Backend
 
-AsiaTravelPlan currently has a strong marketing site and booking capture UX, but no operational core to manage bookings, bookings, trip execution, partners, and field staff at scale.
+AsiaTravelPlan currently has a strong marketing site and booking capture UX, but no operational core to manage bookings, trip execution, partners, and field staff at scale.
 
 Without a backend, the business will hit limits quickly:
 - Booking loss from manual handoff (modal -> email/manual tracking)
@@ -36,7 +36,7 @@ Functional requirements:
   - Past trips, quote history, spend and margin contribution
 - Support booking lifecycle stages:
   - New -> Qualified -> Proposal Sent -> Negotiation -> Won/Lost -> Post-Trip
-- Assign owner (sales agent) and SLA deadlines for each booking
+- Assign staff and SLA deadlines for each booking
 - Track interaction timeline:
   - Calls, emails, WhatsApp chats, notes, tasks, documents
 - Store booking source attribution (campaign, referral, direct, partner)
@@ -201,7 +201,28 @@ Functional requirements:
 - Post-resolution customer feedback capture
 
 Data requirements:
-- Case timeline with ownership changes
+- Case timeline with staff assignment changes
+
+## 3.12 Current backend role model
+
+The implemented backend authorization model is:
+
+- `atp_staff`
+  - read and write only bookings assigned to that staff member
+  - assignment is resolved from Keycloak `preferred_username` matching `backend/app/config/staff.json -> usernames[]`
+- `atp_manager`
+  - read and write all bookings
+  - change staff assignments
+  - create staff records
+- `atp_admin`
+  - read and write all bookings
+  - change staff assignments
+  - create staff records
+  - read and edit tours
+- `atp_accountant`
+  - read all bookings
+  - may change booking stage only
+  - read-only access to tours
 - Root cause taxonomy
 - Compensation and goodwill history
 

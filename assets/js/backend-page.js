@@ -6,6 +6,10 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
+  customersPanel: document.getElementById("customersPanel"),
+  bookingsPanel: document.getElementById("bookingsPanel"),
+  staffPanel: document.getElementById("staffPanel"),
+  toursPanel: document.getElementById("toursPanel"),
 
   customersSearch: document.getElementById("customersSearch"),
   customersSearchBtn: document.getElementById("customersSearchBtn"),
@@ -26,19 +30,43 @@ const els = {
   toursSearchBtn: document.getElementById("toursSearchBtn"),
   toursCountInfo: document.getElementById("toursCountInfo"),
   toursPagination: document.getElementById("toursPagination"),
-  toursTable: document.getElementById("toursTable")
+  toursTable: document.getElementById("toursTable"),
+
+  staffName: document.getElementById("staffName"),
+  staffUsernames: document.getElementById("staffUsernames"),
+  staffDestinations: document.getElementById("staffDestinations"),
+  staffLanguages: document.getElementById("staffLanguages"),
+  staffCreateBtn: document.getElementById("staffCreateBtn"),
+  staffStatus: document.getElementById("staffStatus"),
+  staffTable: document.getElementById("staffTable")
+};
+
+const ROLES = {
+  ADMIN: "atp_admin",
+  MANAGER: "atp_manager",
+  ACCOUNTANT: "atp_accountant",
+  STAFF: "atp_staff"
 };
 
 const state = {
   user: qs.get("user") || "admin",
+  roles: [],
+  permissions: {
+    canReadCustomers: false,
+    canReadBookings: false,
+    canManageStaff: false,
+    canReadTours: false,
+    canEditTours: false
+  },
   customers: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
-  tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" }
+  tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" },
+  staff: []
 };
 
 init();
 
-function init() {
+async function init() {
   if (els.homeLink) {
     const params = new URLSearchParams({ user: state.user });
     els.homeLink.href = `backend.html?${params.toString()}`;
@@ -49,36 +77,54 @@ function init() {
     els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
   }
 
-  loadBackendAuthStatus();
+  await loadBackendAuthStatus();
+  applyRoleVisibility();
   bindControls();
 
-  loadCustomers();
-  loadBookings();
-  loadTours();
+  if (state.permissions.canReadCustomers) loadCustomers();
+  if (state.permissions.canReadBookings) loadBookings();
+  if (state.permissions.canManageStaff) loadStaff();
+  if (state.permissions.canReadTours) loadTours();
 }
 
 async function loadBackendAuthStatus() {
-  if (!els.userLabel) return;
+  if (!els.userLabel) return null;
   try {
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
       els.userLabel.textContent = "";
-      return;
+      return null;
     }
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
+    state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+    state.permissions = {
+      canReadCustomers: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
+      canReadBookings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
+      canManageStaff: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
+      canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
+      canEditTours: hasAnyRole(ROLES.ADMIN)
+    };
     els.userLabel.textContent = user ? `Logged in as: ${user}` : "";
+    return payload.user;
   } catch {
     els.userLabel.textContent = "";
+    return null;
   }
 }
 
 function bindControls() {
-  bindSearch(els.customersSearchBtn, els.customersSearch, state.customers, loadCustomers);
-  bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
-  bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
+  if (state.permissions.canReadCustomers) {
+    bindSearch(els.customersSearchBtn, els.customersSearch, state.customers, loadCustomers);
+  }
+  if (state.permissions.canReadBookings) {
+    bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
+  }
+  if (state.permissions.canReadTours) {
+    bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
+  }
 
-  if (els.toursDestination) {
+  if (state.permissions.canReadTours && els.toursDestination) {
     els.toursDestination.addEventListener("change", () => {
       state.tours.destination = els.toursDestination.value || "all";
       state.tours.page = 1;
@@ -86,7 +132,7 @@ function bindControls() {
     });
   }
 
-  if (els.toursStyle) {
+  if (state.permissions.canReadTours && els.toursStyle) {
     els.toursStyle.addEventListener("change", () => {
       state.tours.style = els.toursStyle.value || "all";
       state.tours.page = 1;
@@ -94,7 +140,7 @@ function bindControls() {
     });
   }
 
-  if (els.toursClearFiltersBtn) {
+  if (state.permissions.canReadTours && els.toursClearFiltersBtn) {
     els.toursClearFiltersBtn.addEventListener("click", () => {
       state.tours.destination = "all";
       state.tours.style = "all";
@@ -104,6 +150,21 @@ function bindControls() {
       loadTours();
     });
   }
+
+  if (state.permissions.canManageStaff && els.staffCreateBtn) {
+    els.staffCreateBtn.addEventListener("click", createStaff);
+  }
+}
+
+function applyRoleVisibility() {
+  if (els.customersPanel) els.customersPanel.style.display = state.permissions.canReadCustomers ? "" : "none";
+  if (els.bookingsPanel) els.bookingsPanel.style.display = state.permissions.canReadBookings ? "" : "none";
+  if (els.staffPanel) els.staffPanel.style.display = state.permissions.canManageStaff ? "" : "none";
+  if (els.toursPanel) els.toursPanel.style.display = state.permissions.canReadTours ? "" : "none";
+}
+
+function hasAnyRole(...roles) {
+  return roles.some((role) => state.roles.includes(role));
 }
 
 function bindSearch(searchBtn, searchInput, model, reloadFn) {
@@ -300,11 +361,17 @@ function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
   return `<button ${attrs}>${escapeHtml(label)}</button>`;
 }
 
-async function fetchApi(path) {
+async function fetchApi(path, options = {}) {
+  const method = options.method || "GET";
+  const body = options.body;
   try {
     const response = await fetch(`${apiBase}${path}`, {
+      method,
       credentials: "include",
-      headers: {}
+      headers: {
+        ...(body ? { "Content-Type": "application/json" } : {})
+      },
+      ...(body ? { body: JSON.stringify(body) } : {})
     });
 
     const payload = await response.json();
@@ -322,18 +389,24 @@ async function fetchApi(path) {
 }
 
 function renderBookings(items) {
-  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Customer</th><th>Destination</th><th>Style</th><th>Owner</th><th>SLA due</th></tr></thead>`;
+  const canOpenCustomer = state.permissions.canReadCustomers;
+  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Customer</th><th>Destination</th><th>Style</th><th>Staff</th><th>SLA due</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildDetailHref("booking", booking.id);
       const customerHref = buildDetailHref("customer", booking.customer_id || "");
+      const customerCell = booking.customer_id
+        ? canOpenCustomer
+          ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(booking.customer_id))}</a>`
+          : escapeHtml(shortId(booking.customer_id))
+        : "-";
       return `<tr>
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
         <td>${escapeHtml(booking.stage)}</td>
-        <td>${booking.customer_id ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(booking.customer_id))}</a>` : "-"}</td>
+        <td>${customerCell}</td>
         <td>${escapeHtml(booking.destination || "-")}</td>
         <td>${escapeHtml(booking.style || "-")}</td>
-        <td>${escapeHtml(booking.owner_name || "Unassigned")}</td>
+        <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
         <td>${escapeHtml(formatDateTime(booking.sla_due_at))}</td>
       </tr>`;
     })
@@ -406,6 +479,66 @@ function clearError() {
   if (!els.error) return;
   els.error.textContent = "";
   els.error.classList.remove("show");
+}
+
+async function loadStaff() {
+  clearError();
+  const payload = await fetchApi(`/api/v1/staff?active=true`);
+  if (!payload) return;
+  state.staff = Array.isArray(payload.items) ? payload.items : [];
+  renderStaff(state.staff);
+}
+
+function renderStaff(items) {
+  if (!els.staffTable) return;
+  const header = `<thead><tr><th>Name</th><th>Usernames</th><th>Destinations</th><th>Languages</th><th>Active</th></tr></thead>`;
+  const rows = items
+    .map((staff) => `<tr>
+      <td>${escapeHtml(staff.name || "-")}</td>
+      <td>${escapeHtml(Array.isArray(staff.usernames) ? staff.usernames.join(", ") : "-")}</td>
+      <td>${escapeHtml(Array.isArray(staff.destinations) ? staff.destinations.join(", ") : "-")}</td>
+      <td>${escapeHtml(Array.isArray(staff.languages) ? staff.languages.join(", ") : "-")}</td>
+      <td>${staff.active ? "Yes" : "No"}</td>
+    </tr>`)
+    .join("");
+  els.staffTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="5">No staff found</td></tr>'}</tbody>`;
+}
+
+async function createStaff() {
+  clearError();
+  setStaffStatus("Creating...");
+  const payload = {
+    name: (els.staffName?.value || "").trim(),
+    usernames: (els.staffUsernames?.value || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+    destinations: (els.staffDestinations?.value || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+    languages: (els.staffLanguages?.value || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+    active: true
+  };
+  const result = await fetchApi(`/api/v1/staff`, { method: "POST", body: payload });
+  if (!result?.staff) {
+    setStaffStatus("");
+    return;
+  }
+  if (els.staffName) els.staffName.value = "";
+  if (els.staffUsernames) els.staffUsernames.value = "";
+  if (els.staffDestinations) els.staffDestinations.value = "";
+  if (els.staffLanguages) els.staffLanguages.value = "";
+  setStaffStatus("Staff created.");
+  await loadStaff();
+}
+
+function setStaffStatus(message) {
+  if (!els.staffStatus) return;
+  els.staffStatus.textContent = message;
 }
 
 function shortId(value) {

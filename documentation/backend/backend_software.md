@@ -7,7 +7,7 @@ Scope decision:
 - **Build in-house** everything else (CRM, quoting, booking, operations, partner/guide management, analytics, compliance workflows, catalog sync).
 
 Primary goal:
-- Move AsiaTravelPlan from static booking capture to a production backend that runs the full booking -> quote -> booking -> trip operations lifecycle.
+- Move AsiaTravelPlan from static booking capture to a production backend that runs the full booking -> quote -> confirmed trip operations lifecycle.
 
 ## 1.1 Implementation Status (Updated February 26, 2026)
 
@@ -20,7 +20,7 @@ Current implemented code lives in:
 - `backend/app/scripts/seed.js`
 
 Implemented now:
-- Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, owner assignment, SLA timestamps, activity timeline)
+- Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, staff assignment, SLA timestamps, activity timeline)
 - Frontend booking form integration in `assets/js/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling
 - Keycloak-protected `/api/v1/*` access via backend session cookie (browser) or Keycloak bearer token
 - Booking/customer list pagination and filtering
@@ -29,7 +29,7 @@ Implemented now:
 - Branded website backoffice pages implemented:
   - `backend.html`: paginated searchable customers + bookings + tours tables (default newest 10 each)
   - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
-  - `backend-booking.html`: detail page for bookings/customers with booking actions (owner/stage updates + notes)
+  - `backend-booking.html`: detail page for bookings/customers with booking actions (staff/stage updates + notes)
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
 - Tours are fully backend-driven:
@@ -41,8 +41,27 @@ Implemented now:
   - destination countries selection via checkbox group (multi selection)
   - styles selection via checkbox group (multi selection)
   - image upload with backend ImageMagick conversion to WebP (max 1000px)
-- Admin API includes staff directory endpoint used by booking assignment controls:
+- Admin API includes staff directory and creation endpoints used by booking assignment controls:
   - `GET /api/v1/staff`
+  - `POST /api/v1/staff`
+
+Current role model in the implemented backend:
+- `atp_staff`
+  - read and write only bookings assigned to that staff member
+  - booking access is resolved by matching Keycloak `preferred_username` to `backend/app/config/staff.json -> usernames[]`
+- `atp_manager`
+  - read and write all bookings
+  - change staff assignments
+  - create staff records
+- `atp_admin`
+  - read and write all bookings
+  - change staff assignments
+  - create staff records
+  - read and edit tours
+- `atp_accountant`
+  - read all bookings
+  - change booking stage only
+  - read-only access to tours
 
 Note on stack:
 - Planned stack remains NestJS + Postgres + Redis for production rollout.
@@ -130,7 +149,7 @@ Status: **Implemented in local backend app**
 Deliverables:
 - Booking ingestion API
 - Customer profile and deduplication
-- Pipeline stages + ownership + SLA clocks
+- Pipeline stages + staff assignment + SLA clocks
 - Activity timeline (notes, tasks, contact logs)
 - Admin views for booking triage and follow-up
 
@@ -142,12 +161,15 @@ Delivered endpoints and features:
 - `GET /api/v1/bookings` with `page`, `page_size`, `stage`, `owner_id`, `search`, `sort`
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
+- `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
+- `GET /api/v1/staff`
+- `POST /api/v1/staff`
 - `GET /api/v1/customers` with pagination/search
 - Admin UI pages:
   - `/admin/bookings` (filters + pagination)
-  - `/admin/bookings/:bookingId` (stage update + activity note)
+  - `/admin/bookings/:bookingId` (role-aware staff/stage/note actions)
   - `/admin/customers` (search + pagination)
   - `/admin/customers/:customerId` (profile + related bookings)
 
@@ -246,9 +268,9 @@ Backend endpoint:
   - `booking_id`, `status`, `next_step_message`
 
 Operational behavior:
-- Booking is stored in CRM and auto-assigned by rules (destination/language/workload).
+- Booking is stored in CRM with `staff` initially unassigned.
 - System creates follow-up task with SLA timer.
-- Notification sent via Postmark/Twilio to assigned staff.
+- Manager/admin can later assign the booking to staff.
 
 ## 6.2 Tour Catalog Integration (`#tourGrid`)
 

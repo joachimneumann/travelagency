@@ -13,7 +13,7 @@ export function createAuth({ port }) {
     keycloakGlobalLogout: parseBoolEnv("KEYCLOAK_GLOBAL_LOGOUT", false),
     keycloakForceLoginPrompt: parseBoolEnv("KEYCLOAK_FORCE_LOGIN_PROMPT", false),
     keycloakAllowedRoles: new Set(
-      String(process.env.KEYCLOAK_ALLOWED_ROLES || "admin,staff_joachim,staff_van")
+      String(process.env.KEYCLOAK_ALLOWED_ROLES || "atp_admin,atp_manager,atp_accountant,atp_staff")
         .split(",")
         .map((value) => normalizeText(value))
         .filter(Boolean)
@@ -73,9 +73,9 @@ export function createAuth({ port }) {
   async function authorizeApiRequest(req, _requestUrl) {
     if (!cfg.keycloakEnabled) return { ok: false };
 
-    const session = getSessionFromRequest(req);
+    const session = getSessionPrincipal(req);
     if (session) {
-      return { ok: true, principal: { type: "session", sub: session.sub, roles: session.roles } };
+      return { ok: true, principal: session };
     }
 
     const authHeader = normalizeText(req.headers.authorization);
@@ -85,7 +85,16 @@ export function createAuth({ port }) {
         const payload = await verifyKeycloakToken(token);
         const roles = extractRolesFromPayload(payload);
         const hasRole = roles.some((role) => cfg.keycloakAllowedRoles.has(role));
-        return { ok: hasRole, principal: { type: "bearer", sub: payload.sub, roles } };
+        return {
+          ok: hasRole,
+          principal: {
+            type: "bearer",
+            sub: String(payload.sub || ""),
+            preferred_username: String(payload.preferred_username || ""),
+            email: String(payload.email || ""),
+            roles
+          }
+        };
       } catch {
         return { ok: false };
       }
@@ -138,6 +147,18 @@ export function createAuth({ port }) {
       return null;
     }
     return { ...session, sid };
+  }
+
+  function getSessionPrincipal(req) {
+    const session = getSessionFromRequest(req);
+    if (!session) return null;
+    return {
+      type: "session",
+      sub: String(session.sub || ""),
+      preferred_username: String(session.preferred_username || ""),
+      email: String(session.email || ""),
+      roles: Array.isArray(session.roles) ? session.roles : []
+    };
   }
 
   function extractRolesFromPayload(payload) {
@@ -411,6 +432,7 @@ export function createAuth({ port }) {
     pruneState,
     isKeycloakEnabled,
     hasSession,
+    getSessionPrincipal,
     getLoginRedirect,
     authorizeApiRequest
   };

@@ -4,6 +4,10 @@ const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const state = {
   id: qs.get("id") || "",
   user: qs.get("user") || "admin",
+  roles: [],
+  permissions: {
+    canEditTours: false
+  },
   tour: null,
   options: {
     destinations: [],
@@ -33,7 +37,7 @@ const els = {
 
 init();
 
-function init() {
+async function init() {
   const backParams = new URLSearchParams({ user: state.user });
   const backHref = `backend.html?${backParams.toString()}`;
 
@@ -49,6 +53,8 @@ function init() {
     showError("Missing tour id.");
     return;
   }
+
+  await loadAuthStatus();
 
   if (els.form) {
     els.form.addEventListener("submit", submitForm);
@@ -98,6 +104,7 @@ async function loadTour() {
 
   renderDestinationChoices(destinationCountries);
   renderStyleChoices(styles);
+  applyTourPermissions();
 }
 
 function renderDestinationChoices(selectedValues) {
@@ -173,6 +180,7 @@ function getCheckedValues(inputName) {
 
 async function submitForm(event) {
   event.preventDefault();
+  if (!state.permissions.canEditTours) return;
   clearError();
   clearTitleError();
 
@@ -277,6 +285,31 @@ async function fetchApi(path, options = {}) {
     console.error(error);
     return null;
   }
+}
+
+async function loadAuthStatus() {
+  try {
+    const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
+    const payload = await response.json();
+    if (!response.ok || !payload?.authenticated) return;
+    state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+    state.permissions.canEditTours = state.roles.includes("atp_admin");
+  } catch {
+    // leave defaults
+  }
+}
+
+function applyTourPermissions() {
+  if (state.permissions.canEditTours) return;
+  if (els.changeImageBtn) els.changeImageBtn.style.display = "none";
+  if (els.imageUpload) els.imageUpload.disabled = true;
+  if (els.form) {
+    els.form.querySelectorAll("input, textarea, select, button").forEach((el) => {
+      if (el.id === "tourCancelBtn") return;
+      el.disabled = true;
+    });
+  }
+  setStatus("Read-only access.");
 }
 
 async function findDuplicateTourTitle(title, currentTourId) {

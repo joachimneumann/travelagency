@@ -4,13 +4,14 @@ This service implements Milestone 1 from `backend/backend_software.md`:
 - Booking ingestion API
 - Customer deduplication and profile creation
 - Booking pipeline stages and transitions
-- Owner assignment with workload balancing
+- Staff assignment on bookings
 - SLA due timestamps
 - Booking activity timeline
 - Simple admin pages for pipeline and booking detail
 
 Related documentation:
 - `mobileApp.md`: how to build a native iPhone app against this backend and Keycloak setup
+- Mobile source scaffold: `/Users/internal_admin/projects/travelagency/mobile/iOS`
 
 ## Run
 
@@ -31,7 +32,7 @@ Environment variables:
 - `KEYCLOAK_CLIENT_SECRET` (Keycloak confidential client secret)
 - `KEYCLOAK_REDIRECT_URI` (default `http://localhost:8787/auth/callback`)
 - `KEYCLOAK_POST_LOGOUT_REDIRECT_URI` (optional; must be allowed by Keycloak client if set)
-- `KEYCLOAK_ALLOWED_ROLES` (comma-separated, default `admin,staff_joachim,staff_van`)
+- `KEYCLOAK_ALLOWED_ROLES` (comma-separated, default `atp_admin,atp_manager,atp_accountant,atp_staff`)
 - `KEYCLOAK_FORCE_LOGIN_PROMPT` (`true`/`false`, default `false`)
 - `KEYCLOAK_GLOBAL_LOGOUT` (`true`/`false`, default `false`)
 - `RETURN_TO_ALLOWED_ORIGINS` (comma-separated absolute origins allowed for `return_to`; default `http://localhost:8080,http://localhost:8787`)
@@ -100,12 +101,13 @@ Admin API:
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
-- `PATCH /api/v1/bookings/:bookingId/owner`
+- `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
 - `GET /api/v1/staff`
+- `POST /api/v1/staff`
 - `GET /api/v1/tours`
 - `GET /api/v1/tours/:tourId`
 - `POST /api/v1/tours`
@@ -144,8 +146,8 @@ Booking list query params (`GET /api/v1/bookings`):
 - `page` (default `1`)
 - `page_size` (default `25`, max `100`)
 - `stage` (`NEW|QUALIFIED|PROPOSAL_SENT|NEGOTIATION|WON|LOST|POST_TRIP`)
-- `owner_id` (exact match)
-- `search` (matches booking id, destination, style, owner, notes, customer name/email)
+- `owner_id` (exact match; compatible filter for assigned staff id)
+- `search` (matches booking id, destination, style, assigned staff, notes, customer name/email)
 - `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `sla_due_at_asc`, `sla_due_at_desc`)
 
 Default ordering:
@@ -160,17 +162,50 @@ Admin UI:
 - `GET /admin/customers/:customerId`
 
 Branded frontend backoffice pages (served by website):
-- `/backend.html`: chapter-branded dashboard with:
+- `/backend.html`: AsiaTravelPlan-branded dashboard with:
   - paginated searchable Customers table
   - paginated searchable Bookings table
   - paginated searchable Tours table
 - `/backend-tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
 - `backend.html` header includes `Website` and `Logout` actions.
-- `/backend-booking.html`: read-only booking/customer detail page with booking actions
+- `/backend-booking.html`: role-aware booking/customer detail page with booking actions
   - booking activities list
-  - change owner
+  - change staff assignment
   - change stage
   - add note activity
+
+## Role Model
+
+Allowed backend roles:
+- `atp_admin`
+- `atp_manager`
+- `atp_accountant`
+- `atp_staff`
+
+Role behavior:
+- `atp_staff`
+  - read and write only bookings assigned to that staff member
+  - staff identity is mapped from Keycloak `preferred_username` to `config/staff.json -> usernames[]`
+- `atp_manager`
+  - see and edit all bookings
+  - change staff assignments
+  - create staff records
+  - see customers
+- `atp_admin`
+  - see and edit all bookings
+  - change staff assignments
+  - create staff records
+  - see customers
+  - see and edit tours
+- `atp_accountant`
+  - see all bookings
+  - may change booking stage only
+  - read-only access to tours
+
+Booking assignment model:
+- each new booking is created with `staff = null`
+- staff assignment is added later by `atp_manager` or `atp_admin`
+- `atp_staff` booking access depends on Keycloak `preferred_username` matching `config/staff.json -> usernames[]`
 
 Website header integration:
 - Main site has a `backend` button (no dropdown) that redirects to `/auth/login`.
@@ -229,7 +264,7 @@ KEYCLOAK_REALM='asiatravelplan' \
 KEYCLOAK_CLIENT_ID='asiatravelplan-backend' \
 KEYCLOAK_CLIENT_SECRET='YOUR_CLIENT_SECRET' \
 KEYCLOAK_REDIRECT_URI='http://localhost:8787/auth/callback' \
-KEYCLOAK_ALLOWED_ROLES='admin,staff_joachim,staff_van' \
+KEYCLOAK_ALLOWED_ROLES='atp_admin,atp_manager,atp_accountant,atp_staff' \
 npm start
 ```
 

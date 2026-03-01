@@ -20,9 +20,10 @@ Features available now:
 - Public backend-hosted tour images (`GET /public/v1/tour-images/:path`)
 - Booking pipeline and stage transitions
 - Customer deduplication
-- Booking ownership assignment + SLA due timestamps
+- Booking staff assignment + SLA due timestamps
 - Booking activity timeline
 - Staff lookup API for assignment controls (`GET /api/v1/staff`)
+- Staff creation API for managers/admins (`POST /api/v1/staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
 - Lightweight admin pages (`/admin`, `/admin/bookings`, `/admin/bookings/:id`, `/admin/customers`, `/admin/customers/:id`)
@@ -31,6 +32,12 @@ Features available now:
 - clicking a tour ID opens `backend-tour.html` for editing
   - destination and styles are edited with checkbox groups
   - image upload converts to WebP (max 1000px) automatically
+
+Current role behavior:
+- `atp_staff`: read/write only assigned bookings
+- `atp_manager`: read/write all bookings, change assignments, create staff
+- `atp_admin`: read/write all bookings, change assignments, create staff, edit tours
+- `atp_accountant`: read all bookings, change stage only, read-only tours
 
 ## 2) Start the backend locally
 
@@ -103,7 +110,7 @@ curl -b cookie.txt \
 Supported filters on `GET /api/v1/bookings`:
 - `page`, `page_size`
 - `stage`
-- `owner_id`
+- `owner_id` (assigned staff id)
 - `search`
 - `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `sla_due_at_asc`, `sla_due_at_desc`)
 
@@ -137,10 +144,11 @@ Tours source:
 Branded backend web UI:
 - `backend.html` provides a AsiaTravelPlan-styled backend workspace page.
 - It shows:
-  - paginated searchable Customers table (newest first, page size 10)
-  - paginated searchable Bookings table (newest first, page size 10)
-  - paginated searchable Tours table
-- tour IDs open `backend-tour.html` for editing
+  - role-based Customers table visibility
+  - role-based Bookings table
+  - role-based Tours table
+  - staff creation panel for managers/admins
+- tour IDs open `backend-tour.html` for admin editing and accountant read-only viewing
 - Booking/customer IDs link to `backend-booking.html`.
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
@@ -161,10 +169,14 @@ KEYCLOAK_REALM='master' \
 KEYCLOAK_CLIENT_ID='asiatravelplan-backend' \
 KEYCLOAK_CLIENT_SECRET='YOUR_CLIENT_SECRET' \
 KEYCLOAK_REDIRECT_URI='http://localhost:8787/auth/callback' \
-KEYCLOAK_ALLOWED_ROLES='admin,staff_joachim,staff_van' \
+KEYCLOAK_ALLOWED_ROLES='atp_admin,atp_manager,atp_accountant,atp_staff' \
 CORS_ORIGIN='http://localhost:8080' \
 npm start
 ```
+
+Role mapping for `atp_staff`:
+- the logged-in Keycloak `preferred_username` must match an entry in `backend/app/config/staff.json -> usernames[]`
+- new bookings are created unassigned and receive `staff = null` until manager/admin assignment
 
 Terminal B (website):
 

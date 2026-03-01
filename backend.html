@@ -32,7 +32,7 @@
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <article class="panel" style="padding: 1rem; margin-bottom: 1rem;">
+          <article class="panel" id="customersPanel" style="padding: 1rem; margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.2rem;">Customers</h2>
             <div class="backend-controls">
               <div class="field">
@@ -48,12 +48,12 @@
             <div class="backend-pagination" id="customersPagination" aria-label="Customers pagination"></div>
           </article>
 
-          <article class="panel" style="padding: 1rem;">
+          <article class="panel" id="bookingsPanel" style="padding: 1rem;">
             <h2 class="section-title" style="font-size: 1.2rem;">Bookings</h2>
             <div class="backend-controls">
               <div class="field">
                 <label for="bookingsSearch">Search bookings</label>
-                <input id="bookingsSearch" type="text" placeholder="id, customer, destination, owner..." />
+                <input id="bookingsSearch" type="text" placeholder="id, customer, destination, staff..." />
               </div>
               <button class="btn btn-ghost" id="bookingsSearchBtn" type="button">Search</button>
               <span id="bookingsCountInfo" class="micro"></span>
@@ -64,7 +64,34 @@
             <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
           </article>
 
-          <article class="panel" style="padding: 1rem; margin-top: 1rem;">
+          <article class="panel" id="staffPanel" style="padding: 1rem; margin-top: 1rem; display:none;">
+            <h2 class="section-title" style="font-size: 1.2rem;">Staff</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="staffName">Name</label>
+                <input id="staffName" type="text" placeholder="Full name" />
+              </div>
+              <div class="field">
+                <label for="staffUsernames">Keycloak usernames</label>
+                <input id="staffUsernames" type="text" placeholder="comma,separated,usernames" />
+              </div>
+              <div class="field">
+                <label for="staffDestinations">Destinations</label>
+                <input id="staffDestinations" type="text" placeholder="Vietnam, Thailand" />
+              </div>
+              <div class="field">
+                <label for="staffLanguages">Languages</label>
+                <input id="staffLanguages" type="text" placeholder="English, Vietnamese" />
+              </div>
+              <button class="btn btn-primary" id="staffCreateBtn" type="button">Create staff</button>
+              <span id="staffStatus" class="micro"></span>
+            </div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="staffTable"></table>
+            </div>
+          </article>
+
+          <article class="panel" id="toursPanel" style="padding: 1rem; margin-top: 1rem;">
             <h2 class="section-title" style="font-size: 1.2rem;">Tours</h2>
             <div class="backend-controls">
               <div class="field">

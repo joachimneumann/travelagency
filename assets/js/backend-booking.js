@@ -13,10 +13,23 @@ const STAGES = [
   "POST_TRIP"
 ];
 
+const ROLES = {
+  ADMIN: "atp_admin",
+  MANAGER: "atp_manager",
+  ACCOUNTANT: "atp_accountant",
+  STAFF: "atp_staff"
+};
+
 const state = {
   type: qs.get("type") || "booking",
   id: qs.get("id") || "",
   user: qs.get("user") || "admin",
+  roles: [],
+  permissions: {
+    canChangeAssignment: false,
+    canChangeStage: false,
+    canEditBooking: false
+  },
   booking: null,
   customer: null,
   staff: [],
@@ -61,7 +74,7 @@ const els = {
 
 init();
 
-function init() {
+async function init() {
   const backParams = new URLSearchParams({ user: state.user });
   const backHref = `backend.html?${backParams.toString()}`;
 
@@ -93,6 +106,8 @@ function init() {
     return;
   }
 
+  await loadAuthStatus();
+
   if (state.type === "customer") {
     if (els.actionsPanel) els.actionsPanel.style.display = "none";
     if (els.invoicePanel) els.invoicePanel.style.display = "none";
@@ -105,10 +120,11 @@ function init() {
 
 async function loadBookingPage() {
   clearStatus();
-  const [bookingPayload, staffPayload] = await Promise.all([
-    fetchApi(`/api/v1/bookings/${encodeURIComponent(state.id)}`),
-    fetchApi(`/api/v1/staff?active=true`)
-  ]);
+  const requests = [fetchApi(`/api/v1/bookings/${encodeURIComponent(state.id)}`)];
+  if (state.permissions.canChangeAssignment) {
+    requests.push(fetchApi(`/api/v1/staff?active=true`));
+  }
+  const [bookingPayload, staffPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
 
   state.booking = bookingPayload.booking || null;
@@ -144,7 +160,7 @@ async function loadCustomer() {
   renderActivitiesTable([]);
   if (els.activitiesTable) {
     els.activitiesTable.innerHTML =
-      '<thead><tr><th>Booking ID</th><th>Stage</th><th>Destination</th><th>Style</th><th>Owner</th><th>Created</th></tr></thead>' +
+      '<thead><tr><th>Booking ID</th><th>Stage</th><th>Destination</th><th>Style</th><th>Staff</th><th>Created</th></tr></thead>' +
       `<tbody>${(payload.bookings || [])
         .map((booking) => {
           const href = buildBookingHref(booking.id);
@@ -153,7 +169,7 @@ async function loadCustomer() {
           <td>${escapeHtml(booking.stage || "-")}</td>
           <td>${escapeHtml(booking.destination || "-")}</td>
           <td>${escapeHtml(booking.style || "-")}</td>
-          <td>${escapeHtml(booking.owner_name || "Unassigned")}</td>
+          <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
           <td>${escapeHtml(formatDateTime(booking.created_at))}</td>
         </tr>`;
         })
@@ -179,7 +195,7 @@ function renderBookingData() {
       entries: [
         ["id", booking.id],
         ["stage", booking.stage],
-        ["owner", booking.owner_name || "Unassigned"],
+        ["staff", booking.staff_name || booking.owner_name || "Unassigned"],
         ["destination", booking.destination],
         ["style", booking.style],
         ["travel_month", booking.travel_month],
@@ -242,8 +258,16 @@ function renderActionControls() {
       .concat((state.staff || []).map((staff) => `<option value="${escapeHtml(staff.id)}">${escapeHtml(staff.name)}</option>`))
       .join("");
     els.ownerSelect.innerHTML = options;
-    els.ownerSelect.value = state.booking.owner_id || "";
+    els.ownerSelect.value = state.booking.staff || state.booking.owner_id || "";
+    els.ownerSelect.disabled = !state.permissions.canChangeAssignment;
   }
+
+  if (els.ownerSaveBtn) els.ownerSaveBtn.style.display = state.permissions.canChangeAssignment ? "" : "none";
+  if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
+  if (els.stageSaveBtn) els.stageSaveBtn.style.display = state.permissions.canChangeStage ? "" : "none";
+  if (els.noteInput) els.noteInput.disabled = !state.permissions.canEditBooking;
+  if (els.noteSaveBtn) els.noteSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 }
 
 async function saveOwner() {
@@ -259,7 +283,7 @@ async function saveOwner() {
   state.booking = result.booking;
   renderBookingHeader();
   renderBookingData();
-  setStatus("Owner updated.");
+  setStatus("Staff updated.");
   await loadActivities();
 }
 
@@ -369,11 +393,12 @@ function renderInvoicesTable() {
   const rows = state.invoices
     .map((invoice) => {
       const checked = invoice.sent_to_customer ? "checked" : "";
+      const disabled = state.permissions.canEditBooking ? "" : "disabled";
       return `<tr>
         <td><a class="btn btn-ghost" href="${escapeHtml(`${apiBase}/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`)}" target="_blank" rel="noopener">PDF</a></td>
         <td>${escapeHtml(invoice.invoice_number || shortId(invoice.id))}</td>
         <td>${escapeHtml(String(invoice.version || 1))}</td>
-        <td><input type="checkbox" data-invoice-sent="${escapeHtml(invoice.id)}" ${checked} /></td>
+        <td><input type="checkbox" data-invoice-sent="${escapeHtml(invoice.id)}" ${checked} ${disabled} /></td>
         <td>${escapeHtml(String(invoice.total_amount_cents || 0))}</td>
         <td>${escapeHtml(formatDateTime(invoice.updated_at))}</td>
         <td><button type="button" class="btn btn-ghost" data-select-invoice="${escapeHtml(invoice.id)}">Load data</button></td>
@@ -426,6 +451,7 @@ function fillInvoiceForm(invoice) {
     els.invoiceVatInput.value = Number.isFinite(vat) ? String(vat) : "0";
   }
   if (els.invoiceNotesInput) els.invoiceNotesInput.value = invoice.notes || "";
+  applyInvoicePermissions();
 }
 
 function resetInvoiceForm() {
@@ -441,6 +467,7 @@ function resetInvoiceForm() {
   if (els.invoiceVatInput) els.invoiceVatInput.value = "0";
   if (els.invoiceNotesInput) els.invoiceNotesInput.value = "";
   clearInvoiceStatus();
+  applyInvoicePermissions();
 }
 
 function invoiceItemsToText(items) {
@@ -496,6 +523,7 @@ function collectInvoicePayload() {
 
 async function createInvoice() {
   if (!state.booking) return;
+  if (!state.permissions.canEditBooking) return;
   clearInvoiceStatus();
   let payload;
   try {
@@ -518,6 +546,7 @@ async function createInvoice() {
 
 async function toggleInvoiceSent(invoiceId, sent) {
   if (!state.booking || !invoiceId) return;
+  if (!state.permissions.canEditBooking) return;
   clearInvoiceStatus();
   const result = await fetchApi(
     `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(invoiceId)}`,
@@ -538,6 +567,26 @@ function setInvoiceStatus(message) {
 
 function clearInvoiceStatus() {
   setInvoiceStatus("");
+}
+
+function applyInvoicePermissions() {
+  const disabled = !state.permissions.canEditBooking;
+  [
+    els.invoiceSelect,
+    els.invoiceNumberInput,
+    els.invoiceCurrencyInput,
+    els.invoiceIssueDateInput,
+    els.invoiceIssueTodayBtn,
+    els.invoiceDueDateInput,
+    els.invoiceDueMonthBtn,
+    els.invoiceTitleInput,
+    els.invoiceItemsInput,
+    els.invoiceDueAmountInput,
+    els.invoiceVatInput,
+    els.invoiceNotesInput
+  ].forEach((el) => {
+    if (el) el.disabled = disabled;
+  });
 }
 
 function normalizeDateInput(value) {
@@ -630,6 +679,26 @@ function setStatus(message) {
 
 function clearStatus() {
   setStatus("");
+}
+
+async function loadAuthStatus() {
+  try {
+    const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
+    const payload = await response.json();
+    if (!response.ok || !payload?.authenticated) return;
+    state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+    state.permissions = {
+      canChangeAssignment: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
+      canChangeStage: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
+      canEditBooking: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF)
+    };
+  } catch {
+    // leave defaults
+  }
+}
+
+function hasAnyRole(...roles) {
+  return roles.some((role) => state.roles.includes(role));
 }
 
 function showError(message) {
