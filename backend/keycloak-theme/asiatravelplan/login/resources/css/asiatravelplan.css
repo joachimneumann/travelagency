@@ -187,7 +187,7 @@ a {
   .login-pf-page,
   .pf-v5-c-login,
   .pf-c-login {
-    padding-top: 8px !important;
+    padding-top: 10px !important;
     padding-bottom: 8px !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
@@ -202,6 +202,9 @@ a {
   .pf-c-login,
   .pf-v5-c-login__container,
   .pf-c-login__container {
+    min-height: auto !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
   }
@@ -209,7 +212,7 @@ a {
   #kc-header-wrapper {
     height: 40px;
     width: min(196px, calc(100vw - 116px));
-    margin: 0 auto 8px auto;
+    margin: 10px auto 4px auto;
   }
 
   .card-pf,
@@ -229,7 +232,7 @@ a {
   .login-pf-page .card-pf,
   .pf-v5-c-login__main,
   .pf-c-login__main {
-    padding-top: 6px !important;
+    padding-top: 0 !important;
     padding-bottom: 10px !important;
   }
 
@@ -239,6 +242,16 @@ a {
   .pf-v5-c-login__main-body,
   .pf-c-login__main-body {
     max-width: min(344px, calc(100vw - 36px)) !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .pf-v5-c-login__main-body,
+  .pf-c-login__main-body,
+  .card-pf .card-pf-body,
+  .pf-c-card__body,
+  #kc-form-wrapper,
+  #kc-form {
     padding-top: 0 !important;
     margin-top: 0 !important;
   }
@@ -263,9 +276,15 @@ a {
 
   .pf-v5-c-form__group:first-child,
   .pf-c-form__group:first-child,
-  #kc-form .form-group:first-child {
+  #kc-form .form-group:first-child,
+  #kc-form .form-group:first-of-type {
     margin-top: 0 !important;
     padding-top: 0 !important;
+  }
+
+  #kc-form .form-group:first-child label,
+  #kc-form .form-group:first-of-type label {
+    margin-top: 0 !important;
   }
 
   label,

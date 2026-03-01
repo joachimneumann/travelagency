@@ -6,10 +6,12 @@
       "scale" : "1x"
     },
     {
+      "filename" : "logo-asiatravelplan@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "logo-asiatravelplan@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

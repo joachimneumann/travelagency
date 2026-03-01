@@ -6,40 +6,32 @@ struct SettingsView: View {
     @AppStorage("debugInfoEnabled") private var debugInfoEnabled = false
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section("Application") {
-                    settingRow("App version", value: AppConfig.currentAppVersion)
-                    settingRow("API version", value: apiVersion)
-                }
-                .textCase(nil)
+        Form {
+            Section("Application") {
+                settingRow("App version", value: AppConfig.currentAppVersion)
+                settingRow("API version", value: apiVersion)
+            }
 
-                Section("Debug") {
-                    Toggle("Debug information", isOn: $debugInfoEnabled)
-                        .font(.subheadline)
+            Section("Debug") {
+                Toggle("Debug information", isOn: $debugInfoEnabled)
 
-                    if debugInfoEnabled {
-                        settingRow("API base", value: AppConfig.apiBaseURL.absoluteString)
-                        settingRow("Auth base", value: AppConfig.keycloakBaseURL.absoluteString)
-                        settingRow("Client", value: AppConfig.clientID)
-                        settingRow("User", value: sessionStore.session?.user.preferredUsername ?? "-")
-                        settingRow("Roles", value: formattedRoles)
-                    }
-                }
-                .textCase(nil)
-
-                Section {
-                    Button(role: .destructive) {
-                        Task { await sessionStore.logoutEverywhere() }
-                    } label: {
-                        Text("Sign out")
-                            .font(.subheadline.weight(.semibold))
-                    }
+                if debugInfoEnabled {
+                    settingRow("API base", value: AppConfig.apiBaseURL.absoluteString)
+                    settingRow("Auth base", value: AppConfig.keycloakBaseURL.absoluteString)
+                    settingRow("Client", value: AppConfig.clientID)
+                    settingRow("User", value: sessionStore.session?.user.preferredUsername ?? "-")
+                    settingRow("Roles", value: formattedRoles)
                 }
             }
-            .listStyle(.plain)
-            .modifier(HideSettingsNavigationBarModifier())
+
+            Section {
+                Button("Sign out", role: .destructive) {
+                    Task { await sessionStore.logoutEverywhere() }
+                }
+            }
         }
+        .navigationTitle("Settings")
+        .modifier(SettingsNavigationTitleDisplayModeModifier())
     }
 
     private var apiVersion: String {
@@ -65,14 +57,14 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
         }
-        .font(.footnote)
+        .font(.body)
     }
 }
 
-private struct HideSettingsNavigationBarModifier: ViewModifier {
+private struct SettingsNavigationTitleDisplayModeModifier: ViewModifier {
     func body(content: Content) -> some View {
 #if os(iOS)
-        content.toolbar(.hidden, for: .navigationBar)
+        content.navigationBarTitleDisplayMode(.automatic)
 #else
         content
 #endif

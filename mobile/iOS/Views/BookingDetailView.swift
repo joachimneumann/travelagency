@@ -2,106 +2,116 @@ import SwiftUI
 
 struct BookingDetailView: View {
     let bookingID: String
-    let onBack: () -> Void
 
     @EnvironmentObject private var sessionStore: SessionStore
     @StateObject private var viewModel = BookingDetailViewModel()
     private let roleService = RoleService()
 
+    @State private var selectedStage = ""
+    @State private var selectedStaffID = ""
+
     var body: some View {
-        VStack(spacing: 0) {
-            detailTopBar
+        Form {
+            if let booking = viewModel.booking {
+                Section("Booking") {
+                    LabeledContent("ID", value: booking.id)
+                    LabeledContent("Stage", value: booking.stage)
+                    LabeledContent("Destination", value: booking.destination ?? "-")
+                    LabeledContent("Style", value: booking.style ?? "-")
+                    LabeledContent("Staff", value: booking.staffName ?? "Unassigned")
+                }
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let booking = viewModel.booking, let session = sessionStore.session {
-                        section("Booking") {
-                            LabeledContent("ID", value: booking.id)
-                            LabeledContent("Stage", value: booking.stage)
-                            LabeledContent("Destination", value: booking.destination ?? "-")
-                            LabeledContent("Style", value: booking.style ?? "-")
-                            LabeledContent("Staff", value: booking.staffName ?? "Unassigned")
-                        }
-
-                        if roleService.canChangeBookingStage(session.user) {
-                            section("Stage") {
-                                ForEach(["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "WON", "LOST", "POST_TRIP"], id: \.self) { stage in
-                                    Button(stage) {
-                                        Task { await viewModel.updateStage(stage, session: session) }
-                                    }
-                                    .buttonStyle(.bordered)
-                                }
-                            }
-                        }
-
-                        if roleService.canChangeAssignment(session.user) {
-                            section("Assignment") {
-                                ForEach(viewModel.staff) { member in
-                                    Button(member.name) {
-                                        Task { await viewModel.updateAssignment(member.id, session: session) }
-                                    }
-                                    .buttonStyle(.bordered)
-                                }
-                                Button("Unassign") {
-                                    Task { await viewModel.updateAssignment(nil, session: session) }
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                        }
-
-                        if roleService.canEditAllBookings(session.user) || roleService.canEditAssignedBookings(session.user) {
-                            section("Booking note") {
-                                TextEditor(text: $viewModel.noteDraft)
-                                    .frame(minHeight: 120)
-                                    .overlay {
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.secondary.opacity(0.3))
-                                    }
-                                Button("Save note") {
-                                    Task { await viewModel.saveNote(session: session) }
-                                }
-                                .buttonStyle(.borderedProminent)
-                            }
-                        }
-
-                        if !viewModel.activities.isEmpty {
-                            section("Activities") {
-                                ForEach(viewModel.activities) { activity in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(activity.type)
-                                            .font(.caption.weight(.semibold))
-                                        Text(activity.detail)
-                                            .font(.footnote)
-                                        Text("\(activity.actor) • \(activity.createdAt)")
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .padding(.vertical, 4)
-                                }
-                            }
-                        }
-
-                        if let customer = viewModel.customer {
-                            section("Customer") {
-                                LabeledContent("Name", value: customer.name ?? "-")
-                                LabeledContent("Email", value: customer.email ?? "-")
-                                LabeledContent("Phone", value: customer.phone ?? "-")
-                                LabeledContent("Language", value: customer.language ?? "-")
-                            }
-                        }
-                    } else if viewModel.isLoading {
-                        ProgressView("Loading booking...")
+                if let customer = viewModel.customer {
+                    Section("Customer") {
+                        LabeledContent("Name", value: customer.name ?? "-")
+                        LabeledContent("Email", value: customer.email ?? "-")
+                        LabeledContent("Phone", value: customer.phone ?? "-")
+                        LabeledContent("Language", value: customer.language ?? "-")
                     }
                 }
-                .padding(16)
+
+                if canChangeStage, let session = sessionStore.session {
+                    Section("Stage") {
+                        Picker("Stage", selection: $selectedStage) {
+                            ForEach(stageOptions, id: \.self) { stage in
+                                Text(stage).tag(stage)
+                            }
+                        }
+
+                        Button("Update Stage") {
+                            Task { await viewModel.updateStage(selectedStage, session: session) }
+                        }
+                        .disabled(selectedStage.isEmpty || selectedStage == booking.stage)
+                    }
+                }
+
+                if canChangeAssignment, let session = sessionStore.session {
+                    Section("Assignment") {
+                        Picker("Staff", selection: $selectedStaffID) {
+                            Text("Unassigned").tag("")
+                            ForEach(viewModel.staff) { member in
+                                Text(member.name).tag(member.id)
+                            }
+                        }
+
+                        Button("Save Assignment") {
+                            let staffID = selectedStaffID.isEmpty ? nil : selectedStaffID
+                            Task { await viewModel.updateAssignment(staffID, session: session) }
+                        }
+                        .disabled(selectedStaffID == (booking.staff ?? ""))
+                    }
+                }
+
+                if canEditBooking, let session = sessionStore.session {
+                    Section("Booking Note") {
+                        TextEditor(text: $viewModel.noteDraft)
+                            .frame(minHeight: 140)
+
+                        Button("Save Note") {
+                            Task { await viewModel.saveNote(session: session) }
+                        }
+                        .disabled(viewModel.noteDraft == viewModel.originalNote)
+                    }
+                }
+
+                if !viewModel.activities.isEmpty {
+                    Section("Activities") {
+                        ForEach(viewModel.activities) { activity in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(activity.type)
+                                    .font(.headline)
+                                Text(activity.detail)
+                                    .font(.body)
+                                Text("\(activity.actor) • \(activity.createdAt)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+            } else if viewModel.isLoading {
+                Section {
+                    ProgressView("Loading booking...")
+                }
             }
         }
+        .navigationTitle("Details")
+        .modifier(InlineNavigationTitleDisplayModeModifier())
         .task {
             guard let session = sessionStore.session else { return }
             await viewModel.load(bookingID: bookingID, session: session)
+            syncSelectionsFromBooking()
         }
-        .ignoresSafeArea(.container, edges: [.top, .bottom])
-        .modifier(BookingDetailNavigationChromeModifier())
+        .onChange(of: viewModel.booking?.id) { _, _ in
+            syncSelectionsFromBooking()
+        }
+        .onChange(of: viewModel.booking?.stage) { _, _ in
+            syncSelectionsFromBooking()
+        }
+        .onChange(of: viewModel.booking?.staff) { _, _ in
+            syncSelectionsFromBooking()
+        }
         .alert("Booking", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -112,52 +122,35 @@ struct BookingDetailView: View {
         }
     }
 
-    private var detailTopBar: some View {
-        HStack(spacing: 8) {
-            Button {
-                onBack()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(width: 32, height: 32)
-            }
-            .buttonStyle(.plain)
-            .contentShape(Rectangle())
-
-            Spacer()
-
-            Text("Details")
-                .font(.system(size: 12, weight: .semibold))
-                .lineLimit(1)
-
-            Spacer()
-
-            Color.clear
-                .frame(width: 32, height: 32)
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 16)
-        .frame(height: 48)
+    private var canChangeStage: Bool {
+        guard let session = sessionStore.session else { return false }
+        return roleService.canChangeBookingStage(session.user)
     }
 
-    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.footnote.bold())
-            content()
-                .font(.footnote)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
-        .background(Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+    private var canChangeAssignment: Bool {
+        guard let session = sessionStore.session else { return false }
+        return roleService.canChangeAssignment(session.user)
+    }
+
+    private var canEditBooking: Bool {
+        guard let session = sessionStore.session else { return false }
+        return roleService.canEditAllBookings(session.user) || roleService.canEditAssignedBookings(session.user)
+    }
+
+    private var stageOptions: [String] {
+        ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "WON", "LOST", "POST_TRIP"]
+    }
+
+    private func syncSelectionsFromBooking() {
+        selectedStage = viewModel.booking?.stage ?? ""
+        selectedStaffID = viewModel.booking?.staff ?? ""
     }
 }
 
-private struct BookingDetailNavigationChromeModifier: ViewModifier {
+private struct InlineNavigationTitleDisplayModeModifier: ViewModifier {
     func body(content: Content) -> some View {
 #if os(iOS)
-        content
-            .toolbar(.hidden, for: .navigationBar)
+        content.navigationBarTitleDisplayMode(.inline)
 #else
         content
 #endif
