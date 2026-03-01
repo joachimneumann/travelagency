@@ -1,0 +1,805 @@
+openapi: 3.1.0
+info:
+  title: AsiaTravelPlan Mobile API
+  version: 2026-03-01.1
+  summary: Contract for the in-house iPhone app and the AsiaTravelPlan backend.
+  description: |
+    This contract is the mobile app's source of truth. It describes the request and
+    response payloads the iPhone app may rely on.
+
+    Important:
+    - The mobile app must not depend on backend storage details.
+    - Breaking changes should increment this contract version and normally require
+      a mobile app update.
+    - Only these app roles are supported:
+      `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`.
+servers:
+  - url: https://api-staging.asiatravelplan.com
+    description: Staging API
+  - url: http://localhost:8787
+    description: Local development API
+tags:
+  - name: Auth
+  - name: Bookings
+  - name: Staff
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ATPUserRole:
+      type: string
+      enum:
+        - atp_admin
+        - atp_manager
+        - atp_accountant
+        - atp_staff
+    BookingStage:
+      type: string
+      enum:
+        - NEW
+        - QUALIFIED
+        - PROPOSAL_SENT
+        - NEGOTIATION
+        - INVOICE_SENT
+        - PAYMENT_RECEIVED
+        - WON
+        - LOST
+        - POST_TRIP
+    AuthenticatedUser:
+      type: object
+      required:
+        - sub
+        - roles
+      properties:
+        sub:
+          type: string
+        preferred_username:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/ATPUserRole"
+    AuthMeResponse:
+      type: object
+      required:
+        - authenticated
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          allOf:
+            - $ref: "#/components/schemas/AuthenticatedUser"
+          nullable: true
+    SourceAttribution:
+      type: object
+      properties:
+        page_url:
+          type: string
+          nullable: true
+        utm_source:
+          type: string
+          nullable: true
+        utm_medium:
+          type: string
+          nullable: true
+        utm_campaign:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+    Booking:
+      type: object
+      required:
+        - id
+        - customer_id
+        - stage
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+        customer_id:
+          type: string
+        stage:
+          $ref: "#/components/schemas/BookingStage"
+        staff:
+          type: string
+          nullable: true
+          description: Canonical assigned staff id.
+        staff_name:
+          type: string
+          nullable: true
+        owner_id:
+          type: string
+          nullable: true
+          description: Legacy compatibility alias for the assigned staff id.
+        owner_name:
+          type: string
+          nullable: true
+          description: Legacy compatibility alias for the assigned staff name.
+        sla_due_at:
+          type: string
+          format: date-time
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+        style:
+          type: string
+          nullable: true
+        travel_month:
+          type: string
+          nullable: true
+        travelers:
+          type: integer
+          nullable: true
+        duration:
+          type: string
+          nullable: true
+        budget:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        source:
+          $ref: "#/components/schemas/SourceAttribution"
+        idempotency_key:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Customer:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    BookingActivity:
+      type: object
+      required:
+        - id
+        - booking_id
+        - type
+        - detail
+        - actor
+        - created_at
+      properties:
+        id:
+          type: string
+        booking_id:
+          type: string
+        type:
+          type: string
+        detail:
+          type: string
+        actor:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    BookingInvoice:
+      type: object
+      required:
+        - id
+        - booking_id
+        - version
+        - status
+        - currency
+        - total_amount_cents
+        - due_amount_cents
+        - sent_to_customer
+      properties:
+        id:
+          type: string
+        booking_id:
+          type: string
+        customer_id:
+          type: string
+          nullable: true
+        invoice_number:
+          type: string
+          nullable: true
+        version:
+          type: integer
+        status:
+          type: string
+        currency:
+          type: string
+        issue_date:
+          type: string
+          nullable: true
+        due_date:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        sent_to_customer:
+          type: boolean
+        sent_to_customer_at:
+          type: string
+          format: date-time
+          nullable: true
+        total_amount_cents:
+          type: integer
+        due_amount_cents:
+          type: integer
+        pdf_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    StaffMember:
+      type: object
+      required:
+        - id
+        - name
+        - active
+        - usernames
+        - destinations
+        - languages
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+        usernames:
+          type: array
+          items:
+            type: string
+        destinations:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+    BookingListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - page_size
+        - total_pages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+    BookingDetailResponse:
+      type: object
+      required:
+        - booking
+      properties:
+        booking:
+          $ref: "#/components/schemas/Booking"
+        customer:
+          oneOf:
+            - $ref: "#/components/schemas/Customer"
+            - type: "null"
+    BookingUpdateResponse:
+      type: object
+      required:
+        - booking
+      properties:
+        booking:
+          $ref: "#/components/schemas/Booking"
+    BookingActivitiesResponse:
+      type: object
+      required:
+        - activities
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingActivity"
+    BookingActivityCreateResponse:
+      type: object
+      required:
+        - activity
+      properties:
+        activity:
+          $ref: "#/components/schemas/BookingActivity"
+    BookingInvoicesResponse:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingInvoice"
+        total:
+          type: integer
+    StaffListResponse:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffMember"
+        total:
+          type: integer
+    StaffCreateRequest:
+      type: object
+      required:
+        - name
+        - usernames
+      properties:
+        name:
+          type: string
+        usernames:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: string
+              description: Comma-separated compatibility form.
+        destinations:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+    StaffCreateResponse:
+      type: object
+      required:
+        - staff
+      properties:
+        staff:
+          $ref: "#/components/schemas/StaffMember"
+    BookingStageUpdateRequest:
+      type: object
+      required:
+        - stage
+      properties:
+        stage:
+          $ref: "#/components/schemas/BookingStage"
+    BookingAssignmentUpdateRequest:
+      type: object
+      properties:
+        staff:
+          type: string
+          nullable: true
+        owner_id:
+          type: string
+          nullable: true
+          description: Legacy compatibility input alias.
+    BookingActivityCreateRequest:
+      type: object
+      required:
+        - type
+        - detail
+      properties:
+        type:
+          type: string
+          example: NOTE
+        detail:
+          type: string
+        actor:
+          type: string
+          nullable: true
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+          nullable: true
+    MobileBootstrapFeatures:
+      type: object
+      required:
+        - bookings
+        - customers
+        - tours
+      properties:
+        bookings:
+          type: boolean
+        customers:
+          type: boolean
+        tours:
+          type: boolean
+    MobileBootstrapResponse:
+      type: object
+      required:
+        - app
+        - api
+        - features
+      properties:
+        app:
+          type: object
+          required:
+            - min_supported_version
+            - latest_version
+            - force_update
+          properties:
+            min_supported_version:
+              type: string
+            latest_version:
+              type: string
+            force_update:
+              type: boolean
+        api:
+          type: object
+          required:
+            - contract_version
+          properties:
+            contract_version:
+              type: string
+        features:
+          $ref: "#/components/schemas/MobileBootstrapFeatures"
+security:
+  - bearerAuth: []
+paths:
+  /public/v1/mobile/bootstrap:
+    get:
+      tags:
+        - Auth
+      summary: Return mobile app bootstrap metadata and minimum supported version.
+      security: []
+      responses:
+        "200":
+          description: Mobile bootstrap metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileBootstrapResponse"
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Return the current authenticated browser-session user.
+      description: |
+        Current browser/mobile helper endpoint. The mobile app should eventually use a
+        dedicated `/api/v1/me` or `/api/v1/mobile/bootstrap` endpoint, but this contract
+        documents the current behavior already used in the app/browser flows.
+      responses:
+        "200":
+          description: Auth state resolved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthMeResponse"
+  /api/v1/bookings:
+    get:
+      tags:
+        - Bookings
+      summary: List visible bookings for the authenticated user.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - in: query
+          name: stage
+          schema:
+            $ref: "#/components/schemas/BookingStage"
+        - in: query
+          name: owner_id
+          schema:
+            type: string
+          description: Legacy filter name; behaves as assigned staff id filter.
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum:
+              - created_at_desc
+              - created_at_asc
+              - updated_at_desc
+              - sla_due_at_asc
+              - sla_due_at_desc
+      responses:
+        "200":
+          description: Booking list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}:
+    get:
+      tags:
+        - Bookings
+      summary: Fetch one booking and its customer.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDetailResponse"
+        "404":
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}/stage:
+    patch:
+      tags:
+        - Bookings
+      summary: Update a booking stage.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingStageUpdateRequest"
+      responses:
+        "200":
+          description: Booking stage updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingUpdateResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Invalid stage transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}/owner:
+    patch:
+      tags:
+        - Bookings
+      summary: Update the assigned staff member for a booking.
+      description: |
+        Current compatibility path. Semantically this is the staff-assignment endpoint.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingAssignmentUpdateRequest"
+      responses:
+        "200":
+          description: Booking assignment updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingUpdateResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Invalid staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}/activities:
+    get:
+      tags:
+        - Bookings
+      summary: List activities for one booking.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Activity timeline.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingActivitiesResponse"
+    post:
+      tags:
+        - Bookings
+      summary: Create an activity on one booking.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingActivityCreateRequest"
+      responses:
+        "201":
+          description: Activity created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingActivityCreateResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}/invoices:
+    get:
+      tags:
+        - Bookings
+      summary: List invoices for one booking.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking invoices.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingInvoicesResponse"
+  /api/v1/staff:
+    get:
+      tags:
+        - Staff
+      summary: List staff records visible to manager/admin.
+      parameters:
+        - in: query
+          name: active
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Staff directory.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffListResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Staff
+      summary: Create a staff member.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffCreateRequest"
+      responses:
+        "201":
+          description: Staff member created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffCreateResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Username conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

@@ -36,6 +36,9 @@ Environment variables:
 - `KEYCLOAK_FORCE_LOGIN_PROMPT` (`true`/`false`, default `false`)
 - `KEYCLOAK_GLOBAL_LOGOUT` (`true`/`false`, default `false`)
 - `RETURN_TO_ALLOWED_ORIGINS` (comma-separated absolute origins allowed for `return_to`; default `http://localhost:8080,http://localhost:8787`)
+- `MOBILE_MIN_SUPPORTED_APP_VERSION` (minimum iOS app version allowed to continue after bootstrap)
+- `MOBILE_LATEST_APP_VERSION` (latest published iOS app version shown to users)
+- `MOBILE_FORCE_UPDATE` (`true`/`false`, forces all app builds to stop at the update screen)
 
 Cross-origin browser usage note:
 - When frontend is served from `http://localhost:8080` and backend from `http://localhost:8787`, use:
@@ -93,6 +96,7 @@ This keeps backend business logic (bookings/customers/pipeline) separate from OI
 ## API Endpoints
 
 Public:
+- `GET /public/v1/mobile/bootstrap`
 - `POST /public/v1/bookings`
 - `GET /public/v1/tours`
 - `GET /public/v1/tour-images/:path`
@@ -218,6 +222,32 @@ Auth:
 - `GET /auth/login`
 - `GET /auth/callback`
 - `GET /auth/logout`
+
+## Mobile Contract
+
+The mobile app should not follow backend internals or `store.json` structure directly.
+The single contract source is:
+- [/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml](/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml)
+
+Generated artifacts:
+- [/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json](/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json)
+- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIModels.swift](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIModels.swift)
+- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIRequestFactory.swift](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIRequestFactory.swift)
+
+Regenerate after editing the OpenAPI file:
+
+```bash
+ruby /Users/internal_admin/projects/travelagency/contracts/generate_mobile_contract_artifacts.rb
+```
+
+Contract validation tests:
+
+```bash
+cd /Users/internal_admin/projects/travelagency/backend/app
+npm test
+```
+
+The iPhone app startup gate reads `GET /public/v1/mobile/bootstrap` and stops with a `Please update` screen when the installed app version is below `MOBILE_MIN_SUPPORTED_APP_VERSION` or when `MOBILE_FORCE_UPDATE=true`.
 - `GET /auth/me`
 
 ## Example Booking Request

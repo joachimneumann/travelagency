@@ -18,6 +18,7 @@ export function createAuth({ port }) {
         .map((value) => normalizeText(value))
         .filter(Boolean)
     ),
+    insecureTestAuth: parseBoolEnv("INSECURE_TEST_AUTH", false),
     returnToAllowedOrigins: new Set(
       String(process.env.RETURN_TO_ALLOWED_ORIGINS || `http://localhost:8080,http://localhost:${port}`)
         .split(",")
@@ -76,6 +77,12 @@ export function createAuth({ port }) {
     const session = getSessionPrincipal(req);
     if (session) {
       return { ok: true, principal: session };
+    }
+
+    const testPrincipal = getInsecureTestPrincipal(req);
+    if (testPrincipal) {
+      const hasRole = testPrincipal.roles.some((role) => cfg.keycloakAllowedRoles.has(role));
+      return { ok: hasRole, principal: testPrincipal };
     }
 
     const authHeader = normalizeText(req.headers.authorization);
@@ -158,6 +165,22 @@ export function createAuth({ port }) {
       preferred_username: String(session.preferred_username || ""),
       email: String(session.email || ""),
       roles: Array.isArray(session.roles) ? session.roles : []
+    };
+  }
+
+  function getInsecureTestPrincipal(req) {
+    if (!cfg.insecureTestAuth) return null;
+    const roles = String(req.headers["x-test-roles"] || "")
+      .split(",")
+      .map((value) => normalizeText(value))
+      .filter(Boolean);
+    if (!roles.length) return null;
+    return {
+      type: "insecure-test",
+      sub: normalizeText(req.headers["x-test-sub"]) || "test-user",
+      preferred_username: normalizeText(req.headers["x-test-username"]) || "test-user",
+      email: normalizeText(req.headers["x-test-email"]) || "test@asiatravelplan.com",
+      roles
     };
   }
 

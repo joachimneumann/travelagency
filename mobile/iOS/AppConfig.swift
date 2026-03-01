@@ -7,4 +7,5 @@ enum AppConfig {
     static let clientID = "asiatravelplan-ios"
     static let redirectURI = "asiatravelplan://auth/callback"
     static let allowedRoles: Set<ATPUserRole> = [.admin, .manager, .accountant, .staff]
+    static let currentAppVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
 }

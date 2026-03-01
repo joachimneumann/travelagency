@@ -2,17 +2,34 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var bootstrapStore: AppBootstrapStore
 
     var body: some View {
         Group {
-            if sessionStore.isRestoring {
-                ProgressView("Restoring session...")
-            } else if !sessionStore.isAuthenticated {
-                LoginView()
-            } else if !sessionStore.isAuthorized {
-                UnauthorizedView()
-            } else {
-                BookingsListView()
+            switch bootstrapStore.state {
+            case .idle, .loading:
+                ProgressView("Checking app version...")
+            case .failed(let message):
+                StartupFailureView(message: message) {
+                    Task {
+                        await bootstrapStore.initialize()
+                        if bootstrapStore.isReady {
+                            await sessionStore.restoreSessionIfPossible()
+                        }
+                    }
+                }
+            case .updateRequired(let bootstrap):
+                UpdateRequiredView(bootstrap: bootstrap)
+            case .ready:
+                if sessionStore.isRestoring {
+                    ProgressView("Restoring session...")
+                } else if !sessionStore.isAuthenticated {
+                    LoginView()
+                } else if !sessionStore.isAuthorized {
+                    UnauthorizedView()
+                } else {
+                    BookingsListView()
+                }
             }
         }
         .alert("Authentication", isPresented: Binding(

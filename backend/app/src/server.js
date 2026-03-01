@@ -18,6 +18,7 @@ const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
+const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "contracts", "generated", "mobile-api.meta.json");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const execFile = promisify(execFileCb);
@@ -26,6 +27,9 @@ const STAGING_ACCESS_PASSWORD = String(process.env.STAGING_ACCESS_PASSWORD || ""
 const STAGING_ACCESS_COOKIE_SECRET = String(process.env.STAGING_ACCESS_COOKIE_SECRET || "");
 const STAGING_ACCESS_COOKIE_NAME = normalizeText(process.env.STAGING_ACCESS_COOKIE_NAME || "asiatravelplan_staging_access");
 const STAGING_ACCESS_MAX_AGE_SECONDS = Math.max(60, Number(process.env.STAGING_ACCESS_MAX_AGE_SECONDS || 60 * 60 * 24 * 30) || 60);
+const MOBILE_MIN_SUPPORTED_APP_VERSION = normalizeText(process.env.MOBILE_MIN_SUPPORTED_APP_VERSION || "1.0.0");
+const MOBILE_LATEST_APP_VERSION = normalizeText(process.env.MOBILE_LATEST_APP_VERSION || MOBILE_MIN_SUPPORTED_APP_VERSION);
+const MOBILE_FORCE_UPDATE = String(process.env.MOBILE_FORCE_UPDATE || "").trim().toLowerCase() === "true";
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -90,100 +94,113 @@ const SLA_HOURS = {
 };
 
 let writeQueue = Promise.resolve();
-const auth = createAuth({ port: PORT });
+let mobileContractMetaPromise = null;
 
-const routes = [
-  ...auth.routes,
-  { method: "GET", pattern: /^\/health$/, handler: handleHealth },
-  { method: "GET", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginPage },
-  { method: "POST", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginSubmit },
-  { method: "GET", pattern: /^\/staging-access\/check$/, handler: handleStagingAccessCheck },
-  { method: "GET", pattern: /^\/staging-access\/logout$/, handler: handleStagingAccessLogout },
-  { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
-  { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlePublicTourImage },
-  { method: "POST", pattern: /^\/public\/v1\/bookings$/, handler: handleCreateBooking },
-  { method: "GET", pattern: /^\/api\/v1\/bookings$/, handler: handleListBookings },
-  { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handleGetBooking },
-  { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlePatchBookingStage },
-  { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
-  { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
-  { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
-  { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
-  { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleCreateBookingInvoice },
-  { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchBookingInvoice },
-  { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
-  { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
-  { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
-  { method: "GET", pattern: /^\/api\/v1\/staff$/, handler: handleListStaff },
-  { method: "POST", pattern: /^\/api\/v1\/staff$/, handler: handleCreateStaff },
-  { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
-  { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
-  { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
-  { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
-  { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handleUploadTourImage },
-  { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
-  { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
-  { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
-  { method: "GET", pattern: /^\/admin\/bookings$/, handler: handleAdminBookingsPage },
-  { method: "GET", pattern: /^\/admin\/bookings\/([^/]+)$/, handler: handleAdminBookingDetailPage }
-];
+export async function createBackendHandler({ port = PORT } = {}) {
+  await ensureStorage();
+  const auth = createAuth({ port });
+  const routes = [
+    ...auth.routes,
+    { method: "GET", pattern: /^\/health$/, handler: handleHealth },
+    { method: "GET", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginPage },
+    { method: "POST", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginSubmit },
+    { method: "GET", pattern: /^\/staging-access\/check$/, handler: handleStagingAccessCheck },
+    { method: "GET", pattern: /^\/staging-access\/logout$/, handler: handleStagingAccessLogout },
+    { method: "GET", pattern: /^\/public\/v1\/mobile\/bootstrap$/, handler: handleMobileBootstrap },
+    { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
+    { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlePublicTourImage },
+    { method: "POST", pattern: /^\/public\/v1\/bookings$/, handler: handleCreateBooking },
+    { method: "GET", pattern: /^\/api\/v1\/bookings$/, handler: handleListBookings },
+    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handleGetBooking },
+    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlePatchBookingStage },
+    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
+    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
+    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
+    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
+    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleCreateBookingInvoice },
+    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchBookingInvoice },
+    { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
+    { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
+    { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
+    { method: "GET", pattern: /^\/api\/v1\/staff$/, handler: handleListStaff },
+    { method: "POST", pattern: /^\/api\/v1\/staff$/, handler: handleCreateStaff },
+    { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
+    { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
+    { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
+    { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
+    { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handleUploadTourImage },
+    { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
+    { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
+    { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
+    { method: "GET", pattern: /^\/admin\/bookings$/, handler: handleAdminBookingsPage },
+    { method: "GET", pattern: /^\/admin\/bookings\/([^/]+)$/, handler: handleAdminBookingDetailPage }
+  ];
 
-await ensureStorage();
+  return async function backendHandler(req, res) {
+    try {
+      auth.pruneState();
+      withCors(req, res);
 
-createServer(async (req, res) => {
-  try {
-    auth.pruneState();
-    withCors(req, res);
-
-    if (req.method === "OPTIONS") {
-      res.writeHead(204);
-      res.end();
-      return;
-    }
-
-    const requestUrl = new URL(req.url, "http://localhost");
-    const pathname = requestUrl.pathname;
-
-    if (pathname.startsWith("/admin") && auth.isKeycloakEnabled()) {
-      const sessionPrincipal = auth.getSessionPrincipal(req);
-      if (!sessionPrincipal) {
-        const returnTo = `${pathname}${requestUrl.search || ""}`;
-        redirect(res, auth.getLoginRedirect(returnTo));
+      if (req.method === "OPTIONS") {
+        res.writeHead(204);
+        res.end();
         return;
       }
-      req.authz = { ok: true, principal: sessionPrincipal };
-    }
 
-    if (pathname.startsWith("/api/v1/")) {
-      const authz = await auth.authorizeApiRequest(req, requestUrl);
-      if (!authz.ok) {
-        sendJson(res, 401, { error: "Unauthorized" });
+      const requestUrl = new URL(req.url, "http://localhost");
+      const pathname = requestUrl.pathname;
+
+      if (pathname.startsWith("/admin") && auth.isKeycloakEnabled()) {
+        const sessionPrincipal = auth.getSessionPrincipal(req);
+        if (!sessionPrincipal) {
+          const returnTo = `${pathname}${requestUrl.search || ""}`;
+          redirect(res, auth.getLoginRedirect(returnTo));
+          return;
+        }
+        req.authz = { ok: true, principal: sessionPrincipal };
+      }
+
+      if (pathname.startsWith("/api/v1/")) {
+        const authz = await auth.authorizeApiRequest(req, requestUrl);
+        if (!authz.ok) {
+          sendJson(res, 401, { error: "Unauthorized" });
+          return;
+        }
+        req.authz = authz;
+      }
+
+      for (const route of routes) {
+        if (route.method !== req.method) continue;
+        const match = pathname.match(route.pattern);
+        if (!match) continue;
+        const params = match.slice(1);
+        await route.handler(req, res, params);
         return;
       }
-      req.authz = authz;
-    }
 
-    for (const route of routes) {
-      if (route.method !== req.method) continue;
-      const match = pathname.match(route.pattern);
-      if (!match) continue;
-      const params = match.slice(1);
-      await route.handler(req, res, params);
-      return;
-    }
+      if (pathname.startsWith("/api/")) {
+        sendJson(res, 404, { error: "Not found" });
+        return;
+      }
 
-    if (pathname.startsWith("/api/")) {
-      sendJson(res, 404, { error: "Not found" });
-      return;
+      sendBackendNotFound(res, pathname);
+    } catch (error) {
+      sendJson(res, 500, { error: "Internal server error", detail: String(error?.message || error) });
     }
+  };
+}
 
-    sendBackendNotFound(res, pathname);
-  } catch (error) {
-    sendJson(res, 500, { error: "Internal server error", detail: String(error?.message || error) });
-  }
-}).listen(PORT, () => {
-  console.log(`AsiaTravelPlan backend listening on http://localhost:${PORT}`);
-});
+export async function startBackendServer({ port = PORT } = {}) {
+  const handler = await createBackendHandler({ port });
+  const server = createServer(handler);
+  await new Promise((resolve) => server.listen(port, resolve));
+  return server;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  const server = await startBackendServer({ port: PORT });
+  console.log(`AsiaTravelPlan backend listening on http://localhost:${server.address().port}`);
+}
 
 async function ensureStorage() {
   await mkdir(TOURS_DIR, { recursive: true });
@@ -1524,6 +1541,34 @@ async function handleHealth(_req, res) {
   });
 }
 
+async function readMobileContractMeta() {
+  if (!mobileContractMetaPromise) {
+    mobileContractMetaPromise = readFile(MOBILE_CONTRACT_META_PATH, "utf8")
+      .then((raw) => JSON.parse(raw))
+      .catch(() => ({ contract_version: "unknown" }));
+  }
+  return mobileContractMetaPromise;
+}
+
+async function handleMobileBootstrap(_req, res) {
+  const contractMeta = await readMobileContractMeta();
+  sendJson(res, 200, {
+    app: {
+      min_supported_version: MOBILE_MIN_SUPPORTED_APP_VERSION,
+      latest_version: MOBILE_LATEST_APP_VERSION,
+      force_update: MOBILE_FORCE_UPDATE
+    },
+    api: {
+      contract_version: normalizeText(contractMeta.contract_version) || "unknown"
+    },
+    features: {
+      bookings: true,
+      customers: false,
+      tours: false
+    }
+  });
+}
+
 async function handleCreateBooking(req, res) {
   let payload;
   try {
@@ -1785,7 +1830,7 @@ async function handleListActivities(req, res, [bookingId]) {
     .filter((activity) => activity.booking_id === bookingId)
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 
-  sendJson(res, 200, { items, total: items.length });
+  sendJson(res, 200, { activities: items, items, total: items.length });
 }
 
 async function handleCreateActivity(req, res, [bookingId]) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "2630"
+   LastUpgradeVersion = "1600"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "870ADAD96AAFD4FA4014C78A"
+               BlueprintIdentifier = "9FA7E0E1243BDD846E14DBD4"
                BuildableName = "AsiaTravelPlan.app"
                BlueprintName = "AsiaTravelPlan"
                ReferencedContainer = "container:AsiaTravelPlan.xcodeproj">
@@ -40,16 +40,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "870ADAD96AAFD4FA4014C78A"
-            BuildableName = "AsiaTravelPlan.app"
-            BlueprintName = "AsiaTravelPlan"
-            ReferencedContainer = "container:AsiaTravelPlan.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

@@ -9,36 +9,61 @@ final class APIClient {
     }
 
     func fetchBookings(session: AuthSession, page: Int = 1, pageSize: Int = 20) async throws -> BookingListResponse {
-        var components = URLComponents(url: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings"), resolvingAgainstBaseURL: false)!
-        components.queryItems = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "page_size", value: String(pageSize)),
-            URLQueryItem(name: "sort", value: "created_at_desc")
-        ]
-        return try await send(requestURL: components.url!, session: session)
+        try await send(
+            requestURL: MobileAPIRequestFactory.bookingsURL(
+                baseURL: AppConfig.apiBaseURL,
+                page: page,
+                pageSize: pageSize
+            ),
+            session: session
+        )
+    }
+
+    func fetchBootstrap() async throws -> MobileBootstrapResponse {
+        var request = URLRequest(url: MobileAPIRequestFactory.bootstrapURL(baseURL: AppConfig.apiBaseURL))
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
+        guard (200...299).contains(http.statusCode) else {
+            let message = String(data: data, encoding: .utf8) ?? "Request failed"
+            throw APIError.server(message)
+        }
+        return try JSONDecoder.api.decode(MobileBootstrapResponse.self, from: data)
     }
 
     func fetchBookingDetail(id: String, session: AuthSession) async throws -> BookingDetailResponse {
-        try await send(requestURL: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings/\(id)"), session: session)
+        try await send(
+            requestURL: MobileAPIRequestFactory.bookingDetailURL(baseURL: AppConfig.apiBaseURL, bookingID: id),
+            session: session
+        )
     }
 
     func fetchActivities(bookingID: String, session: AuthSession) async throws -> BookingActivitiesResponse {
-        try await send(requestURL: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/activities"), session: session)
+        try await send(
+            requestURL: MobileAPIRequestFactory.bookingActivitiesURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
+            session: session
+        )
     }
 
     func fetchInvoices(bookingID: String, session: AuthSession) async throws -> BookingInvoicesResponse {
-        try await send(requestURL: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/invoices"), session: session)
+        try await send(
+            requestURL: MobileAPIRequestFactory.bookingInvoicesURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
+            session: session
+        )
     }
 
     func fetchStaff(session: AuthSession) async throws -> StaffListResponse {
-        var components = URLComponents(url: AppConfig.apiBaseURL.appendingPathComponent("api/v1/staff"), resolvingAgainstBaseURL: false)!
-        components.queryItems = [URLQueryItem(name: "active", value: "true")]
-        return try await send(requestURL: components.url!, session: session)
+        try await send(
+            requestURL: MobileAPIRequestFactory.activeStaffURL(baseURL: AppConfig.apiBaseURL),
+            session: session
+        )
     }
 
     func updateStage(bookingID: String, stage: String, session: AuthSession) async throws -> BookingUpdateResponse {
         try await send(
-            requestURL: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/stage"),
+            requestURL: MobileAPIRequestFactory.bookingStageURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "PATCH",
             body: ["stage": stage],
             session: session
@@ -47,7 +72,7 @@ final class APIClient {
 
     func updateStaffAssignment(bookingID: String, staffID: String?, session: AuthSession) async throws -> BookingUpdateResponse {
         try await send(
-            requestURL: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/owner"),
+            requestURL: MobileAPIRequestFactory.bookingAssignmentURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "PATCH",
             body: ["staff": staffID ?? NSNull()],
             session: session
@@ -56,7 +81,7 @@ final class APIClient {
 
     func addActivity(bookingID: String, detail: String, session: AuthSession) async throws -> BookingActivityCreateResponse {
         try await send(
-            requestURL: AppConfig.apiBaseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/activities"),
+            requestURL: MobileAPIRequestFactory.bookingActivitiesURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "POST",
             body: ["type": "NOTE", "detail": detail],
             session: session

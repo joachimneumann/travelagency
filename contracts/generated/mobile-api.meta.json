@@ -1,0 +1,74 @@
+{
+  "contract_version": "2026-03-01.1",
+  "roles": [
+    "atp_admin",
+    "atp_manager",
+    "atp_accountant",
+    "atp_staff"
+  ],
+  "stages": [
+    "NEW",
+    "QUALIFIED",
+    "PROPOSAL_SENT",
+    "NEGOTIATION",
+    "INVOICE_SENT",
+    "PAYMENT_RECEIVED",
+    "WON",
+    "LOST",
+    "POST_TRIP"
+  ],
+  "paths": {
+    "mobile_bootstrap": "/public/v1/mobile/bootstrap",
+    "auth_me": "/auth/me",
+    "bookings": "/api/v1/bookings",
+    "booking_detail": "/api/v1/bookings/{bookingId}",
+    "booking_stage": "/api/v1/bookings/{bookingId}/stage",
+    "booking_assignment": "/api/v1/bookings/{bookingId}/owner",
+    "booking_activities": "/api/v1/bookings/{bookingId}/activities",
+    "booking_invoices": "/api/v1/bookings/{bookingId}/invoices",
+    "staff": "/api/v1/staff"
+  },
+  "bootstrap_schema": {
+    "type": "object",
+    "required": [
+      "app",
+      "api",
+      "features"
+    ],
+    "properties": {
+      "app": {
+        "type": "object",
+        "required": [
+          "min_supported_version",
+          "latest_version",
+          "force_update"
+        ],
+        "properties": {
+          "min_supported_version": {
+            "type": "string"
+          },
+          "latest_version": {
+            "type": "string"
+          },
+          "force_update": {
+            "type": "boolean"
+          }
+        }
+      },
+      "api": {
+        "type": "object",
+        "required": [
+          "contract_version"
+        ],
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          }
+        }
+      },
+      "features": {
+        "$ref": "#/components/schemas/MobileBootstrapFeatures"
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ Current implementation scaffold:
 - `/Users/internal_admin/projects/travelagency/mobile/iOS`
 - Xcode project: `/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
 - project generator: `/Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
+- contract source: `/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml`
 
 The app scope is intentionally narrow:
 - allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
@@ -81,6 +82,17 @@ Recommended Keycloak client setup:
 
 ## 4) API access model
 
+The mobile app should treat the OpenAPI contract as the only stable interface.
+It should not infer response shapes from backend internals or JSON storage.
+
+Contract source of truth:
+- `/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml`
+
+Generated artifacts:
+- `/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json`
+- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIModels.swift`
+- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIRequestFactory.swift`
+
 The mobile app should call backend APIs with bearer tokens:
 
 ```http
@@ -91,6 +103,7 @@ Authorization: Bearer <access_token>
 The app should target the same backend API used by the browser backend.
 
 Recommended first endpoints:
+- `GET /public/v1/mobile/bootstrap`
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
@@ -246,6 +259,38 @@ Suggested services:
 - `isAllowedATPUser`
 
 ## 11) Recommended backend support for mobile
+
+Current version/bootstrap endpoint:
+
+`GET /public/v1/mobile/bootstrap`
+
+Current response:
+
+```json
+{
+  "app": {
+    "min_supported_version": "1.0.0",
+    "latest_version": "1.0.0",
+    "force_update": false
+  },
+  "api": {
+    "contract_version": "2026-03-01.1"
+  },
+  "features": {
+    "bookings": true,
+    "customers": false,
+    "tours": false
+  }
+}
+```
+
+Startup rule:
+- app starts
+- fetches `/public/v1/mobile/bootstrap`
+- compares installed app version against `min_supported_version`
+- if installed build is too old, show `Please update` and stop app usage
+
+This is the intended behavior for in-house distribution. Backward compatibility beyond the minimum supported version is not a goal.
 
 The mobile app will be simpler if the backend provides:
 
