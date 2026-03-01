@@ -3,7 +3,7 @@ import Foundation
 // Generated from contracts/mobile-api.openapi.yaml. Do not edit by hand.
 
 enum MobileAPIRequestFactory {
-    static let contractVersion = "2026-03-01.1"
+    static let contractVersion = "2026-03-01.3"
     static let bootstrapPath = "/public/v1/mobile/bootstrap"
     static let authMePath = "/auth/me"
     static let bookingsPath = "/api/v1/bookings"
@@ -33,6 +33,10 @@ enum MobileAPIRequestFactory {
 
     static func bookingAssignmentURL(baseURL: URL, bookingID: String) -> URL {
         baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/owner")
+    }
+
+    static func bookingNoteURL(baseURL: URL, bookingID: String) -> URL {
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/notes")
     }
 
     static func bookingActivitiesURL(baseURL: URL, bookingID: String) -> URL {

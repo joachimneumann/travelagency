@@ -1,5 +1,5 @@
 {
-  "contract_version": "2026-03-01.1",
+  "contract_version": "2026-03-01.3",
   "roles": [
     "atp_admin",
     "atp_manager",
@@ -24,6 +24,7 @@
     "booking_detail": "/api/v1/bookings/{bookingId}",
     "booking_stage": "/api/v1/bookings/{bookingId}/stage",
     "booking_assignment": "/api/v1/bookings/{bookingId}/owner",
+    "booking_note": "/api/v1/bookings/{bookingId}/notes",
     "booking_activities": "/api/v1/bookings/{bookingId}/activities",
     "booking_invoices": "/api/v1/bookings/{bookingId}/invoices",
     "staff": "/api/v1/staff"

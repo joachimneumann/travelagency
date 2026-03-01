@@ -114,6 +114,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handleGetBooking },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlePatchBookingStage },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
+    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlePatchBookingNotes },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
     { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
@@ -1463,6 +1464,54 @@ function getBookingCustomerLookup(store) {
   return new Map(store.customers.map((customer) => [customer.id, customer]));
 }
 
+function computeBookingHash(booking) {
+  const payload = {
+    id: booking.id || null,
+    customer_id: booking.customer_id || null,
+    stage: booking.stage || null,
+    staff: booking.staff || booking.owner_id || null,
+    staff_name: booking.staff_name || booking.owner_name || null,
+    sla_due_at: booking.sla_due_at || null,
+    destination: booking.destination || null,
+    style: booking.style || null,
+    travel_month: booking.travel_month || null,
+    travelers: booking.travelers ?? null,
+    duration: booking.duration || null,
+    budget: booking.budget || null,
+    notes: booking.notes || null,
+    source: booking.source || null,
+    created_at: booking.created_at || null,
+    updated_at: booking.updated_at || null
+  };
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
+
+function buildBookingReadModel(booking) {
+  return {
+    ...booking,
+    booking_hash: computeBookingHash(booking)
+  };
+}
+
+function sendBookingHashConflict(res, booking) {
+  sendJson(res, 409, {
+    error: "Booking changed in backend",
+    detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
+    code: "BOOKING_HASH_MISMATCH",
+    booking: buildBookingReadModel(booking)
+  });
+}
+
+function assertMatchingBookingHash(payload, booking, res) {
+  const requestHash = normalizeText(payload.booking_hash);
+  const currentHash = computeBookingHash(booking);
+  if (!requestHash || requestHash !== currentHash) {
+    sendBookingHashConflict(res, booking);
+    return false;
+  }
+  return true;
+}
+
 function filterAndSortBookings(store, query) {
   const stage = normalizeStageFilter(query.get("stage"));
   const ownerId = normalizeText(query.get("owner_id"));
@@ -1664,6 +1713,7 @@ async function handleCreateBooking(req, res) {
 
   sendJson(res, 201, {
     booking_id: booking.id,
+    booking_hash: computeBookingHash(booking),
     customer_id: customer.id,
     status: "accepted",
     deduplicated: Boolean(customerMatch),
@@ -1684,7 +1734,9 @@ async function handleListBookings(req, res) {
   }
   const requestUrl = new URL(req.url, "http://localhost");
   const { items: filtered, filters, sort } = filterAndSortBookings(store, requestUrl.searchParams);
-  const visible = filtered.filter((booking) => canAccessBooking(principal, booking, staffMember));
+  const visible = filtered
+    .filter((booking) => canAccessBooking(principal, booking, staffMember))
+    .map(buildBookingReadModel);
   const paged = paginate(visible, requestUrl.searchParams);
   sendJson(res, 200, {
     items: paged.items,
@@ -1713,7 +1765,7 @@ async function handleGetBooking(req, res, [bookingId]) {
   }
 
   const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  sendJson(res, 200, { booking, customer });
+  sendJson(res, 200, { booking: buildBookingReadModel(booking), customer });
 }
 
 async function handlePatchBookingStage(req, res, [bookingId]) {
@@ -1744,6 +1796,7 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
+  if (!assertMatchingBookingHash(payload, booking, res)) return;
 
   const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
   if (!allowed.includes(nextStage)) {
@@ -1758,7 +1811,7 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
   addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "staff"), `Stage updated to ${nextStage}`);
   await persistStore(store);
 
-  sendJson(res, 200, { booking });
+  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
 }
 
 async function handlePatchBookingOwner(req, res, [bookingId]) {
@@ -1782,6 +1835,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
+  if (!assertMatchingBookingHash(payload, booking, res)) return;
 
   if (!ownerIdRaw) {
     booking.staff = null;
@@ -1790,7 +1844,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     booking.updated_at = nowIso();
     addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "staff"), "Staff unassigned");
     await persistStore(store);
-    sendJson(res, 200, { booking });
+    sendJson(res, 200, { booking: buildBookingReadModel(booking) });
     return;
   }
 
@@ -1808,7 +1862,53 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
   addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "staff"), `Staff set to ${owner.name}`);
   await persistStore(store);
 
-  sendJson(res, 200, { booking });
+  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+}
+
+async function handlePatchBookingNotes(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const staff = await loadStaff();
+  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!assertMatchingBookingHash(payload, booking, res)) return;
+
+  const nextNotes = normalizeText(payload.notes);
+  const currentNotes = normalizeText(booking.notes);
+
+  if (nextNotes === currentNotes) {
+    sendJson(res, 200, { booking: buildBookingReadModel(booking), unchanged: true });
+    return;
+  }
+
+  booking.notes = nextNotes;
+  booking.updated_at = nowIso();
+  addActivity(
+    store,
+    booking.id,
+    "NOTE_UPDATED",
+    actorLabel(principal, normalizeText(payload.actor) || "staff"),
+    nextNotes ? "Booking note updated" : "Booking note cleared"
+  );
+  await persistStore(store);
+
+  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
 }
 
 async function handleListActivities(req, res, [bookingId]) {
@@ -2124,7 +2224,8 @@ async function handleGetCustomer(req, res, [customerId]) {
 
   const bookings = store.bookings
     .filter((booking) => booking.customer_id === customer.id)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .map(buildBookingReadModel);
 
   sendJson(res, 200, { customer, bookings });
 }
@@ -3019,9 +3120,9 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
     <select id="stageSelect">${stageOptions}</select>
     <button id="stageBtn" type="button">Update Stage</button>` : ""}
 
-    ${canEditBooking(principal, booking, staffMember) ? `<label>Add Note</label>
-    <textarea id="note" rows="4" placeholder="Call notes, qualification details, customer preferences..."></textarea>
-    <button id="noteBtn" type="button">Add Activity</button>` : ""}
+    ${canEditBooking(principal, booking, staffMember) ? `<label>Booking Note</label>
+    <textarea id="note" rows="4" placeholder="Call notes, qualification details, customer preferences...">${escapeHtml(booking.notes || "")}</textarea>
+    <button id="noteBtn" type="button">Save Note</button>` : ""}
   </section>
 
   <p><a href="/admin/bookings${backQuery ? `?${escapeHtml(backQuery)}` : ""}">Back to pipeline</a></p>
@@ -3070,16 +3171,29 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
     }
 
     async function addNote() {
-      const detail = document.getElementById("note").value.trim();
-      if (!detail) return;
-      const response = await fetch('/api/v1/bookings/' + bookingId + '/activities', {
-        method: 'POST',
+      const noteEl = document.getElementById("note");
+      if (!noteEl) return;
+      const latestResponse = await fetch('/api/v1/bookings/' + bookingId);
+      const latestPayload = await latestResponse.json();
+      if (!latestResponse.ok || !latestPayload.booking) {
+        alert(latestPayload.error || 'Failed to load latest booking note');
+        return;
+      }
+      const bookingHash = ${JSON.stringify(computeBookingHash(booking))};
+      const latestHash = String(latestPayload.booking.booking_hash || '');
+      if (latestHash !== bookingHash) {
+        noteEl.value = String(latestPayload.booking.notes || '');
+        alert('The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.');
+        return;
+      }
+      const response = await fetch('/api/v1/bookings/' + bookingId + '/notes', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'NOTE', detail, actor: 'admin_ui' })
+        body: JSON.stringify({ notes: noteEl.value.trim(), booking_hash: bookingHash, actor: 'admin_ui' })
       });
       const payload = await response.json();
       if (!response.ok) {
-        alert(payload.error || 'Failed to add note');
+        alert(payload.detail ? (payload.error + ': ' + payload.detail) : (payload.error || 'Failed to save note'));
         return;
       }
       window.location.reload();

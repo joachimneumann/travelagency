@@ -106,6 +106,7 @@ Admin API:
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
+- `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/customers`
@@ -176,7 +177,21 @@ Branded frontend backoffice pages (served by website):
   - booking activities list
   - change staff assignment
   - change stage
-  - add note activity
+  - edit the single booking note
+
+Booking concurrency model:
+- every booking read model includes `booking_hash`
+- clients must send the current `booking_hash` back with any booking mutation
+  - stage change
+  - staff assignment change
+  - note save
+- if the hash does not match, backend rejects the write and returns the refreshed booking
+- clients must show:
+  - `The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.`
+
+Booking note model:
+- each booking has exactly one editable `notes` field
+- note edits use the same `booking_hash` concurrency check as other booking writes
 
 ## Role Model
 

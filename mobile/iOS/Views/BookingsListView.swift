@@ -51,6 +51,7 @@ struct BookingsListView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .modifier(HideRootNavigationBarModifier())
             .navigationDestination(for: String.self) { bookingID in
                 BookingDetailView(bookingID: bookingID)

@@ -34,7 +34,8 @@ const state = {
   customer: null,
   staff: [],
   invoices: [],
-  selectedInvoiceId: ""
+  selectedInvoiceId: "",
+  originalNote: ""
 };
 
 const els = {
@@ -87,7 +88,7 @@ async function init() {
 
   if (els.ownerSaveBtn) els.ownerSaveBtn.addEventListener("click", saveOwner);
   if (els.stageSaveBtn) els.stageSaveBtn.addEventListener("click", saveStage);
-  if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", addNote);
+  if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
   if (els.invoiceIssueTodayBtn) {
@@ -265,16 +266,21 @@ function renderActionControls() {
   if (els.ownerSaveBtn) els.ownerSaveBtn.style.display = state.permissions.canChangeAssignment ? "" : "none";
   if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
   if (els.stageSaveBtn) els.stageSaveBtn.style.display = state.permissions.canChangeStage ? "" : "none";
-  if (els.noteInput) els.noteInput.disabled = !state.permissions.canEditBooking;
+  if (els.noteInput) {
+    els.noteInput.disabled = !state.permissions.canEditBooking;
+    els.noteInput.value = state.booking.notes || "";
+  }
+  state.originalNote = String(state.booking.notes || "");
   if (els.noteSaveBtn) els.noteSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 }
 
 async function saveOwner() {
   if (!state.booking || !els.ownerSelect) return;
-  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/owner`, {
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/owner`, {
     method: "PATCH",
     body: {
+      booking_hash: state.booking.booking_hash,
       owner_id: els.ownerSelect.value || null,
       actor: state.user
     }
@@ -289,9 +295,10 @@ async function saveOwner() {
 
 async function saveStage() {
   if (!state.booking || !els.stageSelect) return;
-  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/stage`, {
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/stage`, {
     method: "PATCH",
     body: {
+      booking_hash: state.booking.booking_hash,
       stage: els.stageSelect.value,
       actor: state.user
     }
@@ -304,26 +311,25 @@ async function saveStage() {
   await loadActivities();
 }
 
-async function addNote() {
+async function saveNote() {
   if (!state.booking || !els.noteInput) return;
-  const text = String(els.noteInput.value || "").trim();
-  if (!text) {
-    setStatus("Please enter a note.");
-    return;
-  }
-
-  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/activities`, {
-    method: "POST",
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/notes`, {
+    method: "PATCH",
     body: {
-      type: "NOTE",
+      booking_hash: state.booking.booking_hash,
+      notes: String(els.noteInput.value || "").trim(),
       actor: state.user,
-      detail: text
     }
   });
-  if (!result?.activity) return;
+  if (!result?.booking) return;
 
-  els.noteInput.value = "";
-  setStatus("Note added.");
+  state.booking = result.booking;
+  state.originalNote = String(result.booking.notes || "");
+  if (els.noteInput) els.noteInput.value = state.originalNote;
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  setStatus(result.unchanged ? "Note unchanged." : "Note saved.");
   await loadActivities();
 }
 
@@ -653,6 +659,48 @@ async function fetchApi(path, options = {}) {
 
     const payload = await response.json();
     if (!response.ok) {
+      const message = payload?.detail ? `${payload.error || "Request failed"}: ${payload.detail}` : payload.error || "Request failed";
+      showError(message);
+      return null;
+    }
+
+    clearError();
+    return payload;
+  } catch (error) {
+    showError("Could not connect to backend API.");
+    console.error(error);
+    return null;
+  }
+}
+
+async function fetchBookingMutation(path, options = {}) {
+  const method = options.method || "GET";
+  const body = options.body;
+
+  try {
+    const response = await fetch(`${apiBase}${path}`, {
+      method,
+      credentials: "include",
+      headers: {
+        ...(body ? { "Content-Type": "application/json" } : {})
+      },
+      ...(body ? { body: JSON.stringify(body) } : {})
+    });
+
+    const payload = await response.json();
+    if (!response.ok) {
+      if (response.status === 409 && payload?.code === "BOOKING_HASH_MISMATCH" && payload?.booking) {
+        state.booking = payload.booking;
+        if (els.noteInput) els.noteInput.value = state.booking.notes || "";
+        state.originalNote = String(state.booking.notes || "");
+        renderBookingHeader();
+        renderBookingData();
+        renderActionControls();
+        loadActivities();
+        setStatus("The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.");
+        clearError();
+        return null;
+      }
       const message = payload?.detail ? `${payload.error || "Request failed"}: ${payload.detail}` : payload.error || "Request failed";
       showError(message);
       return null;

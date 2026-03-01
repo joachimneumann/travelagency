@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AsiaTravelPlan Mobile API
-  version: 2026-03-01.1
+  version: 2026-03-01.3
   summary: Contract for the in-house iPhone app and the AsiaTravelPlan backend.
   description: |
     This contract is the mobile app's source of truth. It describes the request and
@@ -105,6 +105,8 @@ components:
         - updated_at
       properties:
         id:
+          type: string
+        booking_hash:
           type: string
         customer_id:
           type: string
@@ -681,6 +683,50 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "422":
           description: Invalid staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}/notes:
+    patch:
+      tags:
+        - Bookings
+      summary: Update the single editable booking note.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - notes
+                - booking_hash
+              properties:
+                notes:
+                  type: string
+                booking_hash:
+                  type: string
+      responses:
+        "200":
+          description: Booking note updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingUpdateResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Booking note changed before save
           content:
             application/json:
               schema:

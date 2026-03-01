@@ -11,6 +11,7 @@ Current scope:
 - booking list
 - booking detail
 - role-aware booking actions
+- single editable booking note with conflict detection
 - PKCE-based Keycloak login flow
 - startup bootstrap gate with minimum supported app version enforcement
 - generated contract models/request factory from OpenAPI
@@ -26,6 +27,10 @@ Included now:
 - Keycloak end-session logout via `ASWebAuthenticationSession`
 - startup call to `/public/v1/mobile/bootstrap`
 - `Please update` screen when backend requires a newer app build
+- booking note save flow:
+  - send current `booking_hash` with the write
+  - if backend reports a conflict, reload booking data and discard local edits
+  - save via `PATCH /api/v1/bookings/:bookingId/notes`
 
 Regenerate the contract artifacts after changing the OpenAPI file:
 

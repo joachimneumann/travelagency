@@ -179,7 +179,7 @@ If the logged-in `atp_staff` user cannot be mapped to a staff record, the backen
 
 `atp_staff`
 - show only assigned bookings
-- allow note creation only on assigned bookings
+- allow editing the single booking note only on assigned bookings
 - allow stage changes only on assigned bookings
 - hide staff assignment controls
 - hide tours section
@@ -210,7 +210,7 @@ Recommended screens:
 - Booking detail
 - Booking stage update
 - Booking activity timeline
-- Add note/activity
+- Single booking note editor
 - Staff assignment picker for manager/admin only
 - Settings / logout
 
@@ -258,6 +258,20 @@ Suggested services:
 
 `RoleService` should expose:
 - `isATPAdmin`
+
+Booking note behavior:
+- a booking has exactly one editable note field: `booking.notes`
+- the app must not append note activities for normal note editing
+- every booking returned by the backend includes `booking_hash`
+- when the app updates a booking field, it must send the current `booking_hash`
+- if backend reports a hash mismatch, the app must:
+  - reload the booking from the backend
+  - replace the local editor state with the refreshed backend data
+  - show:
+    - `The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.`
+- only if the note is unchanged should the app call:
+  - `PATCH /api/v1/bookings/:bookingId/notes`
+  - with `notes` and `booking_hash`
 - `isATPManager`
 - `isATPAccountant`
 - `isATPStaff`

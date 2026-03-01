@@ -4,10 +4,7 @@ struct AppShellView: View {
     @State private var selectedTab: AppTab = .bookings
 
     var body: some View {
-        ZStack {
-            Color.white
-                .ignoresSafeArea()
-
+        VStack(spacing: 0) {
             Group {
                 switch selectedTab {
                 case .bookings:
@@ -16,14 +13,12 @@ struct AppShellView: View {
                     SettingsView()
                 }
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
             CompactBottomBar(selectedTab: $selectedTab)
-                .background(.thinMaterial)
-                .overlay(alignment: .top) {
-                    Divider()
-                }
         }
+        .background(Color.white.ignoresSafeArea())
+        .ignoresSafeArea(.container, edges: [.top, .bottom])
     }
 }
 
@@ -70,15 +65,17 @@ private struct CompactBottomBar: View {
                     }
                     .foregroundStyle(selectedTab == tab ? Color.primary : Color.secondary)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 2)
+                    .frame(height: 40)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
+        .background(Color.white)
+        .overlay(alignment: .top) {
+            Divider()
+        }
         .padding(.horizontal, 12)
-        .padding(.top, 1)
-        .padding(.bottom, 0)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 40, maxHeight: 40)
     }
 }

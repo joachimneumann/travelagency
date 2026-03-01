@@ -118,6 +118,7 @@ struct AuthenticatedUser: Decodable, Equatable {
 struct Booking: Decodable, Identifiable, Equatable {
     let id: String
     var stage: String
+    let bookingHash: String?
     let destination: String?
     let style: String?
     let travelMonth: String?
@@ -135,6 +136,7 @@ struct Booking: Decodable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id
         case stage
+        case bookingHash = "booking_hash"
         case destination
         case style
         case travelMonth = "travel_month"
@@ -156,6 +158,7 @@ struct Booking: Decodable, Identifiable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         stage = try container.decode(String.self, forKey: .stage)
+        bookingHash = try container.decodeIfPresent(String.self, forKey: .bookingHash)
         destination = try container.decodeIfPresent(String.self, forKey: .destination)
         style = try container.decodeIfPresent(String.self, forKey: .style)
         travelMonth = try container.decodeIfPresent(String.self, forKey: .travelMonth)

@@ -5,6 +5,7 @@ final class APIClient {
         case invalidResponse
         case unauthorized
         case forbidden
+        case bookingConflict(String)
         case server(String)
         case bootstrapUnavailable(URL)
 
@@ -16,6 +17,8 @@ final class APIClient {
                 return "Authentication is required."
             case .forbidden:
                 return "You do not have permission to perform this action."
+            case .bookingConflict(let message):
+                return message
             case .server(let message):
                 return message
             case .bootstrapUnavailable(let url):
@@ -84,29 +87,29 @@ final class APIClient {
         )
     }
 
-    func updateStage(bookingID: String, stage: String, session: AuthSession) async throws -> BookingUpdateResponse {
+    func updateStage(bookingID: String, stage: String, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
         try await send(
             requestURL: MobileAPIRequestFactory.bookingStageURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "PATCH",
-            body: ["stage": stage],
+            body: ["stage": stage, "booking_hash": bookingHash],
             session: session
         )
     }
 
-    func updateStaffAssignment(bookingID: String, staffID: String?, session: AuthSession) async throws -> BookingUpdateResponse {
+    func updateStaffAssignment(bookingID: String, staffID: String?, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
         try await send(
             requestURL: MobileAPIRequestFactory.bookingAssignmentURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "PATCH",
-            body: ["staff": staffID ?? NSNull()],
+            body: ["staff": staffID ?? NSNull(), "booking_hash": bookingHash],
             session: session
         )
     }
 
-    func addActivity(bookingID: String, detail: String, session: AuthSession) async throws -> BookingActivityCreateResponse {
+    func updateBookingNote(bookingID: String, note: String, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
         try await send(
-            requestURL: MobileAPIRequestFactory.bookingActivitiesURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
-            method: "POST",
-            body: ["type": "NOTE", "detail": detail],
+            requestURL: MobileAPIRequestFactory.bookingNoteURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
+            method: "PATCH",
+            body: ["notes": note, "booking_hash": bookingHash],
             session: session
         )
     }
@@ -130,10 +133,33 @@ final class APIClient {
             throw APIError.unauthorized
         case 403:
             throw APIError.forbidden
+        case 409:
+            if let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               String(describing: payload["code"] ?? "") == "BOOKING_HASH_MISMATCH" {
+                throw APIError.bookingConflict(parseErrorMessage(data: data))
+            }
+            fallthrough
         default:
-            let message = String(data: data, encoding: .utf8) ?? "Request failed"
+            let message = parseErrorMessage(data: data)
             throw APIError.server(message)
         }
+    }
+
+    private func parseErrorMessage(data: Data) -> String {
+        if let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            let error = String(describing: payload["error"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let detail = String(describing: payload["detail"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !error.isEmpty && !detail.isEmpty {
+                return "\(error): \(detail)"
+            }
+            if !detail.isEmpty {
+                return detail
+            }
+            if !error.isEmpty {
+                return error
+            }
+        }
+        return String(data: data, encoding: .utf8) ?? "Request failed"
     }
 }
 
