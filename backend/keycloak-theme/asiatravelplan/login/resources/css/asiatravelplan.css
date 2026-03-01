@@ -29,14 +29,8 @@ body.kcBodyClass {
 }
 
 #kc-page-title,
-#kc-header,
-#kc-header-wrapper,
 .pf-v5-c-login__main-header,
-.pf-c-login__main-header,
-.login-pf-page .login-pf-page-header,
-.login-pf-page .login-pf-signup,
-.pf-v5-c-login__main-footer,
-.pf-c-login__main-footer {
+.pf-c-login__main-header {
   display: none !important;
 }
 
@@ -81,12 +75,12 @@ a {
 .login-pf-page {
   background: #ffffff !important;
   background-image: none !important;
-  min-height: auto !important;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start !important;
+  justify-content: center;
   overflow-y: auto;
-  padding: 8px 16px 16px !important;
+  padding: 24px 16px;
 }
 
 .login-pf-page .card-pf {
@@ -117,11 +111,7 @@ a {
 .pf-v5-c-page__main-section {
   background: #ffffff !important;
   background-image: none !important;
-  min-height: auto !important;
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
-  padding-top: 0 !important;
-  margin-top: 0 !important;
+  min-height: 100vh;
 }
 
 .pf-c-login__container,
@@ -131,7 +121,6 @@ a {
   max-width: min(420px, calc(100vw - 32px)) !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  margin-top: 0 !important;
 }
 
 .pf-c-login__main-body,
@@ -145,8 +134,6 @@ a {
   max-width: min(360px, calc(100vw - 48px)) !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  margin-top: 0 !important;
-  padding-top: 0 !important;
 }
 
 .pf-v5-c-form-control,
@@ -163,7 +150,7 @@ a {
   margin-right: auto !important;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   html,
   body {
     min-height: auto !important;
@@ -181,6 +168,15 @@ a {
     display: block !important;
     justify-content: flex-start !important;
     min-height: auto !important;
+  }
+
+  #kc-header,
+  #kc-header-wrapper,
+  .login-pf-page .login-pf-page-header,
+  .login-pf-page .login-pf-signup,
+  .pf-v5-c-login__main-footer,
+  .pf-c-login__main-footer {
+    display: none !important;
   }
 
   .pf-v5-c-login,
@@ -222,7 +218,7 @@ a {
   .pf-c-login__main,
   .pf-c-card {
     margin-top: 0 !important;
-    transform: translateY(-120px) !important;
+    transform: translateY(-160px) !important;
   }
 
   .login-pf-page .card-pf,
@@ -243,7 +239,7 @@ a {
   }
 
   #kc-content-wrapper {
-    margin-top: -24px !important;
+    margin-top: -36px !important;
   }
 
   .pf-v5-c-login__main-body,
