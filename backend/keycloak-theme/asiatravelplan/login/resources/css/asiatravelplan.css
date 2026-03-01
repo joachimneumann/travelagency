@@ -187,13 +187,11 @@ a {
   .login-pf-page,
   .pf-v5-c-login,
   .pf-c-login {
-    padding-top: 0 !important;
-    padding-bottom: 4px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding: 0 12px 4px 12px !important;
   }
 
   .login-pf-page {
+    display: block !important;
     justify-content: flex-start !important;
     min-height: auto !important;
   }
@@ -208,6 +206,10 @@ a {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     margin-top: 0 !important;
+  }
+
+  #kc-header {
+    display: none !important;
   }
 
   #kc-header-wrapper {
@@ -233,6 +235,7 @@ a {
   .pf-c-login__main,
   .pf-c-card {
     margin-top: 0 !important;
+    transform: translateY(-120px) !important;
   }
 
   .login-pf-page .card-pf,
@@ -253,7 +256,7 @@ a {
   }
 
   #kc-content-wrapper {
-    margin-top: -16px !important;
+    margin-top: -24px !important;
   }
 
   .pf-v5-c-login__main-body,
@@ -282,6 +285,12 @@ a {
   .pf-v5-c-form__group,
   .pf-c-form__group {
     margin-bottom: 6px !important;
+  }
+
+  .pf-v5-c-login__main-footer,
+  .pf-c-login__main-footer,
+  .login-pf-page .login-pf-signup {
+    display: none !important;
   }
 
   .pf-v5-c-form__group:first-child,
