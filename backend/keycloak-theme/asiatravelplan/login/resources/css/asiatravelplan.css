@@ -29,6 +29,8 @@ body.kcBodyClass {
 }
 
 #kc-page-title,
+#kc-header,
+#kc-header-wrapper,
 .pf-v5-c-login__main-header,
 .pf-c-login__main-header {
   display: none !important;
@@ -89,6 +91,8 @@ a {
   margin: 0 auto !important;
 }
 
+#kc-header,
+#kc-header-wrapper,
 #kc-content-wrapper,
 #kc-form,
 #kc-form-wrapper {
@@ -142,6 +146,16 @@ a {
 #password {
   width: 100% !important;
   max-width: min(360px, calc(100vw - 48px)) !important;
+}
+
+#kc-header,
+#kc-header-wrapper,
+.login-pf-page .login-pf-page-header,
+.login-pf-page .login-pf-signup,
+.pf-v5-c-login__main-footer,
+.pf-c-login__main-footer {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #kc-form-buttons {
