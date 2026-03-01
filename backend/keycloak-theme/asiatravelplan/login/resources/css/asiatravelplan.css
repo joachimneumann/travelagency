@@ -229,8 +229,8 @@ a {
   .login-pf-page .card-pf,
   .pf-v5-c-login__main,
   .pf-c-login__main {
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
+    padding-top: 6px !important;
+    padding-bottom: 10px !important;
   }
 
   #kc-content-wrapper,
@@ -239,6 +239,16 @@ a {
   .pf-v5-c-login__main-body,
   .pf-c-login__main-body {
     max-width: min(344px, calc(100vw - 36px)) !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  #kc-content,
+  .pf-v5-c-login__main-body,
+  .pf-c-login__main-body,
+  .card-pf .card-pf-body,
+  .pf-c-card__body {
+    padding-top: 0 !important;
   }
 
   .pf-v5-c-form,
@@ -249,6 +259,13 @@ a {
   .pf-v5-c-form__group,
   .pf-c-form__group {
     margin-bottom: 10px !important;
+  }
+
+  .pf-v5-c-form__group:first-child,
+  .pf-c-form__group:first-child,
+  #kc-form .form-group:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
 
   label,

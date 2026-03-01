@@ -13,19 +13,29 @@ struct BookingsListView: View {
                 } else {
                     List(viewModel.bookings) { booking in
                         NavigationLink(value: booking.id) {
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text(booking.destination ?? "Untitled booking")
-                                    .font(.footnote.weight(.semibold))
-                                Text(booking.stage)
-                                    .font(.caption2.weight(.semibold))
-                                Text(booking.staffName ?? "Unassigned")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .font(.caption.weight(.semibold))
+                                    .lineLimit(1)
+                                HStack(spacing: 6) {
+                                    Text(booking.stage)
+                                        .font(.caption2.weight(.semibold))
+                                        .foregroundStyle(.primary)
+                                    Text("•")
+                                        .font(.caption2)
+                                        .foregroundStyle(.tertiary)
+                                    Text(booking.staffName ?? "Unassigned")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
                             }
-                            .padding(.vertical, 1)
+                            .padding(.vertical, 0)
                         }
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 12))
                     }
                     .listStyle(.plain)
+                    .environment(\.defaultMinListRowHeight, 38)
                     .refreshable {
                         if let session = sessionStore.session {
                             await viewModel.load(session: session)
@@ -36,7 +46,7 @@ struct BookingsListView: View {
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Bookings")
-                        .font(.footnote.weight(.semibold))
+                        .font(.caption.weight(.semibold))
                 }
             }
             .navigationDestination(for: String.self) { bookingID in
