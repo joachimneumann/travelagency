@@ -187,8 +187,8 @@ a {
   .login-pf-page,
   .pf-v5-c-login,
   .pf-c-login {
-    padding-top: 10px !important;
-    padding-bottom: 8px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
   }
@@ -210,9 +210,16 @@ a {
   }
 
   #kc-header-wrapper {
-    height: 40px;
-    width: min(196px, calc(100vw - 116px));
-    margin: 10px auto 4px auto;
+    height: 34px;
+    width: min(180px, calc(100vw - 132px));
+    margin: 6px auto 0 auto;
+  }
+
+  #kc-header,
+  #kc-header-wrapper,
+  #kc-content-wrapper {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
   }
 
   .card-pf,
@@ -233,7 +240,7 @@ a {
   .pf-v5-c-login__main,
   .pf-c-login__main {
     padding-top: 0 !important;
-    padding-bottom: 10px !important;
+    padding-bottom: 8px !important;
   }
 
   #kc-content-wrapper,
@@ -244,6 +251,10 @@ a {
     max-width: min(344px, calc(100vw - 36px)) !important;
     padding-top: 0 !important;
     margin-top: 0 !important;
+  }
+
+  #kc-content-wrapper {
+    margin-top: -2px !important;
   }
 
   .pf-v5-c-login__main-body,
@@ -271,7 +282,7 @@ a {
 
   .pf-v5-c-form__group,
   .pf-c-form__group {
-    margin-bottom: 10px !important;
+    margin-bottom: 8px !important;
   }
 
   .pf-v5-c-form__group:first-child,

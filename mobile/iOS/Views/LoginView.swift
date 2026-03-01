@@ -10,7 +10,7 @@ struct LoginView: View {
                 Image("BrandLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: proxy.size.width * 0.7)
+                    .frame(width: proxy.size.width * 0.7)
 
                 Button {
                     Task { await viewModel.login(sessionStore: sessionStore) }
@@ -26,8 +26,8 @@ struct LoginView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(viewModel.isLoading)
                 .controlSize(.regular)
+                .frame(maxWidth: 360)
             }
-            .frame(maxWidth: 360)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.horizontal, 24)
         }

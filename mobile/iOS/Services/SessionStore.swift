@@ -65,7 +65,9 @@ final class SessionStore: ObservableObject {
             try tokenStore.save(session: session)
             self.session = session
         } catch {
-            authError = error.localizedDescription
+            if !isDismissedAuthenticationError(error) {
+                authError = error.localizedDescription
+            }
         }
     }
 
@@ -95,7 +97,14 @@ final class SessionStore: ObservableObject {
         do {
             try await authService.logout(session: currentSession)
         } catch {
-            authError = "Signed out locally, but Keycloak logout may not have completed. Check the mobile client post-logout redirect URI."
+            if !isDismissedAuthenticationError(error) {
+                authError = "Signed out locally, but Keycloak logout may not have completed. Check the mobile client post-logout redirect URI."
+            }
         }
+    }
+
+    private func isDismissedAuthenticationError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && nsError.code == 1
     }
 }
