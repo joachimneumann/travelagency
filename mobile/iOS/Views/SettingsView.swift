@@ -37,13 +37,8 @@ struct SettingsView: View {
                     }
                 }
             }
-            .listStyle(.inset)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Settings")
-                        .font(.footnote.weight(.semibold))
-                }
-            }
+            .listStyle(.plain)
+            .modifier(HideSettingsNavigationBarModifier())
         }
     }
 
@@ -71,5 +66,15 @@ struct SettingsView: View {
                 .multilineTextAlignment(.trailing)
         }
         .font(.footnote)
+    }
+}
+
+private struct HideSettingsNavigationBarModifier: ViewModifier {
+    func body(content: Content) -> some View {
+#if os(iOS)
+        content.toolbar(.hidden, for: .navigationBar)
+#else
+        content
+#endif
     }
 }

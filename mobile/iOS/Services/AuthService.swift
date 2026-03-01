@@ -306,6 +306,7 @@ private struct PKCE {
     }
 }
 
+@MainActor
 private final class WebAuthenticationPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
 #if canImport(UIKit)

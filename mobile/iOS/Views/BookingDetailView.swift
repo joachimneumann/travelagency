@@ -96,6 +96,7 @@ struct BookingDetailView: View {
             guard let session = sessionStore.session else { return }
             await viewModel.load(bookingID: bookingID, session: session)
         }
+        .modifier(BookingDetailNavigationChromeModifier())
         .alert("Booking", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -116,5 +117,17 @@ struct BookingDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+private struct BookingDetailNavigationChromeModifier: ViewModifier {
+    func body(content: Content) -> some View {
+#if os(iOS)
+        content
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+#else
+        content
+#endif
     }
 }
