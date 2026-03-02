@@ -61,9 +61,7 @@ const els = {
   pricingCurrencyInput: document.getElementById("pricingCurrencyInput"),
   pricingAgreedNetInput: document.getElementById("pricingAgreedNetInput"),
   pricingAdjustmentsTable: document.getElementById("pricingAdjustmentsTable"),
-  pricingAddAdjustmentBtn: document.getElementById("pricingAddAdjustmentBtn"),
   pricingPaymentsTable: document.getElementById("pricingPaymentsTable"),
-  pricingAddPaymentBtn: document.getElementById("pricingAddPaymentBtn"),
   pricingSaveBtn: document.getElementById("pricingSaveBtn"),
   pricingStatus: document.getElementById("pricingStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
@@ -101,8 +99,6 @@ async function init() {
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
-  if (els.pricingAddAdjustmentBtn) els.pricingAddAdjustmentBtn.addEventListener("click", addPricingAdjustmentRow);
-  if (els.pricingAddPaymentBtn) els.pricingAddPaymentBtn.addEventListener("click", addPricingPaymentRow);
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
@@ -312,8 +308,6 @@ function renderPricingPanel() {
     els.pricingAgreedNetInput.value = String(pricing.agreed_net_amount_cents || 0);
     els.pricingAgreedNetInput.disabled = !state.permissions.canEditBooking;
   }
-  if (els.pricingAddAdjustmentBtn) els.pricingAddAdjustmentBtn.style.display = state.permissions.canEditBooking ? "" : "none";
-  if (els.pricingAddPaymentBtn) els.pricingAddPaymentBtn.style.display = state.permissions.canEditBooking ? "" : "none";
   if (els.pricingSaveBtn) els.pricingSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 
   renderPricingSummaryTable(pricing);
@@ -337,7 +331,7 @@ function renderPricingSummaryTable(pricing) {
   ]
     .filter(([, value]) => Number(value || 0) !== 0)
     .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(formatMoneyCents(value, pricing.currency))}</td></tr>`);
-  const rows = [`<tr><th>currency</th><td>${escapeHtml(pricing.currency || "USD")}</td></tr>`]
+  const rows = []
     .concat(moneyRows)
     .concat(summary.is_schedule_balanced === false ? ['<tr><th>schedule_balanced</th><td>no</td></tr>'] : [])
     .join("");
@@ -364,7 +358,10 @@ function renderPricingAdjustmentsTable() {
       ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">Remove</button></td>`}
     </tr>`)
     .join("");
-  const body = rows || `<tr><td colspan="${readOnly ? 4 : 5}">No adjustments</td></tr>`;
+  const addRow = readOnly
+    ? ""
+    : `<tr><td colspan="5"><button class="btn btn-ghost" type="button" data-pricing-add-adjustment>Add</button></td></tr>`;
+  const body = (rows || `<tr><td colspan="${readOnly ? 4 : 5}">No adjustments</td></tr>`) + addRow;
   els.pricingAdjustmentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
   if (!readOnly) {
     els.pricingAdjustmentsTable.querySelectorAll("[data-pricing-remove-adjustment]").forEach((button) => {
@@ -373,6 +370,7 @@ function renderPricingAdjustmentsTable() {
         removePricingAdjustmentRow(index);
       });
     });
+    els.pricingAdjustmentsTable.querySelector("[data-pricing-add-adjustment]")?.addEventListener("click", addPricingAdjustmentRow);
   }
 }
 
@@ -397,7 +395,10 @@ function renderPricingPaymentsTable() {
       ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">Remove</button></td>`}
     </tr>`)
     .join("");
-  const body = rows || `<tr><td colspan="${readOnly ? 7 : 8}">No payments scheduled</td></tr>`;
+  const addRow = readOnly
+    ? ""
+    : `<tr><td colspan="8"><button class="btn btn-ghost" type="button" data-pricing-add-payment>Add</button></td></tr>`;
+  const body = (rows || `<tr><td colspan="${readOnly ? 7 : 8}">No payments scheduled</td></tr>`) + addRow;
   els.pricingPaymentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
   if (!readOnly) {
     els.pricingPaymentsTable.querySelectorAll("[data-pricing-remove-payment]").forEach((button) => {
@@ -406,6 +407,7 @@ function renderPricingPaymentsTable() {
         removePricingPaymentRow(index);
       });
     });
+    els.pricingPaymentsTable.querySelector("[data-pricing-add-payment]")?.addEventListener("click", addPricingPaymentRow);
   }
 }
 
