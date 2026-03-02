@@ -1728,7 +1728,10 @@ function validateBookingPricingInput(rawPricing) {
       return { ok: false, error: "tax_rate_basis_points must be between 0 and 100000" };
     }
     if (payment.status === PAYMENT_STATUSES.PAID && !payment.paid_at) {
-      return { ok: false, error: `Paid payment "${payment.label}" requires paid_at` };
+      payment.paid_at = nowIso();
+    }
+    if (payment.status !== PAYMENT_STATUSES.PAID) {
+      payment.paid_at = null;
     }
   }
 

@@ -417,6 +417,18 @@ function renderPricingPaymentsTable() {
         removePricingPaymentRow(index);
       });
     });
+    els.pricingPaymentsTable.querySelectorAll("[data-pricing-payment-status]").forEach((select) => {
+      select.addEventListener("change", () => {
+        const index = Number(select.getAttribute("data-pricing-payment-status"));
+        const paidAtInput = document.querySelector(`[data-pricing-payment-paid-at="${index}"]`);
+        if (!(paidAtInput instanceof HTMLInputElement)) return;
+        if (String(select.value || "").toUpperCase() === "PAID") {
+          if (!paidAtInput.value) paidAtInput.value = normalizeDateTimeLocal(new Date().toISOString());
+        } else {
+          paidAtInput.value = "";
+        }
+      });
+    });
     els.pricingPaymentsTable.querySelector("[data-pricing-add-payment]")?.addEventListener("click", addPricingPaymentRow);
   }
 }
@@ -532,7 +544,10 @@ async function savePricing() {
       actor: state.user
     }
   });
-  if (!result?.booking) return;
+  if (!result?.booking) {
+    if (els.error?.textContent) setPricingStatus(els.error.textContent);
+    return;
+  }
 
   state.booking = result.booking;
   renderBookingHeader();
@@ -848,7 +863,8 @@ function collectPricingPayload() {
     const netAmount = parseMoneyInputValue(document.querySelector(`[data-pricing-payment-net="${index}"]`)?.value || "0", currency);
     const taxPercent = Number(document.querySelector(`[data-pricing-payment-tax="${index}"]`)?.value || "0");
     const status = String(document.querySelector(`[data-pricing-payment-status="${index}"]`)?.value || "PENDING").trim().toUpperCase();
-    const paidAt = normalizeDateTimePayload(document.querySelector(`[data-pricing-payment-paid-at="${index}"]`)?.value || "");
+    const paidAtInputValue = document.querySelector(`[data-pricing-payment-paid-at="${index}"]`)?.value || "";
+    const paidAt = normalizeDateTimePayload(paidAtInputValue || (status === "PAID" ? normalizeDateTimeLocal(new Date().toISOString()) : ""));
     const notes = String(document.querySelector(`[data-pricing-payment-notes="${index}"]`)?.value || "").trim();
     if (!label) throw new Error(`Payment ${index + 1} requires a label.`);
     if (!Number.isFinite(netAmount) || netAmount < 0) throw new Error(`Payment ${index + 1} requires a valid non-negative net amount.`);
