@@ -3,9 +3,16 @@ set -euo pipefail
 
 cd /Users/internal_admin/projects/travelagency
 git add -A
+created_commit=0
 
 if ! git diff --cached --quiet; then
   git commit -m "automatic commit"
+  created_commit=1
+fi
+
+if [[ "$created_commit" -eq 0 ]]; then
+  echo "No git changes to commit. Skipping push and remote deployment."
+  exit 0
 fi
 
 git push
