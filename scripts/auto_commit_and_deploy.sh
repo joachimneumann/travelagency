@@ -16,4 +16,4 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-ssh atp 'bash -lc "source ~/.bashrc >/dev/null 2>&1 || true; cd /srv/asiatravelplan && git pull && upall"'
+ssh atp 'bash -lc "source ~/.bashrc >/dev/null 2>&1 || true; cd /srv/asiatravelplan && git pull && cd /srv/asiatravelplan && ./scripts/update_staging.sh all"'
