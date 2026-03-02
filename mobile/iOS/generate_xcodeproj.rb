@@ -42,6 +42,8 @@ view_models_group = app_group.new_group('ViewModels', 'ViewModels')
 views_group = app_group.new_group('Views', 'Views')
 resources_group = app_group.new_group('Resources', 'Resources')
 generated_group = app_group.new_group('Generated', 'Generated')
+generated_models_group = generated_group.new_group('Models', 'Models')
+generated_api_group = generated_group.new_group('API', 'API')
 
 [
   'AppConfig.swift',
@@ -61,8 +63,13 @@ Dir.glob(File.join(ROOT, 'Services', '*.swift')).sort.each do |file|
   app_target.add_file_references([ref])
 end
 
-Dir.glob(File.join(ROOT, 'Generated', '*.swift')).sort.each do |file|
-  ref = generated_group.new_file(File.basename(file))
+Dir.glob(File.join(ROOT, 'Generated', 'Models', '*.swift')).sort.each do |file|
+  ref = generated_models_group.new_file(File.basename(file))
+  app_target.add_file_references([ref])
+end
+
+Dir.glob(File.join(ROOT, 'Generated', 'API', '*.swift')).sort.each do |file|
+  ref = generated_api_group.new_file(File.basename(file))
   app_target.add_file_references([ref])
 end
 

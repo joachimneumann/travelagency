@@ -4,6 +4,7 @@
 require 'json'
 require 'fileutils'
 require 'open3'
+require 'time'
 
 ROOT = File.expand_path('..', __dir__)
 MODEL_DIR = File.join(ROOT, 'model')
@@ -58,6 +59,10 @@ def upper_snake(name)
   name.gsub(/([a-z\d])([A-Z])/, '\\1_\\2').upcase
 end
 
+def catalog_codes(entries)
+  entries.map { |entry| entry.is_a?(Hash) ? entry.fetch('code') : entry }
+end
+
 def lower_camel(value)
   parts = value.split('_')
   return value if parts.empty?
@@ -73,6 +78,14 @@ def swift_case(value)
 
   first = parts.shift
   first + parts.map(&:capitalize).join
+end
+
+def snake_case(value)
+  value
+    .gsub(/([a-z\d])([A-Z])/, '\\1_\\2')
+    .gsub(/([A-Z]+)([A-Z][a-z])/, '\\1_\\2')
+    .tr('-', '_')
+    .downcase
 end
 
 def swift_type_for_field(field)
@@ -192,22 +205,28 @@ def render_js_currency_module(currency_entries)
 end
 
 def render_js_user_module(types, roles)
+  role_codes = catalog_codes(roles)
+
   <<~JS
     #{JS_RUNTIME_HEADER}
     #{js_validator_helpers}
-    export const GENERATED_ATP_USER_ROLES = Object.freeze(#{js_literal(roles)});
+    export const GENERATED_ATP_USER_ROLES = Object.freeze(#{js_literal(role_codes)});
 
     #{render_js_type_exports(types)}
   JS
 end
 
 def render_js_booking_module(types, stages, payment_statuses, adjustment_types)
+  stage_codes = catalog_codes(stages)
+  payment_status_codes = catalog_codes(payment_statuses)
+  adjustment_type_codes = catalog_codes(adjustment_types)
+
   <<~JS
     #{JS_RUNTIME_HEADER}
     #{js_validator_helpers}
-    export const GENERATED_BOOKING_STAGES = Object.freeze(#{js_literal(stages)});
-    export const GENERATED_PAYMENT_STATUSES = Object.freeze(#{js_literal(payment_statuses)});
-    export const GENERATED_PRICING_ADJUSTMENT_TYPES = Object.freeze(#{js_literal(adjustment_types)});
+    export const GENERATED_BOOKING_STAGES = Object.freeze(#{js_literal(stage_codes)});
+    export const GENERATED_PAYMENT_STATUSES = Object.freeze(#{js_literal(payment_status_codes)});
+    export const GENERATED_PRICING_ADJUSTMENT_TYPES = Object.freeze(#{js_literal(adjustment_type_codes)});
 
     #{render_js_type_exports(types)}
   JS
@@ -223,25 +242,10 @@ def render_js_aux_module(types)
 end
 
 def render_js_api_models_module(api_types, endpoints)
-  missing_transport_types = endpoints.flat_map { |entry| [entry['requestType'], entry['responseType']] }
-                                 .compact
-                                 .uniq
-                                 .reject { |name| api_types.any? { |type| type.fetch('name') == name } }
-
-  placeholders = missing_transport_types.each_with_object({}) do |name, acc|
-    acc[name] = {
-      'name' => name,
-      'status' => 'placeholder',
-      'source' => 'endpoint-reference',
-      'message' => 'Type is referenced by model/api/endpoints.cue but not yet defined as a transport shape in model/api/'
-    }
-  end
-
   <<~JS
     #{JS_RUNTIME_HEADER}
     #{js_validator_helpers}
     export const GENERATED_API_ENDPOINTS = #{js_literal(endpoints)};
-    export const GENERATED_API_PLACEHOLDERS = #{js_literal(placeholders)};
 
     #{render_js_type_exports(api_types)}
   JS
@@ -400,7 +404,8 @@ def render_swift_currency(currency_entries)
 end
 
 def render_swift_user(roles)
-  role_cases = roles.map { |role| "    case #{swift_case(role)} = \"#{role}\"" }.join("\n")
+  role_codes = catalog_codes(roles)
+  role_cases = role_codes.map { |role| "    case #{swift_case(role)} = \"#{role}\"" }.join("\n")
 
   <<~SWIFT
     import Foundation
@@ -422,9 +427,13 @@ def render_swift_user(roles)
 end
 
 def render_swift_booking(stages, payment_statuses, adjustment_types)
-  stage_cases = stages.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
-  payment_cases = payment_statuses.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
-  adjustment_cases = adjustment_types.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+  stage_codes = catalog_codes(stages)
+  payment_status_codes = catalog_codes(payment_statuses)
+  adjustment_type_codes = catalog_codes(adjustment_types)
+
+  stage_cases = stage_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+  payment_cases = payment_status_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+  adjustment_cases = adjustment_type_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
 
   <<~SWIFT
     import Foundation
@@ -634,67 +643,53 @@ def render_swift_booking(stages, payment_statuses, adjustment_types)
   SWIFT
 end
 
-def render_swift_aux
+def render_swift_type(type)
+  protocol_list = ['Codable', 'Equatable']
+  protocol_list << 'Identifiable' if type.fetch('fields').any? { |field| field.fetch('name') == 'id' && !field['isArray'] }
+  protocols = protocol_list.join(', ')
+
+  fields = type.fetch('fields').map do |field|
+    field_name = field.fetch('name')
+    swift_type = swift_type_for_field(field)
+    "    let #{field_name}: #{swift_type}"
+  end.join("\n")
+
+  coding_keys = type.fetch('fields').map do |field|
+    field_name = field.fetch('name')
+    wire_name = field['wireName'] || snake_case(field_name)
+    "        case #{field_name} = \"#{wire_name}\""
+  end.join("\n")
+
   <<~SWIFT
-    import Foundation
+    struct Generated#{type.fetch('name')}: #{protocols} {
+#{fields}
 
-    #{SWIFT_RUNTIME_HEADER}
-    struct GeneratedCustomer: Codable, Equatable, Identifiable {
-        let id: String
-        let name: String
-        let email: String?
-        let phone: String?
-    }
-
-    struct GeneratedTour: Codable, Equatable, Identifiable {
-        let id: String
-        let title: String
-        let country: String?
-        let active: Bool?
+        private enum CodingKeys: String, CodingKey {
+#{coding_keys}
+        }
     }
   SWIFT
 end
 
-def render_swift_api_models(api_types, endpoints)
-  endpoint_pairs = endpoints.flat_map { |entry| [entry['requestType'], entry['responseType']] }.compact.uniq
-  known = api_types.map { |type| type.fetch('name') }
-  placeholders = endpoint_pairs.reject { |name| known.include?(name) }
+def render_swift_type_collection(types)
+  types.map { |type| render_swift_type(type) }.join("\n")
+end
 
-  detail_wrappers = api_types.map do |type|
-    fields = type.fetch('fields').map do |field|
-      coding_key = field.fetch('wireName')
-      field_name = field.fetch('name')
-      swift_type = swift_type_for_field(field)
-      "    let #{field_name}: #{swift_type}"
-    end.join("\n")
-
-    coding_keys = type.fetch('fields').map do |field|
-      "        case #{field.fetch('name')} = \"#{field.fetch('wireName')}\""
-    end.join("\n")
-
-    <<~SWIFT
-      struct Generated#{type.fetch('name')}: Codable, Equatable {
-#{fields}
-
-          private enum CodingKeys: String, CodingKey {
-#{coding_keys}
-          }
-      }
-    SWIFT
-  end.join("\n")
-
-  placeholder_enum = placeholders.map { |name| "    case #{swift_case(name)} = \"#{name}\"" }.join("\n")
-  placeholder_enum = "    case none = \"none\"" if placeholder_enum.empty?
-
+def render_swift_aux(types)
   <<~SWIFT
     import Foundation
 
     #{SWIFT_RUNTIME_HEADER}
-    #{detail_wrappers}
+    #{render_swift_type_collection(types)}
+  SWIFT
+end
 
-    enum GeneratedAPIPlaceholderType: String, CaseIterable {
-#{placeholder_enum}
-    }
+def render_swift_api_models(api_types)
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    #{render_swift_type_collection(api_types)}
   SWIFT
 end
 
@@ -862,11 +857,11 @@ ios_model_outputs = {
   'generated_Currency.swift' => render_swift_currency(currency_entries),
   'generated_User.swift' => render_swift_user(roles),
   'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types),
-  'generated_Aux.swift' => render_swift_aux
+  'generated_Aux.swift' => render_swift_aux(aux_types)
 }
 
 ios_api_outputs = {
-  'generated_APIModels.swift' => render_swift_api_models(api_types, endpoints),
+  'generated_APIModels.swift' => render_swift_api_models(api_types),
   'generated_APIRequestFactory.swift' => render_swift_request_factory(endpoints, contract_version),
   'generated_APIClient.swift' => render_swift_api_client(endpoints)
 }

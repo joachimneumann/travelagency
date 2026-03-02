@@ -5,35 +5,7 @@ struct BookingsListView: View {
     @StateObject private var viewModel = BookingsViewModel()
 
     var body: some View {
-        Group {
-            if viewModel.isLoading && viewModel.bookings.isEmpty {
-                ProgressView("Loading bookings...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            } else {
-                List(viewModel.bookings) { booking in
-                    NavigationLink {
-                        BookingDetailView(bookingID: booking.id)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(booking.destination ?? "Untitled booking")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text("\(booking.stage) • \(booking.staffName ?? "Unassigned")")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                        .padding(.vertical, 2)
-                    }
-                }
-                .listStyle(.plain)
-                .refreshable {
-                    if let session = await sessionStore.validSession() {
-                        await viewModel.load(session: session)
-                    }
-                }
-            }
-        }
+        content
         .navigationTitle("Bookings")
         .modifier(StandardNavigationTitleDisplayModeModifier())
         .task {
@@ -49,6 +21,40 @@ struct BookingsListView: View {
             Text(viewModel.errorMessage ?? "Unknown error")
         }
     }
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.isLoading && viewModel.bookings.isEmpty {
+            ProgressView("Loading bookings...")
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        } else {
+            let bookings: [Booking] = viewModel.bookings
+            List {
+                ForEach(bookings, id: \.id) { booking in
+                    NavigationLink {
+                        BookingDetailView(bookingID: booking.id)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(booking.destination)
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.staffName ?? "Unassigned")")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .refreshable {
+                if let session = await sessionStore.validSession() {
+                    await viewModel.load(session: session)
+                }
+            }
+        }
+    }
+
 }
 
 private struct StandardNavigationTitleDisplayModeModifier: ViewModifier {

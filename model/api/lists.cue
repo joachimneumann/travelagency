@@ -28,5 +28,6 @@ import entities "travelagency.local/model/entities"
 }
 
 #TourDetail: {
-	tour: entities.#Tour
+	tour:    entities.#Tour
+	options: #TourOptions
 }

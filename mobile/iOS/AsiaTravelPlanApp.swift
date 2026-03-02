@@ -4,6 +4,7 @@ import SwiftUI
 struct AsiaTravelPlanApp: App {
     @StateObject private var sessionStore = SessionStore()
     @StateObject private var bootstrapStore = AppBootstrapStore()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +15,17 @@ struct AsiaTravelPlanApp: App {
                     await bootstrapStore.initialize()
                     if bootstrapStore.isReady {
                         await sessionStore.restoreSessionIfPossible()
+                    }
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    guard newPhase == .active else { return }
+                    Task {
+                        if !bootstrapStore.isReady {
+                            await bootstrapStore.initialize()
+                        }
+                        if bootstrapStore.isReady {
+                            await sessionStore.restoreSessionIfPossible()
+                        }
                     }
                 }
         }

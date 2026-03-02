@@ -290,8 +290,8 @@ The single contract source is:
 
 Generated artifacts:
 - [/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json](/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json)
-- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIModels.swift](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIModels.swift)
-- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIRequestFactory.swift](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIRequestFactory.swift)
+- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models)
+- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API)
 
 Regenerate after editing the OpenAPI file:
 

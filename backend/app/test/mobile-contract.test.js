@@ -20,6 +20,16 @@ const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
 const { createBackendHandler } = await import("../src/server.js");
 const handler = await createBackendHandler({ port: 8787 });
 
+function endpointPath(key) {
+  const endpoint = contractMeta.endpoints.find((candidate) => candidate.key === key);
+  assert.ok(endpoint, `Missing endpoint metadata for ${key}`);
+  return endpoint.path;
+}
+
+function catalogCodes(items) {
+  return items.map((item) => item.code);
+}
+
 function createMockRequest({ method = "GET", url = "/", headers = {}, body = "" } = {}) {
   const stream = Readable.from(body ? [Buffer.from(body)] : []);
   stream.method = method;
@@ -81,7 +91,7 @@ function assertISODateLike(value, label) {
 function assertBookingShape(booking) {
   assert.equal(typeof booking.id, "string");
   assert.equal(typeof booking.customer_id, "string");
-  assert.ok(contractMeta.stages.includes(booking.stage), `Unexpected booking stage: ${booking.stage}`);
+  assert.ok(catalogCodes(contractMeta.stages).includes(booking.stage), `Unexpected booking stage: ${booking.stage}`);
   assert.equal(typeof booking.pricing, "object");
   assert.equal(typeof booking.pricing.currency, "string");
   assert.equal(typeof booking.pricing.agreed_net_amount_cents, "number");
@@ -94,9 +104,9 @@ function assertBookingShape(booking) {
 }
 
 test("public mobile bootstrap matches contract metadata", async () => {
-  const result = await requestJson(contractMeta.paths.mobile_bootstrap);
+  const result = await requestJson(endpointPath("mobile_bootstrap"));
   assert.equal(result.status, 200);
-  assert.equal(result.body.api.contract_version, contractMeta.contract_version);
+  assert.equal(result.body.api.contract_version, contractMeta.modelVersion);
   assert.equal(result.body.app.min_supported_version, "1.0.0");
   assert.equal(result.body.app.latest_version, "1.0.0");
   assert.equal(result.body.app.force_update, false);
@@ -108,7 +118,7 @@ test("public mobile bootstrap matches contract metadata", async () => {
 });
 
 test("bookings list response conforms to the mobile contract", async () => {
-  const result = await requestJson(`${contractMeta.paths.bookings}?page=1&page_size=10&sort=created_at_desc`, apiHeaders());
+  const result = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders());
   assert.equal(result.status, 200);
   assert.ok(Array.isArray(result.body.items));
   assert.equal(typeof result.body.page, "number");
@@ -120,16 +130,16 @@ test("bookings list response conforms to the mobile contract", async () => {
 });
 
 test("booking detail, activities, invoices, and staff responses conform to the mobile contract", async () => {
-  const listResult = await requestJson(`${contractMeta.paths.bookings}?page=1&page_size=1&sort=created_at_desc`, apiHeaders());
+  const listResult = await requestJson(`${endpointPath("bookings")}?page=1&page_size=1&sort=created_at_desc`, apiHeaders());
   const bookingID = listResult.body.items[0].id;
 
-  const detailResult = await requestJson(contractMeta.paths.booking_detail.replace("{bookingId}", bookingID), apiHeaders());
+  const detailResult = await requestJson(endpointPath("booking_detail").replace("{bookingId}", bookingID), apiHeaders());
   assert.equal(detailResult.status, 200);
   assertBookingShape(detailResult.body.booking);
   assert.equal(detailResult.body.booking.id, bookingID);
   assert.ok(detailResult.body.customer === null || typeof detailResult.body.customer === "object");
 
-  const activitiesResult = await requestJson(contractMeta.paths.booking_activities.replace("{bookingId}", bookingID), apiHeaders());
+  const activitiesResult = await requestJson(endpointPath("booking_activities").replace("{bookingId}", bookingID), apiHeaders());
   assert.equal(activitiesResult.status, 200);
   assert.ok(Array.isArray(activitiesResult.body.activities));
   for (const activity of activitiesResult.body.activities) {
@@ -141,12 +151,12 @@ test("booking detail, activities, invoices, and staff responses conform to the m
     assertISODateLike(activity.created_at, "activity.created_at");
   }
 
-  const invoicesResult = await requestJson(contractMeta.paths.booking_invoices.replace("{bookingId}", bookingID), apiHeaders());
+  const invoicesResult = await requestJson(endpointPath("booking_invoices").replace("{bookingId}", bookingID), apiHeaders());
   assert.equal(invoicesResult.status, 200);
   assert.ok(Array.isArray(invoicesResult.body.items));
   assert.equal(typeof invoicesResult.body.total, "number");
 
-  const staffResult = await requestJson(`${contractMeta.paths.staff}?active=true`, apiHeaders());
+  const staffResult = await requestJson(`${endpointPath("staff")}?active=true`, apiHeaders());
   assert.equal(staffResult.status, 200);
   assert.ok(Array.isArray(staffResult.body.items));
   assert.equal(typeof staffResult.body.total, "number");

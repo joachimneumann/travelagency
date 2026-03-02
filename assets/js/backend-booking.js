@@ -1,5 +1,28 @@
+import {
+  GENERATED_CURRENCIES,
+  normalizeCurrencyCode as normalizeGeneratedCurrencyCode
+} from "../../frontend/Generated/Models/generated_Currency.js";
+import {
+  bookingActivitiesRequest,
+  bookingAssignmentRequest,
+  bookingDetailRequest,
+  bookingInvoicesRequest,
+  bookingNoteRequest,
+  bookingPricingRequest,
+  bookingStageRequest,
+  customerDetailRequest,
+  staffRequest
+} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
+const apiOrigin = apiBase || window.location.origin;
+
+function resolveApiUrl(pathOrUrl) {
+  const value = String(pathOrUrl || "");
+  if (/^https?:\/\//.test(value)) return value;
+  return `${apiBase}${value}`;
+}
 
 const STAGES = [
   "NEW",
@@ -139,9 +162,9 @@ async function init() {
 
 async function loadBookingPage() {
   clearStatus();
-  const requests = [fetchApi(`/api/v1/bookings/${encodeURIComponent(state.id)}`)];
+  const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, path: { bookingId: state.id } }).url)];
   if (state.permissions.canChangeAssignment) {
-    requests.push(fetchApi(`/api/v1/staff?active=true`));
+    requests.push(fetchApi(staffRequest({ baseURL: apiOrigin, query: { active: true } }).url));
   }
   const [bookingPayload, staffPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
@@ -159,7 +182,7 @@ async function loadBookingPage() {
 }
 
 async function loadCustomer() {
-  const payload = await fetchApi(`/api/v1/customers/${encodeURIComponent(state.id)}`);
+  const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, path: { customerId: state.id } }).url);
   if (!payload) return;
 
   if (els.title) els.title.textContent = payload.customer?.name || `Customer ${state.id}`;
@@ -474,7 +497,7 @@ function removePricingPaymentRow(index) {
 
 async function saveOwner() {
   if (!state.booking || !els.ownerSelect) return;
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/owner`, {
+  const result = await fetchBookingMutation(bookingAssignmentRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -492,7 +515,7 @@ async function saveOwner() {
 
 async function saveStage() {
   if (!state.booking || !els.stageSelect) return;
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/stage`, {
+  const result = await fetchBookingMutation(bookingStageRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -510,7 +533,7 @@ async function saveStage() {
 
 async function saveNote() {
   if (!state.booking || !els.noteInput) return;
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/notes`, {
+  const result = await fetchBookingMutation(bookingNoteRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -540,7 +563,7 @@ async function savePricing() {
     return;
   }
 
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/pricing`, {
+  const result = await fetchBookingMutation(bookingPricingRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -563,7 +586,7 @@ async function savePricing() {
 
 async function loadActivities() {
   if (!state.booking) return;
-  const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/activities`);
+  const payload = await fetchApi(bookingActivitiesRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url);
   if (!payload) return;
   renderActivitiesTable(payload.items || []);
 }
@@ -588,7 +611,7 @@ function renderActivitiesTable(items) {
 
 async function loadInvoices() {
   if (!state.booking) return;
-  const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices`);
+  const payload = await fetchApi(bookingInvoicesRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url);
   if (!payload) return;
   state.invoices = (Array.isArray(payload.items) ? payload.items : []).sort((a, b) =>
     String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
@@ -927,18 +950,11 @@ function formatTaxRatePercent(value) {
 }
 
 function getCurrencyDefinitions() {
-  return window.ATPContract?.currencies || {
-    USD: { symbol: "$", decimal_places: 2, iso_code: "USD" },
-    EURO: { symbol: "€", decimal_places: 2, iso_code: "EUR" },
-    VND: { symbol: "₫", decimal_places: 0, iso_code: "VND" },
-    THB: { symbol: "฿", decimal_places: 0, iso_code: "THB" }
-  };
+  return GENERATED_CURRENCIES;
 }
 
 function normalizeCurrencyCode(value) {
-  const raw = String(value || "USD").trim().toUpperCase() || "USD";
-  const normalized = raw === "EUR" ? "EURO" : raw;
-  return getCurrencyDefinitions()[normalized] ? normalized : "USD";
+  return normalizeGeneratedCurrencyCode(value) || "USD";
 }
 
 function currencyDefinition(currency) {
@@ -1071,7 +1087,7 @@ async function fetchApi(path, options = {}) {
   const body = options.body;
 
   try {
-    const response = await fetch(`${apiBase}${path}`, {
+    const response = await fetch(resolveApiUrl(path), {
       method,
       credentials: "include",
       headers: {
@@ -1101,7 +1117,7 @@ async function fetchBookingMutation(path, options = {}) {
   const body = options.body;
 
   try {
-    const response = await fetch(`${apiBase}${path}`, {
+    const response = await fetch(resolveApiUrl(path), {
       method,
       credentials: "include",
       headers: {

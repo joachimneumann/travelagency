@@ -8,6 +8,10 @@ import { execFile as execFileCb } from "node:child_process";
 import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { deflateSync, inflateSync } from "node:zlib";
 import { createAuth } from "./auth.js";
+import {
+  currencyDefinition as generatedCurrencyDefinition,
+  normalizeCurrencyCode as normalizeGeneratedCurrencyCode
+} from "../Generated/Models/generated_Currency.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -867,21 +871,18 @@ function computeSlaDueAt(stage, from = new Date()) {
   return new Date(from.getTime() + hours * 60 * 60 * 1000).toISOString();
 }
 
-const CURRENCY_DEFINITIONS = Object.freeze({
-  USD: Object.freeze({ code: "USD", symbol: "$", decimal_places: 2, iso_code: "USD" }),
-  EURO: Object.freeze({ code: "EURO", symbol: "€", decimal_places: 2, iso_code: "EUR" }),
-  VND: Object.freeze({ code: "VND", symbol: "₫", decimal_places: 0, iso_code: "VND" }),
-  THB: Object.freeze({ code: "THB", symbol: "฿", decimal_places: 0, iso_code: "THB" })
-});
-
 function safeCurrency(value) {
-  const normalized = normalizeText(value).toUpperCase();
-  if (normalized === "EUR") return "EURO";
-  return CURRENCY_DEFINITIONS[normalized] ? normalized : "USD";
+  return normalizeGeneratedCurrencyCode(value) || "USD";
 }
 
 function getCurrencyDefinition(currency) {
-  return CURRENCY_DEFINITIONS[safeCurrency(currency)] || CURRENCY_DEFINITIONS.USD;
+  const definition = generatedCurrencyDefinition(currency) || generatedCurrencyDefinition("USD");
+  return {
+    code: definition.code,
+    symbol: definition.symbol || definition.code,
+    decimal_places: Number.isFinite(Number(definition.decimalPlaces)) ? Number(definition.decimalPlaces) : 2,
+    iso_code: definition.code === "EURO" ? "EUR" : definition.code
+  };
 }
 
 function safeAmountCents(value) {
@@ -1911,7 +1912,7 @@ async function readMobileContractMeta() {
   if (!mobileContractMetaPromise) {
     mobileContractMetaPromise = readFile(MOBILE_CONTRACT_META_PATH, "utf8")
       .then((raw) => JSON.parse(raw))
-      .catch(() => ({ contract_version: "unknown" }));
+      .catch(() => ({ modelVersion: "unknown" }));
   }
   return mobileContractMetaPromise;
 }
@@ -1925,7 +1926,7 @@ async function handleMobileBootstrap(_req, res) {
       force_update: MOBILE_FORCE_UPDATE
     },
     api: {
-      contract_version: normalizeText(contractMeta.contract_version) || "unknown"
+      contract_version: normalizeText(contractMeta.modelVersion) || "unknown"
     },
     features: {
       bookings: true,

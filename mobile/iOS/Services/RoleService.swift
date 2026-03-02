@@ -6,23 +6,23 @@ struct RoleService {
     }
 
     func canReadAllBookings(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.admin) || profile.roles.contains(.manager) || profile.roles.contains(.accountant)
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager) || profile.roles.contains(.atpAccountant)
     }
 
     func canEditAssignedBookings(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.staff)
+        profile.roles.contains(.atpStaff)
     }
 
     func canEditAllBookings(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.admin) || profile.roles.contains(.manager)
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager)
     }
 
     func canChangeBookingStage(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.admin) || profile.roles.contains(.manager) || profile.roles.contains(.accountant) || profile.roles.contains(.staff)
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager) || profile.roles.contains(.atpAccountant) || profile.roles.contains(.atpStaff)
     }
 
     func canChangeAssignment(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.admin) || profile.roles.contains(.manager)
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager)
     }
 
     func canCreateStaff(_ profile: UserProfile) -> Bool {
@@ -30,10 +30,10 @@ struct RoleService {
     }
 
     func canReadTours(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.admin) || profile.roles.contains(.accountant)
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpAccountant)
     }
 
     func canEditTours(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.admin)
+        profile.roles.contains(.atpAdmin)
     }
 }

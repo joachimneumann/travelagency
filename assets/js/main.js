@@ -3,6 +3,15 @@
   - Tour catalog is loaded from backend endpoint /public/v1/tours
 */
 
+import {
+  GENERATED_CURRENCIES,
+  normalizeCurrencyCode as normalizeGeneratedCurrencyCode
+} from "../../frontend/Generated/Models/generated_Currency.js";
+import {
+  publicBookingsRequest,
+  publicToursRequest
+} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+
 const state = {
   trips: [],
   filteredTrips: [],
@@ -22,12 +31,9 @@ const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
 const TOURS_CACHE_KEY = "asiatravelplan_tours_cache_v2";
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
-const TOURS_API_ENDPOINT =
-  (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/tours` : "/public/v1/tours");
 const TOURS_STATIC_FALLBACK_ENDPOINT = "data/tours_fallback_data.jspn";
-const BOOKING_API_ENDPOINT =
-  (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/bookings` : "/public/v1/bookings");
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
+const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const DEFAULT_BOOKING_CURRENCY = "USD";
 const BOOKING_BUDGET_OPTIONS = {
   USD: ["not decided yet", "$500-$900 / week", "$900-$1,400 / week", "$1,400-$2,200 / week", "$2,200+ / week"],
@@ -186,15 +192,11 @@ function setupBackendLogin() {
 }
 
 function getCurrencyDefinitions() {
-  return window.ATPContract?.currencies || {};
+  return GENERATED_CURRENCIES;
 }
 
 function normalizeCurrencyCode(value) {
-  const raw = String(value || DEFAULT_BOOKING_CURRENCY).trim().toUpperCase();
-  if (raw === "EUR") return "EURO";
-  const definitions = getCurrencyDefinitions();
-  if (definitions[raw]) return raw;
-  return DEFAULT_BOOKING_CURRENCY;
+  return normalizeGeneratedCurrencyCode(value) || DEFAULT_BOOKING_CURRENCY;
 }
 
 function setupBookingBudgetOptions() {
@@ -582,7 +584,11 @@ async function loadTrips() {
   if (cached) return cached;
 
   try {
-    const response = await fetch(`${TOURS_API_ENDPOINT}?v=${TRIPS_REQUEST_VERSION}`, { cache: "no-store" });
+    const toursRequest = publicToursRequest({
+      baseURL: API_BASE_ORIGIN,
+      query: { v: TRIPS_REQUEST_VERSION }
+    });
+    const response = await fetch(toursRequest.url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Backend tours request failed with status ${response.status}.`);
     }
@@ -879,9 +885,11 @@ async function submitBookingForm() {
   const idempotencyKey = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   try {
-    const response = await fetch(BOOKING_API_ENDPOINT, {
-      method: "POST",
+    const bookingRequest = publicBookingsRequest({ baseURL: API_BASE_ORIGIN });
+    const response = await fetch(bookingRequest.url, {
+      method: bookingRequest.method,
       headers: {
+        ...(bookingRequest.headers || {}),
         "Content-Type": "application/json",
         "Idempotency-Key": idempotencyKey
       },

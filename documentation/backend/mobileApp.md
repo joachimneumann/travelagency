@@ -97,8 +97,8 @@ Contract source of truth:
 
 Generated artifacts:
 - `/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIModels.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/MobileAPIRequestFactory.swift`
+- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/`
+- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API/`
 
 The mobile app should call backend APIs with bearer tokens:
 

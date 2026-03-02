@@ -12,177 +12,7 @@ struct BookingDetailView: View {
 
     var body: some View {
         Form {
-            if let booking = viewModel.booking {
-                Section("Booking") {
-                    LabeledContent("ID", value: booking.id)
-                    LabeledContent("Stage", value: booking.stage)
-                    LabeledContent("Destination", value: booking.destination ?? "-")
-                    LabeledContent("Style", value: booking.style ?? "-")
-                    LabeledContent("Staff", value: booking.staffName ?? "Unassigned")
-                }
-
-                if let customer = viewModel.customer {
-                    Section("Customer") {
-                        LabeledContent("Name", value: customer.name ?? "-")
-                        LabeledContent("Email", value: customer.email ?? "-")
-                        LabeledContent("Phone", value: customer.phone ?? "-")
-                        LabeledContent("Language", value: customer.language ?? "-")
-                    }
-                }
-
-                if let pricing = booking.pricing {
-                    Section("Payments") {
-                        if paymentSummaryRows(for: pricing).isEmpty {
-                            Text("No payments yet")
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(paymentSummaryRows(for: pricing), id: \.label) { row in
-                                LabeledContent(row.label, value: row.value)
-                            }
-                            if !pricing.summary.isScheduleBalanced {
-                                LabeledContent("Schedule Complete", value: "No")
-                            }
-                        }
-                    }
-
-                    if !pricing.adjustments.isEmpty {
-                        Section("Adjustments") {
-                            ForEach(pricing.adjustments) { adjustment in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text(adjustment.label)
-                                        Spacer()
-                                        Text(adjustment.type.rawValue)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Text(formatMoney(signedAdjustmentAmount(adjustment), currency: pricing.currency))
-                                        .font(.subheadline)
-                                    if let notes = adjustment.notes, !notes.isEmpty {
-                                        Text(notes)
-                                            .font(.footnote)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .padding(.vertical, 2)
-                            }
-                        }
-                    }
-
-                    Section("Payment Schedule") {
-                        if pricing.payments.isEmpty {
-                            Text("No payments scheduled")
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(pricing.payments) { payment in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(alignment: .firstTextBaseline) {
-                                        Text(payment.label)
-                                        Spacer()
-                                        Text(payment.status.rawValue)
-                                            .foregroundStyle(payment.status == .paid ? .green : .secondary)
-                                    }
-                                    HStack {
-                                        Text(formatMoney(payment.grossAmountCents, currency: pricing.currency))
-                                        Spacer()
-                                        Text("Tax \(formatPercent(payment.taxRateBasisPoints))")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    if let dueDate = payment.dueDate, !dueDate.isEmpty {
-                                        Text("Due \(dueDate)")
-                                            .font(.footnote)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    if let paidAt = payment.paidAt, !paidAt.isEmpty {
-                                        Text("Paid \(paidAt)")
-                                            .font(.footnote)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    if let notes = payment.notes, !notes.isEmpty {
-                                        Text(notes)
-                                            .font(.footnote)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .padding(.vertical, 2)
-                            }
-                        }
-                    }
-                }
-
-                if canChangeStage {
-                    Section("Stage") {
-                        Picker("Stage", selection: $selectedStage) {
-                            ForEach(stageOptions, id: \.self) { stage in
-                                Text(stage).tag(stage)
-                            }
-                        }
-
-                        Button("Update Stage") {
-                            Task {
-                                guard let session = await sessionStore.validSession() else { return }
-                                await viewModel.updateStage(selectedStage, session: session)
-                            }
-                        }
-                        .disabled(selectedStage.isEmpty || selectedStage == booking.stage)
-                    }
-                }
-
-                if canChangeAssignment {
-                    Section("Assignment") {
-                        Picker("Staff", selection: $selectedStaffID) {
-                            Text("Unassigned").tag("")
-                            ForEach(viewModel.staff) { member in
-                                Text(member.name).tag(member.id)
-                            }
-                        }
-
-                        Button("Save Assignment") {
-                            let staffID = selectedStaffID.isEmpty ? nil : selectedStaffID
-                            Task {
-                                guard let session = await sessionStore.validSession() else { return }
-                                await viewModel.updateAssignment(staffID, session: session)
-                            }
-                        }
-                        .disabled(selectedStaffID == (booking.staff ?? ""))
-                    }
-                }
-
-                if canEditBooking {
-                    Section("Booking Note") {
-                        TextEditor(text: $viewModel.noteDraft)
-                            .frame(minHeight: 140)
-
-                        Button("Save Note") {
-                            Task {
-                                guard let session = await sessionStore.validSession() else { return }
-                                await viewModel.saveNote(session: session)
-                            }
-                        }
-                        .disabled(viewModel.noteDraft == viewModel.originalNote)
-                    }
-                }
-
-                if !viewModel.activities.isEmpty {
-                    Section("Activities") {
-                        ForEach(viewModel.activities) { activity in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(activity.type)
-                                    .font(.headline)
-                                Text(activity.detail)
-                                    .font(.body)
-                                Text("\(activity.actor) • \(activity.createdAt)")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.vertical, 2)
-                        }
-                    }
-                }
-            } else if viewModel.isLoading {
-                Section {
-                    ProgressView("Loading booking...")
-                }
-            }
+            formContent
         }
         .navigationTitle("Details")
         .modifier(InlineNavigationTitleDisplayModeModifier())
@@ -197,7 +27,7 @@ struct BookingDetailView: View {
         .onChange(of: viewModel.booking?.stage) { _, _ in
             syncSelectionsFromBooking()
         }
-        .onChange(of: viewModel.booking?.staff) { _, _ in
+        .onChange(of: viewModel.booking?.staffId) { _, _ in
             syncSelectionsFromBooking()
         }
         .alert("Booking", isPresented: Binding(
@@ -207,6 +37,213 @@ struct BookingDetailView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "Unknown error")
+        }
+    }
+
+    @ViewBuilder
+    private var formContent: some View {
+        if let booking = viewModel.booking {
+            bookingSummarySection(for: booking)
+            if let customer = viewModel.customer {
+                customerSection(customer)
+            }
+            if let pricing = booking.pricing {
+                paymentsSection(for: pricing)
+                adjustmentsSection(for: pricing)
+                paymentScheduleSection(for: pricing)
+            }
+            if canChangeStage {
+                stageSection(for: booking)
+            }
+            if canChangeAssignment {
+                assignmentSection(for: booking)
+            }
+            if canEditBooking {
+                bookingNoteSection()
+            }
+            activitiesSection()
+        } else if viewModel.isLoading {
+            Section {
+                ProgressView("Loading booking...")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func bookingSummarySection(for booking: Booking) -> some View {
+        Section("Booking") {
+            LabeledContent("ID", value: booking.id)
+            LabeledContent("Stage", value: booking.stage.rawValue)
+            LabeledContent("Destination", value: booking.destination)
+            LabeledContent("Style", value: booking.style)
+            LabeledContent("Staff", value: booking.staffName ?? "Unassigned")
+        }
+    }
+
+    @ViewBuilder
+    private func customerSection(_ customer: Customer) -> some View {
+        Section("Customer") {
+            LabeledContent("Name", value: customer.name ?? "-")
+            LabeledContent("Email", value: customer.email ?? "-")
+            LabeledContent("Phone", value: customer.phone ?? "-")
+            LabeledContent("Language", value: customer.language ?? "-")
+        }
+    }
+
+    @ViewBuilder
+    private func paymentsSection(for pricing: BookingPricing) -> some View {
+        Section("Payments") {
+            if paymentSummaryRows(for: pricing).isEmpty {
+                Text("No payments yet")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(paymentSummaryRows(for: pricing), id: \.label) { row in
+                    LabeledContent(row.label, value: row.value)
+                }
+                if !pricing.summary.isScheduleBalanced {
+                    LabeledContent("Schedule Complete", value: "No")
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func adjustmentsSection(for pricing: BookingPricing) -> some View {
+        if !pricing.adjustments.isEmpty {
+            Section("Adjustments") {
+                ForEach(pricing.adjustments) { adjustment in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(adjustment.label)
+                            Spacer()
+                            Text(adjustment.type.rawValue)
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(formatMoney(signedAdjustmentAmount(adjustment), currency: pricing.currency))
+                            .font(.subheadline)
+                        if let notes = adjustment.notes, !notes.isEmpty {
+                            Text(notes)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func paymentScheduleSection(for pricing: BookingPricing) -> some View {
+        Section("Payment Schedule") {
+            if pricing.payments.isEmpty {
+                Text("No payments scheduled")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(pricing.payments) { payment in
+                    paymentRow(payment, currency: pricing.currency)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func paymentRow(_ payment: BookingPayment, currency: ATPCurrencyCode) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(payment.label)
+                Spacer()
+                Text(payment.status.rawValue)
+                    .foregroundStyle(payment.status == .paid ? .green : .secondary)
+            }
+            HStack {
+                Text(formatMoney(payment.grossAmountCents, currency: currency))
+                Spacer()
+                Text("Tax \(formatPercent(payment.taxRateBasisPoints))")
+                    .foregroundStyle(.secondary)
+            }
+            if let dueDate = payment.dueDate, !dueDate.isEmpty {
+                Text("Due \(dueDate)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if let paidAt = payment.paidAt, !paidAt.isEmpty {
+                Text("Paid \(paidAt)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if let notes = payment.notes, !notes.isEmpty {
+                Text(notes)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    @ViewBuilder
+    private func stageSection(for booking: Booking) -> some View {
+        Section("Stage") {
+            Picker("Stage", selection: $selectedStage) {
+                ForEach(stageOptions, id: \.self) { stage in
+                    Text(stage).tag(stage)
+                }
+            }
+
+            Button("Update Stage") {
+                Task {
+                    guard let session = await sessionStore.validSession() else { return }
+                    await viewModel.updateStage(selectedStage, session: session)
+                }
+            }
+            .disabled(selectedStage.isEmpty || selectedStage == booking.stage.rawValue)
+        }
+    }
+
+    @ViewBuilder
+    private func assignmentSection(for booking: Booking) -> some View {
+        Section("Assignment") {
+            Picker("Staff", selection: $selectedStaffID) {
+                Text("Unassigned").tag("")
+                ForEach(viewModel.staff) { member in
+                    Text(member.name).tag(member.id)
+                }
+            }
+
+            Button("Save Assignment") {
+                let staffID = selectedStaffID.isEmpty ? nil : selectedStaffID
+                Task {
+                    guard let session = await sessionStore.validSession() else { return }
+                    await viewModel.updateAssignment(staffID, session: session)
+                }
+            }
+            .disabled(selectedStaffID == (booking.staffId ?? ""))
+        }
+    }
+
+    @ViewBuilder
+    private func bookingNoteSection() -> some View {
+        Section("Booking Note") {
+            TextEditor(text: $viewModel.noteDraft)
+                .frame(minHeight: 140)
+
+            Button("Save Note") {
+                Task {
+                    guard let session = await sessionStore.validSession() else { return }
+                    await viewModel.saveNote(session: session)
+                }
+            }
+            .disabled(viewModel.noteDraft == viewModel.originalNote)
+        }
+    }
+
+    @ViewBuilder
+    private func activitiesSection() -> some View {
+        let activities: [BookingActivity] = viewModel.activities
+        if !activities.isEmpty {
+            Section("Activities") {
+                BookingActivityRows(activities: activities)
+            }
         }
     }
 
@@ -230,8 +267,8 @@ struct BookingDetailView: View {
     }
 
     private func syncSelectionsFromBooking() {
-        selectedStage = viewModel.booking?.stage ?? ""
-        selectedStaffID = viewModel.booking?.staff ?? ""
+        selectedStage = viewModel.booking?.stage.rawValue ?? ""
+        selectedStaffID = viewModel.booking?.staffId ?? ""
     }
 
     private func formatMoney(_ minorUnits: Int, currency: ATPCurrencyCode) -> String {
@@ -273,6 +310,36 @@ struct BookingDetailView: View {
         return rows
             .filter { $0.1 != 0 }
             .map { (label: $0.0, value: formatMoney($0.1, currency: pricing.currency)) }
+    }
+}
+
+private struct BookingActivityRows: View {
+    let activities: [BookingActivity]
+
+    var body: some View {
+        ForEach<[Int], Int, ActivityRowView>(Array(0..<activities.count), id: \.self) { index in
+            let activity = activities[index]
+            ActivityRowView(activity: activity)
+        }
+    }
+}
+
+private struct ActivityRowView: View {
+    let activity: BookingActivity
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(activity.type)
+                .font(.headline)
+            if let note = activity.note, !note.isEmpty {
+                Text(note)
+                    .font(.body)
+            }
+            Text(activity.createdAt)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
     }
 }
 
