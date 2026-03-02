@@ -29,7 +29,7 @@
       <section class="section">
         <div class="container">
           <h1 class="section-title" id="detailTitle">Booking</h1>
-          <p class="section-booking" id="detailSubTitle">Loading...</p>
+          <p class="section-booking" id="detailSubTitle" hidden></p>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
@@ -50,8 +50,8 @@
               <label for="bookingNoteInput">Booking Note (Call notes, qualification details, customer preferences...)</label>
               <textarea id="bookingNoteInput" rows="4" placeholder="Write the current booking note..."></textarea>
             </div>
-            <div class="backend-controls">
-              <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">Save note</button>
+            <div class="backend-controls" style="margin-top: 0.35rem;">
+              <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">save</button>
               <span id="bookingActionStatus" class="micro"></span>
             </div>
           </article>
@@ -69,7 +69,7 @@
                 <input id="pricingCurrencyInput" type="text" maxlength="8" placeholder="USD" />
               </div>
               <div class="field">
-                <label for="pricingAgreedNetInput">Agreed Net Amount (cents)</label>
+                <label for="pricingAgreedNetInput" id="pricingAgreedNetLabel">Agreed Net Amount (USD)</label>
                 <input id="pricingAgreedNetInput" type="number" min="0" step="1" />
               </div>
             </div>
@@ -139,13 +139,13 @@
               <input id="invoiceTitleInput" type="text" placeholder="Invoice title" />
             </div>
 
-            <div class="field">
-              <label for="invoiceItemsInput">Items (one per line: Description | Quantity | Unit amount in cents)</label>
-              <textarea id="invoiceItemsInput" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
-            </div>
+              <div class="field">
+                <label for="invoiceItemsInput" id="invoiceItemsLabel">Items (one per line: Description | Quantity | Unit amount in USD)</label>
+                <textarea id="invoiceItemsInput" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
+              </div>
 
             <div class="field">
-              <label for="invoiceDueAmountInput">Due Amount (cents, optional)</label>
+              <label for="invoiceDueAmountInput" id="invoiceDueAmountLabel">Due Amount (USD, optional)</label>
               <input id="invoiceDueAmountInput" type="number" min="1" step="1" />
             </div>
             <div class="field">

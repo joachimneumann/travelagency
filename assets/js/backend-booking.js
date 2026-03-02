@@ -59,6 +59,7 @@ const els = {
   pricingPanel: document.getElementById("pricingPanel"),
   pricingSummaryTable: document.getElementById("pricingSummaryTable"),
   pricingCurrencyInput: document.getElementById("pricingCurrencyInput"),
+  pricingAgreedNetLabel: document.getElementById("pricingAgreedNetLabel"),
   pricingAgreedNetInput: document.getElementById("pricingAgreedNetInput"),
   pricingAdjustmentsTable: document.getElementById("pricingAdjustmentsTable"),
   pricingPaymentsTable: document.getElementById("pricingPaymentsTable"),
@@ -76,6 +77,8 @@ const els = {
   invoiceTitleInput: document.getElementById("invoiceTitleInput"),
   invoiceItemsInput: document.getElementById("invoiceItemsInput"),
   invoiceDueAmountInput: document.getElementById("invoiceDueAmountInput"),
+  invoiceDueAmountLabel: document.getElementById("invoiceDueAmountLabel"),
+  invoiceItemsLabel: document.getElementById("invoiceItemsLabel"),
   invoiceVatInput: document.getElementById("invoiceVatInput"),
   invoiceNotesInput: document.getElementById("invoiceNotesInput"),
   invoiceCreateBtn: document.getElementById("invoiceCreateBtn"),
@@ -101,6 +104,7 @@ async function init() {
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
+  if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.addEventListener("change", renderInvoiceMoneyLabels);
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
   if (els.invoiceIssueTodayBtn) {
     els.invoiceIssueTodayBtn.addEventListener("click", () => {
@@ -194,8 +198,8 @@ function renderBookingHeader() {
   if (!state.booking) return;
   if (els.title) els.title.textContent = `Booking ${shortId(state.booking.id)}`;
   if (els.subtitle) {
-    const customerText = state.customer?.name || state.booking.customer_id || "-";
-    els.subtitle.textContent = `${customerText} | ${state.booking.stage || "-"}`;
+    els.subtitle.textContent = "";
+    els.subtitle.hidden = true;
   }
 }
 
@@ -299,13 +303,17 @@ function renderPricingPanel() {
   if (!els.pricingPanel || !state.booking) return;
   const pricing = clonePricing(state.booking.pricing || {});
   state.pricingDraft = pricing;
+  const currency = normalizeCurrencyCode(pricing.currency);
 
   if (els.pricingCurrencyInput) {
-    els.pricingCurrencyInput.value = pricing.currency || "USD";
+    els.pricingCurrencyInput.value = currency;
     els.pricingCurrencyInput.disabled = !state.permissions.canEditBooking;
   }
+  if (els.pricingAgreedNetLabel) {
+    els.pricingAgreedNetLabel.textContent = `Agreed Net Amount (${currency})`;
+  }
   if (els.pricingAgreedNetInput) {
-    els.pricingAgreedNetInput.value = String(pricing.agreed_net_amount_cents || 0);
+    els.pricingAgreedNetInput.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
     els.pricingAgreedNetInput.disabled = !state.permissions.canEditBooking;
   }
   if (els.pricingSaveBtn) els.pricingSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
@@ -330,7 +338,7 @@ function renderPricingSummaryTable(pricing) {
     ["outstanding_gross_amount", summary.outstanding_gross_amount_cents]
   ]
     .filter(([, value]) => Number(value || 0) !== 0)
-    .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(formatMoneyCents(value, pricing.currency))}</td></tr>`);
+    .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(formatMoneyDisplay(value, pricing.currency))}</td></tr>`);
   const rows = []
     .concat(moneyRows)
     .concat(summary.is_schedule_balanced === false ? ['<tr><th>schedule_balanced</th><td>no</td></tr>'] : [])
@@ -342,7 +350,8 @@ function renderPricingAdjustmentsTable() {
   if (!els.pricingAdjustmentsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const items = Array.isArray(state.pricingDraft.adjustments) ? state.pricingDraft.adjustments : [];
-  const header = `<thead><tr><th>Label</th><th>Type</th><th>Amount (cents)</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const currency = normalizeCurrencyCode(state.pricingDraft.currency);
+  const header = `<thead><tr><th>Label</th><th>Type</th><th>Amount (${escapeHtml(currency)})</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
   const rows = items
     .map((item, index) => `<tr>
       <td><input data-pricing-adjustment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
@@ -353,7 +362,7 @@ function renderPricingAdjustmentsTable() {
             .join("")}
         </select>
       </td>
-      <td><input data-pricing-adjustment-amount="${index}" type="number" min="0" step="1" value="${escapeHtml(String(item.amount_cents || 0))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-adjustment-amount="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
       <td><input data-pricing-adjustment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
       ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">Remove</button></td>`}
     </tr>`)
@@ -378,12 +387,13 @@ function renderPricingPaymentsTable() {
   if (!els.pricingPaymentsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const items = Array.isArray(state.pricingDraft.payments) ? state.pricingDraft.payments : [];
-  const header = `<thead><tr><th>Label</th><th>Due Date</th><th>Net (cents)</th><th>Tax %</th><th>Status</th><th>Paid At</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const currency = normalizeCurrencyCode(state.pricingDraft.currency);
+  const header = `<thead><tr><th>Label</th><th>Due Date</th><th>Net (${escapeHtml(currency)})</th><th>Tax %</th><th>Status</th><th>Paid At</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
   const rows = items
     .map((item, index) => `<tr>
       <td><input data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
       <td><input data-pricing-payment-due-date="${index}" type="date" value="${escapeHtml(item.due_date || "")}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-pricing-payment-net="${index}" type="number" min="0" step="1" value="${escapeHtml(String(item.net_amount_cents || 0))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-payment-net="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.net_amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
       <td><input data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
       <td>
         <select data-pricing-payment-status="${index}" ${readOnly ? "disabled" : ""}>
@@ -594,7 +604,7 @@ function renderInvoiceSelect() {
 
 function renderInvoicesTable() {
   if (!els.invoicesTable) return;
-  const header = `<thead><tr><th>PDF</th><th>Invoice</th><th>Version</th><th>Sent to customer</th><th>Total (cents)</th><th>Updated</th><th>Actions</th></tr></thead>`;
+  const header = `<thead><tr><th>PDF</th><th>Invoice</th><th>Version</th><th>Sent to customer</th><th>Total</th><th>Updated</th><th>Actions</th></tr></thead>`;
   const rows = state.invoices
     .map((invoice) => {
       const checked = invoice.sent_to_customer ? "checked" : "";
@@ -604,7 +614,7 @@ function renderInvoicesTable() {
         <td>${escapeHtml(invoice.invoice_number || shortId(invoice.id))}</td>
         <td>${escapeHtml(String(invoice.version || 1))}</td>
         <td><input type="checkbox" data-invoice-sent="${escapeHtml(invoice.id)}" ${checked} ${disabled} /></td>
-        <td>${escapeHtml(String(invoice.total_amount_cents || 0))}</td>
+        <td>${escapeHtml(formatMoneyDisplay(invoice.total_amount_cents || 0, invoice.currency || "USD"))}</td>
         <td>${escapeHtml(formatDateTime(invoice.updated_at))}</td>
         <td><button type="button" class="btn btn-ghost" data-select-invoice="${escapeHtml(invoice.id)}">Load data</button></td>
       </tr>`;
@@ -646,11 +656,12 @@ function fillInvoiceForm(invoice) {
   if (els.invoiceSelect) els.invoiceSelect.value = invoice.id;
   if (els.invoiceNumberInput) els.invoiceNumberInput.value = invoice.invoice_number || "";
   if (els.invoiceCurrencyInput) setSelectValue(els.invoiceCurrencyInput, invoice.currency || "USD");
+  renderInvoiceMoneyLabels();
   if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = normalizeDateInput(invoice.issue_date);
   if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = normalizeDateInput(invoice.due_date);
   if (els.invoiceTitleInput) els.invoiceTitleInput.value = invoice.title || "";
-  if (els.invoiceItemsInput) els.invoiceItemsInput.value = invoiceItemsToText(invoice.items || []);
-  if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = invoice.due_amount_cents ? String(invoice.due_amount_cents) : "";
+  if (els.invoiceItemsInput) els.invoiceItemsInput.value = invoiceItemsToText(invoice.items || [], invoice.currency || "USD");
+  if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = invoice.due_amount_cents ? formatMoneyInputValue(invoice.due_amount_cents, invoice.currency || "USD") : "";
   if (els.invoiceVatInput) {
     const vat = Number(invoice.vat_percentage || 0);
     els.invoiceVatInput.value = Number.isFinite(vat) ? String(vat) : "0";
@@ -664,6 +675,7 @@ function resetInvoiceForm() {
   if (els.invoiceSelect) els.invoiceSelect.value = "";
   if (els.invoiceNumberInput) els.invoiceNumberInput.value = "";
   if (els.invoiceCurrencyInput) setSelectValue(els.invoiceCurrencyInput, "USD");
+  renderInvoiceMoneyLabels();
   if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = "";
   if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = "";
   if (els.invoiceTitleInput) els.invoiceTitleInput.value = "";
@@ -675,13 +687,14 @@ function resetInvoiceForm() {
   applyInvoicePermissions();
 }
 
-function invoiceItemsToText(items) {
+function invoiceItemsToText(items, currency) {
   return (Array.isArray(items) ? items : [])
-    .map((item) => `${item.description || ""} | ${Number(item.quantity || 1)} | ${Number(item.unit_amount_cents || 0)}`)
+    .map((item) => `${item.description || ""} | ${Number(item.quantity || 1)} | ${formatMoneyInputValue(item.unit_amount_cents || 0, currency || "USD")}`)
     .join("\n");
 }
 
 function parseInvoiceItemsText(text) {
+  const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
   const lines = String(text || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -689,10 +702,10 @@ function parseInvoiceItemsText(text) {
   const items = [];
   for (const line of lines) {
     const parts = line.split("|").map((value) => value.trim());
-    if (parts.length < 3) throw new Error(`Invalid line: "${line}". Use "Description | Quantity | Unit amount in cents".`);
+    if (parts.length < 3) throw new Error(`Invalid line: "${line}". Use "Description | Quantity | Unit amount".`);
     const description = parts[0];
     const quantity = Number(parts[1]);
-    const unitAmountCents = Number(parts[2]);
+    const unitAmountCents = parseMoneyInputValue(parts[2], currency);
     if (!description) throw new Error(`Missing description in line: "${line}"`);
     if (!Number.isFinite(quantity) || quantity < 1) throw new Error(`Invalid quantity in line: "${line}"`);
     if (!Number.isFinite(unitAmountCents) || unitAmountCents < 1) throw new Error(`Invalid amount in line: "${line}"`);
@@ -702,9 +715,10 @@ function parseInvoiceItemsText(text) {
 }
 
 function collectInvoicePayload() {
+  const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
   const items = parseInvoiceItemsText(els.invoiceItemsInput?.value || "");
   const dueAmountRaw = String(els.invoiceDueAmountInput?.value || "").trim();
-  const dueAmount = dueAmountRaw ? Number(dueAmountRaw) : null;
+  const dueAmount = dueAmountRaw ? parseMoneyInputValue(dueAmountRaw, currency) : null;
   if (dueAmountRaw && (!Number.isFinite(dueAmount) || dueAmount < 1)) {
     throw new Error("Due amount must be a positive number.");
   }
@@ -715,7 +729,7 @@ function collectInvoicePayload() {
   }
   return {
     invoice_number: String(els.invoiceNumberInput?.value || "").trim(),
-    currency: String(els.invoiceCurrencyInput?.value || "USD").trim() || "USD",
+    currency,
     issue_date: String(els.invoiceIssueDateInput?.value || "").trim(),
     due_date: String(els.invoiceDueDateInput?.value || "").trim(),
     title: String(els.invoiceTitleInput?.value || "").trim(),
@@ -804,8 +818,8 @@ function applyInvoicePermissions() {
 }
 
 function collectPricingPayload() {
-  const currency = String(els.pricingCurrencyInput?.value || "USD").trim().toUpperCase();
-  const agreedNet = Number(els.pricingAgreedNetInput?.value || "0");
+  const currency = normalizeCurrencyCode(els.pricingCurrencyInput?.value || "USD");
+  const agreedNet = parseMoneyInputValue(els.pricingAgreedNetInput?.value || "0", currency);
   if (!currency) throw new Error("Currency is required.");
   if (!Number.isFinite(agreedNet) || agreedNet < 0) throw new Error("Agreed net amount must be zero or positive.");
 
@@ -813,7 +827,7 @@ function collectPricingPayload() {
     const index = Number(input.getAttribute("data-pricing-adjustment-label"));
     const type = String(document.querySelector(`[data-pricing-adjustment-type="${index}"]`)?.value || "DISCOUNT").trim().toUpperCase();
     const label = String(document.querySelector(`[data-pricing-adjustment-label="${index}"]`)?.value || "").trim();
-    const amount = Number(document.querySelector(`[data-pricing-adjustment-amount="${index}"]`)?.value || "0");
+    const amount = parseMoneyInputValue(document.querySelector(`[data-pricing-adjustment-amount="${index}"]`)?.value || "0", currency);
     const notes = String(document.querySelector(`[data-pricing-adjustment-notes="${index}"]`)?.value || "").trim();
     if (!label) throw new Error(`Adjustment ${index + 1} requires a label.`);
     if (!["DISCOUNT", "CREDIT", "SURCHARGE"].includes(type)) throw new Error(`Adjustment ${index + 1} has an invalid type.`);
@@ -831,7 +845,7 @@ function collectPricingPayload() {
     const index = Number(input.getAttribute("data-pricing-payment-label"));
     const label = String(document.querySelector(`[data-pricing-payment-label="${index}"]`)?.value || "").trim();
     const dueDate = String(document.querySelector(`[data-pricing-payment-due-date="${index}"]`)?.value || "").trim();
-    const netAmount = Number(document.querySelector(`[data-pricing-payment-net="${index}"]`)?.value || "0");
+    const netAmount = parseMoneyInputValue(document.querySelector(`[data-pricing-payment-net="${index}"]`)?.value || "0", currency);
     const taxPercent = Number(document.querySelector(`[data-pricing-payment-tax="${index}"]`)?.value || "0");
     const status = String(document.querySelector(`[data-pricing-payment-status="${index}"]`)?.value || "PENDING").trim().toUpperCase();
     const paidAt = normalizeDateTimePayload(document.querySelector(`[data-pricing-payment-paid-at="${index}"]`)?.value || "");
@@ -892,11 +906,65 @@ function formatTaxRatePercent(value) {
   return (basisPoints / 100).toFixed(2).replace(/\.00$/, "");
 }
 
-function formatMoneyCents(value, currency) {
-  const cents = Number(value || 0);
-  const code = String(currency || "USD").trim().toUpperCase() || "USD";
-  if (!Number.isFinite(cents)) return "-";
-  return `${code} ${(cents / 100).toFixed(2)}`;
+function normalizeCurrencyCode(value) {
+  return String(value || "USD").trim().toUpperCase() || "USD";
+}
+
+function isWholeUnitCurrency(currency) {
+  return normalizeCurrencyCode(currency) === "VND";
+}
+
+function currencySymbol(currency) {
+  const code = normalizeCurrencyCode(currency);
+  const symbols = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    VND: "₫",
+    THB: "฿",
+    LAK: "₭",
+    KHR: "៛"
+  };
+  return symbols[code] || code;
+}
+
+function formatMoneyDisplay(value, currency) {
+  const amount = Number(value || 0);
+  const code = normalizeCurrencyCode(currency);
+  if (!Number.isFinite(amount)) return "-";
+  if (isWholeUnitCurrency(code)) return `${currencySymbol(code)} ${Math.round(amount)}`;
+  const major = amount / 100;
+  return `${currencySymbol(code)} ${major.toFixed(2).replace(".", ",")}`;
+}
+
+function formatMoneyInputValue(value, currency) {
+  const amount = Number(value || 0);
+  const code = normalizeCurrencyCode(currency);
+  if (!Number.isFinite(amount)) return "0";
+  if (isWholeUnitCurrency(code)) return String(Math.round(amount));
+  return (amount / 100).toFixed(2);
+}
+
+function parseMoneyInputValue(value, currency) {
+  const code = normalizeCurrencyCode(currency);
+  const normalized = String(value || "0").trim().replace(",", ".");
+  const amount = Number(normalized || "0");
+  if (!Number.isFinite(amount)) return NaN;
+  if (isWholeUnitCurrency(code)) return Math.round(amount);
+  return Math.round(amount * 100);
+}
+
+function renderInvoiceMoneyLabels() {
+  const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
+  if (els.invoiceDueAmountLabel) {
+    els.invoiceDueAmountLabel.textContent = `Due Amount (${currency}, optional)`;
+  }
+  if (els.invoiceItemsLabel) {
+    els.invoiceItemsLabel.textContent = `Items (one per line: Description | Quantity | Unit amount in ${currency})`;
+  }
+  if (els.invoiceDueAmountInput) {
+    els.invoiceDueAmountInput.step = isWholeUnitCurrency(currency) ? "1" : "0.01";
+  }
 }
 
 function clonePricing(pricing) {
