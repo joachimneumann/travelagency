@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 require 'json'
 require 'fileutils'
 require 'open3'
@@ -6,13 +8,33 @@ require 'open3'
 ROOT = File.expand_path('..', __dir__)
 MODEL_DIR = File.join(ROOT, 'model')
 CONTRACT_GENERATED_DIR = File.join(ROOT, 'contracts', 'generated')
-IOS_GENERATED_ROOT = File.join(ROOT, 'mobile', 'iOS', 'Generated')
-IOS_GENERATED_MODELS_DIR = File.join(IOS_GENERATED_ROOT, 'Models')
-IOS_GENERATED_API_DIR = File.join(IOS_GENERATED_ROOT, 'API')
-FRONTEND_GENERATED_ROOT = File.join(ROOT, 'assets', 'js', 'generated')
-FRONTEND_GENERATED_MODELS_DIR = File.join(FRONTEND_GENERATED_ROOT, 'models')
-FRONTEND_GENERATED_API_DIR = File.join(FRONTEND_GENERATED_ROOT, 'api')
 
+BACKEND_GENERATED_MODELS_DIR = File.join(ROOT, 'backend', 'app', 'Generated', 'Models')
+BACKEND_GENERATED_API_DIR = File.join(ROOT, 'backend', 'app', 'Generated', 'API')
+FRONTEND_GENERATED_MODELS_DIR = File.join(ROOT, 'frontend', 'Generated', 'Models')
+FRONTEND_GENERATED_API_DIR = File.join(ROOT, 'frontend', 'Generated', 'API')
+IOS_GENERATED_MODELS_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated', 'Models')
+IOS_GENERATED_API_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated', 'API')
+
+OUTPUT_DIRS = [
+  CONTRACT_GENERATED_DIR,
+  BACKEND_GENERATED_MODELS_DIR,
+  BACKEND_GENERATED_API_DIR,
+  FRONTEND_GENERATED_MODELS_DIR,
+  FRONTEND_GENERATED_API_DIR,
+  IOS_GENERATED_MODELS_DIR,
+  IOS_GENERATED_API_DIR
+].freeze
+
+JS_RUNTIME_HEADER = <<~JS.freeze
+  // Generated from the normalized model IR exported from model/ir.
+  // Do not edit by hand.
+JS
+
+SWIFT_RUNTIME_HEADER = <<~SWIFT.freeze
+  // Generated from the normalized model IR exported from model/ir.
+  // Do not edit by hand.
+SWIFT
 
 def load_ir_json
   stdout, stderr, status = Open3.capture3('cue', 'export', './ir', '-e', 'IR', chdir: MODEL_DIR)
@@ -23,833 +45,847 @@ def load_ir_json
   JSON.parse(stdout)
 end
 
-def fetch_type(ir, name)
-  ir.fetch('types').find { |entry| entry.fetch('name') == name } ||
-    raise(KeyError, "Missing IR type #{name}")
-end
-
-ir = load_ir_json
-meta_info = ir.fetch('meta')
-catalogs = ir.fetch('catalogs')
-endpoints = ir.fetch('api').fetch('endpoints')
-
-roles = catalogs.fetch('roles').map { |entry| entry.fetch('code') }
-stages = catalogs.fetch('stages').map { |entry| entry.fetch('code') }
-payment_statuses = catalogs.fetch('paymentStatuses').map { |entry| entry.fetch('code') }
-pricing_adjustment_types = catalogs.fetch('pricingAdjustmentTypes').map { |entry| entry.fetch('code') }
-currency_entries = catalogs.fetch('currencies')
-currency_codes = currency_entries.map { |entry| entry.fetch('code') }
-bootstrap = fetch_type(ir, 'MobileBootstrap')
-
-[CONTRACT_GENERATED_DIR, IOS_GENERATED_ROOT, IOS_GENERATED_MODELS_DIR, IOS_GENERATED_API_DIR, FRONTEND_GENERATED_ROOT, FRONTEND_GENERATED_MODELS_DIR, FRONTEND_GENERATED_API_DIR].each do |dir|
-  FileUtils.mkdir_p(dir)
-end
-
-currencies_meta = currency_entries.map do |definition|
-  code = definition.fetch('code')
-  [
-    code,
-    {
-      'code' => code,
-      'symbol' => definition.fetch('symbol'),
-      'decimal_places' => definition.fetch('decimalPlaces'),
-      'iso_code' => code
-    }
-  ]
-end.to_h
-
-paths_meta = endpoints.each_with_object({}) do |endpoint, acc|
-  acc[endpoint.fetch('key')] = endpoint.fetch('path')
-end
-
-meta = {
-  'contract_version' => meta_info.fetch('modelVersion'),
-  'roles' => roles,
-  'stages' => stages,
-  'currencies' => currencies_meta,
-  'pricing_adjustment_types' => pricing_adjustment_types,
-  'payment_statuses' => payment_statuses,
-  'paths' => paths_meta,
-  'bootstrap_schema' => bootstrap
-}
-File.write(File.join(CONTRACT_GENERATED_DIR, 'mobile-api.meta.json'), JSON.pretty_generate(meta) + "\n")
-
-roles_swift = roles.map { |r| "    case #{r.sub('atp_', '')} = \"#{r}\"" }.join("\n")
-stages_swift = stages.map { |s| "    case #{s.downcase} = \"#{s}\"" }.join("\n")
-adjustment_types_swift = pricing_adjustment_types.map { |t| "    case #{t.downcase} = \"#{t}\"" }.join("\n")
-payment_statuses_swift = payment_statuses.map { |s| "    case #{s.downcase} = \"#{s}\"" }.join("\n")
-currency_cases_swift = currency_codes.map { |code| "    case #{code.downcase} = \"#{code}\"" }.join("\n")
-currency_catalog_entries_swift = currency_codes.map do |code|
-  definition = currencies_meta.fetch(code)
-  "        .#{code.downcase}: ATPCurrencyDefinition(code: .#{code.downcase}, symbol: #{definition.fetch('symbol').inspect}, decimalPlaces: #{definition.fetch('decimal_places')}, isoCode: #{definition.fetch('iso_code').inspect})"
-end.join(",\n")
-
-models_swift = <<~SWIFT
-import Foundation
-
-// Generated from the normalized model IR exported from model/ir. Canonical location: mobile/iOS/Generated/Models/MobileAPIModels.swift.
-// Compatibility copies may exist at older paths. Do not edit by hand.
-
-enum ATPCurrencyCode: String, CaseIterable, Codable, Hashable {
-#{currency_cases_swift}
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let rawValue = try container.decode(String.self).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        switch rawValue {
-        case "USD":
-            self = .usd
-        case "EURO", "EUR":
-            self = .euro
-        case "VND":
-            self = .vnd
-        case "THB":
-            self = .thb
-        default:
-            self = .usd
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-struct ATPCurrencyDefinition: Codable, Equatable {
-    let code: ATPCurrencyCode
-    let symbol: String
-    let decimalPlaces: Int
-    let isoCode: String
-}
-
-enum ATPCurrencyCatalog {
-    static let definitions: [ATPCurrencyCode: ATPCurrencyDefinition] = [
-#{currency_catalog_entries_swift}
-    ]
-
-    static func definition(for code: ATPCurrencyCode) -> ATPCurrencyDefinition {
-        definitions[code] ?? ATPCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD")
-    }
-}
-
-enum ATPUserRole: String, CaseIterable, Codable, Hashable {
-#{roles_swift}
-}
-
-enum BookingStage: String, CaseIterable, Codable, Hashable {
-#{stages_swift}
-}
-
-enum PricingAdjustmentType: String, CaseIterable, Codable, Hashable {
-#{adjustment_types_swift}
-}
-
-enum PaymentStatus: String, CaseIterable, Codable, Hashable {
-#{payment_statuses_swift}
-}
-
-struct MobileBootstrapResponse: Decodable {
-    struct AppInfo: Decodable {
-        let minSupportedVersion: String
-        let latestVersion: String
-        let forceUpdate: Bool
-
-        private enum CodingKeys: String, CodingKey {
-            case minSupportedVersion = "min_supported_version"
-            case latestVersion = "latest_version"
-            case forceUpdate = "force_update"
-        }
-    }
-
-    struct APIInfo: Decodable {
-        let contractVersion: String
-
-        private enum CodingKeys: String, CodingKey {
-            case contractVersion = "contract_version"
-        }
-    }
-
-    struct Features: Decodable {
-        let bookings: Bool
-        let customers: Bool
-        let tours: Bool
-    }
-
-    let app: AppInfo
-    let api: APIInfo
-    let features: Features
-}
-
-struct BookingListResponse: Decodable {
-    let items: [Booking]
-    let page: Int
-    let pageSize: Int
-    let total: Int
-    let totalPages: Int
-
-    private enum CodingKeys: String, CodingKey {
-        case items
-        case page
-        case pageSize = "page_size"
-        case total
-        case totalPages = "total_pages"
-    }
-}
-
-struct BookingDetailResponse: Decodable {
-    let booking: Booking
-    let customer: Customer?
-}
-
-struct BookingUpdateResponse: Decodable {
-    let booking: Booking
-    let unchanged: Bool?
-}
-
-struct BookingActivitiesResponse: Decodable {
-    let activities: [BookingActivity]
-}
-
-struct BookingActivityCreateResponse: Decodable {
-    let activity: BookingActivity
-}
-
-struct BookingInvoicesResponse: Decodable {
-    let items: [BookingInvoice]
-    let total: Int
-}
-
-struct StaffListResponse: Decodable {
-    let items: [StaffMember]
-    let total: Int
-}
-
-struct AuthMeResponse: Decodable {
-    let authenticated: Bool
-    let user: AuthenticatedUser?
-}
-
-struct AuthenticatedUser: Decodable, Equatable {
-    let sub: String
-    let preferredUsername: String?
-    let email: String?
-    let roles: Set<ATPUserRole>
-
-    private enum CodingKeys: String, CodingKey {
-        case sub
-        case preferredUsername = "preferred_username"
-        case email
-        case roles
-    }
-}
-
-struct SourceAttribution: Codable, Equatable {
-    let pageURL: String?
-    let ipAddress: String?
-    let ipCountryGuess: String?
-    let utmSource: String?
-    let utmMedium: String?
-    let utmCampaign: String?
-    let referrer: String?
-
-    private enum CodingKeys: String, CodingKey {
-        case pageURL = "page_url"
-        case ipAddress = "ip_address"
-        case ipCountryGuess = "ip_country_guess"
-        case utmSource = "utm_source"
-        case utmMedium = "utm_medium"
-        case utmCampaign = "utm_campaign"
-        case referrer
-    }
-}
-
-struct BookingPricingAdjustment: Codable, Identifiable, Equatable {
-    let id: String
-    let type: PricingAdjustmentType
-    let label: String
-    let amountCents: Int
-    let notes: String?
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case type
-        case label
-        case amountCents = "amount_cents"
-        case notes
-    }
-}
-
-struct BookingPayment: Codable, Identifiable, Equatable {
-    let id: String
-    let label: String
-    let dueDate: String?
-    let netAmountCents: Int
-    let taxRateBasisPoints: Int
-    let taxAmountCents: Int
-    let grossAmountCents: Int
-    let status: PaymentStatus
-    let paidAt: String?
-    let notes: String?
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case label
-        case dueDate = "due_date"
-        case netAmountCents = "net_amount_cents"
-        case taxRateBasisPoints = "tax_rate_basis_points"
-        case taxAmountCents = "tax_amount_cents"
-        case grossAmountCents = "gross_amount_cents"
-        case status
-        case paidAt = "paid_at"
-        case notes
-    }
-}
-
-struct BookingPricingSummary: Codable, Equatable {
-    let agreedNetAmountCents: Int
-    let adjustmentsDeltaCents: Int
-    let adjustedNetAmountCents: Int
-    let scheduledNetAmountCents: Int
-    let unscheduledNetAmountCents: Int
-    let scheduledTaxAmountCents: Int
-    let scheduledGrossAmountCents: Int
-    let paidGrossAmountCents: Int
-    let outstandingGrossAmountCents: Int
-    let isScheduleBalanced: Bool
-
-    private enum CodingKeys: String, CodingKey {
-        case agreedNetAmountCents = "agreed_net_amount_cents"
-        case adjustmentsDeltaCents = "adjustments_delta_cents"
-        case adjustedNetAmountCents = "adjusted_net_amount_cents"
-        case scheduledNetAmountCents = "scheduled_net_amount_cents"
-        case unscheduledNetAmountCents = "unscheduled_net_amount_cents"
-        case scheduledTaxAmountCents = "scheduled_tax_amount_cents"
-        case scheduledGrossAmountCents = "scheduled_gross_amount_cents"
-        case paidGrossAmountCents = "paid_gross_amount_cents"
-        case outstandingGrossAmountCents = "outstanding_gross_amount_cents"
-        case isScheduleBalanced = "is_schedule_balanced"
-    }
-}
-
-struct BookingPricing: Codable, Equatable {
-    let currency: ATPCurrencyCode
-    let agreedNetAmountCents: Int
-    let adjustments: [BookingPricingAdjustment]
-    let payments: [BookingPayment]
-    let summary: BookingPricingSummary
-
-    private enum CodingKeys: String, CodingKey {
-        case currency
-        case agreedNetAmountCents = "agreed_net_amount_cents"
-        case adjustments
-        case payments
-        case summary
-    }
-}
-
-struct Booking: Decodable, Identifiable, Equatable {
-    let id: String
-    var stage: String
-    let bookingHash: String?
-    let destination: String?
-    let style: String?
-    let travelMonth: String?
-    let travelers: Int?
-    let duration: String?
-    let budget: String?
-    let preferredCurrency: ATPCurrencyCode?
-    let notes: String?
-    let pricing: BookingPricing?
-    let source: SourceAttribution?
-    let createdAt: String?
-    let updatedAt: String?
-    let slaDueAt: String?
-    let staff: String?
-    let staffName: String?
-    let customerID: String?
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case stage
-        case bookingHash = "booking_hash"
-        case destination
-        case style
-        case travelMonth = "travel_month"
-        case travelers
-        case duration
-        case budget
-        case preferredCurrency = "preferred_currency"
-        case notes
-        case pricing
-        case source
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-        case slaDueAt = "sla_due_at"
-        case staff
-        case staffName = "staff_name"
-        case ownerID = "owner_id"
-        case ownerName = "owner_name"
-        case customerID = "customer_id"
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        stage = try container.decode(String.self, forKey: .stage)
-        bookingHash = try container.decodeIfPresent(String.self, forKey: .bookingHash)
-        destination = try container.decodeIfPresent(String.self, forKey: .destination)
-        style = try container.decodeIfPresent(String.self, forKey: .style)
-        travelMonth = try container.decodeIfPresent(String.self, forKey: .travelMonth)
-        travelers = try container.decodeIfPresent(Int.self, forKey: .travelers)
-        duration = try container.decodeIfPresent(String.self, forKey: .duration)
-        budget = try container.decodeIfPresent(String.self, forKey: .budget)
-        preferredCurrency = try container.decodeIfPresent(ATPCurrencyCode.self, forKey: .preferredCurrency)
-        notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        pricing = try container.decodeIfPresent(BookingPricing.self, forKey: .pricing)
-        source = try container.decodeIfPresent(SourceAttribution.self, forKey: .source)
-        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
-        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
-        slaDueAt = try container.decodeIfPresent(String.self, forKey: .slaDueAt)
-        let canonicalStaff = try container.decodeIfPresent(String.self, forKey: .staff)
-        let legacyStaff = try container.decodeIfPresent(String.self, forKey: .ownerID)
-        staff = canonicalStaff ?? legacyStaff
-        let canonicalStaffName = try container.decodeIfPresent(String.self, forKey: .staffName)
-        let legacyStaffName = try container.decodeIfPresent(String.self, forKey: .ownerName)
-        staffName = canonicalStaffName ?? legacyStaffName
-        customerID = try container.decodeIfPresent(String.self, forKey: .customerID)
-    }
-}
-
-struct Customer: Codable, Equatable {
-    let id: String
-    let name: String?
-    let email: String?
-    let phone: String?
-    let language: String?
-}
-
-struct BookingActivity: Codable, Identifiable, Equatable {
-    let id: String
-    let bookingID: String
-    let type: String
-    let detail: String
-    let actor: String
-    let createdAt: String
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case bookingID = "booking_id"
-        case type
-        case detail
-        case actor
-        case createdAt = "created_at"
-    }
-}
-
-struct BookingInvoice: Codable, Identifiable, Equatable {
-    let id: String
-    let bookingID: String
-    let customerID: String?
-    let invoiceNumber: String?
-    let version: Int
-    let status: String
-    let currency: ATPCurrencyCode
-    let issueDate: String?
-    let dueDate: String?
-    let title: String?
-    let notes: String?
-    let sentToCustomer: Bool
-    let sentToCustomerAt: String?
-    let totalAmountCents: Int
-    let dueAmountCents: Int
-    let pdfURL: String?
-    let createdAt: String?
-    let updatedAt: String?
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case bookingID = "booking_id"
-        case customerID = "customer_id"
-        case invoiceNumber = "invoice_number"
-        case version
-        case status
-        case currency
-        case issueDate = "issue_date"
-        case dueDate = "due_date"
-        case title
-        case notes
-        case sentToCustomer = "sent_to_customer"
-        case sentToCustomerAt = "sent_to_customer_at"
-        case totalAmountCents = "total_amount_cents"
-        case dueAmountCents = "due_amount_cents"
-        case pdfURL = "pdf_url"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-}
-
-struct StaffMember: Codable, Identifiable, Equatable {
-    let id: String
-    let name: String
-    let active: Bool
-    let usernames: [String]
-    let destinations: [String]
-    let languages: [String]
-}
-SWIFT
-
-request_factory_swift = <<~SWIFT
-import Foundation
-
-// Generated from the normalized model IR exported from model/ir. Canonical location: mobile/iOS/Generated/API/MobileAPIRequestFactory.swift.
-// Compatibility copies may exist at older paths. Do not edit by hand.
-
-enum MobileAPIRequestFactory {
-    static let contractVersion = #{meta_info.fetch('modelVersion').inspect}
-    static let bootstrapPath = #{paths_meta.fetch('mobile_bootstrap').inspect}
-    static let authMePath = #{paths_meta.fetch('auth_me').inspect}
-    static let publicBookingsPath = #{paths_meta.fetch('public_bookings').inspect}
-    static let publicToursPath = #{paths_meta.fetch('public_tours').inspect}
-    static let bookingsPath = #{paths_meta.fetch('bookings').inspect}
-    static let staffPath = #{paths_meta.fetch('staff').inspect}
-    static let customersPath = #{paths_meta.fetch('customers').inspect}
-    static let toursPath = #{paths_meta.fetch('tours').inspect}
-
-    static func bootstrapURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(bootstrapPath.dropFirst()))
-    }
-
-    static func authMeURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(authMePath.dropFirst()))
-    }
-
-    static func publicBookingsURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(publicBookingsPath.dropFirst()))
-    }
-
-    static func publicToursURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(publicToursPath.dropFirst()))
-    }
-
-    static func bookingsURL(baseURL: URL, page: Int, pageSize: Int) -> URL {
-        var components = URLComponents(url: baseURL.appendingPathComponent(String(bookingsPath.dropFirst())), resolvingAgainstBaseURL: false)!
-        components.queryItems = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "page_size", value: String(pageSize)),
-            URLQueryItem(name: "sort", value: "created_at_desc")
-        ]
-        return components.url!
-    }
-
-    static func bookingDetailURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)")
-    }
-
-    static func bookingStageURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/stage")
-    }
-
-    static func bookingAssignmentURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/owner")
-    }
-
-    static func bookingNoteURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/notes")
-    }
-
-    static func bookingPricingURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/pricing")
-    }
-
-    static func bookingActivitiesURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/activities")
-    }
-
-    static func bookingInvoicesURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/invoices")
-    }
-
-    static func activeStaffURL(baseURL: URL) -> URL {
-        var components = URLComponents(url: baseURL.appendingPathComponent(String(staffPath.dropFirst())), resolvingAgainstBaseURL: false)!
-        components.queryItems = [URLQueryItem(name: "active", value: "true")]
-        return components.url!
-    }
-
-    static func staffURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(staffPath.dropFirst()))
-    }
-
-    static func customersURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(customersPath.dropFirst()))
-    }
-
-    static func customerDetailURL(baseURL: URL, customerID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/customers/\(customerID)")
-    }
-
-    static func toursURL(baseURL: URL) -> URL {
-        baseURL.appendingPathComponent(String(toursPath.dropFirst()))
-    }
-
-    static func tourDetailURL(baseURL: URL, tourID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/tours/\(tourID)")
-    }
-
-    static func tourImageURL(baseURL: URL, tourID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/tours/\(tourID)/image")
-    }
-}
-SWIFT
-
-def js_literal(object)
-  JSON.pretty_generate(object)
-end
-
-models_js = <<~JS
-(function (global) {
-  const models = Object.freeze({
-    contractVersion: #{meta_info.fetch('modelVersion').inspect},
-    roles: Object.freeze(#{js_literal(roles)}),
-    stages: Object.freeze(#{js_literal(stages)}),
-    pricingAdjustmentTypes: Object.freeze(#{js_literal(pricing_adjustment_types)}),
-    paymentStatuses: Object.freeze(#{js_literal(payment_statuses)}),
-    currencies: Object.freeze(#{js_literal(currencies_meta)}),
-    paths: Object.freeze(#{js_literal(paths_meta)}),
-    normalizeCurrencyCode(value) {
-      const raw = String(value || "USD").trim().toUpperCase();
-      if (raw === "EUR") return "EURO";
-      return this.currencies[raw] ? raw : "USD";
-    },
-    currencyDefinition(value) {
-      const code = this.normalizeCurrencyCode(value);
-      return this.currencies[code] || this.currencies.USD;
-    }
-  });
-
-  global.ATPGeneratedModels = models;
-  global.ATPContract = models;
-})(window);
-JS
-
-request_factory_js = <<~JS
-(function (global) {
-  const models = global.ATPGeneratedModels || global.ATPContract;
-  const paths = models.paths;
-
-  function normalizeBaseURL(baseURL) {
-    return String(baseURL || "").replace(/\/$/, "");
-  }
-
-  function buildURL(baseURL, path) {
-    return `${normalizeBaseURL(baseURL)}${path}`;
-  }
-
-  function applyQuery(baseURL, path, query) {
-    const url = new URL(buildURL(baseURL, path), window.location.origin);
-    Object.entries(query || {}).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === "") return;
-      url.searchParams.set(key, String(value));
-    });
-    return normalizeBaseURL(baseURL) ? `${url.pathname}${url.search}`.replace(/^/, normalizeBaseURL(baseURL)) : `${url.pathname}${url.search}`;
-  }
-
-  function encodeSegment(value) {
-    return encodeURIComponent(String(value || ""));
-  }
-
-  const requestFactory = Object.freeze({
-    contractVersion: models.contractVersion,
-    bootstrapURL(baseURL) {
-      return buildURL(baseURL, paths.mobile_bootstrap);
-    },
-    authMeURL(baseURL) {
-      return buildURL(baseURL, paths.auth_me);
-    },
-    publicBookingsURL(baseURL) {
-      return buildURL(baseURL, paths.public_bookings);
-    },
-    publicToursURL(baseURL) {
-      return buildURL(baseURL, paths.public_tours);
-    },
-    bookingsURL(baseURL, options = {}) {
-      return applyQuery(baseURL, paths.bookings, {
-        page: options.page,
-        page_size: options.pageSize,
-        sort: options.sort,
-        search: options.search,
-        stage: options.stage,
-        owner_id: options.ownerId
-      });
-    },
-    bookingDetailURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_detail.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    bookingStageURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_stage.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    bookingAssignmentURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_assignment.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    bookingNoteURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_note.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    bookingPricingURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_pricing.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    bookingActivitiesURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_activities.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    bookingInvoicesURL(baseURL, bookingId) {
-      return buildURL(baseURL, paths.booking_invoices.replace('{bookingId}', encodeSegment(bookingId)));
-    },
-    staffURL(baseURL, options = {}) {
-      return applyQuery(baseURL, paths.staff, { active: options.active });
-    },
-    customerDetailURL(baseURL, customerId) {
-      return buildURL(baseURL, paths.customer_detail.replace('{customerId}', encodeSegment(customerId)));
-    },
-    customersURL(baseURL, options = {}) {
-      return applyQuery(baseURL, paths.customers, { page: options.page, page_size: options.pageSize, search: options.search });
-    },
-    toursURL(baseURL, options = {}) {
-      return applyQuery(baseURL, paths.tours, { page: options.page, page_size: options.pageSize, search: options.search, destination: options.destination, style: options.style });
-    },
-    tourDetailURL(baseURL, tourId) {
-      return buildURL(baseURL, paths.tour_detail.replace('{tourId}', encodeSegment(tourId)));
-    },
-    tourImageURL(baseURL, tourId) {
-      return buildURL(baseURL, paths.tour_image.replace('{tourId}', encodeSegment(tourId)));
-    }
-  });
-
-  global.ATPGeneratedRequestFactory = requestFactory;
-})(window);
-JS
-
-api_js = <<~JS
-(function (global) {
-  const requestFactory = global.ATPGeneratedRequestFactory;
-
-  function createClient(config = {}) {
-    const baseURL = String(config.baseURL || '').replace(/\/$/, '');
-    const defaultHeaders = Object.assign({}, config.headers || {});
-    const defaultCredentials = config.credentials || 'include';
-
-    async function fetchJSON(url, options = {}) {
-      const response = await fetch(url, {
-        credentials: options.credentials || defaultCredentials,
-        headers: Object.assign({}, defaultHeaders, options.headers || {}),
-        method: options.method || 'GET',
-        body: options.body
-      });
-      const text = await response.text();
-      let payload = null;
-      if (text) {
-        try {
-          payload = JSON.parse(text);
-        } catch {
-          payload = text;
-        }
-      }
-      if (!response.ok) {
-        const error = new Error(
-          payload?.detail || payload?.error_description || payload?.error || `HTTP ${response.status}`
-        );
-        error.status = response.status;
-        error.payload = payload;
-        throw error;
-      }
-      return payload;
-    }
-
-    return Object.freeze({
-      fetchJSON,
-      authMe() {
-        return fetchJSON(requestFactory.authMeURL(baseURL));
-      },
-      listBookings(options = {}) {
-        return fetchJSON(requestFactory.bookingsURL(baseURL, options));
-      },
-      getBooking(bookingId) {
-        return fetchJSON(requestFactory.bookingDetailURL(baseURL, bookingId));
-      },
-      updateBookingStage(bookingId, payload) {
-        return fetchJSON(requestFactory.bookingStageURL(baseURL, bookingId), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      },
-      updateBookingAssignment(bookingId, payload) {
-        return fetchJSON(requestFactory.bookingAssignmentURL(baseURL, bookingId), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      },
-      updateBookingNote(bookingId, payload) {
-        return fetchJSON(requestFactory.bookingNoteURL(baseURL, bookingId), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      },
-      updateBookingPricing(bookingId, payload) {
-        return fetchJSON(requestFactory.bookingPricingURL(baseURL, bookingId), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      },
-      listBookingActivities(bookingId) {
-        return fetchJSON(requestFactory.bookingActivitiesURL(baseURL, bookingId));
-      },
-      listBookingInvoices(bookingId) {
-        return fetchJSON(requestFactory.bookingInvoicesURL(baseURL, bookingId));
-      },
-      listStaff(options = { active: true }) {
-        return fetchJSON(requestFactory.staffURL(baseURL, options));
-      },
-      createStaff(payload) {
-        return fetchJSON(requestFactory.staffURL(baseURL), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      },
-      listPublicTours() {
-        return fetchJSON(requestFactory.publicToursURL(baseURL));
-      },
-      createPublicBooking(payload) {
-        return fetchJSON(requestFactory.publicBookingsURL(baseURL), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      }
-    });
-  }
-
-  global.ATPGeneratedAPI = Object.freeze({ createClient });
-})(window);
-JS
-
-aggregate_js = [models_js, request_factory_js, api_js].join("\n")
-
 def write_file(path, content)
   FileUtils.mkdir_p(File.dirname(path))
   File.write(path, content)
 end
 
-write_file(File.join(IOS_GENERATED_MODELS_DIR, 'MobileAPIModels.swift'), models_swift)
-write_file(File.join(IOS_GENERATED_API_DIR, 'MobileAPIRequestFactory.swift'), request_factory_swift)
-write_file(File.join(IOS_GENERATED_ROOT, 'MobileAPIModels.swift'), models_swift)
-write_file(File.join(IOS_GENERATED_ROOT, 'MobileAPIRequestFactory.swift'), request_factory_swift)
+def js_literal(object)
+  JSON.pretty_generate(object)
+end
 
-write_file(File.join(FRONTEND_GENERATED_MODELS_DIR, 'mobile-api-models.js'), models_js)
-write_file(File.join(FRONTEND_GENERATED_API_DIR, 'mobile-api-request-factory.js'), request_factory_js)
-write_file(File.join(FRONTEND_GENERATED_API_DIR, 'mobile-api-client.js'), api_js)
-write_file(File.join(FRONTEND_GENERATED_ROOT, 'mobile-api-contract.js'), aggregate_js)
+def upper_snake(name)
+  name.gsub(/([a-z\d])([A-Z])/, '\\1_\\2').upcase
+end
 
-puts 'Generated mobile contract artifacts.'
+def lower_camel(value)
+  parts = value.split('_')
+  return value if parts.empty?
+
+  parts.first + parts[1..].map(&:capitalize).join
+end
+
+def swift_case(value)
+  normalized = value.to_s.gsub(/[^A-Za-z0-9]+/, '_')
+  normalized = normalized.gsub(/([a-z\d])([A-Z])/, '\\1_\\2').downcase
+  parts = normalized.split('_').reject(&:empty?)
+  return 'unknown' if parts.empty?
+
+  first = parts.shift
+  first + parts.map(&:capitalize).join
+end
+
+def swift_type_for_field(field)
+  base = case field.fetch('kind')
+         when 'enum'
+           "Generated#{field.fetch('typeName')}"
+         when 'entity', 'valueObject', 'transport'
+           "Generated#{field.fetch('typeName')}"
+         else
+           case field.fetch('typeName')
+           when 'Identifier', 'Timestamp', 'Email', 'string'
+             'String'
+           when 'int'
+             'Int'
+           when 'bool'
+             'Bool'
+           else
+             'String'
+           end
+         end
+
+  base = "[#{base}]" if field['isArray']
+  field.fetch('required') ? base : "#{base}?"
+end
+
+def js_schema_for_type(type)
+  {
+    'name' => type.fetch('name'),
+    'domain' => type.fetch('domain'),
+    'module' => type.fetch('module'),
+    'sourceType' => type.fetch('sourceType'),
+    'fields' => type.fetch('fields')
+  }
+end
+
+def js_validator_helpers
+  <<~JS
+    function __assertObject(value, schemaName) {
+      if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+        throw new TypeError(`${schemaName} must be an object`);
+      }
+    }
+
+    function __validateShape(value, schema) {
+      __assertObject(value, schema.name);
+      for (const field of schema.fields) {
+        const fieldValue = value[field.name];
+        if (field.required && (fieldValue === undefined || fieldValue === null)) {
+          throw new TypeError(`${schema.name}.${field.name} is required`);
+        }
+        if (fieldValue === undefined || fieldValue === null) continue;
+        if (field.isArray && !Array.isArray(fieldValue)) {
+          throw new TypeError(`${schema.name}.${field.name} must be an array`);
+        }
+      }
+      return value;
+    }
+  JS
+end
+
+def render_js_type_exports(types)
+  return '' if types.empty?
+
+  types.map do |type|
+    const_name = "#{upper_snake(type.fetch('name'))}_SCHEMA"
+    <<~JS
+      export const #{const_name} = #{js_literal(js_schema_for_type(type))};
+
+      export function validate#{type.fetch('name')}(value) {
+        return __validateShape(value, #{const_name});
+      }
+    JS
+  end.join("\n")
+end
+
+def render_js_currency_module(currency_entries)
+  currency_hash = currency_entries.each_with_object({}) do |entry, acc|
+    acc[entry.fetch('code')] = {
+      'code' => entry.fetch('code'),
+      'symbol' => entry.fetch('symbol'),
+      'decimalPlaces' => entry.fetch('decimalPlaces')
+    }
+  end
+
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    export const GENERATED_CURRENCIES = #{js_literal(currency_hash)};
+    export const GENERATED_CURRENCY_CODES = Object.freeze(Object.keys(GENERATED_CURRENCIES));
+
+    export function normalizeCurrencyCode(value) {
+      const normalized = String(value || '').trim().toUpperCase();
+      if (normalized === 'EUR') return 'EURO';
+      return GENERATED_CURRENCY_CODES.includes(normalized) ? normalized : null;
+    }
+
+    export function currencyDefinition(code) {
+      const normalized = normalizeCurrencyCode(code);
+      return normalized ? GENERATED_CURRENCIES[normalized] : null;
+    }
+
+    export function currencyDecimalPlaces(code) {
+      return currencyDefinition(code)?.decimalPlaces ?? 2;
+    }
+
+    export function formatMoneyFromMinorUnits(amountMinorUnits, code) {
+      const definition = currencyDefinition(code);
+      if (!definition) return String(amountMinorUnits ?? '');
+      const numeric = Number(amountMinorUnits || 0);
+      const scale = 10 ** definition.decimalPlaces;
+      const major = definition.decimalPlaces === 0 ? numeric : numeric / scale;
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: definition.decimalPlaces,
+        maximumFractionDigits: definition.decimalPlaces
+      }).format(major);
+    }
+  JS
+end
+
+def render_js_user_module(types, roles)
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    #{js_validator_helpers}
+    export const GENERATED_ATP_USER_ROLES = Object.freeze(#{js_literal(roles)});
+
+    #{render_js_type_exports(types)}
+  JS
+end
+
+def render_js_booking_module(types, stages, payment_statuses, adjustment_types)
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    #{js_validator_helpers}
+    export const GENERATED_BOOKING_STAGES = Object.freeze(#{js_literal(stages)});
+    export const GENERATED_PAYMENT_STATUSES = Object.freeze(#{js_literal(payment_statuses)});
+    export const GENERATED_PRICING_ADJUSTMENT_TYPES = Object.freeze(#{js_literal(adjustment_types)});
+
+    #{render_js_type_exports(types)}
+  JS
+end
+
+def render_js_aux_module(types)
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    #{js_validator_helpers}
+
+    #{render_js_type_exports(types)}
+  JS
+end
+
+def render_js_api_models_module(api_types, endpoints)
+  missing_transport_types = endpoints.flat_map { |entry| [entry['requestType'], entry['responseType']] }
+                                 .compact
+                                 .uniq
+                                 .reject { |name| api_types.any? { |type| type.fetch('name') == name } }
+
+  placeholders = missing_transport_types.each_with_object({}) do |name, acc|
+    acc[name] = {
+      'name' => name,
+      'status' => 'placeholder',
+      'source' => 'endpoint-reference',
+      'message' => 'Type is referenced by model/api/endpoints.cue but not yet defined as a transport shape in model/api/'
+    }
+  end
+
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    #{js_validator_helpers}
+    export const GENERATED_API_ENDPOINTS = #{js_literal(endpoints)};
+    export const GENERATED_API_PLACEHOLDERS = #{js_literal(placeholders)};
+
+    #{render_js_type_exports(api_types)}
+  JS
+end
+
+def render_js_request_factory_module(endpoints, contract_version)
+  endpoint_map = endpoints.each_with_object({}) { |entry, acc| acc[entry.fetch('key')] = entry }
+
+  functions = endpoints.map do |endpoint|
+    key = endpoint.fetch('key')
+    function_base = lower_camel(key)
+    template = endpoint.fetch('path')
+    <<~JS
+      export function #{function_base}Path(params = {}) {
+        return buildPath(#{template.inspect}, params);
+      }
+
+      export function #{function_base}Request({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+        const path = #{function_base}Path(params);
+        const url = buildURL(baseURL, path, query);
+        return {
+          key: #{key.inspect},
+          method: #{endpoint.fetch('method').inspect},
+          authenticated: #{endpoint.fetch('authenticated') ? 'true' : 'false'},
+          url,
+          headers,
+          body
+        };
+      }
+    JS
+  end.join("\n")
+
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    export const GENERATED_CONTRACT_VERSION = #{contract_version.inspect};
+    export const GENERATED_API_ENDPOINTS = #{js_literal(endpoint_map)};
+
+    export function buildPath(template, params = {}) {
+      return template.replace(/\{(\w+)\}/g, (_, key) => {
+        if (!(key in params)) throw new Error(`Missing path parameter ${key}`);
+        return encodeURIComponent(String(params[key]));
+      });
+    }
+
+    export function buildURL(baseURL, path, query = {}) {
+      const url = new URL(path, baseURL);
+      for (const [key, value] of Object.entries(query)) {
+        if (value === undefined || value === null || value === '') continue;
+        url.searchParams.set(key, String(value));
+      }
+      return url;
+    }
+
+    #{functions}
+  JS
+end
+
+def render_js_api_client_module(endpoints)
+  helper_cases = endpoints.map do |endpoint|
+    key = endpoint.fetch('key')
+    function_name = "#{lower_camel(key)}Request"
+    <<~JS
+        case #{key.inspect}:
+          return RequestFactory.#{function_name}(options);
+    JS
+  end.join
+
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    import * as RequestFactory from './generated_APIRequestFactory.js';
+
+    export class GeneratedAPIClient {
+      constructor({ baseURL = '', fetchImpl = fetch, defaultHeaders = {} } = {}) {
+        this.baseURL = baseURL;
+        this.fetchImpl = fetchImpl;
+        this.defaultHeaders = defaultHeaders;
+      }
+
+      buildRequest(key, options = {}) {
+        switch (key) {
+#{helper_cases}      default:
+            throw new Error(`Unknown generated endpoint ${key}`);
+        }
+      }
+
+      async request(key, { parseAs = 'json', ...options } = {}) {
+        const request = this.buildRequest(key, { ...options, baseURL: this.baseURL });
+        const headers = { ...this.defaultHeaders, ...(request.headers || {}) };
+        const init = { method: request.method, headers };
+        if (request.body !== undefined) {
+          init.body = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
+          if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
+        }
+        const response = await this.fetchImpl(request.url, init);
+        if (!response.ok) {
+          const detail = await response.text().catch(() => '');
+          throw new Error(`HTTP ${response.status} ${response.statusText}: ${detail}`);
+        }
+        if (parseAs === 'text') return response.text();
+        if (response.status === 204) return null;
+        return response.json();
+      }
+    }
+  JS
+end
+
+def render_swift_currency(currency_entries)
+  currency_cases = currency_entries.map { |entry| "    case #{swift_case(entry.fetch('code'))} = \"#{entry.fetch('code')}\"" }.join("\n")
+  currency_catalog_entries = currency_entries.map do |entry|
+    code_case = swift_case(entry.fetch('code'))
+    "        .#{code_case}: GeneratedCurrencyDefinition(code: .#{code_case}, symbol: #{entry.fetch('symbol').inspect}, decimalPlaces: #{entry.fetch('decimalPlaces')}, isoCode: #{entry.fetch('code').inspect})"
+  end.join(",\n")
+
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    enum GeneratedCurrencyCode: String, CaseIterable, Codable, Hashable {
+#{currency_cases}
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            switch rawValue {
+            case "USD":
+                self = .usd
+            case "EURO", "EUR":
+                self = .euro
+            case "VND":
+                self = .vnd
+            case "THB":
+                self = .thb
+            default:
+                self = .usd
+            }
+        }
+    }
+
+    struct GeneratedCurrencyDefinition: Codable, Equatable {
+        let code: GeneratedCurrencyCode
+        let symbol: String
+        let decimalPlaces: Int
+        let isoCode: String
+    }
+
+    enum GeneratedCurrencyCatalog {
+        static let definitions: [GeneratedCurrencyCode: GeneratedCurrencyDefinition] = [
+#{currency_catalog_entries}
+        ]
+
+        static func definition(for code: GeneratedCurrencyCode) -> GeneratedCurrencyDefinition {
+            definitions[code] ?? GeneratedCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD")
+        }
+    }
+  SWIFT
+end
+
+def render_swift_user(roles)
+  role_cases = roles.map { |role| "    case #{swift_case(role)} = \"#{role}\"" }.join("\n")
+
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    enum GeneratedATPUserRole: String, CaseIterable, Codable, Hashable {
+#{role_cases}
+    }
+
+    struct GeneratedATPUser: Codable, Equatable {
+        let id: String
+        let preferredUsername: String
+        let displayName: String?
+        let email: String?
+        let roles: [GeneratedATPUserRole]
+        let staffId: String?
+    }
+  SWIFT
+end
+
+def render_swift_booking(stages, payment_statuses, adjustment_types)
+  stage_cases = stages.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+  payment_cases = payment_statuses.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+  adjustment_cases = adjustment_types.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    enum GeneratedBookingStage: String, CaseIterable, Codable, Hashable {
+#{stage_cases}
+    }
+
+    enum GeneratedPaymentStatus: String, CaseIterable, Codable, Hashable {
+#{payment_cases}
+    }
+
+    enum GeneratedPricingAdjustmentType: String, CaseIterable, Codable, Hashable {
+#{adjustment_cases}
+    }
+
+    struct GeneratedSourceAttribution: Codable, Equatable {
+        let pageURL: String?
+        let ipAddress: String?
+        let ipCountryGuess: String?
+        let utmSource: String?
+        let utmMedium: String?
+        let utmCampaign: String?
+        let referrer: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case pageURL = "page_url"
+            case ipAddress = "ip_address"
+            case ipCountryGuess = "ip_country_guess"
+            case utmSource = "utm_source"
+            case utmMedium = "utm_medium"
+            case utmCampaign = "utm_campaign"
+            case referrer
+        }
+    }
+
+    struct GeneratedBookingPricingAdjustment: Codable, Identifiable, Equatable {
+        let id: String
+        let type: GeneratedPricingAdjustmentType
+        let label: String
+        let amountCents: Int
+        let notes: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case type
+            case label
+            case amountCents = "amount_cents"
+            case notes
+        }
+    }
+
+    struct GeneratedBookingPayment: Codable, Identifiable, Equatable {
+        let id: String
+        let label: String
+        let dueDate: String?
+        let netAmountCents: Int
+        let taxRateBasisPoints: Int
+        let taxAmountCents: Int
+        let grossAmountCents: Int
+        let status: GeneratedPaymentStatus
+        let paidAt: String?
+        let notes: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case label
+            case dueDate = "due_date"
+            case netAmountCents = "net_amount_cents"
+            case taxRateBasisPoints = "tax_rate_basis_points"
+            case taxAmountCents = "tax_amount_cents"
+            case grossAmountCents = "gross_amount_cents"
+            case status
+            case paidAt = "paid_at"
+            case notes
+        }
+    }
+
+    struct GeneratedBookingPricingSummary: Codable, Equatable {
+        let agreedNetAmountCents: Int
+        let adjustmentsDeltaCents: Int
+        let adjustedNetAmountCents: Int
+        let scheduledNetAmountCents: Int
+        let unscheduledNetAmountCents: Int
+        let scheduledTaxAmountCents: Int
+        let scheduledGrossAmountCents: Int
+        let paidGrossAmountCents: Int
+        let outstandingGrossAmountCents: Int
+        let isScheduleBalanced: Bool
+
+        private enum CodingKeys: String, CodingKey {
+            case agreedNetAmountCents = "agreed_net_amount_cents"
+            case adjustmentsDeltaCents = "adjustments_delta_cents"
+            case adjustedNetAmountCents = "adjusted_net_amount_cents"
+            case scheduledNetAmountCents = "scheduled_net_amount_cents"
+            case unscheduledNetAmountCents = "unscheduled_net_amount_cents"
+            case scheduledTaxAmountCents = "scheduled_tax_amount_cents"
+            case scheduledGrossAmountCents = "scheduled_gross_amount_cents"
+            case paidGrossAmountCents = "paid_gross_amount_cents"
+            case outstandingGrossAmountCents = "outstanding_gross_amount_cents"
+            case isScheduleBalanced = "is_schedule_balanced"
+        }
+    }
+
+    struct GeneratedBookingPricing: Codable, Equatable {
+        let currency: GeneratedCurrencyCode
+        let agreedNetAmountCents: Int
+        let adjustments: [GeneratedBookingPricingAdjustment]
+        let payments: [GeneratedBookingPayment]
+        let summary: GeneratedBookingPricingSummary
+
+        private enum CodingKeys: String, CodingKey {
+            case currency
+            case agreedNetAmountCents = "agreed_net_amount_cents"
+            case adjustments
+            case payments
+            case summary
+        }
+    }
+
+    struct GeneratedInvoiceLineItem: Codable, Identifiable, Equatable {
+        let id: String
+        let description: String
+        let quantity: Int
+        let unitAmountCents: Int
+        let totalAmountCents: Int
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case description
+            case quantity
+            case unitAmountCents = "unit_amount_cents"
+            case totalAmountCents = "total_amount_cents"
+        }
+    }
+
+    struct GeneratedBookingInvoice: Codable, Identifiable, Equatable {
+        let id: String
+        let currency: GeneratedCurrencyCode
+        let status: String
+        let dueAmountCents: Int
+        let notes: String?
+        let items: [GeneratedInvoiceLineItem]
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case currency
+            case status
+            case dueAmountCents = "due_amount_cents"
+            case notes
+            case items
+        }
+    }
+
+    struct GeneratedBookingActivity: Codable, Identifiable, Equatable {
+        let id: String
+        let type: String
+        let createdAt: String
+        let note: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case type
+            case createdAt = "created_at"
+            case note
+        }
+    }
+
+    struct GeneratedBooking: Codable, Identifiable, Equatable {
+        let id: String
+        let customerId: String?
+        let customerName: String?
+        let destination: String
+        let style: String
+        let travelMonth: String?
+        let travelers: Int?
+        let duration: String?
+        let budget: String?
+        let stage: GeneratedBookingStage
+        let assignedStaffId: String?
+        let assignedStaffName: String?
+        let notes: String?
+        let source: GeneratedSourceAttribution?
+        let bookingHash: String?
+        let pricing: GeneratedBookingPricing?
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case customerId = "customer_id"
+            case customerName = "customer_name"
+            case destination
+            case style
+            case travelMonth = "travel_month"
+            case travelers
+            case duration
+            case budget
+            case stage
+            case assignedStaffId = "staff"
+            case assignedStaffName = "staff_name"
+            case notes
+            case source
+            case bookingHash = "booking_hash"
+            case pricing
+        }
+    }
+  SWIFT
+end
+
+def render_swift_aux
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    struct GeneratedCustomer: Codable, Equatable, Identifiable {
+        let id: String
+        let name: String
+        let email: String?
+        let phone: String?
+    }
+
+    struct GeneratedTour: Codable, Equatable, Identifiable {
+        let id: String
+        let title: String
+        let country: String?
+        let active: Bool?
+    }
+  SWIFT
+end
+
+def render_swift_api_models(api_types, endpoints)
+  endpoint_pairs = endpoints.flat_map { |entry| [entry['requestType'], entry['responseType']] }.compact.uniq
+  known = api_types.map { |type| type.fetch('name') }
+  placeholders = endpoint_pairs.reject { |name| known.include?(name) }
+
+  detail_wrappers = api_types.map do |type|
+    fields = type.fetch('fields').map do |field|
+      coding_key = field.fetch('wireName')
+      field_name = field.fetch('name')
+      swift_type = swift_type_for_field(field)
+      "    let #{field_name}: #{swift_type}"
+    end.join("\n")
+
+    coding_keys = type.fetch('fields').map do |field|
+      "        case #{field.fetch('name')} = \"#{field.fetch('wireName')}\""
+    end.join("\n")
+
+    <<~SWIFT
+      struct Generated#{type.fetch('name')}: Codable, Equatable {
+#{fields}
+
+          private enum CodingKeys: String, CodingKey {
+#{coding_keys}
+          }
+      }
+    SWIFT
+  end.join("\n")
+
+  placeholder_enum = placeholders.map { |name| "    case #{swift_case(name)} = \"#{name}\"" }.join("\n")
+  placeholder_enum = "    case none = \"none\"" if placeholder_enum.empty?
+
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    #{detail_wrappers}
+
+    enum GeneratedAPIPlaceholderType: String, CaseIterable {
+#{placeholder_enum}
+    }
+  SWIFT
+end
+
+def render_swift_request_factory(endpoints, contract_version)
+  endpoint_constants = endpoints.map do |endpoint|
+    "    static let #{lower_camel(endpoint.fetch('key'))} = \"#{endpoint.fetch('path')}\""
+  end.join("\n")
+
+  path_functions = endpoints.map do |endpoint|
+    function_name = "#{lower_camel(endpoint.fetch('key'))}Path"
+    path = endpoint.fetch('path')
+    parameters = endpoint.fetch('parameters', [])
+
+    if parameters.empty?
+      <<~SWIFT
+        static func #{function_name}() -> String {
+            #{path.inspect}
+        }
+      SWIFT
+    else
+      args = parameters.map { |param| "#{param.fetch('name')}: String" }.join(', ')
+      body = path.dup
+      parameters.each do |param|
+        body = body.gsub("{#{param.fetch('name')}}", "\\(#{param.fetch('name')})")
+      end
+      <<~SWIFT
+        static func #{function_name}(#{args}) -> String {
+            "#{body}"
+        }
+      SWIFT
+    end
+  end.join("\n")
+
+  url_helpers = endpoints.map do |endpoint|
+    function_name = "#{lower_camel(endpoint.fetch('key'))}URL"
+    path_function = "#{lower_camel(endpoint.fetch('key'))}Path"
+    parameters = endpoint.fetch('parameters', [])
+    args = ['baseURL: URL']
+    call_args = []
+    parameters.each do |param|
+      args << "#{param.fetch('name')}: String"
+      call_args << "#{param.fetch('name')}: #{param.fetch('name')}"
+    end
+    args << 'queryItems: [URLQueryItem] = []'
+    path_call = call_args.empty? ? "#{path_function}()" : "#{path_function}(#{call_args.join(', ')})"
+    <<~SWIFT
+      static func #{function_name}(#{args.join(', ')}) -> URL {
+          buildURL(baseURL: baseURL, path: #{path_call}, queryItems: queryItems)
+      }
+    SWIFT
+  end.join("\n")
+
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    enum GeneratedAPIRequestFactory {
+        static let contractVersion = #{contract_version.inspect}
+
+#{endpoint_constants}
+
+        static func buildURL(baseURL: URL, path: String, queryItems: [URLQueryItem] = []) -> URL {
+            var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+            components.queryItems = queryItems.isEmpty ? nil : queryItems
+            return components.url!
+        }
+
+#{path_functions}
+
+#{url_helpers}
+    }
+  SWIFT
+end
+
+def render_swift_api_client(endpoints)
+  cases = endpoints.map do |endpoint|
+    "        case .#{swift_case(endpoint.fetch('key'))}: return #{endpoint.fetch('method').inspect}"
+  end.join("\n")
+
+  enum_cases = endpoints.map do |endpoint|
+    "    case #{swift_case(endpoint.fetch('key'))}"
+  end.join("\n")
+
+  <<~SWIFT
+    import Foundation
+
+    #{SWIFT_RUNTIME_HEADER}
+    enum GeneratedAPIEndpointKey: String, CaseIterable {
+#{enum_cases}
+    }
+
+    enum GeneratedAPIClientMethod {
+        static func httpMethod(for endpoint: GeneratedAPIEndpointKey) -> String {
+            switch endpoint {
+#{cases}
+            }
+        }
+    }
+  SWIFT
+end
+
+FileUtils.mkdir_p(CONTRACT_GENERATED_DIR)
+OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) }
+
+ir = load_ir_json
+meta = ir.fetch('meta')
+types = ir.fetch('types')
+endpoints = ir.dig('api', 'endpoints') || []
+
+currency_entries = ir.fetch('catalogs').fetch('currencies')
+roles = ir.fetch('catalogs').fetch('roles')
+stages = ir.fetch('catalogs').fetch('stages')
+payment_statuses = ir.fetch('catalogs').fetch('paymentStatuses')
+adjustment_types = ir.fetch('catalogs').fetch('pricingAdjustmentTypes')
+contract_version = meta.fetch('modelVersion')
+
+entity_types = types.select { |type| type.fetch('module') == 'entities' }
+api_types = types.select { |type| type.fetch('module') == 'api' }
+
+user_types = entity_types.select { |type| type.fetch('domain') == 'user' }
+booking_types = entity_types.select { |type| type.fetch('domain') == 'booking' }
+aux_types = entity_types.reject { |type| %w[user booking].include?(type.fetch('domain')) }
+
+write_file(
+  File.join(CONTRACT_GENERATED_DIR, 'mobile-api.meta.json'),
+  JSON.pretty_generate(
+    {
+      modelVersion: meta.fetch('modelVersion'),
+      generatorVersion: meta.fetch('generatorVersion'),
+      modulePath: meta.fetch('modulePath'),
+      defaultCurrency: meta.fetch('defaultCurrency'),
+      generatedAt: Time.now.utc.iso8601,
+      currencies: currency_entries,
+      roles: roles,
+      stages: stages,
+      paymentStatuses: payment_statuses,
+      pricingAdjustmentTypes: adjustment_types,
+      endpoints: endpoints
+    }
+  ) + "\n"
+)
+
+backend_model_outputs = {
+  'generated_Currency.js' => render_js_currency_module(currency_entries),
+  'generated_User.js' => render_js_user_module(user_types, roles),
+  'generated_Booking.js' => render_js_booking_module(booking_types, stages, payment_statuses, adjustment_types),
+  'generated_Aux.js' => render_js_aux_module(aux_types)
+}
+
+frontend_model_outputs = backend_model_outputs
+
+api_model_js = render_js_api_models_module(api_types, endpoints)
+api_request_js = render_js_request_factory_module(endpoints, contract_version)
+api_client_js = render_js_api_client_module(endpoints)
+
+backend_api_outputs = {
+  'generated_APIModels.js' => api_model_js,
+  'generated_APIRequestFactory.js' => api_request_js,
+  'generated_APIClient.js' => api_client_js
+}
+
+frontend_api_outputs = backend_api_outputs
+
+ios_model_outputs = {
+  'generated_Currency.swift' => render_swift_currency(currency_entries),
+  'generated_User.swift' => render_swift_user(roles),
+  'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types),
+  'generated_Aux.swift' => render_swift_aux
+}
+
+ios_api_outputs = {
+  'generated_APIModels.swift' => render_swift_api_models(api_types, endpoints),
+  'generated_APIRequestFactory.swift' => render_swift_request_factory(endpoints, contract_version),
+  'generated_APIClient.swift' => render_swift_api_client(endpoints)
+}
+
+backend_model_outputs.each do |filename, content|
+  write_file(File.join(BACKEND_GENERATED_MODELS_DIR, filename), content)
+end
+backend_api_outputs.each do |filename, content|
+  write_file(File.join(BACKEND_GENERATED_API_DIR, filename), content)
+end
+frontend_model_outputs.each do |filename, content|
+  write_file(File.join(FRONTEND_GENERATED_MODELS_DIR, filename), content)
+end
+frontend_api_outputs.each do |filename, content|
+  write_file(File.join(FRONTEND_GENERATED_API_DIR, filename), content)
+end
+ios_model_outputs.each do |filename, content|
+  write_file(File.join(IOS_GENERATED_MODELS_DIR, filename), content)
+end
+ios_api_outputs.each do |filename, content|
+  write_file(File.join(IOS_GENERATED_API_DIR, filename), content)
+end
