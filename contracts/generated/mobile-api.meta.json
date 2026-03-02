@@ -1,5 +1,5 @@
 {
-  "contract_version": "2026-03-01.3",
+  "contract_version": "2026-03-02.1",
   "roles": [
     "atp_admin",
     "atp_manager",
@@ -17,6 +17,15 @@
     "LOST",
     "POST_TRIP"
   ],
+  "pricing_adjustment_types": [
+    "DISCOUNT",
+    "CREDIT",
+    "SURCHARGE"
+  ],
+  "payment_statuses": [
+    "PENDING",
+    "PAID"
+  ],
   "paths": {
     "mobile_bootstrap": "/public/v1/mobile/bootstrap",
     "auth_me": "/auth/me",
@@ -25,6 +34,7 @@
     "booking_stage": "/api/v1/bookings/{bookingId}/stage",
     "booking_assignment": "/api/v1/bookings/{bookingId}/owner",
     "booking_note": "/api/v1/bookings/{bookingId}/notes",
+    "booking_pricing": "/api/v1/bookings/{bookingId}/pricing",
     "booking_activities": "/api/v1/bookings/{bookingId}/activities",
     "booking_invoices": "/api/v1/bookings/{bookingId}/invoices",
     "staff": "/api/v1/staff"

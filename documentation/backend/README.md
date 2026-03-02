@@ -118,6 +118,7 @@ Admin API:
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
 - `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
+- `PATCH /api/v1/bookings/:bookingId/pricing` (replace the booking commercials model)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/customers`
@@ -203,6 +204,35 @@ Booking concurrency model:
 Booking note model:
 - each booking has exactly one editable `notes` field
 - note edits use the same `booking_hash` concurrency check as other booking writes
+
+Booking pricing model:
+- the agreed commercial base is stored as `pricing.agreed_net_amount_cents`
+- all amounts are stored in integer cents
+- taxes are stored as basis points per payment (`tax_rate_basis_points`)
+- the booking may contain typed adjustments:
+  - `DISCOUNT`
+  - `CREDIT`
+  - `SURCHARGE`
+- the booking may contain zero or more scheduled payments
+- each payment stores:
+  - label
+  - due date
+  - net amount
+  - tax rate
+  - derived tax amount
+  - derived gross amount
+  - payment status (`PENDING` or `PAID`)
+  - optional paid timestamp
+- backend derives and returns:
+  - adjusted net amount
+  - scheduled tax total
+  - scheduled gross total
+  - paid gross total
+  - outstanding gross total
+  - schedule balance flag
+- if any payment schedule is present, the sum of scheduled payment net amounts must equal the adjusted booking net amount
+- pricing mutations also use `booking_hash`
+- if the booking changed in the meantime, the frontend/mobile client must refresh and ask the user to enter the change again
 
 ## Role Model
 

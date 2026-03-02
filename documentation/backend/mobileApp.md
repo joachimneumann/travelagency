@@ -24,6 +24,8 @@ Version 1 should include:
 - login with Keycloak
 - booking list
 - booking detail
+- booking commercials summary
+- payment schedule visibility
 - booking stage changes where allowed
 - booking note/activity creation where allowed
 - booking staff assignment only for manager/admin
@@ -111,6 +113,7 @@ Recommended first endpoints:
 - `GET /public/v1/mobile/bootstrap`
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
+- `PATCH /api/v1/bookings/:bookingId/pricing`
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner`
 - `GET /api/v1/bookings/:bookingId/activities`
@@ -208,6 +211,8 @@ Recommended screens:
 - Login
 - Booking list
 - Booking detail
+- Booking commercials summary
+- Payment schedule list
 - Booking stage update
 - Booking activity timeline
 - Single booking note editor
@@ -237,6 +242,50 @@ Recommended behavior:
 - on refresh failure, log out cleanly
 
 ## 10) Suggested app structure
+
+## 11) Booking commercials model
+
+The mobile app should render the same commercials structure as the web backend.
+
+Use these concepts:
+- `agreed_net_amount_cents`
+  - the negotiated base price before typed adjustments
+- typed adjustments
+  - `DISCOUNT`
+  - `CREDIT`
+  - `SURCHARGE`
+- payment schedule entries
+  - each entry represents one installment payment
+- payment status
+  - `PENDING`
+  - `PAID`
+- tax per payment
+  - stored as `tax_rate_basis_points`
+  - different payments may use different tax rates
+
+Derived values must come from the backend, not from mobile-only calculations:
+- adjusted net amount
+- scheduled tax total
+- scheduled gross total
+- paid gross total
+- outstanding gross total
+- schedule balance flag
+
+Mobile should display:
+- booking currency
+- agreed net amount
+- adjustments summary
+- adjusted net amount
+- payment schedule with:
+  - label
+  - due date
+  - gross amount
+  - tax rate
+  - paid/pending status
+  - paid timestamp if present
+
+The iPhone app currently treats this as a read model.
+Editing of commercials can stay web-first while the data model stabilizes.
 
 Suggested modules:
 - `Auth`

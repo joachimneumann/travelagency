@@ -64,6 +64,46 @@
             </div>
           </article>
 
+          <article class="panel" id="pricingPanel" style="padding: 1rem; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Commercials</h2>
+
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="pricingSummaryTable"></table>
+            </div>
+
+            <div class="backend-controls">
+              <div class="field">
+                <label for="pricingCurrencyInput">Currency</label>
+                <input id="pricingCurrencyInput" type="text" maxlength="8" placeholder="USD" />
+              </div>
+              <div class="field">
+                <label for="pricingAgreedNetInput">Agreed Net Amount (cents)</label>
+                <input id="pricingAgreedNetInput" type="number" min="0" step="1" />
+              </div>
+            </div>
+
+            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Adjustments</h3>
+              <button class="btn btn-ghost" id="pricingAddAdjustmentBtn" type="button">Add adjustment</button>
+            </div>
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="pricingAdjustmentsTable"></table>
+            </div>
+
+            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Payment Schedule</h3>
+              <button class="btn btn-ghost" id="pricingAddPaymentBtn" type="button">Add payment</button>
+            </div>
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="pricingPaymentsTable"></table>
+            </div>
+
+            <div class="backend-controls">
+              <button class="btn btn-primary" id="pricingSaveBtn" type="button">Save commercials</button>
+              <span id="pricingStatus" class="micro"></span>
+            </div>
+          </article>
+
           <article class="panel" id="invoicePanel" style="padding: 1rem; margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
             <div class="backend-controls">

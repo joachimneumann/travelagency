@@ -30,6 +30,82 @@ struct BookingDetailView: View {
                     }
                 }
 
+                if let pricing = booking.pricing {
+                    Section("Commercials") {
+                        LabeledContent("Currency", value: pricing.currency)
+                        LabeledContent("Agreed Net", value: formatMoney(pricing.agreedNetAmountCents, currency: pricing.currency))
+                        LabeledContent("Adjustments", value: formatMoney(pricing.summary.adjustmentsDeltaCents, currency: pricing.currency))
+                        LabeledContent("Adjusted Net", value: formatMoney(pricing.summary.adjustedNetAmountCents, currency: pricing.currency))
+                        LabeledContent("Scheduled Gross", value: formatMoney(pricing.summary.scheduledGrossAmountCents, currency: pricing.currency))
+                        LabeledContent("Paid", value: formatMoney(pricing.summary.paidGrossAmountCents, currency: pricing.currency))
+                        LabeledContent("Outstanding", value: formatMoney(pricing.summary.outstandingGrossAmountCents, currency: pricing.currency))
+                        LabeledContent("Schedule Balanced", value: pricing.summary.isScheduleBalanced ? "Yes" : "No")
+                    }
+
+                    if !pricing.adjustments.isEmpty {
+                        Section("Adjustments") {
+                            ForEach(pricing.adjustments) { adjustment in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(adjustment.label)
+                                        Spacer()
+                                        Text(adjustment.type.rawValue)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Text(formatMoney(signedAdjustmentAmount(adjustment), currency: pricing.currency))
+                                        .font(.subheadline)
+                                    if let notes = adjustment.notes, !notes.isEmpty {
+                                        Text(notes)
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 2)
+                            }
+                        }
+                    }
+
+                    Section("Payment Schedule") {
+                        if pricing.payments.isEmpty {
+                            Text("No payments scheduled")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(pricing.payments) { payment in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(payment.label)
+                                        Spacer()
+                                        Text(payment.status.rawValue)
+                                            .foregroundStyle(payment.status == .paid ? .green : .secondary)
+                                    }
+                                    HStack {
+                                        Text(formatMoney(payment.grossAmountCents, currency: pricing.currency))
+                                        Spacer()
+                                        Text("Tax \(formatPercent(payment.taxRateBasisPoints))")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let dueDate = payment.dueDate, !dueDate.isEmpty {
+                                        Text("Due \(dueDate)")
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let paidAt = payment.paidAt, !paidAt.isEmpty {
+                                        Text("Paid \(paidAt)")
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let notes = payment.notes, !notes.isEmpty {
+                                        Text(notes)
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 2)
+                            }
+                        }
+                    }
+                }
+
                 if canChangeStage, let session = sessionStore.session {
                     Section("Stage") {
                         Picker("Stage", selection: $selectedStage) {
@@ -144,6 +220,25 @@ struct BookingDetailView: View {
     private func syncSelectionsFromBooking() {
         selectedStage = viewModel.booking?.stage ?? ""
         selectedStaffID = viewModel.booking?.staff ?? ""
+    }
+
+    private func formatMoney(_ cents: Int, currency: String) -> String {
+        let amount = Double(cents) / 100.0
+        return "\(currency) \(String(format: "%.2f", amount))"
+    }
+
+    private func formatPercent(_ basisPoints: Int) -> String {
+        let percent = Double(basisPoints) / 100.0
+        return String(format: "%.2f%%", percent).replacingOccurrences(of: ".00%", with: "%")
+    }
+
+    private func signedAdjustmentAmount(_ adjustment: BookingPricingAdjustment) -> Int {
+        switch adjustment.type {
+        case .discount, .credit:
+            return -adjustment.amountCents
+        case .surcharge:
+            return adjustment.amountCents
+        }
     }
 }
 

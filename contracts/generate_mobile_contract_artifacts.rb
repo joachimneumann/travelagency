@@ -11,11 +11,12 @@ IOS_GENERATED_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated')
 spec = Psych.safe_load(File.read(OPENAPI_PATH), aliases: true)
 info = spec.fetch('info')
 schemas = spec.fetch('components').fetch('schemas')
-paths = spec.fetch('paths')
 
 roles = schemas.fetch('ATPUserRole').fetch('enum')
 stages = schemas.fetch('BookingStage').fetch('enum')
 bootstrap = schemas.fetch('MobileBootstrapResponse')
+pricing_adjustment_types = schemas.fetch('PricingAdjustmentType').fetch('enum')
+payment_statuses = schemas.fetch('PaymentStatus').fetch('enum')
 
 FileUtils.mkdir_p(GENERATED_DIR)
 FileUtils.mkdir_p(IOS_GENERATED_DIR)
@@ -24,6 +25,8 @@ meta = {
   'contract_version' => info.fetch('version'),
   'roles' => roles,
   'stages' => stages,
+  'pricing_adjustment_types' => pricing_adjustment_types,
+  'payment_statuses' => payment_statuses,
   'paths' => {
     'mobile_bootstrap' => '/public/v1/mobile/bootstrap',
     'auth_me' => '/auth/me',
@@ -31,6 +34,8 @@ meta = {
     'booking_detail' => '/api/v1/bookings/{bookingId}',
     'booking_stage' => '/api/v1/bookings/{bookingId}/stage',
     'booking_assignment' => '/api/v1/bookings/{bookingId}/owner',
+    'booking_note' => '/api/v1/bookings/{bookingId}/notes',
+    'booking_pricing' => '/api/v1/bookings/{bookingId}/pricing',
     'booking_activities' => '/api/v1/bookings/{bookingId}/activities',
     'booking_invoices' => '/api/v1/bookings/{bookingId}/invoices',
     'staff' => '/api/v1/staff'
@@ -41,6 +46,8 @@ File.write(File.join(GENERATED_DIR, 'mobile-api.meta.json'), JSON.pretty_generat
 
 roles_swift = roles.map { |r| "    case #{r.sub('atp_', '')} = \"#{r}\"" }.join("\n")
 stages_swift = stages.map { |s| "    case #{s.downcase} = \"#{s}\"" }.join("\n")
+adjustment_types_swift = pricing_adjustment_types.map { |t| "    case #{t.downcase} = \"#{t}\"" }.join("\n")
+payment_statuses_swift = payment_statuses.map { |s| "    case #{s.downcase} = \"#{s}\"" }.join("\n")
 
 models_swift = <<~SWIFT
 import Foundation
@@ -53,6 +60,14 @@ enum ATPUserRole: String, CaseIterable, Codable, Hashable {
 
 enum BookingStage: String, CaseIterable, Codable, Hashable {
 #{stages_swift}
+}
+
+enum PricingAdjustmentType: String, CaseIterable, Codable, Hashable {
+#{adjustment_types_swift}
+}
+
+enum PaymentStatus: String, CaseIterable, Codable, Hashable {
+#{payment_statuses_swift}
 }
 
 struct MobileBootstrapResponse: Decodable {
@@ -110,6 +125,7 @@ struct BookingDetailResponse: Decodable {
 
 struct BookingUpdateResponse: Decodable {
     let booking: Booking
+    let unchanged: Bool?
 }
 
 struct BookingActivitiesResponse: Decodable {
@@ -149,9 +165,112 @@ struct AuthenticatedUser: Decodable, Equatable {
     }
 }
 
+struct SourceAttribution: Codable, Equatable {
+    let pageURL: String?
+    let ipAddress: String?
+    let ipCountryGuess: String?
+    let utmSource: String?
+    let utmMedium: String?
+    let utmCampaign: String?
+    let referrer: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case pageURL = "page_url"
+        case ipAddress = "ip_address"
+        case ipCountryGuess = "ip_country_guess"
+        case utmSource = "utm_source"
+        case utmMedium = "utm_medium"
+        case utmCampaign = "utm_campaign"
+        case referrer
+    }
+}
+
+struct BookingPricingAdjustment: Codable, Identifiable, Equatable {
+    let id: String
+    let type: PricingAdjustmentType
+    let label: String
+    let amountCents: Int
+    let notes: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case label
+        case amountCents = "amount_cents"
+        case notes
+    }
+}
+
+struct BookingPayment: Codable, Identifiable, Equatable {
+    let id: String
+    let label: String
+    let dueDate: String?
+    let netAmountCents: Int
+    let taxRateBasisPoints: Int
+    let taxAmountCents: Int
+    let grossAmountCents: Int
+    let status: PaymentStatus
+    let paidAt: String?
+    let notes: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case label
+        case dueDate = "due_date"
+        case netAmountCents = "net_amount_cents"
+        case taxRateBasisPoints = "tax_rate_basis_points"
+        case taxAmountCents = "tax_amount_cents"
+        case grossAmountCents = "gross_amount_cents"
+        case status
+        case paidAt = "paid_at"
+        case notes
+    }
+}
+
+struct BookingPricingSummary: Codable, Equatable {
+    let agreedNetAmountCents: Int
+    let adjustmentsDeltaCents: Int
+    let adjustedNetAmountCents: Int
+    let scheduledNetAmountCents: Int
+    let scheduledTaxAmountCents: Int
+    let scheduledGrossAmountCents: Int
+    let paidGrossAmountCents: Int
+    let outstandingGrossAmountCents: Int
+    let isScheduleBalanced: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case agreedNetAmountCents = "agreed_net_amount_cents"
+        case adjustmentsDeltaCents = "adjustments_delta_cents"
+        case adjustedNetAmountCents = "adjusted_net_amount_cents"
+        case scheduledNetAmountCents = "scheduled_net_amount_cents"
+        case scheduledTaxAmountCents = "scheduled_tax_amount_cents"
+        case scheduledGrossAmountCents = "scheduled_gross_amount_cents"
+        case paidGrossAmountCents = "paid_gross_amount_cents"
+        case outstandingGrossAmountCents = "outstanding_gross_amount_cents"
+        case isScheduleBalanced = "is_schedule_balanced"
+    }
+}
+
+struct BookingPricing: Codable, Equatable {
+    let currency: String
+    let agreedNetAmountCents: Int
+    let adjustments: [BookingPricingAdjustment]
+    let payments: [BookingPayment]
+    let summary: BookingPricingSummary
+
+    private enum CodingKeys: String, CodingKey {
+        case currency
+        case agreedNetAmountCents = "agreed_net_amount_cents"
+        case adjustments
+        case payments
+        case summary
+    }
+}
+
 struct Booking: Decodable, Identifiable, Equatable {
     let id: String
     var stage: String
+    let bookingHash: String?
     let destination: String?
     let style: String?
     let travelMonth: String?
@@ -159,6 +278,8 @@ struct Booking: Decodable, Identifiable, Equatable {
     let duration: String?
     let budget: String?
     let notes: String?
+    let pricing: BookingPricing?
+    let source: SourceAttribution?
     let createdAt: String?
     let updatedAt: String?
     let slaDueAt: String?
@@ -169,6 +290,7 @@ struct Booking: Decodable, Identifiable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case id
         case stage
+        case bookingHash = "booking_hash"
         case destination
         case style
         case travelMonth = "travel_month"
@@ -176,6 +298,8 @@ struct Booking: Decodable, Identifiable, Equatable {
         case duration
         case budget
         case notes
+        case pricing
+        case source
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case slaDueAt = "sla_due_at"
@@ -190,6 +314,7 @@ struct Booking: Decodable, Identifiable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         stage = try container.decode(String.self, forKey: .stage)
+        bookingHash = try container.decodeIfPresent(String.self, forKey: .bookingHash)
         destination = try container.decodeIfPresent(String.self, forKey: .destination)
         style = try container.decodeIfPresent(String.self, forKey: .style)
         travelMonth = try container.decodeIfPresent(String.self, forKey: .travelMonth)
@@ -197,6 +322,8 @@ struct Booking: Decodable, Identifiable, Equatable {
         duration = try container.decodeIfPresent(String.self, forKey: .duration)
         budget = try container.decodeIfPresent(String.self, forKey: .budget)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        pricing = try container.decodeIfPresent(BookingPricing.self, forKey: .pricing)
+        source = try container.decodeIfPresent(SourceAttribution.self, forKey: .source)
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
         slaDueAt = try container.decodeIfPresent(String.self, forKey: .slaDueAt)
@@ -324,6 +451,14 @@ enum MobileAPIRequestFactory {
 
     static func bookingAssignmentURL(baseURL: URL, bookingID: String) -> URL {
         baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/owner")
+    }
+
+    static func bookingNoteURL(baseURL: URL, bookingID: String) -> URL {
+        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/notes")
+    }
+
+    static func bookingPricingURL(baseURL: URL, bookingID: String) -> URL {
+        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/pricing")
     }
 
     static func bookingActivitiesURL(baseURL: URL, bookingID: String) -> URL {

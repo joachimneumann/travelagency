@@ -35,7 +35,11 @@ const state = {
   staff: [],
   invoices: [],
   selectedInvoiceId: "",
-  originalNote: ""
+  originalNote: "",
+  pricingDraft: {
+    adjustments: [],
+    payments: []
+  }
 };
 
 const els = {
@@ -54,6 +58,16 @@ const els = {
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
   actionStatus: document.getElementById("bookingActionStatus"),
+  pricingPanel: document.getElementById("pricingPanel"),
+  pricingSummaryTable: document.getElementById("pricingSummaryTable"),
+  pricingCurrencyInput: document.getElementById("pricingCurrencyInput"),
+  pricingAgreedNetInput: document.getElementById("pricingAgreedNetInput"),
+  pricingAdjustmentsTable: document.getElementById("pricingAdjustmentsTable"),
+  pricingAddAdjustmentBtn: document.getElementById("pricingAddAdjustmentBtn"),
+  pricingPaymentsTable: document.getElementById("pricingPaymentsTable"),
+  pricingAddPaymentBtn: document.getElementById("pricingAddPaymentBtn"),
+  pricingSaveBtn: document.getElementById("pricingSaveBtn"),
+  pricingStatus: document.getElementById("pricingStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
   invoicePanel: document.getElementById("invoicePanel"),
   invoiceSelect: document.getElementById("invoiceSelect"),
@@ -89,6 +103,9 @@ async function init() {
   if (els.ownerSaveBtn) els.ownerSaveBtn.addEventListener("click", saveOwner);
   if (els.stageSaveBtn) els.stageSaveBtn.addEventListener("click", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
+  if (els.pricingAddAdjustmentBtn) els.pricingAddAdjustmentBtn.addEventListener("click", addPricingAdjustmentRow);
+  if (els.pricingAddPaymentBtn) els.pricingAddPaymentBtn.addEventListener("click", addPricingPaymentRow);
+  if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
   if (els.invoiceIssueTodayBtn) {
@@ -135,6 +152,7 @@ async function loadBookingPage() {
   renderBookingHeader();
   renderBookingData();
   renderActionControls();
+  renderPricingPanel();
   await loadActivities();
   await loadInvoices();
 }
@@ -285,6 +303,149 @@ function renderActionControls() {
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 }
 
+function renderPricingPanel() {
+  if (!els.pricingPanel || !state.booking) return;
+  const pricing = clonePricing(state.booking.pricing || {});
+  state.pricingDraft = pricing;
+
+  if (els.pricingCurrencyInput) {
+    els.pricingCurrencyInput.value = pricing.currency || "USD";
+    els.pricingCurrencyInput.disabled = !state.permissions.canEditBooking;
+  }
+  if (els.pricingAgreedNetInput) {
+    els.pricingAgreedNetInput.value = String(pricing.agreed_net_amount_cents || 0);
+    els.pricingAgreedNetInput.disabled = !state.permissions.canEditBooking;
+  }
+  if (els.pricingAddAdjustmentBtn) els.pricingAddAdjustmentBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.pricingAddPaymentBtn) els.pricingAddPaymentBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.pricingSaveBtn) els.pricingSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+
+  renderPricingSummaryTable(pricing);
+  renderPricingAdjustmentsTable();
+  renderPricingPaymentsTable();
+  clearPricingStatus();
+}
+
+function renderPricingSummaryTable(pricing) {
+  if (!els.pricingSummaryTable) return;
+  const summary = pricing.summary || {};
+  const rows = [
+    ["currency", pricing.currency || "USD"],
+    ["agreed_net_amount", formatMoneyCents(pricing.agreed_net_amount_cents, pricing.currency)],
+    ["adjustments_delta", formatMoneyCents(summary.adjustments_delta_cents, pricing.currency)],
+    ["adjusted_net_amount", formatMoneyCents(summary.adjusted_net_amount_cents, pricing.currency)],
+    ["scheduled_net_amount", formatMoneyCents(summary.scheduled_net_amount_cents, pricing.currency)],
+    ["scheduled_tax_amount", formatMoneyCents(summary.scheduled_tax_amount_cents, pricing.currency)],
+    ["scheduled_gross_amount", formatMoneyCents(summary.scheduled_gross_amount_cents, pricing.currency)],
+    ["paid_gross_amount", formatMoneyCents(summary.paid_gross_amount_cents, pricing.currency)],
+    ["outstanding_gross_amount", formatMoneyCents(summary.outstanding_gross_amount_cents, pricing.currency)],
+    ["schedule_balanced", summary.is_schedule_balanced ? "yes" : "no"]
+  ]
+    .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(String(value ?? "-"))}</td></tr>`)
+    .join("");
+  els.pricingSummaryTable.innerHTML = `<tbody>${rows}</tbody>`;
+}
+
+function renderPricingAdjustmentsTable() {
+  if (!els.pricingAdjustmentsTable) return;
+  const readOnly = !state.permissions.canEditBooking;
+  const items = Array.isArray(state.pricingDraft.adjustments) ? state.pricingDraft.adjustments : [];
+  const header = `<thead><tr><th>Label</th><th>Type</th><th>Amount (cents)</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const rows = items
+    .map((item, index) => `<tr>
+      <td><input data-pricing-adjustment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td>
+        <select data-pricing-adjustment-type="${index}" ${readOnly ? "disabled" : ""}>
+          ${["DISCOUNT", "CREDIT", "SURCHARGE"]
+            .map((type) => `<option value="${type}" ${item.type === type ? "selected" : ""}>${type}</option>`)
+            .join("")}
+        </select>
+      </td>
+      <td><input data-pricing-adjustment-amount="${index}" type="number" min="0" step="1" value="${escapeHtml(String(item.amount_cents || 0))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-adjustment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
+      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">Remove</button></td>`}
+    </tr>`)
+    .join("");
+  const body = rows || `<tr><td colspan="${readOnly ? 4 : 5}">No adjustments</td></tr>`;
+  els.pricingAdjustmentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  if (!readOnly) {
+    els.pricingAdjustmentsTable.querySelectorAll("[data-pricing-remove-adjustment]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.getAttribute("data-pricing-remove-adjustment"));
+        removePricingAdjustmentRow(index);
+      });
+    });
+  }
+}
+
+function renderPricingPaymentsTable() {
+  if (!els.pricingPaymentsTable) return;
+  const readOnly = !state.permissions.canEditBooking;
+  const items = Array.isArray(state.pricingDraft.payments) ? state.pricingDraft.payments : [];
+  const header = `<thead><tr><th>Label</th><th>Due Date</th><th>Net (cents)</th><th>Tax %</th><th>Status</th><th>Paid At</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const rows = items
+    .map((item, index) => `<tr>
+      <td><input data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-payment-due-date="${index}" type="date" value="${escapeHtml(item.due_date || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-payment-net="${index}" type="number" min="0" step="1" value="${escapeHtml(String(item.net_amount_cents || 0))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
+      <td>
+        <select data-pricing-payment-status="${index}" ${readOnly ? "disabled" : ""}>
+          ${["PENDING", "PAID"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}
+        </select>
+      </td>
+      <td><input data-pricing-payment-paid-at="${index}" type="datetime-local" value="${escapeHtml(normalizeDateTimeLocal(item.paid_at))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-pricing-payment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
+      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">Remove</button></td>`}
+    </tr>`)
+    .join("");
+  const body = rows || `<tr><td colspan="${readOnly ? 7 : 8}">No payments scheduled</td></tr>`;
+  els.pricingPaymentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  if (!readOnly) {
+    els.pricingPaymentsTable.querySelectorAll("[data-pricing-remove-payment]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.getAttribute("data-pricing-remove-payment"));
+        removePricingPaymentRow(index);
+      });
+    });
+  }
+}
+
+function addPricingAdjustmentRow() {
+  state.pricingDraft.adjustments.push({
+    id: "",
+    type: "DISCOUNT",
+    label: "",
+    amount_cents: 0,
+    notes: ""
+  });
+  renderPricingAdjustmentsTable();
+}
+
+function removePricingAdjustmentRow(index) {
+  state.pricingDraft.adjustments.splice(index, 1);
+  renderPricingAdjustmentsTable();
+}
+
+function addPricingPaymentRow() {
+  state.pricingDraft.payments.push({
+    id: "",
+    label: "",
+    due_date: "",
+    net_amount_cents: 0,
+    tax_rate_basis_points: 0,
+    status: "PENDING",
+    paid_at: "",
+    notes: ""
+  });
+  renderPricingPaymentsTable();
+}
+
+function removePricingPaymentRow(index) {
+  state.pricingDraft.payments.splice(index, 1);
+  renderPricingPaymentsTable();
+}
+
 async function saveOwner() {
   if (!state.booking || !els.ownerSelect) return;
   const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/owner`, {
@@ -340,6 +501,34 @@ async function saveNote() {
   renderBookingData();
   renderActionControls();
   setStatus(result.unchanged ? "Note unchanged." : "Note saved.");
+  await loadActivities();
+}
+
+async function savePricing() {
+  if (!state.booking) return;
+  let pricing;
+  try {
+    pricing = collectPricingPayload();
+  } catch (error) {
+    setPricingStatus(String(error?.message || error));
+    return;
+  }
+
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/pricing`, {
+    method: "PATCH",
+    body: {
+      booking_hash: state.booking.booking_hash,
+      pricing,
+      actor: state.user
+    }
+  });
+  if (!result?.booking) return;
+
+  state.booking = result.booking;
+  renderBookingHeader();
+  renderBookingData();
+  renderPricingPanel();
+  setPricingStatus(result.unchanged ? "Commercials unchanged." : "Commercials saved.");
   await loadActivities();
 }
 
@@ -585,6 +774,15 @@ function clearInvoiceStatus() {
   setInvoiceStatus("");
 }
 
+function setPricingStatus(message) {
+  if (!els.pricingStatus) return;
+  els.pricingStatus.textContent = message;
+}
+
+function clearPricingStatus() {
+  setPricingStatus("");
+}
+
 function applyInvoicePermissions() {
   const disabled = !state.permissions.canEditBooking;
   [
@@ -605,6 +803,64 @@ function applyInvoicePermissions() {
   });
 }
 
+function collectPricingPayload() {
+  const currency = String(els.pricingCurrencyInput?.value || "USD").trim().toUpperCase();
+  const agreedNet = Number(els.pricingAgreedNetInput?.value || "0");
+  if (!currency) throw new Error("Currency is required.");
+  if (!Number.isFinite(agreedNet) || agreedNet < 0) throw new Error("Agreed net amount must be zero or positive.");
+
+  const adjustments = Array.from(document.querySelectorAll("[data-pricing-adjustment-label]")).map((input) => {
+    const index = Number(input.getAttribute("data-pricing-adjustment-label"));
+    const type = String(document.querySelector(`[data-pricing-adjustment-type="${index}"]`)?.value || "DISCOUNT").trim().toUpperCase();
+    const label = String(document.querySelector(`[data-pricing-adjustment-label="${index}"]`)?.value || "").trim();
+    const amount = Number(document.querySelector(`[data-pricing-adjustment-amount="${index}"]`)?.value || "0");
+    const notes = String(document.querySelector(`[data-pricing-adjustment-notes="${index}"]`)?.value || "").trim();
+    if (!label) throw new Error(`Adjustment ${index + 1} requires a label.`);
+    if (!["DISCOUNT", "CREDIT", "SURCHARGE"].includes(type)) throw new Error(`Adjustment ${index + 1} has an invalid type.`);
+    if (!Number.isFinite(amount) || amount < 0) throw new Error(`Adjustment ${index + 1} requires a valid non-negative amount.`);
+    return {
+      id: state.pricingDraft.adjustments[index]?.id || "",
+      type,
+      label,
+      amount_cents: Math.round(amount),
+      notes: notes || null
+    };
+  });
+
+  const payments = Array.from(document.querySelectorAll("[data-pricing-payment-label]")).map((input) => {
+    const index = Number(input.getAttribute("data-pricing-payment-label"));
+    const label = String(document.querySelector(`[data-pricing-payment-label="${index}"]`)?.value || "").trim();
+    const dueDate = String(document.querySelector(`[data-pricing-payment-due-date="${index}"]`)?.value || "").trim();
+    const netAmount = Number(document.querySelector(`[data-pricing-payment-net="${index}"]`)?.value || "0");
+    const taxPercent = Number(document.querySelector(`[data-pricing-payment-tax="${index}"]`)?.value || "0");
+    const status = String(document.querySelector(`[data-pricing-payment-status="${index}"]`)?.value || "PENDING").trim().toUpperCase();
+    const paidAt = normalizeDateTimePayload(document.querySelector(`[data-pricing-payment-paid-at="${index}"]`)?.value || "");
+    const notes = String(document.querySelector(`[data-pricing-payment-notes="${index}"]`)?.value || "").trim();
+    if (!label) throw new Error(`Payment ${index + 1} requires a label.`);
+    if (!Number.isFinite(netAmount) || netAmount < 0) throw new Error(`Payment ${index + 1} requires a valid non-negative net amount.`);
+    if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) throw new Error(`Payment ${index + 1} requires a tax rate between 0 and 100.`);
+    if (!["PENDING", "PAID"].includes(status)) throw new Error(`Payment ${index + 1} has an invalid status.`);
+    if (status === "PAID" && !paidAt) throw new Error(`Payment ${index + 1} needs a paid time when marked paid.`);
+    return {
+      id: state.pricingDraft.payments[index]?.id || "",
+      label,
+      due_date: dueDate || null,
+      net_amount_cents: Math.round(netAmount),
+      tax_rate_basis_points: Math.round(taxPercent * 100),
+      status,
+      paid_at: paidAt || null,
+      notes: notes || null
+    };
+  });
+
+  return {
+    currency,
+    agreed_net_amount_cents: Math.round(agreedNet),
+    adjustments,
+    payments
+  };
+}
+
 function normalizeDateInput(value) {
   const text = String(value || "").trim();
   if (!text) return "";
@@ -612,6 +868,47 @@ function normalizeDateInput(value) {
   const d = new Date(text);
   if (Number.isNaN(d.getTime())) return "";
   return d.toISOString().slice(0, 10);
+}
+
+function normalizeDateTimeLocal(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const d = new Date(text);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
+function normalizeDateTimePayload(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const d = new Date(text);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString();
+}
+
+function formatTaxRatePercent(value) {
+  const basisPoints = Number(value || 0);
+  if (!Number.isFinite(basisPoints)) return "0";
+  return (basisPoints / 100).toFixed(2).replace(/\.00$/, "");
+}
+
+function formatMoneyCents(value, currency) {
+  const cents = Number(value || 0);
+  const code = String(currency || "USD").trim().toUpperCase() || "USD";
+  if (!Number.isFinite(cents)) return "-";
+  return `${code} ${(cents / 100).toFixed(2)}`;
+}
+
+function clonePricing(pricing) {
+  return JSON.parse(
+    JSON.stringify({
+      currency: pricing.currency || "USD",
+      agreed_net_amount_cents: pricing.agreed_net_amount_cents || 0,
+      adjustments: Array.isArray(pricing.adjustments) ? pricing.adjustments : [],
+      payments: Array.isArray(pricing.payments) ? pricing.payments : [],
+      summary: pricing.summary || {}
+    })
+  );
 }
 
 function formatDateInput(date) {
@@ -706,6 +1003,7 @@ async function fetchBookingMutation(path, options = {}) {
         renderBookingHeader();
         renderBookingData();
         renderActionControls();
+        renderPricingPanel();
         loadActivities();
         setStatus("The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.");
         clearError();

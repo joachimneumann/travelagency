@@ -82,6 +82,13 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.id, "string");
   assert.equal(typeof booking.customer_id, "string");
   assert.ok(contractMeta.stages.includes(booking.stage), `Unexpected booking stage: ${booking.stage}`);
+  assert.equal(typeof booking.pricing, "object");
+  assert.equal(typeof booking.pricing.currency, "string");
+  assert.equal(typeof booking.pricing.agreed_net_amount_cents, "number");
+  assert.ok(Array.isArray(booking.pricing.adjustments));
+  assert.ok(Array.isArray(booking.pricing.payments));
+  assert.equal(typeof booking.pricing.summary, "object");
+  assert.equal(typeof booking.pricing.summary.is_schedule_balanced, "boolean");
   if (booking.created_at) assertISODateLike(booking.created_at, "booking.created_at");
   if (booking.updated_at) assertISODateLike(booking.updated_at, "booking.updated_at");
 }

@@ -69,6 +69,17 @@ const APP_ROLES = {
   STAFF: "atp_staff"
 };
 
+const PRICING_ADJUSTMENT_TYPES = {
+  DISCOUNT: "DISCOUNT",
+  CREDIT: "CREDIT",
+  SURCHARGE: "SURCHARGE"
+};
+
+const PAYMENT_STATUSES = {
+  PENDING: "PENDING",
+  PAID: "PAID"
+};
+
 const ALLOWED_STAGE_TRANSITIONS = {
   [STAGES.NEW]: STAGE_ORDER,
   [STAGES.QUALIFIED]: STAGE_ORDER,
@@ -115,6 +126,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlePatchBookingStage },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlePatchBookingNotes },
+    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/pricing$/, handler: handlePatchBookingPricing },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
     { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
@@ -639,7 +651,11 @@ async function readStore() {
   parsed.bookings ||= [];
   parsed.activities ||= [];
   parsed.invoices ||= [];
-  parsed.bookings = parsed.bookings.map((booking) => syncBookingStaffFields(booking));
+  parsed.bookings = parsed.bookings.map((booking) => {
+    syncBookingStaffFields(booking);
+    booking.pricing = normalizeBookingPricing(booking.pricing);
+    return booking;
+  });
   return parsed;
 }
 
@@ -1561,6 +1577,171 @@ function syncBookingStaffFields(booking) {
   return booking;
 }
 
+function defaultBookingPricing() {
+  return {
+    currency: "USD",
+    agreed_net_amount_cents: 0,
+    adjustments: [],
+    payments: []
+  };
+}
+
+function normalizeAmountCents(value, fallback = 0) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.round(numeric);
+}
+
+function normalizeBasisPoints(value, fallback = 0) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.round(numeric);
+}
+
+function normalizePricingAdjustmentType(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  return PRICING_ADJUSTMENT_TYPES[normalized] || PRICING_ADJUSTMENT_TYPES.DISCOUNT;
+}
+
+function normalizePaymentStatus(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  return PAYMENT_STATUSES[normalized] || PAYMENT_STATUSES.PENDING;
+}
+
+function adjustmentSign(type) {
+  return type === PRICING_ADJUSTMENT_TYPES.SURCHARGE ? 1 : -1;
+}
+
+function roundTaxAmount(netAmountCents, basisPoints) {
+  return Math.round((Number(netAmountCents || 0) * Number(basisPoints || 0)) / 10000);
+}
+
+function normalizeBookingPricing(rawPricing) {
+  const pricing = rawPricing && typeof rawPricing === "object" ? rawPricing : {};
+  const adjustments = Array.isArray(pricing.adjustments) ? pricing.adjustments : [];
+  const payments = Array.isArray(pricing.payments) ? pricing.payments : [];
+
+  return {
+    currency: normalizeText(pricing.currency) || "USD",
+    agreed_net_amount_cents: normalizeAmountCents(pricing.agreed_net_amount_cents, 0),
+    adjustments: adjustments.map((adjustment) => ({
+      id: normalizeText(adjustment?.id) || `adj_${randomUUID()}`,
+      type: normalizePricingAdjustmentType(adjustment?.type),
+      label: normalizeText(adjustment?.label) || "Adjustment",
+      amount_cents: Math.max(0, normalizeAmountCents(adjustment?.amount_cents, 0)),
+      notes: normalizeText(adjustment?.notes)
+    })),
+    payments: payments.map((payment) => ({
+      id: normalizeText(payment?.id) || `pay_${randomUUID()}`,
+      label: normalizeText(payment?.label) || "Installment",
+      due_date: normalizeText(payment?.due_date),
+      net_amount_cents: Math.max(0, normalizeAmountCents(payment?.net_amount_cents, 0)),
+      tax_rate_basis_points: Math.max(0, normalizeBasisPoints(payment?.tax_rate_basis_points, 0)),
+      status: normalizePaymentStatus(payment?.status),
+      paid_at: normalizeText(payment?.paid_at),
+      notes: normalizeText(payment?.notes)
+    }))
+  };
+}
+
+function computeBookingPricingSummary(pricing) {
+  const normalized = normalizeBookingPricing(pricing);
+  const adjustments_delta_cents = normalized.adjustments.reduce(
+    (sum, adjustment) => sum + adjustmentSign(adjustment.type) * adjustment.amount_cents,
+    0
+  );
+  const adjusted_net_amount_cents = normalized.agreed_net_amount_cents + adjustments_delta_cents;
+  const scheduled_net_amount_cents = normalized.payments.reduce((sum, payment) => sum + payment.net_amount_cents, 0);
+  const scheduled_tax_amount_cents = normalized.payments.reduce(
+    (sum, payment) => sum + roundTaxAmount(payment.net_amount_cents, payment.tax_rate_basis_points),
+    0
+  );
+  const scheduled_gross_amount_cents = scheduled_net_amount_cents + scheduled_tax_amount_cents;
+  const paid_gross_amount_cents = normalized.payments.reduce((sum, payment) => {
+    if (payment.status !== PAYMENT_STATUSES.PAID) return sum;
+    return sum + payment.net_amount_cents + roundTaxAmount(payment.net_amount_cents, payment.tax_rate_basis_points);
+  }, 0);
+
+  return {
+    agreed_net_amount_cents: normalized.agreed_net_amount_cents,
+    adjustments_delta_cents,
+    adjusted_net_amount_cents,
+    scheduled_net_amount_cents,
+    scheduled_tax_amount_cents,
+    scheduled_gross_amount_cents,
+    paid_gross_amount_cents,
+    outstanding_gross_amount_cents: Math.max(0, scheduled_gross_amount_cents - paid_gross_amount_cents),
+    is_schedule_balanced:
+      normalized.payments.length === 0 ? true : scheduled_net_amount_cents === adjusted_net_amount_cents
+  };
+}
+
+function buildBookingPricingReadModel(pricing) {
+  const normalized = normalizeBookingPricing(pricing);
+  return {
+    ...normalized,
+    payments: normalized.payments.map((payment) => {
+      const tax_amount_cents = roundTaxAmount(payment.net_amount_cents, payment.tax_rate_basis_points);
+      return {
+        ...payment,
+        tax_amount_cents,
+        gross_amount_cents: payment.net_amount_cents + tax_amount_cents
+      };
+    }),
+    summary: computeBookingPricingSummary(normalized)
+  };
+}
+
+function validateBookingPricingInput(rawPricing) {
+  if (!rawPricing || typeof rawPricing !== "object" || Array.isArray(rawPricing)) {
+    return { ok: false, error: "pricing must be an object" };
+  }
+
+  const pricing = normalizeBookingPricing(rawPricing);
+  if (!pricing.currency) return { ok: false, error: "pricing.currency is required" };
+  if (pricing.agreed_net_amount_cents < 0) {
+    return { ok: false, error: "pricing.agreed_net_amount_cents must be zero or positive" };
+  }
+
+  for (const adjustment of pricing.adjustments) {
+    if (!Object.values(PRICING_ADJUSTMENT_TYPES).includes(adjustment.type)) {
+      return { ok: false, error: `Invalid pricing adjustment type: ${adjustment.type}` };
+    }
+    if (!adjustment.label) return { ok: false, error: "Each pricing adjustment requires a label" };
+    if (adjustment.amount_cents < 0) return { ok: false, error: "Adjustment amounts must be zero or positive" };
+  }
+
+  const summary = computeBookingPricingSummary(pricing);
+  if (summary.adjusted_net_amount_cents < 0) {
+    return { ok: false, error: "Pricing adjustments cannot reduce the agreed amount below zero" };
+  }
+
+  for (const payment of pricing.payments) {
+    if (!payment.label) return { ok: false, error: "Each payment requires a label" };
+    if (!Object.values(PAYMENT_STATUSES).includes(payment.status)) {
+      return { ok: false, error: `Invalid payment status: ${payment.status}` };
+    }
+    if (payment.net_amount_cents < 0) return { ok: false, error: "Payment amounts must be zero or positive" };
+    if (payment.tax_rate_basis_points < 0 || payment.tax_rate_basis_points > 100000) {
+      return { ok: false, error: "tax_rate_basis_points must be between 0 and 100000" };
+    }
+    if (payment.status === PAYMENT_STATUSES.PAID && !payment.paid_at) {
+      return { ok: false, error: `Paid payment "${payment.label}" requires paid_at` };
+    }
+  }
+
+  if (pricing.payments.length > 0 && summary.scheduled_net_amount_cents !== summary.adjusted_net_amount_cents) {
+    return {
+      ok: false,
+      error: `Scheduled payment net total (${summary.scheduled_net_amount_cents}) must equal adjusted net total (${summary.adjusted_net_amount_cents})`
+    };
+  }
+
+  return { ok: true, pricing };
+}
+
 function canAccessBooking(principal, booking, staffMember) {
   if (canReadAllBookings(principal)) return true;
   if (hasRole(principal, APP_ROLES.STAFF) && staffMember) {
@@ -1596,6 +1777,7 @@ function computeBookingHash(booking) {
     duration: booking.duration || null,
     budget: booking.budget || null,
     notes: booking.notes || null,
+    pricing: normalizeBookingPricing(booking.pricing),
     source: booking.source || null,
     created_at: booking.created_at || null,
     updated_at: booking.updated_at || null
@@ -1606,6 +1788,7 @@ function computeBookingHash(booking) {
 function buildBookingReadModel(booking) {
   return {
     ...booking,
+    pricing: buildBookingPricingReadModel(booking.pricing),
     booking_hash: computeBookingHash(booking)
   };
 }
@@ -1813,6 +1996,7 @@ async function handleCreateBooking(req, res) {
     duration: normalizeText(payload.duration),
     budget: normalizeText(payload.budget),
     notes: normalizeText(payload.notes),
+    pricing: defaultBookingPricing(),
     source: {
       page_url: normalizeText(payload.pageUrl),
       ip_address: ipAddress || null,
@@ -2026,6 +2210,58 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
     "NOTE_UPDATED",
     actorLabel(principal, normalizeText(payload.actor) || "staff"),
     nextNotes ? "Booking note updated" : "Booking note cleared"
+  );
+  await persistStore(store);
+
+  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+}
+
+async function handlePatchBookingPricing(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const staff = await loadStaff();
+  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!assertMatchingBookingHash(payload, booking, res)) return;
+
+  const check = validateBookingPricingInput(payload.pricing);
+  if (!check.ok) {
+    sendJson(res, 422, { error: check.error });
+    return;
+  }
+
+  const nextPricing = check.pricing;
+  const nextPricingJson = JSON.stringify(nextPricing);
+  const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
+  if (nextPricingJson === currentPricingJson) {
+    sendJson(res, 200, { booking: buildBookingReadModel(booking), unchanged: true });
+    return;
+  }
+
+  booking.pricing = nextPricing;
+  booking.updated_at = nowIso();
+  addActivity(
+    store,
+    booking.id,
+    "PRICING_UPDATED",
+    actorLabel(principal, normalizeText(payload.actor) || "staff"),
+    "Booking commercials updated"
   );
   await persistStore(store);
 

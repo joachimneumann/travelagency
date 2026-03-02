@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AsiaTravelPlan Mobile API
-  version: 2026-03-01.3
+  version: 2026-03-02.1
   summary: Contract for the in-house iPhone app and the AsiaTravelPlan backend.
   description: |
     This contract is the mobile app's source of truth. It describes the request and
@@ -101,6 +101,131 @@ components:
         referrer:
           type: string
           nullable: true
+    PricingAdjustmentType:
+      type: string
+      enum:
+        - DISCOUNT
+        - CREDIT
+        - SURCHARGE
+    PaymentStatus:
+      type: string
+      enum:
+        - PENDING
+        - PAID
+    BookingPricingAdjustment:
+      type: object
+      required:
+        - id
+        - type
+        - label
+        - amount_cents
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/PricingAdjustmentType"
+        label:
+          type: string
+        amount_cents:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+          nullable: true
+    BookingPayment:
+      type: object
+      required:
+        - id
+        - label
+        - net_amount_cents
+        - tax_rate_basis_points
+        - tax_amount_cents
+        - gross_amount_cents
+        - status
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        due_date:
+          type: string
+          nullable: true
+        net_amount_cents:
+          type: integer
+          minimum: 0
+        tax_rate_basis_points:
+          type: integer
+          minimum: 0
+        tax_amount_cents:
+          type: integer
+          minimum: 0
+        gross_amount_cents:
+          type: integer
+          minimum: 0
+        status:
+          $ref: "#/components/schemas/PaymentStatus"
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    BookingPricingSummary:
+      type: object
+      required:
+        - agreed_net_amount_cents
+        - adjustments_delta_cents
+        - adjusted_net_amount_cents
+        - scheduled_net_amount_cents
+        - scheduled_tax_amount_cents
+        - scheduled_gross_amount_cents
+        - paid_gross_amount_cents
+        - outstanding_gross_amount_cents
+        - is_schedule_balanced
+      properties:
+        agreed_net_amount_cents:
+          type: integer
+        adjustments_delta_cents:
+          type: integer
+        adjusted_net_amount_cents:
+          type: integer
+        scheduled_net_amount_cents:
+          type: integer
+        scheduled_tax_amount_cents:
+          type: integer
+        scheduled_gross_amount_cents:
+          type: integer
+        paid_gross_amount_cents:
+          type: integer
+        outstanding_gross_amount_cents:
+          type: integer
+        is_schedule_balanced:
+          type: boolean
+    BookingPricing:
+      type: object
+      required:
+        - currency
+        - agreed_net_amount_cents
+        - adjustments
+        - payments
+        - summary
+      properties:
+        currency:
+          type: string
+        agreed_net_amount_cents:
+          type: integer
+          minimum: 0
+        adjustments:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingPricingAdjustment"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingPayment"
+        summary:
+          $ref: "#/components/schemas/BookingPricingSummary"
     Booking:
       type: object
       required:
@@ -158,6 +283,8 @@ components:
         notes:
           type: string
           nullable: true
+        pricing:
+          $ref: "#/components/schemas/BookingPricing"
         source:
           $ref: "#/components/schemas/SourceAttribution"
         idempotency_key:
@@ -450,6 +577,79 @@ components:
         actor:
           type: string
           nullable: true
+    BookingPricingUpdateRequest:
+      type: object
+      required:
+        - pricing
+      properties:
+        pricing:
+          type: object
+          required:
+            - currency
+            - agreed_net_amount_cents
+            - adjustments
+            - payments
+          properties:
+            currency:
+              type: string
+            agreed_net_amount_cents:
+              type: integer
+              minimum: 0
+            adjustments:
+              type: array
+              items:
+                type: object
+                required:
+                  - type
+                  - label
+                  - amount_cents
+                properties:
+                  id:
+                    type: string
+                    nullable: true
+                  type:
+                    $ref: "#/components/schemas/PricingAdjustmentType"
+                  label:
+                    type: string
+                  amount_cents:
+                    type: integer
+                    minimum: 0
+                  notes:
+                    type: string
+                    nullable: true
+            payments:
+              type: array
+              items:
+                type: object
+                required:
+                  - label
+                  - net_amount_cents
+                  - tax_rate_basis_points
+                  - status
+                properties:
+                  id:
+                    type: string
+                    nullable: true
+                  label:
+                    type: string
+                  due_date:
+                    type: string
+                    nullable: true
+                  net_amount_cents:
+                    type: integer
+                    minimum: 0
+                  tax_rate_basis_points:
+                    type: integer
+                    minimum: 0
+                  status:
+                    $ref: "#/components/schemas/PaymentStatus"
+                  paid_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
     ErrorResponse:
       type: object
       required:
@@ -615,6 +815,60 @@ paths:
                 $ref: "#/components/schemas/BookingDetailResponse"
         "404":
           description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/bookings/{bookingId}/pricing:
+    patch:
+      tags:
+        - Bookings
+      summary: Replace the booking pricing and payment schedule.
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingPricingUpdateRequest"
+      responses:
+        "200":
+          description: Updated booking.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingUpdateResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Booking hash conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
           content:
             application/json:
               schema:
