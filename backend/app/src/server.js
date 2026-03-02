@@ -1654,6 +1654,7 @@ function computeBookingPricingSummary(pricing) {
   );
   const adjusted_net_amount_cents = normalized.agreed_net_amount_cents + adjustments_delta_cents;
   const scheduled_net_amount_cents = normalized.payments.reduce((sum, payment) => sum + payment.net_amount_cents, 0);
+  const unscheduled_net_amount_cents = Math.max(0, adjusted_net_amount_cents - scheduled_net_amount_cents);
   const scheduled_tax_amount_cents = normalized.payments.reduce(
     (sum, payment) => sum + roundTaxAmount(payment.net_amount_cents, payment.tax_rate_basis_points),
     0
@@ -1669,6 +1670,7 @@ function computeBookingPricingSummary(pricing) {
     adjustments_delta_cents,
     adjusted_net_amount_cents,
     scheduled_net_amount_cents,
+    unscheduled_net_amount_cents,
     scheduled_tax_amount_cents,
     scheduled_gross_amount_cents,
     paid_gross_amount_cents,
@@ -1735,10 +1737,10 @@ function validateBookingPricingInput(rawPricing) {
     }
   }
 
-  if (pricing.payments.length > 0 && summary.scheduled_net_amount_cents !== summary.adjusted_net_amount_cents) {
+  if (pricing.payments.length > 0 && summary.scheduled_net_amount_cents > summary.adjusted_net_amount_cents) {
     return {
       ok: false,
-      error: `Scheduled payment net total (${summary.scheduled_net_amount_cents}) must equal adjusted net total (${summary.adjusted_net_amount_cents})`
+      error: `Scheduled payment net total (${summary.scheduled_net_amount_cents}) cannot exceed adjusted net total (${summary.adjusted_net_amount_cents})`
     };
   }
 

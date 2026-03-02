@@ -31,15 +31,18 @@ struct BookingDetailView: View {
                 }
 
                 if let pricing = booking.pricing {
-                    Section("Commercials") {
+                    Section("Payments") {
                         LabeledContent("Currency", value: pricing.currency)
                         LabeledContent("Agreed Net", value: formatMoney(pricing.agreedNetAmountCents, currency: pricing.currency))
                         LabeledContent("Adjustments", value: formatMoney(pricing.summary.adjustmentsDeltaCents, currency: pricing.currency))
                         LabeledContent("Adjusted Net", value: formatMoney(pricing.summary.adjustedNetAmountCents, currency: pricing.currency))
+                        LabeledContent("Unscheduled Net", value: formatMoney(pricing.summary.unscheduledNetAmountCents, currency: pricing.currency))
                         LabeledContent("Scheduled Gross", value: formatMoney(pricing.summary.scheduledGrossAmountCents, currency: pricing.currency))
                         LabeledContent("Paid", value: formatMoney(pricing.summary.paidGrossAmountCents, currency: pricing.currency))
                         LabeledContent("Outstanding", value: formatMoney(pricing.summary.outstandingGrossAmountCents, currency: pricing.currency))
-                        LabeledContent("Schedule Balanced", value: pricing.summary.isScheduleBalanced ? "Yes" : "No")
+                        if !pricing.summary.isScheduleBalanced {
+                            LabeledContent("Schedule Complete", value: "No")
+                        }
                     }
 
                     if !pricing.adjustments.isEmpty {

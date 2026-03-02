@@ -265,11 +265,17 @@ Use these concepts:
 
 Derived values must come from the backend, not from mobile-only calculations:
 - adjusted net amount
+- unscheduled net amount
 - scheduled tax total
 - scheduled gross total
 - paid gross total
 - outstanding gross total
 - schedule balance flag
+
+Scheduling rule:
+- partial payment schedules are valid
+- scheduled payment net total must not exceed adjusted booking net total
+- any remaining amount to schedule is provided by the backend as `unscheduled_net_amount_cents`
 
 Mobile should display:
 - booking currency

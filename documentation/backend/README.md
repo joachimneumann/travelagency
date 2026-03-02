@@ -225,12 +225,15 @@ Booking pricing model:
   - optional paid timestamp
 - backend derives and returns:
   - adjusted net amount
+  - unscheduled net amount
   - scheduled tax total
   - scheduled gross total
   - paid gross total
   - outstanding gross total
   - schedule balance flag
-- if any payment schedule is present, the sum of scheduled payment net amounts must equal the adjusted booking net amount
+- partial schedules are allowed
+- the sum of scheduled payment net amounts must not exceed the adjusted booking net amount
+- the remaining not-yet-scheduled amount is returned as `unscheduled_net_amount_cents`
 - pricing mutations also use `booking_hash`
 - if the booking changed in the meantime, the frontend/mobile client must refresh and ask the user to enter the change again
 

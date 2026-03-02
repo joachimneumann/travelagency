@@ -232,6 +232,7 @@ struct BookingPricingSummary: Codable, Equatable {
     let adjustmentsDeltaCents: Int
     let adjustedNetAmountCents: Int
     let scheduledNetAmountCents: Int
+    let unscheduledNetAmountCents: Int
     let scheduledTaxAmountCents: Int
     let scheduledGrossAmountCents: Int
     let paidGrossAmountCents: Int
@@ -243,6 +244,7 @@ struct BookingPricingSummary: Codable, Equatable {
         case adjustmentsDeltaCents = "adjustments_delta_cents"
         case adjustedNetAmountCents = "adjusted_net_amount_cents"
         case scheduledNetAmountCents = "scheduled_net_amount_cents"
+        case unscheduledNetAmountCents = "unscheduled_net_amount_cents"
         case scheduledTaxAmountCents = "scheduled_tax_amount_cents"
         case scheduledGrossAmountCents = "scheduled_gross_amount_cents"
         case paidGrossAmountCents = "paid_gross_amount_cents"

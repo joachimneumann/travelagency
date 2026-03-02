@@ -178,6 +178,7 @@ components:
         - adjustments_delta_cents
         - adjusted_net_amount_cents
         - scheduled_net_amount_cents
+        - unscheduled_net_amount_cents
         - scheduled_tax_amount_cents
         - scheduled_gross_amount_cents
         - paid_gross_amount_cents
@@ -191,6 +192,8 @@ components:
         adjusted_net_amount_cents:
           type: integer
         scheduled_net_amount_cents:
+          type: integer
+        unscheduled_net_amount_cents:
           type: integer
         scheduled_tax_amount_cents:
           type: integer

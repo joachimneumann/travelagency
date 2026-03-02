@@ -332,6 +332,7 @@ function renderPricingSummaryTable(pricing) {
     ["adjustments_delta", summary.adjustments_delta_cents],
     ["adjusted_net_amount", summary.adjusted_net_amount_cents],
     ["scheduled_net_amount", summary.scheduled_net_amount_cents],
+    ["unscheduled_net_amount", summary.unscheduled_net_amount_cents],
     ["scheduled_tax_amount", summary.scheduled_tax_amount_cents],
     ["scheduled_gross_amount", summary.scheduled_gross_amount_cents],
     ["paid_gross_amount", summary.paid_gross_amount_cents],
