@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 require 'json'
 require 'fileutils'
-require 'psych'
+require 'open3'
 
 ROOT = File.expand_path('..', __dir__)
-OPENAPI_PATH = File.join(ROOT, 'contracts', 'mobile-api.openapi.yaml')
+MODEL_DIR = File.join(ROOT, 'model')
 CONTRACT_GENERATED_DIR = File.join(ROOT, 'contracts', 'generated')
 IOS_GENERATED_ROOT = File.join(ROOT, 'mobile', 'iOS', 'Generated')
 IOS_GENERATED_MODELS_DIR = File.join(IOS_GENERATED_ROOT, 'Models')
@@ -13,59 +13,57 @@ FRONTEND_GENERATED_ROOT = File.join(ROOT, 'assets', 'js', 'generated')
 FRONTEND_GENERATED_MODELS_DIR = File.join(FRONTEND_GENERATED_ROOT, 'models')
 FRONTEND_GENERATED_API_DIR = File.join(FRONTEND_GENERATED_ROOT, 'api')
 
-spec = Psych.safe_load(File.read(OPENAPI_PATH), aliases: true)
-info = spec.fetch('info')
-schemas = spec.fetch('components').fetch('schemas')
 
-roles = schemas.fetch('ATPUserRole').fetch('enum')
-stages = schemas.fetch('BookingStage').fetch('enum')
-bootstrap = schemas.fetch('MobileBootstrapResponse')
-pricing_adjustment_types = schemas.fetch('PricingAdjustmentType').fetch('enum')
-payment_statuses = schemas.fetch('PaymentStatus').fetch('enum')
-currency_schema = schemas.fetch('ATPCurrencyCode')
-currency_codes = currency_schema.fetch('enum')
-currency_definitions = currency_schema.fetch('x-definitions')
+def load_ir_json
+  stdout, stderr, status = Open3.capture3('cue', 'export', './ir', '-e', 'IR', chdir: MODEL_DIR)
+  unless status.success?
+    warn stderr
+    abort 'Failed to export normalized model IR from model/ir'
+  end
+  JSON.parse(stdout)
+end
+
+def fetch_type(ir, name)
+  ir.fetch('types').find { |entry| entry.fetch('name') == name } ||
+    raise(KeyError, "Missing IR type #{name}")
+end
+
+ir = load_ir_json
+meta_info = ir.fetch('meta')
+catalogs = ir.fetch('catalogs')
+endpoints = ir.fetch('api').fetch('endpoints')
+
+roles = catalogs.fetch('roles').map { |entry| entry.fetch('code') }
+stages = catalogs.fetch('stages').map { |entry| entry.fetch('code') }
+payment_statuses = catalogs.fetch('paymentStatuses').map { |entry| entry.fetch('code') }
+pricing_adjustment_types = catalogs.fetch('pricingAdjustmentTypes').map { |entry| entry.fetch('code') }
+currency_entries = catalogs.fetch('currencies')
+currency_codes = currency_entries.map { |entry| entry.fetch('code') }
+bootstrap = fetch_type(ir, 'MobileBootstrap')
 
 [CONTRACT_GENERATED_DIR, IOS_GENERATED_ROOT, IOS_GENERATED_MODELS_DIR, IOS_GENERATED_API_DIR, FRONTEND_GENERATED_ROOT, FRONTEND_GENERATED_MODELS_DIR, FRONTEND_GENERATED_API_DIR].each do |dir|
   FileUtils.mkdir_p(dir)
 end
 
-currencies_meta = currency_codes.map do |code|
-  definition = currency_definitions.fetch(code)
+currencies_meta = currency_entries.map do |definition|
+  code = definition.fetch('code')
   [
     code,
     {
       'code' => code,
       'symbol' => definition.fetch('symbol'),
-      'decimal_places' => definition.fetch('decimal_places'),
-      'iso_code' => definition.fetch('iso_code')
+      'decimal_places' => definition.fetch('decimalPlaces'),
+      'iso_code' => code
     }
   ]
 end.to_h
 
-paths_meta = {
-  'mobile_bootstrap' => '/public/v1/mobile/bootstrap',
-  'auth_me' => '/auth/me',
-  'public_bookings' => '/public/v1/bookings',
-  'public_tours' => '/public/v1/tours',
-  'bookings' => '/api/v1/bookings',
-  'booking_detail' => '/api/v1/bookings/{bookingId}',
-  'booking_stage' => '/api/v1/bookings/{bookingId}/stage',
-  'booking_assignment' => '/api/v1/bookings/{bookingId}/owner',
-  'booking_note' => '/api/v1/bookings/{bookingId}/notes',
-  'booking_pricing' => '/api/v1/bookings/{bookingId}/pricing',
-  'booking_activities' => '/api/v1/bookings/{bookingId}/activities',
-  'booking_invoices' => '/api/v1/bookings/{bookingId}/invoices',
-  'staff' => '/api/v1/staff',
-  'customers' => '/api/v1/customers',
-  'customer_detail' => '/api/v1/customers/{customerId}',
-  'tours' => '/api/v1/tours',
-  'tour_detail' => '/api/v1/tours/{tourId}',
-  'tour_image' => '/api/v1/tours/{tourId}/image'
-}
+paths_meta = endpoints.each_with_object({}) do |endpoint, acc|
+  acc[endpoint.fetch('key')] = endpoint.fetch('path')
+end
 
 meta = {
-  'contract_version' => info.fetch('version'),
+  'contract_version' => meta_info.fetch('modelVersion'),
   'roles' => roles,
   'stages' => stages,
   'currencies' => currencies_meta,
@@ -89,7 +87,7 @@ end.join(",\n")
 models_swift = <<~SWIFT
 import Foundation
 
-// Generated from contracts/mobile-api.openapi.yaml. Canonical location: mobile/iOS/Generated/Models/MobileAPIModels.swift.
+// Generated from the normalized model IR exported from model/ir. Canonical location: mobile/iOS/Generated/Models/MobileAPIModels.swift.
 // Compatibility copies may exist at older paths. Do not edit by hand.
 
 enum ATPCurrencyCode: String, CaseIterable, Codable, Hashable {
@@ -504,11 +502,11 @@ SWIFT
 request_factory_swift = <<~SWIFT
 import Foundation
 
-// Generated from contracts/mobile-api.openapi.yaml. Canonical location: mobile/iOS/Generated/API/MobileAPIRequestFactory.swift.
+// Generated from the normalized model IR exported from model/ir. Canonical location: mobile/iOS/Generated/API/MobileAPIRequestFactory.swift.
 // Compatibility copies may exist at older paths. Do not edit by hand.
 
 enum MobileAPIRequestFactory {
-    static let contractVersion = #{info.fetch('version').inspect}
+    static let contractVersion = #{meta_info.fetch('modelVersion').inspect}
     static let bootstrapPath = #{paths_meta.fetch('mobile_bootstrap').inspect}
     static let authMePath = #{paths_meta.fetch('auth_me').inspect}
     static let publicBookingsPath = #{paths_meta.fetch('public_bookings').inspect}
@@ -611,7 +609,7 @@ end
 models_js = <<~JS
 (function (global) {
   const models = Object.freeze({
-    contractVersion: #{info.fetch('version').inspect},
+    contractVersion: #{meta_info.fetch('modelVersion').inspect},
     roles: Object.freeze(#{js_literal(roles)}),
     stages: Object.freeze(#{js_literal(stages)}),
     pricingAdjustmentTypes: Object.freeze(#{js_literal(pricing_adjustment_types)}),
