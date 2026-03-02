@@ -29,23 +29,31 @@ body.kcBodyClass {
 }
 
 #kc-page-title,
-#kc-header,
-#kc-header-wrapper,
 .pf-v5-c-login__main-header,
 .pf-c-login__main-header {
   display: none !important;
 }
 
-#kc-header img,
+#kc-header,
+#kc-header-wrapper {
+  display: block !important;
+}
+
+#kc-header-wrapper {
+  height: 78px;
+  width: min(360px, calc(100vw - 48px));
+  margin: 0 auto 18px auto !important;
+  padding: 0 !important;
+  background: url("../img/logo-asiatravelplan.svg") center center / contain no-repeat;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
 #kc-header-wrapper img,
-.login-pf-page .login-pf-page-header img,
-.pf-v5-c-login__main-header img,
-.pf-c-login__main-header img,
-.login-pf-page-header img,
-.login-pf-page-header,
+#kc-header img,
 .kc-logo-text,
 .kc-logo-image {
-  display: none !important;
+  opacity: 0 !important;
 }
 
 .card-pf,
@@ -103,8 +111,6 @@ a {
   margin: 0 auto !important;
 }
 
-#kc-header,
-#kc-header-wrapper,
 #kc-content-wrapper,
 #kc-form,
 #kc-form-wrapper {
@@ -160,8 +166,6 @@ a {
   max-width: min(360px, calc(100vw - 48px)) !important;
 }
 
-#kc-header,
-#kc-header-wrapper,
 .login-pf-page .login-pf-page-header,
 .login-pf-page .login-pf-signup,
 .pf-v5-c-login__main-footer,
