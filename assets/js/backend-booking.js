@@ -52,9 +52,7 @@ const els = {
   bookingDataView: document.getElementById("bookingDataView"),
   actionsPanel: document.getElementById("bookingActionsPanel"),
   ownerSelect: document.getElementById("bookingOwnerSelect"),
-  ownerSaveBtn: document.getElementById("bookingOwnerSaveBtn"),
   stageSelect: document.getElementById("bookingStageSelect"),
-  stageSaveBtn: document.getElementById("bookingStageSaveBtn"),
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
   actionStatus: document.getElementById("bookingActionStatus"),
@@ -100,8 +98,8 @@ async function init() {
     els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
   }
 
-  if (els.ownerSaveBtn) els.ownerSaveBtn.addEventListener("click", saveOwner);
-  if (els.stageSaveBtn) els.stageSaveBtn.addEventListener("click", saveStage);
+  if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
+  if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingAddAdjustmentBtn) els.pricingAddAdjustmentBtn.addEventListener("click", addPricingAdjustmentRow);
   if (els.pricingAddPaymentBtn) els.pricingAddPaymentBtn.addEventListener("click", addPricingPaymentRow);
@@ -291,9 +289,7 @@ function renderActionControls() {
     els.ownerSelect.disabled = !state.permissions.canChangeAssignment;
   }
 
-  if (els.ownerSaveBtn) els.ownerSaveBtn.style.display = state.permissions.canChangeAssignment ? "" : "none";
   if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
-  if (els.stageSaveBtn) els.stageSaveBtn.style.display = state.permissions.canChangeStage ? "" : "none";
   if (els.noteInput) {
     els.noteInput.disabled = !state.permissions.canEditBooking;
     els.noteInput.value = state.booking.notes || "";
@@ -329,21 +325,23 @@ function renderPricingPanel() {
 function renderPricingSummaryTable(pricing) {
   if (!els.pricingSummaryTable) return;
   const summary = pricing.summary || {};
-  const rows = [
-    ["currency", pricing.currency || "USD"],
-    ["agreed_net_amount", formatMoneyCents(pricing.agreed_net_amount_cents, pricing.currency)],
-    ["adjustments_delta", formatMoneyCents(summary.adjustments_delta_cents, pricing.currency)],
-    ["adjusted_net_amount", formatMoneyCents(summary.adjusted_net_amount_cents, pricing.currency)],
-    ["scheduled_net_amount", formatMoneyCents(summary.scheduled_net_amount_cents, pricing.currency)],
-    ["scheduled_tax_amount", formatMoneyCents(summary.scheduled_tax_amount_cents, pricing.currency)],
-    ["scheduled_gross_amount", formatMoneyCents(summary.scheduled_gross_amount_cents, pricing.currency)],
-    ["paid_gross_amount", formatMoneyCents(summary.paid_gross_amount_cents, pricing.currency)],
-    ["outstanding_gross_amount", formatMoneyCents(summary.outstanding_gross_amount_cents, pricing.currency)],
-    ["schedule_balanced", summary.is_schedule_balanced ? "yes" : "no"]
+  const moneyRows = [
+    ["agreed_net_amount", pricing.agreed_net_amount_cents],
+    ["adjustments_delta", summary.adjustments_delta_cents],
+    ["adjusted_net_amount", summary.adjusted_net_amount_cents],
+    ["scheduled_net_amount", summary.scheduled_net_amount_cents],
+    ["scheduled_tax_amount", summary.scheduled_tax_amount_cents],
+    ["scheduled_gross_amount", summary.scheduled_gross_amount_cents],
+    ["paid_gross_amount", summary.paid_gross_amount_cents],
+    ["outstanding_gross_amount", summary.outstanding_gross_amount_cents]
   ]
-    .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(String(value ?? "-"))}</td></tr>`)
+    .filter(([, value]) => Number(value || 0) !== 0)
+    .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(formatMoneyCents(value, pricing.currency))}</td></tr>`);
+  const rows = [`<tr><th>currency</th><td>${escapeHtml(pricing.currency || "USD")}</td></tr>`]
+    .concat(moneyRows)
+    .concat(summary.is_schedule_balanced === false ? ['<tr><th>schedule_balanced</th><td>no</td></tr>'] : [])
     .join("");
-  els.pricingSummaryTable.innerHTML = `<tbody>${rows}</tbody>`;
+  els.pricingSummaryTable.innerHTML = `<tbody>${rows || '<tr><td colspan="2">No payment totals yet</td></tr>'}</tbody>`;
 }
 
 function renderPricingAdjustmentsTable() {
@@ -528,7 +526,7 @@ async function savePricing() {
   renderBookingHeader();
   renderBookingData();
   renderPricingPanel();
-  setPricingStatus(result.unchanged ? "Commercials unchanged." : "Commercials saved.");
+  setPricingStatus(result.unchanged ? "Payments unchanged." : "Payments saved.");
   await loadActivities();
 }
 

@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/css/styles.css?v=3" />
   </head>
-  <body>
+  <body class="booking-detail-page">
     <header class="header" id="top">
       <div class="container header-wrap">
         <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
@@ -33,25 +33,17 @@
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <article class="panel" style="padding: 1rem; margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
-            <div id="bookingDataView"></div>
-          </article>
-
-          <article class="panel" id="bookingActionsPanel" style="padding: 1rem; margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Booking Actions</h2>
+          <article id="bookingActionsPanel" style="margin-bottom: 1rem;">
             <div class="backend-controls">
               <div class="field">
-                <label for="bookingOwnerSelect">Staff</label>
+                <label for="bookingOwnerSelect">Assigned to:</label>
                 <select id="bookingOwnerSelect"></select>
               </div>
-              <button class="btn btn-ghost" id="bookingOwnerSaveBtn" type="button">Change staff</button>
 
               <div class="field">
                 <label for="bookingStageSelect">Stage</label>
                 <select id="bookingStageSelect"></select>
               </div>
-              <button class="btn btn-ghost" id="bookingStageSaveBtn" type="button">Change stage</button>
             </div>
 
             <div class="field">
@@ -64,8 +56,8 @@
             </div>
           </article>
 
-          <article class="panel" id="pricingPanel" style="padding: 1rem; margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Commercials</h2>
+          <article id="pricingPanel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Payments</h2>
 
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
               <table class="backend-table" id="pricingSummaryTable"></table>
@@ -99,12 +91,12 @@
             </div>
 
             <div class="backend-controls">
-              <button class="btn btn-primary" id="pricingSaveBtn" type="button">Save commercials</button>
+              <button class="btn btn-primary" id="pricingSaveBtn" type="button">Save payments</button>
               <span id="pricingStatus" class="micro"></span>
             </div>
           </article>
 
-          <article class="panel" id="invoicePanel" style="padding: 1rem; margin-bottom: 1rem;">
+          <article id="invoicePanel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
             <div class="backend-controls">
               <div class="field">
@@ -178,11 +170,16 @@
             </div>
           </article>
 
-          <article class="panel" style="padding: 1rem;">
+          <article style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Activities</h2>
             <div class="backend-table-wrap">
               <table class="backend-table" id="activitiesTable"></table>
             </div>
+          </article>
+
+          <article style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
+            <div id="bookingDataView"></div>
           </article>
         </div>
       </section>
