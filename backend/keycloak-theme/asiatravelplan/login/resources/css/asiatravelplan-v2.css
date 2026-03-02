@@ -182,8 +182,11 @@ a {
 
 @media (max-width: 900px), (max-height: 900px), (hover: none) and (pointer: coarse) {
   html,
-  body {
+  body,
+  body.login-pf,
+  body.kcBodyClass {
     min-height: auto !important;
+    height: auto !important;
   }
 
   body.login-pf,
@@ -192,18 +195,16 @@ a {
   .pf-v5-c-login,
   .pf-c-login,
   .pf-v5-c-login__container,
-  .pf-c-login__container {
-    padding: 0 8px 4px 8px !important;
-    min-height: auto !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    margin-top: 0 !important;
-  }
-
-  .login-pf-page {
+  .pf-c-login__container,
+  .pf-v5-c-page,
+  .pf-v5-c-page__main,
+  .pf-v5-c-page__main-section {
     display: block !important;
-    justify-content: flex-start !important;
     min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-image: none !important;
   }
 
   #kc-header,
@@ -225,13 +226,15 @@ a {
   .pf-v5-c-login__main,
   .pf-c-login__main,
   .pf-c-card {
-    margin-top: 0 !important;
-    transform: translateY(-295px) !important;
-    border-radius: 10px !important;
-    border-width: 1px !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 8px 10px 10px 10px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
-    padding-top: 0 !important;
-    padding-bottom: 4px !important;
+    background: #ffffff !important;
+    transform: none !important;
   }
 
   .card-pf .card-pf-body,
@@ -244,17 +247,17 @@ a {
   #kc-form-wrapper,
   .pf-v5-c-form,
   .pf-c-form {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    max-width: min(344px, calc(100vw - 28px)) !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  #kc-content-wrapper {
-    margin-top: -126px !important;
-    margin-bottom: 0 !important;
+  #kc-content-wrapper,
+  #kc-form-wrapper,
+  #kc-form {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
 
   .pf-v5-c-form__group,
@@ -299,7 +302,7 @@ a {
   }
 
   #kc-form-buttons {
-    margin-top: 2px !important;
+    margin-top: 6px !important;
   }
 
   #kc-login,
