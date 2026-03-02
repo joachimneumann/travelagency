@@ -28,7 +28,7 @@ struct BookingsListView: View {
                 }
                 .listStyle(.plain)
                 .refreshable {
-                    if let session = sessionStore.session {
+                    if let session = await sessionStore.validSession() {
                         await viewModel.load(session: session)
                     }
                 }
@@ -37,7 +37,7 @@ struct BookingsListView: View {
         .navigationTitle("Bookings")
         .modifier(StandardNavigationTitleDisplayModeModifier())
         .task {
-            guard let session = sessionStore.session else { return }
+            guard let session = await sessionStore.validSession() else { return }
             await viewModel.load(session: session)
         }
         .alert("Bookings", isPresented: Binding(

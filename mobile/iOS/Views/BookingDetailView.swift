@@ -32,16 +32,16 @@ struct BookingDetailView: View {
 
                 if let pricing = booking.pricing {
                     Section("Payments") {
-                        LabeledContent("Currency", value: pricing.currency)
-                        LabeledContent("Agreed Net", value: formatMoney(pricing.agreedNetAmountCents, currency: pricing.currency))
-                        LabeledContent("Adjustments", value: formatMoney(pricing.summary.adjustmentsDeltaCents, currency: pricing.currency))
-                        LabeledContent("Adjusted Net", value: formatMoney(pricing.summary.adjustedNetAmountCents, currency: pricing.currency))
-                        LabeledContent("Unscheduled Net", value: formatMoney(pricing.summary.unscheduledNetAmountCents, currency: pricing.currency))
-                        LabeledContent("Scheduled Gross", value: formatMoney(pricing.summary.scheduledGrossAmountCents, currency: pricing.currency))
-                        LabeledContent("Paid", value: formatMoney(pricing.summary.paidGrossAmountCents, currency: pricing.currency))
-                        LabeledContent("Outstanding", value: formatMoney(pricing.summary.outstandingGrossAmountCents, currency: pricing.currency))
-                        if !pricing.summary.isScheduleBalanced {
-                            LabeledContent("Schedule Complete", value: "No")
+                        if paymentSummaryRows(for: pricing).isEmpty {
+                            Text("No payments yet")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(paymentSummaryRows(for: pricing), id: \.label) { row in
+                                LabeledContent(row.label, value: row.value)
+                            }
+                            if !pricing.summary.isScheduleBalanced {
+                                LabeledContent("Schedule Complete", value: "No")
+                            }
                         }
                     }
 
@@ -109,7 +109,7 @@ struct BookingDetailView: View {
                     }
                 }
 
-                if canChangeStage, let session = sessionStore.session {
+                if canChangeStage {
                     Section("Stage") {
                         Picker("Stage", selection: $selectedStage) {
                             ForEach(stageOptions, id: \.self) { stage in
@@ -118,13 +118,16 @@ struct BookingDetailView: View {
                         }
 
                         Button("Update Stage") {
-                            Task { await viewModel.updateStage(selectedStage, session: session) }
+                            Task {
+                                guard let session = await sessionStore.validSession() else { return }
+                                await viewModel.updateStage(selectedStage, session: session)
+                            }
                         }
                         .disabled(selectedStage.isEmpty || selectedStage == booking.stage)
                     }
                 }
 
-                if canChangeAssignment, let session = sessionStore.session {
+                if canChangeAssignment {
                     Section("Assignment") {
                         Picker("Staff", selection: $selectedStaffID) {
                             Text("Unassigned").tag("")
@@ -135,19 +138,25 @@ struct BookingDetailView: View {
 
                         Button("Save Assignment") {
                             let staffID = selectedStaffID.isEmpty ? nil : selectedStaffID
-                            Task { await viewModel.updateAssignment(staffID, session: session) }
+                            Task {
+                                guard let session = await sessionStore.validSession() else { return }
+                                await viewModel.updateAssignment(staffID, session: session)
+                            }
                         }
                         .disabled(selectedStaffID == (booking.staff ?? ""))
                     }
                 }
 
-                if canEditBooking, let session = sessionStore.session {
+                if canEditBooking {
                     Section("Booking Note") {
                         TextEditor(text: $viewModel.noteDraft)
                             .frame(minHeight: 140)
 
                         Button("Save Note") {
-                            Task { await viewModel.saveNote(session: session) }
+                            Task {
+                                guard let session = await sessionStore.validSession() else { return }
+                                await viewModel.saveNote(session: session)
+                            }
                         }
                         .disabled(viewModel.noteDraft == viewModel.originalNote)
                     }
@@ -178,7 +187,7 @@ struct BookingDetailView: View {
         .navigationTitle("Details")
         .modifier(InlineNavigationTitleDisplayModeModifier())
         .task {
-            guard let session = sessionStore.session else { return }
+            guard let session = await sessionStore.validSession() else { return }
             await viewModel.load(bookingID: bookingID, session: session)
             syncSelectionsFromBooking()
         }
@@ -225,9 +234,15 @@ struct BookingDetailView: View {
         selectedStaffID = viewModel.booking?.staff ?? ""
     }
 
-    private func formatMoney(_ cents: Int, currency: String) -> String {
-        let amount = Double(cents) / 100.0
-        return "\(currency) \(String(format: "%.2f", amount))"
+    private func formatMoney(_ minorUnits: Int, currency: ATPCurrencyCode) -> String {
+        let definition = ATPCurrencyCatalog.definition(for: currency)
+        let divisor = pow(10.0, Double(definition.decimalPlaces))
+        let amount = Double(minorUnits) / divisor
+        if definition.decimalPlaces == 0 {
+            return "\(definition.symbol) \(Int(amount.rounded()))"
+        }
+        let format = "%.\(definition.decimalPlaces)f"
+        return "\(definition.symbol) \(String(format: format, amount).replacingOccurrences(of: ".", with: ","))"
     }
 
     private func formatPercent(_ basisPoints: Int) -> String {
@@ -242,6 +257,22 @@ struct BookingDetailView: View {
         case .surcharge:
             return adjustment.amountCents
         }
+    }
+
+    private func paymentSummaryRows(for pricing: BookingPricing) -> [(label: String, value: String)] {
+        let rows: [(String, Int)] = [
+            ("Agreed Net", pricing.agreedNetAmountCents),
+            ("Adjustments", pricing.summary.adjustmentsDeltaCents),
+            ("Adjusted Net", pricing.summary.adjustedNetAmountCents),
+            ("Unscheduled Net", pricing.summary.unscheduledNetAmountCents),
+            ("Scheduled Gross", pricing.summary.scheduledGrossAmountCents),
+            ("Paid", pricing.summary.paidGrossAmountCents),
+            ("Outstanding", pricing.summary.outstandingGrossAmountCents)
+        ]
+
+        return rows
+            .filter { $0.1 != 0 }
+            .map { (label: $0.0, value: formatMoney($0.1, currency: pricing.currency)) }
     }
 }
 

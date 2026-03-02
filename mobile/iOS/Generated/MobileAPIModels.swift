@@ -2,6 +2,55 @@ import Foundation
 
 // Generated from contracts/mobile-api.openapi.yaml. Do not edit by hand.
 
+enum ATPCurrencyCode: String, CaseIterable, Codable, Hashable {
+    case usd = "USD"
+    case euro = "EURO"
+    case vnd = "VND"
+    case thb = "THB"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        switch rawValue {
+        case "USD":
+            self = .usd
+        case "EURO", "EUR":
+            self = .euro
+        case "VND":
+            self = .vnd
+        case "THB":
+            self = .thb
+        default:
+            self = .usd
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+struct ATPCurrencyDefinition: Codable, Equatable {
+    let code: ATPCurrencyCode
+    let symbol: String
+    let decimalPlaces: Int
+    let isoCode: String
+}
+
+enum ATPCurrencyCatalog {
+    static let definitions: [ATPCurrencyCode: ATPCurrencyDefinition] = [
+        .usd: ATPCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD"),
+        .euro: ATPCurrencyDefinition(code: .euro, symbol: "€", decimalPlaces: 2, isoCode: "EUR"),
+        .vnd: ATPCurrencyDefinition(code: .vnd, symbol: "₫", decimalPlaces: 0, isoCode: "VND"),
+        .thb: ATPCurrencyDefinition(code: .thb, symbol: "฿", decimalPlaces: 0, isoCode: "THB")
+    ]
+
+    static func definition(for code: ATPCurrencyCode) -> ATPCurrencyDefinition {
+        definitions[code] ?? ATPCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD")
+    }
+}
+
 enum ATPUserRole: String, CaseIterable, Codable, Hashable {
     case admin = "atp_admin"
     case manager = "atp_manager"
@@ -216,7 +265,7 @@ struct BookingPricingSummary: Codable, Equatable {
 }
 
 struct BookingPricing: Codable, Equatable {
-    let currency: String
+    let currency: ATPCurrencyCode
     let agreedNetAmountCents: Int
     let adjustments: [BookingPricingAdjustment]
     let payments: [BookingPayment]
@@ -241,6 +290,7 @@ struct Booking: Decodable, Identifiable, Equatable {
     let travelers: Int?
     let duration: String?
     let budget: String?
+    let preferredCurrency: ATPCurrencyCode?
     let notes: String?
     let pricing: BookingPricing?
     let source: SourceAttribution?
@@ -261,6 +311,7 @@ struct Booking: Decodable, Identifiable, Equatable {
         case travelers
         case duration
         case budget
+        case preferredCurrency = "preferred_currency"
         case notes
         case pricing
         case source
@@ -285,6 +336,7 @@ struct Booking: Decodable, Identifiable, Equatable {
         travelers = try container.decodeIfPresent(Int.self, forKey: .travelers)
         duration = try container.decodeIfPresent(String.self, forKey: .duration)
         budget = try container.decodeIfPresent(String.self, forKey: .budget)
+        preferredCurrency = try container.decodeIfPresent(ATPCurrencyCode.self, forKey: .preferredCurrency)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         pricing = try container.decodeIfPresent(BookingPricing.self, forKey: .pricing)
         source = try container.decodeIfPresent(SourceAttribution.self, forKey: .source)
@@ -334,7 +386,7 @@ struct BookingInvoice: Codable, Identifiable, Equatable {
     let invoiceNumber: String?
     let version: Int
     let status: String
-    let currency: String
+    let currency: ATPCurrencyCode
     let issueDate: String?
     let dueDate: String?
     let title: String?

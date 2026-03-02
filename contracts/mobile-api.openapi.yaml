@@ -20,8 +20,11 @@ servers:
     description: Local development API
 tags:
   - name: Auth
+  - name: Public
   - name: Bookings
+  - name: Customers
   - name: Staff
+  - name: Tours
 components:
   securitySchemes:
     bearerAuth:
@@ -29,6 +32,30 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    ATPCurrencyCode:
+      type: string
+      enum:
+        - USD
+        - EURO
+        - VND
+        - THB
+      x-definitions:
+        USD:
+          symbol: $
+          decimal_places: 2
+          iso_code: USD
+        EURO:
+          symbol: €
+          decimal_places: 2
+          iso_code: EUR
+        VND:
+          symbol: ₫
+          decimal_places: 0
+          iso_code: VND
+        THB:
+          symbol: ฿
+          decimal_places: 0
+          iso_code: THB
     ATPUserRole:
       type: string
       enum:
@@ -215,7 +242,7 @@ components:
         - summary
       properties:
         currency:
-          type: string
+          $ref: "#/components/schemas/ATPCurrencyCode"
         agreed_net_amount_cents:
           type: integer
           minimum: 0
@@ -283,6 +310,10 @@ components:
         budget:
           type: string
           nullable: true
+        preferred_currency:
+          allOf:
+            - $ref: "#/components/schemas/ATPCurrencyCode"
+          nullable: true
         notes:
           type: string
           nullable: true
@@ -316,6 +347,57 @@ components:
           type: string
           nullable: true
         language:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    Tour:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        destinationCountries:
+          type: array
+          items:
+            type: string
+        styles:
+          type: array
+          items:
+            type: string
+        durationDays:
+          type: integer
+          nullable: true
+        priceFrom:
+          type: integer
+          nullable: true
+        priority:
+          type: integer
+          nullable: true
+        rating:
+          type: integer
+          nullable: true
+        seasonality:
+          type: string
+          nullable: true
+        shortDescription:
+          type: string
+          nullable: true
+        highlights:
+          type: array
+          items:
+            type: string
+        image:
           type: string
           nullable: true
         created_at:
@@ -376,7 +458,7 @@ components:
         status:
           type: string
         currency:
-          type: string
+          $ref: "#/components/schemas/ATPCurrencyCode"
         issue_date:
           type: string
           nullable: true
@@ -459,6 +541,91 @@ components:
           type: integer
         total_pages:
           type: integer
+    PublicBookingCreateRequest:
+      type: object
+      required:
+        - destination
+        - style
+        - travelMonth
+        - travelers
+        - duration
+        - budget
+        - name
+        - email
+        - phone
+      properties:
+        destination:
+          type: string
+        style:
+          type: string
+        travelMonth:
+          type: string
+        travelers:
+          oneOf:
+            - type: integer
+            - type: string
+        duration:
+          type: string
+        budget:
+          type: string
+        preferredCurrency:
+          $ref: "#/components/schemas/ATPCurrencyCode"
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        language:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        pageUrl:
+          type: string
+          nullable: true
+        utm_source:
+          type: string
+          nullable: true
+        utm_medium:
+          type: string
+          nullable: true
+        utm_campaign:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+    PublicBookingCreateResponse:
+      type: object
+      required:
+        - booking_id
+        - customer_id
+        - status
+        - deduplicated
+      properties:
+        booking_id:
+          type: string
+        booking_hash:
+          type: string
+          nullable: true
+        customer_id:
+          type: string
+        status:
+          type: string
+        deduplicated:
+          type: boolean
+        staff:
+          type: string
+          nullable: true
+        sla_due_at:
+          type: string
+          format: date-time
+          nullable: true
+        next_step_message:
+          type: string
+          nullable: true
     BookingDetailResponse:
       type: object
       required:
@@ -517,6 +684,117 @@ components:
             $ref: "#/components/schemas/StaffMember"
         total:
           type: integer
+    CustomerListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - page_size
+        - total_pages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Customer"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+    CustomerDetailResponse:
+      type: object
+      required:
+        - customer
+        - bookings
+      properties:
+        customer:
+          $ref: "#/components/schemas/Customer"
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+    PublicTourListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - offset
+        - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tour"
+        total:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+    TourListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - page_size
+        - total_pages
+        - sort
+        - filters
+        - available_destinations
+        - available_styles
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tour"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        sort:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+        available_destinations:
+          type: array
+          items:
+            type: string
+        available_styles:
+          type: array
+          items:
+            type: string
+    TourDetailResponse:
+      type: object
+      required:
+        - tour
+        - options
+      properties:
+        tour:
+          $ref: "#/components/schemas/Tour"
+        options:
+          type: object
+          required:
+            - destinations
+            - styles
+          properties:
+            destinations:
+              type: array
+              items:
+                type: string
+            styles:
+              type: array
+              items:
+                type: string
     StaffCreateRequest:
       type: object
       required:
@@ -594,7 +872,7 @@ components:
             - payments
           properties:
             currency:
-              type: string
+              $ref: "#/components/schemas/ATPCurrencyCode"
             agreed_net_amount_cents:
               type: integer
               minimum: 0
@@ -710,6 +988,7 @@ security:
 paths:
   /public/v1/mobile/bootstrap:
     get:
+      x-client-key: mobile_bootstrap
       tags:
         - Auth
       summary: Return mobile app bootstrap metadata and minimum supported version.
@@ -723,6 +1002,7 @@ paths:
                 $ref: "#/components/schemas/MobileBootstrapResponse"
   /auth/me:
     get:
+      x-client-key: auth_me
       tags:
         - Auth
       summary: Return the current authenticated browser-session user.
@@ -737,8 +1017,75 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthMeResponse"
+  /public/v1/bookings:
+    post:
+      x-client-key: public_bookings
+      tags:
+        - Public
+      summary: Create a public booking request from the website flow.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublicBookingCreateRequest"
+      responses:
+        "200":
+          description: Existing booking matched by idempotency key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicBookingCreateResponse"
+        "201":
+          description: Booking created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicBookingCreateResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /public/v1/tours:
+    get:
+      x-client-key: public_tours
+      tags:
+        - Public
+      summary: List public tours for the website catalog.
+      security: []
+      parameters:
+        - in: query
+          name: destination
+          schema:
+            type: string
+        - in: query
+          name: style
+          schema:
+            type: string
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+      responses:
+        "200":
+          description: Public tour catalog.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicTourListResponse"
   /api/v1/bookings:
     get:
+      x-client-key: bookings
       tags:
         - Bookings
       summary: List visible bookings for the authenticated user.
@@ -800,6 +1147,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}:
     get:
+      x-client-key: booking_detail
       tags:
         - Bookings
       summary: Fetch one booking and its customer.
@@ -824,6 +1172,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}/pricing:
     patch:
+      x-client-key: booking_pricing
       tags:
         - Bookings
       summary: Replace the booking pricing and payment schedule.
@@ -878,6 +1227,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}/stage:
     patch:
+      x-client-key: booking_stage
       tags:
         - Bookings
       summary: Update a booking stage.
@@ -914,6 +1264,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}/owner:
     patch:
+      x-client-key: booking_assignment
       tags:
         - Bookings
       summary: Update the assigned staff member for a booking.
@@ -952,6 +1303,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}/notes:
     patch:
+      x-client-key: booking_note
       tags:
         - Bookings
       summary: Update the single editable booking note.
@@ -996,6 +1348,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}/activities:
     get:
+      x-client-key: booking_activities
       tags:
         - Bookings
       summary: List activities for one booking.
@@ -1043,6 +1396,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /api/v1/bookings/{bookingId}/invoices:
     get:
+      x-client-key: booking_invoices
       tags:
         - Bookings
       summary: List invoices for one booking.
@@ -1061,6 +1415,7 @@ paths:
                 $ref: "#/components/schemas/BookingInvoicesResponse"
   /api/v1/staff:
     get:
+      x-client-key: staff
       tags:
         - Staff
       summary: List staff records visible to manager/admin.
@@ -1084,6 +1439,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     post:
+      x-client-key: staff
       tags:
         - Staff
       summary: Create a staff member.
@@ -1112,3 +1468,160 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/customers:
+    get:
+      x-client-key: customers
+      tags:
+        - Customers
+      summary: List visible customers for the authenticated user.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Customer list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerListResponse"
+  /api/v1/customers/{customerId}:
+    get:
+      x-client-key: customer_detail
+      tags:
+        - Customers
+      summary: Fetch one customer and related bookings.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Customer detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerDetailResponse"
+        "404":
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/tours:
+    get:
+      x-client-key: tours
+      tags:
+        - Tours
+      summary: List tours visible to the authenticated user.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - in: query
+          name: destination
+          schema:
+            type: string
+        - in: query
+          name: style
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tour list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TourListResponse"
+  /api/v1/tours/{tourId}:
+    get:
+      x-client-key: tour_detail
+      tags:
+        - Tours
+      summary: Fetch one tour and option lists.
+      parameters:
+        - in: path
+          name: tourId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tour detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TourDetailResponse"
+        "404":
+          description: Tour not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/tours/{tourId}/image:
+    post:
+      x-client-key: tour_image
+      tags:
+        - Tours
+      summary: Upload a tour image.
+      parameters:
+        - in: path
+          name: tourId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+                - data_base64
+              properties:
+                filename:
+                  type: string
+                data_base64:
+                  type: string
+      responses:
+        "200":
+          description: Tour image updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TourDetailResponse"

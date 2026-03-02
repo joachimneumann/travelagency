@@ -11,4 +11,9 @@ struct AuthSession: Codable, Equatable {
         guard let expiresAt else { return false }
         return expiresAt <= Date()
     }
+
+    var requiresRefresh: Bool {
+        guard let expiresAt else { return false }
+        return expiresAt <= Date().addingTimeInterval(60)
+    }
 }

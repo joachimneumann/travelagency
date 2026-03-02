@@ -5,8 +5,13 @@ require 'psych'
 
 ROOT = File.expand_path('..', __dir__)
 OPENAPI_PATH = File.join(ROOT, 'contracts', 'mobile-api.openapi.yaml')
-GENERATED_DIR = File.join(ROOT, 'contracts', 'generated')
-IOS_GENERATED_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated')
+CONTRACT_GENERATED_DIR = File.join(ROOT, 'contracts', 'generated')
+IOS_GENERATED_ROOT = File.join(ROOT, 'mobile', 'iOS', 'Generated')
+IOS_GENERATED_MODELS_DIR = File.join(IOS_GENERATED_ROOT, 'Models')
+IOS_GENERATED_API_DIR = File.join(IOS_GENERATED_ROOT, 'API')
+FRONTEND_GENERATED_ROOT = File.join(ROOT, 'assets', 'js', 'generated')
+FRONTEND_GENERATED_MODELS_DIR = File.join(FRONTEND_GENERATED_ROOT, 'models')
+FRONTEND_GENERATED_API_DIR = File.join(FRONTEND_GENERATED_ROOT, 'api')
 
 spec = Psych.safe_load(File.read(OPENAPI_PATH), aliases: true)
 info = spec.fetch('info')
@@ -17,42 +22,118 @@ stages = schemas.fetch('BookingStage').fetch('enum')
 bootstrap = schemas.fetch('MobileBootstrapResponse')
 pricing_adjustment_types = schemas.fetch('PricingAdjustmentType').fetch('enum')
 payment_statuses = schemas.fetch('PaymentStatus').fetch('enum')
+currency_schema = schemas.fetch('ATPCurrencyCode')
+currency_codes = currency_schema.fetch('enum')
+currency_definitions = currency_schema.fetch('x-definitions')
 
-FileUtils.mkdir_p(GENERATED_DIR)
-FileUtils.mkdir_p(IOS_GENERATED_DIR)
+[CONTRACT_GENERATED_DIR, IOS_GENERATED_ROOT, IOS_GENERATED_MODELS_DIR, IOS_GENERATED_API_DIR, FRONTEND_GENERATED_ROOT, FRONTEND_GENERATED_MODELS_DIR, FRONTEND_GENERATED_API_DIR].each do |dir|
+  FileUtils.mkdir_p(dir)
+end
+
+currencies_meta = currency_codes.map do |code|
+  definition = currency_definitions.fetch(code)
+  [
+    code,
+    {
+      'code' => code,
+      'symbol' => definition.fetch('symbol'),
+      'decimal_places' => definition.fetch('decimal_places'),
+      'iso_code' => definition.fetch('iso_code')
+    }
+  ]
+end.to_h
+
+paths_meta = {
+  'mobile_bootstrap' => '/public/v1/mobile/bootstrap',
+  'auth_me' => '/auth/me',
+  'public_bookings' => '/public/v1/bookings',
+  'public_tours' => '/public/v1/tours',
+  'bookings' => '/api/v1/bookings',
+  'booking_detail' => '/api/v1/bookings/{bookingId}',
+  'booking_stage' => '/api/v1/bookings/{bookingId}/stage',
+  'booking_assignment' => '/api/v1/bookings/{bookingId}/owner',
+  'booking_note' => '/api/v1/bookings/{bookingId}/notes',
+  'booking_pricing' => '/api/v1/bookings/{bookingId}/pricing',
+  'booking_activities' => '/api/v1/bookings/{bookingId}/activities',
+  'booking_invoices' => '/api/v1/bookings/{bookingId}/invoices',
+  'staff' => '/api/v1/staff',
+  'customers' => '/api/v1/customers',
+  'customer_detail' => '/api/v1/customers/{customerId}',
+  'tours' => '/api/v1/tours',
+  'tour_detail' => '/api/v1/tours/{tourId}',
+  'tour_image' => '/api/v1/tours/{tourId}/image'
+}
 
 meta = {
   'contract_version' => info.fetch('version'),
   'roles' => roles,
   'stages' => stages,
+  'currencies' => currencies_meta,
   'pricing_adjustment_types' => pricing_adjustment_types,
   'payment_statuses' => payment_statuses,
-  'paths' => {
-    'mobile_bootstrap' => '/public/v1/mobile/bootstrap',
-    'auth_me' => '/auth/me',
-    'bookings' => '/api/v1/bookings',
-    'booking_detail' => '/api/v1/bookings/{bookingId}',
-    'booking_stage' => '/api/v1/bookings/{bookingId}/stage',
-    'booking_assignment' => '/api/v1/bookings/{bookingId}/owner',
-    'booking_note' => '/api/v1/bookings/{bookingId}/notes',
-    'booking_pricing' => '/api/v1/bookings/{bookingId}/pricing',
-    'booking_activities' => '/api/v1/bookings/{bookingId}/activities',
-    'booking_invoices' => '/api/v1/bookings/{bookingId}/invoices',
-    'staff' => '/api/v1/staff'
-  },
+  'paths' => paths_meta,
   'bootstrap_schema' => bootstrap
 }
-File.write(File.join(GENERATED_DIR, 'mobile-api.meta.json'), JSON.pretty_generate(meta) + "\n")
+File.write(File.join(CONTRACT_GENERATED_DIR, 'mobile-api.meta.json'), JSON.pretty_generate(meta) + "\n")
 
 roles_swift = roles.map { |r| "    case #{r.sub('atp_', '')} = \"#{r}\"" }.join("\n")
 stages_swift = stages.map { |s| "    case #{s.downcase} = \"#{s}\"" }.join("\n")
 adjustment_types_swift = pricing_adjustment_types.map { |t| "    case #{t.downcase} = \"#{t}\"" }.join("\n")
 payment_statuses_swift = payment_statuses.map { |s| "    case #{s.downcase} = \"#{s}\"" }.join("\n")
+currency_cases_swift = currency_codes.map { |code| "    case #{code.downcase} = \"#{code}\"" }.join("\n")
+currency_catalog_entries_swift = currency_codes.map do |code|
+  definition = currencies_meta.fetch(code)
+  "        .#{code.downcase}: ATPCurrencyDefinition(code: .#{code.downcase}, symbol: #{definition.fetch('symbol').inspect}, decimalPlaces: #{definition.fetch('decimal_places')}, isoCode: #{definition.fetch('iso_code').inspect})"
+end.join(",\n")
 
 models_swift = <<~SWIFT
 import Foundation
 
-// Generated from contracts/mobile-api.openapi.yaml. Do not edit by hand.
+// Generated from contracts/mobile-api.openapi.yaml. Canonical location: mobile/iOS/Generated/Models/MobileAPIModels.swift.
+// Compatibility copies may exist at older paths. Do not edit by hand.
+
+enum ATPCurrencyCode: String, CaseIterable, Codable, Hashable {
+#{currency_cases_swift}
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        switch rawValue {
+        case "USD":
+            self = .usd
+        case "EURO", "EUR":
+            self = .euro
+        case "VND":
+            self = .vnd
+        case "THB":
+            self = .thb
+        default:
+            self = .usd
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+struct ATPCurrencyDefinition: Codable, Equatable {
+    let code: ATPCurrencyCode
+    let symbol: String
+    let decimalPlaces: Int
+    let isoCode: String
+}
+
+enum ATPCurrencyCatalog {
+    static let definitions: [ATPCurrencyCode: ATPCurrencyDefinition] = [
+#{currency_catalog_entries_swift}
+    ]
+
+    static func definition(for code: ATPCurrencyCode) -> ATPCurrencyDefinition {
+        definitions[code] ?? ATPCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD")
+    }
+}
 
 enum ATPUserRole: String, CaseIterable, Codable, Hashable {
 #{roles_swift}
@@ -254,7 +335,7 @@ struct BookingPricingSummary: Codable, Equatable {
 }
 
 struct BookingPricing: Codable, Equatable {
-    let currency: String
+    let currency: ATPCurrencyCode
     let agreedNetAmountCents: Int
     let adjustments: [BookingPricingAdjustment]
     let payments: [BookingPayment]
@@ -279,6 +360,7 @@ struct Booking: Decodable, Identifiable, Equatable {
     let travelers: Int?
     let duration: String?
     let budget: String?
+    let preferredCurrency: ATPCurrencyCode?
     let notes: String?
     let pricing: BookingPricing?
     let source: SourceAttribution?
@@ -299,6 +381,7 @@ struct Booking: Decodable, Identifiable, Equatable {
         case travelers
         case duration
         case budget
+        case preferredCurrency = "preferred_currency"
         case notes
         case pricing
         case source
@@ -323,6 +406,7 @@ struct Booking: Decodable, Identifiable, Equatable {
         travelers = try container.decodeIfPresent(Int.self, forKey: .travelers)
         duration = try container.decodeIfPresent(String.self, forKey: .duration)
         budget = try container.decodeIfPresent(String.self, forKey: .budget)
+        preferredCurrency = try container.decodeIfPresent(ATPCurrencyCode.self, forKey: .preferredCurrency)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         pricing = try container.decodeIfPresent(BookingPricing.self, forKey: .pricing)
         source = try container.decodeIfPresent(SourceAttribution.self, forKey: .source)
@@ -372,7 +456,7 @@ struct BookingInvoice: Codable, Identifiable, Equatable {
     let invoiceNumber: String?
     let version: Int
     let status: String
-    let currency: String
+    let currency: ATPCurrencyCode
     let issueDate: String?
     let dueDate: String?
     let title: String?
@@ -420,17 +504,34 @@ SWIFT
 request_factory_swift = <<~SWIFT
 import Foundation
 
-// Generated from contracts/mobile-api.openapi.yaml. Do not edit by hand.
+// Generated from contracts/mobile-api.openapi.yaml. Canonical location: mobile/iOS/Generated/API/MobileAPIRequestFactory.swift.
+// Compatibility copies may exist at older paths. Do not edit by hand.
 
 enum MobileAPIRequestFactory {
     static let contractVersion = #{info.fetch('version').inspect}
-    static let bootstrapPath = "/public/v1/mobile/bootstrap"
-    static let authMePath = "/auth/me"
-    static let bookingsPath = "/api/v1/bookings"
-    static let staffPath = "/api/v1/staff"
+    static let bootstrapPath = #{paths_meta.fetch('mobile_bootstrap').inspect}
+    static let authMePath = #{paths_meta.fetch('auth_me').inspect}
+    static let publicBookingsPath = #{paths_meta.fetch('public_bookings').inspect}
+    static let publicToursPath = #{paths_meta.fetch('public_tours').inspect}
+    static let bookingsPath = #{paths_meta.fetch('bookings').inspect}
+    static let staffPath = #{paths_meta.fetch('staff').inspect}
+    static let customersPath = #{paths_meta.fetch('customers').inspect}
+    static let toursPath = #{paths_meta.fetch('tours').inspect}
 
     static func bootstrapURL(baseURL: URL) -> URL {
         baseURL.appendingPathComponent(String(bootstrapPath.dropFirst()))
+    }
+
+    static func authMeURL(baseURL: URL) -> URL {
+        baseURL.appendingPathComponent(String(authMePath.dropFirst()))
+    }
+
+    static func publicBookingsURL(baseURL: URL) -> URL {
+        baseURL.appendingPathComponent(String(publicBookingsPath.dropFirst()))
+    }
+
+    static func publicToursURL(baseURL: URL) -> URL {
+        baseURL.appendingPathComponent(String(publicToursPath.dropFirst()))
     }
 
     static func bookingsURL(baseURL: URL, page: Int, pageSize: Int) -> URL {
@@ -444,31 +545,31 @@ enum MobileAPIRequestFactory {
     }
 
     static func bookingDetailURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)")
     }
 
     static func bookingStageURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/stage")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/stage")
     }
 
     static func bookingAssignmentURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/owner")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/owner")
     }
 
     static func bookingNoteURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/notes")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/notes")
     }
 
     static func bookingPricingURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/pricing")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/pricing")
     }
 
     static func bookingActivitiesURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/activities")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/activities")
     }
 
     static func bookingInvoicesURL(baseURL: URL, bookingID: String) -> URL {
-        baseURL.appendingPathComponent("api/v1/bookings/\\(bookingID)/invoices")
+        baseURL.appendingPathComponent("api/v1/bookings/\(bookingID)/invoices")
     }
 
     static func activeStaffURL(baseURL: URL) -> URL {
@@ -476,9 +577,281 @@ enum MobileAPIRequestFactory {
         components.queryItems = [URLQueryItem(name: "active", value: "true")]
         return components.url!
     }
+
+    static func staffURL(baseURL: URL) -> URL {
+        baseURL.appendingPathComponent(String(staffPath.dropFirst()))
+    }
+
+    static func customersURL(baseURL: URL) -> URL {
+        baseURL.appendingPathComponent(String(customersPath.dropFirst()))
+    }
+
+    static func customerDetailURL(baseURL: URL, customerID: String) -> URL {
+        baseURL.appendingPathComponent("api/v1/customers/\(customerID)")
+    }
+
+    static func toursURL(baseURL: URL) -> URL {
+        baseURL.appendingPathComponent(String(toursPath.dropFirst()))
+    }
+
+    static func tourDetailURL(baseURL: URL, tourID: String) -> URL {
+        baseURL.appendingPathComponent("api/v1/tours/\(tourID)")
+    }
+
+    static func tourImageURL(baseURL: URL, tourID: String) -> URL {
+        baseURL.appendingPathComponent("api/v1/tours/\(tourID)/image")
+    }
 }
 SWIFT
 
-File.write(File.join(IOS_GENERATED_DIR, 'MobileAPIModels.swift'), models_swift)
-File.write(File.join(IOS_GENERATED_DIR, 'MobileAPIRequestFactory.swift'), request_factory_swift)
+def js_literal(object)
+  JSON.pretty_generate(object)
+end
+
+models_js = <<~JS
+(function (global) {
+  const models = Object.freeze({
+    contractVersion: #{info.fetch('version').inspect},
+    roles: Object.freeze(#{js_literal(roles)}),
+    stages: Object.freeze(#{js_literal(stages)}),
+    pricingAdjustmentTypes: Object.freeze(#{js_literal(pricing_adjustment_types)}),
+    paymentStatuses: Object.freeze(#{js_literal(payment_statuses)}),
+    currencies: Object.freeze(#{js_literal(currencies_meta)}),
+    paths: Object.freeze(#{js_literal(paths_meta)}),
+    normalizeCurrencyCode(value) {
+      const raw = String(value || "USD").trim().toUpperCase();
+      if (raw === "EUR") return "EURO";
+      return this.currencies[raw] ? raw : "USD";
+    },
+    currencyDefinition(value) {
+      const code = this.normalizeCurrencyCode(value);
+      return this.currencies[code] || this.currencies.USD;
+    }
+  });
+
+  global.ATPGeneratedModels = models;
+  global.ATPContract = models;
+})(window);
+JS
+
+request_factory_js = <<~JS
+(function (global) {
+  const models = global.ATPGeneratedModels || global.ATPContract;
+  const paths = models.paths;
+
+  function normalizeBaseURL(baseURL) {
+    return String(baseURL || "").replace(/\/$/, "");
+  }
+
+  function buildURL(baseURL, path) {
+    return `${normalizeBaseURL(baseURL)}${path}`;
+  }
+
+  function applyQuery(baseURL, path, query) {
+    const url = new URL(buildURL(baseURL, path), window.location.origin);
+    Object.entries(query || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") return;
+      url.searchParams.set(key, String(value));
+    });
+    return normalizeBaseURL(baseURL) ? `${url.pathname}${url.search}`.replace(/^/, normalizeBaseURL(baseURL)) : `${url.pathname}${url.search}`;
+  }
+
+  function encodeSegment(value) {
+    return encodeURIComponent(String(value || ""));
+  }
+
+  const requestFactory = Object.freeze({
+    contractVersion: models.contractVersion,
+    bootstrapURL(baseURL) {
+      return buildURL(baseURL, paths.mobile_bootstrap);
+    },
+    authMeURL(baseURL) {
+      return buildURL(baseURL, paths.auth_me);
+    },
+    publicBookingsURL(baseURL) {
+      return buildURL(baseURL, paths.public_bookings);
+    },
+    publicToursURL(baseURL) {
+      return buildURL(baseURL, paths.public_tours);
+    },
+    bookingsURL(baseURL, options = {}) {
+      return applyQuery(baseURL, paths.bookings, {
+        page: options.page,
+        page_size: options.pageSize,
+        sort: options.sort,
+        search: options.search,
+        stage: options.stage,
+        owner_id: options.ownerId
+      });
+    },
+    bookingDetailURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_detail.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    bookingStageURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_stage.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    bookingAssignmentURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_assignment.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    bookingNoteURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_note.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    bookingPricingURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_pricing.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    bookingActivitiesURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_activities.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    bookingInvoicesURL(baseURL, bookingId) {
+      return buildURL(baseURL, paths.booking_invoices.replace('{bookingId}', encodeSegment(bookingId)));
+    },
+    staffURL(baseURL, options = {}) {
+      return applyQuery(baseURL, paths.staff, { active: options.active });
+    },
+    customerDetailURL(baseURL, customerId) {
+      return buildURL(baseURL, paths.customer_detail.replace('{customerId}', encodeSegment(customerId)));
+    },
+    customersURL(baseURL, options = {}) {
+      return applyQuery(baseURL, paths.customers, { page: options.page, page_size: options.pageSize, search: options.search });
+    },
+    toursURL(baseURL, options = {}) {
+      return applyQuery(baseURL, paths.tours, { page: options.page, page_size: options.pageSize, search: options.search, destination: options.destination, style: options.style });
+    },
+    tourDetailURL(baseURL, tourId) {
+      return buildURL(baseURL, paths.tour_detail.replace('{tourId}', encodeSegment(tourId)));
+    },
+    tourImageURL(baseURL, tourId) {
+      return buildURL(baseURL, paths.tour_image.replace('{tourId}', encodeSegment(tourId)));
+    }
+  });
+
+  global.ATPGeneratedRequestFactory = requestFactory;
+})(window);
+JS
+
+api_js = <<~JS
+(function (global) {
+  const requestFactory = global.ATPGeneratedRequestFactory;
+
+  function createClient(config = {}) {
+    const baseURL = String(config.baseURL || '').replace(/\/$/, '');
+    const defaultHeaders = Object.assign({}, config.headers || {});
+    const defaultCredentials = config.credentials || 'include';
+
+    async function fetchJSON(url, options = {}) {
+      const response = await fetch(url, {
+        credentials: options.credentials || defaultCredentials,
+        headers: Object.assign({}, defaultHeaders, options.headers || {}),
+        method: options.method || 'GET',
+        body: options.body
+      });
+      const text = await response.text();
+      let payload = null;
+      if (text) {
+        try {
+          payload = JSON.parse(text);
+        } catch {
+          payload = text;
+        }
+      }
+      if (!response.ok) {
+        const error = new Error(
+          payload?.detail || payload?.error_description || payload?.error || `HTTP ${response.status}`
+        );
+        error.status = response.status;
+        error.payload = payload;
+        throw error;
+      }
+      return payload;
+    }
+
+    return Object.freeze({
+      fetchJSON,
+      authMe() {
+        return fetchJSON(requestFactory.authMeURL(baseURL));
+      },
+      listBookings(options = {}) {
+        return fetchJSON(requestFactory.bookingsURL(baseURL, options));
+      },
+      getBooking(bookingId) {
+        return fetchJSON(requestFactory.bookingDetailURL(baseURL, bookingId));
+      },
+      updateBookingStage(bookingId, payload) {
+        return fetchJSON(requestFactory.bookingStageURL(baseURL, bookingId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      },
+      updateBookingAssignment(bookingId, payload) {
+        return fetchJSON(requestFactory.bookingAssignmentURL(baseURL, bookingId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      },
+      updateBookingNote(bookingId, payload) {
+        return fetchJSON(requestFactory.bookingNoteURL(baseURL, bookingId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      },
+      updateBookingPricing(bookingId, payload) {
+        return fetchJSON(requestFactory.bookingPricingURL(baseURL, bookingId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      },
+      listBookingActivities(bookingId) {
+        return fetchJSON(requestFactory.bookingActivitiesURL(baseURL, bookingId));
+      },
+      listBookingInvoices(bookingId) {
+        return fetchJSON(requestFactory.bookingInvoicesURL(baseURL, bookingId));
+      },
+      listStaff(options = { active: true }) {
+        return fetchJSON(requestFactory.staffURL(baseURL, options));
+      },
+      createStaff(payload) {
+        return fetchJSON(requestFactory.staffURL(baseURL), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      },
+      listPublicTours() {
+        return fetchJSON(requestFactory.publicToursURL(baseURL));
+      },
+      createPublicBooking(payload) {
+        return fetchJSON(requestFactory.publicBookingsURL(baseURL), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+    });
+  }
+
+  global.ATPGeneratedAPI = Object.freeze({ createClient });
+})(window);
+JS
+
+aggregate_js = [models_js, request_factory_js, api_js].join("\n")
+
+def write_file(path, content)
+  FileUtils.mkdir_p(File.dirname(path))
+  File.write(path, content)
+end
+
+write_file(File.join(IOS_GENERATED_MODELS_DIR, 'MobileAPIModels.swift'), models_swift)
+write_file(File.join(IOS_GENERATED_API_DIR, 'MobileAPIRequestFactory.swift'), request_factory_swift)
+write_file(File.join(IOS_GENERATED_ROOT, 'MobileAPIModels.swift'), models_swift)
+write_file(File.join(IOS_GENERATED_ROOT, 'MobileAPIRequestFactory.swift'), request_factory_swift)
+
+write_file(File.join(FRONTEND_GENERATED_MODELS_DIR, 'mobile-api-models.js'), models_js)
+write_file(File.join(FRONTEND_GENERATED_API_DIR, 'mobile-api-request-factory.js'), request_factory_js)
+write_file(File.join(FRONTEND_GENERATED_API_DIR, 'mobile-api-client.js'), api_js)
+write_file(File.join(FRONTEND_GENERATED_ROOT, 'mobile-api-contract.js'), aggregate_js)
+
 puts 'Generated mobile contract artifacts.'

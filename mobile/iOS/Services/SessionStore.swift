@@ -19,6 +19,36 @@ final class SessionStore: ObservableObject {
         return roleService.isAllowed(session.user)
     }
 
+    func validSession() async -> AuthSession? {
+        guard let current = session else { return nil }
+
+        if !current.requiresRefresh {
+            return current
+        }
+
+        authError = nil
+        do {
+            let refreshed = try await authService.refresh(session: current)
+            guard roleService.isAllowed(refreshed.user) else {
+                tokenStore.clear()
+                session = nil
+                authError = "Authenticated, but not authorized for the mobile app."
+                return nil
+            }
+            try tokenStore.save(session: refreshed)
+            session = refreshed
+            return refreshed
+        } catch {
+            if !current.isExpired {
+                return current
+            }
+            tokenStore.clear()
+            session = nil
+            authError = error.localizedDescription
+            return nil
+        }
+    }
+
     func restoreSessionIfPossible() async {
         isRestoring = true
         defer { isRestoring = false }
@@ -28,15 +58,25 @@ final class SessionStore: ObservableObject {
                 session = nil
                 return
             }
-            if restored.isExpired {
-                let refreshed = try await authService.refresh(session: restored)
-                if roleService.isAllowed(refreshed.user) {
-                    try tokenStore.save(session: refreshed)
-                    session = refreshed
-                } else {
-                    tokenStore.clear()
-                    session = nil
-                    authError = "Authenticated, but not authorized for the mobile app."
+            if restored.requiresRefresh {
+                do {
+                    let refreshed = try await authService.refresh(session: restored)
+                    if roleService.isAllowed(refreshed.user) {
+                        try tokenStore.save(session: refreshed)
+                        session = refreshed
+                    } else {
+                        tokenStore.clear()
+                        session = nil
+                        authError = "Authenticated, but not authorized for the mobile app."
+                    }
+                } catch {
+                    if !restored.isExpired, roleService.isAllowed(restored.user) {
+                        session = restored
+                    } else {
+                        tokenStore.clear()
+                        session = nil
+                        authError = error.localizedDescription
+                    }
                 }
                 return
             }

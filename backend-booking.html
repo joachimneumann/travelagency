@@ -66,7 +66,12 @@
             <div class="backend-controls">
               <div class="field">
                 <label for="pricingCurrencyInput">Currency</label>
-                <input id="pricingCurrencyInput" type="text" maxlength="8" placeholder="USD" />
+                <select id="pricingCurrencyInput">
+                  <option value="USD">USD</option>
+                  <option value="EURO">EURO</option>
+                  <option value="VND">VND</option>
+                  <option value="THB">THB</option>
+                </select>
               </div>
               <div class="field">
                 <label for="pricingAgreedNetInput" id="pricingAgreedNetLabel">Agreed Net Amount (USD)</label>
@@ -113,13 +118,10 @@
               <div class="field">
                 <label for="invoiceCurrencyInput">Currency</label>
                 <select id="invoiceCurrencyInput">
-                  <option value="USD" selected>USD - US Dollar</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="GBP">GBP - British Pound</option>
-                  <option value="THB">THB - Thai Baht</option>
-                  <option value="VND">VND - Vietnamese Dong</option>
-                  <option value="LAK">LAK - Lao Kip</option>
-                  <option value="KHR">KHR - Cambodian Riel</option>
+                  <option value="USD" selected>USD</option>
+                  <option value="EURO">EURO</option>
+                  <option value="VND">VND</option>
+                  <option value="THB">THB</option>
                 </select>
               </div>
               <div class="field">
@@ -183,6 +185,7 @@
       </section>
     </main>
 
+    <script src="assets/js/generated/mobile-api-contract.js" defer></script>
     <script src="assets/js/backend-booking.js" defer></script>
   </body>
 </html>

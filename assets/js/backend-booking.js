@@ -99,6 +99,9 @@ async function init() {
     els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
   }
 
+  populateCurrencySelect(els.pricingCurrencyInput);
+  populateCurrencySelect(els.invoiceCurrencyInput);
+
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
@@ -923,52 +926,80 @@ function formatTaxRatePercent(value) {
   return (basisPoints / 100).toFixed(2).replace(/\.00$/, "");
 }
 
-function normalizeCurrencyCode(value) {
-  return String(value || "USD").trim().toUpperCase() || "USD";
+function getCurrencyDefinitions() {
+  return window.ATPContract?.currencies || {
+    USD: { symbol: "$", decimal_places: 2, iso_code: "USD" },
+    EURO: { symbol: "€", decimal_places: 2, iso_code: "EUR" },
+    VND: { symbol: "₫", decimal_places: 0, iso_code: "VND" },
+    THB: { symbol: "฿", decimal_places: 0, iso_code: "THB" }
+  };
 }
 
-function isWholeUnitCurrency(currency) {
-  return normalizeCurrencyCode(currency) === "VND";
+function normalizeCurrencyCode(value) {
+  const raw = String(value || "USD").trim().toUpperCase() || "USD";
+  const normalized = raw === "EUR" ? "EURO" : raw;
+  return getCurrencyDefinitions()[normalized] ? normalized : "USD";
+}
+
+function currencyDefinition(currency) {
+  const code = normalizeCurrencyCode(currency);
+  const definitions = getCurrencyDefinitions();
+  const definition = definitions[code] || definitions.USD || { symbol: code, decimalPlaces: 2 };
+  return {
+    code,
+    symbol: definition.symbol || code,
+    decimalPlaces: Number.isFinite(Number(definition.decimal_places ?? definition.decimalPlaces))
+      ? Number(definition.decimal_places ?? definition.decimalPlaces)
+      : 2
+  };
 }
 
 function currencySymbol(currency) {
-  const code = normalizeCurrencyCode(currency);
-  const symbols = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-    VND: "₫",
-    THB: "฿",
-    LAK: "₭",
-    KHR: "៛"
-  };
-  return symbols[code] || code;
+  return currencyDefinition(currency).symbol;
+}
+
+function currencyDecimalPlaces(currency) {
+  return currencyDefinition(currency).decimalPlaces;
+}
+
+function isWholeUnitCurrency(currency) {
+  return currencyDecimalPlaces(currency) === 0;
+}
+
+function populateCurrencySelect(selectEl) {
+  if (!(selectEl instanceof HTMLSelectElement)) return;
+  const definitions = getCurrencyDefinitions();
+  const selectedValue = normalizeCurrencyCode(selectEl.value || "USD");
+  selectEl.innerHTML = Object.keys(definitions)
+    .map((code) => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`)
+    .join("");
+  selectEl.value = selectedValue;
 }
 
 function formatMoneyDisplay(value, currency) {
   const amount = Number(value || 0);
-  const code = normalizeCurrencyCode(currency);
+  const definition = currencyDefinition(currency);
   if (!Number.isFinite(amount)) return "-";
-  if (isWholeUnitCurrency(code)) return `${currencySymbol(code)} ${Math.round(amount)}`;
-  const major = amount / 100;
-  return `${currencySymbol(code)} ${major.toFixed(2).replace(".", ",")}`;
+  if (definition.decimalPlaces === 0) return `${definition.symbol} ${Math.round(amount)}`;
+  const major = amount / 10 ** definition.decimalPlaces;
+  return `${definition.symbol} ${major.toFixed(definition.decimalPlaces).replace(".", ",")}`;
 }
 
 function formatMoneyInputValue(value, currency) {
   const amount = Number(value || 0);
-  const code = normalizeCurrencyCode(currency);
+  const definition = currencyDefinition(currency);
   if (!Number.isFinite(amount)) return "0";
-  if (isWholeUnitCurrency(code)) return String(Math.round(amount));
-  return (amount / 100).toFixed(2);
+  if (definition.decimalPlaces === 0) return String(Math.round(amount));
+  return (amount / 10 ** definition.decimalPlaces).toFixed(definition.decimalPlaces);
 }
 
 function parseMoneyInputValue(value, currency) {
-  const code = normalizeCurrencyCode(currency);
+  const definition = currencyDefinition(currency);
   const normalized = String(value || "0").trim().replace(",", ".");
   const amount = Number(normalized || "0");
   if (!Number.isFinite(amount)) return NaN;
-  if (isWholeUnitCurrency(code)) return Math.round(amount);
-  return Math.round(amount * 100);
+  if (definition.decimalPlaces === 0) return Math.round(amount);
+  return Math.round(amount * 10 ** definition.decimalPlaces);
 }
 
 function renderInvoiceMoneyLabels() {
@@ -1015,7 +1046,7 @@ function plusOneMonthDateInput(date) {
 
 function setSelectValue(selectEl, rawValue) {
   if (!selectEl) return;
-  const value = String(rawValue || "").trim().toUpperCase() || "USD";
+  const value = normalizeCurrencyCode(rawValue || "USD");
   const hasOption = Array.from(selectEl.options).some((option) => option.value === value);
   if (!hasOption) {
     const option = document.createElement("option");

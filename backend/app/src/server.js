@@ -867,9 +867,21 @@ function computeSlaDueAt(stage, from = new Date()) {
   return new Date(from.getTime() + hours * 60 * 60 * 1000).toISOString();
 }
 
+const CURRENCY_DEFINITIONS = Object.freeze({
+  USD: Object.freeze({ code: "USD", symbol: "$", decimal_places: 2, iso_code: "USD" }),
+  EURO: Object.freeze({ code: "EURO", symbol: "€", decimal_places: 2, iso_code: "EUR" }),
+  VND: Object.freeze({ code: "VND", symbol: "₫", decimal_places: 0, iso_code: "VND" }),
+  THB: Object.freeze({ code: "THB", symbol: "฿", decimal_places: 0, iso_code: "THB" })
+});
+
 function safeCurrency(value) {
   const normalized = normalizeText(value).toUpperCase();
-  return /^[A-Z]{3}$/.test(normalized) ? normalized : "USD";
+  if (normalized === "EUR") return "EURO";
+  return CURRENCY_DEFINITIONS[normalized] ? normalized : "USD";
+}
+
+function getCurrencyDefinition(currency) {
+  return CURRENCY_DEFINITIONS[safeCurrency(currency)] || CURRENCY_DEFINITIONS.USD;
 }
 
 function safeAmountCents(value) {
@@ -880,13 +892,12 @@ function safeAmountCents(value) {
 }
 
 function formatMoney(amountCents, currency) {
-  const amount = Number(amountCents || 0) / 100;
-  const code = safeCurrency(currency);
-  try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: code }).format(amount);
-  } catch {
-    return `${code} ${amount.toFixed(2)}`;
+  const definition = getCurrencyDefinition(currency);
+  const amount = Number(amountCents || 0) / 10 ** definition.decimal_places;
+  if (definition.decimal_places === 0) {
+    return `${definition.symbol} ${Math.round(amount)}`;
   }
+  return `${definition.symbol} ${amount.toFixed(definition.decimal_places).replace(".", ",")}`;
 }
 
 function normalizeInvoiceItems(value) {
@@ -1624,7 +1635,7 @@ function normalizeBookingPricing(rawPricing) {
   const payments = Array.isArray(pricing.payments) ? pricing.payments : [];
 
   return {
-    currency: normalizeText(pricing.currency) || "USD",
+    currency: safeCurrency(pricing.currency || "USD"),
     agreed_net_amount_cents: normalizeAmountCents(pricing.agreed_net_amount_cents, 0),
     adjustments: adjustments.map((adjustment) => ({
       id: normalizeText(adjustment?.id) || `adj_${randomUUID()}`,
@@ -1781,6 +1792,7 @@ function computeBookingHash(booking) {
     travelers: booking.travelers ?? null,
     duration: booking.duration || null,
     budget: booking.budget || null,
+    preferred_currency: booking.preferred_currency || null,
     notes: booking.notes || null,
     pricing: normalizeBookingPricing(booking.pricing),
     source: booking.source || null,
@@ -2000,6 +2012,7 @@ async function handleCreateBooking(req, res) {
     travelers: safeInt(payload.travelers),
     duration: normalizeText(payload.duration),
     budget: normalizeText(payload.budget),
+    preferred_currency: safeCurrency(payload.preferredCurrency || payload.preferred_currency || "USD"),
     notes: normalizeText(payload.notes),
     pricing: defaultBookingPricing(),
     source: {

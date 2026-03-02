@@ -28,6 +28,13 @@ const TOURS_STATIC_FALLBACK_ENDPOINT = "data/tours_fallback_data.jspn";
 const BOOKING_API_ENDPOINT =
   (window.ASIATRAVELPLAN_API_BASE ? `${window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "")}/public/v1/bookings` : "/public/v1/bookings");
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
+const DEFAULT_BOOKING_CURRENCY = "USD";
+const BOOKING_BUDGET_OPTIONS = {
+  USD: ["not decided yet", "$500-$900 / week", "$900-$1,400 / week", "$1,400-$2,200 / week", "$2,200+ / week"],
+  EURO: ["not decided yet", "€450-€800 / week", "€800-€1,250 / week", "€1,250-€2,000 / week", "€2,000+ / week"],
+  VND: ["not decided yet", "12.000.000₫-22.000.000₫ / week", "22.000.000₫-35.000.000₫ / week", "35.000.000₫-55.000.000₫ / week", "55.000.000₫+ / week"],
+  THB: ["not decided yet", "17.000฿-30.000฿ / week", "30.000฿-47.000฿ / week", "47.000฿-74.000฿ / week", "74.000฿+ / week"]
+};
 
 const els = {
   navToggle: document.getElementById("navToggle"),
@@ -60,6 +67,9 @@ const els = {
   closeBookingModal: document.getElementById("closeBookingModal"),
   openModalButtons: document.querySelectorAll("[data-open-modal]"),
   bookingForm: document.getElementById("bookingForm"),
+  bookingPreferredCurrency: document.getElementById("bookingPreferredCurrency"),
+  bookingBudget: document.getElementById("bookingBudget"),
+  bookingBudgetLabel: document.getElementById("bookingBudgetLabel"),
   stepBack: document.getElementById("stepBack"),
   stepNext: document.getElementById("stepNext"),
   progressSteps: document.querySelectorAll(".progress-step"),
@@ -78,6 +88,7 @@ async function init() {
   loadWebsiteAuthStatus();
   setupModal();
   setupFormNavigation();
+  setupBookingBudgetOptions();
 
   const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
   const urlFilters = getFiltersFromURL();
@@ -172,6 +183,43 @@ function setupBackendLogin() {
     }
     window.location.href = loginUrl;
   });
+}
+
+function getCurrencyDefinitions() {
+  return window.ATPContract?.currencies || {};
+}
+
+function normalizeCurrencyCode(value) {
+  const raw = String(value || DEFAULT_BOOKING_CURRENCY).trim().toUpperCase();
+  if (raw === "EUR") return "EURO";
+  const definitions = getCurrencyDefinitions();
+  if (definitions[raw]) return raw;
+  return DEFAULT_BOOKING_CURRENCY;
+}
+
+function setupBookingBudgetOptions() {
+  if (!els.bookingPreferredCurrency || !els.bookingBudget) return;
+  els.bookingPreferredCurrency.value = normalizeCurrencyCode(els.bookingPreferredCurrency.value || DEFAULT_BOOKING_CURRENCY);
+  renderBudgetOptions(els.bookingPreferredCurrency.value);
+  els.bookingPreferredCurrency.addEventListener("change", () => {
+    renderBudgetOptions(els.bookingPreferredCurrency.value);
+  });
+}
+
+function renderBudgetOptions(currencyCode) {
+  if (!els.bookingBudget || !els.bookingBudgetLabel) return;
+  const currency = normalizeCurrencyCode(currencyCode);
+  const options = BOOKING_BUDGET_OPTIONS[currency] || BOOKING_BUDGET_OPTIONS[DEFAULT_BOOKING_CURRENCY];
+  const previousValue = els.bookingBudget.value;
+  els.bookingBudget.innerHTML = "";
+  options.forEach((optionValue) => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue === "not decided yet" ? "Not decided yet" : optionValue;
+    els.bookingBudget.appendChild(option);
+  });
+  els.bookingBudget.value = options.includes(previousValue) ? previousValue : "not decided yet";
+  els.bookingBudgetLabel.textContent = `Budget range (${currency})`;
 }
 
 async function loadWebsiteAuthStatus() {
@@ -812,6 +860,7 @@ async function submitBookingForm() {
     destination: entries.destination || "",
     style: entries.style || "",
     travelMonth: entries.travelMonth || "",
+    preferredCurrency: normalizeCurrencyCode(entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY),
     duration: entries.duration || "",
     travelers: entries.travelers || "",
     budget: entries.budget || "",

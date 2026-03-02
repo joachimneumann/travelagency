@@ -424,9 +424,19 @@
                   <span class="error">Please enter travelers.</span>
                 </div>
                 <div class="field">
+                  <label for="bookingPreferredCurrency">Preferred currency</label>
+                  <select id="bookingPreferredCurrency" name="preferredCurrency" required>
+                    <option value="USD">USD</option>
+                    <option value="EURO">EURO</option>
+                    <option value="VND">VND</option>
+                    <option value="THB">THB</option>
+                  </select>
+                  <span class="error">Please choose a currency.</span>
+                </div>
+                <div class="field">
                   <label for="bookingDuration">Travel duration</label>
                   <select id="bookingDuration" name="duration" required>
-                    <option value="">Select duration</option>
+                    <option value="not decided yet" selected>Not decided yet</option>
                     <option>3-5 days</option>
                     <option>6-8 days</option>
                     <option>9-12 days</option>
@@ -434,17 +444,6 @@
                     <option>17+ days</option>
                   </select>
                   <span class="error">Please choose a duration.</span>
-                </div>
-                <div class="field full">
-                  <label for="bookingBudget">Budget range (USD per person)</label>
-                  <select id="bookingBudget" name="budget" required>
-                    <option value="">Select budget range</option>
-                    <option>$500-$900 / week</option>
-                    <option>$900-$1,400 / week</option>
-                    <option>$1,400-$2,200 / week</option>
-                    <option>$2,200+ / week</option>
-                  </select>
-                  <span class="error">Please choose a budget range.</span>
                 </div>
               </div>
             </section>
@@ -466,6 +465,13 @@
                   <label for="bookingPhone">WhatsApp or phone</label>
                   <input id="bookingPhone" name="phone" type="tel" required />
                   <span class="error">Please add a contact number.</span>
+                </div>
+                <div class="field">
+                  <label for="bookingBudget" id="bookingBudgetLabel">Budget range (USD)</label>
+                  <select id="bookingBudget" name="budget" required>
+                    <option value="not decided yet" selected>Not decided yet</option>
+                  </select>
+                  <span class="error">Please choose a budget range.</span>
                 </div>
                 <div class="field">
                   <label for="bookingLanguage">Preferred language</label>
@@ -515,6 +521,7 @@
         </div>
       </div>
     </div>
+    <script src="assets/js/generated/mobile-api-contract.js" defer></script>
     <script src="assets/js/main.js" defer></script>
 
     <script type="application/ld+json">
