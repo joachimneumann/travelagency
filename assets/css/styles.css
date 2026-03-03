@@ -1018,6 +1018,7 @@ textarea:focus-visible {
 .backend-table .offer-col-price-total {
   width: 230px;
   text-align: right;
+  padding-right: 0.55rem;
 }
 
 .backend-table .offer-col-price-single input,
@@ -1044,6 +1045,7 @@ textarea:focus-visible {
 .offer-total-sum {
   display: flex;
   justify-content: flex-end;
+  width: 100%;
 }
 
 .offer-remove-btn {
