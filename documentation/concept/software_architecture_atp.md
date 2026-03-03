@@ -184,7 +184,7 @@ ATP keeps the model split explicit:
 ### 5.1 Backend
 
 - `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_Currency.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_User.js`
+- `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_ATPStaff.js`
 - `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_Booking.js`
 - `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_Aux.js`
 - `/Users/internal_admin/projects/travelagency/backend/app/Generated/API/generated_APIModels.js`
@@ -201,7 +201,7 @@ ATP keeps the model split explicit:
 ### 5.2 Frontend
 
 - `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_Currency.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_User.js`
+- `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_ATPStaff.js`
 - `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_Booking.js`
 - `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_Aux.js`
 - `/Users/internal_admin/projects/travelagency/frontend/Generated/API/generated_APIModels.js`
@@ -211,7 +211,7 @@ ATP keeps the model split explicit:
 ### 5.3 iOS
 
 - `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_Currency.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_User.swift`
+- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_ATPStaff.swift`
 - `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_Booking.swift`
 - `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_Aux.swift`
 - `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API/generated_APIModels.swift`
@@ -230,14 +230,14 @@ Contains:
 - canonical currency metadata
 - currency-related enums and helpers
 
-### 6.2 `generated_User`
+### 6.2 `generated_ATPStaff`
 
 Contains:
 
-- user transport structures
-- user roles
-- authenticated user payloads
-- user-related enums and helpers
+- atp_staff transport structures
+- atp_staff roles
+- authenticated atp_staff payloads
+- atp_staff-related enums and helpers
 
 ### 6.3 `generated_Booking`
 
@@ -255,7 +255,7 @@ Transport wrappers, list payloads, and endpoint-specific request or response sha
 
 Contains:
 
-- supporting enums and model types not owned by Currency, User, or Booking
+- supporting enums and model types not owned by Currency, ATPStaff, or Booking
 - non-transport shared value objects when they are not first-class entities
 
 Transport-only payloads do not belong here.
@@ -295,7 +295,7 @@ Examples:
 - Booking
 - Customer
 - Tour
-- User
+- ATPStaff
 - Currency
 
 Transport-only shapes belong in API-oriented generated files and originate in `model/api/`.

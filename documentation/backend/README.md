@@ -123,8 +123,8 @@ Admin API:
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
-- `GET /api/v1/staff`
-- `POST /api/v1/staff`
+- `GET /api/v1/atp_staff`
+- `POST /api/v1/atp_staff`
 - `GET /api/v1/tours`
 - `GET /api/v1/tours/:tourId`
 - `POST /api/v1/tours`

@@ -20,7 +20,7 @@ const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
 const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
-const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
+const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
 const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
 const PORT = Number(process.env.PORT || 8787);
@@ -70,7 +70,7 @@ const APP_ROLES = {
   ADMIN: "atp_admin",
   MANAGER: "atp_manager",
   ACCOUNTANT: "atp_accountant",
-  STAFF: "atp_staff"
+  ATP_STAFF: "atp_staff"
 };
 
 const FX_RATE_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -168,8 +168,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
     { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
     { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
-    { method: "GET", pattern: /^\/api\/v1\/staff$/, handler: handleListStaff },
-    { method: "POST", pattern: /^\/api\/v1\/staff$/, handler: handleCreateStaff },
+    { method: "GET", pattern: /^\/api\/v1\/atp_staff$/, handler: handleListAtpStaff },
+    { method: "POST", pattern: /^\/api\/v1\/atp_staff$/, handler: handleCreateAtpStaff },
     { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
     { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
     { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
@@ -685,7 +685,7 @@ async function readStore() {
   parsed.activities ||= [];
   parsed.invoices ||= [];
   parsed.bookings = parsed.bookings.map((booking) => {
-    syncBookingStaffFields(booking);
+    syncBookingAtpStaffFields(booking);
     booking.pricing = normalizeBookingPricing(booking.pricing);
     booking.offer = normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD");
     return booking;
@@ -739,15 +739,15 @@ async function persistTour(tour) {
   await writeQueue;
 }
 
-async function loadStaff() {
-  const raw = await readFile(STAFF_PATH, "utf8");
+async function loadAtpStaff() {
+  const raw = await readFile(ATP_STAFF_PATH, "utf8");
   const parsed = JSON.parse(raw);
   return Array.isArray(parsed) ? parsed : [];
 }
 
-async function persistStaff(staff) {
+async function persistAtpStaff(atp_staff) {
   writeQueue = writeQueue.then(async () => {
-    await writeFile(STAFF_PATH, `${JSON.stringify(staff, null, 2)}\n`, "utf8");
+    await writeFile(ATP_STAFF_PATH, `${JSON.stringify(atp_staff, null, 2)}\n`, "utf8");
   });
   await writeQueue;
 }
@@ -1485,36 +1485,36 @@ function levenshtein(a, b) {
 }
 
 function chooseOwner(staffList, bookings, destination, language) {
-  const activeStaff = staffList.filter((s) => s.active);
+  const activeAtpStaff = staffList.filter((s) => s.active);
   const normalizedDestination = normalizeText(destination);
   const normalizedLanguage = normalizeText(language);
 
-  let candidates = activeStaff.filter((staff) => {
-    const destinationMatch = staff.destinations?.includes(normalizedDestination);
-    const languageMatch = !normalizedLanguage || staff.languages?.includes(normalizedLanguage);
+  let candidates = activeAtpStaff.filter((atp_staff) => {
+    const destinationMatch = atp_staff.destinations?.includes(normalizedDestination);
+    const languageMatch = !normalizedLanguage || atp_staff.languages?.includes(normalizedLanguage);
     return destinationMatch && languageMatch;
   });
 
   if (!candidates.length) {
-    candidates = activeStaff.filter((staff) => {
-      const destinationMatch = staff.destinations?.includes(normalizedDestination);
+    candidates = activeAtpStaff.filter((atp_staff) => {
+      const destinationMatch = atp_staff.destinations?.includes(normalizedDestination);
       return destinationMatch;
     });
   }
 
-  if (!candidates.length) candidates = activeStaff;
+  if (!candidates.length) candidates = activeAtpStaff;
   if (!candidates.length) return null;
 
   const openStages = new Set([STAGES.NEW, STAGES.QUALIFIED, STAGES.PROPOSAL_SENT, STAGES.NEGOTIATION, STAGES.WON]);
 
   const byLoad = candidates
-    .map((staff) => {
-      const load = bookings.filter((booking) => booking.owner_id === staff.id && openStages.has(booking.stage)).length;
-      return { staff, load };
+    .map((atp_staff) => {
+      const load = bookings.filter((booking) => booking.owner_id === atp_staff.id && openStages.has(booking.stage)).length;
+      return { atp_staff, load };
     })
-    .sort((a, b) => a.load - b.load || a.staff.name.localeCompare(b.staff.name));
+    .sort((a, b) => a.load - b.load || a.atp_staff.name.localeCompare(b.atp_staff.name));
 
-  return byLoad[0].staff;
+  return byLoad[0].atp_staff;
 }
 
 function findMatchingCustomer(customers, candidate) {
@@ -1618,8 +1618,8 @@ function canChangeBookingStage(principal, booking, staffMember) {
   if (hasRole(principal, APP_ROLES.ADMIN) || hasRole(principal, APP_ROLES.MANAGER) || hasRole(principal, APP_ROLES.ACCOUNTANT)) {
     return true;
   }
-  if (hasRole(principal, APP_ROLES.STAFF) && staffMember) {
-    return getBookingStaffId(booking) === staffMember.id;
+  if (hasRole(principal, APP_ROLES.ATP_STAFF) && staffMember) {
+    return getBookingAtpStaffId(booking) === staffMember.id;
   }
   return false;
 }
@@ -1632,11 +1632,11 @@ function canReadCustomers(principal) {
   return canReadAllBookings(principal);
 }
 
-function canViewStaffDirectory(principal) {
+function canViewAtpStaffDirectory(principal) {
   return canChangeBookingAssignment(principal);
 }
 
-function canManageStaff(principal) {
+function canManageAtpStaff(principal) {
   return hasRole(principal, APP_ROLES.ADMIN) || hasRole(principal, APP_ROLES.MANAGER);
 }
 
@@ -1662,8 +1662,8 @@ function staffEmails(member) {
   return Array.from(new Set(explicit.map(normalizeCompareText).filter(Boolean)));
 }
 
-function resolvePrincipalStaffMember(principal, staffList) {
-  if (!hasRole(principal, APP_ROLES.STAFF)) return null;
+function resolvePrincipalAtpStaffMember(principal, staffList) {
+  if (!hasRole(principal, APP_ROLES.ATP_STAFF)) return null;
   const username = normalizeCompareText(principal?.preferred_username);
   const email = normalizeCompareText(principal?.email);
   const sub = normalizeCompareText(principal?.sub);
@@ -1681,15 +1681,15 @@ function resolvePrincipalStaffMember(principal, staffList) {
   );
 }
 
-function getBookingStaffId(booking) {
-  return normalizeText(booking?.staff || booking?.owner_id);
+function getBookingAtpStaffId(booking) {
+  return normalizeText(booking?.atp_staff || booking?.owner_id);
 }
 
-function syncBookingStaffFields(booking) {
-  const staffId = normalizeText(booking.staff || booking.owner_id);
-  const staffName = normalizeText(booking.staff_name || booking.owner_name);
-  booking.staff = staffId || null;
-  booking.staff_name = staffName || null;
+function syncBookingAtpStaffFields(booking) {
+  const staffId = normalizeText(booking.atp_staff || booking.owner_id);
+  const staffName = normalizeText(booking.atp_staff_name || booking.owner_name);
+  booking.atp_staff = staffId || null;
+  booking.atp_staff_name = staffName || null;
   booking.owner_id = staffId || null;
   booking.owner_name = staffName || null;
   return booking;
@@ -2036,16 +2036,16 @@ function validateBookingPricingInput(rawPricing) {
 
 function canAccessBooking(principal, booking, staffMember) {
   if (canReadAllBookings(principal)) return true;
-  if (hasRole(principal, APP_ROLES.STAFF) && staffMember) {
-    return getBookingStaffId(booking) === staffMember.id;
+  if (hasRole(principal, APP_ROLES.ATP_STAFF) && staffMember) {
+    return getBookingAtpStaffId(booking) === staffMember.id;
   }
   return false;
 }
 
 function canEditBooking(principal, booking, staffMember) {
   if (canWriteAllBookings(principal)) return true;
-  if (hasRole(principal, APP_ROLES.STAFF) && staffMember) {
-    return getBookingStaffId(booking) === staffMember.id;
+  if (hasRole(principal, APP_ROLES.ATP_STAFF) && staffMember) {
+    return getBookingAtpStaffId(booking) === staffMember.id;
   }
   return false;
 }
@@ -2059,8 +2059,8 @@ function computeBookingHash(booking) {
     id: booking.id || null,
     customer_id: booking.customer_id || null,
     stage: booking.stage || null,
-    staff: booking.staff || booking.owner_id || null,
-    staff_name: booking.staff_name || booking.owner_name || null,
+    atp_staff: booking.atp_staff || booking.owner_id || null,
+    atp_staff_name: booking.atp_staff_name || booking.owner_name || null,
     sla_due_at: booking.sla_due_at || null,
     destination: booking.destination || null,
     style: booking.style || null,
@@ -2281,8 +2281,8 @@ async function handleCreateBooking(req, res) {
     id: `booking_${randomUUID()}`,
     customer_id: customer.id,
     stage: STAGES.NEW,
-    staff: null,
-    staff_name: null,
+    atp_staff: null,
+    atp_staff_name: null,
     owner_id: null,
     owner_name: null,
     sla_due_at: computeSlaDueAt(STAGES.NEW),
@@ -2321,7 +2321,7 @@ async function handleCreateBooking(req, res) {
     customer_id: customer.id,
     status: "accepted",
     deduplicated: Boolean(customerMatch),
-    staff: booking.staff_name,
+    atp_staff: booking.atp_staff_name,
     sla_due_at: booking.sla_due_at,
     next_step_message: "Thanks, we will contact you with route options within 48-72h."
   });
@@ -2330,8 +2330,8 @@ async function handleCreateBooking(req, res) {
 async function handleListBookings(req, res) {
   const store = await readStore();
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canReadAllBookings(principal) && !staffMember) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2361,8 +2361,8 @@ async function handleGetBooking(req, res, [bookingId]) {
     return;
   }
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canAccessBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2394,8 +2394,8 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
     sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canChangeBookingStage(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2412,7 +2412,7 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
   booking.sla_due_at = computeSlaDueAt(nextStage);
   booking.updated_at = nowIso();
 
-  addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "staff"), `Stage updated to ${nextStage}`);
+  addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Stage updated to ${nextStage}`);
   await persistStore(store);
 
   sendJson(res, 200, { booking: buildBookingReadModel(booking) });
@@ -2427,7 +2427,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     return;
   }
 
-  const ownerIdRaw = normalizeText(payload.owner_id || payload.staff);
+  const ownerIdRaw = normalizeText(payload.owner_id || payload.atp_staff);
   const principal = getPrincipal(req);
   const store = await readStore();
   const booking = store.bookings.find((item) => item.id === bookingId);
@@ -2442,28 +2442,28 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
   if (!assertMatchingBookingHash(payload, booking, res)) return;
 
   if (!ownerIdRaw) {
-    booking.staff = null;
-    booking.staff_name = null;
-    syncBookingStaffFields(booking);
+    booking.atp_staff = null;
+    booking.atp_staff_name = null;
+    syncBookingAtpStaffFields(booking);
     booking.updated_at = nowIso();
-    addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "staff"), "Staff unassigned");
+    addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), "AtpStaff unassigned");
     await persistStore(store);
     sendJson(res, 200, { booking: buildBookingReadModel(booking) });
     return;
   }
 
-  const staff = await loadStaff();
-  const owner = staff.find((member) => member.id === ownerIdRaw && member.active);
+  const atp_staff = await loadAtpStaff();
+  const owner = atp_staff.find((member) => member.id === ownerIdRaw && member.active);
   if (!owner) {
-    sendJson(res, 422, { error: "Staff member not found or inactive" });
+    sendJson(res, 422, { error: "AtpStaff member not found or inactive" });
     return;
   }
 
-  booking.staff = owner.id;
-  booking.staff_name = owner.name;
-  syncBookingStaffFields(booking);
+  booking.atp_staff = owner.id;
+  booking.atp_staff_name = owner.name;
+  syncBookingAtpStaffFields(booking);
   booking.updated_at = nowIso();
-  addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "staff"), `Staff set to ${owner.name}`);
+  addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${owner.name}`);
   await persistStore(store);
 
   sendJson(res, 200, { booking: buildBookingReadModel(booking) });
@@ -2485,8 +2485,8 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
     sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canEditBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2507,7 +2507,7 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
     store,
     booking.id,
     "NOTE_UPDATED",
-    actorLabel(principal, normalizeText(payload.actor) || "staff"),
+    actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
     nextNotes ? "Booking note updated" : "Booking note cleared"
   );
   await persistStore(store);
@@ -2531,8 +2531,8 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
     sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canEditBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2559,7 +2559,7 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
     store,
     booking.id,
     "PRICING_UPDATED",
-    actorLabel(principal, normalizeText(payload.actor) || "staff"),
+    actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
     "Booking commercials updated"
   );
   await persistStore(store);
@@ -2583,8 +2583,8 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
     sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canEditBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2613,7 +2613,7 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
     store,
     booking.id,
     "OFFER_UPDATED",
-    actorLabel(principal, normalizeText(payload.actor) || "staff"),
+    actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
     "Booking offer updated"
   );
   await persistStore(store);
@@ -2682,8 +2682,8 @@ async function handleListActivities(req, res, [bookingId]) {
     return;
   }
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canAccessBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2720,14 +2720,14 @@ async function handleCreateActivity(req, res, [bookingId]) {
     sendJson(res, 404, { error: "Booking not found" });
     return;
   }
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canEditBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
 
-  const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "staff"), detail);
+  const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), detail);
   booking.updated_at = nowIso();
   await persistStore(store);
 
@@ -2751,8 +2751,8 @@ async function handleListBookingInvoices(req, res, [bookingId]) {
     return;
   }
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canAccessBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2781,8 +2781,8 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
     return;
   }
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canEditBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2845,8 +2845,8 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     return;
   }
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canEditBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2929,8 +2929,8 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
   }
   const booking = store.bookings.find((item) => item.id === invoice.booking_id) || null;
   const principal = getPrincipal(req);
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!booking || !canAccessBooking(principal, booking, staffMember)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
@@ -2993,16 +2993,16 @@ async function handleGetCustomer(req, res, [customerId]) {
   sendJson(res, 200, { customer, bookings });
 }
 
-async function handleListStaff(req, res) {
+async function handleListAtpStaff(req, res) {
   const principal = getPrincipal(req);
-  if (!canViewStaffDirectory(principal)) {
+  if (!canViewAtpStaffDirectory(principal)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
   const requestUrl = new URL(req.url, "http://localhost");
   const onlyActive = normalizeText(requestUrl.searchParams.get("active")) !== "false";
-  const staff = await loadStaff();
-  const items = staff
+  const atp_staff = await loadAtpStaff();
+  const items = atp_staff
     .filter((member) => (onlyActive ? member.active : true))
     .map((member) => ({
       id: member.id,
@@ -3017,9 +3017,9 @@ async function handleListStaff(req, res) {
   sendJson(res, 200, { items, total: items.length });
 }
 
-async function handleCreateStaff(req, res) {
+async function handleCreateAtpStaff(req, res) {
   const principal = getPrincipal(req);
-  if (!canManageStaff(principal)) {
+  if (!canManageAtpStaff(principal)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
@@ -3053,9 +3053,9 @@ async function handleCreateStaff(req, res) {
     return;
   }
 
-  const staff = await loadStaff();
+  const atp_staff = await loadAtpStaff();
   const usernameSet = new Set(usernames);
-  const duplicate = staff.find((member) => {
+  const duplicate = atp_staff.find((member) => {
     const existing = new Set(staffUsernames(member));
     return Array.from(usernameSet).some((username) => existing.has(username));
   });
@@ -3073,10 +3073,10 @@ async function handleCreateStaff(req, res) {
     languages
   };
 
-  staff.push(member);
-  await persistStaff(staff);
+  atp_staff.push(member);
+  await persistAtpStaff(atp_staff);
   sendJson(res, 201, {
-    staff: {
+    atp_staff: {
       id: member.id,
       name: member.name,
       active: member.active,
@@ -3416,7 +3416,7 @@ async function handleAdminHome(req, res) {
     return;
   }
   const links = [];
-  if (canReadAllBookings(principal) || hasRole(principal, APP_ROLES.STAFF)) {
+  if (canReadAllBookings(principal) || hasRole(principal, APP_ROLES.ATP_STAFF)) {
     links.push(`<li><a href="/admin/bookings">Booking pipeline view</a></li>`);
   }
   if (canReadCustomers(principal)) {
@@ -3579,8 +3579,8 @@ async function handleAdminCustomersPage(req, res) {
 async function handleAdminBookingsPage(req, res) {
   const principal = getPrincipal(req);
   const store = await readStore();
-  const staff = await loadStaff();
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canReadAllBookings(principal) && !staffMember) {
     sendHtml(res, 403, "<h1>Forbidden</h1>");
     return;
@@ -3607,7 +3607,7 @@ async function handleAdminBookingsPage(req, res) {
         <td>${escapeHtml(booking.stage)}</td>
         <td>${escapeHtml(booking.destination)}</td>
         <td>${escapeHtml(booking.style)}</td>
-        <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
+        <td>${escapeHtml(booking.atp_staff_name || booking.owner_name || "Unassigned")}</td>
         <td>${escapeHtml(booking.sla_due_at || "-")}</td>
       </tr>`;
     })
@@ -3696,7 +3696,7 @@ async function handleAdminBookingsPage(req, res) {
         <th>Stage</th>
         <th>Destination</th>
         <th>Style</th>
-        <th>Staff</th>
+        <th>AtpStaff</th>
         <th>SLA Due</th>
       </tr>
     </thead>
@@ -3747,7 +3747,7 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
         <td>${escapeHtml(booking.stage)}</td>
         <td>${escapeHtml(booking.destination)}</td>
         <td>${escapeHtml(booking.style)}</td>
-        <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
+        <td>${escapeHtml(booking.atp_staff_name || booking.owner_name || "Unassigned")}</td>
         <td>${escapeHtml(booking.created_at)}</td>
       </tr>`;
     })
@@ -3783,7 +3783,7 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
         <th>Stage</th>
         <th>Destination</th>
         <th>Style</th>
-        <th>Staff</th>
+        <th>AtpStaff</th>
         <th>Created</th>
       </tr>
     </thead>
@@ -3799,7 +3799,7 @@ async function handleAdminCustomerDetailPage(req, res, [customerId]) {
 async function handleAdminBookingDetailPage(req, res, [bookingId]) {
   const principal = getPrincipal(req);
   const store = await readStore();
-  const staff = await loadStaff();
+  const atp_staff = await loadAtpStaff();
   const requestUrl = new URL(req.url, "http://localhost");
   const backQuery = requestUrl.searchParams.toString();
   const booking = store.bookings.find((item) => item.id === bookingId);
@@ -3812,7 +3812,7 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
     );
     return;
   }
-  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
   if (!canAccessBooking(principal, booking, staffMember)) {
     sendHtml(res, 403, "<h1>Forbidden</h1>");
     return;
@@ -3830,7 +3830,7 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
   const stageOptions = STAGE_ORDER.map((stage) => `<option value="${stage}">${stage}</option>`).join("\n");
   const ownerOptions = [`<option value="">Unassigned</option>`]
     .concat(
-      staff
+      atp_staff
         .filter((member) => member.active)
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((member) => `<option value="${escapeHtml(member.id)}">${escapeHtml(member.name)}</option>`)
@@ -3855,7 +3855,7 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
 <body>
   <h1>Booking ${escapeHtml(booking.id)}</h1>
   <p>Stage: <strong>${escapeHtml(booking.stage)}</strong></p>
-  <p>Staff: <strong>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</strong></p>
+  <p>AtpStaff: <strong>${escapeHtml(booking.atp_staff_name || booking.owner_name || "Unassigned")}</strong></p>
 
   <div class="grid">
     <section>
@@ -3875,9 +3875,9 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
 
   <section>
     <h2>Quick updates</h2>
-    ${canChangeBookingAssignment(principal) ? `<label>Set Staff</label>
+    ${canChangeBookingAssignment(principal) ? `<label>Set AtpStaff</label>
     <select id="ownerSelect">${ownerOptions}</select>
-    <button id="ownerBtn" type="button">Update Staff</button>` : ""}
+    <button id="ownerBtn" type="button">Update AtpStaff</button>` : ""}
 
     ${canChangeBookingStage(principal, booking, staffMember) ? `<label>Change Stage</label>
     <select id="stageSelect">${stageOptions}</select>
@@ -3893,7 +3893,7 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
   <script>
     const bookingId = ${JSON.stringify(booking.id)};
     const currentStage = ${JSON.stringify(booking.stage)};
-    const currentOwnerId = ${JSON.stringify(booking.staff || booking.owner_id || "")};
+    const currentOwnerId = ${JSON.stringify(booking.atp_staff || booking.owner_id || "")};
     const stageSelect = document.getElementById("stageSelect");
     const ownerSelect = document.getElementById("ownerSelect");
     if (stageSelect) stageSelect.value = currentStage;
@@ -3927,7 +3927,7 @@ async function handleAdminBookingDetailPage(req, res, [bookingId]) {
       });
       const payload = await response.json();
       if (!response.ok) {
-        alert(payload.error || 'Failed to update staff');
+        alert(payload.error || 'Failed to update atp_staff');
         return;
       }
       window.location.reload();

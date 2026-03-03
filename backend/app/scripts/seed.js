@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
-const STAFF_PATH = path.join(APP_ROOT, "config", "staff.json");
+const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 
 const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "WON", "LOST", "POST_TRIP"];
 
@@ -82,8 +82,8 @@ async function readJson(p) {
 async function main() {
   const count = parseCountArg(process.argv);
   const store = await readJson(DATA_PATH);
-  const staff = await readJson(STAFF_PATH);
-  const activeStaff = staff.filter((s) => s.active);
+  const atp_staff = await readJson(ATP_STAFF_PATH);
+  const activeAtpStaff = atp_staff.filter((s) => s.active);
 
   store.customers ||= [];
   store.bookings ||= [];
@@ -101,7 +101,7 @@ async function main() {
     const stage = pick(STAGES);
     const createdAt = nowMinusHours(randomInt(2, 24 * 40));
     const updatedAt = new Date(new Date(createdAt).getTime() + randomInt(1, 120) * 60 * 1000).toISOString();
-    const owner = activeStaff.length ? activeStaff[i % activeStaff.length] : null;
+    const owner = activeAtpStaff.length ? activeAtpStaff[i % activeAtpStaff.length] : null;
 
     const customer = {
       id: `cust_${randomUUID()}`,

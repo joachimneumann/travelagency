@@ -85,7 +85,7 @@ export const BOOKING_SCHEMA = {
       "required": true
     },
     {
-      "name": "staff",
+      "name": "atp_staff",
       "kind": "scalar",
       "typeName": "Identifier",
       "required": false

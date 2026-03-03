@@ -5,7 +5,7 @@ import (
 	entities "travelagency.local/model/entities"
 )
 
-#StaffDirectoryEntry: {
+#AtpStaffDirectoryEntry: {
 	id:      common.#Identifier
 	name:    string
 	active?: bool
@@ -14,8 +14,8 @@ import (
 	languages?: [...string]
 }
 
-#StaffListResponse: {
-	items: [...#StaffDirectoryEntry]
+#AtpStaffListResponse: {
+	items: [...#AtpStaffDirectoryEntry]
 	total: >=0 & int
 }
 
@@ -37,5 +37,5 @@ import (
 
 #AuthMeResponse: {
 	authenticated: bool
-	principal?:    entities.#ATPUser
+	principal?:    entities.#ATPStaff
 }

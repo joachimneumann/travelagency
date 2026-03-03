@@ -22,7 +22,7 @@
 		4574BD14E2DE04406789A0A5 /* generated_Aux.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7FF6C778344F1FA9BEB06 /* generated_Aux.swift */; };
 		5247A53C329A36295297CE13 /* StartupFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B441BB7BA80E1A1394F166 /* StartupFailureView.swift */; };
 		6282BF8EECB5E0436B772A4D /* BookingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F045AAAC8CC5E75837C6A8C1 /* BookingsViewModel.swift */; };
-		6BBB100466B23641E0DCE69E /* generated_User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A39C848F90553D339AE33C3B /* generated_User.swift */; };
+		6BBB100466B23641E0DCE69E /* generated_ATPStaff.swift in Sources */ = {isa = PBXBuildFile; fileRef = A39C848F90553D339AE33C3B /* generated_ATPStaff.swift */; };
 		6C13E2ADF676184ABDECA1D3 /* RoleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F9168D1C38BA9EB16D652A /* RoleService.swift */; };
 		6D88501EF318C457F49AF2C2 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E158E059C1CC2FC54AE5E38 /* LoginViewModel.swift */; };
 		76A14DA153C6006A7D9EA781 /* JWTDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4F1B24D8D6EC17E53C164F /* JWTDecoder.swift */; };
@@ -34,7 +34,7 @@
 		B206195631B237AA4610101F /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E01C85FF240E1D95D828445 /* AuthService.swift */; };
 		B5182B081531304D63C36545 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 404694A3DFC9E5FF05228A9D /* RootView.swift */; };
 		B849738AF1CCB5754BA4AC21 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBAB27BED5A102DC50F345D /* SettingsView.swift */; };
-		BC0AE9B00497D6E0BD9B75DA /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B745ABEFB5A756688035EEAE /* UserProfile.swift */; };
+		BC0AE9B00497D6E0BD9B75DA /* ClientProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B745ABEFB5A756688035EEAE /* ClientProfile.swift */; };
 		CDA20BD5F6EA456BDD7BCF59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */; };
 		D4F01FE921E35D8C9E6515D9 /* generated_Booking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37556070E9AE22B2A0E9521 /* generated_Booking.swift */; };
 		DDFBB2377221EBED1D085E27 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7CD5ECF52C5CBA7D2AC9B77 /* AuthSession.swift */; };
@@ -59,11 +59,11 @@
 		74F9168D1C38BA9EB16D652A /* RoleService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RoleService.swift; sourceTree = "<group>"; };
 		7ED794228F17DCBE93DEBF6E /* UpdateRequiredView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpdateRequiredView.swift; sourceTree = "<group>"; };
 		A2D000F64548F8C1EA519F79 /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		A39C848F90553D339AE33C3B /* generated_User.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = generated_User.swift; sourceTree = "<group>"; };
+		A39C848F90553D339AE33C3B /* generated_ATPStaff.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = generated_ATPStaff.swift; sourceTree = "<group>"; };
 		A5CF69F5AECDB4348F313CA2 /* UnauthorizedView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnauthorizedView.swift; sourceTree = "<group>"; };
 		AD670E648A843FFCE057C38F /* generated_Currency.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = generated_Currency.swift; sourceTree = "<group>"; };
 		B6596F18A94CCC4825B180E5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		B745ABEFB5A756688035EEAE /* UserProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		B745ABEFB5A756688035EEAE /* ClientProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientProfile.swift; sourceTree = "<group>"; };
 		C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C7B441BB7BA80E1A1394F166 /* StartupFailureView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartupFailureView.swift; sourceTree = "<group>"; };
 		CA4F1B24D8D6EC17E53C164F /* JWTDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JWTDecoder.swift; sourceTree = "<group>"; };
@@ -93,7 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				E7CD5ECF52C5CBA7D2AC9B77 /* AuthSession.swift */,
-				B745ABEFB5A756688035EEAE /* UserProfile.swift */,
+				B745ABEFB5A756688035EEAE /* ClientProfile.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -196,7 +196,7 @@
 				32D7FF6C778344F1FA9BEB06 /* generated_Aux.swift */,
 				E37556070E9AE22B2A0E9521 /* generated_Booking.swift */,
 				AD670E648A843FFCE057C38F /* generated_Currency.swift */,
-				A39C848F90553D339AE33C3B /* generated_User.swift */,
+				A39C848F90553D339AE33C3B /* generated_ATPStaff.swift */,
 			);
 			name = Models;
 			path = Models;
@@ -285,7 +285,7 @@
 				22018DFA963D6504A052D6F7 /* AppConfig.swift in Sources */,
 				440F3E7EC1B56826B4F383BF /* AsiaTravelPlanApp.swift in Sources */,
 				DDFBB2377221EBED1D085E27 /* AuthSession.swift in Sources */,
-				BC0AE9B00497D6E0BD9B75DA /* UserProfile.swift in Sources */,
+				BC0AE9B00497D6E0BD9B75DA /* ClientProfile.swift in Sources */,
 				4015AF62BD6EAD68B9EA0AA0 /* APIClient.swift in Sources */,
 				2B034DF177B1A9722F70AA32 /* AppBootstrapStore.swift in Sources */,
 				B206195631B237AA4610101F /* AuthService.swift in Sources */,
@@ -308,7 +308,7 @@
 				4574BD14E2DE04406789A0A5 /* generated_Aux.swift in Sources */,
 				D4F01FE921E35D8C9E6515D9 /* generated_Booking.swift in Sources */,
 				A59D5E22504DD7C6866B7446 /* generated_Currency.swift in Sources */,
-				6BBB100466B23641E0DCE69E /* generated_User.swift in Sources */,
+				6BBB100466B23641E0DCE69E /* generated_ATPStaff.swift in Sources */,
 				374FDD407C5838639E6D3E0F /* generated_APIClient.swift in Sources */,
 				A8B917E0513EA53FE9F4A44B /* generated_APIModels.swift in Sources */,
 				27F57DEB2D3617E979CD49A8 /* generated_APIRequestFactory.swift in Sources */,

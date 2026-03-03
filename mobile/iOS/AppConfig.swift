@@ -4,8 +4,8 @@ typealias ATPCurrencyCode = GeneratedCurrencyCode
 typealias ATPCurrencyDefinition = GeneratedCurrencyDefinition
 typealias ATPCurrencyCatalog = GeneratedCurrencyCatalog
 
-typealias ATPUserRole = GeneratedATPUserRole
-typealias ATPUser = GeneratedATPUser
+typealias ATPStaffRole = GeneratedATPStaffRole
+typealias ATPStaff = GeneratedATPStaff
 
 typealias BookingStage = GeneratedBookingStage
 typealias PaymentStatus = GeneratedPaymentStatus
@@ -37,9 +37,9 @@ typealias BookingUpdateResponse = GeneratedBookingDetail
 typealias CustomerDetailResponse = GeneratedCustomerDetail
 typealias TourOptionsResponse = GeneratedTourOptions
 typealias TourDetailResponse = GeneratedTourDetail
-typealias StaffDirectoryEntry = GeneratedStaffDirectoryEntry
-typealias StaffMember = GeneratedStaffDirectoryEntry
-typealias StaffListResponse = GeneratedStaffListResponse
+typealias AtpStaffDirectoryEntry = GeneratedAtpStaffDirectoryEntry
+typealias AtpStaffMember = GeneratedAtpStaffDirectoryEntry
+typealias AtpStaffListResponse = GeneratedAtpStaffListResponse
 typealias BookingActivitiesResponse = GeneratedBookingActivitiesResponse
 typealias BookingInvoicesResponse = GeneratedBookingInvoicesResponse
 typealias MobileBootstrapResponse = GeneratedMobileBootstrap
@@ -84,7 +84,7 @@ enum MobileAPIRequestFactory {
         GeneratedAPIRequestFactory.bookingInvoicesURL(baseURL: baseURL, bookingId: bookingID)
     }
 
-    static func activeStaffURL(baseURL: URL) -> URL {
+    static func activeAtpStaffURL(baseURL: URL) -> URL {
         GeneratedAPIRequestFactory.staffURL(
             baseURL: baseURL,
             queryItems: [URLQueryItem(name: "active", value: "true")]
@@ -110,6 +110,6 @@ enum AppConfig {
     static let realm = "master"
     static let clientID = "asiatravelplan-ios"
     static let redirectURI = "asiatravelplan://auth/callback"
-    static let allowedRoles: Set<ATPUserRole> = [.atpAdmin, .atpManager, .atpAccountant, .atpStaff]
+    static let allowedRoles: Set<ATPStaffRole> = [.atpAdmin, .atpManager, .atpAccountant, .staff]
     static let currentAppVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
 }

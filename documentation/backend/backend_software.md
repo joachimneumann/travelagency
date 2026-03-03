@@ -46,8 +46,8 @@ Implemented now:
   - styles selection via checkbox group (multi selection)
   - image upload with backend ImageMagick conversion to WebP (max 1000px)
 - Admin API includes staff directory and creation endpoints used by booking assignment controls:
-  - `GET /api/v1/staff`
-  - `POST /api/v1/staff`
+  - `GET /api/v1/atp_staff`
+  - `POST /api/v1/atp_staff`
 
 Current role model in the implemented backend:
 - `atp_staff`
@@ -168,8 +168,8 @@ Delivered endpoints and features:
 - `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
-- `GET /api/v1/staff`
-- `POST /api/v1/staff`
+- `GET /api/v1/atp_staff`
+- `POST /api/v1/atp_staff`
 - `GET /api/v1/customers` with pagination/search
 - Admin UI pages:
   - `/admin/bookings` (filters + pagination)

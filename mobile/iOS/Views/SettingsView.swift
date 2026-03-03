@@ -19,7 +19,7 @@ struct SettingsView: View {
                     settingRow("API base", value: AppConfig.apiBaseURL.absoluteString)
                     settingRow("Auth base", value: AppConfig.keycloakBaseURL.absoluteString)
                     settingRow("Client", value: AppConfig.clientID)
-                    settingRow("User", value: sessionStore.session?.user.preferredUsername ?? "-")
+                    settingRow("Client", value: sessionStore.session?.client.preferredUsername ?? "-")
                     settingRow("Roles", value: formattedRoles)
                 }
             }
@@ -46,7 +46,7 @@ struct SettingsView: View {
     }
 
     private var formattedRoles: String {
-        let roles = sessionStore.session?.user.roles.map(\.rawValue).sorted() ?? []
+        let roles = sessionStore.session?.client.roles.map(\.rawValue).sorted() ?? []
         return roles.isEmpty ? "-" : roles.joined(separator: ", ")
     }
 

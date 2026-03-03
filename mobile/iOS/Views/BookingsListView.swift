@@ -37,7 +37,7 @@ struct BookingsListView: View {
                             Text(booking.destination)
                                 .font(.headline)
                                 .foregroundStyle(.primary)
-                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.assignedStaffName ?? "Unassigned")")
+                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.assignedAtpStaffName ?? "Unassigned")")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)

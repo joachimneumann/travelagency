@@ -330,7 +330,7 @@ Booking note behavior:
 - `isATPManager`
 - `isATPAccountant`
 - `isATPStaff`
-- `isAllowedATPUser`
+- `isAllowedATPStaff`
 
 ## 11) Recommended backend support for mobile
 

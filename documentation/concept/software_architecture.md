@@ -116,7 +116,7 @@ Examples:
 - `Booking`
 - `Customer`
 - `Tour`
-- `User`
+- `ATPStaff`
 - `Currency`
 
 These types represent business meaning. They are not request wrappers, list envelopes, or transport error payloads.

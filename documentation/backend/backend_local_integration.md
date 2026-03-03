@@ -27,8 +27,8 @@ Features available now:
 - Customer deduplication
 - Booking staff assignment + SLA due timestamps
 - Booking activity timeline
-- Staff lookup API for assignment controls (`GET /api/v1/staff`)
-- Staff creation API for managers/admins (`POST /api/v1/staff`)
+- Staff lookup API for assignment controls (`GET /api/v1/atp_staff`)
+- Staff creation API for managers/admins (`POST /api/v1/atp_staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
 - Lightweight admin pages (`/admin`, `/admin/bookings`, `/admin/bookings/:id`, `/admin/customers`, `/admin/customers/:id`)

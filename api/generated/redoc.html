@@ -41,7 +41,7 @@
       "name": "Customers"
     },
     {
-      "name": "Staff"
+      "name": "AtpStaff"
     },
     {
       "name": "Tours"
@@ -65,7 +65,7 @@
           "THB"
         ]
       },
-      "ATPUserRole": {
+      "ATPStaffRole": {
         "type": "string",
         "enum": [
           "atp_admin",
@@ -133,7 +133,7 @@
         "type": "object",
         "description": "Defined in model (referenced as BookingInvoice)."
       },
-      "ATPUser": {
+      "ATPStaff": {
         "type": "object",
         "required": [
           "id",
@@ -157,7 +157,7 @@
           "roles": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ATPUserRole"
+              "$ref": "#/components/schemas/ATPStaffRole"
             }
           },
           "staffId": {
@@ -268,7 +268,7 @@
           "stage": {
             "$ref": "#/components/schemas/BookingStage"
           },
-          "staff": {
+          "atp_staff": {
             "type": "string",
             "nullable": true
           },
@@ -564,7 +564,7 @@
           }
         }
       },
-      "StaffDirectoryEntry": {
+      "AtpStaffDirectoryEntry": {
         "type": "object",
         "required": [
           "id",
@@ -601,7 +601,7 @@
           }
         }
       },
-      "StaffListResponse": {
+      "AtpStaffListResponse": {
         "type": "object",
         "required": [
           "total"
@@ -610,7 +610,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StaffDirectoryEntry"
+              "$ref": "#/components/schemas/AtpStaffDirectoryEntry"
             }
           },
           "total": {
@@ -779,7 +779,7 @@
             "type": "boolean"
           },
           "principal": {
-            "$ref": "#/components/schemas/ATPUser",
+            "$ref": "#/components/schemas/ATPStaff",
             "nullable": true
           }
         }
@@ -1597,9 +1597,9 @@
         }
       }
     },
-    "/api/v1/staff": {
+    "/api/v1/atp_staff": {
       "get": {
-        "summary": "Staff",
+        "summary": "AtpStaff",
         "tags": [
           "V1"
         ],
@@ -1619,7 +1619,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StaffListResponse"
+                  "$ref": "#/components/schemas/AtpStaffListResponse"
                 }
               }
             }

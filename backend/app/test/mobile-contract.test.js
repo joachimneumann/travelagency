@@ -136,7 +136,7 @@ test("bookings list response conforms to the mobile contract", async () => {
   assertBookingShape(result.body.items[0]);
 });
 
-test("booking detail, activities, invoices, and staff responses conform to the mobile contract", async () => {
+test("booking detail, activities, invoices, and atp_staff responses conform to the mobile contract", async () => {
   const listResult = await requestJson(`${endpointPath("bookings")}?page=1&page_size=1&sort=created_at_desc`, apiHeaders());
   const bookingID = listResult.body.items[0].id;
 
@@ -163,7 +163,7 @@ test("booking detail, activities, invoices, and staff responses conform to the m
   assert.ok(Array.isArray(invoicesResult.body.items));
   assert.equal(typeof invoicesResult.body.total, "number");
 
-  const staffResult = await requestJson(`${endpointPath("staff")}?active=true`, apiHeaders());
+  const staffResult = await requestJson(`${endpointPath("atp_staff")}?active=true`, apiHeaders());
   assert.equal(staffResult.status, 200);
   assert.ok(Array.isArray(staffResult.body.items));
   assert.equal(typeof staffResult.body.total, "number");

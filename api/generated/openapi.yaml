@@ -25,7 +25,7 @@ tags:
 - name: Public
 - name: Bookings
 - name: Customers
-- name: Staff
+- name: AtpStaff
 - name: Tours
 components:
   securitySchemes:
@@ -41,7 +41,7 @@ components:
       - EURO
       - VND
       - THB
-    ATPUserRole:
+    ATPStaffRole:
       type: string
       enum:
       - atp_admin
@@ -95,7 +95,7 @@ components:
     BookingInvoice:
       type: object
       description: Defined in model (referenced as BookingInvoice).
-    ATPUser:
+    ATPStaff:
       type: object
       required:
       - id
@@ -114,7 +114,7 @@ components:
         roles:
           type: array
           items:
-            "$ref": "#/components/schemas/ATPUserRole"
+            "$ref": "#/components/schemas/ATPStaffRole"
         staffId:
           type: string
           nullable: true
@@ -191,7 +191,7 @@ components:
           type: string
         stage:
           "$ref": "#/components/schemas/BookingStage"
-        staff:
+        atp_staff:
           type: string
           nullable: true
         staffName:
@@ -392,7 +392,7 @@ components:
           "$ref": "#/components/schemas/Tour"
         options:
           "$ref": "#/components/schemas/TourOptions"
-    StaffDirectoryEntry:
+    AtpStaffDirectoryEntry:
       type: object
       required:
       - id
@@ -417,7 +417,7 @@ components:
           type: array
           items:
             type: string
-    StaffListResponse:
+    AtpStaffListResponse:
       type: object
       required:
       - total
@@ -425,7 +425,7 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/StaffDirectoryEntry"
+            "$ref": "#/components/schemas/AtpStaffDirectoryEntry"
         total:
           type: integer
     BookingActivitiesResponse:
@@ -537,7 +537,7 @@ components:
         authenticated:
           type: boolean
         principal:
-          "$ref": "#/components/schemas/ATPUser"
+          "$ref": "#/components/schemas/ATPStaff"
           nullable: true
     PublicBookingCreateRequest:
       type: object
@@ -1009,9 +1009,9 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/staff":
+  "/api/v1/atp_staff":
     get:
-      summary: Staff
+      summary: AtpStaff
       tags:
       - V1
       security:
@@ -1023,7 +1023,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/StaffListResponse"
+                "$ref": "#/components/schemas/AtpStaffListResponse"
         '401':
           description: Unauthorized
           content:

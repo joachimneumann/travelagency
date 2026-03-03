@@ -19,7 +19,7 @@
     static let bookingOffer = "/api/v1/bookings/{bookingId}/offer"
     static let bookingActivities = "/api/v1/bookings/{bookingId}/activities"
     static let bookingInvoices = "/api/v1/bookings/{bookingId}/invoices"
-    static let staff = "/api/v1/staff"
+    static let atp_staff = "/api/v1/atp_staff"
     static let customers = "/api/v1/customers"
     static let customerDetail = "/api/v1/customers/{customerId}"
     static let tours = "/api/v1/tours"
@@ -85,7 +85,7 @@ static func bookingInvoicesPath(bookingId: String) -> String {
 }
 
 static func staffPath() -> String {
-    "/api/v1/staff"
+    "/api/v1/atp_staff"
 }
 
 static func customersPath() -> String {

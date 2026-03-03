@@ -22,18 +22,18 @@ function __validateShape(value, schema) {
   return value;
 }
 
-export const GENERATED_ATP_USER_ROLES = Object.freeze([
+export const GENERATED_ATP_STAFF_ROLES = Object.freeze([
   "atp_admin",
   "atp_manager",
   "atp_accountant",
   "atp_staff"
 ]);
 
-export const ATPUSER_SCHEMA = {
-  "name": "ATPUser",
-  "domain": "user",
+export const ATPSTAFF_SCHEMA = {
+  "name": "ATPStaff",
+  "domain": "atp_staff",
   "module": "entities",
-  "sourceType": "entities.#ATPUser",
+  "sourceType": "entities.#ATPStaff",
   "fields": [
     {
       "name": "id",
@@ -62,7 +62,7 @@ export const ATPUSER_SCHEMA = {
     {
       "name": "roles",
       "kind": "enum",
-      "typeName": "ATPUserRole",
+      "typeName": "ATPStaffRole",
       "required": true,
       "isArray": true
     },
@@ -75,7 +75,7 @@ export const ATPUSER_SCHEMA = {
   ]
 };
 
-export function validateATPUser(value) {
-  return __validateShape(value, ATPUSER_SCHEMA);
+export function validateATPStaff(value) {
+  return __validateShape(value, ATPSTAFF_SCHEMA);
 }
 

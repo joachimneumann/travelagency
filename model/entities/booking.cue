@@ -130,8 +130,8 @@ import (
 	bookingHash?:       string
 	customerId:         common.#Identifier
 	stage:              enums.#BookingStage
-	staff?:             common.#Identifier
-	staffName?:         string
+	atpStaff?:          common.#Identifier
+	atpStaffName?:      string
 	ownerId?:           common.#Identifier
 	ownerName?:         string
 	slaDueAt?:          common.#Timestamp

@@ -38,7 +38,7 @@ case "booking_activities":
   return RequestFactory.bookingActivitiesRequest(options);
 case "booking_invoices":
   return RequestFactory.bookingInvoicesRequest(options);
-case "staff":
+case "atp_staff":
   return RequestFactory.staffRequest(options);
 case "customers":
   return RequestFactory.customersRequest(options);

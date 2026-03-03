@@ -6,7 +6,7 @@ final class BookingDetailViewModel: ObservableObject {
     @Published private(set) var customer: Customer?
     @Published private(set) var activities: [BookingActivity] = []
     @Published private(set) var invoices: [BookingInvoice] = []
-    @Published private(set) var staff: [StaffMember] = []
+    @Published private(set) var atp_staff: [AtpStaffMember] = []
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
     @Published var noteDraft = ""
@@ -22,8 +22,8 @@ final class BookingDetailViewModel: ObservableObject {
             async let detail = apiClient.fetchBookingDetail(id: bookingID, session: session)
             async let activityPayload = apiClient.fetchActivities(bookingID: bookingID, session: session)
             async let invoicePayload = apiClient.fetchInvoices(bookingID: bookingID, session: session)
-            async let staffPayload: StaffListResponse? = roleService.canChangeAssignment(session.user)
-                ? apiClient.fetchStaff(session: session)
+            async let staffPayload: AtpStaffListResponse? = roleService.canChangeAssignment(session.client)
+                ? apiClient.fetchAtpStaff(session: session)
                 : nil
 
             let detailResponse = try await detail
@@ -33,7 +33,7 @@ final class BookingDetailViewModel: ObservableObject {
             originalNote = detailResponse.booking.notes ?? ""
             activities = try await activityPayload.activities
             invoices = try await invoicePayload.items
-            staff = try await staffPayload?.items ?? []
+            atp_staff = try await staffPayload?.items ?? []
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -56,7 +56,7 @@ final class BookingDetailViewModel: ObservableObject {
     func updateAssignment(_ staffID: String?, session: AuthSession) async {
         guard let booking, let bookingHash = booking.bookingHash else { return }
         do {
-            let response = try await apiClient.updateStaffAssignment(bookingID: booking.id, staffID: staffID, bookingHash: bookingHash, session: session)
+            let response = try await apiClient.updateAtpStaffAssignment(bookingID: booking.id, staffID: staffID, bookingHash: bookingHash, session: session)
             self.booking = response.booking
             self.noteDraft = response.booking.notes ?? ""
             self.originalNote = response.booking.notes ?? ""

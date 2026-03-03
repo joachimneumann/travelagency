@@ -205,13 +205,13 @@ def render_js_currency_module(currency_entries)
   JS
 end
 
-def render_js_user_module(types, roles)
+def render_js_atp_staff_module(types, roles)
   role_codes = catalog_codes(roles)
 
   <<~JS
     #{JS_RUNTIME_HEADER}
     #{js_validator_helpers}
-    export const GENERATED_ATP_USER_ROLES = Object.freeze(#{js_literal(role_codes)});
+    export const GENERATED_ATP_STAFF_ROLES = Object.freeze(#{js_literal(role_codes)});
 
     #{render_js_type_exports(types)}
   JS
@@ -406,7 +406,7 @@ def render_swift_currency(currency_entries)
   SWIFT
 end
 
-def render_swift_user(roles)
+def render_swift_atp_staff(roles)
   role_codes = catalog_codes(roles)
   role_cases = role_codes.map { |role| "    case #{swift_case(role)} = \"#{role}\"" }.join("\n")
 
@@ -414,16 +414,16 @@ def render_swift_user(roles)
     import Foundation
 
     #{SWIFT_RUNTIME_HEADER}
-    enum GeneratedATPUserRole: String, CaseIterable, Codable, Hashable {
+    enum GeneratedATPStaffRole: String, CaseIterable, Codable, Hashable {
 #{role_cases}
     }
 
-    struct GeneratedATPUser: Codable, Equatable {
+    struct GeneratedATPStaff: Codable, Equatable {
         let id: String
         let preferredUsername: String
         let displayName: String?
         let email: String?
-        let roles: [GeneratedATPUserRole]
+        let roles: [GeneratedATPStaffRole]
         let staffId: String?
     }
   SWIFT
@@ -909,7 +909,7 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
          when 'enum'
            ref_name = field.fetch('typeName')
            ref_name = 'ATPCurrencyCode' if ref_name == 'CurrencyCode'
-           ref_name = 'ATPUserRole' if ref_name == 'ATPUserRole'
+           ref_name = 'ATPStaffRole' if ref_name == 'ATPStaffRole'
            ref_name = 'BookingStage' if ref_name == 'BookingStage'
            ref_name = 'PaymentStatus' if ref_name == 'PaymentStatus'
            ref_name = 'PricingAdjustmentType' if ref_name == 'PricingAdjustmentType'
@@ -930,7 +930,7 @@ def build_openapi_schemas(ir)
   types = ir.fetch('types')
   type_index = types.each_with_object({}) { |t, acc| acc[t.fetch('name')] = t }
 
-  enum_schema_names = %w[ATPCurrencyCode ATPUserRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory]
+  enum_schema_names = %w[ATPCurrencyCode ATPStaffRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory]
 
   # Enum schemas from catalogs (camelCase not needed for enum values)
   schemas = {}
@@ -938,7 +938,7 @@ def build_openapi_schemas(ir)
     type: 'string',
     enum: catalog_codes(ir.dig('catalogs', 'currencies'))
   }
-  schemas['ATPUserRole'] = {
+  schemas['ATPStaffRole'] = {
     type: 'string',
     enum: catalog_codes(ir.dig('catalogs', 'roles'))
   }
@@ -1115,9 +1115,9 @@ contract_version = meta.fetch('modelVersion')
 entity_types = types.select { |type| type.fetch('module') == 'entities' }
 api_types = types.select { |type| type.fetch('module') == 'api' }
 
-user_types = entity_types.select { |type| type.fetch('domain') == 'user' }
+atp_staff_types = entity_types.select { |type| type.fetch('domain') == 'atp_staff' }
 booking_types = entity_types.select { |type| type.fetch('domain') == 'booking' }
-aux_types = entity_types.reject { |type| %w[user booking].include?(type.fetch('domain')) }
+aux_types = entity_types.reject { |type| %w[atp_staff booking].include?(type.fetch('domain')) }
 
 write_file(
   File.join(CONTRACT_GENERATED_DIR, 'mobile-api.meta.json'),
@@ -1196,7 +1196,7 @@ write_file(
 
 backend_model_outputs = {
   'generated_Currency.js' => render_js_currency_module(currency_entries),
-  'generated_User.js' => render_js_user_module(user_types, roles),
+  'generated_ATPStaff.js' => render_js_atp_staff_module(atp_staff_types, roles),
   'generated_Booking.js' => render_js_booking_module(booking_types, stages, payment_statuses, adjustment_types, offer_categories),
   'generated_Aux.js' => render_js_aux_module(aux_types)
 }
@@ -1217,7 +1217,7 @@ frontend_api_outputs = backend_api_outputs
 
 ios_model_outputs = {
   'generated_Currency.swift' => render_swift_currency(currency_entries),
-  'generated_User.swift' => render_swift_user(roles),
+  'generated_ATPStaff.swift' => render_swift_atp_staff(roles),
   'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories),
   'generated_Aux.swift' => render_swift_aux(aux_types)
 }

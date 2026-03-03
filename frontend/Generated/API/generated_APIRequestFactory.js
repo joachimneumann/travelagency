@@ -161,12 +161,12 @@ export const GENERATED_API_ENDPOINTS = {
       }
     ]
   },
-  "staff": {
-    "key": "staff",
-    "path": "/api/v1/staff",
+  "atp_staff": {
+    "key": "atp_staff",
+    "path": "/api/v1/atp_staff",
     "method": "GET",
     "authenticated": true,
-    "responseType": "StaffListResponse"
+    "responseType": "AtpStaffListResponse"
   },
   "customers": {
     "key": "customers",
@@ -466,14 +466,14 @@ export function bookingInvoicesRequest({ baseURL = '', params = {}, query = {}, 
 }
 
 export function staffPath(params = {}) {
-  return buildPath("/api/v1/staff", params);
+  return buildPath("/api/v1/atp_staff", params);
 }
 
 export function staffRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
   const path = staffPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "staff",
+    key: "atp_staff",
     method: "GET",
     authenticated: true,
     url,

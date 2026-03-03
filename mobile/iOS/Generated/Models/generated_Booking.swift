@@ -279,8 +279,8 @@
         let duration: String?
         let budget: String?
         let stage: GeneratedBookingStage
-        let assignedStaffId: String?
-        let assignedStaffName: String?
+        let assignedAtpStaffId: String?
+        let assignedAtpStaffName: String?
         let notes: String?
         let source: GeneratedSourceAttribution?
         let bookingHash: String?
@@ -298,8 +298,8 @@
             case duration
             case budget
             case stage
-            case assignedStaffId = "staff"
-            case assignedStaffName = "staff_name"
+            case assignedAtpStaffId = "atp_staff"
+            case assignedAtpStaffName = "atp_staff_name"
             case notes
             case source
             case bookingHash = "booking_hash"
@@ -320,8 +320,8 @@
             budget = try container.decodeIfPresent(String.self, forKey: .budget)
             let rawStage = try container.decodeIfPresent(String.self, forKey: .stage)
             stage = GeneratedBookingStage(rawValue: rawStage ?? "") ?? .new
-            assignedStaffId = try container.decodeIfPresent(String.self, forKey: .assignedStaffId)
-            assignedStaffName = try container.decodeIfPresent(String.self, forKey: .assignedStaffName)
+            assignedAtpStaffId = try container.decodeIfPresent(String.self, forKey: .assignedAtpStaffId)
+            assignedAtpStaffName = try container.decodeIfPresent(String.self, forKey: .assignedAtpStaffName)
             notes = try container.decodeIfPresent(String.self, forKey: .notes)
             source = try container.decodeIfPresent(GeneratedSourceAttribution.self, forKey: .source)
             bookingHash = try container.decodeIfPresent(String.self, forKey: .bookingHash)

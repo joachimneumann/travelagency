@@ -1,39 +1,39 @@
 import Foundation
 
 struct RoleService {
-    func isAllowed(_ profile: UserProfile) -> Bool {
+    func isAllowed(_ profile: ClientProfile) -> Bool {
         !profile.roles.isDisjoint(with: AppConfig.allowedRoles)
     }
 
-    func canReadAllBookings(_ profile: UserProfile) -> Bool {
+    func canReadAllBookings(_ profile: ClientProfile) -> Bool {
         profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager) || profile.roles.contains(.atpAccountant)
     }
 
-    func canEditAssignedBookings(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.atpStaff)
+    func canEditAssignedBookings(_ profile: ClientProfile) -> Bool {
+        profile.roles.contains(.staff)
     }
 
-    func canEditAllBookings(_ profile: UserProfile) -> Bool {
+    func canEditAllBookings(_ profile: ClientProfile) -> Bool {
         profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager)
     }
 
-    func canChangeBookingStage(_ profile: UserProfile) -> Bool {
-        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager) || profile.roles.contains(.atpAccountant) || profile.roles.contains(.atpStaff)
+    func canChangeBookingStage(_ profile: ClientProfile) -> Bool {
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager) || profile.roles.contains(.atpAccountant) || profile.roles.contains(.staff)
     }
 
-    func canChangeAssignment(_ profile: UserProfile) -> Bool {
+    func canChangeAssignment(_ profile: ClientProfile) -> Bool {
         profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager)
     }
 
-    func canCreateStaff(_ profile: UserProfile) -> Bool {
+    func canCreateAtpStaff(_ profile: ClientProfile) -> Bool {
         canChangeAssignment(profile)
     }
 
-    func canReadTours(_ profile: UserProfile) -> Bool {
+    func canReadTours(_ profile: ClientProfile) -> Bool {
         profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpAccountant)
     }
 
-    func canEditTours(_ profile: UserProfile) -> Bool {
+    func canEditTours(_ profile: ClientProfile) -> Bool {
         profile.roles.contains(.atpAdmin)
     }
 }

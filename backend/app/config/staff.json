@@ -1,6 +1,6 @@
 [
   {
-    "id": "staff_joachim",
+    "id": "atp_staff_joachim",
     "name": "Joachim Neumann",
     "active": true,
     "usernames": ["joachim", "admin"],
@@ -8,7 +8,7 @@
     "languages": ["English", "Spanish", "German"]
   },
   {
-    "id": "staff_minh",
+    "id": "atp_staff_minh",
     "name": "Vân Nguyễn",
     "active": true,
     "usernames": ["van", "minh"],

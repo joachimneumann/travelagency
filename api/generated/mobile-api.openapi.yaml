@@ -23,7 +23,7 @@ tags:
   - name: Public
   - name: Bookings
   - name: Customers
-  - name: Staff
+  - name: AtpStaff
   - name: Tours
 components:
   securitySchemes:
@@ -56,7 +56,7 @@ components:
           symbol: ฿
           decimal_places: 0
           iso_code: THB
-    ATPUserRole:
+    ATPStaffRole:
       type: string
       enum:
         - atp_admin
@@ -92,7 +92,7 @@ components:
         roles:
           type: array
           items:
-            $ref: "#/components/schemas/ATPUserRole"
+            $ref: "#/components/schemas/ATPStaffRole"
     AuthMeResponse:
       type: object
       required:
@@ -273,21 +273,21 @@ components:
           type: string
         stage:
           $ref: "#/components/schemas/BookingStage"
-        staff:
+        atp_staff:
           type: string
           nullable: true
-          description: Canonical assigned staff id.
-        staff_name:
+          description: Canonical assigned atp_staff id.
+        atp_staff_name:
           type: string
           nullable: true
         owner_id:
           type: string
           nullable: true
-          description: Legacy compatibility alias for the assigned staff id.
+          description: Legacy compatibility alias for the assigned atp_staff id.
         owner_name:
           type: string
           nullable: true
-          description: Legacy compatibility alias for the assigned staff name.
+          description: Legacy compatibility alias for the assigned atp_staff name.
         sla_due_at:
           type: string
           format: date-time
@@ -492,7 +492,7 @@ components:
           type: string
           format: date-time
           nullable: true
-    StaffMember:
+    AtpStaffMember:
       type: object
       required:
         - id
@@ -616,7 +616,7 @@ components:
           type: string
         deduplicated:
           type: boolean
-        staff:
+        atp_staff:
           type: string
           nullable: true
         sla_due_at:
@@ -672,7 +672,7 @@ components:
             $ref: "#/components/schemas/BookingInvoice"
         total:
           type: integer
-    StaffListResponse:
+    AtpStaffListResponse:
       type: object
       required:
         - items
@@ -681,7 +681,7 @@ components:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/StaffMember"
+            $ref: "#/components/schemas/AtpStaffMember"
         total:
           type: integer
     CustomerListResponse:
@@ -795,7 +795,7 @@ components:
               type: array
               items:
                 type: string
-    StaffCreateRequest:
+    AtpStaffCreateRequest:
       type: object
       required:
         - name
@@ -820,13 +820,13 @@ components:
             type: string
         active:
           type: boolean
-    StaffCreateResponse:
+    AtpStaffCreateResponse:
       type: object
       required:
-        - staff
+        - atp_staff
       properties:
-        staff:
-          $ref: "#/components/schemas/StaffMember"
+        atp_staff:
+          $ref: "#/components/schemas/AtpStaffMember"
     BookingStageUpdateRequest:
       type: object
       required:
@@ -837,7 +837,7 @@ components:
     BookingAssignmentUpdateRequest:
       type: object
       properties:
-        staff:
+        atp_staff:
           type: string
           nullable: true
         owner_id:
@@ -1111,7 +1111,7 @@ paths:
           name: owner_id
           schema:
             type: string
-          description: Legacy filter name; behaves as assigned staff id filter.
+          description: Legacy filter name; behaves as assigned atp_staff id filter.
         - in: query
           name: search
           schema:
@@ -1267,9 +1267,9 @@ paths:
       x-client-key: booking_assignment
       tags:
         - Bookings
-      summary: Update the assigned staff member for a booking.
+      summary: Update the assigned atp_staff member for a booking.
       description: |
-        Current compatibility path. Semantically this is the staff-assignment endpoint.
+        Current compatibility path. Semantically this is the atp_staff-assignment endpoint.
       parameters:
         - in: path
           name: bookingId
@@ -1296,7 +1296,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "422":
-          description: Invalid staff member
+          description: Invalid atp_staff member
           content:
             application/json:
               schema:
@@ -1413,12 +1413,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BookingInvoicesResponse"
-  /api/v1/staff:
+  /api/v1/atp_staff:
     get:
-      x-client-key: staff
+      x-client-key: atp_staff
       tags:
-        - Staff
-      summary: List staff records visible to manager/admin.
+        - AtpStaff
+      summary: List atp_staff records visible to manager/admin.
       parameters:
         - in: query
           name: active
@@ -1427,11 +1427,11 @@ paths:
             default: true
       responses:
         "200":
-          description: Staff directory.
+          description: AtpStaff directory.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StaffListResponse"
+                $ref: "#/components/schemas/AtpStaffListResponse"
         "403":
           description: Forbidden
           content:
@@ -1439,23 +1439,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     post:
-      x-client-key: staff
+      x-client-key: atp_staff
       tags:
-        - Staff
-      summary: Create a staff member.
+        - AtpStaff
+      summary: Create a atp_staff member.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StaffCreateRequest"
+              $ref: "#/components/schemas/AtpStaffCreateRequest"
       responses:
         "201":
-          description: Staff member created.
+          description: AtpStaff member created.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StaffCreateResponse"
+                $ref: "#/components/schemas/AtpStaffCreateResponse"
         "403":
           description: Forbidden
           content:

@@ -164,11 +164,11 @@ package api
 		}]
 	},
 	{
-		key:           "staff"
-		path:          "/api/v1/staff"
+		key:           "atp_staff"
+		path:          "/api/v1/atp_staff"
 		method:        "GET"
 		authenticated: true
-		responseType:  "StaffListResponse"
+		responseType:  "AtpStaffListResponse"
 	},
 	{
 		key:           "customers"

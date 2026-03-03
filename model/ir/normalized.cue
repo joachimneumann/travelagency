@@ -19,7 +19,7 @@ import (
 
 #TypeDefinition: {
 	name:       string & !=""
-	domain:     "currency" | "user" | "booking" | "aux" | "api"
+	domain:     "currency" | "atp_staff" | "booking" | "aux" | "api"
 	module:     "entities" | "api" | "common" | "enums"
 	sourceType: string & !=""
 	fields: [...#FieldDefinition]
@@ -47,7 +47,7 @@ IR: {
 				}
 			},
 		]
-		roles: [for role in enumModel.ATPUserRoleCatalog {{code: role}}]
+		roles: [for role in enumModel.ATPStaffRoleCatalog {{code: role}}]
 		stages: [for stage in enumModel.BookingStageCatalog {{code: stage}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
@@ -56,17 +56,17 @@ IR: {
 
 	types: [
 		{
-			name:       "ATPUser"
-			domain:     "user"
+			name:       "ATPStaff"
+			domain:     "atp_staff"
 			module:     "entities"
-			sourceType: "entities.#ATPUser"
+			sourceType: "entities.#ATPStaff"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "preferredUsername", kind: "scalar", typeName: "string", required: true},
 				{name: "displayName", kind: "scalar", typeName: "string", required: false},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "roles", kind: "enum", typeName: "ATPUserRole", required: true, isArray: true},
-				{name: "staffId", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "roles", kind: "enum", typeName: "ATPStaffRole", required: true, isArray: true},
+				{name: "atpStaffId", kind: "scalar", typeName: "Identifier", required: false},
 			]
 		},
 		{
@@ -116,8 +116,8 @@ IR: {
 				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
 				{name: "customerId", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
-				{name: "staff", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "staffName", kind: "scalar", typeName: "string", required: false},
+				{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "atpStaffName", kind: "scalar", typeName: "string", required: false},
 				{name: "destination", kind: "scalar", typeName: "string", required: false},
 				{name: "style", kind: "scalar", typeName: "string", required: false},
 				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
@@ -258,10 +258,10 @@ IR: {
 			]
 		},
 		{
-			name:       "StaffDirectoryEntry"
+			name:       "AtpStaffDirectoryEntry"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#StaffDirectoryEntry"
+			sourceType: "api.#AtpStaffDirectoryEntry"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: true},
@@ -272,12 +272,12 @@ IR: {
 			]
 		},
 		{
-			name:       "StaffListResponse"
+			name:       "AtpStaffListResponse"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#StaffListResponse"
+			sourceType: "api.#AtpStaffListResponse"
 			fields: [
-				{name: "items", kind: "transport", typeName: "StaffDirectoryEntry", required: true, isArray: true},
+				{name: "items", kind: "transport", typeName: "AtpStaffDirectoryEntry", required: true, isArray: true},
 				{name: "total", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -374,7 +374,7 @@ IR: {
 			sourceType: "api.#AuthMeResponse"
 			fields: [
 				{name: "authenticated", kind: "scalar", typeName: "bool", required: true},
-				{name: "principal", kind: "entity", typeName: "ATPUser", required: false},
+				{name: "principal", kind: "entity", typeName: "ATPStaff", required: false},
 			]
 		},
 		{

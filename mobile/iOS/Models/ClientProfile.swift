@@ -1,8 +1,8 @@
 import Foundation
 
-struct UserProfile: Codable, Equatable {
+struct ClientProfile: Codable, Equatable {
     let subject: String
     let preferredUsername: String?
     let email: String?
-    let roles: Set<ATPUserRole>
+    let roles: Set<ATPStaffRole>
 }

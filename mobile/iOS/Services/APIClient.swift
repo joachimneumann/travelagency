@@ -80,9 +80,9 @@ final class APIClient {
         )
     }
 
-    func fetchStaff(session: AuthSession) async throws -> StaffListResponse {
+    func fetchAtpStaff(session: AuthSession) async throws -> AtpStaffListResponse {
         try await send(
-            requestURL: MobileAPIRequestFactory.activeStaffURL(baseURL: AppConfig.apiBaseURL),
+            requestURL: MobileAPIRequestFactory.activeAtpStaffURL(baseURL: AppConfig.apiBaseURL),
             session: session
         )
     }
@@ -96,11 +96,11 @@ final class APIClient {
         )
     }
 
-    func updateStaffAssignment(bookingID: String, staffID: String?, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
+    func updateAtpStaffAssignment(bookingID: String, staffID: String?, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
         try await send(
             requestURL: MobileAPIRequestFactory.bookingAssignmentURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "PATCH",
-            body: ["staff": staffID ?? NSNull(), "booking_hash": bookingHash],
+            body: ["atp_staff": staffID ?? NSNull(), "booking_hash": bookingHash],
             session: session
         )
     }

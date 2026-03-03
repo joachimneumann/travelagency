@@ -5,12 +5,12 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#ATPUser: {
+#ATPStaff: {
 	id:                common.#Identifier
 	preferredUsername: string & !=""
 	displayName?:      string
 	email?:            common.#Email
-	roles: [...enums.#ATPUserRole]
+	roles: [...enums.#ATPStaffRole]
 	staffId?:   common.#Identifier
 	active?:    bool
 	createdAt?: common.#Timestamp

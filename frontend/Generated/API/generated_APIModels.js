@@ -182,11 +182,11 @@ export const GENERATED_API_ENDPOINTS = [
     ]
   },
   {
-    "key": "staff",
-    "path": "/api/v1/staff",
+    "key": "atp_staff",
+    "path": "/api/v1/atp_staff",
     "method": "GET",
     "authenticated": true,
-    "responseType": "StaffListResponse"
+    "responseType": "AtpStaffListResponse"
   },
   {
     "key": "customers",
@@ -430,10 +430,10 @@ export function validateTourDetail(value) {
 }
 
 export const STAFF_DIRECTORY_ENTRY_SCHEMA = {
-  "name": "StaffDirectoryEntry",
+  "name": "AtpStaffDirectoryEntry",
   "domain": "api",
   "module": "api",
-  "sourceType": "api.#StaffDirectoryEntry",
+  "sourceType": "api.#AtpStaffDirectoryEntry",
   "fields": [
     {
       "name": "id",
@@ -477,20 +477,20 @@ export const STAFF_DIRECTORY_ENTRY_SCHEMA = {
   ]
 };
 
-export function validateStaffDirectoryEntry(value) {
+export function validateAtpStaffDirectoryEntry(value) {
   return __validateShape(value, STAFF_DIRECTORY_ENTRY_SCHEMA);
 }
 
 export const STAFF_LIST_RESPONSE_SCHEMA = {
-  "name": "StaffListResponse",
+  "name": "AtpStaffListResponse",
   "domain": "api",
   "module": "api",
-  "sourceType": "api.#StaffListResponse",
+  "sourceType": "api.#AtpStaffListResponse",
   "fields": [
     {
       "name": "items",
       "kind": "transport",
-      "typeName": "StaffDirectoryEntry",
+      "typeName": "AtpStaffDirectoryEntry",
       "required": true,
       "isArray": true
     },
@@ -503,7 +503,7 @@ export const STAFF_LIST_RESPONSE_SCHEMA = {
   ]
 };
 
-export function validateStaffListResponse(value) {
+export function validateAtpStaffListResponse(value) {
   return __validateShape(value, STAFF_LIST_RESPONSE_SCHEMA);
 }
 
@@ -761,7 +761,7 @@ export const AUTH_ME_RESPONSE_SCHEMA = {
     {
       "name": "principal",
       "kind": "entity",
-      "typeName": "ATPUser",
+      "typeName": "ATPStaff",
       "required": false
     }
   ]

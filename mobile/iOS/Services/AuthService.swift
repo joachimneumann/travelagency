@@ -42,14 +42,14 @@ final class AuthService: NSObject {
     func buildSession(accessToken: String, idToken: String? = nil, refreshToken: String?, expiresIn: TimeInterval? = nil) throws -> AuthSession {
         let claims = try decoder.decode(accessToken)
         let roles = extractRoles(from: claims)
-        let profile = UserProfile(
+        let profile = ClientProfile(
             subject: claims.sub,
             preferredUsername: claims.preferredUsername,
             email: claims.email,
             roles: roles
         )
         let expiresAt = expiresIn.map { Date().addingTimeInterval($0) } ?? claims.exp.map { Date(timeIntervalSince1970: $0) }
-        return AuthSession(accessToken: accessToken, idToken: idToken, refreshToken: refreshToken, expiresAt: expiresAt, user: profile)
+        return AuthSession(accessToken: accessToken, idToken: idToken, refreshToken: refreshToken, expiresAt: expiresAt, client: profile)
     }
 
     func refresh(session: AuthSession) async throws -> AuthSession {
@@ -87,12 +87,12 @@ final class AuthService: NSObject {
         _ = try await authenticate(at: logoutURL)
     }
 
-    private func extractRoles(from claims: JWTDecoder.Claims) -> Set<ATPUserRole> {
+    private func extractRoles(from claims: JWTDecoder.Claims) -> Set<ATPStaffRole> {
         var values = Set<String>()
         values.formUnion(claims.realmAccess?.roles ?? [])
         values.formUnion(claims.resourceAccess?[AppConfig.clientID]?.roles ?? [])
         values.formUnion(claims.resourceAccess?["asiatravelplan-backend"]?.roles ?? [])
-        return Set(values.compactMap(ATPUserRole.init(rawValue:)))
+        return Set(values.compactMap(ATPStaffRole.init(rawValue:)))
     }
 
     private var authorizationEndpoint: URL {

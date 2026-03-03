@@ -91,7 +91,7 @@ import Foundation
         }
     }
 
-    struct GeneratedStaffDirectoryEntry: Codable, Equatable, Identifiable {
+    struct GeneratedAtpStaffDirectoryEntry: Codable, Equatable, Identifiable {
     let id: String
     let name: String
     let active: Bool?
@@ -109,8 +109,8 @@ import Foundation
         }
     }
 
-    struct GeneratedStaffListResponse: Codable, Equatable {
-    let items: [GeneratedStaffDirectoryEntry]
+    struct GeneratedAtpStaffListResponse: Codable, Equatable {
+    let items: [GeneratedAtpStaffDirectoryEntry]
     let total: Int
 
         private enum CodingKeys: String, CodingKey {
@@ -228,7 +228,7 @@ import Foundation
 
     struct GeneratedAuthMeResponse: Codable, Equatable {
     let authenticated: Bool
-    let principal: GeneratedATPUser?
+    let principal: GeneratedATPStaff?
 
         private enum CodingKeys: String, CodingKey {
         case authenticated = "authenticated"

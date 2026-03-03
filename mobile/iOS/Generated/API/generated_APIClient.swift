@@ -17,7 +17,7 @@
     case bookingOffer
     case bookingActivities
     case bookingInvoices
-    case staff
+    case atp_staff
     case customers
     case customerDetail
     case tours
@@ -41,7 +41,7 @@
         case .bookingOffer: return "PATCH"
         case .bookingActivities: return "GET"
         case .bookingInvoices: return "GET"
-        case .staff: return "GET"
+        case .atp_staff: return "GET"
         case .customers: return "GET"
         case .customerDetail: return "GET"
         case .tours: return "GET"

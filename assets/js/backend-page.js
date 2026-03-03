@@ -483,7 +483,7 @@ function clearError() {
 
 async function loadStaff() {
   clearError();
-  const payload = await fetchApi(`/api/v1/staff?active=true`);
+  const payload = await fetchApi(`/api/v1/atp_staff?active=true`);
   if (!payload) return;
   state.staff = Array.isArray(payload.items) ? payload.items : [];
   renderStaff(state.staff);
@@ -523,7 +523,7 @@ async function createStaff() {
       .filter(Boolean),
     active: true
   };
-  const result = await fetchApi(`/api/v1/staff`, { method: "POST", body: payload });
+  const result = await fetchApi(`/api/v1/atp_staff`, { method: "POST", body: payload });
   if (!result?.staff) {
     setStaffStatus("");
     return;

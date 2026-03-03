@@ -16,7 +16,7 @@ final class SessionStore: ObservableObject {
 
     var isAuthorized: Bool {
         guard let session else { return false }
-        return roleService.isAllowed(session.user)
+        return roleService.isAllowed(session.client)
     }
 
     func validSession() async -> AuthSession? {
@@ -29,7 +29,7 @@ final class SessionStore: ObservableObject {
         authError = nil
         do {
             let refreshed = try await authService.refresh(session: current)
-            guard roleService.isAllowed(refreshed.user) else {
+            guard roleService.isAllowed(refreshed.client) else {
                 tokenStore.clear()
                 session = nil
                 authError = "Authenticated, but not authorized for the mobile app."
@@ -61,7 +61,7 @@ final class SessionStore: ObservableObject {
             if restored.requiresRefresh {
                 do {
                     let refreshed = try await authService.refresh(session: restored)
-                    if roleService.isAllowed(refreshed.user) {
+                    if roleService.isAllowed(refreshed.client) {
                         try tokenStore.save(session: refreshed)
                         session = refreshed
                     } else {
@@ -70,7 +70,7 @@ final class SessionStore: ObservableObject {
                         authError = "Authenticated, but not authorized for the mobile app."
                     }
                 } catch {
-                    if !restored.isExpired, roleService.isAllowed(restored.user) {
+                    if !restored.isExpired, roleService.isAllowed(restored.client) {
                         session = restored
                     } else {
                         tokenStore.clear()
@@ -80,7 +80,7 @@ final class SessionStore: ObservableObject {
                 }
                 return
             }
-            if roleService.isAllowed(restored.user) {
+            if roleService.isAllowed(restored.client) {
                 session = restored
             } else {
                 tokenStore.clear()
@@ -96,7 +96,7 @@ final class SessionStore: ObservableObject {
         authError = nil
         do {
             let session = try await authService.startLogin()
-            guard roleService.isAllowed(session.user) else {
+            guard roleService.isAllowed(session.client) else {
                 tokenStore.clear()
                 self.session = nil
                 authError = "Authenticated, but not authorized for the mobile app."
@@ -113,7 +113,7 @@ final class SessionStore: ObservableObject {
 
     func store(session: AuthSession) {
         do {
-            guard roleService.isAllowed(session.user) else {
+            guard roleService.isAllowed(session.client) else {
                 authError = "Authenticated, but not authorized for the mobile app."
                 return
             }

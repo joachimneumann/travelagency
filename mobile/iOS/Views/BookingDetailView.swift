@@ -8,7 +8,7 @@ struct BookingDetailView: View {
     private let roleService = RoleService()
 
     @State private var selectedStage = ""
-    @State private var selectedStaffID = ""
+    @State private var selectedAtpStaffID = ""
 
     var body: some View {
         Form {
@@ -27,7 +27,7 @@ struct BookingDetailView: View {
         .onChange(of: viewModel.booking?.stage) { _, _ in
             syncSelectionsFromBooking()
         }
-        .onChange(of: viewModel.booking?.assignedStaffId) { _, _ in
+        .onChange(of: viewModel.booking?.assignedAtpStaffId) { _, _ in
             syncSelectionsFromBooking()
         }
         .alert("Booking", isPresented: Binding(
@@ -79,7 +79,7 @@ struct BookingDetailView: View {
             LabeledContent("Stage", value: booking.stage.rawValue)
             LabeledContent("Destination", value: booking.destination)
             LabeledContent("Style", value: booking.style)
-            LabeledContent("Staff", value: booking.assignedStaffName ?? "Unassigned")
+            LabeledContent("AtpStaff", value: booking.assignedAtpStaffName ?? "Unassigned")
         }
     }
 
@@ -267,21 +267,21 @@ struct BookingDetailView: View {
     @ViewBuilder
     private func assignmentSection(for booking: Booking) -> some View {
         Section("Assignment") {
-            Picker("Staff", selection: $selectedStaffID) {
+            Picker("AtpStaff", selection: $selectedAtpStaffID) {
                 Text("Unassigned").tag("")
-                ForEach(viewModel.staff) { member in
+                ForEach(viewModel.atp_staff) { member in
                     Text(member.name).tag(member.id)
                 }
             }
 
             Button("Save Assignment") {
-                let staffID = selectedStaffID.isEmpty ? nil : selectedStaffID
+                let staffID = selectedAtpStaffID.isEmpty ? nil : selectedAtpStaffID
                 Task {
                     guard let session = await sessionStore.validSession() else { return }
                     await viewModel.updateAssignment(staffID, session: session)
                 }
             }
-            .disabled(selectedStaffID == (booking.assignedStaffId ?? ""))
+            .disabled(selectedAtpStaffID == (booking.assignedAtpStaffId ?? ""))
         }
     }
 
@@ -313,17 +313,17 @@ struct BookingDetailView: View {
 
     private var canChangeStage: Bool {
         guard let session = sessionStore.session else { return false }
-        return roleService.canChangeBookingStage(session.user)
+        return roleService.canChangeBookingStage(session.client)
     }
 
     private var canChangeAssignment: Bool {
         guard let session = sessionStore.session else { return false }
-        return roleService.canChangeAssignment(session.user)
+        return roleService.canChangeAssignment(session.client)
     }
 
     private var canEditBooking: Bool {
         guard let session = sessionStore.session else { return false }
-        return roleService.canEditAllBookings(session.user) || roleService.canEditAssignedBookings(session.user)
+        return roleService.canEditAllBookings(session.client) || roleService.canEditAssignedBookings(session.client)
     }
 
     private var stageOptions: [String] {
@@ -332,7 +332,7 @@ struct BookingDetailView: View {
 
     private func syncSelectionsFromBooking() {
         selectedStage = viewModel.booking?.stage.rawValue ?? ""
-        selectedStaffID = viewModel.booking?.assignedStaffId ?? ""
+        selectedAtpStaffID = viewModel.booking?.assignedAtpStaffId ?? ""
     }
 
     private func formatMoney(_ minorUnits: Int, currency: ATPCurrencyCode) -> String {
