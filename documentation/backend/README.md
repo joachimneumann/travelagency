@@ -39,6 +39,8 @@ Environment variables:
 - `MOBILE_MIN_SUPPORTED_APP_VERSION` (minimum iOS app version allowed to continue after bootstrap)
 - `MOBILE_LATEST_APP_VERSION` (latest published iOS app version shown to users)
 - `MOBILE_FORCE_UPDATE` (`true`/`false`, forces all app builds to stop at the update screen)
+- `BASE_CURRENCY` (optional canonical storage currency, defaults to `USD`; valid values from catalog: `USD`, `EURO`, `VND`, `THB`)
+- `EXCHANGE_RATE_<FROM>_<TO>` (optional override, e.g. `EXCHANGE_RATE_USD_VND=23000`)
 
 Cross-origin browser usage note:
 - When frontend is served from `http://localhost:8080` and backend from `http://localhost:8787`, use:
@@ -119,8 +121,10 @@ Admin API:
 - `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
 - `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
 - `PATCH /api/v1/bookings/:bookingId/pricing` (replace the booking commercials model)
+- `PATCH /api/v1/bookings/:bookingId/offer` (offers are normalized and converted to base currency before persistence)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
+- `POST /api/v1/offers/exchange-rates` (preview converted offer totals while editing display currency)
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
 - `GET /api/v1/atp_staff`
@@ -209,6 +213,8 @@ Booking pricing model:
 - the agreed commercial base is stored as `pricing.agreed_net_amount_cents`
 - all amounts are stored in integer cents
 - taxes are stored as basis points per payment (`tax_rate_basis_points`)
+- canonical storage currency is `BASE_CURRENCY` (default `USD`)
+- all stored booking `pricing` and `offer` values are normalized and persisted in `BASE_CURRENCY`
 - the booking may contain typed adjustments:
   - `DISCOUNT`
   - `CREDIT`
@@ -236,6 +242,18 @@ Booking pricing model:
 - the remaining not-yet-scheduled amount is returned as `unscheduled_net_amount_cents`
 - pricing mutations also use `booking_hash`
 - if the booking changed in the meantime, the frontend/mobile client must refresh and ask the user to enter the change again
+- read models are converted from storage currency to display currency on demand:
+  - booking preference (`preferred_currency`) takes priority
+  - fallback to stored `pricing.currency`
+  - fallback to `BASE_CURRENCY`
+- conversion behavior:
+  - runtime conversion uses Frankfurter + ER API provider chain
+  - conversion endpoint `POST /api/v1/offers/exchange-rates` performs live conversion + tax-aware line totals
+  - configured override rates are supported with `EXCHANGE_RATE_<FROM>_<TO>`
+  - if no live rate is available, stale cached rates or explicit override values are used before returning a hard failure
+- money display precision is catalog-driven:
+  - `USD`, `EURO`: 2 decimal places
+  - `VND`, `THB`: 0 decimal places
 
 ## Role Model
 

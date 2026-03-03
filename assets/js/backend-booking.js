@@ -520,7 +520,7 @@ function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const offerItems = readOfferDraftItemsForRender();
+  const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
   const hasMultiQuantityItem = (offerItems || []).some(
     (item) => Math.max(1, Number(item?.quantity || 1)) !== 1
   );
@@ -569,6 +569,7 @@ function renderOfferItemsTable() {
   if (!readOnly) {
     const syncOfferInputTotals = () => {
       state.offerDraft.items = readOfferDraftItemsForRender();
+      state.offerDraft.total_price_cents = null;
       renderOfferItemsTable();
     };
     els.offerItemsTable.querySelectorAll("[data-offer-remove-item]").forEach((button) => {
@@ -620,13 +621,11 @@ function readOfferDraftItemsForRender() {
 }
 
 function resolveOfferTotalCents() {
-  const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
-  if (offerItems.length === 0) {
-    const explicitTotal = Number(state.offerDraft?.total_price_cents);
-    if (Number.isFinite(explicitTotal)) {
-      return Math.round(explicitTotal);
-    }
+  const explicitTotal = Number(state.offerDraft?.total_price_cents);
+  if (Number.isFinite(explicitTotal)) {
+    return Math.round(explicitTotal);
   }
+  const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
   const offerTotals = computeOfferDraftTotalsFromItems(offerItems);
   return offerTotals?.gross_amount_cents || 0;
 }

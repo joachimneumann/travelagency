@@ -181,6 +181,7 @@ function loadExchangeRateOverrides() {
 }
 
 const EXCHANGE_RATE_OVERRIDES = loadExchangeRateOverrides();
+const BASE_CURRENCY = normalizeGeneratedCurrencyCode(process.env.BASE_CURRENCY || "USD") || "USD";
 
 function getFallbackExchangeRate(fromCurrency, toCurrency) {
   const direct = EXCHANGE_RATE_OVERRIDES[`${fromCurrency}->${toCurrency}`];
@@ -738,12 +739,15 @@ async function readStore() {
   parsed.bookings ||= [];
   parsed.activities ||= [];
   parsed.invoices ||= [];
-  parsed.bookings = parsed.bookings.map((booking) => {
+  const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
     syncBookingAtpStaffFields(booking);
     booking.pricing = normalizeBookingPricing(booking.pricing);
-    booking.offer = normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD");
+    booking.offer = normalizeBookingOffer(booking.offer, getBookingPreferredCurrency(booking));
+    booking.pricing = await convertBookingPricingToBaseCurrency(booking.pricing);
+    booking.offer = await convertBookingOfferToBaseCurrency(booking.offer);
     return booking;
-  });
+  }));
+  parsed.bookings = convertedBookings;
   return parsed;
 }
 
@@ -961,7 +965,11 @@ function computeSlaDueAt(stage, from = new Date()) {
 }
 
 function safeCurrency(value) {
-  return normalizeGeneratedCurrencyCode(value) || "USD";
+  return normalizeGeneratedCurrencyCode(value) || BASE_CURRENCY;
+}
+
+function getBookingPreferredCurrency(booking = null) {
+  return safeCurrency(booking?.preferred_currency || booking?.pricing?.currency || booking?.offer?.currency || BASE_CURRENCY);
 }
 
 function parseCurrencyForExchange(value) {
@@ -970,7 +978,7 @@ function parseCurrencyForExchange(value) {
 }
 
 function getCurrencyDefinition(currency) {
-  const definition = generatedCurrencyDefinition(currency) || generatedCurrencyDefinition("USD");
+  const definition = generatedCurrencyDefinition(currency) || generatedCurrencyDefinition(BASE_CURRENCY);
   return {
     code: definition.code,
     symbol: definition.symbol || definition.code,
@@ -1009,11 +1017,6 @@ async function fetchExchangeRate(fromCurrency, toCurrency, options = {}) {
   if (cached && cached.expiresAt > now) return cached.rate;
 
   const staleCached = fxRateCache.get(cacheKey);
-
-  const fallbackRate = getFallbackExchangeRate(from, to) || getFallbackExchangeRate(fromCurrency, toCurrency);
-  if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
-    return fallbackRate;
-  }
 
   const providers = [
     async () => {
@@ -1123,7 +1126,16 @@ async function fetchExchangeRate(fromCurrency, toCurrency, options = {}) {
     }
   }
 
-  const crossVia = ["USD", "EUR"];
+  const fallbackRate = getFallbackExchangeRate(from, to) || getFallbackExchangeRate(fromCurrency, toCurrency);
+  if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
+    console.warn(
+      `[backend] using configured fallback exchange rate ${from}->${to} = ${fallbackRate} after provider lookup failures:`,
+      errors.join(" | ")
+    );
+    return fallbackRate;
+  }
+
+  const crossVia = [...new Set([BASE_CURRENCY, "EUR"])]
   for (const via of crossVia) {
     if (via === from || via === to) continue;
     const crossKey = getExchangeCacheKey(fromCurrency, via);
@@ -1172,6 +1184,270 @@ function roundConvertedAmount(amountCents, fromCurrency, toCurrency, rate) {
   const major = Number(amountCents) / fromScale;
   const converted = major * rate;
   return Math.max(0, Math.round(converted * toScale));
+}
+
+function convertMinorUnitsRaw(amountCents, fromCurrency, toCurrency, rate) {
+  const fromDefinition = getCurrencyDefinition(fromCurrency);
+  const toDefinition = getCurrencyDefinition(toCurrency);
+  const source = Number(amountCents);
+  if (!Number.isFinite(source) || source <= 0) return 0;
+  const fromScale = 10 ** fromDefinition.decimal_places;
+  const toScale = 10 ** toDefinition.decimal_places;
+  const major = source / fromScale;
+  return major * rate * toScale;
+}
+
+function convertOfferLineAmountForCurrency(item, rates, fromCurrency, toCurrency) {
+  const sourceCurrency = safeCurrency(fromCurrency) || BASE_CURRENCY;
+  const targetCurrency = safeCurrency(toCurrency) || BASE_CURRENCY;
+
+  const normalizedRates = (() => {
+    if (!rates) return { sourceToBaseRate: 1, baseToTargetRate: 1 };
+    if (Array.isArray(rates)) {
+      return {
+        sourceToBaseRate: Number(rates[0]) || 1,
+        baseToTargetRate: Number(rates[1]) || 1
+      };
+    }
+    return {
+      sourceToBaseRate: Number(rates.sourceToBaseRate) || 1,
+      baseToTargetRate: Number(rates.baseToTargetRate) || 1
+    };
+  })();
+
+  if (sourceCurrency === targetCurrency) {
+    const unitAmountCents = Math.max(0, Number(item?.unit_amount_cents || 0));
+    const safeQuantity = Math.max(1, safeInt(item?.quantity) || 1);
+    const sign = offerCategorySign(item?.category);
+    const taxBasisPoints = clampOfferTaxRateBasisPoints(item?.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
+    const lineNetAmountCents = sign * unitAmountCents * safeQuantity;
+    const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxBasisPoints) / 10000);
+    return {
+      id: String(item?.id || ""),
+      category: normalizeOfferCategory(item?.category),
+      quantity: safeQuantity,
+      tax_rate_basis_points: taxBasisPoints,
+      unit_amount_cents: unitAmountCents,
+      line_net_amount_cents: lineNetAmountCents,
+      line_tax_amount_cents: lineTaxAmountCents,
+      line_total_amount_cents: lineNetAmountCents + lineTaxAmountCents,
+      currency: targetCurrency
+    };
+  }
+
+  const fromDefinition = getCurrencyDefinition(sourceCurrency);
+  const baseDefinition = getCurrencyDefinition(BASE_CURRENCY);
+  const fromScale = 10 ** fromDefinition.decimal_places;
+  const toDefinition = getCurrencyDefinition(targetCurrency);
+  const toScale = 10 ** toDefinition.decimal_places;
+  const safeQuantity = Math.max(1, safeInt(item?.quantity) || 1);
+  const unitAmountCents = Math.max(0, Number(item?.unit_amount_cents || 0));
+  const sign = offerCategorySign(item?.category);
+  const taxBasisPoints = clampOfferTaxRateBasisPoints(item?.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
+  const sourceToBaseRate = sourceCurrency === BASE_CURRENCY ? 1 : normalizedRates.sourceToBaseRate;
+  const baseToTargetRate = targetCurrency === BASE_CURRENCY ? 1 : normalizedRates.baseToTargetRate;
+
+  const unitMajor = unitAmountCents / fromScale;
+  const baseScale = 10 ** baseDefinition.decimal_places;
+  const unitBaseMajor = unitMajor * sourceToBaseRate;
+  const roundedUnitBaseMinor = Math.max(0, Math.round(unitBaseMajor * baseScale));
+  const roundedUnitBaseMajor = roundedUnitBaseMinor / baseScale;
+  const convertedUnitMajor = roundedUnitBaseMajor * baseToTargetRate;
+  const convertedUnitMinor = Math.max(0, Math.round(convertedUnitMajor * toScale));
+
+  const lineNetAmountCents = sign * convertedUnitMinor * safeQuantity;
+  const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxBasisPoints) / 10000);
+  const line_total_amount_cents = lineNetAmountCents + lineTaxAmountCents;
+
+  return {
+    id: String(item?.id || ""),
+    category: normalizeOfferCategory(item?.category),
+    quantity: safeQuantity,
+    tax_rate_basis_points: taxBasisPoints,
+    unit_amount_cents: convertedUnitMinor,
+    line_net_amount_cents: lineNetAmountCents,
+    line_tax_amount_cents: lineTaxAmountCents,
+    line_total_amount_cents,
+    currency: targetCurrency
+  };
+}
+
+async function convertMinorUnits(amountCents, fromCurrency, toCurrency) {
+  const sourceCurrency = safeCurrency(fromCurrency) || BASE_CURRENCY;
+  const targetCurrency = safeCurrency(toCurrency) || BASE_CURRENCY;
+  const normalizedAmount = normalizeAmountCents(amountCents, 0);
+  if (sourceCurrency === targetCurrency) return normalizedAmount;
+  const rate = await fetchExchangeRate(sourceCurrency, targetCurrency);
+  return roundConvertedAmount(normalizedAmount, sourceCurrency, targetCurrency, rate);
+}
+
+async function resolveExchangeRateWithFallback(fromCurrency, toCurrency) {
+  try {
+    return {
+      rate: await fetchExchangeRate(fromCurrency, toCurrency),
+      warning: null
+    };
+  } catch (error) {
+    const fallbackRate = getFallbackExchangeRate(fromCurrency, toCurrency);
+    if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
+      return {
+        rate: fallbackRate,
+        warning: `Exchange rate lookup failed for ${fromCurrency}->${toCurrency}. Using configured fallback.`
+      };
+    }
+    throw error;
+  }
+}
+
+async function convertToBaseCurrency(bookingCurrency, amountCents) {
+  return convertMinorUnits(amountCents, bookingCurrency, BASE_CURRENCY);
+}
+
+function getOfferCurrencyForStorage(offer) {
+  return safeCurrency(offer?.currency || BASE_CURRENCY);
+}
+
+function getPricingCurrencyForStorage(pricing) {
+  return safeCurrency(pricing?.currency || BASE_CURRENCY);
+}
+
+async function convertBookingPricingToBaseCurrency(pricing) {
+  const normalized = normalizeBookingPricing(pricing);
+  const sourceCurrency = getPricingCurrencyForStorage(normalized);
+  if (sourceCurrency === BASE_CURRENCY) {
+    return {
+      ...normalized,
+      currency: BASE_CURRENCY
+    };
+  }
+
+  const [agreedNetAmount, adjustments, payments] = await Promise.all([
+    convertMinorUnits(normalized.agreed_net_amount_cents, sourceCurrency, BASE_CURRENCY),
+    Promise.all(
+      normalized.adjustments.map((adjustment) =>
+        convertMinorUnits(adjustment.amount_cents, sourceCurrency, BASE_CURRENCY)
+      )
+    ),
+    Promise.all(
+      normalized.payments.map((payment) => convertMinorUnits(payment.net_amount_cents, sourceCurrency, BASE_CURRENCY))
+    )
+  ]);
+
+  return {
+    ...normalized,
+    currency: BASE_CURRENCY,
+    agreed_net_amount_cents: agreedNetAmount,
+    adjustments: normalized.adjustments.map((adjustment, index) => ({
+      ...adjustment,
+      amount_cents: adjustments[index]
+    })),
+    payments: normalized.payments.map((payment, index) => ({
+      ...payment,
+      net_amount_cents: payments[index]
+    }))
+  };
+}
+
+async function convertBookingOfferToBaseCurrency(offer) {
+  const normalized = normalizeBookingOffer(offer, getOfferCurrencyForStorage(offer));
+  const sourceCurrency = getOfferCurrencyForStorage(normalized);
+  if (sourceCurrency === BASE_CURRENCY) {
+    return {
+      ...normalized,
+      currency: BASE_CURRENCY,
+      totals: {
+        ...normalized.totals
+      },
+      total_price_cents: normalized.total_price_cents
+    };
+  }
+
+  const convertedItemAmounts = await Promise.all(
+    normalized.items.map((item) => convertMinorUnits(item.unit_amount_cents, sourceCurrency, BASE_CURRENCY))
+  );
+
+  const converted = {
+    ...normalized,
+    currency: BASE_CURRENCY,
+    items: normalized.items.map((item, index) => ({
+      ...item,
+      currency: BASE_CURRENCY,
+      unit_amount_cents: convertedItemAmounts[index]
+    }))
+  };
+  const totals = computeBookingOfferTotals(converted);
+
+  return {
+    ...converted,
+    totals,
+    total_price_cents: totals.total_price_cents
+  };
+}
+
+async function convertPricingForDisplay(pricing, targetCurrency) {
+  const normalized = normalizeBookingPricing(pricing);
+  const sourceCurrency = getPricingCurrencyForStorage(normalized);
+  const displayCurrency = safeCurrency(targetCurrency || sourceCurrency);
+  if (sourceCurrency === displayCurrency) {
+    return {
+      ...normalized,
+      currency: displayCurrency,
+      totals: normalized.totals || computeBookingOfferTotals(normalized),
+      total_price_cents: normalized.total_price_cents ?? (normalized.totals?.total_price_cents || 0)
+    };
+  }
+
+  const [agreedNetAmount, adjustments, payments] = await Promise.all([
+    convertMinorUnits(normalized.agreed_net_amount_cents, sourceCurrency, displayCurrency),
+    Promise.all(
+      normalized.adjustments.map((adjustment) =>
+        convertMinorUnits(adjustment.amount_cents, sourceCurrency, displayCurrency)
+      )
+    ),
+    Promise.all(
+      normalized.payments.map((payment) => convertMinorUnits(payment.net_amount_cents, sourceCurrency, displayCurrency))
+    )
+  ]);
+
+  return {
+    ...normalized,
+    currency: displayCurrency,
+    agreed_net_amount_cents: agreedNetAmount,
+    adjustments: normalized.adjustments.map((adjustment, index) => ({
+      ...adjustment,
+      amount_cents: adjustments[index]
+    })),
+    payments: normalized.payments.map((payment, index) => ({
+      ...payment,
+      net_amount_cents: payments[index]
+    }))
+  };
+}
+
+async function convertOfferForDisplay(rawOffer, targetCurrency) {
+  const normalized = normalizeBookingOffer(rawOffer, getOfferCurrencyForStorage(rawOffer));
+  const sourceCurrency = getOfferCurrencyForStorage(normalized);
+  const displayCurrency = safeCurrency(targetCurrency || sourceCurrency);
+  if (sourceCurrency === displayCurrency) {
+    return {
+      ...normalized,
+      currency: displayCurrency
+    };
+  }
+
+  const convertedAmounts = await Promise.all(
+    normalized.items.map((item) => convertMinorUnits(item.unit_amount_cents, sourceCurrency, displayCurrency))
+  );
+
+  return {
+    ...normalized,
+    currency: displayCurrency,
+    items: normalized.items.map((item, index) => ({
+      ...item,
+      currency: displayCurrency,
+      unit_amount_cents: convertedAmounts[index]
+    }))
+  };
 }
 
 function validateOfferExchangeRequest(payload) {
@@ -1911,14 +2187,14 @@ function syncBookingAtpStaffFields(booking) {
 
 function defaultBookingPricing() {
   return {
-    currency: "USD",
+    currency: BASE_CURRENCY,
     agreed_net_amount_cents: 0,
     adjustments: [],
     payments: []
   };
 }
 
-function defaultBookingOffer(preferredCurrency = "USD") {
+function defaultBookingOffer(preferredCurrency = BASE_CURRENCY) {
   const currency = safeCurrency(preferredCurrency);
   return {
     currency,
@@ -2018,7 +2294,7 @@ function computeBookingOfferTotals(offer) {
   };
 }
 
-function normalizeBookingOffer(rawOffer, preferredCurrency = "USD") {
+function normalizeBookingOffer(rawOffer, preferredCurrency = BASE_CURRENCY) {
   const fallback = defaultBookingOffer(preferredCurrency);
   const offer = rawOffer && typeof rawOffer === "object" ? rawOffer : {};
   const currency = safeCurrency(offer.currency || preferredCurrency || fallback.currency);
@@ -2066,8 +2342,8 @@ function normalizeBookingOffer(rawOffer, preferredCurrency = "USD") {
   };
 }
 
-function buildBookingOfferReadModel(rawOffer, preferredCurrency = "USD") {
-  const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
+async function buildBookingOfferReadModel(rawOffer, preferredCurrency = BASE_CURRENCY) {
+  const offer = await convertOfferForDisplay(rawOffer, preferredCurrency);
   const totals = computeBookingOfferTotals(offer);
   return {
     ...offer,
@@ -2101,8 +2377,8 @@ function validateBookingOfferInput(rawOffer, booking) {
     booking?.preferred_currency ||
       booking?.offer?.currency ||
       booking?.pricing?.currency ||
-      rawOffer.currency ||
-      "USD"
+      rawOffer?.currency ||
+      BASE_CURRENCY
   );
   const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
 
@@ -2132,7 +2408,7 @@ function normalizeBookingPricing(rawPricing) {
   const payments = Array.isArray(pricing.payments) ? pricing.payments : [];
 
   return {
-    currency: safeCurrency(pricing.currency || "USD"),
+    currency: safeCurrency(pricing.currency || BASE_CURRENCY),
     agreed_net_amount_cents: normalizeAmountCents(pricing.agreed_net_amount_cents, 0),
     adjustments: adjustments.map((adjustment) => ({
       id: normalizeText(adjustment?.id) || `adj_${randomUUID()}`,
@@ -2188,11 +2464,12 @@ function computeBookingPricingSummary(pricing) {
   };
 }
 
-function buildBookingPricingReadModel(pricing) {
+async function buildBookingPricingReadModel(pricing, targetCurrency = BASE_CURRENCY) {
   const normalized = normalizeBookingPricing(pricing);
+  const converted = await convertPricingForDisplay(normalized, targetCurrency);
   return {
-    ...normalized,
-    payments: normalized.payments.map((payment) => {
+    ...converted,
+    payments: converted.payments.map((payment) => {
       const tax_amount_cents = roundTaxAmount(payment.net_amount_cents, payment.tax_rate_basis_points);
       return {
         ...payment,
@@ -2200,7 +2477,7 @@ function buildBookingPricingReadModel(pricing) {
         gross_amount_cents: payment.net_amount_cents + tax_amount_cents
       };
     }),
-    summary: computeBookingPricingSummary(normalized)
+    summary: computeBookingPricingSummary(converted)
   };
 }
 
@@ -2292,7 +2569,7 @@ function computeBookingHash(booking) {
     preferred_currency: booking.preferred_currency || null,
     notes: booking.notes || null,
     pricing: normalizeBookingPricing(booking.pricing),
-    offer: normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD"),
+  offer: normalizeBookingOffer(booking.offer, booking.preferred_currency || BASE_CURRENCY),
     source: booking.source || null,
     created_at: booking.created_at || null,
     updated_at: booking.updated_at || null
@@ -2300,29 +2577,30 @@ function computeBookingHash(booking) {
   return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
-function buildBookingReadModel(booking) {
+async function buildBookingReadModel(booking) {
+  const preferredCurrency = safeCurrency(booking?.preferred_currency || booking?.pricing?.currency || BASE_CURRENCY);
   return {
     ...booking,
-    pricing: buildBookingPricingReadModel(booking.pricing),
-    offer: buildBookingOfferReadModel(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD"),
+    pricing: await buildBookingPricingReadModel(booking.pricing, preferredCurrency),
+    offer: await buildBookingOfferReadModel(booking.offer, preferredCurrency),
     booking_hash: computeBookingHash(booking)
   };
 }
 
-function sendBookingHashConflict(res, booking) {
+async function sendBookingHashConflict(res, booking) {
   sendJson(res, 409, {
     error: "Booking changed in backend",
     detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
     code: "BOOKING_HASH_MISMATCH",
-    booking: buildBookingReadModel(booking)
+    booking: await buildBookingReadModel(booking)
   });
 }
 
-function assertMatchingBookingHash(payload, booking, res) {
+async function assertMatchingBookingHash(payload, booking, res) {
   const requestHash = normalizeText(payload.booking_hash);
   const currentHash = computeBookingHash(booking);
   if (!requestHash || requestHash !== currentHash) {
-    sendBookingHashConflict(res, booking);
+    await sendBookingHashConflict(res, booking);
     return false;
   }
   return true;
@@ -2496,7 +2774,7 @@ async function handleCreateBooking(req, res) {
     store.customers.push(customer);
   }
 
-  const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || "USD");
+  const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || BASE_CURRENCY);
 
   const booking = {
     id: `booking_${randomUUID()}`,
@@ -2559,9 +2837,11 @@ async function handleListBookings(req, res) {
   }
   const requestUrl = new URL(req.url, "http://localhost");
   const { items: filtered, filters, sort } = filterAndSortBookings(store, requestUrl.searchParams);
-  const visible = filtered
-    .filter((booking) => canAccessBooking(principal, booking, staffMember))
-    .map(buildBookingReadModel);
+  const visible = await Promise.all(
+    filtered
+      .filter((booking) => canAccessBooking(principal, booking, staffMember))
+      .map(async (booking) => buildBookingReadModel(booking))
+  );
   const paged = paginate(visible, requestUrl.searchParams);
   sendJson(res, 200, {
     items: paged.items,
@@ -2590,7 +2870,7 @@ async function handleGetBooking(req, res, [bookingId]) {
   }
 
   const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  sendJson(res, 200, { booking: buildBookingReadModel(booking), customer });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking), customer });
 }
 
 async function handlePatchBookingStage(req, res, [bookingId]) {
@@ -2621,7 +2901,7 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
-  if (!assertMatchingBookingHash(payload, booking, res)) return;
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
   const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
   if (!allowed.includes(nextStage)) {
@@ -2636,7 +2916,7 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
   addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Stage updated to ${nextStage}`);
   await persistStore(store);
 
-  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
 }
 
 async function handlePatchBookingOwner(req, res, [bookingId]) {
@@ -2660,7 +2940,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
-  if (!assertMatchingBookingHash(payload, booking, res)) return;
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
   if (!ownerIdRaw) {
     booking.atp_staff = null;
@@ -2669,7 +2949,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     booking.updated_at = nowIso();
     addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), "AtpStaff unassigned");
     await persistStore(store);
-    sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+    sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
     return;
   }
 
@@ -2687,7 +2967,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
   addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${owner.name}`);
   await persistStore(store);
 
-  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
 }
 
 async function handlePatchBookingNotes(req, res, [bookingId]) {
@@ -2712,13 +2992,13 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
-  if (!assertMatchingBookingHash(payload, booking, res)) return;
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
   const nextNotes = normalizeText(payload.notes);
   const currentNotes = normalizeText(booking.notes);
 
   if (nextNotes === currentNotes) {
-    sendJson(res, 200, { booking: buildBookingReadModel(booking), unchanged: true });
+    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
     return;
   }
 
@@ -2733,7 +3013,7 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
   );
   await persistStore(store);
 
-  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
 }
 
 async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -2758,7 +3038,7 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
-  if (!assertMatchingBookingHash(payload, booking, res)) return;
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
   const check = validateBookingPricingInput(payload.pricing);
   if (!check.ok) {
@@ -2766,15 +3046,15 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
     return;
   }
 
-  const nextPricing = check.pricing;
-  const nextPricingJson = JSON.stringify(nextPricing);
+  const nextPricingBase = await convertBookingPricingToBaseCurrency(check.pricing);
+  const nextPricingJson = JSON.stringify(nextPricingBase);
   const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
   if (nextPricingJson === currentPricingJson) {
-    sendJson(res, 200, { booking: buildBookingReadModel(booking), unchanged: true });
+    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
     return;
   }
 
-  booking.pricing = nextPricing;
+  booking.pricing = nextPricingBase;
   booking.updated_at = nowIso();
   addActivity(
     store,
@@ -2785,7 +3065,7 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
   );
   await persistStore(store);
 
-  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
 }
 
 async function handlePatchBookingOffer(req, res, [bookingId]) {
@@ -2810,7 +3090,7 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
-  if (!assertMatchingBookingHash(payload, booking, res)) return;
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
   const check = validateBookingOfferInput(payload.offer, booking);
   if (!check.ok) {
@@ -2818,17 +3098,17 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
     return;
   }
 
-  const nextOffer = check.offer;
-  const nextOfferJson = JSON.stringify(nextOffer);
+  const nextOfferBase = await convertBookingOfferToBaseCurrency(check.offer);
+  const nextOfferJson = JSON.stringify(nextOfferBase);
   const currentOfferJson = JSON.stringify(
-    normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD")
+    normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY)
   );
   if (nextOfferJson === currentOfferJson) {
-    sendJson(res, 200, { booking: buildBookingReadModel(booking), unchanged: true });
+    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
     return;
   }
 
-  booking.offer = nextOffer;
+  booking.offer = nextOfferBase;
   booking.updated_at = nowIso();
   addActivity(
     store,
@@ -2839,7 +3119,7 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
   );
   await persistStore(store);
 
-  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
 }
 
 async function handlePostOfferExchangeRates(req, res) {
@@ -2869,59 +3149,53 @@ async function handlePostOfferExchangeRates(req, res) {
       from_currency: fromCurrency,
       to_currency: toCurrency,
       exchange_rate: 1,
+      total_price_cents: 0,
       converted_items: []
     });
     return;
   }
 
-  let rate;
-  let warning = null;
-  try {
-    rate = await fetchExchangeRate(fromCurrency, toCurrency);
-  } catch (error) {
-    const fallbackRate = getFallbackExchangeRate(fromCurrency, toCurrency);
-    if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
-      rate = fallbackRate;
-      warning = "Exchange rate lookup failed. Using fallback rate.";
-      console.error("[backend] exchange rate lookup failed; fallback used", {
-        fromCurrency,
-        toCurrency,
-        fallbackRate,
-        detail: String(error?.message || error)
-      });
-    } else {
+  let sourceToBaseRate = 1;
+  let baseToTargetRate = 1;
+  const warnings = new Set();
+
+  if (fromCurrency !== BASE_CURRENCY) {
+    try {
+      const resolved = await resolveExchangeRateWithFallback(fromCurrency, BASE_CURRENCY);
+      sourceToBaseRate = resolved.rate;
+      if (resolved.warning) warnings.add(resolved.warning);
+    } catch (error) {
+      sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
+      return;
+    }
+  }
+  if (toCurrency !== BASE_CURRENCY) {
+    try {
+      const resolved = await resolveExchangeRateWithFallback(BASE_CURRENCY, toCurrency);
+      baseToTargetRate = resolved.rate;
+      if (resolved.warning) warnings.add(resolved.warning);
+    } catch (error) {
       sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
       return;
     }
   }
 
-  const convertedItems = items.map((item) => {
-    const converted_unit_amount_cents = roundConvertedAmount(item.unit_amount_cents, fromCurrency, toCurrency, rate);
-    const sign = offerCategorySign(item.category);
-    const line_net_amount_cents = sign * converted_unit_amount_cents * item.quantity;
-    const line_tax_amount_cents = sign * roundTaxAmount(converted_unit_amount_cents * item.quantity, item.tax_rate_basis_points);
-
-    return {
-      id: item.id || "",
-      unit_amount_cents: converted_unit_amount_cents,
-      category: item.category,
-      quantity: item.quantity,
-      tax_rate_basis_points: item.tax_rate_basis_points,
-      line_total_amount_cents: line_net_amount_cents + line_tax_amount_cents
-    };
-  });
+  const convertedItems = items.map((item) =>
+    convertOfferLineAmountForCurrency(item, { sourceToBaseRate, baseToTargetRate }, fromCurrency, toCurrency)
+  );
+  const combinedRate = sourceToBaseRate * baseToTargetRate;
 
   sendJson(res, 200, {
     from_currency: fromCurrency,
     to_currency: toCurrency,
-    exchange_rate: rate,
+    exchange_rate: combinedRate,
     total_price_cents: convertedItems.reduce(
       (sum, item) =>
         sum + (Number.isFinite(item.line_total_amount_cents) ? Number(item.line_total_amount_cents) : 0),
       0
     ),
     converted_items: convertedItems,
-    ...(warning ? { warning } : {})
+    ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
   });
 }
 
@@ -3239,9 +3513,11 @@ async function handleGetCustomer(req, res, [customerId]) {
   const bookings = store.bookings
     .filter((booking) => booking.customer_id === customer.id)
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .map(buildBookingReadModel);
+    .map(async (booking) => await buildBookingReadModel(booking));
 
-  sendJson(res, 200, { customer, bookings });
+  const bookingsReadModel = await Promise.all(bookings);
+
+  sendJson(res, 200, { customer, bookings: bookingsReadModel });
 }
 
 async function handleListAtpStaff(req, res) {

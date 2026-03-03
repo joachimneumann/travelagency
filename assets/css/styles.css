@@ -1039,8 +1039,8 @@ textarea:focus-visible {
   min-width: 42px;
   height: 42px;
   border-radius: 10px;
-  color: #b00020;
-  border-color: #ffccd4;
+  color: var(--accent);
+  border-color: var(--accent);
   font-size: 1.8rem;
   font-weight: 700;
   line-height: 1;
@@ -1049,9 +1049,9 @@ textarea:focus-visible {
 
 .offer-remove-btn:hover,
 .offer-remove-btn:focus-visible {
-  background: #fff4f6;
-  color: #8d0018;
-  border-color: #ffb3c2;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .backend-table tr:last-child td {

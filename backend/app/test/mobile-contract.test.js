@@ -201,7 +201,7 @@ test("booking offer patch enforces preferred currency", async () => {
   assert.equal(typeof patchResult.body.booking.offer.totals.gross_amount_cents, "number");
 
   const mismatchCurrency = offerCurrency === "USD" ? "VND" : "USD";
-  const invalidResult = await requestJson(
+  const conversionResult = await requestJson(
     endpointPath("booking_offer").replace("{bookingId}", bookingID),
     apiHeaders(),
     {
@@ -216,6 +216,7 @@ test("booking offer patch enforces preferred currency", async () => {
       }
     }
   );
-  assert.equal(invalidResult.status, 422);
-  assert.match(String(invalidResult.body.error || ""), /offer\.currency must match booking\.preferred_currency/);
+  assert.equal(conversionResult.status, 200);
+  assert.equal(conversionResult.body.booking.offer.currency, offerCurrency);
+  assert.equal(typeof conversionResult.body.booking.offer.total_price_cents, "number");
 });
