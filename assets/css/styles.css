@@ -1017,6 +1017,12 @@ textarea:focus-visible {
 .backend-table .offer-col-price-single,
 .backend-table .offer-col-price-total {
   width: 230px;
+  text-align: right;
+}
+
+.backend-table .offer-col-price-single input,
+.backend-table .offer-col-price-total {
+  text-align: right;
 }
 
 .backend-table textarea[data-offer-item-details] {
@@ -1031,8 +1037,13 @@ textarea:focus-visible {
 .offer-total-cell {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.6rem;
+}
+
+.offer-total-sum {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .offer-remove-btn {
@@ -1052,6 +1063,12 @@ textarea:focus-visible {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: var(--accent);
+}
+
+.offer-category-tax {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #5d6d78;
 }
 
 .backend-table tr:last-child td {

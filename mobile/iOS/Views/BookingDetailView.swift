@@ -185,6 +185,7 @@ struct BookingDetailView: View {
                                 .foregroundStyle(.secondary)
                                 Text("Tax: \(formatPercent(item.taxRateBasisPoints))")
                                     .font(.caption2)
+                                    .italic()
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -204,13 +205,16 @@ struct BookingDetailView: View {
                                     currency: offer.currency
                                 )
                                 VStack(alignment: .trailing, spacing: 2) {
-                                    Text("Price (SINGLE, \(offer.currency.rawValue)): \(single)")
-                                    Text("Price (TOTAL, \(offer.currency.rawValue)): \(total)")
+                                Text("Price (SINGLE, \(offer.currency.rawValue)): \(single)")
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                                Text("Price (TOTAL, \(offer.currency.rawValue)): \(total)")
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                                 }
                                 .font(.subheadline)
                             } else {
                                 let lineGross = item.lineGrossAmountCents
                                 Text(formatMoney(lineGross ?? (item.lineTotalAmountCents ?? (item.unitAmountCents * item.quantity)), currency: offer.currency))
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                         }
                         if let notes = item.notes, !notes.isEmpty {

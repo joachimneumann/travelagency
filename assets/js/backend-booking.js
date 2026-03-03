@@ -565,7 +565,7 @@ function renderOfferItemsTable() {
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
   const leadingTotalCols = showDualPrice ? 4 : 3;
-  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><strong>Total with Tax: ${escapeHtml(offerTotalValue)}</strong></td></tr>`;
+  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><div class="offer-total-sum"><strong>Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td></tr>`;
   const columns = 3 + (showDualPrice ? 2 : 1);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
   const body = (rows || noRows) + totalRow;
