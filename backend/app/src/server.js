@@ -75,6 +75,7 @@ const APP_ROLES = {
 
 const FX_RATE_CACHE_TTL_MS = 5 * 60 * 1000;
 const fxRateCache = new Map();
+const FX_RATE_CACHE_STALE_MS = 30 * 60 * 1000;
 
 const PRICING_ADJUSTMENT_TYPES = {
   DISCOUNT: "DISCOUNT",
@@ -989,45 +990,178 @@ function getExchangeCacheKey(fromCurrency, toCurrency) {
   return `${fromCurrency}->${toCurrency}`;
 }
 
-async function fetchExchangeRate(fromCurrency, toCurrency) {
+async function fetchExchangeRate(fromCurrency, toCurrency, options = {}) {
+  const { visited = new Set() } = options;
   const from = fromCurrency === "EURO" ? "EUR" : fromCurrency;
   const to = toCurrency === "EURO" ? "EUR" : toCurrency;
   if (!from || !to || from === to) return 1;
 
+  const key = `${from}->${to}`;
+  if (visited.has(key)) {
+    throw new Error(`Exchange-rate conversion loop detected for ${key}`);
+  }
+  const nextVisited = new Set(visited);
+  nextVisited.add(key);
+
   const now = Date.now();
-  const key = getExchangeCacheKey(fromCurrency, toCurrency);
-  const cached = fxRateCache.get(key);
+  const cacheKey = getExchangeCacheKey(fromCurrency, toCurrency);
+  const cached = fxRateCache.get(cacheKey);
   if (cached && cached.expiresAt > now) return cached.rate;
 
-  const endpoint = `https://api.frankfurter.app/latest?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-  try {
-    const response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(`Exchange API request failed (${response.status})`);
-    }
-    const payload = await response.json();
-    const rawRate = payload?.rates?.[to];
-    const rate = Number(rawRate);
-    if (!Number.isFinite(rate) || rate <= 0) {
-      throw new Error("Exchange rate response did not contain a valid rate");
-    }
-    fxRateCache.set(key, {
-      rate,
-      expiresAt: now + FX_RATE_CACHE_TTL_MS
-    });
-    return rate;
-  } catch (error) {
-    const fallbackRate = getFallbackExchangeRate(from, to) || getFallbackExchangeRate(fromCurrency, toCurrency);
-    if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
-      console.warn(
-        `[backend] using fallback exchange rate ${from}->${to} = ${fallbackRate} after API fetch error:`,
-        error?.message || error
-      );
-      return fallbackRate;
-    }
+  const staleCached = fxRateCache.get(cacheKey);
 
-    throw error;
+  const fallbackRate = getFallbackExchangeRate(from, to) || getFallbackExchangeRate(fromCurrency, toCurrency);
+  if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
+    return fallbackRate;
   }
+
+  const providers = [
+    async () => {
+      const response = await fetch(
+        `https://api.frankfurter.app/latest?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+      );
+      if (!response.ok) {
+        throw new Error(`Frankfurter API request failed (${response.status})`);
+      }
+      const payload = await response.json();
+      const rate = Number(payload?.rates?.[to]);
+      if (!Number.isFinite(rate) || rate <= 0) {
+        throw new Error("Frankfurter exchange rate response did not contain a valid rate");
+      }
+      return rate;
+    },
+    async () => {
+      const symbols = Array.from(new Set([from, to])).filter(Boolean).join(",");
+      const response = await fetch(
+        `https://api.frankfurter.app/latest?from=EUR&to=${encodeURIComponent(symbols)}`
+      );
+      if (!response.ok) {
+        throw new Error(`Frankfurter EUR-based API request failed (${response.status})`);
+      }
+      const payload = await response.json();
+      const rates = payload?.rates || {};
+      if (from === "EUR") {
+        const toRate = Number(rates[to]);
+        if (!Number.isFinite(toRate) || toRate <= 0) {
+          throw new Error("Frankfurter EUR-based exchange response did not contain a valid to-rate");
+        }
+        return toRate;
+      }
+      if (to === "EUR") {
+        const fromRate = Number(rates[from]);
+        if (!Number.isFinite(fromRate) || fromRate <= 0) {
+          throw new Error("Frankfurter EUR-based exchange response did not contain a valid from-rate");
+        }
+        return 1 / fromRate;
+      }
+      const fromRate = Number(rates[from]);
+      const toRate = Number(rates[to]);
+      if (!Number.isFinite(fromRate) || fromRate <= 0 || !Number.isFinite(toRate) || toRate <= 0) {
+        throw new Error("Frankfurter EUR-based exchange response did not contain valid rates");
+      }
+      return toRate / fromRate;
+    },
+    async () => {
+      const response = await fetch(`https://open.er-api.com/v6/latest/${encodeURIComponent(from)}`);
+      if (!response.ok) {
+        throw new Error(`ER-API request failed (${response.status})`);
+      }
+      const payload = await response.json();
+      if (String(payload?.result || "").toLowerCase() !== "success" && payload?.result !== undefined) {
+        throw new Error(`ER-API reported status: ${payload?.result || "unknown"}`);
+      }
+      const rate = Number(payload?.rates?.[to]);
+      if (!Number.isFinite(rate) || rate <= 0) {
+        throw new Error("ER-API exchange rate response did not contain a valid rate");
+      }
+      return rate;
+    },
+    async () => {
+      const response = await fetch(`https://open.er-api.com/v6/latest/EUR`);
+      if (!response.ok) {
+        throw new Error(`ER-API EUR-based request failed (${response.status})`);
+      }
+      const payload = await response.json();
+      if (String(payload?.result || "").toLowerCase() !== "success" && payload?.result !== undefined) {
+        throw new Error(`ER-API reported status: ${payload?.result || "unknown"}`);
+      }
+      const rates = payload?.rates || {};
+      if (from === "EUR") {
+        const toRate = Number(rates[to]);
+        if (!Number.isFinite(toRate) || toRate <= 0) {
+          throw new Error("ER-API EUR-based exchange response did not contain a valid to-rate");
+        }
+        return toRate;
+      }
+      if (to === "EUR") {
+        const fromRate = Number(rates[from]);
+        if (!Number.isFinite(fromRate) || fromRate <= 0) {
+          throw new Error("ER-API EUR-based exchange response did not contain a valid from-rate");
+        }
+        return 1 / fromRate;
+      }
+      const fromRate = Number(rates[from]);
+      const toRate = Number(rates[to]);
+      if (!Number.isFinite(fromRate) || fromRate <= 0 || !Number.isFinite(toRate) || toRate <= 0) {
+        throw new Error("ER-API EUR-based exchange response did not contain valid rates");
+      }
+      return toRate / fromRate;
+    }
+  ];
+
+  const errors = [];
+  for (const provider of providers) {
+    try {
+      const rate = await provider();
+      fxRateCache.set(cacheKey, {
+        rate,
+        expiresAt: now + FX_RATE_CACHE_TTL_MS
+      });
+      return rate;
+    } catch (error) {
+      errors.push(String(error?.message || error));
+    }
+  }
+
+  const crossVia = ["USD", "EUR"];
+  for (const via of crossVia) {
+    if (via === from || via === to) continue;
+    const crossKey = getExchangeCacheKey(fromCurrency, via);
+    const viaCached = fxRateCache.get(crossKey);
+    const crossRate = viaCached && viaCached.expiresAt > now ? viaCached.rate : null;
+
+    try {
+      const fromToVia = crossRate || await fetchExchangeRate(fromCurrency, via, { visited: nextVisited });
+      const viaToCache = getExchangeCacheKey(via, toCurrency);
+      const viaToCached = fxRateCache.get(viaToCache);
+      const viaTo = viaToCached && viaToCached.expiresAt > now ? viaToCached.rate : null;
+      const toRate = viaTo || await fetchExchangeRate(via, toCurrency, { visited: nextVisited });
+      if (fromToVia > 0 && toRate > 0) {
+        const rate = fromToVia * toRate;
+        fxRateCache.set(cacheKey, {
+          rate,
+          expiresAt: now + FX_RATE_CACHE_TTL_MS
+        });
+        return rate;
+      }
+    } catch (error) {
+      errors.push(`Cross via ${via} failed: ${String(error?.message || error)}`);
+    }
+  }
+
+  if (staleCached) {
+    console.warn(
+      `[backend] using stale exchange rate ${from}->${to} = ${staleCached.rate} after fresh-rate lookup failures:`,
+      errors.join(" | ")
+    );
+    return staleCached.rate;
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors[0]);
+  }
+
+  throw new Error("No exchange rate source available");
 }
 
 function roundConvertedAmount(amountCents, fromCurrency, toCurrency, rate) {
