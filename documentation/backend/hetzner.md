@@ -181,7 +181,7 @@ docker compose version
 On your local machine, run:
 
 ```bash
-rsync -avz --exclude '.git' /Users/internal_admin/projects/travelagency/ asiatravelplan@<SERVER_IP>:/home/asiatravelplan/travelagency/
+rsync -avz --exclude '.git' ~/projects/travelagency/ asiatravelplan@<SERVER_IP>:/home/asiatravelplan/travelagency/
 ```
 
 On server:

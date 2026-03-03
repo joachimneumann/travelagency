@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="/Users/internal_admin/projects/travelagency"
+ROOT_DIR="$HOME/projects/travelagency"
 REMOTE_SCRIPT="./scripts/update_staging.sh"
 
 usage() {

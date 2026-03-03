@@ -183,13 +183,13 @@ ATP keeps the model split explicit:
 
 ### 5.1 Backend
 
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_Currency.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_ATPStaff.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_Booking.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/Models/generated_Aux.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/API/generated_APIModels.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/API/generated_APIRequestFactory.js`
-- `/Users/internal_admin/projects/travelagency/backend/app/Generated/API/generated_APIClient.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_Currency.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_ATPStaff.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_Booking.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_Aux.js`
+- `~/projects/travelagency/backend/app/Generated/API/generated_APIModels.js`
+- `~/projects/travelagency/backend/app/Generated/API/generated_APIRequestFactory.js`
+- `~/projects/travelagency/backend/app/Generated/API/generated_APIClient.js`
 
 `generated_Booking.js` includes booking-related structures for:
 
@@ -200,23 +200,23 @@ ATP keeps the model split explicit:
 
 ### 5.2 Frontend
 
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_Currency.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_ATPStaff.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_Booking.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/Models/generated_Aux.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/API/generated_APIModels.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/API/generated_APIRequestFactory.js`
-- `/Users/internal_admin/projects/travelagency/frontend/Generated/API/generated_APIClient.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_Currency.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_ATPStaff.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_Booking.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_Aux.js`
+- `~/projects/travelagency/frontend/Generated/API/generated_APIModels.js`
+- `~/projects/travelagency/frontend/Generated/API/generated_APIRequestFactory.js`
+- `~/projects/travelagency/frontend/Generated/API/generated_APIClient.js`
 
 ### 5.3 iOS
 
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_Currency.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_ATPStaff.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_Booking.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/generated_Aux.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API/generated_APIModels.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API/generated_APIRequestFactory.swift`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API/generated_APIClient.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Currency.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_ATPStaff.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Booking.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Aux.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/API/generated_APIModels.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/API/generated_APIRequestFactory.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/API/generated_APIClient.swift`
 
 ## 6. Generated File Responsibilities
 

@@ -1,7 +1,7 @@
 # AsiaTravelPlan iOS App
 
 This folder contains the first implementation pass of the native iPhone app described in:
-- `/Users/internal_admin/projects/travelagency/documentation/backend/mobileApp.md`
+- `~/projects/travelagency/documentation/backend/mobileApp.md`
 
 Current scope:
 - SwiftUI app shell
@@ -17,10 +17,10 @@ Current scope:
 - generated contract models/request factory from OpenAPI
 
 Included now:
-- Xcode project: `/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
-- project generator: `/Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml`
-- generated models: `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated`
+- Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
+- project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
+- contract source: `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
+- generated models: `~/projects/travelagency/mobile/iOS/Generated`
 - URL scheme registration in `Resources/Info.plist`
 - PKCE authorization code exchange against Keycloak
 - refresh-token based session restoration
@@ -35,8 +35,8 @@ Included now:
 Regenerate the contract artifacts after changing the OpenAPI file:
 
 ```bash
-ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
-ruby /Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
+ruby ~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
+ruby ~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
 ```
 
 Current limitation:

@@ -108,7 +108,7 @@ Notes:
 ## Step 4: Restart Backend
 
 ```bash
-cd /Users/internal_admin/projects/travelagency/backend/app
+cd ~/projects/travelagency/backend/app
 npm start
 ```
 

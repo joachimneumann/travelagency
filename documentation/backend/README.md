@@ -11,7 +11,7 @@ This service implements Milestone 1 from `backend/backend_software.md`:
 
 Related documentation:
 - `mobileApp.md`: how to build a native iPhone app against this backend and Keycloak setup
-- Mobile source scaffold: `/Users/internal_admin/projects/travelagency/mobile/iOS`
+- Mobile source scaffold: `~/projects/travelagency/mobile/iOS`
 
 ## Run
 
@@ -53,18 +53,18 @@ Cross-origin browser usage note:
 ## Local Keycloak With Persistent Theme
 
 For local Docker-based Keycloak with the custom login theme mounted persistently, use:
-- `/Users/internal_admin/projects/travelagency/docker-compose.local-keycloak.yml`
-- `/Users/internal_admin/projects/travelagency/backend/keycloak-theme/asiatravelplan`
+- `~/projects/travelagency/docker-compose.local-keycloak.yml`
+- `~/projects/travelagency/backend/keycloak-theme/asiatravelplan`
 
 Helper scripts:
-- `/Users/internal_admin/projects/travelagency/scripts/start_local_keycloak.sh`
-- `/Users/internal_admin/projects/travelagency/scripts/stop_local_keycloak.sh`
-- `/Users/internal_admin/projects/travelagency/scripts/restart_local_keycloak.sh`
+- `~/projects/travelagency/scripts/start_local_keycloak.sh`
+- `~/projects/travelagency/scripts/stop_local_keycloak.sh`
+- `~/projects/travelagency/scripts/restart_local_keycloak.sh`
 
 Start Keycloak:
 
 ```bash
-cd /Users/internal_admin/projects/travelagency
+cd ~/projects/travelagency
 ./scripts/start_local_keycloak.sh
 ```
 
@@ -316,23 +316,23 @@ Auth:
 
 The mobile app should not follow backend internals or `store.json` structure directly.
 The single contract source is:
-- [/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml](/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml)
+- [~/projects/travelagency/api/generated/mobile-api.openapi.yaml](~/projects/travelagency/api/generated/mobile-api.openapi.yaml)
 
 Generated artifacts:
-- [/Users/internal_admin/projects/travelagency/api/generated/mobile-api.meta.json](/Users/internal_admin/projects/travelagency/api/generated/mobile-api.meta.json)
-- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models)
-- [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API)
+- [~/projects/travelagency/api/generated/mobile-api.meta.json](~/projects/travelagency/api/generated/mobile-api.meta.json)
+- [~/projects/travelagency/mobile/iOS/Generated/Models](~/projects/travelagency/mobile/iOS/Generated/Models)
+- [~/projects/travelagency/mobile/iOS/Generated/API](~/projects/travelagency/mobile/iOS/Generated/API)
 
 Regenerate after editing the OpenAPI file:
 
 ```bash
-ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
+ruby ~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
 ```
 
 Contract validation tests:
 
 ```bash
-cd /Users/internal_admin/projects/travelagency/backend/app
+cd ~/projects/travelagency/backend/app
 npm test
 ```
 

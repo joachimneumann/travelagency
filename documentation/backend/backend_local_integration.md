@@ -194,7 +194,7 @@ Role mapping for `atp_staff`:
 Terminal B (website):
 
 ```bash
-cd /Users/internal_admin/projects/travelagency
+cd ~/projects/travelagency
 python3 -m http.server 8080
 ```
 
@@ -220,7 +220,7 @@ Scripts:
 Start Keycloak:
 
 ```bash
-cd /Users/internal_admin/projects/travelagency
+cd ~/projects/travelagency
 ./scripts/start_local_keycloak.sh
 ```
 
@@ -228,7 +228,7 @@ This starts Keycloak on:
 - `http://localhost:8081`
 
 The compose file mounts:
-- host: `/Users/internal_admin/projects/travelagency/backend/keycloak-theme/asiatravelplan`
+- host: `~/projects/travelagency/backend/keycloak-theme/asiatravelplan`
 - container: `/opt/keycloak/themes/asiatravelplan`
 
 Important behavior:

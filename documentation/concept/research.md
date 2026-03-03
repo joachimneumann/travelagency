@@ -274,4 +274,4 @@ This merge adds benchmark references for:
 - Abercrombie & Kent, Scott Dunn, Butterfield & Robinson
 
 Primary source list is preserved in:
-- `/Users/internal_admin/projects/travelagency/output/pdf/sea_travel_agency_market_report_2026-02-22.txt`
+- `~/projects/travelagency/output/pdf/sea_travel_agency_market_report_2026-02-22.txt`

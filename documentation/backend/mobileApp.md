@@ -3,10 +3,10 @@
 This document defines the first iPhone app for AsiaTravelPlan.
 
 Current implementation scaffold:
-- `/Users/internal_admin/projects/travelagency/mobile/iOS`
-- Xcode project: `/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
-- project generator: `/Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml`
+- `~/projects/travelagency/mobile/iOS`
+- Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
+- project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
+- contract source: `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
 
 The app scope is intentionally narrow:
 - allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
@@ -93,12 +93,12 @@ The mobile app should treat the OpenAPI contract as the only stable interface.
 It should not infer response shapes from backend internals or JSON storage.
 
 Contract source of truth:
-- `/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml`
+- `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
 
 Generated artifacts:
-- `/Users/internal_admin/projects/travelagency/api/generated/mobile-api.meta.json`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models/`
-- `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API/`
+- `~/projects/travelagency/api/generated/mobile-api.meta.json`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/`
+- `~/projects/travelagency/mobile/iOS/Generated/API/`
 
 The mobile app should call backend APIs with bearer tokens:
 
