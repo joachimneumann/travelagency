@@ -118,6 +118,7 @@ const els = {
   offerItemCategorySelect: document.getElementById("offerItemCategorySelect"),
   offerAddItemBtn: document.getElementById("offerAddItemBtn"),
   offerItemsTable: document.getElementById("offerItemsTable"),
+  offerItemsTotalTable: document.getElementById("offerItemsTotalTable"),
   offerSaveBtn: document.getElementById("offerSaveBtn"),
   offerStatus: document.getElementById("offerStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
@@ -518,6 +519,7 @@ function renderOfferPanel() {
 
 function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
+  if (!els.offerItemsTotalTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const showActionsCol = !readOnly;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
@@ -567,13 +569,16 @@ function renderOfferItemsTable() {
     })
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
-  const leadingTotalCols = showDualPrice ? 4 : 3;
-  const trailingTotalActionCell = showActionsCol ? `<td class="offer-col-actions"></td>` : "";
-  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td>${trailingTotalActionCell}</tr>`;
   const columns = 3 + (showDualPrice ? 2 : 1) + (showActionsCol ? 1 : 0);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
-  const body = (rows || noRows) + totalRow;
+  const totalAlignCols = 3 + (showDualPrice ? 1 : 0);
+  const totalCellOffset = `<td colspan="${totalAlignCols}"></td>`;
+  const totalRow = `<tr>${totalCellOffset}<td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td>${
+    showActionsCol ? '<td class="offer-col-actions"></td>' : ""
+  }</tr>`;
+  const body = rows || noRows;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.offerItemsTotalTable.innerHTML = `<tbody>${totalRow}</tbody>`;
 
   if (!readOnly) {
     const syncOfferInputTotals = () => {

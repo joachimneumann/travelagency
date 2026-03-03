@@ -987,6 +987,16 @@ textarea:focus-visible {
   --offer-col-min-width: 120px;
 }
 
+.backend-offer-total-table {
+  margin-top: 0.35rem;
+}
+
+.backend-offer-total-table td {
+  border-bottom: 0;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
 .backend-table th,
 .backend-table td {
   border-bottom: 1px solid var(--line);
@@ -1020,6 +1030,7 @@ textarea:focus-visible {
 .backend-table .offer-col-qty {
   width: 90px;
   max-width: 90px;
+  min-width: 72px;
 }
 
 .backend-table .offer-col-qty input {
@@ -1028,16 +1039,16 @@ textarea:focus-visible {
 
 .backend-table .offer-col-price-single,
 .backend-table .offer-col-price-total {
-  width: 250px;
-  min-width: 250px;
+  width: 210px;
+  min-width: 190px;
   text-align: right;
   padding-inline-end: 1rem;
   box-sizing: border-box;
 }
 
 .backend-table .offer-col-price-total {
-  width: 300px;
-  min-width: 300px;
+  width: 220px;
+  min-width: 200px;
 }
 
 .backend-table th.offer-col-price-single,
