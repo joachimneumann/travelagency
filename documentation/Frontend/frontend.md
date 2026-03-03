@@ -69,9 +69,8 @@
 - Tour card thumbnails use `aspect-ratio: 1/1` (square) with full width and `object-fit: cover`
 
 Behavior from JS:
-- Trips loaded from backend `GET /public/v1/tours` (primary source)
+- Trips are loaded from backend `GET /public/v1/tours` (primary source)
 - Backend responses are cached in localStorage (`asiatravelplan_tours_cache_v1`) with TTL
-- If backend is unavailable, frontend falls back to static `frontend/fallbackData/tours_fallback_data.jspn` (for GitHub/static deployment compatibility)
 - Filter state from URL params/localStorage (`asiatravelplan_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and hidden tours heading/subtitle still update based on filters

@@ -84,7 +84,7 @@ Implement all required sections from structure.md, tailored to a Vietnam travel 
 
 4) Data-driven tours (beginner editable)
 
-Tours must be stored in frontend/fallbackData/tours_fallback_data.jspn and rendered dynamically via JS. Include fields:
+Tours data should be loaded from backend endpoint `/public/v1/tours` and rendered dynamically via JS. Include fields:
 	•	id, title, shortDescription
 	•	destinationCountry
 	•	styles (array)
@@ -185,7 +185,7 @@ Deliver a complete project with this folder structure (or better):
 	•	/assets/js/main.js
 	•	/assets/img/* (downloaded + optimized images)
 	•	/assets/img/credits.md (image sources)
-	•	/frontend/fallbackData/tours_fallback_data.jspn
+	•	/public/v1/tours
 	•	/README.md explaining:
 	•	how to edit text, colors, and destinations/styles
 	•	how to add a new trip in JSON

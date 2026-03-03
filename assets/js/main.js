@@ -31,7 +31,6 @@ const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
 const TOURS_CACHE_KEY = "asiatravelplan_tours_cache_v2";
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
-const TOURS_STATIC_FALLBACK_ENDPOINT = "/frontend/fallbackData/tours_fallback_data.jspn";
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const DEFAULT_BOOKING_CURRENCY = "USD";
@@ -623,14 +622,7 @@ async function loadTrips() {
     setCachedTours(items);
     return items;
   } catch (error) {
-    const fallbackResponse = await fetch(`${TOURS_STATIC_FALLBACK_ENDPOINT}?v=${TRIPS_REQUEST_VERSION}`, { cache: "no-store" });
-    if (!fallbackResponse.ok) {
-      throw error;
-    }
-    const fallbackPayload = await fallbackResponse.json();
-    const items = normalizeToursForFrontend(Array.isArray(fallbackPayload) ? fallbackPayload : fallbackPayload.items || []);
-    setCachedTours(items);
-    return items;
+    throw error;
   }
 }
 
@@ -647,41 +639,13 @@ function normalizeToursForFrontend(items) {
 function resolveTourImage(item) {
   const raw = String(item?.image || "").trim();
   if (!raw) return raw;
-
-  const backendImagePath = raw.startsWith("/public/v1/tour-images/") || raw.startsWith("public/v1/tour-images/");
-  if (backendImagePath && !BACKEND_BASE_URL) {
-    const titleSlug = slugify(String(item?.title || "").trim()) || "tour";
-    return `/assets/img/tours_fallback_images/${titleSlug}.webp`;
-  }
-
   return absolutizeBackendUrl(raw);
-}
-
-function slugify(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-}
-
-function localAssetPathFromLegacyId(legacyId) {
-  if (!legacyId.startsWith("trip-")) return "";
-  const parts = legacyId.slice(5).split("-");
-  if (parts.length < 3) return "";
-
-  const country = (parts.shift() || "").toLowerCase();
-  const style = (parts.shift() || "").toLowerCase();
-  const variant = parts.join("-").toLowerCase();
-  if (!country || !style || !variant) return "";
-
-  const variantUnderscored = variant.replace(/-/g, "_");
-  return `/assets/tours/${country}/${style}/${country}-${style}-${variantUnderscored}.webp`;
 }
 
 function absolutizeBackendUrl(urlValue) {
   const value = String(urlValue || "").trim();
   if (!value) return value;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
   if (value.startsWith("assets/") || value.startsWith("./assets/")) {
     return `/${value.replace(/^\.\//, "")}`;
   }
@@ -689,15 +653,11 @@ function absolutizeBackendUrl(urlValue) {
 
   if (value.startsWith("public/v1/")) return `/${value}`;
   if (value.startsWith("/public/v1/")) return value;
-  if (value.startsWith("tours_fallback_images/")) return `/assets/img/tours_fallback_images/${value.replace(/^tours_fallback_images\//, "")}`;
-  if (/^[^/\\s]+\\.(webp|jpg|jpeg|png|gif|avif|svg)$/i.test(value)) {
-    return `/assets/img/tours_fallback_images/${value}`;
-  }
   if (!BACKEND_BASE_URL) return value;
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
   if (value.startsWith("/")) return `${BACKEND_BASE_URL}${value}`;
   return `${BACKEND_BASE_URL}/${value}`;
 }
+
 
 function getCachedTours() {
   try {

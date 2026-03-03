@@ -233,7 +233,7 @@ Functional requirements:
 - Product status control (active, paused, retired)
 - Image/media references and localized text fields
 - Priority and merchandising rules for front-end cards
-- Sync pipeline between backend catalog and website `frontend/fallbackData/tours_fallback_data.jspn`
+- Sync pipeline from backend catalog to website catalog feed
 - Change approval workflow for published offers
 
 Data requirements:
@@ -492,7 +492,7 @@ This requirements document is aligned with:
   - Booking-level margin
   - Partner payables mapping
 - Website catalog sync:
-  - Backend products -> `frontend/fallbackData/tours_fallback_data.jspn` publish pipeline
+  - Backend products -> frontend catalog data feed for `/public/v1/tours`
 - Audit trail and compliance workflows specific to tourism operations in target markets.
 
 ## 13.4 Recommended Technology Stack (Concrete)
