@@ -156,6 +156,7 @@ IR: {
 				{name: "quantity", kind: "scalar", typeName: "int", required: true},
 				{name: "unitAmountCents", kind: "scalar", typeName: "int", required: true},
 				{name: "taxRateBasisPoints", kind: "scalar", typeName: "int", required: true},
+				{name: "lineTotalAmountCents", kind: "scalar", typeName: "int", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "sortOrder", kind: "scalar", typeName: "int", required: false},
@@ -185,6 +186,7 @@ IR: {
 				{name: "categoryRules", kind: "valueObject", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "items", kind: "valueObject", typeName: "BookingOfferItem", required: true, isArray: true},
 				{name: "totals", kind: "valueObject", typeName: "BookingOfferTotals", required: true},
+				{name: "totalPriceCents", kind: "scalar", typeName: "int", required: true},
 			]
 		},
 		{

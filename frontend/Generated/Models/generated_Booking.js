@@ -255,6 +255,12 @@ export const BOOKING_OFFER_ITEM_SCHEMA = {
       "required": true
     },
     {
+      "name": "lineTotalAmountCents",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": false
+    },
+    {
       "name": "currency",
       "kind": "enum",
       "typeName": "CurrencyCode",
@@ -358,6 +364,12 @@ export const BOOKING_OFFER_SCHEMA = {
       "name": "totals",
       "kind": "valueObject",
       "typeName": "BookingOfferTotals",
+      "required": true
+    },
+    {
+      "name": "totalPriceCents",
+      "kind": "scalar",
+      "typeName": "int",
       "required": true
     }
   ]

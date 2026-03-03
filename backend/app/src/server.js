@@ -1193,9 +1193,18 @@ function validateOfferExchangeRequest(payload) {
     if (!Number.isFinite(rawAmount) || rawAmount < 0) {
       return { ok: false, error: `Item ${index + 1} has an invalid unit_amount_cents.` };
     }
+    const category = normalizeOfferCategory(row?.category);
+    const taxRateBasisPoints = clampOfferTaxRateBasisPoints(
+      row?.tax_rate_basis_points,
+      DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
+    );
+    const quantity = Math.max(1, safeInt(row?.quantity) || 1);
     items.push({
       id: normalizeText(row?.id) || `item_${index}`,
-      unit_amount_cents: rawAmount
+      unit_amount_cents: rawAmount,
+      category,
+      tax_rate_basis_points: taxRateBasisPoints,
+      quantity
     });
   }
 
@@ -1923,7 +1932,8 @@ function defaultBookingOffer(preferredCurrency = "USD") {
       tax_amount_cents: 0,
       gross_amount_cents: 0,
       items_count: 0
-    }
+    },
+    total_price_cents: 0
   };
 }
 
@@ -2003,6 +2013,7 @@ function computeBookingOfferTotals(offer) {
     net_amount_cents,
     tax_amount_cents,
     gross_amount_cents: net_amount_cents + tax_amount_cents,
+    total_price_cents: net_amount_cents + tax_amount_cents,
     items_count
   };
 }
@@ -2050,12 +2061,14 @@ function normalizeBookingOffer(rawOffer, preferredCurrency = "USD") {
   const totals = computeBookingOfferTotals(normalized);
   return {
     ...normalized,
-    totals
+    totals,
+    total_price_cents: totals.total_price_cents
   };
 }
 
 function buildBookingOfferReadModel(rawOffer, preferredCurrency = "USD") {
   const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
+  const totals = computeBookingOfferTotals(offer);
   return {
     ...offer,
     items: offer.items.map((item) => {
@@ -2065,14 +2078,17 @@ function buildBookingOfferReadModel(rawOffer, preferredCurrency = "USD") {
         item.unit_amount_cents * item.quantity,
         item.tax_rate_basis_points
       );
+      const line_total_amount_cents = line_net_amount_cents + line_tax_amount_cents;
       return {
         ...item,
         line_net_amount_cents,
         line_tax_amount_cents,
-        line_gross_amount_cents: line_net_amount_cents + line_tax_amount_cents
+        line_total_amount_cents,
+        line_gross_amount_cents: line_total_amount_cents
       };
     }),
-    totals: computeBookingOfferTotals(offer)
+    totals,
+    total_price_cents: totals.total_price_cents
   };
 }
 
@@ -2879,15 +2895,31 @@ async function handlePostOfferExchangeRates(req, res) {
     }
   }
 
-  const convertedItems = items.map((item) => ({
-    id: item.id || "",
-    unit_amount_cents: roundConvertedAmount(item.unit_amount_cents, fromCurrency, toCurrency, rate)
-  }));
+  const convertedItems = items.map((item) => {
+    const converted_unit_amount_cents = roundConvertedAmount(item.unit_amount_cents, fromCurrency, toCurrency, rate);
+    const sign = offerCategorySign(item.category);
+    const line_net_amount_cents = sign * converted_unit_amount_cents * item.quantity;
+    const line_tax_amount_cents = sign * roundTaxAmount(converted_unit_amount_cents * item.quantity, item.tax_rate_basis_points);
+
+    return {
+      id: item.id || "",
+      unit_amount_cents: converted_unit_amount_cents,
+      category: item.category,
+      quantity: item.quantity,
+      tax_rate_basis_points: item.tax_rate_basis_points,
+      line_total_amount_cents: line_net_amount_cents + line_tax_amount_cents
+    };
+  });
 
   sendJson(res, 200, {
     from_currency: fromCurrency,
     to_currency: toCurrency,
     exchange_rate: rate,
+    total_price_cents: convertedItems.reduce(
+      (sum, item) =>
+        sum + (Number.isFinite(item.line_total_amount_cents) ? Number(item.line_total_amount_cents) : 0),
+      0
+    ),
     converted_items: convertedItems,
     ...(warning ? { warning } : {})
   });

@@ -532,9 +532,16 @@ function renderOfferItemsTable() {
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
-      const unitTotal = quantity * unitAmount;
-      const priceTotal = formatMoneyDisplay(unitTotal, currency);
-      const priceCells = showDualPrice ? `<td>${escapeHtml(priceTotal)}</td>` : "";
+      const rawLineTotal = Number.isFinite(Number(item?.line_total_amount_cents))
+        ? Number(item.line_total_amount_cents)
+        : Number.isFinite(Number(item?.line_gross_amount_cents))
+          ? Number(item.line_gross_amount_cents)
+          : quantity * unitAmount;
+      const unitPriceText = formatMoneyDisplay(Math.round(unitAmount), currency);
+      const itemTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
+      const singlePriceCell = showDualPrice ? `<td>${escapeHtml(unitPriceText)}</td>` : "";
+      const totalPriceCell = `<td>${escapeHtml(itemTotalText)}</td>`;
+      const priceCells = showDualPrice ? `${singlePriceCell}${totalPriceCell}` : totalPriceCell;
       return `<tr>
       <td>${escapeHtml(offerCategoryLabel(item.category))}</td>
       <td><input data-offer-item-details="${index}" type="text" value="${escapeHtml(item.details || item.description || "")}" ${
@@ -546,7 +553,7 @@ function renderOfferItemsTable() {
       <td><input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} /></td>
-      ${showDualPrice ? priceCells : ""}
+      ${priceCells}
       ${
         readOnly
           ? ""
@@ -555,13 +562,19 @@ function renderOfferItemsTable() {
     </tr>`;
     })
     .join("");
-  const totals = computeOfferDraftTotals();
-  const totalColumns = 4 + (showDualPrice ? 1 : 0) + (readOnly ? 0 : 1);
-  const totalsRow = `<tr><th colspan="${totalColumns}">Items: ${escapeHtml(String(totals.items_count))} · Offer total (TOTAL, ${escapeHtml(
-    currency
-  )}): ${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th></tr>`;
-  const columns = totalColumns;
-  const body = (rows || `<tr><td colspan="${columns}">No offer items yet</td></tr>`) + totalsRow;
+  const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
+  const totalRowLabel = "Offer total";
+  const totalLabelColumns = 3 + (showDualPrice ? 1 : 0);
+  const totalRow = showDualPrice
+    ? `<tr><td colspan="${totalLabelColumns}"><strong>${escapeHtml(totalRowLabel)}:</strong></td><td>${escapeHtml(offerTotalValue)}</td>${
+        readOnly ? "" : `<td></td>`
+      }</tr>`
+    : `<tr><td colspan="${totalLabelColumns}"><strong>${escapeHtml(totalRowLabel)}:</strong></td><td>${escapeHtml(offerTotalValue)}</td>${
+        readOnly ? "" : `<td></td>`
+      }</tr>`;
+  const columns = 3 + (showDualPrice ? 2 : 1) + 1 + (readOnly ? 0 : 1);
+  const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
+  const body = (rows || noRows) + totalRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 
   if (!readOnly) {
@@ -573,6 +586,14 @@ function renderOfferItemsTable() {
       });
     });
   }
+}
+
+function resolveOfferTotalCents() {
+  if (Number.isFinite(Number(state.offerDraft?.total_price_cents))) {
+    return Math.round(Number(state.offerDraft.total_price_cents));
+  }
+  const offerTotals = computeOfferDraftTotals();
+  return offerTotals?.gross_amount_cents || 0;
 }
 
 function computeOfferDraftTotals() {
@@ -1247,7 +1268,10 @@ async function convertOfferItemsInBackend(currentCurrency, nextCurrency, items) 
       to_currency: nextCurrency,
       items: items.map((item, index) => ({
         id: item.id || `item_${index}`,
-        unit_amount_cents: Number(item.unit_amount_cents || 0)
+        unit_amount_cents: Number(item.unit_amount_cents || 0),
+        category: item.category || "OTHER",
+        quantity: Number(item.quantity || 1),
+        tax_rate_basis_points: Number(item.tax_rate_basis_points || 1000)
       }))
     }
   });
@@ -1255,10 +1279,18 @@ async function convertOfferItemsInBackend(currentCurrency, nextCurrency, items) 
   if (!response || !Array.isArray(response.converted_items)) {
     throw new Error(response?.detail || response?.error || "Offer exchange failed.");
   }
-  return response.converted_items.map((item, index) => ({
-    id: item.id || `item_${index}`,
-    unit_amount_cents: Math.max(0, Number(item.unit_amount_cents) || 0)
-  }));
+  return {
+    convertedItems: response.converted_items.map((item, index) => ({
+      id: item.id || `item_${index}`,
+      unit_amount_cents: Math.max(0, Number(item.unit_amount_cents) || 0),
+      line_total_amount_cents: Number.isFinite(Number(item.line_total_amount_cents))
+        ? Number(item.line_total_amount_cents)
+        : Number(item.line_gross_amount_cents) || 0
+    })),
+    totalPriceCents: Number.isFinite(Number(response.total_price_cents))
+      ? Number(response.total_price_cents)
+      : null
+  };
 }
 
 async function handleOfferCurrencyChange() {
@@ -1294,7 +1326,8 @@ async function handleOfferCurrencyChange() {
   }
   setOfferStatus("Converting prices...");
   try {
-    const convertedItems = await convertOfferItemsInBackend(currentCurrency, nextCurrency, items);
+    const converted = await convertOfferItemsInBackend(currentCurrency, nextCurrency, items);
+    const convertedItems = converted.convertedItems;
     state.offerDraft.currency = nextCurrency;
     state.offerDraft.items = items.map((item, index) => {
       const convertedItem = convertedItems[index] || {};
@@ -1302,9 +1335,15 @@ async function handleOfferCurrencyChange() {
         ...item,
         unit_amount_cents:
           Number.isFinite(convertedItem.unit_amount_cents) && convertedItem.unit_amount_cents >= 0 ? convertedItem.unit_amount_cents : item.unit_amount_cents,
+        line_total_amount_cents: Number.isFinite(convertedItem.line_total_amount_cents)
+          ? convertedItem.line_total_amount_cents
+          : item.line_total_amount_cents,
         currency: nextCurrency
       };
     });
+    if (Number.isFinite(Number(converted.totalPriceCents))) {
+      state.offerDraft.total_price_cents = Math.round(Number(converted.totalPriceCents));
+    }
   } catch (error) {
     setOfferStatus(`Exchange rate lookup failed: ${error?.message || error}`);
     restoreSelectState();

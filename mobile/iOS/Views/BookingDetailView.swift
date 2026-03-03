@@ -159,7 +159,7 @@ struct BookingDetailView: View {
             LabeledContent("Net", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
             LabeledContent("Tax", value: formatMoney(offer.totals.taxAmountCents, currency: offer.currency))
             LabeledContent("Gross", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
-            LabeledContent("Offer total (TOTAL, \(offer.currency.rawValue))", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
+            LabeledContent("Offer total (TOTAL, \(offer.currency.rawValue))", value: formatMoney(offer.totalPriceCents, currency: offer.currency))
         }
 
         if !offer.categoryRules.isEmpty {
@@ -194,7 +194,10 @@ struct BookingDetailView: View {
                             Spacer()
                             if showOfferTotalValues {
                                 let single = formatMoney(item.unitAmountCents, currency: offer.currency)
-                                let total = formatMoney(item.unitAmountCents * item.quantity, currency: offer.currency)
+                                let total = formatMoney(
+                                    item.lineTotalAmountCents ?? (item.unitAmountCents * item.quantity),
+                                    currency: offer.currency
+                                )
                                 VStack(alignment: .trailing, spacing: 2) {
                                     Text("Price (SINGLE, \(offer.currency.rawValue)): \(single)")
                                     Text("Price (TOTAL, \(offer.currency.rawValue)): \(total)")
@@ -202,7 +205,7 @@ struct BookingDetailView: View {
                                 .font(.subheadline)
                             } else {
                                 let lineGross = item.lineGrossAmountCents
-                                Text(formatMoney(lineGross ?? (item.unitAmountCents * item.quantity), currency: offer.currency))
+                                Text(formatMoney(lineGross ?? (item.lineTotalAmountCents ?? (item.unitAmountCents * item.quantity)), currency: offer.currency))
                             }
                         }
                         Text("Tax \(formatPercent(item.taxRateBasisPoints))")

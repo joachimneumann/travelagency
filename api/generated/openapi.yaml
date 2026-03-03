@@ -268,6 +268,9 @@ components:
           type: integer
         taxRateBasisPoints:
           type: integer
+        lineTotalAmountCents:
+          type: integer
+          nullable: true
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         notes:
@@ -303,6 +306,7 @@ components:
       required:
       - currency
       - totals
+      - totalPriceCents
       properties:
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
@@ -316,6 +320,8 @@ components:
             "$ref": "#/components/schemas/BookingOfferItem"
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
+        totalPriceCents:
+          type: integer
     BookingList:
       type: object
       required:

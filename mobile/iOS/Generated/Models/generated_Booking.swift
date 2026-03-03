@@ -163,6 +163,7 @@
         let taxRateBasisPoints: Int
         let lineTaxAmountCents: Int?
         let lineGrossAmountCents: Int?
+        let lineTotalAmountCents: Int?
         let currency: GeneratedCurrencyCode
         let notes: String?
         let sortOrder: Int?
@@ -178,6 +179,7 @@
             case taxRateBasisPoints = "tax_rate_basis_points"
             case lineTaxAmountCents = "line_tax_amount_cents"
             case lineGrossAmountCents = "line_gross_amount_cents"
+            case lineTotalAmountCents = "line_total_amount_cents"
             case currency
             case notes
             case sortOrder = "sort_order"
@@ -203,12 +205,14 @@
         let categoryRules: [GeneratedBookingOfferCategoryRule]
         let items: [GeneratedBookingOfferItem]
         let totals: GeneratedBookingOfferTotals
+        let totalPriceCents: Int
 
         private enum CodingKeys: String, CodingKey {
             case currency
             case categoryRules = "category_rules"
             case items
             case totals
+            case totalPriceCents = "total_price_cents"
         }
     }
 

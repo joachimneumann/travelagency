@@ -86,18 +86,19 @@ import (
 }
 
 #BookingOfferItem: {
-  id:           common.#Identifier
-  category:     enums.#OfferCategory
-  label:        string & !=""
-	details?: string
-  quantity:     >0 & int
-  unitNet:      common.#NonNegativeMoneyAmount
-  taxRate:      >=0 & <=100 & number
-  currency:     enums.#CurrencyCode
-	notes?:       string
-	sortOrder?:   int
-	createdAt?:   common.#Timestamp
-	updatedAt?:   common.#Timestamp
+	id:                    common.#Identifier
+	category:              enums.#OfferCategory
+	label:                 string & !=""
+	details?:              string
+	quantity:              >0 & int
+	unitNet:               common.#NonNegativeMoneyAmount
+	taxRate:               >=0 & <=100 & number
+	currency:              enums.#CurrencyCode
+	lineTotalAmountCents?: int
+	notes?:                string
+	sortOrder?:            int
+	createdAt?:            common.#Timestamp
+	updatedAt?:            common.#Timestamp
 }
 
 #BookingOfferTotals: {
@@ -111,7 +112,8 @@ import (
 	currency: enums.#CurrencyCode
 	categoryRules: [...#BookingOfferCategoryRule]
 	items: [...#BookingOfferItem]
-	totals: #BookingOfferTotals
+	totals:          #BookingOfferTotals
+	totalPriceCents: int
 }
 
 #BookingActivityType: "BOOKING_CREATED" | "STAGE_CHANGED" | "ASSIGNMENT_CHANGED" | "NOTE_UPDATED" | "PRICING_UPDATED" | "OFFER_UPDATED" | "INVOICE_CREATED" | "INVOICE_UPDATED" | "PAYMENT_UPDATED"
