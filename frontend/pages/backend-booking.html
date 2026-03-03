@@ -48,11 +48,46 @@
 
             <div class="field">
               <label for="bookingNoteInput">Booking Note (Call notes, qualification details, customer preferences...)</label>
-              <textarea id="bookingNoteInput" rows="4" placeholder="Write the current booking note..."></textarea>
+              <div class="backend-controls" style="align-items: flex-start; margin-top: 0.35rem; gap: 0.6rem;">
+                <textarea id="bookingNoteInput" rows="4" placeholder="Write the current booking note..." style="flex: 1;"></textarea>
+                <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">save</button>
+                <span id="bookingActionStatus" class="micro"></span>
+              </div>
             </div>
-            <div class="backend-controls" style="margin-top: 0.35rem;">
-              <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">save</button>
-              <span id="bookingActionStatus" class="micro"></span>
+          </article>
+
+          <article id="offerPanel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Offer</h2>
+
+            <div class="backend-controls">
+              <div class="field">
+                <label for="offerCurrencyInput">Offer Currency (must match booking preferred currency)</label>
+                <select id="offerCurrencyInput">
+                  <option value="USD">USD</option>
+                  <option value="EURO">EURO</option>
+                  <option value="VND">VND</option>
+                  <option value="THB">THB</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Category Tax Rules</h3>
+            </div>
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="offerCategoriesTable"></table>
+            </div>
+
+            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Offer Items</h3>
+            </div>
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="offerItemsTable"></table>
+            </div>
+
+            <div class="backend-controls">
+              <button class="btn btn-primary" id="offerSaveBtn" type="button">Save offer</button>
+              <span id="offerStatus" class="micro"></span>
             </div>
           </article>
 
@@ -96,41 +131,6 @@
             <div class="backend-controls">
               <button class="btn btn-primary" id="pricingSaveBtn" type="button">Save payments</button>
               <span id="pricingStatus" class="micro"></span>
-            </div>
-          </article>
-
-          <article id="offerPanel" style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Offer</h2>
-
-            <div class="backend-controls">
-              <div class="field">
-                <label for="offerCurrencyInput">Offer Currency (must match booking preferred currency)</label>
-                <select id="offerCurrencyInput">
-                  <option value="USD">USD</option>
-                  <option value="EURO">EURO</option>
-                  <option value="VND">VND</option>
-                  <option value="THB">THB</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Category Tax Rules</h3>
-            </div>
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="offerCategoriesTable"></table>
-            </div>
-
-            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Offer Items</h3>
-            </div>
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="offerItemsTable"></table>
-            </div>
-
-            <div class="backend-controls">
-              <button class="btn btn-primary" id="offerSaveBtn" type="button">Save offer</button>
-              <span id="offerStatus" class="micro"></span>
             </div>
           </article>
 

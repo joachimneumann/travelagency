@@ -258,6 +258,14 @@
             case createdAt = "created_at"
             case note
         }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            type = try container.decode(String.self, forKey: .type)
+            createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt) ?? ""
+            note = try container.decodeIfPresent(String.self, forKey: .note)
+        }
     }
 
     struct GeneratedBooking: Codable, Identifiable, Equatable {
@@ -297,5 +305,27 @@
             case bookingHash = "booking_hash"
             case pricing
             case offer
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            customerId = try container.decodeIfPresent(String.self, forKey: .customerId)
+            customerName = try container.decodeIfPresent(String.self, forKey: .customerName)
+            destination = try container.decodeIfPresent(String.self, forKey: .destination) ?? ""
+            style = try container.decodeIfPresent(String.self, forKey: .style) ?? ""
+            travelMonth = try container.decodeIfPresent(String.self, forKey: .travelMonth)
+            travelers = try container.decodeIfPresent(Int.self, forKey: .travelers)
+            duration = try container.decodeIfPresent(String.self, forKey: .duration)
+            budget = try container.decodeIfPresent(String.self, forKey: .budget)
+            let rawStage = try container.decodeIfPresent(String.self, forKey: .stage)
+            stage = GeneratedBookingStage(rawValue: rawStage ?? "") ?? .new
+            assignedStaffId = try container.decodeIfPresent(String.self, forKey: .assignedStaffId)
+            assignedStaffName = try container.decodeIfPresent(String.self, forKey: .assignedStaffName)
+            notes = try container.decodeIfPresent(String.self, forKey: .notes)
+            source = try container.decodeIfPresent(GeneratedSourceAttribution.self, forKey: .source)
+            bookingHash = try container.decodeIfPresent(String.self, forKey: .bookingHash)
+            pricing = try container.decodeIfPresent(GeneratedBookingPricing.self, forKey: .pricing)
+            offer = try container.decodeIfPresent(GeneratedBookingOffer.self, forKey: .offer)
         }
     }

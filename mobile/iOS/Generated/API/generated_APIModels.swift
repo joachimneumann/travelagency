@@ -5,31 +5,49 @@ import Foundation
 
     struct GeneratedBookingList: Codable, Equatable {
     let items: [GeneratedBooking]
-    let pagination: GeneratedPagination
+    let pagination: GeneratedPagination?
 
         private enum CodingKeys: String, CodingKey {
         case items = "items"
         case pagination = "pagination"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            items = try container.decodeIfPresent([GeneratedBooking].self, forKey: .items) ?? []
+            pagination = try container.decodeIfPresent(GeneratedPagination.self, forKey: .pagination)
         }
     }
 
     struct GeneratedCustomerList: Codable, Equatable {
     let items: [GeneratedCustomer]
-    let pagination: GeneratedPagination
+    let pagination: GeneratedPagination?
 
         private enum CodingKeys: String, CodingKey {
         case items = "items"
         case pagination = "pagination"
         }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            items = try container.decodeIfPresent([GeneratedCustomer].self, forKey: .items) ?? []
+            pagination = try container.decodeIfPresent(GeneratedPagination.self, forKey: .pagination)
+        }
     }
 
     struct GeneratedTourList: Codable, Equatable {
     let items: [GeneratedTour]
-    let pagination: GeneratedPagination
+    let pagination: GeneratedPagination?
 
         private enum CodingKeys: String, CodingKey {
         case items = "items"
         case pagination = "pagination"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            items = try container.decodeIfPresent([GeneratedTour].self, forKey: .items) ?? []
+            pagination = try container.decodeIfPresent(GeneratedPagination.self, forKey: .pagination)
         }
     }
 
@@ -111,6 +129,15 @@ import Foundation
         case activities = "activities"
         case total = "total"
         }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let decodedItems = try container.decodeIfPresent([GeneratedBookingActivity].self, forKey: .items)
+            let decodedActivities = try container.decodeIfPresent([GeneratedBookingActivity].self, forKey: .activities)
+            items = decodedItems ?? decodedActivities ?? []
+            activities = decodedActivities ?? decodedItems ?? []
+            total = try container.decodeIfPresent(Int.self, forKey: .total) ?? items.count
+        }
     }
 
     struct GeneratedBookingInvoicesResponse: Codable, Equatable {
@@ -120,6 +147,12 @@ import Foundation
         private enum CodingKeys: String, CodingKey {
         case items = "items"
         case total = "total"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            items = try container.decodeIfPresent([GeneratedBookingInvoice].self, forKey: .items) ?? []
+            total = try container.decodeIfPresent(Int.self, forKey: .total) ?? items.count
         }
     }
 
@@ -276,4 +309,3 @@ import Foundation
         case code = "code"
         }
     }
-
