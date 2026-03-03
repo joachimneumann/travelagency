@@ -520,20 +520,15 @@ function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const header = `<thead><tr><th>Category</th><th>Item</th><th>Description</th><th>Qty</th><th>Unit (${escapeHtml(
+  const header = `<thead><tr><th>Category</th><th>Description</th><th>Qty</th><th>Price (${escapeHtml(
     currency
-  )})</th><th>Net</th><th>Gross</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  )})</th><th></th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
   const rows = (state.offerDraft.items || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
-      const sign = offerCategorySign(item.category);
-      const lineNet = sign * quantity * unitAmount;
-      const lineTax = sign * Math.round((quantity * unitAmount * getOfferCategoryTaxRateBasisPoints(item.category)) / 10000);
-      const lineGross = lineNet + lineTax;
       return `<tr>
       <td>${escapeHtml(offerCategoryLabel(item.category))}</td>
-      <td><input data-offer-item-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
       <td><input data-offer-item-description="${index}" type="text" value="${escapeHtml(item.description || "")}" ${
         readOnly ? "disabled" : ""
       } /></td>
@@ -543,9 +538,6 @@ function renderOfferItemsTable() {
       <td><input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} /></td>
-      <td>${escapeHtml(formatMoneyDisplay(lineNet, currency))}</td>
-      <td>${escapeHtml(formatMoneyDisplay(lineGross, currency))}</td>
-      <td><input data-offer-item-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
       ${
         readOnly
           ? ""
@@ -555,10 +547,8 @@ function renderOfferItemsTable() {
     })
     .join("");
   const totals = computeOfferDraftTotals();
-  const totalsRow = `<tr><th colspan="4">Totals</th><th>${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th><th>${escapeHtml(
-    formatMoneyDisplay(totals.gross_amount_cents, currency)
-  )}</th><th colspan="${readOnly ? 2 : 3}">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
-  const columns = readOnly ? 8 : 9;
+  const totalsRow = `<tr><th colspan="3">Totals</th><th colspan="${readOnly ? 1 : 2}">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
+  const columns = readOnly ? 4 : 5;
   const body = (rows || `<tr><td colspan="${columns}">No offer items yet</td></tr>`) + totalsRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 
@@ -1192,20 +1182,16 @@ function collectOfferCategoryRules() {
 
 function collectOfferItems({ throwOnError = true } = {}) {
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const rows = Array.from(document.querySelectorAll("[data-offer-item-label]"));
+  const rows = Array.from(document.querySelectorAll("[data-offer-item-description]"));
   const items = [];
   for (const input of rows) {
-    const index = Number(input.getAttribute("data-offer-item-label"));
+    const index = Number(input.getAttribute("data-offer-item-description"));
     const category = normalizeOfferCategory(state.offerDraft?.items[index]?.category || "OTHER");
-    const label = String(document.querySelector(`[data-offer-item-label="${index}"]`)?.value || "").trim();
     const description = String(document.querySelector(`[data-offer-item-description="${index}"]`)?.value || "").trim();
     const quantity = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
     const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0", currency);
-    const notes = String(document.querySelector(`[data-offer-item-notes="${index}"]`)?.value || "").trim();
-    if (!label) {
-      if (throwOnError) throw new Error(`Offer item ${index + 1} requires a label.`);
-      continue;
-    }
+    const label = String(offerCategoryLabel(category)).trim();
+    const notes = String(state.offerDraft?.items[index]?.notes || "").trim();
     if (!Number.isFinite(quantity) || quantity < 1) {
       if (throwOnError) throw new Error(`Offer item ${index + 1} quantity must be at least 1.`);
       continue;
