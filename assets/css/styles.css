@@ -98,7 +98,8 @@ img {
 
 .brand-logo {
   display: block;
-  width: clamp(170px, 18vw, 240px);
+  width: 320px;
+  max-width: min(40vw, 320px);
   height: auto;
 }
 
