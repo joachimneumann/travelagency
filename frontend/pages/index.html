@@ -30,7 +30,6 @@
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" as="image" href="/assets/video/rice%20field.webp?v=2" fetchpriority="high" />
-    <link rel="preload" as="video" href="/assets/video/rice%20field.webm" type="video/webm" media="(min-width: 768px)" />
     <link rel="preload" as="style" href="/assets/css/styles.css?v=3" />
 
     <style>
@@ -111,9 +110,9 @@
 
     <main id="main-content">
       <section class="hero hero-video" id="hero">
-        <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" poster="/assets/video/rice field.webp?v=2">
-          <source src="/assets/video/rice field.webm" type="video/webm" />
+        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="/assets/video/rice field.webp?v=2">
           <source src="/assets/video/rice field.mp4" type="video/mp4" />
+          <source src="/assets/video/rice field.webm" type="video/webm" />
           Your browser does not support HTML5 video.
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
