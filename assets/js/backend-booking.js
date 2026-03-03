@@ -519,7 +519,6 @@ function renderOfferPanel() {
 
 function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
-  if (!els.offerItemsTotalTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const showActionsCol = !readOnly;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
@@ -578,7 +577,11 @@ function renderOfferItemsTable() {
   }</tr>`;
   const body = rows || noRows;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  els.offerItemsTotalTable.innerHTML = `<tbody>${totalRow}</tbody>`;
+  if (els.offerItemsTotalTable) {
+    els.offerItemsTotalTable.innerHTML = `<tbody>${totalRow}</tbody>`;
+  } else {
+    els.offerItemsTable.insertAdjacentHTML("beforeend", `<tbody>${totalRow}</tbody>`);
+  }
 
   if (!readOnly) {
     const syncOfferInputTotals = () => {
