@@ -34,6 +34,8 @@ const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const DEFAULT_BOOKING_CURRENCY = "USD";
+const MIN_TRAVELERS = 1;
+const MAX_TRAVELERS = 30;
 const BOOKING_BUDGET_OPTIONS = {
   USD: ["not decided yet", "$500-$900 / week", "$900-$1,400 / week", "$1,400-$2,200 / week", "$2,200+ / week"],
   EURO: ["not decided yet", "€450-€800 / week", "€800-€1,250 / week", "€1,250-€2,000 / week", "€2,000+ / week"],
@@ -860,6 +862,18 @@ async function submitBookingForm() {
 
   const formData = new FormData(els.bookingForm);
   const entries = Object.fromEntries(formData.entries());
+  const travelersValue = Number.parseInt(entries.travelers, 10);
+
+  if (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS) {
+    renderBookingError(`Travelers must be between ${MIN_TRAVELERS} and ${MAX_TRAVELERS}.`);
+    els.stepNext.disabled = false;
+    els.stepBack.disabled = false;
+    const travelersField = document.getElementById("bookingTravelers")?.closest(".field");
+    if (travelersField) {
+      travelersField.classList.add("invalid");
+    }
+    return;
+  }
 
   const payload = {
     destination: entries.destination || "",
@@ -867,7 +881,7 @@ async function submitBookingForm() {
     travelMonth: entries.travelMonth || "",
     preferredCurrency: normalizeCurrencyCode(entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY),
     duration: entries.duration || "",
-    travelers: entries.travelers || "",
+    travelers: travelersValue,
     budget: entries.budget || "",
     name: entries.name || "",
     email: entries.email || "",

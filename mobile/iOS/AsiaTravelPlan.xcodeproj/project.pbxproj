@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0AC8A3E3D2A2B8F300A5BBE4 /* BookingSummaryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F3FA4F8F3A4E5DB4B8D8F1 /* BookingSummaryDetailView.swift */; };
+		0A5D9CB5B8A8E5F6C1D6F4A8 /* BookingCustomerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2AA0BE4BCE34F3B8CCF4C8A /* BookingCustomerDetailView.swift */; };
+		0B2F2F1C1A7F4F4A8A9EFA35 /* OfferDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D1F4E7BE6A4A7DA7F0DBA7 /* OfferDetailView.swift */; };
+		0BD5A6F1A6A243A3AAE3EC91 /* OfferItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F5B4D2D3D14A2FAED5E4D3 /* OfferItemDetailView.swift */; };
+		0C1DAB4A8A9F4B4F98B6E8F5 /* ActivitiesDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B6A5D4C8D34A6CABF8BE5D /* ActivitiesDetailView.swift */; };
+		0C8A6F8B9D6E4E6EA2D9AA8D /* BookingNoteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1B0F5D89D24A6BAAB0AF45 /* BookingNoteDetailView.swift */; };
+		0CCF9D0A3A9A4F0D9E6BBA1D /* ActivityRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8FD7E1A8E04F2DAE4E9D9C /* ActivityRowView.swift */; };
+		0D0B9C2A7F0B4E8DB2C3DFA2 /* InlineNavigationTitleDisplayModeModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8F7D2E4D4A64B0CB7A9C5F1 /* InlineNavigationTitleDisplayModeModifier.swift */; };
+		0D8C9E4E9D4F4B2EB7F0D0A6 /* BookingDetailFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9ED7F8BB9E1459CB9FA2E2A /* BookingDetailFormatting.swift */; };
+		0E4F1A4A7D2B4C2F8A1D5B8C /* PaymentsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F1C9D78B2F4A6E9D3F7C91 /* PaymentsDetailView.swift */; };
 		014D30334DC634EAEEF56815 /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B9C3078AF749E1B18E2E15C /* AppShellView.swift */; };
 		0409BDB01FA404B015C7F148 /* BookingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2F497350C9D6985AF9AAFF4 /* BookingsListView.swift */; };
 		0AC202A06C0DB00FA238EC93 /* BookingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36294932E777177A9AF9ABF /* BookingDetailView.swift */; };
@@ -42,6 +52,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9A8FD7E1A8E04F2DAE4E9D9C /* ActivityRowView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActivityRowView.swift; sourceTree = "<group>"; };
+		A3F3FA4F8F3A4E5DB4B8D8F1 /* BookingSummaryDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingSummaryDetailView.swift; sourceTree = "<group>"; };
+		A8F7D2E4D4A64B0CB7A9C5F1 /* InlineNavigationTitleDisplayModeModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InlineNavigationTitleDisplayModeModifier.swift; sourceTree = "<group>"; };
+		C4F5B4D2D3D14A2FAED5E4D3 /* OfferItemDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OfferItemDetailView.swift; sourceTree = "<group>"; };
+		E2AA0BE4BCE34F3B8CCF4C8A /* BookingCustomerDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingCustomerDetailView.swift; sourceTree = "<group>"; };
+		E6D1F4E7BE6A4A7DA7F0DBA7 /* OfferDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OfferDetailView.swift; sourceTree = "<group>"; };
+		E9ED7F8BB9E1459CB9FA2E2A /* BookingDetailFormatting.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingDetailFormatting.swift; sourceTree = "<group>"; };
+		FC1B0F5D89D24A6BAAB0AF45 /* BookingNoteDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingNoteDetailView.swift; sourceTree = "<group>"; };
+		F7B6A5D4C8D34A6CABF8BE5D /* ActivitiesDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActivitiesDetailView.swift; sourceTree = "<group>"; };
+		E4F1C9D78B2F4A6E9D3F7C91 /* PaymentsDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PaymentsDetailView.swift; sourceTree = "<group>"; };
 		0E372D5E7007C4504587AC97 /* AppBootstrapStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppBootstrapStore.swift; sourceTree = "<group>"; };
 		1D1654A07B8123B423266BB7 /* TokenStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
 		2271DC5EA0F1CCC528A5CB5B /* generated_APIRequestFactory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = generated_APIRequestFactory.swift; sourceTree = "<group>"; };
@@ -154,6 +174,7 @@
 				3E432AEF70508F1A051A16AB /* Services */,
 				9840A9A61B8FC7E11A267AA2 /* ViewModels */,
 				F00A3EFD8B70B08F08400262 /* Views */,
+				3E9D7F4C5F2E4FA79A3B8D5A /* Utilities */,
 				5774677A51C2A03D2B84CE7B /* Resources */,
 				6FBB15AF21C746114217F16E /* Generated */,
 				D5C091DBA2E9F7F99A7CEC74 /* AppConfig.swift */,
@@ -214,8 +235,25 @@
 				C7B441BB7BA80E1A1394F166 /* StartupFailureView.swift */,
 				A5CF69F5AECDB4348F313CA2 /* UnauthorizedView.swift */,
 				7ED794228F17DCBE93DEBF6E /* UpdateRequiredView.swift */,
+				A3F3FA4F8F3A4E5DB4B8D8F1 /* BookingSummaryDetailView.swift */,
+				E2AA0BE4BCE34F3B8CCF4C8A /* BookingCustomerDetailView.swift */,
+				E6D1F4E7BE6A4A7DA7F0DBA7 /* OfferDetailView.swift */,
+				C4F5B4D2D3D14A2FAED5E4D3 /* OfferItemDetailView.swift */,
+				F7B6A5D4C8D34A6CABF8BE5D /* ActivitiesDetailView.swift */,
+				FC1B0F5D89D24A6BAAB0AF45 /* BookingNoteDetailView.swift */,
+				E4F1C9D78B2F4A6E9D3F7C91 /* PaymentsDetailView.swift */,
+				9A8FD7E1A8E04F2DAE4E9D9C /* ActivityRowView.swift */,
+				A8F7D2E4D4A64B0CB7A9C5F1 /* InlineNavigationTitleDisplayModeModifier.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		3E9D7F4C5F2E4FA79A3B8D5A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				E9ED7F8BB9E1459CB9FA2E2A /* BookingDetailFormatting.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -312,6 +350,16 @@
 				374FDD407C5838639E6D3E0F /* generated_APIClient.swift in Sources */,
 				A8B917E0513EA53FE9F4A44B /* generated_APIModels.swift in Sources */,
 				27F57DEB2D3617E979CD49A8 /* generated_APIRequestFactory.swift in Sources */,
+				0AC8A3E3D2A2B8F300A5BBE4 /* BookingSummaryDetailView.swift in Sources */,
+				0A5D9CB5B8A8E5F6C1D6F4A8 /* BookingCustomerDetailView.swift in Sources */,
+				0B2F2F1C1A7F4F4A8A9EFA35 /* OfferDetailView.swift in Sources */,
+				0BD5A6F1A6A243A3AAE3EC91 /* OfferItemDetailView.swift in Sources */,
+				0C1DAB4A8A9F4B4F98B6E8F5 /* ActivitiesDetailView.swift in Sources */,
+				0C8A6F8B9D6E4E6EA2D9AA8D /* BookingNoteDetailView.swift in Sources */,
+				0CCF9D0A3A9A4F0D9E6BBA1D /* ActivityRowView.swift in Sources */,
+				0D0B9C2A7F0B4E8DB2C3DFA2 /* InlineNavigationTitleDisplayModeModifier.swift in Sources */,
+				0D8C9E4E9D4F4B2EB7F0D0A6 /* BookingDetailFormatting.swift in Sources */,
+				0E4F1A4A7D2B4C2F8A1D5B8C /* PaymentsDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
