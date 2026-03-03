@@ -209,7 +209,7 @@ The implemented backend authorization model is:
 
 - `atp_staff`
   - read and write only bookings assigned to that staff member
-  - assignment is resolved from Keycloak `preferred_username` matching `backend/app/config/staff.json -> usernames[]`
+- assignment is resolved from Keycloak `preferred_username` matching `backend/app/config/atp_staff.json -> usernames[]`
 - `atp_manager`
   - read and write all bookings
   - change staff assignments

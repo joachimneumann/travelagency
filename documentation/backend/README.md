@@ -77,7 +77,7 @@ JSON files are used for local persistence:
 - `data/store.json`
 - `data/tours/<tour_id>/tour.json`
 - `data/tours/<tour_id>/tour_<uuid>.webp`
-- `config/staff.json`
+- `backend/app/config/atp_staff.json`
 
 Runtime data note:
 - `backend/app/data/store.json` is no longer tracked in Git.
@@ -248,7 +248,7 @@ Allowed backend roles:
 Role behavior:
 - `atp_staff`
   - read and write only bookings assigned to that staff member
-  - staff identity is mapped from Keycloak `preferred_username` to `config/staff.json -> usernames[]`
+  - staff identity is mapped from Keycloak `preferred_username` to `backend/app/config/atp_staff.json -> usernames[]`
 - `atp_manager`
   - see and edit all bookings
   - change staff assignments
@@ -266,9 +266,9 @@ Role behavior:
   - read-only access to tours
 
 Booking assignment model:
-- each new booking is created with `staff = null`
+- each new booking is created with `atp_staff = null`
 - staff assignment is added later by `atp_manager` or `atp_admin`
-- `atp_staff` booking access depends on Keycloak `preferred_username` matching `config/staff.json -> usernames[]`
+- `atp_staff` booking access depends on Keycloak `preferred_username` matching `backend/app/config/atp_staff.json -> usernames[]`
 
 Website header integration:
 - Main site has a `backend` button (no dropdown) that redirects to `/auth/login`.

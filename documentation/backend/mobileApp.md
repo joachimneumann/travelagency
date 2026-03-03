@@ -163,7 +163,7 @@ The app should reflect these permissions, but the backend must remain authoritat
 For `atp_staff`, the backend resolves access based on the Keycloak username.
 
 Required mapping rule:
-- Keycloak `preferred_username` must match one of the entries in `backend/app/config/staff.json -> usernames[]`
+- Keycloak `preferred_username` must match one of the entries in `backend/app/config/atp_staff.json -> usernames[]`
 
 Example:
 

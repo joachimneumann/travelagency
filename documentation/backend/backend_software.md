@@ -16,7 +16,7 @@ Current implemented code lives in:
 - `backend/app/src/auth.js`
 - `backend/app/data/store.json`
 - `backend/app/data/tours/`
-- `backend/app/config/staff.json`
+- `backend/app/config/atp_staff.json`
 - `backend/app/scripts/seed.js`
 
 Runtime persistence note:
@@ -52,7 +52,7 @@ Implemented now:
 Current role model in the implemented backend:
 - `atp_staff`
   - read and write only bookings assigned to that staff member
-  - booking access is resolved by matching Keycloak `preferred_username` to `backend/app/config/staff.json -> usernames[]`
+  - booking access is resolved by matching Keycloak `preferred_username` to `backend/app/config/atp_staff.json -> usernames[]`
 - `atp_manager`
   - read and write all bookings
   - change staff assignments

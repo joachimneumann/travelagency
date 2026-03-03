@@ -11,7 +11,7 @@ Local backend implementation (Milestone 1) is in:
 - `backend/app/src/server.js`
 - `backend/app/data/store.json`
 - `backend/app/data/tours/`
-- `backend/app/config/staff.json`
+- `backend/app/config/atp_staff.json`
 - `backend/app/scripts/seed.js`
 
 Important persistence note:
@@ -188,7 +188,7 @@ npm start
 ```
 
 Role mapping for `atp_staff`:
-- the logged-in Keycloak `preferred_username` must match an entry in `backend/app/config/staff.json -> usernames[]`
+- the logged-in Keycloak `preferred_username` must match an entry in `backend/app/config/atp_staff.json -> usernames[]`
 - new bookings are created unassigned and receive `staff = null` until manager/admin assignment
 
 Terminal B (website):
