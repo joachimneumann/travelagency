@@ -740,9 +740,14 @@ async function persistTour(tour) {
 }
 
 async function loadAtpStaff() {
-  const raw = await readFile(ATP_STAFF_PATH, "utf8");
-  const parsed = JSON.parse(raw);
-  return Array.isArray(parsed) ? parsed : [];
+  try {
+    const raw = await readFile(ATP_STAFF_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("[backend] failed to load atp_staff.json:", error?.message || error);
+    return [];
+  }
 }
 
 async function persistAtpStaff(atp_staff) {
