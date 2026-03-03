@@ -115,7 +115,8 @@ const els = {
   pricingStatus: document.getElementById("pricingStatus"),
   offerPanel: document.getElementById("offerPanel"),
   offerCurrencyInput: document.getElementById("offerCurrencyInput"),
-  offerCategoriesTable: document.getElementById("offerCategoriesTable"),
+  offerItemCategorySelect: document.getElementById("offerItemCategorySelect"),
+  offerAddItemBtn: document.getElementById("offerAddItemBtn"),
   offerItemsTable: document.getElementById("offerItemsTable"),
   offerSaveBtn: document.getElementById("offerSaveBtn"),
   offerStatus: document.getElementById("offerStatus"),
@@ -162,6 +163,7 @@ async function init() {
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
   if (els.offerCurrencyInput) els.offerCurrencyInput.addEventListener("change", renderOfferPanel);
+  if (els.offerAddItemBtn) els.offerAddItemBtn.addEventListener("click", addOfferItemFromSelector);
   if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.addEventListener("change", renderInvoiceMoneyLabels);
@@ -452,14 +454,35 @@ function offerCategoryLabel(code) {
   return OFFER_CATEGORIES.find((entry) => entry.code === normalizeOfferCategory(code))?.label || "Other";
 }
 
-function formatBasisPointsPercent(value) {
-  const basisPoints = Number(value || 0);
-  if (!Number.isFinite(basisPoints)) return "0";
-  return (basisPoints / 100).toFixed(2).replace(/\.00$/, "");
-}
-
 function offerCategorySign(code) {
   return normalizeOfferCategory(code) === "DISCOUNTS_CREDITS" ? -1 : 1;
+}
+
+function getOfferCategoryTaxRateBasisPoints(category) {
+  const normalizedCategory = normalizeOfferCategory(category);
+  const rule = Array.isArray(state.offerDraft?.category_rules)
+    ? state.offerDraft.category_rules.find((item) => normalizeOfferCategory(item?.category) === normalizedCategory)
+    : null;
+  const basisPoints = Number(rule?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
+  return Number.isFinite(basisPoints) ? Math.max(0, Math.round(basisPoints)) : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS;
+}
+
+function addOfferItemFromSelector() {
+  if (!state.permissions.canEditBooking || !state.offerDraft) return;
+  const category = normalizeOfferCategory(els.offerItemCategorySelect?.value || "OTHER");
+  state.offerDraft.items.push({
+    id: "",
+    category,
+    label: "",
+    description: "",
+    quantity: 1,
+    unit_amount_cents: 0,
+    tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
+    currency: state.offerDraft.currency,
+    notes: "",
+    sort_order: state.offerDraft.items.length
+  });
+  renderOfferItemsTable();
 }
 
 function renderOfferPanel() {
@@ -478,26 +501,8 @@ function renderOfferPanel() {
   }
   if (els.offerSaveBtn) els.offerSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 
-  renderOfferCategoriesTable();
   renderOfferItemsTable();
   clearOfferStatus();
-}
-
-function renderOfferCategoriesTable() {
-  if (!els.offerCategoriesTable) return;
-  const readOnly = !state.permissions.canEditBooking;
-  const header = `<thead><tr><th>Category</th><th>Tax %</th></tr></thead>`;
-  const rows = state.offerDraft.category_rules
-    .map(
-      (rule, index) => `<tr>
-      <td>${escapeHtml(offerCategoryLabel(rule.category))}</td>
-      <td><input data-offer-category-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(
-        formatBasisPointsPercent(rule.tax_rate_basis_points)
-      )}" ${readOnly ? "disabled" : ""} /></td>
-    </tr>`
-    )
-    .join("");
-  els.offerCategoriesTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="2">No category rules</td></tr>'}</tbody>`;
 }
 
 function renderOfferItemsTable() {
@@ -506,26 +511,17 @@ function renderOfferItemsTable() {
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const header = `<thead><tr><th>Category</th><th>Item</th><th>Description</th><th>Qty</th><th>Unit (${escapeHtml(
     currency
-  )})</th><th>Tax %</th><th>Net</th><th>Tax</th><th>Gross</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  )})</th><th>Net</th><th>Tax</th><th>Gross</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
   const rows = (state.offerDraft.items || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
       const sign = offerCategorySign(item.category);
       const lineNet = sign * quantity * unitAmount;
-      const lineTax = sign * Math.round((quantity * unitAmount * Number(item.tax_rate_basis_points || 0)) / 10000);
+      const lineTax = sign * Math.round((quantity * unitAmount * getOfferCategoryTaxRateBasisPoints(item.category)) / 10000);
       const lineGross = lineNet + lineTax;
       return `<tr>
-      <td>
-        <select data-offer-item-category="${index}" ${readOnly ? "disabled" : ""}>
-          ${OFFER_CATEGORIES.map(
-            (entry) =>
-              `<option value="${entry.code}" ${normalizeOfferCategory(item.category) === entry.code ? "selected" : ""}>${escapeHtml(
-                entry.label
-              )}</option>`
-          ).join("")}
-        </select>
-      </td>
+      <td>${escapeHtml(offerCategoryLabel(item.category))}</td>
       <td><input data-offer-item-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
       <td><input data-offer-item-description="${index}" type="text" value="${escapeHtml(item.description || "")}" ${
         readOnly ? "disabled" : ""
@@ -535,9 +531,6 @@ function renderOfferItemsTable() {
       } /></td>
       <td><input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
-      )}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-offer-item-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(
-        formatBasisPointsPercent(item.tax_rate_basis_points)
       )}" ${readOnly ? "disabled" : ""} /></td>
       <td>${escapeHtml(formatMoneyDisplay(lineNet, currency))}</td>
       <td>${escapeHtml(formatMoneyDisplay(lineTax, currency))}</td>
@@ -551,16 +544,14 @@ function renderOfferItemsTable() {
     </tr>`;
     })
     .join("");
-  const addRow = readOnly
-    ? ""
-    : `<tr><td colspan="11"><button class="btn btn-ghost" type="button" data-offer-add-item>Add item</button></td></tr>`;
   const totals = computeOfferDraftTotals();
-  const totalsRow = `<tr><th colspan="6">Totals</th><th>${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th><th>${escapeHtml(
+  const totalsRow = `<tr><th colspan="5">Totals</th><th>${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th><th>${escapeHtml(
     formatMoneyDisplay(totals.tax_amount_cents, currency)
   )}</th><th>${escapeHtml(formatMoneyDisplay(totals.gross_amount_cents, currency))}</th><th colspan="${
     readOnly ? 1 : 2
   }">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
-  const body = (rows || `<tr><td colspan="${readOnly ? 10 : 11}">No offer items yet</td></tr>`) + totalsRow + addRow;
+  const columns = readOnly ? 9 : 10;
+  const body = (rows || `<tr><td colspan="${columns}">No offer items yet</td></tr>`) + totalsRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 
   if (!readOnly) {
@@ -570,21 +561,6 @@ function renderOfferItemsTable() {
         state.offerDraft.items.splice(index, 1);
         renderOfferItemsTable();
       });
-    });
-    els.offerItemsTable.querySelector("[data-offer-add-item]")?.addEventListener("click", () => {
-      state.offerDraft.items.push({
-        id: "",
-        category: "OTHER",
-        label: "",
-        description: "",
-        quantity: 1,
-        unit_amount_cents: 0,
-        tax_rate_basis_points: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
-        currency: state.offerDraft.currency,
-        notes: "",
-        sort_order: state.offerDraft.items.length
-      });
-      renderOfferItemsTable();
     });
   }
 }
@@ -1188,16 +1164,21 @@ function collectPricingPayload() {
 }
 
 function collectOfferCategoryRules() {
-  return OFFER_CATEGORIES.map((category, index) => {
-    const input = document.querySelector(`[data-offer-category-tax="${index}"]`);
-    const taxPercent = Number(input?.value || "0");
-    if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) {
-      throw new Error(`${category.label}: tax rate must be between 0 and 100.`);
-    }
+  const defaults = defaultOfferCategoryRules();
+  const byCategory = new Map((Array.isArray(state.offerDraft?.category_rules) ? state.offerDraft.category_rules : []).map((rule) => [
+    normalizeOfferCategory(rule?.category),
+    rule
+  ]));
+  return OFFER_CATEGORIES.map((category) => {
+    const override = byCategory.get(category.code);
+    const raw = override?.tax_rate_basis_points;
+    const taxRateBasisPoints = Number.isFinite(Number(raw))
+      ? Math.max(0, Math.round(Number(raw)))
+      : defaults.find((entry) => entry.category === category.code)?.tax_rate_basis_points || DEFAULT_OFFER_TAX_RATE_BASIS_POINTS;
     return {
       category: category.code,
-      tax_rate_basis_points: Math.round(taxPercent * 100)
-    };
+      tax_rate_basis_points: taxRateBasisPoints
+    }
   });
 }
 
@@ -1207,12 +1188,11 @@ function collectOfferItems({ throwOnError = true } = {}) {
   const items = [];
   for (const input of rows) {
     const index = Number(input.getAttribute("data-offer-item-label"));
-    const category = normalizeOfferCategory(document.querySelector(`[data-offer-item-category="${index}"]`)?.value || "OTHER");
+    const category = normalizeOfferCategory(state.offerDraft?.items[index]?.category || "OTHER");
     const label = String(document.querySelector(`[data-offer-item-label="${index}"]`)?.value || "").trim();
     const description = String(document.querySelector(`[data-offer-item-description="${index}"]`)?.value || "").trim();
     const quantity = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
     const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0", currency);
-    const taxPercent = Number(document.querySelector(`[data-offer-item-tax="${index}"]`)?.value || "0");
     const notes = String(document.querySelector(`[data-offer-item-notes="${index}"]`)?.value || "").trim();
     if (!label) {
       if (throwOnError) throw new Error(`Offer item ${index + 1} requires a label.`);
@@ -1226,10 +1206,6 @@ function collectOfferItems({ throwOnError = true } = {}) {
       if (throwOnError) throw new Error(`Offer item ${index + 1} requires a valid non-negative unit amount.`);
       continue;
     }
-    if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) {
-      if (throwOnError) throw new Error(`Offer item ${index + 1} tax rate must be between 0 and 100.`);
-      continue;
-    }
     items.push({
       id: state.offerDraft.items[index]?.id || "",
       category,
@@ -1237,7 +1213,7 @@ function collectOfferItems({ throwOnError = true } = {}) {
       description: description || null,
       quantity: Math.round(quantity),
       unit_amount_cents: Math.round(unitAmount),
-      tax_rate_basis_points: Math.round(taxPercent * 100),
+      tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
       currency,
       notes: notes || null,
       sort_order: index

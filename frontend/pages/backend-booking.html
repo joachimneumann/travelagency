@@ -72,14 +72,23 @@
             </div>
 
             <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Category Tax Rules</h3>
-            </div>
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="offerCategoriesTable"></table>
-            </div>
-
-            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
               <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Offer Items</h3>
+            </div>
+            <div class="backend-controls" style="align-items: center; margin: 0.6rem 0 0.25rem; column-gap: 0.5rem;">
+              <div class="field">
+                <label for="offerItemCategorySelect">New item category</label>
+                <select id="offerItemCategorySelect">
+                  <option value="ACCOMMODATION">Accommodation</option>
+                  <option value="TRANSPORTATION">Transportation</option>
+                  <option value="TOURS_ACTIVITIES">Tours & Activities</option>
+                  <option value="GUIDE_SUPPORT_SERVICES">Guide & Support Services</option>
+                  <option value="MEALS">Meals</option>
+                  <option value="FEES_TAXES">Fees & Taxes</option>
+                  <option value="DISCOUNTS_CREDITS">Discounts & Credits</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" id="offerAddItemBtn" type="button">Add item</button>
             </div>
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
               <table class="backend-table" id="offerItemsTable"></table>
