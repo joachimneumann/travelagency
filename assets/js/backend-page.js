@@ -64,6 +64,14 @@ const state = {
   staff: []
 };
 
+function formatIntegerWithGrouping(value) {
+  if (!Number.isFinite(Number(value))) return "-";
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+    useGrouping: true
+  }).format(Number(value));
+}
+
 init();
 
 async function init() {
@@ -449,7 +457,7 @@ function renderTours(items) {
         <td>${escapeHtml(countries || "-")}</td>
         <td>${escapeHtml(styles || "-")}</td>
         <td>${escapeHtml(String(tour.durationDays ?? "-"))}</td>
-        <td>${escapeHtml(String(tour.priceFrom ?? "-"))}</td>
+        <td>${escapeHtml(formatIntegerWithGrouping(tour.priceFrom ?? "-"))}</td>
         <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
       </tr>`;
     })

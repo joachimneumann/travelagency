@@ -526,8 +526,8 @@ function renderOfferItemsTable() {
   );
   const showDualPrice = hasMultiQuantityItem;
   const priceHeaders = showDualPrice
-    ? `<th class="offer-col-price-single">Price (SINGLE, ${escapeHtml(currency)})</th><th class="offer-col-price-total">Price (TOTAL, ${escapeHtml(currency)})</th>`
-    : `<th class="offer-col-price-total">Price (${escapeHtml(currency)})</th>`;
+    ? `<th class="offer-col-price-single">PRICE (SINGLE, ${escapeHtml(currency)})</th><th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`
+    : `<th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`;
   const header = `<thead><tr><th class="offer-col-category">Category</th><th class="offer-col-details">Details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}</tr></thead>`;
   const rows = (offerItems || [])
     .map((item, index) => {
@@ -535,6 +535,8 @@ function renderOfferItemsTable() {
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
       const rawLineTotal = computeOfferItemLineTotals(item).gross_amount_cents;
       const itemTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
+      const taxRateBasisPoints = Number(item?.tax_rate_basis_points || 0);
+      const taxLabel = `Tax: ${formatTaxRatePercent(taxRateBasisPoints)}%`;
       const removeButton = readOnly
         ? ""
         : `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-item="${index}" title="Remove offer item" aria-label="Remove offer item">×</button>`;
@@ -547,7 +549,10 @@ function renderOfferItemsTable() {
       const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
       const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
       return `<tr>
-      <td class="offer-col-category">${escapeHtml(offerCategoryLabel(item.category))}</td>
+      <td class="offer-col-category">
+        <div>${escapeHtml(offerCategoryLabel(item.category))}</div>
+        <div class="offer-category-tax">${escapeHtml(taxLabel)}</div>
+      </td>
       <td class="offer-col-details"><textarea data-offer-item-details="${index}" rows="2" ${
         readOnly ? "disabled" : ""
       }>${escapeHtml(item.details || item.description || "")}</textarea></td>
@@ -560,7 +565,7 @@ function renderOfferItemsTable() {
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
   const leadingTotalCols = showDualPrice ? 4 : 3;
-  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><strong>${escapeHtml(offerTotalValue)}</strong></td></tr>`;
+  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><strong>Total with Tax: ${escapeHtml(offerTotalValue)}</strong></td></tr>`;
   const columns = 3 + (showDualPrice ? 2 : 1);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
   const body = (rows || noRows) + totalRow;
@@ -1516,7 +1521,6 @@ function formatMoneyDisplay(value, currency) {
   const amount = Number(value || 0);
   const definition = currencyDefinition(currency);
   if (!Number.isFinite(amount)) return "-";
-  if (definition.decimalPlaces === 0) return `${definition.symbol} ${Math.round(amount)}`;
   const major = amount / 10 ** definition.decimalPlaces;
   return `${definition.symbol} ${new Intl.NumberFormat("en-US", {
     minimumFractionDigits: definition.decimalPlaces,

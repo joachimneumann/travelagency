@@ -159,7 +159,7 @@ struct BookingDetailView: View {
             LabeledContent("Net", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
             LabeledContent("Tax", value: formatMoney(offer.totals.taxAmountCents, currency: offer.currency))
             LabeledContent("Gross", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
-            LabeledContent("Offer total (TOTAL, \(offer.currency.rawValue))", value: formatMoney(offer.totalPriceCents, currency: offer.currency))
+            LabeledContent("Total with Tax", value: formatMoney(offer.totalPriceCents, currency: offer.currency))
         }
 
         if !offer.categoryRules.isEmpty {
@@ -180,8 +180,13 @@ struct BookingDetailView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(item.label)
                             Spacer()
-                            Text(offerCategoryLabel(item.category))
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text(offerCategoryLabel(item.category))
                                 .foregroundStyle(.secondary)
+                                Text("Tax: \(formatPercent(item.taxRateBasisPoints))")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         if let details = item.details, !details.isEmpty {
                             Text(details)
@@ -208,9 +213,6 @@ struct BookingDetailView: View {
                                 Text(formatMoney(lineGross ?? (item.lineTotalAmountCents ?? (item.unitAmountCents * item.quantity)), currency: offer.currency))
                             }
                         }
-                        Text("Tax \(formatPercent(item.taxRateBasisPoints))")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                         if let notes = item.notes, !notes.isEmpty {
                             Text(notes)
                                 .font(.footnote)

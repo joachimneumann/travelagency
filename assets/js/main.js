@@ -37,8 +37,8 @@ const DEFAULT_BOOKING_CURRENCY = "USD";
 const BOOKING_BUDGET_OPTIONS = {
   USD: ["not decided yet", "$500-$900 / week", "$900-$1,400 / week", "$1,400-$2,200 / week", "$2,200+ / week"],
   EURO: ["not decided yet", "€450-€800 / week", "€800-€1,250 / week", "€1,250-€2,000 / week", "€2,000+ / week"],
-  VND: ["not decided yet", "12.000.000₫-22.000.000₫ / week", "22.000.000₫-35.000.000₫ / week", "35.000.000₫-55.000.000₫ / week", "55.000.000₫+ / week"],
-  THB: ["not decided yet", "17.000฿-30.000฿ / week", "30.000฿-47.000฿ / week", "47.000฿-74.000฿ / week", "74.000฿+ / week"]
+  VND: ["not decided yet", "12,000,000₫-22,000,000₫ / week", "22,000,000₫-35,000,000₫ / week", "35,000,000₫-55,000,000₫ / week", "55,000,000₫+ / week"],
+  THB: ["not decided yet", "17,000฿-30,000฿ / week", "30,000฿-47,000฿ / week", "47,000฿-74,000฿ / week", "74,000฿+ / week"]
 };
 
 const els = {
@@ -504,7 +504,12 @@ function renderTrips(trips) {
       const tags = trip.styles.map((style) => `<span class="tag">${escapeHTML(style)}</span>`).join("");
       const countries = tourDestinationCountries(trip);
       const countriesLabel = countries.join(", ");
-      const price = typeof trip.priceFrom === "number" ? `From $${trip.priceFrom}` : "Custom quote";
+      const price = typeof trip.priceFrom === "number"
+        ? `From $${new Intl.NumberFormat("en-US", {
+          maximumFractionDigits: 0,
+          useGrouping: true
+        }).format(trip.priceFrom)}`
+        : "Custom quote";
       const rating = typeof trip.rating === "number" ? `★ ${trip.rating.toFixed(1)}` : "";
       const loading = index < 3 ? "eager" : "lazy";
       const fetchpriority = index < 3 ? "high" : "auto";

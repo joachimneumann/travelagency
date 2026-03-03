@@ -124,7 +124,7 @@ Admin API:
 - `PATCH /api/v1/bookings/:bookingId/offer` (offers are normalized and converted to base currency before persistence)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
-- `POST /api/v1/offers/exchange-rates` (preview converted offer totals while editing display currency)
+- `POST /api/v1/offers/exchange-rates` (preview converted offer line totals and total while editing display currency; frontend displays backend output directly)
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
 - `GET /api/v1/atp_staff`
@@ -247,10 +247,16 @@ Booking pricing model:
   - fallback to stored `pricing.currency`
   - fallback to `BASE_CURRENCY`
 - conversion behavior:
-  - runtime conversion uses Frankfurter + ER API provider chain
-  - conversion endpoint `POST /api/v1/offers/exchange-rates` performs live conversion + tax-aware line totals
-  - configured override rates are supported with `EXCHANGE_RATE_<FROM>_<TO>`
-  - if no live rate is available, stale cached rates or explicit override values are used before returning a hard failure
+  - runtime conversion uses Frankfurter + ER API provider chain with fallback to configured overrides (`EXCHANGE_RATE_<FROM>_<TO>`)
+  - all values are always returned to clients in the requested display currency; clients do **not** perform rate math themselves
+  - conversion for offers uses a strict USD-hop path per item:
+    - each item is converted `source -> USD` using the resolved source-to-base rate
+    - the item unit is rounded to USD decimals
+    - then converted `USD -> target` and rounded to target decimals
+    - per-item line tax is calculated in target currency
+    - line total is summed across converted items to produce total
+  - total offer values are not obtained by converting a single USD total; total is calculated from converted line totals
+  - if no live rate is available, stale cached rates or explicit overrides are used before returning hard failure
 - money display precision is catalog-driven:
   - `USD`, `EURO`: 2 decimal places
   - `VND`, `THB`: 0 decimal places
