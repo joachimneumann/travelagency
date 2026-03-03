@@ -73,6 +73,9 @@ const APP_ROLES = {
   STAFF: "atp_staff"
 };
 
+const FX_RATE_CACHE_TTL_MS = 5 * 60 * 1000;
+const fxRateCache = new Map();
+
 const PRICING_ADJUSTMENT_TYPES = {
   DISCOUNT: "DISCOUNT",
   CREDIT: "CREDIT",
@@ -156,6 +159,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlePatchBookingNotes },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/pricing$/, handler: handlePatchBookingPricing },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/offer$/, handler: handlePatchBookingOffer },
+    { method: "POST", pattern: /^\/api\/v1\/offers\/exchange-rates$/, handler: handlePostOfferExchangeRates },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
     { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
@@ -901,6 +905,11 @@ function safeCurrency(value) {
   return normalizeGeneratedCurrencyCode(value) || "USD";
 }
 
+function parseCurrencyForExchange(value) {
+  const normalized = normalizeGeneratedCurrencyCode(value);
+  return normalized || null;
+}
+
 function getCurrencyDefinition(currency) {
   const definition = generatedCurrencyDefinition(currency) || generatedCurrencyDefinition("USD");
   return {
@@ -916,6 +925,77 @@ function safeAmountCents(value) {
   if (!Number.isFinite(n)) return null;
   const rounded = Math.round(n);
   return rounded > 0 ? rounded : null;
+}
+
+function getExchangeCacheKey(fromCurrency, toCurrency) {
+  return `${fromCurrency}->${toCurrency}`;
+}
+
+async function fetchExchangeRate(fromCurrency, toCurrency) {
+  const from = fromCurrency === "EURO" ? "EUR" : fromCurrency;
+  const to = toCurrency === "EURO" ? "EUR" : toCurrency;
+  if (!from || !to || from === to) return 1;
+
+  const now = Date.now();
+  const key = getExchangeCacheKey(fromCurrency, toCurrency);
+  const cached = fxRateCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.rate;
+
+  const endpoint = `https://api.frankfurter.app/latest?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  const response = await fetch(endpoint);
+  if (!response.ok) {
+    throw new Error(`Exchange API request failed (${response.status})`);
+  }
+  const payload = await response.json();
+  const rawRate = payload?.rates?.[to];
+  const rate = Number(rawRate);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw new Error("Exchange rate response did not contain a valid rate");
+  }
+
+  fxRateCache.set(key, {
+    rate,
+    expiresAt: now + FX_RATE_CACHE_TTL_MS
+  });
+  return rate;
+}
+
+function roundConvertedAmount(amountCents, fromCurrency, toCurrency, rate) {
+  const fromDefinition = getCurrencyDefinition(fromCurrency);
+  const toDefinition = getCurrencyDefinition(toCurrency);
+  const fromScale = 10 ** fromDefinition.decimal_places;
+  const toScale = 10 ** toDefinition.decimal_places;
+  const major = Number(amountCents) / fromScale;
+  const converted = major * rate;
+  return Math.max(0, Math.round(converted * toScale));
+}
+
+function validateOfferExchangeRequest(payload) {
+  if (!payload || typeof payload !== "object") {
+    return { ok: false, error: "Request body is required." };
+  }
+
+  const fromCurrency = parseCurrencyForExchange(payload.from_currency || payload.fromCurrency);
+  const toCurrency = parseCurrencyForExchange(payload.to_currency || payload.toCurrency);
+  if (!fromCurrency) return { ok: false, error: "from_currency is required and must be a valid currency." };
+  if (!toCurrency) return { ok: false, error: "to_currency is required and must be a valid currency." };
+
+  const inputItems = Array.isArray(payload.items) ? payload.items : [];
+  const items = [];
+
+  for (let index = 0; index < inputItems.length; index++) {
+    const row = inputItems[index];
+    const rawAmount = normalizeAmountCents(row?.unit_amount_cents, 0);
+    if (!Number.isFinite(rawAmount) || rawAmount < 0) {
+      return { ok: false, error: `Item ${index + 1} has an invalid unit_amount_cents.` };
+    }
+    items.push({
+      id: normalizeText(row?.id) || `item_${index}`,
+      unit_amount_cents: rawAmount
+    });
+  }
+
+  return { ok: true, fromCurrency, toCurrency, items };
 }
 
 function formatMoney(amountCents, currency) {
@@ -1805,25 +1885,12 @@ function validateBookingOfferInput(rawOffer, booking) {
   );
   const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
 
-  if (offer.currency !== preferredCurrency) {
-    return {
-      ok: false,
-      error: `offer.currency must match booking.preferred_currency (${preferredCurrency})`
-    };
-  }
-
   for (const item of offer.items) {
     if (!item.label) return { ok: false, error: "Each offer item requires a label" };
     if (item.quantity < 1) return { ok: false, error: "Offer item quantity must be at least 1" };
     if (item.unit_amount_cents < 0) return { ok: false, error: "Offer item amounts must be zero or positive" };
     if (item.tax_rate_basis_points < 0 || item.tax_rate_basis_points > 100000) {
       return { ok: false, error: "Offer item tax_rate_basis_points must be between 0 and 100000" };
-    }
-    if (item.currency !== preferredCurrency) {
-      return {
-        ok: false,
-        error: "Every offer item currency must match booking preferred currency"
-      };
     }
   }
 
@@ -2552,6 +2619,59 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
   await persistStore(store);
 
   sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+}
+
+async function handlePostOfferExchangeRates(req, res) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  if (!principal) {
+    sendJson(res, 401, { error: "Unauthorized" });
+    return;
+  }
+
+  const check = validateOfferExchangeRequest(payload);
+  if (!check.ok) {
+    sendJson(res, 422, { error: check.error });
+    return;
+  }
+
+  const { fromCurrency, toCurrency, items } = check;
+  if (!Array.isArray(items) || items.length === 0) {
+    sendJson(res, 200, {
+      from_currency: fromCurrency,
+      to_currency: toCurrency,
+      exchange_rate: 1,
+      converted_items: []
+    });
+    return;
+  }
+
+  let rate;
+  try {
+    rate = await fetchExchangeRate(fromCurrency, toCurrency);
+  } catch (error) {
+    sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
+    return;
+  }
+
+  const convertedItems = items.map((item) => ({
+    id: item.id || "",
+    unit_amount_cents: roundConvertedAmount(item.unit_amount_cents, fromCurrency, toCurrency, rate)
+  }));
+
+  sendJson(res, 200, {
+    from_currency: fromCurrency,
+    to_currency: toCurrency,
+    exchange_rate: rate,
+    converted_items: convertedItems
+  });
 }
 
 async function handleListActivities(req, res, [bookingId]) {

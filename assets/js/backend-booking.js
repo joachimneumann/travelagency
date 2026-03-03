@@ -162,7 +162,10 @@ async function init() {
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
-  if (els.offerCurrencyInput) els.offerCurrencyInput.addEventListener("change", renderOfferPanel);
+  if (els.offerCurrencyInput)
+    els.offerCurrencyInput.addEventListener("change", () => {
+      void handleOfferCurrencyChange();
+    });
   if (els.offerAddItemBtn) els.offerAddItemBtn.addEventListener("click", addOfferItemFromSelector);
   if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
@@ -496,10 +499,7 @@ function renderOfferPanel() {
 
   if (els.offerCurrencyInput) {
     setSelectValue(els.offerCurrencyInput, currency);
-    const preferred = normalizeCurrencyCode(state.booking.preferred_currency || currency);
-    els.offerCurrencyInput.value = preferred;
-    state.offerDraft.currency = preferred;
-    els.offerCurrencyInput.disabled = true;
+    els.offerCurrencyInput.disabled = !state.permissions.canEditBooking;
   }
   if (els.offerItemCategorySelect) {
     els.offerItemCategorySelect.disabled = !state.permissions.canEditBooking;
@@ -1225,6 +1225,83 @@ function collectOfferPayload() {
     category_rules,
     items
   };
+}
+
+async function convertOfferItemsInBackend(currentCurrency, nextCurrency, items) {
+  const response = await fetchApi(`${apiOrigin}/api/v1/offers/exchange-rates`, {
+    method: "POST",
+    body: {
+      from_currency: currentCurrency,
+      to_currency: nextCurrency,
+      items: items.map((item, index) => ({
+        id: item.id || `item_${index}`,
+        unit_amount_cents: Number(item.unit_amount_cents || 0)
+      }))
+    }
+  });
+
+  if (!response || !Array.isArray(response.converted_items)) {
+    throw new Error(response?.detail || response?.error || "Offer exchange failed.");
+  }
+  return response.converted_items.map((item, index) => ({
+    id: item.id || `item_${index}`,
+    unit_amount_cents: Math.max(0, Number(item.unit_amount_cents) || 0)
+  }));
+}
+
+async function handleOfferCurrencyChange() {
+  if (!state.booking || !state.offerDraft || !els.offerCurrencyInput) return;
+  if (!state.permissions.canEditBooking) {
+    setSelectValue(els.offerCurrencyInput, normalizeCurrencyCode(state.offerDraft.currency || "USD"));
+    return;
+  }
+
+  const nextCurrency = normalizeCurrencyCode(els.offerCurrencyInput.value);
+  const currentCurrency = normalizeCurrencyCode(state.offerDraft.currency || state.booking.preferred_currency || "USD");
+  if (!nextCurrency || nextCurrency === currentCurrency) {
+    setSelectValue(els.offerCurrencyInput, currentCurrency);
+    return;
+  }
+
+  let items;
+  try {
+    items = collectOfferItems({ throwOnError: true });
+  } catch (error) {
+    setOfferStatus(String(error?.message || error));
+    setSelectValue(els.offerCurrencyInput, currentCurrency);
+    return;
+  }
+
+  const restoreSelectState = () => {
+    if (els.offerCurrencyInput) {
+      els.offerCurrencyInput.disabled = false;
+    }
+  };
+  if (els.offerCurrencyInput) {
+    els.offerCurrencyInput.disabled = true;
+  }
+  setOfferStatus("Converting prices...");
+  try {
+    const convertedItems = await convertOfferItemsInBackend(currentCurrency, nextCurrency, items);
+    state.offerDraft.currency = nextCurrency;
+    state.offerDraft.items = items.map((item, index) => {
+      const convertedItem = convertedItems[index] || {};
+      return {
+        ...item,
+        unit_amount_cents:
+          Number.isFinite(convertedItem.unit_amount_cents) && convertedItem.unit_amount_cents >= 0 ? convertedItem.unit_amount_cents : item.unit_amount_cents,
+        currency: nextCurrency
+      };
+    });
+  } catch (error) {
+    setOfferStatus(`Exchange rate lookup failed: ${error?.message || error}`);
+    restoreSelectState();
+    setSelectValue(els.offerCurrencyInput, currentCurrency);
+    return;
+  }
+  restoreSelectState();
+  setOfferStatus("");
+  renderOfferItemsTable();
 }
 
 async function saveOffer() {
