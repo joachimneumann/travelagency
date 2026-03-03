@@ -99,6 +99,41 @@
             </div>
           </article>
 
+          <article id="offerPanel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Offer</h2>
+
+            <div class="backend-controls">
+              <div class="field">
+                <label for="offerCurrencyInput">Offer Currency (must match booking preferred currency)</label>
+                <select id="offerCurrencyInput">
+                  <option value="USD">USD</option>
+                  <option value="EURO">EURO</option>
+                  <option value="VND">VND</option>
+                  <option value="THB">THB</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Category Tax Rules</h3>
+            </div>
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="offerCategoriesTable"></table>
+            </div>
+
+            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Offer Items</h3>
+            </div>
+            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+              <table class="backend-table" id="offerItemsTable"></table>
+            </div>
+
+            <div class="backend-controls">
+              <button class="btn btn-primary" id="offerSaveBtn" type="button">Save offer</button>
+              <span id="offerStatus" class="micro"></span>
+            </div>
+          </article>
+
           <article id="invoicePanel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
             <div class="backend-controls">

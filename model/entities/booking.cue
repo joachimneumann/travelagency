@@ -80,7 +80,41 @@ import (
 	summary: #BookingPricingSummary
 }
 
-#BookingActivityType: "BOOKING_CREATED" | "STAGE_CHANGED" | "ASSIGNMENT_CHANGED" | "NOTE_UPDATED" | "INVOICE_CREATED" | "INVOICE_UPDATED" | "PAYMENT_UPDATED"
+#BookingOfferCategoryRule: {
+	category: enums.#OfferCategory
+	taxRate:  >=0 & <=100 & number
+}
+
+#BookingOfferItem: {
+	id:           common.#Identifier
+	category:     enums.#OfferCategory
+	label:        string & !=""
+	description?: string
+	quantity:     >0 & int
+	unitNet:      common.#NonNegativeMoneyAmount
+	taxRate:      >=0 & <=100 & number
+	currency:     enums.#CurrencyCode
+	notes?:       string
+	sortOrder?:   int
+	createdAt?:   common.#Timestamp
+	updatedAt?:   common.#Timestamp
+}
+
+#BookingOfferTotals: {
+	netAmount:   common.#MoneyAmount
+	taxAmount:   common.#MoneyAmount
+	grossAmount: common.#MoneyAmount
+	itemsCount:  >=0 & int
+}
+
+#BookingOffer: {
+	currency: enums.#CurrencyCode
+	categoryRules: [...#BookingOfferCategoryRule]
+	items: [...#BookingOfferItem]
+	totals: #BookingOfferTotals
+}
+
+#BookingActivityType: "BOOKING_CREATED" | "STAGE_CHANGED" | "ASSIGNMENT_CHANGED" | "NOTE_UPDATED" | "PRICING_UPDATED" | "OFFER_UPDATED" | "INVOICE_CREATED" | "INVOICE_UPDATED" | "PAYMENT_UPDATED"
 
 #BookingActivity: {
 	id:        common.#Identifier
@@ -110,6 +144,7 @@ import (
 	preferredCurrency?: enums.#CurrencyCode
 	notes?:             string
 	pricing:            #BookingPricing
+	offer:              #BookingOffer
 	source?:            #SourceAttribution
 	idempotencyKey?:    string
 	createdAt:          common.#Timestamp

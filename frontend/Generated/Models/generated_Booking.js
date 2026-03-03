@@ -43,6 +43,16 @@ export const GENERATED_PRICING_ADJUSTMENT_TYPES = Object.freeze([
   "CREDIT",
   "SURCHARGE"
 ]);
+export const GENERATED_OFFER_CATEGORIES = Object.freeze([
+  "ACCOMMODATION",
+  "TRANSPORTATION",
+  "TOURS_ACTIVITIES",
+  "GUIDE_SUPPORT_SERVICES",
+  "MEALS",
+  "FEES_TAXES",
+  "DISCOUNTS_CREDITS",
+  "OTHER"
+]);
 
 export const BOOKING_SCHEMA = {
   "name": "Booking",
@@ -141,6 +151,12 @@ export const BOOKING_SCHEMA = {
       "required": true
     },
     {
+      "name": "offer",
+      "kind": "valueObject",
+      "typeName": "BookingOffer",
+      "required": true
+    },
+    {
       "name": "source",
       "kind": "valueObject",
       "typeName": "SourceAttribution",
@@ -163,5 +179,191 @@ export const BOOKING_SCHEMA = {
 
 export function validateBooking(value) {
   return __validateShape(value, BOOKING_SCHEMA);
+}
+
+export const BOOKING_OFFER_CATEGORY_RULE_SCHEMA = {
+  "name": "BookingOfferCategoryRule",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "entities.#BookingOfferCategoryRule",
+  "fields": [
+    {
+      "name": "category",
+      "kind": "enum",
+      "typeName": "OfferCategory",
+      "required": true
+    },
+    {
+      "name": "taxRateBasisPoints",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    }
+  ]
+};
+
+export function validateBookingOfferCategoryRule(value) {
+  return __validateShape(value, BOOKING_OFFER_CATEGORY_RULE_SCHEMA);
+}
+
+export const BOOKING_OFFER_ITEM_SCHEMA = {
+  "name": "BookingOfferItem",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "entities.#BookingOfferItem",
+  "fields": [
+    {
+      "name": "id",
+      "kind": "scalar",
+      "typeName": "Identifier",
+      "required": true
+    },
+    {
+      "name": "category",
+      "kind": "enum",
+      "typeName": "OfferCategory",
+      "required": true
+    },
+    {
+      "name": "label",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": true
+    },
+    {
+      "name": "description",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "quantity",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "unitAmountCents",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "taxRateBasisPoints",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "currency",
+      "kind": "enum",
+      "typeName": "CurrencyCode",
+      "required": true
+    },
+    {
+      "name": "notes",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "sortOrder",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": false
+    },
+    {
+      "name": "createdAt",
+      "kind": "scalar",
+      "typeName": "Timestamp",
+      "required": false
+    },
+    {
+      "name": "updatedAt",
+      "kind": "scalar",
+      "typeName": "Timestamp",
+      "required": false
+    }
+  ]
+};
+
+export function validateBookingOfferItem(value) {
+  return __validateShape(value, BOOKING_OFFER_ITEM_SCHEMA);
+}
+
+export const BOOKING_OFFER_TOTALS_SCHEMA = {
+  "name": "BookingOfferTotals",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "entities.#BookingOfferTotals",
+  "fields": [
+    {
+      "name": "netAmountCents",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "taxAmountCents",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "grossAmountCents",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "itemsCount",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    }
+  ]
+};
+
+export function validateBookingOfferTotals(value) {
+  return __validateShape(value, BOOKING_OFFER_TOTALS_SCHEMA);
+}
+
+export const BOOKING_OFFER_SCHEMA = {
+  "name": "BookingOffer",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "entities.#BookingOffer",
+  "fields": [
+    {
+      "name": "currency",
+      "kind": "enum",
+      "typeName": "CurrencyCode",
+      "required": true
+    },
+    {
+      "name": "categoryRules",
+      "kind": "valueObject",
+      "typeName": "BookingOfferCategoryRule",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "items",
+      "kind": "valueObject",
+      "typeName": "BookingOfferItem",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "totals",
+      "kind": "valueObject",
+      "typeName": "BookingOfferTotals",
+      "required": true
+    }
+  ]
+};
+
+export function validateBookingOffer(value) {
+  return __validateShape(value, BOOKING_OFFER_SCHEMA);
 }
 

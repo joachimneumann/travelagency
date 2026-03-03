@@ -27,7 +27,7 @@ struct BookingDetailView: View {
         .onChange(of: viewModel.booking?.stage) { _, _ in
             syncSelectionsFromBooking()
         }
-        .onChange(of: viewModel.booking?.staffId) { _, _ in
+        .onChange(of: viewModel.booking?.assignedStaffId) { _, _ in
             syncSelectionsFromBooking()
         }
         .alert("Booking", isPresented: Binding(
@@ -51,6 +51,9 @@ struct BookingDetailView: View {
                 paymentsSection(for: pricing)
                 adjustmentsSection(for: pricing)
                 paymentScheduleSection(for: pricing)
+            }
+            if let offer = booking.offer {
+                offerSection(for: offer)
             }
             if canChangeStage {
                 stageSection(for: booking)
@@ -76,7 +79,7 @@ struct BookingDetailView: View {
             LabeledContent("Stage", value: booking.stage.rawValue)
             LabeledContent("Destination", value: booking.destination)
             LabeledContent("Style", value: booking.style)
-            LabeledContent("Staff", value: booking.staffName ?? "Unassigned")
+            LabeledContent("Staff", value: booking.assignedStaffName ?? "Unassigned")
         }
     }
 
@@ -142,6 +145,67 @@ struct BookingDetailView: View {
             } else {
                 ForEach(pricing.payments) { payment in
                     paymentRow(payment, currency: pricing.currency)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func offerSection(for offer: BookingOffer) -> some View {
+        Section("Offer") {
+            LabeledContent("Currency", value: offer.currency.rawValue)
+            LabeledContent("Items", value: String(offer.totals.itemsCount))
+            LabeledContent("Net", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
+            LabeledContent("Tax", value: formatMoney(offer.totals.taxAmountCents, currency: offer.currency))
+            LabeledContent("Gross", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
+        }
+
+        if !offer.categoryRules.isEmpty {
+            Section("Offer Tax Rules") {
+                ForEach(offer.categoryRules, id: \.category) { rule in
+                    LabeledContent(offerCategoryLabel(rule.category), value: formatPercent(rule.taxRateBasisPoints))
+                }
+            }
+        }
+
+        Section("Offer Items") {
+            if offer.items.isEmpty {
+                Text("No offer items yet")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(offer.items) { item in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(item.label)
+                            Spacer()
+                            Text(offerCategoryLabel(item.category))
+                                .foregroundStyle(.secondary)
+                        }
+                        if let description = item.description, !description.isEmpty {
+                            Text(description)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            Text("Qty \(item.quantity)")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            if let lineGross = item.lineGrossAmountCents {
+                                Text(formatMoney(lineGross, currency: offer.currency))
+                            } else {
+                                Text(formatMoney(item.unitAmountCents * item.quantity, currency: offer.currency))
+                            }
+                        }
+                        Text("Tax \(formatPercent(item.taxRateBasisPoints))")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        if let notes = item.notes, !notes.isEmpty {
+                            Text(notes)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
                 }
             }
         }
@@ -217,7 +281,7 @@ struct BookingDetailView: View {
                     await viewModel.updateAssignment(staffID, session: session)
                 }
             }
-            .disabled(selectedStaffID == (booking.staffId ?? ""))
+            .disabled(selectedStaffID == (booking.assignedStaffId ?? ""))
         }
     }
 
@@ -268,7 +332,7 @@ struct BookingDetailView: View {
 
     private func syncSelectionsFromBooking() {
         selectedStage = viewModel.booking?.stage.rawValue ?? ""
-        selectedStaffID = viewModel.booking?.staffId ?? ""
+        selectedStaffID = viewModel.booking?.assignedStaffId ?? ""
     }
 
     private func formatMoney(_ minorUnits: Int, currency: ATPCurrencyCode) -> String {
@@ -310,6 +374,27 @@ struct BookingDetailView: View {
         return rows
             .filter { $0.1 != 0 }
             .map { (label: $0.0, value: formatMoney($0.1, currency: pricing.currency)) }
+    }
+
+    private func offerCategoryLabel(_ category: OfferCategory) -> String {
+        switch category {
+        case .accommodation:
+            return "Accommodation"
+        case .transportation:
+            return "Transportation"
+        case .toursActivities:
+            return "Tours & Activities"
+        case .guideSupportServices:
+            return "Guide & Support Services"
+        case .meals:
+            return "Meals"
+        case .feesTaxes:
+            return "Fees & Taxes"
+        case .discountsCredits:
+            return "Discounts & Credits"
+        case .other:
+            return "Other"
+        }
     }
 }
 

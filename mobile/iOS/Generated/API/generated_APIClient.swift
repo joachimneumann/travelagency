@@ -14,6 +14,7 @@
     case bookingAssignment
     case bookingNote
     case bookingPricing
+    case bookingOffer
     case bookingActivities
     case bookingInvoices
     case staff
@@ -37,6 +38,7 @@
         case .bookingAssignment: return "PATCH"
         case .bookingNote: return "PATCH"
         case .bookingPricing: return "PATCH"
+        case .bookingOffer: return "PATCH"
         case .bookingActivities: return "GET"
         case .bookingInvoices: return "GET"
         case .staff: return "GET"

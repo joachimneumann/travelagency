@@ -51,6 +51,7 @@ IR: {
 		stages: [for stage in enumModel.BookingStageCatalog {{code: stage}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
+		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
 	}
 
 	types: [
@@ -126,9 +127,64 @@ IR: {
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "pricing", kind: "valueObject", typeName: "BookingPricing", required: true},
+				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
 				{name: "source", kind: "valueObject", typeName: "SourceAttribution", required: false},
 				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: true},
+			]
+		},
+		{
+			name:       "BookingOfferCategoryRule"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferCategoryRule"
+			fields: [
+				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
+				{name: "taxRateBasisPoints", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
+			name:       "BookingOfferItem"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferItem"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "description", kind: "scalar", typeName: "string", required: false},
+				{name: "quantity", kind: "scalar", typeName: "int", required: true},
+				{name: "unitAmountCents", kind: "scalar", typeName: "int", required: true},
+				{name: "taxRateBasisPoints", kind: "scalar", typeName: "int", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "sortOrder", kind: "scalar", typeName: "int", required: false},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferTotals"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferTotals"
+			fields: [
+				{name: "netAmountCents", kind: "scalar", typeName: "int", required: true},
+				{name: "taxAmountCents", kind: "scalar", typeName: "int", required: true},
+				{name: "grossAmountCents", kind: "scalar", typeName: "int", required: true},
+				{name: "itemsCount", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
+			name:       "BookingOffer"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOffer"
+			fields: [
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "categoryRules", kind: "valueObject", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
+				{name: "items", kind: "valueObject", typeName: "BookingOfferItem", required: true, isArray: true},
+				{name: "totals", kind: "valueObject", typeName: "BookingOfferTotals", required: true},
 			]
 		},
 		{
@@ -355,6 +411,16 @@ IR: {
 			fields: [
 				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
 				{name: "pricing", kind: "valueObject", typeName: "BookingPricing", required: true},
+			]
+		},
+		{
+			name:       "BookingOfferUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingOfferUpdateRequest"
+			fields: [
+				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
+				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
 			]
 		},
 		{

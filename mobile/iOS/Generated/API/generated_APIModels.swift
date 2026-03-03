@@ -255,6 +255,16 @@ import Foundation
         }
     }
 
+    struct GeneratedBookingOfferUpdateRequest: Codable, Equatable {
+    let bookingHash: String?
+    let offer: GeneratedBookingOffer
+
+        private enum CodingKeys: String, CodingKey {
+        case bookingHash = "booking_hash"
+        case offer = "offer"
+        }
+    }
+
     struct GeneratedErrorResponse: Codable, Equatable {
     let error: String
     let detail: String?

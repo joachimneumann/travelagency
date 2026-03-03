@@ -29,7 +29,7 @@ struct BookingsListView: View {
         } else {
             let bookings: [Booking] = viewModel.bookings
             List {
-                ForEach(bookings, id: \.id) { booking in
+                ForEach(bookings) { booking in
                     NavigationLink {
                         BookingDetailView(bookingID: booking.id)
                     } label: {
@@ -37,7 +37,7 @@ struct BookingsListView: View {
                             Text(booking.destination)
                                 .font(.headline)
                                 .foregroundStyle(.primary)
-                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.staffName ?? "Unassigned")")
+                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.assignedStaffName ?? "Unassigned")")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)

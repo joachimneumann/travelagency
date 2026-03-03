@@ -84,6 +84,30 @@ const PAYMENT_STATUSES = {
   PAID: "PAID"
 };
 
+const OFFER_CATEGORIES = {
+  ACCOMMODATION: "ACCOMMODATION",
+  TRANSPORTATION: "TRANSPORTATION",
+  TOURS_ACTIVITIES: "TOURS_ACTIVITIES",
+  GUIDE_SUPPORT_SERVICES: "GUIDE_SUPPORT_SERVICES",
+  MEALS: "MEALS",
+  FEES_TAXES: "FEES_TAXES",
+  DISCOUNTS_CREDITS: "DISCOUNTS_CREDITS",
+  OTHER: "OTHER"
+};
+
+const OFFER_CATEGORY_ORDER = [
+  OFFER_CATEGORIES.ACCOMMODATION,
+  OFFER_CATEGORIES.TRANSPORTATION,
+  OFFER_CATEGORIES.TOURS_ACTIVITIES,
+  OFFER_CATEGORIES.GUIDE_SUPPORT_SERVICES,
+  OFFER_CATEGORIES.MEALS,
+  OFFER_CATEGORIES.FEES_TAXES,
+  OFFER_CATEGORIES.DISCOUNTS_CREDITS,
+  OFFER_CATEGORIES.OTHER
+];
+
+const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
+
 const ALLOWED_STAGE_TRANSITIONS = {
   [STAGES.NEW]: STAGE_ORDER,
   [STAGES.QUALIFIED]: STAGE_ORDER,
@@ -131,6 +155,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlePatchBookingNotes },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/pricing$/, handler: handlePatchBookingPricing },
+    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/offer$/, handler: handlePatchBookingOffer },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
     { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
@@ -658,6 +683,7 @@ async function readStore() {
   parsed.bookings = parsed.bookings.map((booking) => {
     syncBookingStaffFields(booking);
     booking.pricing = normalizeBookingPricing(booking.pricing);
+    booking.offer = normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD");
     return booking;
   });
   return parsed;
@@ -1598,6 +1624,24 @@ function defaultBookingPricing() {
   };
 }
 
+function defaultBookingOffer(preferredCurrency = "USD") {
+  const currency = safeCurrency(preferredCurrency);
+  return {
+    currency,
+    category_rules: OFFER_CATEGORY_ORDER.map((category) => ({
+      category,
+      tax_rate_basis_points: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
+    })),
+    items: [],
+    totals: {
+      net_amount_cents: 0,
+      tax_amount_cents: 0,
+      gross_amount_cents: 0,
+      items_count: 0
+    }
+  };
+}
+
 function normalizeAmountCents(value, fallback = 0) {
   if (value === null || value === undefined || value === "") return fallback;
   const numeric = Number(value);
@@ -1620,6 +1664,170 @@ function normalizePricingAdjustmentType(value) {
 function normalizePaymentStatus(value) {
   const normalized = normalizeText(value).toUpperCase();
   return PAYMENT_STATUSES[normalized] || PAYMENT_STATUSES.PENDING;
+}
+
+function normalizeOfferCategory(value) {
+  const normalized = normalizeText(value).toUpperCase();
+  return OFFER_CATEGORIES[normalized] || OFFER_CATEGORIES.OTHER;
+}
+
+function offerCategorySign(category) {
+  return normalizeOfferCategory(category) === OFFER_CATEGORIES.DISCOUNTS_CREDITS ? -1 : 1;
+}
+
+function clampOfferTaxRateBasisPoints(value, fallback = DEFAULT_OFFER_TAX_RATE_BASIS_POINTS) {
+  const basisPoints = normalizeBasisPoints(value, fallback);
+  return clamp(basisPoints, 0, 100000);
+}
+
+function buildOfferCategoryRuleMap(rules) {
+  const map = new Map(
+    OFFER_CATEGORY_ORDER.map((category) => [
+      category,
+      {
+        category,
+        tax_rate_basis_points: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
+      }
+    ])
+  );
+  for (const rule of rules) {
+    const category = normalizeOfferCategory(rule?.category);
+    map.set(category, {
+      category,
+      tax_rate_basis_points: clampOfferTaxRateBasisPoints(rule?.tax_rate_basis_points)
+    });
+  }
+  return map;
+}
+
+function computeBookingOfferTotals(offer) {
+  let net_amount_cents = 0;
+  let tax_amount_cents = 0;
+  let items_count = 0;
+
+  for (const item of offer.items || []) {
+    const sign = offerCategorySign(item.category);
+    const lineNet = Math.max(0, normalizeAmountCents(item.unit_amount_cents, 0)) * Math.max(1, safeInt(item.quantity) || 1);
+    const lineTax = roundTaxAmount(lineNet, clampOfferTaxRateBasisPoints(item.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS));
+    net_amount_cents += sign * lineNet;
+    tax_amount_cents += sign * lineTax;
+    items_count += 1;
+  }
+
+  return {
+    net_amount_cents,
+    tax_amount_cents,
+    gross_amount_cents: net_amount_cents + tax_amount_cents,
+    items_count
+  };
+}
+
+function normalizeBookingOffer(rawOffer, preferredCurrency = "USD") {
+  const fallback = defaultBookingOffer(preferredCurrency);
+  const offer = rawOffer && typeof rawOffer === "object" ? rawOffer : {};
+  const currency = safeCurrency(offer.currency || preferredCurrency || fallback.currency);
+  const rulesInput = Array.isArray(offer.category_rules) ? offer.category_rules : [];
+  const ruleMap = buildOfferCategoryRuleMap(rulesInput);
+  const category_rules = OFFER_CATEGORY_ORDER.map((category) => ruleMap.get(category));
+  const items = Array.isArray(offer.items)
+    ? offer.items.map((item, index) => {
+        const category = normalizeOfferCategory(item?.category);
+        const categoryRule = ruleMap.get(category);
+        return {
+          id: normalizeText(item?.id) || `offer_item_${randomUUID()}`,
+          category,
+          label: normalizeText(item?.label) || "Offer item",
+          description: normalizeText(item?.description),
+          quantity: Math.max(1, safeInt(item?.quantity) || 1),
+          unit_amount_cents: Math.max(0, normalizeAmountCents(item?.unit_amount_cents, 0)),
+          tax_rate_basis_points: clampOfferTaxRateBasisPoints(
+            item?.tax_rate_basis_points,
+            categoryRule?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
+          ),
+          currency,
+          notes: normalizeText(item?.notes),
+          sort_order: Number.isFinite(safeInt(item?.sort_order))
+            ? safeInt(item?.sort_order)
+            : Number.isFinite(safeInt(item?.sortOrder))
+              ? safeInt(item?.sortOrder)
+              : index,
+          created_at: normalizeText(item?.created_at) || null,
+          updated_at: normalizeText(item?.updated_at) || null
+        };
+      })
+    : [];
+
+  const normalized = {
+    currency,
+    category_rules,
+    items
+  };
+  const totals = computeBookingOfferTotals(normalized);
+  return {
+    ...normalized,
+    totals
+  };
+}
+
+function buildBookingOfferReadModel(rawOffer, preferredCurrency = "USD") {
+  const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
+  return {
+    ...offer,
+    items: offer.items.map((item) => {
+      const sign = offerCategorySign(item.category);
+      const line_net_amount_cents = sign * item.unit_amount_cents * item.quantity;
+      const line_tax_amount_cents = sign * roundTaxAmount(
+        item.unit_amount_cents * item.quantity,
+        item.tax_rate_basis_points
+      );
+      return {
+        ...item,
+        line_net_amount_cents,
+        line_tax_amount_cents,
+        line_gross_amount_cents: line_net_amount_cents + line_tax_amount_cents
+      };
+    }),
+    totals: computeBookingOfferTotals(offer)
+  };
+}
+
+function validateBookingOfferInput(rawOffer, booking) {
+  if (!rawOffer || typeof rawOffer !== "object" || Array.isArray(rawOffer)) {
+    return { ok: false, error: "offer must be an object" };
+  }
+
+  const preferredCurrency = safeCurrency(
+    booking?.preferred_currency ||
+      booking?.offer?.currency ||
+      booking?.pricing?.currency ||
+      rawOffer.currency ||
+      "USD"
+  );
+  const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
+
+  if (offer.currency !== preferredCurrency) {
+    return {
+      ok: false,
+      error: `offer.currency must match booking.preferred_currency (${preferredCurrency})`
+    };
+  }
+
+  for (const item of offer.items) {
+    if (!item.label) return { ok: false, error: "Each offer item requires a label" };
+    if (item.quantity < 1) return { ok: false, error: "Offer item quantity must be at least 1" };
+    if (item.unit_amount_cents < 0) return { ok: false, error: "Offer item amounts must be zero or positive" };
+    if (item.tax_rate_basis_points < 0 || item.tax_rate_basis_points > 100000) {
+      return { ok: false, error: "Offer item tax_rate_basis_points must be between 0 and 100000" };
+    }
+    if (item.currency !== preferredCurrency) {
+      return {
+        ok: false,
+        error: "Every offer item currency must match booking preferred currency"
+      };
+    }
+  }
+
+  return { ok: true, offer };
 }
 
 function adjustmentSign(type) {
@@ -1796,6 +2004,7 @@ function computeBookingHash(booking) {
     preferred_currency: booking.preferred_currency || null,
     notes: booking.notes || null,
     pricing: normalizeBookingPricing(booking.pricing),
+    offer: normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD"),
     source: booking.source || null,
     created_at: booking.created_at || null,
     updated_at: booking.updated_at || null
@@ -1807,6 +2016,7 @@ function buildBookingReadModel(booking) {
   return {
     ...booking,
     pricing: buildBookingPricingReadModel(booking.pricing),
+    offer: buildBookingOfferReadModel(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD"),
     booking_hash: computeBookingHash(booking)
   };
 }
@@ -1998,6 +2208,8 @@ async function handleCreateBooking(req, res) {
     store.customers.push(customer);
   }
 
+  const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || "USD");
+
   const booking = {
     id: `booking_${randomUUID()}`,
     customer_id: customer.id,
@@ -2013,9 +2225,10 @@ async function handleCreateBooking(req, res) {
     travelers: safeInt(payload.travelers),
     duration: normalizeText(payload.duration),
     budget: normalizeText(payload.budget),
-    preferred_currency: safeCurrency(payload.preferredCurrency || payload.preferred_currency || "USD"),
+    preferred_currency: preferredCurrency,
     notes: normalizeText(payload.notes),
     pricing: defaultBookingPricing(),
+    offer: defaultBookingOffer(preferredCurrency),
     source: {
       page_url: normalizeText(payload.pageUrl),
       ip_address: ipAddress || null,
@@ -2281,6 +2494,60 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
     "PRICING_UPDATED",
     actorLabel(principal, normalizeText(payload.actor) || "staff"),
     "Booking commercials updated"
+  );
+  await persistStore(store);
+
+  sendJson(res, 200, { booking: buildBookingReadModel(booking) });
+}
+
+async function handlePatchBookingOffer(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const staff = await loadStaff();
+  const staffMember = resolvePrincipalStaffMember(principal, staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!assertMatchingBookingHash(payload, booking, res)) return;
+
+  const check = validateBookingOfferInput(payload.offer, booking);
+  if (!check.ok) {
+    sendJson(res, 422, { error: check.error });
+    return;
+  }
+
+  const nextOffer = check.offer;
+  const nextOfferJson = JSON.stringify(nextOffer);
+  const currentOfferJson = JSON.stringify(
+    normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || "USD")
+  );
+  if (nextOfferJson === currentOfferJson) {
+    sendJson(res, 200, { booking: buildBookingReadModel(booking), unchanged: true });
+    return;
+  }
+
+  booking.offer = nextOffer;
+  booking.updated_at = nowIso();
+  addActivity(
+    store,
+    booking.id,
+    "OFFER_UPDATED",
+    actorLabel(principal, normalizeText(payload.actor) || "staff"),
+    "Booking offer updated"
   );
   await persistStore(store);
 

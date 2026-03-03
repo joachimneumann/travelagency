@@ -217,10 +217,11 @@ def render_js_user_module(types, roles)
   JS
 end
 
-def render_js_booking_module(types, stages, payment_statuses, adjustment_types)
+def render_js_booking_module(types, stages, payment_statuses, adjustment_types, offer_categories)
   stage_codes = catalog_codes(stages)
   payment_status_codes = catalog_codes(payment_statuses)
   adjustment_type_codes = catalog_codes(adjustment_types)
+  offer_category_codes = catalog_codes(offer_categories)
 
   <<~JS
     #{JS_RUNTIME_HEADER}
@@ -228,6 +229,7 @@ def render_js_booking_module(types, stages, payment_statuses, adjustment_types)
     export const GENERATED_BOOKING_STAGES = Object.freeze(#{js_literal(stage_codes)});
     export const GENERATED_PAYMENT_STATUSES = Object.freeze(#{js_literal(payment_status_codes)});
     export const GENERATED_PRICING_ADJUSTMENT_TYPES = Object.freeze(#{js_literal(adjustment_type_codes)});
+    export const GENERATED_OFFER_CATEGORIES = Object.freeze(#{js_literal(offer_category_codes)});
 
     #{render_js_type_exports(types)}
   JS
@@ -427,14 +429,16 @@ def render_swift_user(roles)
   SWIFT
 end
 
-def render_swift_booking(stages, payment_statuses, adjustment_types)
+def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories)
   stage_codes = catalog_codes(stages)
   payment_status_codes = catalog_codes(payment_statuses)
   adjustment_type_codes = catalog_codes(adjustment_types)
+  offer_category_codes = catalog_codes(offer_categories)
 
   stage_cases = stage_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
   payment_cases = payment_status_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
   adjustment_cases = adjustment_type_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
+  offer_category_cases = offer_category_codes.map { |entry| "    case #{swift_case(entry)} = \"#{entry}\"" }.join("\n")
 
   <<~SWIFT
     import Foundation
@@ -450,6 +454,10 @@ def render_swift_booking(stages, payment_statuses, adjustment_types)
 
     enum GeneratedPricingAdjustmentType: String, CaseIterable, Codable, Hashable {
 #{adjustment_cases}
+    }
+
+    enum GeneratedOfferCategory: String, CaseIterable, Codable, Hashable {
+#{offer_category_cases}
     }
 
     struct GeneratedSourceAttribution: Codable, Equatable {
@@ -556,6 +564,76 @@ def render_swift_booking(stages, payment_statuses, adjustment_types)
         }
     }
 
+    struct GeneratedBookingOfferCategoryRule: Codable, Equatable {
+        let category: GeneratedOfferCategory
+        let taxRateBasisPoints: Int
+
+        private enum CodingKeys: String, CodingKey {
+            case category
+            case taxRateBasisPoints = "tax_rate_basis_points"
+        }
+    }
+
+    struct GeneratedBookingOfferItem: Codable, Identifiable, Equatable {
+        let id: String
+        let category: GeneratedOfferCategory
+        let label: String
+        let description: String?
+        let quantity: Int
+        let unitAmountCents: Int
+        let lineNetAmountCents: Int?
+        let taxRateBasisPoints: Int
+        let lineTaxAmountCents: Int?
+        let lineGrossAmountCents: Int?
+        let currency: GeneratedCurrencyCode
+        let notes: String?
+        let sortOrder: Int?
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case category
+            case label
+            case description
+            case quantity
+            case unitAmountCents = "unit_amount_cents"
+            case lineNetAmountCents = "line_net_amount_cents"
+            case taxRateBasisPoints = "tax_rate_basis_points"
+            case lineTaxAmountCents = "line_tax_amount_cents"
+            case lineGrossAmountCents = "line_gross_amount_cents"
+            case currency
+            case notes
+            case sortOrder = "sort_order"
+        }
+    }
+
+    struct GeneratedBookingOfferTotals: Codable, Equatable {
+        let netAmountCents: Int
+        let taxAmountCents: Int
+        let grossAmountCents: Int
+        let itemsCount: Int
+
+        private enum CodingKeys: String, CodingKey {
+            case netAmountCents = "net_amount_cents"
+            case taxAmountCents = "tax_amount_cents"
+            case grossAmountCents = "gross_amount_cents"
+            case itemsCount = "items_count"
+        }
+    }
+
+    struct GeneratedBookingOffer: Codable, Equatable {
+        let currency: GeneratedCurrencyCode
+        let categoryRules: [GeneratedBookingOfferCategoryRule]
+        let items: [GeneratedBookingOfferItem]
+        let totals: GeneratedBookingOfferTotals
+
+        private enum CodingKeys: String, CodingKey {
+            case currency
+            case categoryRules = "category_rules"
+            case items
+            case totals
+        }
+    }
+
     struct GeneratedInvoiceLineItem: Codable, Identifiable, Equatable {
         let id: String
         let description: String
@@ -621,6 +699,7 @@ def render_swift_booking(stages, payment_statuses, adjustment_types)
         let source: GeneratedSourceAttribution?
         let bookingHash: String?
         let pricing: GeneratedBookingPricing?
+        let offer: GeneratedBookingOffer?
 
         private enum CodingKeys: String, CodingKey {
             case id
@@ -639,6 +718,7 @@ def render_swift_booking(stages, payment_statuses, adjustment_types)
             case source
             case bookingHash = "booking_hash"
             case pricing
+            case offer
         }
     }
   SWIFT
@@ -833,6 +913,7 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
            ref_name = 'BookingStage' if ref_name == 'BookingStage'
            ref_name = 'PaymentStatus' if ref_name == 'PaymentStatus'
            ref_name = 'PricingAdjustmentType' if ref_name == 'PricingAdjustmentType'
+           ref_name = 'OfferCategory' if ref_name == 'OfferCategory'
            openapi_schema_ref(ref_name)
          when 'entity', 'valueObject', 'transport'
            openapi_schema_ref(field.fetch('typeName'))
@@ -849,7 +930,7 @@ def build_openapi_schemas(ir)
   types = ir.fetch('types')
   type_index = types.each_with_object({}) { |t, acc| acc[t.fetch('name')] = t }
 
-  enum_schema_names = %w[ATPCurrencyCode ATPUserRole BookingStage PaymentStatus PricingAdjustmentType]
+  enum_schema_names = %w[ATPCurrencyCode ATPUserRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory]
 
   # Enum schemas from catalogs (camelCase not needed for enum values)
   schemas = {}
@@ -872,6 +953,10 @@ def build_openapi_schemas(ir)
   schemas['PricingAdjustmentType'] = {
     type: 'string',
     enum: catalog_codes(ir.dig('catalogs', 'pricingAdjustmentTypes'))
+  }
+  schemas['OfferCategory'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'offerCategories'))
   }
 
   # Collect all referenced type names
@@ -1024,6 +1109,7 @@ roles = ir.fetch('catalogs').fetch('roles')
 stages = ir.fetch('catalogs').fetch('stages')
 payment_statuses = ir.fetch('catalogs').fetch('paymentStatuses')
 adjustment_types = ir.fetch('catalogs').fetch('pricingAdjustmentTypes')
+offer_categories = ir.fetch('catalogs').fetch('offerCategories')
 contract_version = meta.fetch('modelVersion')
 
 entity_types = types.select { |type| type.fetch('module') == 'entities' }
@@ -1047,6 +1133,7 @@ write_file(
       stages: stages,
       paymentStatuses: payment_statuses,
       pricingAdjustmentTypes: adjustment_types,
+      offerCategories: offer_categories,
       endpoints: endpoints
     }
   ) + "\n"
@@ -1110,7 +1197,7 @@ write_file(
 backend_model_outputs = {
   'generated_Currency.js' => render_js_currency_module(currency_entries),
   'generated_User.js' => render_js_user_module(user_types, roles),
-  'generated_Booking.js' => render_js_booking_module(booking_types, stages, payment_statuses, adjustment_types),
+  'generated_Booking.js' => render_js_booking_module(booking_types, stages, payment_statuses, adjustment_types, offer_categories),
   'generated_Aux.js' => render_js_aux_module(aux_types)
 }
 
@@ -1131,7 +1218,7 @@ frontend_api_outputs = backend_api_outputs
 ios_model_outputs = {
   'generated_Currency.swift' => render_swift_currency(currency_entries),
   'generated_User.swift' => render_swift_user(roles),
-  'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types),
+  'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories),
   'generated_Aux.swift' => render_swift_aux(aux_types)
 }
 

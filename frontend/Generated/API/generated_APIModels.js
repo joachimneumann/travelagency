@@ -136,6 +136,22 @@ export const GENERATED_API_ENDPOINTS = [
     ]
   },
   {
+    "key": "booking_offer",
+    "path": "/api/v1/bookings/{bookingId}/offer",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "BookingOfferUpdateRequest",
+    "responseType": "BookingDetail",
+    "parameters": [
+      {
+        "name": "bookingId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  {
     "key": "booking_activities",
     "path": "/api/v1/bookings/{bookingId}/activities",
     "method": "GET",
@@ -899,6 +915,31 @@ export const BOOKING_PRICING_UPDATE_REQUEST_SCHEMA = {
 
 export function validateBookingPricingUpdateRequest(value) {
   return __validateShape(value, BOOKING_PRICING_UPDATE_REQUEST_SCHEMA);
+}
+
+export const BOOKING_OFFER_UPDATE_REQUEST_SCHEMA = {
+  "name": "BookingOfferUpdateRequest",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "api.#BookingOfferUpdateRequest",
+  "fields": [
+    {
+      "name": "bookingHash",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "offer",
+      "kind": "valueObject",
+      "typeName": "BookingOffer",
+      "required": true
+    }
+  ]
+};
+
+export function validateBookingOfferUpdateRequest(value) {
+  return __validateShape(value, BOOKING_OFFER_UPDATE_REQUEST_SCHEMA);
 }
 
 export const ERROR_RESPONSE_SCHEMA = {

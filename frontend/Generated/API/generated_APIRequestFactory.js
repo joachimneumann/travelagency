@@ -115,6 +115,22 @@ export const GENERATED_API_ENDPOINTS = {
       }
     ]
   },
+  "booking_offer": {
+    "key": "booking_offer",
+    "path": "/api/v1/bookings/{bookingId}/offer",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "BookingOfferUpdateRequest",
+    "responseType": "BookingDetail",
+    "parameters": [
+      {
+        "name": "bookingId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
   "booking_activities": {
     "key": "booking_activities",
     "path": "/api/v1/bookings/{bookingId}/activities",
@@ -390,6 +406,23 @@ export function bookingPricingRequest({ baseURL = '', params = {}, query = {}, b
   const url = buildURL(baseURL, path, query);
   return {
     key: "booking_pricing",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingOfferPath(params = {}) {
+  return buildPath("/api/v1/bookings/{bookingId}/offer", params);
+}
+
+export function bookingOfferRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingOfferPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_offer",
     method: "PATCH",
     authenticated: true,
     url,

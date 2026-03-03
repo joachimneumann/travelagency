@@ -31,3 +31,8 @@ import (
 	bookingHash?: string
 	pricing:      entities.#BookingPricing
 }
+
+#BookingOfferUpdateRequest: {
+	bookingHash?: string
+	offer:        entities.#BookingOffer
+}

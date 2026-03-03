@@ -28,6 +28,7 @@ import (
 		BookingStage:          enumModel.#BookingStage
 		PaymentStatus:         enumModel.#PaymentStatus
 		PricingAdjustmentType: enumModel.#PricingAdjustmentType
+		OfferCategory:         enumModel.#OfferCategory
 	}
 
 	api: {
@@ -52,6 +53,7 @@ import (
 		PaginatedRequest:            apiModel.#PaginatedRequest
 		PublicBookingCreateRequest:  apiModel.#PublicBookingCreateRequest
 		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
+		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
 		Endpoints:                   apiModel.#Endpoints
 	}
 }

@@ -65,8 +65,15 @@ function createMockResponse() {
   };
 }
 
-async function requestJson(pathname, headers = {}) {
-  const req = createMockRequest({ url: pathname, headers });
+async function requestJson(pathname, headers = {}, options = {}) {
+  const method = options.method || "GET";
+  const body = options.body === undefined ? "" : JSON.stringify(options.body);
+  const req = createMockRequest({
+    method,
+    url: pathname,
+    headers: body ? { "content-type": "application/json", ...headers } : headers,
+    body
+  });
   const res = createMockResponse();
   await handler(req, res);
   return {
@@ -160,4 +167,55 @@ test("booking detail, activities, invoices, and staff responses conform to the m
   assert.equal(staffResult.status, 200);
   assert.ok(Array.isArray(staffResult.body.items));
   assert.equal(typeof staffResult.body.total, "number");
+});
+
+test("booking offer patch enforces preferred currency", async () => {
+  const listResult = await requestJson(`${endpointPath("bookings")}?page=1&page_size=1&sort=created_at_desc`, apiHeaders());
+  const bookingID = listResult.body.items[0].id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{bookingId}", bookingID), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+  const offerCurrency = booking.offer?.currency || booking.preferred_currency || booking.pricing?.currency || "USD";
+  const bookingHash = booking.booking_hash;
+  assert.equal(typeof bookingHash, "string");
+
+  const currentOffer = booking.offer;
+  assert.equal(typeof currentOffer, "object");
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{bookingId}", bookingID),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        booking_hash: bookingHash,
+        offer: currentOffer
+      }
+    }
+  );
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.currency, offerCurrency);
+  assert.equal(patchResult.body.unchanged, true);
+  assert.ok(Array.isArray(patchResult.body.booking.offer.items));
+  assert.equal(typeof patchResult.body.booking.offer.totals.gross_amount_cents, "number");
+
+  const mismatchCurrency = offerCurrency === "USD" ? "VND" : "USD";
+  const invalidResult = await requestJson(
+    endpointPath("booking_offer").replace("{bookingId}", bookingID),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        booking_hash: bookingHash,
+        offer: {
+          ...currentOffer,
+          currency: mismatchCurrency,
+          items: []
+        }
+      }
+    }
+  );
+  assert.equal(invalidResult.status, 422);
+  assert.match(String(invalidResult.body.error || ""), /offer\.currency must match booking\.preferred_currency/);
 });

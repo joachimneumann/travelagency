@@ -124,6 +124,20 @@ package api
 		}]
 	},
 	{
+		key:           "booking_offer"
+		path:          "/api/v1/bookings/{bookingId}/offer"
+		method:        "PATCH"
+		authenticated: true
+		requestType:   "BookingOfferUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "bookingId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_activities"
 		path:          "/api/v1/bookings/{bookingId}/activities"
 		method:        "GET"

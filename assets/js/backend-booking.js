@@ -8,6 +8,7 @@ import {
   bookingDetailRequest,
   bookingInvoicesRequest,
   bookingNoteRequest,
+  bookingOfferRequest,
   bookingPricingRequest,
   bookingStageRequest,
   customerDetailRequest,
@@ -36,6 +37,19 @@ const STAGES = [
   "POST_TRIP"
 ];
 
+const OFFER_CATEGORIES = [
+  { code: "ACCOMMODATION", label: "Accommodation" },
+  { code: "TRANSPORTATION", label: "Transportation" },
+  { code: "TOURS_ACTIVITIES", label: "Tours & Activities" },
+  { code: "GUIDE_SUPPORT_SERVICES", label: "Guide & Support Services" },
+  { code: "MEALS", label: "Meals" },
+  { code: "FEES_TAXES", label: "Fees & Taxes" },
+  { code: "DISCOUNTS_CREDITS", label: "Discounts & Credits" },
+  { code: "OTHER", label: "Other" }
+];
+
+const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
+
 const ROLES = {
   ADMIN: "atp_admin",
   MANAGER: "atp_manager",
@@ -62,6 +76,17 @@ const state = {
   pricingDraft: {
     adjustments: [],
     payments: []
+  },
+  offerDraft: {
+    currency: "USD",
+    category_rules: [],
+    items: [],
+    totals: {
+      net_amount_cents: 0,
+      tax_amount_cents: 0,
+      gross_amount_cents: 0,
+      items_count: 0
+    }
   }
 };
 
@@ -88,6 +113,12 @@ const els = {
   pricingPaymentsTable: document.getElementById("pricingPaymentsTable"),
   pricingSaveBtn: document.getElementById("pricingSaveBtn"),
   pricingStatus: document.getElementById("pricingStatus"),
+  offerPanel: document.getElementById("offerPanel"),
+  offerCurrencyInput: document.getElementById("offerCurrencyInput"),
+  offerCategoriesTable: document.getElementById("offerCategoriesTable"),
+  offerItemsTable: document.getElementById("offerItemsTable"),
+  offerSaveBtn: document.getElementById("offerSaveBtn"),
+  offerStatus: document.getElementById("offerStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
   invoicePanel: document.getElementById("invoicePanel"),
   invoiceSelect: document.getElementById("invoiceSelect"),
@@ -123,12 +154,15 @@ async function init() {
   }
 
   populateCurrencySelect(els.pricingCurrencyInput);
+  populateCurrencySelect(els.offerCurrencyInput);
   populateCurrencySelect(els.invoiceCurrencyInput);
 
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
+  if (els.offerCurrencyInput) els.offerCurrencyInput.addEventListener("change", renderOfferPanel);
+  if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.addEventListener("change", renderInvoiceMoneyLabels);
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
@@ -177,6 +211,7 @@ async function loadBookingPage() {
   renderBookingData();
   renderActionControls();
   renderPricingPanel();
+  renderOfferPanel();
   await loadActivities();
   await loadInvoices();
 }
@@ -348,6 +383,231 @@ function renderPricingPanel() {
   renderPricingAdjustmentsTable();
   renderPricingPaymentsTable();
   clearPricingStatus();
+}
+
+function defaultOfferCategoryRules() {
+  return OFFER_CATEGORIES.map((category) => ({
+    category: category.code,
+    tax_rate_basis_points: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
+  }));
+}
+
+function cloneOffer(offer) {
+  const source = offer && typeof offer === "object" ? offer : {};
+  const categoryRulesByCode = new Map(
+    (Array.isArray(source.category_rules) ? source.category_rules : []).map((rule) => [
+      String(rule?.category || "").toUpperCase(),
+      {
+        category: String(rule?.category || "").toUpperCase(),
+        tax_rate_basis_points: Number(rule?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS)
+      }
+    ])
+  );
+
+  const category_rules = OFFER_CATEGORIES.map((category) => {
+    const existing = categoryRulesByCode.get(category.code);
+    return {
+      category: category.code,
+      tax_rate_basis_points:
+        Number.isFinite(Number(existing?.tax_rate_basis_points))
+          ? Math.max(0, Math.round(Number(existing.tax_rate_basis_points)))
+          : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
+    };
+  });
+
+  return {
+    currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
+    category_rules,
+    items: Array.isArray(source.items)
+      ? source.items.map((item, index) => ({
+          id: String(item?.id || ""),
+          category: normalizeOfferCategory(item?.category),
+          label: String(item?.label || ""),
+          description: String(item?.description || ""),
+          quantity: Math.max(1, Number(item?.quantity || 1)),
+          unit_amount_cents: Math.max(0, Number(item?.unit_amount_cents || 0)),
+          tax_rate_basis_points: Number.isFinite(Number(item?.tax_rate_basis_points))
+            ? Math.max(0, Math.round(Number(item.tax_rate_basis_points)))
+            : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
+          currency: normalizeCurrencyCode(item?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+          notes: String(item?.notes || ""),
+          sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index
+        }))
+      : [],
+    totals: source.totals || {
+      net_amount_cents: 0,
+      tax_amount_cents: 0,
+      gross_amount_cents: 0,
+      items_count: 0
+    }
+  };
+}
+
+function normalizeOfferCategory(value) {
+  const normalized = String(value || "").trim().toUpperCase();
+  return OFFER_CATEGORIES.some((category) => category.code === normalized) ? normalized : "OTHER";
+}
+
+function offerCategoryLabel(code) {
+  return OFFER_CATEGORIES.find((entry) => entry.code === normalizeOfferCategory(code))?.label || "Other";
+}
+
+function formatBasisPointsPercent(value) {
+  const basisPoints = Number(value || 0);
+  if (!Number.isFinite(basisPoints)) return "0";
+  return (basisPoints / 100).toFixed(2).replace(/\.00$/, "");
+}
+
+function offerCategorySign(code) {
+  return normalizeOfferCategory(code) === "DISCOUNTS_CREDITS" ? -1 : 1;
+}
+
+function renderOfferPanel() {
+  if (!els.offerPanel || !state.booking) return;
+  const offer = cloneOffer(state.booking.offer || {});
+  state.offerDraft = offer;
+  const currency = normalizeCurrencyCode(offer.currency || state.booking.preferred_currency || "USD");
+  state.offerDraft.currency = currency;
+
+  if (els.offerCurrencyInput) {
+    setSelectValue(els.offerCurrencyInput, currency);
+    const preferred = normalizeCurrencyCode(state.booking.preferred_currency || currency);
+    els.offerCurrencyInput.value = preferred;
+    state.offerDraft.currency = preferred;
+    els.offerCurrencyInput.disabled = true;
+  }
+  if (els.offerSaveBtn) els.offerSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+
+  renderOfferCategoriesTable();
+  renderOfferItemsTable();
+  clearOfferStatus();
+}
+
+function renderOfferCategoriesTable() {
+  if (!els.offerCategoriesTable) return;
+  const readOnly = !state.permissions.canEditBooking;
+  const header = `<thead><tr><th>Category</th><th>Tax %</th></tr></thead>`;
+  const rows = state.offerDraft.category_rules
+    .map(
+      (rule, index) => `<tr>
+      <td>${escapeHtml(offerCategoryLabel(rule.category))}</td>
+      <td><input data-offer-category-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(
+        formatBasisPointsPercent(rule.tax_rate_basis_points)
+      )}" ${readOnly ? "disabled" : ""} /></td>
+    </tr>`
+    )
+    .join("");
+  els.offerCategoriesTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="2">No category rules</td></tr>'}</tbody>`;
+}
+
+function renderOfferItemsTable() {
+  if (!els.offerItemsTable) return;
+  const readOnly = !state.permissions.canEditBooking;
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const header = `<thead><tr><th>Category</th><th>Item</th><th>Description</th><th>Qty</th><th>Unit (${escapeHtml(
+    currency
+  )})</th><th>Tax %</th><th>Net</th><th>Tax</th><th>Gross</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const rows = (state.offerDraft.items || [])
+    .map((item, index) => {
+      const quantity = Math.max(1, Number(item.quantity || 1));
+      const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
+      const sign = offerCategorySign(item.category);
+      const lineNet = sign * quantity * unitAmount;
+      const lineTax = sign * Math.round((quantity * unitAmount * Number(item.tax_rate_basis_points || 0)) / 10000);
+      const lineGross = lineNet + lineTax;
+      return `<tr>
+      <td>
+        <select data-offer-item-category="${index}" ${readOnly ? "disabled" : ""}>
+          ${OFFER_CATEGORIES.map(
+            (entry) =>
+              `<option value="${entry.code}" ${normalizeOfferCategory(item.category) === entry.code ? "selected" : ""}>${escapeHtml(
+                entry.label
+              )}</option>`
+          ).join("")}
+        </select>
+      </td>
+      <td><input data-offer-item-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-offer-item-description="${index}" type="text" value="${escapeHtml(item.description || "")}" ${
+        readOnly ? "disabled" : ""
+      } /></td>
+      <td><input data-offer-item-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
+        readOnly ? "disabled" : ""
+      } /></td>
+      <td><input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
+        formatMoneyInputValue(unitAmount, currency)
+      )}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input data-offer-item-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(
+        formatBasisPointsPercent(item.tax_rate_basis_points)
+      )}" ${readOnly ? "disabled" : ""} /></td>
+      <td>${escapeHtml(formatMoneyDisplay(lineNet, currency))}</td>
+      <td>${escapeHtml(formatMoneyDisplay(lineTax, currency))}</td>
+      <td>${escapeHtml(formatMoneyDisplay(lineGross, currency))}</td>
+      <td><input data-offer-item-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
+      ${
+        readOnly
+          ? ""
+          : `<td><button class="btn btn-ghost" type="button" data-offer-remove-item="${index}">Remove</button></td>`
+      }
+    </tr>`;
+    })
+    .join("");
+  const addRow = readOnly
+    ? ""
+    : `<tr><td colspan="11"><button class="btn btn-ghost" type="button" data-offer-add-item>Add item</button></td></tr>`;
+  const totals = computeOfferDraftTotals();
+  const totalsRow = `<tr><th colspan="6">Totals</th><th>${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th><th>${escapeHtml(
+    formatMoneyDisplay(totals.tax_amount_cents, currency)
+  )}</th><th>${escapeHtml(formatMoneyDisplay(totals.gross_amount_cents, currency))}</th><th colspan="${
+    readOnly ? 1 : 2
+  }">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
+  const body = (rows || `<tr><td colspan="${readOnly ? 10 : 11}">No offer items yet</td></tr>`) + totalsRow + addRow;
+  els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+
+  if (!readOnly) {
+    els.offerItemsTable.querySelectorAll("[data-offer-remove-item]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.getAttribute("data-offer-remove-item"));
+        state.offerDraft.items.splice(index, 1);
+        renderOfferItemsTable();
+      });
+    });
+    els.offerItemsTable.querySelector("[data-offer-add-item]")?.addEventListener("click", () => {
+      state.offerDraft.items.push({
+        id: "",
+        category: "OTHER",
+        label: "",
+        description: "",
+        quantity: 1,
+        unit_amount_cents: 0,
+        tax_rate_basis_points: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
+        currency: state.offerDraft.currency,
+        notes: "",
+        sort_order: state.offerDraft.items.length
+      });
+      renderOfferItemsTable();
+    });
+  }
+}
+
+function computeOfferDraftTotals() {
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const normalizedItems = collectOfferItems({ throwOnError: false }) || [];
+  let net_amount_cents = 0;
+  let tax_amount_cents = 0;
+  for (const item of normalizedItems) {
+    const sign = offerCategorySign(item.category);
+    const lineNet = sign * item.quantity * item.unit_amount_cents;
+    const lineTax = sign * Math.round((item.quantity * item.unit_amount_cents * item.tax_rate_basis_points) / 10000);
+    net_amount_cents += lineNet;
+    tax_amount_cents += lineTax;
+  }
+  return {
+    currency,
+    net_amount_cents,
+    tax_amount_cents,
+    gross_amount_cents: net_amount_cents + tax_amount_cents,
+    items_count: normalizedItems.length
+  };
 }
 
 function renderPricingSummaryTable(pricing) {
@@ -839,6 +1099,15 @@ function clearPricingStatus() {
   setPricingStatus("");
 }
 
+function setOfferStatus(message) {
+  if (!els.offerStatus) return;
+  els.offerStatus.textContent = message;
+}
+
+function clearOfferStatus() {
+  setOfferStatus("");
+}
+
 function applyInvoicePermissions() {
   const disabled = !state.permissions.canEditBooking;
   [
@@ -916,6 +1185,109 @@ function collectPricingPayload() {
     adjustments,
     payments
   };
+}
+
+function collectOfferCategoryRules() {
+  return OFFER_CATEGORIES.map((category, index) => {
+    const input = document.querySelector(`[data-offer-category-tax="${index}"]`);
+    const taxPercent = Number(input?.value || "0");
+    if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) {
+      throw new Error(`${category.label}: tax rate must be between 0 and 100.`);
+    }
+    return {
+      category: category.code,
+      tax_rate_basis_points: Math.round(taxPercent * 100)
+    };
+  });
+}
+
+function collectOfferItems({ throwOnError = true } = {}) {
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const rows = Array.from(document.querySelectorAll("[data-offer-item-label]"));
+  const items = [];
+  for (const input of rows) {
+    const index = Number(input.getAttribute("data-offer-item-label"));
+    const category = normalizeOfferCategory(document.querySelector(`[data-offer-item-category="${index}"]`)?.value || "OTHER");
+    const label = String(document.querySelector(`[data-offer-item-label="${index}"]`)?.value || "").trim();
+    const description = String(document.querySelector(`[data-offer-item-description="${index}"]`)?.value || "").trim();
+    const quantity = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
+    const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0", currency);
+    const taxPercent = Number(document.querySelector(`[data-offer-item-tax="${index}"]`)?.value || "0");
+    const notes = String(document.querySelector(`[data-offer-item-notes="${index}"]`)?.value || "").trim();
+    if (!label) {
+      if (throwOnError) throw new Error(`Offer item ${index + 1} requires a label.`);
+      continue;
+    }
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      if (throwOnError) throw new Error(`Offer item ${index + 1} quantity must be at least 1.`);
+      continue;
+    }
+    if (!Number.isFinite(unitAmount) || unitAmount < 0) {
+      if (throwOnError) throw new Error(`Offer item ${index + 1} requires a valid non-negative unit amount.`);
+      continue;
+    }
+    if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) {
+      if (throwOnError) throw new Error(`Offer item ${index + 1} tax rate must be between 0 and 100.`);
+      continue;
+    }
+    items.push({
+      id: state.offerDraft.items[index]?.id || "",
+      category,
+      label,
+      description: description || null,
+      quantity: Math.round(quantity),
+      unit_amount_cents: Math.round(unitAmount),
+      tax_rate_basis_points: Math.round(taxPercent * 100),
+      currency,
+      notes: notes || null,
+      sort_order: index
+    });
+  }
+  return items;
+}
+
+function collectOfferPayload() {
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const category_rules = collectOfferCategoryRules();
+  const items = collectOfferItems();
+  return {
+    currency,
+    category_rules,
+    items
+  };
+}
+
+async function saveOffer() {
+  if (!state.booking || !state.permissions.canEditBooking) return;
+  clearOfferStatus();
+  let offer;
+  try {
+    offer = collectOfferPayload();
+  } catch (error) {
+    setOfferStatus(String(error?.message || error));
+    return;
+  }
+
+  const result = await fetchBookingMutation(bookingOfferRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
+    method: "PATCH",
+    body: {
+      booking_hash: state.booking.booking_hash,
+      offer,
+      actor: state.user
+    }
+  });
+
+  if (!result?.booking) {
+    if (els.error?.textContent) setOfferStatus(els.error.textContent);
+    return;
+  }
+
+  state.booking = result.booking;
+  renderBookingHeader();
+  renderBookingData();
+  renderOfferPanel();
+  setOfferStatus(result.unchanged ? "Offer unchanged." : "Offer saved.");
+  await loadActivities();
 }
 
 function normalizeDateInput(value) {
@@ -1136,6 +1508,7 @@ async function fetchBookingMutation(path, options = {}) {
         renderBookingData();
         renderActionControls();
         renderPricingPanel();
+        renderOfferPanel();
         loadActivities();
         setStatus("The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.");
         clearError();

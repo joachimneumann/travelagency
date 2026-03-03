@@ -104,6 +104,19 @@
           "SURCHARGE"
         ]
       },
+      "OfferCategory": {
+        "type": "string",
+        "enum": [
+          "ACCOMMODATION",
+          "TRANSPORTATION",
+          "TOURS_ACTIVITIES",
+          "GUIDE_SUPPORT_SERVICES",
+          "MEALS",
+          "FEES_TAXES",
+          "DISCOUNTS_CREDITS",
+          "OTHER"
+        ]
+      },
       "BookingPricing": {
         "type": "object",
         "description": "Defined in model (referenced as BookingPricing)."
@@ -237,6 +250,7 @@
           "customerId",
           "stage",
           "pricing",
+          "offer",
           "createdAt",
           "updatedAt"
         ],
@@ -297,6 +311,9 @@
           "pricing": {
             "$ref": "#/components/schemas/BookingPricing"
           },
+          "offer": {
+            "$ref": "#/components/schemas/BookingOffer"
+          },
           "source": {
             "$ref": "#/components/schemas/SourceAttribution",
             "nullable": true
@@ -306,6 +323,126 @@
           },
           "updatedAt": {
             "type": "string"
+          }
+        }
+      },
+      "BookingOfferCategoryRule": {
+        "type": "object",
+        "required": [
+          "category",
+          "taxRateBasisPoints"
+        ],
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/OfferCategory"
+          },
+          "taxRateBasisPoints": {
+            "type": "integer"
+          }
+        }
+      },
+      "BookingOfferItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "quantity",
+          "unitAmountCents",
+          "taxRateBasisPoints",
+          "currency"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/OfferCategory"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unitAmountCents": {
+            "type": "integer"
+          },
+          "taxRateBasisPoints": {
+            "type": "integer"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/ATPCurrencyCode"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "BookingOfferTotals": {
+        "type": "object",
+        "required": [
+          "netAmountCents",
+          "taxAmountCents",
+          "grossAmountCents",
+          "itemsCount"
+        ],
+        "properties": {
+          "netAmountCents": {
+            "type": "integer"
+          },
+          "taxAmountCents": {
+            "type": "integer"
+          },
+          "grossAmountCents": {
+            "type": "integer"
+          },
+          "itemsCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "BookingOffer": {
+        "type": "object",
+        "required": [
+          "currency",
+          "totals"
+        ],
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/ATPCurrencyCode"
+          },
+          "categoryRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingOfferCategoryRule"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingOfferItem"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/BookingOfferTotals"
           }
         }
       },
@@ -739,6 +876,21 @@
           },
           "pricing": {
             "$ref": "#/components/schemas/BookingPricing"
+          }
+        }
+      },
+      "BookingOfferUpdateRequest": {
+        "type": "object",
+        "required": [
+          "offer"
+        ],
+        "properties": {
+          "bookingHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "offer": {
+            "$ref": "#/components/schemas/BookingOffer"
           }
         }
       },
@@ -1226,6 +1378,73 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BookingPricingUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/{bookingId}/offer": {
+      "patch": {
+        "summary": "Booking Offer",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingOfferUpdateRequest"
               }
             }
           }

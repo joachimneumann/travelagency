@@ -27,6 +27,17 @@
     case surcharge = "SURCHARGE"
     }
 
+    enum GeneratedOfferCategory: String, CaseIterable, Codable, Hashable {
+    case accommodation = "ACCOMMODATION"
+    case transportation = "TRANSPORTATION"
+    case toursActivities = "TOURS_ACTIVITIES"
+    case guideSupportServices = "GUIDE_SUPPORT_SERVICES"
+    case meals = "MEALS"
+    case feesTaxes = "FEES_TAXES"
+    case discountsCredits = "DISCOUNTS_CREDITS"
+    case other = "OTHER"
+    }
+
     struct GeneratedSourceAttribution: Codable, Equatable {
         let pageURL: String?
         let ipAddress: String?
@@ -131,6 +142,76 @@
         }
     }
 
+    struct GeneratedBookingOfferCategoryRule: Codable, Equatable {
+        let category: GeneratedOfferCategory
+        let taxRateBasisPoints: Int
+
+        private enum CodingKeys: String, CodingKey {
+            case category
+            case taxRateBasisPoints = "tax_rate_basis_points"
+        }
+    }
+
+    struct GeneratedBookingOfferItem: Codable, Identifiable, Equatable {
+        let id: String
+        let category: GeneratedOfferCategory
+        let label: String
+        let description: String?
+        let quantity: Int
+        let unitAmountCents: Int
+        let lineNetAmountCents: Int?
+        let taxRateBasisPoints: Int
+        let lineTaxAmountCents: Int?
+        let lineGrossAmountCents: Int?
+        let currency: GeneratedCurrencyCode
+        let notes: String?
+        let sortOrder: Int?
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case category
+            case label
+            case description
+            case quantity
+            case unitAmountCents = "unit_amount_cents"
+            case lineNetAmountCents = "line_net_amount_cents"
+            case taxRateBasisPoints = "tax_rate_basis_points"
+            case lineTaxAmountCents = "line_tax_amount_cents"
+            case lineGrossAmountCents = "line_gross_amount_cents"
+            case currency
+            case notes
+            case sortOrder = "sort_order"
+        }
+    }
+
+    struct GeneratedBookingOfferTotals: Codable, Equatable {
+        let netAmountCents: Int
+        let taxAmountCents: Int
+        let grossAmountCents: Int
+        let itemsCount: Int
+
+        private enum CodingKeys: String, CodingKey {
+            case netAmountCents = "net_amount_cents"
+            case taxAmountCents = "tax_amount_cents"
+            case grossAmountCents = "gross_amount_cents"
+            case itemsCount = "items_count"
+        }
+    }
+
+    struct GeneratedBookingOffer: Codable, Equatable {
+        let currency: GeneratedCurrencyCode
+        let categoryRules: [GeneratedBookingOfferCategoryRule]
+        let items: [GeneratedBookingOfferItem]
+        let totals: GeneratedBookingOfferTotals
+
+        private enum CodingKeys: String, CodingKey {
+            case currency
+            case categoryRules = "category_rules"
+            case items
+            case totals
+        }
+    }
+
     struct GeneratedInvoiceLineItem: Codable, Identifiable, Equatable {
         let id: String
         let description: String
@@ -196,6 +277,7 @@
         let source: GeneratedSourceAttribution?
         let bookingHash: String?
         let pricing: GeneratedBookingPricing?
+        let offer: GeneratedBookingOffer?
 
         private enum CodingKeys: String, CodingKey {
             case id
@@ -214,5 +296,6 @@
             case source
             case bookingHash = "booking_hash"
             case pricing
+            case offer
         }
     }

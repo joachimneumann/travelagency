@@ -32,6 +32,8 @@ case "booking_note":
   return RequestFactory.bookingNoteRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
+case "booking_offer":
+  return RequestFactory.bookingOfferRequest(options);
 case "booking_activities":
   return RequestFactory.bookingActivitiesRequest(options);
 case "booking_invoices":
