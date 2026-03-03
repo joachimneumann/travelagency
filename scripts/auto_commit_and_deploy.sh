@@ -75,6 +75,11 @@ git add -A
 created_commit=0
 
 collect_services "$TARGET"
+if [[ "${#SERVICES[@]}" -eq 0 ]]; then
+  echo "No deployment services selected." >&2
+  usage >&2
+  exit 1
+fi
 
 if ! git diff --cached --quiet; then
   git commit -m "$COMMIT_MESSAGE"
