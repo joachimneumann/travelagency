@@ -197,10 +197,11 @@ def render_js_currency_module(currency_entries)
       const numeric = Number(amountMinorUnits || 0);
       const scale = 10 ** definition.decimalPlaces;
       const major = definition.decimalPlaces === 0 ? numeric : numeric / scale;
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: definition.decimalPlaces,
-        maximumFractionDigits: definition.decimalPlaces
-      }).format(major);
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: definition.decimalPlaces,
+      maximumFractionDigits: definition.decimalPlaces,
+      useGrouping: true
+    }).format(major);
     }
   JS
 end
@@ -578,7 +579,7 @@ def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categ
         let id: String
         let category: GeneratedOfferCategory
         let label: String
-        let description: String?
+        let details: String?
         let quantity: Int
         let unitAmountCents: Int
         let lineNetAmountCents: Int?
@@ -593,7 +594,7 @@ def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categ
             case id
             case category
             case label
-            case description
+            case details
             case quantity
             case unitAmountCents = "unit_amount_cents"
             case lineNetAmountCents = "line_net_amount_cents"

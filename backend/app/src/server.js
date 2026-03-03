@@ -1205,10 +1205,11 @@ function validateOfferExchangeRequest(payload) {
 function formatMoney(amountCents, currency) {
   const definition = getCurrencyDefinition(currency);
   const amount = Number(amountCents || 0) / 10 ** definition.decimal_places;
-  if (definition.decimal_places === 0) {
-    return `${definition.symbol} ${Math.round(amount)}`;
-  }
-  return `${definition.symbol} ${amount.toFixed(definition.decimal_places).replace(".", ",")}`;
+  return `${definition.symbol} ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: definition.decimal_places,
+    maximumFractionDigits: definition.decimal_places,
+    useGrouping: true
+  }).format(amount)}`;
 }
 
 function normalizeInvoiceItems(value) {
@@ -2021,7 +2022,7 @@ function normalizeBookingOffer(rawOffer, preferredCurrency = "USD") {
           id: normalizeText(item?.id) || `offer_item_${randomUUID()}`,
           category,
           label: normalizeText(item?.label) || "Offer item",
-          description: normalizeText(item?.description),
+          details: normalizeText(item?.details || item?.description),
           quantity: Math.max(1, safeInt(item?.quantity) || 1),
           unit_amount_cents: Math.max(0, normalizeAmountCents(item?.unit_amount_cents, 0)),
           tax_rate_basis_points: clampOfferTaxRateBasisPoints(

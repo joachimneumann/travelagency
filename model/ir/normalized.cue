@@ -152,7 +152,7 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
 				{name: "label", kind: "scalar", typeName: "string", required: true},
-				{name: "description", kind: "scalar", typeName: "string", required: false},
+				{name: "details", kind: "scalar", typeName: "string", required: false},
 				{name: "quantity", kind: "scalar", typeName: "int", required: true},
 				{name: "unitAmountCents", kind: "scalar", typeName: "int", required: true},
 				{name: "taxRateBasisPoints", kind: "scalar", typeName: "int", required: true},

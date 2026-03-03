@@ -231,7 +231,7 @@ export const BOOKING_OFFER_ITEM_SCHEMA = {
       "required": true
     },
     {
-      "name": "description",
+      "name": "details",
       "kind": "scalar",
       "typeName": "string",
       "required": false
@@ -366,4 +366,3 @@ export const BOOKING_OFFER_SCHEMA = {
 export function validateBookingOffer(value) {
   return __validateShape(value, BOOKING_OFFER_SCHEMA);
 }
-

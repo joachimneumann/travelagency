@@ -152,12 +152,14 @@ struct BookingDetailView: View {
 
     @ViewBuilder
     private func offerSection(for offer: BookingOffer) -> some View {
+        let showOfferTotalValues = offer.items.contains(where: { $0.quantity != 1 })
         Section("Offer") {
             LabeledContent("Currency", value: offer.currency.rawValue)
             LabeledContent("Items", value: String(offer.totals.itemsCount))
             LabeledContent("Net", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
             LabeledContent("Tax", value: formatMoney(offer.totals.taxAmountCents, currency: offer.currency))
             LabeledContent("Gross", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
+            LabeledContent("Offer total (TOTAL, \(offer.currency.rawValue))", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
         }
 
         if !offer.categoryRules.isEmpty {
@@ -181,8 +183,8 @@ struct BookingDetailView: View {
                             Text(offerCategoryLabel(item.category))
                                 .foregroundStyle(.secondary)
                         }
-                        if let description = item.description, !description.isEmpty {
-                            Text(description)
+                        if let details = item.details, !details.isEmpty {
+                            Text(details)
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
@@ -190,10 +192,17 @@ struct BookingDetailView: View {
                             Text("Qty \(item.quantity)")
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            if let lineGross = item.lineGrossAmountCents {
-                                Text(formatMoney(lineGross, currency: offer.currency))
+                            if showOfferTotalValues {
+                                let single = formatMoney(item.unitAmountCents, currency: offer.currency)
+                                let total = formatMoney(item.unitAmountCents * item.quantity, currency: offer.currency)
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text("Price (SINGLE, \(offer.currency.rawValue)): \(single)")
+                                    Text("Price (TOTAL, \(offer.currency.rawValue)): \(total)")
+                                }
+                                .font(.subheadline)
                             } else {
-                                Text(formatMoney(item.unitAmountCents * item.quantity, currency: offer.currency))
+                                let lineGross = item.lineGrossAmountCents
+                                Text(formatMoney(lineGross ?? (item.unitAmountCents * item.quantity), currency: offer.currency))
                             }
                         }
                         Text("Tax \(formatPercent(item.taxRateBasisPoints))")
@@ -342,8 +351,14 @@ struct BookingDetailView: View {
         if definition.decimalPlaces == 0 {
             return "\(definition.symbol) \(Int(amount.rounded()))"
         }
-        let format = "%.\(definition.decimalPlaces)f"
-        return "\(definition.symbol) \(String(format: format, amount).replacingOccurrences(of: ".", with: ","))"
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = true
+        formatter.groupingSeparator = ","
+        formatter.decimalSeparator = "."
+        formatter.minimumFractionDigits = definition.decimalPlaces
+        formatter.maximumFractionDigits = definition.decimalPlaces
+        return "\(definition.symbol) \(formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount))"
     }
 
     private func formatPercent(_ basisPoints: Int) -> String {

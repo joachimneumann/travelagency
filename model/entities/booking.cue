@@ -86,14 +86,14 @@ import (
 }
 
 #BookingOfferItem: {
-	id:           common.#Identifier
-	category:     enums.#OfferCategory
-	label:        string & !=""
-	description?: string
-	quantity:     >0 & int
-	unitNet:      common.#NonNegativeMoneyAmount
-	taxRate:      >=0 & <=100 & number
-	currency:     enums.#CurrencyCode
+  id:           common.#Identifier
+  category:     enums.#OfferCategory
+  label:        string & !=""
+	details?: string
+  quantity:     >0 & int
+  unitNet:      common.#NonNegativeMoneyAmount
+  taxRate:      >=0 & <=100 & number
+  currency:     enums.#CurrencyCode
 	notes?:       string
 	sortOrder?:   int
 	createdAt?:   common.#Timestamp

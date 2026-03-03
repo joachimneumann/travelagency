@@ -259,7 +259,7 @@ components:
           "$ref": "#/components/schemas/OfferCategory"
         label:
           type: string
-        description:
+        details:
           type: string
           nullable: true
         quantity:

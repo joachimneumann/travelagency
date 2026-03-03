@@ -48,6 +48,7 @@ export function formatMoneyFromMinorUnits(amountMinorUnits, code) {
   const major = definition.decimalPlaces === 0 ? numeric : numeric / scale;
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: definition.decimalPlaces,
-    maximumFractionDigits: definition.decimalPlaces
+    maximumFractionDigits: definition.decimalPlaces,
+    useGrouping: true
   }).format(major);
 }

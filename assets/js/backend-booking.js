@@ -428,7 +428,7 @@ function cloneOffer(offer) {
           id: String(item?.id || ""),
           category: normalizeOfferCategory(item?.category),
           label: String(item?.label || ""),
-          description: String(item?.description || ""),
+          details: String(item?.details || item?.description || ""),
           quantity: Math.max(1, Number(item?.quantity || 1)),
           unit_amount_cents: Math.max(0, Number(item?.unit_amount_cents || 0)),
           tax_rate_basis_points: Number.isFinite(Number(item?.tax_rate_basis_points))
@@ -479,7 +479,7 @@ function addOfferItemFromSelector() {
     id: "",
     category,
     label: "",
-    description: "",
+    details: "",
     quantity: 1,
     unit_amount_cents: 0,
     tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
@@ -520,16 +520,24 @@ function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const header = `<thead><tr><th>Category</th><th>Description</th><th>Qty</th><th>Price (${escapeHtml(
-    currency
-  )})</th><th></th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const hasMultiQuantityItem = (state.offerDraft?.items || []).some(
+    (item) => Math.max(1, Number(item?.quantity || 1)) !== 1
+  );
+  const showDualPrice = hasMultiQuantityItem;
+  const priceHeaders = showDualPrice
+    ? `<th>Price (SINGLE, ${escapeHtml(currency)})</th><th>Price (TOTAL, ${escapeHtml(currency)})</th>`
+    : `<th>Price (${escapeHtml(currency)})</th>`;
+  const header = `<thead><tr><th>Category</th><th>Details</th><th>Qty</th>${priceHeaders}<th></th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
   const rows = (state.offerDraft.items || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
+      const unitTotal = quantity * unitAmount;
+      const priceTotal = formatMoneyDisplay(unitTotal, currency);
+      const priceCells = showDualPrice ? `<td>${escapeHtml(priceTotal)}</td>` : "";
       return `<tr>
       <td>${escapeHtml(offerCategoryLabel(item.category))}</td>
-      <td><input data-offer-item-description="${index}" type="text" value="${escapeHtml(item.description || "")}" ${
+      <td><input data-offer-item-details="${index}" type="text" value="${escapeHtml(item.details || item.description || "")}" ${
         readOnly ? "disabled" : ""
       } /></td>
       <td><input data-offer-item-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
@@ -538,6 +546,7 @@ function renderOfferItemsTable() {
       <td><input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} /></td>
+      ${showDualPrice ? priceCells : ""}
       ${
         readOnly
           ? ""
@@ -547,8 +556,11 @@ function renderOfferItemsTable() {
     })
     .join("");
   const totals = computeOfferDraftTotals();
-  const totalsRow = `<tr><th colspan="3">Totals</th><th colspan="${readOnly ? 1 : 2}">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
-  const columns = readOnly ? 4 : 5;
+  const totalColumns = 4 + (showDualPrice ? 1 : 0) + (readOnly ? 0 : 1);
+  const totalsRow = `<tr><th colspan="${totalColumns}">Items: ${escapeHtml(String(totals.items_count))} · Offer total (TOTAL, ${escapeHtml(
+    currency
+  )}): ${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th></tr>`;
+  const columns = totalColumns;
   const body = (rows || `<tr><td colspan="${columns}">No offer items yet</td></tr>`) + totalsRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 
@@ -1182,12 +1194,12 @@ function collectOfferCategoryRules() {
 
 function collectOfferItems({ throwOnError = true } = {}) {
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const rows = Array.from(document.querySelectorAll("[data-offer-item-description]"));
+  const rows = Array.from(document.querySelectorAll("[data-offer-item-details]"));
   const items = [];
   for (const input of rows) {
-    const index = Number(input.getAttribute("data-offer-item-description"));
+    const index = Number(input.getAttribute("data-offer-item-details"));
     const category = normalizeOfferCategory(state.offerDraft?.items[index]?.category || "OTHER");
-    const description = String(document.querySelector(`[data-offer-item-description="${index}"]`)?.value || "").trim();
+    const details = String(document.querySelector(`[data-offer-item-details="${index}"]`)?.value || "").trim();
     const quantity = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
     const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0", currency);
     const label = String(offerCategoryLabel(category)).trim();
@@ -1204,7 +1216,7 @@ function collectOfferItems({ throwOnError = true } = {}) {
       id: state.offerDraft.items[index]?.id || "",
       category,
       label,
-      description: description || null,
+      details: details || null,
       quantity: Math.round(quantity),
       unit_amount_cents: Math.round(unitAmount),
       tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
@@ -1417,7 +1429,11 @@ function formatMoneyDisplay(value, currency) {
   if (!Number.isFinite(amount)) return "-";
   if (definition.decimalPlaces === 0) return `${definition.symbol} ${Math.round(amount)}`;
   const major = amount / 10 ** definition.decimalPlaces;
-  return `${definition.symbol} ${major.toFixed(definition.decimalPlaces).replace(".", ",")}`;
+  return `${definition.symbol} ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: definition.decimalPlaces,
+    maximumFractionDigits: definition.decimalPlaces,
+    useGrouping: true
+  }).format(major)}`;
 }
 
 function formatMoneyInputValue(value, currency) {

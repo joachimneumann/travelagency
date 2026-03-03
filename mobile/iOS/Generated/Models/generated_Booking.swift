@@ -156,7 +156,7 @@
         let id: String
         let category: GeneratedOfferCategory
         let label: String
-        let description: String?
+        let details: String?
         let quantity: Int
         let unitAmountCents: Int
         let lineNetAmountCents: Int?
@@ -171,7 +171,7 @@
             case id
             case category
             case label
-            case description
+            case details
             case quantity
             case unitAmountCents = "unit_amount_cents"
             case lineNetAmountCents = "line_net_amount_cents"

@@ -9,7 +9,7 @@ import (
 
 #AbstractModel: {
 	entities: {
-		ATPStaff:  entityModel.#ATPStaff
+		ATPStaff: entityModel.#ATPStaff
 		Customer: entityModel.#Customer
 		Booking:  entityModel.#Booking
 		Tour:     entityModel.#Tour
@@ -24,7 +24,7 @@ import (
 	enums: {
 		CurrencyCode:          enumModel.#CurrencyCode
 		CurrencyMeta:          enumModel.#CurrencyMeta
-		ATPStaffRole:           enumModel.#ATPStaffRole
+		ATPStaffRole:          enumModel.#ATPStaffRole
 		BookingStage:          enumModel.#BookingStage
 		PaymentStatus:         enumModel.#PaymentStatus
 		PricingAdjustmentType: enumModel.#PricingAdjustmentType
@@ -38,8 +38,8 @@ import (
 		BookingDetail:               apiModel.#BookingDetail
 		CustomerDetail:              apiModel.#CustomerDetail
 		TourDetail:                  apiModel.#TourDetail
-		AtpStaffDirectoryEntry:            apiModel.#AtpStaffDirectoryEntry
-		AtpStaffListResponse:              apiModel.#AtpStaffListResponse
+		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
+		AtpStaffListResponse:        apiModel.#AtpStaffListResponse
 		BookingActivitiesResponse:   apiModel.#BookingActivitiesResponse
 		BookingInvoicesResponse:     apiModel.#BookingInvoicesResponse
 		TourOptions:                 apiModel.#TourOptions
