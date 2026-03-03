@@ -74,20 +74,6 @@ const APP_ROLES = {
 };
 
 const FX_RATE_CACHE_TTL_MS = 5 * 60 * 1000;
-const DEFAULT_EXCHANGE_RATE_OVERRIDES = Object.freeze({
-  "USD->EURO": 0.91,
-  "EURO->USD": 1.1,
-  "USD->VND": 24000,
-  "VND->USD": 0.000042,
-  "USD->THB": 36.0,
-  "THB->USD": 0.0278,
-  "EURO->VND": 26200,
-  "VND->EURO": 0.000038,
-  "EURO->THB": 39.5,
-  "THB->EURO": 0.025,
-  "VND->THB": 0.0015,
-  "THB->VND": 670
-});
 const fxRateCache = new Map();
 
 const PRICING_ADJUSTMENT_TYPES = {
@@ -190,7 +176,7 @@ function loadExchangeRateOverrides() {
     parsed[pair] = rate;
   }
 
-  return { ...DEFAULT_EXCHANGE_RATE_OVERRIDES, ...parsed };
+  return { ...parsed };
 }
 
 const EXCHANGE_RATE_OVERRIDES = loadExchangeRateOverrides();
