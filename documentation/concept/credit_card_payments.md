@@ -63,7 +63,7 @@ Business flow:
 - Good support for multi-currency and future subscription/deposit flows.
 - Clear dashboard and reconciliation tooling for operations/finance.
 
-## Disadvantages
+## Disadvantages 
 
 - Provider fees can be significant at scale.
 - Dependency on external service availability.
