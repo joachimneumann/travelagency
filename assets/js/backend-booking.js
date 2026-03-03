@@ -526,50 +526,42 @@ function renderOfferItemsTable() {
   );
   const showDualPrice = hasMultiQuantityItem;
   const priceHeaders = showDualPrice
-    ? `<th>Price (SINGLE, ${escapeHtml(currency)})</th><th>Price (TOTAL, ${escapeHtml(currency)})</th>`
-    : `<th>Price (${escapeHtml(currency)})</th>`;
-  const header = `<thead><tr><th>Category</th><th>Details</th><th>Qty</th>${priceHeaders}${readOnly ? "" : "<th></th>"}</tr></thead>`;
+    ? `<th class="offer-col-price-single">Price (SINGLE, ${escapeHtml(currency)})</th><th class="offer-col-price-total">Price (TOTAL, ${escapeHtml(currency)})</th>`
+    : `<th class="offer-col-price-total">Price (${escapeHtml(currency)})</th>`;
+  const header = `<thead><tr><th class="offer-col-category">Category</th><th class="offer-col-details">Details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}</tr></thead>`;
   const rows = (offerItems || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
       const rawLineTotal = computeOfferItemLineTotals(item).gross_amount_cents;
-      const unitPriceText = formatMoneyDisplay(Math.round(unitAmount), currency);
       const itemTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
-      const singlePriceCell = showDualPrice ? `<td>${escapeHtml(unitPriceText)}</td>` : "";
-      const totalPriceCell = `<td>${escapeHtml(itemTotalText)}</td>`;
-      const priceCells = showDualPrice ? `${singlePriceCell}${totalPriceCell}` : totalPriceCell;
-      return `<tr>
-      <td>${escapeHtml(offerCategoryLabel(item.category))}</td>
-      <td><input data-offer-item-details="${index}" type="text" value="${escapeHtml(item.details || item.description || "")}" ${
-        readOnly ? "disabled" : ""
-      } /></td>
-      <td><input data-offer-item-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
-        readOnly ? "disabled" : ""
-      } /></td>
-      <td><input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
+      const removeButton = readOnly
+        ? ""
+        : `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-item="${index}" title="Remove offer item" aria-label="Remove offer item">×</button>`;
+      const singleInput = `<input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
-      )}" ${readOnly ? "disabled" : ""} /></td>
+      )}" ${readOnly ? "disabled" : ""} />`;
+      const totalPriceCell = showDualPrice
+        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span>${escapeHtml(itemTotalText)}</span>${removeButton}</div></td>`
+        : `<td class="offer-col-price-total"><div class="offer-total-cell">${singleInput}${removeButton}</div></td>`;
+      const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
+      const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
+      return `<tr>
+      <td class="offer-col-category">${escapeHtml(offerCategoryLabel(item.category))}</td>
+      <td class="offer-col-details"><textarea data-offer-item-details="${index}" rows="2" ${
+        readOnly ? "disabled" : ""
+      }>${escapeHtml(item.details || item.description || "")}</textarea></td>
+      <td class="offer-col-qty"><input data-offer-item-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
+        readOnly ? "disabled" : ""
+      } /></td>
       ${priceCells}
-      ${
-        readOnly
-          ? ""
-          : `<td><button class="btn btn-ghost" type="button" data-offer-remove-item="${index}" title="Remove offer item" style="color:#b00020;border-color:#ffccd4;">×</button></td>`
-      }
     </tr>`;
     })
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
-  const totalRowLabel = "Offer total";
-  const totalLabelColumns = 3 + (showDualPrice ? 2 : 1);
-  const totalRow = showDualPrice
-    ? `<tr><td colspan="${totalLabelColumns}"><strong>${escapeHtml(totalRowLabel)}:</strong></td><td>${escapeHtml(offerTotalValue)}</td>${
-        readOnly ? "" : `<td></td>`
-      }</tr>`
-    : `<tr><td colspan="${totalLabelColumns}"><strong>${escapeHtml(totalRowLabel)}:</strong></td><td>${escapeHtml(offerTotalValue)}</td>${
-        readOnly ? "" : `<td></td>`
-      }</tr>`;
-  const columns = 3 + (showDualPrice ? 2 : 1) + (readOnly ? 0 : 1);
+  const leadingTotalCols = showDualPrice ? 4 : 3;
+  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><strong>${escapeHtml(offerTotalValue)}</strong></td></tr>`;
+  const columns = 3 + (showDualPrice ? 2 : 1);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
   const body = (rows || noRows) + totalRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;

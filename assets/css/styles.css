@@ -1000,6 +1000,60 @@ textarea:focus-visible {
   color: #4d616d;
 }
 
+.backend-table .offer-col-details {
+  width: 42%;
+  min-width: 320px;
+}
+
+.backend-table .offer-col-qty {
+  width: 90px;
+  max-width: 90px;
+}
+
+.backend-table .offer-col-qty input {
+  width: 100%;
+}
+
+.backend-table .offer-col-price-single,
+.backend-table .offer-col-price-total {
+  width: 230px;
+}
+
+.backend-table textarea[data-offer-item-details] {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.offer-total-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.offer-remove-btn {
+  min-width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  color: #b00020;
+  border-color: #ffccd4;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+}
+
+.offer-remove-btn:hover,
+.offer-remove-btn:focus-visible {
+  background: #fff4f6;
+  color: #8d0018;
+  border-color: #ffb3c2;
+}
+
 .backend-table tr:last-child td {
   border-bottom: 0;
 }
