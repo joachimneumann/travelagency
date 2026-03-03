@@ -984,6 +984,7 @@ textarea:focus-visible {
   border-collapse: collapse;
   --offer-remove-size: 42px;
   --offer-price-right-pad: 1rem;
+  --offer-col-min-width: 120px;
 }
 
 .backend-table th,
@@ -1002,9 +1003,18 @@ textarea:focus-visible {
   color: #4d616d;
 }
 
+.backend-table .offer-col-category,
+.backend-table .offer-col-qty,
+.backend-table .offer-col-price-single,
+.backend-table .offer-col-price-total,
+.backend-table .offer-col-actions,
+.backend-table .offer-col-details {
+  min-width: var(--offer-col-min-width);
+}
+
 .backend-table .offer-col-details {
   width: 42%;
-  min-width: 320px;
+  min-width: 260px;
 }
 
 .backend-table .offer-col-qty {
