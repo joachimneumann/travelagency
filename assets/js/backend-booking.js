@@ -520,23 +520,20 @@ function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const hasMultiQuantityItem = (state.offerDraft?.items || []).some(
+  const offerItems = readOfferDraftItemsForRender();
+  const hasMultiQuantityItem = (offerItems || []).some(
     (item) => Math.max(1, Number(item?.quantity || 1)) !== 1
   );
   const showDualPrice = hasMultiQuantityItem;
   const priceHeaders = showDualPrice
     ? `<th>Price (SINGLE, ${escapeHtml(currency)})</th><th>Price (TOTAL, ${escapeHtml(currency)})</th>`
     : `<th>Price (${escapeHtml(currency)})</th>`;
-  const header = `<thead><tr><th>Category</th><th>Details</th><th>Qty</th>${priceHeaders}<th></th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
-  const rows = (state.offerDraft.items || [])
+  const header = `<thead><tr><th>Category</th><th>Details</th><th>Qty</th>${priceHeaders}${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  const rows = (offerItems || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
-      const rawLineTotal = Number.isFinite(Number(item?.line_total_amount_cents))
-        ? Number(item.line_total_amount_cents)
-        : Number.isFinite(Number(item?.line_gross_amount_cents))
-          ? Number(item.line_gross_amount_cents)
-          : quantity * unitAmount;
+      const rawLineTotal = computeOfferItemLineTotals(item).gross_amount_cents;
       const unitPriceText = formatMoneyDisplay(Math.round(unitAmount), currency);
       const itemTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
       const singlePriceCell = showDualPrice ? `<td>${escapeHtml(unitPriceText)}</td>` : "";
@@ -557,14 +554,14 @@ function renderOfferItemsTable() {
       ${
         readOnly
           ? ""
-          : `<td><button class="btn btn-ghost" type="button" data-offer-remove-item="${index}">Remove</button></td>`
+          : `<td><button class="btn btn-ghost" type="button" data-offer-remove-item="${index}" title="Remove offer item" style="color:#b00020;border-color:#ffccd4;">×</button></td>`
       }
     </tr>`;
     })
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
   const totalRowLabel = "Offer total";
-  const totalLabelColumns = 3 + (showDualPrice ? 1 : 0);
+  const totalLabelColumns = 3 + (showDualPrice ? 2 : 1);
   const totalRow = showDualPrice
     ? `<tr><td colspan="${totalLabelColumns}"><strong>${escapeHtml(totalRowLabel)}:</strong></td><td>${escapeHtml(offerTotalValue)}</td>${
         readOnly ? "" : `<td></td>`
@@ -572,48 +569,110 @@ function renderOfferItemsTable() {
     : `<tr><td colspan="${totalLabelColumns}"><strong>${escapeHtml(totalRowLabel)}:</strong></td><td>${escapeHtml(offerTotalValue)}</td>${
         readOnly ? "" : `<td></td>`
       }</tr>`;
-  const columns = 3 + (showDualPrice ? 2 : 1) + 1 + (readOnly ? 0 : 1);
+  const columns = 3 + (showDualPrice ? 2 : 1) + (readOnly ? 0 : 1);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
   const body = (rows || noRows) + totalRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 
   if (!readOnly) {
+    const syncOfferInputTotals = () => {
+      state.offerDraft.items = readOfferDraftItemsForRender();
+      renderOfferItemsTable();
+    };
     els.offerItemsTable.querySelectorAll("[data-offer-remove-item]").forEach((button) => {
       button.addEventListener("click", () => {
         const index = Number(button.getAttribute("data-offer-remove-item"));
+        if (!window.confirm("Remove this offer item?")) {
+          return;
+        }
         state.offerDraft.items.splice(index, 1);
         renderOfferItemsTable();
       });
     });
+    els.offerItemsTable.querySelectorAll("[data-offer-item-details], [data-offer-item-quantity], [data-offer-item-unit]").forEach((input) => {
+      input.addEventListener("change", syncOfferInputTotals);
+    });
   }
 }
 
-function resolveOfferTotalCents() {
-  if (Number.isFinite(Number(state.offerDraft?.total_price_cents))) {
-    return Math.round(Number(state.offerDraft.total_price_cents));
+function readOfferDraftItemsForRender() {
+  const rows = Array.from(document.querySelectorAll("[data-offer-item-details]"));
+  const fallbackItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
+  if (!rows.length) {
+    return fallbackItems;
   }
-  const offerTotals = computeOfferDraftTotals();
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  return rows.map((_, index) => {
+    const category = normalizeOfferCategory(state.offerDraft?.items?.[index]?.category || "OTHER");
+    const details = String(document.querySelector(`[data-offer-item-details="${index}"]`)?.value || "").trim();
+    const quantityRaw = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
+    const unitAmountRaw = document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0";
+    const quantity = Number.isFinite(quantityRaw) && quantityRaw >= 1 ? Math.round(quantityRaw) : 1;
+    const unitAmount = parseMoneyInputValue(unitAmountRaw, currency);
+    const fallbackItem = fallbackItems[index] || {};
+    return {
+      id: String(fallbackItem.id || ""),
+      category,
+      label: String(fallbackItem.label || ""),
+      details: details || null,
+      quantity,
+      unit_amount_cents: Number.isFinite(unitAmount) && unitAmount >= 0 ? Math.round(unitAmount) : Math.max(0, Number(fallbackItem.unit_amount_cents || 0)),
+      tax_rate_basis_points: Number.isFinite(Number(fallbackItem.tax_rate_basis_points))
+        ? Math.max(0, Math.round(Number(fallbackItem.tax_rate_basis_points)))
+        : getOfferCategoryTaxRateBasisPoints(category),
+      currency,
+      notes: String(fallbackItem.notes || ""),
+      sort_order: fallbackItem.sort_order ?? index
+    };
+  });
+}
+
+function resolveOfferTotalCents() {
+  const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
+  if (offerItems.length === 0) {
+    const explicitTotal = Number(state.offerDraft?.total_price_cents);
+    if (Number.isFinite(explicitTotal)) {
+      return Math.round(explicitTotal);
+    }
+  }
+  const offerTotals = computeOfferDraftTotalsFromItems(offerItems);
   return offerTotals?.gross_amount_cents || 0;
 }
 
 function computeOfferDraftTotals() {
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const normalizedItems = collectOfferItems({ throwOnError: false }) || [];
+  return computeOfferDraftTotalsFromItems(state.offerDraft?.items || []);
+}
+
+function computeOfferDraftTotalsFromItems(items) {
+  const normalizedItems = Array.isArray(items) ? items : [];
   let net_amount_cents = 0;
   let tax_amount_cents = 0;
   for (const item of normalizedItems) {
-    const sign = offerCategorySign(item.category);
-    const lineNet = sign * item.quantity * item.unit_amount_cents;
-    const lineTax = sign * Math.round((item.quantity * item.unit_amount_cents * item.tax_rate_basis_points) / 10000);
-    net_amount_cents += lineNet;
-    tax_amount_cents += lineTax;
+    const line = computeOfferItemLineTotals(item);
+    net_amount_cents += line.net_amount_cents;
+    tax_amount_cents += line.tax_amount_cents;
   }
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   return {
     currency,
     net_amount_cents,
     tax_amount_cents,
     gross_amount_cents: net_amount_cents + tax_amount_cents,
     items_count: normalizedItems.length
+  };
+}
+
+function computeOfferItemLineTotals(item) {
+  const sign = offerCategorySign(item?.category);
+  const quantity = Math.max(1, Number(item?.quantity || 1));
+  const unitAmount = Math.max(0, Number(item?.unit_amount_cents || 0));
+  const taxBasisPoints = Math.max(0, Number(item?.tax_rate_basis_points || 0));
+  const net_amount_cents = sign * quantity * unitAmount;
+  const tax_amount_cents = sign * Math.round((quantity * unitAmount * taxBasisPoints) / 10000);
+  return {
+    net_amount_cents,
+    tax_amount_cents,
+    gross_amount_cents: net_amount_cents + tax_amount_cents
   };
 }
 
