@@ -469,7 +469,9 @@ function getOfferCategoryTaxRateBasisPoints(category) {
 
 function addOfferItemFromSelector() {
   if (!state.permissions.canEditBooking || !state.offerDraft) return;
-  const category = normalizeOfferCategory(els.offerItemCategorySelect?.value || "OTHER");
+  const selectedCategory = els.offerItemCategorySelect?.value || "";
+  if (!selectedCategory) return;
+  const category = normalizeOfferCategory(selectedCategory);
   state.offerDraft.items.push({
     id: "",
     category,
@@ -499,6 +501,15 @@ function renderOfferPanel() {
     state.offerDraft.currency = preferred;
     els.offerCurrencyInput.disabled = true;
   }
+  if (els.offerItemCategorySelect) {
+    els.offerItemCategorySelect.disabled = !state.permissions.canEditBooking;
+    if (state.permissions.canEditBooking) {
+      els.offerItemCategorySelect.value = "";
+    }
+  }
+  if (els.offerAddItemBtn) {
+    els.offerAddItemBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  }
   if (els.offerSaveBtn) els.offerSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 
   renderOfferItemsTable();
@@ -511,7 +522,7 @@ function renderOfferItemsTable() {
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const header = `<thead><tr><th>Category</th><th>Item</th><th>Description</th><th>Qty</th><th>Unit (${escapeHtml(
     currency
-  )})</th><th>Net</th><th>Tax</th><th>Gross</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+  )})</th><th>Net</th><th>Gross</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
   const rows = (state.offerDraft.items || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
@@ -533,7 +544,6 @@ function renderOfferItemsTable() {
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} /></td>
       <td>${escapeHtml(formatMoneyDisplay(lineNet, currency))}</td>
-      <td>${escapeHtml(formatMoneyDisplay(lineTax, currency))}</td>
       <td>${escapeHtml(formatMoneyDisplay(lineGross, currency))}</td>
       <td><input data-offer-item-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
       ${
@@ -545,12 +555,10 @@ function renderOfferItemsTable() {
     })
     .join("");
   const totals = computeOfferDraftTotals();
-  const totalsRow = `<tr><th colspan="5">Totals</th><th>${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th><th>${escapeHtml(
-    formatMoneyDisplay(totals.tax_amount_cents, currency)
-  )}</th><th>${escapeHtml(formatMoneyDisplay(totals.gross_amount_cents, currency))}</th><th colspan="${
-    readOnly ? 1 : 2
-  }">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
-  const columns = readOnly ? 9 : 10;
+  const totalsRow = `<tr><th colspan="4">Totals</th><th>${escapeHtml(formatMoneyDisplay(totals.net_amount_cents, currency))}</th><th>${escapeHtml(
+    formatMoneyDisplay(totals.gross_amount_cents, currency)
+  )}</th><th colspan="${readOnly ? 2 : 3}">Items: ${escapeHtml(String(totals.items_count))}</th></tr>`;
+  const columns = readOnly ? 8 : 9;
   const body = (rows || `<tr><td colspan="${columns}">No offer items yet</td></tr>`) + totalsRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 

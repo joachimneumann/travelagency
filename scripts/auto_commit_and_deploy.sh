@@ -52,7 +52,7 @@ cd "$ROOT_DIR"
 
 if [[ "$#" -eq 0 ]]; then
   usage
-  exit 0
+  exit 1
 fi
 
 if [[ "$#" -lt 2 ]]; then
@@ -64,6 +64,12 @@ fi
 TARGET="$1"
 shift
 COMMIT_MESSAGE="$*"
+
+if [[ -z "${TARGET:-}" ]]; then
+  echo "First parameter is required and must be one of: backend_caddy, keycloak, all." >&2
+  usage >&2
+  exit 1
+fi
 
 git add -A
 created_commit=0
