@@ -74,6 +74,20 @@ const APP_ROLES = {
 };
 
 const FX_RATE_CACHE_TTL_MS = 5 * 60 * 1000;
+const DEFAULT_EXCHANGE_RATE_OVERRIDES = Object.freeze({
+  "USD->EURO": 0.91,
+  "EURO->USD": 1.1,
+  "USD->VND": 24000,
+  "VND->USD": 0.000042,
+  "USD->THB": 36.0,
+  "THB->USD": 0.0278,
+  "EURO->VND": 26200,
+  "VND->EURO": 0.000038,
+  "EURO->THB": 39.5,
+  "THB->EURO": 0.025,
+  "VND->THB": 0.0015,
+  "THB->VND": 670
+});
 const fxRateCache = new Map();
 
 const PRICING_ADJUSTMENT_TYPES = {
@@ -137,6 +151,59 @@ const SLA_HOURS = {
 
 let writeQueue = Promise.resolve();
 let mobileContractMetaPromise = null;
+
+function normalizeExchangeRatePairKey(value) {
+  const cleaned = String(value).toUpperCase().replace(/\s+/g, "");
+  if (cleaned.includes("->")) {
+    return cleaned;
+  }
+  if (/^[A-Z]{3}_[A-Z]{3}$/i.test(cleaned)) {
+    return `${cleaned.slice(0, 3)}->${cleaned.slice(4)}`;
+  }
+  return null;
+}
+
+function loadExchangeRateOverrides() {
+  const parsed = {};
+  try {
+    const json = String(process.env.EXCHANGE_RATE_OVERRIDES || "").trim();
+    if (json) {
+      const candidate = JSON.parse(json);
+      if (candidate && typeof candidate === "object") {
+        for (const [key, value] of Object.entries(candidate)) {
+          const pair = normalizeExchangeRatePairKey(key);
+          const rate = Number(value);
+          if (!pair || !Number.isFinite(rate) || rate <= 0) continue;
+          parsed[pair] = rate;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[backend] failed to parse EXCHANGE_RATE_OVERRIDES:", error?.message || error);
+  }
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (!key.startsWith("EXCHANGE_RATE_")) continue;
+    const pair = normalizeExchangeRatePairKey(key.replace(/^EXCHANGE_RATE_/, ""));
+    const rate = Number(value);
+    if (!pair || !Number.isFinite(rate) || rate <= 0) continue;
+    parsed[pair] = rate;
+  }
+
+  return { ...DEFAULT_EXCHANGE_RATE_OVERRIDES, ...parsed };
+}
+
+const EXCHANGE_RATE_OVERRIDES = loadExchangeRateOverrides();
+
+function getFallbackExchangeRate(fromCurrency, toCurrency) {
+  const direct = EXCHANGE_RATE_OVERRIDES[`${fromCurrency}->${toCurrency}`];
+  if (Number.isFinite(direct) && direct > 0) return direct;
+
+  const reverse = EXCHANGE_RATE_OVERRIDES[`${toCurrency}->${fromCurrency}`];
+  if (Number.isFinite(reverse) && reverse > 0) return Number((1 / reverse).toFixed(10));
+
+  return null;
+}
 
 export async function createBackendHandler({ port = PORT } = {}) {
   await ensureStorage();
@@ -947,22 +1014,34 @@ async function fetchExchangeRate(fromCurrency, toCurrency) {
   if (cached && cached.expiresAt > now) return cached.rate;
 
   const endpoint = `https://api.frankfurter.app/latest?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-  const response = await fetch(endpoint);
-  if (!response.ok) {
-    throw new Error(`Exchange API request failed (${response.status})`);
-  }
-  const payload = await response.json();
-  const rawRate = payload?.rates?.[to];
-  const rate = Number(rawRate);
-  if (!Number.isFinite(rate) || rate <= 0) {
-    throw new Error("Exchange rate response did not contain a valid rate");
-  }
+  try {
+    const response = await fetch(endpoint);
+    if (!response.ok) {
+      throw new Error(`Exchange API request failed (${response.status})`);
+    }
+    const payload = await response.json();
+    const rawRate = payload?.rates?.[to];
+    const rate = Number(rawRate);
+    if (!Number.isFinite(rate) || rate <= 0) {
+      throw new Error("Exchange rate response did not contain a valid rate");
+    }
+    fxRateCache.set(key, {
+      rate,
+      expiresAt: now + FX_RATE_CACHE_TTL_MS
+    });
+    return rate;
+  } catch (error) {
+    const fallbackRate = getFallbackExchangeRate(from, to) || getFallbackExchangeRate(fromCurrency, toCurrency);
+    if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
+      console.warn(
+        `[backend] using fallback exchange rate ${from}->${to} = ${fallbackRate} after API fetch error:`,
+        error?.message || error
+      );
+      return fallbackRate;
+    }
 
-  fxRateCache.set(key, {
-    rate,
-    expiresAt: now + FX_RATE_CACHE_TTL_MS
-  });
-  return rate;
+    throw error;
+  }
 }
 
 function roundConvertedAmount(amountCents, fromCurrency, toCurrency, rate) {
@@ -2659,11 +2738,24 @@ async function handlePostOfferExchangeRates(req, res) {
   }
 
   let rate;
+  let warning = null;
   try {
     rate = await fetchExchangeRate(fromCurrency, toCurrency);
   } catch (error) {
-    sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
-    return;
+    const fallbackRate = getFallbackExchangeRate(fromCurrency, toCurrency);
+    if (Number.isFinite(fallbackRate) && fallbackRate > 0) {
+      rate = fallbackRate;
+      warning = "Exchange rate lookup failed. Using fallback rate.";
+      console.error("[backend] exchange rate lookup failed; fallback used", {
+        fromCurrency,
+        toCurrency,
+        fallbackRate,
+        detail: String(error?.message || error)
+      });
+    } else {
+      sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
+      return;
+    }
   }
 
   const convertedItems = items.map((item) => ({
@@ -2675,7 +2767,8 @@ async function handlePostOfferExchangeRates(req, res) {
     from_currency: fromCurrency,
     to_currency: toCurrency,
     exchange_rate: rate,
-    converted_items: convertedItems
+    converted_items: convertedItems,
+    ...(warning ? { warning } : {})
   });
 }
 
