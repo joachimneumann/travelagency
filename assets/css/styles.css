@@ -1028,9 +1028,9 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-col-qty {
-  width: 90px;
-  max-width: 90px;
-  min-width: 72px;
+  width: 80px;
+  max-width: 80px;
+  min-width: 80px;
 }
 
 .backend-table .offer-col-qty input {
@@ -1039,8 +1039,8 @@ textarea:focus-visible {
 
 .backend-table .offer-col-price-single,
 .backend-table .offer-col-price-total {
-  width: 210px;
-  min-width: 190px;
+  width: 80px;
+  min-width: 90px;
   text-align: right;
   padding-inline-end: 1rem;
   box-sizing: border-box;
