@@ -94,13 +94,14 @@
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
               <table class="backend-table" id="offerItemsTable"></table>
             </div>
-            <div class="backend-table-wrap" style="margin-bottom: 0.75rem;">
-              <table class="backend-table backend-offer-total-table" id="offerItemsTotalTable"></table>
-            </div>
-
-            <div class="backend-controls">
-              <button class="btn btn-primary" id="offerSaveBtn" type="button">Save offer</button>
-              <span id="offerStatus" class="micro"></span>
+            <div class="backend-offer-footer">
+              <div class="backend-table-wrap backend-offer-total-wrap" style="margin-bottom: 0.75rem; margin-top: 0;">
+                <table class="backend-table backend-offer-total-table" id="offerItemsTotalTable"></table>
+              </div>
+              <div class="backend-controls backend-offer-actions">
+                <button class="btn btn-primary offer-update-btn" id="offerSaveBtn" type="button" disabled>Update</button>
+                <span id="offerStatus" class="micro"></span>
+              </div>
             </div>
           </article>
 

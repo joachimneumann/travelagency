@@ -142,6 +142,11 @@ const els = {
   invoicesTable: document.getElementById("invoicesTable")
 };
 
+function setOfferSaveEnabled(enabled) {
+  if (!els.offerSaveBtn) return;
+  els.offerSaveBtn.disabled = !enabled || !state.permissions.canEditBooking;
+}
+
 init();
 
 async function init() {
@@ -488,6 +493,7 @@ function addOfferItemFromSelector() {
     notes: "",
     sort_order: state.offerDraft.items.length
   });
+  setOfferSaveEnabled(true);
   renderOfferItemsTable();
 }
 
@@ -512,6 +518,7 @@ function renderOfferPanel() {
     els.offerAddItemBtn.style.display = state.permissions.canEditBooking ? "" : "none";
   }
   if (els.offerSaveBtn) els.offerSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  setOfferSaveEnabled(false);
 
   renderOfferItemsTable();
   clearOfferStatus();
@@ -587,6 +594,7 @@ function renderOfferItemsTable() {
     const syncOfferInputTotals = () => {
       state.offerDraft.items = readOfferDraftItemsForRender();
       state.offerDraft.total_price_cents = null;
+      setOfferSaveEnabled(true);
       renderOfferItemsTable();
     };
     els.offerItemsTable.querySelectorAll("[data-offer-remove-item]").forEach((button) => {
@@ -596,6 +604,7 @@ function renderOfferItemsTable() {
           return;
         }
         state.offerDraft.items.splice(index, 1);
+        setOfferSaveEnabled(true);
         renderOfferItemsTable();
       });
     });
@@ -1393,7 +1402,7 @@ async function handleOfferCurrencyChange() {
   }
   setOfferStatus("Converting prices...");
   try {
-    const converted = await convertOfferItemsInBackend(currentCurrency, nextCurrency, items);
+      const converted = await convertOfferItemsInBackend(currentCurrency, nextCurrency, items);
     const convertedItems = converted.convertedItems;
     state.offerDraft.currency = nextCurrency;
     state.offerDraft.items = items.map((item, index) => {
@@ -1411,6 +1420,7 @@ async function handleOfferCurrencyChange() {
     if (Number.isFinite(Number(converted.totalPriceCents))) {
       state.offerDraft.total_price_cents = Math.round(Number(converted.totalPriceCents));
     }
+    setOfferSaveEnabled(true);
   } catch (error) {
     setOfferStatus(`Exchange rate lookup failed: ${error?.message || error}`);
     restoreSelectState();
@@ -1452,6 +1462,7 @@ async function saveOffer() {
   renderBookingData();
   renderOfferPanel();
   setOfferStatus(result.unchanged ? "Offer unchanged." : "Offer saved.");
+  setOfferSaveEnabled(false);
   await loadActivities();
 }
 

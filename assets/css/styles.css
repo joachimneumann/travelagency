@@ -293,6 +293,24 @@ textarea:focus-visible {
   box-shadow: 0 8px 18px rgba(255, 111, 77, 0.35);
 }
 
+.btn:disabled,
+.btn:disabled:hover,
+.btn:disabled:focus-visible {
+  background: #e4e7ea;
+  color: #8f97a0;
+  border: 1px solid #d4dbe2;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary:disabled,
+.btn-primary:disabled:hover,
+.btn-primary:disabled:focus-visible {
+  background: #e4e7ea;
+  color: #8f97a0;
+}
+
 .btn-primary:hover {
   transform: translateY(-1px);
 }
@@ -995,6 +1013,21 @@ textarea:focus-visible {
   border-bottom: 0;
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;
+}
+
+.backend-offer-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.backend-offer-total-wrap {
+  flex: 1;
+}
+
+.backend-offer-actions {
+  margin: 0;
 }
 
 .backend-table th,
