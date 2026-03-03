@@ -45,6 +45,7 @@ const BOOKING_BUDGET_OPTIONS = {
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
+  brandLogoLink: document.getElementById("brandLogoLink"),
   navDestination: document.getElementById("navDestination"),
   navStyle: document.getElementById("navStyle"),
   backendLoginContainer: document.getElementById("backendLoginContainer"),
@@ -91,6 +92,7 @@ async function init() {
   setupFAQ();
   setupHeroScroll();
   setupBackendLogin();
+  setupHiddenBackendQuickLogin();
   loadWebsiteAuthStatus();
   setupModal();
   setupFormNavigation();
@@ -188,6 +190,30 @@ function setupBackendLogin() {
       // Fall through to login redirect.
     }
     window.location.href = loginUrl;
+  });
+}
+
+function isStagingFrontend() {
+  return window.location.hostname === "staging.asiatravelplan.com";
+}
+
+function setupHiddenBackendQuickLogin() {
+  if (!els.brandLogoLink || !isStagingFrontend()) return;
+
+  els.brandLogoLink.addEventListener("click", (event) => {
+    if (!event.metaKey) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const backendUrl = `${window.location.origin}/backend.html`;
+    const loginParams = new URLSearchParams({
+      return_to: backendUrl,
+      quick_login: "1"
+    });
+    window.location.href = `${BACKEND_BASE_URL}/auth/login?${loginParams.toString()}`;
   });
 }
 

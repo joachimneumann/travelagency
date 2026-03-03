@@ -290,9 +290,19 @@ export function createAuth({ port }) {
     }
 
     const requestUrl = new URL(req.url, "http://localhost");
+    const requestHost = extractHost(req.headers.host);
+    const quickLoginAllowedHost = requestHost === "staging.asiatravelplan.com";
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/admin");
+    const quickLoginRequested =
+      quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";
+    const quickLoginUser = normalizeText(requestUrl.searchParams.get("quick_login_user")) || "joachim";
     const state = randomUUID();
-    authRequests.set(state, { return_to: returnTo, created_at: Date.now() });
+    authRequests.set(state, {
+      return_to: returnTo,
+      quick_login: quickLoginRequested,
+      quick_login_user: quickLoginRequested ? quickLoginUser : undefined,
+      created_at: Date.now()
+    });
 
     const discovery = await getKeycloakDiscovery();
     const authUrl = new URL(discovery.authorization_endpoint);
@@ -301,6 +311,12 @@ export function createAuth({ port }) {
     authUrl.searchParams.set("scope", "openid profile email");
     authUrl.searchParams.set("redirect_uri", cfg.keycloakRedirectUri);
     authUrl.searchParams.set("state", state);
+    if (quickLoginRequested) {
+      authUrl.searchParams.set("quick_login", "1");
+      if (quickLoginUser) {
+        authUrl.searchParams.set("login_hint", quickLoginUser);
+      }
+    }
     if (cfg.keycloakForceLoginPrompt) {
       authUrl.searchParams.set("prompt", "login");
       authUrl.searchParams.set("max_age", "0");
@@ -471,6 +487,12 @@ function parseBoolQuery(value, defaultValue) {
   const raw = normalizeText(value);
   if (!raw) return defaultValue;
   return raw.toLowerCase() === "true";
+}
+
+function extractHost(headerValue) {
+  const raw = normalizeText(headerValue);
+  if (!raw) return "";
+  return raw.split(":")[0];
 }
 
 function normalizeText(value) {
