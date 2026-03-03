@@ -519,6 +519,7 @@ function renderOfferPanel() {
 function renderOfferItemsTable() {
   if (!els.offerItemsTable) return;
   const readOnly = !state.permissions.canEditBooking;
+  const showActionsCol = !readOnly;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
   const hasMultiQuantityItem = (offerItems || []).some(
@@ -528,7 +529,8 @@ function renderOfferItemsTable() {
   const priceHeaders = showDualPrice
     ? `<th class="offer-col-price-single">PRICE (SINGLE, ${escapeHtml(currency)})</th><th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`
     : `<th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`;
-  const header = `<thead><tr><th class="offer-col-category">Category</th><th class="offer-col-details">Details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}</tr></thead>`;
+  const actionHeader = showActionsCol ? `<th class="offer-col-actions"></th>` : "";
+  const header = `<thead><tr><th class="offer-col-category">Category</th><th class="offer-col-details">Details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}${actionHeader}</tr></thead>`;
   const rows = (offerItems || [])
     .map((item, index) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
@@ -537,16 +539,17 @@ function renderOfferItemsTable() {
       const itemTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
       const taxRateBasisPoints = Number(item?.tax_rate_basis_points || 0);
       const taxLabel = `Tax: ${formatTaxRatePercent(taxRateBasisPoints)}%`;
-      const removeButton = readOnly
-        ? ""
-        : `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-item="${index}" title="Remove offer item" aria-label="Remove offer item">×</button>`;
+      const removeButton = showActionsCol
+        ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-item="${index}" title="Remove offer item" aria-label="Remove offer item">×</button>`
+        : "";
       const singleInput = `<input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} />`;
       const totalPriceCell = showDualPrice
-        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${escapeHtml(itemTotalText)}</span>${removeButton}</div></td>`
-        : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${singleInput}</span>${removeButton}</div></td>`;
+        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${escapeHtml(itemTotalText)}</span></div></td>`
+        : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${singleInput}</span></div></td>`;
       const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
+      const actionCell = showActionsCol ? `<td class="offer-col-actions">${removeButton}</td>` : "";
       const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
       return `<tr>
       <td class="offer-col-category">
@@ -559,14 +562,15 @@ function renderOfferItemsTable() {
       <td class="offer-col-qty"><input data-offer-item-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
         readOnly ? "disabled" : ""
       } /></td>
-      ${priceCells}
+      ${priceCells}${actionCell}
     </tr>`;
     })
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
   const leadingTotalCols = showDualPrice ? 4 : 3;
-  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td></tr>`;
-  const columns = 3 + (showDualPrice ? 2 : 1);
+  const trailingTotalActionCell = showActionsCol ? `<td class="offer-col-actions"></td>` : "";
+  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td>${trailingTotalActionCell}</tr>`;
+  const columns = 3 + (showDualPrice ? 2 : 1) + (showActionsCol ? 1 : 0);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
   const body = (rows || noRows) + totalRow;
   els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;

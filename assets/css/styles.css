@@ -982,6 +982,8 @@ textarea:focus-visible {
 .backend-table {
   width: 100%;
   border-collapse: collapse;
+  --offer-remove-size: 42px;
+  --offer-price-right-pad: 1rem;
 }
 
 .backend-table th,
@@ -1016,10 +1018,16 @@ textarea:focus-visible {
 
 .backend-table .offer-col-price-single,
 .backend-table .offer-col-price-total {
-  width: 230px;
+  width: 250px;
+  min-width: 250px;
   text-align: right;
   padding-inline-end: 1rem;
   box-sizing: border-box;
+}
+
+.backend-table .offer-col-price-total {
+  width: 300px;
+  min-width: 300px;
 }
 
 .backend-table th.offer-col-price-single,
@@ -1044,7 +1052,8 @@ textarea:focus-visible {
   display: block;
   width: 100%;
   text-align: right;
-  padding-inline-end: 0.35rem;
+  white-space: nowrap;
+  padding-inline-end: var(--offer-price-right-pad);
 }
 
 .backend-table textarea[data-offer-item-details] {
@@ -1060,7 +1069,6 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.6rem;
 }
 
 .offer-total-sum {
@@ -1073,12 +1081,23 @@ textarea:focus-visible {
   display: block;
   width: 100%;
   text-align: right;
-  padding-inline-end: 0.35rem;
+  white-space: nowrap;
+  padding-inline-end: var(--offer-price-right-pad);
+}
+
+.backend-table .offer-col-actions {
+  width: 86px;
+  min-width: 86px;
+  text-align: center;
+}
+
+.backend-table td.offer-col-actions {
+  padding-inline: 0.45rem;
 }
 
 .offer-remove-btn {
-  min-width: 42px;
-  height: 42px;
+  min-width: var(--offer-remove-size);
+  height: var(--offer-remove-size);
   border-radius: 10px;
   color: var(--accent);
   border-color: var(--accent);
