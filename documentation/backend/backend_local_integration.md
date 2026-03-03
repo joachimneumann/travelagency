@@ -6,7 +6,7 @@ This guide explains:
 - how to verify the integration end-to-end
 
 ## 1) What is implemented now
-
+ 
 Local backend implementation (Milestone 1) is in:
 - `backend/app/src/server.js`
 - `backend/app/data/store.json`
