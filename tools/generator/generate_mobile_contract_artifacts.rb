@@ -285,7 +285,7 @@ def render_js_request_factory_module(endpoints, contract_version)
     export const GENERATED_API_ENDPOINTS = #{js_literal(endpoint_map)};
 
     export function buildPath(template, params = {}) {
-      return template.replace(/\{(\w+)\}/g, (_, key) => {
+      return template.replace(/\{(\\w+)\}/g, (_, key) => {
         if (!(key in params)) throw new Error(`Missing path parameter ${key}`);
         return encodeURIComponent(String(params[key]));
       });

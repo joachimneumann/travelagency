@@ -213,7 +213,7 @@ export const GENERATED_API_ENDPOINTS = {
 };
 
 export function buildPath(template, params = {}) {
-  return template.replace(/{(w+)}/g, (_, key) => {
+  return template.replace(/{(\w+)}/g, (_, key) => {
     if (!(key in params)) throw new Error(`Missing path parameter ${key}`);
     return encodeURIComponent(String(params[key]));
   });

@@ -162,7 +162,7 @@ async function init() {
 
 async function loadBookingPage() {
   clearStatus();
-  const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, path: { bookingId: state.id } }).url)];
+  const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { bookingId: state.id } }).url)];
   if (state.permissions.canChangeAssignment) {
     requests.push(fetchApi(staffRequest({ baseURL: apiOrigin, query: { active: true } }).url));
   }
@@ -182,7 +182,7 @@ async function loadBookingPage() {
 }
 
 async function loadCustomer() {
-  const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, path: { customerId: state.id } }).url);
+  const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, params: { customerId: state.id } }).url);
   if (!payload) return;
 
   if (els.title) els.title.textContent = payload.customer?.name || `Customer ${state.id}`;
@@ -497,7 +497,7 @@ function removePricingPaymentRow(index) {
 
 async function saveOwner() {
   if (!state.booking || !els.ownerSelect) return;
-  const result = await fetchBookingMutation(bookingAssignmentRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
+  const result = await fetchBookingMutation(bookingAssignmentRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -515,7 +515,7 @@ async function saveOwner() {
 
 async function saveStage() {
   if (!state.booking || !els.stageSelect) return;
-  const result = await fetchBookingMutation(bookingStageRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
+  const result = await fetchBookingMutation(bookingStageRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -533,7 +533,7 @@ async function saveStage() {
 
 async function saveNote() {
   if (!state.booking || !els.noteInput) return;
-  const result = await fetchBookingMutation(bookingNoteRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
+  const result = await fetchBookingMutation(bookingNoteRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -563,7 +563,7 @@ async function savePricing() {
     return;
   }
 
-  const result = await fetchBookingMutation(bookingPricingRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url, {
+  const result = await fetchBookingMutation(bookingPricingRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
@@ -586,7 +586,7 @@ async function savePricing() {
 
 async function loadActivities() {
   if (!state.booking) return;
-  const payload = await fetchApi(bookingActivitiesRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url);
+  const payload = await fetchApi(bookingActivitiesRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url);
   if (!payload) return;
   renderActivitiesTable(payload.items || []);
 }
@@ -611,7 +611,7 @@ function renderActivitiesTable(items) {
 
 async function loadInvoices() {
   if (!state.booking) return;
-  const payload = await fetchApi(bookingInvoicesRequest({ baseURL: apiOrigin, path: { bookingId: state.booking.id } }).url);
+  const payload = await fetchApi(bookingInvoicesRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url);
   if (!payload) return;
   state.invoices = (Array.isArray(payload.items) ? payload.items : []).sort((a, b) =>
     String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
