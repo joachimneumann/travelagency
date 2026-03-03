@@ -1047,8 +1047,8 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-col-price-total {
-  width: 220px;
-  min-width: 200px;
+  width: 80px;
+  min-width: 90px;
 }
 
 .backend-table th.offer-col-price-single,
