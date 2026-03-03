@@ -1018,12 +1018,33 @@ textarea:focus-visible {
 .backend-table .offer-col-price-total {
   width: 230px;
   text-align: right;
-  padding-right: 0.55rem;
+  padding-inline-end: 1rem;
+  box-sizing: border-box;
+}
+
+.backend-table th.offer-col-price-single,
+.backend-table th.offer-col-price-total {
+  text-align: right;
+  padding-inline-end: 1rem;
 }
 
 .backend-table .offer-col-price-single input,
 .backend-table .offer-col-price-total {
   text-align: right;
+}
+
+.backend-table .offer-col-price-single input,
+.backend-table .offer-col-price-total input {
+  text-align: right;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.offer-price-value {
+  display: block;
+  width: 100%;
+  text-align: right;
+  padding-inline-end: 0.35rem;
 }
 
 .backend-table textarea[data-offer-item-details] {
@@ -1046,6 +1067,13 @@ textarea:focus-visible {
   display: flex;
   justify-content: flex-end;
   width: 100%;
+}
+
+.offer-total-sum .offer-total-value {
+  display: block;
+  width: 100%;
+  text-align: right;
+  padding-inline-end: 0.35rem;
 }
 
 .offer-remove-btn {

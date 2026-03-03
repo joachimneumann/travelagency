@@ -544,8 +544,8 @@ function renderOfferItemsTable() {
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} />`;
       const totalPriceCell = showDualPrice
-        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span>${escapeHtml(itemTotalText)}</span>${removeButton}</div></td>`
-        : `<td class="offer-col-price-total"><div class="offer-total-cell">${singleInput}${removeButton}</div></td>`;
+        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${escapeHtml(itemTotalText)}</span>${removeButton}</div></td>`
+        : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${singleInput}</span>${removeButton}</div></td>`;
       const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
       const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
       return `<tr>
@@ -565,7 +565,7 @@ function renderOfferItemsTable() {
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
   const leadingTotalCols = showDualPrice ? 4 : 3;
-  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><div class="offer-total-sum"><strong>Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td></tr>`;
+  const totalRow = `<tr><td colspan="${leadingTotalCols}"></td><td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td></tr>`;
   const columns = 3 + (showDualPrice ? 2 : 1);
   const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
   const body = (rows || noRows) + totalRow;
