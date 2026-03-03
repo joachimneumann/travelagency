@@ -43,7 +43,7 @@ Before deploying to Hetzner, do these steps locally in this order:
 - Keep DB references (paths/keys) only.
 
 7. Harden before deploy
-- Remove dev fallbacks/tokens.
+- Remove development placeholder credentials.
 - Restrict CORS to staging domain.
 - Confirm health checks and logs.
 

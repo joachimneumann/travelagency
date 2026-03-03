@@ -112,7 +112,7 @@ Flow
 
 Technical handling
 	•	Since static site: implement submit options:
-	•	Default: mailto: fallback that opens an email prefilled with form content
+	•	Default: mailto link that opens an email prefilled with form content
 	•	Also provide a clearly commented placeholder for integrating Formspree/Netlify Forms later (do not require it to run)
 	•	Store the last selected filters (destination/style) and prefill the form accordingly.
 

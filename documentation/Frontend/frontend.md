@@ -49,7 +49,7 @@
 
 ### 4.1 Hero (`#hero`)
 
-- Full-width background video (primary `assets/video/rice field.webm` with `assets/video/rice field.mp4` fallback)
+- Full-width background video (`assets/video/rice field.webm`) with `assets/video/rice field.mp4` secondary format
 - Poster image (`assets/video/rice field.webp`)
 - Video container has outer margin and rounded corners
 - No dark scrim over video; hero title uses a semi-transparent white background for legibility

@@ -169,7 +169,7 @@ Booking list query params (`GET /api/v1/bookings`):
 
 Default ordering:
 - Bookings: newest first (`created_at desc`)
-- Customers: newest first (`created_at desc`, fallback `updated_at`)
+- Customers: newest first (`created_at desc`, then `updated_at`)
 
 Admin UI:
 - `GET /admin`

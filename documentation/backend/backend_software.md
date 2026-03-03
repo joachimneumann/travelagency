@@ -354,7 +354,7 @@ Backend:
 ## 6.8 Migration Plan (No Frontend Downtime)
 
 1. Add backend APIs in staging and wire frontend feature flags.
-2. Bookings are already switched to backend API (no mailto fallback in current implementation).
+2. Bookings are already switched to backend API (no email alternative in current implementation).
 3. Move catalog to backend publish mode.
 4. Introduce quote/payment public pages.
 
