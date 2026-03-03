@@ -87,6 +87,10 @@ const state = {
       gross_amount_cents: 0,
       items_count: 0
     }
+  },
+  chat: {
+    items: [],
+    conversations: []
   }
 };
 
@@ -122,6 +126,9 @@ const els = {
   offerSaveBtn: document.getElementById("offerSaveBtn"),
   offerStatus: document.getElementById("offerStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
+  metaChatPanel: document.getElementById("metaChatPanel"),
+  metaChatSummary: document.getElementById("metaChatSummary"),
+  metaChatTable: document.getElementById("metaChatTable"),
   invoicePanel: document.getElementById("invoicePanel"),
   invoiceSelect: document.getElementById("invoiceSelect"),
   invoiceNumberInput: document.getElementById("invoiceNumberInput"),
@@ -198,6 +205,7 @@ async function init() {
   if (state.type === "customer") {
     if (els.actionsPanel) els.actionsPanel.style.display = "none";
     if (els.invoicePanel) els.invoicePanel.style.display = "none";
+    if (els.metaChatPanel) els.metaChatPanel.style.display = "none";
     loadCustomer();
     return;
   }
@@ -224,6 +232,7 @@ async function loadBookingPage() {
   renderPricingPanel();
   renderOfferPanel();
   await loadActivities();
+  await loadBookingChat();
   await loadInvoices();
 }
 
@@ -932,6 +941,48 @@ async function loadActivities() {
   const payload = await fetchApi(bookingActivitiesRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url);
   if (!payload) return;
   renderActivitiesTable(payload.items || []);
+}
+
+async function loadBookingChat() {
+  if (!state.booking || !els.metaChatTable) return;
+  const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/chat?limit=100`);
+  if (!payload) return;
+  state.chat.items = Array.isArray(payload.items) ? payload.items : [];
+  state.chat.conversations = Array.isArray(payload.conversations) ? payload.conversations : [];
+  renderMetaChatPanel();
+}
+
+function renderMetaChatPanel() {
+  if (!els.metaChatTable) return;
+  const items = Array.isArray(state.chat.items) ? state.chat.items : [];
+  const conversations = Array.isArray(state.chat.conversations) ? state.chat.conversations : [];
+
+  if (els.metaChatSummary) {
+    const summaryText = conversations.length
+      ? `${conversations.length} conversation(s), ${items.length} event(s) shown`
+      : "No chat data yet.";
+    els.metaChatSummary.textContent = summaryText;
+  }
+
+  const header = "<thead><tr><th>Time</th><th>Channel</th><th>Direction</th><th>Contact</th><th>Message</th><th>Status</th><th>Open</th></tr></thead>";
+  const rows = items
+    .map((item) => {
+      const open = item.open_url
+        ? `<a class="btn btn-ghost" href="${escapeHtml(item.open_url)}" target="_blank" rel="noopener">Open</a>`
+        : "-";
+      return `<tr>
+        <td>${escapeHtml(formatDateTime(item.sent_at))}</td>
+        <td>${escapeHtml(String(item.channel || "-").toUpperCase())}</td>
+        <td>${escapeHtml(String(item.direction || "-").toUpperCase())}</td>
+        <td>${escapeHtml(item.sender_contact || item.sender_display || "-")}</td>
+        <td>${escapeHtml(item.text_preview || "-")}</td>
+        <td>${escapeHtml(item.external_status || "-")}</td>
+        <td>${open}</td>
+      </tr>`;
+    })
+    .join("");
+  const body = rows || '<tr><td colspan="7">No chat events for this booking/customer yet</td></tr>';
+  els.metaChatTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function renderActivitiesTable(items) {

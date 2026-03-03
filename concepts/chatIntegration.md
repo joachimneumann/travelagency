@@ -126,9 +126,10 @@ Goal: ingest WhatsApp messages/events into backend and show them in internal UI,
 - Subscribe to WhatsApp message/event callbacks.
 
 2. Backend endpoints
-- Add `GET /api/v1/integrations/whatsapp/webhook` for verification challenge.
-- Add `POST /api/v1/integrations/whatsapp/webhook` for event ingestion.
+- Add `GET /integrations/meta/webhook` for verification challenge.
+- Add `POST /integrations/meta/webhook` for read-only event ingestion.
 - Enforce signature verification and reject unsigned/invalid requests.
+- Add `GET /api/v1/bookings/:bookingId/chat` for protected read-only timeline retrieval in backend/iOS.
 
 3. Data model
 - Add `chat_channel_account`:

@@ -39,6 +39,9 @@ Environment variables:
 - `MOBILE_MIN_SUPPORTED_APP_VERSION` (minimum iOS app version allowed to continue after bootstrap)
 - `MOBILE_LATEST_APP_VERSION` (latest published iOS app version shown to users)
 - `MOBILE_FORCE_UPDATE` (`true`/`false`, forces all app builds to stop at the update screen)
+- `META_WEBHOOK_ENABLED` (`true`/`false`, enables read-only Meta webhook ingestion)
+- `META_WEBHOOK_VERIFY_TOKEN` (Meta webhook verify token, required when `META_WEBHOOK_ENABLED=true`)
+- `META_APP_SECRET` (Meta app secret for webhook signature verification)
 - `BASE_CURRENCY` (optional canonical storage currency, defaults to `USD`; valid values from catalog: `USD`, `EURO`, `VND`, `THB`)
 - `EXCHANGE_RATE_<FROM>_<TO>` (optional override, e.g. `EXCHANGE_RATE_USD_VND=23000`)
 
@@ -113,10 +116,13 @@ Public:
 - `POST /public/v1/bookings`
 - `GET /public/v1/tours`
 - `GET /public/v1/tour-images/:path`
+- `GET /integrations/meta/webhook` (Meta webhook verification challenge)
+- `POST /integrations/meta/webhook` (Meta webhook ingestion, read-only)
 
 Admin API:
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
+- `GET /api/v1/bookings/:bookingId/chat` (read-only Meta chat timeline for booking/customer)
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
 - `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
