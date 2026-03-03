@@ -286,17 +286,17 @@ Auth:
 
 The mobile app should not follow backend internals or `store.json` structure directly.
 The single contract source is:
-- [/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml](/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml)
+- [/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml](/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml)
 
 Generated artifacts:
-- [/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json](/Users/internal_admin/projects/travelagency/contracts/generated/mobile-api.meta.json)
+- [/Users/internal_admin/projects/travelagency/api/generated/mobile-api.meta.json](/Users/internal_admin/projects/travelagency/api/generated/mobile-api.meta.json)
 - [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/Models)
 - [/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API](/Users/internal_admin/projects/travelagency/mobile/iOS/Generated/API)
 
 Regenerate after editing the OpenAPI file:
 
 ```bash
-ruby /Users/internal_admin/projects/travelagency/contracts/generate_mobile_contract_artifacts.rb
+ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
 ```
 
 Contract validation tests:

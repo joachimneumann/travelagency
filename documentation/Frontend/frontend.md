@@ -31,8 +31,6 @@
 - Main JS bundle: `assets/js/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
 - Tour hero images managed by backend are converted to WebP and resized to a maximum bounding box of `1000x1000`
-- Cache headers config file present at `_headers` (long-lived assets)
-
 ## 3) Header and navigation (`#top`)
 
 - Brand logo (`assets/img/logo-asiatravelplan.svg`)
@@ -73,7 +71,7 @@
 Behavior from JS:
 - Trips loaded from backend `GET /public/v1/tours` (primary source)
 - Backend responses are cached in localStorage (`asiatravelplan_tours_cache_v1`) with TTL
-- If backend is unavailable, frontend falls back to static `data/tours_fallback_data.jspn` (for GitHub/static deployment compatibility)
+- If backend is unavailable, frontend falls back to static `frontend/fallbackData/tours_fallback_data.jspn` (for GitHub/static deployment compatibility)
 - Filter state from URL params/localStorage (`asiatravelplan_filters`)
 - URL sync with `?dest=...&style=...`
 - Dynamic page title and hidden tours heading/subtitle still update based on filters

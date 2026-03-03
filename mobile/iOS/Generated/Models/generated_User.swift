@@ -18,6 +18,3 @@
         let roles: [GeneratedATPUserRole]
         let staffId: String?
     }
-
-typealias ATPUserRole = GeneratedATPUserRole
-typealias ATPUser = GeneratedATPUser

@@ -1,0 +1,1042 @@
+# Generated from model/ (CUE) via tools/generator. Do not edit by hand.
+# 2026-03-03T00:12:18Z
+
+---
+openapi: 3.1.0
+info:
+  title: AsiaTravelPlan Mobile API
+  version: 2026-03-02.1
+  summary: Contract for the in-house iPhone app and the AsiaTravelPlan backend.
+  description: |-
+    This contract is generated from the CUE abstract model (model/api, model/entities, model/enums, model/common).
+    It describes the request and response payloads the iPhone app and frontend may rely on.
+
+    Important:
+    - The mobile app must not depend on backend storage details.
+    - Breaking changes should increment the contract version and normally require a mobile app update.
+    - Only these app roles are supported: atp_admin, atp_manager, atp_accountant, atp_staff.
+servers:
+- url: https://api-staging.asiatravelplan.com
+  description: Staging API
+- url: http://localhost:8787
+  description: Local development API
+tags:
+- name: Auth
+- name: Public
+- name: Bookings
+- name: Customers
+- name: Staff
+- name: Tours
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ATPCurrencyCode:
+      type: string
+      enum:
+      - USD
+      - EURO
+      - VND
+      - THB
+    ATPUserRole:
+      type: string
+      enum:
+      - atp_admin
+      - atp_manager
+      - atp_accountant
+      - atp_staff
+    BookingStage:
+      type: string
+      enum:
+      - NEW
+      - QUALIFIED
+      - PROPOSAL_SENT
+      - NEGOTIATION
+      - INVOICE_SENT
+      - PAYMENT_RECEIVED
+      - WON
+      - LOST
+      - POST_TRIP
+    PaymentStatus:
+      type: string
+      enum:
+      - PENDING
+      - PAID
+      - VOID
+    PricingAdjustmentType:
+      type: string
+      enum:
+      - DISCOUNT
+      - CREDIT
+      - SURCHARGE
+    BookingPricing:
+      type: object
+      description: Defined in model (referenced as BookingPricing).
+    SourceAttribution:
+      type: object
+      description: Defined in model (referenced as SourceAttribution).
+    BookingActivity:
+      type: object
+      description: Defined in model (referenced as BookingActivity).
+    BookingInvoice:
+      type: object
+      description: Defined in model (referenced as BookingInvoice).
+    ATPUser:
+      type: object
+      required:
+      - id
+      - preferredUsername
+      properties:
+        id:
+          type: string
+        preferredUsername:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ATPUserRole"
+        staffId:
+          type: string
+          nullable: true
+    Customer:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        language:
+          type: string
+          nullable: true
+    Tour:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        destinationCountries:
+          type: array
+          items:
+            type: string
+        styles:
+          type: array
+          items:
+            type: string
+        durationDays:
+          type: integer
+          nullable: true
+        priceFrom:
+          "$ref": "#/components/schemas/TourPriceFrom"
+          nullable: true
+    TourPriceFrom:
+      type: object
+      required:
+      - currency
+      - minor
+      properties:
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        minor:
+          type: integer
+    Booking:
+      type: object
+      required:
+      - id
+      - customerId
+      - stage
+      - pricing
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: string
+        bookingHash:
+          type: string
+          nullable: true
+        customerId:
+          type: string
+        stage:
+          "$ref": "#/components/schemas/BookingStage"
+        staff:
+          type: string
+          nullable: true
+        staffName:
+          type: string
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+        style:
+          type: string
+          nullable: true
+        travelMonth:
+          type: string
+          nullable: true
+        travelers:
+          type: integer
+          nullable: true
+        duration:
+          type: string
+          nullable: true
+        budget:
+          type: string
+          nullable: true
+        preferredCurrency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        pricing:
+          "$ref": "#/components/schemas/BookingPricing"
+        source:
+          "$ref": "#/components/schemas/SourceAttribution"
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    BookingList:
+      type: object
+      required:
+      - pagination
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Booking"
+        pagination:
+          "$ref": "#/components/schemas/Pagination"
+    CustomerList:
+      type: object
+      required:
+      - pagination
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Customer"
+        pagination:
+          "$ref": "#/components/schemas/Pagination"
+    TourList:
+      type: object
+      required:
+      - pagination
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Tour"
+        pagination:
+          "$ref": "#/components/schemas/Pagination"
+    BookingDetail:
+      type: object
+      required:
+      - booking
+      properties:
+        booking:
+          "$ref": "#/components/schemas/Booking"
+        customer:
+          "$ref": "#/components/schemas/Customer"
+          nullable: true
+    CustomerDetail:
+      type: object
+      required:
+      - customer
+      properties:
+        customer:
+          "$ref": "#/components/schemas/Customer"
+        bookings:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Booking"
+    TourOptions:
+      type: object
+      required: []
+      properties:
+        destinations:
+          type: array
+          items:
+            type: string
+        styles:
+          type: array
+          items:
+            type: string
+    TourDetail:
+      type: object
+      required:
+      - tour
+      - options
+      properties:
+        tour:
+          "$ref": "#/components/schemas/Tour"
+        options:
+          "$ref": "#/components/schemas/TourOptions"
+    StaffDirectoryEntry:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+          nullable: true
+        usernames:
+          type: array
+          items:
+            type: string
+        destinations:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+    StaffListResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/StaffDirectoryEntry"
+        total:
+          type: integer
+    BookingActivitiesResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingActivity"
+        activities:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingActivity"
+        total:
+          type: integer
+    BookingInvoicesResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingInvoice"
+        total:
+          type: integer
+    MobileBootstrap:
+      type: object
+      required:
+      - app
+      - api
+      - features
+      properties:
+        app:
+          "$ref": "#/components/schemas/MobileAppVersionGate"
+        api:
+          "$ref": "#/components/schemas/APIContractVersion"
+        features:
+          "$ref": "#/components/schemas/FeatureFlags"
+    FeatureFlags:
+      type: object
+      required:
+      - bookings
+      - customers
+      - tours
+      properties:
+        bookings:
+          type: boolean
+        customers:
+          type: boolean
+        tours:
+          type: boolean
+    MobileAppVersionGate:
+      type: object
+      required:
+      - minSupportedVersion
+      - latestVersion
+      - forceUpdate
+      properties:
+        minSupportedVersion:
+          type: string
+        latestVersion:
+          type: string
+        forceUpdate:
+          type: boolean
+    APIContractVersion:
+      type: object
+      required:
+      - contractVersion
+      properties:
+        contractVersion:
+          type: string
+    Pagination:
+      type: object
+      required:
+      - page
+      - pageSize
+      - totalItems
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+    PaginatedRequest:
+      type: object
+      required: []
+      properties:
+        page:
+          type: integer
+          nullable: true
+        pageSize:
+          type: integer
+          nullable: true
+        sort:
+          type: string
+          nullable: true
+        query:
+          type: string
+          nullable: true
+    AuthMeResponse:
+      type: object
+      required:
+      - authenticated
+      properties:
+        authenticated:
+          type: boolean
+        principal:
+          "$ref": "#/components/schemas/ATPUser"
+          nullable: true
+    PublicBookingCreateRequest:
+      type: object
+      required: []
+      properties:
+        destination:
+          type: string
+          nullable: true
+        style:
+          type: string
+          nullable: true
+        travelMonth:
+          type: string
+          nullable: true
+        travelers:
+          type: integer
+          nullable: true
+        duration:
+          type: string
+          nullable: true
+        budget:
+          type: string
+          nullable: true
+        preferredCurrency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        pageUrl:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+        utmSource:
+          type: string
+          nullable: true
+        utmMedium:
+          type: string
+          nullable: true
+        utmCampaign:
+          type: string
+          nullable: true
+        idempotencyKey:
+          type: string
+          nullable: true
+    BookingPricingUpdateRequest:
+      type: object
+      required:
+      - pricing
+      properties:
+        bookingHash:
+          type: string
+          nullable: true
+        pricing:
+          "$ref": "#/components/schemas/BookingPricing"
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+security:
+- bearerAuth: []
+paths:
+  "/public/v1/mobile/bootstrap":
+    get:
+      summary: Mobile Bootstrap
+      tags:
+      - Public
+      security: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MobileBootstrap"
+  "/auth/me":
+    get:
+      summary: Auth Me
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AuthMeResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/public/v1/bookings":
+    post:
+      summary: Public Bookings
+      tags:
+      - Public
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PublicBookingCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+  "/public/v1/tours":
+    get:
+      summary: Public Tours
+      tags:
+      - Public
+      security: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourList"
+  "/api/v1/bookings":
+    get:
+      summary: Bookings
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingList"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}":
+    get:
+      summary: Booking Detail
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/stage":
+    patch:
+      summary: Booking Stage
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/owner":
+    patch:
+      summary: Booking Assignment
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/notes":
+    patch:
+      summary: Booking Note
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/pricing":
+    patch:
+      summary: Booking Pricing
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingPricingUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/activities":
+    get:
+      summary: Booking Activities
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingActivitiesResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/invoices":
+    get:
+      summary: Booking Invoices
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingInvoicesResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/staff":
+    get:
+      summary: Staff
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/StaffListResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/customers":
+    get:
+      summary: Customers
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CustomerList"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/customers/{customerId}":
+    get:
+      summary: Customer Detail
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: customerId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CustomerDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours":
+    get:
+      summary: Tours
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourList"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tourId}":
+    get:
+      summary: Tour Detail
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tourId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tourId}/image":
+    get:
+      summary: Tour Image
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tourId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"

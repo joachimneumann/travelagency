@@ -7,6 +7,16 @@ import os
 from urllib.parse import urlsplit
 
 
+PAGE_MAP = {
+    "/": "frontend/pages/index.html",
+    "/index.html": "frontend/pages/index.html",
+    "/404.html": "frontend/pages/404.html",
+    "/backend.html": "frontend/pages/backend.html",
+    "/backend-booking.html": "frontend/pages/backend-booking.html",
+    "/backend-tour.html": "frontend/pages/backend-tour.html",
+}
+
+
 class FrontendHandler(SimpleHTTPRequestHandler):
     backend_base = "http://127.0.0.1:8787"
     proxy_prefixes = ("/api/", "/auth/", "/public/v1/")
@@ -53,8 +63,12 @@ class FrontendHandler(SimpleHTTPRequestHandler):
         finally:
             connection.close()
 
+    def resolved_page_path(self, request_path):
+        mapped = PAGE_MAP.get(request_path)
+        return (self.root / mapped) if mapped else None
+
     def send_custom_404(self):
-        not_found = self.root / "404.html"
+        not_found = self.root / "frontend/pages/404.html"
         if not_found.exists():
             body = not_found.read_bytes()
             self.send_response(404)
@@ -68,6 +82,11 @@ class FrontendHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.maybe_proxy():
             return
+        request_path = urlsplit(self.path).path
+        resolved_page = self.resolved_page_path(request_path)
+        if resolved_page and resolved_page.exists():
+            self.path = "/" + str(resolved_page.relative_to(self.root)).replace(os.sep, "/")
+            return super().do_GET()
         path = self.translate_path(self.path)
         if os.path.exists(path):
             return super().do_GET()
@@ -76,10 +95,15 @@ class FrontendHandler(SimpleHTTPRequestHandler):
     def do_HEAD(self):
         if self.maybe_proxy():
             return
+        request_path = urlsplit(self.path).path
+        resolved_page = self.resolved_page_path(request_path)
+        if resolved_page and resolved_page.exists():
+            self.path = "/" + str(resolved_page.relative_to(self.root)).replace(os.sep, "/")
+            return super().do_HEAD()
         path = self.translate_path(self.path)
         if os.path.exists(path):
             return super().do_HEAD()
-        not_found = self.root / "404.html"
+        not_found = self.root / "frontend/pages/404.html"
         if not_found.exists():
             self.send_response(404)
             self.send_header("Content-Type", "text/html; charset=utf-8")

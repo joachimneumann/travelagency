@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "contracts", "generated", "mobile-api.meta.json");
+const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";

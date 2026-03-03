@@ -338,7 +338,7 @@ At the time of writing, the abstract model description (Layer 1) is not yet impl
 ATP currently uses:
 
 - the backend model and business code as the practical source of domain truth
-- the generated OpenAPI specification (`contracts/mobile-api.openapi.yaml`) as the transport contract and generator input
+- the generated OpenAPI specification (`api/generated/mobile-api.openapi.yaml`) as the transport contract and generator input
 
 The goal is to evolve towards the full four-layer design by introducing a minimal abstract model description that sits above both the backend model and the generated API specification.
 

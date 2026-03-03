@@ -19,7 +19,7 @@ Current scope:
 Included now:
 - Xcode project: `/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
 - project generator: `/Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `/Users/internal_admin/projects/travelagency/contracts/mobile-api.openapi.yaml`
+- contract source: `/Users/internal_admin/projects/travelagency/api/generated/mobile-api.openapi.yaml`
 - generated models: `/Users/internal_admin/projects/travelagency/mobile/iOS/Generated`
 - URL scheme registration in `Resources/Info.plist`
 - PKCE authorization code exchange against Keycloak
@@ -35,7 +35,7 @@ Included now:
 Regenerate the contract artifacts after changing the OpenAPI file:
 
 ```bash
-ruby /Users/internal_admin/projects/travelagency/contracts/generate_mobile_contract_artifacts.rb
+ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
 ruby /Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
 ```
 

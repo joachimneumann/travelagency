@@ -216,21 +216,3 @@
             case pricing
         }
     }
-
-    extension GeneratedBooking {
-        var staffId: String? { assignedStaffId }
-        var staffName: String? { assignedStaffName }
-    }
-
-typealias BookingStage = GeneratedBookingStage
-typealias PaymentStatus = GeneratedPaymentStatus
-typealias PricingAdjustmentType = GeneratedPricingAdjustmentType
-typealias SourceAttribution = GeneratedSourceAttribution
-typealias BookingPricingAdjustment = GeneratedBookingPricingAdjustment
-typealias BookingPayment = GeneratedBookingPayment
-typealias BookingPricingSummary = GeneratedBookingPricingSummary
-typealias BookingPricing = GeneratedBookingPricing
-typealias InvoiceLineItem = GeneratedInvoiceLineItem
-typealias BookingInvoice = GeneratedBookingInvoice
-typealias BookingActivity = GeneratedBookingActivity
-typealias Booking = GeneratedBooking

@@ -4,7 +4,7 @@
 
   Default paths:
   - Input:  backend/app/data/tours/<tour_id>/tour.json
-  - Output: data/tours_fallback_data.jspn
+  - Output: frontend/fallbackData/tours_fallback_data.jspn
 */
 
 const fs = require('fs');
@@ -12,7 +12,7 @@ const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..');
 const toursRoot = path.join(rootDir, 'backend', 'app', 'data', 'tours');
-const outPath = path.join(rootDir, 'data', 'tours_fallback_data.jspn');
+const outPath = path.join(rootDir, 'frontend', 'fallbackData', 'tours_fallback_data.jspn');
 const fallbackImagesDirRel = path.join('assets', 'img', 'tours_fallback_images');
 const fallbackImagesDirAbs = path.join(rootDir, fallbackImagesDirRel);
 

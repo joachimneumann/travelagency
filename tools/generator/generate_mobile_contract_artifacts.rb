@@ -2,13 +2,14 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'yaml'
 require 'fileutils'
 require 'open3'
 require 'time'
 
-ROOT = File.expand_path('..', __dir__)
+ROOT = File.expand_path('../..', __dir__)
 MODEL_DIR = File.join(ROOT, 'model')
-CONTRACT_GENERATED_DIR = File.join(ROOT, 'contracts', 'generated')
+CONTRACT_GENERATED_DIR = File.join(ROOT, 'api', 'generated')
 
 BACKEND_GENERATED_MODELS_DIR = File.join(ROOT, 'backend', 'app', 'Generated', 'Models')
 BACKEND_GENERATED_API_DIR = File.join(ROOT, 'backend', 'app', 'Generated', 'API')
@@ -791,6 +792,225 @@ def render_swift_api_client(endpoints)
   SWIFT
 end
 
+# --- OpenAPI 3.1 generation from IR (model/api/ + entities/enums/common) ---
+
+OPENAPI_INFO = {
+  title: 'AsiaTravelPlan Mobile API',
+  version: '2026-03-02.1',
+  summary: 'Contract for the in-house iPhone app and the AsiaTravelPlan backend.',
+  description: <<~DESC.strip
+    This contract is generated from the CUE abstract model (model/api, model/entities, model/enums, model/common).
+    It describes the request and response payloads the iPhone app and frontend may rely on.
+
+    Important:
+    - The mobile app must not depend on backend storage details.
+    - Breaking changes should increment the contract version and normally require a mobile app update.
+    - Only these app roles are supported: atp_admin, atp_manager, atp_accountant, atp_staff.
+  DESC
+}.freeze
+
+def openapi_schema_ref(name)
+  { '$ref' => "#/components/schemas/#{name}" }
+end
+
+def openapi_schema_for_field(field, type_index, enum_schema_names)
+  prop = case field.fetch('kind')
+         when 'scalar'
+           case field.fetch('typeName')
+           when 'string', 'Identifier', 'Timestamp', 'Email', 'Url'
+             { type: 'string' }
+           when 'int'
+             { type: 'integer' }
+           when 'bool'
+             { type: 'boolean' }
+           else
+             { type: 'string' }
+           end
+         when 'enum'
+           ref_name = field.fetch('typeName')
+           ref_name = 'ATPCurrencyCode' if ref_name == 'CurrencyCode'
+           ref_name = 'ATPUserRole' if ref_name == 'ATPUserRole'
+           ref_name = 'BookingStage' if ref_name == 'BookingStage'
+           ref_name = 'PaymentStatus' if ref_name == 'PaymentStatus'
+           ref_name = 'PricingAdjustmentType' if ref_name == 'PricingAdjustmentType'
+           openapi_schema_ref(ref_name)
+         when 'entity', 'valueObject', 'transport'
+           openapi_schema_ref(field.fetch('typeName'))
+         else
+           { type: 'string' }
+         end
+
+  prop = { type: 'array', items: prop } if field['isArray']
+  prop[:nullable] = true if field['required'] == false && !field['isArray']
+  prop
+end
+
+def build_openapi_schemas(ir)
+  types = ir.fetch('types')
+  type_index = types.each_with_object({}) { |t, acc| acc[t.fetch('name')] = t }
+
+  enum_schema_names = %w[ATPCurrencyCode ATPUserRole BookingStage PaymentStatus PricingAdjustmentType]
+
+  # Enum schemas from catalogs (camelCase not needed for enum values)
+  schemas = {}
+  schemas['ATPCurrencyCode'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'currencies'))
+  }
+  schemas['ATPUserRole'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'roles'))
+  }
+  schemas['BookingStage'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'stages'))
+  }
+  schemas['PaymentStatus'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'paymentStatuses'))
+  }
+  schemas['PricingAdjustmentType'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'pricingAdjustmentTypes'))
+  }
+
+  # Collect all referenced type names
+  referenced = types.flat_map do |t|
+    t.fetch('fields').map { |f| f.fetch('typeName') if %w[entity valueObject transport enum].include?(f.fetch('kind')) }
+  end.compact.uniq
+  referenced += enum_schema_names
+  referenced.uniq!
+
+  # Placeholder for refs not defined in types (e.g. BookingPricing from CUE but not in IR types list)
+  referenced.each do |name|
+    next if schemas.key?(name)
+    next if type_index.key?(name)
+
+    canonical = name
+    canonical = 'ATPCurrencyCode' if name == 'CurrencyCode'
+    next if schemas.key?(canonical)
+
+    schemas[name] = { type: 'object', description: "Defined in model (referenced as #{name})." }
+  end
+
+  # Object schemas from IR types (camelCase property names)
+  types.each do |type|
+    name = type.fetch('name')
+    fields = type.fetch('fields')
+    properties = {}
+    required = []
+
+    fields.each do |field|
+      prop_name = field.fetch('name')
+      properties[prop_name] = openapi_schema_for_field(field, type_index, enum_schema_names)
+      required << prop_name if field.fetch('required') && !field['isArray']
+    end
+
+    schemas[name] = {
+      type: 'object',
+      required: required,
+      properties: properties
+    }
+  end
+
+  schemas
+end
+
+def build_openapi_paths(endpoints, request_types, response_types)
+  paths = {}
+  endpoints.each do |ep|
+    path = ep.fetch('path')
+    method = ep.fetch('method').downcase
+    paths[path] ||= {}
+    tag = if path.start_with?('/public/') then 'Public'
+           elsif path.include?('auth') then 'Auth'
+           else (path.split('/')[2]&.capitalize || 'API')
+           end
+    op = {
+      summary: ep.fetch('key').split('_').map(&:capitalize).join(' '),
+      tags: [tag],
+      security: ep.fetch('authenticated') ? [{ bearerAuth: [] }] : []
+    }
+    op[:parameters] = (ep['parameters'] || []).map do |p|
+      {
+        name: p.fetch('name'),
+        in: p.fetch('location') == 'path' ? 'path' : 'query',
+        required: p.fetch('required'),
+        schema: { type: 'string' }
+      }
+    end
+    if request_types.include?(ep['requestType'])
+      op[:requestBody] = {
+        required: true,
+        content: {
+          'application/json' => {
+            schema: openapi_schema_ref(ep['requestType'])
+          }
+        }
+      }
+    end
+    response_schema = response_types.include?(ep['responseType']) ? openapi_schema_ref(ep['responseType']) : { type: 'object' }
+    op[:responses] = {
+      '200' => { description: 'Success', content: { 'application/json' => { schema: response_schema } } }
+    }
+    op[:responses]['201'] = { description: 'Created', content: { 'application/json' => { schema: response_schema } } } if ep.fetch('method') == 'POST'
+    op[:responses]['401'] = { description: 'Unauthorized', content: { 'application/json' => { schema: openapi_schema_ref('ErrorResponse') } } } if ep.fetch('authenticated')
+    op[:responses]['403'] = { description: 'Forbidden', content: { 'application/json' => { schema: openapi_schema_ref('ErrorResponse') } } } if ep.fetch('authenticated')
+    paths[path][method] = op
+  end
+  paths
+end
+
+def build_openapi_doc(ir)
+  endpoints = ir.dig('api', 'endpoints') || []
+  types = ir.fetch('types')
+
+  schemas = build_openapi_schemas(ir)
+  request_types = endpoints.map { |e| e['requestType'] }.compact.uniq
+  response_types = endpoints.map { |e| e['responseType'] }.compact.uniq
+
+  {
+    'openapi' => '3.1.0',
+    'info' => OPENAPI_INFO,
+    'servers' => [
+      { url: 'https://api-staging.asiatravelplan.com', description: 'Staging API' },
+      { url: 'http://localhost:8787', description: 'Local development API' }
+    ],
+    'tags' => [
+      { name: 'Auth' },
+      { name: 'Public' },
+      { name: 'Bookings' },
+      { name: 'Customers' },
+      { name: 'Staff' },
+      { name: 'Tours' }
+    ],
+    'components' => {
+      'securitySchemes' => {
+        'bearerAuth' => { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
+      },
+      'schemas' => schemas
+    },
+    'security' => [{ 'bearerAuth' => [] }],
+    'paths' => build_openapi_paths(endpoints, request_types, response_types)
+  }
+end
+
+def deep_stringify_keys(obj)
+  case obj
+  when Hash
+    obj.transform_keys(&:to_s).transform_values { |v| deep_stringify_keys(v) }
+  when Array
+    obj.map { |e| deep_stringify_keys(e) }
+  else
+    obj
+  end
+end
+
+def write_openapi_yaml(path, doc)
+  yaml = YAML.dump(deep_stringify_keys(doc))
+  File.write(path, "# Generated from model/ (CUE) via tools/generator. Do not edit by hand.\n# #{Time.now.utc.iso8601}\n\n" + yaml)
+end
+
 FileUtils.mkdir_p(CONTRACT_GENERATED_DIR)
 OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) }
 
@@ -830,6 +1050,61 @@ write_file(
       endpoints: endpoints
     }
   ) + "\n"
+)
+
+openapi_doc = build_openapi_doc(ir)
+write_openapi_yaml(File.join(CONTRACT_GENERATED_DIR, 'openapi.yaml'), openapi_doc)
+
+# Embed spec in HTML so Redoc never resolves external refs (avoids Node-only lstatSync/process in the bundle).
+openapi_json = JSON.pretty_generate(deep_stringify_keys(openapi_doc))
+openapi_json = openapi_json.gsub('</script>', '\u003c/script>') # avoid closing the script tag in HTML
+
+redoc_head = <<~REDOC_HEAD
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>#{OPENAPI_INFO[:title]} – API Documentation</title>
+    <link href="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="redoc"></div>
+    <script type="application/json" id="openapi-spec">
+REDOC_HEAD
+redoc_tail = <<~REDOC_TAIL
+  </script>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    <script>
+      Redoc.init(JSON.parse(document.getElementById("openapi-spec").textContent), {}, document.getElementById("redoc"));
+    </script>
+  </body>
+  </html>
+REDOC_TAIL
+
+write_file(File.join(CONTRACT_GENERATED_DIR, 'redoc.html'), redoc_head + openapi_json + redoc_tail)
+
+write_file(
+  File.join(CONTRACT_GENERATED_DIR, 'README.md'),
+  <<~README
+    # Generated API contract and docs
+
+    This directory is generated from the CUE model (\`model/\`) by \`tools/generator/generate_mobile_contract_artifacts.rb\`. Do not edit these files by hand.
+
+    - **openapi.yaml** – OpenAPI 3.1 specification (source of truth for mobile and frontend clients).
+    - **mobile-api.meta.json** – Generator metadata (endpoints, catalogs, version).
+    - **redoc.html** – API documentation rendered with [Redoc](https://redoc.ly/).
+
+    ## Viewing the API docs
+
+    Serve this directory over HTTP so `openapi.yaml` can be loaded (e.g. CORS when opening the HTML from file is restricted). From the project root:
+
+    ```bash
+    npx serve api/generated
+    ```
+
+    Then open http://localhost:3000/redoc.html (or the port shown). Alternatively, use any static server (Python \`http.server\`, Ruby \`rackup\`, etc.) pointed at \`api/generated\`.
+  README
 )
 
 backend_model_outputs = {

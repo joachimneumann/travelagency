@@ -46,7 +46,3 @@
             definitions[code] ?? GeneratedCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD")
         }
     }
-
-typealias ATPCurrencyCode = GeneratedCurrencyCode
-typealias ATPCurrencyDefinition = GeneratedCurrencyDefinition
-typealias ATPCurrencyCatalog = GeneratedCurrencyCatalog

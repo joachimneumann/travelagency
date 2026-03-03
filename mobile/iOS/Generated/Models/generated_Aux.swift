@@ -47,6 +47,3 @@ import Foundation
         }
     }
 
-typealias Customer = GeneratedCustomer
-typealias Tour = GeneratedTour
-typealias TourPriceFrom = GeneratedTourPriceFrom
