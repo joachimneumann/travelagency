@@ -1047,10 +1047,12 @@ function chatDayKey(value) {
 function formatChatDayLabel(value) {
   const date = parseChatDate(value);
   if (!date) return "";
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(date.getFullYear());
-  return `${dd}.${mm}.${yyyy}`;
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(date);
 }
 
 function parseDeliveredStatusPayload(textPreview) {
@@ -1089,7 +1091,7 @@ function isDeliveredStatusText(text) {
 
 function buildDeliveredTicksMarkup(isDelivered) {
   if (!isDelivered) return "";
-  return '<span class="wa-meta-ticks" aria-label="delivered">&#10003;&#10003;</span>';
+  return '<span class="wa-meta-ticks" aria-label="delivered">&#10003;</span>';
 }
 
 function renderMetaChatPanel() {
@@ -1133,16 +1135,20 @@ function renderMetaChatPanel() {
         text = parsedStatus.message;
         rowClass = "is-out";
         deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
-        deliveredLine = parsedStatus.status
+        deliveredLine = parsedStatus.status && !isDeliveredStatusText(parsedStatus.status)
           ? `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`
           : "";
       } else if (eventType === "status" && parsedStatus.status) {
         text = "Status update";
         deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
-        deliveredLine = `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`;
+        deliveredLine = isDeliveredStatusText(parsedStatus.status)
+          ? ""
+          : `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`;
       } else if (item?.external_status) {
         deliveredForMeta = isDeliveredStatusText(item.external_status);
-        deliveredLine = `<div class="wa-msg-status"><em>${escapeHtml(String(item.external_status))}</em></div>`;
+        deliveredLine = isDeliveredStatusText(item.external_status)
+          ? ""
+          : `<div class="wa-msg-status"><em>${escapeHtml(String(item.external_status))}</em></div>`;
       }
 
       const safeText = escapeHtml(text);
