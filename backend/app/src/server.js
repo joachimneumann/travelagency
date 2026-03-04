@@ -2851,7 +2851,8 @@ function compactPreviewText(value, fallback = "(event)") {
 function extractWhatsAppMessagePreview(message) {
   const type = normalizeText(message?.type).toLowerCase();
   if (type === "text") {
-    return normalizeText(message?.text?.body) || "[text]";
+    const body = typeof message?.text === "string" ? message?.text : message?.text?.body;
+    return normalizeText(body) || "[text]";
   }
   if (type === "button") {
     return normalizeText(message?.button?.text) || "[button]";
@@ -2859,6 +2860,8 @@ function extractWhatsAppMessagePreview(message) {
   if (type === "interactive") {
     return normalizeText(message?.interactive?.body?.text) || "[interactive]";
   }
+  const fallbackBody = normalizeText(message?.body || message?.message?.body || message?.message?.text?.body || message?.message?.text);
+  if (fallbackBody) return fallbackBody;
   if (type) return `[${type}]`;
   return "(message)";
 }
@@ -3003,7 +3006,7 @@ function findChatMessageTextByExternalMessageId(store, conversationId, externalM
   return normalizeText(matched?.text_preview);
 }
 
-function processWhatsAppMetaChange(store, entry, change) {
+function buildWhatsAppContext(store, entry, change) {
   const value = change?.value && typeof change.value === "object" ? change.value : {};
   const metadata = value?.metadata && typeof value.metadata === "object" ? value.metadata : {};
   const phoneNumberId = normalizeText(metadata.phone_number_id);
@@ -3028,49 +3031,87 @@ function processWhatsAppMetaChange(store, entry, change) {
       .filter(([waId]) => Boolean(waId))
   );
 
+  return { value, account, displayPhone, contacts, contactMap };
+}
+
+function findOrCreateWhatsAppConversation(store, account, waId) {
+  const normalizedWaId = normalizeText(waId);
+  if (!normalizedWaId) return null;
+  const matchedCustomer = resolveCustomerByExternalContact(store, normalizedWaId);
+  const matchedBooking = resolveBookingForCustomer(store, matchedCustomer?.id || null);
+  return findOrCreateMetaConversation(store, {
+    channel: "whatsapp",
+    externalConversationId: normalizedWaId,
+    externalContactId: normalizedWaId,
+    channelAccountId: account?.id || "",
+    customerId: matchedCustomer?.id || null,
+    bookingId: matchedBooking?.id || null
+  });
+}
+
+function coerceWhatsAppMessagePayload(rawMessage) {
+  const source = rawMessage && typeof rawMessage === "object" ? rawMessage : {};
+  const nested = source?.message && typeof source.message === "object" ? source.message : null;
+  if (!nested) return source;
+  return {
+    ...nested,
+    id: normalizeText(source?.id) || normalizeText(nested?.id),
+    from: normalizeText(source?.from) || normalizeText(nested?.from),
+    to: normalizeText(source?.to) || normalizeText(nested?.to),
+    timestamp: normalizeText(source?.timestamp) || normalizeText(nested?.timestamp)
+  };
+}
+
+function resolveWhatsAppDirectionAndContact(message, displayPhone, fallbackContact = "") {
+  const from = normalizeText(message?.from);
+  const to = normalizeText(message?.to);
+  const outboundFromBusiness = Boolean(displayPhone && from) && isLikelyPhoneMatch(from, displayPhone);
+  const inboundToBusiness = Boolean(displayPhone && to) && isLikelyPhoneMatch(to, displayPhone);
+
+  if (outboundFromBusiness) {
+    return { direction: "outbound", contactId: normalizeText(to || fallbackContact) };
+  }
+  if (inboundToBusiness) {
+    return { direction: "inbound", contactId: normalizeText(from || fallbackContact) };
+  }
+  return { direction: "inbound", contactId: normalizeText(from || to || fallbackContact) };
+}
+
+function processWhatsAppMetaChange(store, entry, change) {
+  const { value, account, displayPhone, contacts, contactMap } = buildWhatsAppContext(store, entry, change);
   let inserted = 0;
   let ignored = 0;
 
   const messages = Array.isArray(value?.messages) ? value.messages : [];
-  for (const message of messages) {
-    const messageFrom = normalizeText(message?.from || "");
-    const outboundFromBusiness = Boolean(displayPhone) && isLikelyPhoneMatch(messageFrom, displayPhone);
-    const waId = outboundFromBusiness
-      ? normalizeText(message?.to || contacts?.[0]?.wa_id || "")
-      : messageFrom;
+  const messageEchoes = Array.isArray(value?.message_echoes) ? value.message_echoes : [];
+  const combinedMessages = [...messages, ...messageEchoes];
+  for (const rawMessage of combinedMessages) {
+    const message = coerceWhatsAppMessagePayload(rawMessage);
+    const directionInfo = resolveWhatsAppDirectionAndContact(message, displayPhone, contacts?.[0]?.wa_id || "");
+    const waId = normalizeText(directionInfo.contactId);
     if (!waId) {
       ignored += 1;
       continue;
     }
-    const matchedCustomer = resolveCustomerByExternalContact(store, waId);
-    const matchedBooking = resolveBookingForCustomer(store, matchedCustomer?.id || null);
-    const conversation = findOrCreateMetaConversation(store, {
-      channel: "whatsapp",
-      externalConversationId: waId,
-      externalContactId: waId,
-      channelAccountId: account?.id || "",
-      customerId: matchedCustomer?.id || null,
-      bookingId: matchedBooking?.id || null
-    });
+    const conversation = findOrCreateWhatsAppConversation(store, account, waId);
     if (!conversation) {
       ignored += 1;
       continue;
     }
 
     const profileName = normalizeText(contactMap.get(waId)?.profile?.name);
-    const direction = outboundFromBusiness ? "outbound" : "inbound";
     const result = appendMetaChatEvent(store, {
       conversation_id: conversation.id,
       channel: "whatsapp",
       event_type: "message",
-      direction,
+      direction: directionInfo.direction,
       external_message_id: normalizeText(message?.id),
       external_status: null,
-      sender_display: outboundFromBusiness ? "business" : profileName || waId,
-      sender_contact: outboundFromBusiness ? displayPhone || messageFrom : waId,
+      sender_display: directionInfo.direction === "outbound" ? "business" : profileName || waId,
+      sender_contact: directionInfo.direction === "outbound" ? displayPhone || normalizeText(message?.from) : waId,
       text_preview: extractWhatsAppMessagePreview(message),
       sent_at: message?.timestamp,
-      payload_json: message
+      payload_json: rawMessage
     });
     if (result.inserted) inserted += 1;
     else ignored += 1;
@@ -3078,39 +3119,158 @@ function processWhatsAppMetaChange(store, entry, change) {
 
   const statuses = Array.isArray(value?.statuses) ? value.statuses : [];
   for (const status of statuses) {
-    const waId = normalizeText(status?.recipient_id || "");
+    const waId = normalizeText(status?.recipient_id || status?.to || status?.recipient || "");
     if (!waId) {
       ignored += 1;
       continue;
     }
-    const matchedCustomer = resolveCustomerByExternalContact(store, waId);
-    const matchedBooking = resolveBookingForCustomer(store, matchedCustomer?.id || null);
-    const conversation = findOrCreateMetaConversation(store, {
-      channel: "whatsapp",
-      externalConversationId: waId,
-      externalContactId: waId,
-      channelAccountId: account?.id || "",
-      customerId: matchedCustomer?.id || null,
-      bookingId: matchedBooking?.id || null
-    });
+    const conversation = findOrCreateWhatsAppConversation(store, account, waId);
     if (!conversation) {
       ignored += 1;
       continue;
     }
     const statusCode = normalizeText(status?.status).toLowerCase() || "unknown";
-    const relatedMessageText = findChatMessageTextByExternalMessageId(store, conversation.id, normalizeText(status?.id));
+    const externalStatusMessageId = normalizeText(status?.id || status?.message_id || status?.meta_msg_id);
+    const relatedMessageText = findChatMessageTextByExternalMessageId(store, conversation.id, externalStatusMessageId);
     const result = appendMetaChatEvent(store, {
       conversation_id: conversation.id,
       channel: "whatsapp",
       event_type: "status",
       direction: "outbound",
-      external_message_id: normalizeText(status?.id),
+      external_message_id: externalStatusMessageId,
       external_status: statusCode,
       sender_display: "business",
       sender_contact: displayPhone || null,
       text_preview: relatedMessageText ? `Status: ${statusCode} - ${relatedMessageText}` : `Status: ${statusCode}`,
       sent_at: status?.timestamp,
       payload_json: status
+    });
+    if (result.inserted) inserted += 1;
+    else ignored += 1;
+  }
+
+  return { inserted, ignored };
+}
+
+function processWhatsAppMessageEchoesChange(store, entry, change) {
+  const { value, account, displayPhone, contacts, contactMap } = buildWhatsAppContext(store, entry, change);
+  let inserted = 0;
+  let ignored = 0;
+  const echoes = Array.isArray(value?.message_echoes) ? value.message_echoes : [];
+
+  for (const rawEcho of echoes) {
+    const echo = coerceWhatsAppMessagePayload(rawEcho);
+    const directionInfo = resolveWhatsAppDirectionAndContact(echo, displayPhone, contacts?.[0]?.wa_id || "");
+    const waId = normalizeText(directionInfo.contactId);
+    if (!waId) {
+      ignored += 1;
+      continue;
+    }
+    const conversation = findOrCreateWhatsAppConversation(store, account, waId);
+    if (!conversation) {
+      ignored += 1;
+      continue;
+    }
+
+    const profileName = normalizeText(contactMap.get(waId)?.profile?.name);
+    const result = appendMetaChatEvent(store, {
+      conversation_id: conversation.id,
+      channel: "whatsapp",
+      event_type: "message",
+      direction: directionInfo.direction,
+      external_message_id: normalizeText(echo?.id),
+      external_status: null,
+      sender_display: directionInfo.direction === "outbound" ? "business" : profileName || waId,
+      sender_contact: directionInfo.direction === "outbound" ? displayPhone || normalizeText(echo?.from) : waId,
+      text_preview: extractWhatsAppMessagePreview(echo),
+      sent_at: echo?.timestamp,
+      payload_json: rawEcho
+    });
+    if (result.inserted) inserted += 1;
+    else ignored += 1;
+  }
+
+  return { inserted, ignored };
+}
+
+function processWhatsAppHistoryChange(store, entry, change) {
+  const { value, account, displayPhone, contacts } = buildWhatsAppContext(store, entry, change);
+  let inserted = 0;
+  let ignored = 0;
+  const historyItems = Array.isArray(value?.history) ? value.history : [];
+
+  for (const historyItem of historyItems) {
+    const fallbackContact = normalizeText(historyItem?.wa_id || historyItem?.chat_id || historyItem?.contact?.wa_id || contacts?.[0]?.wa_id || "");
+    const messageItems = Array.isArray(historyItem?.messages) ? historyItem.messages : [historyItem];
+    for (const rawMessage of messageItems) {
+      const message = coerceWhatsAppMessagePayload(rawMessage);
+      const directionInfo = resolveWhatsAppDirectionAndContact(message, displayPhone, fallbackContact);
+      const waId = normalizeText(directionInfo.contactId);
+      if (!waId) {
+        ignored += 1;
+        continue;
+      }
+      const conversation = findOrCreateWhatsAppConversation(store, account, waId);
+      if (!conversation) {
+        ignored += 1;
+        continue;
+      }
+
+      const historyStatus = normalizeText(message?.history_context?.status).toLowerCase();
+      const eventType = historyStatus ? "status" : "message";
+      const textPreview = historyStatus ? `History status: ${historyStatus}` : extractWhatsAppMessagePreview(message);
+      const result = appendMetaChatEvent(store, {
+        conversation_id: conversation.id,
+        channel: "whatsapp",
+        event_type: eventType,
+        direction: directionInfo.direction,
+        external_message_id: normalizeText(message?.id),
+        external_status: historyStatus || null,
+        sender_display: directionInfo.direction === "outbound" ? "business" : waId,
+        sender_contact: directionInfo.direction === "outbound" ? displayPhone || normalizeText(message?.from) : waId,
+        text_preview: textPreview,
+        sent_at: message?.timestamp || value?.timestamp,
+        payload_json: rawMessage
+      });
+      if (result.inserted) inserted += 1;
+      else ignored += 1;
+    }
+  }
+
+  return { inserted, ignored };
+}
+
+function processWhatsAppAppStateSyncChange(store, entry, change) {
+  const { value, account, displayPhone, contactMap } = buildWhatsAppContext(store, entry, change);
+  let inserted = 0;
+  let ignored = 0;
+  const contacts = Array.isArray(value?.contacts) ? value.contacts : [];
+
+  for (const contact of contacts) {
+    const waId = normalizeText(contact?.wa_id || contact?.id || contact?.phone || "");
+    if (!waId) {
+      ignored += 1;
+      continue;
+    }
+    const conversation = findOrCreateWhatsAppConversation(store, account, waId);
+    if (!conversation) {
+      ignored += 1;
+      continue;
+    }
+    const profileName = normalizeText(contactMap.get(waId)?.profile?.name || contact?.profile?.name);
+    const appState = normalizeText(contact?.state || contact?.status || contact?.app_state || "updated").toLowerCase();
+    const result = appendMetaChatEvent(store, {
+      conversation_id: conversation.id,
+      channel: "whatsapp",
+      event_type: "status",
+      direction: "inbound",
+      external_message_id: normalizeText(contact?.id) || `app_state_sync_${waId}`,
+      external_status: "app_state_sync",
+      sender_display: profileName || waId,
+      sender_contact: waId,
+      text_preview: `App state sync: ${appState}`,
+      sent_at: value?.timestamp || nowIso(),
+      payload_json: contact
     });
     if (result.inserted) inserted += 1;
     else ignored += 1;
@@ -3192,8 +3352,19 @@ function processMetaWebhookPayload(store, payload) {
     for (const entry of entries) {
       const changes = Array.isArray(entry?.changes) ? entry.changes : [];
       for (const change of changes) {
-        if (normalizeText(change?.field) !== "messages") continue;
-        const result = processWhatsAppMetaChange(store, entry, change);
+        const field = normalizeText(change?.field).toLowerCase();
+        let result = null;
+        if (field === "messages") {
+          result = processWhatsAppMetaChange(store, entry, change);
+        } else if (field === "smb_message_echoes") {
+          result = processWhatsAppMessageEchoesChange(store, entry, change);
+        } else if (field === "history") {
+          result = processWhatsAppHistoryChange(store, entry, change);
+        } else if (field === "smb_app_state_sync") {
+          result = processWhatsAppAppStateSyncChange(store, entry, change);
+        } else {
+          continue;
+        }
         inserted += result.inserted;
         ignored += result.ignored;
       }
