@@ -40,6 +40,15 @@ const META_WEBHOOK_VERIFY_TOKEN = normalizeText(process.env.META_WEBHOOK_VERIFY_
 const WHATSAPP_WEBHOOK_VERIFY_TOKEN = normalizeText(process.env.WHATSAPP_VERIFY_TOKEN || "");
 const META_APP_SECRET = normalizeText(process.env.META_APP_SECRET || "");
 const WHATSAPP_APP_SECRET = normalizeText(process.env.WHATSAPP_APP_SECRET || "");
+const META_WEBHOOK_STATUS = {
+  verify_requests: 0,
+  ingest_requests: 0,
+  signature_failures: 0,
+  json_parse_failures: 0,
+  last_verify_at: null,
+  last_ingest_at: null,
+  last_result: null
+};
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -205,6 +214,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const routes = [
     ...auth.routes,
     { method: "GET", pattern: /^\/health$/, handler: handleHealth },
+    { method: "GET", pattern: /^\/integrations\/meta\/webhook\/status$/, handler: handleMetaWebhookStatus },
     { method: "GET", pattern: /^\/api\/whatsapp\/webhook$/, handler: handleMetaWebhookVerify },
     { method: "POST", pattern: /^\/api\/whatsapp\/webhook$/, handler: handleMetaWebhookIngest },
     { method: "GET", pattern: /^\/integrations\/meta\/webhook$/, handler: handleMetaWebhookVerify },
@@ -2773,13 +2783,13 @@ function compactPreviewText(value, fallback = "(event)") {
 function extractWhatsAppMessagePreview(message) {
   const type = normalizeText(message?.type).toLowerCase();
   if (type === "text") {
-    return compactPreviewText(message?.text?.body, "[text]");
+    return normalizeText(message?.text?.body) || "[text]";
   }
   if (type === "button") {
-    return compactPreviewText(message?.button?.text, "[button]");
+    return normalizeText(message?.button?.text) || "[button]";
   }
   if (type === "interactive") {
-    return compactPreviewText(message?.interactive?.body?.text, "[interactive]");
+    return normalizeText(message?.interactive?.body?.text) || "[interactive]";
   }
   if (type) return `[${type}]`;
   return "(message)";
@@ -3134,6 +3144,8 @@ function isMetaWebhookConfigured() {
 }
 
 async function handleMetaWebhookVerify(req, res) {
+  META_WEBHOOK_STATUS.verify_requests += 1;
+  META_WEBHOOK_STATUS.last_verify_at = nowIso();
   if (!isMetaWebhookConfigured()) {
     sendJson(res, 503, { error: "Meta webhook is disabled" });
     return;
@@ -3154,6 +3166,8 @@ async function handleMetaWebhookVerify(req, res) {
 }
 
 async function handleMetaWebhookIngest(req, res) {
+  META_WEBHOOK_STATUS.ingest_requests += 1;
+  META_WEBHOOK_STATUS.last_ingest_at = nowIso();
   if (!isMetaWebhookConfigured()) {
     sendJson(res, 503, { error: "Meta webhook is disabled" });
     return;
@@ -3168,6 +3182,7 @@ async function handleMetaWebhookIngest(req, res) {
   }
 
   if (!verifyMetaWebhookSignature(req, rawBody)) {
+    META_WEBHOOK_STATUS.signature_failures += 1;
     sendJson(res, 401, { error: "Invalid Meta signature" });
     return;
   }
@@ -3176,6 +3191,7 @@ async function handleMetaWebhookIngest(req, res) {
   try {
     payload = JSON.parse(rawBody.toString("utf8"));
   } catch {
+    META_WEBHOOK_STATUS.json_parse_failures += 1;
     sendJson(res, 400, { error: "Invalid JSON payload" });
     return;
   }
@@ -3185,12 +3201,44 @@ async function handleMetaWebhookIngest(req, res) {
   if (result.inserted > 0) {
     await persistStore(store);
   }
+  META_WEBHOOK_STATUS.last_result = {
+    at: nowIso(),
+    object: normalizeText(payload?.object).toLowerCase() || "unknown",
+    entry_count: Array.isArray(payload?.entry) ? payload.entry.length : 0,
+    channel: result.channel,
+    inserted: result.inserted,
+    ignored: result.ignored,
+    sample_entry_id: normalizeText(payload?.entry?.[0]?.id),
+    sample_change_field: normalizeText(payload?.entry?.[0]?.changes?.[0]?.field),
+    sample_from: normalizeText(payload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.from)
+  };
   sendJson(res, 200, {
     ok: true,
     mode: "read_only",
     channel: result.channel,
     inserted: result.inserted,
     ignored: result.ignored
+  });
+}
+
+async function handleMetaWebhookStatus(_req, res) {
+  sendJson(res, 200, {
+    ok: true,
+    mode: "read_only",
+    configured: {
+      webhook_enabled: isMetaWebhookConfigured(),
+      verify_token_set: Boolean(META_WEBHOOK_VERIFY_TOKEN || WHATSAPP_WEBHOOK_VERIFY_TOKEN),
+      app_secret_set: Boolean(META_APP_SECRET || WHATSAPP_APP_SECRET)
+    },
+    counters: {
+      verify_requests: META_WEBHOOK_STATUS.verify_requests,
+      ingest_requests: META_WEBHOOK_STATUS.ingest_requests,
+      signature_failures: META_WEBHOOK_STATUS.signature_failures,
+      json_parse_failures: META_WEBHOOK_STATUS.json_parse_failures
+    },
+    last_verify_at: META_WEBHOOK_STATUS.last_verify_at,
+    last_ingest_at: META_WEBHOOK_STATUS.last_ingest_at,
+    last_result: META_WEBHOOK_STATUS.last_result
   });
 }
 
