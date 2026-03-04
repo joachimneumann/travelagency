@@ -42,7 +42,7 @@ staging.asiatravelplan.com {
   @robots path /robots.txt
   rewrite @robots /robots-staging.txt
 
-  @backend path /auth/* /api/* /public/v1/*
+  @backend path /auth/* /api/* /public/v1/* /integrations/*
   handle @backend {
     reverse_proxy backend:8787
   }
