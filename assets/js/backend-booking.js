@@ -952,36 +952,41 @@ async function loadBookingChat() {
   renderMetaChatPanel();
 }
 
+function normalizePhoneDigits(value) {
+  return String(value || "").replace(/[^\d]/g, "");
+}
+
+function resolveChatPhoneNumber(items) {
+  const customerPhone = String(state.customer?.phone || "").trim();
+  if (customerPhone) return customerPhone;
+  const firstSender = (Array.isArray(items) ? items : []).find((item) => String(item?.sender_contact || "").trim());
+  return String(firstSender?.sender_contact || "").trim();
+}
+
 function renderMetaChatPanel() {
   if (!els.metaChatTable) return;
   const items = Array.isArray(state.chat.items) ? state.chat.items : [];
-  const conversations = Array.isArray(state.chat.conversations) ? state.chat.conversations : [];
 
   if (els.metaChatSummary) {
-    const summaryText = conversations.length
-      ? `${conversations.length} conversation(s), ${items.length} event(s) shown`
-      : "No chat data yet.";
-    els.metaChatSummary.textContent = summaryText;
+    const phone = resolveChatPhoneNumber(items) || "-";
+    const waDigits = normalizePhoneDigits(phone);
+    const waUrl = waDigits ? `https://wa.me/${waDigits}` : "";
+    const button = waUrl
+      ? `<a class="btn btn-ghost" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener">WhatsApp</a>`
+      : `<span class="btn btn-ghost" aria-disabled="true">WhatsApp</span>`;
+    els.metaChatSummary.innerHTML = `Channel: WhatsApp | Phone: ${escapeHtml(phone)} | ${button}`;
   }
 
-  const header = "<thead><tr><th>Time</th><th>Channel</th><th>Direction</th><th>Contact</th><th>Message</th><th>Status</th><th>Open</th></tr></thead>";
+  const header = "<thead><tr><th>Time</th><th>Message</th></tr></thead>";
   const rows = items
     .map((item) => {
-      const open = item.open_url
-        ? `<a class="btn btn-ghost" href="${escapeHtml(item.open_url)}" target="_blank" rel="noopener">Open</a>`
-        : "-";
       return `<tr>
         <td>${escapeHtml(formatDateTime(item.sent_at))}</td>
-        <td>${escapeHtml(String(item.channel || "-").toUpperCase())}</td>
-        <td>${escapeHtml(String(item.direction || "-").toUpperCase())}</td>
-        <td>${escapeHtml(item.sender_contact || item.sender_display || "-")}</td>
         <td>${escapeHtml(item.text_preview || "-")}</td>
-        <td>${escapeHtml(item.external_status || "-")}</td>
-        <td>${open}</td>
       </tr>`;
     })
     .join("");
-  const body = rows || '<tr><td colspan="7">No chat events for this booking/customer yet</td></tr>';
+  const body = rows || '<tr><td colspan="2">No chat events for this booking/customer yet</td></tr>';
   els.metaChatTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
