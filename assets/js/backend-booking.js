@@ -1022,6 +1022,11 @@ function resolveChatPhoneNumber(items) {
 function renderMetaChatPanel() {
   if (!els.metaChatTable) return;
   const items = Array.isArray(state.chat.items) ? state.chat.items : [];
+  const orderedItems = [...items].sort((left, right) => {
+    const leftTime = String(left?.sent_at || left?.created_at || "");
+    const rightTime = String(right?.sent_at || right?.created_at || "");
+    return leftTime.localeCompare(rightTime);
+  });
 
   if (els.metaChatSummary) {
     const phone = resolveChatPhoneNumber(items) || "-";
@@ -1033,17 +1038,28 @@ function renderMetaChatPanel() {
     els.metaChatSummary.innerHTML = `Channel: WhatsApp | Phone: ${escapeHtml(phone)} | ${button}`;
   }
 
-  const header = "<thead><tr><th>Time</th><th>Message</th></tr></thead>";
-  const rows = items
+  const rows = orderedItems
     .map((item) => {
-      return `<tr>
-        <td>${escapeHtml(formatDateTime(item.sent_at))}</td>
-        <td>${escapeHtml(item.text_preview || "-")}</td>
-      </tr>`;
+      const direction = String(item?.direction || "").toLowerCase();
+      const eventType = String(item?.event_type || "").toLowerCase();
+      const rowClass = eventType === "status" ? "is-status" : direction === "outbound" ? "is-out" : "is-in";
+      const text = escapeHtml(item?.text_preview || "-");
+      const time = escapeHtml(formatDateTime(item?.sent_at || item?.created_at));
+      const status = escapeHtml(item?.external_status || "");
+      const metaLine = status ? `${time} · ${status}` : time;
+      return `<div class="wa-msg-row ${rowClass}">
+        <div class="wa-msg-bubble">
+          <div class="wa-msg-text">${text}</div>
+          <div class="wa-msg-meta">${metaLine}</div>
+        </div>
+      </div>`;
     })
     .join("");
-  const body = rows || '<tr><td colspan="2">No chat events for this booking/customer yet</td></tr>';
-  els.metaChatTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.metaChatTable.innerHTML = rows || '<div class="wa-empty">No chat events for this booking/customer yet</div>';
+  const canvas = els.metaChatTable.parentElement;
+  if (canvas) {
+    canvas.scrollTop = canvas.scrollHeight;
+  }
 }
 
 function renderActivitiesTable(items) {
