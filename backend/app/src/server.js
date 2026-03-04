@@ -251,11 +251,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
     { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
     { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
     { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handleUploadTourImage },
-    { method: "GET", pattern: /^\/admin$/, handler: handleAdminHome },
-    { method: "GET", pattern: /^\/admin\/customers$/, handler: handleAdminCustomersPage },
-    { method: "GET", pattern: /^\/admin\/customers\/([^/]+)$/, handler: handleAdminCustomerDetailPage },
-    { method: "GET", pattern: /^\/admin\/bookings$/, handler: handleAdminBookingsPage },
-    { method: "GET", pattern: /^\/admin\/bookings\/([^/]+)$/, handler: handleAdminBookingDetailPage }
   ];
 
   return async function backendHandler(req, res) {
@@ -271,16 +266,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
 
       const requestUrl = new URL(req.url, "http://localhost");
       const pathname = requestUrl.pathname;
-
-      if (pathname.startsWith("/admin") && auth.isKeycloakEnabled()) {
-        const sessionPrincipal = auth.getSessionPrincipal(req);
-        if (!sessionPrincipal) {
-          const returnTo = `${pathname}${requestUrl.search || ""}`;
-          redirect(res, auth.getLoginRedirect(returnTo));
-          return;
-        }
-        req.authz = { ok: true, principal: sessionPrincipal };
-      }
 
       if (pathname.startsWith("/api/v1/")) {
         const authz = await auth.authorizeApiRequest(req, requestUrl);
@@ -381,8 +366,8 @@ function sendHtml(res, status, html) {
 }
 
 function sendBackendNotFound(res, pathname = "") {
-  const backHref = pathname.startsWith("/admin") ? "/admin" : "/";
-  const backLabel = pathname.startsWith("/admin") ? "Back to backend" : "Back to website";
+  const backHref = "/";
+  const backLabel = "Back to website";
 
   sendHtml(
     res,
