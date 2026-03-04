@@ -433,7 +433,11 @@ function renderBookings(items) {
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="7">No bookings found</td></tr>`;
+  const body =
+    rows ||
+    `<tr><td colspan="7">${escapeHtml(
+      `No bookings found${state.bookings.search ? ` for "${state.bookings.search}"` : ""}`
+    )}</td></tr>`;
   if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 

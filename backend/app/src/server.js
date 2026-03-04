@@ -2742,6 +2742,8 @@ function filterAndSortBookings(store, query) {
   const ownerId = normalizeText(query.get("owner_id"));
   const rawSearch = normalizeText(query.get("search")).toLowerCase();
   const search = rawSearch.replace(/[^a-z0-9]+/g, "");
+  const searchDigits = rawSearch.replace(/[^0-9]+/g, "");
+  const searchLetters = rawSearch.replace(/[^a-z]+/g, "");
   const sort = normalizeText(query.get("sort")) || "created_at_desc";
   const customersById = getBookingCustomerLookup(store);
   ensureMetaChatCollections(store);
@@ -2815,7 +2817,17 @@ function filterAndSortBookings(store, query) {
       .join(" ")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "");
-    return haystack.includes(search);
+    return (
+      haystack.includes(rawSearch) ||
+      haystack.includes(search) ||
+      (searchDigits && haystack.includes(searchDigits)) ||
+      (searchLetters && haystack.includes(searchLetters)) ||
+      Boolean(
+        searchDigits &&
+          searchLetters &&
+          haystack.includes(`${searchDigits}${searchLetters}`)
+      )
+    );
   });
 
   const sorted = [...filtered].sort((a, b) => {
