@@ -914,14 +914,33 @@ function normalizeVietnamPhoneForMatch(value) {
 }
 
 function isLikelyPhoneMatch(leftRaw, rightRaw) {
+  const leftDigits = normalizePhoneDigits(leftRaw);
+  const rightDigits = normalizePhoneDigits(rightRaw);
+  if (!leftDigits || !rightDigits) return false;
+
   const left = normalizeVietnamPhoneForMatch(leftRaw);
   const right = normalizeVietnamPhoneForMatch(rightRaw);
-  if (!left || !right) return false;
-  if (left === right) return true;
-  const minLen = Math.min(left.length, right.length);
-  if (minLen < 9) return false;
-  const tailLength = Math.min(10, minLen);
-  return left.slice(-tailLength) === right.slice(-tailLength);
+  const leftCandidates = new Set([leftDigits, left].filter(Boolean));
+  const rightCandidates = new Set([rightDigits, right].filter(Boolean));
+
+  if (leftCandidates.has(rightDigits) || rightCandidates.has(leftDigits)) {
+    return true;
+  }
+
+  for (const leftValue of leftCandidates) {
+    for (const rightValue of rightCandidates) {
+      if (!leftValue || !rightValue) continue;
+      if (leftValue === rightValue) return true;
+
+      const minLen = Math.min(leftValue.length, rightValue.length);
+      if (minLen < 9) continue;
+      for (let tailLength = Math.min(10, minLen); tailLength >= 9; tailLength -= 1) {
+        if (leftValue.slice(-tailLength) === rightValue.slice(-tailLength)) return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 function resolveCustomerByExternalContact(store, externalContactId) {
@@ -2799,10 +2818,9 @@ function filterAndSortBookings(store, query) {
 
   const bookingChatTextMap = new Map();
   for (const event of store.chat_events) {
-    if (normalizeText(event.event_type).toLowerCase() !== "message") continue;
     const conversationId = normalizeText(event.conversation_id);
-    const messageText = normalizeText(event.text_preview).toLowerCase();
-    if (!messageText) continue;
+    const eventText = normalizeText(event.text_preview).toLowerCase();
+    if (!eventText) continue;
 
     const matchedBookingIds = new Set(conversationBookingIds.get(conversationId) || []);
     if (!matchedBookingIds.size) {
@@ -2821,18 +2839,18 @@ function filterAndSortBookings(store, query) {
     }
     if (!matchedBookingIds.size) continue;
 
-    const normalizedMessage = messageText.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const normalizedMessage = eventText.toLowerCase().replace(/[^a-z0-9]+/g, "");
     const messageVariants = [
-      messageText,
+      eventText,
       normalizedMessage,
-      messageText.replace(/\s+/g, ""),
+      eventText.replace(/\s+/g, ""),
       normalizedMessage.replace(/[^0-9]+/g, ""),
       normalizedMessage.replace(/[^a-z]+/g, "")
     ];
 
     const nextText = messageVariants.some((variant) => String(variant || "").trim())
       ? [...new Set(messageVariants)].join(" ")
-      : messageText;
+      : eventText;
 
     for (const bookingId of matchedBookingIds) {
       const existing = bookingChatTextMap.get(bookingId) || "";
