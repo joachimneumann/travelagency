@@ -90,7 +90,10 @@ const state = {
   },
   chat: {
     items: [],
-    conversations: []
+    conversations: [],
+    initialized: false,
+    pollTimer: null,
+    isPolling: false
   }
 };
 
@@ -155,6 +158,12 @@ function setOfferSaveEnabled(enabled) {
 }
 
 init();
+window.addEventListener("beforeunload", () => {
+  if (state.chat.pollTimer) {
+    window.clearInterval(state.chat.pollTimer);
+    state.chat.pollTimer = null;
+  }
+});
 
 async function init() {
   const backParams = new URLSearchParams({ user: state.user });
@@ -234,6 +243,7 @@ async function loadBookingPage() {
   await loadActivities();
   await loadBookingChat();
   await loadInvoices();
+  startBookingChatAutoRefresh();
 }
 
 async function loadCustomer() {
@@ -943,13 +953,59 @@ async function loadActivities() {
   renderActivitiesTable(payload.items || []);
 }
 
-async function loadBookingChat() {
+async function loadBookingChat({ fromPoll = false } = {}) {
   if (!state.booking || !els.metaChatTable) return;
+  const previousIds = new Set((Array.isArray(state.chat.items) ? state.chat.items : []).map((item) => String(item?.id || "")));
   const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/chat?limit=100`);
   if (!payload) return;
-  state.chat.items = Array.isArray(payload.items) ? payload.items : [];
+  const nextItems = Array.isArray(payload.items) ? payload.items : [];
+  const newlyArrived = nextItems.filter((item) => {
+    const id = String(item?.id || "");
+    return id && !previousIds.has(id);
+  });
+  const inboundNew = newlyArrived.filter((item) => String(item?.direction || "").toLowerCase() === "inbound");
+  state.chat.items = nextItems;
   state.chat.conversations = Array.isArray(payload.conversations) ? payload.conversations : [];
   renderMetaChatPanel();
+  if (fromPoll && state.chat.initialized && inboundNew.length) {
+    notifyNewChatMessages(inboundNew);
+  }
+  state.chat.initialized = true;
+}
+
+function startBookingChatAutoRefresh() {
+  if (!state.booking || state.chat.pollTimer) return;
+  state.chat.pollTimer = window.setInterval(async () => {
+    if (state.chat.isPolling) return;
+    state.chat.isPolling = true;
+    try {
+      await loadBookingChat({ fromPoll: true });
+    } finally {
+      state.chat.isPolling = false;
+    }
+  }, 10000);
+}
+
+function notifyNewChatMessages(items) {
+  const count = Array.isArray(items) ? items.length : 0;
+  if (!count) return;
+  const newest = items[0];
+  const summary = count === 1 ? "New WhatsApp message received." : `${count} new WhatsApp messages received.`;
+  setStatus(summary);
+
+  if (!("Notification" in window)) return;
+  const body = String(newest?.text_preview || "Open booking chat to read.");
+  if (Notification.permission === "granted") {
+    new Notification("WhatsApp message", { body });
+    return;
+  }
+  if (Notification.permission === "default") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        new Notification("WhatsApp message", { body });
+      }
+    });
+  }
 }
 
 function normalizePhoneDigits(value) {
