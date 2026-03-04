@@ -2741,6 +2741,7 @@ function filterAndSortBookings(store, query) {
   const stage = normalizeStageFilter(query.get("stage"));
   const ownerId = normalizeText(query.get("owner_id"));
   const rawSearch = normalizeText(query.get("search")).toLowerCase();
+  const rawSearchNoSpace = rawSearch.replace(/\s+/g, "");
   const search = rawSearch.replace(/[^a-z0-9]+/g, "");
   const searchDigits = rawSearch.replace(/[^0-9]+/g, "");
   const searchLetters = rawSearch.replace(/[^a-z]+/g, "");
@@ -2749,6 +2750,12 @@ function filterAndSortBookings(store, query) {
   ensureMetaChatCollections(store);
 
   const conversationBookingIds = new Map();
+  const conversationIdToConversation = new Map();
+  const bookingCustomerPhones = store.bookings.map((booking) => {
+    const customer = customersById.get(booking.customer_id);
+    return { bookingId: booking.id, phone: customer?.phone || "" };
+  });
+
   for (const conversation of store.chat_conversations) {
     const conversationId = normalizeText(conversation.id);
     if (!conversationId) continue;
@@ -2778,19 +2785,58 @@ function filterAndSortBookings(store, query) {
     if (matchedBookingIds.size > 0) {
       conversationBookingIds.set(conversationId, [...matchedBookingIds]);
     }
+    conversationIdToConversation.set(conversationId, conversation);
   }
+
+  const getBookingIdsFromPhoneMatch = (phone) => {
+    const matched = new Set();
+    for (const entry of bookingCustomerPhones) {
+      if (!entry.phone || !phone) continue;
+      if (isLikelyPhoneMatch(entry.phone, phone)) matched.add(entry.bookingId);
+    }
+    return matched;
+  };
 
   const bookingChatTextMap = new Map();
   for (const event of store.chat_events) {
     if (normalizeText(event.event_type).toLowerCase() !== "message") continue;
     const conversationId = normalizeText(event.conversation_id);
-    const matchedBookingIds = conversationBookingIds.get(conversationId);
     const messageText = normalizeText(event.text_preview).toLowerCase();
-    if (!matchedBookingIds?.length || !messageText) continue;
+    if (!messageText) continue;
+
+    const matchedBookingIds = new Set(conversationBookingIds.get(conversationId) || []);
+    if (!matchedBookingIds.size) {
+      const senderContact = normalizePhoneDigits(event.sender_contact);
+      if (senderContact) {
+        for (const id of getBookingIdsFromPhoneMatch(senderContact)) matchedBookingIds.add(id);
+      }
+    }
+
+    if (!matchedBookingIds.size) {
+      const conversation = conversationIdToConversation.get(conversationId);
+      const conversationContact = conversation ? normalizePhoneDigits(conversation.external_contact_id) : "";
+      if (conversationContact) {
+        for (const id of getBookingIdsFromPhoneMatch(conversationContact)) matchedBookingIds.add(id);
+      }
+    }
+    if (!matchedBookingIds.size) continue;
+
+    const normalizedMessage = messageText.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const messageVariants = [
+      messageText,
+      normalizedMessage,
+      messageText.replace(/\s+/g, ""),
+      normalizedMessage.replace(/[^0-9]+/g, ""),
+      normalizedMessage.replace(/[^a-z]+/g, "")
+    ];
+
+    const nextText = messageVariants.some((variant) => String(variant || "").trim())
+      ? [...new Set(messageVariants)].join(" ")
+      : messageText;
 
     for (const bookingId of matchedBookingIds) {
       const existing = bookingChatTextMap.get(bookingId) || "";
-      bookingChatTextMap.set(bookingId, existing ? `${existing} ${messageText}` : messageText);
+      bookingChatTextMap.set(bookingId, existing ? `${existing} ${nextText}` : nextText);
     }
   }
 
@@ -2817,15 +2863,21 @@ function filterAndSortBookings(store, query) {
       .join(" ")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "");
+    const normalizedHaystack = haystack.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const normalizedHaystackNoSpace = haystack.replace(/\s+/g, "").toLowerCase();
     return (
       haystack.includes(rawSearch) ||
-      haystack.includes(search) ||
-      (searchDigits && haystack.includes(searchDigits)) ||
-      (searchLetters && haystack.includes(searchLetters)) ||
+      normalizedHaystack.includes(search) ||
+      normalizedHaystack.includes(rawSearchNoSpace) ||
+      (searchDigits && (normalizedHaystack.includes(searchDigits) || normalizedHaystackNoSpace.includes(searchDigits))) ||
+      (searchLetters &&
+        (normalizedHaystack.includes(searchLetters) ||
+          normalizedHaystackNoSpace.includes(searchLetters))) ||
       Boolean(
         searchDigits &&
           searchLetters &&
-          haystack.includes(`${searchDigits}${searchLetters}`)
+          (normalizedHaystack.includes(`${searchDigits}${searchLetters}`) ||
+            normalizedHaystackNoSpace.includes(`${searchDigits}${searchLetters}`))
       )
     );
   });
