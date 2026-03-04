@@ -2989,6 +2989,20 @@ function appendMetaChatEvent(store, event) {
   return { inserted: true, event: normalizedEvent };
 }
 
+function findChatMessageTextByExternalMessageId(store, conversationId, externalMessageId) {
+  const targetConversationId = normalizeText(conversationId);
+  const targetExternalId = normalizeText(externalMessageId);
+  if (!targetConversationId || !targetExternalId) return "";
+  const matched = store.chat_events.find((item) => {
+    return (
+      normalizeText(item.conversation_id) === targetConversationId &&
+      normalizeText(item.event_type).toLowerCase() === "message" &&
+      normalizeText(item.external_message_id) === targetExternalId
+    );
+  });
+  return normalizeText(matched?.text_preview);
+}
+
 function processWhatsAppMetaChange(store, entry, change) {
   const value = change?.value && typeof change.value === "object" ? change.value : {};
   const metadata = value?.metadata && typeof value.metadata === "object" ? value.metadata : {};
@@ -3019,7 +3033,11 @@ function processWhatsAppMetaChange(store, entry, change) {
 
   const messages = Array.isArray(value?.messages) ? value.messages : [];
   for (const message of messages) {
-    const waId = normalizeText(message?.from || "");
+    const messageFrom = normalizeText(message?.from || "");
+    const outboundFromBusiness = Boolean(displayPhone) && isLikelyPhoneMatch(messageFrom, displayPhone);
+    const waId = outboundFromBusiness
+      ? normalizeText(message?.to || contacts?.[0]?.wa_id || "")
+      : messageFrom;
     if (!waId) {
       ignored += 1;
       continue;
@@ -3040,15 +3058,16 @@ function processWhatsAppMetaChange(store, entry, change) {
     }
 
     const profileName = normalizeText(contactMap.get(waId)?.profile?.name);
+    const direction = outboundFromBusiness ? "outbound" : "inbound";
     const result = appendMetaChatEvent(store, {
       conversation_id: conversation.id,
       channel: "whatsapp",
       event_type: "message",
-      direction: "inbound",
+      direction,
       external_message_id: normalizeText(message?.id),
       external_status: null,
-      sender_display: profileName || waId,
-      sender_contact: waId,
+      sender_display: outboundFromBusiness ? "business" : profileName || waId,
+      sender_contact: outboundFromBusiness ? displayPhone || messageFrom : waId,
       text_preview: extractWhatsAppMessagePreview(message),
       sent_at: message?.timestamp,
       payload_json: message
@@ -3079,6 +3098,7 @@ function processWhatsAppMetaChange(store, entry, change) {
       continue;
     }
     const statusCode = normalizeText(status?.status).toLowerCase() || "unknown";
+    const relatedMessageText = findChatMessageTextByExternalMessageId(store, conversation.id, normalizeText(status?.id));
     const result = appendMetaChatEvent(store, {
       conversation_id: conversation.id,
       channel: "whatsapp",
@@ -3088,7 +3108,7 @@ function processWhatsAppMetaChange(store, entry, change) {
       external_status: statusCode,
       sender_display: "business",
       sender_contact: displayPhone || null,
-      text_preview: `Status: ${statusCode}`,
+      text_preview: relatedMessageText ? `Status: ${statusCode} - ${relatedMessageText}` : `Status: ${statusCode}`,
       sent_at: status?.timestamp,
       payload_json: status
     });
