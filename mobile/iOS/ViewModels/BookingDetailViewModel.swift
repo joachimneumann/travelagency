@@ -6,6 +6,8 @@ final class BookingDetailViewModel: ObservableObject {
     @Published private(set) var customer: Customer?
     @Published private(set) var activities: [BookingActivity] = []
     @Published private(set) var invoices: [BookingInvoice] = []
+    @Published private(set) var chatEvents: [BookingChatEvent] = []
+    @Published private(set) var chatConversations: [BookingChatConversation] = []
     @Published private(set) var atp_staff: [AtpStaffMember] = []
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
@@ -22,6 +24,7 @@ final class BookingDetailViewModel: ObservableObject {
             async let detail = apiClient.fetchBookingDetail(id: bookingID, session: session)
             async let activityPayload = apiClient.fetchActivities(bookingID: bookingID, session: session)
             async let invoicePayload = apiClient.fetchInvoices(bookingID: bookingID, session: session)
+            async let chatPayload = apiClient.fetchBookingChat(bookingID: bookingID, session: session)
             async let staffPayload: AtpStaffListResponse? = roleService.canChangeAssignment(session.client)
                 ? apiClient.fetchAtpStaff(session: session)
                 : nil
@@ -33,6 +36,9 @@ final class BookingDetailViewModel: ObservableObject {
             originalNote = detailResponse.booking.notes ?? ""
             activities = try await activityPayload.activities
             invoices = try await invoicePayload.items
+            let chatResponse = try await chatPayload
+            chatEvents = chatResponse.items
+            chatConversations = chatResponse.conversations
             atp_staff = try await staffPayload?.items ?? []
         } catch {
             errorMessage = error.localizedDescription
@@ -82,6 +88,9 @@ final class BookingDetailViewModel: ObservableObject {
             self.originalNote = response.booking.notes ?? ""
             let activityPayload = try await apiClient.fetchActivities(bookingID: booking.id, session: session)
             self.activities = activityPayload.activities
+            let chatPayload = try await apiClient.fetchBookingChat(bookingID: booking.id, session: session)
+            self.chatEvents = chatPayload.items
+            self.chatConversations = chatPayload.conversations
         } catch APIClient.APIError.bookingConflict {
             await refreshAfterConflict(session: session, bookingID: booking.id)
         } catch {
@@ -98,9 +107,23 @@ final class BookingDetailViewModel: ObservableObject {
             self.originalNote = detailResponse.booking.notes ?? ""
             let activityPayload = try await apiClient.fetchActivities(bookingID: bookingID, session: session)
             self.activities = activityPayload.activities
+            let chatPayload = try await apiClient.fetchBookingChat(bookingID: bookingID, session: session)
+            self.chatEvents = chatPayload.items
+            self.chatConversations = chatPayload.conversations
             self.errorMessage = "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again."
         } catch {
             self.errorMessage = error.localizedDescription
+        }
+    }
+
+    func refreshChat(session: AuthSession) async {
+        guard let booking else { return }
+        do {
+            let chatPayload = try await apiClient.fetchBookingChat(bookingID: booking.id, session: session)
+            self.chatEvents = chatPayload.items
+            self.chatConversations = chatPayload.conversations
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

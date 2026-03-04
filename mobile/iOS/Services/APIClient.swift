@@ -80,6 +80,13 @@ final class APIClient {
         )
     }
 
+    func fetchBookingChat(bookingID: String, session: AuthSession) async throws -> BookingChatResponse {
+        try await send(
+            requestURL: MobileAPIRequestFactory.bookingChatURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID, limit: 100),
+            session: session
+        )
+    }
+
     func fetchAtpStaff(session: AuthSession) async throws -> AtpStaffListResponse {
         try await send(
             requestURL: MobileAPIRequestFactory.activeAtpStaffURL(baseURL: AppConfig.apiBaseURL),

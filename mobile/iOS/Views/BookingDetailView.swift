@@ -54,6 +54,7 @@ struct BookingDetailView: View {
                 customerSection(customer)
             }
             bookingNoteSection()
+            whatsAppChatSection()
             if let offer = booking.offer {
                 offerSection(for: offer)
             }
@@ -130,6 +131,41 @@ struct BookingDetailView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func whatsAppChatSection() -> some View {
+        let events = viewModel.chatEvents
+        let latest = events.max { left, right in
+            let leftKey = left.sentAt ?? left.createdAt ?? left.receivedAt ?? ""
+            let rightKey = right.sentAt ?? right.createdAt ?? right.receivedAt ?? ""
+            return leftKey < rightKey
+        }
+        Section {
+            NavigationLink {
+                WhatsAppChatThreadView(
+                    events: events,
+                    customerPhone: viewModel.customer?.phone,
+                    onRefresh: {
+                        guard let session = await sessionStore.validSession() else { return }
+                        await viewModel.refreshChat(session: session)
+                    }
+                )
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("WhatsApp Chat")
+                        .font(.headline)
+                    Text(
+                        events.isEmpty
+                            ? "No messages yet"
+                            : "\(events.count) messages · \(formatSummaryText(from: latest?.textPreview ?? "", maxLength: 56))"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 }
             }
         }
@@ -290,4 +326,146 @@ struct BookingDetailView: View {
         let total = pricing.payments.count
         return "\(paid) or \(total) paid"
     }
+}
+
+private struct WhatsAppChatThreadView: View {
+    let events: [BookingChatEvent]
+    let customerPhone: String?
+    let onRefresh: () async -> Void
+
+    private var orderedEvents: [BookingChatEvent] {
+        events.sorted { left, right in
+            let leftKey = left.sentAt ?? left.createdAt ?? left.receivedAt ?? ""
+            let rightKey = right.sentAt ?? right.createdAt ?? right.receivedAt ?? ""
+            return leftKey < rightKey
+        }
+    }
+
+    private var waURL: URL? {
+        let digits = String(customerPhone ?? "").filter { $0.isNumber }
+        guard !digits.isEmpty else { return nil }
+        return URL(string: "https://wa.me/\(digits)")
+    }
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                if orderedEvents.isEmpty {
+                    Text("No WhatsApp messages yet.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 24)
+                } else {
+                    ForEach(orderedEvents) { event in
+                        WhatsAppChatBubbleRow(event: event)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 14)
+        }
+        .background(WhatsAppChatBackground().ignoresSafeArea())
+        .navigationTitle("WhatsApp Chat")
+        .modifier(InlineNavigationTitleDisplayModeModifier())
+        .toolbar {
+            if let waURL {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Link("WhatsApp", destination: waURL)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                }
+            }
+        }
+        .refreshable {
+            await onRefresh()
+        }
+    }
+}
+
+private struct WhatsAppChatBubbleRow: View {
+    let event: BookingChatEvent
+
+    private var isOutbound: Bool { event.direction.lowercased() == "outbound" }
+    private var isStatus: Bool { event.eventType.lowercased() == "status" }
+    private var bubbleColor: Color {
+        if isStatus { return Color(red: 1.0, green: 0.97, blue: 0.83) }
+        if isOutbound { return Color(red: 0.85, green: 0.99, blue: 0.83) }
+        return .white
+    }
+
+    private var metaLine: String {
+        let time = chatClockTime(from: event.sentAt ?? event.createdAt ?? event.receivedAt)
+        let status = event.externalStatus?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if status.isEmpty { return time }
+        return "\(time) · \(status)"
+    }
+
+    var body: some View {
+        HStack {
+            if isStatus {
+                Spacer(minLength: 24)
+                bubble
+                Spacer(minLength: 24)
+            } else if isOutbound {
+                Spacer(minLength: 44)
+                bubble
+            } else {
+                bubble
+                Spacer(minLength: 44)
+            }
+        }
+    }
+
+    private var bubble: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(event.textPreview.isEmpty ? "-" : event.textPreview)
+                .font(.system(size: 19, weight: .regular, design: .rounded))
+                .foregroundStyle(Color(red: 0.07, green: 0.11, blue: 0.13))
+                .multilineTextAlignment(.leading)
+            HStack {
+                Spacer(minLength: 0)
+                Text(metaLine)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(red: 0.38, green: 0.45, blue: 0.49))
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(bubbleColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+        )
+        .frame(maxWidth: 340, alignment: .leading)
+    }
+}
+
+private struct WhatsAppChatBackground: View {
+    var body: some View {
+        ZStack {
+            Color(red: 0.94, green: 0.92, blue: 0.89)
+            LinearGradient(
+                colors: [Color.black.opacity(0.035), Color.clear, Color.black.opacity(0.02)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+}
+
+private func chatClockTime(from rawTimestamp: String?) -> String {
+    guard let rawTimestamp, !rawTimestamp.isEmpty else { return "--:--" }
+    let isoWithFractional = ISO8601DateFormatter()
+    isoWithFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    let isoWithoutFractional = ISO8601DateFormatter()
+    isoWithoutFractional.formatOptions = [.withInternetDateTime]
+
+    let parsedDate = isoWithFractional.date(from: rawTimestamp) ?? isoWithoutFractional.date(from: rawTimestamp)
+    guard let parsedDate else { return rawTimestamp }
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "HH:mm"
+    return formatter.string(from: parsedDate)
 }

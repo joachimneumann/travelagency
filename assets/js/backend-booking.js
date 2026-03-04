@@ -1019,6 +1019,53 @@ function resolveChatPhoneNumber(items) {
   return String(firstSender?.sender_contact || "").trim();
 }
 
+function parseChatDate(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function formatChatTime(value) {
+  const date = parseChatDate(value);
+  if (!date) return "-";
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function chatDayKey(value) {
+  const date = parseChatDate(value);
+  if (!date) return "";
+  const yyyy = String(date.getFullYear());
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatChatDayLabel(value) {
+  const date = parseChatDate(value);
+  if (!date) return "";
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(date.getFullYear());
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+function parseDeliveredStatusPayload(textPreview) {
+  const text = String(textPreview || "").trim();
+  const withMessage = text.match(/^Status:\s*([a-z_ ]+)\s*-\s*(.+)$/i);
+  if (withMessage) {
+    return { status: String(withMessage[1] || "").trim(), message: String(withMessage[2] || "").trim() };
+  }
+  const onlyStatus = text.match(/^Status:\s*(.+)$/i);
+  if (onlyStatus) {
+    return { status: String(onlyStatus[1] || "").trim(), message: "" };
+  }
+  return { status: "", message: "" };
+}
+
 function renderMetaChatPanel() {
   if (!els.metaChatTable) return;
   const items = Array.isArray(state.chat.items) ? state.chat.items : [];
@@ -1033,23 +1080,50 @@ function renderMetaChatPanel() {
     const waDigits = normalizePhoneDigits(phone);
     const waUrl = waDigits ? `https://wa.me/${waDigits}` : "";
     const button = waUrl
-      ? `<a class="btn btn-ghost" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener">WhatsApp</a>`
-      : `<span class="btn btn-ghost" aria-disabled="true">WhatsApp</span>`;
-    els.metaChatSummary.innerHTML = `Channel: WhatsApp | Phone: ${escapeHtml(phone)} | ${button}`;
+      ? `<a class="btn btn-ghost" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener">Open WhatsApp</a>`
+      : `<span class="btn btn-ghost" aria-disabled="true">Open WhatsApp</span>`;
+    els.metaChatSummary.innerHTML = `<span class="wa-meta-item">Channel: WhatsApp</span><span class="wa-meta-gap"></span><span class="wa-meta-item">Phone: ${escapeHtml(
+      phone
+    )}</span><span class="wa-meta-gap"></span>${button}`;
   }
 
+  let previousDay = "";
   const rows = orderedItems
     .map((item) => {
       const direction = String(item?.direction || "").toLowerCase();
       const eventType = String(item?.event_type || "").toLowerCase();
-      const rowClass = eventType === "status" ? "is-status" : direction === "outbound" ? "is-out" : "is-in";
-      const text = escapeHtml(item?.text_preview || "-");
-      const time = escapeHtml(formatDateTime(item?.sent_at || item?.created_at));
-      const status = escapeHtml(item?.external_status || "");
-      const metaLine = status ? `${time} · ${status}` : time;
-      return `<div class="wa-msg-row ${rowClass}">
+      const sentAt = item?.sent_at || item?.created_at || item?.received_at;
+      const day = chatDayKey(sentAt);
+      const daySeparator =
+        day && day !== previousDay
+          ? `<div class="wa-day-sep"><span>${escapeHtml(formatChatDayLabel(sentAt))}</span></div>`
+          : "";
+      if (day) previousDay = day;
+
+      let rowClass = eventType === "status" ? "is-status" : direction === "outbound" ? "is-out" : "is-in";
+      let text = String(item?.text_preview || "-");
+      const parsedStatus = parseDeliveredStatusPayload(text);
+      let deliveredLine = "";
+      if (eventType === "status" && parsedStatus.message) {
+        text = parsedStatus.message;
+        rowClass = "is-out";
+        deliveredLine = parsedStatus.status
+          ? `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`
+          : "";
+      } else if (eventType === "status" && parsedStatus.status) {
+        text = "Status update";
+        deliveredLine = `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`;
+      } else if (item?.external_status) {
+        deliveredLine = `<div class="wa-msg-status"><em>${escapeHtml(String(item.external_status))}</em></div>`;
+      }
+
+      const safeText = escapeHtml(text);
+      const time = escapeHtml(formatChatTime(sentAt));
+      const metaLine = time;
+      return `${daySeparator}<div class="wa-msg-row ${rowClass}">
         <div class="wa-msg-bubble">
-          <div class="wa-msg-text">${text}</div>
+          <div class="wa-msg-text">${safeText}</div>
+          ${deliveredLine}
           <div class="wa-msg-meta">${metaLine}</div>
         </div>
       </div>`;

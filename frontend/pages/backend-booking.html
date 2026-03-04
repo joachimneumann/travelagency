@@ -28,6 +28,8 @@
       }
 
       #metaChatPanel.wa-chat-panel {
+        max-width: 820px;
+        margin-inline: auto;
         border: 1px solid #c9d4d9;
         border-radius: 14px;
         overflow: hidden;
@@ -44,10 +46,25 @@
 
       #metaChatSummary.wa-chat-meta {
         margin: 0;
-        padding: 0.45rem 0.95rem;
+        min-height: 3rem;
+        padding: 0.68rem 0.95rem;
         background: #f0f2f5;
         border-bottom: 1px solid #d9e0e4;
         color: #2f3f45;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+      }
+
+      .wa-meta-item {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .wa-meta-gap {
+        display: inline-block;
+        width: 1.15rem;
       }
 
       .wa-chat-canvas {
@@ -114,6 +131,32 @@
         text-align: right;
         font-size: 0.78rem;
         color: var(--wa-meta);
+      }
+
+      .wa-msg-status {
+        margin-top: 0.18rem;
+        text-align: right;
+        font-size: 0.79rem;
+        color: #52646a;
+      }
+
+      .wa-msg-status em {
+        font-style: italic;
+      }
+
+      .wa-day-sep {
+        display: flex;
+        justify-content: center;
+        margin: 0.2rem 0 0.35rem;
+      }
+
+      .wa-day-sep > span {
+        font-size: 0.73rem;
+        color: #455c63;
+        background: rgba(218, 233, 236, 0.88);
+        border: 1px solid #c7dde4;
+        border-radius: 999px;
+        padding: 0.12rem 0.56rem;
       }
 
       .wa-empty {
@@ -368,6 +411,6 @@
       </section>
     </main>
 
-    <script type="module" src="assets/js/backend-booking.js?v=20260304a"></script>
+    <script type="module" src="assets/js/backend-booking.js?v=20260304b"></script>
   </body>
 </html>

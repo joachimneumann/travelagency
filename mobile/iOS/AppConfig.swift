@@ -54,6 +54,102 @@ typealias BookingPricingUpdateRequest = GeneratedBookingPricingUpdateRequest
 typealias BookingOfferUpdateRequest = GeneratedBookingOfferUpdateRequest
 typealias APIErrorResponse = GeneratedErrorResponse
 
+struct BookingChatEvent: Codable, Equatable, Identifiable {
+    let id: String
+    let channel: String
+    let direction: String
+    let eventType: String
+    let externalStatus: String?
+    let textPreview: String
+    let senderDisplay: String?
+    let senderContact: String?
+    let sentAt: String?
+    let receivedAt: String?
+    let conversationID: String
+    let openURL: String?
+    let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case channel
+        case direction
+        case eventType = "event_type"
+        case externalStatus = "external_status"
+        case textPreview = "text_preview"
+        case senderDisplay = "sender_display"
+        case senderContact = "sender_contact"
+        case sentAt = "sent_at"
+        case receivedAt = "received_at"
+        case conversationID = "conversation_id"
+        case openURL = "open_url"
+        case createdAt = "created_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        channel = try container.decodeIfPresent(String.self, forKey: .channel) ?? ""
+        direction = try container.decodeIfPresent(String.self, forKey: .direction) ?? ""
+        eventType = try container.decodeIfPresent(String.self, forKey: .eventType) ?? "message"
+        externalStatus = try container.decodeIfPresent(String.self, forKey: .externalStatus)
+        textPreview = try container.decodeIfPresent(String.self, forKey: .textPreview) ?? ""
+        senderDisplay = try container.decodeIfPresent(String.self, forKey: .senderDisplay)
+        senderContact = try container.decodeIfPresent(String.self, forKey: .senderContact)
+        sentAt = try container.decodeIfPresent(String.self, forKey: .sentAt)
+        receivedAt = try container.decodeIfPresent(String.self, forKey: .receivedAt)
+        conversationID = try container.decodeIfPresent(String.self, forKey: .conversationID) ?? ""
+        openURL = try container.decodeIfPresent(String.self, forKey: .openURL)
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+    }
+}
+
+struct BookingChatConversation: Codable, Equatable, Identifiable {
+    let id: String
+    let channel: String
+    let externalContactID: String?
+    let customerID: String?
+    let bookingID: String?
+    let lastEventAt: String?
+    let latestPreview: String?
+    let openURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case channel
+        case externalContactID = "external_contact_id"
+        case customerID = "customer_id"
+        case bookingID = "booking_id"
+        case lastEventAt = "last_event_at"
+        case latestPreview = "latest_preview"
+        case openURL = "open_url"
+    }
+}
+
+struct BookingChatResponse: Codable, Equatable {
+    let mode: String?
+    let items: [BookingChatEvent]
+    let total: Int?
+    let conversations: [BookingChatConversation]
+    let conversationTotal: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case mode
+        case items
+        case total
+        case conversations
+        case conversationTotal = "conversation_total"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        mode = try container.decodeIfPresent(String.self, forKey: .mode)
+        items = try container.decodeIfPresent([BookingChatEvent].self, forKey: .items) ?? []
+        total = try container.decodeIfPresent(Int.self, forKey: .total)
+        conversations = try container.decodeIfPresent([BookingChatConversation].self, forKey: .conversations) ?? []
+        conversationTotal = try container.decodeIfPresent(Int.self, forKey: .conversationTotal)
+    }
+}
+
 enum MobileAPIRequestFactory {
     static let contractVersion = GeneratedAPIRequestFactory.contractVersion
 
@@ -101,6 +197,14 @@ enum MobileAPIRequestFactory {
 
     static func bookingNoteURL(baseURL: URL, bookingID: String) -> URL {
         GeneratedAPIRequestFactory.bookingNoteURL(baseURL: baseURL, bookingId: bookingID)
+    }
+
+    static func bookingChatURL(baseURL: URL, bookingID: String, limit: Int = 100) -> URL {
+        let encodedBookingID = bookingID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? bookingID
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
+        components?.path = "/api/v1/bookings/\(encodedBookingID)/chat"
+        components?.queryItems = [URLQueryItem(name: "limit", value: String(limit))]
+        return components?.url ?? baseURL.appendingPathComponent("api/v1/bookings/\(encodedBookingID)/chat")
     }
 }
 
