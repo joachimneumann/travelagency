@@ -2758,6 +2758,53 @@ function filterAndSortBookings(store, query) {
   const search = normalizeText(query.get("search")).toLowerCase();
   const sort = normalizeText(query.get("sort")) || "created_at_desc";
   const customersById = getBookingCustomerLookup(store);
+  ensureMetaChatCollections(store);
+
+  const conversationBookingIds = new Map();
+  for (const conversation of store.chat_conversations) {
+    const conversationId = normalizeText(conversation.id);
+    if (!conversationId) continue;
+
+    const matchedBookingIds = new Set();
+    const linkedBookingId = normalizeText(conversation.booking_id);
+    if (linkedBookingId) matchedBookingIds.add(linkedBookingId);
+
+    const linkedCustomerId = normalizeText(conversation.customer_id);
+    if (linkedCustomerId) {
+      for (const booking of store.bookings) {
+        if (normalizeText(booking.customer_id) === linkedCustomerId) matchedBookingIds.add(booking.id);
+      }
+    }
+
+    const channel = normalizeText(conversation.channel).toLowerCase();
+    const externalContactId = normalizeText(conversation.external_contact_id);
+    if (channel === "whatsapp" && externalContactId) {
+      for (const booking of store.bookings) {
+        const customer = customersById.get(booking.customer_id);
+        if (customer?.phone && isLikelyPhoneMatch(customer.phone, externalContactId)) {
+          matchedBookingIds.add(booking.id);
+        }
+      }
+    }
+
+    if (matchedBookingIds.size > 0) {
+      conversationBookingIds.set(conversationId, [...matchedBookingIds]);
+    }
+  }
+
+  const bookingChatTextMap = new Map();
+  for (const event of store.chat_events) {
+    if (normalizeText(event.event_type).toLowerCase() !== "message") continue;
+    const conversationId = normalizeText(event.conversation_id);
+    const matchedBookingIds = conversationBookingIds.get(conversationId);
+    const messageText = normalizeText(event.text_preview).toLowerCase();
+    if (!matchedBookingIds?.length || !messageText) continue;
+
+    for (const bookingId of matchedBookingIds) {
+      const existing = bookingChatTextMap.get(bookingId) || "";
+      bookingChatTextMap.set(bookingId, existing ? `${existing} ${messageText}` : messageText);
+    }
+  }
 
   const filtered = store.bookings.filter((booking) => {
     if (stage && booking.stage !== stage) return false;
@@ -2772,7 +2819,8 @@ function filterAndSortBookings(store, query) {
       booking.owner_name,
       booking.notes,
       customer?.name,
-      customer?.email
+      customer?.email,
+      bookingChatTextMap.get(booking.id)
     ]
       .filter(Boolean)
       .join(" ")
@@ -4383,61 +4431,14 @@ async function handleListCustomers(req, res) {
     return;
   }
   const store = await readStore();
-  ensureMetaChatCollections(store);
   const requestUrl = new URL(req.url, "http://localhost");
   const search = normalizeText(requestUrl.searchParams.get("search")).toLowerCase();
   const pageQuery = requestUrl.searchParams;
 
-  const conversationCustomerIds = new Map();
-  for (const conversation of store.chat_conversations) {
-    const conversationId = normalizeText(conversation.id);
-    if (!conversationId) continue;
-
-    const matchedCustomerIds = new Set();
-    const linkedCustomerId = normalizeText(conversation.customer_id);
-    if (linkedCustomerId) matchedCustomerIds.add(linkedCustomerId);
-
-    const channel = normalizeText(conversation.channel).toLowerCase();
-    const externalContactId = normalizeText(conversation.external_contact_id);
-    if (channel === "whatsapp" && externalContactId) {
-      for (const customer of store.customers) {
-        if (isLikelyPhoneMatch(customer.phone, externalContactId)) matchedCustomerIds.add(customer.id);
-      }
-    }
-
-    if (matchedCustomerIds.size > 0) {
-      conversationCustomerIds.set(conversationId, [...matchedCustomerIds]);
-    }
-  }
-
-  const customerChatTextMap = new Map();
-  for (const event of store.chat_events) {
-    if (normalizeText(event.event_type).toLowerCase() !== "message") continue;
-    const conversationId = normalizeText(event.conversation_id);
-    const matchedCustomerIds = conversationCustomerIds.get(conversationId);
-    const messageText = normalizeText(event.text_preview).toLowerCase();
-    if (!matchedCustomerIds?.length || !messageText) continue;
-
-    for (const customerId of matchedCustomerIds) {
-      const existing = customerChatTextMap.get(customerId) || "";
-      customerChatTextMap.set(customerId, existing ? `${existing} ${messageText}` : messageText);
-    }
-  }
-
   const filtered = [...store.customers]
     .filter((customer) => {
       if (!search) return true;
-      const haystack = [
-        customer.id,
-        customer.name,
-        customer.email,
-        customer.phone,
-        customer.language,
-        customerChatTextMap.get(customer.id)
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+      const haystack = [customer.name, customer.email, customer.phone, customer.language].filter(Boolean).join(" ").toLowerCase();
       return haystack.includes(search);
     })
     .sort((a, b) =>
