@@ -19,6 +19,7 @@ const els = {
 
   bookingsSearch: document.getElementById("bookingsSearch"),
   bookingsSearchBtn: document.getElementById("bookingsSearchBtn"),
+  bookingsClearSearchBtn: document.getElementById("bookingsClearSearchBtn"),
   bookingsCountInfo: document.getElementById("bookingsCountInfo"),
   bookingsPagination: document.getElementById("bookingsPagination"),
   bookingsTable: document.getElementById("bookingsTable"),
@@ -127,6 +128,14 @@ function bindControls() {
   }
   if (state.permissions.canReadBookings) {
     bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
+    if (els.bookingsClearSearchBtn) {
+      els.bookingsClearSearchBtn.addEventListener("click", () => {
+        state.bookings.search = "";
+        if (els.bookingsSearch) els.bookingsSearch.value = "";
+        state.bookings.page = 1;
+        loadBookings();
+      });
+    }
   }
   if (state.permissions.canReadTours) {
     bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
@@ -398,6 +407,10 @@ async function fetchApi(path, options = {}) {
 
 function renderBookings(items) {
   const canOpenCustomer = state.permissions.canReadCustomers;
+  if (els.bookingsClearSearchBtn) {
+    els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
+  }
+
   const header = `<thead><tr><th>ID</th><th>Stage</th><th>Customer</th><th>Destination</th><th>Style</th><th>Staff</th><th>SLA due</th></tr></thead>`;
   const rows = items
     .map((booking) => {

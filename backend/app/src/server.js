@@ -2740,7 +2740,8 @@ async function assertMatchingBookingHash(payload, booking, res) {
 function filterAndSortBookings(store, query) {
   const stage = normalizeStageFilter(query.get("stage"));
   const ownerId = normalizeText(query.get("owner_id"));
-  const search = normalizeText(query.get("search")).toLowerCase();
+  const rawSearch = normalizeText(query.get("search")).toLowerCase();
+  const search = rawSearch.replace(/[^a-z0-9]+/g, "");
   const sort = normalizeText(query.get("sort")) || "created_at_desc";
   const customersById = getBookingCustomerLookup(store);
   ensureMetaChatCollections(store);
@@ -2805,11 +2806,15 @@ function filterAndSortBookings(store, query) {
       booking.notes,
       customer?.name,
       customer?.email,
-      bookingChatTextMap.get(booking.id)
+      bookingChatTextMap.get(booking.id),
+      booking.sla_due_at,
+      JSON.stringify(booking.pricing),
+      JSON.stringify(booking.offer)
     ]
       .filter(Boolean)
       .join(" ")
-      .toLowerCase();
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
     return haystack.includes(search);
   });
 
