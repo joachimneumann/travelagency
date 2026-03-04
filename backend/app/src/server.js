@@ -2821,11 +2821,9 @@ function filterAndSortBookings(store, query) {
     const channel = normalizeText(conversation.channel).toLowerCase();
     const externalContactId = normalizeText(conversation.external_contact_id);
     if (channel === "whatsapp" && externalContactId) {
-      for (const booking of store.bookings) {
-        const customer = customersById.get(booking.customer_id);
-        if (customer?.phone && isLikelyPhoneMatch(customer.phone, externalContactId)) {
-          matchedBookingIds.add(booking.id);
-        }
+      const latestBookingId = getLatestBookingForPhoneMatch(externalContactId);
+      if (latestBookingId) {
+        matchedBookingIds.add(latestBookingId);
       }
     }
 
