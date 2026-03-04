@@ -932,6 +932,12 @@ function isLikelyPhoneMatch(leftRaw, rightRaw) {
       if (!leftValue || !rightValue) continue;
       if (leftValue === rightValue) return true;
 
+      if (leftValue.length >= 9 && rightValue.length >= 9) {
+        if (leftValue.includes(rightValue) || rightValue.includes(leftValue)) {
+          return true;
+        }
+      }
+
       const minLen = Math.min(leftValue.length, rightValue.length);
       if (minLen < 9) continue;
       for (let tailLength = Math.min(10, minLen); tailLength >= 9; tailLength -= 1) {
@@ -2774,6 +2780,27 @@ function filterAndSortBookings(store, query) {
     const customer = customersById.get(booking.customer_id);
     return { bookingId: booking.id, phone: customer?.phone || "" };
   });
+  const latestBookingByCustomer = new Map();
+  const sortedByRecency = [...store.bookings].sort(
+    (a, b) =>
+      String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
+  );
+  for (const booking of sortedByRecency) {
+    if (!latestBookingByCustomer.has(booking.customer_id)) {
+      latestBookingByCustomer.set(booking.customer_id, booking.id);
+    }
+  }
+
+  const getLatestBookingForPhoneMatch = (phone) => {
+    if (!phone) return null;
+    for (const booking of sortedByRecency) {
+      const customer = customersById.get(booking.customer_id);
+      const storedPhone = customer?.phone || "";
+      if (!storedPhone) continue;
+      if (isLikelyPhoneMatch(storedPhone, phone)) return booking.id;
+    }
+    return null;
+  };
 
   for (const conversation of store.chat_conversations) {
     const conversationId = normalizeText(conversation.id);
@@ -2785,8 +2812,9 @@ function filterAndSortBookings(store, query) {
 
     const linkedCustomerId = normalizeText(conversation.customer_id);
     if (linkedCustomerId) {
-      for (const booking of store.bookings) {
-        if (normalizeText(booking.customer_id) === linkedCustomerId) matchedBookingIds.add(booking.id);
+      const latestBookingId = latestBookingByCustomer.get(linkedCustomerId);
+      if (latestBookingId) {
+        matchedBookingIds.add(latestBookingId);
       }
     }
 
@@ -2809,10 +2837,8 @@ function filterAndSortBookings(store, query) {
 
   const getBookingIdsFromPhoneMatch = (phone) => {
     const matched = new Set();
-    for (const entry of bookingCustomerPhones) {
-      if (!entry.phone || !phone) continue;
-      if (isLikelyPhoneMatch(entry.phone, phone)) matched.add(entry.bookingId);
-    }
+    const latestBookingId = getLatestBookingForPhoneMatch(phone);
+    if (latestBookingId) matched.add(latestBookingId);
     return matched;
   };
 
@@ -2864,6 +2890,8 @@ function filterAndSortBookings(store, query) {
     if (!search) return true;
 
     const customer = customersById.get(booking.customer_id);
+    const hasDigits = /[0-9]/.test(search);
+    const hasLetters = /[a-z]/.test(search);
     const haystack = [
       booking.id,
       booking.destination,
@@ -2883,20 +2911,28 @@ function filterAndSortBookings(store, query) {
       .replace(/[^a-z0-9]+/g, "");
     const normalizedHaystack = haystack.toLowerCase().replace(/[^a-z0-9]+/g, "");
     const normalizedHaystackNoSpace = haystack.replace(/\s+/g, "").toLowerCase();
+    if (hasDigits && hasLetters) {
+      const mixedSearch = `${searchDigits}${searchLetters}`;
+      const mixedSearchAlt = `${searchLetters}${searchDigits}`;
+      const mixedSearchNoSpace = rawSearchNoSpace.replace(/[^a-z0-9]+/g, "");
+      return (
+        normalizedHaystack.includes(mixedSearch) ||
+        normalizedHaystackNoSpace.includes(mixedSearch) ||
+        normalizedHaystack.includes(mixedSearchAlt) ||
+        normalizedHaystackNoSpace.includes(mixedSearchAlt) ||
+        normalizedHaystack.includes(mixedSearchNoSpace) ||
+        normalizedHaystackNoSpace.includes(mixedSearchNoSpace)
+      );
+    }
+
     return (
       haystack.includes(rawSearch) ||
       normalizedHaystack.includes(search) ||
       normalizedHaystack.includes(rawSearchNoSpace) ||
-      (searchDigits && (normalizedHaystack.includes(searchDigits) || normalizedHaystackNoSpace.includes(searchDigits))) ||
+      (searchDigits &&
+        (normalizedHaystack.includes(searchDigits) || normalizedHaystackNoSpace.includes(searchDigits))) ||
       (searchLetters &&
-        (normalizedHaystack.includes(searchLetters) ||
-          normalizedHaystackNoSpace.includes(searchLetters))) ||
-      Boolean(
-        searchDigits &&
-          searchLetters &&
-          (normalizedHaystack.includes(`${searchDigits}${searchLetters}`) ||
-            normalizedHaystackNoSpace.includes(`${searchDigits}${searchLetters}`))
-      )
+        (normalizedHaystack.includes(searchLetters) || normalizedHaystackNoSpace.includes(searchLetters)))
     );
   });
 
