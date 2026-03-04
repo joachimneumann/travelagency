@@ -9,6 +9,10 @@ struct RoleService {
         profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager) || profile.roles.contains(.atpAccountant)
     }
 
+    func canReadCustomers(_ profile: ClientProfile) -> Bool {
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager)
+    }
+
     func canEditAssignedBookings(_ profile: ClientProfile) -> Bool {
         profile.roles.contains(.atpStaff)
     }

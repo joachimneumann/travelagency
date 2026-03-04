@@ -168,6 +168,21 @@ enum MobileAPIRequestFactory {
         )
     }
 
+    static func customersURL(baseURL: URL, page: Int, pageSize: Int, search: String? = nil) -> URL {
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "page_size", value: String(pageSize))
+        ]
+        let trimmedSearch = (search ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedSearch.isEmpty {
+            queryItems.append(URLQueryItem(name: "search", value: trimmedSearch))
+        }
+        return GeneratedAPIRequestFactory.customersURL(
+            baseURL: baseURL,
+            queryItems: queryItems
+        )
+    }
+
     static func bookingDetailURL(baseURL: URL, bookingID: String) -> URL {
         GeneratedAPIRequestFactory.bookingDetailURL(baseURL: baseURL, bookingId: bookingID)
     }

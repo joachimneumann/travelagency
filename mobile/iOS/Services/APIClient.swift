@@ -38,6 +38,23 @@ final class APIClient {
         )
     }
 
+    func fetchCustomers(
+        session: AuthSession,
+        page: Int = 1,
+        pageSize: Int = 20,
+        search: String? = nil
+    ) async throws -> CustomerListResponse {
+        try await send(
+            requestURL: MobileAPIRequestFactory.customersURL(
+                baseURL: AppConfig.apiBaseURL,
+                page: page,
+                pageSize: pageSize,
+                search: search
+            ),
+            session: session
+        )
+    }
+
     func fetchBootstrap() async throws -> MobileBootstrapResponse {
         let bootstrapURL = MobileAPIRequestFactory.bootstrapURL(baseURL: AppConfig.apiBaseURL)
         var request = URLRequest(url: bootstrapURL)
