@@ -3428,12 +3428,19 @@ async function handleListBookingChatEvents(req, res, [bookingId]) {
   }
 
   ensureMetaChatCollections(store);
+  const bookingCustomer = store.customers.find((item) => item.id === booking.customer_id) || null;
   const requestUrl = new URL(req.url, "http://localhost");
   const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 100, 1, 500);
 
   const conversationItems = store.chat_conversations.filter((conversation) => {
     if (normalizeText(conversation.booking_id) === bookingId) return true;
-    return normalizeText(conversation.customer_id) === normalizeText(booking.customer_id);
+    if (normalizeText(conversation.customer_id) === normalizeText(booking.customer_id)) return true;
+
+    const channel = normalizeText(conversation.channel).toLowerCase();
+    if (channel === "whatsapp" && bookingCustomer?.phone) {
+      return isLikelyPhoneMatch(bookingCustomer.phone, conversation.external_contact_id);
+    }
+    return false;
   });
   const conversationMap = new Map(conversationItems.map((item) => [item.id, item]));
   const events = store.chat_events
