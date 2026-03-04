@@ -34,7 +34,7 @@ staging.asiatravelplan.com {
     reverse_proxy backend:8787
   }
 
-  @protected not path /staging-access/*
+  @protected not path /staging-access/* /api/whatsapp/webhook /integrations/meta/webhook
   forward_auth @protected backend:8787 {
     uri /staging-access/check
   }
