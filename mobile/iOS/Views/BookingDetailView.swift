@@ -347,36 +347,115 @@ private struct WhatsAppChatThreadView: View {
         return URL(string: "https://wa.me/\(digits)")
     }
 
+    private var phoneLabel: String {
+        let trimmed = String(customerPhone ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "-" : trimmed
+    }
+
+    private var timelineRows: [WhatsAppTimelineRow] {
+        var rows: [WhatsAppTimelineRow] = []
+        var previousDay = ""
+        for event in orderedEvents {
+            let timestamp = event.sentAt ?? event.createdAt ?? event.receivedAt
+            let dayKey = chatDayKey(from: timestamp)
+            if !dayKey.isEmpty, dayKey != previousDay {
+                rows.append(
+                    WhatsAppTimelineRow(
+                        id: "day-\(dayKey)",
+                        dayLabel: chatDayLabel(from: timestamp),
+                        event: nil
+                    )
+                )
+                previousDay = dayKey
+            }
+            rows.append(WhatsAppTimelineRow(id: event.id, dayLabel: nil, event: event))
+        }
+        return rows
+    }
+
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                if orderedEvents.isEmpty {
-                    Text("No WhatsApp messages yet.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 24)
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 16) {
+                Text("Channel: WhatsApp")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.16, green: 0.25, blue: 0.29))
+                Text("Phone: \(phoneLabel)")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(red: 0.16, green: 0.25, blue: 0.29))
+                Spacer(minLength: 8)
+                if let waURL {
+                    Link("Open WhatsApp", destination: waURL)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
                 } else {
-                    ForEach(orderedEvents) { event in
-                        WhatsAppChatBubbleRow(event: event)
-                    }
+                    Text("Open WhatsApp")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .frame(maxWidth: 760)
+            .frame(maxWidth: .infinity)
+            .background(Color(red: 0.94, green: 0.96, blue: 0.97))
+
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    if timelineRows.isEmpty {
+                        Text("No WhatsApp messages yet.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 24)
+                    } else {
+                        ForEach(timelineRows) { row in
+                            if let dayLabel = row.dayLabel {
+                                WhatsAppDaySeparator(label: dayLabel)
+                            } else if let event = row.event {
+                                WhatsAppChatBubbleRow(event: event)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 14)
+            }
         }
         .background(WhatsAppChatBackground().ignoresSafeArea())
         .navigationTitle("WhatsApp Chat")
         .modifier(InlineNavigationTitleDisplayModeModifier())
-        .toolbar {
-            if let waURL {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Link("WhatsApp", destination: waURL)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                }
-            }
-        }
         .refreshable {
             await onRefresh()
+        }
+    }
+}
+
+private struct WhatsAppTimelineRow: Identifiable {
+    let id: String
+    let dayLabel: String?
+    let event: BookingChatEvent?
+}
+
+private struct WhatsAppDaySeparator: View {
+    let label: String
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text(label)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color(red: 0.27, green: 0.37, blue: 0.42))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(Color(red: 0.85, green: 0.91, blue: 0.93).opacity(0.92))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color(red: 0.79, green: 0.86, blue: 0.89), lineWidth: 1)
+                )
+            Spacer(minLength: 0)
         }
     }
 }
@@ -386,26 +465,64 @@ private struct WhatsAppChatBubbleRow: View {
 
     private var isOutbound: Bool { event.direction.lowercased() == "outbound" }
     private var isStatus: Bool { event.eventType.lowercased() == "status" }
+    private var parsedStatus: (status: String, message: String?) {
+        let preview = event.textPreview.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard preview.lowercased().hasPrefix("status:") else {
+            return (event.externalStatus ?? "", nil)
+        }
+        let statusBody = String(preview.dropFirst("Status:".count)).trimmingCharacters(in: .whitespacesAndNewlines)
+        if let splitRange = statusBody.range(of: " - ") {
+            let statusText = String(statusBody[..<splitRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+            let messageText = String(statusBody[splitRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            return (statusText, messageText.isEmpty ? nil : messageText)
+        }
+        return (statusBody, nil)
+    }
+
+    private var bubbleText: String {
+        if isStatus {
+            if let message = parsedStatus.message, !message.isEmpty {
+                return message
+            }
+            return "Status update"
+        }
+        return event.textPreview.isEmpty ? "-" : event.textPreview
+    }
+
+    private var statusLine: String? {
+        let raw = parsedStatus.status.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { return nil }
+        return raw
+    }
+
+    private var isStatusBanner: Bool {
+        isStatus && (parsedStatus.message?.isEmpty ?? true)
+    }
+
+    private var alignsOutbound: Bool {
+        if isStatus, parsedStatus.message != nil {
+            return true
+        }
+        return isOutbound
+    }
+
     private var bubbleColor: Color {
-        if isStatus { return Color(red: 1.0, green: 0.97, blue: 0.83) }
-        if isOutbound { return Color(red: 0.85, green: 0.99, blue: 0.83) }
+        if isStatusBanner { return Color(red: 1.0, green: 0.97, blue: 0.83) }
+        if alignsOutbound { return Color(red: 0.85, green: 0.99, blue: 0.83) }
         return .white
     }
 
     private var metaLine: String {
-        let time = chatClockTime(from: event.sentAt ?? event.createdAt ?? event.receivedAt)
-        let status = event.externalStatus?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if status.isEmpty { return time }
-        return "\(time) · \(status)"
+        chatClockTime(from: event.sentAt ?? event.createdAt ?? event.receivedAt)
     }
 
     var body: some View {
         HStack {
-            if isStatus {
+            if isStatusBanner {
                 Spacer(minLength: 24)
                 bubble
                 Spacer(minLength: 24)
-            } else if isOutbound {
+            } else if alignsOutbound {
                 Spacer(minLength: 44)
                 bubble
             } else {
@@ -417,10 +534,17 @@ private struct WhatsAppChatBubbleRow: View {
 
     private var bubble: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(event.textPreview.isEmpty ? "-" : event.textPreview)
+            Text(bubbleText)
                 .font(.system(size: 19, weight: .regular, design: .rounded))
                 .foregroundStyle(Color(red: 0.07, green: 0.11, blue: 0.13))
                 .multilineTextAlignment(.leading)
+            if let statusLine {
+                Text(statusLine)
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                    .italic()
+                    .foregroundStyle(Color(red: 0.32, green: 0.39, blue: 0.43))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
             HStack {
                 Spacer(minLength: 0)
                 Text(metaLine)
@@ -438,7 +562,7 @@ private struct WhatsAppChatBubbleRow: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color.black.opacity(0.06), lineWidth: 1)
         )
-        .frame(maxWidth: 340, alignment: .leading)
+        .frame(maxWidth: 316, alignment: .leading)
     }
 }
 
@@ -456,16 +580,31 @@ private struct WhatsAppChatBackground: View {
 }
 
 private func chatClockTime(from rawTimestamp: String?) -> String {
-    guard let rawTimestamp, !rawTimestamp.isEmpty else { return "--:--" }
+    guard let parsedDate = parseChatDate(rawTimestamp) else { return "--:--" }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "HH:mm"
+    return formatter.string(from: parsedDate)
+}
+
+private func chatDayKey(from rawTimestamp: String?) -> String {
+    guard let parsedDate = parseChatDate(rawTimestamp) else { return "" }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: parsedDate)
+}
+
+private func chatDayLabel(from rawTimestamp: String?) -> String {
+    guard let parsedDate = parseChatDate(rawTimestamp) else { return "" }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "dd.MM.yyyy"
+    return formatter.string(from: parsedDate)
+}
+
+private func parseChatDate(_ rawTimestamp: String?) -> Date? {
+    guard let rawTimestamp, !rawTimestamp.isEmpty else { return nil }
     let isoWithFractional = ISO8601DateFormatter()
     isoWithFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     let isoWithoutFractional = ISO8601DateFormatter()
     isoWithoutFractional.formatOptions = [.withInternetDateTime]
-
-    let parsedDate = isoWithFractional.date(from: rawTimestamp) ?? isoWithoutFractional.date(from: rawTimestamp)
-    guard let parsedDate else { return rawTimestamp }
-
-    let formatter = DateFormatter()
-    formatter.dateFormat = "HH:mm"
-    return formatter.string(from: parsedDate)
+    return isoWithFractional.date(from: rawTimestamp) ?? isoWithoutFractional.date(from: rawTimestamp)
 }

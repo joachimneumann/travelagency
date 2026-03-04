@@ -1066,6 +1066,32 @@ function parseDeliveredStatusPayload(textPreview) {
   return { status: "", message: "" };
 }
 
+function isSingleEmojiMessage(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return false;
+  const compact = raw.replace(/\s+/g, "");
+  if (!compact) return false;
+  let graphemes = [];
+  if (typeof Intl !== "undefined" && typeof Intl.Segmenter === "function") {
+    const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+    graphemes = [...segmenter.segment(compact)].map((part) => part.segment);
+  } else {
+    graphemes = Array.from(compact);
+  }
+  if (graphemes.length !== 1) return false;
+  return /\p{Extended_Pictographic}/u.test(graphemes[0]);
+}
+
+function isDeliveredStatusText(text) {
+  const status = String(text || "").trim().toLowerCase();
+  return status === "delivered";
+}
+
+function buildDeliveredTicksMarkup(isDelivered) {
+  if (!isDelivered) return "";
+  return '<span class="wa-meta-ticks" aria-label="delivered">&#10003;&#10003;</span>';
+}
+
 function renderMetaChatPanel() {
   if (!els.metaChatTable) return;
   const items = Array.isArray(state.chat.items) ? state.chat.items : [];
@@ -1082,9 +1108,7 @@ function renderMetaChatPanel() {
     const button = waUrl
       ? `<a class="btn btn-ghost" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener">Open WhatsApp</a>`
       : `<span class="btn btn-ghost" aria-disabled="true">Open WhatsApp</span>`;
-    els.metaChatSummary.innerHTML = `<span class="wa-meta-item">Channel: WhatsApp</span><span class="wa-meta-gap"></span><span class="wa-meta-item">Phone: ${escapeHtml(
-      phone
-    )}</span><span class="wa-meta-gap"></span>${button}`;
+    els.metaChatSummary.innerHTML = `<span class="wa-meta-item">Phone: ${escapeHtml(phone)}</span><span class="wa-meta-gap"></span>${button}`;
   }
 
   let previousDay = "";
@@ -1104,24 +1128,29 @@ function renderMetaChatPanel() {
       let text = String(item?.text_preview || "-");
       const parsedStatus = parseDeliveredStatusPayload(text);
       let deliveredLine = "";
+      let deliveredForMeta = false;
       if (eventType === "status" && parsedStatus.message) {
         text = parsedStatus.message;
         rowClass = "is-out";
+        deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
         deliveredLine = parsedStatus.status
           ? `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`
           : "";
       } else if (eventType === "status" && parsedStatus.status) {
         text = "Status update";
+        deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
         deliveredLine = `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`;
       } else if (item?.external_status) {
+        deliveredForMeta = isDeliveredStatusText(item.external_status);
         deliveredLine = `<div class="wa-msg-status"><em>${escapeHtml(String(item.external_status))}</em></div>`;
       }
 
       const safeText = escapeHtml(text);
       const time = escapeHtml(formatChatTime(sentAt));
-      const metaLine = time;
+      const bubbleClass = isSingleEmojiMessage(text) ? "wa-msg-bubble is-emoji" : "wa-msg-bubble";
+      const metaLine = `${time}${buildDeliveredTicksMarkup(deliveredForMeta)}`;
       return `${daySeparator}<div class="wa-msg-row ${rowClass}">
-        <div class="wa-msg-bubble">
+        <div class="${bubbleClass}">
           <div class="wa-msg-text">${safeText}</div>
           ${deliveredLine}
           <div class="wa-msg-meta">${metaLine}</div>
