@@ -35,8 +35,11 @@ const MOBILE_MIN_SUPPORTED_APP_VERSION = normalizeText(process.env.MOBILE_MIN_SU
 const MOBILE_LATEST_APP_VERSION = normalizeText(process.env.MOBILE_LATEST_APP_VERSION || MOBILE_MIN_SUPPORTED_APP_VERSION);
 const MOBILE_FORCE_UPDATE = String(process.env.MOBILE_FORCE_UPDATE || "").trim().toLowerCase() === "true";
 const META_WEBHOOK_ENABLED = String(process.env.META_WEBHOOK_ENABLED || "").trim().toLowerCase() === "true";
+const WHATSAPP_WEBHOOK_ENABLED = String(process.env.WHATSAPP_WEBHOOK_ENABLED || "").trim().toLowerCase() === "true";
 const META_WEBHOOK_VERIFY_TOKEN = normalizeText(process.env.META_WEBHOOK_VERIFY_TOKEN || "");
+const WHATSAPP_WEBHOOK_VERIFY_TOKEN = normalizeText(process.env.WHATSAPP_VERIFY_TOKEN || "");
 const META_APP_SECRET = normalizeText(process.env.META_APP_SECRET || "");
+const WHATSAPP_APP_SECRET = normalizeText(process.env.WHATSAPP_APP_SECRET || "");
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -202,6 +205,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const routes = [
     ...auth.routes,
     { method: "GET", pattern: /^\/health$/, handler: handleHealth },
+    { method: "GET", pattern: /^\/api\/whatsapp\/webhook$/, handler: handleMetaWebhookVerify },
+    { method: "POST", pattern: /^\/api\/whatsapp\/webhook$/, handler: handleMetaWebhookIngest },
     { method: "GET", pattern: /^\/integrations\/meta\/webhook$/, handler: handleMetaWebhookVerify },
     { method: "POST", pattern: /^\/integrations\/meta\/webhook$/, handler: handleMetaWebhookIngest },
     { method: "GET", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginPage },
@@ -3112,16 +3117,20 @@ function processMetaWebhookPayload(store, payload) {
 }
 
 function verifyMetaWebhookSignature(req, rawBody) {
-  if (!META_APP_SECRET) return true;
+  const secret = META_APP_SECRET || WHATSAPP_APP_SECRET;
+  if (!secret) return true;
   const signatureHeader = firstHeaderValue(req.headers["x-hub-signature-256"]);
   if (!signatureHeader.startsWith("sha256=")) return false;
-  const expected = createHmac("sha256", META_APP_SECRET).update(rawBody).digest("hex");
+  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   const actual = signatureHeader.slice("sha256=".length);
   return safeEqualText(actual, expected);
 }
 
 function isMetaWebhookConfigured() {
-  return META_WEBHOOK_ENABLED && Boolean(META_WEBHOOK_VERIFY_TOKEN);
+  const enabled = META_WEBHOOK_ENABLED || WHATSAPP_WEBHOOK_ENABLED;
+  const verifyToken = META_WEBHOOK_VERIFY_TOKEN || WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+  if (enabled) return Boolean(verifyToken);
+  return Boolean(verifyToken);
 }
 
 async function handleMetaWebhookVerify(req, res) {
@@ -3133,8 +3142,9 @@ async function handleMetaWebhookVerify(req, res) {
   const mode = normalizeText(requestUrl.searchParams.get("hub.mode"));
   const verifyToken = normalizeText(requestUrl.searchParams.get("hub.verify_token"));
   const challenge = normalizeText(requestUrl.searchParams.get("hub.challenge"));
+  const configuredVerifyToken = META_WEBHOOK_VERIFY_TOKEN || WHATSAPP_WEBHOOK_VERIFY_TOKEN;
 
-  if (mode === "subscribe" && challenge && safeEqualText(verifyToken, META_WEBHOOK_VERIFY_TOKEN)) {
+  if (mode === "subscribe" && challenge && safeEqualText(verifyToken, configuredVerifyToken)) {
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
     res.end(challenge);
     return;
