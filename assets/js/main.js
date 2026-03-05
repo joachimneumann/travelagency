@@ -582,20 +582,6 @@ function renderTrips(trips) {
     .join("");
 
   els.tourGrid.innerHTML = cards;
-  // Re-bind modal opener buttons created after rendering cards.
-  els.tourGrid.querySelectorAll("[data-open-modal]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const tripId = btn.getAttribute("data-trip-id");
-      const selected = state.trips.find((t) => t.id === tripId);
-      if (selected) {
-        const firstDestination = tourDestinationCountries(selected)[0] || "";
-        setBookingField("bookingDestination", firstDestination);
-        setBookingField("bookingStyle", selected.styles[0] || "");
-        setSelectedTourContext(selected);
-      }
-      openBookingModal();
-    });
-  });
 }
 
 function populateFilterOptions(trips) {
@@ -757,14 +743,45 @@ function prewarmTourImages(tours) {
 function setupModal() {
   if (!els.bookingModal) return;
 
-  const openButtons = [els.openBookingModal, ...els.openModalButtons]
-    .filter(Boolean)
-    .filter((button) => !button.hasAttribute("data-trip-id"));
-  openButtons.forEach((button) => {
-    button.addEventListener("click", () => {
+  const openModalButtons = [els.openBookingModal, ...els.openModalButtons].filter(Boolean);
+  const resolveAndOpenBookingModalFromButton = (trigger) => {
+    const tripId = trigger?.getAttribute?.("data-trip-id");
+    if (!tripId) {
       clearSelectedTourContext();
       openBookingModal();
+      return;
+    }
+
+    const selected = state.trips.find((trip) => trip.id === tripId);
+    if (selected) {
+      const firstDestination = tourDestinationCountries(selected)[0] || "";
+      setBookingField("bookingDestination", firstDestination);
+      setBookingField("bookingStyle", selected.styles[0] || "");
+      setSelectedTourContext(selected);
+      openBookingModal();
+      return;
+    }
+
+    clearSelectedTourContext();
+    openBookingModal();
+  };
+
+  openModalButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      resolveAndOpenBookingModalFromButton(button);
     });
+  });
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-open-modal]");
+    if (!trigger) return;
+
+    event.preventDefault();
+    if (openModalButtons.includes(trigger) || trigger.closest(".modal")) {
+      return;
+    }
+
+    resolveAndOpenBookingModalFromButton(trigger);
   });
 
   els.closeBookingModal.addEventListener("click", closeBookingModal);
