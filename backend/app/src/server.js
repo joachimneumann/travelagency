@@ -25,6 +25,7 @@ const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
 const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
+const BACKEND_GENERATED_REQUEST_FACTORY_PATH = path.join(APP_ROOT, "Generated", "API", "generated_APIRequestFactory.js");
 const PORT = Number(process.env.PORT || 8787);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const execFile = promisify(execFileCb);
@@ -3687,9 +3688,23 @@ async function handleHealth(_req, res) {
 
 async function readMobileContractMeta() {
   if (!mobileContractMetaPromise) {
-    mobileContractMetaPromise = readFile(MOBILE_CONTRACT_META_PATH, "utf8")
-      .then((raw) => JSON.parse(raw))
-      .catch(() => ({ modelVersion: "unknown" }));
+    mobileContractMetaPromise = (async () => {
+      try {
+        const raw = await readFile(MOBILE_CONTRACT_META_PATH, "utf8");
+        return JSON.parse(raw);
+      } catch {
+        try {
+          const generatedFactorySource = await readFile(BACKEND_GENERATED_REQUEST_FACTORY_PATH, "utf8");
+          const match = generatedFactorySource.match(/GENERATED_CONTRACT_VERSION\\s*=\\s*\"([^\"]+)\"/);
+          if (match?.[1]) {
+            return { modelVersion: match[1] };
+          }
+        } catch {
+          // Fall through to unknown
+        }
+        return { modelVersion: "unknown" };
+      }
+    })();
   }
   return mobileContractMetaPromise;
 }
