@@ -99,7 +99,7 @@ struct BookingDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Customer")
                         .font(.headline)
-                    Text(customer.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown")
+                    Text(customer.display_name.trimmingCharacters(in: .whitespacesAndNewlines))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -148,7 +148,7 @@ struct BookingDetailView: View {
             NavigationLink {
                 WhatsAppChatThreadView(
                     events: events,
-                    customerPhone: viewModel.customer?.phone,
+                    customerPhone: viewModel.customer?.phone_number,
                     onRefresh: {
                         guard let session = await sessionStore.validSession() else { return }
                         await viewModel.refreshChat(session: session)

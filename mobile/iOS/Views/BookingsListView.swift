@@ -165,14 +165,14 @@ struct CustomersListView: View {
     }
 
     private func displayName(for customer: Customer) -> String {
-        let name = (customer.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = customer.display_name.trimmingCharacters(in: .whitespacesAndNewlines)
         if !name.isEmpty { return name }
-        return customer.email ?? customer.phone ?? customer.id
+        return customer.email ?? customer.phone_number ?? customer.id
     }
 
     private func subtitle(for customer: Customer) -> String {
         let email = (customer.email ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let phone = (customer.phone ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let phone = (customer.phone_number ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if !email.isEmpty && !phone.isEmpty {
             return "\(email) • \(phone)"
         }

@@ -33,11 +33,9 @@ struct RoleService {
         canChangeAssignment(profile)
     }
 
-    func canReadTours(_ profile: ClientProfile) -> Bool {
-        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpAccountant)
+
+    func canReadSettings(_ profile: ClientProfile) -> Bool {
+        profile.roles.contains(.atpAdmin) || profile.roles.contains(.atpManager)
     }
 
-    func canEditTours(_ profile: ClientProfile) -> Bool {
-        profile.roles.contains(.atpAdmin)
-    }
 }

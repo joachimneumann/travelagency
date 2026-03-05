@@ -23,16 +23,6 @@ import Foundation
         }
     }
 
-    struct GeneratedTourList: Codable, Equatable {
-    let items: [GeneratedTour]
-    let pagination: GeneratedPagination
-
-        private enum CodingKeys: String, CodingKey {
-        case items = "items"
-        case pagination = "pagination"
-        }
-    }
-
     struct GeneratedBookingDetail: Codable, Equatable {
     let booking: GeneratedBooking
     let customer: GeneratedCustomer?
@@ -46,30 +36,18 @@ import Foundation
     struct GeneratedCustomerDetail: Codable, Equatable {
     let customer: GeneratedCustomer
     let bookings: [GeneratedBooking]
+    let consents: [GeneratedCustomerConsent]
+    let documents: [GeneratedCustomerDocument]
+    let travelGroups: [GeneratedTravelGroup]
+    let travelGroupMembers: [GeneratedTravelGroupMember]
 
         private enum CodingKeys: String, CodingKey {
         case customer = "customer"
         case bookings = "bookings"
-        }
-    }
-
-    struct GeneratedTourOptions: Codable, Equatable {
-    let destinations: [String]?
-    let styles: [String]?
-
-        private enum CodingKeys: String, CodingKey {
-        case destinations = "destinations"
-        case styles = "styles"
-        }
-    }
-
-    struct GeneratedTourDetail: Codable, Equatable {
-    let tour: GeneratedTour
-    let options: GeneratedTourOptions
-
-        private enum CodingKeys: String, CodingKey {
-        case tour = "tour"
-        case options = "options"
+        case consents = "consents"
+        case documents = "documents"
+        case travelGroups = "travel_groups"
+        case travelGroupMembers = "travel_group_members"
         }
     }
 
@@ -206,12 +184,10 @@ import Foundation
     struct GeneratedFeatureFlags: Codable, Equatable {
     let bookings: Bool
     let customers: Bool
-    let tours: Bool
 
         private enum CodingKeys: String, CodingKey {
         case bookings = "bookings"
         case customers = "customers"
-        case tours = "tours"
         }
     }
 
@@ -344,4 +320,3 @@ import Foundation
         case code = "code"
         }
     }
-

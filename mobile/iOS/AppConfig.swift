@@ -26,17 +26,11 @@ typealias BookingActivity = GeneratedBookingActivity
 typealias Booking = GeneratedBooking
 
 typealias Customer = GeneratedCustomer
-typealias Tour = GeneratedTour
-typealias TourPriceFrom = GeneratedTourPriceFrom
-
 typealias BookingListResponse = GeneratedBookingList
 typealias CustomerListResponse = GeneratedCustomerList
-typealias TourListResponse = GeneratedTourList
 typealias BookingDetailResponse = GeneratedBookingDetail
 typealias BookingUpdateResponse = GeneratedBookingDetail
 typealias CustomerDetailResponse = GeneratedCustomerDetail
-typealias TourOptionsResponse = GeneratedTourOptions
-typealias TourDetailResponse = GeneratedTourDetail
 typealias AtpStaffDirectoryEntry = GeneratedAtpStaffDirectoryEntry
 typealias AtpStaffMember = GeneratedAtpStaffDirectoryEntry
 typealias AtpStaffListResponse = GeneratedAtpStaffListResponse

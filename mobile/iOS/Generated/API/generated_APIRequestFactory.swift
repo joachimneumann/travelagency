@@ -9,7 +9,6 @@
     static let mobileBootstrap = "/public/v1/mobile/bootstrap"
     static let authMe = "/auth/me"
     static let publicBookings = "/public/v1/bookings"
-    static let publicTours = "/public/v1/tours"
     static let bookings = "/api/v1/bookings"
     static let bookingDetail = "/api/v1/bookings/{bookingId}"
     static let bookingChat = "/api/v1/bookings/{bookingId}/chat"
@@ -23,9 +22,6 @@
     static let atpStaff = "/api/v1/atp_staff"
     static let customers = "/api/v1/customers"
     static let customerDetail = "/api/v1/customers/{customerId}"
-    static let tours = "/api/v1/tours"
-    static let tourDetail = "/api/v1/tours/{tourId}"
-    static let tourImage = "/api/v1/tours/{tourId}/image"
 
         static func buildURL(baseURL: URL, path: String, queryItems: [URLQueryItem] = []) -> URL {
             var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
@@ -43,10 +39,6 @@ static func authMePath() -> String {
 
 static func publicBookingsPath() -> String {
     "/public/v1/bookings"
-}
-
-static func publicToursPath() -> String {
-    "/public/v1/tours"
 }
 
 static func bookingsPath() -> String {
@@ -101,18 +93,6 @@ static func customerDetailPath(customerId: String) -> String {
     "/api/v1/customers/\(customerId)"
 }
 
-static func toursPath() -> String {
-    "/api/v1/tours"
-}
-
-static func tourDetailPath(tourId: String) -> String {
-    "/api/v1/tours/\(tourId)"
-}
-
-static func tourImagePath(tourId: String) -> String {
-    "/api/v1/tours/\(tourId)/image"
-}
-
 
 static func mobileBootstrapURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
     buildURL(baseURL: baseURL, path: mobileBootstrapPath(), queryItems: queryItems)
@@ -124,10 +104,6 @@ static func authMeURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
 
 static func publicBookingsURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
     buildURL(baseURL: baseURL, path: publicBookingsPath(), queryItems: queryItems)
-}
-
-static func publicToursURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
-    buildURL(baseURL: baseURL, path: publicToursPath(), queryItems: queryItems)
 }
 
 static func bookingsURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
@@ -180,18 +156,6 @@ static func customersURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
 
 static func customerDetailURL(baseURL: URL, customerId: String, queryItems: [URLQueryItem] = []) -> URL {
     buildURL(baseURL: baseURL, path: customerDetailPath(customerId: customerId), queryItems: queryItems)
-}
-
-static func toursURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
-    buildURL(baseURL: baseURL, path: toursPath(), queryItems: queryItems)
-}
-
-static func tourDetailURL(baseURL: URL, tourId: String, queryItems: [URLQueryItem] = []) -> URL {
-    buildURL(baseURL: baseURL, path: tourDetailPath(tourId: tourId), queryItems: queryItems)
-}
-
-static func tourImageURL(baseURL: URL, tourId: String, queryItems: [URLQueryItem] = []) -> URL {
-    buildURL(baseURL: baseURL, path: tourImagePath(tourId: tourId), queryItems: queryItems)
 }
 
     }

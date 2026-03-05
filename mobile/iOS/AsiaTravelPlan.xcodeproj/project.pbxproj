@@ -20,6 +20,8 @@
 		0D0B9C2A7F0B4E8DB2C3DFA2 /* InlineNavigationTitleDisplayModeModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8F7D2E4D4A64B0CB7A9C5F1 /* InlineNavigationTitleDisplayModeModifier.swift */; };
 		0D8C9E4E9D4F4B2EB7F0D0A6 /* BookingDetailFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9ED7F8BB9E1459CB9FA2E2A /* BookingDetailFormatting.swift */; };
 		0E4F1A4A7D2B4C2F8A1D5B8C /* PaymentsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F1C9D78B2F4A6E9D3F7C91 /* PaymentsDetailView.swift */; };
+		D1A2B3D4E5F60789ABCDEF11 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60789ABCDEF01 /* DashboardView.swift */; };
+		D1A2B3D4E5F60789ABCDEF12 /* TravelGroupsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60789ABCDEF02 /* TravelGroupsListView.swift */; };
 		15E247FEC87B25DF7C6F9CAE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6596F18A94CCC4825B180E5 /* Foundation.framework */; };
 		22018DFA963D6504A052D6F7 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C091DBA2E9F7F99A7CEC74 /* AppConfig.swift */; };
 		27F57DEB2D3617E979CD49A8 /* generated_APIRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2271DC5EA0F1CCC528A5CB5B /* generated_APIRequestFactory.swift */; };
@@ -79,6 +81,8 @@
 		B6596F18A94CCC4825B180E5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		B745ABEFB5A756688035EEAE /* ClientProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientProfile.swift; sourceTree = "<group>"; };
 		C4F5B4D2D3D14A2FAED5E4D3 /* OfferComponentDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OfferComponentDetailView.swift; sourceTree = "<group>"; };
+		C1A2B3D4E5F60789ABCDEF01 /* DashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		C1A2B3D4E5F60789ABCDEF02 /* TravelGroupsListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TravelGroupsListView.swift; sourceTree = "<group>"; };
 		C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8B7A6D5E4F3029181716151 /* asiatravelplan.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.iconcomposer.icon; path = asiatravelplan.icon; sourceTree = "<group>"; };
 		C7B441BB7BA80E1A1394F166 /* StartupFailureView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartupFailureView.swift; sourceTree = "<group>"; };
@@ -236,6 +240,7 @@
 			isa = PBXGroup;
 			children = (
 				3B9C3078AF749E1B18E2E15C /* AppShellView.swift */,
+				C1A2B3D4E5F60789ABCDEF01 /* DashboardView.swift */,
 				D36294932E777177A9AF9ABF /* BookingDetailView.swift */,
 				D2F497350C9D6985AF9AAFF4 /* BookingsListView.swift */,
 				74DD1AD7347A24E8D20DF4CA /* LoginView.swift */,
@@ -253,6 +258,7 @@
 				E4F1C9D78B2F4A6E9D3F7C91 /* PaymentsDetailView.swift */,
 				9A8FD7E1A8E04F2DAE4E9D9C /* ActivityRowView.swift */,
 				A8F7D2E4D4A64B0CB7A9C5F1 /* InlineNavigationTitleDisplayModeModifier.swift */,
+				C1A2B3D4E5F60789ABCDEF02 /* TravelGroupsListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -362,6 +368,8 @@
 				0D0B9C2A7F0B4E8DB2C3DFA2 /* InlineNavigationTitleDisplayModeModifier.swift in Sources */,
 				0D8C9E4E9D4F4B2EB7F0D0A6 /* BookingDetailFormatting.swift in Sources */,
 				0E4F1A4A7D2B4C2F8A1D5B8C /* PaymentsDetailView.swift in Sources */,
+				D1A2B3D4E5F60789ABCDEF11 /* DashboardView.swift in Sources */,
+				D1A2B3D4E5F60789ABCDEF12 /* TravelGroupsListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
