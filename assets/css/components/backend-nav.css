@@ -14,6 +14,10 @@
   width: max-content;
 }
 
+.backend-nav__website {
+  margin-left: auto;
+}
+
 .backend-nav__logout-link {
   display: inline-flex;
   flex-direction: column;
