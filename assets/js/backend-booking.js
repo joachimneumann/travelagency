@@ -1977,7 +1977,7 @@ async function loadAuthStatus() {
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
     if (els.userLabel) {
-      els.userLabel.textContent = user ? `Logged in as: ${user}` : "";
+      els.userLabel.textContent = user || "";
     }
     state.permissions = {
       canChangeAssignment: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),

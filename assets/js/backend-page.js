@@ -120,7 +120,7 @@ async function loadBackendAuthStatus() {
       canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
       canEditTours: hasAnyRole(ROLES.ADMIN)
     };
-    els.userLabel.textContent = user ? `Logged in as: ${user}` : "";
+    els.userLabel.textContent = user || "";
     return payload.user;
   } catch {
     els.userLabel.textContent = "";

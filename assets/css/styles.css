@@ -120,8 +120,10 @@ img {
 
 .backend-login {
   display: flex;
-  gap: 0.45rem;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.45rem;
   align-items: center;
+  justify-content: flex-end;
 }
 
 #backendLoginBtn {
@@ -136,6 +138,11 @@ img {
   font-weight: 500;
   opacity: 0.9;
   margin-top: 0.16rem;
+}
+
+#websiteAuthStatus {
+  width: 100%;
+  text-align: right;
 }
 
 .backend-login select {

@@ -283,18 +283,32 @@ function placeBackendLogin(authenticated) {
 }
 
 function updateBackendButtonLabel({ authenticated, user }) {
-  if (!els.backendLoginBtnTitle || !els.backendLoginBtnSubtitle) return;
+  if (!els.backendLoginBtnTitle) return;
+  const subtitleEl = els.backendLoginBtnSubtitle;
+  const statusEl = els.websiteAuthStatus;
 
   if (authenticated) {
     els.backendLoginBtnTitle.textContent = "Backend";
-    els.backendLoginBtnSubtitle.textContent = user || "";
-    els.backendLoginBtnSubtitle.hidden = !Boolean(user);
+    if (subtitleEl) {
+      subtitleEl.textContent = "";
+      subtitleEl.hidden = true;
+    }
+    if (statusEl) {
+      statusEl.textContent = user || "";
+      statusEl.hidden = !Boolean(user);
+    }
     return;
   }
 
   els.backendLoginBtnTitle.textContent = "AsiaTravelPlan Backend";
-  els.backendLoginBtnSubtitle.textContent = "";
-  els.backendLoginBtnSubtitle.hidden = true;
+  if (subtitleEl) {
+    subtitleEl.textContent = "";
+    subtitleEl.hidden = true;
+  }
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.hidden = true;
+  }
 }
 
 function setupFilterEvents() {
