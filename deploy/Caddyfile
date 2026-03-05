@@ -26,7 +26,7 @@ staging.asiatravelplan.com {
   @site_root path /
   rewrite @site_root /frontend/pages/index.html
 
-  @html_pages path /index.html /404.html /backend.html /backend-booking.html /backend-tour.html
+  @html_pages path /index.html /404.html /backend.html /backend-booking.html /backend-tour.html /customer.html
   rewrite @html_pages /frontend/pages{path}
 
   @staging_access path /staging-access/*
