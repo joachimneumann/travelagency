@@ -15,14 +15,35 @@ const state = {
   id: qs.get("id") || "",
   user: qs.get("user") || "admin",
   customer: null,
-  isSaving: false,
-  hasChanges: false
+  isSaving: false
 };
 
-const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields.map((field) => ({
-  ...field,
-  editable: true
-}));
+const CUSTOMER_FIELD_UI_CONFIG = {
+  id: { editable: false },
+  created_at: { editable: false },
+  updated_at: { editable: false },
+  archived_at: { editable: false },
+  entity_type: {
+    editable: true,
+    control: "select",
+    options: [
+      { value: "person", label: "Person" },
+      { value: "organization", label: "Organization" }
+    ]
+  },
+  notes: { editable: true, control: "textarea", rows: 4 },
+  tags: { editable: true, control: "textarea", rows: 2 },
+  can_receive_marketing: { editable: true, control: "checkbox" }
+};
+
+const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields.map((field) => {
+  const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
+  return {
+    ...field,
+    ...config,
+    editable: config.editable ?? true
+  };
+});
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -187,9 +208,33 @@ function renderEditableCustomerTable(tableEl, fields, entity) {
 
 function renderEditableFieldInput(field, value) {
   const fieldId = customerFieldInputId(field.name);
+  if (!field.editable) {
+    return `<span>${escapeHtml(formatFieldValue(value, field))}</span>`;
+  }
+
+  const options = field.options || [];
   if (field.typeName === "bool") {
     const checked = value ? "checked" : "";
     return `<label><input type="checkbox" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" ${checked} /></label>`;
+  }
+
+  if (field.control === "select" && options.length) {
+    const optionsHtml = options
+      .map((entry) => {
+        const optionValue = String(entry.value || "");
+        const optionLabel = String(entry.label || entry.value || "");
+        const selected = normalizeText(optionValue) === normalizeText(value) ? " selected" : "";
+        return `<option value="${escapeHtml(optionValue)}"${selected}>${escapeHtml(optionLabel)}</option>`;
+      })
+      .join("");
+    return `<select id="${fieldId}" data-customer-field="${escapeHtml(field.name)}"><option value="">(select)</option>${optionsHtml}</select>`;
+  }
+
+  if (field.control === "textarea") {
+    const isMultiLine = field.isArray;
+    const rows = Number(field.rows) > 0 ? Number(field.rows) : 2;
+    const asText = field.isArray ? (Array.isArray(value) ? value.join(", ") : "") : String(value || "");
+    return `<textarea id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" rows="${rows}">${escapeHtml(asText)}</textarea>`;
   }
 
   if (field.isArray) {
@@ -215,6 +260,9 @@ function renderEditableFieldInput(field, value) {
 function getInputTypeForField(field) {
   if (field.name === "email") return "email";
   if (field.name.includes("phone")) return "tel";
+  if (field.name === "phone_number") return "tel";
+  if (field.name === "address_country_code" || field.name === "nationality") return "text";
+  if (field.name === "preferred_currency") return "text";
   if (field.name.includes("date")) return "date";
   return "text";
 }
@@ -291,6 +339,7 @@ function collectEditableCustomerPayload() {
   const fields = CUSTOMER_EDIT_FIELDS;
   const payload = {};
   fields.forEach((field) => {
+    if (!field.editable) return;
     const el = document.getElementById(customerFieldInputId(field.name));
     if (!el) return;
     payload[field.name] = getFieldValueFromInput(field, el);
