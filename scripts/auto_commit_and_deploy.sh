@@ -7,10 +7,11 @@ REMOTE_SCRIPT="./scripts/update_staging.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/auto_commit_and_deploy.sh <backend_caddy|keycloak|all> <commit message...>
+  ./scripts/auto_commit_and_deploy.sh <backend_caddy|keycloak|all> [--all-files] <commit message...>
 
 Examples:
   ./scripts/auto_commit_and_deploy.sh backend_caddy automatic commit
+  ./scripts/auto_commit_and_deploy.sh backend_caddy --all-files ship everything
   ./scripts/auto_commit_and_deploy.sh keycloak tighten mobile auth layout
   ./scripts/auto_commit_and_deploy.sh all pricing partial payments
 EOF
@@ -48,6 +49,36 @@ collect_services() {
   done < <(normalize_target "$1")
 }
 
+default_stage_paths_for_target() {
+  local target="$1"
+  case "$target" in
+    backend_caddy)
+      printf '%s\n' \
+        api/generated \
+        assets \
+        backend/app \
+        deploy/Caddyfile \
+        documentation \
+        frontend \
+        model \
+        scripts \
+        tools/generator
+      ;;
+    keycloak)
+      printf '%s\n' \
+        backend/keycloak-theme \
+        deploy/Caddyfile \
+        scripts
+      ;;
+    all)
+      return 1
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 cd "$ROOT_DIR"
 
 if [[ "$#" -eq 0 ]]; then
@@ -63,6 +94,13 @@ fi
 
 TARGET="$1"
 shift
+
+ADD_ALL_FILES=0
+if [[ "${1:-}" == "--all-files" ]]; then
+  ADD_ALL_FILES=1
+  shift
+fi
+
 COMMIT_MESSAGE="$*"
 
 if [[ -z "${TARGET:-}" ]]; then
@@ -71,7 +109,12 @@ if [[ -z "${TARGET:-}" ]]; then
   exit 1
 fi
 
-git add -A
+if [[ -z "${COMMIT_MESSAGE// }" ]]; then
+  echo "Commit message must not be empty." >&2
+  usage >&2
+  exit 1
+fi
+
 created_commit=0
 
 collect_services "$TARGET"
@@ -81,7 +124,23 @@ if [[ "${#SERVICES[@]}" -eq 0 ]]; then
   exit 1
 fi
 
+if [[ "$ADD_ALL_FILES" -eq 1 || "$TARGET" == "all" ]]; then
+  git add -A
+else
+  STAGE_PATHS=()
+  while IFS= read -r path; do
+    [[ -n "$path" ]] && STAGE_PATHS+=("$path")
+  done < <(default_stage_paths_for_target "$TARGET")
+  if [[ "${#STAGE_PATHS[@]}" -eq 0 ]]; then
+    git add -A
+  else
+    git add -- "${STAGE_PATHS[@]}"
+  fi
+fi
+
 if ! git diff --cached --quiet; then
+  echo "Staged files:"
+  git diff --cached --name-only
   git commit -m "$COMMIT_MESSAGE"
   created_commit=1
 fi
