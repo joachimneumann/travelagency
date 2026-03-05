@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-03T03:55:29Z
+# 2026-03-05T01:22:35Z
 
 ---
 openapi: 3.1.0
@@ -25,7 +25,7 @@ tags:
 - name: Public
 - name: Bookings
 - name: Customers
-- name: AtpStaff
+- name: Staff
 - name: Tours
 components:
   securitySchemes:
@@ -115,7 +115,7 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/ATPStaffRole"
-        staffId:
+        atpStaffId:
           type: string
           nullable: true
     Customer:
@@ -194,7 +194,7 @@ components:
         atp_staff:
           type: string
           nullable: true
-        staffName:
+        atpStaffName:
           type: string
           nullable: true
         destination:
@@ -459,6 +459,95 @@ components:
           items:
             "$ref": "#/components/schemas/BookingInvoice"
         total:
+          type: integer
+    BookingChatEvent:
+      type: object
+      required:
+      - id
+      - channel
+      - direction
+      - eventType
+      - textPreview
+      - conversationId
+      properties:
+        id:
+          type: string
+        channel:
+          type: string
+        direction:
+          type: string
+        eventType:
+          type: string
+        externalStatus:
+          type: string
+          nullable: true
+        textPreview:
+          type: string
+        senderDisplay:
+          type: string
+          nullable: true
+        senderContact:
+          type: string
+          nullable: true
+        sentAt:
+          type: string
+          nullable: true
+        receivedAt:
+          type: string
+          nullable: true
+        conversationId:
+          type: string
+        openUrl:
+          type: string
+          nullable: true
+    BookingChatConversation:
+      type: object
+      required:
+      - id
+      - channel
+      properties:
+        id:
+          type: string
+        channel:
+          type: string
+        externalContactId:
+          type: string
+          nullable: true
+        customerId:
+          type: string
+          nullable: true
+        bookingId:
+          type: string
+          nullable: true
+        lastEventAt:
+          type: string
+          nullable: true
+        latestPreview:
+          type: string
+          nullable: true
+        openUrl:
+          type: string
+          nullable: true
+    BookingChatResponse:
+      type: object
+      required:
+      - total
+      - conversationTotal
+      properties:
+        mode:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingChatEvent"
+        total:
+          type: integer
+        conversations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingChatConversation"
+        conversationTotal:
           type: integer
     MobileBootstrap:
       type: object
@@ -779,6 +868,38 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/chat":
+    get:
+      summary: Booking Chat
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingChatResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/stage":
     patch:
       summary: Booking Stage
@@ -1017,7 +1138,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/atp_staff":
     get:
-      summary: AtpStaff
+      summary: Atp Staff
       tags:
       - V1
       security:

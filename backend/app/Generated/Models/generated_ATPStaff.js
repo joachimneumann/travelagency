@@ -67,7 +67,7 @@ export const ATPSTAFF_SCHEMA = {
       "isArray": true
     },
     {
-      "name": "staffId",
+      "name": "atpStaffId",
       "kind": "scalar",
       "typeName": "Identifier",
       "required": false

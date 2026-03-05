@@ -10,6 +10,7 @@
     case publicTours
     case bookings
     case bookingDetail
+    case bookingChat
     case bookingStage
     case bookingAssignment
     case bookingNote
@@ -17,7 +18,7 @@
     case bookingOffer
     case bookingActivities
     case bookingInvoices
-    case atp_staff
+    case atpStaff
     case customers
     case customerDetail
     case tours
@@ -34,6 +35,7 @@
         case .publicTours: return "GET"
         case .bookings: return "GET"
         case .bookingDetail: return "GET"
+        case .bookingChat: return "GET"
         case .bookingStage: return "PATCH"
         case .bookingAssignment: return "PATCH"
         case .bookingNote: return "PATCH"
@@ -41,7 +43,7 @@
         case .bookingOffer: return "PATCH"
         case .bookingActivities: return "GET"
         case .bookingInvoices: return "GET"
-        case .atp_staff: return "GET"
+        case .atpStaff: return "GET"
         case .customers: return "GET"
         case .customerDetail: return "GET"
         case .tours: return "GET"

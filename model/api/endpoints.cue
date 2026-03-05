@@ -71,6 +71,19 @@ package api
 		}]
 	},
 	{
+		key:           "booking_chat"
+		path:          "/api/v1/bookings/{bookingId}/chat"
+		method:        "GET"
+		authenticated: true
+		responseType:  "BookingChatResponse"
+		parameters: [{
+			name:     "bookingId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_stage"
 		path:          "/api/v1/bookings/{bookingId}/stage"
 		method:        "PATCH"

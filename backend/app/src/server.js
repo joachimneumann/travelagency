@@ -8,6 +8,8 @@ import { execFile as execFileCb } from "node:child_process";
 import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { deflateSync, inflateSync } from "node:zlib";
 import { createAuth } from "./auth.js";
+import { buildApiRoutes } from "./http/routes.js";
+import { buildPaginatedListResponse } from "./http/pagination.js";
 import {
   currencyDefinition as generatedCurrencyDefinition,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
@@ -211,47 +213,47 @@ function getFallbackExchangeRate(fromCurrency, toCurrency) {
 export async function createBackendHandler({ port = PORT } = {}) {
   await ensureStorage();
   const auth = createAuth({ port });
-  const routes = [
-    ...auth.routes,
-    { method: "GET", pattern: /^\/health$/, handler: handleHealth },
-    { method: "GET", pattern: /^\/integrations\/meta\/webhook\/status$/, handler: handleMetaWebhookStatus },
-    { method: "GET", pattern: /^\/api\/whatsapp\/webhook$/, handler: handleMetaWebhookVerify },
-    { method: "POST", pattern: /^\/api\/whatsapp\/webhook$/, handler: handleMetaWebhookIngest },
-    { method: "GET", pattern: /^\/integrations\/meta\/webhook$/, handler: handleMetaWebhookVerify },
-    { method: "POST", pattern: /^\/integrations\/meta\/webhook$/, handler: handleMetaWebhookIngest },
-    { method: "GET", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginPage },
-    { method: "POST", pattern: /^\/staging-access\/login$/, handler: handleStagingAccessLoginSubmit },
-    { method: "GET", pattern: /^\/staging-access\/check$/, handler: handleStagingAccessCheck },
-    { method: "GET", pattern: /^\/staging-access\/logout$/, handler: handleStagingAccessLogout },
-    { method: "GET", pattern: /^\/public\/v1\/mobile\/bootstrap$/, handler: handleMobileBootstrap },
-    { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlePublicListTours },
-    { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlePublicTourImage },
-    { method: "POST", pattern: /^\/public\/v1\/bookings$/, handler: handleCreateBooking },
-    { method: "GET", pattern: /^\/api\/v1\/bookings$/, handler: handleListBookings },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handleGetBooking },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/chat$/, handler: handleListBookingChatEvents },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlePatchBookingStage },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlePatchBookingOwner },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlePatchBookingNotes },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/pricing$/, handler: handlePatchBookingPricing },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/offer$/, handler: handlePatchBookingOffer },
-    { method: "POST", pattern: /^\/api\/v1\/offers\/exchange-rates$/, handler: handlePostOfferExchangeRates },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleListActivities },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handleCreateActivity },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleListBookingInvoices },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handleCreateBookingInvoice },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices\/([^/]+)$/, handler: handlePatchBookingInvoice },
-    { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handleGetInvoicePdf },
-    { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handleListCustomers },
-    { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handleGetCustomer },
-    { method: "GET", pattern: /^\/api\/v1\/atp_staff$/, handler: handleListAtpStaff },
-    { method: "POST", pattern: /^\/api\/v1\/atp_staff$/, handler: handleCreateAtpStaff },
-    { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handleListTours },
-    { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handleGetTour },
-    { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handleCreateTour },
-    { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlePatchTour },
-    { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handleUploadTourImage },
-  ];
+  const routes = buildApiRoutes({
+    authRoutes: auth.routes,
+    handlers: {
+      handleHealth,
+      handleMetaWebhookStatus,
+      handleMetaWebhookVerify,
+      handleMetaWebhookIngest,
+      handleStagingAccessLoginPage,
+      handleStagingAccessLoginSubmit,
+      handleStagingAccessCheck,
+      handleStagingAccessLogout,
+      handleMobileBootstrap,
+      handlePublicListTours,
+      handlePublicTourImage,
+      handleCreateBooking,
+      handleListBookings,
+      handleGetBooking,
+      handleListBookingChatEvents,
+      handlePatchBookingStage,
+      handlePatchBookingOwner,
+      handlePatchBookingNotes,
+      handlePatchBookingPricing,
+      handlePatchBookingOffer,
+      handlePostOfferExchangeRates,
+      handleListActivities,
+      handleCreateActivity,
+      handleListBookingInvoices,
+      handleCreateBookingInvoice,
+      handlePatchBookingInvoice,
+      handleGetInvoicePdf,
+      handleListCustomers,
+      handleGetCustomer,
+      handleListAtpStaff,
+      handleCreateAtpStaff,
+      handleListTours,
+      handleGetTour,
+      handleCreateTour,
+      handlePatchTour,
+      handleUploadTourImage
+    }
+  });
 
   return async function backendHandler(req, res) {
     try {
@@ -3700,15 +3702,15 @@ async function handleMobileBootstrap(_req, res) {
       latest_version: MOBILE_LATEST_APP_VERSION,
       force_update: MOBILE_FORCE_UPDATE
     },
-    api: {
-      contract_version: normalizeText(contractMeta.modelVersion) || "unknown"
-    },
-    features: {
-      bookings: true,
-      customers: false,
-      tours: false
-    }
-  });
+      api: {
+        contract_version: normalizeText(contractMeta.modelVersion) || "unknown"
+      },
+      features: {
+        bookings: true,
+        customers: true,
+        tours: false
+      }
+    });
 }
 
 async function handleCreateBooking(req, res) {
@@ -3842,15 +3844,7 @@ async function handleListBookings(req, res) {
       .map(async (booking) => buildBookingReadModel(booking))
   );
   const paged = paginate(visible, requestUrl.searchParams);
-  sendJson(res, 200, {
-    items: paged.items,
-    total: paged.total,
-    page: paged.page,
-    page_size: paged.page_size,
-    total_pages: paged.total_pages,
-    filters,
-    sort
-  });
+  sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));
 }
 
 async function handleGetBooking(req, res, [bookingId]) {
@@ -4551,13 +4545,7 @@ async function handleListCustomers(req, res) {
       String(b.created_at || b.updated_at || "").localeCompare(String(a.created_at || a.updated_at || ""))
     );
   const paged = paginate(filtered, pageQuery);
-  sendJson(res, 200, {
-    items: paged.items,
-    total: paged.total,
-    page: paged.page,
-    page_size: paged.page_size,
-    total_pages: paged.total_pages
-  });
+  sendJson(res, 200, buildPaginatedListResponse(paged));
 }
 
 async function handleGetCustomer(req, res, [customerId]) {
@@ -4776,7 +4764,20 @@ async function handlePublicListTours(req, res) {
 
   const sorted = [...filtered].sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
   const items = sorted.slice(offset, offset + limit).map(normalizeTourForRead);
-  const payload = { items, total: filtered.length, offset, limit };
+  const payload = {
+    items,
+    pagination: {
+      page: Math.floor(offset / limit) + 1,
+      page_size: limit,
+      pageSize: limit,
+      total_items: filtered.length,
+      totalItems: filtered.length,
+      total_pages: Math.max(1, Math.ceil(filtered.length / limit))
+    },
+    total: filtered.length,
+    offset,
+    limit
+  };
   const payloadText = JSON.stringify(payload);
   const etag = `W/"${createHash("sha1").update(payloadText).digest("hex")}"`;
   const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
@@ -4806,17 +4807,22 @@ async function handleListTours(req, res) {
   const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams);
   const paged = paginate(filtered, requestUrl.searchParams);
   const options = collectTourOptions(tours);
-  sendJson(res, 200, {
-    items: paged.items.map(normalizeTourForRead),
-    total: paged.total,
-    page: paged.page,
-    page_size: paged.page_size,
-    total_pages: paged.total_pages,
-    sort,
-    filters,
-    available_destinations: options.destinations,
-    available_styles: options.styles
-  });
+  sendJson(
+    res,
+    200,
+    buildPaginatedListResponse(
+      {
+        ...paged,
+        items: paged.items.map(normalizeTourForRead)
+      },
+      {
+        sort,
+        filters,
+        available_destinations: options.destinations,
+        available_styles: options.styles
+      }
+    )
+  );
 }
 
 async function handleGetTour(req, res, [tourId]) {

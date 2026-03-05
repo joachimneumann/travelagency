@@ -163,7 +163,6 @@
         let taxRateBasisPoints: Int
         let lineTaxAmountCents: Int?
         let lineGrossAmountCents: Int?
-        let lineTotalAmountCents: Int?
         let currency: GeneratedCurrencyCode
         let notes: String?
         let sortOrder: Int?
@@ -179,7 +178,6 @@
             case taxRateBasisPoints = "tax_rate_basis_points"
             case lineTaxAmountCents = "line_tax_amount_cents"
             case lineGrossAmountCents = "line_gross_amount_cents"
-            case lineTotalAmountCents = "line_total_amount_cents"
             case currency
             case notes
             case sortOrder = "sort_order"
@@ -205,14 +203,12 @@
         let categoryRules: [GeneratedBookingOfferCategoryRule]
         let items: [GeneratedBookingOfferItem]
         let totals: GeneratedBookingOfferTotals
-        let totalPriceCents: Int
 
         private enum CodingKeys: String, CodingKey {
             case currency
             case categoryRules = "category_rules"
             case items
             case totals
-            case totalPriceCents = "total_price_cents"
         }
     }
 
@@ -262,14 +258,6 @@
             case createdAt = "created_at"
             case note
         }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            id = try container.decode(String.self, forKey: .id)
-            type = try container.decode(String.self, forKey: .type)
-            createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt) ?? ""
-            note = try container.decodeIfPresent(String.self, forKey: .note)
-        }
     }
 
     struct GeneratedBooking: Codable, Identifiable, Equatable {
@@ -283,8 +271,8 @@
         let duration: String?
         let budget: String?
         let stage: GeneratedBookingStage
-        let assignedAtpStaffId: String?
-        let assignedAtpStaffName: String?
+        let assignedStaffId: String?
+        let assignedStaffName: String?
         let notes: String?
         let source: GeneratedSourceAttribution?
         let bookingHash: String?
@@ -302,34 +290,12 @@
             case duration
             case budget
             case stage
-            case assignedAtpStaffId = "atp_staff"
-            case assignedAtpStaffName = "atp_staff_name"
+            case assignedStaffId = "staff"
+            case assignedStaffName = "staff_name"
             case notes
             case source
             case bookingHash = "booking_hash"
             case pricing
             case offer
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            id = try container.decode(String.self, forKey: .id)
-            customerId = try container.decodeIfPresent(String.self, forKey: .customerId)
-            customerName = try container.decodeIfPresent(String.self, forKey: .customerName)
-            destination = try container.decodeIfPresent(String.self, forKey: .destination) ?? ""
-            style = try container.decodeIfPresent(String.self, forKey: .style) ?? ""
-            travelMonth = try container.decodeIfPresent(String.self, forKey: .travelMonth)
-            travelers = try container.decodeIfPresent(Int.self, forKey: .travelers)
-            duration = try container.decodeIfPresent(String.self, forKey: .duration)
-            budget = try container.decodeIfPresent(String.self, forKey: .budget)
-            let rawStage = try container.decodeIfPresent(String.self, forKey: .stage)
-            stage = GeneratedBookingStage(rawValue: rawStage ?? "") ?? .new
-            assignedAtpStaffId = try container.decodeIfPresent(String.self, forKey: .assignedAtpStaffId)
-            assignedAtpStaffName = try container.decodeIfPresent(String.self, forKey: .assignedAtpStaffName)
-            notes = try container.decodeIfPresent(String.self, forKey: .notes)
-            source = try container.decodeIfPresent(GeneratedSourceAttribution.self, forKey: .source)
-            bookingHash = try container.decodeIfPresent(String.self, forKey: .bookingHash)
-            pricing = try container.decodeIfPresent(GeneratedBookingPricing.self, forKey: .pricing)
-            offer = try container.decodeIfPresent(GeneratedBookingOffer.self, forKey: .offer)
         }
     }

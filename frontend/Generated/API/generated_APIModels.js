@@ -75,6 +75,21 @@ export const GENERATED_API_ENDPOINTS = [
     ]
   },
   {
+    "key": "booking_chat",
+    "path": "/api/v1/bookings/{bookingId}/chat",
+    "method": "GET",
+    "authenticated": true,
+    "responseType": "BookingChatResponse",
+    "parameters": [
+      {
+        "name": "bookingId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  {
     "key": "booking_stage",
     "path": "/api/v1/bookings/{bookingId}/stage",
     "method": "PATCH",
@@ -429,7 +444,7 @@ export function validateTourDetail(value) {
   return __validateShape(value, TOUR_DETAIL_SCHEMA);
 }
 
-export const STAFF_DIRECTORY_ENTRY_SCHEMA = {
+export const ATP_STAFF_DIRECTORY_ENTRY_SCHEMA = {
   "name": "AtpStaffDirectoryEntry",
   "domain": "api",
   "module": "api",
@@ -478,10 +493,10 @@ export const STAFF_DIRECTORY_ENTRY_SCHEMA = {
 };
 
 export function validateAtpStaffDirectoryEntry(value) {
-  return __validateShape(value, STAFF_DIRECTORY_ENTRY_SCHEMA);
+  return __validateShape(value, ATP_STAFF_DIRECTORY_ENTRY_SCHEMA);
 }
 
-export const STAFF_LIST_RESPONSE_SCHEMA = {
+export const ATP_STAFF_LIST_RESPONSE_SCHEMA = {
   "name": "AtpStaffListResponse",
   "domain": "api",
   "module": "api",
@@ -504,7 +519,7 @@ export const STAFF_LIST_RESPONSE_SCHEMA = {
 };
 
 export function validateAtpStaffListResponse(value) {
-  return __validateShape(value, STAFF_LIST_RESPONSE_SCHEMA);
+  return __validateShape(value, ATP_STAFF_LIST_RESPONSE_SCHEMA);
 }
 
 export const BOOKING_ACTIVITIES_RESPONSE_SCHEMA = {
@@ -564,6 +579,197 @@ export const BOOKING_INVOICES_RESPONSE_SCHEMA = {
 
 export function validateBookingInvoicesResponse(value) {
   return __validateShape(value, BOOKING_INVOICES_RESPONSE_SCHEMA);
+}
+
+export const BOOKING_CHAT_EVENT_SCHEMA = {
+  "name": "BookingChatEvent",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "api.#BookingChatEvent",
+  "fields": [
+    {
+      "name": "id",
+      "kind": "scalar",
+      "typeName": "Identifier",
+      "required": true
+    },
+    {
+      "name": "channel",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": true
+    },
+    {
+      "name": "direction",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": true
+    },
+    {
+      "name": "eventType",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": true
+    },
+    {
+      "name": "externalStatus",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "textPreview",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": true
+    },
+    {
+      "name": "senderDisplay",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "senderContact",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "sentAt",
+      "kind": "scalar",
+      "typeName": "Timestamp",
+      "required": false
+    },
+    {
+      "name": "receivedAt",
+      "kind": "scalar",
+      "typeName": "Timestamp",
+      "required": false
+    },
+    {
+      "name": "conversationId",
+      "kind": "scalar",
+      "typeName": "Identifier",
+      "required": true
+    },
+    {
+      "name": "openUrl",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    }
+  ]
+};
+
+export function validateBookingChatEvent(value) {
+  return __validateShape(value, BOOKING_CHAT_EVENT_SCHEMA);
+}
+
+export const BOOKING_CHAT_CONVERSATION_SCHEMA = {
+  "name": "BookingChatConversation",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "api.#BookingChatConversation",
+  "fields": [
+    {
+      "name": "id",
+      "kind": "scalar",
+      "typeName": "Identifier",
+      "required": true
+    },
+    {
+      "name": "channel",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": true
+    },
+    {
+      "name": "externalContactId",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "customerId",
+      "kind": "scalar",
+      "typeName": "Identifier",
+      "required": false
+    },
+    {
+      "name": "bookingId",
+      "kind": "scalar",
+      "typeName": "Identifier",
+      "required": false
+    },
+    {
+      "name": "lastEventAt",
+      "kind": "scalar",
+      "typeName": "Timestamp",
+      "required": false
+    },
+    {
+      "name": "latestPreview",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "openUrl",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    }
+  ]
+};
+
+export function validateBookingChatConversation(value) {
+  return __validateShape(value, BOOKING_CHAT_CONVERSATION_SCHEMA);
+}
+
+export const BOOKING_CHAT_RESPONSE_SCHEMA = {
+  "name": "BookingChatResponse",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "api.#BookingChatResponse",
+  "fields": [
+    {
+      "name": "mode",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "items",
+      "kind": "transport",
+      "typeName": "BookingChatEvent",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "total",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    },
+    {
+      "name": "conversations",
+      "kind": "transport",
+      "typeName": "BookingChatConversation",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "conversationTotal",
+      "kind": "scalar",
+      "typeName": "int",
+      "required": true
+    }
+  ]
+};
+
+export function validateBookingChatResponse(value) {
+  return __validateShape(value, BOOKING_CHAT_RESPONSE_SCHEMA);
 }
 
 export const MOBILE_BOOTSTRAP_SCHEMA = {

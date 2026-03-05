@@ -215,11 +215,11 @@ enum MobileAPIRequestFactory {
     }
 
     static func bookingChatURL(baseURL: URL, bookingID: String, limit: Int = 100) -> URL {
-        let encodedBookingID = bookingID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? bookingID
-        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
-        components?.path = "/api/v1/bookings/\(encodedBookingID)/chat"
-        components?.queryItems = [URLQueryItem(name: "limit", value: String(limit))]
-        return components?.url ?? baseURL.appendingPathComponent("api/v1/bookings/\(encodedBookingID)/chat")
+        GeneratedAPIRequestFactory.bookingChatURL(
+            baseURL: baseURL,
+            bookingId: bookingID,
+            queryItems: [URLQueryItem(name: "limit", value: String(limit))]
+        )
     }
 }
 

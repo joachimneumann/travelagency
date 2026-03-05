@@ -305,6 +305,55 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingChatEvent"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingChatEvent"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "channel", kind: "scalar", typeName: "string", required: true},
+				{name: "direction", kind: "scalar", typeName: "string", required: true},
+				{name: "eventType", kind: "scalar", typeName: "string", required: true},
+				{name: "externalStatus", kind: "scalar", typeName: "string", required: false},
+				{name: "textPreview", kind: "scalar", typeName: "string", required: true},
+				{name: "senderDisplay", kind: "scalar", typeName: "string", required: false},
+				{name: "senderContact", kind: "scalar", typeName: "string", required: false},
+				{name: "sentAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "receivedAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "conversationId", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "openUrl", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingChatConversation"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingChatConversation"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "channel", kind: "scalar", typeName: "string", required: true},
+				{name: "externalContactId", kind: "scalar", typeName: "string", required: false},
+				{name: "customerId", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "bookingId", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "lastEventAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "latestPreview", kind: "scalar", typeName: "string", required: false},
+				{name: "openUrl", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingChatResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingChatResponse"
+			fields: [
+				{name: "mode", kind: "scalar", typeName: "string", required: false},
+				{name: "items", kind: "transport", typeName: "BookingChatEvent", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+				{name: "conversations", kind: "transport", typeName: "BookingChatConversation", required: true, isArray: true},
+				{name: "conversationTotal", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
 			name:       "MobileBootstrap"
 			domain:     "api"
 			module:     "api"

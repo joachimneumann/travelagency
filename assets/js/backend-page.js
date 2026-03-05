@@ -1,5 +1,19 @@
+import {
+  bookingsRequest,
+  customersRequest,
+  staffRequest,
+  toursRequest
+} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
+const apiOrigin = apiBase || window.location.origin;
+
+function resolveApiUrl(pathOrUrl) {
+  const value = String(pathOrUrl || "");
+  if (/^https?:\/\//.test(value)) return value;
+  return `${apiBase}${value}`;
+}
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -207,18 +221,24 @@ function bindSearch(searchBtn, searchInput, model, reloadFn) {
 async function loadCustomers() {
   clearError();
 
-  const params = new URLSearchParams({
-    page: String(state.customers.page),
-    page_size: String(state.customers.pageSize)
+  const request = customersRequest({
+    baseURL: apiOrigin,
+    query: {
+      page: state.customers.page,
+      page_size: state.customers.pageSize,
+      search: state.customers.search || undefined
+    }
   });
-  if (state.customers.search) params.set("search", state.customers.search);
-
-  const payload = await fetchApi(`/api/v1/customers?${params.toString()}`);
+  const payload = await fetchApi(request.url);
   if (!payload) return;
+  const pagination = payload.pagination || {};
 
-  state.customers.totalPages = Math.max(1, Number(payload.total_pages || 1));
-  state.customers.total = Number(payload.total || 0);
-  state.customers.page = Number(payload.page || state.customers.page);
+  state.customers.totalPages = Math.max(
+    1,
+    Number(payload.total_pages || pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.customers.pageSize) || 1)
+  );
+  state.customers.total = Number(payload.total || pagination.total_items || 0);
+  state.customers.page = Number(payload.page || pagination.page || state.customers.page);
   updatePaginationUi("customers");
   renderCustomers(payload.items || []);
 }
@@ -226,19 +246,25 @@ async function loadCustomers() {
 async function loadBookings() {
   clearError();
 
-  const params = new URLSearchParams({
-    page: String(state.bookings.page),
-    page_size: String(state.bookings.pageSize),
-    sort: "created_at_desc"
+  const request = bookingsRequest({
+    baseURL: apiOrigin,
+    query: {
+      page: state.bookings.page,
+      page_size: state.bookings.pageSize,
+      sort: "created_at_desc",
+      search: state.bookings.search || undefined
+    }
   });
-  if (state.bookings.search) params.set("search", state.bookings.search);
-
-  const payload = await fetchApi(`/api/v1/bookings?${params.toString()}`);
+  const payload = await fetchApi(request.url);
   if (!payload) return;
+  const pagination = payload.pagination || {};
 
-  state.bookings.totalPages = Math.max(1, Number(payload.total_pages || 1));
-  state.bookings.total = Number(payload.total || 0);
-  state.bookings.page = Number(payload.page || state.bookings.page);
+  state.bookings.totalPages = Math.max(
+    1,
+    Number(payload.total_pages || pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.bookings.pageSize) || 1)
+  );
+  state.bookings.total = Number(payload.total || pagination.total_items || 0);
+  state.bookings.page = Number(payload.page || pagination.page || state.bookings.page);
   updatePaginationUi("bookings");
   renderBookings(payload.items || []);
 }
@@ -246,21 +272,27 @@ async function loadBookings() {
 async function loadTours() {
   clearError();
 
-  const params = new URLSearchParams({
-    page: String(state.tours.page),
-    page_size: String(state.tours.pageSize),
-    sort: "updated_at_desc"
+  const request = toursRequest({
+    baseURL: apiOrigin,
+    query: {
+      page: state.tours.page,
+      page_size: state.tours.pageSize,
+      sort: "updated_at_desc",
+      search: state.tours.search || undefined,
+      destination: state.tours.destination && state.tours.destination !== "all" ? state.tours.destination : undefined,
+      style: state.tours.style && state.tours.style !== "all" ? state.tours.style : undefined
+    }
   });
-  if (state.tours.search) params.set("search", state.tours.search);
-  if (state.tours.destination && state.tours.destination !== "all") params.set("destination", state.tours.destination);
-  if (state.tours.style && state.tours.style !== "all") params.set("style", state.tours.style);
-
-  const payload = await fetchApi(`/api/v1/tours?${params.toString()}`);
+  const payload = await fetchApi(request.url);
   if (!payload) return;
+  const pagination = payload.pagination || {};
 
-  state.tours.totalPages = Math.max(1, Number(payload.total_pages || 1));
-  state.tours.total = Number(payload.total || 0);
-  state.tours.page = Number(payload.page || state.tours.page);
+  state.tours.totalPages = Math.max(
+    1,
+    Number(payload.total_pages || pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.tours.pageSize) || 1)
+  );
+  state.tours.total = Number(payload.total || pagination.total_items || 0);
+  state.tours.page = Number(payload.page || pagination.page || state.tours.page);
   populateTourFilterOptions(payload);
   updatePaginationUi("tours");
   renderTours(payload.items || []);
@@ -382,7 +414,7 @@ async function fetchApi(path, options = {}) {
   const method = options.method || "GET";
   const body = options.body;
   try {
-    const response = await fetch(`${apiBase}${path}`, {
+    const response = await fetch(resolveApiUrl(path), {
       method,
       credentials: "include",
       headers: {
@@ -508,7 +540,8 @@ function clearError() {
 
 async function loadStaff() {
   clearError();
-  const payload = await fetchApi(`/api/v1/atp_staff?active=true`);
+  const request = staffRequest({ baseURL: apiOrigin, query: { active: true } });
+  const payload = await fetchApi(request.url);
   if (!payload) return;
   state.staff = Array.isArray(payload.items) ? payload.items : [];
   renderStaff(state.staff);

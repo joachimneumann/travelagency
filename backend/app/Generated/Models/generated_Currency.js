@@ -46,9 +46,9 @@ export function formatMoneyFromMinorUnits(amountMinorUnits, code) {
   const numeric = Number(amountMinorUnits || 0);
   const scale = 10 ** definition.decimalPlaces;
   const major = definition.decimalPlaces === 0 ? numeric : numeric / scale;
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: definition.decimalPlaces,
-    maximumFractionDigits: definition.decimalPlaces,
-    useGrouping: true
-  }).format(major);
+return new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: definition.decimalPlaces,
+  maximumFractionDigits: definition.decimalPlaces,
+  useGrouping: true
+}).format(major);
 }

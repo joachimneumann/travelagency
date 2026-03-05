@@ -91,7 +91,7 @@ export const BOOKING_SCHEMA = {
       "required": false
     },
     {
-      "name": "staffName",
+      "name": "atpStaffName",
       "kind": "scalar",
       "typeName": "string",
       "required": false
@@ -378,3 +378,4 @@ export const BOOKING_OFFER_SCHEMA = {
 export function validateBookingOffer(value) {
   return __validateShape(value, BOOKING_OFFER_SCHEMA);
 }
+

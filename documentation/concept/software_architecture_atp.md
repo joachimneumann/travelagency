@@ -129,6 +129,19 @@ ATP uses this derivation flow:
 4. generated API specification -> generated iOS model and API code
 5. generated backend model -> storage adapters / storage model
 
+### 3.1 Current implementation note
+
+The generated contract is the target transport contract, but ATP currently still has a small set of hand-written endpoints that are not yet modeled in `model/api/`.
+
+Examples include:
+- integration endpoints (for example Meta/WhatsApp webhook paths)
+- selected admin/internal helper endpoints
+- selected booking chat transport shapes
+
+These should be treated as transitional and either:
+- moved into the abstract model + generated contract flow, or
+- explicitly documented as runtime-internal and non-contract.
+
 ## 4. Runtime Responsibilities
 
 ### 4.1 Backend

@@ -12,7 +12,7 @@ The app scope is intentionally narrow:
 - allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
 - show bookings
 - allow booking actions according to role
-- later add customer interaction features
+- include read-only customer directory workflows for allowed roles
 
 The app should not try to reproduce the full website backend.
 
@@ -27,20 +27,24 @@ Version 1 should include:
 - booking commercials summary
 - payment schedule visibility
 - booking stage changes where allowed
-- booking note/activity creation where allowed
+- booking note editing where allowed
+- booking activity visibility
 - booking staff assignment only for manager/admin
+- customer list with search
+- customer detail
+- customer contact actions (call/WhatsApp links)
 - logout
 
 Later phase:
 - customer interaction workflows
-- customer detail screens
-- direct communication actions
+- richer customer communication inbox
+- two-way communication features
 
 Out of scope for the first mobile version:
 - tour editing
 - staff management UI
 - full finance UI
-- customer administration UI
+- customer administration/editing UI
 
 ## 2) Allowed roles only
 
@@ -91,6 +95,10 @@ Logout behavior:
 
 The mobile app should treat the OpenAPI contract as the only stable interface.
 It should not infer response shapes from backend internals or JSON storage.
+
+Current transition note:
+- a small number of integration/support endpoints are still hand-written outside `model/api/`
+- if mobile uses such an endpoint, it must be treated as transitional until moved into the generated contract
 
 Contract source of truth:
 - `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
@@ -217,6 +225,8 @@ Recommended screens:
 - Booking activity timeline
 - Single booking note editor
 - Staff assignment picker for manager/admin only
+- Customer list
+- Customer detail
 - Settings / logout
 
 Later screens:

@@ -30,6 +30,40 @@ import (
 	total: >=0 & int
 }
 
+#BookingChatEvent: {
+	id:             common.#Identifier
+	channel:        string
+	direction:      string
+	eventType:      string
+	externalStatus?: string
+	textPreview:    string
+	senderDisplay?: string
+	senderContact?: string
+	sentAt?:        common.#Timestamp
+	receivedAt?:    common.#Timestamp
+	conversationId: common.#Identifier
+	openUrl?:       string
+}
+
+#BookingChatConversation: {
+	id:                common.#Identifier
+	channel:           string
+	externalContactId?: string
+	customerId?:       common.#Identifier
+	bookingId?:        common.#Identifier
+	lastEventAt?:      common.#Timestamp
+	latestPreview?:    string
+	openUrl?:          string
+}
+
+#BookingChatResponse: {
+	mode?:              string
+	items:              [...#BookingChatEvent]
+	total:              >=0 & int
+	conversations:      [...#BookingChatConversation]
+	conversationTotal:  >=0 & int
+}
+
 #TourOptions: {
 	destinations?: [...string]
 	styles?: [...string]

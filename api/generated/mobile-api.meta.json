@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-03T03:55:29Z",
+  "generatedAt": "2026-03-05T01:22:35Z",
   "currencies": [
     {
       "code": "USD",
@@ -160,6 +160,21 @@
       "method": "GET",
       "authenticated": true,
       "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "bookingId",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "booking_chat",
+      "path": "/api/v1/bookings/{bookingId}/chat",
+      "method": "GET",
+      "authenticated": true,
+      "responseType": "BookingChatResponse",
       "parameters": [
         {
           "name": "bookingId",

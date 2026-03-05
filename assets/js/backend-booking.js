@@ -5,6 +5,7 @@ import {
 import {
   bookingActivitiesRequest,
   bookingAssignmentRequest,
+  bookingChatRequest,
   bookingDetailRequest,
   bookingInvoicesRequest,
   bookingNoteRequest,
@@ -956,7 +957,13 @@ async function loadActivities() {
 async function loadBookingChat({ fromPoll = false } = {}) {
   if (!state.booking || !els.metaChatTable) return;
   const previousIds = new Set((Array.isArray(state.chat.items) ? state.chat.items : []).map((item) => String(item?.id || "")));
-  const payload = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/chat?limit=100`);
+  const payload = await fetchApi(
+    bookingChatRequest({
+      baseURL: apiOrigin,
+      params: { bookingId: state.booking.id },
+      query: { limit: 100 }
+    }).url
+  );
   if (!payload) return;
   const nextItems = Array.isArray(payload.items) ? payload.items : [];
   const newlyArrived = nextItems.filter((item) => {

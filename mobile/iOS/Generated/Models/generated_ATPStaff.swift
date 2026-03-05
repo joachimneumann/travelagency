@@ -16,5 +16,5 @@
         let displayName: String?
         let email: String?
         let roles: [GeneratedATPStaffRole]
-        let atpStaffId: String?
+        let staffId: String?
     }

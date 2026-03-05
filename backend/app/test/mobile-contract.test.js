@@ -119,7 +119,7 @@ test("public mobile bootstrap matches contract metadata", async () => {
   assert.equal(result.body.app.force_update, false);
   assert.deepEqual(result.body.features, {
     bookings: true,
-    customers: false,
+    customers: true,
     tours: false
   });
 });
@@ -128,10 +128,11 @@ test("bookings list response conforms to the mobile contract", async () => {
   const result = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders());
   assert.equal(result.status, 200);
   assert.ok(Array.isArray(result.body.items));
-  assert.equal(typeof result.body.page, "number");
-  assert.equal(typeof result.body.page_size, "number");
-  assert.equal(typeof result.body.total, "number");
-  assert.equal(typeof result.body.total_pages, "number");
+  assert.equal(typeof result.body.pagination, "object");
+  assert.equal(typeof result.body.pagination.page, "number");
+  assert.equal(typeof result.body.pagination.page_size, "number");
+  assert.equal(typeof result.body.pagination.total_items, "number");
+  assert.equal(typeof result.body.pagination.total_pages, "number");
   assert.ok(result.body.items.length > 0, "Seed data should contain at least one booking");
   assertBookingShape(result.body.items[0]);
 });

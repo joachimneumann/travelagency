@@ -11,6 +11,9 @@ Current scope:
 - booking list
 - booking detail
 - role-aware booking actions
+- customer directory tab (role-gated)
+- customer search + customer detail
+- customer contact actions in booking detail (`Call`, `WhatsApp`)
 - single editable booking note with conflict detection
 - PKCE-based Keycloak login flow
 - startup bootstrap gate with minimum supported app version enforcement

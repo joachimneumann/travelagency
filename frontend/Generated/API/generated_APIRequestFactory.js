@@ -54,6 +54,21 @@ export const GENERATED_API_ENDPOINTS = {
       }
     ]
   },
+  "booking_chat": {
+    "key": "booking_chat",
+    "path": "/api/v1/bookings/{bookingId}/chat",
+    "method": "GET",
+    "authenticated": true,
+    "responseType": "BookingChatResponse",
+    "parameters": [
+      {
+        "name": "bookingId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
   "booking_stage": {
     "key": "booking_stage",
     "path": "/api/v1/bookings/{bookingId}/stage",
@@ -346,6 +361,23 @@ export function bookingDetailRequest({ baseURL = '', params = {}, query = {}, bo
   };
 }
 
+export function bookingChatPath(params = {}) {
+  return buildPath("/api/v1/bookings/{bookingId}/chat", params);
+}
+
+export function bookingChatRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingChatPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_chat",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingStagePath(params = {}) {
   return buildPath("/api/v1/bookings/{bookingId}/stage", params);
 }
@@ -465,12 +497,12 @@ export function bookingInvoicesRequest({ baseURL = '', params = {}, query = {}, 
   };
 }
 
-export function staffPath(params = {}) {
+export function atpStaffPath(params = {}) {
   return buildPath("/api/v1/atp_staff", params);
 }
 
-export function staffRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = staffPath(params);
+export function atpStaffRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = atpStaffPath(params);
   const url = buildURL(baseURL, path, query);
   return {
     key: "atp_staff",

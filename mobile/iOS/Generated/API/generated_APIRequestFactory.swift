@@ -12,6 +12,7 @@
     static let publicTours = "/public/v1/tours"
     static let bookings = "/api/v1/bookings"
     static let bookingDetail = "/api/v1/bookings/{bookingId}"
+    static let bookingChat = "/api/v1/bookings/{bookingId}/chat"
     static let bookingStage = "/api/v1/bookings/{bookingId}/stage"
     static let bookingAssignment = "/api/v1/bookings/{bookingId}/owner"
     static let bookingNote = "/api/v1/bookings/{bookingId}/notes"
@@ -19,7 +20,7 @@
     static let bookingOffer = "/api/v1/bookings/{bookingId}/offer"
     static let bookingActivities = "/api/v1/bookings/{bookingId}/activities"
     static let bookingInvoices = "/api/v1/bookings/{bookingId}/invoices"
-    static let atp_staff = "/api/v1/atp_staff"
+    static let atpStaff = "/api/v1/atp_staff"
     static let customers = "/api/v1/customers"
     static let customerDetail = "/api/v1/customers/{customerId}"
     static let tours = "/api/v1/tours"
@@ -56,6 +57,10 @@ static func bookingDetailPath(bookingId: String) -> String {
     "/api/v1/bookings/\(bookingId)"
 }
 
+static func bookingChatPath(bookingId: String) -> String {
+    "/api/v1/bookings/\(bookingId)/chat"
+}
+
 static func bookingStagePath(bookingId: String) -> String {
     "/api/v1/bookings/\(bookingId)/stage"
 }
@@ -84,7 +89,7 @@ static func bookingInvoicesPath(bookingId: String) -> String {
     "/api/v1/bookings/\(bookingId)/invoices"
 }
 
-static func staffPath() -> String {
+static func atpStaffPath() -> String {
     "/api/v1/atp_staff"
 }
 
@@ -133,6 +138,10 @@ static func bookingDetailURL(baseURL: URL, bookingId: String, queryItems: [URLQu
     buildURL(baseURL: baseURL, path: bookingDetailPath(bookingId: bookingId), queryItems: queryItems)
 }
 
+static func bookingChatURL(baseURL: URL, bookingId: String, queryItems: [URLQueryItem] = []) -> URL {
+    buildURL(baseURL: baseURL, path: bookingChatPath(bookingId: bookingId), queryItems: queryItems)
+}
+
 static func bookingStageURL(baseURL: URL, bookingId: String, queryItems: [URLQueryItem] = []) -> URL {
     buildURL(baseURL: baseURL, path: bookingStagePath(bookingId: bookingId), queryItems: queryItems)
 }
@@ -161,8 +170,8 @@ static func bookingInvoicesURL(baseURL: URL, bookingId: String, queryItems: [URL
     buildURL(baseURL: baseURL, path: bookingInvoicesPath(bookingId: bookingId), queryItems: queryItems)
 }
 
-static func staffURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
-    buildURL(baseURL: baseURL, path: staffPath(), queryItems: queryItems)
+static func atpStaffURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
+    buildURL(baseURL: baseURL, path: atpStaffPath(), queryItems: queryItems)
 }
 
 static func customersURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
