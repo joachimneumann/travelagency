@@ -10,20 +10,25 @@
 }
 
 .backend-nav__logout {
-  display: flex;
+  display: block;
+  width: max-content;
+}
+
+.backend-nav__logout-link {
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.08rem;
-  width: max-content;
+  justify-content: center;
+  gap: 0.05rem;
+  line-height: 1.08;
 }
 
 .backend-nav__user {
   margin: 0;
   font-size: 0.8rem;
-  line-height: 1.05;
+  font-weight: 400;
+  line-height: 1;
   color: var(--muted);
   display: block;
-  width: max-content;
-  margin-inline: auto;
   text-align: center;
 }

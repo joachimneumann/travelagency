@@ -1,10 +1,8 @@
 .backend-login {
-  position: relative;
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 0.35rem;
 }
 
 .backend-login--deferred {
@@ -19,42 +17,24 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  line-height: 1.1;
+  justify-content: center;
+  line-height: 1.08;
+  gap: 0.05rem;
 }
 
 .backend-login__subtitle {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  opacity: 0.9;
-  margin-top: 0.16rem;
-}
-
-.backend-login__user {
-  position: absolute;
-  top: calc(100% + 0.08rem);
-  left: 0;
-  right: 0;
-  transform: none;
-  width: 100%;
+  line-height: 1;
+  color: var(--muted);
   text-align: center;
-  pointer-events: none;
 }
 
 @media (max-width: 760px) {
   .backend-login {
-    position: static;
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .backend-login__user {
-    position: static;
-    top: auto;
-    left: auto;
-    transform: none;
-    width: 100%;
-    text-align: center;
-    pointer-events: auto;
+    gap: 0;
   }
 
   .backend-login .btn {

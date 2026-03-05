@@ -292,12 +292,12 @@ function updateBackendButtonLabel({ authenticated, user }) {
   if (authenticated) {
     els.backendLoginBtnTitle.textContent = "Backend";
     if (subtitleEl) {
-      subtitleEl.textContent = "";
-      subtitleEl.hidden = true;
+      subtitleEl.textContent = user || "";
+      subtitleEl.hidden = !Boolean(user);
     }
     if (statusEl) {
-      statusEl.textContent = user || "";
-      statusEl.hidden = !Boolean(user);
+      statusEl.textContent = "";
+      statusEl.hidden = true;
     }
     return;
   }
