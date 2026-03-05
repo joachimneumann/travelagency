@@ -30,6 +30,7 @@ export function buildApiRoutes({ authRoutes = [], handlers }) {
     { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handlers.handleGetInvoicePdf },
     { method: "GET", pattern: /^\/api\/v1\/customers$/, handler: handlers.handleListCustomers },
     { method: "GET", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handlers.handleGetCustomer },
+    { method: "PATCH", pattern: /^\/api\/v1\/customers\/([^/]+)$/, handler: handlers.handlePatchCustomer },
     { method: "GET", pattern: /^\/api\/v1\/atp_staff$/, handler: handlers.handleListAtpStaff },
     { method: "POST", pattern: /^\/api\/v1\/atp_staff$/, handler: handlers.handleCreateAtpStaff },
     { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handlers.handleListTours },

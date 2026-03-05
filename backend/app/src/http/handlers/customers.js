@@ -15,8 +15,42 @@ export function createCustomerHandlers(deps) {
     readBodyJson,
     normalizeStringArray,
     persistAtpStaff,
-    randomUUID
+    randomUUID,
+    persistStore,
+    nowIso
   } = deps;
+
+const CUSTOMER_UPDATE_FIELDS = new Set([
+  "id",
+  "entity_type",
+  "display_name",
+  "first_name",
+  "last_name",
+  "date_of_birth",
+  "nationality",
+  "organization_name",
+  "tax_id",
+  "phone_number",
+  "email",
+  "address_line_1",
+  "address_line_2",
+  "address_city",
+  "address_state_region",
+  "address_postal_code",
+  "address_country_code",
+  "preferred_language",
+  "preferred_currency",
+  "timezone",
+  "tags",
+  "notes",
+  "can_receive_marketing",
+  "created_at",
+  "updated_at",
+  "archived_at",
+  "name",
+  "phone",
+  "language"
+]);
 
 async function handleListCustomers(req, res) {
   const principal = getPrincipal(req);
@@ -63,6 +97,41 @@ async function handleGetCustomer(req, res, [customerId]) {
   const bookingsReadModel = await Promise.all(bookings);
 
   sendJson(res, 200, { customer, bookings: bookingsReadModel });
+}
+
+async function handlePatchCustomer(req, res, [customerId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  if (!canReadCustomers(principal)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+
+  const store = await readStore();
+  const customer = store.customers.find((item) => item.id === customerId);
+  if (!customer) {
+    sendJson(res, 404, { error: "Customer not found" });
+    return;
+  }
+
+  const patch = normalizeCustomerPatch(payload);
+  if (!patch || !Object.keys(patch).length) {
+    sendJson(res, 422, { error: "No valid fields to update" });
+    return;
+  }
+
+  applyCustomerPatch(customer, patch);
+  customer.updated_at = nowIso();
+
+  await persistStore(store);
+  sendJson(res, 200, { customer });
 }
 
 async function handleListAtpStaff(req, res) {
@@ -162,7 +231,75 @@ async function handleCreateAtpStaff(req, res) {
   return {
     handleListCustomers,
     handleGetCustomer,
+    handlePatchCustomer,
     handleListAtpStaff,
     handleCreateAtpStaff
   };
+}
+
+function normalizeCustomerPatch(payload = {}) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+
+  const patch = {};
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (!CUSTOMER_UPDATE_FIELDS.has(key) || key === "id") {
+      return;
+    }
+
+    if (key === "tags") {
+      if (Array.isArray(value)) {
+        patch[key] = normalizeStringArray(value).filter(Boolean);
+      } else {
+        patch[key] = normalizeStringArray(normalizeText(String(value || "")).split(","));
+      }
+      return;
+    }
+
+    if (key === "can_receive_marketing") {
+      patch[key] = Boolean(value);
+      return;
+    }
+
+    if (key === "created_at" || key === "updated_at" || key === "archived_at" || key === "date_of_birth") {
+      patch[key] = normalizeText(value);
+      return;
+    }
+
+    patch[key] = normalizeText(value);
+  });
+
+  if (Object.prototype.hasOwnProperty.call(patch, "display_name") && !Object.prototype.hasOwnProperty.call(patch, "name")) {
+    patch.name = patch.display_name;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "phone_number") && !Object.prototype.hasOwnProperty.call(patch, "phone")) {
+    patch.phone = patch.phone_number;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "preferred_language") && !Object.prototype.hasOwnProperty.call(patch, "language")) {
+    patch.language = patch.preferred_language;
+  }
+
+  return patch;
+}
+
+function applyCustomerPatch(customer, patch = {}) {
+  for (const [key, value] of Object.entries(patch)) {
+    customer[key] = value;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "display_name")) {
+    customer.name = patch.display_name || customer.name;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "phone_number")) {
+    customer.phone = patch.phone_number || customer.phone;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "preferred_language")) {
+    customer.language = patch.preferred_language || customer.language;
+  }
 }

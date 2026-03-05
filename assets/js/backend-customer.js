@@ -14,8 +14,15 @@ const apiOrigin = apiBase || window.location.origin;
 const state = {
   id: qs.get("id") || "",
   user: qs.get("user") || "admin",
-  customer: null
+  customer: null,
+  isSaving: false,
+  hasChanges: false
 };
+
+const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields.map((field) => ({
+  ...field,
+  editable: true
+}));
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -30,7 +37,9 @@ const els = {
   documentsTable: document.getElementById("customerDocumentsTable"),
   travelGroupsTable: document.getElementById("customerTravelGroupsTable"),
   travelGroupMembersTable: document.getElementById("customerTravelGroupMembersTable"),
-  bookingsTable: document.getElementById("customerBookingsTable")
+  bookingsTable: document.getElementById("customerBookingsTable"),
+  saveBtn: document.getElementById("customerSaveBtn"),
+  saveStatus: document.getElementById("customerSaveStatus")
 };
 
 init();
@@ -44,6 +53,11 @@ async function init() {
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/index.html`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
+  }
+
+  if (els.saveBtn) {
+    els.saveBtn.addEventListener("click", saveCustomerProfile);
+    els.saveBtn.disabled = true;
   }
 
   await loadAuthStatus();
@@ -60,40 +74,60 @@ async function loadCustomer() {
   const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, params: { customerId: state.id } }).url);
   if (!payload?.customer) return;
 
-  state.customer = payload.customer || {};
-  const normalizedCustomer = normalizeCustomer(state.customer);
-  state.customer = normalizedCustomer;
+  state.customer = normalizeCustomer(payload.customer);
 
   if (els.title) {
-    const displayName = normalizedCustomer.display_name || normalizedCustomer.name || "Customer";
-    els.title.textContent = `Customer ${normalizeCustomerId(normalizedCustomer.id)}`;
-    if (displayName) {
-      els.title.textContent = displayName;
-    }
+    const displayName = state.customer.display_name || state.customer.name || "Customer";
+    els.title.textContent = displayName;
   }
+
   if (els.subtitle) {
-    els.subtitle.textContent = `${normalizedCustomer.entity_type || "person"} · ${normalizedCustomer.id || ""}`;
+    els.subtitle.textContent = `${state.customer.entity_type || "person"} · ${state.customer.id || ""}`;
     els.subtitle.hidden = false;
   }
 
-  renderModelTable(els.customerDataTable, CUSTOMER_SCHEMA.fields, normalizedCustomer, "Customer");
+  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_EDIT_FIELDS, state.customer);
+  bindCustomerProfileInputs();
   renderCustomerConsents(payload.consents || []);
   renderCustomerDocuments(payload.documents || []);
   renderTravelGroups(payload.travelGroups || []);
   renderTravelGroupMembers(payload.travelGroupMembers || []);
   renderRelatedBookings(payload.bookings || []);
+
+  setSaveEnabled(false);
+  clearSaveStatus();
 }
 
 function normalizeCustomer(customer) {
-  return {
+  const normalized = {
     ...customer,
-    display_name: customer.display_name || customer.name || "",
-    phone_number: customer.phone_number || customer.phone || "",
-    preferred_language: customer.preferred_language || customer.language || "",
-    first_name: customer.first_name || "",
-    last_name: customer.last_name || "",
-    date_of_birth: customer.date_of_birth || customer.birthdate || ""
+    display_name: normalizeText(customer.display_name) || normalizeText(customer.name) || "",
+    name: normalizeText(customer.name) || normalizeText(customer.display_name) || "",
+    phone_number: normalizeText(customer.phone_number) || normalizeText(customer.phone) || "",
+    phone: normalizeText(customer.phone) || normalizeText(customer.phone_number) || "",
+    preferred_language: normalizeText(customer.preferred_language) || normalizeText(customer.language) || "",
+    language: normalizeText(customer.language) || normalizeText(customer.preferred_language) || "",
+    first_name: normalizeText(customer.first_name) || "",
+    last_name: normalizeText(customer.last_name) || "",
+    date_of_birth: normalizeText(customer.date_of_birth) || "",
+    nationality: normalizeText(customer.nationality) || "",
+    organization_name: normalizeText(customer.organization_name) || "",
+    tax_id: normalizeText(customer.tax_id) || "",
+    email: normalizeText(customer.email) || "",
+    address_line_1: normalizeText(customer.address_line_1) || "",
+    address_line_2: normalizeText(customer.address_line_2) || "",
+    address_city: normalizeText(customer.address_city) || "",
+    address_state_region: normalizeText(customer.address_state_region) || "",
+    address_postal_code: normalizeText(customer.address_postal_code) || "",
+    address_country_code: normalizeText(customer.address_country_code) || "",
+    preferred_currency: normalizeText(customer.preferred_currency) || "",
+    timezone: normalizeText(customer.timezone) || "",
+    notes: normalizeText(customer.notes) || "",
+    can_receive_marketing: Boolean(customer.can_receive_marketing),
+    tags: Array.isArray(customer.tags) ? customer.tags.map((value) => normalizeText(value)).filter(Boolean) : []
   };
+
+  return normalized;
 }
 
 function renderCustomerConsents(consents) {
@@ -132,6 +166,59 @@ function renderTravelGroupMembers(members) {
   );
 }
 
+function renderEditableCustomerTable(tableEl, fields, entity) {
+  if (!tableEl) return;
+
+  const header = `<thead><tr><th>Field</th><th>Value</th></tr></thead>`;
+  const rows = fields
+    .map((field) => {
+      const value = entity?.[field.name];
+      return `
+        <tr>
+          <th>${escapeHtml(fieldLabel(field.name))}</th>
+          <td>${renderEditableFieldInput(field, value)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  tableEl.innerHTML = `${header}<tbody>${rows}</tbody>`;
+}
+
+function renderEditableFieldInput(field, value) {
+  const fieldId = customerFieldInputId(field.name);
+  if (field.typeName === "bool") {
+    const checked = value ? "checked" : "";
+    return `<label><input type="checkbox" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" ${checked} /></label>`;
+  }
+
+  if (field.isArray) {
+    const asText = Array.isArray(value) ? value.join(", ") : "";
+    return `<textarea id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" rows="2">${escapeHtml(asText)}</textarea>`;
+  }
+
+  if (field.typeName === "DateOnly") {
+    const dateValue = formatDateOnlyForInput(value);
+    return `<input type="date" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" value="${escapeHtml(dateValue)}" />`;
+  }
+
+  if (field.typeName === "Timestamp") {
+    const dateTimeValue = formatDateTimeForInput(value);
+    return `<input type="datetime-local" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" value="${escapeHtml(dateTimeValue)}" />`;
+  }
+
+  const inputType = getInputTypeForField(field);
+  const textValue = value === null || value === undefined ? "" : String(value);
+  return `<input type="${inputType}" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" value="${escapeHtml(textValue)}" />`;
+}
+
+function getInputTypeForField(field) {
+  if (field.name === "email") return "email";
+  if (field.name.includes("phone")) return "tel";
+  if (field.name.includes("date")) return "date";
+  return "text";
+}
+
 function renderRelatedBookings(bookings) {
   const items = Array.isArray(bookings) ? bookings : [];
   const header = `
@@ -162,29 +249,9 @@ function renderRelatedBookings(bookings) {
     })
     .join("");
 
-  const body =
-    rows || `<tr><td colspan="6">${escapeHtml("No related bookings")}</td></tr>`;
+  const body = rows || `<tr><td colspan="6">${escapeHtml("No related bookings")}</td></tr>`;
   if (els.bookingsTable) {
     els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  }
-}
-
-function renderModelTable(tableEl, fields, entity, title) {
-  const header = `<thead><tr><th>${escapeHtml(title)} field</th><th>Value</th></tr></thead>`;
-  const rows = fields
-    .map((field) => {
-      const raw = entity?.[field.name];
-      return `
-        <tr>
-          <th>${escapeHtml(fieldLabel(field.name))}</th>
-          <td>${escapeHtml(formatFieldValue(raw, field))}</td>
-        </tr>
-      `;
-    })
-    .join("");
-  const body = rows || `<tr><td colspan="2">${escapeHtml(`No ${title} data`)}</td></tr>`;
-  if (tableEl) {
-    tableEl.innerHTML = `${header}<tbody>${body}</tbody>`;
   }
 }
 
@@ -204,9 +271,134 @@ function renderEntityCollectionTable(tableEl, title, rows, fields) {
   tableEl.innerHTML = `${header}<tbody>${bodyRows || emptyText}</tbody>`;
 }
 
+function bindCustomerProfileInputs() {
+  const controls = Array.from(
+    document.querySelectorAll('#customerDataTable [data-customer-field]')
+  );
+
+  controls.forEach((control) => {
+    if (control.dataset.bound === "1") return;
+    control.dataset.bound = "1";
+    const markDirty = () => {
+      setSaveEnabled(true);
+    };
+    control.addEventListener("input", markDirty);
+    control.addEventListener("change", markDirty);
+  });
+}
+
+function collectEditableCustomerPayload() {
+  const fields = CUSTOMER_EDIT_FIELDS;
+  const payload = {};
+  fields.forEach((field) => {
+    const el = document.getElementById(customerFieldInputId(field.name));
+    if (!el) return;
+    payload[field.name] = getFieldValueFromInput(field, el);
+  });
+
+  if (Object.prototype.hasOwnProperty.call(payload, "display_name") && !Object.prototype.hasOwnProperty.call(payload, "name")) {
+    payload.name = payload.display_name;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, "phone_number") && !Object.prototype.hasOwnProperty.call(payload, "phone")) {
+    payload.phone = payload.phone_number;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(payload, "preferred_language") &&
+    !Object.prototype.hasOwnProperty.call(payload, "language")
+  ) {
+    payload.language = payload.preferred_language;
+  }
+
+  return payload;
+}
+
+function getFieldValueFromInput(field, element) {
+  if (field.typeName === "bool") {
+    return Boolean(element.checked);
+  }
+
+  if (field.isArray) {
+    const text = normalizeText(element.value);
+    if (!text) return [];
+    return text
+      .split(",")
+      .map((item) => normalizeText(item))
+      .filter(Boolean);
+  }
+
+  if (field.typeName === "DateOnly") {
+    return normalizeText(element.value);
+  }
+
+  if (field.typeName === "Timestamp") {
+    return parseDateTimeInputValue(element.value);
+  }
+
+  return normalizeText(element.value);
+}
+
+async function saveCustomerProfile() {
+  if (state.isSaving || !state.customer?.id) return;
+
+  const payload = collectEditableCustomerPayload();
+  state.isSaving = true;
+  setSaveEnabled(false);
+  setSaveStatus("Saving customer…");
+
+  const result = await fetchApi(`/api/v1/customers/${encodeURIComponent(state.id)}`, {
+    method: "PATCH",
+    body: payload
+  });
+
+  state.isSaving = false;
+
+  if (!result?.customer) {
+    setSaveStatus("");
+    return;
+  }
+
+  state.customer = normalizeCustomer(result.customer);
+  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_EDIT_FIELDS, state.customer);
+  bindCustomerProfileInputs();
+  setSaveEnabled(false);
+  setSaveStatus("Customer updated.");
+}
+
+function setSaveEnabled(enabled) {
+  if (!els.saveBtn) return;
+  if (state.isSaving) {
+    els.saveBtn.disabled = true;
+    els.saveBtn.textContent = "Saving…";
+    return;
+  }
+
+  els.saveBtn.disabled = !enabled;
+  els.saveBtn.textContent = "Update";
+}
+
+function setSaveStatus(message) {
+  if (!els.saveStatus) return;
+  if (!message) {
+    els.saveStatus.hidden = true;
+    els.saveStatus.textContent = "";
+    return;
+  }
+
+  els.saveStatus.hidden = false;
+  els.saveStatus.textContent = message;
+}
+
+function clearSaveStatus() {
+  setSaveStatus("");
+}
+
 function buildBookingHref(id) {
   const params = new URLSearchParams({ type: "booking", id, user: state.user });
   return `backend-booking.html?${params.toString()}`;
+}
+
+function customerFieldInputId(fieldName) {
+  return `customer-field-${String(fieldName || "").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 function formatFieldValue(value, field = {}) {
@@ -248,6 +440,37 @@ function formatDateTime(value) {
   const hh = String(d.getHours()).padStart(2, "0");
   const min = String(d.getMinutes()).padStart(2, "0");
   return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+}
+
+function formatDateOnlyForInput(value) {
+  if (!value) return "";
+  const d = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) {
+    const plain = String(value || "").trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(plain) ? plain : "";
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDateTimeForInput(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+
+  const year = String(d.getFullYear()).padStart(4, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const date = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${date}T${hours}:${minutes}`;
+}
+
+function parseDateTimeInputValue(value) {
+  const text = normalizeText(value);
+  if (!text) return "";
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return text;
+  return parsed.toISOString();
 }
 
 function normalizeCustomerId(value) {
@@ -317,6 +540,10 @@ function clearError() {
   if (!els.error) return;
   els.error.textContent = "";
   els.error.classList.remove("show");
+}
+
+function normalizeText(value) {
+  return String(value || "").trim();
 }
 
 function escapeHtml(value) {

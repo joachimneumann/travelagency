@@ -295,6 +295,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     readBodyJson,
     normalizeStringArray,
     persistAtpStaff,
+    persistStore,
     randomUUID
   });
   const tourHandlers = createTourHandlers({
@@ -3824,4 +3825,3 @@ async function handleMobileBootstrap(_req, res) {
       }
     });
 }
-
