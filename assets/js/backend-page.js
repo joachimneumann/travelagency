@@ -1,13 +1,5 @@
-import {
-  bookingsRequest,
-  customersRequest,
-  staffRequest,
-  toursRequest
-} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
-
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
-const apiOrigin = apiBase || window.location.origin;
 
 function resolveApiUrl(pathOrUrl) {
   const value = String(pathOrUrl || "");
@@ -221,15 +213,13 @@ function bindSearch(searchBtn, searchInput, model, reloadFn) {
 async function loadCustomers() {
   clearError();
 
-  const request = customersRequest({
-    baseURL: apiOrigin,
-    query: {
-      page: state.customers.page,
-      page_size: state.customers.pageSize,
-      search: state.customers.search || undefined
-    }
+  const params = new URLSearchParams({
+    page: String(state.customers.page),
+    page_size: String(state.customers.pageSize)
   });
-  const payload = await fetchApi(request.url);
+  if (state.customers.search) params.set("search", state.customers.search);
+
+  const payload = await fetchApi(`/api/v1/customers?${params.toString()}`);
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -246,16 +236,14 @@ async function loadCustomers() {
 async function loadBookings() {
   clearError();
 
-  const request = bookingsRequest({
-    baseURL: apiOrigin,
-    query: {
-      page: state.bookings.page,
-      page_size: state.bookings.pageSize,
-      sort: "created_at_desc",
-      search: state.bookings.search || undefined
-    }
+  const params = new URLSearchParams({
+    page: String(state.bookings.page),
+    page_size: String(state.bookings.pageSize),
+    sort: "created_at_desc"
   });
-  const payload = await fetchApi(request.url);
+  if (state.bookings.search) params.set("search", state.bookings.search);
+
+  const payload = await fetchApi(`/api/v1/bookings?${params.toString()}`);
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -272,18 +260,16 @@ async function loadBookings() {
 async function loadTours() {
   clearError();
 
-  const request = toursRequest({
-    baseURL: apiOrigin,
-    query: {
-      page: state.tours.page,
-      page_size: state.tours.pageSize,
-      sort: "updated_at_desc",
-      search: state.tours.search || undefined,
-      destination: state.tours.destination && state.tours.destination !== "all" ? state.tours.destination : undefined,
-      style: state.tours.style && state.tours.style !== "all" ? state.tours.style : undefined
-    }
+  const params = new URLSearchParams({
+    page: String(state.tours.page),
+    page_size: String(state.tours.pageSize),
+    sort: "updated_at_desc"
   });
-  const payload = await fetchApi(request.url);
+  if (state.tours.search) params.set("search", state.tours.search);
+  if (state.tours.destination && state.tours.destination !== "all") params.set("destination", state.tours.destination);
+  if (state.tours.style && state.tours.style !== "all") params.set("style", state.tours.style);
+
+  const payload = await fetchApi(`/api/v1/tours?${params.toString()}`);
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -540,8 +526,7 @@ function clearError() {
 
 async function loadStaff() {
   clearError();
-  const request = staffRequest({ baseURL: apiOrigin, query: { active: true } });
-  const payload = await fetchApi(request.url);
+  const payload = await fetchApi(`/api/v1/atp_staff?active=true`);
   if (!payload) return;
   state.staff = Array.isArray(payload.items) ? payload.items : [];
   renderStaff(state.staff);
