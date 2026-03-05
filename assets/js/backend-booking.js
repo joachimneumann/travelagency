@@ -3,7 +3,7 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../frontend/Generated/Models/generated_Currency.js";
 import {
-  atpStaffRequest as staffRequest,
+  atpStaffRequest,
   bookingActivitiesRequest,
   bookingAssignmentRequest,
   bookingChatRequest,
@@ -227,7 +227,7 @@ async function loadBookingPage() {
   clearStatus();
   const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { bookingId: state.id } }).url)];
   if (state.permissions.canChangeAssignment) {
-    requests.push(fetchApi(staffRequest({ baseURL: apiOrigin, query: { active: true } }).url));
+    requests.push(fetchApi(atpStaffRequest({ baseURL: apiOrigin, query: { active: true } }).url));
   }
   const [bookingPayload, staffPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
