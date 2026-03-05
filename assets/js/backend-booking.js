@@ -3,6 +3,7 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../frontend/Generated/Models/generated_Currency.js";
 import {
+  atpStaffRequest as staffRequest,
   bookingActivitiesRequest,
   bookingAssignmentRequest,
   bookingChatRequest,
@@ -13,7 +14,6 @@ import {
   bookingPricingRequest,
   bookingStageRequest,
   customerDetailRequest,
-  staffRequest
 } from "../../frontend/Generated/API/generated_APIRequestFactory.js";
 
 const qs = new URLSearchParams(window.location.search);
