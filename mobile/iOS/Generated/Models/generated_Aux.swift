@@ -5,13 +5,16 @@ import Foundation
 
     struct GeneratedCustomer: Codable, Equatable, Identifiable {
     let id: String
-    let entity_type: String
     let display_name: String
     let first_name: String?
     let last_name: String?
     let date_of_birth: String?
     let nationality: String?
     let organization_name: String?
+    let organization_address: String?
+    let organization_phone_number: String?
+    let organization_webpage: String?
+    let organization_email: String?
     let tax_id: String?
     let phone_number: String?
     let email: String?
@@ -31,15 +34,18 @@ import Foundation
     let updated_at: String
     let archived_at: String?
 
-    private enum CodingKeys: String, CodingKey {
+        private enum CodingKeys: String, CodingKey {
         case id = "id"
-        case entity_type = "entity_type"
         case display_name = "display_name"
         case first_name = "first_name"
         case last_name = "last_name"
         case date_of_birth = "date_of_birth"
         case nationality = "nationality"
         case organization_name = "organization_name"
+        case organization_address = "organization_address"
+        case organization_phone_number = "organization_phone_number"
+        case organization_webpage = "organization_webpage"
+        case organization_email = "organization_email"
         case tax_id = "tax_id"
         case phone_number = "phone_number"
         case email = "email"
@@ -148,3 +154,32 @@ import Foundation
         case updated_at = "updated_at"
         }
     }
+
+    struct GeneratedTour: Codable, Equatable, Identifiable {
+    let id: String
+    let title: String?
+    let destinationCountries: [String]
+    let styles: [String]
+    let durationDays: Int?
+    let priceFrom: GeneratedTourPriceFrom?
+
+        private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case title = "title"
+        case destinationCountries = "destination_countries"
+        case styles = "styles"
+        case durationDays = "duration_days"
+        case priceFrom = "price_from"
+        }
+    }
+
+    struct GeneratedTourPriceFrom: Codable, Equatable {
+    let currency: GeneratedCurrencyCode
+    let minor: Int
+
+        private enum CodingKeys: String, CodingKey {
+        case currency = "currency"
+        case minor = "minor"
+        }
+    }
+
