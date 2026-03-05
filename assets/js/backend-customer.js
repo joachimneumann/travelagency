@@ -11,11 +11,21 @@ const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
 
+const ORGANIZATION_CUSTOMER_FIELDS = new Set([
+  "organization_name",
+  "organization_address",
+  "organization_phone_number",
+  "organization_webpage",
+  "organization_email",
+  "tax_id"
+]);
+
 const state = {
   id: qs.get("id") || "",
   user: qs.get("user") || "admin",
   customer: null,
-  isSaving: false
+  isSaving: false,
+  isOrganizationCustomer: false
 };
 
 const CUSTOMER_FIELD_UI_CONFIG = {
@@ -23,14 +33,6 @@ const CUSTOMER_FIELD_UI_CONFIG = {
   created_at: { editable: false },
   updated_at: { editable: false },
   archived_at: { editable: false },
-  entity_type: {
-    editable: true,
-    control: "select",
-    options: [
-      { value: "person", label: "Person" },
-      { value: "organization", label: "Organization" }
-    ]
-  },
   notes: { editable: true, control: "textarea", rows: 4 },
   tags: { editable: true, control: "textarea", rows: 2 },
   can_receive_marketing: { editable: true, control: "checkbox" }
@@ -60,7 +62,8 @@ const els = {
   travelGroupMembersTable: document.getElementById("customerTravelGroupMembersTable"),
   bookingsTable: document.getElementById("customerBookingsTable"),
   saveBtn: document.getElementById("customerSaveBtn"),
-  saveStatus: document.getElementById("customerSaveStatus")
+  saveStatus: document.getElementById("customerSaveStatus"),
+  organizationToggle: document.getElementById("customerIsOrganization")
 };
 
 init();
@@ -79,6 +82,10 @@ async function init() {
   if (els.saveBtn) {
     els.saveBtn.addEventListener("click", saveCustomerProfile);
     els.saveBtn.disabled = true;
+  }
+
+  if (els.organizationToggle) {
+    els.organizationToggle.addEventListener("change", handleOrganizationToggleChange);
   }
 
   await loadAuthStatus();
@@ -103,11 +110,18 @@ async function loadCustomer() {
   }
 
   if (els.subtitle) {
-    els.subtitle.textContent = `${state.customer.entity_type || "person"} · ${state.customer.id || ""}`;
+    const customerId = state.customer.id ? ` · ${state.customer.id}` : "";
+    els.subtitle.textContent = `Customer${customerId}`;
     els.subtitle.hidden = false;
   }
 
+  state.isOrganizationCustomer = shouldEnableOrganizationFields(state.customer);
+  if (els.organizationToggle) {
+    els.organizationToggle.checked = state.isOrganizationCustomer;
+  }
+
   renderEditableCustomerTable(els.customerDataTable, CUSTOMER_EDIT_FIELDS, state.customer);
+  applyOrganizationFieldVisibility(state.isOrganizationCustomer);
   bindCustomerProfileInputs();
   renderCustomerConsents(payload.consents || []);
   renderCustomerDocuments(payload.documents || []);
@@ -133,6 +147,10 @@ function normalizeCustomer(customer) {
     date_of_birth: normalizeText(customer.date_of_birth) || "",
     nationality: normalizeText(customer.nationality) || "",
     organization_name: normalizeText(customer.organization_name) || "",
+    organization_address: normalizeText(customer.organization_address) || "",
+    organization_phone_number: normalizeText(customer.organization_phone_number) || "",
+    organization_webpage: normalizeText(customer.organization_webpage) || "",
+    organization_email: normalizeText(customer.organization_email) || "",
     tax_id: normalizeText(customer.tax_id) || "",
     email: normalizeText(customer.email) || "",
     address_line_1: normalizeText(customer.address_line_1) || "",
@@ -194,8 +212,10 @@ function renderEditableCustomerTable(tableEl, fields, entity) {
   const rows = fields
     .map((field) => {
       const value = entity?.[field.name];
+      const isOrganizationField = isCustomerOrganizationField(field.name);
+      const hiddenStyle = !state.isOrganizationCustomer && isOrganizationField ? ' style="display: none;"' : "";
       return `
-        <tr>
+        <tr data-customer-org-field="${isOrganizationField ? "1" : "0"}"${hiddenStyle}>
           <th>${escapeHtml(fieldLabel(field.name))}</th>
           <td>${renderEditableFieldInput(field, value)}</td>
         </tr>
@@ -340,6 +360,7 @@ function collectEditableCustomerPayload() {
   const payload = {};
   fields.forEach((field) => {
     if (!field.editable) return;
+    if (isCustomerOrganizationField(field.name) && !state.isOrganizationCustomer) return;
     const el = document.getElementById(customerFieldInputId(field.name));
     if (!el) return;
     payload[field.name] = getFieldValueFromInput(field, el);
@@ -408,9 +429,33 @@ async function saveCustomerProfile() {
 
   state.customer = normalizeCustomer(result.customer);
   renderEditableCustomerTable(els.customerDataTable, CUSTOMER_EDIT_FIELDS, state.customer);
+  applyOrganizationFieldVisibility(state.isOrganizationCustomer);
   bindCustomerProfileInputs();
   setSaveEnabled(false);
   setSaveStatus("Customer updated.");
+}
+
+function shouldEnableOrganizationFields(customer = {}) {
+  return Array.from(ORGANIZATION_CUSTOMER_FIELDS).some((fieldName) => {
+    return normalizeText(customer?.[fieldName]);
+  });
+}
+
+function isCustomerOrganizationField(fieldName) {
+  return ORGANIZATION_CUSTOMER_FIELDS.has(String(fieldName || ""));
+}
+
+function applyOrganizationFieldVisibility(enabled) {
+  if (!els.customerDataTable) return;
+  const rows = els.customerDataTable.querySelectorAll('tr[data-customer-org-field="1"]');
+  rows.forEach((row) => {
+    row.style.display = enabled ? "" : "none";
+  });
+}
+
+function handleOrganizationToggleChange() {
+  state.isOrganizationCustomer = Boolean(els.organizationToggle?.checked);
+  applyOrganizationFieldVisibility(state.isOrganizationCustomer);
 }
 
 function setSaveEnabled(enabled) {

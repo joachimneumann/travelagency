@@ -69,20 +69,23 @@ IR: {
 				{name: "atpStaffId", kind: "scalar", typeName: "Identifier", required: false},
 			]
 		},
-		{
-			name:       "Customer"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#Customer"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "entity_type", kind: "scalar", typeName: "string", required: true},
-				{name: "display_name", kind: "scalar", typeName: "string", required: true},
+			{
+				name:       "Customer"
+				domain:     "aux"
+				module:     "entities"
+				sourceType: "entities.#Customer"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "display_name", kind: "scalar", typeName: "string", required: true},
 				{name: "first_name", kind: "scalar", typeName: "string", required: false},
 				{name: "last_name", kind: "scalar", typeName: "string", required: false},
 				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "nationality", kind: "scalar", typeName: "string", required: false},
 				{name: "organization_name", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_address", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_webpage", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_email", kind: "scalar", typeName: "Email", required: false},
 				{name: "tax_id", kind: "scalar", typeName: "string", required: false},
 				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},

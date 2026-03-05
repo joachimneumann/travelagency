@@ -4,13 +4,16 @@ import common "travelagency.local/model/common"
 
 #Customer: {
 	id:                    common.#Identifier
-	entity_type:           "person" | "organization"
 	display_name:          string
 	first_name?:           string
 	last_name?:            string
 	date_of_birth?:        common.#DateOnly
 	nationality?:          string
 	organization_name?:    string
+	organization_address?: string
+	organization_phone_number?: string
+	organization_webpage?:  string
+	organization_email?:    common.#Email
 	tax_id?:               string
 	phone_number?:         string
 	email?:                common.#Email

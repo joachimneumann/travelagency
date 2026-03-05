@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-05T12:03:57Z
+# 2026-03-05T15:09:40Z
 
 ---
 openapi: 3.1.0
@@ -122,15 +122,12 @@ components:
       type: object
       required:
       - id
-      - entity_type
       - display_name
       - can_receive_marketing
       - created_at
       - updated_at
       properties:
         id:
-          type: string
-        entity_type:
           type: string
         display_name:
           type: string
@@ -147,6 +144,18 @@ components:
           type: string
           nullable: true
         organization_name:
+          type: string
+          nullable: true
+        organization_address:
+          type: string
+          nullable: true
+        organization_phone_number:
+          type: string
+          nullable: true
+        organization_webpage:
+          type: string
+          nullable: true
+        organization_email:
           type: string
           nullable: true
         tax_id:

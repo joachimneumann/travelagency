@@ -36,12 +36,6 @@ export const CUSTOMER_SCHEMA = {
       "required": true
     },
     {
-      "name": "entity_type",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": true
-    },
-    {
       "name": "display_name",
       "kind": "scalar",
       "typeName": "string",
@@ -75,6 +69,30 @@ export const CUSTOMER_SCHEMA = {
       "name": "organization_name",
       "kind": "scalar",
       "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "organization_address",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "organization_phone_number",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "organization_webpage",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "organization_email",
+      "kind": "scalar",
+      "typeName": "Email",
       "required": false
     },
     {

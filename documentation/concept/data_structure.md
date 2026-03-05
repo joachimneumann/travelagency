@@ -6,17 +6,18 @@
 
 `Customer`
 - `id` (string, immutable, system-generated)
-- `entity_type` (`person` | `organization`)
 - `display_name` (required)
 
-For persons:
 - `first_name` (optional)
 - `last_name` (optional)
 - `date_of_birth` (optional)
 - `nationality` (optional, ISO-3166-1 alpha-2)
-For organizations:
 - `organization_name` (optional)
 - `tax_id` (optional)
+- `organization_address` (optional)
+- `organization_phone_number` (optional)
+- `organization_webpage` (optional)
+- `organization_email` (optional)
 
 - `phone_number` (optional)
 - `email` (optional)
@@ -98,7 +99,7 @@ Security note:
 - `Customer.dedup_fingerprint` is unique per active customer record and must be recomputed on customer creation/update.
 - `TravelGroupMember.customer_id` must always reference an existing `Customer`.
 - Unknown traveler flow:
-  - When traveler identity is unknown, create a minimal `Customer` first (at least `display_name` and `entity_type` + one contact field) before creating `TravelGroupMember`.
+  - When traveler identity is unknown, create a minimal `Customer` first (at least `display_name` and one contact field) before creating `TravelGroupMember`.
 - Each `TravelGroup` must have at least one `TravelGroupMember` with role `TravelGroupContact`.
 
 ## 4) Search indexing recommendations

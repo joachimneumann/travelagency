@@ -170,7 +170,6 @@
         "type": "object",
         "required": [
           "id",
-          "entity_type",
           "display_name",
           "can_receive_marketing",
           "created_at",
@@ -178,9 +177,6 @@
         ],
         "properties": {
           "id": {
-            "type": "string"
-          },
-          "entity_type": {
             "type": "string"
           },
           "display_name": {
@@ -203,6 +199,22 @@
             "nullable": true
           },
           "organization_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_address": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_phone_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_webpage": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_email": {
             "type": "string",
             "nullable": true
           },

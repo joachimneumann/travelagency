@@ -22,13 +22,16 @@ export function createCustomerHandlers(deps) {
 
 const CUSTOMER_UPDATE_FIELDS = new Set([
   "id",
-  "entity_type",
   "display_name",
   "first_name",
   "last_name",
   "date_of_birth",
   "nationality",
   "organization_name",
+  "organization_address",
+  "organization_phone_number",
+  "organization_webpage",
+  "organization_email",
   "tax_id",
   "phone_number",
   "email",
