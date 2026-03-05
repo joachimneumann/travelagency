@@ -89,7 +89,7 @@ async function init() {
 
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/index.html`;
-    els.logoutLink.href = `${apiBase}/auth/logout?global=true&return_to=${encodeURIComponent(returnTo)}`;
+    els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
 
   await loadBackendAuthStatus();

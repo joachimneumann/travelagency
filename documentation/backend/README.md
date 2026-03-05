@@ -34,7 +34,6 @@ Environment variables:
 - `KEYCLOAK_POST_LOGOUT_REDIRECT_URI` (optional; must be allowed by Keycloak client if set)
 - `KEYCLOAK_ALLOWED_ROLES` (comma-separated, default `atp_admin,atp_manager,atp_accountant,atp_staff`)
 - `KEYCLOAK_FORCE_LOGIN_PROMPT` (`true`/`false`, default `false`)
-- `KEYCLOAK_GLOBAL_LOGOUT` (`true`/`false`, default `false`)
 - `RETURN_TO_ALLOWED_ORIGINS` (comma-separated absolute origins allowed for `return_to`; default `http://localhost:8080,http://localhost:8787`)
 - `MOBILE_MIN_SUPPORTED_APP_VERSION` (minimum iOS app version allowed to continue after bootstrap)
 - `MOBILE_LATEST_APP_VERSION` (latest published iOS app version shown to users)

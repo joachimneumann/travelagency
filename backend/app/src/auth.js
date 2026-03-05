@@ -10,7 +10,6 @@ export function createAuth({ port }) {
     keycloakClientSecret: normalizeText(process.env.KEYCLOAK_CLIENT_SECRET),
     keycloakRedirectUri: normalizeText(process.env.KEYCLOAK_REDIRECT_URI || `http://localhost:${port}/auth/callback`),
     keycloakPostLogoutRedirectUri: normalizeText(process.env.KEYCLOAK_POST_LOGOUT_REDIRECT_URI),
-    keycloakGlobalLogout: parseBoolEnv("KEYCLOAK_GLOBAL_LOGOUT", false),
     keycloakForceLoginPrompt: parseBoolEnv("KEYCLOAK_FORCE_LOGIN_PROMPT", false),
     keycloakAllowedRoles: new Set(
       String(process.env.KEYCLOAK_ALLOWED_ROLES || "atp_admin,atp_manager,atp_accountant,atp_staff")
@@ -408,7 +407,6 @@ export function createAuth({ port }) {
 
   async function handleAuthLogout(req, res) {
     const session = getSessionFromRequest(req);
-    const idTokenHint = normalizeText(session?.id_token);
     if (session?.sid) {
       sessions.delete(session.sid);
     }
@@ -416,32 +414,7 @@ export function createAuth({ port }) {
 
     const requestUrl = new URL(req.url, "http://localhost");
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/admin");
-    const forceGlobal = parseBoolQuery(requestUrl.searchParams.get("global"), false);
-
-    const shouldGlobalLogout = cfg.keycloakEnabled && (cfg.keycloakGlobalLogout || forceGlobal);
-    if (!shouldGlobalLogout) {
-      redirect(res, returnTo);
-      return;
-    }
-
-    try {
-      const discovery = await getKeycloakDiscovery();
-      const logoutUrl = new URL(
-        discovery.end_session_endpoint ||
-          `${cfg.keycloakBaseUrl}/realms/${cfg.keycloakRealm}/protocol/openid-connect/logout`
-      );
-      if (idTokenHint) {
-        logoutUrl.searchParams.set("id_token_hint", idTokenHint);
-      }
-      logoutUrl.searchParams.set("client_id", cfg.keycloakClientId);
-      const postLogoutRedirect = cfg.keycloakPostLogoutRedirectUri || returnTo;
-      logoutUrl.searchParams.set("post_logout_redirect_uri", postLogoutRedirect);
-      // Compatibility for Keycloak versions/setups that still read redirect_uri on logout.
-      logoutUrl.searchParams.set("redirect_uri", postLogoutRedirect);
-      redirect(res, logoutUrl.toString());
-    } catch {
-      redirect(res, returnTo);
-    }
+    redirect(res, returnTo);
   }
 
   async function handleAuthMe(req, res) {
@@ -479,12 +452,6 @@ export function createAuth({ port }) {
 
 function parseBoolEnv(name, defaultValue) {
   const raw = normalizeText(process.env[name]);
-  if (!raw) return defaultValue;
-  return raw.toLowerCase() === "true";
-}
-
-function parseBoolQuery(value, defaultValue) {
-  const raw = normalizeText(value);
   if (!raw) return defaultValue;
   return raw.toLowerCase() === "true";
 }
