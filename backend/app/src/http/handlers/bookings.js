@@ -125,6 +125,8 @@ async function handleCreateBooking(req, res) {
   }
 
   const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || BASE_CURRENCY);
+  const selectedTourId = normalizeText(payload.tourId || payload.tour_id);
+  const selectedTourTitle = normalizeText(payload.tourTitle || payload.tour_title);
 
   const booking = {
     id: `booking_${randomUUID()}`,
@@ -152,7 +154,9 @@ async function handleCreateBooking(req, res) {
       utm_source: normalizeText(payload.utm_source),
       utm_medium: normalizeText(payload.utm_medium),
       utm_campaign: normalizeText(payload.utm_campaign),
-      referrer: normalizeText(payload.referrer)
+      referrer: normalizeText(payload.referrer),
+      tour_id: selectedTourId || null,
+      tour_title: selectedTourTitle || null
     },
     idempotency_key: idempotencyKey || null,
     created_at: nowIso(),

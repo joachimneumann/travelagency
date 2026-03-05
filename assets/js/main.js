@@ -27,7 +27,8 @@ const state = {
   formStep: 1,
   bookingSubmitted: false,
   visibleToursCount: 3,
-  showMoreUsed: false
+  showMoreUsed: false,
+  selectedTour: null
 };
 
 const TRIPS_REQUEST_VERSION = Date.now();
@@ -87,6 +88,8 @@ const els = {
   bookingPreferredCurrency: document.getElementById("bookingPreferredCurrency"),
   bookingBudget: document.getElementById("bookingBudget"),
   bookingBudgetLabel: document.getElementById("bookingBudgetLabel"),
+  bookingTourId: document.getElementById("bookingTourId"),
+  bookingTourTitle: document.getElementById("bookingTourTitle"),
   stepBack: document.getElementById("stepBack"),
   stepNext: document.getElementById("stepNext"),
   progressSteps: document.querySelectorAll(".progress-step"),
@@ -588,6 +591,7 @@ function renderTrips(trips) {
         const firstDestination = tourDestinationCountries(selected)[0] || "";
         setBookingField("bookingDestination", firstDestination);
         setBookingField("bookingStyle", selected.styles[0] || "");
+        setSelectedTourContext(selected);
       }
       openBookingModal();
     });
@@ -753,9 +757,14 @@ function prewarmTourImages(tours) {
 function setupModal() {
   if (!els.bookingModal) return;
 
-  const openButtons = [els.openBookingModal, ...els.openModalButtons].filter(Boolean);
+  const openButtons = [els.openBookingModal, ...els.openModalButtons]
+    .filter(Boolean)
+    .filter((button) => !button.hasAttribute("data-trip-id"));
   openButtons.forEach((button) => {
-    button.addEventListener("click", openBookingModal);
+    button.addEventListener("click", () => {
+      clearSelectedTourContext();
+      openBookingModal();
+    });
   });
 
   els.closeBookingModal.addEventListener("click", closeBookingModal);
@@ -778,6 +787,26 @@ function openBookingModal() {
   document.body.style.overflow = "hidden";
   const firstInput = els.bookingForm.querySelector(".step.active input, .step.active select, .step.active textarea");
   if (firstInput) firstInput.focus();
+}
+
+function setSelectedTourContext(selectedTour) {
+  state.selectedTour = selectedTour
+    ? {
+      id: normalizeText(selectedTour.id || ""),
+      title: normalizeText(selectedTour.title || "")
+    }
+    : null;
+
+  if (els.bookingTourId) {
+    els.bookingTourId.value = state.selectedTour?.id || "";
+  }
+  if (els.bookingTourTitle) {
+    els.bookingTourTitle.value = state.selectedTour?.title || "";
+  }
+}
+
+function clearSelectedTourContext() {
+  setSelectedTourContext(null);
 }
 
 function closeBookingModal() {
@@ -951,6 +980,8 @@ async function submitBookingForm() {
     phone: entries.phone || "",
     language: entries.language || "",
     notes: entries.notes || "",
+    tourId: entries.tourId || "",
+    tourTitle: entries.tourTitle || "",
     pageUrl: window.location.href,
     referrer: document.referrer || "",
     utm_source: getQueryParam("utm_source"),
