@@ -1,425 +1,98 @@
-1. Client (Customer) Profile
-
-Basic information about the traveler or booking contact.
-
-Personal Information
-	•	First name
-	•	Last name
-	•	Title (Mr / Mrs / Dr etc.)
-	•	Gender (optional but useful for rooming)
-	•	Date of birth
-	•	Nationality
-	•	Passport country
-	•	Passport number
-	•	Passport expiry date
-	•	Passport photo / document upload
-
-Contact Information
-	•	Email
-	•	Phone number
-	•	WhatsApp number
-	•	Emergency contact name
-	•	Emergency contact phone
-	•	Address
-	•	Country of residence
-	•	Time zone
-
-Communication Preferences
-	•	Preferred language
-	•	Preferred communication channel
-	•	Email
-	•	WhatsApp
-	•	Phone
-	•	Marketing consent
-	•	Newsletter subscription
-
-Travel Preferences
-	•	Preferred travel style
-	•	Luxury
-	•	Boutique
-	•	Adventure
-	•	Budget
-	•	Private
-	•	Group
-	•	Accommodation preferences
-	•	Dietary requirements
-	•	Mobility limitations
-	•	Accessibility needs
-	•	Allergies
-	•	Interests
-	•	Culture
-	•	Food
-	•	Nature
-	•	Beaches
-	•	Trekking
-	•	Photography
-	•	History
-	•	Wellness
-
-Documents
-	•	Passport copy
-	•	Visa documents
-	•	Insurance certificate
-	•	Flight tickets
-	•	Vaccination records (optional)
-
-CRM Metadata
-	•	Lead source (Google / referral / hotel / travel agent)
-	•	Customer lifetime value
-	•	Notes from staff
-	•	Tags (VIP, repeat guest, honeymoon, etc.)
-	•	Previous bookings history
-	•	Loyalty status
-
-⸻
-
-2. Booking / Reservation
-
-The main booking record.
-
-Booking Overview
-	•	Booking ID
-	•	Booking status
-	•	Inquiry
-	•	Quotation sent
-	•	Confirmed
-	•	Deposit paid
-	•	Fully paid
-	•	Completed
-	•	Cancelled
-	•	Booking date
-	•	Booking owner (staff)
-	•	Sales agent
-	•	Travel consultant
-
-Trip Overview
-	•	Tour name
-	•	Tour type
-	•	Private
-	•	Group
-	•	Tailor-made
-	•	Day tour
-	•	Multi-country tour
-	•	Countries included
-	•	Start date
-	•	End date
-	•	Number of nights
-	•	Number of travelers
-
-Traveler List
-
-For each traveler:
-	•	Full name
-	•	Date of birth
-	•	Passport details
-	•	Nationality
-	•	Room assignment
-	•	Special requests
-	•	Medical notes
-
-⸻
-
-3. Itinerary
-
-Detailed travel plan.
-
-Daily Itinerary
-
-For each day:
-	•	Date
-	•	City / destination
-	•	Accommodation
-	•	Activities
-	•	Tours
-	•	Transport
-	•	Meals included
-	•	Notes
-	•	Supplier responsible
-
-Activity Details
-	•	Activity name
-	•	Start time
-	•	End time
-	•	Pickup location
-	•	Drop-off location
-	•	Guide assigned
-	•	Supplier
-	•	Confirmation number
-	•	Capacity
-	•	Special notes
-
-⸻
-
-4. Accommodation
-
-For each hotel stay:
-	•	Hotel name
-	•	Hotel supplier
-	•	Location
-	•	Star rating
-	•	Room type
-	•	Number of rooms
-	•	Bed configuration
-	•	Check-in date
-	•	Check-out date
-	•	Confirmation number
-	•	Meal plan
-	•	Breakfast
-	•	Half board
-	•	Full board
-	•	Special requests
-	•	Honeymoon setup
-	•	Late check-in
-	•	Connecting rooms
-
-⸻
-
-5. Transport
-
-All transport arrangements.
-
-Flights
-	•	Airline
-	•	Flight number
-	•	Departure airport
-	•	Arrival airport
-	•	Departure time
-	•	Arrival time
-	•	Ticket number
-	•	Booking reference
-	•	Luggage allowance
-
-Ground Transport
-	•	Transport type
-	•	Car
-	•	Van
-	•	Bus
-	•	Boat
-	•	Train
-	•	Vehicle type
-	•	Driver name
-	•	Driver phone
-	•	Pickup location
-	•	Pickup time
-	•	Drop-off location
-	•	Supplier
-	•	Cost
-
-⸻
-
-6. Local Guides
-	•	Guide name
-	•	Language
-	•	Guide license number
-	•	Phone number
-	•	Supplier company
-	•	Assigned tours
-	•	Notes
-
-⸻
-
-7. Local Suppliers
-
-Important since you mentioned working with local providers.
-
-Supplier Profile
-	•	Supplier name
-	•	Country
-	•	City
-	•	Contact person
-	•	Phone
-	•	Email
-	•	WhatsApp
-	•	Contract details
-	•	Payment terms
-	•	Bank details
-	•	Reliability rating
-	•	Notes
-
-Supplier Service
-	•	Service type
-	•	Hotel
-	•	Guide
-	•	Transport
-	•	Tour operator
-	•	Activity provider
-	•	Pricing
-	•	Commission
-	•	Capacity
-	•	Availability
-
-⸻
-
-8. Financial Information
-
-Critical for staff managing bookings.
-
-Pricing
-	•	Total tour price
-	•	Price per traveler
-	•	Currency
-	•	Exchange rate
-	•	Cost breakdown
-	•	Accommodation
-	•	Activities
-	•	Transport
-	•	Guides
-	•	Internal flights
-	•	Margin
-	•	Commission
-
-Payments
-	•	Payment status
-	•	Deposit amount
-	•	Deposit due date
-	•	Balance due date
-	•	Payment method
-	•	Credit card
-	•	Bank transfer
-	•	Stripe
-	•	PayPal
-	•	Payment history
-	•	Invoice numbers
-	•	Refunds
-	•	Discounts applied
-	•	Promo codes
-
-⸻
-
-9. Documents & Files
-
-Attachable files.
-
-Examples:
-	•	Client passport copies
-	•	Signed booking forms
-	•	Invoices
-	•	Supplier confirmations
-	•	Tour vouchers
-	•	Travel insurance
-	•	Tickets
-	•	Visa documents
-
-⸻
-
-10. Internal Staff Tools
-
-Useful for a CRM.
-
-Tasks
-	•	Follow up payment
-	•	Send itinerary
-	•	Confirm hotel
-	•	Confirm guide
-	•	Send vouchers
-
-Internal Notes
-	•	Private staff comments
-	•	Client personality notes
-	•	Special handling
-
-Activity Log
-	•	Who changed what
-	•	Communication history
-	•	Payment updates
-	•	Booking edits
-
-⸻
-
-11. Client Communication History
-
-Important for WhatsApp integration.
-
-Track:
-	•	Emails sent
-	•	WhatsApp conversations
-	•	Phone calls
-	•	Attachments sent
-	•	Quotation versions
-	•	Message timestamps
-	•	Staff assigned
-
-⸻
-
-12. Pre-Trip Information
-
-Things staff need before departure.
-	•	Visa requirements
-	•	Entry requirements
-	•	Arrival flight details
-	•	Pickup arrangements
-	•	Emergency contact
-	•	Special arrangements
-	•	Honeymoon
-	•	Birthday
-	•	Anniversary
-
-⸻
-
-13. On-Trip Operations
-
-Live travel monitoring.
-	•	Current location
-	•	Today’s activities
-	•	Guide assigned
-	•	Driver assigned
-	•	Emergency contacts
-	•	Incident reports
-	•	Delays or changes
-
-⸻
-
-14. Post-Trip Data
-
-Very valuable for improving tours.
-	•	Client feedback
-	•	Review score
-	•	Complaint reports
-	•	Refund cases
-	•	Testimonials
-	•	Photo permissions
-	•	Future travel interest
-
-⸻
-
-15. Reporting / Analytics
-
-Management data.
-
-Examples:
-	•	Revenue per country
-	•	Top suppliers
-	•	Top guides
-	•	Conversion rate
-	•	Average booking value
-	•	Lead source performance
-	•	Client nationality distribution
-
-⸻
-
-16. Safety & Emergency Data
-
-Important for tours in Southeast Asia.
-	•	Embassy contact
-	•	Local emergency numbers
-	•	Travel insurance contact
-	•	Local operations manager
-	•	Medical facilities near itinerary
-
-⸻
-
-💡 Important architecture tip (since you’re coding this system):
-
-Your core database entities should likely be:
-
-Clients
-Travelers
-Bookings
-Itineraries
-Services
-Suppliers
-Payments
-Documents
-Messages
-Tasks
-Staff
+# Data Structure (Concept)
+
+## 1) Client (Customer) Profile
+
+### 1.1 Customer
+
+`Customer`
+- `id` (string, immutable, system-generated)
+- `entity_type` (`person` | `organization`)
+
+For persons:
+- `date_of_birth` (optional, for person)
+- `nationality` (optional, ISO-3166-1 alpha-2)
+For organizations:
+- `legal_name` (optional)
+
+- `phone number`
+- `address_line_1`
+- `address_line_2`
+- `address_city`, 
+- `address_state_region`
+- `address_postal_code`
+- `address_country_code` (ISO-3166-1 alpha-2)
+- `preferred_language` (optional, ISO language code)
+- `preferred_currency` (from currency cue)
+- `timezone` (optional, IANA timezone)
+- `source` (optional, e.g. `web_form`, `manual`, `import`)
+- `tags` (array<string>, optional)
+- `notes` (optional)
+- `can_receive_marketing` (bool, default false)
+- `created_at` (datetime)
+- `updated_at` (datetime)
+- `archived_at` (datetime, optional)
+
+
+### 1.4 CustomerConsent (compliance)
+`CustomerConsent`
+- `id`
+- `customer_id` (FK)
+- `consent_type` (`privacy_policy` | `marketing_email` | `marketing_whatsapp` | `profiling`)
+- `status` (`granted` | `withdrawn` | `unknown`)
+- `captured_via` (optional, e.g. `web_form`)
+- `captured_at` (datetime)
+- `evidence_ref` (optional)
+- `updated_at`
+
+### 1.5 CustomerDocument (optional, sensitive)
+`CustomerDocument`
+- `id`
+- `customer_id` (FK)
+- `document_type` (`passport` | `national_id` | `visa` | `other`)
+- `document_number_masked` (required)
+- `document picture` (optional)
+- `issuing_country` (optional)
+- `expires_on` (date, optional)
+- `storage_ref` (optional, secure reference)
+- `created_at`
+- `updated_at`
+
+Security note:
+- Store only encrypted CustomerDocuments.
+
+## 2) Group Travel
+
+### 2.1 TravelGroup
+`TravelGroup`
+- `id`
+- `booking_id` (FK -> Booking)
+- `name` (optional)
+- `group_type` (`family` | `friends` | `corporate` | `school` | `other`)
+- `notes` (optional)
+- `created_at`
+- `updated_at`
+
+### 2.2 TravelGroupMember
+`TravelGroupMember`
+- `id`
+- `travel_group_id` (FK -> `TravelGroup.id`)
+- `customer_id` (FK -> `Customer.id`, required)
+- `member_roles` (required, array<enum>, multiple choice):
+  - `is_traveling`
+  - `TravelGroupContact`
+  - `decision_maker`
+  - `payer`
+  - `assistant`
+  - `other`
+- `notes`
+- `created_at`
+- `updated_at`
+
+## 3) Constraints and invariants
+
+- A booking has zero or one `TravelGroup`.
+- A `TravelGroup` has one or more `TravelGroupMember`.
+- Multiple primary contacts are represented by multiple members carrying the `TravelGroupContact` role.
+
+## 4) Search indexing recommendations
+Include these fields in booking/customer search:
