@@ -942,9 +942,13 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
+  width: max-content;
 }
 
 .backend-nav-meta .nav-logout-stack .backend-user-chip {
+  display: block;
+  width: max-content;
+  margin-inline: auto;
   text-align: center;
 }
 
