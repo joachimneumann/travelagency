@@ -41,12 +41,12 @@
 		A59D5E22504DD7C6866B7446 /* generated_Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD670E648A843FFCE057C38F /* generated_Currency.swift */; };
 		A881CE8DFB5A7ACD41480737 /* BookingDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F08E8704B77986372792B9F /* BookingDetailViewModel.swift */; };
 		A8B917E0513EA53FE9F4A44B /* generated_APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA8FAC00B08A28C6FF884CA /* generated_APIModels.swift */; };
-		AA656BE02F5893A3000975FC /* asiatravelplan.icon in Resources */ = {isa = PBXBuildFile; fileRef = AA656BDF2F5893A3000975FC /* asiatravelplan.icon */; };
 		B206195631B237AA4610101F /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E01C85FF240E1D95D828445 /* AuthService.swift */; };
 		B5182B081531304D63C36545 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 404694A3DFC9E5FF05228A9D /* RootView.swift */; };
 		B849738AF1CCB5754BA4AC21 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBAB27BED5A102DC50F345D /* SettingsView.swift */; };
 		BC0AE9B00497D6E0BD9B75DA /* ClientProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B745ABEFB5A756688035EEAE /* ClientProfile.swift */; };
 		CDA20BD5F6EA456BDD7BCF59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */; };
+		D9E7A1B24C5D6E7F8091A2B3 /* asiatravelplan.icon in Resources */ = {isa = PBXBuildFile; fileRef = C8B7A6D5E4F3029181716151 /* asiatravelplan.icon */; };
 		D4F01FE921E35D8C9E6515D9 /* generated_Booking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37556070E9AE22B2A0E9521 /* generated_Booking.swift */; };
 		DDFBB2377221EBED1D085E27 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7CD5ECF52C5CBA7D2AC9B77 /* AuthSession.swift */; };
 		E30B9FF7027C73BADE84E817 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74DD1AD7347A24E8D20DF4CA /* LoginView.swift */; };
@@ -75,12 +75,12 @@
 		A3F3FA4F8F3A4E5DB4B8D8F1 /* BookingSummaryDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BookingSummaryDetailView.swift; sourceTree = "<group>"; };
 		A5CF69F5AECDB4348F313CA2 /* UnauthorizedView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnauthorizedView.swift; sourceTree = "<group>"; };
 		A8F7D2E4D4A64B0CB7A9C5F1 /* InlineNavigationTitleDisplayModeModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InlineNavigationTitleDisplayModeModifier.swift; sourceTree = "<group>"; };
-		AA656BDF2F5893A3000975FC /* asiatravelplan.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = asiatravelplan.icon; sourceTree = "<group>"; };
 		AD670E648A843FFCE057C38F /* generated_Currency.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = generated_Currency.swift; sourceTree = "<group>"; };
 		B6596F18A94CCC4825B180E5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		B745ABEFB5A756688035EEAE /* ClientProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientProfile.swift; sourceTree = "<group>"; };
 		C4F5B4D2D3D14A2FAED5E4D3 /* OfferComponentDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OfferComponentDetailView.swift; sourceTree = "<group>"; };
 		C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C8B7A6D5E4F3029181716151 /* asiatravelplan.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.iconcomposer.icon; path = asiatravelplan.icon; sourceTree = "<group>"; };
 		C7B441BB7BA80E1A1394F166 /* StartupFailureView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartupFailureView.swift; sourceTree = "<group>"; };
 		CA4F1B24D8D6EC17E53C164F /* JWTDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JWTDecoder.swift; sourceTree = "<group>"; };
 		CD0B0CE6D394B3D1FF92BE65 /* SessionStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -172,6 +172,7 @@
 			isa = PBXGroup;
 			children = (
 				C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */,
+				C8B7A6D5E4F3029181716151 /* asiatravelplan.icon */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -217,7 +218,6 @@
 				6A87D52FAE10564A4678C82A /* AsiaTravelPlan */,
 				3B5D02B92F5410D40023548C /* Recovered References */,
 				3B5D02BB2F5410D40023548C /* Products */,
-				AA656BDF2F5893A3000975FC /* asiatravelplan.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -311,7 +311,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CDA20BD5F6EA456BDD7BCF59 /* Assets.xcassets in Resources */,
-				AA656BE02F5893A3000975FC /* asiatravelplan.icon in Resources */,
+				D9E7A1B24C5D6E7F8091A2B3 /* asiatravelplan.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -437,6 +437,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = asiatravelplan;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -468,6 +469,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = asiatravelplan;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
