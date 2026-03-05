@@ -10,6 +10,9 @@ import { deflateSync, inflateSync } from "node:zlib";
 import { createAuth } from "./auth.js";
 import { buildApiRoutes } from "./http/routes.js";
 import { buildPaginatedListResponse } from "./http/pagination.js";
+import { createBookingHandlers } from "./http/handlers/bookings.js";
+import { createCustomerHandlers } from "./http/handlers/customers.js";
+import { createTourHandlers } from "./http/handlers/tours.js";
 import {
   currencyDefinition as generatedCurrencyDefinition,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
@@ -214,6 +217,119 @@ function getFallbackExchangeRate(fromCurrency, toCurrency) {
 export async function createBackendHandler({ port = PORT } = {}) {
   await ensureStorage();
   const auth = createAuth({ port });
+  const bookingHandlers = createBookingHandlers({
+    readBodyJson,
+    sendJson,
+    validateBookingInput,
+    readStore,
+    normalizeText,
+    getRequestIpAddress,
+    guessCountryFromRequest,
+    findMatchingCustomer,
+    normalizeEmail,
+    normalizePhone,
+    nowIso,
+    safeCurrency,
+    BASE_CURRENCY,
+    STAGES,
+    computeSlaDueAt,
+    safeInt,
+    defaultBookingPricing,
+    defaultBookingOffer,
+    addActivity,
+    persistStore,
+    computeBookingHash,
+    getPrincipal,
+    loadAtpStaff,
+    resolvePrincipalAtpStaffMember,
+    canReadAllBookings,
+    filterAndSortBookings,
+    canAccessBooking,
+    buildBookingReadModel,
+    paginate,
+    buildPaginatedListResponse,
+    ensureMetaChatCollections,
+    clamp,
+    isLikelyPhoneMatch,
+    buildChatEventReadModel,
+    getMetaConversationOpenUrl,
+    STAGE_ORDER,
+    ALLOWED_STAGE_TRANSITIONS,
+    canChangeBookingStage,
+    assertMatchingBookingHash,
+    actorLabel,
+    canChangeBookingAssignment,
+    syncBookingAtpStaffFields,
+    canEditBooking,
+    validateBookingPricingInput,
+    convertBookingPricingToBaseCurrency,
+    normalizeBookingPricing,
+    validateBookingOfferInput,
+    convertBookingOfferToBaseCurrency,
+    normalizeBookingOffer,
+    validateOfferExchangeRequest,
+    resolveExchangeRateWithFallback,
+    convertOfferLineAmountForCurrency,
+    normalizeInvoiceItems,
+    computeInvoiceTotal,
+    safeAmountCents,
+    nextInvoiceNumber,
+    writeInvoicePdf,
+    randomUUID,
+    invoicePdfPath,
+    sendFileWithCache
+  });
+  const customerHandlers = createCustomerHandlers({
+    getPrincipal,
+    canReadCustomers,
+    sendJson,
+    readStore,
+    normalizeText,
+    paginate,
+    buildPaginatedListResponse,
+    buildBookingReadModel,
+    canViewAtpStaffDirectory,
+    loadAtpStaff,
+    staffUsernames,
+    canManageAtpStaff,
+    readBodyJson,
+    normalizeStringArray,
+    persistAtpStaff,
+    randomUUID
+  });
+  const tourHandlers = createTourHandlers({
+    normalizeText,
+    normalizeStringArray,
+    safeInt,
+    safeFloat,
+    normalizeHighlights,
+    toTourImagePublicUrl,
+    tourDestinationCountries,
+    readTours,
+    sendJson,
+    clamp,
+    normalizeTourForRead,
+    createHash,
+    getPrincipal,
+    canReadTours,
+    paginate,
+    collectTourOptions,
+    buildPaginatedListResponse,
+    canEditTours,
+    readBodyJson,
+    nowIso,
+    randomUUID,
+    persistTour,
+    resolveTourImageDiskPath,
+    sendFileWithCache,
+    mkdir,
+    path,
+    execFile,
+    TEMP_UPLOAD_DIR,
+    TOURS_DIR,
+    writeFile,
+    rm
+  });
   const routes = buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
@@ -226,33 +342,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
       handleStagingAccessCheck,
       handleStagingAccessLogout,
       handleMobileBootstrap,
-      handlePublicListTours,
-      handlePublicTourImage,
-      handleCreateBooking,
-      handleListBookings,
-      handleGetBooking,
-      handleListBookingChatEvents,
-      handlePatchBookingStage,
-      handlePatchBookingOwner,
-      handlePatchBookingNotes,
-      handlePatchBookingPricing,
-      handlePatchBookingOffer,
-      handlePostOfferExchangeRates,
-      handleListActivities,
-      handleCreateActivity,
-      handleListBookingInvoices,
-      handleCreateBookingInvoice,
-      handlePatchBookingInvoice,
-      handleGetInvoicePdf,
-      handleListCustomers,
-      handleGetCustomer,
-      handleListAtpStaff,
-      handleCreateAtpStaff,
-      handleListTours,
-      handleGetTour,
-      handleCreateTour,
-      handlePatchTour,
-      handleUploadTourImage
+      ...bookingHandlers,
+      ...customerHandlers,
+      ...tourHandlers
     }
   });
 
@@ -3726,1298 +3818,6 @@ async function handleMobileBootstrap(_req, res) {
         tours: false
       }
     });
-}
-
-async function handleCreateBooking(req, res) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const check = validateBookingInput(payload);
-  if (!check.ok) {
-    sendJson(res, 422, { error: check.error });
-    return;
-  }
-
-  const store = await readStore();
-  const idempotencyKey = normalizeText(req.headers["idempotency-key"]);
-  const ipAddress = getRequestIpAddress(req);
-  const ipCountryGuess = guessCountryFromRequest(req, ipAddress);
-
-  if (idempotencyKey) {
-    const existingByKey = store.bookings.find((booking) => booking.idempotency_key === idempotencyKey);
-    if (existingByKey) {
-      sendJson(res, 200, {
-        booking_id: existingByKey.id,
-        customer_id: existingByKey.customer_id,
-        status: "accepted",
-        deduplicated: true,
-        message: "Booking already captured with this idempotency key"
-      });
-      return;
-    }
-  }
-
-  const customerMatch = findMatchingCustomer(store.customers, payload);
-  let customer;
-
-  if (customerMatch) {
-    customer = {
-      ...customerMatch,
-      name: normalizeText(payload.name) || customerMatch.name,
-      email: normalizeEmail(payload.email) || customerMatch.email,
-      phone: normalizePhone(payload.phone) || customerMatch.phone,
-      language: normalizeText(payload.language) || customerMatch.language,
-      updated_at: nowIso()
-    };
-    const idx = store.customers.findIndex((c) => c.id === customer.id);
-    store.customers[idx] = customer;
-  } else {
-    customer = {
-      id: `cust_${randomUUID()}`,
-      name: normalizeText(payload.name),
-      email: normalizeEmail(payload.email),
-      phone: normalizePhone(payload.phone),
-      language: normalizeText(payload.language) || "English",
-      created_at: nowIso(),
-      updated_at: nowIso(),
-      tags: []
-    };
-    store.customers.push(customer);
-  }
-
-  const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || BASE_CURRENCY);
-
-  const booking = {
-    id: `booking_${randomUUID()}`,
-    customer_id: customer.id,
-    stage: STAGES.NEW,
-    atp_staff: null,
-    atp_staff_name: null,
-    owner_id: null,
-    owner_name: null,
-    sla_due_at: computeSlaDueAt(STAGES.NEW),
-    destination: normalizeText(payload.destination),
-    style: normalizeText(payload.style),
-    travel_month: normalizeText(payload.travelMonth),
-    travelers: safeInt(payload.travelers),
-    duration: normalizeText(payload.duration),
-    budget: normalizeText(payload.budget),
-    preferred_currency: preferredCurrency,
-    notes: normalizeText(payload.notes),
-    pricing: defaultBookingPricing(),
-    offer: defaultBookingOffer(preferredCurrency),
-    source: {
-      page_url: normalizeText(payload.pageUrl),
-      ip_address: ipAddress || null,
-      ip_country_guess: ipCountryGuess || null,
-      utm_source: normalizeText(payload.utm_source),
-      utm_medium: normalizeText(payload.utm_medium),
-      utm_campaign: normalizeText(payload.utm_campaign),
-      referrer: normalizeText(payload.referrer)
-    },
-    idempotency_key: idempotencyKey || null,
-    created_at: nowIso(),
-    updated_at: nowIso()
-  };
-
-  store.bookings.push(booking);
-  addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
-
-  await persistStore(store);
-
-  sendJson(res, 201, {
-    booking_id: booking.id,
-    booking_hash: computeBookingHash(booking),
-    customer_id: customer.id,
-    status: "accepted",
-    deduplicated: Boolean(customerMatch),
-    atp_staff: booking.atp_staff_name,
-    sla_due_at: booking.sla_due_at,
-    next_step_message: "Thanks, we will contact you with route options within 48-72h."
-  });
-}
-
-async function handleListBookings(req, res) {
-  const store = await readStore();
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canReadAllBookings(principal) && !staffMember) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const requestUrl = new URL(req.url, "http://localhost");
-  const { items: filtered, filters, sort } = filterAndSortBookings(store, requestUrl.searchParams);
-  const visible = await Promise.all(
-    filtered
-      .filter((booking) => canAccessBooking(principal, booking, staffMember))
-      .map(async (booking) => buildBookingReadModel(booking))
-  );
-  const paged = paginate(visible, requestUrl.searchParams);
-  sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));
-}
-
-async function handleGetBooking(req, res, [bookingId]) {
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canAccessBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-
-  const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking), customer });
-}
-
-async function handleListBookingChatEvents(req, res, [bookingId]) {
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canAccessBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-
-  ensureMetaChatCollections(store);
-  const bookingCustomer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  const requestUrl = new URL(req.url, "http://localhost");
-  const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 100, 1, 500);
-
-  const conversationItems = store.chat_conversations.filter((conversation) => {
-    if (normalizeText(conversation.booking_id) === bookingId) return true;
-    if (normalizeText(conversation.customer_id) === normalizeText(booking.customer_id)) return true;
-
-    const channel = normalizeText(conversation.channel).toLowerCase();
-    if (channel === "whatsapp" && bookingCustomer?.phone) {
-      return isLikelyPhoneMatch(bookingCustomer.phone, conversation.external_contact_id);
-    }
-    return false;
-  });
-  const conversationMap = new Map(conversationItems.map((item) => [item.id, item]));
-  const events = store.chat_events
-    .filter((event) => conversationMap.has(event.conversation_id))
-    .sort((a, b) => String(b.sent_at || b.created_at || "").localeCompare(String(a.sent_at || a.created_at || "")))
-    .slice(0, limit);
-
-  const items = events.map((event) => buildChatEventReadModel(event, conversationMap.get(event.conversation_id)));
-  const conversations = conversationItems
-    .map((conversation) => {
-      const channel = normalizeText(conversation.channel).toLowerCase();
-      return {
-        id: conversation.id,
-        channel,
-        external_contact_id: conversation.external_contact_id || null,
-        customer_id: conversation.customer_id || null,
-        booking_id: conversation.booking_id || null,
-        last_event_at: conversation.last_event_at || null,
-        latest_preview: conversation.latest_preview || null,
-        open_url: getMetaConversationOpenUrl(channel, conversation.external_contact_id)
-      };
-    })
-    .sort((a, b) => String(b.last_event_at || "").localeCompare(String(a.last_event_at || "")));
-
-  sendJson(res, 200, {
-    mode: "read_only",
-    items,
-    total: items.length,
-    conversations,
-    conversation_total: conversations.length
-  });
-}
-
-async function handlePatchBookingStage(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const nextStage = normalizeText(payload.stage).toUpperCase();
-  if (!STAGE_ORDER.includes(nextStage)) {
-    sendJson(res, 422, { error: "Invalid stage" });
-    return;
-  }
-
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canChangeBookingStage(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-
-  const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
-  if (!allowed.includes(nextStage)) {
-    sendJson(res, 409, { error: `Transition ${booking.stage} -> ${nextStage} is not allowed` });
-    return;
-  }
-
-  booking.stage = nextStage;
-  booking.sla_due_at = computeSlaDueAt(nextStage);
-  booking.updated_at = nowIso();
-
-  addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Stage updated to ${nextStage}`);
-  await persistStore(store);
-
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
-}
-
-async function handlePatchBookingOwner(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const ownerIdRaw = normalizeText(payload.owner_id || payload.atp_staff);
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  if (!canChangeBookingAssignment(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-
-  if (!ownerIdRaw) {
-    booking.atp_staff = null;
-    booking.atp_staff_name = null;
-    syncBookingAtpStaffFields(booking);
-    booking.updated_at = nowIso();
-    addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), "AtpStaff unassigned");
-    await persistStore(store);
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
-    return;
-  }
-
-  const atp_staff = await loadAtpStaff();
-  const owner = atp_staff.find((member) => member.id === ownerIdRaw && member.active);
-  if (!owner) {
-    sendJson(res, 422, { error: "AtpStaff member not found or inactive" });
-    return;
-  }
-
-  booking.atp_staff = owner.id;
-  booking.atp_staff_name = owner.name;
-  syncBookingAtpStaffFields(booking);
-  booking.updated_at = nowIso();
-  addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${owner.name}`);
-  await persistStore(store);
-
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
-}
-
-async function handlePatchBookingNotes(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canEditBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-
-  const nextNotes = normalizeText(payload.notes);
-  const currentNotes = normalizeText(booking.notes);
-
-  if (nextNotes === currentNotes) {
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
-    return;
-  }
-
-  booking.notes = nextNotes;
-  booking.updated_at = nowIso();
-  addActivity(
-    store,
-    booking.id,
-    "NOTE_UPDATED",
-    actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
-    nextNotes ? "Booking note updated" : "Booking note cleared"
-  );
-  await persistStore(store);
-
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
-}
-
-async function handlePatchBookingPricing(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canEditBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-
-  const check = validateBookingPricingInput(payload.pricing);
-  if (!check.ok) {
-    sendJson(res, 422, { error: check.error });
-    return;
-  }
-
-  const nextPricingBase = await convertBookingPricingToBaseCurrency(check.pricing);
-  const nextPricingJson = JSON.stringify(nextPricingBase);
-  const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
-  if (nextPricingJson === currentPricingJson) {
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
-    return;
-  }
-
-  booking.pricing = nextPricingBase;
-  booking.updated_at = nowIso();
-  addActivity(
-    store,
-    booking.id,
-    "PRICING_UPDATED",
-    actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
-    "Booking commercials updated"
-  );
-  await persistStore(store);
-
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
-}
-
-async function handlePatchBookingOffer(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canEditBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-
-  const check = validateBookingOfferInput(payload.offer, booking);
-  if (!check.ok) {
-    sendJson(res, 422, { error: check.error });
-    return;
-  }
-
-  const nextOfferBase = await convertBookingOfferToBaseCurrency(check.offer);
-  const nextOfferJson = JSON.stringify(nextOfferBase);
-  const currentOfferJson = JSON.stringify(
-    normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY)
-  );
-  if (nextOfferJson === currentOfferJson) {
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
-    return;
-  }
-
-  booking.offer = nextOfferBase;
-  booking.updated_at = nowIso();
-  addActivity(
-    store,
-    booking.id,
-    "OFFER_UPDATED",
-    actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
-    "Booking offer updated"
-  );
-  await persistStore(store);
-
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
-}
-
-async function handlePostOfferExchangeRates(req, res) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const principal = getPrincipal(req);
-  if (!principal) {
-    sendJson(res, 401, { error: "Unauthorized" });
-    return;
-  }
-
-  const check = validateOfferExchangeRequest(payload);
-  if (!check.ok) {
-    sendJson(res, 422, { error: check.error });
-    return;
-  }
-
-  const { fromCurrency, toCurrency, items } = check;
-  if (!Array.isArray(items) || items.length === 0) {
-    sendJson(res, 200, {
-      from_currency: fromCurrency,
-      to_currency: toCurrency,
-      exchange_rate: 1,
-      total_price_cents: 0,
-      converted_items: []
-    });
-    return;
-  }
-
-  let sourceToBaseRate = 1;
-  let baseToTargetRate = 1;
-  const warnings = new Set();
-
-  if (fromCurrency !== BASE_CURRENCY) {
-    try {
-      const resolved = await resolveExchangeRateWithFallback(fromCurrency, BASE_CURRENCY);
-      sourceToBaseRate = resolved.rate;
-      if (resolved.warning) warnings.add(resolved.warning);
-    } catch (error) {
-      sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
-      return;
-    }
-  }
-  if (toCurrency !== BASE_CURRENCY) {
-    try {
-      const resolved = await resolveExchangeRateWithFallback(BASE_CURRENCY, toCurrency);
-      baseToTargetRate = resolved.rate;
-      if (resolved.warning) warnings.add(resolved.warning);
-    } catch (error) {
-      sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
-      return;
-    }
-  }
-
-  const convertedItems = items.map((item) =>
-    convertOfferLineAmountForCurrency(item, { sourceToBaseRate, baseToTargetRate }, fromCurrency, toCurrency)
-  );
-  const combinedRate = sourceToBaseRate * baseToTargetRate;
-
-  sendJson(res, 200, {
-    from_currency: fromCurrency,
-    to_currency: toCurrency,
-    exchange_rate: combinedRate,
-    total_price_cents: convertedItems.reduce(
-      (sum, item) =>
-        sum + (Number.isFinite(item.line_total_amount_cents) ? Number(item.line_total_amount_cents) : 0),
-      0
-    ),
-    converted_items: convertedItems,
-    ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
-  });
-}
-
-async function handleListActivities(req, res, [bookingId]) {
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canAccessBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-
-  const items = store.activities
-    .filter((activity) => activity.booking_id === bookingId)
-    .sort((a, b) => a.created_at.localeCompare(b.created_at));
-
-  sendJson(res, 200, { activities: items, items, total: items.length });
-}
-
-async function handleCreateActivity(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const type = normalizeText(payload.type).toUpperCase();
-  const principal = getPrincipal(req);
-  const detail = normalizeText(payload.detail);
-
-  if (!type) {
-    sendJson(res, 422, { error: "type is required" });
-    return;
-  }
-
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canEditBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-
-  const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), detail);
-  booking.updated_at = nowIso();
-  await persistStore(store);
-
-  sendJson(res, 201, { activity });
-}
-
-function buildInvoiceReadModel(invoice) {
-  return {
-    ...invoice,
-    sent_to_customer: Boolean(invoice.sent_to_customer),
-    sent_to_customer_at: invoice.sent_to_customer_at || null,
-    pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
-  };
-}
-
-async function handleListBookingInvoices(req, res, [bookingId]) {
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canAccessBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-
-  const items = [...store.invoices]
-    .filter((invoice) => invoice.booking_id === bookingId)
-    .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
-    .map(buildInvoiceReadModel);
-  sendJson(res, 200, { items, total: items.length });
-}
-
-async function handleCreateBookingInvoice(req, res, [bookingId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canEditBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const customer = store.customers.find((item) => item.id === booking.customer_id);
-  if (!customer) {
-    sendJson(res, 422, { error: "Booking customer not found" });
-    return;
-  }
-
-  const items = normalizeInvoiceItems(payload.items);
-  if (!items.length) {
-    sendJson(res, 422, { error: "At least one invoice item is required" });
-    return;
-  }
-
-  const now = nowIso();
-  const totalAmountCents = computeInvoiceTotal(items);
-  const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
-  const invoice = {
-    id: `inv_${randomUUID()}`,
-    booking_id: bookingId,
-    customer_id: customer.id,
-    invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
-    version: 1,
-    status: "DRAFT",
-    currency: safeCurrency(payload.currency),
-    issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
-    due_date: normalizeText(payload.due_date) || null,
-    title: normalizeText(payload.title) || `Invoice for ${normalizeText(customer.name) || "customer"}`,
-    notes: normalizeText(payload.notes),
-    sent_to_customer: false,
-    sent_to_customer_at: null,
-    items,
-    total_amount_cents: totalAmountCents,
-    due_amount_cents: dueAmountCents,
-    created_at: now,
-    updated_at: now
-  };
-
-  await writeInvoicePdf(invoice, customer, booking);
-  store.invoices.push(invoice);
-  await persistStore(store);
-  sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice) });
-}
-
-async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const store = await readStore();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-  if (!booking) {
-    sendJson(res, 404, { error: "Booking not found" });
-    return;
-  }
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canEditBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const customer = store.customers.find((item) => item.id === booking.customer_id);
-  if (!customer) {
-    sendJson(res, 422, { error: "Booking customer not found" });
-    return;
-  }
-  const invoice = store.invoices.find((item) => item.id === invoiceId && item.booking_id === bookingId);
-  if (!invoice) {
-    sendJson(res, 404, { error: "Invoice not found" });
-    return;
-  }
-
-  const items = payload.items ? normalizeInvoiceItems(payload.items) : invoice.items;
-  if (!items.length) {
-    sendJson(res, 422, { error: "At least one invoice item is required" });
-    return;
-  }
-
-  const isContentUpdate =
-    payload.invoice_number !== undefined ||
-    payload.currency !== undefined ||
-    payload.issue_date !== undefined ||
-    payload.due_date !== undefined ||
-    payload.title !== undefined ||
-    payload.notes !== undefined ||
-    payload.items !== undefined ||
-    payload.due_amount_cents !== undefined;
-
-  if (payload.sent_to_customer !== undefined) {
-    const sent = Boolean(payload.sent_to_customer);
-    invoice.sent_to_customer = sent;
-    invoice.sent_to_customer_at = sent ? invoice.sent_to_customer_at || nowIso() : null;
-    if (invoice.status !== "PAID") {
-      invoice.status = sent ? "INVOICE_SENT" : "DRAFT";
-    }
-  }
-
-  if (isContentUpdate) {
-    const totalAmountCents = computeInvoiceTotal(items);
-    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
-    if (payload.invoice_number !== undefined) {
-      invoice.invoice_number = normalizeText(payload.invoice_number) || invoice.invoice_number;
-    }
-    if (payload.currency !== undefined) {
-      invoice.currency = safeCurrency(payload.currency || invoice.currency);
-    }
-    if (payload.issue_date !== undefined) {
-      invoice.issue_date = normalizeText(payload.issue_date) || invoice.issue_date;
-    }
-    if (payload.due_date !== undefined) {
-      invoice.due_date = normalizeText(payload.due_date) || null;
-    }
-    if (payload.title !== undefined) {
-      invoice.title = normalizeText(payload.title) || invoice.title;
-    }
-    if (payload.notes !== undefined) {
-      invoice.notes = normalizeText(payload.notes);
-    }
-    invoice.items = items;
-    invoice.total_amount_cents = totalAmountCents;
-    invoice.due_amount_cents = dueAmountCents;
-    invoice.version = Number(invoice.version || 1) + 1;
-    await writeInvoicePdf(invoice, customer, booking);
-  }
-  invoice.updated_at = nowIso();
-
-  await persistStore(store);
-  sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice) });
-}
-
-async function handleGetInvoicePdf(req, res, [invoiceId]) {
-  const store = await readStore();
-  const invoice = store.invoices.find((item) => item.id === invoiceId);
-  if (!invoice) {
-    sendJson(res, 404, { error: "Invoice not found" });
-    return;
-  }
-  const booking = store.bookings.find((item) => item.id === invoice.booking_id) || null;
-  const principal = getPrincipal(req);
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!booking || !canAccessBooking(principal, booking, staffMember)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const customer = store.customers.find((item) => item.id === invoice.customer_id) || null;
-  const pdfPath = invoicePdfPath(invoice.id, invoice.version);
-  // Always regenerate so PDF styling/content updates are reflected immediately.
-  await writeInvoicePdf(invoice, customer, booking);
-  res.setHeader("Content-Disposition", `inline; filename=\"${invoice.invoice_number || invoice.id}.pdf\"`);
-  await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store");
-}
-
-async function handleListCustomers(req, res) {
-  const principal = getPrincipal(req);
-  if (!canReadCustomers(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const store = await readStore();
-  const requestUrl = new URL(req.url, "http://localhost");
-  const search = normalizeText(requestUrl.searchParams.get("search")).toLowerCase();
-  const pageQuery = requestUrl.searchParams;
-
-  const filtered = [...store.customers]
-    .filter((customer) => {
-      if (!search) return true;
-      const haystack = [customer.name, customer.email, customer.phone, customer.language].filter(Boolean).join(" ").toLowerCase();
-      return haystack.includes(search);
-    })
-    .sort((a, b) =>
-      String(b.created_at || b.updated_at || "").localeCompare(String(a.created_at || a.updated_at || ""))
-    );
-  const paged = paginate(filtered, pageQuery);
-  sendJson(res, 200, buildPaginatedListResponse(paged));
-}
-
-async function handleGetCustomer(req, res, [customerId]) {
-  const principal = getPrincipal(req);
-  if (!canReadCustomers(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const store = await readStore();
-  const customer = store.customers.find((item) => item.id === customerId);
-  if (!customer) {
-    sendJson(res, 404, { error: "Customer not found" });
-    return;
-  }
-
-  const bookings = store.bookings
-    .filter((booking) => booking.customer_id === customer.id)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .map(async (booking) => await buildBookingReadModel(booking));
-
-  const bookingsReadModel = await Promise.all(bookings);
-
-  sendJson(res, 200, { customer, bookings: bookingsReadModel });
-}
-
-async function handleListAtpStaff(req, res) {
-  const principal = getPrincipal(req);
-  if (!canViewAtpStaffDirectory(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const requestUrl = new URL(req.url, "http://localhost");
-  const onlyActive = normalizeText(requestUrl.searchParams.get("active")) !== "false";
-  const atp_staff = await loadAtpStaff();
-  const items = atp_staff
-    .filter((member) => (onlyActive ? member.active : true))
-    .map((member) => ({
-      id: member.id,
-      name: member.name,
-      active: Boolean(member.active),
-      usernames: staffUsernames(member),
-      destinations: Array.isArray(member.destinations) ? member.destinations : [],
-      languages: Array.isArray(member.languages) ? member.languages : []
-    }))
-    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
-
-  sendJson(res, 200, { items, total: items.length });
-}
-
-async function handleCreateAtpStaff(req, res) {
-  const principal = getPrincipal(req);
-  if (!canManageAtpStaff(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const name = normalizeText(payload.name);
-  const usernames = Array.from(
-    new Set(
-      (Array.isArray(payload.usernames) ? payload.usernames : String(payload.usernames || "").split(","))
-        .map((value) => normalizeText(value).toLowerCase())
-        .filter(Boolean)
-    )
-  );
-  const destinations = normalizeStringArray(payload.destinations);
-  const languages = normalizeStringArray(payload.languages);
-
-  if (!name) {
-    sendJson(res, 422, { error: "name is required" });
-    return;
-  }
-
-  if (!usernames.length) {
-    sendJson(res, 422, { error: "at least one username is required" });
-    return;
-  }
-
-  const atp_staff = await loadAtpStaff();
-  const usernameSet = new Set(usernames);
-  const duplicate = atp_staff.find((member) => {
-    const existing = new Set(staffUsernames(member));
-    return Array.from(usernameSet).some((username) => existing.has(username));
-  });
-  if (duplicate) {
-    sendJson(res, 409, { error: `username already in use by ${duplicate.name}` });
-    return;
-  }
-
-  const member = {
-    id: `staff_${randomUUID()}`,
-    name,
-    active: payload.active !== false,
-    usernames,
-    destinations,
-    languages
-  };
-
-  atp_staff.push(member);
-  await persistAtpStaff(atp_staff);
-  sendJson(res, 201, {
-    atp_staff: {
-      id: member.id,
-      name: member.name,
-      active: member.active,
-      usernames: member.usernames,
-      destinations: member.destinations,
-      languages: member.languages
-    }
-  });
-}
-
-function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
-  const next = existing ? { ...existing } : {};
-
-  if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id);
-  if (isCreate || payload.title !== undefined) next.title = normalizeText(payload.title);
-  if (payload.shortDescription !== undefined) next.shortDescription = normalizeText(payload.shortDescription);
-  if (isCreate || payload.destinationCountries !== undefined) {
-    const destinationCountries = normalizeStringArray(payload.destinationCountries);
-    next.destinationCountries = destinationCountries;
-  }
-  if (isCreate || payload.styles !== undefined) next.styles = normalizeStringArray(payload.styles);
-  if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
-  if (payload.seasonality !== undefined) next.seasonality = normalizeText(payload.seasonality);
-  if (payload.highlights !== undefined || isCreate) next.highlights = normalizeHighlights(payload.highlights);
-
-  if (payload.priority !== undefined || isCreate) {
-    const priority = safeInt(payload.priority);
-    next.priority = priority === null ? 50 : priority;
-  }
-  if (payload.durationDays !== undefined || isCreate) {
-    const durationDays = safeInt(payload.durationDays);
-    next.durationDays = durationDays === null ? 0 : durationDays;
-  }
-  if (payload.priceFrom !== undefined || isCreate) {
-    const priceFrom = safeInt(payload.priceFrom);
-    next.priceFrom = priceFrom === null ? 0 : priceFrom;
-  }
-  if (payload.rating !== undefined || isCreate) {
-    const rating = safeFloat(payload.rating);
-    next.rating = rating === null ? 0 : rating;
-  }
-
-  return next;
-}
-
-function validateTourInput(tour, { isCreate = false } = {}) {
-  if (isCreate && !tour.title) return "title is required";
-  if (isCreate && !tourDestinationCountries(tour).length) return "destinationCountries is required";
-  if (isCreate && (!Array.isArray(tour.styles) || !tour.styles.length)) return "styles is required";
-  return "";
-}
-
-function filterAndSortTours(tours, query) {
-  const search = normalizeText(query.get("search")).toLowerCase();
-  const destination = normalizeText(query.get("destination"));
-  const style = normalizeText(query.get("style"));
-  const sort = normalizeText(query.get("sort")) || "updated_at_desc";
-
-  const filtered = tours.filter((tour) => {
-    const destinationMatch = !destination || tourDestinationCountries(tour).includes(destination);
-    const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
-    if (!destinationMatch || !styleMatch) return false;
-    if (!search) return true;
-    const haystack = [
-      tour.id,
-      tour.title,
-      tour.shortDescription,
-      ...tourDestinationCountries(tour),
-      ...(Array.isArray(tour.highlights) ? tour.highlights : []),
-      ...(Array.isArray(tour.styles) ? tour.styles : [])
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(search);
-  });
-
-  const items = [...filtered].sort((a, b) => {
-    if (sort === "title_asc") return String(a.title || "").localeCompare(String(b.title || ""));
-    return String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""));
-  });
-
-  return {
-    items,
-    sort,
-    filters: {
-      destination: destination || null,
-      style: style || null,
-      search: search || null
-    }
-  };
-}
-
-async function handlePublicListTours(req, res) {
-  const tours = await readTours();
-  const requestUrl = new URL(req.url, "http://localhost");
-  const destination = normalizeText(requestUrl.searchParams.get("destination"));
-  const style = normalizeText(requestUrl.searchParams.get("style"));
-  const offset = Math.max(0, safeInt(requestUrl.searchParams.get("offset")) || 0);
-  const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || tours.length || 1000, 1, 5000);
-
-  const filtered = tours.filter((tour) => {
-    const destinationMatch = !destination || tourDestinationCountries(tour).includes(destination);
-    const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
-    return destinationMatch && styleMatch;
-  });
-
-  const sorted = [...filtered].sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
-  const items = sorted.slice(offset, offset + limit).map(normalizeTourForRead);
-  const payload = {
-    items,
-    pagination: {
-      page: Math.floor(offset / limit) + 1,
-      page_size: limit,
-      pageSize: limit,
-      total_items: filtered.length,
-      totalItems: filtered.length,
-      total_pages: Math.max(1, Math.ceil(filtered.length / limit))
-    },
-    total: filtered.length,
-    offset,
-    limit
-  };
-  const payloadText = JSON.stringify(payload);
-  const etag = `W/"${createHash("sha1").update(payloadText).digest("hex")}"`;
-  const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
-
-  const cacheHeaders = {
-    "Cache-Control": "public, max-age=120, stale-while-revalidate=600, must-revalidate",
-    ETag: etag
-  };
-
-  if (ifNoneMatch === etag) {
-    res.writeHead(304, cacheHeaders);
-    res.end();
-    return;
-  }
-
-  sendJson(res, 200, payload, cacheHeaders);
-}
-
-async function handleListTours(req, res) {
-  const principal = getPrincipal(req);
-  if (!canReadTours(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const tours = await readTours();
-  const requestUrl = new URL(req.url, "http://localhost");
-  const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams);
-  const paged = paginate(filtered, requestUrl.searchParams);
-  const options = collectTourOptions(tours);
-  sendJson(
-    res,
-    200,
-    buildPaginatedListResponse(
-      {
-        ...paged,
-        items: paged.items.map(normalizeTourForRead)
-      },
-      {
-        sort,
-        filters,
-        available_destinations: options.destinations,
-        available_styles: options.styles
-      }
-    )
-  );
-}
-
-async function handleGetTour(req, res, [tourId]) {
-  const principal = getPrincipal(req);
-  if (!canReadTours(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  const tours = await readTours();
-  const tour = tours.find((item) => item.id === tourId);
-  if (!tour) {
-    sendJson(res, 404, { error: "Tour not found" });
-    return;
-  }
-  const options = collectTourOptions(tours);
-  sendJson(res, 200, {
-    tour: normalizeTourForRead(tour),
-    options: {
-      destinations: options.destinations,
-      styles: options.styles
-    }
-  });
-}
-
-async function handleCreateTour(req, res) {
-  const principal = getPrincipal(req);
-  if (!canEditTours(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const now = nowIso();
-  const tour = buildTourPayload(payload, { isCreate: true });
-  tour.id = `tour_${randomUUID()}`;
-  tour.image = toTourImagePublicUrl(tour.image);
-  tour.created_at = now;
-  tour.updated_at = now;
-
-  const validationError = validateTourInput(tour, { isCreate: true });
-  if (validationError) {
-    sendJson(res, 422, { error: validationError });
-    return;
-  }
-
-  await persistTour(tour);
-  sendJson(res, 201, { tour: normalizeTourForRead(tour) });
-}
-
-async function handlePatchTour(req, res, [tourId]) {
-  const principal = getPrincipal(req);
-  if (!canEditTours(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const tours = await readTours();
-  const index = tours.findIndex((item) => item.id === tourId);
-  if (index < 0) {
-    sendJson(res, 404, { error: "Tour not found" });
-    return;
-  }
-
-  const current = tours[index];
-  const idChange = normalizeText(payload.id);
-  if (idChange && idChange !== tourId) {
-    sendJson(res, 422, { error: "Tour id cannot be changed" });
-    return;
-  }
-
-  const updated = buildTourPayload(payload, { existing: current, isCreate: false });
-  updated.updated_at = nowIso();
-
-  const validationError = validateTourInput(updated, { isCreate: false });
-  if (validationError) {
-    sendJson(res, 422, { error: validationError });
-    return;
-  }
-
-  tours[index] = updated;
-  await persistTour(updated);
-  sendJson(res, 200, { tour: normalizeTourForRead(updated) });
-}
-
-async function handlePublicTourImage(req, res, [rawRelativePath]) {
-  const absolutePath = resolveTourImageDiskPath(rawRelativePath);
-  if (!absolutePath) {
-    sendJson(res, 404, { error: "Not found" });
-    return;
-  }
-  await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
-}
-
-async function processTourImageToWebp(inputPath, outputPath) {
-  await mkdir(path.dirname(outputPath), { recursive: true });
-  await execFile("magick", [
-    inputPath,
-    "-auto-orient",
-    "-resize",
-    "1000x1000>",
-    "-strip",
-    "-quality",
-    "82",
-    outputPath
-  ]);
-}
-
-async function handleUploadTourImage(req, res, [tourId]) {
-  const principal = getPrincipal(req);
-  if (!canEditTours(principal)) {
-    sendJson(res, 403, { error: "Forbidden" });
-    return;
-  }
-  let payload;
-  try {
-    payload = await readBodyJson(req);
-  } catch {
-    sendJson(res, 400, { error: "Invalid JSON payload" });
-    return;
-  }
-
-  const filename = normalizeText(payload.filename) || `${tourId}.upload`;
-  const base64 = normalizeText(payload.data_base64);
-  if (!base64) {
-    sendJson(res, 422, { error: "data_base64 is required" });
-    return;
-  }
-
-  const tours = await readTours();
-  const index = tours.findIndex((item) => item.id === tourId);
-  if (index < 0) {
-    sendJson(res, 404, { error: "Tour not found" });
-    return;
-  }
-
-  const now = nowIso();
-  const sourceBuffer = Buffer.from(base64, "base64");
-  if (!sourceBuffer.length) {
-    sendJson(res, 422, { error: "Invalid base64 image payload" });
-    return;
-  }
-
-  const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${tourId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-  const outputName = `${tourId}.webp`;
-  const outputRelativePath = `${tourId}/${outputName}`;
-  const outputPath = path.join(TOURS_DIR, outputRelativePath);
-
-  try {
-    await writeFile(tempInputPath, sourceBuffer);
-    await processTourImageToWebp(tempInputPath, outputPath);
-  } catch (error) {
-    sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
-    return;
-  } finally {
-    await rm(tempInputPath, { force: true });
-  }
-
-  const publicPath = `/public/v1/tour-images/${outputRelativePath}`;
-  const updated = {
-    ...tours[index],
-    image: publicPath,
-    updated_at: now
-  };
-  tours[index] = updated;
-  await persistTour(updated);
-
-  sendJson(res, 200, { tour: normalizeTourForRead(updated) });
 }
 
 async function handleAdminHome(req, res) {
