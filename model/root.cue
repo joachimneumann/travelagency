@@ -11,8 +11,12 @@ import (
 	entities: {
 		ATPStaff: entityModel.#ATPStaff
 		Customer: entityModel.#Customer
+		CustomerConsent: entityModel.#CustomerConsent
+		CustomerDocument: entityModel.#CustomerDocument
 		Booking:  entityModel.#Booking
 		Tour:     entityModel.#Tour
+		TravelGroup: entityModel.#TravelGroup
+		TravelGroupMember: entityModel.#TravelGroupMember
 	}
 
 	common: {

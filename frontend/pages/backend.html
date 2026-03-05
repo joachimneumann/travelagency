@@ -29,6 +29,16 @@
           </div>
         </nav>
       </div>
+      <div class="container backend-section-nav-wrap">
+        <nav class="backend-section-nav" aria-label="Backend sections">
+          <button type="button" class="backend-section-nav__item" data-backend-section="dashboard">Dashboard</button>
+          <button type="button" class="backend-section-nav__item" data-backend-section="customers">Customers</button>
+          <button type="button" class="backend-section-nav__item" data-backend-section="travelGroups">Travel Groups</button>
+          <button type="button" class="backend-section-nav__item" data-backend-section="bookings">Bookings</button>
+          <button type="button" class="backend-section-nav__item" data-backend-section="tours">Tours</button>
+          <button type="button" class="backend-section-nav__item" data-backend-section="settings">Reports/Settings</button>
+        </nav>
+      </div>
     </header>
 
     <main id="main-content">
@@ -36,7 +46,30 @@
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <article class="panel" id="customersPanel" style="padding: 1rem; margin-bottom: 1rem;">
+          <article class="panel backend-section" id="dashboardPanel">
+            <h2 class="section-title" style="font-size: 1.2rem;">Dashboard</h2>
+            <div class="backend-kpi-grid" aria-live="polite">
+              <div class="backend-kpi-card">
+                <h3>Customers</h3>
+                <strong id="dashboardCustomersCount">0</strong>
+              </div>
+              <div class="backend-kpi-card">
+                <h3>Bookings</h3>
+                <strong id="dashboardBookingsCount">0</strong>
+              </div>
+              <div class="backend-kpi-card">
+                <h3>Tours</h3>
+                <strong id="dashboardToursCount">0</strong>
+              </div>
+              <div class="backend-kpi-card">
+                <h3>Travel Groups</h3>
+                <strong id="dashboardTravelGroupsCount">0</strong>
+              </div>
+            </div>
+            <p class="micro">Use the menu above to switch between backend areas.</p>
+          </article>
+
+          <article class="panel backend-section" id="customersPanel">
             <h2 class="section-title" style="font-size: 1.2rem;">Customers</h2>
             <div class="backend-controls">
               <div class="field">
@@ -52,7 +85,16 @@
             <div class="backend-pagination" id="customersPagination" aria-label="Customers pagination"></div>
           </article>
 
-          <article class="panel" id="bookingsPanel" style="padding: 1rem;">
+          <article class="panel backend-section" id="travelGroupsPanel">
+            <h2 class="section-title" style="font-size: 1.2rem;">Travel Groups</h2>
+            <p class="micro" id="travelGroupsNotice">Travel groups are not available yet as a dedicated list endpoint.</p>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="travelGroupsTable"></table>
+            </div>
+            <div class="backend-pagination" id="travelGroupsPagination" aria-label="Travel groups pagination"></div>
+          </article>
+
+          <article class="panel backend-section" id="bookingsPanel" style="padding: 1rem;">
             <h2 class="section-title" style="font-size: 1.2rem;">Bookings</h2>
             <div class="backend-controls">
               <div class="field">
@@ -69,34 +111,7 @@
             <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
           </article>
 
-          <article class="panel" id="staffPanel" style="padding: 1rem; margin-top: 1rem; display:none;">
-            <h2 class="section-title" style="font-size: 1.2rem;">AtpStaff</h2>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="staffName">Name</label>
-                <input id="staffName" type="text" placeholder="Full name" />
-              </div>
-              <div class="field">
-                <label for="staffUsernames">Keycloak usernames</label>
-                <input id="staffUsernames" type="text" placeholder="comma,separated,usernames" />
-              </div>
-              <div class="field">
-                <label for="staffDestinations">Destinations</label>
-                <input id="staffDestinations" type="text" placeholder="Vietnam, Thailand" />
-              </div>
-              <div class="field">
-                <label for="staffLanguages">Languages</label>
-                <input id="staffLanguages" type="text" placeholder="English, Vietnamese" />
-              </div>
-              <button class="btn btn-primary" id="staffCreateBtn" type="button">Create atp_staff</button>
-              <span id="staffStatus" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="staffTable"></table>
-            </div>
-          </article>
-
-          <article class="panel" id="toursPanel" style="padding: 1rem; margin-top: 1rem;">
+          <article class="panel backend-section" id="toursPanel" style="padding: 1rem; margin-top: 1rem;">
             <h2 class="section-title" style="font-size: 1.2rem;">Tours</h2>
             <div class="backend-controls">
               <div class="field">
@@ -123,6 +138,33 @@
               <table class="backend-table" id="toursTable"></table>
             </div>
             <div class="backend-pagination" id="toursPagination" aria-label="Tours pagination"></div>
+          </article>
+
+          <article class="panel backend-section" id="settingsPanel" style="padding: 1rem; margin-top: 1rem;">
+            <h2 class="section-title" style="font-size: 1.2rem;">Reports / Settings</h2>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="staffName">Name</label>
+                <input id="staffName" type="text" placeholder="Full name" />
+              </div>
+              <div class="field">
+                <label for="staffUsernames">Keycloak usernames</label>
+                <input id="staffUsernames" type="text" placeholder="comma,separated,usernames" />
+              </div>
+              <div class="field">
+                <label for="staffDestinations">Destinations</label>
+                <input id="staffDestinations" type="text" placeholder="Vietnam, Thailand" />
+              </div>
+              <div class="field">
+                <label for="staffLanguages">Languages</label>
+                <input id="staffLanguages" type="text" placeholder="English, Vietnamese" />
+              </div>
+              <button class="btn btn-primary" id="staffCreateBtn" type="button">Create atp_staff</button>
+              <span id="staffStatus" class="micro"></span>
+            </div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="staffTable"></table>
+            </div>
           </article>
         </div>
       </section>

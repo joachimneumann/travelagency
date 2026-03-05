@@ -169,13 +169,48 @@
       "Customer": {
         "type": "object",
         "required": [
-          "id"
+          "id",
+          "entity_type",
+          "display_name",
+          "can_receive_marketing",
+          "created_at",
+          "updated_at"
         ],
         "properties": {
           "id": {
             "type": "string"
           },
-          "name": {
+          "entity_type": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "date_of_birth": {
+            "type": "string",
+            "nullable": true
+          },
+          "nationality": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "tax_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone_number": {
             "type": "string",
             "nullable": true
           },
@@ -183,13 +218,222 @@
             "type": "string",
             "nullable": true
           },
-          "phone": {
+          "address_line_1": {
             "type": "string",
             "nullable": true
           },
-          "language": {
+          "address_line_2": {
             "type": "string",
             "nullable": true
+          },
+          "address_city": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_state_region": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_postal_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_country_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferred_language": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferred_currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "can_receive_marketing": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "archived_at": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CustomerConsent": {
+        "type": "object",
+        "required": [
+          "id",
+          "customer_id",
+          "consent_type",
+          "status",
+          "captured_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "string"
+          },
+          "consent_type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "captured_via": {
+            "type": "string",
+            "nullable": true
+          },
+          "captured_at": {
+            "type": "string"
+          },
+          "evidence_ref": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerDocument": {
+        "type": "object",
+        "required": [
+          "id",
+          "customer_id",
+          "document_type",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "string"
+          },
+          "document_type": {
+            "type": "string"
+          },
+          "document_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "document_picture_ref": {
+            "type": "string",
+            "nullable": true
+          },
+          "issuing_country": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_on": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "TravelGroup": {
+        "type": "object",
+        "required": [
+          "id",
+          "booking_id",
+          "group_type",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "booking_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "group_type": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "TravelGroupMember": {
+        "type": "object",
+        "required": [
+          "id",
+          "travel_group_id",
+          "customer_id",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "travel_group_id": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "string"
+          },
+          "is_traveling": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "member_roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
           }
         }
       },
@@ -533,6 +777,30 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Booking"
+            }
+          },
+          "consents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerConsent"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerDocument"
+            }
+          },
+          "travelGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TravelGroup"
+            }
+          },
+          "travelGroupMembers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TravelGroupMember"
             }
           }
         }

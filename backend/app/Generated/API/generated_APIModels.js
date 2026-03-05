@@ -384,6 +384,34 @@ export const CUSTOMER_DETAIL_SCHEMA = {
       "typeName": "Booking",
       "required": true,
       "isArray": true
+    },
+    {
+      "name": "consents",
+      "kind": "entity",
+      "typeName": "CustomerConsent",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "documents",
+      "kind": "entity",
+      "typeName": "CustomerDocument",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "travelGroups",
+      "kind": "entity",
+      "typeName": "TravelGroup",
+      "required": true,
+      "isArray": true
+    },
+    {
+      "name": "travelGroupMembers",
+      "kind": "entity",
+      "typeName": "TravelGroupMember",
+      "required": true,
+      "isArray": true
     }
   ]
 };

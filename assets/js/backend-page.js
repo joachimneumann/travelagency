@@ -12,10 +12,19 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
+  sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
+
+  dashboardPanel: document.getElementById("dashboardPanel"),
   customersPanel: document.getElementById("customersPanel"),
+  travelGroupsPanel: document.getElementById("travelGroupsPanel"),
   bookingsPanel: document.getElementById("bookingsPanel"),
-  staffPanel: document.getElementById("staffPanel"),
   toursPanel: document.getElementById("toursPanel"),
+  settingsPanel: document.getElementById("settingsPanel"),
+
+  dashboardCustomersCount: document.getElementById("dashboardCustomersCount"),
+  dashboardBookingsCount: document.getElementById("dashboardBookingsCount"),
+  dashboardToursCount: document.getElementById("dashboardToursCount"),
+  dashboardTravelGroupsCount: document.getElementById("dashboardTravelGroupsCount"),
 
   customersSearch: document.getElementById("customersSearch"),
   customersSearchBtn: document.getElementById("customersSearchBtn"),
@@ -29,6 +38,11 @@ const els = {
   bookingsCountInfo: document.getElementById("bookingsCountInfo"),
   bookingsPagination: document.getElementById("bookingsPagination"),
   bookingsTable: document.getElementById("bookingsTable"),
+
+  travelGroupsCountInfo: document.getElementById("travelGroupsCountInfo"),
+  travelGroupsPagination: document.getElementById("travelGroupsPagination"),
+  travelGroupsTable: document.getElementById("travelGroupsTable"),
+  travelGroupsNotice: document.getElementById("travelGroupsNotice"),
 
   toursSearch: document.getElementById("toursSearch"),
   toursDestination: document.getElementById("toursDestination"),
@@ -48,6 +62,15 @@ const els = {
   staffTable: document.getElementById("staffTable")
 };
 
+const SECTION_CONFIG = [
+  { id: "dashboard", canAccess: () => true },
+  { id: "customers", canAccess: () => state.permissions.canReadCustomers },
+  { id: "travelGroups", canAccess: () => state.permissions.canReadTravelGroups },
+  { id: "bookings", canAccess: () => state.permissions.canReadBookings },
+  { id: "tours", canAccess: () => state.permissions.canReadTours },
+  { id: "settings", canAccess: () => state.permissions.canReadSettings }
+];
+
 const ROLES = {
   ADMIN: "atp_admin",
   MANAGER: "atp_manager",
@@ -61,14 +84,18 @@ const state = {
   permissions: {
     canReadCustomers: false,
     canReadBookings: false,
+    canReadTravelGroups: false,
+    canReadSettings: false,
     canManageStaff: false,
     canReadTours: false,
     canEditTours: false
   },
   customers: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
+  travelGroups: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" },
-  staff: []
+  staff: [],
+  activeSection: "dashboard"
 };
 
 function formatIntegerWithGrouping(value) {
@@ -93,13 +120,16 @@ async function init() {
   }
 
   await loadBackendAuthStatus();
+  bindSectionNavigation();
   applyRoleVisibility();
   bindControls();
 
   if (state.permissions.canReadCustomers) loadCustomers();
   if (state.permissions.canReadBookings) loadBookings();
+  if (state.permissions.canReadTravelGroups) loadTravelGroups();
   if (state.permissions.canManageStaff) loadStaff();
   if (state.permissions.canReadTours) loadTours();
+  updateDashboardCounts();
 }
 
 async function loadBackendAuthStatus() {
@@ -113,10 +143,13 @@ async function loadBackendAuthStatus() {
     }
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+    const isAdmin = hasAnyRole(ROLES.ADMIN, ROLES.MANAGER);
     state.permissions = {
       canReadCustomers: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
       canReadBookings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
-      canManageStaff: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
+      canReadTravelGroups: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
+      canManageStaff: isAdmin,
+      canReadSettings: isAdmin,
       canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
       canEditTours: hasAnyRole(ROLES.ADMIN)
     };
@@ -128,7 +161,28 @@ async function loadBackendAuthStatus() {
   }
 }
 
-function bindControls() {
+function bindSectionNavigation() {
+  const buttons = Array.from(els.sectionNavButtons || []);
+  buttons.forEach((button) => {
+    const section = button.dataset.backendSection;
+    const allowed = isSectionAllowed(section);
+    button.classList.toggle("is-hidden", !allowed);
+
+    if (!allowed) return;
+
+    button.addEventListener("click", () => {
+      if (state.activeSection === section) return;
+      showSection(section);
+    });
+  });
+
+  if (buttons.length === 0) return;
+  if (!isSectionAllowed(state.activeSection)) {
+    state.activeSection = resolveRequestedSection();
+  }
+}
+
+function bindSearchControls() {
   if (state.permissions.canReadCustomers) {
     bindSearch(els.customersSearchBtn, els.customersSearch, state.customers, loadCustomers);
   }
@@ -177,13 +231,71 @@ function bindControls() {
   if (state.permissions.canManageStaff && els.staffCreateBtn) {
     els.staffCreateBtn.addEventListener("click", createStaff);
   }
+
+  const requestedSection = resolveRequestedSection();
+  showSection(requestedSection, { updateUrl: false });
+}
+
+function bindControls() {
+  bindSearchControls();
+}
+
+function isSectionAllowed(sectionId) {
+  return SECTION_CONFIG.some((item) => item.id === sectionId && item.canAccess());
+}
+
+function sectionPanel(sectionId) {
+  return els[`${sectionId}Panel`];
+}
+
+function firstAllowedSection() {
+  const section = SECTION_CONFIG.find((item) => item.canAccess());
+  return section ? section.id : "dashboard";
+}
+
+function resolveRequestedSection() {
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get("section");
+  if (!requested) return firstAllowedSection();
+  return isSectionAllowed(requested) ? requested : firstAllowedSection();
+}
+
+function showSection(sectionId, options = { updateUrl: true }) {
+  const section = isSectionAllowed(sectionId) ? sectionId : firstAllowedSection();
+  state.activeSection = section;
+
+  const allowedSections = SECTION_CONFIG.filter((item) => item.canAccess()).map((item) => item.id);
+  allowedSections.forEach((id) => {
+    const panel = sectionPanel(id);
+    if (panel) panel.classList.toggle("is-hidden", id !== section);
+  });
+
+  Array.from(els.sectionNavButtons || []).forEach((button) => {
+    const candidate = button.dataset.backendSection;
+    button.classList.toggle("is-active", candidate === section);
+  });
+
+  if (options.updateUrl) {
+    const params = new URLSearchParams(window.location.search);
+    params.set("section", section);
+    if (!params.get("user") && state.user) {
+      params.set("user", state.user);
+    }
+    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+  }
 }
 
 function applyRoleVisibility() {
-  if (els.customersPanel) els.customersPanel.style.display = state.permissions.canReadCustomers ? "" : "none";
-  if (els.bookingsPanel) els.bookingsPanel.style.display = state.permissions.canReadBookings ? "" : "none";
-  if (els.staffPanel) els.staffPanel.style.display = state.permissions.canManageStaff ? "" : "none";
-  if (els.toursPanel) els.toursPanel.style.display = state.permissions.canReadTours ? "" : "none";
+  SECTION_CONFIG.forEach((section) => {
+    const allowed = section.canAccess();
+    const button = Array.from(els.sectionNavButtons || []).find(
+      (item) => item.dataset.backendSection === section.id
+    );
+    const panel = sectionPanel(section.id);
+
+    if (button) button.classList.toggle("is-hidden", !allowed);
+    if (panel) panel.classList.toggle("is-hidden", !allowed);
+  });
 }
 
 function hasAnyRole(...roles) {
@@ -231,6 +343,7 @@ async function loadCustomers() {
   state.customers.page = Number(pagination.page || state.customers.page);
   updatePaginationUi("customers");
   renderCustomers(payload.items || []);
+  updateDashboardCounts();
 }
 
 async function loadBookings() {
@@ -255,6 +368,48 @@ async function loadBookings() {
   state.bookings.page = Number(pagination.page || state.bookings.page);
   updatePaginationUi("bookings");
   renderBookings(payload.items || []);
+  updateDashboardCounts();
+}
+
+async function loadTravelGroups() {
+  clearError();
+  const payload = await fetchApi("/api/v1/travel_groups", { suppressNotFound: true });
+  if (!payload) {
+    if (els.travelGroupsNotice) {
+      els.travelGroupsNotice.textContent = "Travel groups endpoint is not configured yet.";
+    }
+    state.travelGroups.totalPages = 1;
+    state.travelGroups.total = 0;
+    state.travelGroups.page = 1;
+    renderTravelGroups([]);
+    updatePaginationUi("travelGroups");
+    updateDashboardCounts();
+    return;
+  }
+
+  const items = Array.isArray(payload.items)
+    ? payload.items
+    : Array.isArray(payload.travel_groups)
+    ? payload.travel_groups
+    : [];
+  const pagination = payload.pagination || {};
+
+  state.travelGroups.totalPages = Math.max(
+    1,
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || items.length || 0) / state.travelGroups.pageSize) || 1)
+  );
+  state.travelGroups.total = Number(pagination.total_items || items.length || 0);
+  state.travelGroups.page = Number(pagination.page || state.travelGroups.page);
+  if (els.travelGroupsNotice) {
+    if (items.length === 0) {
+      els.travelGroupsNotice.textContent = "No travel groups found.";
+    } else {
+      els.travelGroupsNotice.textContent = "";
+    }
+  }
+  updatePaginationUi("travelGroups");
+  renderTravelGroups(items);
+  updateDashboardCounts();
 }
 
 async function loadTours() {
@@ -282,6 +437,7 @@ async function loadTours() {
   populateTourFilterOptions(payload);
   updatePaginationUi("tours");
   renderTours(payload.items || []);
+  updateDashboardCounts();
 }
 
 function populateTourFilterOptions(payload) {
@@ -324,6 +480,7 @@ function updatePaginationUi(section) {
       if (section === "customers") loadCustomers();
       if (section === "bookings") loadBookings();
       if (section === "tours") loadTours();
+      if (section === "travelGroups") loadTravelGroups();
     });
   }
 }
@@ -399,6 +556,7 @@ function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
 async function fetchApi(path, options = {}) {
   const method = options.method || "GET";
   const body = options.body;
+  const suppressNotFound = options.suppressNotFound || false;
   try {
     const response = await fetch(resolveApiUrl(path), {
       method,
@@ -409,9 +567,16 @@ async function fetchApi(path, options = {}) {
       ...(body ? { body: JSON.stringify(body) } : {})
     });
 
-    const payload = await response.json();
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
     if (!response.ok) {
-      showError(payload.error || "Request failed");
+      if (suppressNotFound && response.status === 404) return null;
+      showError((payload && payload.error) || "Request failed");
       return null;
     }
 
@@ -420,6 +585,21 @@ async function fetchApi(path, options = {}) {
     showError("Could not connect to backend API. Ensure backend is running on localhost:8787.");
     console.error(error);
     return null;
+  }
+}
+
+function updateDashboardCounts() {
+  if (els.dashboardCustomersCount) {
+    els.dashboardCustomersCount.textContent = formatIntegerWithGrouping(state.customers.total);
+  }
+  if (els.dashboardBookingsCount) {
+    els.dashboardBookingsCount.textContent = formatIntegerWithGrouping(state.bookings.total);
+  }
+  if (els.dashboardToursCount) {
+    els.dashboardToursCount.textContent = formatIntegerWithGrouping(state.tours.total);
+  }
+  if (els.dashboardTravelGroupsCount) {
+    els.dashboardTravelGroupsCount.textContent = formatIntegerWithGrouping(state.travelGroups.total);
   }
 }
 
@@ -500,6 +680,25 @@ function renderTours(items) {
 
   const body = rows || `<tr><td colspan="7">No tours found</td></tr>`;
   if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+function renderTravelGroups(items) {
+  const header = `<thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Booking</th><th>Notes</th><th>Updated</th></tr></thead>`;
+  const rows = items
+    .map((group) => {
+      return `<tr>
+        <td>${escapeHtml(group.id || "-")}</td>
+        <td>${escapeHtml(group.name || "-")}</td>
+        <td>${escapeHtml(group.group_type || group.groupType || "-")}</td>
+        <td>${escapeHtml(group.booking_id || group.bookingId || "-")}</td>
+        <td>${escapeHtml(group.notes || "-")}</td>
+        <td>${escapeHtml(formatDateTime(group.updated_at || group.updatedAt))}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const body = rows || `<tr><td colspan="6">No travel groups found</td></tr>`;
+  if (els.travelGroupsTable) els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function buildDetailHref(type, id) {

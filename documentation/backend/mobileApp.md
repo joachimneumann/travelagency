@@ -184,29 +184,53 @@ If the logged-in `atp_staff` user cannot be mapped to a staff record, the backen
 
 ## 7) Recommended mobile UI behavior by role
 
+The first mobile version mirrors the web backend entry points and section visibility.
+
+Sections:
+- Dashboard (always visible)
+- Customers (admin/manager)
+- Travel Groups (admin/manager/accountant/staff)
+- Bookings (admin/manager/accountant/staff)
+- Tours (admin/accountant; read-only)
+- Reports/Settings (admin/manager)
+
 `atp_staff`
 - show only assigned bookings
 - allow editing the single booking note only on assigned bookings
 - allow stage changes only on assigned bookings
 - hide staff assignment controls
-- hide tours section
+- show Customers: no
+- show Travel Groups: yes
+- show Tours: no
+- show Reports/Settings: no
 
 `atp_manager`
 - show all bookings
 - allow booking editing
 - show staff assignment controls
-- hide tours section
+- show Customers: yes
+- show Travel Groups: yes
+- show Tours: no
+- show Reports/Settings: no
 
 `atp_admin`
 - show all bookings
 - allow booking editing
 - show staff assignment controls
+- show Customers: yes
+- show Travel Groups: yes
+- show Tours: yes
+- show Reports/Settings: yes
 - if tours are added later to mobile, allow editing
 
 `atp_accountant`
 - show all bookings
 - allow stage changes only
 - keep other booking actions read-only
+- show Customers: no
+- show Travel Groups: yes
+- show Tours: yes (read-only)
+- show Reports/Settings: no
 - if tours are added later to mobile, allow read-only viewing only
 
 ## 8) First-version screens

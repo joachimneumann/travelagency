@@ -25,6 +25,10 @@ import entities "travelagency.local/model/entities"
 #CustomerDetail: {
 	customer: entities.#Customer
 	bookings: [...entities.#Booking]
+	consents: [...entities.#CustomerConsent]
+	documents: [...entities.#CustomerDocument]
+	travelGroups: [...entities.#TravelGroup]
+	travelGroupMembers: [...entities.#TravelGroupMember]
 }
 
 #TourDetail: {
