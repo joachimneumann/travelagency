@@ -196,7 +196,7 @@ enum MobileAPIRequestFactory {
     }
 
     static func activeAtpStaffURL(baseURL: URL) -> URL {
-        GeneratedAPIRequestFactory.staffURL(
+        GeneratedAPIRequestFactory.atpStaffURL(
             baseURL: baseURL,
             queryItems: [URLQueryItem(name: "active", value: "true")]
         )

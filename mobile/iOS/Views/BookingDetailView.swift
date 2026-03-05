@@ -28,7 +28,7 @@ struct BookingDetailView: View {
         .onChange(of: viewModel.booking?.stage) { _, _ in
             syncSelectionsFromBooking()
         }
-        .onChange(of: viewModel.booking?.assignedAtpStaffId) { _, _ in
+        .onChange(of: viewModel.booking?.assignedStaffId) { _, _ in
             syncSelectionsFromBooking()
         }
         .alert("Booking", isPresented: Binding(
@@ -181,7 +181,7 @@ struct BookingDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Offer")
                         .font(.headline)
-                    Text("Total with tax \(formatMoney(offer.totalPriceCents, currency: offer.currency)) (\(summary))")
+                    Text("Total with tax \(formatMoney(offer.totals.grossAmountCents, currency: offer.currency)) (\(summary))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -264,7 +264,7 @@ struct BookingDetailView: View {
                     await viewModel.updateAssignment(staffID, session: session)
                 }
             }
-            .disabled(selectedAtpStaffID == (booking.assignedAtpStaffId ?? ""))
+            .disabled(selectedAtpStaffID == (booking.assignedStaffId ?? ""))
         }
     }
 
@@ -309,7 +309,7 @@ struct BookingDetailView: View {
     private func syncSelectionsFromBooking() {
         isApplyingSelection = true
         selectedStage = viewModel.booking?.stage.rawValue ?? ""
-        selectedAtpStaffID = viewModel.booking?.assignedAtpStaffId ?? ""
+        selectedAtpStaffID = viewModel.booking?.assignedStaffId ?? ""
         isApplyingSelection = false
     }
 

@@ -25,7 +25,7 @@ struct BookingSummaryDetailView: View {
                 if let source = booking.source, let pageURL = source.pageURL, !pageURL.isEmpty {
                     LabeledContent("Source", value: pageURL)
                 }
-                LabeledContent("Atp Staff", value: booking.assignedAtpStaffName ?? "Unassigned")
+                LabeledContent("Atp Staff", value: booking.assignedStaffName ?? "Unassigned")
             }
         }
         .navigationTitle("Booking")

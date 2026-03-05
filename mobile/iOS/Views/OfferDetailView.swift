@@ -12,7 +12,7 @@ struct OfferDetailView: View {
                 LabeledContent("Net", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
                 LabeledContent("Tax", value: formatMoney(offer.totals.taxAmountCents, currency: offer.currency))
                 LabeledContent("Gross", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
-                LabeledContent("Total with Tax", value: formatMoney(offer.totalPriceCents, currency: offer.currency))
+                LabeledContent("Total with Tax", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
             }
 
             if !offer.categoryRules.isEmpty {
