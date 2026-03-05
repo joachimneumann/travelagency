@@ -3695,7 +3695,7 @@ async function readMobileContractMeta() {
       } catch {
         try {
           const generatedFactorySource = await readFile(BACKEND_GENERATED_REQUEST_FACTORY_PATH, "utf8");
-          const match = generatedFactorySource.match(/GENERATED_CONTRACT_VERSION\\s*=\\s*\"([^\"]+)\"/);
+          const match = generatedFactorySource.match(/GENERATED_CONTRACT_VERSION\s*=\s*"([^"]+)"/);
           if (match?.[1]) {
             return { modelVersion: match[1] };
           }
