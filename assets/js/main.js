@@ -252,7 +252,7 @@ function renderBudgetOptions(currencyCode) {
 }
 
 async function loadWebsiteAuthStatus() {
-  if (!els.websiteAuthStatus) return;
+  if (!els.backendLoginContainer) return;
 
   try {
     const response = await fetch(`${BACKEND_BASE_URL}/auth/me`, {
@@ -270,6 +270,8 @@ async function loadWebsiteAuthStatus() {
   } catch {
     placeBackendLogin(false);
     updateBackendButtonLabel({ authenticated: false, user: "" });
+  } finally {
+    els.backendLoginContainer.style.visibility = "visible";
   }
 }
 

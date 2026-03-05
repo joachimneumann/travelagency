@@ -126,6 +126,10 @@ img {
   justify-content: flex-end;
 }
 
+#backendLoginContainer {
+  visibility: hidden;
+}
+
 #backendLoginBtn {
   display: inline-flex;
   flex-direction: column;
