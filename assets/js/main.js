@@ -782,6 +782,7 @@ function setupFormNavigation() {
   els.stepNext.addEventListener("click", () => {
     if (state.bookingSubmitted) return;
     if (state.formStep < 3) {
+      clearBookingFeedback();
       const valid = validateCurrentStep();
       if (!valid) return;
       state.formStep += 1;
@@ -845,6 +846,7 @@ function validateCurrentStep() {
   if (!activeStep) return true;
 
   let isValid = true;
+  let travelersRangeError = "";
   const fields = activeStep.querySelectorAll(".field");
 
   fields.forEach((field) => {
@@ -863,12 +865,38 @@ function validateCurrentStep() {
     const value = input.value.trim();
     const isEmail = input.type === "email";
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    const isNumber = input.type === "number";
 
     if (!value || (isEmail && !emailValid)) {
       field.classList.add("invalid");
       isValid = false;
+      return;
+    }
+
+    if (isNumber) {
+      const numeric = Number(value);
+      const minAttr = Number(input.getAttribute("min"));
+      const maxAttr = Number(input.getAttribute("max"));
+      const min = Number.isFinite(minAttr) ? minAttr : null;
+      const max = Number.isFinite(maxAttr) ? maxAttr : null;
+      const belowMin = min !== null && numeric < min;
+      const aboveMax = max !== null && numeric > max;
+
+      if (!Number.isFinite(numeric) || belowMin || aboveMax) {
+        field.classList.add("invalid");
+        isValid = false;
+        if (!travelersRangeError && (input.id === "bookingTravelers" || input.name === "travelers")) {
+          const minDisplay = min !== null ? min : MIN_TRAVELERS;
+          const maxDisplay = max !== null ? max : MAX_TRAVELERS;
+          travelersRangeError = `Travelers must be between ${minDisplay} and ${maxDisplay}.`;
+        }
+      }
     }
   });
+
+  if (travelersRangeError) {
+    renderBookingError(travelersRangeError);
+  }
 
   return isValid;
 }
