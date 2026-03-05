@@ -8,6 +8,10 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../frontend/Generated/Models/generated_Currency.js";
 import {
+  MAX_TRAVELERS as GENERATED_MAX_TRAVELERS,
+  MIN_TRAVELERS as GENERATED_MIN_TRAVELERS
+} from "../../frontend/Generated/Models/generated_FormConstraints.js";
+import {
   publicBookingsRequest,
   publicToursRequest
 } from "../../frontend/Generated/API/generated_APIRequestFactory.js";
@@ -34,8 +38,13 @@ const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const DEFAULT_BOOKING_CURRENCY = "USD";
-const MIN_TRAVELERS = 1;
-const MAX_TRAVELERS = 30;
+const MIN_TRAVELERS = Number.isFinite(Number(GENERATED_MIN_TRAVELERS))
+  ? Number(GENERATED_MIN_TRAVELERS)
+  : 1;
+const MAX_TRAVELERS = Number.isFinite(Number(GENERATED_MAX_TRAVELERS)) &&
+  Number(GENERATED_MAX_TRAVELERS) >= MIN_TRAVELERS
+  ? Number(GENERATED_MAX_TRAVELERS)
+  : 30;
 const BOOKING_BUDGET_OPTIONS = {
   USD: ["not decided yet", "$500-$900 / week", "$900-$1,400 / week", "$1,400-$2,200 / week", "$2,200+ / week"],
   EURO: ["not decided yet", "€450-€800 / week", "€800-€1,250 / week", "€1,250-€2,000 / week", "€2,000+ / week"],
@@ -97,6 +106,7 @@ async function init() {
   loadWebsiteAuthStatus();
   setupModal();
   setupFormNavigation();
+  applyTravelerBoundsFromModel();
   setupBookingBudgetOptions();
 
   const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
@@ -117,6 +127,13 @@ async function init() {
   applyFilters();
   setupFilterEvents();
   prefillBookingFormWithFilters();
+}
+
+function applyTravelerBoundsFromModel() {
+  const travelersInput = document.getElementById("bookingTravelers");
+  if (!travelersInput) return;
+  travelersInput.setAttribute("min", String(MIN_TRAVELERS));
+  travelersInput.setAttribute("max", String(MAX_TRAVELERS));
 }
 
 function setupMobileNav() {

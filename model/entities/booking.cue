@@ -140,7 +140,7 @@ import (
 	destination?:       string
 	style?:             string
 	travelMonth?:       string
-	travelers?:         >0 & int
+	travelers?:         >=common.#MinTravelers & <=common.#MaxTravelers & int
 	duration?:          string
 	budget?:            string
 	preferredCurrency?: enums.#CurrencyCode

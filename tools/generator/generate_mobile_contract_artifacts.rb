@@ -47,6 +47,15 @@ def load_ir_json
   JSON.parse(stdout)
 end
 
+def load_traveler_constraints_json
+  stdout, stderr, status = Open3.capture3('cue', 'export', './api', '-e', '#TravelerConstraints', chdir: MODEL_DIR)
+  unless status.success?
+    warn stderr
+    abort 'Failed to export traveler constraints from model/api'
+  end
+  JSON.parse(stdout)
+end
+
 def write_file(path, content)
   FileUtils.mkdir_p(File.dirname(path))
   File.write(path, content)
@@ -203,6 +212,22 @@ def render_js_currency_module(currency_entries)
       useGrouping: true
     }).format(major);
     }
+  JS
+end
+
+def render_js_form_constraints_module(traveler_constraints)
+  min_travelers = Integer(traveler_constraints.fetch('min'))
+  max_travelers = Integer(traveler_constraints.fetch('max'))
+
+  <<~JS
+    #{JS_RUNTIME_HEADER}
+    export const GENERATED_TRAVELER_CONSTRAINTS = Object.freeze({
+      min: #{min_travelers},
+      max: #{max_travelers}
+    });
+
+    export const MIN_TRAVELERS = GENERATED_TRAVELER_CONSTRAINTS.min;
+    export const MAX_TRAVELERS = GENERATED_TRAVELER_CONSTRAINTS.max;
   JS
 end
 
@@ -403,6 +428,19 @@ def render_swift_currency(currency_entries)
         static func definition(for code: GeneratedCurrencyCode) -> GeneratedCurrencyDefinition {
             definitions[code] ?? GeneratedCurrencyDefinition(code: .usd, symbol: "$", decimalPlaces: 2, isoCode: "USD")
         }
+    }
+  SWIFT
+end
+
+def render_swift_form_constraints(traveler_constraints)
+  min_travelers = Integer(traveler_constraints.fetch('min'))
+  max_travelers = Integer(traveler_constraints.fetch('max'))
+
+  <<~SWIFT
+    #{SWIFT_RUNTIME_HEADER}
+    enum GeneratedFormConstraints {
+        static let minTravelers: Int = #{min_travelers}
+        static let maxTravelers: Int = #{max_travelers}
     }
   SWIFT
 end
@@ -1101,6 +1139,7 @@ FileUtils.mkdir_p(CONTRACT_GENERATED_DIR)
 OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) }
 
 ir = load_ir_json
+traveler_constraints = load_traveler_constraints_json
 meta = ir.fetch('meta')
 types = ir.fetch('types')
 endpoints = ir.dig('api', 'endpoints') || []
@@ -1135,6 +1174,7 @@ write_file(
       paymentStatuses: payment_statuses,
       pricingAdjustmentTypes: adjustment_types,
       offerCategories: offer_categories,
+      travelerConstraints: traveler_constraints,
       endpoints: endpoints
     }
   ) + "\n"
@@ -1197,6 +1237,7 @@ write_file(
 
 backend_model_outputs = {
   'generated_Currency.js' => render_js_currency_module(currency_entries),
+  'generated_FormConstraints.js' => render_js_form_constraints_module(traveler_constraints),
   'generated_ATPStaff.js' => render_js_atp_staff_module(atp_staff_types, roles),
   'generated_Booking.js' => render_js_booking_module(booking_types, stages, payment_statuses, adjustment_types, offer_categories),
   'generated_Aux.js' => render_js_aux_module(aux_types)
@@ -1218,6 +1259,7 @@ frontend_api_outputs = backend_api_outputs
 
 ios_model_outputs = {
   'generated_Currency.swift' => render_swift_currency(currency_entries),
+  'generated_FormConstraints.swift' => render_swift_form_constraints(traveler_constraints),
   'generated_ATPStaff.swift' => render_swift_atp_staff(roles),
   'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories),
   'generated_Aux.swift' => render_swift_aux(aux_types)

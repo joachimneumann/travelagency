@@ -6,11 +6,16 @@ import (
 	entities "travelagency.local/model/entities"
 )
 
+#TravelerConstraints: {
+	min: common.#MinTravelers
+	max: common.#MaxTravelers
+}
+
 #PublicBookingCreateRequest: {
 	destination?:       string
 	style?:             string
 	travelMonth?:       string
-	travelers?:         >0 & int
+	travelers?:         >=common.#MinTravelers & <=common.#MaxTravelers & int
 	duration?:          string
 	budget?:            string
 	preferredCurrency?: enums.#CurrencyCode
