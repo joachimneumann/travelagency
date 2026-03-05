@@ -1,0 +1,28 @@
+.backend-nav__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.backend-nav__meta .nav-list {
+  align-items: flex-start;
+}
+
+.backend-nav__logout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: max-content;
+}
+
+.backend-nav__user {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: block;
+  width: max-content;
+  margin-inline: auto;
+  text-align: center;
+}

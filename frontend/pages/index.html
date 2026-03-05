@@ -96,12 +96,12 @@
             <li><a href="#contact">Contact</a></li>
           </ul>
           <div id="headerBackendLoginMount">
-            <div class="backend-login" id="backendLoginContainer" aria-label="Backend login">
-              <button id="backendLoginBtn" class="btn btn-ghost" type="button">
-                <span id="backendLoginBtnTitle">Backend</span>
-                <span id="backendLoginBtnSubtitle"></span>
+            <div class="backend-login backend-login--deferred" id="backendLoginContainer" aria-label="Backend login">
+              <button id="backendLoginBtn" class="btn btn-ghost backend-login__button" type="button">
+                <span id="backendLoginBtnTitle" class="backend-login__title">Backend</span>
+                <span id="backendLoginBtnSubtitle" class="backend-login__subtitle"></span>
               </button>
-              <p class="backend-user-chip" id="websiteAuthStatus" hidden></p>
+              <p class="backend-nav__user backend-login__user" id="websiteAuthStatus" hidden></p>
             </div>
           </div>
         </nav>

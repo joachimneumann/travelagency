@@ -1,0 +1,45 @@
+.backend-login {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.45rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.backend-login--deferred {
+  visibility: hidden;
+}
+
+#backendLoginContainer.backend-login:not(.backend-login--deferred) {
+  visibility: visible;
+}
+
+.backend-login__button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.backend-login__subtitle {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-top: 0.16rem;
+}
+
+.backend-login__user {
+  width: 100%;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .backend-login {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .backend-login .btn {
+    width: 100%;
+  }
+}

@@ -196,3 +196,21 @@ Two JSON-LD blocks:
 - FAQ accordion
 - Tour image prewarm for faster first render
 - Modal booking capture with 3-step progression
+
+## 10) Frontend CSS architecture (current)
+
+- `assets/css/styles.css` is now an entrypoint only (imports modular files + `legacy.css`)
+- `assets/css/legacy.css` keeps existing behavior while migration is in progress
+- New styles must be added to modular files under:
+  - `assets/css/tokens.css`
+  - `assets/css/base.css`
+  - `assets/css/components/*.css`
+- Naming convention for new styles:
+  - BEM classes only (example: `backend-nav__logout`, `backend-login__user`)
+  - Avoid introducing new ID-based style selectors
+- Tailwind + PurgeCSS toolchain scaffold lives in `frontend/`:
+  - `frontend/package.json`
+  - `frontend/tailwind.config.cjs`
+  - `frontend/postcss.config.cjs`
+  - Input: `assets/css/tailwind.input.css`
+  - Output: `assets/css/tailwind.generated.css`

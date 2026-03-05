@@ -271,7 +271,7 @@ async function loadWebsiteAuthStatus() {
     placeBackendLogin(false);
     updateBackendButtonLabel({ authenticated: false, user: "" });
   } finally {
-    els.backendLoginContainer.style.visibility = "visible";
+    els.backendLoginContainer.classList.remove("backend-login--deferred");
   }
 }
 
