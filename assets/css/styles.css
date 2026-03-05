@@ -937,6 +937,17 @@ textarea:focus-visible {
   color: var(--muted);
 }
 
+.backend-nav-meta .nav-logout-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.backend-nav-meta .nav-logout-stack .backend-user-chip {
+  text-align: center;
+}
+
 .backend-controls {
   display: flex;
   flex-wrap: wrap;
