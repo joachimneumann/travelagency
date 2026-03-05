@@ -840,6 +840,10 @@ function clearSelectedTourContext() {
   setSelectedTourContext(null);
 }
 
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
 function closeBookingModal() {
   els.bookingModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
