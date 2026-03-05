@@ -260,12 +260,7 @@ img {
 }
 
 .select-wrap label {
-  font-size: 0.75rem;
-  color: var(--muted);
-  font-weight: 600;
-  padding-left: 0;
-  width: 100%;
-  text-align: center;
+  display: none;
 }
 
 .select-wrap select {
