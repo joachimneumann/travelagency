@@ -931,6 +931,10 @@ textarea:focus-visible {
   gap: 0.25rem;
 }
 
+.backend-nav-meta .nav-list {
+  align-items: flex-start;
+}
+
 .backend-user-chip {
   margin: 0;
   font-size: 0.8rem;
