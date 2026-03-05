@@ -32,9 +32,10 @@
 .backend-login__user {
   position: absolute;
   top: calc(100% + 0.08rem);
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
+  left: 0;
+  right: 0;
+  transform: none;
+  width: 100%;
   text-align: center;
   pointer-events: none;
 }
