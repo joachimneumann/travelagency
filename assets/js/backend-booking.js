@@ -102,6 +102,7 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   logoutLink: document.getElementById("backendLogoutLink"),
+  userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
   error: document.getElementById("detailError"),
@@ -1969,14 +1970,22 @@ async function loadAuthStatus() {
   try {
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
-    if (!response.ok || !payload?.authenticated) return;
+    if (!response.ok || !payload?.authenticated) {
+      if (els.userLabel) els.userLabel.textContent = "";
+      return;
+    }
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
+    if (els.userLabel) {
+      els.userLabel.textContent = user ? `Logged in as: ${user}` : "";
+    }
     state.permissions = {
       canChangeAssignment: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
       canChangeStage: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
       canEditBooking: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF)
     };
   } catch {
+    if (els.userLabel) els.userLabel.textContent = "";
     // leave defaults
   }
 }
