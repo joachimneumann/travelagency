@@ -31,8 +31,7 @@ Features available now:
 - Staff creation API for managers/admins (`POST /api/v1/atp_staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
-- Lightweight admin pages (`/admin`, `/admin/bookings`, `/admin/bookings/:id`, `/admin/customers`, `/admin/customers/:id`)
-- Branded frontend backoffice pages (`backend.html`, `backend-booking.html`)
+- Branded frontend backoffice pages (`/backend.html`, `/backend-booking.html`, `/backend-tour.html`)
 - `backend.html` lists tours
 - clicking a tour ID opens `backend-tour.html` for editing
   - destination and styles are edited with checkbox groups
@@ -137,9 +136,9 @@ curl -H 'Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>' \
 ## 4.3 Admin web pages
 
 Open in browser:
-- `http://localhost:8787/admin`
-- `http://localhost:8787/admin/bookings`
-- `http://localhost:8787/admin/customers`
+- `http://localhost:8080/backend.html`
+- `http://localhost:8080/backend-booking.html`
+- `http://localhost:8080/backend-tour.html`
 
 ## 5) Integrate with locally executed AsiaTravelPlan webpage
 

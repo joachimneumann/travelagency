@@ -345,7 +345,7 @@ async function findDuplicateTourTitle(title, currentTourId) {
     });
     if (duplicate) return duplicate;
 
-    const totalPages = Number(payload.total_pages || 1);
+    const totalPages = Number(payload.pagination?.total_pages || 1);
     if (!Number.isFinite(totalPages) || page >= totalPages) break;
     page += 1;
   }

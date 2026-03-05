@@ -25,7 +25,7 @@ import (
 	updatedAt?: common.#Timestamp
 }
 
-#InvoiceLine: {
+#InvoiceComponent: {
 	id?:          common.#Identifier
 	label:        string & !=""
 	description?: string
@@ -53,7 +53,7 @@ import (
 	currency:       enums.#CurrencyCode
 	issueDate?:     common.#DateOnly
 	dueDate?:       common.#DateOnly
-	items: [...#InvoiceLine]
+	components: [...#InvoiceComponent]
 	notes?:          string
 	sentToCustomer?: bool
 	createdAt?:      common.#Timestamp
@@ -85,7 +85,7 @@ import (
 	taxRate:  >=0 & <=100 & number
 }
 
-#BookingOfferItem: {
+#BookingOfferComponent: {
 	id:                    common.#Identifier
 	category:              enums.#OfferCategory
 	label:                 string & !=""
@@ -105,13 +105,13 @@ import (
 	netAmount:   common.#MoneyAmount
 	taxAmount:   common.#MoneyAmount
 	grossAmount: common.#MoneyAmount
-	itemsCount:  >=0 & int
+	componentsCount: >=0 & int
 }
 
 #BookingOffer: {
 	currency: enums.#CurrencyCode
 	categoryRules: [...#BookingOfferCategoryRule]
-	items: [...#BookingOfferItem]
+	components: [...#BookingOfferComponent]
 	totals:          #BookingOfferTotals
 	totalPriceCents: int
 }

@@ -206,11 +206,11 @@ export function validateBookingOfferCategoryRule(value) {
   return __validateShape(value, BOOKING_OFFER_CATEGORY_RULE_SCHEMA);
 }
 
-export const BOOKING_OFFER_ITEM_SCHEMA = {
-  "name": "BookingOfferItem",
+export const BOOKING_OFFER_COMPONENT_SCHEMA = {
+  "name": "BookingOfferComponent",
   "domain": "booking",
   "module": "entities",
-  "sourceType": "entities.#BookingOfferItem",
+  "sourceType": "entities.#BookingOfferComponent",
   "fields": [
     {
       "name": "id",
@@ -293,8 +293,8 @@ export const BOOKING_OFFER_ITEM_SCHEMA = {
   ]
 };
 
-export function validateBookingOfferItem(value) {
-  return __validateShape(value, BOOKING_OFFER_ITEM_SCHEMA);
+export function validateBookingOfferComponent(value) {
+  return __validateShape(value, BOOKING_OFFER_COMPONENT_SCHEMA);
 }
 
 export const BOOKING_OFFER_TOTALS_SCHEMA = {
@@ -322,7 +322,7 @@ export const BOOKING_OFFER_TOTALS_SCHEMA = {
       "required": true
     },
     {
-      "name": "itemsCount",
+      "name": "componentsCount",
       "kind": "scalar",
       "typeName": "int",
       "required": true
@@ -354,9 +354,9 @@ export const BOOKING_OFFER_SCHEMA = {
       "isArray": true
     },
     {
-      "name": "items",
+      "name": "components",
       "kind": "valueObject",
-      "typeName": "BookingOfferItem",
+      "typeName": "BookingOfferComponent",
       "required": true,
       "isArray": true
     },

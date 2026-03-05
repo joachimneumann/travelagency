@@ -96,10 +96,6 @@ Logout behavior:
 The mobile app should treat the OpenAPI contract as the only stable interface.
 It should not infer response shapes from backend internals or JSON storage.
 
-Current transition note:
-- a small number of integration/support endpoints are still hand-written outside `model/api/`
-- if mobile uses such an endpoint, it must be treated as transitional until moved into the generated contract
-
 Contract source of truth:
 - `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
 
@@ -129,9 +125,9 @@ Recommended first endpoints:
 - `GET /api/v1/bookings/:bookingId/invoices`
 
 Note:
-- the current assignment route path is still `PATCH /api/v1/bookings/:bookingId/owner`
-- semantically this is now a staff assignment endpoint
-- request body may send `owner_id` for compatibility or `staff`
+- the current assignment route path is `PATCH /api/v1/bookings/:bookingId/owner`
+- semantically this is a staff assignment endpoint
+- request body must send `owner_id`
 
 ## 5) Current backend role behavior
 
@@ -405,7 +401,7 @@ Suggested response shape:
 
 3. stable staff assignment behavior
 - manager/admin only
-- path compatibility kept even if route name still says `owner`
+- assignment endpoint path: `PATCH /api/v1/bookings/:bookingId/owner`
 
 ## 12) Summary
 

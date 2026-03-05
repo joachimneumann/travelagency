@@ -144,10 +144,10 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingOfferItem"
+			name:       "BookingOfferComponent"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingOfferItem"
+			sourceType: "entities.#BookingOfferComponent"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
@@ -173,7 +173,7 @@ IR: {
 				{name: "netAmountCents", kind: "scalar", typeName: "int", required: true},
 				{name: "taxAmountCents", kind: "scalar", typeName: "int", required: true},
 				{name: "grossAmountCents", kind: "scalar", typeName: "int", required: true},
-				{name: "itemsCount", kind: "scalar", typeName: "int", required: true},
+				{name: "componentsCount", kind: "scalar", typeName: "int", required: true},
 			]
 		},
 		{
@@ -184,7 +184,7 @@ IR: {
 			fields: [
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "categoryRules", kind: "valueObject", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
-				{name: "items", kind: "valueObject", typeName: "BookingOfferItem", required: true, isArray: true},
+				{name: "components", kind: "valueObject", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "totals", kind: "valueObject", typeName: "BookingOfferTotals", required: true},
 				{name: "totalPriceCents", kind: "scalar", typeName: "int", required: true},
 			]

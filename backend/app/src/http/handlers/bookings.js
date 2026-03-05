@@ -52,8 +52,8 @@ export function createBookingHandlers(deps) {
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
-    normalizeInvoiceItems,
-    computeInvoiceTotal,
+    normalizeInvoiceComponents,
+    computeInvoiceComponentTotal,
     safeAmountCents,
     nextInvoiceNumber,
     writeInvoicePdf,
@@ -333,7 +333,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     return;
   }
 
-  const ownerIdRaw = normalizeText(payload.owner_id || payload.atp_staff);
+  const ownerIdRaw = normalizeText(payload.owner_id);
   const principal = getPrincipal(req);
   const store = await readStore();
   const booking = store.bookings.find((item) => item.id === bookingId);
@@ -548,14 +548,14 @@ async function handlePostOfferExchangeRates(req, res) {
     return;
   }
 
-  const { fromCurrency, toCurrency, items } = check;
-  if (!Array.isArray(items) || items.length === 0) {
+  const { fromCurrency, toCurrency, components } = check;
+  if (!Array.isArray(components) || components.length === 0) {
     sendJson(res, 200, {
       from_currency: fromCurrency,
       to_currency: toCurrency,
       exchange_rate: 1,
       total_price_cents: 0,
-      converted_items: []
+      converted_components: []
     });
     return;
   }
@@ -585,8 +585,8 @@ async function handlePostOfferExchangeRates(req, res) {
     }
   }
 
-  const convertedItems = items.map((item) =>
-    convertOfferLineAmountForCurrency(item, { sourceToBaseRate, baseToTargetRate }, fromCurrency, toCurrency)
+  const convertedComponents = components.map((component) =>
+    convertOfferLineAmountForCurrency(component, { sourceToBaseRate, baseToTargetRate }, fromCurrency, toCurrency)
   );
   const combinedRate = sourceToBaseRate * baseToTargetRate;
 
@@ -594,12 +594,12 @@ async function handlePostOfferExchangeRates(req, res) {
     from_currency: fromCurrency,
     to_currency: toCurrency,
     exchange_rate: combinedRate,
-    total_price_cents: convertedItems.reduce(
-      (sum, item) =>
-        sum + (Number.isFinite(item.line_total_amount_cents) ? Number(item.line_total_amount_cents) : 0),
+    total_price_cents: convertedComponents.reduce(
+      (sum, component) =>
+        sum + (Number.isFinite(component.line_total_amount_cents) ? Number(component.line_total_amount_cents) : 0),
       0
     ),
-    converted_items: convertedItems,
+    converted_components: convertedComponents,
     ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
   });
 }
@@ -667,6 +667,7 @@ async function handleCreateActivity(req, res, [bookingId]) {
 function buildInvoiceReadModel(invoice) {
   return {
     ...invoice,
+    components: Array.isArray(invoice?.components) ? invoice.components : [],
     sent_to_customer: Boolean(invoice.sent_to_customer),
     sent_to_customer_at: invoice.sent_to_customer_at || null,
     pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
@@ -688,11 +689,11 @@ async function handleListBookingInvoices(req, res, [bookingId]) {
     return;
   }
 
-  const items = [...store.invoices]
+  const invoices = [...store.invoices]
     .filter((invoice) => invoice.booking_id === bookingId)
     .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
     .map(buildInvoiceReadModel);
-  sendJson(res, 200, { items, total: items.length });
+  sendJson(res, 200, { items: invoices, total: invoices.length });
 }
 
 async function handleCreateBookingInvoice(req, res, [bookingId]) {
@@ -723,14 +724,14 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
     return;
   }
 
-  const items = normalizeInvoiceItems(payload.items);
-  if (!items.length) {
-    sendJson(res, 422, { error: "At least one invoice item is required" });
+  const components = normalizeInvoiceComponents(payload.components);
+  if (!components.length) {
+    sendJson(res, 422, { error: "At least one invoice component is required" });
     return;
   }
 
   const now = nowIso();
-  const totalAmountCents = computeInvoiceTotal(items);
+  const totalAmountCents = computeInvoiceComponentTotal(components);
   const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
   const invoice = {
     id: `inv_${randomUUID()}`,
@@ -746,7 +747,7 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
     notes: normalizeText(payload.notes),
     sent_to_customer: false,
     sent_to_customer_at: null,
-    items,
+    components,
     total_amount_cents: totalAmountCents,
     due_amount_cents: dueAmountCents,
     created_at: now,
@@ -792,9 +793,13 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     return;
   }
 
-  const items = payload.items ? normalizeInvoiceItems(payload.items) : invoice.items;
-  if (!items.length) {
-    sendJson(res, 422, { error: "At least one invoice item is required" });
+  const components = payload.components
+    ? normalizeInvoiceComponents(payload.components)
+    : Array.isArray(invoice.components)
+      ? invoice.components
+      : [];
+  if (!components.length) {
+    sendJson(res, 422, { error: "At least one invoice component is required" });
     return;
   }
 
@@ -805,7 +810,7 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     payload.due_date !== undefined ||
     payload.title !== undefined ||
     payload.notes !== undefined ||
-    payload.items !== undefined ||
+    payload.components !== undefined ||
     payload.due_amount_cents !== undefined;
 
   if (payload.sent_to_customer !== undefined) {
@@ -818,7 +823,7 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
   }
 
   if (isContentUpdate) {
-    const totalAmountCents = computeInvoiceTotal(items);
+    const totalAmountCents = computeInvoiceComponentTotal(components);
     const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
     if (payload.invoice_number !== undefined) {
       invoice.invoice_number = normalizeText(payload.invoice_number) || invoice.invoice_number;
@@ -838,7 +843,7 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     if (payload.notes !== undefined) {
       invoice.notes = normalizeText(payload.notes);
     }
-    invoice.items = items;
+    invoice.components = components;
     invoice.total_amount_cents = totalAmountCents;
     invoice.due_amount_cents = dueAmountCents;
     invoice.version = Number(invoice.version || 1) + 1;

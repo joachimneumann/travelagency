@@ -165,17 +165,15 @@ Delivered endpoints and features:
 - `GET /api/v1/bookings` with `page`, `page_size`, `stage`, `owner_id`, `search`, `sort`
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
-- `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
+- `PATCH /api/v1/bookings/:bookingId/owner`
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/atp_staff`
 - `POST /api/v1/atp_staff`
 - `GET /api/v1/customers` with pagination/search
-- Admin UI pages:
-  - `/admin/bookings` (filters + pagination)
-  - `/admin/bookings/:bookingId` (role-aware staff/stage/note actions)
-  - `/admin/customers` (search + pagination)
-  - `/admin/customers/:customerId` (profile + related bookings)
+- Branded frontend backoffice pages:
+  - `/backend.html` (filters + pagination)
+  - `/backend-booking.html` (role-aware staff/stage/note actions)
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)
 

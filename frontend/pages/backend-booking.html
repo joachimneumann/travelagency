@@ -241,7 +241,7 @@
               <label for="bookingNoteInput">Booking Notes: Call notes, qualification details, customer preferences...</label>
               <div class="backend-controls" style="align-items: flex-start; margin-top: 0.35rem; gap: 0.6rem;">
                 <textarea id="bookingNoteInput" rows="4" placeholder="Write the current booking note..." style="flex: 1;"></textarea>
-                <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">save</button>
+                <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">update</button>
                 <span id="bookingActionStatus" class="micro"></span>
               </div>
             </div>
@@ -256,46 +256,35 @@
           </article>
 
           <article id="offerPanel" style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Offer</h2>
-
-            <div class="backend-controls">
-              <div class="field">
-                <label for="offerCurrencyInput">Offer Currency</label>
-                <select id="offerCurrencyInput">
-                  <option value="USD">USD</option>
-                  <option value="EURO">EURO</option>
-                  <option value="VND">VND</option>
-                  <option value="THB">THB</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Offer Items</h3>
+            <div class="backend-controls" style="align-items: center; margin-bottom: 0.35rem; column-gap: 0.5rem;">
+              <h2 class="section-title" style="font-size: 1.05rem; margin: 0;">Offer</h2>
+              <select id="offerCurrencyInput" aria-label="Offer currency" style="max-width: 120px;">
+                <option value="USD">USD</option>
+                <option value="EURO">EURO</option>
+                <option value="VND">VND</option>
+                <option value="THB">THB</option>
+              </select>
             </div>
             <div class="backend-controls" style="align-items: center; margin: 0.6rem 0 0.25rem; column-gap: 0.5rem;">
-              <div class="field">
-                <label for="offerItemCategorySelect">New item category</label>
-                <select id="offerItemCategorySelect">
-                  <option value="" selected disabled>— Select category —</option>
-                  <option value="ACCOMMODATION">Accommodation</option>
-                  <option value="TRANSPORTATION">Transportation</option>
-                  <option value="TOURS_ACTIVITIES">Tours & Activities</option>
-                  <option value="GUIDE_SUPPORT_SERVICES">Guide & Support Services</option>
-                  <option value="MEALS">Meals</option>
-                  <option value="FEES_TAXES">Fees & Taxes</option>
-                  <option value="DISCOUNTS_CREDITS">Discounts & Credits</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-              <button class="btn btn-ghost" id="offerAddItemBtn" type="button">Add item</button>
+              <button class="btn btn-ghost" id="offerAddComponentBtn" type="button">New component</button>
+              <select id="offerComponentCategorySelect" aria-label="New component category">
+                <option value="" selected disabled>Category</option>
+                <option value="ACCOMMODATION">Accommodation</option>
+                <option value="TRANSPORTATION">Transportation</option>
+                <option value="TOURS_ACTIVITIES">Tours & Activities</option>
+                <option value="GUIDE_SUPPORT_SERVICES">Guide & Support Services</option>
+                <option value="MEALS">Meals</option>
+                <option value="FEES_TAXES">Fees & Taxes</option>
+                <option value="DISCOUNTS_CREDITS">Discounts & Credits</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="offerItemsTable"></table>
+              <table class="backend-table" id="offerComponentsTable"></table>
             </div>
             <div class="backend-offer-footer">
               <div class="backend-table-wrap backend-offer-total-wrap" style="margin-bottom: 0.75rem; margin-top: 0;">
-                <table class="backend-table backend-offer-total-table" id="offerItemsTotalTable"></table>
+                <table class="backend-table backend-offer-total-table" id="offerComponentsTotalTable"></table>
               </div>
               <div class="backend-controls backend-offer-actions">
                 <button class="btn btn-primary offer-update-btn" id="offerSaveBtn" type="button" disabled>Update</button>
@@ -390,8 +379,8 @@
             </div>
 
               <div class="field">
-                <label for="invoiceItemsInput" id="invoiceItemsLabel">Items (one per line: Description | Quantity | Unit amount in USD)</label>
-                <textarea id="invoiceItemsInput" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
+                <label for="invoiceComponentsInput" id="invoiceComponentsLabel">Components (one per line: Description | Quantity | Unit amount in USD)</label>
+                <textarea id="invoiceComponentsInput" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
               </div>
 
             <div class="field">

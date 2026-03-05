@@ -270,8 +270,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
-    normalizeInvoiceItems,
-    computeInvoiceTotal,
+    normalizeInvoiceComponents,
+    computeInvoiceComponentTotal,
     safeAmountCents,
     nextInvoiceNumber,
     writeInvoicePdf,
@@ -1613,17 +1613,17 @@ async function convertBookingOfferToBaseCurrency(offer) {
     };
   }
 
-  const convertedItemAmounts = await Promise.all(
-    normalized.items.map((item) => convertMinorUnits(item.unit_amount_cents, sourceCurrency, BASE_CURRENCY))
+  const convertedComponentAmounts = await Promise.all(
+    normalized.components.map((component) => convertMinorUnits(component.unit_amount_cents, sourceCurrency, BASE_CURRENCY))
   );
 
   const converted = {
     ...normalized,
     currency: BASE_CURRENCY,
-    items: normalized.items.map((item, index) => ({
-      ...item,
+    components: normalized.components.map((component, index) => ({
+      ...component,
       currency: BASE_CURRENCY,
-      unit_amount_cents: convertedItemAmounts[index]
+      unit_amount_cents: convertedComponentAmounts[index]
     }))
   };
   const totals = computeBookingOfferTotals(converted);
@@ -1687,14 +1687,14 @@ async function convertOfferForDisplay(rawOffer, targetCurrency) {
   }
 
   const convertedAmounts = await Promise.all(
-    normalized.items.map((item) => convertMinorUnits(item.unit_amount_cents, sourceCurrency, displayCurrency))
+    normalized.components.map((component) => convertMinorUnits(component.unit_amount_cents, sourceCurrency, displayCurrency))
   );
 
   return {
     ...normalized,
     currency: displayCurrency,
-    items: normalized.items.map((item, index) => ({
-      ...item,
+    components: normalized.components.map((component, index) => ({
+      ...component,
       currency: displayCurrency,
       unit_amount_cents: convertedAmounts[index]
     }))
@@ -1711,14 +1711,14 @@ function validateOfferExchangeRequest(payload) {
   if (!fromCurrency) return { ok: false, error: "from_currency is required and must be a valid currency." };
   if (!toCurrency) return { ok: false, error: "to_currency is required and must be a valid currency." };
 
-  const inputItems = Array.isArray(payload.items) ? payload.items : [];
-  const items = [];
+  const inputComponents = Array.isArray(payload.components) ? payload.components : [];
+  const components = [];
 
-  for (let index = 0; index < inputItems.length; index++) {
-    const row = inputItems[index];
+  for (let index = 0; index < inputComponents.length; index++) {
+    const row = inputComponents[index];
     const rawAmount = normalizeAmountCents(row?.unit_amount_cents, 0);
     if (!Number.isFinite(rawAmount) || rawAmount < 0) {
-      return { ok: false, error: `Item ${index + 1} has an invalid unit_amount_cents.` };
+      return { ok: false, error: `Component ${index + 1} has an invalid unit_amount_cents.` };
     }
     const category = normalizeOfferCategory(row?.category);
     const taxRateBasisPoints = clampOfferTaxRateBasisPoints(
@@ -1726,8 +1726,8 @@ function validateOfferExchangeRequest(payload) {
       DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
     );
     const quantity = Math.max(1, safeInt(row?.quantity) || 1);
-    items.push({
-      id: normalizeText(row?.id) || `item_${index}`,
+    components.push({
+      id: normalizeText(row?.id) || `component_${index}`,
       unit_amount_cents: rawAmount,
       category,
       tax_rate_basis_points: taxRateBasisPoints,
@@ -1735,7 +1735,7 @@ function validateOfferExchangeRequest(payload) {
     });
   }
 
-  return { ok: true, fromCurrency, toCurrency, items };
+  return { ok: true, fromCurrency, toCurrency, components };
 }
 
 function formatMoney(amountCents, currency) {
@@ -1748,16 +1748,16 @@ function formatMoney(amountCents, currency) {
   }).format(amount)}`;
 }
 
-function normalizeInvoiceItems(value) {
+function normalizeInvoiceComponents(value) {
   const input = Array.isArray(value) ? value : [];
   return input
-    .map((item) => {
-      const description = normalizeText(item?.description);
-      const quantity = Math.max(1, safeInt(item?.quantity) || 1);
-      const unitAmountCents = safeAmountCents(item?.unit_amount_cents);
+    .map((component) => {
+      const description = normalizeText(component?.description);
+      const quantity = Math.max(1, safeInt(component?.quantity) || 1);
+      const unitAmountCents = safeAmountCents(component?.unit_amount_cents);
       if (!description || !unitAmountCents) return null;
       return {
-        id: normalizeText(item?.id) || `inv_item_${randomUUID()}`,
+        id: normalizeText(component?.id) || `inv_component_${randomUUID()}`,
         description,
         quantity,
         unit_amount_cents: unitAmountCents,
@@ -1767,8 +1767,11 @@ function normalizeInvoiceItems(value) {
     .filter(Boolean);
 }
 
-function computeInvoiceTotal(items) {
-  return (Array.isArray(items) ? items : []).reduce((sum, item) => sum + (safeAmountCents(item?.total_amount_cents) || 0), 0);
+function computeInvoiceComponentTotal(components) {
+  return (Array.isArray(components) ? components : []).reduce(
+    (sum, component) => sum + (safeAmountCents(component?.total_amount_cents) || 0),
+    0
+  );
 }
 
 function safeVatPercentage(value) {
@@ -1969,8 +1972,8 @@ function abbreviateBookingId(value) {
 
 function buildInvoicePdfBuffer(invoice, customer, booking, logoImage) {
   const currency = safeCurrency(invoice.currency);
-  const items = Array.isArray(invoice.items) ? invoice.items : [];
-  const subtotalCents = safeAmountCents(invoice.subtotal_amount_cents) ?? computeInvoiceTotal(items);
+  const components = Array.isArray(invoice.components) ? invoice.components : [];
+  const subtotalCents = safeAmountCents(invoice.subtotal_amount_cents) ?? computeInvoiceComponentTotal(components);
   const vatPercentage = safeVatPercentage(invoice.vat_percentage);
   const vatAmountCents = safeAmountCents(invoice.vat_amount_cents) ?? Math.round(subtotalCents * (vatPercentage / 100));
   const totalCents = safeAmountCents(invoice.total_amount_cents) ?? subtotalCents + vatAmountCents;
@@ -2020,7 +2023,7 @@ function buildInvoicePdfBuffer(invoice, customer, booking, logoImage) {
   ops.push(textAt(317, 674, 11, normalizeText(customer?.name) || "-"));
   ops.push(textAt(317, 658, 9, normalizeEmail(customer?.email) || "-"));
 
-  // Items table header.
+  // Components table header.
   const tableTop = 596;
   ops.push("0.82 0.85 0.88 RG");
   ops.push(rectStroke(40, tableTop, 515, 26));
@@ -2032,21 +2035,21 @@ function buildInvoicePdfBuffer(invoice, customer, booking, logoImage) {
   ops.push(textAt(410, tableTop + 10, 9, "Unit"));
   ops.push(textAt(485, tableTop + 10, 9, "Total"));
 
-  // Table rows.
+  // Component rows.
   let rowY = tableTop - 24;
   const rowHeight = 24;
   const maxRows = 16;
-  for (let i = 0; i < Math.min(items.length, maxRows); i += 1) {
-    const item = items[i];
+  for (let i = 0; i < Math.min(components.length, maxRows); i += 1) {
+    const component = components[i];
     ops.push("0.86 0.88 0.90 RG");
     ops.push(rectStroke(40, rowY, 515, rowHeight));
     ops.push("0.12 0.18 0.22 rg");
-    const descLines = wrapPdfText(normalizeText(item.description) || "-", 42, 2);
+    const descLines = wrapPdfText(normalizeText(component.description) || "-", 42, 2);
     ops.push(textAt(48, rowY + 11, 9, descLines[0] || "-"));
     if (descLines[1]) ops.push(textAt(48, rowY + 2, 9, descLines[1]));
-    ops.push(textAt(356, rowY + 7, 9, String(item.quantity || 1)));
-    ops.push(textAt(408, rowY + 7, 9, formatMoney(item.unit_amount_cents, currency)));
-    ops.push(textAt(476, rowY + 7, 9, formatMoney(item.total_amount_cents, currency)));
+    ops.push(textAt(356, rowY + 7, 9, String(component.quantity || 1)));
+    ops.push(textAt(408, rowY + 7, 9, formatMoney(component.unit_amount_cents, currency)));
+    ops.push(textAt(476, rowY + 7, 9, formatMoney(component.total_amount_cents, currency)));
     rowY -= rowHeight;
   }
 
@@ -2453,12 +2456,12 @@ function defaultBookingOffer(preferredCurrency = BASE_CURRENCY) {
       category,
       tax_rate_basis_points: DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
     })),
-    items: [],
+    components: [],
     totals: {
       net_amount_cents: 0,
       tax_amount_cents: 0,
       gross_amount_cents: 0,
-      items_count: 0
+      components_count: 0
     },
     total_price_cents: 0
   };
@@ -2525,15 +2528,18 @@ function buildOfferCategoryRuleMap(rules) {
 function computeBookingOfferTotals(offer) {
   let net_amount_cents = 0;
   let tax_amount_cents = 0;
-  let items_count = 0;
+  let components_count = 0;
 
-  for (const item of offer.items || []) {
-    const sign = offerCategorySign(item.category);
-    const lineNet = Math.max(0, normalizeAmountCents(item.unit_amount_cents, 0)) * Math.max(1, safeInt(item.quantity) || 1);
-    const lineTax = roundTaxAmount(lineNet, clampOfferTaxRateBasisPoints(item.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS));
+  for (const component of offer.components || []) {
+    const sign = offerCategorySign(component.category);
+    const lineNet = Math.max(0, normalizeAmountCents(component.unit_amount_cents, 0)) * Math.max(1, safeInt(component.quantity) || 1);
+    const lineTax = roundTaxAmount(
+      lineNet,
+      clampOfferTaxRateBasisPoints(component.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS)
+    );
     net_amount_cents += sign * lineNet;
     tax_amount_cents += sign * lineTax;
-    items_count += 1;
+    components_count += 1;
   }
 
   return {
@@ -2541,7 +2547,7 @@ function computeBookingOfferTotals(offer) {
     tax_amount_cents,
     gross_amount_cents: net_amount_cents + tax_amount_cents,
     total_price_cents: net_amount_cents + tax_amount_cents,
-    items_count
+    components_count
   };
 }
 
@@ -2552,38 +2558,37 @@ function normalizeBookingOffer(rawOffer, preferredCurrency = BASE_CURRENCY) {
   const rulesInput = Array.isArray(offer.category_rules) ? offer.category_rules : [];
   const ruleMap = buildOfferCategoryRuleMap(rulesInput);
   const category_rules = OFFER_CATEGORY_ORDER.map((category) => ruleMap.get(category));
-  const items = Array.isArray(offer.items)
-    ? offer.items.map((item, index) => {
-        const category = normalizeOfferCategory(item?.category);
+  const sourceComponents = Array.isArray(offer.components) ? offer.components : [];
+  const components = sourceComponents.map((component, index) => {
+    const category = normalizeOfferCategory(component?.category);
         const categoryRule = ruleMap.get(category);
         return {
-          id: normalizeText(item?.id) || `offer_item_${randomUUID()}`,
+          id: normalizeText(component?.id) || `offer_component_${randomUUID()}`,
           category,
-          label: normalizeText(item?.label) || "Offer item",
-          details: normalizeText(item?.details || item?.description),
-          quantity: Math.max(1, safeInt(item?.quantity) || 1),
-          unit_amount_cents: Math.max(0, normalizeAmountCents(item?.unit_amount_cents, 0)),
+          label: normalizeText(component?.label) || "Offer component",
+          details: normalizeText(component?.details || component?.description),
+          quantity: Math.max(1, safeInt(component?.quantity) || 1),
+          unit_amount_cents: Math.max(0, normalizeAmountCents(component?.unit_amount_cents, 0)),
           tax_rate_basis_points: clampOfferTaxRateBasisPoints(
-            item?.tax_rate_basis_points,
+            component?.tax_rate_basis_points,
             categoryRule?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS
           ),
           currency,
-          notes: normalizeText(item?.notes),
-          sort_order: Number.isFinite(safeInt(item?.sort_order))
-            ? safeInt(item?.sort_order)
-            : Number.isFinite(safeInt(item?.sortOrder))
-              ? safeInt(item?.sortOrder)
+          notes: normalizeText(component?.notes),
+          sort_order: Number.isFinite(safeInt(component?.sort_order))
+            ? safeInt(component?.sort_order)
+            : Number.isFinite(safeInt(component?.sortOrder))
+              ? safeInt(component?.sortOrder)
               : index,
-          created_at: normalizeText(item?.created_at) || null,
-          updated_at: normalizeText(item?.updated_at) || null
+          created_at: normalizeText(component?.created_at) || null,
+          updated_at: normalizeText(component?.updated_at) || null
         };
-      })
-    : [];
+      });
 
   const normalized = {
     currency,
     category_rules,
-    items
+    components
   };
   const totals = computeBookingOfferTotals(normalized);
   return {
@@ -2598,16 +2603,16 @@ async function buildBookingOfferReadModel(rawOffer, preferredCurrency = BASE_CUR
   const totals = computeBookingOfferTotals(offer);
   return {
     ...offer,
-    items: offer.items.map((item) => {
-      const sign = offerCategorySign(item.category);
-      const line_net_amount_cents = sign * item.unit_amount_cents * item.quantity;
+    components: offer.components.map((component) => {
+      const sign = offerCategorySign(component.category);
+      const line_net_amount_cents = sign * component.unit_amount_cents * component.quantity;
       const line_tax_amount_cents = sign * roundTaxAmount(
-        item.unit_amount_cents * item.quantity,
-        item.tax_rate_basis_points
+        component.unit_amount_cents * component.quantity,
+        component.tax_rate_basis_points
       );
       const line_total_amount_cents = line_net_amount_cents + line_tax_amount_cents;
       return {
-        ...item,
+        ...component,
         line_net_amount_cents,
         line_tax_amount_cents,
         line_total_amount_cents,
@@ -2633,12 +2638,12 @@ function validateBookingOfferInput(rawOffer, booking) {
   );
   const offer = normalizeBookingOffer(rawOffer, preferredCurrency);
 
-  for (const item of offer.items) {
-    if (!item.label) return { ok: false, error: "Each offer item requires a label" };
-    if (item.quantity < 1) return { ok: false, error: "Offer item quantity must be at least 1" };
-    if (item.unit_amount_cents < 0) return { ok: false, error: "Offer item amounts must be zero or positive" };
-    if (item.tax_rate_basis_points < 0 || item.tax_rate_basis_points > 100000) {
-      return { ok: false, error: "Offer item tax_rate_basis_points must be between 0 and 100000" };
+  for (const component of offer.components) {
+    if (!component.label) return { ok: false, error: "Each offer component requires a label" };
+    if (component.quantity < 1) return { ok: false, error: "Offer component quantity must be at least 1" };
+    if (component.unit_amount_cents < 0) return { ok: false, error: "Offer component amounts must be zero or positive" };
+    if (component.tax_rate_basis_points < 0 || component.tax_rate_basis_points > 100000) {
+      return { ok: false, error: "Offer component tax_rate_basis_points must be between 0 and 100000" };
     }
   }
 
@@ -3820,567 +3825,3 @@ async function handleMobileBootstrap(_req, res) {
     });
 }
 
-async function handleAdminHome(req, res) {
-  const principal = getPrincipal(req);
-  if (!principal) {
-    sendJson(res, 401, { error: "Unauthorized" });
-    return;
-  }
-  const links = [];
-  if (canReadAllBookings(principal) || hasRole(principal, APP_ROLES.ATP_STAFF)) {
-    links.push(`<li><a href="/admin/bookings">Booking pipeline view</a></li>`);
-  }
-  if (canReadCustomers(principal)) {
-    links.push(`<li><a href="/admin/customers">Customers UI</a></li>`);
-    links.push(`<li>Customers API: <a href="/api/v1/customers"><code>/api/v1/customers</code></a></li>`);
-  }
-  if (canReadTours(principal)) {
-    links.push(`<li>Tours API: <a href="/api/v1/tours"><code>/api/v1/tours</code></a></li>`);
-  }
-  sendHtml(
-    res,
-    200,
-    `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>AsiaTravelPlan Admin</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    a { color: #004f7a; }
-  </style>
-</head>
-<body>
-  <h1>AsiaTravelPlan Admin</h1>
-  <ul>
-    ${links.join("\n")}
-  </ul>
-</body>
-</html>`
-  );
-}
-
-async function handleAdminCustomersPage(req, res) {
-  const principal = getPrincipal(req);
-  if (!canReadCustomers(principal)) {
-    sendHtml(res, 403, "<h1>Forbidden</h1>");
-    return;
-  }
-  const store = await readStore();
-  const requestUrl = new URL(req.url, "http://localhost");
-  const params = requestUrl.searchParams;
-  const search = normalizeText(params.get("search")).toLowerCase();
-  const pageSize = String(clamp(safeInt(params.get("page_size")) || 25, 1, 100));
-
-  const filtered = [...store.customers]
-    .filter((customer) => {
-      if (!search) return true;
-      const haystack = [customer.id, customer.name, customer.email, customer.phone, customer.language]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(search);
-    })
-    .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-
-  const paged = paginate(filtered, params);
-
-  const customerBookingsCount = new Map();
-  for (const booking of store.bookings) {
-    customerBookingsCount.set(booking.customer_id, (customerBookingsCount.get(booking.customer_id) || 0) + 1);
-  }
-
-  const detailBaseQuery = new URLSearchParams(params);
-  detailBaseQuery.delete("page");
-  const detailQuery = detailBaseQuery.toString();
-
-  const rows = paged.items
-    .map((customer) => {
-      const customerHref = `/admin/customers/${encodeURIComponent(customer.id)}${detailQuery ? `?${detailQuery}` : ""}`;
-      return `<tr>
-        <td><a href="${escapeHtml(customerHref)}">${escapeHtml(customer.id)}</a></td>
-        <td>${escapeHtml(customer.name || "-")}</td>
-        <td>${escapeHtml(customer.email || "-")}</td>
-        <td>${escapeHtml(customer.phone || "-")}</td>
-        <td>${escapeHtml(customer.language || "-")}</td>
-        <td>${customerBookingsCount.get(customer.id) || 0}</td>
-        <td>${escapeHtml(customer.updated_at || "-")}</td>
-      </tr>`;
-    })
-    .join("\n");
-
-  function pageLink(targetPage) {
-    const next = new URLSearchParams(params);
-    next.set("page", String(targetPage));
-    return `/admin/customers?${next.toString()}`;
-  }
-
-  const prevLink = paged.page > 1 ? `<a href="${escapeHtml(pageLink(paged.page - 1))}">Previous</a>` : "";
-  const nextLink =
-    paged.page < paged.total_pages ? `<a href="${escapeHtml(pageLink(paged.page + 1))}">Next</a>` : "";
-
-  const bookingsHref = "/admin/bookings";
-  const homeHref = "/admin";
-
-  sendHtml(
-    res,
-    200,
-    `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Customers</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    form { display: grid; grid-template-columns: 1fr 180px auto; gap: 0.5rem; align-items: end; margin-bottom: 1rem; }
-    input, select, button { padding: 0.45rem; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    th { background: #f6f6f6; }
-    .pager, .links { display: flex; gap: 1rem; margin-top: 1rem; align-items: center; }
-  </style>
-</head>
-<body>
-  <h1>Customers</h1>
-  <p>Total customers (all): ${store.customers.length}</p>
-  <p>Total customers (filtered): ${paged.total}</p>
-  <div class="links">
-    <a href="${escapeHtml(homeHref)}">Admin home</a>
-    <a href="${escapeHtml(bookingsHref)}">Booking pipeline</a>
-  </div>
-  <form method="get" action="/admin/customers">
-    <label>Search
-      <input type="text" name="search" value="${escapeHtml(params.get("search") || "")}" placeholder="id, name, email, phone..." />
-    </label>
-    <label>Page size
-      <select name="page_size">
-        <option value="10"${pageSize === "10" ? " selected" : ""}>10</option>
-        <option value="25"${pageSize === "25" ? " selected" : ""}>25</option>
-        <option value="50"${pageSize === "50" ? " selected" : ""}>50</option>
-      </select>
-    </label>
-    <button type="submit">Apply</button>
-  </form>
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Language</th>
-        <th>Bookings</th>
-        <th>Updated</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows || "<tr><td colspan='7'>No customers found</td></tr>"}
-    </tbody>
-  </table>
-  <div class="pager">
-    <span>Page ${paged.page} / ${paged.total_pages}</span>
-    ${prevLink}
-    ${nextLink}
-  </div>
-</body>
-</html>`
-  );
-}
-
-async function handleAdminBookingsPage(req, res) {
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const atp_staff = await loadAtpStaff();
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canReadAllBookings(principal) && !staffMember) {
-    sendHtml(res, 403, "<h1>Forbidden</h1>");
-    return;
-  }
-  const requestUrl = new URL(req.url, "http://localhost");
-  const filtered = filterAndSortBookings(store, requestUrl.searchParams);
-  const visible = filtered.items.filter((booking) => canAccessBooking(principal, booking, staffMember));
-  const paged = paginate(visible, requestUrl.searchParams);
-  const params = requestUrl.searchParams;
-  const stageValue = normalizeStageFilter(params.get("stage"));
-  const searchValue = normalizeText(params.get("search"));
-  const pageSizeValue = String(paged.page_size);
-  const sortValue = filtered.sort;
-
-  const detailBaseQuery = new URLSearchParams(params);
-  detailBaseQuery.delete("page");
-  const detailQuery = detailBaseQuery.toString();
-
-  const rows = paged.items
-    .map((booking) => {
-      const href = `/admin/bookings/${encodeURIComponent(booking.id)}${detailQuery ? `?${detailQuery}` : ""}`;
-      return `<tr>
-        <td><a href="${escapeHtml(href)}">${escapeHtml(booking.id)}</a></td>
-        <td>${escapeHtml(booking.stage)}</td>
-        <td>${escapeHtml(booking.destination)}</td>
-        <td>${escapeHtml(booking.style)}</td>
-        <td>${escapeHtml(booking.atp_staff_name || booking.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(booking.sla_due_at || "-")}</td>
-      </tr>`;
-    })
-    .join("\n");
-
-  const stageOptions = [`<option value="">All stages</option>`]
-    .concat(
-      STAGE_ORDER.map((stage) => {
-        const selected = stage === stageValue ? " selected" : "";
-        return `<option value="${stage}"${selected}>${stage}</option>`;
-      })
-    )
-    .join("\n");
-
-  const sortOptions = [
-    { value: "created_at_desc", label: "Newest first" },
-    { value: "created_at_asc", label: "Oldest first" },
-    { value: "updated_at_desc", label: "Recently updated" },
-    { value: "sla_due_at_asc", label: "SLA due soonest" },
-    { value: "sla_due_at_desc", label: "SLA due latest" }
-  ]
-    .map((option) => {
-      const selected = option.value === sortValue ? " selected" : "";
-      return `<option value="${option.value}"${selected}>${option.label}</option>`;
-    })
-    .join("\n");
-
-  function pageLink(targetPage) {
-    const next = new URLSearchParams(params);
-    next.set("page", String(targetPage));
-    return `/admin/bookings?${next.toString()}`;
-  }
-
-  const prevLink = paged.page > 1 ? `<a href="${escapeHtml(pageLink(paged.page - 1))}">Previous</a>` : "";
-  const nextLink =
-    paged.page < paged.total_pages ? `<a href="${escapeHtml(pageLink(paged.page + 1))}">Next</a>` : "";
-  const customersHref = "/admin/customers";
-  const homeHref = "/admin";
-
-  sendHtml(
-    res,
-    200,
-    `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Booking Pipeline</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    form { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 0.5rem; align-items: end; margin-bottom: 1rem; }
-    input, select, button { padding: 0.45rem; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    th { background: #f6f6f6; }
-    .pager { display: flex; gap: 1rem; margin-top: 1rem; align-items: center; }
-  </style>
-</head>
-<body>
-  <h1>Booking Pipeline</h1>
-  <p><a href="${escapeHtml(homeHref)}">Admin home</a> | <a href="${escapeHtml(customersHref)}">Customers UI</a></p>
-  <p>Total bookings (all): ${store.bookings.length}</p>
-  <p>Total bookings (filtered): ${paged.total}</p>
-  <form method="get" action="/admin/bookings">
-    <label>Stage
-      <select name="stage">${stageOptions}</select>
-    </label>
-    <label>Search
-      <input type="text" name="search" value="${escapeHtml(searchValue)}" placeholder="name, email, destination..." />
-    </label>
-    <label>Sort
-      <select name="sort">${sortOptions}</select>
-    </label>
-    <label>Page size
-      <select name="page_size">
-        <option value="10"${pageSizeValue === "10" ? " selected" : ""}>10</option>
-        <option value="25"${pageSizeValue === "25" ? " selected" : ""}>25</option>
-        <option value="50"${pageSizeValue === "50" ? " selected" : ""}>50</option>
-      </select>
-    </label>
-    <button type="submit">Apply</button>
-  </form>
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Stage</th>
-        <th>Destination</th>
-        <th>Style</th>
-        <th>AtpStaff</th>
-        <th>SLA Due</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows || "<tr><td colspan='6'>No bookings yet</td></tr>"}
-    </tbody>
-  </table>
-  <div class="pager">
-    <span>Page ${paged.page} / ${paged.total_pages}</span>
-    ${prevLink}
-    ${nextLink}
-  </div>
-  <p><a href="/admin">Back</a></p>
-</body>
-</html>`
-  );
-}
-
-async function handleAdminCustomerDetailPage(req, res, [customerId]) {
-  const principal = getPrincipal(req);
-  if (!canReadCustomers(principal)) {
-    sendHtml(res, 403, "<h1>Forbidden</h1>");
-    return;
-  }
-  const store = await readStore();
-  const requestUrl = new URL(req.url, "http://localhost");
-  const backQuery = requestUrl.searchParams.toString();
-  const customer = store.customers.find((item) => item.id === customerId);
-
-  if (!customer) {
-    sendHtml(
-      res,
-      404,
-      `<h1>Customer not found</h1><p><a href='/admin/customers${backQuery ? `?${escapeHtml(backQuery)}` : ""}'>Back</a></p>`
-    );
-    return;
-  }
-
-  const relatedBookings = store.bookings
-    .filter((booking) => booking.customer_id === customer.id)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
-
-  const bookingRows = relatedBookings
-    .map((booking) => {
-      const href = `/admin/bookings/${encodeURIComponent(booking.id)}${backQuery ? `?${backQuery}` : ""}`;
-      return `<tr>
-        <td><a href="${escapeHtml(href)}">${escapeHtml(booking.id)}</a></td>
-        <td>${escapeHtml(booking.stage)}</td>
-        <td>${escapeHtml(booking.destination)}</td>
-        <td>${escapeHtml(booking.style)}</td>
-        <td>${escapeHtml(booking.atp_staff_name || booking.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(booking.created_at)}</td>
-      </tr>`;
-    })
-    .join("\n");
-
-  sendHtml(
-    res,
-    200,
-    `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${escapeHtml(customer.id)}</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 980px; }
-    pre { background: #f6f6f6; padding: 1rem; overflow: auto; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    th { background: #f6f6f6; }
-  </style>
-</head>
-<body>
-  <h1>Customer ${escapeHtml(customer.id)}</h1>
-  <p><a href="/admin/customers${backQuery ? `?${escapeHtml(backQuery)}` : ""}">Back to customers</a></p>
-  <h2>Profile</h2>
-  <pre>${escapeHtml(JSON.stringify(customer, null, 2))}</pre>
-
-  <h2>Related Bookings (${relatedBookings.length})</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Booking ID</th>
-        <th>Stage</th>
-        <th>Destination</th>
-        <th>Style</th>
-        <th>AtpStaff</th>
-        <th>Created</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${bookingRows || "<tr><td colspan='6'>No related bookings</td></tr>"}
-    </tbody>
-  </table>
-</body>
-</html>`
-  );
-}
-
-async function handleAdminBookingDetailPage(req, res, [bookingId]) {
-  const principal = getPrincipal(req);
-  const store = await readStore();
-  const atp_staff = await loadAtpStaff();
-  const requestUrl = new URL(req.url, "http://localhost");
-  const backQuery = requestUrl.searchParams.toString();
-  const booking = store.bookings.find((item) => item.id === bookingId);
-
-  if (!booking) {
-    sendHtml(
-      res,
-      404,
-      `<h1>Booking not found</h1><p><a href='/admin/bookings${backQuery ? `?${escapeHtml(backQuery)}` : ""}'>Back</a></p>`
-    );
-    return;
-  }
-  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-  if (!canAccessBooking(principal, booking, staffMember)) {
-    sendHtml(res, 403, "<h1>Forbidden</h1>");
-    return;
-  }
-
-  const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  const activities = store.activities
-    .filter((item) => item.booking_id === booking.id)
-    .sort((a, b) => a.created_at.localeCompare(b.created_at));
-
-  const activityRows = activities
-    .map((item) => `<li><strong>${escapeHtml(item.created_at)}</strong> [${escapeHtml(item.type)}] ${escapeHtml(item.detail)} (${escapeHtml(item.actor)})</li>`)
-    .join("\n");
-
-  const stageOptions = STAGE_ORDER.map((stage) => `<option value="${stage}">${stage}</option>`).join("\n");
-  const ownerOptions = [`<option value="">Unassigned</option>`]
-    .concat(
-      atp_staff
-        .filter((member) => member.active)
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((member) => `<option value="${escapeHtml(member.id)}">${escapeHtml(member.name)}</option>`)
-    )
-    .join("\n");
-
-  sendHtml(
-    res,
-    200,
-    `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${escapeHtml(booking.id)}</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 900px; }
-    pre { background: #f6f6f6; padding: 1rem; overflow: auto; }
-    input, textarea, select, button { width: 100%; margin: 0.25rem 0 0.75rem; padding: 0.5rem; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  </style>
-</head>
-<body>
-  <h1>Booking ${escapeHtml(booking.id)}</h1>
-  <p>Stage: <strong>${escapeHtml(booking.stage)}</strong></p>
-  <p>AtpStaff: <strong>${escapeHtml(booking.atp_staff_name || booking.owner_name || "Unassigned")}</strong></p>
-
-  <div class="grid">
-    <section>
-      <h2>Booking</h2>
-      <pre>${escapeHtml(JSON.stringify(booking, null, 2))}</pre>
-    </section>
-    <section>
-      <h2>Customer</h2>
-      <pre>${escapeHtml(JSON.stringify(customer, null, 2))}</pre>
-    </section>
-  </div>
-
-  <section>
-    <h2>Activities</h2>
-    <ul>${activityRows || "<li>No activities</li>"}</ul>
-  </section>
-
-  <section>
-    <h2>Quick updates</h2>
-    ${canChangeBookingAssignment(principal) ? `<label>Set AtpStaff</label>
-    <select id="ownerSelect">${ownerOptions}</select>
-    <button id="ownerBtn" type="button">Update AtpStaff</button>` : ""}
-
-    ${canChangeBookingStage(principal, booking, staffMember) ? `<label>Change Stage</label>
-    <select id="stageSelect">${stageOptions}</select>
-    <button id="stageBtn" type="button">Update Stage</button>` : ""}
-
-    ${canEditBooking(principal, booking, staffMember) ? `<label>Booking Note</label>
-    <textarea id="note" rows="4" placeholder="Call notes, qualification details, customer preferences...">${escapeHtml(booking.notes || "")}</textarea>
-    <button id="noteBtn" type="button">Save Note</button>` : ""}
-  </section>
-
-  <p><a href="/admin/bookings${backQuery ? `?${escapeHtml(backQuery)}` : ""}">Back to pipeline</a></p>
-
-  <script>
-    const bookingId = ${JSON.stringify(booking.id)};
-    const currentStage = ${JSON.stringify(booking.stage)};
-    const currentOwnerId = ${JSON.stringify(booking.atp_staff || booking.owner_id || "")};
-    const stageSelect = document.getElementById("stageSelect");
-    const ownerSelect = document.getElementById("ownerSelect");
-    if (stageSelect) stageSelect.value = currentStage;
-    if (ownerSelect) ownerSelect.value = currentOwnerId;
-
-    async function updateStage() {
-      const stageEl = document.getElementById("stageSelect");
-      if (!stageEl) return;
-      const stage = stageEl.value;
-      const response = await fetch('/api/v1/bookings/' + bookingId + '/stage', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage, actor: 'admin_ui' })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        alert(payload.error || 'Failed to update stage');
-        return;
-      }
-      window.location.reload();
-    }
-
-    async function updateOwner() {
-      const ownerEl = document.getElementById("ownerSelect");
-      if (!ownerEl) return;
-      const owner_id = ownerEl.value;
-      const response = await fetch('/api/v1/bookings/' + bookingId + '/owner', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id, actor: 'admin_ui' })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        alert(payload.error || 'Failed to update atp_staff');
-        return;
-      }
-      window.location.reload();
-    }
-
-    async function addNote() {
-      const noteEl = document.getElementById("note");
-      if (!noteEl) return;
-      const latestResponse = await fetch('/api/v1/bookings/' + bookingId);
-      const latestPayload = await latestResponse.json();
-      if (!latestResponse.ok || !latestPayload.booking) {
-        alert(latestPayload.error || 'Failed to load latest booking note');
-        return;
-      }
-      const bookingHash = ${JSON.stringify(computeBookingHash(booking))};
-      const latestHash = String(latestPayload.booking.booking_hash || '');
-      if (latestHash !== bookingHash) {
-        noteEl.value = String(latestPayload.booking.notes || '');
-        alert('The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.');
-        return;
-      }
-      const response = await fetch('/api/v1/bookings/' + bookingId + '/notes', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: noteEl.value.trim(), booking_hash: bookingHash, actor: 'admin_ui' })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        alert(payload.detail ? (payload.error + ': ' + payload.detail) : (payload.error || 'Failed to save note'));
-        return;
-      }
-      window.location.reload();
-    }
-
-    const stageBtn = document.getElementById("stageBtn");
-    const ownerBtn = document.getElementById("ownerBtn");
-    const noteBtn = document.getElementById("noteBtn");
-    if (stageBtn) stageBtn.addEventListener("click", updateStage);
-    if (ownerBtn) ownerBtn.addEventListener("click", updateOwner);
-    if (noteBtn) noteBtn.addEventListener("click", addNote);
-  </script>
-</body>
-</html>`
-  );
-}

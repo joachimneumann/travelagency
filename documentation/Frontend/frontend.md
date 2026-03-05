@@ -199,8 +199,8 @@ Two JSON-LD blocks:
 
 ## 10) Frontend CSS architecture (current)
 
-- `assets/css/styles.css` is now an entrypoint only (imports modular files + `legacy.css`)
-- `assets/css/legacy.css` keeps existing behavior while migration is in progress
+- `assets/css/styles.css` is now an entrypoint only (imports modular files + `site.css`)
+- `assets/css/site.css` contains baseline site styles
 - New styles must be added to modular files under:
   - `assets/css/tokens.css`
   - `assets/css/base.css`

@@ -2,12 +2,12 @@
   Frontend CSS entrypoint
   - Keep this file small and composable.
   - New styles belong in modular files.
-  - legacy.css remains as compatibility layer during migration.
+  - site.css contains the baseline site styles.
 */
 
 @import "./tokens.css";
 @import "./base.css";
-@import "./legacy.css";
+@import "./site.css";
 @import "./components/backend-nav.css";
 @import "./components/backend-login.css";
 @import "./tailwind.generated.css";

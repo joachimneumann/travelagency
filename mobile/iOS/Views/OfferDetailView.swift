@@ -8,7 +8,7 @@ struct OfferDetailView: View {
         Form {
             Section("Offer") {
                 LabeledContent("Currency", value: offer.currency.rawValue)
-                LabeledContent("Items", value: String(offer.totals.itemsCount))
+                LabeledContent("Components", value: String(offer.totals.componentsCount))
                 LabeledContent("Net", value: formatMoney(offer.totals.netAmountCents, currency: offer.currency))
                 LabeledContent("Tax", value: formatMoney(offer.totals.taxAmountCents, currency: offer.currency))
                 LabeledContent("Gross", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
@@ -23,23 +23,23 @@ struct OfferDetailView: View {
                 }
             }
 
-            Section("Offer Items (\(offerTitle))") {
-                if offer.items.isEmpty {
-                    Text("No offer items yet")
+            Section("Offer Components (\(offerTitle))") {
+                if offer.components.isEmpty {
+                    Text("no components yet")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(offer.items) { item in
+                    ForEach(offer.components) { component in
                         NavigationLink {
-                            OfferItemDetailView(item: item, currency: offer.currency)
+                            OfferComponentDetailView(component: component, currency: offer.currency)
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(offerCategoryLabel(item.category))
+                                Text(offerCategoryLabel(component.category))
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
-                                Text(item.label)
+                                Text(component.label)
                                     .foregroundStyle(.primary)
                                     .lineLimit(1)
-                                if let details = item.details, !details.isEmpty {
+                                if let details = component.details, !details.isEmpty {
                                     Text(details)
                                         .font(.footnote)
                                         .foregroundStyle(.secondary)

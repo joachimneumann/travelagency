@@ -1140,7 +1140,7 @@ textarea:focus-visible {
   padding-inline-end: var(--offer-price-right-pad);
 }
 
-.backend-table textarea[data-offer-item-details] {
+.backend-table textarea[data-offer-component-details] {
   width: 100%;
   min-height: 52px;
   resize: vertical;

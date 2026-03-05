@@ -152,7 +152,7 @@
         }
     }
 
-    struct GeneratedBookingOfferItem: Codable, Identifiable, Equatable {
+    struct GeneratedBookingOfferComponent: Codable, Identifiable, Equatable {
         let id: String
         let category: GeneratedOfferCategory
         let label: String
@@ -188,31 +188,31 @@
         let netAmountCents: Int
         let taxAmountCents: Int
         let grossAmountCents: Int
-        let itemsCount: Int
+        let componentsCount: Int
 
         private enum CodingKeys: String, CodingKey {
             case netAmountCents = "net_amount_cents"
             case taxAmountCents = "tax_amount_cents"
             case grossAmountCents = "gross_amount_cents"
-            case itemsCount = "items_count"
+            case componentsCount = "components_count"
         }
     }
 
     struct GeneratedBookingOffer: Codable, Equatable {
         let currency: GeneratedCurrencyCode
         let categoryRules: [GeneratedBookingOfferCategoryRule]
-        let items: [GeneratedBookingOfferItem]
+        let components: [GeneratedBookingOfferComponent]
         let totals: GeneratedBookingOfferTotals
 
         private enum CodingKeys: String, CodingKey {
             case currency
             case categoryRules = "category_rules"
-            case items
+            case components
             case totals
         }
     }
 
-    struct GeneratedInvoiceLineItem: Codable, Identifiable, Equatable {
+    struct GeneratedInvoiceComponent: Codable, Identifiable, Equatable {
         let id: String
         let description: String
         let quantity: Int
@@ -234,7 +234,7 @@
         let status: String
         let dueAmountCents: Int
         let notes: String?
-        let items: [GeneratedInvoiceLineItem]
+        let components: [GeneratedInvoiceComponent]
 
         private enum CodingKeys: String, CodingKey {
             case id
@@ -242,7 +242,7 @@
             case status
             case dueAmountCents = "due_amount_cents"
             case notes
-            case items
+            case components
         }
     }
 

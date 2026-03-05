@@ -13,7 +13,7 @@
 		0AC202A06C0DB00FA238EC93 /* BookingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36294932E777177A9AF9ABF /* BookingDetailView.swift */; };
 		0AC8A3E3D2A2B8F300A5BBE4 /* BookingSummaryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F3FA4F8F3A4E5DB4B8D8F1 /* BookingSummaryDetailView.swift */; };
 		0B2F2F1C1A7F4F4A8A9EFA35 /* OfferDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D1F4E7BE6A4A7DA7F0DBA7 /* OfferDetailView.swift */; };
-		0BD5A6F1A6A243A3AAE3EC91 /* OfferItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F5B4D2D3D14A2FAED5E4D3 /* OfferItemDetailView.swift */; };
+		0BD5A6F1A6A243A3AAE3EC91 /* OfferComponentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F5B4D2D3D14A2FAED5E4D3 /* OfferComponentDetailView.swift */; };
 		0C1DAB4A8A9F4B4F98B6E8F5 /* ActivitiesDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B6A5D4C8D34A6CABF8BE5D /* ActivitiesDetailView.swift */; };
 		0C8A6F8B9D6E4E6EA2D9AA8D /* BookingNoteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC1B0F5D89D24A6BAAB0AF45 /* BookingNoteDetailView.swift */; };
 		0CCF9D0A3A9A4F0D9E6BBA1D /* ActivityRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8FD7E1A8E04F2DAE4E9D9C /* ActivityRowView.swift */; };
@@ -79,7 +79,7 @@
 		AD670E648A843FFCE057C38F /* generated_Currency.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = generated_Currency.swift; sourceTree = "<group>"; };
 		B6596F18A94CCC4825B180E5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		B745ABEFB5A756688035EEAE /* ClientProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientProfile.swift; sourceTree = "<group>"; };
-		C4F5B4D2D3D14A2FAED5E4D3 /* OfferItemDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OfferItemDetailView.swift; sourceTree = "<group>"; };
+		C4F5B4D2D3D14A2FAED5E4D3 /* OfferComponentDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OfferComponentDetailView.swift; sourceTree = "<group>"; };
 		C71CC98B04022D9A9EF6C2D2 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C7B441BB7BA80E1A1394F166 /* StartupFailureView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StartupFailureView.swift; sourceTree = "<group>"; };
 		CA4F1B24D8D6EC17E53C164F /* JWTDecoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JWTDecoder.swift; sourceTree = "<group>"; };
@@ -247,7 +247,7 @@
 				A3F3FA4F8F3A4E5DB4B8D8F1 /* BookingSummaryDetailView.swift */,
 				E2AA0BE4BCE34F3B8CCF4C8A /* BookingCustomerDetailView.swift */,
 				E6D1F4E7BE6A4A7DA7F0DBA7 /* OfferDetailView.swift */,
-				C4F5B4D2D3D14A2FAED5E4D3 /* OfferItemDetailView.swift */,
+				C4F5B4D2D3D14A2FAED5E4D3 /* OfferComponentDetailView.swift */,
 				F7B6A5D4C8D34A6CABF8BE5D /* ActivitiesDetailView.swift */,
 				FC1B0F5D89D24A6BAAB0AF45 /* BookingNoteDetailView.swift */,
 				E4F1C9D78B2F4A6E9D3F7C91 /* PaymentsDetailView.swift */,
@@ -355,7 +355,7 @@
 				0AC8A3E3D2A2B8F300A5BBE4 /* BookingSummaryDetailView.swift in Sources */,
 				0A5D9CB5B8A8E5F6C1D6F4A8 /* BookingCustomerDetailView.swift in Sources */,
 				0B2F2F1C1A7F4F4A8A9EFA35 /* OfferDetailView.swift in Sources */,
-				0BD5A6F1A6A243A3AAE3EC91 /* OfferItemDetailView.swift in Sources */,
+				0BD5A6F1A6A243A3AAE3EC91 /* OfferComponentDetailView.swift in Sources */,
 				0C1DAB4A8A9F4B4F98B6E8F5 /* ActivitiesDetailView.swift in Sources */,
 				0C8A6F8B9D6E4E6EA2D9AA8D /* BookingNoteDetailView.swift in Sources */,
 				0CCF9D0A3A9A4F0D9E6BBA1D /* ActivityRowView.swift in Sources */,

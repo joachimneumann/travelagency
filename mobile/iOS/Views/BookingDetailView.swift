@@ -173,7 +173,7 @@ struct BookingDetailView: View {
 
     @ViewBuilder
     private func offerSection(for offer: BookingOffer) -> some View {
-        let summary = offer.items.isEmpty ? "No offer items" : "\(offer.totals.itemsCount) items"
+        let summary = offer.components.isEmpty ? "No components" : "\(offer.totals.componentsCount) components"
         Section {
             NavigationLink {
                 OfferDetailView(offer: offer, offerTitle: summary)

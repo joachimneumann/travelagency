@@ -10,7 +10,7 @@
 ## File structure
 
 - Entry: `assets/css/styles.css`
-- Compatibility layer: `assets/css/legacy.css`
+- Site baseline: `assets/css/site.css`
 - Tokens: `assets/css/tokens.css`
 - Base: `assets/css/base.css`
 - Components: `assets/css/components/*.css`
@@ -42,6 +42,5 @@ Production build uses PostCSS + Tailwind + PurgeCSS and writes:
 
 ## Migration policy
 
-- New UI work must go into modular files, not `legacy.css`.
-- Existing legacy rules are migrated incrementally by feature/page.
-- When a legacy section is fully migrated, delete that section from `legacy.css`.
+- New UI work must go into modular files under `assets/css/components/`.
+- Keep shared constants in `tokens.css` and global defaults in `base.css`.

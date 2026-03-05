@@ -225,10 +225,10 @@ async function loadCustomers() {
 
   state.customers.totalPages = Math.max(
     1,
-    Number(payload.total_pages || pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.customers.pageSize) || 1)
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.customers.pageSize) || 1)
   );
-  state.customers.total = Number(payload.total || pagination.total_items || 0);
-  state.customers.page = Number(payload.page || pagination.page || state.customers.page);
+  state.customers.total = Number(pagination.total_items || 0);
+  state.customers.page = Number(pagination.page || state.customers.page);
   updatePaginationUi("customers");
   renderCustomers(payload.items || []);
 }
@@ -249,10 +249,10 @@ async function loadBookings() {
 
   state.bookings.totalPages = Math.max(
     1,
-    Number(payload.total_pages || pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.bookings.pageSize) || 1)
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.bookings.pageSize) || 1)
   );
-  state.bookings.total = Number(payload.total || pagination.total_items || 0);
-  state.bookings.page = Number(payload.page || pagination.page || state.bookings.page);
+  state.bookings.total = Number(pagination.total_items || 0);
+  state.bookings.page = Number(pagination.page || state.bookings.page);
   updatePaginationUi("bookings");
   renderBookings(payload.items || []);
 }
@@ -275,10 +275,10 @@ async function loadTours() {
 
   state.tours.totalPages = Math.max(
     1,
-    Number(payload.total_pages || pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.tours.pageSize) || 1)
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.tours.pageSize) || 1)
   );
-  state.tours.total = Number(payload.total || pagination.total_items || 0);
-  state.tours.page = Number(payload.page || pagination.page || state.tours.page);
+  state.tours.total = Number(pagination.total_items || 0);
+  state.tours.page = Number(pagination.page || state.tours.page);
   populateTourFilterOptions(payload);
   updatePaginationUi("tours");
   renderTours(payload.items || []);

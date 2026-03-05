@@ -25,11 +25,6 @@ export function buildPaginatedListResponse(paged, extra = {}) {
   return {
     items: Array.isArray(paged?.items) ? paged.items : [],
     pagination,
-    // Transitional top-level keys for legacy callers.
-    total: pagination.total_items,
-    page: pagination.page,
-    page_size: pagination.page_size,
-    total_pages: pagination.total_pages,
     ...extra
   };
 }

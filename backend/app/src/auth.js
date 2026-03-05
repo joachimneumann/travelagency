@@ -47,7 +47,7 @@ export function createAuth({ port }) {
   }
 
   function getLoginRedirect(returnTo) {
-    return `/auth/login?return_to=${encodeURIComponent(returnTo || "/admin")}`;
+    return `/auth/login?return_to=${encodeURIComponent(returnTo || "/backend.html")}`;
   }
 
   function hasSession(req) {
@@ -253,7 +253,7 @@ export function createAuth({ port }) {
     return { ok: true };
   }
 
-  function buildSafeReturnTo(value, fallback = "/admin") {
+  function buildSafeReturnTo(value, fallback = "/backend.html") {
     const raw = normalizeText(value);
     if (!raw) return fallback;
 
@@ -291,7 +291,7 @@ export function createAuth({ port }) {
     const requestUrl = new URL(req.url, "http://localhost");
     const requestHost = extractHost(req.headers.host);
     const quickLoginAllowedHost = requestHost === "staging.asiatravelplan.com";
-    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/admin");
+    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/backend.html");
     const quickLoginRequested =
       quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";
     const quickLoginUser = normalizeText(requestUrl.searchParams.get("quick_login_user")) || "joachim";
@@ -402,7 +402,7 @@ export function createAuth({ port }) {
     });
     setSessionCookie(res, sid);
 
-    redirect(res, requestState.return_to || "/admin");
+    redirect(res, requestState.return_to || "/backend.html");
   }
 
   async function handleAuthLogout(req, res) {
@@ -413,7 +413,7 @@ export function createAuth({ port }) {
     clearSessionCookie(res);
 
     const requestUrl = new URL(req.url, "http://localhost");
-    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/admin");
+    const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/backend.html");
     redirect(res, returnTo);
   }
 

@@ -3,8 +3,6 @@ export function buildApiRoutes({ authRoutes = [], handlers }) {
     ...authRoutes,
     { method: "GET", pattern: /^\/health$/, handler: handlers.handleHealth },
     { method: "GET", pattern: /^\/integrations\/meta\/webhook\/status$/, handler: handlers.handleMetaWebhookStatus },
-    { method: "GET", pattern: /^\/api\/whatsapp\/webhook$/, handler: handlers.handleMetaWebhookVerify },
-    { method: "POST", pattern: /^\/api\/whatsapp\/webhook$/, handler: handlers.handleMetaWebhookIngest },
     { method: "GET", pattern: /^\/integrations\/meta\/webhook$/, handler: handlers.handleMetaWebhookVerify },
     { method: "POST", pattern: /^\/integrations\/meta\/webhook$/, handler: handlers.handleMetaWebhookIngest },
     { method: "GET", pattern: /^\/staging-access\/login$/, handler: handlers.handleStagingAccessLoginPage },

@@ -103,7 +103,6 @@ Authentication internals are now isolated in:
 - `const auth = createAuth({ port })`
 - `...auth.routes` for `/auth/*` handlers
 - `auth.pruneState()` on each request
-- `auth.isKeycloakEnabled()` + `auth.hasSession(req)` for `/admin*` gate
 - `auth.authorizeApiRequest(req, requestUrl)` for `/api/v1/*` gate
 
 This keeps backend business logic (bookings/customers/pipeline) separate from OIDC/session internals.
@@ -123,7 +122,7 @@ Admin API:
 - `GET /api/v1/bookings/:bookingId`
 - `GET /api/v1/bookings/:bookingId/chat` (read-only Meta chat timeline for booking/customer)
 - `PATCH /api/v1/bookings/:bookingId/stage`
-- `PATCH /api/v1/bookings/:bookingId/owner` (current path retained for staff assignment compatibility)
+- `PATCH /api/v1/bookings/:bookingId/owner`
 - `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
 - `PATCH /api/v1/bookings/:bookingId/pricing` (replace the booking commercials model)
 - `PATCH /api/v1/bookings/:bookingId/offer` (offers are normalized and converted to base currency before persistence)
@@ -164,7 +163,6 @@ Tour API caching:
 - Or `Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>`
 
 When Keycloak is enabled:
-- `/admin*` requires browser session login via Keycloak.
 - `/api/v1/*` accepts either authenticated backend session cookie or Keycloak bearer token.
 - If `KEYCLOAK_ENABLED=false`, `/api/v1/*` requests are rejected with `401`.
 
@@ -172,20 +170,13 @@ Booking list query params (`GET /api/v1/bookings`):
 - `page` (default `1`)
 - `page_size` (default `25`, max `100`)
 - `stage` (`NEW|QUALIFIED|PROPOSAL_SENT|NEGOTIATION|WON|LOST|POST_TRIP`)
-- `owner_id` (exact match; compatible filter for assigned staff id)
+- `owner_id` (exact match for assigned staff id)
 - `search` (matches booking id, destination, style, assigned staff, notes, customer name/email)
 - `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `sla_due_at_asc`, `sla_due_at_desc`)
 
 Default ordering:
 - Bookings: newest first (`created_at desc`)
 - Customers: newest first (`created_at desc`, then `updated_at`)
-
-Admin UI:
-- `GET /admin`
-- `GET /admin/bookings`
-- `GET /admin/bookings/:bookingId`
-- `GET /admin/customers`
-- `GET /admin/customers/:customerId`
 
 Branded frontend backoffice pages (served by website):
 - `/backend.html`: AsiaTravelPlan-branded dashboard with:
@@ -392,4 +383,4 @@ npm start
 ```
 
 Open:
-- `http://localhost:8787/auth/login?return_to=/admin`
+- `http://localhost:8787/auth/login?return_to=/backend.html`

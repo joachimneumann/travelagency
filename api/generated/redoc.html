@@ -341,7 +341,7 @@
           }
         }
       },
-      "BookingOfferItem": {
+      "BookingOfferComponent": {
         "type": "object",
         "required": [
           "id",
@@ -406,7 +406,7 @@
           "netAmountCents",
           "taxAmountCents",
           "grossAmountCents",
-          "itemsCount"
+          "componentsCount"
         ],
         "properties": {
           "netAmountCents": {
@@ -418,7 +418,7 @@
           "grossAmountCents": {
             "type": "integer"
           },
-          "itemsCount": {
+          "componentsCount": {
             "type": "integer"
           }
         }
@@ -440,10 +440,10 @@
               "$ref": "#/components/schemas/BookingOfferCategoryRule"
             }
           },
-          "items": {
+          "components": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/BookingOfferItem"
+              "$ref": "#/components/schemas/BookingOfferComponent"
             }
           },
           "totals": {

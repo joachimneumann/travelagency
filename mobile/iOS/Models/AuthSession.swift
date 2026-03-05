@@ -31,19 +31,7 @@ struct AuthSession: Codable, Equatable {
         idToken = try container.decodeIfPresent(String.self, forKey: .idToken)
         refreshToken = try container.decodeIfPresent(String.self, forKey: .refreshToken)
         expiresAt = try container.decodeIfPresent(Date.self, forKey: .expiresAt)
-        if let currentClient = try container.decodeIfPresent(ClientProfile.self, forKey: .client) {
-            client = currentClient
-        } else if let legacyUser = try container.decodeIfPresent(ClientProfile.self, forKey: .user) {
-            client = legacyUser
-        } else {
-            throw DecodingError.keyNotFound(
-                CodingKeys.client,
-                DecodingError.Context(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "Missing required field `client` in AuthSession"
-                )
-            )
-        }
+        client = try container.decode(ClientProfile.self, forKey: .client)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -61,6 +49,5 @@ struct AuthSession: Codable, Equatable {
         case refreshToken
         case expiresAt
         case client
-        case user
     }
 }

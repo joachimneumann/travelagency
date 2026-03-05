@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-05T02:44:51Z
+# 2026-03-05T03:17:53Z
 
 ---
 openapi: 3.1.0
@@ -242,7 +242,7 @@ components:
           "$ref": "#/components/schemas/OfferCategory"
         taxRateBasisPoints:
           type: integer
-    BookingOfferItem:
+    BookingOfferComponent:
       type: object
       required:
       - id
@@ -291,7 +291,7 @@ components:
       - netAmountCents
       - taxAmountCents
       - grossAmountCents
-      - itemsCount
+      - componentsCount
       properties:
         netAmountCents:
           type: integer
@@ -299,7 +299,7 @@ components:
           type: integer
         grossAmountCents:
           type: integer
-        itemsCount:
+        componentsCount:
           type: integer
     BookingOffer:
       type: object
@@ -314,10 +314,10 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferCategoryRule"
-        items:
+        components:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingOfferItem"
+            "$ref": "#/components/schemas/BookingOfferComponent"
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
         totalPriceCents:

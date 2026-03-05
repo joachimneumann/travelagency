@@ -198,7 +198,7 @@ test("booking offer patch enforces preferred currency", async () => {
   assert.equal(patchResult.status, 200);
   assert.equal(patchResult.body.booking.offer.currency, offerCurrency);
   assert.equal(patchResult.body.unchanged, true);
-  assert.ok(Array.isArray(patchResult.body.booking.offer.items));
+  assert.ok(Array.isArray(patchResult.body.booking.offer.components));
   assert.equal(typeof patchResult.body.booking.offer.totals.gross_amount_cents, "number");
 
   const mismatchCurrency = offerCurrency === "USD" ? "VND" : "USD";
@@ -212,7 +212,7 @@ test("booking offer patch enforces preferred currency", async () => {
         offer: {
           ...currentOffer,
           currency: mismatchCurrency,
-          items: []
+          components: []
         }
       }
     }

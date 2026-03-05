@@ -81,12 +81,12 @@ const state = {
   offerDraft: {
     currency: "USD",
     category_rules: [],
-    items: [],
+    components: [],
     totals: {
       net_amount_cents: 0,
       tax_amount_cents: 0,
       gross_amount_cents: 0,
-      items_count: 0
+      components_count: 0
     }
   },
   chat: {
@@ -124,10 +124,10 @@ const els = {
   pricingStatus: document.getElementById("pricingStatus"),
   offerPanel: document.getElementById("offerPanel"),
   offerCurrencyInput: document.getElementById("offerCurrencyInput"),
-  offerItemCategorySelect: document.getElementById("offerItemCategorySelect"),
-  offerAddItemBtn: document.getElementById("offerAddItemBtn"),
-  offerItemsTable: document.getElementById("offerItemsTable"),
-  offerItemsTotalTable: document.getElementById("offerItemsTotalTable"),
+  offerComponentCategorySelect: document.getElementById("offerComponentCategorySelect"),
+  offerAddComponentBtn: document.getElementById("offerAddComponentBtn"),
+  offerComponentsTable: document.getElementById("offerComponentsTable"),
+  offerComponentsTotalTable: document.getElementById("offerComponentsTotalTable"),
   offerSaveBtn: document.getElementById("offerSaveBtn"),
   offerStatus: document.getElementById("offerStatus"),
   activitiesTable: document.getElementById("activitiesTable"),
@@ -143,10 +143,10 @@ const els = {
   invoiceDueDateInput: document.getElementById("invoiceDueDateInput"),
   invoiceDueMonthBtn: document.getElementById("invoiceDueMonthBtn"),
   invoiceTitleInput: document.getElementById("invoiceTitleInput"),
-  invoiceItemsInput: document.getElementById("invoiceItemsInput"),
+  invoiceComponentsInput: document.getElementById("invoiceComponentsInput"),
   invoiceDueAmountInput: document.getElementById("invoiceDueAmountInput"),
   invoiceDueAmountLabel: document.getElementById("invoiceDueAmountLabel"),
-  invoiceItemsLabel: document.getElementById("invoiceItemsLabel"),
+  invoiceComponentsLabel: document.getElementById("invoiceComponentsLabel"),
   invoiceVatInput: document.getElementById("invoiceVatInput"),
   invoiceNotesInput: document.getElementById("invoiceNotesInput"),
   invoiceCreateBtn: document.getElementById("invoiceCreateBtn"),
@@ -184,13 +184,14 @@ async function init() {
 
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
+  if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
   if (els.offerCurrencyInput)
     els.offerCurrencyInput.addEventListener("change", () => {
       void handleOfferCurrencyChange();
     });
-  if (els.offerAddItemBtn) els.offerAddItemBtn.addEventListener("click", addOfferItemFromSelector);
+  if (els.offerAddComponentBtn) els.offerAddComponentBtn.addEventListener("click", addOfferComponentFromSelector);
   if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.addEventListener("change", renderInvoiceMoneyLabels);
@@ -388,7 +389,10 @@ function renderActionControls() {
     els.noteInput.value = state.booking.notes || "";
   }
   state.originalNote = String(state.booking.notes || "");
-  if (els.noteSaveBtn) els.noteSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.noteSaveBtn) {
+    els.noteSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+    updateNoteSaveButtonState();
+  }
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
 }
 
@@ -447,30 +451,30 @@ function cloneOffer(offer) {
     };
   });
 
+  const sourceComponents = Array.isArray(source.components) ? source.components : [];
+
   return {
     currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
     category_rules,
-    items: Array.isArray(source.items)
-      ? source.items.map((item, index) => ({
-          id: String(item?.id || ""),
-          category: normalizeOfferCategory(item?.category),
-          label: String(item?.label || ""),
-          details: String(item?.details || item?.description || ""),
-          quantity: Math.max(1, Number(item?.quantity || 1)),
-          unit_amount_cents: Math.max(0, Number(item?.unit_amount_cents || 0)),
-          tax_rate_basis_points: Number.isFinite(Number(item?.tax_rate_basis_points))
-            ? Math.max(0, Math.round(Number(item.tax_rate_basis_points)))
+    components: sourceComponents.map((component, index) => ({
+      id: String(component?.id || ""),
+      category: normalizeOfferCategory(component?.category),
+      label: String(component?.label || ""),
+      details: String(component?.details || component?.description || ""),
+      quantity: Math.max(1, Number(component?.quantity || 1)),
+      unit_amount_cents: Math.max(0, Number(component?.unit_amount_cents || 0)),
+      tax_rate_basis_points: Number.isFinite(Number(component?.tax_rate_basis_points))
+        ? Math.max(0, Math.round(Number(component.tax_rate_basis_points)))
             : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
-          currency: normalizeCurrencyCode(item?.currency || source.currency || state.booking?.preferred_currency || "USD"),
-          notes: String(item?.notes || ""),
-          sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index
-        }))
-      : [],
+      currency: normalizeCurrencyCode(component?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+      notes: String(component?.notes || ""),
+      sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index
+    })),
     totals: source.totals || {
       net_amount_cents: 0,
       tax_amount_cents: 0,
       gross_amount_cents: 0,
-      items_count: 0
+      components_count: 0
     }
   };
 }
@@ -497,12 +501,12 @@ function getOfferCategoryTaxRateBasisPoints(category) {
   return Number.isFinite(basisPoints) ? Math.max(0, Math.round(basisPoints)) : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS;
 }
 
-function addOfferItemFromSelector() {
+function addOfferComponentFromSelector() {
   if (!state.permissions.canEditBooking || !state.offerDraft) return;
-  const selectedCategory = els.offerItemCategorySelect?.value || "";
+  const selectedCategory = els.offerComponentCategorySelect?.value || "";
   if (!selectedCategory) return;
   const category = normalizeOfferCategory(selectedCategory);
-  state.offerDraft.items.push({
+  state.offerDraft.components.push({
     id: "",
     category,
     label: "",
@@ -512,10 +516,10 @@ function addOfferItemFromSelector() {
     tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
     currency: state.offerDraft.currency,
     notes: "",
-    sort_order: state.offerDraft.items.length
+    sort_order: state.offerDraft.components.length
   });
   setOfferSaveEnabled(true);
-  renderOfferItemsTable();
+  renderOfferComponentsTable();
 }
 
 function renderOfferPanel() {
@@ -529,66 +533,66 @@ function renderOfferPanel() {
     setSelectValue(els.offerCurrencyInput, currency);
     els.offerCurrencyInput.disabled = !state.permissions.canEditBooking;
   }
-  if (els.offerItemCategorySelect) {
-    els.offerItemCategorySelect.disabled = !state.permissions.canEditBooking;
+  if (els.offerComponentCategorySelect) {
+    els.offerComponentCategorySelect.disabled = !state.permissions.canEditBooking;
     if (state.permissions.canEditBooking) {
-      els.offerItemCategorySelect.value = "";
+      els.offerComponentCategorySelect.value = "";
     }
   }
-  if (els.offerAddItemBtn) {
-    els.offerAddItemBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.offerAddComponentBtn) {
+    els.offerAddComponentBtn.style.display = state.permissions.canEditBooking ? "" : "none";
   }
   if (els.offerSaveBtn) els.offerSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
   setOfferSaveEnabled(false);
 
-  renderOfferItemsTable();
+  renderOfferComponentsTable();
   clearOfferStatus();
 }
 
-function renderOfferItemsTable() {
-  if (!els.offerItemsTable) return;
+function renderOfferComponentsTable() {
+  if (!els.offerComponentsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const showActionsCol = !readOnly;
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
-  const hasMultiQuantityItem = (offerItems || []).some(
-    (item) => Math.max(1, Number(item?.quantity || 1)) !== 1
+  const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+  const hasMultiQuantityComponent = (offerComponents || []).some(
+    (component) => Math.max(1, Number(component?.quantity || 1)) !== 1
   );
-  const showDualPrice = hasMultiQuantityItem;
+  const showDualPrice = hasMultiQuantityComponent;
   const priceHeaders = showDualPrice
     ? `<th class="offer-col-price-single">PRICE (SINGLE, ${escapeHtml(currency)})</th><th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`
     : `<th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`;
   const actionHeader = showActionsCol ? `<th class="offer-col-actions"></th>` : "";
   const header = `<thead><tr><th class="offer-col-category">Category</th><th class="offer-col-details">Details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}${actionHeader}</tr></thead>`;
-  const rows = (offerItems || [])
-    .map((item, index) => {
-      const quantity = Math.max(1, Number(item.quantity || 1));
-      const unitAmount = Math.max(0, Number(item.unit_amount_cents || 0));
-      const rawLineTotal = computeOfferItemLineTotals(item).gross_amount_cents;
-      const itemTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
-      const taxRateBasisPoints = Number(item?.tax_rate_basis_points || 0);
+  const rows = (offerComponents || [])
+    .map((component, index) => {
+      const quantity = Math.max(1, Number(component.quantity || 1));
+      const unitAmount = Math.max(0, Number(component.unit_amount_cents || 0));
+      const rawLineTotal = computeOfferComponentLineTotals(component).gross_amount_cents;
+      const componentTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
+      const taxRateBasisPoints = Number(component?.tax_rate_basis_points || 0);
       const taxLabel = `Tax: ${formatTaxRatePercent(taxRateBasisPoints)}%`;
       const removeButton = showActionsCol
-        ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-item="${index}" title="Remove offer item" aria-label="Remove offer item">×</button>`
+        ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-component="${index}" title="Remove offer component" aria-label="Remove offer component">×</button>`
         : "";
-      const singleInput = `<input data-offer-item-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
+      const singleInput = `<input data-offer-component-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(
         formatMoneyInputValue(unitAmount, currency)
       )}" ${readOnly ? "disabled" : ""} />`;
       const totalPriceCell = showDualPrice
-        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${escapeHtml(itemTotalText)}</span></div></td>`
+        ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${escapeHtml(componentTotalText)}</span></div></td>`
         : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${singleInput}</span></div></td>`;
       const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
       const actionCell = showActionsCol ? `<td class="offer-col-actions">${removeButton}</td>` : "";
       const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
       return `<tr>
       <td class="offer-col-category">
-        <div>${escapeHtml(offerCategoryLabel(item.category))}</div>
+        <div>${escapeHtml(offerCategoryLabel(component.category))}</div>
         <div class="offer-category-tax">${escapeHtml(taxLabel)}</div>
       </td>
-      <td class="offer-col-details"><textarea data-offer-item-details="${index}" rows="2" ${
+      <td class="offer-col-details"><textarea data-offer-component-details="${index}" rows="2" ${
         readOnly ? "disabled" : ""
-      }>${escapeHtml(item.details || item.description || "")}</textarea></td>
-      <td class="offer-col-qty"><input data-offer-item-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
+      }>${escapeHtml(component.details || component.description || "")}</textarea></td>
+      <td class="offer-col-qty"><input data-offer-component-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${
         readOnly ? "disabled" : ""
       } /></td>
       ${priceCells}${actionCell}
@@ -597,72 +601,72 @@ function renderOfferItemsTable() {
     .join("");
   const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
   const columns = 3 + (showDualPrice ? 2 : 1) + (showActionsCol ? 1 : 0);
-  const noRows = `<tr><td colspan="${columns}">No offer items yet</td></tr>`;
+  const noRows = `<tr><td colspan="${columns}" style="padding-top:50px;padding-bottom:50px;">no components yet</td></tr>`;
   const totalAlignCols = 3 + (showDualPrice ? 1 : 0);
   const totalCellOffset = `<td colspan="${totalAlignCols}"></td>`;
   const totalRow = `<tr>${totalCellOffset}<td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td>${
     showActionsCol ? '<td class="offer-col-actions"></td>' : ""
   }</tr>`;
   const body = rows || noRows;
-  els.offerItemsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  if (els.offerItemsTotalTable) {
-    els.offerItemsTotalTable.innerHTML = `<tbody>${totalRow}</tbody>`;
+  els.offerComponentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  if (els.offerComponentsTotalTable) {
+    els.offerComponentsTotalTable.innerHTML = `<tbody>${totalRow}</tbody>`;
   } else {
-    els.offerItemsTable.insertAdjacentHTML("beforeend", `<tbody>${totalRow}</tbody>`);
+    els.offerComponentsTable.insertAdjacentHTML("beforeend", `<tbody>${totalRow}</tbody>`);
   }
 
   if (!readOnly) {
     const syncOfferInputTotals = () => {
-      state.offerDraft.items = readOfferDraftItemsForRender();
+      state.offerDraft.components = readOfferDraftComponentsForRender();
       state.offerDraft.total_price_cents = null;
       setOfferSaveEnabled(true);
-      renderOfferItemsTable();
+      renderOfferComponentsTable();
     };
-    els.offerItemsTable.querySelectorAll("[data-offer-remove-item]").forEach((button) => {
+    els.offerComponentsTable.querySelectorAll("[data-offer-remove-component]").forEach((button) => {
       button.addEventListener("click", () => {
-        const index = Number(button.getAttribute("data-offer-remove-item"));
-        if (!window.confirm("Remove this offer item?")) {
+        const index = Number(button.getAttribute("data-offer-remove-component"));
+        if (!window.confirm("Remove this offer component?")) {
           return;
         }
-        state.offerDraft.items.splice(index, 1);
+        state.offerDraft.components.splice(index, 1);
         setOfferSaveEnabled(true);
-        renderOfferItemsTable();
+        renderOfferComponentsTable();
       });
     });
-    els.offerItemsTable.querySelectorAll("[data-offer-item-details], [data-offer-item-quantity], [data-offer-item-unit]").forEach((input) => {
+    els.offerComponentsTable.querySelectorAll("[data-offer-component-details], [data-offer-component-quantity], [data-offer-component-unit]").forEach((input) => {
       input.addEventListener("change", syncOfferInputTotals);
     });
   }
 }
 
-function readOfferDraftItemsForRender() {
-  const rows = Array.from(document.querySelectorAll("[data-offer-item-details]"));
-  const fallbackItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
+function readOfferDraftComponentsForRender() {
+  const rows = Array.from(document.querySelectorAll("[data-offer-component-details]"));
+  const fallbackComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
   if (!rows.length) {
-    return fallbackItems;
+    return fallbackComponents;
   }
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   return rows.map((_, index) => {
-    const category = normalizeOfferCategory(state.offerDraft?.items?.[index]?.category || "OTHER");
-    const details = String(document.querySelector(`[data-offer-item-details="${index}"]`)?.value || "").trim();
-    const quantityRaw = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
-    const unitAmountRaw = document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0";
+    const category = normalizeOfferCategory(state.offerDraft?.components?.[index]?.category || "OTHER");
+    const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
+    const quantityRaw = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
+    const unitAmountRaw = document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0";
     const quantity = Number.isFinite(quantityRaw) && quantityRaw >= 1 ? Math.round(quantityRaw) : 1;
     const unitAmount = parseMoneyInputValue(unitAmountRaw, currency);
-    const fallbackItem = fallbackItems[index] || {};
+    const fallbackComponent = fallbackComponents[index] || {};
     return {
-      id: String(fallbackItem.id || ""),
+      id: String(fallbackComponent.id || ""),
       category,
-      label: String(fallbackItem.label || ""),
+      label: String(fallbackComponent.label || ""),
       details: details || null,
       quantity,
-      unit_amount_cents: Number.isFinite(unitAmount) && unitAmount >= 0 ? Math.round(unitAmount) : Math.max(0, Number(fallbackItem.unit_amount_cents || 0)),
-      tax_rate_basis_points: Number.isFinite(Number(fallbackItem.tax_rate_basis_points))
-        ? Math.max(0, Math.round(Number(fallbackItem.tax_rate_basis_points)))
+      unit_amount_cents: Number.isFinite(unitAmount) && unitAmount >= 0 ? Math.round(unitAmount) : Math.max(0, Number(fallbackComponent.unit_amount_cents || 0)),
+      tax_rate_basis_points: Number.isFinite(Number(fallbackComponent.tax_rate_basis_points))
+        ? Math.max(0, Math.round(Number(fallbackComponent.tax_rate_basis_points)))
         : getOfferCategoryTaxRateBasisPoints(category),
       currency,
-      notes: String(fallbackItem.notes || ""),
-      sort_order: fallbackItem.sort_order ?? index
+      notes: String(fallbackComponent.notes || ""),
+      sort_order: fallbackComponent.sort_order ?? index
     };
   });
 }
@@ -672,21 +676,21 @@ function resolveOfferTotalCents() {
   if (Number.isFinite(explicitTotal)) {
     return Math.round(explicitTotal);
   }
-  const offerItems = Array.isArray(state.offerDraft?.items) ? state.offerDraft.items : [];
-  const offerTotals = computeOfferDraftTotalsFromItems(offerItems);
+  const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+  const offerTotals = computeOfferDraftTotalsFromComponents(offerComponents);
   return offerTotals?.gross_amount_cents || 0;
 }
 
 function computeOfferDraftTotals() {
-  return computeOfferDraftTotalsFromItems(state.offerDraft?.items || []);
+  return computeOfferDraftTotalsFromComponents(state.offerDraft?.components || []);
 }
 
-function computeOfferDraftTotalsFromItems(items) {
-  const normalizedItems = Array.isArray(items) ? items : [];
+function computeOfferDraftTotalsFromComponents(components) {
+  const normalizedComponents = Array.isArray(components) ? components : [];
   let net_amount_cents = 0;
   let tax_amount_cents = 0;
-  for (const item of normalizedItems) {
-    const line = computeOfferItemLineTotals(item);
+  for (const component of normalizedComponents) {
+    const line = computeOfferComponentLineTotals(component);
     net_amount_cents += line.net_amount_cents;
     tax_amount_cents += line.tax_amount_cents;
   }
@@ -696,11 +700,11 @@ function computeOfferDraftTotalsFromItems(items) {
     net_amount_cents,
     tax_amount_cents,
     gross_amount_cents: net_amount_cents + tax_amount_cents,
-    items_count: normalizedItems.length
+    components_count: normalizedComponents.length
   };
 }
 
-function computeOfferItemLineTotals(item) {
+function computeOfferComponentLineTotals(item) {
   const sign = offerCategorySign(item?.category);
   const quantity = Math.max(1, Number(item?.quantity || 1));
   const unitAmount = Math.max(0, Number(item?.unit_amount_cents || 0));
@@ -897,6 +901,11 @@ async function saveStage() {
 
 async function saveNote() {
   if (!state.booking || !els.noteInput) return;
+  if (!hasBookingNoteChanged()) {
+    updateNoteSaveButtonState();
+    setStatus("No changes to update.");
+    return;
+  }
   const result = await fetchBookingMutation(bookingNoteRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
     method: "PATCH",
     body: {
@@ -910,11 +919,27 @@ async function saveNote() {
   state.booking = result.booking;
   state.originalNote = String(result.booking.notes || "");
   if (els.noteInput) els.noteInput.value = state.originalNote;
+  updateNoteSaveButtonState();
   renderBookingHeader();
   renderBookingData();
   renderActionControls();
-  setStatus(result.unchanged ? "Note unchanged." : "Note saved.");
+  setStatus(result.unchanged ? "Note unchanged." : "Note updated.");
   await loadActivities();
+}
+
+function hasBookingNoteChanged() {
+  if (!els.noteInput) return false;
+  const current = String(els.noteInput.value || "").trim();
+  const original = String(state.originalNote || "").trim();
+  return current !== original;
+}
+
+function updateNoteSaveButtonState() {
+  if (!els.noteSaveBtn) return;
+  const canUpdate = state.permissions.canEditBooking && hasBookingNoteChanged();
+  els.noteSaveBtn.disabled = !canUpdate;
+  els.noteSaveBtn.style.opacity = canUpdate ? "1" : "0.55";
+  els.noteSaveBtn.style.cursor = canUpdate ? "" : "not-allowed";
 }
 
 async function savePricing() {
@@ -1290,7 +1315,7 @@ function fillInvoiceForm(invoice) {
   if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = normalizeDateInput(invoice.issue_date);
   if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = normalizeDateInput(invoice.due_date);
   if (els.invoiceTitleInput) els.invoiceTitleInput.value = invoice.title || "";
-  if (els.invoiceItemsInput) els.invoiceItemsInput.value = invoiceItemsToText(invoice.items || [], invoice.currency || "USD");
+  if (els.invoiceComponentsInput) els.invoiceComponentsInput.value = invoiceComponentsToText(invoice.components || [], invoice.currency || "USD");
   if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = invoice.due_amount_cents ? formatMoneyInputValue(invoice.due_amount_cents, invoice.currency || "USD") : "";
   if (els.invoiceVatInput) {
     const vat = Number(invoice.vat_percentage || 0);
@@ -1309,7 +1334,7 @@ function resetInvoiceForm() {
   if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = "";
   if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = "";
   if (els.invoiceTitleInput) els.invoiceTitleInput.value = "";
-  if (els.invoiceItemsInput) els.invoiceItemsInput.value = "";
+  if (els.invoiceComponentsInput) els.invoiceComponentsInput.value = "";
   if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = "";
   if (els.invoiceVatInput) els.invoiceVatInput.value = "0";
   if (els.invoiceNotesInput) els.invoiceNotesInput.value = "";
@@ -1317,19 +1342,19 @@ function resetInvoiceForm() {
   applyInvoicePermissions();
 }
 
-function invoiceItemsToText(items, currency) {
-  return (Array.isArray(items) ? items : [])
-    .map((item) => `${item.description || ""} | ${Number(item.quantity || 1)} | ${formatMoneyInputValue(item.unit_amount_cents || 0, currency || "USD")}`)
+function invoiceComponentsToText(components, currency) {
+  return (Array.isArray(components) ? components : [])
+    .map((component) => `${component.description || ""} | ${Number(component.quantity || 1)} | ${formatMoneyInputValue(component.unit_amount_cents || 0, currency || "USD")}`)
     .join("\n");
 }
 
-function parseInvoiceItemsText(text) {
+function parseInvoiceComponentsText(text) {
   const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
   const lines = String(text || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const items = [];
+  const components = [];
   for (const line of lines) {
     const parts = line.split("|").map((value) => value.trim());
     if (parts.length < 3) throw new Error(`Invalid line: "${line}". Use "Description | Quantity | Unit amount".`);
@@ -1339,14 +1364,14 @@ function parseInvoiceItemsText(text) {
     if (!description) throw new Error(`Missing description in line: "${line}"`);
     if (!Number.isFinite(quantity) || quantity < 1) throw new Error(`Invalid quantity in line: "${line}"`);
     if (!Number.isFinite(unitAmountCents) || unitAmountCents < 1) throw new Error(`Invalid amount in line: "${line}"`);
-    items.push({ description, quantity: Math.round(quantity), unit_amount_cents: Math.round(unitAmountCents) });
+    components.push({ description, quantity: Math.round(quantity), unit_amount_cents: Math.round(unitAmountCents) });
   }
-  return items;
+  return components;
 }
 
 function collectInvoicePayload() {
   const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
-  const items = parseInvoiceItemsText(els.invoiceItemsInput?.value || "");
+  const components = parseInvoiceComponentsText(els.invoiceComponentsInput?.value || "");
   const dueAmountRaw = String(els.invoiceDueAmountInput?.value || "").trim();
   const dueAmount = dueAmountRaw ? parseMoneyInputValue(dueAmountRaw, currency) : null;
   if (dueAmountRaw && (!Number.isFinite(dueAmount) || dueAmount < 1)) {
@@ -1366,7 +1391,7 @@ function collectInvoicePayload() {
     notes: String(els.invoiceNotesInput?.value || "").trim(),
     vat_percentage: vat,
     due_amount_cents: dueAmount ? Math.round(dueAmount) : null,
-    items
+    components
   };
 }
 
@@ -1447,7 +1472,7 @@ function applyInvoicePermissions() {
     els.invoiceDueDateInput,
     els.invoiceDueMonthBtn,
     els.invoiceTitleInput,
-    els.invoiceItemsInput,
+    els.invoiceComponentsInput,
     els.invoiceDueAmountInput,
     els.invoiceVatInput,
     els.invoiceNotesInput
@@ -1534,28 +1559,28 @@ function collectOfferCategoryRules() {
   });
 }
 
-function collectOfferItems({ throwOnError = true } = {}) {
+function collectOfferComponents({ throwOnError = true } = {}) {
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-  const rows = Array.from(document.querySelectorAll("[data-offer-item-details]"));
-  const items = [];
+  const rows = Array.from(document.querySelectorAll("[data-offer-component-details]"));
+  const components = [];
   for (const input of rows) {
-    const index = Number(input.getAttribute("data-offer-item-details"));
-    const category = normalizeOfferCategory(state.offerDraft?.items[index]?.category || "OTHER");
-    const details = String(document.querySelector(`[data-offer-item-details="${index}"]`)?.value || "").trim();
-    const quantity = Number(document.querySelector(`[data-offer-item-quantity="${index}"]`)?.value || "1");
-    const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-item-unit="${index}"]`)?.value || "0", currency);
+    const index = Number(input.getAttribute("data-offer-component-details"));
+    const category = normalizeOfferCategory(state.offerDraft?.components[index]?.category || "OTHER");
+    const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
+    const quantity = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
+    const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0", currency);
     const label = String(offerCategoryLabel(category)).trim();
-    const notes = String(state.offerDraft?.items[index]?.notes || "").trim();
+    const notes = String(state.offerDraft?.components[index]?.notes || "").trim();
     if (!Number.isFinite(quantity) || quantity < 1) {
-      if (throwOnError) throw new Error(`Offer item ${index + 1} quantity must be at least 1.`);
+      if (throwOnError) throw new Error(`Offer component ${index + 1} quantity must be at least 1.`);
       continue;
     }
     if (!Number.isFinite(unitAmount) || unitAmount < 0) {
-      if (throwOnError) throw new Error(`Offer item ${index + 1} requires a valid non-negative unit amount.`);
+      if (throwOnError) throw new Error(`Offer component ${index + 1} requires a valid non-negative unit amount.`);
       continue;
     }
-    items.push({
-      id: state.offerDraft.items[index]?.id || "",
+    components.push({
+      id: state.offerDraft.components[index]?.id || "",
       category,
       label,
       details: details || null,
@@ -1567,46 +1592,49 @@ function collectOfferItems({ throwOnError = true } = {}) {
       sort_order: index
     });
   }
-  return items;
+  return components;
 }
 
 function collectOfferPayload() {
   const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const category_rules = collectOfferCategoryRules();
-  const items = collectOfferItems();
+  const components = collectOfferComponents();
   return {
     currency,
     category_rules,
-    items
+    components
   };
 }
 
-async function convertOfferItemsInBackend(currentCurrency, nextCurrency, items) {
+async function convertOfferComponentsInBackend(currentCurrency, nextCurrency, components) {
   const response = await fetchApi(`${apiOrigin}/api/v1/offers/exchange-rates`, {
     method: "POST",
     body: {
       from_currency: currentCurrency,
       to_currency: nextCurrency,
-      items: items.map((item, index) => ({
-        id: item.id || `item_${index}`,
-        unit_amount_cents: Number(item.unit_amount_cents || 0),
-        category: item.category || "OTHER",
-        quantity: Number(item.quantity || 1),
-        tax_rate_basis_points: Number(item.tax_rate_basis_points || 1000)
+      components: components.map((component, index) => ({
+        id: component.id || `component_${index}`,
+        unit_amount_cents: Number(component.unit_amount_cents || 0),
+        category: component.category || "OTHER",
+        quantity: Number(component.quantity || 1),
+        tax_rate_basis_points: Number(component.tax_rate_basis_points || 1000)
       }))
     }
   });
 
-  if (!response || !Array.isArray(response.converted_items)) {
+  const convertedComponentsRaw = Array.isArray(response?.converted_components)
+    ? response.converted_components
+    : null;
+  if (!response || !Array.isArray(convertedComponentsRaw)) {
     throw new Error(response?.detail || response?.error || "Offer exchange failed.");
   }
   return {
-    convertedItems: response.converted_items.map((item, index) => ({
-      id: item.id || `item_${index}`,
-      unit_amount_cents: Math.max(0, Number(item.unit_amount_cents) || 0),
-      line_total_amount_cents: Number.isFinite(Number(item.line_total_amount_cents))
-        ? Number(item.line_total_amount_cents)
-        : Number(item.line_gross_amount_cents) || 0
+    convertedComponents: convertedComponentsRaw.map((component, index) => ({
+      id: component.id || `component_${index}`,
+      unit_amount_cents: Math.max(0, Number(component.unit_amount_cents) || 0),
+      line_total_amount_cents: Number.isFinite(Number(component.line_total_amount_cents))
+        ? Number(component.line_total_amount_cents)
+        : Number(component.line_gross_amount_cents) || 0
     })),
     totalPriceCents: Number.isFinite(Number(response.total_price_cents))
       ? Number(response.total_price_cents)
@@ -1628,9 +1656,9 @@ async function handleOfferCurrencyChange() {
     return;
   }
 
-  let items;
+  let components;
   try {
-    items = collectOfferItems({ throwOnError: true });
+    components = collectOfferComponents({ throwOnError: true });
   } catch (error) {
     setOfferStatus(String(error?.message || error));
     setSelectValue(els.offerCurrencyInput, currentCurrency);
@@ -1647,18 +1675,20 @@ async function handleOfferCurrencyChange() {
   }
   setOfferStatus("Converting prices...");
   try {
-      const converted = await convertOfferItemsInBackend(currentCurrency, nextCurrency, items);
-    const convertedItems = converted.convertedItems;
+    const converted = await convertOfferComponentsInBackend(currentCurrency, nextCurrency, components);
+    const convertedComponents = converted.convertedComponents;
     state.offerDraft.currency = nextCurrency;
-    state.offerDraft.items = items.map((item, index) => {
-      const convertedItem = convertedItems[index] || {};
+    state.offerDraft.components = components.map((component, index) => {
+      const convertedComponent = convertedComponents[index] || {};
       return {
-        ...item,
+        ...component,
         unit_amount_cents:
-          Number.isFinite(convertedItem.unit_amount_cents) && convertedItem.unit_amount_cents >= 0 ? convertedItem.unit_amount_cents : item.unit_amount_cents,
-        line_total_amount_cents: Number.isFinite(convertedItem.line_total_amount_cents)
-          ? convertedItem.line_total_amount_cents
-          : item.line_total_amount_cents,
+          Number.isFinite(convertedComponent.unit_amount_cents) && convertedComponent.unit_amount_cents >= 0
+            ? convertedComponent.unit_amount_cents
+            : component.unit_amount_cents,
+        line_total_amount_cents: Number.isFinite(convertedComponent.line_total_amount_cents)
+          ? convertedComponent.line_total_amount_cents
+          : component.line_total_amount_cents,
         currency: nextCurrency
       };
     });
@@ -1674,7 +1704,7 @@ async function handleOfferCurrencyChange() {
   }
   restoreSelectState();
   setOfferStatus("");
-  renderOfferItemsTable();
+  renderOfferComponentsTable();
 }
 
 async function saveOffer() {
@@ -1819,8 +1849,8 @@ function renderInvoiceMoneyLabels() {
   if (els.invoiceDueAmountLabel) {
     els.invoiceDueAmountLabel.textContent = `Due Amount (${currency}, optional)`;
   }
-  if (els.invoiceItemsLabel) {
-    els.invoiceItemsLabel.textContent = `Items (one per line: Description | Quantity | Unit amount in ${currency})`;
+  if (els.invoiceComponentsLabel) {
+    els.invoiceComponentsLabel.textContent = `Components (one per line: Description | Quantity | Unit amount in ${currency})`;
   }
   if (els.invoiceDueAmountInput) {
     els.invoiceDueAmountInput.step = isWholeUnitCurrency(currency) ? "1" : "0.01";
