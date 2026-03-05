@@ -214,11 +214,13 @@ async function init() {
 
   await loadAuthStatus();
 
+  if (state.type !== "booking" && state.type !== "customer") {
+    state.type = "booking";
+  }
+
   if (state.type === "customer") {
-    if (els.actionsPanel) els.actionsPanel.style.display = "none";
-    if (els.invoicePanel) els.invoicePanel.style.display = "none";
-    if (els.metaChatPanel) els.metaChatPanel.style.display = "none";
-    loadCustomer();
+    const customerParams = new URLSearchParams({ id: state.id, user: state.user });
+    window.location.replace(`customer.html?${customerParams.toString()}`);
     return;
   }
 

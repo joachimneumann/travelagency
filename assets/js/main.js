@@ -91,6 +91,7 @@ const els = {
   bookingTourId: document.getElementById("bookingTourId"),
   bookingTourTitle: document.getElementById("bookingTourTitle"),
   stepBack: document.getElementById("stepBack"),
+  stepClose: document.getElementById("stepClose"),
   stepNext: document.getElementById("stepNext"),
   progressSteps: document.querySelectorAll(".progress-step"),
   formSteps: document.querySelectorAll(".step"),
@@ -812,8 +813,11 @@ function setupModal() {
 }
 
 function openBookingModal() {
+  state.bookingSubmitted = false;
+  state.formStep = 1;
   prefillBookingFormWithFilters();
   clearBookingFeedback();
+  renderFormStep();
   els.bookingModal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
   const firstInput = els.bookingForm.querySelector(".step.active input, .step.active select, .step.active textarea");
@@ -876,6 +880,12 @@ function setupFormNavigation() {
     submitBookingForm();
   });
 
+  if (els.stepClose) {
+    els.stepClose.addEventListener("click", () => {
+      closeBookingModal();
+    });
+  }
+
   renderFormStep();
 }
 
@@ -920,6 +930,10 @@ function renderFormStep() {
   els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;
   els.stepNext.disabled = state.bookingSubmitted;
   els.stepNext.textContent = state.formStep === 3 ? "Submit request" : "Next";
+  if (els.stepClose) {
+    els.stepClose.hidden = !state.bookingSubmitted;
+    els.stepClose.disabled = false;
+  }
 }
 
 function validateCurrentStep() {
@@ -1048,6 +1062,10 @@ async function submitBookingForm() {
     els.stepNext.disabled = true;
     els.stepNext.classList.add("is-submitted");
     els.stepBack.disabled = true;
+    if (els.stepClose) {
+      els.stepClose.hidden = false;
+      els.stepClose.disabled = false;
+    }
     return;
   } catch (error) {
     renderBookingError(
@@ -1072,6 +1090,9 @@ function clearBookingFeedback() {
   if (els.stepNext) {
     els.stepNext.disabled = state.bookingSubmitted;
     els.stepNext.classList.toggle("is-submitted", state.bookingSubmitted);
+    if (els.stepClose) {
+      els.stepClose.hidden = true;
+    }
   }
   if (els.stepBack) {
     els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;

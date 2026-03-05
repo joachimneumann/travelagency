@@ -612,8 +612,8 @@ function renderBookings(items) {
   const header = `<thead><tr><th>ID</th><th>Stage</th><th>Customer</th><th>Destination</th><th>Style</th><th>Staff</th><th>SLA due</th></tr></thead>`;
   const rows = items
     .map((booking) => {
-      const bookingHref = buildDetailHref("booking", booking.id);
-      const customerHref = buildDetailHref("customer", booking.customer_id || "");
+      const bookingHref = buildBookingHref(booking.id);
+      const customerHref = buildCustomerHref(booking.customer_id || "");
       const customerCell = booking.customer_id
         ? canOpenCustomer
           ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(booking.customer_id))}</a>`
@@ -643,13 +643,13 @@ function renderCustomers(items) {
   const header = `<thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Language</th><th>Updated</th></tr></thead>`;
   const rows = items
     .map((customer) => {
-      const customerHref = buildDetailHref("customer", customer.id);
+      const customerHref = buildCustomerHref(customer.id);
       return `<tr>
         <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.id))}</a></td>
-        <td>${escapeHtml(customer.name || "-")}</td>
+        <td>${escapeHtml(customer.display_name || customer.name || "-")}</td>
         <td>${escapeHtml(customer.email || "-")}</td>
-        <td>${escapeHtml(customer.phone || "-")}</td>
-        <td>${escapeHtml(customer.language || "-")}</td>
+        <td>${escapeHtml(customer.phone_number || customer.phone || "-")}</td>
+        <td>${escapeHtml(customer.preferred_language || customer.language || "-")}</td>
         <td>${escapeHtml(formatDateTime(customer.updated_at))}</td>
       </tr>`;
     })
@@ -701,8 +701,13 @@ function renderTravelGroups(items) {
   if (els.travelGroupsTable) els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
-function buildDetailHref(type, id) {
-  const params = new URLSearchParams({ type, id, user: state.user });
+function buildCustomerHref(id) {
+  const params = new URLSearchParams({ id, user: state.user });
+  return `customer.html?${params.toString()}`;
+}
+
+function buildBookingHref(id) {
+  const params = new URLSearchParams({ type: "booking", id, user: state.user });
   return `backend-booking.html?${params.toString()}`;
 }
 

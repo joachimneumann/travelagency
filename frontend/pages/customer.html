@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AsiaTravelPlan Customer</title>
+    <meta name="description" content="AsiaTravelPlan customer detail" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+  </head>
+  <body>
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+
+        <nav class="nav" aria-label="Backend navigation">
+          <div class="backend-nav__meta">
+            <ul class="nav-list">
+              <li><a id="backToBackend" href="backend.html">Backend</a></li>
+              <li><a href="index.html">Website</a></li>
+              <li class="backend-nav__logout">
+                <a class="backend-nav__logout-link" id="backendLogoutLink" href="#">
+                  <span class="backend-nav__logout-title">Logout</span>
+                  <span class="backend-nav__user" id="backendUserLabel"></span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <h1 class="section-title" id="detailTitle">Customer</h1>
+          <p class="section-booking" id="detailSubTitle" hidden></p>
+
+          <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <article class="panel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Customer profile</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerDataTable"></table>
+            </div>
+          </article>
+
+          <article class="panel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Customer consents</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerConsentsTable"></table>
+            </div>
+          </article>
+
+          <article class="panel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Customer documents</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerDocumentsTable"></table>
+            </div>
+          </article>
+
+          <article class="panel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Travel group members</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerTravelGroupMembersTable"></table>
+            </div>
+          </article>
+
+          <article class="panel" style="margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.05rem;">Travel groups</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerTravelGroupsTable"></table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h2 class="section-title" style="font-size: 1.05rem;">Related bookings</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerBookingsTable"></table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="assets/js/backend-customer.js?v=20260305a"></script>
+  </body>
+</html>
