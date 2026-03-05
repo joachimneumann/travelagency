@@ -255,7 +255,7 @@ img {
 .select-wrap {
   display: flex;
   flex-direction: column-reverse;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25rem;
 }
 
@@ -263,7 +263,9 @@ img {
   font-size: 0.75rem;
   color: var(--muted);
   font-weight: 600;
-  padding-left: 0.25rem;
+  padding-left: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .select-wrap select {
