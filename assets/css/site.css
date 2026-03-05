@@ -114,7 +114,7 @@ img {
 
 .nav {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
 }
 
@@ -163,7 +163,7 @@ img {
   margin: 0;
   padding: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.35rem;
 }
 
@@ -173,6 +173,8 @@ img {
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.92rem;
+  text-align: center;
+  vertical-align: top;
 }
 
 .nav-list a:hover,
@@ -183,7 +185,7 @@ img {
 .filter-menu {
   display: flex;
   gap: 0.55rem;
-  align-items: center;
+  align-items: flex-start;
 }
 
 /* Top header menu typography: single font, two sizes only */
@@ -227,6 +229,8 @@ img {
   border-radius: 8px;
   padding: 0.5rem 0.7rem;
   transform: none;
+  text-align: center;
+  vertical-align: top;
 }
 
 .header .nav #backendLoginBtn.btn {
