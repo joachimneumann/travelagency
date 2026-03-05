@@ -582,6 +582,32 @@ function renderTrips(trips) {
     .join("");
 
   els.tourGrid.innerHTML = cards;
+  bindTourCardOpenHandlers();
+}
+
+function bindTourCardOpenHandlers() {
+  if (!els.tourGrid) return;
+
+  const buttons = els.tourGrid.querySelectorAll("[data-open-modal][data-trip-id]");
+  buttons.forEach((button) => {
+    if (button.dataset.bookingBound) return;
+
+    button.addEventListener("click", () => {
+      const tripId = button.getAttribute("data-trip-id");
+      const selected = state.trips.find((trip) => trip.id === tripId);
+      if (selected) {
+        const firstDestination = tourDestinationCountries(selected)[0] || "";
+        setBookingField("bookingDestination", firstDestination);
+        setBookingField("bookingStyle", selected.styles[0] || "");
+        setSelectedTourContext(selected);
+      } else {
+        clearSelectedTourContext();
+      }
+      openBookingModal();
+    });
+
+    button.dataset.bookingBound = "1";
+  });
 }
 
 function populateFilterOptions(trips) {
@@ -770,18 +796,6 @@ function setupModal() {
     button.addEventListener("click", () => {
       resolveAndOpenBookingModalFromButton(button);
     });
-  });
-
-  document.addEventListener("click", (event) => {
-    const trigger = event.target.closest("[data-open-modal]");
-    if (!trigger) return;
-
-    event.preventDefault();
-    if (openModalButtons.includes(trigger) || trigger.closest(".modal")) {
-      return;
-    }
-
-    resolveAndOpenBookingModalFromButton(trigger);
   });
 
   els.closeBookingModal.addEventListener("click", closeBookingModal);
