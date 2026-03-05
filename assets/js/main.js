@@ -835,6 +835,8 @@ function renderFormStep() {
   });
 
   els.stepBack.style.visibility = state.formStep === 1 ? "hidden" : "visible";
+  els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;
+  els.stepNext.disabled = state.bookingSubmitted;
   els.stepNext.textContent = state.formStep === 3 ? "Submit request" : "Next";
 }
 
