@@ -373,42 +373,14 @@ async function loadBookings() {
 
 async function loadTravelGroups() {
   clearError();
-  const payload = await fetchApi("/api/v1/travel_groups", { suppressNotFound: true });
-  if (!payload) {
-    if (els.travelGroupsNotice) {
-      els.travelGroupsNotice.textContent = "Travel groups endpoint is not configured yet.";
-    }
-    state.travelGroups.totalPages = 1;
-    state.travelGroups.total = 0;
-    state.travelGroups.page = 1;
-    renderTravelGroups([]);
-    updatePaginationUi("travelGroups");
-    updateDashboardCounts();
-    return;
-  }
-
-  const items = Array.isArray(payload.items)
-    ? payload.items
-    : Array.isArray(payload.travel_groups)
-    ? payload.travel_groups
-    : [];
-  const pagination = payload.pagination || {};
-
-  state.travelGroups.totalPages = Math.max(
-    1,
-    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || items.length || 0) / state.travelGroups.pageSize) || 1)
-  );
-  state.travelGroups.total = Number(pagination.total_items || items.length || 0);
-  state.travelGroups.page = Number(pagination.page || state.travelGroups.page);
   if (els.travelGroupsNotice) {
-    if (items.length === 0) {
-      els.travelGroupsNotice.textContent = "No travel groups found.";
-    } else {
-      els.travelGroupsNotice.textContent = "";
-    }
+    els.travelGroupsNotice.textContent = "Travel groups endpoint is not configured yet.";
   }
+  state.travelGroups.totalPages = 1;
+  state.travelGroups.total = 0;
+  state.travelGroups.page = 1;
   updatePaginationUi("travelGroups");
-  renderTravelGroups(items);
+  renderTravelGroups([]);
   updateDashboardCounts();
 }
 
