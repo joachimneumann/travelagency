@@ -3,7 +3,6 @@ const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 
 const state = {
   id: qs.get("id") || "",
-  user: qs.get("user") || "admin",
   roles: [],
   permissions: {
     canEditTours: false
@@ -19,6 +18,7 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   logoutLink: document.getElementById("backendLogoutLink"),
+  sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("tourTitle"),
   subtitle: document.getElementById("tourSubtitle"),
@@ -39,8 +39,7 @@ const els = {
 init();
 
 async function init() {
-  const backParams = new URLSearchParams({ user: state.user });
-  const backHref = `backend.html?${backParams.toString()}`;
+  const backHref = "backend.html";
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.back) els.back.href = backHref;
@@ -49,6 +48,8 @@ async function init() {
     const returnTo = `${window.location.origin}/index.html`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
+
+  bindSectionNavigation("tours");
 
   if (!state.id) {
     showError("Missing tour id.");
@@ -77,6 +78,22 @@ async function init() {
   }
 
   loadTour();
+}
+
+function bindSectionNavigation(activeSection) {
+  Array.from(els.sectionNavButtons || []).forEach((button) => {
+    const section = button.dataset.backendSection;
+    if (!section) return;
+    button.classList.toggle("is-active", section === activeSection);
+    if (section === activeSection) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+    button.addEventListener("click", () => {
+      window.location.href = `backend.html?section=${encodeURIComponent(section)}`;
+    });
+  });
 }
 
 async function loadTour() {

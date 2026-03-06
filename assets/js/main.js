@@ -219,8 +219,12 @@ function isStagingFrontend() {
   return window.location.hostname === "staging.asiatravelplan.com";
 }
 
+function isLocalFrontend() {
+  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+}
+
 function setupHiddenBackendQuickLogin() {
-  if (!els.brandLogoLink || !isStagingFrontend()) return;
+  if (!els.brandLogoLink || (!isStagingFrontend() && !isLocalFrontend())) return;
 
   els.brandLogoLink.addEventListener("click", (event) => {
     if (!event.metaKey) {

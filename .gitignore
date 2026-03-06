@@ -2,6 +2,7 @@ backend/app/data/invoices/
 backend/app/data/store.json
 .env.staging
 backend/app/node_modules/
+__pycache__/
 *.xcuserstate
 *.xccheckout
 *.xcscmblueprint

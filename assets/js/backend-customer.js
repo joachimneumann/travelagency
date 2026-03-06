@@ -22,7 +22,6 @@ const ORGANIZATION_CUSTOMER_FIELDS = new Set([
 
 const state = {
   id: qs.get("id") || "",
-  user: qs.get("user") || "admin",
   customer: null,
   isSaving: false,
   isOrganizationCustomer: false
@@ -51,6 +50,7 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   logoutLink: document.getElementById("backendLogoutLink"),
+  sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
@@ -69,8 +69,7 @@ const els = {
 init();
 
 async function init() {
-  const backParams = new URLSearchParams({ user: state.user });
-  const backHref = `backend.html?${backParams.toString()}`;
+  const backHref = "backend.html";
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.back) els.back.href = backHref;
@@ -88,6 +87,7 @@ async function init() {
     els.organizationToggle.addEventListener("change", handleOrganizationToggleChange);
   }
 
+  bindSectionNavigation("customers");
   await loadAuthStatus();
 
   if (!state.id) {
@@ -96,6 +96,22 @@ async function init() {
   }
 
   await loadCustomer();
+}
+
+function bindSectionNavigation(activeSection) {
+  Array.from(els.sectionNavButtons || []).forEach((button) => {
+    const section = button.dataset.backendSection;
+    if (!section) return;
+    button.classList.toggle("is-active", section === activeSection);
+    if (section === activeSection) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+    button.addEventListener("click", () => {
+      window.location.href = `backend.html?section=${encodeURIComponent(section)}`;
+    });
+  });
 }
 
 async function loadCustomer() {
@@ -487,7 +503,7 @@ function clearSaveStatus() {
 }
 
 function buildBookingHref(id) {
-  const params = new URLSearchParams({ type: "booking", id, user: state.user });
+  const params = new URLSearchParams({ type: "booking", id });
   return `backend-booking.html?${params.toString()}`;
 }
 

@@ -290,7 +290,8 @@ export function createAuth({ port }) {
 
     const requestUrl = new URL(req.url, "http://localhost");
     const requestHost = extractHost(req.headers.host);
-    const quickLoginAllowedHost = requestHost === "staging.asiatravelplan.com";
+    const quickLoginAllowedHost =
+      requestHost === "staging.asiatravelplan.com" || requestHost === "localhost" || requestHost === "127.0.0.1";
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/backend.html");
     const quickLoginRequested =
       quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";

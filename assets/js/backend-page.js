@@ -79,7 +79,6 @@ const ROLES = {
 };
 
 const state = {
-  user: qs.get("user") || "admin",
   roles: [],
   permissions: {
     canReadCustomers: false,
@@ -110,8 +109,7 @@ init();
 
 async function init() {
   if (els.homeLink) {
-    const params = new URLSearchParams({ user: state.user });
-    els.homeLink.href = `backend.html?${params.toString()}`;
+    els.homeLink.href = "backend.html";
   }
 
   if (els.logoutLink) {
@@ -674,17 +672,17 @@ function renderTravelGroups(items) {
 }
 
 function buildCustomerHref(id) {
-  const params = new URLSearchParams({ id, user: state.user });
+  const params = new URLSearchParams({ id });
   return `customer.html?${params.toString()}`;
 }
 
 function buildBookingHref(id) {
-  const params = new URLSearchParams({ type: "booking", id, user: state.user });
+  const params = new URLSearchParams({ type: "booking", id });
   return `backend-booking.html?${params.toString()}`;
 }
 
 function buildTourEditHref(id) {
-  const params = new URLSearchParams({ id, user: state.user });
+  const params = new URLSearchParams({ id });
   return `backend-tour.html?${params.toString()}`;
 }
 

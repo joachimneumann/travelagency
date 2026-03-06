@@ -14,6 +14,7 @@ PAGE_MAP = {
     "/backend.html": "frontend/pages/backend.html",
     "/backend-booking.html": "frontend/pages/backend-booking.html",
     "/backend-tour.html": "frontend/pages/backend-tour.html",
+    "/customer.html": "frontend/pages/customer.html",
 }
 
 

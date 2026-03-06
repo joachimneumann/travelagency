@@ -61,7 +61,6 @@ const ROLES = {
 const state = {
   type: qs.get("type") || "booking",
   id: qs.get("id") || "",
-  user: qs.get("user") || "admin",
   roles: [],
   permissions: {
     canChangeAssignment: false,
@@ -102,6 +101,7 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   logoutLink: document.getElementById("backendLogoutLink"),
+  sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
@@ -168,8 +168,7 @@ window.addEventListener("beforeunload", () => {
 });
 
 async function init() {
-  const backParams = new URLSearchParams({ user: state.user });
-  const backHref = `backend.html?${backParams.toString()}`;
+  const backHref = "backend.html";
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.back) els.back.href = backHref;
@@ -207,6 +206,8 @@ async function init() {
     });
   }
 
+  bindSectionNavigation("bookings");
+
   if (!state.id) {
     showError("Missing record id.");
     return;
@@ -219,12 +220,28 @@ async function init() {
   }
 
   if (state.type === "customer") {
-    const customerParams = new URLSearchParams({ id: state.id, user: state.user });
+    const customerParams = new URLSearchParams({ id: state.id });
     window.location.replace(`customer.html?${customerParams.toString()}`);
     return;
   }
 
   loadBookingPage();
+}
+
+function bindSectionNavigation(activeSection) {
+  Array.from(els.sectionNavButtons || []).forEach((button) => {
+    const section = button.dataset.backendSection;
+    if (!section) return;
+    button.classList.toggle("is-active", section === activeSection);
+    if (section === activeSection) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+    button.addEventListener("click", () => {
+      window.location.href = `backend.html?section=${encodeURIComponent(section)}`;
+    });
+  });
 }
 
 async function loadBookingPage() {
@@ -1985,7 +2002,7 @@ async function fetchBookingMutation(path, options = {}) {
 }
 
 function buildBookingHref(id) {
-  const params = new URLSearchParams({ type: "booking", id, user: state.user });
+  const params = new URLSearchParams({ type: "booking", id });
   return `backend-booking.html?${params.toString()}`;
 }
 
