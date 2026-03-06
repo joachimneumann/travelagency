@@ -1,0 +1,15 @@
+{
+  "name": "AsiaTravelPlan",
+  "short_name": "AsiaTravelPlan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4efe8",
+  "theme_color": "#f4efe8",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

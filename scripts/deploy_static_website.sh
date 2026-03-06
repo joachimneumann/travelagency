@@ -44,9 +44,9 @@ cd "$ROOT_DIR"
 for required in \
   "$SOURCE_ROOT/index.html" \
   "$SOURCE_ROOT/assets" \
-  "site.webmanifest" \
-  "robots.txt" \
-  "sitemap.xml"; do
+  "$SOURCE_ROOT/site.webmanifest" \
+  "$SOURCE_ROOT/robots.txt" \
+  "$SOURCE_ROOT/sitemap.xml"; do
   if [[ ! -e "$required" ]]; then
     echo "Missing required path: $required" >&2
     exit 1
@@ -56,9 +56,9 @@ done
 mkdir -p "$STAGE_DIR/assets"
 cp "$SOURCE_ROOT/index.html" "$STAGE_DIR/index.html"
 cp "$SOURCE_ROOT/index.html" "$STAGE_DIR/404.html"
-cp "site.webmanifest" "$STAGE_DIR/site.webmanifest"
-cp "robots.txt" "$STAGE_DIR/robots.txt"
-cp "sitemap.xml" "$STAGE_DIR/sitemap.xml"
+cp "$SOURCE_ROOT/site.webmanifest" "$STAGE_DIR/site.webmanifest"
+cp "$SOURCE_ROOT/robots.txt" "$STAGE_DIR/robots.txt"
+cp "$SOURCE_ROOT/sitemap.xml" "$STAGE_DIR/sitemap.xml"
 rsync -a --delete "$SOURCE_ROOT/assets/" "$STAGE_DIR/assets/"
 
 mkdir -p "$TARGET_ROOT"
