@@ -37,14 +37,16 @@ const CUSTOMER_FIELD_UI_CONFIG = {
   can_receive_marketing: { editable: true, control: "checkbox" }
 };
 
-const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields.map((field) => {
-  const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
-  return {
-    ...field,
-    ...config,
-    editable: config.editable ?? true
-  };
-});
+const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
+  .filter((field) => field.name !== "id")
+  .map((field) => {
+    const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
+    return {
+      ...field,
+      ...config,
+      editable: config.editable ?? true
+    };
+  });
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -126,8 +128,8 @@ async function loadCustomer() {
   }
 
   if (els.subtitle) {
-    const customerId = state.customer.id ? ` · ${state.customer.id}` : "";
-    els.subtitle.textContent = `Customer${customerId}`;
+    const customerId = state.customer.id ? `ID: ${state.customer.id}` : "";
+    els.subtitle.textContent = customerId;
     els.subtitle.hidden = false;
   }
 
