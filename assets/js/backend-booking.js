@@ -15,6 +15,7 @@ import {
   bookingStageRequest,
   customerDetailRequest,
 } from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+import { normalizeLocalDateTimeToIso } from "./shared/datetime.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -470,7 +471,11 @@ function cloneOffer(offer) {
     };
   });
 
-  const sourceComponents = Array.isArray(source.components) ? source.components : [];
+  const sourceComponents = Array.isArray(source.components)
+    ? source.components
+    : Array.isArray(source.items)
+      ? source.items
+      : [];
 
   return {
     currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
@@ -514,7 +519,7 @@ function offerCategorySign(code) {
 function getOfferCategoryTaxRateBasisPoints(category) {
   const normalizedCategory = normalizeOfferCategory(category);
   const rule = Array.isArray(state.offerDraft?.category_rules)
-    ? state.offerDraft.category_rules.find((item) => normalizeOfferCategory(item?.category) === normalizedCategory)
+    ? state.offerDraft.category_rules.find((componentRule) => normalizeOfferCategory(componentRule?.category) === normalizedCategory)
     : null;
   const basisPoints = Number(rule?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
   return Number.isFinite(basisPoints) ? Math.max(0, Math.round(basisPoints)) : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS;
@@ -723,11 +728,11 @@ function computeOfferDraftTotalsFromComponents(components) {
   };
 }
 
-function computeOfferComponentLineTotals(item) {
-  const sign = offerCategorySign(item?.category);
-  const quantity = Math.max(1, Number(item?.quantity || 1));
-  const unitAmount = Math.max(0, Number(item?.unit_amount_cents || 0));
-  const taxBasisPoints = Math.max(0, Number(item?.tax_rate_basis_points || 0));
+function computeOfferComponentLineTotals(component) {
+  const sign = offerCategorySign(component?.category);
+  const quantity = Math.max(1, Number(component?.quantity || 1));
+  const unitAmount = Math.max(0, Number(component?.unit_amount_cents || 0));
+  const taxBasisPoints = Math.max(0, Number(component?.tax_rate_basis_points || 0));
   const net_amount_cents = sign * quantity * unitAmount;
   const tax_amount_cents = sign * Math.round((quantity * unitAmount * taxBasisPoints) / 10000);
   return {
@@ -1532,7 +1537,7 @@ function collectPricingPayload() {
     const taxPercent = Number(document.querySelector(`[data-pricing-payment-tax="${index}"]`)?.value || "0");
     const status = String(document.querySelector(`[data-pricing-payment-status="${index}"]`)?.value || "PENDING").trim().toUpperCase();
     const paidAtInputValue = document.querySelector(`[data-pricing-payment-paid-at="${index}"]`)?.value || "";
-    const paidAt = normalizeDateTimePayload(paidAtInputValue || (status === "PAID" ? normalizeDateTimeLocal(new Date().toISOString()) : ""));
+    const paidAt = normalizeLocalDateTimeToIso(paidAtInputValue || (status === "PAID" ? normalizeDateTimeLocal(new Date().toISOString()) : ""));
     const notes = String(document.querySelector(`[data-pricing-payment-notes="${index}"]`)?.value || "").trim();
     if (!label) throw new Error(`Payment ${index + 1} requires a label.`);
     if (!Number.isFinite(netAmount) || netAmount < 0) throw new Error(`Payment ${index + 1} requires a valid non-negative net amount.`);
@@ -1775,14 +1780,6 @@ function normalizeDateTimeLocal(value) {
   const d = new Date(text);
   if (Number.isNaN(d.getTime())) return "";
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
-
-function normalizeDateTimePayload(value) {
-  const text = String(value || "").trim();
-  if (!text) return "";
-  const d = new Date(text);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString();
 }
 
 function formatTaxRatePercent(value) {

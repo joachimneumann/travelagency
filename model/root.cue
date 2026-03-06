@@ -26,6 +26,7 @@ import (
 	}
 
 	enums: {
+		LanguageCode:          enumModel.#LanguageCode
 		CurrencyCode:          enumModel.#CurrencyCode
 		CurrencyMeta:          enumModel.#CurrencyMeta
 		ATPStaffRole:          enumModel.#ATPStaffRole

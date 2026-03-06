@@ -6,6 +6,7 @@ require 'yaml'
 require 'fileutils'
 require 'open3'
 require 'time'
+require 'set'
 
 ROOT = File.expand_path('../..', __dir__)
 MODEL_DIR = File.join(ROOT, 'model')
@@ -33,8 +34,18 @@ JS_RUNTIME_HEADER = <<~JS.freeze
   // Do not edit by hand.
 JS
 
+JS_OPENAPI_HEADER = <<~JS.freeze
+  // Generated from api/generated/openapi.yaml.
+  // Do not edit by hand.
+JS
+
 SWIFT_RUNTIME_HEADER = <<~SWIFT.freeze
   // Generated from the normalized model IR exported from model/ir.
+  // Do not edit by hand.
+SWIFT
+
+SWIFT_OPENAPI_HEADER = <<~SWIFT.freeze
+  // Generated from api/generated/openapi.yaml.
   // Do not edit by hand.
 SWIFT
 
@@ -215,12 +226,29 @@ def render_js_currency_module(currency_entries)
   JS
 end
 
-def render_js_form_constraints_module(traveler_constraints)
+def render_js_language_module(language_codes, header = JS_RUNTIME_HEADER)
+  <<~JS
+    #{header}
+
+    export const GENERATED_LANGUAGE_CODES = Object.freeze(#{js_literal(language_codes)});
+
+    export function normalizeLanguageCode(value) {
+      const normalized = String(value || '').trim();
+      return GENERATED_LANGUAGE_CODES.includes(normalized) ? normalized : null;
+    }
+
+    export function formatLanguageCodeLabel(code) {
+      return normalizeLanguageCode(code) || String(code || '').trim();
+    }
+  JS
+end
+
+def render_js_form_constraints_module(traveler_constraints, header = JS_RUNTIME_HEADER)
   min_travelers = Integer(traveler_constraints.fetch('min'))
   max_travelers = Integer(traveler_constraints.fetch('max'))
 
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     export const GENERATED_TRAVELER_CONSTRAINTS = Object.freeze({
       min: #{min_travelers},
       max: #{max_travelers}
@@ -231,11 +259,11 @@ def render_js_form_constraints_module(traveler_constraints)
   JS
 end
 
-def render_js_atp_staff_module(types, roles)
+def render_js_atp_staff_module(types, roles, header = JS_RUNTIME_HEADER)
   role_codes = catalog_codes(roles)
 
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     #{js_validator_helpers}
     export const GENERATED_ATP_STAFF_ROLES = Object.freeze(#{js_literal(role_codes)});
 
@@ -243,14 +271,14 @@ def render_js_atp_staff_module(types, roles)
   JS
 end
 
-def render_js_booking_module(types, stages, payment_statuses, adjustment_types, offer_categories)
+def render_js_booking_module(types, stages, payment_statuses, adjustment_types, offer_categories, header = JS_RUNTIME_HEADER)
   stage_codes = catalog_codes(stages)
   payment_status_codes = catalog_codes(payment_statuses)
   adjustment_type_codes = catalog_codes(adjustment_types)
   offer_category_codes = catalog_codes(offer_categories)
 
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     #{js_validator_helpers}
     export const GENERATED_BOOKING_STAGES = Object.freeze(#{js_literal(stage_codes)});
     export const GENERATED_PAYMENT_STATUSES = Object.freeze(#{js_literal(payment_status_codes)});
@@ -261,18 +289,18 @@ def render_js_booking_module(types, stages, payment_statuses, adjustment_types, 
   JS
 end
 
-def render_js_aux_module(types)
+def render_js_aux_module(types, header = JS_RUNTIME_HEADER)
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     #{js_validator_helpers}
 
     #{render_js_type_exports(types)}
   JS
 end
 
-def render_js_api_models_module(api_types, endpoints)
+def render_js_api_models_module(api_types, endpoints, header = JS_RUNTIME_HEADER)
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     #{js_validator_helpers}
     export const GENERATED_API_ENDPOINTS = #{js_literal(endpoints)};
 
@@ -280,7 +308,7 @@ def render_js_api_models_module(api_types, endpoints)
   JS
 end
 
-def render_js_request_factory_module(endpoints, contract_version)
+def render_js_request_factory_module(endpoints, contract_version, header = JS_RUNTIME_HEADER)
   endpoint_map = endpoints.each_with_object({}) { |entry, acc| acc[entry.fetch('key')] = entry }
 
   functions = endpoints.map do |endpoint|
@@ -308,7 +336,7 @@ def render_js_request_factory_module(endpoints, contract_version)
   end.join("\n")
 
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     export const GENERATED_CONTRACT_VERSION = #{contract_version.inspect};
     export const GENERATED_API_ENDPOINTS = #{js_literal(endpoint_map)};
 
@@ -332,7 +360,7 @@ def render_js_request_factory_module(endpoints, contract_version)
   JS
 end
 
-def render_js_api_client_module(endpoints)
+def render_js_api_client_module(endpoints, header = JS_RUNTIME_HEADER)
   helper_cases = endpoints.map do |endpoint|
     key = endpoint.fetch('key')
     function_name = "#{lower_camel(key)}Request"
@@ -343,7 +371,7 @@ def render_js_api_client_module(endpoints)
   end.join
 
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     import * as RequestFactory from './generated_APIRequestFactory.js';
 
     export class GeneratedAPIClient {
@@ -432,12 +460,24 @@ def render_swift_currency(currency_entries)
   SWIFT
 end
 
-def render_swift_form_constraints(traveler_constraints)
+def render_swift_language(language_codes, header = SWIFT_RUNTIME_HEADER)
+  language_cases = language_codes.map { |code| "    case #{swift_case(code)} = \"#{code}\"" }.join("\n")
+
+  <<~SWIFT
+    #{header}
+
+    enum GeneratedLanguageCode: String, CaseIterable, Codable, Hashable {
+#{language_cases}
+    }
+  SWIFT
+end
+
+def render_swift_form_constraints(traveler_constraints, header = SWIFT_RUNTIME_HEADER)
   min_travelers = Integer(traveler_constraints.fetch('min'))
   max_travelers = Integer(traveler_constraints.fetch('max'))
 
   <<~SWIFT
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     enum GeneratedFormConstraints {
         static let minTravelers: Int = #{min_travelers}
         static let maxTravelers: Int = #{max_travelers}
@@ -445,30 +485,23 @@ def render_swift_form_constraints(traveler_constraints)
   SWIFT
 end
 
-def render_swift_atp_staff(roles)
+def render_swift_atp_staff(roles, types = [], header = SWIFT_RUNTIME_HEADER)
   role_codes = catalog_codes(roles)
   role_cases = role_codes.map { |role| "    case #{swift_case(role)} = \"#{role}\"" }.join("\n")
 
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     enum GeneratedATPStaffRole: String, CaseIterable, Codable, Hashable {
 #{role_cases}
     }
 
-    struct GeneratedATPStaff: Codable, Equatable {
-        let id: String
-        let preferredUsername: String
-        let displayName: String?
-        let email: String?
-        let roles: [GeneratedATPStaffRole]
-        let staffId: String?
-    }
+    #{render_swift_type_collection(types)}
   SWIFT
 end
 
-def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories)
+def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories, types = [], header = SWIFT_RUNTIME_HEADER)
   stage_codes = catalog_codes(stages)
   payment_status_codes = catalog_codes(payment_statuses)
   adjustment_type_codes = catalog_codes(adjustment_types)
@@ -482,7 +515,7 @@ def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categ
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     enum GeneratedBookingStage: String, CaseIterable, Codable, Hashable {
 #{stage_cases}
     }
@@ -499,267 +532,7 @@ def render_swift_booking(stages, payment_statuses, adjustment_types, offer_categ
 #{offer_category_cases}
     }
 
-    struct GeneratedSourceAttribution: Codable, Equatable {
-        let pageURL: String?
-        let ipAddress: String?
-        let ipCountryGuess: String?
-        let utmSource: String?
-        let utmMedium: String?
-        let utmCampaign: String?
-        let referrer: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case pageURL = "page_url"
-            case ipAddress = "ip_address"
-            case ipCountryGuess = "ip_country_guess"
-            case utmSource = "utm_source"
-            case utmMedium = "utm_medium"
-            case utmCampaign = "utm_campaign"
-            case referrer
-        }
-    }
-
-    struct GeneratedBookingPricingAdjustment: Codable, Identifiable, Equatable {
-        let id: String
-        let type: GeneratedPricingAdjustmentType
-        let label: String
-        let amountCents: Int
-        let notes: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case type
-            case label
-            case amountCents = "amount_cents"
-            case notes
-        }
-    }
-
-    struct GeneratedBookingPayment: Codable, Identifiable, Equatable {
-        let id: String
-        let label: String
-        let dueDate: String?
-        let netAmountCents: Int
-        let taxRateBasisPoints: Int
-        let taxAmountCents: Int
-        let grossAmountCents: Int
-        let status: GeneratedPaymentStatus
-        let paidAt: String?
-        let notes: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case label
-            case dueDate = "due_date"
-            case netAmountCents = "net_amount_cents"
-            case taxRateBasisPoints = "tax_rate_basis_points"
-            case taxAmountCents = "tax_amount_cents"
-            case grossAmountCents = "gross_amount_cents"
-            case status
-            case paidAt = "paid_at"
-            case notes
-        }
-    }
-
-    struct GeneratedBookingPricingSummary: Codable, Equatable {
-        let agreedNetAmountCents: Int
-        let adjustmentsDeltaCents: Int
-        let adjustedNetAmountCents: Int
-        let scheduledNetAmountCents: Int
-        let unscheduledNetAmountCents: Int
-        let scheduledTaxAmountCents: Int
-        let scheduledGrossAmountCents: Int
-        let paidGrossAmountCents: Int
-        let outstandingGrossAmountCents: Int
-        let isScheduleBalanced: Bool
-
-        private enum CodingKeys: String, CodingKey {
-            case agreedNetAmountCents = "agreed_net_amount_cents"
-            case adjustmentsDeltaCents = "adjustments_delta_cents"
-            case adjustedNetAmountCents = "adjusted_net_amount_cents"
-            case scheduledNetAmountCents = "scheduled_net_amount_cents"
-            case unscheduledNetAmountCents = "unscheduled_net_amount_cents"
-            case scheduledTaxAmountCents = "scheduled_tax_amount_cents"
-            case scheduledGrossAmountCents = "scheduled_gross_amount_cents"
-            case paidGrossAmountCents = "paid_gross_amount_cents"
-            case outstandingGrossAmountCents = "outstanding_gross_amount_cents"
-            case isScheduleBalanced = "is_schedule_balanced"
-        }
-    }
-
-    struct GeneratedBookingPricing: Codable, Equatable {
-        let currency: GeneratedCurrencyCode
-        let agreedNetAmountCents: Int
-        let adjustments: [GeneratedBookingPricingAdjustment]
-        let payments: [GeneratedBookingPayment]
-        let summary: GeneratedBookingPricingSummary
-
-        private enum CodingKeys: String, CodingKey {
-            case currency
-            case agreedNetAmountCents = "agreed_net_amount_cents"
-            case adjustments
-            case payments
-            case summary
-        }
-    }
-
-    struct GeneratedBookingOfferCategoryRule: Codable, Equatable {
-        let category: GeneratedOfferCategory
-        let taxRateBasisPoints: Int
-
-        private enum CodingKeys: String, CodingKey {
-            case category
-            case taxRateBasisPoints = "tax_rate_basis_points"
-        }
-    }
-
-    struct GeneratedBookingOfferComponent: Codable, Identifiable, Equatable {
-        let id: String
-        let category: GeneratedOfferCategory
-        let label: String
-        let details: String?
-        let quantity: Int
-        let unitAmountCents: Int
-        let lineNetAmountCents: Int?
-        let taxRateBasisPoints: Int
-        let lineTaxAmountCents: Int?
-        let lineGrossAmountCents: Int?
-        let currency: GeneratedCurrencyCode
-        let notes: String?
-        let sortOrder: Int?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case category
-            case label
-            case details
-            case quantity
-            case unitAmountCents = "unit_amount_cents"
-            case lineNetAmountCents = "line_net_amount_cents"
-            case taxRateBasisPoints = "tax_rate_basis_points"
-            case lineTaxAmountCents = "line_tax_amount_cents"
-            case lineGrossAmountCents = "line_gross_amount_cents"
-            case currency
-            case notes
-            case sortOrder = "sort_order"
-        }
-    }
-
-    struct GeneratedBookingOfferTotals: Codable, Equatable {
-        let netAmountCents: Int
-        let taxAmountCents: Int
-        let grossAmountCents: Int
-        let componentsCount: Int
-
-        private enum CodingKeys: String, CodingKey {
-            case netAmountCents = "net_amount_cents"
-            case taxAmountCents = "tax_amount_cents"
-            case grossAmountCents = "gross_amount_cents"
-            case componentsCount = "components_count"
-        }
-    }
-
-    struct GeneratedBookingOffer: Codable, Equatable {
-        let currency: GeneratedCurrencyCode
-        let categoryRules: [GeneratedBookingOfferCategoryRule]
-        let components: [GeneratedBookingOfferComponent]
-        let totals: GeneratedBookingOfferTotals
-
-        private enum CodingKeys: String, CodingKey {
-            case currency
-            case categoryRules = "category_rules"
-            case components
-            case totals
-        }
-    }
-
-    struct GeneratedInvoiceComponent: Codable, Identifiable, Equatable {
-        let id: String
-        let description: String
-        let quantity: Int
-        let unitAmountCents: Int
-        let totalAmountCents: Int
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case description
-            case quantity
-            case unitAmountCents = "unit_amount_cents"
-            case totalAmountCents = "total_amount_cents"
-        }
-    }
-
-    struct GeneratedBookingInvoice: Codable, Identifiable, Equatable {
-        let id: String
-        let currency: GeneratedCurrencyCode
-        let status: String
-        let dueAmountCents: Int
-        let notes: String?
-        let components: [GeneratedInvoiceComponent]
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case currency
-            case status
-            case dueAmountCents = "due_amount_cents"
-            case notes
-            case components
-        }
-    }
-
-    struct GeneratedBookingActivity: Codable, Identifiable, Equatable {
-        let id: String
-        let type: String
-        let createdAt: String
-        let note: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case type
-            case createdAt = "created_at"
-            case note
-        }
-    }
-
-    struct GeneratedBooking: Codable, Identifiable, Equatable {
-        let id: String
-        let customerId: String?
-        let customerName: String?
-        let destination: String
-        let style: String
-        let travelMonth: String?
-        let travelers: Int?
-        let duration: String?
-        let budget: String?
-        let stage: GeneratedBookingStage
-        let assignedStaffId: String?
-        let assignedStaffName: String?
-        let notes: String?
-        let source: GeneratedSourceAttribution?
-        let bookingHash: String?
-        let pricing: GeneratedBookingPricing?
-        let offer: GeneratedBookingOffer?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case customerId = "customer_id"
-            case customerName = "customer_name"
-            case destination
-            case style
-            case travelMonth = "travel_month"
-            case travelers
-            case duration
-            case budget
-            case stage
-            case assignedStaffId = "staff"
-            case assignedStaffName = "staff_name"
-            case notes
-            case source
-            case bookingHash = "booking_hash"
-            case pricing
-            case offer
-        }
-    }
+    #{render_swift_type_collection(types)}
   SWIFT
 end
 
@@ -795,25 +568,25 @@ def render_swift_type_collection(types)
   types.map { |type| render_swift_type(type) }.join("\n")
 end
 
-def render_swift_aux(types)
+def render_swift_aux(types, header = SWIFT_RUNTIME_HEADER)
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     #{render_swift_type_collection(types)}
   SWIFT
 end
 
-def render_swift_api_models(api_types)
+def render_swift_api_models(api_types, header = SWIFT_RUNTIME_HEADER)
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     #{render_swift_type_collection(api_types)}
   SWIFT
 end
 
-def render_swift_request_factory(endpoints, contract_version)
+def render_swift_request_factory(endpoints, contract_version, header = SWIFT_RUNTIME_HEADER)
   endpoint_constants = endpoints.map do |endpoint|
     "    static let #{lower_camel(endpoint.fetch('key'))} = \"#{endpoint.fetch('path')}\""
   end.join("\n")
@@ -865,7 +638,7 @@ def render_swift_request_factory(endpoints, contract_version)
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     enum GeneratedAPIRequestFactory {
         static let contractVersion = #{contract_version.inspect}
 
@@ -884,7 +657,7 @@ def render_swift_request_factory(endpoints, contract_version)
   SWIFT
 end
 
-def render_swift_api_client(endpoints)
+def render_swift_api_client(endpoints, header = SWIFT_RUNTIME_HEADER)
   cases = endpoints.map do |endpoint|
     "        case .#{swift_case(endpoint.fetch('key'))}: return #{endpoint.fetch('method').inspect}"
   end.join("\n")
@@ -896,7 +669,7 @@ def render_swift_api_client(endpoints)
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     enum GeneratedAPIEndpointKey: String, CaseIterable {
 #{enum_cases}
     }
@@ -909,6 +682,161 @@ def render_swift_api_client(endpoints)
         }
     }
   SWIFT
+end
+
+def ref_name_from_schema_ref(ref)
+  String(ref).split('/').last
+end
+
+def canonical_runtime_type_name(name)
+  case name
+  when 'ATPCurrencyCode' then 'CurrencyCode'
+  else name
+  end
+end
+
+def openapi_enum_schema_names(schemas)
+  schemas.each_with_object(Set.new) do |(name, schema), acc|
+    acc << name if schema.is_a?(Hash) && schema['enum'].is_a?(Array)
+  end
+end
+
+def field_type_from_openapi_schema(field_schema, enum_names, transport_kind)
+  schema = field_schema.dup
+  is_array = schema['type'] == 'array'
+  schema = schema['items'] if is_array
+
+  if schema['$ref']
+    ref_name = ref_name_from_schema_ref(schema['$ref'])
+    kind = enum_names.include?(ref_name) ? 'enum' : transport_kind
+    type_name = canonical_runtime_type_name(ref_name)
+    return [kind, type_name, is_array]
+  end
+
+  kind = 'scalar'
+  type_name = case schema['type']
+              when 'integer' then 'int'
+              when 'boolean' then 'bool'
+              else 'string'
+              end
+  [kind, type_name, is_array]
+end
+
+def openapi_object_schema_to_type(name, schema, enum_names, domain:, mod:, source_type:, transport_kind:)
+  properties = schema.fetch('properties', {})
+  required = Array(schema['required'])
+  fields = properties.map do |prop_name, prop_schema|
+    kind, type_name, is_array = field_type_from_openapi_schema(prop_schema, enum_names, transport_kind)
+    {
+      'name' => prop_name,
+      'kind' => kind,
+      'typeName' => type_name,
+      'required' => required.include?(prop_name),
+      'isArray' => is_array,
+      'wireName' => prop_name
+    }
+  end
+
+  {
+    'name' => name,
+    'domain' => domain,
+    'module' => mod,
+    'sourceType' => source_type,
+    'fields' => fields
+  }
+end
+
+def openapi_types_for_schema_names(schema_names, schemas, enum_names, domain:, mod:, transport_kind:)
+  schema_names.map do |schema_name|
+    schema = schemas[schema_name]
+    next unless schema.is_a?(Hash)
+    next unless schema['type'] == 'object' || schema.key?('properties')
+
+    openapi_object_schema_to_type(
+      schema_name,
+      schema,
+      enum_names,
+      domain: domain,
+      mod: mod,
+      source_type: "openapi.components.schemas.#{schema_name}",
+      transport_kind: transport_kind
+    )
+  end.compact
+end
+
+def openapi_endpoints(doc)
+  paths = doc.fetch('paths')
+  endpoints = []
+
+  paths.each do |path, methods|
+    methods.each do |method, operation|
+      next unless operation.is_a?(Hash)
+      key = operation['operationId'] || "#{method}_#{path}".gsub(%r{[^a-zA-Z0-9]+}, '_').gsub(/^_+|_+$/, '')
+      parameters = Array(operation['parameters']).map do |parameter|
+        schema = parameter['schema'] || {}
+        {
+          'name' => parameter.fetch('name'),
+          'location' => parameter.fetch('in'),
+          'required' => parameter.fetch('required', false),
+          'typeName' => case schema['type']
+                        when 'integer' then 'int'
+                        when 'boolean' then 'bool'
+                        else 'Identifier'
+                        end
+        }
+      end
+
+      request_body_schema = operation.dig('requestBody', 'content', 'application/json', 'schema')
+      request_type = request_body_schema && request_body_schema['$ref'] ? ref_name_from_schema_ref(request_body_schema['$ref']) : nil
+
+      response_schema = nil
+      %w[200 201].each do |status_code|
+        candidate = operation.dig('responses', status_code, 'content', 'application/json', 'schema')
+        if candidate
+          response_schema = candidate
+          break
+        end
+      end
+      response_type = response_schema && response_schema['$ref'] ? ref_name_from_schema_ref(response_schema['$ref']) : nil
+
+      endpoints << {
+        'key' => key,
+        'path' => path,
+        'method' => method.upcase,
+        'authenticated' => Array(operation['security']).any?,
+        'requestType' => request_type,
+        'responseType' => response_type,
+        'parameters' => parameters
+      }
+    end
+  end
+
+  endpoints
+end
+
+def openapi_transport_type_names(doc)
+  endpoint_types = openapi_endpoints(doc).flat_map { |ep| [ep['requestType'], ep['responseType']] }.compact.uniq
+  queue = endpoint_types.dup
+  seen = Set.new
+  schemas = doc.dig('components', 'schemas') || {}
+
+  until queue.empty?
+    name = queue.shift
+    next if seen.include?(name)
+    seen << name
+    schema = schemas[name]
+    next unless schema.is_a?(Hash)
+
+    properties = schema['properties'] || {}
+    properties.each_value do |prop_schema|
+      nested = prop_schema['type'] == 'array' ? prop_schema['items'] : prop_schema
+      next unless nested.is_a?(Hash) && nested['$ref']
+      ref_name = ref_name_from_schema_ref(nested['$ref'])
+      queue << ref_name
+    end
+  end
+
+  seen
 end
 
 # --- OpenAPI 3.1 generation from IR (model/api/ + entities/enums/common) ---
@@ -965,17 +893,22 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
   prop
 end
 
-def build_openapi_schemas(ir)
+def build_openapi_schemas(ir, traveler_constraints)
   types = ir.fetch('types')
   type_index = types.each_with_object({}) { |t, acc| acc[t.fetch('name')] = t }
 
-  enum_schema_names = %w[ATPCurrencyCode ATPStaffRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory]
+  enum_schema_names = %w[ATPCurrencyCode LanguageCode ATPStaffRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory]
 
   # Enum schemas from catalogs (camelCase not needed for enum values)
   schemas = {}
   schemas['ATPCurrencyCode'] = {
     type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'currencies'))
+    enum: catalog_codes(ir.dig('catalogs', 'currencies')),
+    'x-currency-catalog' => ir.dig('catalogs', 'currencies')
+  }
+  schemas['LanguageCode'] = {
+    type: 'string',
+    enum: catalog_codes(ir.dig('catalogs', 'languages'))
   }
   schemas['ATPStaffRole'] = {
     type: 'string',
@@ -996,6 +929,14 @@ def build_openapi_schemas(ir)
   schemas['OfferCategory'] = {
     type: 'string',
     enum: catalog_codes(ir.dig('catalogs', 'offerCategories'))
+  }
+  schemas['TravelerConstraints'] = {
+    type: 'object',
+    required: %w[min max],
+    properties: {
+      'min' => { type: 'integer', const: Integer(traveler_constraints.fetch('min')) },
+      'max' => { type: 'integer', const: Integer(traveler_constraints.fetch('max')) }
+    }
   }
 
   # Collect all referenced type names
@@ -1051,6 +992,7 @@ def build_openapi_paths(endpoints, request_types, response_types)
            else (path.split('/')[2]&.capitalize || 'API')
            end
     op = {
+      operationId: ep.fetch('key'),
       summary: ep.fetch('key').split('_').map(&:capitalize).join(' '),
       tags: [tag],
       security: ep.fetch('authenticated') ? [{ bearerAuth: [] }] : []
@@ -1085,11 +1027,11 @@ def build_openapi_paths(endpoints, request_types, response_types)
   paths
 end
 
-def build_openapi_doc(ir)
+def build_openapi_doc(ir, traveler_constraints)
   endpoints = ir.dig('api', 'endpoints') || []
   types = ir.fetch('types')
 
-  schemas = build_openapi_schemas(ir)
+  schemas = build_openapi_schemas(ir, traveler_constraints)
   request_types = endpoints.map { |e| e['requestType'] }.compact.uniq
   response_types = endpoints.map { |e| e['responseType'] }.compact.uniq
 
@@ -1145,6 +1087,7 @@ types = ir.fetch('types')
 endpoints = ir.dig('api', 'endpoints') || []
 
 currency_entries = ir.fetch('catalogs').fetch('currencies')
+language_codes = catalog_codes(ir.fetch('catalogs').fetch('languages'))
 roles = ir.fetch('catalogs').fetch('roles')
 stages = ir.fetch('catalogs').fetch('stages')
 payment_statuses = ir.fetch('catalogs').fetch('paymentStatuses')
@@ -1168,6 +1111,7 @@ write_file(
       modulePath: meta.fetch('modulePath'),
       defaultCurrency: meta.fetch('defaultCurrency'),
       generatedAt: Time.now.utc.iso8601,
+      languages: language_codes,
       currencies: currency_entries,
       roles: roles,
       stages: stages,
@@ -1180,7 +1124,7 @@ write_file(
   ) + "\n"
 )
 
-openapi_doc = build_openapi_doc(ir)
+openapi_doc = deep_stringify_keys(build_openapi_doc(ir, traveler_constraints))
 write_openapi_yaml(File.join(CONTRACT_GENERATED_DIR, 'openapi.yaml'), openapi_doc)
 
 # Embed spec in HTML so Redoc never resolves external refs (avoids Node-only lstatSync/process in the bundle).
@@ -1235,7 +1179,10 @@ write_file(
   README
 )
 
+FileUtils.rm_f(File.join(CONTRACT_GENERATED_DIR, 'mobile-api.openapi.yaml'))
+
 backend_model_outputs = {
+  'generated_Language.js' => render_js_language_module(language_codes),
   'generated_Currency.js' => render_js_currency_module(currency_entries),
   'generated_FormConstraints.js' => render_js_form_constraints_module(traveler_constraints),
   'generated_ATPStaff.js' => render_js_atp_staff_module(atp_staff_types, roles),
@@ -1245,30 +1192,125 @@ backend_model_outputs = {
 
 frontend_model_outputs = backend_model_outputs
 
-api_model_js = render_js_api_models_module(api_types, endpoints)
-api_request_js = render_js_request_factory_module(endpoints, contract_version)
-api_client_js = render_js_api_client_module(endpoints)
-
 backend_api_outputs = {
-  'generated_APIModels.js' => api_model_js,
-  'generated_APIRequestFactory.js' => api_request_js,
-  'generated_APIClient.js' => api_client_js
+  'generated_APIModels.js' => render_js_api_models_module(api_types, endpoints),
+  'generated_APIRequestFactory.js' => render_js_request_factory_module(endpoints, contract_version),
+  'generated_APIClient.js' => render_js_api_client_module(endpoints)
 }
 
-frontend_api_outputs = backend_api_outputs
+openapi_schemas = openapi_doc.dig('components', 'schemas') || {}
+openapi_enum_names = openapi_enum_schema_names(openapi_schemas)
+openapi_endpoint_list = openapi_endpoints(openapi_doc)
+openapi_transport_names = openapi_transport_type_names(openapi_doc)
+
+frontend_currency_catalog = openapi_schemas.fetch('ATPCurrencyCode').fetch('x-currency-catalog')
+frontend_language_codes = openapi_schemas.fetch('LanguageCode').fetch('enum')
+frontend_roles = openapi_schemas.fetch('ATPStaffRole').fetch('enum')
+frontend_stages = openapi_schemas.fetch('BookingStage').fetch('enum')
+frontend_payment_statuses = openapi_schemas.fetch('PaymentStatus').fetch('enum')
+frontend_adjustment_types = openapi_schemas.fetch('PricingAdjustmentType').fetch('enum')
+frontend_offer_categories = openapi_schemas.fetch('OfferCategory').fetch('enum')
+frontend_traveler_constraints = {
+  'min' => openapi_schemas.fetch('TravelerConstraints').dig('properties', 'min', 'const'),
+  'max' => openapi_schemas.fetch('TravelerConstraints').dig('properties', 'max', 'const')
+}
+
+frontend_atp_staff_types = openapi_types_for_schema_names(
+  ['ATPStaff'],
+  openapi_schemas,
+  openapi_enum_names,
+  domain: 'atp_staff',
+  mod: 'entities',
+  transport_kind: 'entity'
+)
+
+frontend_booking_type_names = %w[
+  SourceAttribution
+  BookingActivity
+  InvoiceComponent
+  BookingInvoice
+  BookingPricingAdjustment
+  BookingPayment
+  BookingPricingSummary
+  BookingPricing
+  BookingOfferCategoryRule
+  BookingOfferComponent
+  BookingOfferTotals
+  BookingOffer
+  Booking
+]
+
+frontend_aux_type_names = %w[
+  Customer
+  CustomerConsent
+  CustomerDocument
+  TravelGroup
+  TravelGroupMember
+  Tour
+  TourPriceFrom
+]
+
+frontend_api_type_names = openapi_transport_names.to_a.reject do |name|
+  frontend_booking_type_names.include?(name) ||
+    frontend_aux_type_names.include?(name) ||
+    name == 'ATPStaff'
+end
+
+frontend_model_outputs = {
+  'generated_Language.js' => render_js_language_module(frontend_language_codes, JS_OPENAPI_HEADER),
+  'generated_Currency.js' => render_js_currency_module(frontend_currency_catalog),
+  'generated_FormConstraints.js' => render_js_form_constraints_module(frontend_traveler_constraints, JS_OPENAPI_HEADER),
+  'generated_ATPStaff.js' => render_js_atp_staff_module(frontend_atp_staff_types, frontend_roles, JS_OPENAPI_HEADER),
+  'generated_Booking.js' => render_js_booking_module(
+    openapi_types_for_schema_names(frontend_booking_type_names, openapi_schemas, openapi_enum_names, domain: 'booking', mod: 'entities', transport_kind: 'entity'),
+    frontend_stages,
+    frontend_payment_statuses,
+    frontend_adjustment_types,
+    frontend_offer_categories,
+    JS_OPENAPI_HEADER
+  ),
+  'generated_Aux.js' => render_js_aux_module(
+    openapi_types_for_schema_names(frontend_aux_type_names, openapi_schemas, openapi_enum_names, domain: 'aux', mod: 'entities', transport_kind: 'entity'),
+    JS_OPENAPI_HEADER
+  )
+}
+
+frontend_api_outputs = {
+  'generated_APIModels.js' => render_js_api_models_module(
+    openapi_types_for_schema_names(frontend_api_type_names, openapi_schemas, openapi_enum_names, domain: 'api', mod: 'api', transport_kind: 'transport'),
+    openapi_endpoint_list,
+    JS_OPENAPI_HEADER
+  ),
+  'generated_APIRequestFactory.js' => render_js_request_factory_module(openapi_endpoint_list, openapi_doc.dig('info', 'version'), JS_OPENAPI_HEADER),
+  'generated_APIClient.js' => render_js_api_client_module(openapi_endpoint_list, JS_OPENAPI_HEADER)
+}
 
 ios_model_outputs = {
-  'generated_Currency.swift' => render_swift_currency(currency_entries),
-  'generated_FormConstraints.swift' => render_swift_form_constraints(traveler_constraints),
-  'generated_ATPStaff.swift' => render_swift_atp_staff(roles),
-  'generated_Booking.swift' => render_swift_booking(stages, payment_statuses, adjustment_types, offer_categories),
-  'generated_Aux.swift' => render_swift_aux(aux_types)
+  'generated_Language.swift' => render_swift_language(frontend_language_codes, SWIFT_OPENAPI_HEADER),
+  'generated_Currency.swift' => render_swift_currency(frontend_currency_catalog),
+  'generated_FormConstraints.swift' => render_swift_form_constraints(frontend_traveler_constraints, SWIFT_OPENAPI_HEADER),
+  'generated_ATPStaff.swift' => render_swift_atp_staff(frontend_roles, frontend_atp_staff_types, SWIFT_OPENAPI_HEADER),
+  'generated_Booking.swift' => render_swift_booking(
+    frontend_stages,
+    frontend_payment_statuses,
+    frontend_adjustment_types,
+    frontend_offer_categories,
+    openapi_types_for_schema_names(frontend_booking_type_names, openapi_schemas, openapi_enum_names, domain: 'booking', mod: 'entities', transport_kind: 'entity'),
+    SWIFT_OPENAPI_HEADER
+  ),
+  'generated_Aux.swift' => render_swift_aux(
+    openapi_types_for_schema_names(frontend_aux_type_names, openapi_schemas, openapi_enum_names, domain: 'aux', mod: 'entities', transport_kind: 'entity'),
+    SWIFT_OPENAPI_HEADER
+  )
 }
 
 ios_api_outputs = {
-  'generated_APIModels.swift' => render_swift_api_models(api_types),
-  'generated_APIRequestFactory.swift' => render_swift_request_factory(endpoints, contract_version),
-  'generated_APIClient.swift' => render_swift_api_client(endpoints)
+  'generated_APIModels.swift' => render_swift_api_models(
+    openapi_types_for_schema_names(frontend_api_type_names, openapi_schemas, openapi_enum_names, domain: 'api', mod: 'api', transport_kind: 'transport'),
+    SWIFT_OPENAPI_HEADER
+  ),
+  'generated_APIRequestFactory.swift' => render_swift_request_factory(openapi_endpoint_list, openapi_doc.dig('info', 'version'), SWIFT_OPENAPI_HEADER),
+  'generated_APIClient.swift' => render_swift_api_client(openapi_endpoint_list, SWIFT_OPENAPI_HEADER)
 }
 
 backend_model_outputs.each do |filename, content|

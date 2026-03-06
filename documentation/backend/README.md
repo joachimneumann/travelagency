@@ -7,7 +7,7 @@ This service implements Milestone 1 from `backend/backend_software.md`:
 - Staff assignment on bookings
 - SLA due timestamps
 - Booking activity timeline
-- Simple admin pages for pipeline and booking detail
+- Branded admin pages for pipeline, booking detail, customer detail, and tour detail
 
 Related documentation:
 - `mobileApp.md`: how to build a native iPhone app against this backend and Keycloak setup
@@ -183,13 +183,15 @@ Branded frontend backoffice pages (served by website):
   - paginated searchable Customers table
   - paginated searchable Bookings table
   - paginated searchable Tours table
+- `customer.html`: dedicated customer detail page with grouped editable customer profile fields
 - `/backend-tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
 - `backend.html` header includes `Website` and `Logout` actions.
-- `/backend-booking.html`: role-aware booking/customer detail page with booking actions
+- `/backend-booking.html`: role-aware booking detail page with booking actions
   - booking activities list
   - change staff assignment
   - change stage
   - edit the single booking note
+- Travel groups do not yet have a dedicated list endpoint; the `backend.html` travel-groups panel is currently a placeholder view.
 
 Booking concurrency model:
 - every booking read model includes `booking_hash`
@@ -245,12 +247,12 @@ Booking pricing model:
 - conversion behavior:
   - runtime conversion uses Frankfurter + ER API provider chain with fallback to configured overrides (`EXCHANGE_RATE_<FROM>_<TO>`)
   - all values are always returned to clients in the requested display currency; clients do **not** perform rate math themselves
-  - conversion for offers uses a strict USD-hop path per item:
-    - each item is converted `source -> USD` using the resolved source-to-base rate
-    - the item unit is rounded to USD decimals
+  - conversion for offers uses a strict USD-hop path per component:
+    - each component is converted `source -> USD` using the resolved source-to-base rate
+    - the component unit is rounded to USD decimals
     - then converted `USD -> target` and rounded to target decimals
-    - per-item line tax is calculated in target currency
-    - line total is summed across converted items to produce total
+    - per-component line tax is calculated in target currency
+    - line total is summed across converted components to produce total
   - total offer values are not obtained by converting a single USD total; total is calculated from converted line totals
   - if no live rate is available, stale cached rates or explicit overrides are used before returning hard failure
 - money display precision is catalog-driven:
@@ -306,7 +308,7 @@ Auth:
 
 The mobile app should not follow backend internals or `store.json` structure directly.
 The single contract source is:
-- [~/projects/travelagency/api/generated/mobile-api.openapi.yaml](~/projects/travelagency/api/generated/mobile-api.openapi.yaml)
+- [~/projects/travelagency/api/generated/openapi.yaml](~/projects/travelagency/api/generated/openapi.yaml)
 
 Generated artifacts:
 - [~/projects/travelagency/api/generated/mobile-api.meta.json](~/projects/travelagency/api/generated/mobile-api.meta.json)

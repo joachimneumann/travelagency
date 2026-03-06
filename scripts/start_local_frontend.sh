@@ -5,24 +5,24 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 FRONTEND_BIND="${FRONTEND_BIND:-localhost}"
-FRONTEND_PID_FILE="${FRONTEND_PID_FILE:-/tmp/asiatravelplan-frontend.pid}"
-FRONTEND_LOG_FILE="${FRONTEND_LOG_FILE:-/tmp/asiatravelplan-frontend.log}"
-BACKEND_BASE="${BACKEND_BASE:-http://127.0.0.1:8787}"
+COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-caddy.yml}"
 
-wait_for_pid() {
-  local pid="$1"
+wait_for_http() {
+  local url="$1"
   local label="$2"
-  local log_file="$3"
+  local attempts="${3:-20}"
 
-  sleep 0.8
-  if ! kill -0 "$pid" 2>/dev/null; then
-    echo "Error: ${label} failed to start." >&2
-    if [ -f "$log_file" ]; then
-      echo "--- ${label} log (tail) ---" >&2
-      tail -n 80 "$log_file" >&2 || true
+  local i
+  for i in $(seq 1 "$attempts"); do
+    if curl -fsSI "$url" >/dev/null 2>&1; then
+      return 0
     fi
-    exit 1
-  fi
+    sleep 0.5
+  done
+
+  echo "Error: ${label} failed to start." >&2
+  docker compose -f "$COMPOSE_FILE" logs --tail=120 caddy >&2 || true
+  exit 1
 }
 
 require_cmd() {
@@ -59,49 +59,32 @@ stop_listeners_on_port() {
 }
 
 stop_existing_frontend() {
-  if [ ! -f "$FRONTEND_PID_FILE" ]; then
-    stop_listeners_on_port "$FRONTEND_PORT" "frontend"
-    return
+  if [ -f "$COMPOSE_FILE" ]; then
+    (
+      cd "$ROOT_DIR"
+      FRONTEND_PORT="$FRONTEND_PORT" docker compose -f "$COMPOSE_FILE" down --remove-orphans
+    ) >/dev/null 2>&1 || true
   fi
 
-  local existing_pid
-  existing_pid="$(cat "$FRONTEND_PID_FILE" 2>/dev/null || true)"
-  if [ -n "${existing_pid}" ] && kill -0 "${existing_pid}" 2>/dev/null; then
-    echo "Stopping existing frontend (PID ${existing_pid}) ..."
-    kill "${existing_pid}" 2>/dev/null || true
-    sleep 0.5
-    if kill -0 "${existing_pid}" 2>/dev/null; then
-      kill -9 "${existing_pid}" 2>/dev/null || true
-    fi
-  fi
-
-  rm -f "$FRONTEND_PID_FILE"
   stop_listeners_on_port "$FRONTEND_PORT" "frontend"
 }
 
 main() {
-  require_cmd python3
+  require_cmd docker
   require_cmd lsof
+  require_cmd curl
   stop_existing_frontend
 
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."
-  bash -lc '
-    cd "$1"
-    nohup bash scripts/run_local_frontend_supervisor.sh \
-      "$1" \
-      "$2" \
-      "$3" \
-      "$4" \
-      "$5" > /dev/null 2>&1 < /dev/null &
-    pid=$!
-    disown "$pid" 2>/dev/null || true
-    printf "%s\n" "$pid" >"$6"
-  ' bash "$ROOT_DIR" "$FRONTEND_BIND" "$FRONTEND_PORT" "$BACKEND_BASE" "$FRONTEND_LOG_FILE" "$FRONTEND_PID_FILE"
-  wait_for_pid "$(cat "$FRONTEND_PID_FILE")" "frontend" "$FRONTEND_LOG_FILE"
+  (
+    cd "$ROOT_DIR"
+    FRONTEND_PORT="$FRONTEND_PORT" docker compose -f "$COMPOSE_FILE" up -d caddy
+  )
+
+  wait_for_http "http://${FRONTEND_BIND}:${FRONTEND_PORT}/" "frontend"
 
   echo "Frontend:    http://${FRONTEND_BIND}:${FRONTEND_PORT}"
-  echo "Backend proxy: ${BACKEND_BASE}"
-  echo "Frontend log: ${FRONTEND_LOG_FILE}"
+  echo "Frontend mode: local Caddy"
 }
 
 main "$@"

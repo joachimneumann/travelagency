@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-05T15:09:40Z
+# 2026-03-06T15:16:27Z
 
 ---
 openapi: 3.1.0
@@ -41,6 +41,27 @@ components:
       - EURO
       - VND
       - THB
+      x-currency-catalog:
+      - code: USD
+        symbol: "$"
+        decimalPlaces: 2
+      - code: EURO
+        symbol: "€"
+        decimalPlaces: 2
+      - code: VND
+        symbol: "₫"
+        decimalPlaces: 0
+      - code: THB
+        symbol: "฿"
+        decimalPlaces: 0
+    LanguageCode:
+      type: string
+      enum:
+      - English
+      - Vietnamese
+      - French
+      - German
+      - Spanish
     ATPStaffRole:
       type: string
       enum:
@@ -83,6 +104,18 @@ components:
       - FEES_TAXES
       - DISCOUNTS_CREDITS
       - OTHER
+    TravelerConstraints:
+      type: object
+      required:
+      - min
+      - max
+      properties:
+        min:
+          type: integer
+          const: 1
+        max:
+          type: integer
+          const: 30
     BookingPricing:
       type: object
       description: Defined in model (referenced as BookingPricing).
@@ -123,7 +156,6 @@ components:
       required:
       - id
       - name
-      - can_receive_marketing
       - created_at
       - updated_at
       properties:
@@ -144,6 +176,24 @@ components:
           type: string
           nullable: true
         nationality:
+          type: string
+          nullable: true
+        address_line_1:
+          type: string
+          nullable: true
+        address_line_2:
+          type: string
+          nullable: true
+        address_city:
+          type: string
+          nullable: true
+        address_state_region:
+          type: string
+          nullable: true
+        address_postal_code:
+          type: string
+          nullable: true
+        address_country_code:
           type: string
           nullable: true
         organization_name:
@@ -170,42 +220,18 @@ components:
         email:
           type: string
           nullable: true
-        address_line_1:
-          type: string
-          nullable: true
-        address_line_2:
-          type: string
-          nullable: true
-        address_city:
-          type: string
-          nullable: true
-        address_state_region:
-          type: string
-          nullable: true
-        address_postal_code:
-          type: string
-          nullable: true
-        address_country_code:
-          type: string
-          nullable: true
         preferred_language:
-          type: string
+          "$ref": "#/components/schemas/LanguageCode"
           nullable: true
         preferred_currency:
-          type: string
+          "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
         timezone:
           type: string
           nullable: true
-        tags:
-          type: array
-          items:
-            type: string
         notes:
           type: string
           nullable: true
-        can_receive_marketing:
-          type: boolean
         created_at:
           type: string
         updated_at:
@@ -935,6 +961,7 @@ security:
 paths:
   "/public/v1/mobile/bootstrap":
     get:
+      operationId: mobile_bootstrap
       summary: Mobile Bootstrap
       tags:
       - Public
@@ -949,6 +976,7 @@ paths:
                 "$ref": "#/components/schemas/MobileBootstrap"
   "/auth/me":
     get:
+      operationId: auth_me
       summary: Auth Me
       tags:
       - Auth
@@ -976,6 +1004,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/public/v1/bookings":
     post:
+      operationId: public_bookings
       summary: Public Bookings
       tags:
       - Public
@@ -1002,6 +1031,7 @@ paths:
                 "$ref": "#/components/schemas/BookingDetail"
   "/public/v1/tours":
     get:
+      operationId: public_tours
       summary: Public Tours
       tags:
       - Public
@@ -1016,6 +1046,7 @@ paths:
                 "$ref": "#/components/schemas/TourList"
   "/api/v1/bookings":
     get:
+      operationId: bookings
       summary: Bookings
       tags:
       - V1
@@ -1043,6 +1074,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}":
     get:
+      operationId: booking_detail
       summary: Booking Detail
       tags:
       - V1
@@ -1075,6 +1107,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/chat":
     get:
+      operationId: booking_chat
       summary: Booking Chat
       tags:
       - V1
@@ -1107,6 +1140,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/stage":
     patch:
+      operationId: booking_stage
       summary: Booking Stage
       tags:
       - V1
@@ -1139,6 +1173,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/owner":
     patch:
+      operationId: booking_assignment
       summary: Booking Assignment
       tags:
       - V1
@@ -1171,6 +1206,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/notes":
     patch:
+      operationId: booking_note
       summary: Booking Note
       tags:
       - V1
@@ -1203,6 +1239,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/pricing":
     patch:
+      operationId: booking_pricing
       summary: Booking Pricing
       tags:
       - V1
@@ -1241,6 +1278,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/offer":
     patch:
+      operationId: booking_offer
       summary: Booking Offer
       tags:
       - V1
@@ -1279,6 +1317,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/activities":
     get:
+      operationId: booking_activities
       summary: Booking Activities
       tags:
       - V1
@@ -1311,6 +1350,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/invoices":
     get:
+      operationId: booking_invoices
       summary: Booking Invoices
       tags:
       - V1
@@ -1343,6 +1383,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/atp_staff":
     get:
+      operationId: atp_staff
       summary: Atp Staff
       tags:
       - V1
@@ -1370,6 +1411,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/customers":
     get:
+      operationId: customers
       summary: Customers
       tags:
       - V1
@@ -1397,6 +1439,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/customers/{customerId}":
     get:
+      operationId: customer_detail
       summary: Customer Detail
       tags:
       - V1
@@ -1429,6 +1472,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/tours":
     get:
+      operationId: tours
       summary: Tours
       tags:
       - V1
@@ -1456,6 +1500,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/tours/{tourId}":
     get:
+      operationId: tour_detail
       summary: Tour Detail
       tags:
       - V1
@@ -1488,6 +1533,7 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/tours/{tourId}/image":
     get:
+      operationId: tour_image
       summary: Tour Image
       tags:
       - V1

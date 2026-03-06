@@ -1,4 +1,4 @@
-// Generated from the normalized model IR exported from model/ir.
+// Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
 function __assertObject(value, schemaName) {
@@ -33,44 +33,55 @@ export const ATPSTAFF_SCHEMA = {
   "name": "ATPStaff",
   "domain": "atp_staff",
   "module": "entities",
-  "sourceType": "entities.#ATPStaff",
+  "sourceType": "openapi.components.schemas.ATPStaff",
   "fields": [
     {
       "name": "id",
       "kind": "scalar",
-      "typeName": "Identifier",
-      "required": true
+      "typeName": "string",
+      "required": true,
+      "isArray": false,
+      "wireName": "id"
     },
     {
       "name": "preferredUsername",
       "kind": "scalar",
       "typeName": "string",
-      "required": true
+      "required": true,
+      "isArray": false,
+      "wireName": "preferredUsername"
     },
     {
       "name": "displayName",
       "kind": "scalar",
       "typeName": "string",
-      "required": false
+      "required": false,
+      "isArray": false,
+      "wireName": "displayName"
     },
     {
       "name": "email",
       "kind": "scalar",
-      "typeName": "Email",
-      "required": false
+      "typeName": "string",
+      "required": false,
+      "isArray": false,
+      "wireName": "email"
     },
     {
       "name": "roles",
       "kind": "enum",
       "typeName": "ATPStaffRole",
-      "required": true,
-      "isArray": true
+      "required": false,
+      "isArray": true,
+      "wireName": "roles"
     },
     {
       "name": "atpStaffId",
       "kind": "scalar",
-      "typeName": "Identifier",
-      "required": false
+      "typeName": "string",
+      "required": false,
+      "isArray": false,
+      "wireName": "atpStaffId"
     }
   ]
 };

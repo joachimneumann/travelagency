@@ -1,40 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FRONTEND_PID_FILE="${FRONTEND_PID_FILE:-/tmp/asiatravelplan-frontend.pid}"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
+COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-caddy.yml}"
 
-stop_process() {
-  local pid="$1"
-  local label="$2"
-
-  if [ -z "$pid" ]; then
+stop_compose_frontend() {
+  if [ ! -f "$COMPOSE_FILE" ]; then
     return
   fi
 
-  if kill -0 "$pid" 2>/dev/null; then
-    echo "Stopping ${label} (PID ${pid}) ..."
-    kill "$pid" 2>/dev/null || true
-    sleep 0.5
-    if kill -0 "$pid" 2>/dev/null; then
-      kill -9 "$pid" 2>/dev/null || true
-    fi
-    echo "${label} stopped."
-  fi
-}
-
-stop_from_pid_file() {
-  if [ ! -f "$FRONTEND_PID_FILE" ]; then
+  if ! command -v docker >/dev/null 2>&1; then
     return
   fi
 
-  local pid
-  pid="$(cat "$FRONTEND_PID_FILE" 2>/dev/null || true)"
-  if [ -z "$pid" ]; then
-    echo "frontend PID file was empty and has been removed."
-  fi
-  stop_process "$pid" "frontend"
-  rm -f "$FRONTEND_PID_FILE"
+  (
+    cd "$ROOT_DIR"
+    FRONTEND_PORT="$FRONTEND_PORT" docker compose -f "$COMPOSE_FILE" down --remove-orphans
+  ) >/dev/null 2>&1 || true
 }
 
 stop_from_port() {
@@ -46,11 +29,16 @@ stop_from_port() {
 
   local pid
   for pid in $pids; do
-    stop_process "$pid" "frontend on port ${FRONTEND_PORT}"
+    echo "Stopping frontend listener on port ${FRONTEND_PORT} (PID ${pid}) ..."
+    kill "$pid" 2>/dev/null || true
+    sleep 0.5
+    if kill -0 "$pid" 2>/dev/null; then
+      kill -9 "$pid" 2>/dev/null || true
+    fi
   done
 }
 
-stop_from_pid_file
+stop_compose_frontend
 stop_from_port
 
 if lsof -tiTCP:${FRONTEND_PORT} -sTCP:LISTEN >/dev/null 2>&1; then

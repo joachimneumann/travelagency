@@ -31,7 +31,7 @@ Features available now:
 - Staff creation API for managers/admins (`POST /api/v1/atp_staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
-- Branded frontend backoffice pages (`/backend.html`, `/backend-booking.html`, `/backend-tour.html`)
+- Branded frontend backoffice pages (`/backend.html`, `/backend-booking.html`, `/customer.html`, `/backend-tour.html`)
 - `backend.html` lists tours
 - clicking a tour ID opens `backend-tour.html` for editing
   - destination and styles are edited with checkbox groups
@@ -137,7 +137,8 @@ curl -H 'Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>' \
 
 Open in browser:
 - `http://localhost:8080/backend.html`
-- `http://localhost:8080/backend-booking.html`
+- `http://localhost:8080/customer.html?id=<customer_id>`
+- `http://localhost:8080/backend-booking.html?id=<booking_id>`
 - `http://localhost:8080/backend-tour.html`
 
 ## 5) Integrate with locally executed AsiaTravelPlan webpage
@@ -161,11 +162,12 @@ Branded backend web UI:
   - role-based Tours table
   - staff creation panel for managers/admins
 - tour IDs open `backend-tour.html` for admin editing and accountant read-only viewing
-- Booking/customer IDs link to `backend-booking.html`.
+- customer IDs open `customer.html`
+- booking IDs open `backend-booking.html`
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
 - Clicking `backend` triggers Keycloak login (`/auth/login`) in the main window and returns to `backend.html`.
-- The main site also displays `Logged in as: ...` below the `backend` button using `/auth/me`.
+- The main site displays the logged-in username inside the `Backend`/`Logout` button using `/auth/me`.
 
 ## 5.1 Recommended local setup (split origin)
 
@@ -186,15 +188,20 @@ CORS_ORIGIN='http://localhost:8080' \
 npm start
 ```
 
+Note:
+- the helper script `./scripts/start_local_backend.sh` currently defaults `KEYCLOAK_ENABLED=true`
+- the helper script requires `KEYCLOAK_CLIENT_SECRET` to be exported before startup
+- `./scripts/start_local_all.sh` simply starts local Keycloak, backend, and frontend in sequence; it does not document or inject the secret for you
+
 Role mapping for `atp_staff`:
 - the logged-in Keycloak `preferred_username` must match an entry in `backend/app/config/atp_staff.json -> usernames[]`
 - new bookings are created unassigned and receive `staff = null` until manager/admin assignment
 
-Terminal B (website):
+Terminal B (website via local Caddy):
 
 ```bash
 cd ~/projects/travelagency
-python3 -m http.server 8080
+./scripts/start_local_frontend.sh
 ```
 
 Then open:
@@ -251,17 +258,15 @@ Then hard refresh the browser and re-check the theme dropdown.
 
 ## 5.2 Same-origin setup (optional)
 
-If you place a reverse proxy in front (for example `http://localhost:8080`) and route:
+Local development now uses repo-managed Caddy on `http://localhost:8080`.
+
+It routes:
 - `/public/v1/*` and `/api/v1/*` -> backend (`8787`)
-- `/` and static assets -> website static server
+- `/auth/*` -> backend (`8787`)
+- `/` and static assets -> repo files served by Caddy
+- `/integrations/*` -> backend (`8787`)
 
 then you do not need `window.ASIATRAVELPLAN_API_BASE`, because relative path `/public/v1/bookings` works directly.
-
-## 5.3 File-open mode (`file://`) note
-
-The website can be opened directly from filesystem, but this is not recommended for integration tests.
-
-Use an HTTP static server (`python -m http.server`) so browser behavior matches production more closely.
 
 ## 6) Verify end-to-end integration
 

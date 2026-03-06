@@ -1,10 +1,10 @@
     import Foundation
 
-    // Generated from the normalized model IR exported from model/ir.
+    // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
     enum GeneratedAPIRequestFactory {
-        static let contractVersion = "0.1.0"
+        static let contractVersion = "2026-03-02.1"
 
     static let mobileBootstrap = "/public/v1/mobile/bootstrap"
     static let authMe = "/auth/me"

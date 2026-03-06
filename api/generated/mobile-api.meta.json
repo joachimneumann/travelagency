@@ -3,7 +3,14 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-05T15:09:40Z",
+  "generatedAt": "2026-03-06T15:16:27Z",
+  "languages": [
+    "English",
+    "Vietnamese",
+    "French",
+    "German",
+    "Spanish"
+  ],
   "currencies": [
     {
       "code": "USD",

@@ -1,0 +1,11 @@
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    volumes:
+      - ./deploy/Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - ./:/srv:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

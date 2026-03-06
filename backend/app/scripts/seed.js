@@ -110,8 +110,7 @@ async function main() {
       phone,
       language,
       created_at: createdAt,
-      updated_at: updatedAt,
-      tags: []
+      updated_at: updatedAt
     };
     store.customers.push(customer);
 

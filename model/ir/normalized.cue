@@ -38,6 +38,7 @@ IR: {
 	}
 
 	catalogs: {
+		languages: [for language in enumModel.LanguageCatalog {{code: language}}]
 		currencies: [
 			for currency in enumModel.CurrencyCatalog {
 				{
@@ -82,6 +83,12 @@ IR: {
 				{name: "last_name", kind: "scalar", typeName: "string", required: false},
 				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "nationality", kind: "scalar", typeName: "string", required: false},
+				{name: "address_line_1", kind: "scalar", typeName: "string", required: false},
+				{name: "address_line_2", kind: "scalar", typeName: "string", required: false},
+				{name: "address_city", kind: "scalar", typeName: "string", required: false},
+				{name: "address_state_region", kind: "scalar", typeName: "string", required: false},
+				{name: "address_postal_code", kind: "scalar", typeName: "string", required: false},
+				{name: "address_country_code", kind: "scalar", typeName: "string", required: false},
 				{name: "organization_name", kind: "scalar", typeName: "string", required: false},
 				{name: "organization_address", kind: "scalar", typeName: "string", required: false},
 				{name: "organization_phone_number", kind: "scalar", typeName: "string", required: false},
@@ -90,18 +97,10 @@ IR: {
 				{name: "tax_id", kind: "scalar", typeName: "string", required: false},
 				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "address_line_1", kind: "scalar", typeName: "string", required: false},
-				{name: "address_line_2", kind: "scalar", typeName: "string", required: false},
-				{name: "address_city", kind: "scalar", typeName: "string", required: false},
-				{name: "address_state_region", kind: "scalar", typeName: "string", required: false},
-				{name: "address_postal_code", kind: "scalar", typeName: "string", required: false},
-				{name: "address_country_code", kind: "scalar", typeName: "string", required: false},
-				{name: "preferred_language", kind: "scalar", typeName: "string", required: false},
-				{name: "preferred_currency", kind: "scalar", typeName: "string", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "timezone", kind: "scalar", typeName: "string", required: false},
-				{name: "tags", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "can_receive_marketing", kind: "scalar", typeName: "bool", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "archived_at", kind: "scalar", typeName: "Timestamp", required: false},

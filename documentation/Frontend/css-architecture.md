@@ -13,7 +13,9 @@
 - Site baseline: `assets/css/site.css`
 - Tokens: `assets/css/tokens.css`
 - Base: `assets/css/base.css`
+- Utilities: `assets/css/utilities.css`
 - Components: `assets/css/components/*.css`
+- Page-scoped styles: `assets/css/pages/*.css`
 - Tailwind input: `assets/css/tailwind.input.css`
 - Tailwind output: `assets/css/tailwind.generated.css`
 
@@ -43,4 +45,6 @@ Production build uses PostCSS + Tailwind + PurgeCSS and writes:
 ## Migration policy
 
 - New UI work must go into modular files under `assets/css/components/`.
+- Page-specific overrides belong in `assets/css/pages/`.
 - Keep shared constants in `tokens.css` and global defaults in `base.css`.
+- Put repeated spacing/title/visibility helpers in `utilities.css` instead of inline `style=""`.

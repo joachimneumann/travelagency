@@ -24,6 +24,8 @@ const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
 const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
+const CONSENT_EVIDENCE_DIR = path.join(APP_ROOT, "data", "consent-evidence");
+const CUSTOMER_PHOTOS_DIR = path.join(APP_ROOT, "data", "customer-photos");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
@@ -296,7 +298,15 @@ export async function createBackendHandler({ port = PORT } = {}) {
     normalizeStringArray,
     persistAtpStaff,
     persistStore,
-    randomUUID
+    randomUUID,
+    nowIso,
+    mkdir,
+    path,
+    writeFile,
+    stat,
+    sendFileWithCache,
+    CONSENT_EVIDENCE_DIR,
+    CUSTOMER_PHOTOS_DIR
   });
   const tourHandlers = createTourHandlers({
     normalizeText,
@@ -408,6 +418,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
 async function ensureStorage() {
   await mkdir(TOURS_DIR, { recursive: true });
   await mkdir(INVOICES_DIR, { recursive: true });
+  await mkdir(CONSENT_EVIDENCE_DIR, { recursive: true });
+  await mkdir(CUSTOMER_PHOTOS_DIR, { recursive: true });
   await mkdir(TEMP_UPLOAD_DIR, { recursive: true });
 }
 
@@ -846,6 +858,7 @@ async function readStore() {
   parsed.bookings ||= [];
   parsed.activities ||= [];
   parsed.invoices ||= [];
+  parsed.customer_consents ||= [];
   parsed.chat_channel_accounts ||= [];
   parsed.chat_conversations ||= [];
   parsed.chat_events ||= [];
@@ -1449,7 +1462,7 @@ function convertMinorUnitsRaw(amountCents, fromCurrency, toCurrency, rate) {
   return major * rate * toScale;
 }
 
-function convertOfferLineAmountForCurrency(item, rates, fromCurrency, toCurrency) {
+function convertOfferLineAmountForCurrency(component, rates, fromCurrency, toCurrency) {
   const sourceCurrency = safeCurrency(fromCurrency) || BASE_CURRENCY;
   const targetCurrency = safeCurrency(toCurrency) || BASE_CURRENCY;
 
@@ -1468,15 +1481,15 @@ function convertOfferLineAmountForCurrency(item, rates, fromCurrency, toCurrency
   })();
 
   if (sourceCurrency === targetCurrency) {
-    const unitAmountCents = Math.max(0, Number(item?.unit_amount_cents || 0));
-    const safeQuantity = Math.max(1, safeInt(item?.quantity) || 1);
-    const sign = offerCategorySign(item?.category);
-    const taxBasisPoints = clampOfferTaxRateBasisPoints(item?.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
+    const unitAmountCents = Math.max(0, Number(component?.unit_amount_cents || 0));
+    const safeQuantity = Math.max(1, safeInt(component?.quantity) || 1);
+    const sign = offerCategorySign(component?.category);
+    const taxBasisPoints = clampOfferTaxRateBasisPoints(component?.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
     const lineNetAmountCents = sign * unitAmountCents * safeQuantity;
     const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxBasisPoints) / 10000);
     return {
-      id: String(item?.id || ""),
-      category: normalizeOfferCategory(item?.category),
+      id: String(component?.id || ""),
+      category: normalizeOfferCategory(component?.category),
       quantity: safeQuantity,
       tax_rate_basis_points: taxBasisPoints,
       unit_amount_cents: unitAmountCents,
@@ -1492,10 +1505,10 @@ function convertOfferLineAmountForCurrency(item, rates, fromCurrency, toCurrency
   const fromScale = 10 ** fromDefinition.decimal_places;
   const toDefinition = getCurrencyDefinition(targetCurrency);
   const toScale = 10 ** toDefinition.decimal_places;
-  const safeQuantity = Math.max(1, safeInt(item?.quantity) || 1);
-  const unitAmountCents = Math.max(0, Number(item?.unit_amount_cents || 0));
-  const sign = offerCategorySign(item?.category);
-  const taxBasisPoints = clampOfferTaxRateBasisPoints(item?.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
+  const safeQuantity = Math.max(1, safeInt(component?.quantity) || 1);
+  const unitAmountCents = Math.max(0, Number(component?.unit_amount_cents || 0));
+  const sign = offerCategorySign(component?.category);
+  const taxBasisPoints = clampOfferTaxRateBasisPoints(component?.tax_rate_basis_points, DEFAULT_OFFER_TAX_RATE_BASIS_POINTS);
   const sourceToBaseRate = sourceCurrency === BASE_CURRENCY ? 1 : normalizedRates.sourceToBaseRate;
   const baseToTargetRate = targetCurrency === BASE_CURRENCY ? 1 : normalizedRates.baseToTargetRate;
 
@@ -1512,8 +1525,8 @@ function convertOfferLineAmountForCurrency(item, rates, fromCurrency, toCurrency
   const line_total_amount_cents = lineNetAmountCents + lineTaxAmountCents;
 
   return {
-    id: String(item?.id || ""),
-    category: normalizeOfferCategory(item?.category),
+    id: String(component?.id || ""),
+    category: normalizeOfferCategory(component?.category),
     quantity: safeQuantity,
     tax_rate_basis_points: taxBasisPoints,
     unit_amount_cents: convertedUnitMinor,
@@ -2559,7 +2572,11 @@ function normalizeBookingOffer(rawOffer, preferredCurrency = BASE_CURRENCY) {
   const rulesInput = Array.isArray(offer.category_rules) ? offer.category_rules : [];
   const ruleMap = buildOfferCategoryRuleMap(rulesInput);
   const category_rules = OFFER_CATEGORY_ORDER.map((category) => ruleMap.get(category));
-  const sourceComponents = Array.isArray(offer.components) ? offer.components : [];
+  const sourceComponents = Array.isArray(offer.components)
+    ? offer.components
+    : Array.isArray(offer.items)
+      ? offer.items
+      : [];
   const components = sourceComponents.map((component, index) => {
     const category = normalizeOfferCategory(component?.category);
         const categoryRule = ruleMap.get(category);

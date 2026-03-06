@@ -1,6 +1,6 @@
     import Foundation
 
-    // Generated from the normalized model IR exported from model/ir.
+    // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
     enum GeneratedAPIEndpointKey: String, CaseIterable {

@@ -14,8 +14,8 @@ Business flow:
 
 ### 2.1 Offer and Payment Link
 
-- Create one offer per customer with one or more tour line items.
-- Each line item includes:
+- Create one offer per customer with one or more tour line components.
+- Each line component includes:
   - base tour reference (`tour_id`)
   - customer-specific overrides/notes
   - customer-specific pricing (`unit_amount_cents`, `quantity`, `total_amount_cents`)

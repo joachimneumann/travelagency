@@ -6,7 +6,7 @@ Current implementation scaffold:
 - `~/projects/travelagency/mobile/iOS`
 - Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
 - project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
+- contract source: `~/projects/travelagency/api/generated/openapi.yaml`
 
 The app scope is intentionally narrow:
 - allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
@@ -97,7 +97,7 @@ The mobile app should treat the OpenAPI contract as the only stable interface.
 It should not infer response shapes from backend internals or JSON storage.
 
 Contract source of truth:
-- `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
+- `~/projects/travelagency/api/generated/openapi.yaml`
 
 Generated artifacts:
 - `~/projects/travelagency/api/generated/mobile-api.meta.json`

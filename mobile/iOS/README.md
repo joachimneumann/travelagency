@@ -22,7 +22,7 @@ Current scope:
 Included now:
 - Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
 - project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `~/projects/travelagency/api/generated/mobile-api.openapi.yaml`
+- contract source: `~/projects/travelagency/api/generated/openapi.yaml`
 - generated models: `~/projects/travelagency/mobile/iOS/Generated`
 - URL scheme registration in `Resources/Info.plist`
 - PKCE authorization code exchange against Keycloak

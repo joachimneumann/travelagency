@@ -9,7 +9,7 @@ Scope decision:
 Primary goal:
 - Move AsiaTravelPlan from static booking capture to a production backend that runs the full booking -> quote -> confirmed trip operations lifecycle.
 
-## 1.1 Implementation Status (Updated February 26, 2026)
+## 1.1 Implementation Status (Updated March 6, 2026)
 
 Current implemented code lives in:
 - `backend/app/src/server.js`
@@ -33,9 +33,11 @@ Implemented now:
 - Branded website backoffice pages implemented:
   - `backend.html`: paginated searchable customers + bookings + tours tables (default newest 10 each)
   - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
-  - `backend-booking.html`: detail page for bookings/customers with booking actions (staff/stage updates + notes)
+  - `customer.html`: dedicated customer detail page with grouped editable customer fields
+  - `backend-booking.html`: booking detail page with booking actions (staff/stage updates + notes)
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
+  - travel groups are visible in the UI, but there is not yet a dedicated `/api/v1/travel_groups` list endpoint
 - Tours are fully backend-driven:
   - website reads tours from `GET /public/v1/tours`
   - tour images are backend-hosted under `/public/v1/tour-images/...`
@@ -173,6 +175,7 @@ Delivered endpoints and features:
 - `GET /api/v1/customers` with pagination/search
 - Branded frontend backoffice pages:
   - `/backend.html` (filters + pagination)
+  - `/customer.html` (customer profile detail/edit page)
   - `/backend-booking.html` (role-aware staff/stage/note actions)
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)

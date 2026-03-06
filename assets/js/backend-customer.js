@@ -5,6 +5,16 @@ import {
   TRAVEL_GROUP_SCHEMA,
   TRAVEL_GROUP_MEMBER_SCHEMA
 } from "../../frontend/Generated/Models/generated_Aux.js";
+import {
+  GENERATED_CURRENCY_CODES,
+  normalizeCurrencyCode
+} from "../../frontend/Generated/Models/generated_Currency.js";
+import {
+  GENERATED_LANGUAGE_CODES,
+  formatLanguageCodeLabel,
+  normalizeLanguageCode
+} from "../../frontend/Generated/Models/generated_Language.js";
+import { normalizeLocalDateTimeToIso } from "./shared/datetime.js";
 import { customerDetailRequest } from "../../frontend/Generated/API/generated_APIRequestFactory.js";
 
 const qs = new URLSearchParams(window.location.search);
@@ -23,6 +33,7 @@ const ORGANIZATION_CUSTOMER_FIELDS = new Set([
 const state = {
   id: qs.get("id") || "",
   customer: null,
+  consents: [],
   isSaving: false,
   isOrganizationCustomer: false
 };
@@ -32,26 +43,325 @@ const CUSTOMER_FIELD_UI_CONFIG = {
   created_at: { editable: false },
   updated_at: { editable: false },
   archived_at: { editable: false },
-  notes: { editable: true, control: "textarea", rows: 4 },
-  tags: { editable: true, control: "textarea", rows: 2 },
-  can_receive_marketing: { editable: true, control: "checkbox" }
+  notes: { editable: true, control: "textarea", rows: 4 }
 };
 
+const COUNTRY_CODE_OPTIONS = [
+  "AD",
+  "AE",
+  "AF",
+  "AG",
+  "AI",
+  "AL",
+  "AM",
+  "AO",
+  "AQ",
+  "AR",
+  "AS",
+  "AT",
+  "AU",
+  "AW",
+  "AX",
+  "AZ",
+  "BA",
+  "BB",
+  "BD",
+  "BE",
+  "BF",
+  "BG",
+  "BH",
+  "BI",
+  "BJ",
+  "BL",
+  "BM",
+  "BN",
+  "BO",
+  "BQ",
+  "BR",
+  "BS",
+  "BT",
+  "BV",
+  "BW",
+  "BY",
+  "BZ",
+  "CA",
+  "CC",
+  "CD",
+  "CF",
+  "CG",
+  "CH",
+  "CI",
+  "CK",
+  "CL",
+  "CM",
+  "CN",
+  "CO",
+  "CR",
+  "CU",
+  "CV",
+  "CW",
+  "CX",
+  "CY",
+  "CZ",
+  "DE",
+  "DJ",
+  "DK",
+  "DM",
+  "DO",
+  "DZ",
+  "EC",
+  "EE",
+  "EG",
+  "EH",
+  "ER",
+  "ES",
+  "ET",
+  "FI",
+  "FJ",
+  "FK",
+  "FM",
+  "FO",
+  "FR",
+  "GA",
+  "GB",
+  "GD",
+  "GE",
+  "GF",
+  "GG",
+  "GH",
+  "GI",
+  "GL",
+  "GM",
+  "GN",
+  "GP",
+  "GQ",
+  "GR",
+  "GS",
+  "GT",
+  "GU",
+  "GW",
+  "GY",
+  "HK",
+  "HM",
+  "HN",
+  "HR",
+  "HT",
+  "HU",
+  "ID",
+  "IE",
+  "IL",
+  "IM",
+  "IN",
+  "IO",
+  "IQ",
+  "IR",
+  "IS",
+  "IT",
+  "JE",
+  "JM",
+  "JO",
+  "JP",
+  "KE",
+  "KG",
+  "KH",
+  "KI",
+  "KM",
+  "KN",
+  "KP",
+  "KR",
+  "KW",
+  "KY",
+  "KZ",
+  "LA",
+  "LB",
+  "LC",
+  "LI",
+  "LK",
+  "LR",
+  "LS",
+  "LT",
+  "LU",
+  "LV",
+  "LY",
+  "MA",
+  "MC",
+  "MD",
+  "ME",
+  "MF",
+  "MG",
+  "MH",
+  "MK",
+  "ML",
+  "MM",
+  "MN",
+  "MO",
+  "MP",
+  "MQ",
+  "MR",
+  "MS",
+  "MT",
+  "MU",
+  "MV",
+  "MW",
+  "MX",
+  "MY",
+  "MZ",
+  "NA",
+  "NC",
+  "NE",
+  "NF",
+  "NG",
+  "NI",
+  "NL",
+  "NO",
+  "NP",
+  "NR",
+  "NU",
+  "NZ",
+  "OM",
+  "PA",
+  "PE",
+  "PF",
+  "PG",
+  "PH",
+  "PK",
+  "PL",
+  "PM",
+  "PN",
+  "PR",
+  "PS",
+  "PT",
+  "PW",
+  "PY",
+  "QA",
+  "RE",
+  "RO",
+  "RS",
+  "RU",
+  "RW",
+  "SA",
+  "SB",
+  "SC",
+  "SD",
+  "SE",
+  "SG",
+  "SH",
+  "SI",
+  "SJ",
+  "SK",
+  "SL",
+  "SM",
+  "SN",
+  "SO",
+  "SR",
+  "SS",
+  "ST",
+  "SV",
+  "SX",
+  "SY",
+  "SZ",
+  "TC",
+  "TD",
+  "TF",
+  "TG",
+  "TH",
+  "TJ",
+  "TK",
+  "TL",
+  "TM",
+  "TN",
+  "TO",
+  "TR",
+  "TT",
+  "TV",
+  "TW",
+  "TZ",
+  "UA",
+  "UG",
+  "UM",
+  "US",
+  "UY",
+  "UZ",
+  "VA",
+  "VC",
+  "VE",
+  "VG",
+  "VI",
+  "VN",
+  "VU",
+  "WF",
+  "WS",
+  "YE",
+  "YT",
+  "ZA",
+  "ZM",
+  "ZW"
+].map((code) => ({
+  value: code,
+  label: formatCountryOptionLabel(code)
+}));
+
+const PREFERRED_LANGUAGE_OPTIONS = GENERATED_LANGUAGE_CODES.map((code) => ({
+  value: code,
+  label: formatLanguageCodeLabel(code)
+}));
+
+const PREFERRED_CURRENCY_OPTIONS = GENERATED_CURRENCY_CODES.map((code) => ({
+  value: code,
+  label: code
+}));
+
+const TIMEZONE_OPTIONS = (
+  typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function"
+    ? Intl.supportedValuesOf("timeZone")
+    : ["UTC", "Asia/Ho_Chi_Minh", "Europe/Berlin", "America/New_York"]
+).map((timezone) => ({
+  value: timezone,
+  label: timezone.replace(/_/g, " ")
+}));
+
 const CUSTOMER_PRIMARY_GROUP_FIELD_NAMES = [
-  "name",
   "title",
+  "name",
   "date_of_birth",
   "nationality",
   "phone_number",
-  "email"
+  "email",
+  "preferred_language",
+  "preferred_currency",
+  "timezone"
+];
+
+const CUSTOMER_ADDRESS_GROUP_FIELD_NAMES = [
+  "address_line_1",
+  "address_line_2",
+  "address_postal_code",
+  "address_city",
+  "address_country_code",
+  "address_state_region"
+];
+
+const CUSTOMER_NOTES_GROUP_FIELD_NAMES = [
+  "notes"
 ];
 
 const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
   .filter((field) => !["id", "first_name", "last_name"].includes(field.name))
   .map((field) => {
     const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
+    const selectConfig =
+      field.name === "nationality" || field.name === "address_country_code"
+        ? { control: "select", options: COUNTRY_CODE_OPTIONS }
+        : field.name === "preferred_language"
+          ? { control: "select", options: PREFERRED_LANGUAGE_OPTIONS }
+          : field.name === "preferred_currency"
+            ? { control: "select", options: PREFERRED_CURRENCY_OPTIONS }
+            : field.name === "timezone"
+              ? { control: "select", options: TIMEZONE_OPTIONS }
+              : {};
     return {
       ...field,
+      ...selectConfig,
       ...config,
       editable: config.editable ?? true
     };
@@ -61,9 +371,17 @@ const CUSTOMER_PRIMARY_GROUP_FIELDS = CUSTOMER_PRIMARY_GROUP_FIELD_NAMES
   .map((fieldName) => CUSTOMER_EDIT_FIELDS.find((field) => field.name === fieldName))
   .filter(Boolean);
 
-const CUSTOMER_REMAINING_FIELDS = CUSTOMER_EDIT_FIELDS.filter(
-  (field) => !CUSTOMER_PRIMARY_GROUP_FIELD_NAMES.includes(field.name)
+const CUSTOMER_ADDRESS_GROUP_FIELDS = CUSTOMER_ADDRESS_GROUP_FIELD_NAMES
+  .map((fieldName) => CUSTOMER_EDIT_FIELDS.find((field) => field.name === fieldName))
+  .filter(Boolean);
+
+const CUSTOMER_ORGANIZATION_GROUP_FIELDS = CUSTOMER_EDIT_FIELDS.filter((field) =>
+  ORGANIZATION_CUSTOMER_FIELDS.has(field.name)
 );
+
+const CUSTOMER_NOTES_GROUP_FIELDS = CUSTOMER_NOTES_GROUP_FIELD_NAMES
+  .map((fieldName) => CUSTOMER_EDIT_FIELDS.find((field) => field.name === fieldName))
+  .filter(Boolean);
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -71,20 +389,39 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
-  heroTitle: document.getElementById("customerHeroTitle"),
   heroId: document.getElementById("customerHeroId"),
   heroName: document.getElementById("customerHeroName"),
+  heroPhoto: document.getElementById("customerHeroPhoto"),
+  heroPhotoPlaceholder: document.getElementById("customerHeroPhotoPlaceholder"),
   error: document.getElementById("detailError"),
+  photoInput: document.getElementById("customerPhotoInput"),
+  photoUploadBtn: document.getElementById("customerPhotoUploadBtn"),
+  photoStatus: document.getElementById("customerPhotoStatus"),
   customerPrimaryGroup: document.getElementById("customerPrimaryGroup"),
-  customerDataTable: document.getElementById("customerDataTable"),
+  customerAddressGroup: document.getElementById("customerAddressGroup"),
+  customerOrganizationGroup: document.getElementById("customerOrganizationGroup"),
+  customerNotesGroup: document.getElementById("customerNotesGroup"),
+  systemMeta: document.getElementById("customerSystemMeta"),
   consentsTable: document.getElementById("customerConsentsTable"),
+  addConsentBtn: document.getElementById("customerAddConsentBtn"),
+  consentForm: document.getElementById("customerConsentForm"),
+  consentType: document.getElementById("customerConsentType"),
+  consentStatusSelect: document.getElementById("customerConsentStatus"),
+  consentCapturedVia: document.getElementById("customerConsentCapturedVia"),
+  consentCapturedAt: document.getElementById("customerConsentCapturedAt"),
+  consentEvidenceRef: document.getElementById("customerConsentEvidenceRef"),
+  consentEvidenceFile: document.getElementById("customerConsentEvidenceFile"),
+  consentSaveBtn: document.getElementById("customerConsentSaveBtn"),
+  consentCancelBtn: document.getElementById("customerConsentCancelBtn"),
+  consentFormStatus: document.getElementById("customerConsentFormStatus"),
   documentsTable: document.getElementById("customerDocumentsTable"),
   travelGroupsTable: document.getElementById("customerTravelGroupsTable"),
   travelGroupMembersTable: document.getElementById("customerTravelGroupMembersTable"),
   bookingsTable: document.getElementById("customerBookingsTable"),
   saveBtn: document.getElementById("customerSaveBtn"),
+  saveBtnBottom: document.getElementById("customerSaveBtnBottom"),
   saveStatus: document.getElementById("customerSaveStatus"),
-  organizationToggle: document.getElementById("customerIsOrganization")
+  organizationToggle: null
 };
 
 init();
@@ -103,10 +440,16 @@ async function init() {
     els.saveBtn.addEventListener("click", saveCustomerProfile);
     els.saveBtn.disabled = true;
   }
-
-  if (els.organizationToggle) {
-    els.organizationToggle.addEventListener("change", handleOrganizationToggleChange);
+  if (els.saveBtnBottom) {
+    els.saveBtnBottom.addEventListener("click", saveCustomerProfile);
+    els.saveBtnBottom.disabled = true;
   }
+  if (els.photoUploadBtn) {
+    els.photoUploadBtn.addEventListener("click", saveCustomerPhoto);
+  }
+  if (els.addConsentBtn) els.addConsentBtn.addEventListener("click", () => toggleConsentForm(true));
+  if (els.consentCancelBtn) els.consentCancelBtn.addEventListener("click", () => toggleConsentForm(false));
+  if (els.consentSaveBtn) els.consentSaveBtn.addEventListener("click", saveCustomerConsent);
 
   bindSectionNavigation("customers");
   await loadAuthStatus();
@@ -147,11 +490,16 @@ async function loadCustomer() {
     els.organizationToggle.checked = state.isOrganizationCustomer;
   }
 
-  renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer);
-  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_REMAINING_FIELDS, state.customer);
+  renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer, "primary");
+  renderEditableCustomerGroup(els.customerAddressGroup, CUSTOMER_ADDRESS_GROUP_FIELDS, state.customer, "address");
+  renderEditableCustomerGroup(els.customerOrganizationGroup, CUSTOMER_ORGANIZATION_GROUP_FIELDS, state.customer, "organization");
+  renderEditableCustomerGroup(els.customerNotesGroup, CUSTOMER_NOTES_GROUP_FIELDS, state.customer, "notes");
+  bindOrganizationToggle();
+  renderCustomerSystemMeta(state.customer);
   applyOrganizationFieldVisibility(state.isOrganizationCustomer);
   bindCustomerProfileInputs();
-  renderCustomerConsents(payload.consents || []);
+  state.consents = Array.isArray(payload.consents) ? payload.consents : [];
+  renderCustomerConsents(state.consents);
   renderCustomerDocuments(payload.documents || []);
   renderTravelGroups(payload.travelGroups || []);
   renderTravelGroupMembers(payload.travelGroupMembers || []);
@@ -162,18 +510,11 @@ async function loadCustomer() {
 }
 
 function renderCustomerHero(customer) {
-  if (els.heroName) {
-    els.heroName.textContent = customer.name || "Customer";
-  }
+  updateCustomerHeroName(customer.name || "Customer");
+  updateCustomerHeroPhoto(customer.photo_ref);
 
   if (els.heroId) {
     els.heroId.textContent = customer.id ? `ID: ${customer.id}` : "ID: -";
-  }
-
-  if (els.heroTitle) {
-    const title = normalizeText(customer.title);
-    els.heroTitle.textContent = title;
-    els.heroTitle.hidden = !title;
   }
 }
 
@@ -181,6 +522,7 @@ function normalizeCustomer(customer) {
   const normalized = {
     ...customer,
     name: normalizeText(customer.name) || "",
+    photo_ref: normalizeText(customer.photo_ref) || "",
     title: normalizeText(customer.title) || "",
     phone_number: normalizeText(customer.phone_number) || normalizeText(customer.phone) || "",
     phone: normalizeText(customer.phone) || normalizeText(customer.phone_number) || "",
@@ -190,6 +532,12 @@ function normalizeCustomer(customer) {
     last_name: normalizeText(customer.last_name) || "",
     date_of_birth: normalizeText(customer.date_of_birth) || "",
     nationality: normalizeText(customer.nationality) || "",
+    address_line_1: normalizeText(customer.address_line_1) || "",
+    address_line_2: normalizeText(customer.address_line_2) || "",
+    address_city: normalizeText(customer.address_city) || "",
+    address_state_region: normalizeText(customer.address_state_region) || "",
+    address_postal_code: normalizeText(customer.address_postal_code) || "",
+    address_country_code: normalizeText(customer.address_country_code) || "",
     organization_name: normalizeText(customer.organization_name) || "",
     organization_address: normalizeText(customer.organization_address) || "",
     organization_phone_number: normalizeText(customer.organization_phone_number) || "",
@@ -197,29 +545,175 @@ function normalizeCustomer(customer) {
     organization_email: normalizeText(customer.organization_email) || "",
     tax_id: normalizeText(customer.tax_id) || "",
     email: normalizeText(customer.email) || "",
-    address_line_1: normalizeText(customer.address_line_1) || "",
-    address_line_2: normalizeText(customer.address_line_2) || "",
-    address_city: normalizeText(customer.address_city) || "",
-    address_state_region: normalizeText(customer.address_state_region) || "",
-    address_postal_code: normalizeText(customer.address_postal_code) || "",
-    address_country_code: normalizeText(customer.address_country_code) || "",
     preferred_currency: normalizeText(customer.preferred_currency) || "",
     timezone: normalizeText(customer.timezone) || "",
-    notes: normalizeText(customer.notes) || "",
-    can_receive_marketing: Boolean(customer.can_receive_marketing),
-    tags: Array.isArray(customer.tags) ? customer.tags.map((value) => normalizeText(value)).filter(Boolean) : []
+    notes: normalizeText(customer.notes) || ""
   };
 
   return normalized;
 }
 
+function updateCustomerHeroPhoto(value) {
+  const photoRef = normalizeText(value);
+  if (els.heroPhoto) {
+    if (photoRef) {
+      els.heroPhoto.src = photoRef;
+      els.heroPhoto.hidden = false;
+    } else {
+      els.heroPhoto.removeAttribute("src");
+      els.heroPhoto.hidden = true;
+    }
+  }
+  if (els.heroPhotoPlaceholder) {
+    els.heroPhotoPlaceholder.hidden = Boolean(photoRef);
+  }
+}
+
 function renderCustomerConsents(consents) {
-  renderEntityCollectionTable(
-    els.consentsTable,
-    "Customer Consents",
-    Array.isArray(consents) ? consents : [],
-    CUSTOMER_CONSENT_SCHEMA.fields
-  );
+  if (!els.consentsTable) return;
+  const fields = CUSTOMER_CONSENT_SCHEMA.fields;
+  const rows = Array.isArray(consents) ? consents : [];
+  const header = `<thead><tr>${fields.map((field) => `<th>${escapeHtml(fieldLabel(field.name))}</th>`).join("")}</tr></thead>`;
+  const bodyRows = rows
+    .map((row) => {
+      const cells = fields
+        .map((field) => {
+          const value = row?.[field.name];
+          const evidenceRef = normalizeText(row?.evidence_ref) || normalizeText(row?.evidenceRef);
+          if ((field.name === "evidence_ref" || field.name === "evidenceRef") && evidenceRef) {
+            return `<td><a href="${escapeHtml(evidenceRef)}" target="_blank" rel="noopener">Open</a></td>`;
+          }
+          return `<td>${escapeHtml(formatFieldValue(value, field))}</td>`;
+        })
+        .join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
+  const emptyText = `<tr><td colspan="${fields.length}">${escapeHtml("No Customer Consents")}</td></tr>`;
+  els.consentsTable.innerHTML = `${header}<tbody>${bodyRows || emptyText}</tbody>`;
+}
+
+function toggleConsentForm(show) {
+  if (!els.consentForm) return;
+  els.consentForm.hidden = !show;
+  if (!show) {
+    resetConsentForm();
+  }
+}
+
+function resetConsentForm() {
+  if (els.consentType) els.consentType.value = "privacy_policy";
+  if (els.consentStatusSelect) els.consentStatusSelect.value = "granted";
+  if (els.consentCapturedVia) els.consentCapturedVia.value = "";
+  if (els.consentCapturedAt) els.consentCapturedAt.value = "";
+  if (els.consentEvidenceRef) els.consentEvidenceRef.value = "";
+  if (els.consentEvidenceFile) els.consentEvidenceFile.value = "";
+  if (els.consentFormStatus) els.consentFormStatus.textContent = "";
+}
+
+async function saveCustomerConsent() {
+  if (!state.id) return;
+  if (els.consentSaveBtn) els.consentSaveBtn.disabled = true;
+  if (els.consentFormStatus) els.consentFormStatus.textContent = "";
+  try {
+    const evidenceUpload = await readConsentEvidenceUpload();
+    const result = await fetchApi(`${apiOrigin}/api/v1/customers/${encodeURIComponent(state.id)}/consents`, {
+      method: "POST",
+      body: {
+        consent_type: els.consentType?.value || "privacy_policy",
+        status: els.consentStatusSelect?.value || "granted",
+        captured_via: normalizeText(els.consentCapturedVia?.value) || null,
+        captured_at: normalizeLocalDateTimeToIso(els.consentCapturedAt?.value),
+        evidence_ref: normalizeText(els.consentEvidenceRef?.value) || null,
+        evidence_upload: evidenceUpload
+      }
+    });
+    if (!result?.consent) {
+      if (els.consentFormStatus && !els.consentFormStatus.textContent) {
+        els.consentFormStatus.textContent = "Could not save consent.";
+      }
+      return;
+    }
+    state.consents = [result.consent, ...(Array.isArray(state.consents) ? state.consents : [])];
+    renderCustomerConsents(state.consents);
+    toggleConsentForm(false);
+    await loadCustomer();
+  } catch (error) {
+    if (els.consentFormStatus) {
+      els.consentFormStatus.textContent = error?.message || "Could not save consent.";
+    }
+  } finally {
+    if (els.consentSaveBtn) els.consentSaveBtn.disabled = false;
+  }
+}
+
+async function saveCustomerPhoto() {
+  if (!state.id) return;
+  const photoUpload = await readCustomerPhotoUpload();
+  if (!photoUpload) {
+    if (els.photoStatus) els.photoStatus.textContent = "Choose an image first.";
+    return;
+  }
+  if (els.photoUploadBtn) els.photoUploadBtn.disabled = true;
+  if (els.photoStatus) els.photoStatus.textContent = "";
+  try {
+    const result = await fetchApi(`${apiOrigin}/api/v1/customers/${encodeURIComponent(state.id)}/photo`, {
+      method: "POST",
+      body: {
+        photo_upload: photoUpload
+      }
+    });
+    if (!result?.customer) {
+      if (els.photoStatus && !els.photoStatus.textContent) {
+        els.photoStatus.textContent = "Could not upload photo.";
+      }
+      return;
+    }
+    state.customer = normalizeCustomer(result.customer);
+    renderCustomerHero(state.customer);
+    if (els.photoInput) els.photoInput.value = "";
+    if (els.photoStatus) els.photoStatus.textContent = "Photo uploaded.";
+  } catch (error) {
+    if (els.photoStatus) {
+      els.photoStatus.textContent = error?.message || "Could not upload photo.";
+    }
+  } finally {
+    if (els.photoUploadBtn) els.photoUploadBtn.disabled = false;
+  }
+}
+
+async function readCustomerPhotoUpload() {
+  const file = els.photoInput?.files?.[0];
+  if (!file) return null;
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+  const [, base64 = ""] = dataUrl.split(",", 2);
+  return {
+    filename: file.name,
+    mime_type: file.type || "application/octet-stream",
+    data_base64: base64
+  };
+}
+
+async function readConsentEvidenceUpload() {
+  const file = els.consentEvidenceFile?.files?.[0];
+  if (!file) return null;
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+  const [, base64 = ""] = dataUrl.split(",", 2);
+  return {
+    filename: file.name,
+    mime_type: file.type || "application/octet-stream",
+    data_base64: base64
+  };
 }
 
 function renderCustomerDocuments(documents) {
@@ -270,28 +764,84 @@ function renderEditableCustomerTable(tableEl, fields, entity) {
   tableEl.innerHTML = `${header}<tbody>${rows}</tbody>`;
 }
 
-function renderEditableCustomerGroup(containerEl, fields, entity) {
+function renderEditableCustomerGroup(containerEl, fields, entity, variant = "primary") {
   if (!containerEl) return;
 
   const rows = fields
     .map((field) => {
       const value = entity?.[field.name];
-      const layoutClass = getCustomerPrimaryFieldLayoutClass(field.name);
+      const labelText = fieldLabel(field.name);
+      const layoutClass = variant === "primary"
+        ? getCustomerPrimaryFieldLayoutClass(field.name)
+        : variant === "address"
+          ? getCustomerAddressFieldLayoutClass(field.name)
+        : variant === "organization"
+          ? getCustomerOrganizationFieldLayoutClass(field.name)
+          : variant === "notes"
+            ? " full"
+          : "";
       return `
         <div class="field${layoutClass}">
-          <label for="${customerFieldInputId(field.name)}">${escapeHtml(fieldLabel(field.name))}</label>
+          ${labelText ? `<label for="${customerFieldInputId(field.name)}">${escapeHtml(labelText)}</label>` : ""}
           ${renderEditableFieldInput(field, value)}
         </div>
       `;
     })
     .join("");
 
-  containerEl.innerHTML = `<div class="field-grid">${rows}</div>`;
+  const organizationToggle = variant === "organization"
+    ? `
+      <div class="field field--organization-toggle">
+        <label class="customer-primary-group__toggle" for="customerIsOrganization">
+          <input id="customerIsOrganization" type="checkbox" ${state.isOrganizationCustomer ? "checked" : ""} />
+          <span>Organization</span>
+        </label>
+      </div>
+    `
+    : "";
+
+  if (variant === "organization") {
+    containerEl.innerHTML = `
+      <div class="field-grid">
+        ${organizationToggle}
+        <div class="customer-organization-group__fields">
+          ${rows}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  containerEl.innerHTML = `<div class="field-grid">${organizationToggle}${rows}</div>`;
 }
 
 function getCustomerPrimaryFieldLayoutClass(fieldName) {
   if (fieldName === "title") return " field--title";
   if (fieldName === "name") return " field--name";
+  if (fieldName === "date_of_birth") return " field--dob";
+  if (fieldName === "nationality") return " field--nationality";
+  if (fieldName === "phone_number") return " field--phone";
+  if (fieldName === "email") return " field--email";
+  return "";
+}
+
+function getCustomerOrganizationFieldLayoutClass(fieldName) {
+  if (fieldName === "organization_name") return " full";
+  if (fieldName === "organization_address") return " full";
+  if (fieldName === "organization_phone_number") return " full";
+  if (fieldName === "organization_webpage") return " full";
+  if (fieldName === "organization_email") return " full";
+  if (fieldName === "tax_id") return " full";
+  return "";
+}
+
+function getCustomerAddressFieldLayoutClass(fieldName) {
+  if (fieldName === "address_line_1") return " field--line-1";
+  if (fieldName === "address_line_2") return " field--line-2";
+  if (fieldName === "address_postal_code") return " field--postal";
+  if (fieldName === "address_city") return " field--city";
+  if (fieldName === "address_country_code") return " field--country-code";
+  if (fieldName === "address_state_region") return " field--state-region";
   return "";
 }
 
@@ -333,7 +883,28 @@ function renderEditableFieldInput(field, value) {
 
   if (field.typeName === "DateOnly") {
     const dateValue = formatDateOnlyForInput(value);
-    return `<input type="date" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" value="${escapeHtml(dateValue)}" />`;
+    const displayValue = formatDateOnlyForDisplay(dateValue);
+    return `
+      <div class="customer-date-picker">
+        <input
+          type="date"
+          id="${fieldId}"
+          class="customer-date-picker__native"
+          data-customer-field="${escapeHtml(field.name)}"
+          value="${escapeHtml(dateValue)}"
+        />
+        <div class="customer-date-picker__shell">
+          <input
+            type="text"
+            class="customer-date-picker__display"
+            data-customer-date-display="${escapeHtml(field.name)}"
+            value="${escapeHtml(displayValue)}"
+            placeholder="dd.mm.yyyy"
+            inputmode="numeric"
+          />
+        </div>
+      </div>
+    `;
   }
 
   if (field.typeName === "Timestamp") {
@@ -350,8 +921,6 @@ function getInputTypeForField(field) {
   if (field.name === "email") return "email";
   if (field.name.includes("phone")) return "tel";
   if (field.name === "phone_number") return "tel";
-  if (field.name === "address_country_code" || field.name === "nationality") return "text";
-  if (field.name === "preferred_currency") return "text";
   if (field.name.includes("date")) return "date";
   return "text";
 }
@@ -392,6 +961,20 @@ function renderRelatedBookings(bookings) {
   }
 }
 
+function renderCustomerSystemMeta(customer) {
+  if (!els.systemMeta) return;
+  const createdAt = formatFieldValue(customer?.created_at, { typeName: "Timestamp" });
+  const updatedAt = formatFieldValue(customer?.updated_at, { typeName: "Timestamp" });
+  const archivedAt = formatFieldValue(customer?.archived_at, { typeName: "Timestamp" });
+  els.systemMeta.innerHTML = `
+    <strong>Created At</strong> ${escapeHtml(createdAt)}
+    &nbsp;&nbsp;&nbsp;
+    <strong>Updated At</strong> ${escapeHtml(updatedAt)}
+    &nbsp;&nbsp;&nbsp;
+    <strong>Archived At</strong> ${escapeHtml(archivedAt)}
+  `;
+}
+
 function renderEntityCollectionTable(tableEl, title, rows, fields) {
   if (!tableEl) return;
 
@@ -421,6 +1004,61 @@ function bindCustomerProfileInputs() {
     };
     control.addEventListener("input", markDirty);
     control.addEventListener("change", markDirty);
+
+    if (control.dataset.customerField === "name") {
+      const syncName = () => updateCustomerHeroName(control.value);
+      control.addEventListener("input", syncName);
+      control.addEventListener("change", syncName);
+    }
+  });
+
+  bindDatePickerControls();
+}
+
+function updateCustomerHeroName(value) {
+  const name = normalizeText(value) || "Customer";
+  if (els.heroName) {
+    els.heroName.textContent = name;
+  }
+  document.title = `${name} | AsiaTravelPlan Customer`;
+}
+
+function bindDatePickerControls() {
+  const dateInputs = Array.from(document.querySelectorAll('[data-customer-field][type="date"]'));
+  dateInputs.forEach((input) => {
+    if (input.dataset.dateBound === "1") return;
+    input.dataset.dateBound = "1";
+
+    const fieldName = input.dataset.customerField;
+    const display = document.querySelector(`[data-customer-date-display="${fieldName}"]`);
+    if (!(display instanceof HTMLInputElement)) return;
+
+    const syncFromNative = () => {
+      display.value = formatDateOnlyForDisplay(input.value);
+    };
+
+    input.addEventListener("input", syncFromNative);
+    input.addEventListener("change", syncFromNative);
+
+    display.addEventListener("input", () => {
+      const normalized = normalizeDateDisplayValue(display.value);
+      if (normalized) {
+        input.value = normalized;
+      } else if (!normalizeText(display.value)) {
+        input.value = "";
+      }
+      setSaveEnabled(true);
+    });
+
+    display.addEventListener("blur", () => {
+      display.value = formatDateOnlyForDisplay(input.value || normalizeDateDisplayValue(display.value));
+    });
+
+    display.addEventListener("focus", () => {
+      if (typeof input.showPicker === "function") {
+        input.showPicker();
+      }
+    });
   });
 }
 
@@ -442,7 +1080,11 @@ function collectEditableCustomerPayload() {
     Object.prototype.hasOwnProperty.call(payload, "preferred_language") &&
     !Object.prototype.hasOwnProperty.call(payload, "language")
   ) {
+    payload.preferred_language = normalizeLanguageCode(payload.preferred_language) || payload.preferred_language;
     payload.language = payload.preferred_language;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, "preferred_currency")) {
+    payload.preferred_currency = normalizeCurrencyCode(payload.preferred_currency) || payload.preferred_currency;
   }
 
   return payload;
@@ -467,7 +1109,7 @@ function getFieldValueFromInput(field, element) {
   }
 
   if (field.typeName === "Timestamp") {
-    return parseDateTimeInputValue(element.value);
+    return normalizeLocalDateTimeToIso(element.value);
   }
 
   return normalizeText(element.value);
@@ -494,8 +1136,12 @@ async function saveCustomerProfile() {
   }
 
   state.customer = normalizeCustomer(result.customer);
-  renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer);
-  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_REMAINING_FIELDS, state.customer);
+  renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer, "primary");
+  renderEditableCustomerGroup(els.customerAddressGroup, CUSTOMER_ADDRESS_GROUP_FIELDS, state.customer, "address");
+  renderEditableCustomerGroup(els.customerOrganizationGroup, CUSTOMER_ORGANIZATION_GROUP_FIELDS, state.customer, "organization");
+  renderEditableCustomerGroup(els.customerNotesGroup, CUSTOMER_NOTES_GROUP_FIELDS, state.customer, "notes");
+  bindOrganizationToggle();
+  renderCustomerSystemMeta(state.customer);
   applyOrganizationFieldVisibility(state.isOrganizationCustomer);
   bindCustomerProfileInputs();
   setSaveEnabled(false);
@@ -513,27 +1159,39 @@ function isCustomerOrganizationField(fieldName) {
 }
 
 function applyOrganizationFieldVisibility(enabled) {
-  const rows = document.querySelectorAll('[data-customer-org-field="1"]');
-  rows.forEach((row) => {
-    row.style.display = enabled ? "" : "none";
-  });
+  if (els.customerOrganizationGroup) {
+    els.customerOrganizationGroup.classList.toggle("is-expanded", Boolean(enabled));
+  }
 }
 
 function handleOrganizationToggleChange() {
   state.isOrganizationCustomer = Boolean(els.organizationToggle?.checked);
   applyOrganizationFieldVisibility(state.isOrganizationCustomer);
+  setSaveEnabled(true);
+}
+
+function bindOrganizationToggle() {
+  els.organizationToggle = document.getElementById("customerIsOrganization");
+  if (!els.organizationToggle || els.organizationToggle.dataset.bound === "1") return;
+  els.organizationToggle.dataset.bound = "1";
+  els.organizationToggle.addEventListener("change", handleOrganizationToggleChange);
 }
 
 function setSaveEnabled(enabled) {
-  if (!els.saveBtn) return;
+  const buttons = [els.saveBtn, els.saveBtnBottom].filter(Boolean);
+  if (!buttons.length) return;
   if (state.isSaving) {
-    els.saveBtn.disabled = true;
-    els.saveBtn.textContent = "Saving…";
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.textContent = "Saving…";
+    });
     return;
   }
 
-  els.saveBtn.disabled = !enabled;
-  els.saveBtn.textContent = "Update";
+  buttons.forEach((button) => {
+    button.disabled = !enabled;
+    button.textContent = "Update";
+  });
 }
 
 function setSaveStatus(message) {
@@ -579,9 +1237,31 @@ function formatFieldValue(value, field = {}) {
 }
 
 function fieldLabel(raw) {
+  const overrides = {
+    notes: "",
+    photo_ref: "Customer Photo",
+    address_line_1: "Address Line 1",
+    address_line_2: "Address Line 2",
+    address_city: "City",
+    address_state_region: "State Region",
+    address_postal_code: "Postal Code",
+    address_country_code: "Country Code"
+  };
+  if (Object.prototype.hasOwnProperty.call(overrides, raw)) return overrides[raw];
   return String(raw || "")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatCountryOptionLabel(code) {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!normalized) return "";
+  try {
+    const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
+    return `${displayNames.of(normalized) || normalized} (${normalized})`;
+  } catch {
+    return normalized;
+  }
 }
 
 function formatDateOnly(value) {
@@ -612,6 +1292,31 @@ function formatDateOnlyForInput(value) {
   return d.toISOString().slice(0, 10);
 }
 
+function formatDateOnlyForDisplay(value) {
+  const normalized = formatDateOnlyForInput(value);
+  if (!normalized) return "";
+  const [year, month, day] = normalized.split("-");
+  return `${day}.${month}.${year}`;
+}
+
+function normalizeDateDisplayValue(value) {
+  const text = normalizeText(value).replace(/\//g, ".").replace(/-/g, ".");
+  if (!text) return "";
+
+  const dotted = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (dotted) {
+    const day = dotted[1].padStart(2, "0");
+    const month = dotted[2].padStart(2, "0");
+    const year = dotted[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+
+  return "";
+}
+
 function formatDateTimeForInput(value) {
   if (!value) return "";
   const d = new Date(value);
@@ -623,14 +1328,6 @@ function formatDateTimeForInput(value) {
   const hours = String(d.getHours()).padStart(2, "0");
   const minutes = String(d.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${date}T${hours}:${minutes}`;
-}
-
-function parseDateTimeInputValue(value) {
-  const text = normalizeText(value);
-  if (!text) return "";
-  const parsed = new Date(text);
-  if (Number.isNaN(parsed.getTime())) return text;
-  return parsed.toISOString();
 }
 
 function normalizeCustomerId(value) {

@@ -127,8 +127,7 @@ async function handleCreateBooking(req, res) {
       phone: normalizePhone(payload.phone),
       language: normalizeText(payload.language) || "English",
       created_at: nowIso(),
-      updated_at: nowIso(),
-      tags: []
+      updated_at: nowIso()
     };
     store.customers.push(customer);
   }

@@ -14,10 +14,8 @@
 - Canonical URL: `https://asiatravelplan.com/`
 - Open Graph + Twitter metadata present
 - Favicon + web manifest linked
-- Main stylesheet: `assets/css/styles.css` loaded with preload + non-blocking apply (`?v=3`)
+- Main stylesheet: `assets/css/styles.css` loaded directly as a normal stylesheet (`?v=3`)
 - LCP hero poster preloaded from `assets/video/rice field.webp?v=2`
-- Hero video preloaded from `assets/video/rice field.webm`
-- Small inline critical CSS block included for initial header/hero paint
 
 ## 2) Global layout
 
@@ -51,11 +49,11 @@
 
 - Full-width background video (`assets/video/rice field.webm`) with `assets/video/rice field.mp4` secondary format
 - Poster image (`assets/video/rice field.webp`)
-- Video container has outer margin and rounded corners
-- No dark scrim over video; hero title uses a semi-transparent white background for legibility
+- Video container is now full-bleed with no outer margin or rounded corners
+- A dark scrim sits over the video for legibility
 - Hero hides subtitle text below the H1 only when both filters are `All`; otherwise it shows the active filter title
 - Hero shows only a centered down-arrow link to `#tours`
-- Hero title tile remains centered; dynamic subtitle tile is horizontally centered near the bottom of the hero
+- Hero title remains centered without a boxed title tile; dynamic subtitle link is horizontally centered near the bottom of the hero
 - Hover/focus interaction at hero bottom highlights only the arrow circle (not the full subtitle link area)
 - Arrow click uses smooth scrolling with sticky-header offset so the hero exits view while top spacing in the tours section remains visible
 - H1:
@@ -199,12 +197,22 @@ Two JSON-LD blocks:
 
 ## 10) Frontend CSS architecture (current)
 
-- `assets/css/styles.css` is now an entrypoint only (imports modular files + `site.css`)
-- `assets/css/site.css` contains baseline site styles
+- `assets/css/styles.css` is now an entrypoint only
+- Current imported layers:
+  - `assets/css/tokens.css`
+  - `assets/css/base.css`
+  - `assets/css/utilities.css`
+  - `assets/css/site.css`
+  - `assets/css/components/*.css`
+  - `assets/css/pages/*.css`
+  - `assets/css/tailwind.generated.css`
+- `assets/css/site.css` contains shared site and backend styles, but page-specific overrides now live in `assets/css/pages/*.css`
 - New styles must be added to modular files under:
   - `assets/css/tokens.css`
   - `assets/css/base.css`
   - `assets/css/components/*.css`
+  - `assets/css/pages/*.css` for page-scoped styling
+- Reusable spacing/visibility helpers now live in `assets/css/utilities.css`
 - Naming convention for new styles:
   - BEM classes only (example: `backend-nav__logout`, `backend-login__user`)
   - Avoid introducing new ID-based style selectors

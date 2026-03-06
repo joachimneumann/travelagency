@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+import_zsh_env() {
+  command -v zsh >/dev/null 2>&1 || return 0
+  local exported
+  exported="$(zsh -lc 'typeset -px KEYCLOAK_ENABLED KEYCLOAK_BASE_URL KEYCLOAK_REALM KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET KEYCLOAK_REDIRECT_URI KEYCLOAK_ALLOWED_ROLES KEYCLOAK_POST_LOGOUT_REDIRECT_URI CORS_ORIGIN FRONTEND_PORT BACKEND_PORT 2>/dev/null' 2>/dev/null || true)"
+  [ -n "$exported" ] || return 0
+  eval "$exported"
+}
+
+import_zsh_env
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="${BACKEND_DIR:-$ROOT_DIR/backend/app}"
 BACKEND_PID_FILE="${BACKEND_PID_FILE:-/tmp/asiatravelplan-backend.pid}"
@@ -123,22 +133,35 @@ EOF
   stop_existing_backend
 
   echo "Starting backend from ${BACKEND_DIR} ..."
-  (
-    cd "$BACKEND_DIR"
-    nohup env \
-      PORT="$BACKEND_PORT" \
-      CORS_ORIGIN="$CORS_ORIGIN" \
-      KEYCLOAK_ENABLED="$KEYCLOAK_ENABLED" \
-      KEYCLOAK_BASE_URL="$KEYCLOAK_BASE_URL" \
-      KEYCLOAK_REALM="$KEYCLOAK_REALM" \
-      KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
-      KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
-      KEYCLOAK_REDIRECT_URI="$KEYCLOAK_REDIRECT_URI" \
-      KEYCLOAK_ALLOWED_ROLES="$KEYCLOAK_ALLOWED_ROLES" \
-      KEYCLOAK_POST_LOGOUT_REDIRECT_URI="$KEYCLOAK_POST_LOGOUT_REDIRECT_URI" \
-      npm start >"$BACKEND_LOG_FILE" 2>&1 &
-    echo $! >"$BACKEND_PID_FILE"
-  )
+  env \
+    BACKEND_DIR="$BACKEND_DIR" \
+    BACKEND_LOG_FILE="$BACKEND_LOG_FILE" \
+    BACKEND_PID_FILE="$BACKEND_PID_FILE" \
+    PORT="$BACKEND_PORT" \
+    CORS_ORIGIN="$CORS_ORIGIN" \
+    KEYCLOAK_ENABLED="$KEYCLOAK_ENABLED" \
+    KEYCLOAK_BASE_URL="$KEYCLOAK_BASE_URL" \
+    KEYCLOAK_REALM="$KEYCLOAK_REALM" \
+    KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
+    KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
+    KEYCLOAK_REDIRECT_URI="$KEYCLOAK_REDIRECT_URI" \
+    KEYCLOAK_ALLOWED_ROLES="$KEYCLOAK_ALLOWED_ROLES" \
+    KEYCLOAK_POST_LOGOUT_REDIRECT_URI="$KEYCLOAK_POST_LOGOUT_REDIRECT_URI" \
+    node <<'EOF'
+const fs = require("fs");
+const { spawn } = require("child_process");
+
+const logFd = fs.openSync(process.env.BACKEND_LOG_FILE, "a");
+const child = spawn("npm", ["start"], {
+  cwd: process.env.BACKEND_DIR,
+  env: process.env,
+  detached: true,
+  stdio: ["ignore", logFd, logFd]
+});
+
+fs.writeFileSync(process.env.BACKEND_PID_FILE, `${child.pid}\n`, "utf8");
+child.unref();
+EOF
   wait_for_pid "$(cat "$BACKEND_PID_FILE")" "backend" "$BACKEND_LOG_FILE"
 
   echo "Backend API: http://localhost:${BACKEND_PORT}"

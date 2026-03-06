@@ -6,83 +6,9 @@
     <title>AsiaTravelPlan Customer</title>
     <meta name="description" content="AsiaTravelPlan customer detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
-    <style>
-      .customer-hero {
-        margin-bottom: 1.4rem;
-        padding: 1.3rem 1.4rem;
-        border: 1px solid rgba(22, 49, 61, 0.12);
-        border-radius: 24px;
-        background:
-          radial-gradient(circle at top right, rgba(166, 208, 198, 0.28), transparent 42%),
-          linear-gradient(145deg, rgba(248, 251, 250, 0.96), rgba(255, 255, 255, 0.98));
-        box-shadow: 0 18px 40px rgba(16, 36, 46, 0.08);
-      }
-
-      .customer-hero__top {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.7rem;
-        margin-bottom: 0.9rem;
-      }
-
-      .customer-hero__title {
-        display: inline-flex;
-        align-items: center;
-        min-height: 2rem;
-        padding: 0.35rem 0.85rem;
-        border-radius: 999px;
-        background: rgba(16, 102, 88, 0.1);
-        color: #0d5d51;
-        font-size: 0.82rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-      }
-
-      .customer-hero__id {
-        color: rgba(22, 49, 61, 0.68);
-        font-size: 0.94rem;
-      }
-
-      .customer-hero__name {
-        margin: 0;
-        color: #16313d;
-        font-size: clamp(2rem, 4vw, 3.15rem);
-        line-height: 1.04;
-      }
-
-      .customer-primary-group {
-        margin-bottom: 1rem;
-      }
-
-      .customer-primary-group .field label {
-        color: rgba(22, 49, 61, 0.72);
-        letter-spacing: 0.02em;
-      }
-
-      .customer-primary-group .field input,
-      .customer-primary-group .field select,
-      .customer-primary-group .field textarea {
-        background: rgba(255, 255, 255, 0.96);
-      }
-
-      .customer-primary-group .field-grid {
-        margin: 0;
-        grid-template-columns: 8rem minmax(0, 1.6fr) repeat(2, minmax(0, 1fr));
-      }
-
-      .customer-primary-group .field--title {
-        grid-column: span 1;
-      }
-
-      .customer-primary-group .field--name {
-        grid-column: span 1;
-      }
-    </style>
+    <link rel="stylesheet" href="assets/css/styles.css?v=4" />
   </head>
-  <body>
+  <body class="customer-page">
     <header class="header" id="top">
       <div class="container header-wrap">
         <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
@@ -132,69 +58,137 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <section class="customer-hero" aria-labelledby="customerHeroName">
-            <div class="customer-hero__top">
-              <span class="customer-hero__title" id="customerHeroTitle" hidden></span>
+          <div class="customer-hero">
+            <div class="customer-hero__photo">
+              <img class="customer-hero__photo-image" id="customerHeroPhoto" alt="Customer photo" hidden />
+              <div class="customer-hero__photo-placeholder" id="customerHeroPhotoPlaceholder">Photo</div>
+            </div>
+            <div class="customer-hero__copy">
+              <h1 class="customer-hero__name" id="customerHeroName">Customer</h1>
               <span class="customer-hero__id" id="customerHeroId">ID: -</span>
             </div>
-            <h1 class="customer-hero__name" id="customerHeroName">Customer</h1>
-          </section>
+          </div>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <section style="margin-bottom: 1rem;">
-            <div class="backend-controls">
-              <label class="field">
-                <span>Organization</span>
-                <input id="customerIsOrganization" type="checkbox" />
-              </label>
-              <button id="customerSaveBtn" class="btn btn-primary" type="button" disabled>Update</button>
+          <section class="u-stack-md">
+            <div class="customer-primary-group">
+              <div class="customer-primary-group__header">
+                <button id="customerSaveBtn" class="btn btn-primary" type="button" disabled>Update</button>
+              </div>
+              <div class="customer-photo-panel">
+                <div class="field full">
+                  <label for="customerPhotoInput">Customer Photo</label>
+                  <input id="customerPhotoInput" type="file" accept="image/*" />
+                </div>
+                <div class="customer-photo-panel__actions">
+                  <button id="customerPhotoUploadBtn" class="btn btn-ghost" type="button">Upload photo</button>
+                  <span id="customerPhotoStatus" class="micro"></span>
+                </div>
+              </div>
+              <div id="customerPrimaryGroup"></div>
+              <div class="customer-organization-group" id="customerOrganizationGroup"></div>
+              <h2 class="section-title u-title-compact">Address</h2>
+              <div class="customer-address-group" id="customerAddressGroup"></div>
+              <h2 class="section-title u-title-compact">Notes</h2>
+              <div id="customerNotesGroup"></div>
             </div>
             <p id="customerSaveStatus" class="section-booking" hidden></p>
-            <div class="customer-primary-group" id="customerPrimaryGroup"></div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="customerDataTable"></table>
-            </div>
           </section>
 
-          <section style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Customer consents</h2>
+          <section class="u-stack-md">
+            <div class="customer-consent-header">
+              <h2 class="section-title u-title-compact">Customer consents</h2>
+              <button id="customerAddConsentBtn" class="customer-add-consent-btn" type="button" aria-label="Add consent">+</button>
+            </div>
+            <div class="customer-consent-form" id="customerConsentForm" hidden>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="customerConsentType">Consent Type</label>
+                  <select id="customerConsentType">
+                    <option value="privacy_policy">privacy_policy</option>
+                    <option value="marketing_email">marketing_email</option>
+                    <option value="marketing_whatsapp">marketing_whatsapp</option>
+                    <option value="profiling">profiling</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="customerConsentStatus">Status</label>
+                  <select id="customerConsentStatus">
+                    <option value="granted">granted</option>
+                    <option value="withdrawn">withdrawn</option>
+                    <option value="unknown">unknown</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="customerConsentCapturedVia">Captured Via</label>
+                  <input id="customerConsentCapturedVia" type="text" />
+                </div>
+                <div class="field">
+                  <label for="customerConsentCapturedAt">Captured At</label>
+                  <input id="customerConsentCapturedAt" type="datetime-local" />
+                </div>
+                <div class="field full">
+                  <label for="customerConsentEvidenceRef">Evidence Ref</label>
+                  <input id="customerConsentEvidenceRef" type="text" />
+                </div>
+                <div class="field full">
+                  <label for="customerConsentEvidenceFile">Evidence File</label>
+                  <input id="customerConsentEvidenceFile" type="file" accept=".pdf,image/*" />
+                </div>
+              </div>
+              <div class="customer-consent-form__actions">
+                <button id="customerConsentSaveBtn" class="btn btn-primary" type="button">Save consent</button>
+                <button id="customerConsentCancelBtn" class="btn btn-ghost" type="button">Cancel</button>
+                <span id="customerConsentFormStatus" class="micro"></span>
+              </div>
+            </div>
             <div class="backend-table-wrap">
               <table class="backend-table" id="customerConsentsTable"></table>
             </div>
           </section>
 
-          <section style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Customer documents</h2>
+          <section class="u-stack-md">
+            <h2 class="section-title u-title-compact">Customer documents</h2>
             <div class="backend-table-wrap">
               <table class="backend-table" id="customerDocumentsTable"></table>
             </div>
           </section>
 
-          <section style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Travel group members</h2>
+          <section class="u-stack-md">
+            <h2 class="section-title u-title-compact">Travel group members</h2>
             <div class="backend-table-wrap">
               <table class="backend-table" id="customerTravelGroupMembersTable"></table>
             </div>
           </section>
 
-          <section style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Travel groups</h2>
+          <section class="u-stack-md">
+            <h2 class="section-title u-title-compact">Travel groups</h2>
             <div class="backend-table-wrap">
               <table class="backend-table" id="customerTravelGroupsTable"></table>
             </div>
           </section>
 
           <section>
-            <h2 class="section-title" style="font-size: 1.05rem;">Related bookings</h2>
+            <h2 class="section-title u-title-compact">Related bookings</h2>
             <div class="backend-table-wrap">
               <table class="backend-table" id="customerBookingsTable"></table>
+            </div>
+          </section>
+
+          <section>
+            <p class="customer-system-meta" id="customerSystemMeta"></p>
+          </section>
+
+          <section>
+            <div class="customer-bottom-actions">
+              <button id="customerSaveBtnBottom" class="btn btn-primary" type="button" disabled>Update</button>
             </div>
           </section>
         </div>
       </section>
     </main>
 
-    <script type="module" src="assets/js/backend-customer.js?v=20260305a"></script>
+    <script type="module" src="assets/js/backend-customer.js?v=20260306b"></script>
   </body>
 </html>

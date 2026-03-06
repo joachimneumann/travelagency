@@ -1,6 +1,6 @@
     import Foundation
 
-    // Generated from the normalized model IR exported from model/ir.
+    // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
     enum GeneratedBookingStage: String, CaseIterable, Codable, Hashable {
@@ -38,264 +38,151 @@
     case other = "OTHER"
     }
 
-    struct GeneratedSourceAttribution: Codable, Equatable {
-        let pageURL: String?
-        let ipAddress: String?
-        let ipCountryGuess: String?
-        let utmSource: String?
-        let utmMedium: String?
-        let utmCampaign: String?
-        let referrer: String?
+        struct GeneratedSourceAttribution: Codable, Equatable {
+
 
         private enum CodingKeys: String, CodingKey {
-            case pageURL = "page_url"
-            case ipAddress = "ip_address"
-            case ipCountryGuess = "ip_country_guess"
-            case utmSource = "utm_source"
-            case utmMedium = "utm_medium"
-            case utmCampaign = "utm_campaign"
-            case referrer
+
         }
     }
 
-    struct GeneratedBookingPricingAdjustment: Codable, Identifiable, Equatable {
-        let id: String
-        let type: GeneratedPricingAdjustmentType
-        let label: String
-        let amountCents: Int
-        let notes: String?
+    struct GeneratedBookingActivity: Codable, Equatable {
+
 
         private enum CodingKeys: String, CodingKey {
-            case id
-            case type
-            case label
-            case amountCents = "amount_cents"
-            case notes
+
         }
     }
 
-    struct GeneratedBookingPayment: Codable, Identifiable, Equatable {
-        let id: String
-        let label: String
-        let dueDate: String?
-        let netAmountCents: Int
-        let taxRateBasisPoints: Int
-        let taxAmountCents: Int
-        let grossAmountCents: Int
-        let status: GeneratedPaymentStatus
-        let paidAt: String?
-        let notes: String?
+    struct GeneratedBookingInvoice: Codable, Equatable {
+
 
         private enum CodingKeys: String, CodingKey {
-            case id
-            case label
-            case dueDate = "due_date"
-            case netAmountCents = "net_amount_cents"
-            case taxRateBasisPoints = "tax_rate_basis_points"
-            case taxAmountCents = "tax_amount_cents"
-            case grossAmountCents = "gross_amount_cents"
-            case status
-            case paidAt = "paid_at"
-            case notes
-        }
-    }
 
-    struct GeneratedBookingPricingSummary: Codable, Equatable {
-        let agreedNetAmountCents: Int
-        let adjustmentsDeltaCents: Int
-        let adjustedNetAmountCents: Int
-        let scheduledNetAmountCents: Int
-        let unscheduledNetAmountCents: Int
-        let scheduledTaxAmountCents: Int
-        let scheduledGrossAmountCents: Int
-        let paidGrossAmountCents: Int
-        let outstandingGrossAmountCents: Int
-        let isScheduleBalanced: Bool
-
-        private enum CodingKeys: String, CodingKey {
-            case agreedNetAmountCents = "agreed_net_amount_cents"
-            case adjustmentsDeltaCents = "adjustments_delta_cents"
-            case adjustedNetAmountCents = "adjusted_net_amount_cents"
-            case scheduledNetAmountCents = "scheduled_net_amount_cents"
-            case unscheduledNetAmountCents = "unscheduled_net_amount_cents"
-            case scheduledTaxAmountCents = "scheduled_tax_amount_cents"
-            case scheduledGrossAmountCents = "scheduled_gross_amount_cents"
-            case paidGrossAmountCents = "paid_gross_amount_cents"
-            case outstandingGrossAmountCents = "outstanding_gross_amount_cents"
-            case isScheduleBalanced = "is_schedule_balanced"
         }
     }
 
     struct GeneratedBookingPricing: Codable, Equatable {
-        let currency: GeneratedCurrencyCode
-        let agreedNetAmountCents: Int
-        let adjustments: [GeneratedBookingPricingAdjustment]
-        let payments: [GeneratedBookingPayment]
-        let summary: GeneratedBookingPricingSummary
+
 
         private enum CodingKeys: String, CodingKey {
-            case currency
-            case agreedNetAmountCents = "agreed_net_amount_cents"
-            case adjustments
-            case payments
-            case summary
+
         }
     }
 
     struct GeneratedBookingOfferCategoryRule: Codable, Equatable {
-        let category: GeneratedOfferCategory
-        let taxRateBasisPoints: Int
+    let category: GeneratedOfferCategory
+    let taxRateBasisPoints: Int
 
         private enum CodingKeys: String, CodingKey {
-            case category
-            case taxRateBasisPoints = "tax_rate_basis_points"
+        case category = "category"
+        case taxRateBasisPoints = "taxRateBasisPoints"
         }
     }
 
-    struct GeneratedBookingOfferComponent: Codable, Identifiable, Equatable {
-        let id: String
-        let category: GeneratedOfferCategory
-        let label: String
-        let details: String?
-        let quantity: Int
-        let unitAmountCents: Int
-        let lineNetAmountCents: Int?
-        let taxRateBasisPoints: Int
-        let lineTaxAmountCents: Int?
-        let lineGrossAmountCents: Int?
-        let currency: GeneratedCurrencyCode
-        let notes: String?
-        let sortOrder: Int?
+    struct GeneratedBookingOfferComponent: Codable, Equatable, Identifiable {
+    let id: String
+    let category: GeneratedOfferCategory
+    let label: String
+    let details: String?
+    let quantity: Int
+    let unitAmountCents: Int
+    let taxRateBasisPoints: Int
+    let lineTotalAmountCents: Int?
+    let currency: GeneratedCurrencyCode
+    let notes: String?
+    let sortOrder: Int?
+    let createdAt: String?
+    let updatedAt: String?
 
         private enum CodingKeys: String, CodingKey {
-            case id
-            case category
-            case label
-            case details
-            case quantity
-            case unitAmountCents = "unit_amount_cents"
-            case lineNetAmountCents = "line_net_amount_cents"
-            case taxRateBasisPoints = "tax_rate_basis_points"
-            case lineTaxAmountCents = "line_tax_amount_cents"
-            case lineGrossAmountCents = "line_gross_amount_cents"
-            case currency
-            case notes
-            case sortOrder = "sort_order"
+        case id = "id"
+        case category = "category"
+        case label = "label"
+        case details = "details"
+        case quantity = "quantity"
+        case unitAmountCents = "unitAmountCents"
+        case taxRateBasisPoints = "taxRateBasisPoints"
+        case lineTotalAmountCents = "lineTotalAmountCents"
+        case currency = "currency"
+        case notes = "notes"
+        case sortOrder = "sortOrder"
+        case createdAt = "createdAt"
+        case updatedAt = "updatedAt"
         }
     }
 
     struct GeneratedBookingOfferTotals: Codable, Equatable {
-        let netAmountCents: Int
-        let taxAmountCents: Int
-        let grossAmountCents: Int
-        let componentsCount: Int
+    let netAmountCents: Int
+    let taxAmountCents: Int
+    let grossAmountCents: Int
+    let componentsCount: Int
 
         private enum CodingKeys: String, CodingKey {
-            case netAmountCents = "net_amount_cents"
-            case taxAmountCents = "tax_amount_cents"
-            case grossAmountCents = "gross_amount_cents"
-            case componentsCount = "components_count"
+        case netAmountCents = "netAmountCents"
+        case taxAmountCents = "taxAmountCents"
+        case grossAmountCents = "grossAmountCents"
+        case componentsCount = "componentsCount"
         }
     }
 
     struct GeneratedBookingOffer: Codable, Equatable {
-        let currency: GeneratedCurrencyCode
-        let categoryRules: [GeneratedBookingOfferCategoryRule]
-        let components: [GeneratedBookingOfferComponent]
-        let totals: GeneratedBookingOfferTotals
+    let currency: GeneratedCurrencyCode
+    let categoryRules: [GeneratedBookingOfferCategoryRule]?
+    let components: [GeneratedBookingOfferComponent]?
+    let totals: GeneratedBookingOfferTotals
+    let totalPriceCents: Int
 
         private enum CodingKeys: String, CodingKey {
-            case currency
-            case categoryRules = "category_rules"
-            case components
-            case totals
+        case currency = "currency"
+        case categoryRules = "categoryRules"
+        case components = "components"
+        case totals = "totals"
+        case totalPriceCents = "totalPriceCents"
         }
     }
 
-    struct GeneratedInvoiceComponent: Codable, Identifiable, Equatable {
-        let id: String
-        let description: String
-        let quantity: Int
-        let unitAmountCents: Int
-        let totalAmountCents: Int
+    struct GeneratedBooking: Codable, Equatable, Identifiable {
+    let id: String
+    let bookingHash: String?
+    let customerId: String
+    let stage: GeneratedBookingStage
+    let atp_staff: String?
+    let atpStaffName: String?
+    let destination: String?
+    let style: String?
+    let travelMonth: String?
+    let travelers: Int?
+    let duration: String?
+    let budget: String?
+    let preferredCurrency: GeneratedCurrencyCode?
+    let notes: String?
+    let pricing: GeneratedBookingPricing
+    let offer: GeneratedBookingOffer
+    let source: GeneratedSourceAttribution?
+    let createdAt: String
+    let updatedAt: String
 
         private enum CodingKeys: String, CodingKey {
-            case id
-            case description
-            case quantity
-            case unitAmountCents = "unit_amount_cents"
-            case totalAmountCents = "total_amount_cents"
+        case id = "id"
+        case bookingHash = "bookingHash"
+        case customerId = "customerId"
+        case stage = "stage"
+        case atp_staff = "atp_staff"
+        case atpStaffName = "atpStaffName"
+        case destination = "destination"
+        case style = "style"
+        case travelMonth = "travelMonth"
+        case travelers = "travelers"
+        case duration = "duration"
+        case budget = "budget"
+        case preferredCurrency = "preferredCurrency"
+        case notes = "notes"
+        case pricing = "pricing"
+        case offer = "offer"
+        case source = "source"
+        case createdAt = "createdAt"
+        case updatedAt = "updatedAt"
         }
     }
 
-    struct GeneratedBookingInvoice: Codable, Identifiable, Equatable {
-        let id: String
-        let currency: GeneratedCurrencyCode
-        let status: String
-        let dueAmountCents: Int
-        let notes: String?
-        let components: [GeneratedInvoiceComponent]
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case currency
-            case status
-            case dueAmountCents = "due_amount_cents"
-            case notes
-            case components
-        }
-    }
-
-    struct GeneratedBookingActivity: Codable, Identifiable, Equatable {
-        let id: String
-        let type: String
-        let createdAt: String
-        let note: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case type
-            case createdAt = "created_at"
-            case note
-        }
-    }
-
-    struct GeneratedBooking: Codable, Identifiable, Equatable {
-        let id: String
-        let customerId: String?
-        let customerName: String?
-        let destination: String
-        let style: String
-        let travelMonth: String?
-        let travelers: Int?
-        let duration: String?
-        let budget: String?
-        let stage: GeneratedBookingStage
-        let assignedStaffId: String?
-        let assignedStaffName: String?
-        let notes: String?
-        let source: GeneratedSourceAttribution?
-        let bookingHash: String?
-        let pricing: GeneratedBookingPricing?
-        let offer: GeneratedBookingOffer?
-
-        private enum CodingKeys: String, CodingKey {
-            case id
-            case customerId = "customer_id"
-            case customerName = "customer_name"
-            case destination
-            case style
-            case travelMonth = "travel_month"
-            case travelers
-            case duration
-            case budget
-            case stage
-            case assignedStaffId = "staff"
-            case assignedStaffName = "staff_name"
-            case notes
-            case source
-            case bookingHash = "booking_hash"
-            case pricing
-            case offer
-        }
-    }

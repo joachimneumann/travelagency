@@ -1,15 +1,23 @@
 package entities
 
 import common "travelagency.local/model/common"
+import enums "travelagency.local/model/enums"
 
 #Customer: {
 	id:                    common.#Identifier
 	name:                  string
+	photo_ref?:            string
 	title?:                string
 	first_name?:           string
 	last_name?:            string
 	date_of_birth?:        common.#DateOnly
 	nationality?:          string
+	address_line_1?:       string
+	address_line_2?:       string
+	address_city?:         string
+	address_state_region?: string
+	address_postal_code?:  string
+	address_country_code?: string
 	organization_name?:    string
 	organization_address?: string
 	organization_phone_number?: string
@@ -18,18 +26,10 @@ import common "travelagency.local/model/common"
 	tax_id?:               string
 	phone_number?:         string
 	email?:                common.#Email
-	address_line_1?:       string
-	address_line_2?:       string
-	address_city?:         string
-	address_state_region?:  string
-	address_postal_code?:   string
-	address_country_code?:  string
-	preferred_language?:    string
-	preferred_currency?:    string
-	timezone?:             string
-	tags?:                 [...string]
+	preferred_language?:    enums.#LanguageCode
+	preferred_currency?:    enums.#CurrencyCode
+	timezone?:              string
 	notes?:                string
-	can_receive_marketing:  bool | *false
 	created_at:            common.#Timestamp
 	updated_at:            common.#Timestamp
 	archived_at?:          common.#Timestamp

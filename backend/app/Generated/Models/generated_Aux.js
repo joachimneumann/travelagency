@@ -72,6 +72,42 @@ export const CUSTOMER_SCHEMA = {
       "required": false
     },
     {
+      "name": "address_line_1",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "address_line_2",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "address_city",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "address_state_region",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "address_postal_code",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
+      "name": "address_country_code",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
+    },
+    {
       "name": "organization_name",
       "kind": "scalar",
       "typeName": "string",
@@ -120,51 +156,15 @@ export const CUSTOMER_SCHEMA = {
       "required": false
     },
     {
-      "name": "address_line_1",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "address_line_2",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "address_city",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "address_state_region",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "address_postal_code",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "address_country_code",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
       "name": "preferred_language",
-      "kind": "scalar",
-      "typeName": "string",
+      "kind": "enum",
+      "typeName": "LanguageCode",
       "required": false
     },
     {
       "name": "preferred_currency",
-      "kind": "scalar",
-      "typeName": "string",
+      "kind": "enum",
+      "typeName": "CurrencyCode",
       "required": false
     },
     {
@@ -174,23 +174,10 @@ export const CUSTOMER_SCHEMA = {
       "required": false
     },
     {
-      "name": "tags",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false,
-      "isArray": true
-    },
-    {
       "name": "notes",
       "kind": "scalar",
       "typeName": "string",
       "required": false
-    },
-    {
-      "name": "can_receive_marketing",
-      "kind": "scalar",
-      "typeName": "bool",
-      "required": true
     },
     {
       "name": "created_at",
@@ -537,3 +524,4 @@ export const TOUR_PRICE_FROM_SCHEMA = {
 export function validateTourPriceFrom(value) {
   return __validateShape(value, TOUR_PRICE_FROM_SCHEMA);
 }
+

@@ -1,14 +1,22 @@
 import Foundation
 
-// Generated from the normalized model IR exported from model/ir.
+// Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
     struct GeneratedCustomer: Codable, Equatable, Identifiable {
     let id: String
     let name: String
     let title: String?
+    let first_name: String?
+    let last_name: String?
     let date_of_birth: String?
     let nationality: String?
+    let address_line_1: String?
+    let address_line_2: String?
+    let address_city: String?
+    let address_state_region: String?
+    let address_postal_code: String?
+    let address_country_code: String?
     let organization_name: String?
     let organization_address: String?
     let organization_phone_number: String?
@@ -17,18 +25,10 @@ import Foundation
     let tax_id: String?
     let phone_number: String?
     let email: String?
-    let address_line_1: String?
-    let address_line_2: String?
-    let address_city: String?
-    let address_state_region: String?
-    let address_postal_code: String?
-    let address_country_code: String?
-    let preferred_language: String?
-    let preferred_currency: String?
+    let preferred_language: GeneratedLanguageCode?
+    let preferred_currency: GeneratedCurrencyCode?
     let timezone: String?
-    let tags: [String]?
     let notes: String?
-    let can_receive_marketing: Bool
     let created_at: String
     let updated_at: String
     let archived_at: String?
@@ -37,8 +37,16 @@ import Foundation
         case id = "id"
         case name = "name"
         case title = "title"
+        case first_name = "first_name"
+        case last_name = "last_name"
         case date_of_birth = "date_of_birth"
         case nationality = "nationality"
+        case address_line_1 = "address_line_1"
+        case address_line_2 = "address_line_2"
+        case address_city = "address_city"
+        case address_state_region = "address_state_region"
+        case address_postal_code = "address_postal_code"
+        case address_country_code = "address_country_code"
         case organization_name = "organization_name"
         case organization_address = "organization_address"
         case organization_phone_number = "organization_phone_number"
@@ -47,18 +55,10 @@ import Foundation
         case tax_id = "tax_id"
         case phone_number = "phone_number"
         case email = "email"
-        case address_line_1 = "address_line_1"
-        case address_line_2 = "address_line_2"
-        case address_city = "address_city"
-        case address_state_region = "address_state_region"
-        case address_postal_code = "address_postal_code"
-        case address_country_code = "address_country_code"
         case preferred_language = "preferred_language"
         case preferred_currency = "preferred_currency"
         case timezone = "timezone"
-        case tags = "tags"
         case notes = "notes"
-        case can_receive_marketing = "can_receive_marketing"
         case created_at = "created_at"
         case updated_at = "updated_at"
         case archived_at = "archived_at"
@@ -136,7 +136,7 @@ import Foundation
     let travel_group_id: String
     let customer_id: String
     let is_traveling: Bool?
-    let member_roles: [String]
+    let member_roles: [String]?
     let notes: String?
     let created_at: String
     let updated_at: String
@@ -156,18 +156,18 @@ import Foundation
     struct GeneratedTour: Codable, Equatable, Identifiable {
     let id: String
     let title: String?
-    let destinationCountries: [String]
-    let styles: [String]
+    let destinationCountries: [String]?
+    let styles: [String]?
     let durationDays: Int?
     let priceFrom: GeneratedTourPriceFrom?
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
         case title = "title"
-        case destinationCountries = "destination_countries"
+        case destinationCountries = "destinationCountries"
         case styles = "styles"
-        case durationDays = "duration_days"
-        case priceFrom = "price_from"
+        case durationDays = "durationDays"
+        case priceFrom = "priceFrom"
         }
     }
 
@@ -180,3 +180,4 @@ import Foundation
         case minor = "minor"
         }
     }
+
