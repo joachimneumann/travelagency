@@ -4,6 +4,7 @@ set -euo pipefail
 EXPECTED_HOSTNAME="${EXPECTED_HOSTNAME:-atp}"
 TARGET_ROOT="${TARGET_ROOT:-/srv/production}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE_ROOT="${SOURCE_ROOT:-$ROOT_DIR/production}"
 STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/asiatravelplan-static.XXXXXX")"
 
 cleanup() {
@@ -19,6 +20,7 @@ Usage:
 Environment overrides:
   EXPECTED_HOSTNAME   Hostname required for execution (default: atp)
   TARGET_ROOT         Static site target directory (default: /srv/production)
+  SOURCE_ROOT         Static source directory (default: <repo>/production)
 
 This script must be executed on the production server.
 It publishes the public static website bundle to TARGET_ROOT.
@@ -40,9 +42,8 @@ fi
 cd "$ROOT_DIR"
 
 for required in \
-  "frontend/pages/index.html" \
-  "frontend/pages/404.html" \
-  "assets" \
+  "$SOURCE_ROOT/index.html" \
+  "$SOURCE_ROOT/assets" \
   "site.webmanifest" \
   "robots.txt" \
   "sitemap.xml"; do
@@ -53,12 +54,12 @@ for required in \
 done
 
 mkdir -p "$STAGE_DIR/assets"
-cp "frontend/pages/index.html" "$STAGE_DIR/index.html"
-cp "frontend/pages/404.html" "$STAGE_DIR/404.html"
+cp "$SOURCE_ROOT/index.html" "$STAGE_DIR/index.html"
+cp "$SOURCE_ROOT/index.html" "$STAGE_DIR/404.html"
 cp "site.webmanifest" "$STAGE_DIR/site.webmanifest"
 cp "robots.txt" "$STAGE_DIR/robots.txt"
 cp "sitemap.xml" "$STAGE_DIR/sitemap.xml"
-rsync -a --delete "assets/" "$STAGE_DIR/assets/"
+rsync -a --delete "$SOURCE_ROOT/assets/" "$STAGE_DIR/assets/"
 
 mkdir -p "$TARGET_ROOT"
 rsync -a --delete "$STAGE_DIR/" "$TARGET_ROOT/"
