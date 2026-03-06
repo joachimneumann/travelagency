@@ -44,7 +44,8 @@ for required in \
   "frontend/pages/404.html" \
   "assets" \
   "site.webmanifest" \
-  "robots.txt"; do
+  "robots.txt" \
+  "sitemap.xml"; do
   if [[ ! -e "$required" ]]; then
     echo "Missing required path: $required" >&2
     exit 1
@@ -56,6 +57,7 @@ cp "frontend/pages/index.html" "$STAGE_DIR/index.html"
 cp "frontend/pages/404.html" "$STAGE_DIR/404.html"
 cp "site.webmanifest" "$STAGE_DIR/site.webmanifest"
 cp "robots.txt" "$STAGE_DIR/robots.txt"
+cp "sitemap.xml" "$STAGE_DIR/sitemap.xml"
 rsync -a --delete "assets/" "$STAGE_DIR/assets/"
 
 mkdir -p "$TARGET_ROOT"

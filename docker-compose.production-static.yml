@@ -1,0 +1,16 @@
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - /srv/production:/srv/production:ro
+      - caddy_prod_data:/data
+      - caddy_prod_config:/config
+
+volumes:
+  caddy_prod_data:
+  caddy_prod_config:
