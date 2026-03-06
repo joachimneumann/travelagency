@@ -22,7 +22,8 @@ export function createCustomerHandlers(deps) {
 
 const CUSTOMER_UPDATE_FIELDS = new Set([
   "id",
-  "display_name",
+  "name",
+  "title",
   "first_name",
   "last_name",
   "date_of_birth",
@@ -50,10 +51,17 @@ const CUSTOMER_UPDATE_FIELDS = new Set([
   "created_at",
   "updated_at",
   "archived_at",
-  "name",
   "phone",
   "language"
 ]);
+
+function buildCustomerReadModel(customer) {
+  return {
+    ...customer,
+    name: normalizeText(customer?.name) || "",
+    title: normalizeText(customer?.title) || null
+  };
+}
 
 async function handleListCustomers(req, res) {
   const principal = getPrincipal(req);
@@ -67,6 +75,7 @@ async function handleListCustomers(req, res) {
   const pageQuery = requestUrl.searchParams;
 
   const filtered = [...store.customers]
+    .map((customer) => buildCustomerReadModel(customer))
     .filter((customer) => {
       if (!search) return true;
       const haystack = [customer.name, customer.email, customer.phone, customer.language].filter(Boolean).join(" ").toLowerCase();
@@ -99,7 +108,7 @@ async function handleGetCustomer(req, res, [customerId]) {
 
   const bookingsReadModel = await Promise.all(bookings);
 
-  sendJson(res, 200, { customer, bookings: bookingsReadModel });
+  sendJson(res, 200, { customer: buildCustomerReadModel(customer), bookings: bookingsReadModel });
 }
 
 async function handlePatchCustomer(req, res, [customerId]) {
@@ -134,7 +143,7 @@ async function handlePatchCustomer(req, res, [customerId]) {
   customer.updated_at = nowIso();
 
   await persistStore(store);
-  sendJson(res, 200, { customer });
+  sendJson(res, 200, { customer: buildCustomerReadModel(customer) });
 }
 
 async function handleListAtpStaff(req, res) {
@@ -274,10 +283,6 @@ function normalizeCustomerPatch(payload = {}) {
     patch[key] = normalizeText(value);
   });
 
-  if (Object.prototype.hasOwnProperty.call(patch, "display_name") && !Object.prototype.hasOwnProperty.call(patch, "name")) {
-    patch.name = patch.display_name;
-  }
-
   if (Object.prototype.hasOwnProperty.call(patch, "phone_number") && !Object.prototype.hasOwnProperty.call(patch, "phone")) {
     patch.phone = patch.phone_number;
   }
@@ -294,8 +299,8 @@ function applyCustomerPatch(customer, patch = {}) {
     customer[key] = value;
   }
 
-  if (Object.prototype.hasOwnProperty.call(patch, "display_name")) {
-    customer.name = patch.display_name || customer.name;
+  if (Object.prototype.hasOwnProperty.call(patch, "name")) {
+    customer.name = patch.name || customer.name || "";
   }
 
   if (Object.prototype.hasOwnProperty.call(patch, "phone_number")) {

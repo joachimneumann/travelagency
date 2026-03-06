@@ -4,7 +4,8 @@ import common "travelagency.local/model/common"
 
 #Customer: {
 	id:                    common.#Identifier
-	display_name:          string
+	name:                  string
+	title?:                string
 	first_name?:           string
 	last_name?:            string
 	date_of_birth?:        common.#DateOnly

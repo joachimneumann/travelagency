@@ -99,7 +99,7 @@ struct BookingDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Customer")
                         .font(.headline)
-                    Text(customer.display_name.trimmingCharacters(in: .whitespacesAndNewlines))
+                    Text(customer.name.trimmingCharacters(in: .whitespacesAndNewlines))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)

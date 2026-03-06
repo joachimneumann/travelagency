@@ -76,7 +76,8 @@ IR: {
 				sourceType: "entities.#Customer"
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-					{name: "display_name", kind: "scalar", typeName: "string", required: true},
+					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "first_name", kind: "scalar", typeName: "string", required: false},
 				{name: "last_name", kind: "scalar", typeName: "string", required: false},
 				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},

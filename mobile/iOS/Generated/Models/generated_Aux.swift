@@ -5,9 +5,8 @@ import Foundation
 
     struct GeneratedCustomer: Codable, Equatable, Identifiable {
     let id: String
-    let display_name: String
-    let first_name: String?
-    let last_name: String?
+    let name: String
+    let title: String?
     let date_of_birth: String?
     let nationality: String?
     let organization_name: String?
@@ -36,9 +35,8 @@ import Foundation
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
-        case display_name = "display_name"
-        case first_name = "first_name"
-        case last_name = "last_name"
+        case name = "name"
+        case title = "title"
         case date_of_birth = "date_of_birth"
         case nationality = "nationality"
         case organization_name = "organization_name"
@@ -182,4 +180,3 @@ import Foundation
         case minor = "minor"
         }
     }
-

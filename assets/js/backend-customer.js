@@ -38,7 +38,7 @@ const CUSTOMER_FIELD_UI_CONFIG = {
 };
 
 const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
-  .filter((field) => field.name !== "id")
+  .filter((field) => !["id", "first_name", "last_name"].includes(field.name))
   .map((field) => {
     const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
     return {
@@ -54,8 +54,10 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
-  title: document.getElementById("detailTitle"),
-  subtitle: document.getElementById("detailSubTitle"),
+  heroTitle: document.getElementById("customerHeroTitle"),
+  heroId: document.getElementById("customerHeroId"),
+  heroName: document.getElementById("customerHeroName"),
+  heroDob: document.getElementById("customerHeroDob"),
   error: document.getElementById("detailError"),
   customerDataTable: document.getElementById("customerDataTable"),
   consentsTable: document.getElementById("customerConsentsTable"),
@@ -121,17 +123,7 @@ async function loadCustomer() {
   if (!payload?.customer) return;
 
   state.customer = normalizeCustomer(payload.customer);
-
-  if (els.title) {
-    const displayName = state.customer.display_name || state.customer.name || "Customer";
-    els.title.textContent = displayName;
-  }
-
-  if (els.subtitle) {
-    const customerId = state.customer.id ? `ID: ${state.customer.id}` : "";
-    els.subtitle.textContent = customerId;
-    els.subtitle.hidden = false;
-  }
+  renderCustomerHero(state.customer);
 
   state.isOrganizationCustomer = shouldEnableOrganizationFields(state.customer);
   if (els.organizationToggle) {
@@ -151,11 +143,31 @@ async function loadCustomer() {
   clearSaveStatus();
 }
 
+function renderCustomerHero(customer) {
+  if (els.heroName) {
+    els.heroName.textContent = customer.name || "Customer";
+  }
+
+  if (els.heroId) {
+    els.heroId.textContent = customer.id ? `ID: ${customer.id}` : "ID: -";
+  }
+
+  if (els.heroDob) {
+    els.heroDob.textContent = formatHeroDateOnly(customer.date_of_birth) || "-";
+  }
+
+  if (els.heroTitle) {
+    const title = normalizeText(customer.title);
+    els.heroTitle.textContent = title;
+    els.heroTitle.hidden = !title;
+  }
+}
+
 function normalizeCustomer(customer) {
   const normalized = {
     ...customer,
-    display_name: normalizeText(customer.display_name) || normalizeText(customer.name) || "",
-    name: normalizeText(customer.name) || normalizeText(customer.display_name) || "",
+    name: normalizeText(customer.name) || "",
+    title: normalizeText(customer.title) || "",
     phone_number: normalizeText(customer.phone_number) || normalizeText(customer.phone) || "",
     phone: normalizeText(customer.phone) || normalizeText(customer.phone_number) || "",
     preferred_language: normalizeText(customer.preferred_language) || normalizeText(customer.language) || "",
@@ -384,9 +396,6 @@ function collectEditableCustomerPayload() {
     payload[field.name] = getFieldValueFromInput(field, el);
   });
 
-  if (Object.prototype.hasOwnProperty.call(payload, "display_name") && !Object.prototype.hasOwnProperty.call(payload, "name")) {
-    payload.name = payload.display_name;
-  }
   if (Object.prototype.hasOwnProperty.call(payload, "phone_number") && !Object.prototype.hasOwnProperty.call(payload, "phone")) {
     payload.phone = payload.phone_number;
   }
@@ -540,6 +549,16 @@ function formatDateOnly(value) {
   const d = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return String(value || "-");
   return d.toISOString().slice(0, 10);
+}
+
+function formatHeroDateOnly(value) {
+  if (!value) return "";
+  const d = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return String(value || "");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = String(d.getUTCFullYear());
+  return `${dd}.${mm}.${yyyy}`;
 }
 
 function formatDateTime(value) {

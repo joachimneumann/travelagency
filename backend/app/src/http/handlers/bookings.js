@@ -62,6 +62,15 @@ export function createBookingHandlers(deps) {
     sendFileWithCache
   } = deps;
 
+function buildCustomerReadModel(customer) {
+  if (!customer) return null;
+  return {
+    ...customer,
+    name: normalizeText(customer.name) || "",
+    title: normalizeText(customer.title) || null
+  };
+}
+
 async function handleCreateBooking(req, res) {
   let payload;
   try {
@@ -216,7 +225,7 @@ async function handleGetBooking(req, res, [bookingId]) {
   }
 
   const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking), customer });
+  sendJson(res, 200, { booking: await buildBookingReadModel(booking), customer: buildCustomerReadModel(customer) });
 }
 
 async function handleListBookingChatEvents(req, res, [bookingId]) {

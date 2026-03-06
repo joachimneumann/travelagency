@@ -36,10 +36,16 @@ export const CUSTOMER_SCHEMA = {
       "required": true
     },
     {
-      "name": "display_name",
+      "name": "name",
       "kind": "scalar",
       "typeName": "string",
       "required": true
+    },
+    {
+      "name": "title",
+      "kind": "scalar",
+      "typeName": "string",
+      "required": false
     },
     {
       "name": "first_name",
@@ -531,4 +537,3 @@ export const TOUR_PRICE_FROM_SCHEMA = {
 export function validateTourPriceFrom(value) {
   return __validateShape(value, TOUR_PRICE_FROM_SCHEMA);
 }
-

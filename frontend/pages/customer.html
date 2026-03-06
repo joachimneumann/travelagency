@@ -7,6 +7,82 @@
     <meta name="description" content="AsiaTravelPlan customer detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+    <style>
+      .customer-hero {
+        margin-bottom: 1.4rem;
+        padding: 1.3rem 1.4rem;
+        border: 1px solid rgba(22, 49, 61, 0.12);
+        border-radius: 24px;
+        background:
+          radial-gradient(circle at top right, rgba(166, 208, 198, 0.28), transparent 42%),
+          linear-gradient(145deg, rgba(248, 251, 250, 0.96), rgba(255, 255, 255, 0.98));
+        box-shadow: 0 18px 40px rgba(16, 36, 46, 0.08);
+      }
+
+      .customer-hero__top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 0.9rem;
+      }
+
+      .customer-hero__title {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(16, 102, 88, 0.1);
+        color: #0d5d51;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .customer-hero__id {
+        color: rgba(22, 49, 61, 0.68);
+        font-size: 0.94rem;
+      }
+
+      .customer-hero__name {
+        margin: 0;
+        color: #16313d;
+        font-size: clamp(2rem, 4vw, 3.15rem);
+        line-height: 1.04;
+      }
+
+      .customer-hero__meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.85rem;
+        margin-top: 1rem;
+      }
+
+      .customer-hero__panel {
+        padding: 0.9rem 1rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(22, 49, 61, 0.08);
+      }
+
+      .customer-hero__label {
+        display: block;
+        margin-bottom: 0.28rem;
+        color: rgba(22, 49, 61, 0.58);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .customer-hero__value {
+        color: #16313d;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
     <header class="header" id="top">
@@ -58,14 +134,24 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <h1 class="section-title" id="detailTitle">Customer</h1>
-          <p class="section-booking" id="detailSubTitle" hidden></p>
+          <section class="customer-hero" aria-labelledby="customerHeroName">
+            <div class="customer-hero__top">
+              <span class="customer-hero__title" id="customerHeroTitle" hidden></span>
+              <span class="customer-hero__id" id="customerHeroId">ID: -</span>
+            </div>
+            <h1 class="customer-hero__name" id="customerHeroName">Customer</h1>
+            <div class="customer-hero__meta">
+              <div class="customer-hero__panel">
+                <span class="customer-hero__label">Date Of Birth</span>
+                <span class="customer-hero__value" id="customerHeroDob">-</span>
+              </div>
+            </div>
+          </section>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <section style="margin-bottom: 1rem;">
             <div class="backend-controls">
-              <h2 class="section-title" style="font-size: 1.05rem;">Customer profile</h2>
               <label class="field">
                 <span>Organization</span>
                 <input id="customerIsOrganization" type="checkbox" />

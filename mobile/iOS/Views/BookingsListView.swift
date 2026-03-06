@@ -165,7 +165,7 @@ struct CustomersListView: View {
     }
 
     private func displayName(for customer: Customer) -> String {
-        let name = customer.display_name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = customer.name.trimmingCharacters(in: .whitespacesAndNewlines)
         if !name.isEmpty { return name }
         return customer.email ?? customer.phone_number ?? customer.id
     }

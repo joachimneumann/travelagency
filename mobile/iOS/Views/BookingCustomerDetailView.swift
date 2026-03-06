@@ -6,7 +6,10 @@ struct BookingCustomerDetailView: View {
     var body: some View {
         Form {
             Section("Customer") {
-                LabeledContent("Name", value: customer.display_name)
+                LabeledContent("Name", value: customer.name)
+                if let title = customer.title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    LabeledContent("Title", value: title)
+                }
                 LabeledContent("Email", value: customer.email ?? "-")
                 LabeledContent("Phone", value: customer.phone_number ?? "-")
                 LabeledContent("Language", value: customer.preferred_language ?? "-")

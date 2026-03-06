@@ -616,7 +616,7 @@ function renderCustomers(items) {
       const customerHref = buildCustomerHref(customer.id);
       return `<tr>
         <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.id))}</a></td>
-        <td>${escapeHtml(customer.display_name || customer.name || "-")}</td>
+        <td>${escapeHtml(customer.name || "-")}</td>
         <td>${escapeHtml(customer.email || "-")}</td>
         <td>${escapeHtml(customer.phone_number || customer.phone || "-")}</td>
         <td>${escapeHtml(customer.preferred_language || customer.language || "-")}</td>

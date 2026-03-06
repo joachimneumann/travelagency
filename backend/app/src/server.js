@@ -3136,7 +3136,7 @@ function upsertMetaChannelAccount(store, { channel, externalAccountId, displayNa
       id: `chatacct_${randomUUID()}`,
       channel: normalizedChannel,
       external_account_id: normalizedAccountId,
-      display_name: normalizeText(displayName) || null,
+      name: normalizeText(displayName) || null,
       metadata: metadata && typeof metadata === "object" ? metadata : {},
       created_at: nowIso(),
       updated_at: nowIso()
@@ -3145,7 +3145,7 @@ function upsertMetaChannelAccount(store, { channel, externalAccountId, displayNa
     return account;
   }
 
-  account.display_name = normalizeText(displayName) || account.display_name || null;
+  account.name = normalizeText(displayName) || account.name || null;
   account.metadata = metadata && typeof metadata === "object" ? { ...account.metadata, ...metadata } : account.metadata;
   account.updated_at = nowIso();
   return account;

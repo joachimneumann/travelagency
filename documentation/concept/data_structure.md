@@ -6,7 +6,7 @@
 
 `Customer`
 - `id` (string, immutable, system-generated)
-- `display_name` (required)
+- `name` (required)
 
 - `first_name` (optional)
 - `last_name` (optional)
@@ -99,7 +99,7 @@ Security note:
 - `Customer.dedup_fingerprint` is unique per active customer record and must be recomputed on customer creation/update.
 - `TravelGroupMember.customer_id` must always reference an existing `Customer`.
 - Unknown traveler flow:
-  - When traveler identity is unknown, create a minimal `Customer` first (at least `display_name` and one contact field) before creating `TravelGroupMember`.
+  - When traveler identity is unknown, create a minimal `Customer` first (at least `name` and one contact field) before creating `TravelGroupMember`.
 - Each `TravelGroup` must have at least one `TravelGroupMember` with role `TravelGroupContact`.
 
 ## 4) Search indexing recommendations

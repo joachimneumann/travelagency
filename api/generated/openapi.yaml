@@ -122,15 +122,18 @@ components:
       type: object
       required:
       - id
-      - display_name
+      - name
       - can_receive_marketing
       - created_at
       - updated_at
       properties:
         id:
           type: string
-        display_name:
+        name:
           type: string
+        title:
+          type: string
+          nullable: true
         first_name:
           type: string
           nullable: true
