@@ -44,8 +44,35 @@ require_cmd() {
   fi
 }
 
+stop_listeners_on_port() {
+  local port="$1"
+  local label="$2"
+  local pids
+
+  pids="$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -z "$pids" ]; then
+    return
+  fi
+
+  echo "Stopping ${label} listener(s) on port ${port}: ${pids//$'\n'/ } ..."
+  while IFS= read -r pid; do
+    [ -n "$pid" ] || continue
+    kill "$pid" 2>/dev/null || true
+  done <<< "$pids"
+
+  sleep 0.5
+
+  while IFS= read -r pid; do
+    [ -n "$pid" ] || continue
+    if kill -0 "$pid" 2>/dev/null; then
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+  done <<< "$pids"
+}
+
 stop_existing_backend() {
   if [ ! -f "$BACKEND_PID_FILE" ]; then
+    stop_listeners_on_port "$BACKEND_PORT" "backend"
     return
   fi
 
@@ -61,10 +88,12 @@ stop_existing_backend() {
   fi
 
   rm -f "$BACKEND_PID_FILE"
+  stop_listeners_on_port "$BACKEND_PORT" "backend"
 }
 
 main() {
   require_cmd npm
+  require_cmd lsof
 
   if [ ! -f "$BACKEND_DIR/package.json" ]; then
     echo "Error: backend package.json not found in $BACKEND_DIR" >&2

@@ -32,8 +32,35 @@ require_cmd() {
   fi
 }
 
+stop_listeners_on_port() {
+  local port="$1"
+  local label="$2"
+  local pids
+
+  pids="$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -z "$pids" ]; then
+    return
+  fi
+
+  echo "Stopping ${label} listener(s) on port ${port}: ${pids//$'\n'/ } ..."
+  while IFS= read -r pid; do
+    [ -n "$pid" ] || continue
+    kill "$pid" 2>/dev/null || true
+  done <<< "$pids"
+
+  sleep 0.5
+
+  while IFS= read -r pid; do
+    [ -n "$pid" ] || continue
+    if kill -0 "$pid" 2>/dev/null; then
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+  done <<< "$pids"
+}
+
 stop_existing_frontend() {
   if [ ! -f "$FRONTEND_PID_FILE" ]; then
+    stop_listeners_on_port "$FRONTEND_PORT" "frontend"
     return
   fi
 
@@ -49,10 +76,12 @@ stop_existing_frontend() {
   fi
 
   rm -f "$FRONTEND_PID_FILE"
+  stop_listeners_on_port "$FRONTEND_PORT" "frontend"
 }
 
 main() {
   require_cmd python3
+  require_cmd lsof
   stop_existing_frontend
 
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."
