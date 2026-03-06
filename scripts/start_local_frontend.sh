@@ -87,11 +87,12 @@ main() {
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."
   bash -lc '
     cd "$1"
-    nohup python3 scripts/serve_frontend.py \
-      --bind "$2" \
+    nohup bash scripts/run_local_frontend_supervisor.sh \
+      "$1" \
+      "$2" \
       "$3" \
-      --directory "$1" \
-      --backend-base "$4" >"$5" 2>&1 < /dev/null &
+      "$4" \
+      "$5" > /dev/null 2>&1 < /dev/null &
     pid=$!
     disown "$pid" 2>/dev/null || true
     printf "%s\n" "$pid" >"$6"
