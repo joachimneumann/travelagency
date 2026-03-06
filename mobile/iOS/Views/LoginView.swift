@@ -7,22 +7,11 @@ struct LoginView: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 10) {
-                Image("BrandMark")
+                Image("BrandLogo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 88, height: 88)
-
-                Text("AsiaTravelPlan")
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(Color(red: 22 / 255, green: 48 / 255, blue: 64 / 255))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                    .multilineTextAlignment(.center)
-
-                Text("Southeast Asia Travel")
-                    .font(.headline)
-                    .foregroundStyle(Color(red: 75 / 255, green: 105 / 255, blue: 120 / 255))
-                    .multilineTextAlignment(.center)
+                    .padding()
+                    .padding(.trailing, 10)
             }
             .frame(maxWidth: .infinity)
 
