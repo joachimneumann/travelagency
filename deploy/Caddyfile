@@ -17,6 +17,22 @@
   }
 }
 
+asiatravelplan.com {
+  import security_headers
+  encode zstd gzip
+  root * /srv/production
+
+  @manifest path /site.webmanifest
+  header @manifest Content-Type "application/manifest+json"
+
+  file_server
+}
+
+www.asiatravelplan.com {
+  import security_headers
+  redir https://asiatravelplan.com{uri} permanent
+}
+
 staging.asiatravelplan.com {
   import security_headers
   import noindex_headers

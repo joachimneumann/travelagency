@@ -3,11 +3,10 @@ set -euo pipefail
 
 EXPECTED_HOSTNAME="${EXPECTED_HOSTNAME:-atp}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy/Caddyfile.production}"
-TARGET_CADDYFILE="${TARGET_CADDYFILE:-/etc/caddy/Caddyfile}"
-SERVICE_NAME="${SERVICE_NAME:-caddy}"
-BACKUP_DIR="${BACKUP_DIR:-/etc/caddy/backups}"
-COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.production-static.yml}"
+SOURCE_CADDYFILE="${SOURCE_CADDYFILE:-$ROOT_DIR/deploy/Caddyfile}"
+STAGING_ENV_FILE="${STAGING_ENV_FILE:-$ROOT_DIR/.env.staging}"
+STAGING_COMPOSE_FILE="${STAGING_COMPOSE_FILE:-$ROOT_DIR/docker-compose.staging.yml}"
+LEGACY_PRODUCTION_COMPOSE_FILE="${LEGACY_PRODUCTION_COMPOSE_FILE:-$ROOT_DIR/docker-compose.production-static.yml}"
 
 usage() {
   cat <<EOF
@@ -16,11 +15,10 @@ Usage:
 
 Environment overrides:
   EXPECTED_HOSTNAME  Hostname required for execution (default: atp)
-  SOURCE_CADDYFILE   Source config file (default: deploy/Caddyfile.production)
-  TARGET_CADDYFILE   Installed Caddyfile path for system Caddy (default: /etc/caddy/Caddyfile)
-  SERVICE_NAME       Service name to reload for system Caddy (default: caddy)
-  BACKUP_DIR         Backup directory for previous system config (default: /etc/caddy/backups)
-  COMPOSE_FILE       Docker Compose file for containerized Caddy (default: docker-compose.production-static.yml)
+  SOURCE_CADDYFILE   Shared Caddy config file (default: deploy/Caddyfile)
+  STAGING_ENV_FILE   Env file for the shared staging/prod compose stack (default: .env.staging)
+  STAGING_COMPOSE_FILE Docker Compose file for the shared staging/prod Caddy stack (default: docker-compose.staging.yml)
+  LEGACY_PRODUCTION_COMPOSE_FILE Legacy standalone production compose file to stop if present (default: docker-compose.production-static.yml)
 EOF
 }
 
@@ -41,60 +39,29 @@ if [[ ! -f "$SOURCE_CADDYFILE" ]]; then
   exit 1
 fi
 
-run_system_caddy_install() {
-  local sudo_cmd=""
-  if [[ "$(id -u)" -ne 0 ]]; then
-    if command -v sudo >/dev/null 2>&1; then
-      sudo_cmd="sudo"
-    else
-      echo "This script requires root or sudo to write $TARGET_CADDYFILE and reload Caddy." >&2
-      exit 1
-    fi
-  fi
-
-  local tmp_config
-  tmp_config="$(mktemp "${TMPDIR:-/tmp}/Caddyfile.production.XXXXXX")"
-  trap 'rm -f "$tmp_config"' RETURN
-
-  cp "$SOURCE_CADDYFILE" "$tmp_config"
-  caddy validate --config "$tmp_config"
-
-  $sudo_cmd mkdir -p "$BACKUP_DIR"
-  if [[ -f "$TARGET_CADDYFILE" ]]; then
-    local timestamp
-    timestamp="$(date +%Y%m%d-%H%M%S)"
-    $sudo_cmd cp "$TARGET_CADDYFILE" "$BACKUP_DIR/Caddyfile.$timestamp"
-  fi
-
-  $sudo_cmd cp "$tmp_config" "$TARGET_CADDYFILE"
-  $sudo_cmd systemctl reload "$SERVICE_NAME"
-  echo "Installed $SOURCE_CADDYFILE to $TARGET_CADDYFILE and reloaded $SERVICE_NAME on $CURRENT_HOSTNAME."
-}
-
-run_docker_caddy_install() {
-  if [[ ! -f "$COMPOSE_FILE" ]]; then
-    echo "Missing Docker Compose file: $COMPOSE_FILE" >&2
-    exit 1
-  fi
-
-  docker run --rm \
-    -v "$SOURCE_CADDYFILE:/etc/caddy/Caddyfile:ro" \
-    caddy:2 \
-    caddy validate --config /etc/caddy/Caddyfile
-
-  docker compose -f "$COMPOSE_FILE" up -d caddy
-  echo "Started/reloaded production Caddy via Docker Compose on $CURRENT_HOSTNAME using $COMPOSE_FILE."
-}
-
-if command -v caddy >/dev/null 2>&1; then
-  run_system_caddy_install
-  exit 0
+if [[ ! -f "$STAGING_ENV_FILE" ]]; then
+  echo "Missing staging env file: $STAGING_ENV_FILE" >&2
+  exit 1
 fi
 
-if command -v docker >/dev/null 2>&1; then
-  run_docker_caddy_install
-  exit 0
+if [[ ! -f "$STAGING_COMPOSE_FILE" ]]; then
+  echo "Missing staging compose file: $STAGING_COMPOSE_FILE" >&2
+  exit 1
 fi
 
-echo "Neither system Caddy nor Docker is available on this host." >&2
-exit 1
+if ! command -v docker >/dev/null 2>&1; then
+  echo "docker is required on this host." >&2
+  exit 1
+fi
+
+docker run --rm \
+  -v "$SOURCE_CADDYFILE:/etc/caddy/Caddyfile:ro" \
+  caddy:2 \
+  caddy validate --config /etc/caddy/Caddyfile
+
+if [[ -f "$LEGACY_PRODUCTION_COMPOSE_FILE" ]]; then
+  docker compose -f "$LEGACY_PRODUCTION_COMPOSE_FILE" down || true
+fi
+
+docker compose --env-file "$STAGING_ENV_FILE" -f "$STAGING_COMPOSE_FILE" up -d caddy
+echo "Shared staging/production Caddy reloaded on $CURRENT_HOSTNAME using $STAGING_COMPOSE_FILE."
