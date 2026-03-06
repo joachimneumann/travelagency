@@ -4,6 +4,8 @@ from http.client import HTTPConnection
 from pathlib import Path
 import argparse
 import os
+import socket
+import time
 from urllib.parse import urlsplit
 
 
@@ -21,10 +23,20 @@ PAGE_MAP = {
 class FrontendHandler(SimpleHTTPRequestHandler):
     backend_base = "http://127.0.0.1:8787"
     proxy_prefixes = ("/api/", "/auth/", "/public/v1/")
+    reload_prefix = "/__dev_reload"
+    live_reload_enabled = True
+    watched_roots = ("frontend", "assets")
+    watched_suffixes = (".html", ".css", ".js")
 
     def __init__(self, *args, directory=None, **kwargs):
         self.root = Path(directory or os.getcwd())
         super().__init__(*args, directory=str(self.root), **kwargs)
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
 
     def maybe_proxy(self):
         path = urlsplit(self.path).path
@@ -71,7 +83,7 @@ class FrontendHandler(SimpleHTTPRequestHandler):
     def send_custom_404(self):
         not_found = self.root / "frontend/pages/404.html"
         if not_found.exists():
-            body = not_found.read_bytes()
+            body = self.inject_live_reload(not_found.read_text(encoding="utf-8")).encode("utf-8")
             self.send_response(404)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -80,16 +92,96 @@ class FrontendHandler(SimpleHTTPRequestHandler):
             return
         self.send_error(404, "File not found")
 
+    def serve_html_file(self, html_path, status=200):
+        body = self.inject_live_reload(html_path.read_text(encoding="utf-8")).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
+
+    def inject_live_reload(self, html_text):
+        if not self.live_reload_enabled:
+            return html_text
+
+        script = """
+<script>
+(() => {
+  if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
+  const source = new EventSource("/__dev_reload");
+  source.onmessage = (event) => {
+    if (event.data === "reload") {
+      source.close();
+      window.location.reload();
+    }
+  };
+})();
+</script>
+""".strip()
+
+        marker = "</body>"
+        if marker in html_text:
+          return html_text.replace(marker, f"{script}\n{marker}", 1)
+        return f"{html_text}\n{script}"
+
+    def current_tree_version(self):
+        latest = 0
+        for relative_root in self.watched_roots:
+            base = self.root / relative_root
+            if not base.exists():
+                continue
+            for dirpath, dirnames, filenames in os.walk(base):
+                dirnames[:] = [name for name in dirnames if name not in {".git", "__pycache__", "node_modules"}]
+                for filename in filenames:
+                    if not filename.endswith(self.watched_suffixes):
+                        continue
+                    file_path = Path(dirpath) / filename
+                    try:
+                        mtime = file_path.stat().st_mtime_ns
+                    except OSError:
+                        continue
+                    if mtime > latest:
+                        latest = mtime
+        return latest
+
+    def handle_dev_reload(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        baseline = self.current_tree_version()
+        try:
+            while True:
+                current = self.current_tree_version()
+                if current > baseline:
+                    self.wfile.write(b"data: reload\n\n")
+                    self.wfile.flush()
+                    return
+                self.wfile.write(b": keepalive\n\n")
+                self.wfile.flush()
+                time.sleep(1.0)
+        except (BrokenPipeError, ConnectionResetError):
+            return
+
     def do_GET(self):
         if self.maybe_proxy():
             return
         request_path = urlsplit(self.path).path
+        if request_path == self.reload_prefix and self.live_reload_enabled:
+            self.handle_dev_reload()
+            return
         resolved_page = self.resolved_page_path(request_path)
         if resolved_page and resolved_page.exists():
-            self.path = "/" + str(resolved_page.relative_to(self.root)).replace(os.sep, "/")
-            return super().do_GET()
+            self.serve_html_file(resolved_page)
+            return
         path = self.translate_path(self.path)
         if os.path.exists(path):
+            if path.endswith(".html"):
+                self.serve_html_file(Path(path))
+                return
             return super().do_GET()
         self.send_custom_404()
 
@@ -99,17 +191,17 @@ class FrontendHandler(SimpleHTTPRequestHandler):
         request_path = urlsplit(self.path).path
         resolved_page = self.resolved_page_path(request_path)
         if resolved_page and resolved_page.exists():
-            self.path = "/" + str(resolved_page.relative_to(self.root)).replace(os.sep, "/")
-            return super().do_HEAD()
+            self.serve_html_file(resolved_page)
+            return
         path = self.translate_path(self.path)
         if os.path.exists(path):
+            if path.endswith(".html"):
+                self.serve_html_file(Path(path))
+                return
             return super().do_HEAD()
         not_found = self.root / "frontend/pages/404.html"
         if not_found.exists():
-            self.send_response(404)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(not_found.stat().st_size))
-            self.end_headers()
+            self.serve_html_file(not_found, status=404)
             return
         self.send_error(404, "File not found")
 
@@ -124,6 +216,15 @@ class FrontendHandler(SimpleHTTPRequestHandler):
         self.send_error(405, "Method not allowed")
 
 
+class DualStackThreadingHTTPServer(ThreadingHTTPServer):
+    address_family = socket.AF_INET6
+
+    def server_bind(self):
+        if hasattr(socket, "IPPROTO_IPV6") and hasattr(socket, "IPV6_V6ONLY"):
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        super().server_bind()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bind", default="127.0.0.1")
@@ -134,7 +235,10 @@ def main():
 
     FrontendHandler.backend_base = args.backend_base.rstrip("/")
     handler = lambda *h_args, **h_kwargs: FrontendHandler(*h_args, directory=args.directory, **h_kwargs)
-    server = ThreadingHTTPServer((args.bind, args.port), handler)
+    if args.bind in {"localhost", "127.0.0.1"}:
+        server = DualStackThreadingHTTPServer(("::", args.port), handler)
+    else:
+        server = ThreadingHTTPServer((args.bind, args.port), handler)
     try:
       server.serve_forever()
     except KeyboardInterrupt:

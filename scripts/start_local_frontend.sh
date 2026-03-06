@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
-FRONTEND_BIND="${FRONTEND_BIND:-127.0.0.1}"
+FRONTEND_BIND="${FRONTEND_BIND:-localhost}"
 FRONTEND_PID_FILE="${FRONTEND_PID_FILE:-/tmp/asiatravelplan-frontend.pid}"
 FRONTEND_LOG_FILE="${FRONTEND_LOG_FILE:-/tmp/asiatravelplan-frontend.log}"
 BACKEND_BASE="${BACKEND_BASE:-http://127.0.0.1:8787}"
@@ -85,15 +85,17 @@ main() {
   stop_existing_frontend
 
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."
-  (
-    cd "$ROOT_DIR"
+  bash -lc '
+    cd "$1"
     nohup python3 scripts/serve_frontend.py \
-      --bind "$FRONTEND_BIND" \
-      "$FRONTEND_PORT" \
-      --directory "$ROOT_DIR" \
-      --backend-base "$BACKEND_BASE" >"$FRONTEND_LOG_FILE" 2>&1 &
-    echo $! >"$FRONTEND_PID_FILE"
-  )
+      --bind "$2" \
+      "$3" \
+      --directory "$1" \
+      --backend-base "$4" >"$5" 2>&1 < /dev/null &
+    pid=$!
+    disown "$pid" 2>/dev/null || true
+    printf "%s\n" "$pid" >"$6"
+  ' bash "$ROOT_DIR" "$FRONTEND_BIND" "$FRONTEND_PORT" "$BACKEND_BASE" "$FRONTEND_LOG_FILE" "$FRONTEND_PID_FILE"
   wait_for_pid "$(cat "$FRONTEND_PID_FILE")" "frontend" "$FRONTEND_LOG_FILE"
 
   echo "Frontend:    http://${FRONTEND_BIND}:${FRONTEND_PORT}"

@@ -37,6 +37,15 @@ const CUSTOMER_FIELD_UI_CONFIG = {
   can_receive_marketing: { editable: true, control: "checkbox" }
 };
 
+const CUSTOMER_PRIMARY_GROUP_FIELD_NAMES = [
+  "name",
+  "title",
+  "date_of_birth",
+  "nationality",
+  "phone_number",
+  "email"
+];
+
 const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
   .filter((field) => !["id", "first_name", "last_name"].includes(field.name))
   .map((field) => {
@@ -48,6 +57,14 @@ const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
     };
   });
 
+const CUSTOMER_PRIMARY_GROUP_FIELDS = CUSTOMER_PRIMARY_GROUP_FIELD_NAMES
+  .map((fieldName) => CUSTOMER_EDIT_FIELDS.find((field) => field.name === fieldName))
+  .filter(Boolean);
+
+const CUSTOMER_REMAINING_FIELDS = CUSTOMER_EDIT_FIELDS.filter(
+  (field) => !CUSTOMER_PRIMARY_GROUP_FIELD_NAMES.includes(field.name)
+);
+
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
@@ -57,8 +74,8 @@ const els = {
   heroTitle: document.getElementById("customerHeroTitle"),
   heroId: document.getElementById("customerHeroId"),
   heroName: document.getElementById("customerHeroName"),
-  heroDob: document.getElementById("customerHeroDob"),
   error: document.getElementById("detailError"),
+  customerPrimaryGroup: document.getElementById("customerPrimaryGroup"),
   customerDataTable: document.getElementById("customerDataTable"),
   consentsTable: document.getElementById("customerConsentsTable"),
   documentsTable: document.getElementById("customerDocumentsTable"),
@@ -130,7 +147,8 @@ async function loadCustomer() {
     els.organizationToggle.checked = state.isOrganizationCustomer;
   }
 
-  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_EDIT_FIELDS, state.customer);
+  renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer);
+  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_REMAINING_FIELDS, state.customer);
   applyOrganizationFieldVisibility(state.isOrganizationCustomer);
   bindCustomerProfileInputs();
   renderCustomerConsents(payload.consents || []);
@@ -150,10 +168,6 @@ function renderCustomerHero(customer) {
 
   if (els.heroId) {
     els.heroId.textContent = customer.id ? `ID: ${customer.id}` : "ID: -";
-  }
-
-  if (els.heroDob) {
-    els.heroDob.textContent = formatHeroDateOnly(customer.date_of_birth) || "-";
   }
 
   if (els.heroTitle) {
@@ -254,6 +268,31 @@ function renderEditableCustomerTable(tableEl, fields, entity) {
     .join("");
 
   tableEl.innerHTML = `${header}<tbody>${rows}</tbody>`;
+}
+
+function renderEditableCustomerGroup(containerEl, fields, entity) {
+  if (!containerEl) return;
+
+  const rows = fields
+    .map((field) => {
+      const value = entity?.[field.name];
+      const layoutClass = getCustomerPrimaryFieldLayoutClass(field.name);
+      return `
+        <div class="field${layoutClass}">
+          <label for="${customerFieldInputId(field.name)}">${escapeHtml(fieldLabel(field.name))}</label>
+          ${renderEditableFieldInput(field, value)}
+        </div>
+      `;
+    })
+    .join("");
+
+  containerEl.innerHTML = `<div class="field-grid">${rows}</div>`;
+}
+
+function getCustomerPrimaryFieldLayoutClass(fieldName) {
+  if (fieldName === "title") return " field--title";
+  if (fieldName === "name") return " field--name";
+  return "";
 }
 
 function renderEditableFieldInput(field, value) {
@@ -371,7 +410,7 @@ function renderEntityCollectionTable(tableEl, title, rows, fields) {
 
 function bindCustomerProfileInputs() {
   const controls = Array.from(
-    document.querySelectorAll('#customerDataTable [data-customer-field]')
+    document.querySelectorAll('[data-customer-field]')
   );
 
   controls.forEach((control) => {
@@ -455,7 +494,8 @@ async function saveCustomerProfile() {
   }
 
   state.customer = normalizeCustomer(result.customer);
-  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_EDIT_FIELDS, state.customer);
+  renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer);
+  renderEditableCustomerTable(els.customerDataTable, CUSTOMER_REMAINING_FIELDS, state.customer);
   applyOrganizationFieldVisibility(state.isOrganizationCustomer);
   bindCustomerProfileInputs();
   setSaveEnabled(false);
@@ -473,8 +513,7 @@ function isCustomerOrganizationField(fieldName) {
 }
 
 function applyOrganizationFieldVisibility(enabled) {
-  if (!els.customerDataTable) return;
-  const rows = els.customerDataTable.querySelectorAll('tr[data-customer-org-field="1"]');
+  const rows = document.querySelectorAll('[data-customer-org-field="1"]');
   rows.forEach((row) => {
     row.style.display = enabled ? "" : "none";
   });
@@ -549,16 +588,6 @@ function formatDateOnly(value) {
   const d = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return String(value || "-");
   return d.toISOString().slice(0, 10);
-}
-
-function formatHeroDateOnly(value) {
-  if (!value) return "";
-  const d = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(d.getTime())) return String(value || "");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getUTCFullYear());
-  return `${dd}.${mm}.${yyyy}`;
 }
 
 function formatDateTime(value) {

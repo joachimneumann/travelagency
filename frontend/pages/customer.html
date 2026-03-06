@@ -53,34 +53,32 @@
         line-height: 1.04;
       }
 
-      .customer-hero__meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 0.85rem;
-        margin-top: 1rem;
+      .customer-primary-group {
+        margin-bottom: 1rem;
       }
 
-      .customer-hero__panel {
-        padding: 0.9rem 1rem;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(22, 49, 61, 0.08);
+      .customer-primary-group .field label {
+        color: rgba(22, 49, 61, 0.72);
+        letter-spacing: 0.02em;
       }
 
-      .customer-hero__label {
-        display: block;
-        margin-bottom: 0.28rem;
-        color: rgba(22, 49, 61, 0.58);
-        font-size: 0.76rem;
-        font-weight: 700;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
+      .customer-primary-group .field input,
+      .customer-primary-group .field select,
+      .customer-primary-group .field textarea {
+        background: rgba(255, 255, 255, 0.96);
       }
 
-      .customer-hero__value {
-        color: #16313d;
-        font-size: 1.05rem;
-        font-weight: 600;
+      .customer-primary-group .field-grid {
+        margin: 0;
+        grid-template-columns: 8rem minmax(0, 1.6fr) repeat(2, minmax(0, 1fr));
+      }
+
+      .customer-primary-group .field--title {
+        grid-column: span 1;
+      }
+
+      .customer-primary-group .field--name {
+        grid-column: span 1;
       }
     </style>
   </head>
@@ -140,12 +138,6 @@
               <span class="customer-hero__id" id="customerHeroId">ID: -</span>
             </div>
             <h1 class="customer-hero__name" id="customerHeroName">Customer</h1>
-            <div class="customer-hero__meta">
-              <div class="customer-hero__panel">
-                <span class="customer-hero__label">Date Of Birth</span>
-                <span class="customer-hero__value" id="customerHeroDob">-</span>
-              </div>
-            </div>
           </section>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
@@ -159,7 +151,10 @@
               <button id="customerSaveBtn" class="btn btn-primary" type="button" disabled>Update</button>
             </div>
             <p id="customerSaveStatus" class="section-booking" hidden></p>
-            <table class="backend-table" id="customerDataTable"></table>
+            <div class="customer-primary-group" id="customerPrimaryGroup"></div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="customerDataTable"></table>
+            </div>
           </section>
 
           <section style="margin-bottom: 1rem;">
