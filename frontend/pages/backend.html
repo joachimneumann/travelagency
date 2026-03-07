@@ -100,7 +100,15 @@
 
           <section class="backend-section" id="travelGroupsPanel">
             <h2 class="section-title u-title-medium">Travel Groups</h2>
-            <p class="micro" id="travelGroupsNotice">Travel groups are not available yet as a dedicated list endpoint.</p>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="travelGroupName">New travel group</label>
+                <input id="travelGroupName" type="text" placeholder="Group name" />
+              </div>
+              <button class="btn btn-ghost" id="travelGroupCreateBtn" type="button">Create</button>
+              <span class="micro" id="travelGroupCreateStatus"></span>
+            </div>
+            <p class="micro" id="travelGroupsNotice"></p>
             <div class="backend-table-wrap">
               <table class="backend-table" id="travelGroupsTable"></table>
             </div>

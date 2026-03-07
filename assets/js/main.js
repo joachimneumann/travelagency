@@ -1203,7 +1203,7 @@ async function submitBookingForm() {
     return;
   } catch (error) {
     renderBookingError(
-      "We could not submit your request right now. Please try again in a few minutes.",
+      "We could not submit your request right now.",
       error?.message || "Unknown booking submission error."
     );
     els.stepNext.disabled = false;

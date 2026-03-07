@@ -1,13 +1,31 @@
 # Data Structure (Concept)
 
-## 1) Client (Customer) Profile
+## 1) Client anchor and customer profile
 
-### 1.1 Customer
+### 1.1 Client
+
+`Client`
+- `id` (string, immutable, system-generated)
+- `client_type` (`customer` | `travel_group`)
+- `client_hash` (string, concurrency token)
+
+Purpose:
+- stable booking-facing reference
+- polymorphic anchor for one individual customer or one travel group
+
+Invariant:
+- exactly one subtype record exists for every `Client`
+- if `client_type == customer`, one `Customer` exists for `Client.id`
+- if `client_type == travel_group`, one `TravelGroup` exists for `Client.id`
+
+### 1.2 Customer
 
 `Customer`
-- `id` (string, immutable, system-generated)
+- `client_id` (FK -> `Client.id`, required)
+- `customer_hash` (string, concurrency token)
 - `name` (required)
-
+- `photo_ref` (optional)
+- `title` (optional)
 - `first_name` (optional)
 - `last_name` (optional)
 - `date_of_birth` (optional)
@@ -24,81 +42,112 @@
 - `organization_phone_number` (optional)
 - `organization_webpage` (optional)
 - `organization_email` (optional)
-
 - `phone_number` (optional)
 - `email` (optional)
-- `preferred_language` (optional, ISO language code)
-- `preferred_currency` (optional, from currency cue)
+- `preferred_language` (optional, generated language enum)
+- `preferred_currency` (optional, generated currency enum)
 - `timezone` (optional, IANA timezone)
 - `notes` (optional)
 - `created_at` (datetime)
 - `updated_at` (datetime)
 - `archived_at` (datetime, optional)
 
-### 1.2 CustomerConsent (compliance)
+### 1.3 CustomerConsent
+
 `CustomerConsent`
 - `id`
-- `customer_id` (FK)
+- `customer_client_id` (FK -> `Customer.client_id`)
 - `consent_type` (`privacy_policy` | `marketing_email` | `marketing_whatsapp` | `profiling`)
 - `status` (`granted` | `withdrawn` | `unknown`)
-- `captured_via` (optional, e.g. `web_form`)
+- `captured_via` (optional)
 - `captured_at` (datetime)
 - `evidence_ref` (optional)
 - `updated_at`
 
-### 1.3 CustomerDocument (optional)
+### 1.4 CustomerDocument
+
 `CustomerDocument`
 - `id`
-- `customer_id` (FK)
+- `customer_client_id` (FK -> `Customer.client_id`)
 - `document_type` (`passport` | `national_id` | `visa` | `other`)
 - `document_number` (optional)
-- `document_picture_ref` (optional, secure reference to uploaded document photo or scan)
+- `document_picture_ref` (optional)
 - `issuing_country` (optional)
 - `expires_on` (date, optional)
 - `created_at`
 - `updated_at`
 
 Security note:
-- Store only encrypted CustomerDocuments.
+- store only encrypted `CustomerDocument` payloads and secure file references
 
-## 2) Group Travel
+## 2) Group travel
 
 ### 2.1 TravelGroup
+
 `TravelGroup`
 - `id`
-- `booking_id` (FK -> Booking)
-- `name` (optional)
-- `group_type` (`family` | `friends` | `corporate` | `school` | `other`)
+- `client_id` (FK -> `Client.id`, required)
+- `travel_group_hash` (string, concurrency token)
+- `group_name` (required)
+- `preferred_language` (optional)
+- `preferred_currency` (optional)
+- `timezone` (optional)
+- `notes` (optional)
+- `created_at`
+- `updated_at`
+- `archived_at` (optional)
+
+### 2.2 TravelGroupMember
+
+`TravelGroupMember`
+- `id`
+- `travel_group_id` (FK -> `TravelGroup.id`, required)
+- `customer_client_id` (FK -> `Customer.client_id`, required)
+- `is_traveling` (bool, default false)
+- `member_roles` (required, array<enum>):
+  - `TravelGroupContact`
+  - `other`
 - `notes` (optional)
 - `created_at`
 - `updated_at`
 
-### 2.2 TravelGroupMember
-`TravelGroupMember`
-- `id`
-- `travel_group_id` (FK -> `TravelGroup.id`)
-- `customer_id` (FK -> `Customer.id`, required)
-- `is_traveling` (bool, default false)
-- `member_roles` (required, array<enum>, multiple choice):
-  - `TravelGroupContact`
-  - `decision_maker`
-  - `payer`
-  - `assistant`
-  - `other`
-- `notes`
-- `created_at`
-- `updated_at`
+## 3) Booking relationship
 
-## 3) Constraints and invariants
+A booking belongs to exactly one `Client`.
 
-- A booking has zero or one `TravelGroup`.
-- A `TravelGroup` has one or more `TravelGroupMember`.
-- Multiple primary contacts are represented by multiple members carrying the `TravelGroupContact` role.
-- `Customer.dedup_fingerprint` is unique per active customer record and must be recomputed on customer creation/update.
-- `TravelGroupMember.customer_id` must always reference an existing `Customer`.
+`Booking`
+- `client_id` (FK -> `Client.id`, required)
+- `booking_hash` (string, concurrency token)
+
+Read models should also expose resolved client summary fields for convenience:
+- `client_type`
+- `client_display_name`
+- `client_primary_phone_number`
+- `client_primary_email`
+
+## 4) Constraints and invariants
+
+- A `Client` is either `customer` or `travel_group`.
+- A `Customer` cannot exist without a matching `Client`.
+- A `TravelGroup` cannot exist without a matching `Client`.
+- A `TravelGroup` has one or more `TravelGroupMember` rows.
+- Each `TravelGroup` must have at least one member with role `TravelGroupContact`.
+- `TravelGroupMember.customer_client_id` must reference an existing `Customer`.
 - Unknown traveler flow:
-  - When traveler identity is unknown, create a minimal `Customer` first (at least `name` and one contact field) before creating `TravelGroupMember`.
-- Each `TravelGroup` must have at least one `TravelGroupMember` with role `TravelGroupContact`.
+  - create a minimal `Customer` first, then attach it to a `TravelGroup`.
+- False merges are worse than duplicates:
+  - exact normalized phone/email may reuse an existing customer
+  - fuzzy matches should create duplicate-review candidates, not silent merges
 
-## 4) Search indexing recommendations
+## 5) Search indexing recommendations
+
 Include these fields in booking/customer search:
+- booking id
+- client display name
+- customer name
+- phone number
+- email
+- travel group name
+- destination
+- style
+- notes

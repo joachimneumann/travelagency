@@ -3,19 +3,29 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../frontend/Generated/Models/generated_Currency.js";
 import {
+  BOOKING_CLIENT_UPDATE_REQUEST_SCHEMA,
+  BOOKING_GROUP_MEMBER_CREATE_REQUEST_SCHEMA,
   atpStaffRequest,
   bookingActivitiesRequest,
   bookingAssignmentRequest,
   bookingChatRequest,
+  bookingClientRequest,
   bookingDetailRequest,
+  bookingGroupMembersRequest,
   bookingInvoicesRequest,
   bookingNoteRequest,
   bookingOfferRequest,
   bookingPricingRequest,
   bookingStageRequest,
-  customerDetailRequest,
 } from "../../frontend/Generated/API/generated_APIRequestFactory.js";
 import { normalizeLocalDateTimeToIso } from "./shared/datetime.js";
+
+const BOOKING_CLIENT_UPDATE_FIELDS = Object.fromEntries(
+  BOOKING_CLIENT_UPDATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
+);
+const BOOKING_GROUP_MEMBER_CREATE_FIELDS = Object.fromEntries(
+  BOOKING_GROUP_MEMBER_CREATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
+);
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -60,7 +70,6 @@ const ROLES = {
 };
 
 const state = {
-  type: qs.get("type") || "booking",
   id: qs.get("id") || "",
   roles: [],
   permissions: {
@@ -69,7 +78,11 @@ const state = {
     canEditBooking: false
   },
   booking: null,
+  client: null,
   customer: null,
+  travelGroup: null,
+  travelGroupMembers: [],
+  travelGroupCustomers: [],
   staff: [],
   invoices: [],
   selectedInvoiceId: "",
@@ -115,6 +128,19 @@ const els = {
   actionsPanel: document.getElementById("bookingActionsPanel"),
   ownerSelect: document.getElementById("bookingOwnerSelect"),
   stageSelect: document.getElementById("bookingStageSelect"),
+  clientTypeSelect: document.getElementById("bookingClientTypeSelect"),
+  clientGroupNameInput: document.getElementById("bookingClientGroupNameInput"),
+  clientTypeSaveBtn: document.getElementById("bookingClientTypeSaveBtn"),
+  clientStatus: document.getElementById("bookingClientStatus"),
+  groupMembersWrap: document.getElementById("bookingGroupMembersWrap"),
+  groupMembersTable: document.getElementById("bookingGroupMembersTable"),
+  groupMemberNameInput: document.getElementById("bookingGroupMemberNameInput"),
+  groupMemberEmailInput: document.getElementById("bookingGroupMemberEmailInput"),
+  groupMemberPhoneInput: document.getElementById("bookingGroupMemberPhoneInput"),
+  groupMemberLanguageInput: document.getElementById("bookingGroupMemberLanguageInput"),
+  groupMemberRoleSelect: document.getElementById("bookingGroupMemberRoleSelect"),
+  groupMemberTravelingInput: document.getElementById("bookingGroupMemberTravelingInput"),
+  groupMemberAddBtn: document.getElementById("bookingGroupMemberAddBtn"),
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
   actionStatus: document.getElementById("bookingActionStatus"),
@@ -244,6 +270,8 @@ async function init() {
 
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
+  if (els.clientTypeSaveBtn) els.clientTypeSaveBtn.addEventListener("click", saveClientType);
+  if (els.groupMemberAddBtn) els.groupMemberAddBtn.addEventListener("click", addGroupMember);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingPanel) {
@@ -281,6 +309,7 @@ async function init() {
   }
 
   bindSectionNavigation("bookings");
+  populateBookingClientOptions();
 
   if (!state.id) {
     showError("Missing record id.");
@@ -288,16 +317,6 @@ async function init() {
   }
 
   await loadAuthStatus();
-
-  if (state.type !== "booking" && state.type !== "customer") {
-    state.type = "booking";
-  }
-
-  if (state.type === "customer") {
-    const customerParams = new URLSearchParams({ id: state.id });
-    window.location.replace(`customer.html?${customerParams.toString()}`);
-    return;
-  }
 
   loadBookingPage();
 }
@@ -327,8 +346,7 @@ async function loadBookingPage() {
   const [bookingPayload, staffPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
 
-  state.booking = bookingPayload.booking || null;
-  state.customer = bookingPayload.customer || null;
+  applyBookingClientPayload(bookingPayload);
   state.staff = Array.isArray(staffPayload?.items) ? staffPayload.items : [];
 
   renderBookingHeader();
@@ -340,45 +358,6 @@ async function loadBookingPage() {
   await loadBookingChat();
   await loadInvoices();
   startBookingChatAutoRefresh();
-}
-
-async function loadCustomer() {
-  const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, params: { customerId: state.id } }).url);
-  if (!payload) return;
-
-  if (els.title) els.title.textContent = payload.customer?.name || `Customer ${state.id}`;
-  if (els.subtitle) els.subtitle.textContent = payload.customer?.email || "Customer detail";
-
-  const sections = [
-    {
-      title: "Customer",
-      entries: toEntries(payload.customer || {})
-    },
-    {
-      title: "Related Bookings",
-      entries: [{ key: "count", value: String((payload.bookings || []).length) }]
-    }
-  ];
-  renderSections(sections);
-
-  renderActivitiesTable([]);
-  if (els.activitiesTable) {
-    els.activitiesTable.innerHTML =
-      '<thead><tr><th>Booking ID</th><th>Stage</th><th>Destination</th><th>Style</th><th>Staff</th><th>Created</th></tr></thead>' +
-      `<tbody>${(payload.bookings || [])
-        .map((booking) => {
-          const href = buildBookingHref(booking.id);
-          return `<tr>
-          <td><a href="${escapeHtml(href)}">${escapeHtml(shortId(booking.id))}</a></td>
-          <td>${escapeHtml(booking.stage || "-")}</td>
-          <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
-          <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
-          <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
-          <td>${escapeHtml(formatDateTime(booking.created_at))}</td>
-        </tr>`;
-        })
-        .join("") || '<tr><td colspan="6">No related bookings</td></tr>'}</tbody>`;
-  }
 }
 
 function renderBookingHeader() {
@@ -414,8 +393,16 @@ function renderBookingData() {
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
     },
     {
+      title: "Client",
+      entries: toEntries(state.client || {})
+    },
+    {
       title: "Customer",
       entries: toEntries(state.customer || {})
+    },
+    {
+      title: "Travel group",
+      entries: toEntries(state.travelGroup || {})
     },
     {
       title: "Source",
@@ -477,6 +464,7 @@ function renderActionControls() {
   }
 
   if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
+  renderClientPanel();
   if (els.noteInput) {
     els.noteInput.disabled = !state.permissions.canEditBooking;
     els.noteInput.value = state.booking.notes || "";
@@ -487,6 +475,149 @@ function renderActionControls() {
     updateNoteSaveButtonState();
   }
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+}
+
+function applyBookingClientPayload(payload = {}) {
+  state.booking = payload.booking || state.booking || null;
+  state.client = payload.client || null;
+  state.customer = payload.customer || null;
+  state.travelGroup = payload.travelGroup || null;
+  state.travelGroupMembers = Array.isArray(payload.members) ? payload.members : [];
+  state.travelGroupCustomers = Array.isArray(payload.memberCustomers) ? payload.memberCustomers : [];
+}
+
+function renderClientPanel() {
+  if (!state.booking || !els.clientTypeSelect) return;
+  const currentType = normalizeText(state.booking.client_type || state.client?.client_type || "customer") || "customer";
+  els.clientTypeSelect.value = currentType;
+  els.clientTypeSelect.disabled = !state.permissions.canEditBooking || currentType === "travel_group";
+  if (els.clientGroupNameInput) {
+    els.clientGroupNameInput.value = state.travelGroup?.group_name || state.booking.client_display_name || "";
+    els.clientGroupNameInput.disabled = !state.permissions.canEditBooking || currentType !== "travel_group";
+  }
+  if (els.clientTypeSaveBtn) {
+    els.clientTypeSaveBtn.disabled = !state.permissions.canEditBooking;
+  }
+  [
+    els.groupMemberNameInput,
+    els.groupMemberEmailInput,
+    els.groupMemberPhoneInput,
+    els.groupMemberLanguageInput,
+    els.groupMemberRoleSelect,
+    els.groupMemberTravelingInput,
+    els.groupMemberAddBtn
+  ].forEach((element) => {
+    if (element) element.disabled = !state.permissions.canEditBooking || currentType !== "travel_group";
+  });
+  if (els.groupMembersWrap) {
+    els.groupMembersWrap.hidden = currentType !== "travel_group";
+  }
+  renderGroupMembersTable();
+}
+
+function populateBookingClientOptions() {
+  populateSelectFromField(els.clientTypeSelect, BOOKING_CLIENT_UPDATE_FIELDS.client_type);
+  populateSelectFromField(els.groupMemberLanguageInput, BOOKING_GROUP_MEMBER_CREATE_FIELDS.preferred_language, { includeBlank: true });
+  populateSelectFromField(els.groupMemberRoleSelect, BOOKING_GROUP_MEMBER_CREATE_FIELDS.member_roles, { includeBlank: false });
+  if (els.groupMemberRoleSelect && !els.groupMemberRoleSelect.value) {
+    els.groupMemberRoleSelect.value = "other";
+  }
+  if (els.groupMemberLanguageInput && !els.groupMemberLanguageInput.value) {
+    els.groupMemberLanguageInput.value = "";
+  }
+}
+
+function populateSelectFromField(selectEl, field, { includeBlank = false } = {}) {
+  if (!(selectEl instanceof HTMLSelectElement) || !field) return;
+  const options = Array.isArray(field.options) ? field.options : [];
+  const blank = includeBlank ? '<option value=""></option>' : "";
+  selectEl.innerHTML = `${blank}${options
+    .map((option) => `<option value="${escapeHtml(option.value || "")}">${escapeHtml(option.label || option.value || "")}</option>`)
+    .join("")}`;
+}
+
+function renderGroupMembersTable() {
+  if (!els.groupMembersTable) return;
+  const members = Array.isArray(state.travelGroupMembers) ? state.travelGroupMembers : [];
+  const customersByClientId = new Map((state.travelGroupCustomers || []).map((customer) => [customer.client_id, customer]));
+  const header = "<thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Roles</th><th>Traveling</th></tr></thead>";
+  const rows = members
+    .map((member) => {
+      const customer = customersByClientId.get(member.customer_client_id) || null;
+      return `<tr>
+        <td>${escapeHtml(customer?.name || shortId(member.customer_client_id || "-"))}</td>
+        <td>${escapeHtml(customer?.email || "-")}</td>
+        <td>${escapeHtml(customer?.phone_number || "-")}</td>
+        <td>${escapeHtml(Array.isArray(member.member_roles) ? member.member_roles.join(", ") : "-")}</td>
+        <td>${member.is_traveling === false ? "No" : "Yes"}</td>
+      </tr>`;
+    })
+    .join("");
+  const body = rows || '<tr><td colspan="5">No group members yet</td></tr>';
+  els.groupMembersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+async function saveClientType() {
+  if (!state.permissions.canEditBooking || !state.booking || !els.clientTypeSelect) return;
+  const clientType = normalizeText(els.clientTypeSelect.value || "customer");
+  const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      booking_hash: state.booking.booking_hash,
+      client_type: clientType,
+      group_name: clientType === "travel_group" ? normalizeText(els.clientGroupNameInput?.value) || null : null
+    }
+  });
+  if (!result?.booking) return;
+  applyBookingClientPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  setClientStatus(clientType === "travel_group" ? "Client converted to travel group." : "Client updated.");
+}
+
+async function addGroupMember() {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  const name = normalizeText(els.groupMemberNameInput?.value);
+  if (!name) {
+    setClientStatus("Name is required.");
+    return;
+  }
+  const request = bookingGroupMembersRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      booking_hash: state.booking.booking_hash,
+      name,
+      email: normalizeText(els.groupMemberEmailInput?.value) || null,
+      phone_number: normalizeText(els.groupMemberPhoneInput?.value) || null,
+      preferred_language: normalizeText(els.groupMemberLanguageInput?.value) || null,
+      member_roles: [normalizeText(els.groupMemberRoleSelect?.value) || "other"],
+      is_traveling: Boolean(els.groupMemberTravelingInput?.checked)
+    }
+  });
+  if (!result?.booking) return;
+  applyBookingClientPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  clearGroupMemberForm();
+  setClientStatus("Group member added.");
+}
+
+function clearGroupMemberForm() {
+  if (els.groupMemberNameInput) els.groupMemberNameInput.value = "";
+  if (els.groupMemberEmailInput) els.groupMemberEmailInput.value = "";
+  if (els.groupMemberPhoneInput) els.groupMemberPhoneInput.value = "";
+  if (els.groupMemberLanguageInput) els.groupMemberLanguageInput.value = "";
+  if (els.groupMemberRoleSelect) els.groupMemberRoleSelect.value = "other";
+  if (els.groupMemberTravelingInput) els.groupMemberTravelingInput.checked = true;
+}
+
+function setClientStatus(message) {
+  if (!els.clientStatus) return;
+  els.clientStatus.textContent = message;
 }
 
 function renderPricingPanel() {
@@ -2095,7 +2226,7 @@ async function fetchBookingMutation(path, options = {}) {
 }
 
 function buildBookingHref(id) {
-  const params = new URLSearchParams({ type: "booking", id });
+  const params = new URLSearchParams({ id });
   return `backend-booking.html?${params.toString()}`;
 }
 

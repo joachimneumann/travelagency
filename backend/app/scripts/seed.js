@@ -85,6 +85,7 @@ async function main() {
   const atp_staff = await readJson(ATP_STAFF_PATH);
   const activeAtpStaff = atp_staff.filter((s) => s.active);
 
+  store.clients ||= [];
   store.customers ||= [];
   store.bookings ||= [];
   store.activities ||= [];
@@ -94,29 +95,38 @@ async function main() {
     const lastName = pick(LAST_NAMES);
     const name = `${firstName} ${lastName}`;
     const email = buildEmail(name, i + 1);
-    const phone = `+1${randomInt(2000000000, 9999999999)}`;
-    const language = pick(LANGUAGES);
-    const destination = pick(DESTINATIONS);
-    const style = pick(STYLES);
+    const phoneNumber = `+1${randomInt(2000000000, 9999999999)}`;
+    const preferredLanguage = pick(LANGUAGES);
+    const destination = [pick(DESTINATIONS)];
+    const style = [pick(STYLES)];
     const stage = pick(STAGES);
     const createdAt = nowMinusHours(randomInt(2, 24 * 40));
     const updatedAt = new Date(new Date(createdAt).getTime() + randomInt(1, 120) * 60 * 1000).toISOString();
     const owner = activeAtpStaff.length ? activeAtpStaff[i % activeAtpStaff.length] : null;
 
+    const client = {
+      id: `client_${randomUUID()}`,
+      client_type: "customer"
+    };
     const customer = {
-      id: `cust_${randomUUID()}`,
+      client_id: client.id,
       name,
       email,
-      phone,
-      language,
+      phone_number: phoneNumber,
+      preferred_language: preferredLanguage,
       created_at: createdAt,
       updated_at: updatedAt
     };
+    store.clients.push(client);
     store.customers.push(customer);
 
     const booking = {
       id: `booking_${randomUUID()}`,
-      customer_id: customer.id,
+      client_id: client.id,
+      client_type: "customer",
+      client_display_name: customer.name,
+      client_primary_phone_number: customer.phone_number,
+      client_primary_email: customer.email,
       stage,
       owner_id: owner?.id || null,
       owner_name: owner?.name || null,
@@ -155,14 +165,14 @@ async function main() {
         booking_id: booking.id,
         type: "NOTE",
         actor: "seed_script",
-        detail: `Customer interested in ${style.toLowerCase()} itinerary in ${destination}`,
+        detail: `Traveler interested in ${style[0].toLowerCase()} itinerary in ${destination[0]}`,
         created_at: updatedAt
       }
     );
   }
 
   await writeFile(DATA_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-  console.log(`Seed complete: +${count} customers, +${count} bookings, +${count * 2} activities`);
+  console.log(`Seed complete: +${count} clients, +${count} customers, +${count} bookings, +${count * 2} activities`);
 }
 
 main().catch((error) => {

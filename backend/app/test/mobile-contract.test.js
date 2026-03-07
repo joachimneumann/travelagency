@@ -97,7 +97,8 @@ function assertISODateLike(value, label) {
 
 function assertBookingShape(booking) {
   assert.equal(typeof booking.id, "string");
-  assert.equal(typeof booking.customer_id, "string");
+  assert.equal(typeof booking.client_id, "string");
+  assert.ok(["customer", "travel_group"].includes(booking.client_type), `Unexpected booking client_type: ${booking.client_type}`);
   assert.ok(catalogCodes(contractMeta.stages).includes(booking.stage), `Unexpected booking stage: ${booking.stage}`);
   assert.equal(typeof booking.pricing, "object");
   assert.equal(typeof booking.pricing.currency, "string");
@@ -145,7 +146,9 @@ test("booking detail, activities, invoices, and atp_staff responses conform to t
   assert.equal(detailResult.status, 200);
   assertBookingShape(detailResult.body.booking);
   assert.equal(detailResult.body.booking.id, bookingID);
+  assert.ok(detailResult.body.client === null || typeof detailResult.body.client === "object");
   assert.ok(detailResult.body.customer === null || typeof detailResult.body.customer === "object");
+  assert.ok(detailResult.body.travelGroup === null || typeof detailResult.body.travelGroup === "object");
 
   const activitiesResult = await requestJson(endpointPath("booking_activities").replace("{bookingId}", bookingID), apiHeaders());
   assert.equal(activitiesResult.status, 200);

@@ -32,6 +32,10 @@ case "booking_assignment":
   return RequestFactory.bookingAssignmentRequest(options);
 case "booking_note":
   return RequestFactory.bookingNoteRequest(options);
+case "booking_client":
+  return RequestFactory.bookingClientRequest(options);
+case "booking_group_members":
+  return RequestFactory.bookingGroupMembersRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
@@ -54,6 +58,8 @@ case "customer_consent_create":
   return RequestFactory.customerConsentCreateRequest(options);
 case "travel_groups":
   return RequestFactory.travelGroupsRequest(options);
+case "travel_group_create":
+  return RequestFactory.travelGroupCreateRequest(options);
 case "travel_group_detail":
   return RequestFactory.travelGroupDetailRequest(options);
 case "travel_group_update":

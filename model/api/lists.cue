@@ -18,11 +18,23 @@ import entities "travelagency.local/model/entities"
 }
 
 #BookingDetail: {
-	booking:   entities.#Booking
-	customer?: entities.#Customer
+	booking:      entities.#Booking
+	client?:      entities.#ClientSummary
+	customer?:      entities.#Customer
+	travelGroup?: entities.#TravelGroup
+}
+
+#BookingClientDetail: {
+	booking:      entities.#Booking
+	client?:      entities.#ClientSummary
+	customer?:      entities.#Customer
+	travelGroup?: entities.#TravelGroup
+	members?:     [...entities.#TravelGroupMember]
+	memberCustomers?: [...entities.#Customer]
 }
 
 #CustomerDetail: {
+	client: entities.#Client
 	customer: entities.#Customer
 	bookings: [...entities.#Booking]
 	consents: [...entities.#CustomerConsent]
@@ -37,8 +49,10 @@ import entities "travelagency.local/model/entities"
 }
 
 #TravelGroupDetail: {
+	client: entities.#Client
 	travelGroup: entities.#TravelGroup
 	members: [...entities.#TravelGroupMember]
+	memberCustomers: [...entities.#Customer]
 }
 
 #TourDetail: {

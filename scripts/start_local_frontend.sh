@@ -2,10 +2,12 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 FRONTEND_BIND="${FRONTEND_BIND:-localhost}"
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-caddy.yml}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-travelagency_frontend}"
 
 wait_for_http() {
   local url="$1"
@@ -21,7 +23,7 @@ wait_for_http() {
   done
 
   echo "Error: ${label} failed to start." >&2
-  docker compose -f "$COMPOSE_FILE" logs --tail=120 caddy >&2 || true
+  docker_compose -f "$COMPOSE_FILE" logs --tail=120 caddy >&2 || true
   exit 1
 }
 
@@ -62,7 +64,7 @@ stop_existing_frontend() {
   if [ -f "$COMPOSE_FILE" ]; then
     (
       cd "$ROOT_DIR"
-      FRONTEND_PORT="$FRONTEND_PORT" docker compose -f "$COMPOSE_FILE" down --remove-orphans
+      FRONTEND_PORT="$FRONTEND_PORT" docker_compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" down --remove-orphans
     ) >/dev/null 2>&1 || true
   fi
 
@@ -70,7 +72,7 @@ stop_existing_frontend() {
 }
 
 main() {
-  require_cmd docker
+  ensure_local_docker_runtime
   require_cmd lsof
   require_cmd curl
   stop_existing_frontend
@@ -78,13 +80,14 @@ main() {
   echo "Starting frontend on http://${FRONTEND_BIND}:${FRONTEND_PORT} ..."
   (
     cd "$ROOT_DIR"
-    FRONTEND_PORT="$FRONTEND_PORT" docker compose -f "$COMPOSE_FILE" up -d caddy
+    FRONTEND_PORT="$FRONTEND_PORT" docker_compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" up -d caddy
   )
 
   wait_for_http "http://${FRONTEND_BIND}:${FRONTEND_PORT}/" "frontend"
 
   echo "Frontend:    http://${FRONTEND_BIND}:${FRONTEND_PORT}"
   echo "Frontend mode: local Caddy"
+  echo "Docker context: $(docker_context_name)"
 }
 
 main "$@"

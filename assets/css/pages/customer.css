@@ -13,6 +13,7 @@
   width: 104px;
   height: 104px;
   flex: 0 0 104px;
+  position: relative;
   border-radius: 26px;
   overflow: hidden;
   background: rgba(226, 241, 248, 0.42);
@@ -22,18 +23,59 @@
   justify-content: center;
 }
 
+.customer-page .customer-hero__photo-button {
+  appearance: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.customer-page .customer-hero__photo-button:hover,
+.customer-page .customer-hero__photo-button:focus-visible {
+  border-color: rgba(64, 176, 171, 0.95);
+  box-shadow: 0 0 0 3px rgba(64, 176, 171, 0.18);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.customer-page .customer-hero__photo-button:disabled {
+  cursor: wait;
+  transform: none;
+}
+
 .customer-page .customer-hero__photo-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .customer-page .customer-hero__photo-placeholder {
-  color: rgba(22, 49, 61, 0.55);
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
+  position: absolute;
+  inset: 0;
+  color: rgba(22, 49, 61, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  transition: opacity 0.16s ease, visibility 0.16s ease;
+}
+
+.customer-page .customer-hero__photo.has-photo .customer-hero__photo-placeholder {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.customer-page .customer-hero__photo-placeholder-icon {
+  width: 62px;
+  height: 62px;
+  display: block;
 }
 
 .customer-page .customer-hero__id {
@@ -63,6 +105,10 @@
   align-items: center;
   gap: 0.75rem;
   margin-top: 0.6rem;
+}
+
+.customer-page .customer-photo-input {
+  display: none;
 }
 
 .customer-page .customer-primary-group__header {
@@ -162,6 +208,22 @@
 .customer-page .customer-primary-group .field textarea {
   min-width: 0;
   background: rgba(255, 255, 255, 0.96);
+}
+
+.customer-page .customer-primary-group .field input,
+.customer-page .customer-primary-group .field select,
+.customer-page .customer-address-group .field input,
+.customer-page .customer-address-group .field select,
+.customer-page .customer-organization-group .field input,
+.customer-page .customer-organization-group .field select {
+  min-height: 3.45rem;
+}
+
+.customer-page .field input:focus-visible,
+.customer-page .field select:focus-visible,
+.customer-page .field textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--secondary);
 }
 
 .customer-page .customer-address-group {

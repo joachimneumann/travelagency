@@ -26,8 +26,8 @@ import Foundation
     }
 
     struct GeneratedPublicBookingCreateRequest: Codable, Equatable {
-    let destination: String?
-    let style: String?
+    let destination: [String]?
+    let style: [String]?
     let travelMonth: String?
     let travelers: Int?
     let duration: String?
@@ -69,11 +69,15 @@ import Foundation
 
     struct GeneratedBookingDetail: Codable, Equatable {
     let booking: GeneratedBooking
+    let client: GeneratedClientSummary?
     let customer: GeneratedCustomer?
+    let travelGroup: GeneratedTravelGroup?
 
         private enum CodingKeys: String, CodingKey {
         case booking = "booking"
+        case client = "client"
         case customer = "customer"
+        case travelGroup = "travelGroup"
         }
     }
 
@@ -113,22 +117,94 @@ import Foundation
         }
     }
 
+    struct GeneratedBookingClientUpdateRequest: Codable, Equatable {
+    let booking_hash: String?
+    let client_type: GeneratedClientType
+    let customer_client_id: String?
+    let group_name: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case booking_hash = "booking_hash"
+        case client_type = "client_type"
+        case customer_client_id = "customer_client_id"
+        case group_name = "group_name"
+        }
+    }
+
+    struct GeneratedBookingClientUpdateResponse: Codable, Equatable {
+    let booking: GeneratedBooking
+    let client: GeneratedClientSummary?
+    let customer: GeneratedCustomer?
+    let travelGroup: GeneratedTravelGroup?
+    let members: [GeneratedTravelGroupMember]?
+    let memberCustomers: [GeneratedCustomer]?
+
+        private enum CodingKeys: String, CodingKey {
+        case booking = "booking"
+        case client = "client"
+        case customer = "customer"
+        case travelGroup = "travelGroup"
+        case members = "members"
+        case memberCustomers = "memberCustomers"
+        }
+    }
+
+    struct GeneratedBookingGroupMemberCreateRequest: Codable, Equatable {
+    let booking_hash: String?
+    let name: String
+    let email: String?
+    let phone_number: String?
+    let preferred_language: GeneratedLanguageCode?
+    let member_roles: [GeneratedTravelGroupMemberRole]?
+    let is_traveling: Bool?
+    let member_notes: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case booking_hash = "booking_hash"
+        case name = "name"
+        case email = "email"
+        case phone_number = "phone_number"
+        case preferred_language = "preferred_language"
+        case member_roles = "member_roles"
+        case is_traveling = "is_traveling"
+        case member_notes = "member_notes"
+        }
+    }
+
+    struct GeneratedBookingGroupMemberCreateResponse: Codable, Equatable {
+    let booking: GeneratedBooking
+    let client: GeneratedClientSummary?
+    let customer: GeneratedCustomer?
+    let travelGroup: GeneratedTravelGroup?
+    let members: [GeneratedTravelGroupMember]?
+    let memberCustomers: [GeneratedCustomer]?
+
+        private enum CodingKeys: String, CodingKey {
+        case booking = "booking"
+        case client = "client"
+        case customer = "customer"
+        case travelGroup = "travelGroup"
+        case members = "members"
+        case memberCustomers = "memberCustomers"
+        }
+    }
+
     struct GeneratedBookingPricingUpdateRequest: Codable, Equatable {
-    let bookingHash: String?
+    let booking_hash: String?
     let pricing: GeneratedBookingPricing
 
         private enum CodingKeys: String, CodingKey {
-        case bookingHash = "bookingHash"
+        case booking_hash = "booking_hash"
         case pricing = "pricing"
         }
     }
 
     struct GeneratedBookingOfferUpdateRequest: Codable, Equatable {
-    let bookingHash: String?
+    let booking_hash: String?
     let offer: GeneratedBookingOffer
 
         private enum CodingKeys: String, CodingKey {
-        case bookingHash = "bookingHash"
+        case booking_hash = "booking_hash"
         case offer = "offer"
         }
     }
@@ -176,6 +252,7 @@ import Foundation
     }
 
     struct GeneratedCustomerDetail: Codable, Equatable {
+    let client: GeneratedClient
     let customer: GeneratedCustomer
     let bookings: [GeneratedBooking]?
     let consents: [GeneratedCustomerConsent]?
@@ -184,6 +261,7 @@ import Foundation
     let travelGroupMembers: [GeneratedTravelGroupMember]?
 
         private enum CodingKeys: String, CodingKey {
+        case client = "client"
         case customer = "customer"
         case bookings = "bookings"
         case consents = "consents"
@@ -194,6 +272,7 @@ import Foundation
     }
 
     struct GeneratedCustomerUpdateRequest: Codable, Equatable {
+    let customer_hash: String?
     let name: String?
     let photo_ref: String?
     let title: String?
@@ -221,6 +300,7 @@ import Foundation
     let notes: String?
 
         private enum CodingKeys: String, CodingKey {
+        case customer_hash = "customer_hash"
         case name = "name"
         case photo_ref = "photo_ref"
         case title = "title"
@@ -250,32 +330,39 @@ import Foundation
     }
 
     struct GeneratedCustomerUpdateResponse: Codable, Equatable {
+    let client: GeneratedClient
     let customer: GeneratedCustomer
 
         private enum CodingKeys: String, CodingKey {
+        case client = "client"
         case customer = "customer"
         }
     }
 
     struct GeneratedCustomerPhotoUploadRequest: Codable, Equatable {
+    let customer_hash: String?
     let photo_upload: GeneratedEvidenceUpload?
     let photo: GeneratedEvidenceUpload?
 
         private enum CodingKeys: String, CodingKey {
+        case customer_hash = "customer_hash"
         case photo_upload = "photo_upload"
         case photo = "photo"
         }
     }
 
     struct GeneratedCustomerPhotoUploadResponse: Codable, Equatable {
+    let client: GeneratedClient
     let customer: GeneratedCustomer
 
         private enum CodingKeys: String, CodingKey {
+        case client = "client"
         case customer = "customer"
         }
     }
 
     struct GeneratedCustomerConsentCreateRequest: Codable, Equatable {
+    let customer_hash: String?
     let consent_type: GeneratedCustomerConsentType
     let status: GeneratedCustomerConsentStatus
     let captured_via: String?
@@ -284,6 +371,7 @@ import Foundation
     let evidence_upload: GeneratedEvidenceUpload?
 
         private enum CodingKeys: String, CodingKey {
+        case customer_hash = "customer_hash"
         case consent_type = "consent_type"
         case status = "status"
         case captured_via = "captured_via"
@@ -294,10 +382,62 @@ import Foundation
     }
 
     struct GeneratedCustomerConsentCreateResponse: Codable, Equatable {
+    let client: GeneratedClient
+    let customer: GeneratedCustomer
     let consent: GeneratedCustomerConsent
 
         private enum CodingKeys: String, CodingKey {
+        case client = "client"
+        case customer = "customer"
         case consent = "consent"
+        }
+    }
+
+    struct GeneratedTravelGroupList: Codable, Equatable {
+    let items: [GeneratedTravelGroup]?
+    let total: Int
+    let page: Int
+    let page_size: Int
+    let total_pages: Int
+
+        private enum CodingKeys: String, CodingKey {
+        case items = "items"
+        case total = "total"
+        case page = "page"
+        case page_size = "page_size"
+        case total_pages = "total_pages"
+        }
+    }
+
+    struct GeneratedTravelGroupDetail: Codable, Equatable {
+    let client: GeneratedClient
+    let travel_group: GeneratedTravelGroup
+    let members: [GeneratedTravelGroupMember]?
+    let memberCustomers: [GeneratedCustomer]?
+
+        private enum CodingKeys: String, CodingKey {
+        case client = "client"
+        case travel_group = "travel_group"
+        case members = "members"
+        case memberCustomers = "memberCustomers"
+        }
+    }
+
+    struct GeneratedTravelGroupUpdateRequest: Codable, Equatable {
+    let travel_group_hash: String?
+    let group_name: String?
+    let preferred_language: GeneratedLanguageCode?
+    let preferred_currency: GeneratedCurrencyCode?
+    let timezone: GeneratedTimezoneCode?
+    let notes: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case travel_group_hash = "travel_group_hash"
+        case group_name = "group_name"
+        case preferred_language = "preferred_language"
+        case preferred_currency = "preferred_currency"
+        case timezone = "timezone"
+        case notes = "notes"
         }
     }
 
@@ -340,6 +480,24 @@ import Foundation
         case bookings = "bookings"
         case customers = "customers"
         case tours = "tours"
+        }
+    }
+
+    struct GeneratedClientSummary: Codable, Equatable, Identifiable {
+    let id: String
+    let client_type: GeneratedClientType
+    let client_hash: String?
+    let display_name: String
+    let primary_phone_number: String?
+    let primary_email: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case client_type = "client_type"
+        case client_hash = "client_hash"
+        case display_name = "display_name"
+        case primary_phone_number = "primary_phone_number"
+        case primary_email = "primary_email"
         }
     }
 
@@ -389,7 +547,7 @@ import Foundation
     let id: String
     let channel: String
     let externalContactId: String?
-    let customerId: String?
+    let clientId: String?
     let bookingId: String?
     let lastEventAt: String?
     let latestPreview: String?
@@ -399,7 +557,7 @@ import Foundation
         case id = "id"
         case channel = "channel"
         case externalContactId = "externalContactId"
-        case customerId = "customerId"
+        case clientId = "clientId"
         case bookingId = "bookingId"
         case lastEventAt = "lastEventAt"
         case latestPreview = "latestPreview"
@@ -422,6 +580,18 @@ import Foundation
         case usernames = "usernames"
         case destinations = "destinations"
         case languages = "languages"
+        }
+    }
+
+    struct GeneratedClient: Codable, Equatable, Identifiable {
+    let id: String
+    let client_type: GeneratedClientType
+    let client_hash: String
+
+        private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case client_type = "client_type"
+        case client_hash = "client_hash"
         }
     }
 

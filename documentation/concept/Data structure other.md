@@ -226,7 +226,7 @@ Supplier Profile
 	•	Supplier name
 	•	Country
 	•	City
-	•	Contact person
+	•	Primary contact
 	•	Phone
 	•	Email
 	•	WhatsApp

@@ -131,6 +131,12 @@ Admin API:
 - `POST /api/v1/offers/exchange-rates` (preview converted offer line totals and total while editing display currency; frontend displays backend output directly)
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
+- `POST /api/v1/customers/:customerId/consents`
+- `POST /api/v1/customers/:customerId/photo`
+- `GET /api/v1/travel_groups`
+- `GET /api/v1/travel_groups/:travelGroupId`
+- `PATCH /api/v1/travel_groups/:travelGroupId`
+- `POST /api/v1/travel_groups`
 - `GET /api/v1/atp_staff`
 - `POST /api/v1/atp_staff`
 - `GET /api/v1/tours`
@@ -191,11 +197,13 @@ Branded frontend backoffice pages (served by website):
   - change staff assignment
   - change stage
   - edit the single booking note
-- Travel groups do not yet have a dedicated list endpoint; the `backend.html` travel-groups panel is currently a placeholder view.
+- Travel groups have dedicated list/detail/update endpoints and can be created from `backend.html`.
 
 Booking concurrency model:
 - every booking read model includes `booking_hash`
-- clients must send the current `booking_hash` back with any booking mutation
+- every customer read model includes `customer_hash`
+- every travel-group read model includes `travel_group_hash`
+- clients must send the current hash back with any matching mutation
   - stage change
   - staff assignment change
   - note save

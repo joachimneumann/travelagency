@@ -71,10 +71,10 @@ Pricing in Vietnam's agency market is strongly driven by:
 - Activity density (cruise grade, specialized guides, premium attractions)
 
 On wideeyedtours.com, listed examples include:
-- 10-day private "Best of Vietnam" itinerary at US$1,514 per person sharing
-- 14-day private tour at US$1,744 per person sharing
-- 18-day private tour at US$2,319 per person sharing
-- 2-day Ha Long Bay cruise from US$217 per person sharing
+- 10-day private "Best of Vietnam" itinerary at US$1,514 per traveler sharing
+- 14-day private tour at US$1,744 per traveler sharing
+- 18-day private tour at US$2,319 per traveler sharing
+- 2-day Ha Long Bay cruise from US$217 per traveler sharing
 
 A typical family-oriented private package page communicates value through explicit inclusions: hotel classes and nights, meal count, named activities, guides and tickets, and "all transport," while excluding insurance and visas (offered as extras).
 

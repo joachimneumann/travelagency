@@ -3,7 +3,9 @@ import Foundation
 @MainActor
 final class BookingDetailViewModel: ObservableObject {
     @Published private(set) var booking: Booking?
+    @Published private(set) var client: ClientSummary?
     @Published private(set) var customer: Customer?
+    @Published private(set) var travelGroup: TravelGroup?
     @Published private(set) var activities: [BookingActivity] = []
     @Published private(set) var invoices: [BookingInvoice] = []
     @Published private(set) var chatEvents: [BookingChatEvent] = []
@@ -31,7 +33,9 @@ final class BookingDetailViewModel: ObservableObject {
 
             let detailResponse = try await detail
             booking = detailResponse.booking
+            client = detailResponse.client
             customer = detailResponse.customer
+            travelGroup = detailResponse.travelGroup
             noteDraft = detailResponse.booking.notes ?? ""
             originalNote = detailResponse.booking.notes ?? ""
             activities = try await activityPayload.activities
@@ -46,7 +50,7 @@ final class BookingDetailViewModel: ObservableObject {
     }
 
     func updateStage(_ stage: String, session: AuthSession) async {
-        guard let booking, let bookingHash = booking.bookingHash else { return }
+        guard let booking, let bookingHash = booking.booking_hash else { return }
         do {
             let response = try await apiClient.updateStage(bookingID: booking.id, stage: stage, bookingHash: bookingHash, session: session)
             self.booking = response.booking
@@ -60,7 +64,7 @@ final class BookingDetailViewModel: ObservableObject {
     }
 
     func updateAssignment(_ staffID: String?, session: AuthSession) async {
-        guard let booking, let bookingHash = booking.bookingHash else { return }
+        guard let booking, let bookingHash = booking.booking_hash else { return }
         do {
             let response = try await apiClient.updateAtpStaffAssignment(bookingID: booking.id, staffID: staffID, bookingHash: bookingHash, session: session)
             self.booking = response.booking
@@ -74,7 +78,7 @@ final class BookingDetailViewModel: ObservableObject {
     }
 
     func saveNote(session: AuthSession) async {
-        guard let booking, let bookingHash = booking.bookingHash else { return }
+        guard let booking, let bookingHash = booking.booking_hash else { return }
         do {
             let trimmed = noteDraft.trimmingCharacters(in: .whitespacesAndNewlines)
             let response = try await apiClient.updateBookingNote(
@@ -102,7 +106,9 @@ final class BookingDetailViewModel: ObservableObject {
         do {
             let detailResponse = try await apiClient.fetchBookingDetail(id: bookingID, session: session)
             self.booking = detailResponse.booking
+            self.client = detailResponse.client
             self.customer = detailResponse.customer
+            self.travelGroup = detailResponse.travelGroup
             self.noteDraft = detailResponse.booking.notes ?? ""
             self.originalNote = detailResponse.booking.notes ?? ""
             let activityPayload = try await apiClient.fetchActivities(bookingID: bookingID, session: session)

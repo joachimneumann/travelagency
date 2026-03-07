@@ -123,6 +123,34 @@ package api
 		}]
 	},
 	{
+		key:           "booking_client"
+		path:          "/api/v1/bookings/{bookingId}/client"
+		method:        "PATCH"
+		authenticated: true
+		requestType:   "BookingClientUpdateRequest"
+		responseType:  "BookingClientUpdateResponse"
+		parameters: [{
+			name:     "bookingId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_group_members"
+		path:          "/api/v1/bookings/{bookingId}/client/members"
+		method:        "POST"
+		authenticated: true
+		requestType:   "BookingGroupMemberCreateRequest"
+		responseType:  "BookingGroupMemberCreateResponse"
+		parameters: [{
+			name:     "bookingId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_pricing"
 		path:          "/api/v1/bookings/{bookingId}/pricing"
 		method:        "PATCH"
@@ -192,12 +220,12 @@ package api
 	},
 	{
 		key:           "customer_detail"
-		path:          "/api/v1/customers/{customerId}"
+		path:          "/api/v1/customers/{customerClientId}"
 		method:        "GET"
 		authenticated: true
 		responseType:  "CustomerDetail"
 		parameters: [{
-			name:     "customerId"
+			name:     "customerClientId"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -205,13 +233,13 @@ package api
 	},
 	{
 		key:           "customer_update"
-		path:          "/api/v1/customers/{customerId}"
+		path:          "/api/v1/customers/{customerClientId}"
 		method:        "PATCH"
 		authenticated: true
 		requestType:   "CustomerUpdateRequest"
 		responseType:  "CustomerUpdateResponse"
 		parameters: [{
-			name:     "customerId"
+			name:     "customerClientId"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -219,13 +247,13 @@ package api
 	},
 	{
 		key:           "customer_photo_upload"
-		path:          "/api/v1/customers/{customerId}/photo"
+		path:          "/api/v1/customers/{customerClientId}/photo"
 		method:        "POST"
 		authenticated: true
 		requestType:   "CustomerPhotoUploadRequest"
 		responseType:  "CustomerPhotoUploadResponse"
 		parameters: [{
-			name:     "customerId"
+			name:     "customerClientId"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -233,13 +261,13 @@ package api
 	},
 	{
 		key:           "customer_consent_create"
-		path:          "/api/v1/customers/{customerId}/consents"
+		path:          "/api/v1/customers/{customerClientId}/consents"
 		method:        "POST"
 		authenticated: true
 		requestType:   "CustomerConsentCreateRequest"
 		responseType:  "CustomerConsentCreateResponse"
 		parameters: [{
-			name:     "customerId"
+			name:     "customerClientId"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -251,6 +279,14 @@ package api
 		method:        "GET"
 		authenticated: true
 		responseType:  "TravelGroupList"
+	},
+	{
+		key:           "travel_group_create"
+		path:          "/api/v1/travel_groups"
+		method:        "POST"
+		authenticated: true
+		requestType:   "TravelGroupCreateRequest"
+		responseType:  "TravelGroupDetail"
 	},
 	{
 		key:           "travel_group_detail"

@@ -123,7 +123,7 @@ main() {
 EOF
   fi
 
-  if [ -z "$KEYCLOAK_CLIENT_SECRET" ]; then
+  if [ "$KEYCLOAK_ENABLED" = "true" ] && [ -z "$KEYCLOAK_CLIENT_SECRET" ]; then
     echo "Error: KEYCLOAK_CLIENT_SECRET is not set." >&2
     echo "Export it first, for example:" >&2
     echo "  export KEYCLOAK_CLIENT_SECRET='...'" >&2

@@ -34,10 +34,10 @@ Implemented now:
   - `backend.html`: paginated searchable customers + bookings + tours tables (default newest 10 each)
   - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
   - `customer.html`: dedicated customer detail page with grouped editable customer fields
-  - `backend-booking.html`: booking detail page with booking actions (staff/stage updates + notes)
+  - `backend-booking.html`: booking detail page with booking actions (staff/stage updates, notes, booking client conversion, travel-group member management)
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
-  - travel groups are visible in the UI, but there is not yet a dedicated `/api/v1/travel_groups` list endpoint
+  - travel groups have dedicated list/detail/create/update endpoints and are editable from the backend UI
 - Tours are fully backend-driven:
   - website reads tours from `GET /public/v1/tours`
   - tour images are backend-hosted under `/public/v1/tour-images/...`
@@ -154,7 +154,7 @@ Status: **Implemented in local backend app**
 
 Deliverables:
 - Booking ingestion API
-- Customer profile and deduplication
+- Client/customer profile and deduplication
 - Pipeline stages + staff assignment + SLA clocks
 - Activity timeline (notes, tasks, contact logs)
 - Admin views for booking triage and follow-up
@@ -173,10 +173,11 @@ Delivered endpoints and features:
 - `GET /api/v1/atp_staff`
 - `POST /api/v1/atp_staff`
 - `GET /api/v1/customers` with pagination/search
+- `GET /api/v1/travel_groups` with pagination/search
 - Branded frontend backoffice pages:
-  - `/backend.html` (filters + pagination)
+  - `/backend.html` (filters + pagination for customers, travel groups, bookings, tours)
   - `/customer.html` (customer profile detail/edit page)
-  - `/backend-booking.html` (role-aware staff/stage/note actions)
+  - `/backend-booking.html` (role-aware staff/stage/note actions, booking client conversion, group member management)
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)
 

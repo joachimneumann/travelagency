@@ -10,6 +10,8 @@ import (
 #AbstractModel: {
 	entities: {
 		ATPStaff: entityModel.#ATPStaff
+		Client: entityModel.#Client
+		ClientSummary: entityModel.#ClientSummary
 		Customer: entityModel.#Customer
 		CustomerConsent: entityModel.#CustomerConsent
 		CustomerDocument: entityModel.#CustomerDocument
@@ -36,6 +38,7 @@ import (
 		OfferCategory:         enumModel.#OfferCategory
 		CountryCode:           enumModel.#CountryCode
 		TimezoneCode:          enumModel.#TimezoneCode
+		ClientType:            enumModel.#ClientType
 		CustomerConsentType:   enumModel.#CustomerConsentType
 		CustomerConsentStatus: enumModel.#CustomerConsentStatus
 		CustomerDocumentType:  enumModel.#CustomerDocumentType
@@ -46,11 +49,11 @@ import (
 
 	api: {
 		BookingList:                 apiModel.#BookingList
-		CustomerList:                apiModel.#CustomerList
+		CustomerList:                  apiModel.#CustomerList
 		TravelGroupList:             apiModel.#TravelGroupList
 		TourList:                    apiModel.#TourList
 		BookingDetail:               apiModel.#BookingDetail
-		CustomerDetail:              apiModel.#CustomerDetail
+		CustomerDetail:                apiModel.#CustomerDetail
 		TravelGroupDetail:           apiModel.#TravelGroupDetail
 		TourDetail:                  apiModel.#TourDetail
 		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
@@ -69,13 +72,13 @@ import (
 		PublicBookingCreateRequest:   apiModel.#PublicBookingCreateRequest
 		BookingPricingUpdateRequest:  apiModel.#BookingPricingUpdateRequest
 		BookingOfferUpdateRequest:    apiModel.#BookingOfferUpdateRequest
-		CustomerUpdateRequest:        apiModel.#CustomerUpdateRequest
+		CustomerUpdateRequest:          apiModel.#CustomerUpdateRequest
 		TravelGroupUpdateRequest:     apiModel.#TravelGroupUpdateRequest
-		CustomerPhotoUploadRequest:   apiModel.#CustomerPhotoUploadRequest
-		CustomerConsentCreateRequest: apiModel.#CustomerConsentCreateRequest
-		CustomerUpdateResponse:       apiModel.#CustomerUpdateResponse
-		CustomerPhotoUploadResponse:  apiModel.#CustomerPhotoUploadResponse
-		CustomerConsentCreateResponse: apiModel.#CustomerConsentCreateResponse
+		CustomerPhotoUploadRequest:     apiModel.#CustomerPhotoUploadRequest
+		CustomerConsentCreateRequest:   apiModel.#CustomerConsentCreateRequest
+		CustomerUpdateResponse:         apiModel.#CustomerUpdateResponse
+		CustomerPhotoUploadResponse:    apiModel.#CustomerPhotoUploadResponse
+		CustomerConsentCreateResponse:  apiModel.#CustomerConsentCreateResponse
 		Endpoints:                    apiModel.#Endpoints
 	}
 }

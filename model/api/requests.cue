@@ -42,8 +42,26 @@ import (
 	offer:         entities.#BookingOffer
 }
 
+#BookingClientUpdateRequest: {
+	booking_hash?:   string
+	client_type:     entities.#ClientType
+	customer_client_id?: string
+	group_name?:     string
+}
+
+#BookingGroupMemberCreateRequest: {
+	booking_hash?:       string
+	name:               string
+	email?:             common.#Email
+	phone_number?:      string
+	preferred_language?: enums.#LanguageCode
+	member_roles?:      [...entities.#TravelGroupMemberRole]
+	is_traveling?:      bool
+	member_notes?:      string
+}
+
 #CustomerUpdateRequest: {
-	customer_hash?:          string
+	customer_hash?:            string
 	name?:                  string
 	photo_ref?:             string
 	title?:                 string
@@ -78,13 +96,13 @@ import (
 }
 
 #CustomerPhotoUploadRequest: {
-	customer_hash?: string
+	customer_hash?:   string
 	photo_upload?: #EvidenceUpload
 	photo?:        #EvidenceUpload
 }
 
 #CustomerConsentCreateRequest: {
-	customer_hash?: string
+	customer_hash?:     string
 	consent_type:   enums.#CustomerConsentType
 	status:         enums.#CustomerConsentStatus
 	captured_via?:  string
@@ -95,7 +113,17 @@ import (
 
 #TravelGroupUpdateRequest: {
 	travel_group_hash?: string
-	name?:              string
-	group_type?:        enums.#TravelGroupType
+	group_name?:        string
+	preferred_language?: enums.#LanguageCode
+	preferred_currency?: enums.#CurrencyCode
+	timezone?:          enums.#TimezoneCode
 	notes?:             string
+}
+
+#TravelGroupCreateRequest: {
+	group_name:          string
+	preferred_language?: enums.#LanguageCode
+	preferred_currency?: enums.#CurrencyCode
+	timezone?:           enums.#TimezoneCode
+	notes?:              string
 }

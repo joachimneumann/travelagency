@@ -2,10 +2,11 @@ import {
   CUSTOMER_SCHEMA,
   CUSTOMER_CONSENT_SCHEMA,
   CUSTOMER_DOCUMENT_SCHEMA,
-  TRAVEL_GROUP_SCHEMA,
-  TRAVEL_GROUP_MEMBER_SCHEMA
+  TRAVEL_GROUP_SCHEMA
 } from "../../frontend/Generated/Models/generated_Aux.js";
-import { CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA } from "../../frontend/Generated/API/generated_APIModels.js";
+import {
+  CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA
+} from "../../frontend/Generated/API/generated_APIModels.js";
 import {
   normalizeCurrencyCode
 } from "../../frontend/Generated/Models/generated_Currency.js";
@@ -32,14 +33,17 @@ const ORGANIZATION_CUSTOMER_FIELDS = new Set([
 
 const state = {
   id: qs.get("id") || "",
+  client: null,
   customer: null,
   consents: [],
+  travelGroups: [],
   isSaving: false,
   isOrganizationCustomer: false
 };
 
 const CUSTOMER_FIELD_UI_CONFIG = {
-  id: { editable: false },
+  client_id: { editable: false },
+  customer_hash: { editable: false },
   created_at: { editable: false },
   updated_at: { editable: false },
   archived_at: { editable: false },
@@ -89,7 +93,7 @@ const CUSTOMER_NOTES_GROUP_FIELD_NAMES = [
 ];
 
 const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
-  .filter((field) => !["id", "first_name", "last_name"].includes(field.name))
+  .filter((field) => !["client_id", "first_name", "last_name", "customer_hash"].includes(field.name))
   .map((field) => {
     const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
     return {
@@ -128,12 +132,10 @@ const els = {
   heroName: document.getElementById("customerHeroName"),
   heroPhoto: document.getElementById("customerHeroPhoto"),
   heroPhotoPlaceholder: document.getElementById("customerHeroPhotoPlaceholder"),
+  photoPicker: document.getElementById("customerPhotoPicker"),
   error: document.getElementById("detailError"),
   primaryGroup: document.querySelector(".customer-primary-group"),
-  photoPanel: document.querySelector(".customer-photo-panel"),
   photoInput: document.getElementById("customerPhotoInput"),
-  photoUploadBtn: document.getElementById("customerPhotoUploadBtn"),
-  photoStatus: document.getElementById("customerPhotoStatus"),
   customerPrimaryGroup: document.getElementById("customerPrimaryGroup"),
   customerAddressGroup: document.getElementById("customerAddressGroup"),
   customerOrganizationGroup: document.getElementById("customerOrganizationGroup"),
@@ -160,6 +162,8 @@ const els = {
   organizationToggle: null
 };
 
+let pendingPhotoObjectUrl = null;
+
 init();
 
 async function init() {
@@ -176,11 +180,14 @@ async function init() {
     els.saveBtn.addEventListener("click", saveCustomerProfile);
     els.saveBtn.disabled = true;
   }
-  if (els.photoUploadBtn) {
-    els.photoUploadBtn.addEventListener("click", saveCustomerPhoto);
+  if (els.photoPicker) {
+    els.photoPicker.addEventListener("click", () => {
+      if (!els.photoInput || els.photoPicker.disabled) return;
+      els.photoInput.click();
+    });
   }
   if (els.photoInput) {
-    els.photoInput.addEventListener("change", updatePhotoDirtyState);
+    els.photoInput.addEventListener("change", handleCustomerPhotoSelection);
   }
   populateConsentFormOptions();
   if (els.addConsentBtn) els.addConsentBtn.addEventListener("click", () => toggleConsentForm(true));
@@ -228,11 +235,12 @@ function bindSectionNavigation(activeSection) {
 }
 
 async function loadCustomer() {
-  const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, params: { customerId: state.id } }).url);
+  const payload = await fetchApi(customerDetailRequest({ baseURL: apiOrigin, params: { customerClientId: state.id } }).url);
   if (!payload?.customer) return;
 
+  state.client = payload.client || null;
   state.customer = normalizeCustomer(payload.customer);
-  renderCustomerHero(state.customer);
+  renderCustomerHero(state.customer, state.client);
 
   state.isOrganizationCustomer = shouldEnableOrganizationFields(state.customer);
   if (els.organizationToggle) {
@@ -250,7 +258,8 @@ async function loadCustomer() {
   state.consents = Array.isArray(payload.consents) ? payload.consents : [];
   renderCustomerConsents(state.consents);
   renderCustomerDocuments(payload.documents || []);
-  renderTravelGroups(payload.travelGroups || []);
+  state.travelGroups = Array.isArray(payload.travelGroups) ? payload.travelGroups : [];
+  renderTravelGroups(state.travelGroups);
   renderTravelGroupMembers(payload.travelGroupMembers || []);
   renderRelatedBookings(payload.bookings || []);
 
@@ -258,20 +267,22 @@ async function loadCustomer() {
   clearSaveStatus();
 }
 
-function renderCustomerHero(customer) {
+function renderCustomerHero(customer, client = null) {
   updateCustomerHeroName(customer.name || "Customer");
   updateCustomerHeroPhoto(customer.photo_ref);
 
   if (els.heroId) {
-    els.heroId.textContent = customer.id ? `ID: ${customer.id}` : "ID: -";
+    const identifier = normalizeText(client?.id) || normalizeText(customer?.client_id) || state.id;
+    els.heroId.textContent = identifier ? `ID: ${identifier}` : "ID: -";
   }
 }
 
 function normalizeCustomer(customer) {
   const normalized = {
     ...customer,
-    name: normalizeText(customer.name) || "",
+    client_id: normalizeText(customer.client_id) || "",
     customer_hash: normalizeText(customer.customer_hash) || "",
+    name: normalizeText(customer.name) || "",
     photo_ref: normalizeText(customer.photo_ref) || "",
     title: normalizeText(customer.title) || "",
     phone_number: normalizeText(customer.phone_number) || "",
@@ -303,8 +314,12 @@ function normalizeCustomer(customer) {
 
 function updateCustomerHeroPhoto(value) {
   const photoRef = normalizeText(value);
+  const hasPhoto = Boolean(photoRef);
+  if (els.photoPicker) {
+    els.photoPicker.classList.toggle("has-photo", hasPhoto);
+  }
   if (els.heroPhoto) {
-    if (photoRef) {
+    if (hasPhoto) {
       els.heroPhoto.src = photoRef;
       els.heroPhoto.hidden = false;
     } else {
@@ -313,8 +328,21 @@ function updateCustomerHeroPhoto(value) {
     }
   }
   if (els.heroPhotoPlaceholder) {
-    els.heroPhotoPlaceholder.hidden = Boolean(photoRef);
+    els.heroPhotoPlaceholder.hidden = hasPhoto;
+    els.heroPhotoPlaceholder.style.display = hasPhoto ? "none" : "flex";
   }
+}
+
+function revokePendingPhotoObjectUrl() {
+  if (!pendingPhotoObjectUrl) return;
+  URL.revokeObjectURL(pendingPhotoObjectUrl);
+  pendingPhotoObjectUrl = null;
+}
+
+function previewSelectedCustomerPhoto(file) {
+  revokePendingPhotoObjectUrl();
+  pendingPhotoObjectUrl = URL.createObjectURL(file);
+  updateCustomerHeroPhoto(pendingPhotoObjectUrl);
 }
 
 function renderCustomerConsents(consents) {
@@ -385,10 +413,6 @@ function setDirtySurface(element, isDirty) {
   element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
 }
 
-function updatePhotoDirtyState() {
-  setDirtySurface(els.photoPanel, Boolean(els.photoInput?.files?.length));
-}
-
 function updateConsentFormDirtyState() {
   if (!els.consentForm || els.consentForm.hidden) {
     setDirtySurface(els.consentForm, false);
@@ -415,7 +439,7 @@ async function saveCustomerConsent() {
     const evidenceUpload = await readConsentEvidenceUpload();
     const request = customerConsentCreateRequest({
       baseURL: apiOrigin,
-      params: { customerId: state.id }
+      params: { customerClientId: state.id }
     });
     const result = await fetchApi(request.url, {
       method: request.method,
@@ -436,8 +460,9 @@ async function saveCustomerConsent() {
       return;
     }
     if (result.customer) {
+      state.client = result.client || state.client;
       state.customer = normalizeCustomer(result.customer);
-      renderCustomerHero(state.customer);
+      renderCustomerHero(state.customer, state.client);
       renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer, "primary");
       renderEditableCustomerGroup(els.customerAddressGroup, CUSTOMER_ADDRESS_GROUP_FIELDS, state.customer, "address");
       renderEditableCustomerGroup(els.customerOrganizationGroup, CUSTOMER_ORGANIZATION_GROUP_FIELDS, state.customer, "organization");
@@ -463,16 +488,12 @@ async function saveCustomerConsent() {
 async function saveCustomerPhoto() {
   if (!state.id) return;
   const photoUpload = await readCustomerPhotoUpload();
-  if (!photoUpload) {
-    if (els.photoStatus) els.photoStatus.textContent = "Choose an image first.";
-    return;
-  }
-  if (els.photoUploadBtn) els.photoUploadBtn.disabled = true;
-  if (els.photoStatus) els.photoStatus.textContent = "";
+  if (!photoUpload) return false;
+  if (els.photoPicker) els.photoPicker.disabled = true;
   try {
     const request = customerPhotoUploadRequest({
       baseURL: apiOrigin,
-      params: { customerId: state.id }
+      params: { customerClientId: state.id }
     });
     const result = await fetchApi(request.url, {
       method: request.method,
@@ -482,23 +503,34 @@ async function saveCustomerPhoto() {
       }
     });
     if (!result?.customer) {
-      if (els.photoStatus && !els.photoStatus.textContent) {
-        els.photoStatus.textContent = "Could not upload photo.";
-      }
-      return;
+      return false;
     }
+    state.client = result.client || state.client;
     state.customer = normalizeCustomer(result.customer);
-    renderCustomerHero(state.customer);
+    renderCustomerHero(state.customer, state.client);
+    revokePendingPhotoObjectUrl();
     if (els.photoInput) els.photoInput.value = "";
-    updatePhotoDirtyState();
-    if (els.photoStatus) els.photoStatus.textContent = "Photo uploaded.";
+    setSaveStatus("Photo updated.");
+    return true;
   } catch (error) {
-    if (els.photoStatus) {
-      els.photoStatus.textContent = error?.message || "Could not upload photo.";
-    }
+    showError(error?.message || "Could not upload photo.");
+    return false;
   } finally {
-    if (els.photoUploadBtn) els.photoUploadBtn.disabled = false;
+    if (els.photoPicker) els.photoPicker.disabled = false;
   }
+}
+
+async function handleCustomerPhotoSelection() {
+  const file = els.photoInput?.files?.[0];
+  if (!file) return;
+  const previousPhotoRef = state.customer?.photo_ref || "";
+  previewSelectedCustomerPhoto(file);
+  const saved = await saveCustomerPhoto();
+  if (!saved) {
+    revokePendingPhotoObjectUrl();
+    updateCustomerHeroPhoto(previousPhotoRef);
+  }
+  if (els.photoInput) els.photoInput.value = "";
 }
 
 async function readCustomerPhotoUpload() {
@@ -554,12 +586,32 @@ function renderTravelGroups(groups) {
 }
 
 function renderTravelGroupMembers(members) {
-  renderEntityCollectionTable(
-    els.travelGroupMembersTable,
-    "Travel Group Members",
-    Array.isArray(members) ? members : [],
-    TRAVEL_GROUP_MEMBER_SCHEMA.fields
+  if (!els.travelGroupMembersTable) return;
+
+  const groupsById = new Map(
+    (Array.isArray(state.travelGroups) ? state.travelGroups : []).map((group) => [
+      normalizeText(group.id),
+      group
+    ])
   );
+  const uniqueGroupIds = Array.from(
+    new Set(
+      (Array.isArray(members) ? members : [])
+        .map((member) => normalizeText(member.travel_group_id))
+        .filter(Boolean)
+    )
+  );
+  const header = `<thead><tr><th>Travel group</th></tr></thead>`;
+  const rows = uniqueGroupIds
+    .map((groupId) => {
+      const group = groupsById.get(groupId);
+      const label = normalizeText(group?.group_name) || normalizeText(group?.name) || normalizeText(groupId) || "-";
+      const href = buildTravelGroupHref(groupId);
+      return `<tr><td><a href="${escapeHtml(href)}">${escapeHtml(label)}</a></td></tr>`;
+    })
+    .join("");
+  const body = rows || `<tr><td>${escapeHtml("No travel group memberships")}</td></tr>`;
+  els.travelGroupMembersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function renderEditableCustomerTable(tableEl, fields, entity) {
@@ -926,7 +978,7 @@ function getFieldValueFromInput(field, element) {
 }
 
 async function saveCustomerProfile() {
-  if (state.isSaving || !state.customer?.id) return;
+  if (state.isSaving || !state.customer?.client_id) return;
 
   const payload = collectEditableCustomerPayload();
   payload.customer_hash = state.customer.customer_hash;
@@ -936,7 +988,7 @@ async function saveCustomerProfile() {
 
   const request = customerUpdateRequest({
     baseURL: apiOrigin,
-    params: { customerId: state.id }
+    params: { customerClientId: state.id }
   });
   const result = await fetchApi(request.url, {
     method: request.method,
@@ -950,7 +1002,9 @@ async function saveCustomerProfile() {
     return;
   }
 
+  state.client = result.client || state.client;
   state.customer = normalizeCustomer(result.customer);
+  renderCustomerHero(state.customer, state.client);
   renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer, "primary");
   renderEditableCustomerGroup(els.customerAddressGroup, CUSTOMER_ADDRESS_GROUP_FIELDS, state.customer, "address");
   renderEditableCustomerGroup(els.customerOrganizationGroup, CUSTOMER_ORGANIZATION_GROUP_FIELDS, state.customer, "organization");
@@ -1027,8 +1081,13 @@ function clearSaveStatus() {
 }
 
 function buildBookingHref(id) {
-  const params = new URLSearchParams({ type: "booking", id });
+  const params = new URLSearchParams({ id });
   return `backend-booking.html?${params.toString()}`;
+}
+
+function buildTravelGroupHref(id) {
+  const params = new URLSearchParams({ section: "travelGroups", id });
+  return `backend.html?${params.toString()}`;
 }
 
 function customerFieldInputId(fieldName) {

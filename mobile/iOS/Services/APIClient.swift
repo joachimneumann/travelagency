@@ -6,6 +6,7 @@ final class APIClient {
         case unauthorized
         case forbidden
         case bookingConflict(String)
+        case customerConflict(String)
         case server(String)
         case bootstrapUnavailable(URL)
 
@@ -18,6 +19,8 @@ final class APIClient {
             case .forbidden:
                 return "You do not have permission to perform this action."
             case .bookingConflict(let message):
+                return message
+            case .customerConflict(let message):
                 return message
             case .server(let message):
                 return message
@@ -50,6 +53,33 @@ final class APIClient {
                 page: page,
                 pageSize: pageSize,
                 search: search
+            ),
+            session: session
+        )
+    }
+
+    func fetchTravelGroups(
+        session: AuthSession,
+        page: Int = 1,
+        pageSize: Int = 20,
+        search: String? = nil
+    ) async throws -> TravelGroupListResponse {
+        try await send(
+            requestURL: MobileAPIRequestFactory.travelGroupsURL(
+                baseURL: AppConfig.apiBaseURL,
+                page: page,
+                pageSize: pageSize,
+                search: search
+            ),
+            session: session
+        )
+    }
+
+    func fetchCustomerDetail(customerClientID: String, session: AuthSession) async throws -> CustomerDetailResponse {
+        try await send(
+            requestURL: GeneratedAPIRequestFactory.customerDetailURL(
+                baseURL: AppConfig.apiBaseURL,
+                customerClientId: customerClientID
             ),
             session: session
         )
@@ -138,6 +168,42 @@ final class APIClient {
         )
     }
 
+    func updateCustomer(customerClientID: String, body: [String: Any], session: AuthSession) async throws -> CustomerUpdateResponse {
+        try await send(
+            requestURL: GeneratedAPIRequestFactory.customerUpdateURL(
+                baseURL: AppConfig.apiBaseURL,
+                customerClientId: customerClientID
+            ),
+            method: "PATCH",
+            body: body,
+            session: session
+        )
+    }
+
+    func uploadCustomerPhoto(customerClientID: String, body: [String: Any], session: AuthSession) async throws -> CustomerPhotoUploadResponse {
+        try await send(
+            requestURL: GeneratedAPIRequestFactory.customerPhotoUploadURL(
+                baseURL: AppConfig.apiBaseURL,
+                customerClientId: customerClientID
+            ),
+            method: "POST",
+            body: body,
+            session: session
+        )
+    }
+
+    func createCustomerConsent(customerClientID: String, body: [String: Any], session: AuthSession) async throws -> CustomerConsentCreateResponse {
+        try await send(
+            requestURL: GeneratedAPIRequestFactory.customerConsentCreateURL(
+                baseURL: AppConfig.apiBaseURL,
+                customerClientId: customerClientID
+            ),
+            method: "POST",
+            body: body,
+            session: session
+        )
+    }
+
     private func send<T: Decodable>(requestURL: URL, method: String = "GET", body: [String: Any]? = nil, session: AuthSession) async throws -> T {
         var request = URLRequest(url: requestURL)
         request.httpMethod = method
@@ -158,9 +224,12 @@ final class APIClient {
         case 403:
             throw APIError.forbidden
         case 409:
-            if let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               String(describing: payload["code"] ?? "") == "BOOKING_HASH_MISMATCH" {
+            let errorCode = parseErrorCode(data: data)
+            if errorCode == "BOOKING_HASH_MISMATCH" {
                 throw APIError.bookingConflict(parseErrorMessage(data: data))
+            }
+            if errorCode == "CUSTOMER_HASH_MISMATCH" {
+                throw APIError.customerConflict(parseErrorMessage(data: data))
             }
             fallthrough
         default:
@@ -184,6 +253,13 @@ final class APIClient {
             }
         }
         return String(data: data, encoding: .utf8) ?? "Request failed"
+    }
+
+    private func parseErrorCode(data: Data) -> String {
+        guard let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return ""
+        }
+        return String(describing: payload["code"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

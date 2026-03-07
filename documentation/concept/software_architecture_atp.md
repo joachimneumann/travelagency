@@ -29,13 +29,16 @@ It defines:
 - invariants
 - canonical terminology
 - canonical field meaning
+- the `Client` anchor plus `Customer` and `TravelGroup` subtypes
 
 It covers concepts such as:
 
 - user
 - role
 - booking
+- client
 - customer
+- travel_group
 - tour
 - pricing
 - payment
@@ -168,6 +171,7 @@ Responsible for:
 - public booking interactions
 - administrative booking UI
 - administrative customer UI
+- administrative travel-group UI
 - administrative tour UI
 - administrative payment and invoice UI
 - client-side form behavior

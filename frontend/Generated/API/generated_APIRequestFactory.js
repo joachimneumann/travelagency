@@ -138,6 +138,38 @@ export const GENERATED_API_ENDPOINTS = {
       }
     ]
   },
+  "booking_client": {
+    "key": "booking_client",
+    "path": "/api/v1/bookings/{bookingId}/client",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "BookingClientUpdateRequest",
+    "responseType": "BookingClientUpdateResponse",
+    "parameters": [
+      {
+        "name": "bookingId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "booking_group_members": {
+    "key": "booking_group_members",
+    "path": "/api/v1/bookings/{bookingId}/client/members",
+    "method": "POST",
+    "authenticated": true,
+    "requestType": "BookingGroupMemberCreateRequest",
+    "responseType": "BookingGroupMemberCreateResponse",
+    "parameters": [
+      {
+        "name": "bookingId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
   "booking_pricing": {
     "key": "booking_pricing",
     "path": "/api/v1/bookings/{bookingId}/pricing",
@@ -226,14 +258,14 @@ export const GENERATED_API_ENDPOINTS = {
   },
   "customer_detail": {
     "key": "customer_detail",
-    "path": "/api/v1/customers/{customerId}",
+    "path": "/api/v1/customers/{customerClientId}",
     "method": "GET",
     "authenticated": true,
     "requestType": null,
     "responseType": "CustomerDetail",
     "parameters": [
       {
-        "name": "customerId",
+        "name": "customerClientId",
         "location": "path",
         "required": true,
         "typeName": "Identifier"
@@ -242,14 +274,14 @@ export const GENERATED_API_ENDPOINTS = {
   },
   "customer_update": {
     "key": "customer_update",
-    "path": "/api/v1/customers/{customerId}",
+    "path": "/api/v1/customers/{customerClientId}",
     "method": "PATCH",
     "authenticated": true,
     "requestType": "CustomerUpdateRequest",
     "responseType": "CustomerUpdateResponse",
     "parameters": [
       {
-        "name": "customerId",
+        "name": "customerClientId",
         "location": "path",
         "required": true,
         "typeName": "Identifier"
@@ -258,14 +290,14 @@ export const GENERATED_API_ENDPOINTS = {
   },
   "customer_photo_upload": {
     "key": "customer_photo_upload",
-    "path": "/api/v1/customers/{customerId}/photo",
+    "path": "/api/v1/customers/{customerClientId}/photo",
     "method": "POST",
     "authenticated": true,
     "requestType": "CustomerPhotoUploadRequest",
     "responseType": "CustomerPhotoUploadResponse",
     "parameters": [
       {
-        "name": "customerId",
+        "name": "customerClientId",
         "location": "path",
         "required": true,
         "typeName": "Identifier"
@@ -274,14 +306,14 @@ export const GENERATED_API_ENDPOINTS = {
   },
   "customer_consent_create": {
     "key": "customer_consent_create",
-    "path": "/api/v1/customers/{customerId}/consents",
+    "path": "/api/v1/customers/{customerClientId}/consents",
     "method": "POST",
     "authenticated": true,
     "requestType": "CustomerConsentCreateRequest",
     "responseType": "CustomerConsentCreateResponse",
     "parameters": [
       {
-        "name": "customerId",
+        "name": "customerClientId",
         "location": "path",
         "required": true,
         "typeName": "Identifier"
@@ -295,6 +327,17 @@ export const GENERATED_API_ENDPOINTS = {
     "authenticated": true,
     "requestType": null,
     "responseType": "TravelGroupList",
+    "parameters": [
+
+    ]
+  },
+  "travel_group_create": {
+    "key": "travel_group_create",
+    "path": "/api/v1/travel_groups",
+    "method": "POST",
+    "authenticated": true,
+    "requestType": "TravelGroupCreateRequest",
+    "responseType": "TravelGroupDetail",
     "parameters": [
 
     ]
@@ -562,6 +605,40 @@ export function bookingNoteRequest({ baseURL = '', params = {}, query = {}, body
   };
 }
 
+export function bookingClientPath(params = {}) {
+  return buildPath("/api/v1/bookings/{bookingId}/client", params);
+}
+
+export function bookingClientRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingClientPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_client",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingGroupMembersPath(params = {}) {
+  return buildPath("/api/v1/bookings/{bookingId}/client/members", params);
+}
+
+export function bookingGroupMembersRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingGroupMembersPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_group_members",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingPricingPath(params = {}) {
   return buildPath("/api/v1/bookings/{bookingId}/pricing", params);
 }
@@ -665,7 +742,7 @@ export function customersRequest({ baseURL = '', params = {}, query = {}, body, 
 }
 
 export function customerDetailPath(params = {}) {
-  return buildPath("/api/v1/customers/{customerId}", params);
+  return buildPath("/api/v1/customers/{customerClientId}", params);
 }
 
 export function customerDetailRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -682,7 +759,7 @@ export function customerDetailRequest({ baseURL = '', params = {}, query = {}, b
 }
 
 export function customerUpdatePath(params = {}) {
-  return buildPath("/api/v1/customers/{customerId}", params);
+  return buildPath("/api/v1/customers/{customerClientId}", params);
 }
 
 export function customerUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -699,7 +776,7 @@ export function customerUpdateRequest({ baseURL = '', params = {}, query = {}, b
 }
 
 export function customerPhotoUploadPath(params = {}) {
-  return buildPath("/api/v1/customers/{customerId}/photo", params);
+  return buildPath("/api/v1/customers/{customerClientId}/photo", params);
 }
 
 export function customerPhotoUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -716,7 +793,7 @@ export function customerPhotoUploadRequest({ baseURL = '', params = {}, query = 
 }
 
 export function customerConsentCreatePath(params = {}) {
-  return buildPath("/api/v1/customers/{customerId}/consents", params);
+  return buildPath("/api/v1/customers/{customerClientId}/consents", params);
 }
 
 export function customerConsentCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
@@ -742,6 +819,23 @@ export function travelGroupsRequest({ baseURL = '', params = {}, query = {}, bod
   return {
     key: "travel_groups",
     method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelGroupCreatePath(params = {}) {
+  return buildPath("/api/v1/travel_groups", params);
+}
+
+export function travelGroupCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelGroupCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_group_create",
+    method: "POST",
     authenticated: true,
     url,
     headers,

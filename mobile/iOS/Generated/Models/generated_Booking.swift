@@ -154,13 +154,17 @@
 
     struct GeneratedBooking: Codable, Equatable, Identifiable {
     let id: String
-    let bookingHash: String?
-    let customerId: String
+    let booking_hash: String?
+    let client_id: String
+    let client_type: GeneratedClientType?
+    let client_display_name: String?
+    let client_primary_phone_number: String?
+    let client_primary_email: String?
     let stage: GeneratedBookingStage
     let atp_staff: String?
     let atpStaffName: String?
-    let destination: String?
-    let style: String?
+    let destination: [String]?
+    let style: [String]?
     let travelMonth: String?
     let travelers: Int?
     let duration: String?
@@ -175,8 +179,12 @@
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
-        case bookingHash = "bookingHash"
-        case customerId = "customerId"
+        case booking_hash = "booking_hash"
+        case client_id = "client_id"
+        case client_type = "client_type"
+        case client_display_name = "client_display_name"
+        case client_primary_phone_number = "client_primary_phone_number"
+        case client_primary_email = "client_primary_email"
         case stage = "stage"
         case atp_staff = "atp_staff"
         case atpStaffName = "atpStaffName"

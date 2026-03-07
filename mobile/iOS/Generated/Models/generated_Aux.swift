@@ -3,8 +3,9 @@ import Foundation
 // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
-    struct GeneratedCustomer: Codable, Equatable, Identifiable {
-    let id: String
+    struct GeneratedCustomer: Codable, Equatable {
+    let client_id: String
+    let customer_hash: String?
     let name: String
     let photo_ref: String?
     let title: String?
@@ -35,7 +36,8 @@ import Foundation
     let archived_at: String?
 
         private enum CodingKeys: String, CodingKey {
-        case id = "id"
+        case client_id = "client_id"
+        case customer_hash = "customer_hash"
         case name = "name"
         case photo_ref = "photo_ref"
         case title = "title"
@@ -69,7 +71,7 @@ import Foundation
 
     struct GeneratedCustomerConsent: Codable, Equatable, Identifiable {
     let id: String
-    let customer_id: String
+    let customer_client_id: String
     let consent_type: GeneratedCustomerConsentType
     let status: GeneratedCustomerConsentStatus
     let captured_via: String?
@@ -79,7 +81,7 @@ import Foundation
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
-        case customer_id = "customer_id"
+        case customer_client_id = "customer_client_id"
         case consent_type = "consent_type"
         case status = "status"
         case captured_via = "captured_via"
@@ -91,7 +93,7 @@ import Foundation
 
     struct GeneratedCustomerDocument: Codable, Equatable, Identifiable {
     let id: String
-    let customer_id: String
+    let customer_client_id: String
     let document_type: GeneratedCustomerDocumentType
     let document_number: String?
     let document_picture_ref: String?
@@ -102,7 +104,7 @@ import Foundation
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
-        case customer_id = "customer_id"
+        case customer_client_id = "customer_client_id"
         case document_type = "document_type"
         case document_number = "document_number"
         case document_picture_ref = "document_picture_ref"
@@ -115,28 +117,36 @@ import Foundation
 
     struct GeneratedTravelGroup: Codable, Equatable, Identifiable {
     let id: String
-    let booking_id: String
-    let name: String?
-    let group_type: GeneratedTravelGroupType
+    let client_id: String
+    let travel_group_hash: String?
+    let group_name: String
+    let preferred_language: GeneratedLanguageCode?
+    let preferred_currency: GeneratedCurrencyCode?
+    let timezone: GeneratedTimezoneCode?
     let notes: String?
     let created_at: String
     let updated_at: String
+    let archived_at: String?
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
-        case booking_id = "booking_id"
-        case name = "name"
-        case group_type = "group_type"
+        case client_id = "client_id"
+        case travel_group_hash = "travel_group_hash"
+        case group_name = "group_name"
+        case preferred_language = "preferred_language"
+        case preferred_currency = "preferred_currency"
+        case timezone = "timezone"
         case notes = "notes"
         case created_at = "created_at"
         case updated_at = "updated_at"
+        case archived_at = "archived_at"
         }
     }
 
     struct GeneratedTravelGroupMember: Codable, Equatable, Identifiable {
     let id: String
     let travel_group_id: String
-    let customer_id: String
+    let customer_client_id: String
     let is_traveling: Bool?
     let member_roles: [GeneratedTravelGroupMemberRole]?
     let notes: String?
@@ -146,7 +156,7 @@ import Foundation
         private enum CodingKeys: String, CodingKey {
         case id = "id"
         case travel_group_id = "travel_group_id"
-        case customer_id = "customer_id"
+        case customer_client_id = "customer_client_id"
         case is_traveling = "is_traveling"
         case member_roles = "member_roles"
         case notes = "notes"

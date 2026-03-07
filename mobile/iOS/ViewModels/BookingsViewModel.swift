@@ -57,7 +57,7 @@ final class CustomersViewModel: ObservableObject {
                 pageSize: 20,
                 search: search
             )
-            customers = response.items
+            customers = response.items ?? []
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -65,5 +65,30 @@ final class CustomersViewModel: ObservableObject {
 
     private func normalizedQuery(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+@MainActor
+final class TravelGroupsViewModel: ObservableObject {
+    @Published private(set) var groups: [TravelGroup] = []
+    @Published private(set) var isLoading = false
+    @Published var errorMessage: String?
+
+    private let apiClient = APIClient()
+
+    func load(session: AuthSession) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let response = try await apiClient.fetchTravelGroups(
+                session: session,
+                page: 1,
+                pageSize: 20,
+                search: nil
+            )
+            groups = response.items ?? []
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

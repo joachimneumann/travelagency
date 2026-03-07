@@ -59,15 +59,21 @@
       <section class="section">
         <div class="container">
           <div class="customer-hero">
-            <div class="customer-hero__photo">
+            <button class="customer-hero__photo customer-hero__photo-button" id="customerPhotoPicker" type="button" aria-label="Choose customer photo">
               <img class="customer-hero__photo-image" id="customerHeroPhoto" alt="Customer photo" hidden />
-              <div class="customer-hero__photo-placeholder" id="customerHeroPhotoPlaceholder">Photo</div>
-            </div>
+              <div class="customer-hero__photo-placeholder" id="customerHeroPhotoPlaceholder" aria-hidden="true">
+                <svg class="customer-hero__photo-placeholder-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="32" cy="22" r="12" fill="currentColor" />
+                  <path d="M12 54C12 42.9543 20.9543 34 32 34C43.0457 34 52 42.9543 52 54V56H12V54Z" fill="currentColor" />
+                </svg>
+              </div>
+            </button>
             <div class="customer-hero__copy">
               <h1 class="customer-hero__name" id="customerHeroName">Customer</h1>
               <span class="customer-hero__id" id="customerHeroId">ID: -</span>
             </div>
           </div>
+          <input id="customerPhotoInput" class="customer-photo-input" type="file" accept="image/*" />
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
@@ -75,16 +81,6 @@
             <div class="customer-primary-group">
               <div class="customer-primary-group__header">
                 <button id="customerSaveBtn" class="btn btn-primary" type="button" disabled>Update</button>
-              </div>
-              <div class="customer-photo-panel">
-                <div class="field full">
-                  <label for="customerPhotoInput">Customer Photo</label>
-                  <input id="customerPhotoInput" type="file" accept="image/*" />
-                </div>
-              <div class="customer-photo-panel__actions">
-                  <button id="customerPhotoUploadBtn" class="btn btn-ghost" type="button">Upload photo</button>
-                  <span id="customerPhotoStatus" class="micro"></span>
-                </div>
               </div>
               <div id="customerPrimaryGroup"></div>
               <div class="customer-organization-group" id="customerOrganizationGroup"></div>

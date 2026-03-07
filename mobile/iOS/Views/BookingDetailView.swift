@@ -50,6 +50,7 @@ struct BookingDetailView: View {
                 readOnlyStageSection(booking)
             }
             bookingSummarySection(for: booking)
+            clientSection()
             if let customer = viewModel.customer {
                 customerSection(customer)
             }
@@ -81,7 +82,7 @@ struct BookingDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Booking")
                         .font(.headline)
-                    Text("\(booking.destination.isEmpty ? "—" : booking.destination) | \(booking.style.isEmpty ? "—" : booking.style)")
+                    Text("\(joinedList(booking.destination)) | \(joinedList(booking.style))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -91,10 +92,26 @@ struct BookingDetailView: View {
     }
 
     @ViewBuilder
+    private func clientSection() -> some View {
+        let label = viewModel.travelGroup?.group_name ?? viewModel.customer?.name ?? viewModel.client?.display_name ?? "Client"
+        let typeLabel = displayClientType(viewModel.client?.client_type)
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Client")
+                    .font(.headline)
+                Text("\(label) • \(typeLabel)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    @ViewBuilder
     private func customerSection(_ customer: Customer) -> some View {
         Section {
             NavigationLink {
-                BookingCustomerDetailView(customer: customer)
+                BookingCustomerDetailView(customerClientID: customer.client_id, initialCustomer: customer)
             } label: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Customer")
@@ -326,6 +343,16 @@ struct BookingDetailView: View {
         let total = pricing.payments.count
         return "\(paid) or \(total) paid"
     }
+}
+
+private func displayClientType(_ value: ClientType?) -> String {
+    let raw = String(describing: value ?? "customer")
+    return raw.replacingOccurrences(of: "_", with: " ")
+}
+
+private func joinedList(_ values: [String]?) -> String {
+    let entries = (values ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    return entries.isEmpty ? "—" : entries.joined(separator: ", ")
 }
 
 private struct WhatsAppChatThreadView: View {

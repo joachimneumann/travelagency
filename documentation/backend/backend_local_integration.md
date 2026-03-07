@@ -163,6 +163,7 @@ Branded backend web UI:
   - staff creation panel for managers/admins
 - tour IDs open `backend-tour.html` for admin editing and accountant read-only viewing
 - customer IDs open `customer.html`
+- travel group IDs can be opened from the travel-groups section in `backend.html`
 - booking IDs open `backend-booking.html`
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
@@ -172,6 +173,24 @@ Branded backend web UI:
 ## 5.1 Recommended local setup (split origin)
 
 Run backend on `8787`, static site on another port (for example `8080`).
+
+Preferred local container runtime on macOS:
+- `colima`
+- any Docker-compatible daemon also works
+
+Recommended bootstrap on macOS:
+
+```bash
+brew install colima docker docker-compose
+colima start
+docker context use colima
+docker info
+```
+
+Notes:
+- local scripts no longer assume Docker Desktop
+- `./scripts/start_local_frontend.sh` and `./scripts/start_local_keycloak.sh` will try to use the current Docker daemon
+- if no daemon is reachable and `colima` is installed, they will start `colima` automatically
 
 Terminal A (backend):
 
@@ -190,8 +209,9 @@ npm start
 
 Note:
 - the helper script `./scripts/start_local_backend.sh` currently defaults `KEYCLOAK_ENABLED=true`
-- the helper script requires `KEYCLOAK_CLIENT_SECRET` to be exported before startup
-- `./scripts/start_local_all.sh` simply starts local Keycloak, backend, and frontend in sequence; it does not document or inject the secret for you
+- `KEYCLOAK_CLIENT_SECRET` is required only when `KEYCLOAK_ENABLED=true`
+- the local start scripts source exported values from `~/.zshrc` when present
+- `./scripts/start_local_all.sh` starts local Keycloak, backend, and frontend in sequence
 
 Role mapping for `atp_staff`:
 - the logged-in Keycloak `preferred_username` must match an entry in `backend/app/config/atp_staff.json -> usernames[]`
@@ -240,6 +260,7 @@ The compose file mounts:
 Important behavior:
 - the custom login theme survives container restarts/recreates
 - theme cache is disabled in local dev for faster CSS/theme iteration
+- on macOS, the script will auto-start `colima` if no Docker daemon is reachable and `colima` is installed
 
 After Keycloak is running:
 1. Open Keycloak admin.
@@ -251,7 +272,7 @@ After Keycloak is running:
 If the theme does not appear in the dropdown:
 
 ```bash
-docker compose -f docker-compose.local-keycloak.yml restart
+docker-compose -f docker-compose.local-keycloak.yml restart
 ```
 
 Then hard refresh the browser and re-check the theme dropdown.

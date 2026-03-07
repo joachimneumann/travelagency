@@ -7,6 +7,10 @@ function resolveApiUrl(pathOrUrl) {
   return `${apiBase}${value}`;
 }
 
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
+
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   logoutLink: document.getElementById("backendLogoutLink"),
@@ -43,6 +47,9 @@ const els = {
   travelGroupsPagination: document.getElementById("travelGroupsPagination"),
   travelGroupsTable: document.getElementById("travelGroupsTable"),
   travelGroupsNotice: document.getElementById("travelGroupsNotice"),
+  travelGroupName: document.getElementById("travelGroupName"),
+  travelGroupCreateBtn: document.getElementById("travelGroupCreateBtn"),
+  travelGroupCreateStatus: document.getElementById("travelGroupCreateStatus"),
 
   toursSearch: document.getElementById("toursSearch"),
   toursDestination: document.getElementById("toursDestination"),
@@ -226,6 +233,10 @@ function bindSearchControls() {
     });
   }
 
+  if (state.permissions.canReadTravelGroups && els.travelGroupCreateBtn) {
+    els.travelGroupCreateBtn.addEventListener("click", createTravelGroup);
+  }
+
   if (state.permissions.canManageStaff && els.staffCreateBtn) {
     els.staffCreateBtn.addEventListener("click", createStaff);
   }
@@ -394,6 +405,32 @@ async function loadTravelGroups() {
   updatePaginationUi("travelGroups");
   renderTravelGroups(payload.items || []);
   updateDashboardCounts();
+}
+
+async function createTravelGroup() {
+  const groupName = normalizeText(els.travelGroupName?.value);
+  if (!groupName) {
+    showError("Group name is required.");
+    if (els.travelGroupName) els.travelGroupName.focus();
+    return;
+  }
+
+  clearError();
+  if (els.travelGroupCreateBtn) els.travelGroupCreateBtn.disabled = true;
+  if (els.travelGroupCreateStatus) els.travelGroupCreateStatus.textContent = "";
+
+  const payload = await fetchApi("/api/v1/travel_groups", {
+    method: "POST",
+    body: { group_name: groupName }
+  });
+
+  if (els.travelGroupCreateBtn) els.travelGroupCreateBtn.disabled = false;
+  if (!payload?.travel_group) return;
+
+  if (els.travelGroupName) els.travelGroupName.value = "";
+  if (els.travelGroupCreateStatus) els.travelGroupCreateStatus.textContent = "Travel group created.";
+  state.travelGroups.page = 1;
+  await loadTravelGroups();
 }
 
 async function loadTours() {
@@ -593,20 +630,21 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Customer</th><th>Destination</th><th>Style</th><th>Staff</th><th>SLA due</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Client</th><th>Destination</th><th>Style</th><th>Staff</th><th>SLA due</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
-      const customerHref = buildCustomerHref(booking.customer_id || "");
-      const customerCell = booking.customer_id
-        ? canOpenCustomer
-          ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(booking.customer_id))}</a>`
-          : escapeHtml(shortId(booking.customer_id))
+      const clientHref = buildCustomerHref(booking.client_id || "");
+      const clientLabel = booking.client_display_name || shortId(booking.client_id);
+      const clientCell = booking.client_id
+        ? booking.client_type === "customer" && canOpenCustomer
+          ? `<a href="${escapeHtml(clientHref)}">${escapeHtml(clientLabel)}</a>`
+          : escapeHtml(clientLabel)
         : "-";
       return `<tr>
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
         <td>${escapeHtml(booking.stage)}</td>
-        <td>${customerCell}</td>
+        <td>${clientCell}</td>
         <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
         <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
         <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
@@ -627,9 +665,9 @@ function renderCustomers(items) {
   const header = `<thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Language</th><th>Updated</th></tr></thead>`;
   const rows = items
     .map((customer) => {
-      const customerHref = buildCustomerHref(customer.id);
+      const customerHref = buildCustomerHref(customer.client_id || customer.id);
       return `<tr>
-        <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.id))}</a></td>
+        <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.client_id || customer.id))}</a></td>
         <td>${escapeHtml(customer.name || "-")}</td>
         <td>${escapeHtml(customer.email || "-")}</td>
         <td>${escapeHtml(customer.phone_number || "-")}</td>
@@ -667,15 +705,15 @@ function renderTours(items) {
 }
 
 function renderTravelGroups(items) {
-  const header = `<thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Booking</th><th>Notes</th><th>Updated</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Client</th><th>Name</th><th>Language</th><th>Currency</th><th>Updated</th></tr></thead>`;
   const rows = items
     .map((group) => {
       return `<tr>
         <td>${escapeHtml(group.id || "-")}</td>
-        <td>${escapeHtml(group.name || "-")}</td>
-        <td>${escapeHtml(group.group_type || group.groupType || "-")}</td>
-        <td>${escapeHtml(group.booking_id || group.bookingId || "-")}</td>
-        <td>${escapeHtml(group.notes || "-")}</td>
+        <td>${escapeHtml(shortId(group.client_id || "-"))}</td>
+        <td>${escapeHtml(group.group_name || group.name || "-")}</td>
+        <td>${escapeHtml(group.preferred_language || "-")}</td>
+        <td>${escapeHtml(group.preferred_currency || "-")}</td>
         <td>${escapeHtml(formatDateTime(group.updated_at || group.updatedAt))}</td>
       </tr>`;
     })
@@ -691,7 +729,7 @@ function buildCustomerHref(id) {
 }
 
 function buildBookingHref(id) {
-  const params = new URLSearchParams({ type: "booking", id });
+  const params = new URLSearchParams({ id });
   return `backend-booking.html?${params.toString()}`;
 }
 

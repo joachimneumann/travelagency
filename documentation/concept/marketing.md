@@ -4,7 +4,7 @@
 
 - Position AsiaTravelPlan as a premium, transparent custom trip specialist (not a low-price operator).
 - Core promise: custom private itineraries, clear pricing, fast first plan (48-72h), local support.
-- Primary audience: Western couples, families, and friends seeking comfort-focused Southeast Asia trips (Vietnam, Thailand, Cambodia, Laos), with budgets from about $500+/person/week.
+- Primary audience: Western couples, families, and friends seeking comfort-focused Southeast Asia trips (Vietnam, Thailand, Cambodia, Laos), with budgets from about $500+/traveler/week.
 
 ## Growth Priorities
 

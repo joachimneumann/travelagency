@@ -132,7 +132,11 @@ import (
 #Booking: {
 	id:                 common.#Identifier
 	booking_hash?:      string
-	customerId:         common.#Identifier
+	client_id:          common.#Identifier
+	client_type?:       enums.#ClientType
+	client_display_name?: string
+	client_primary_phone_number?: string
+	client_primary_email?: common.#Email
 	stage:              enums.#BookingStage
 	atpStaff?:          common.#Identifier
 	atpStaffName?:      string

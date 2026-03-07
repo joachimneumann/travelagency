@@ -23,7 +23,9 @@ export function createBookingHandlers(deps) {
     addActivity,
     persistStore,
     computeBookingHash,
+    computeClientHash,
     computeCustomerHash,
+    computeTravelGroupHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -64,6 +66,17 @@ export function createBookingHandlers(deps) {
     invoicePdfPath,
     sendFileWithCache
   } = deps;
+
+function buildClientReadModel(client, customer = null, group = null) {
+  if (!client) return null;
+  return {
+    ...client,
+    client_hash: computeClientHash(client),
+    display_name: normalizeText(customer?.name || group?.group_name) || "",
+    primary_email: normalizeEmail(customer?.email) || null,
+    primary_phone_number: normalizePhone(customer?.phone_number) || null
+  };
+}
 
 function buildCustomerReadModel(customer) {
   if (!customer) return null;
@@ -155,8 +168,8 @@ function rankConfidence(current, next) {
 }
 
 function upsertCandidate(candidateMap, customer, reason, confidence, score) {
-  if (!customer?.id) return;
-  const existing = candidateMap.get(customer.id) || {
+  if (!customer?.client_id) return;
+  const existing = candidateMap.get(customer.client_id) || {
     customer,
     reasons: [],
     confidence: "low",
@@ -165,7 +178,7 @@ function upsertCandidate(candidateMap, customer, reason, confidence, score) {
   if (!existing.reasons.includes(reason)) existing.reasons.push(reason);
   existing.confidence = rankConfidence(existing.confidence, confidence);
   existing.score = Math.max(existing.score, score);
-  candidateMap.set(customer.id, existing);
+  candidateMap.set(customer.client_id, existing);
 }
 
 function summarizeCandidates(candidateMap) {
@@ -178,7 +191,7 @@ function summarizeCandidates(candidateMap) {
       );
     })
     .map((entry) => ({
-      customer_id: entry.customer.id,
+      customer_client_id: entry.customer.client_id,
       confidence: entry.confidence,
       reasons: entry.reasons
     }));
@@ -244,8 +257,8 @@ function resolveCustomerForBookingSubmission(customers, payload, { normalizeEmai
     }
   }
 
-  const exactEmailIds = new Set(exactEmailMatches.map((customer) => customer.id));
-  const exactIntersection = exactPhoneMatches.filter((customer) => exactEmailIds.has(customer.id));
+  const exactEmailIds = new Set(exactEmailMatches.map((customer) => customer.client_id));
+  const exactIntersection = exactPhoneMatches.filter((customer) => exactEmailIds.has(customer.client_id));
 
   if (exactIntersection.length === 1) {
     return {
@@ -257,7 +270,7 @@ function resolveCustomerForBookingSubmission(customers, payload, { normalizeEmai
     };
   }
 
-  if (exactPhoneMatches.length === 1 && (exactEmailMatches.length === 0 || exactEmailIds.has(exactPhoneMatches[0].id))) {
+  if (exactPhoneMatches.length === 1 && (exactEmailMatches.length === 0 || exactEmailIds.has(exactPhoneMatches[0].client_id))) {
     return {
       decision: "matched_existing_customer",
       confidence: "high",
@@ -302,6 +315,79 @@ function resolveCustomerForBookingSubmission(customers, payload, { normalizeEmai
   };
 }
 
+function resolveBookingClientContext(store, booking) {
+  const client = (store.clients || []).find((item) => item.id === booking.client_id) || null;
+  const customer = (store.customers || []).find((item) => item.client_id === booking.client_id) || null;
+  const travelGroup = (store.travel_groups || []).find((item) => item.client_id === booking.client_id) || null;
+  return { client, customer, travelGroup };
+}
+
+function syncBookingClientSummary(store, booking) {
+  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  booking.client_type = client?.client_type || booking.client_type || null;
+  booking.client_display_name = travelGroup?.group_name || customer?.name || booking.client_display_name || "";
+  booking.client_primary_phone_number = customer?.phone_number || booking.client_primary_phone_number || null;
+  booking.client_primary_email = customer?.email || booking.client_primary_email || null;
+}
+
+function membersForTravelGroup(store, travelGroupId) {
+  return (store.travel_group_members || [])
+    .filter((member) => member.travel_group_id === travelGroupId)
+    .sort((a, b) => String(a.created_at || a.id || "").localeCompare(String(b.created_at || b.id || "")));
+}
+
+function buildTravelGroupPayload(store, travelGroup) {
+  const members = membersForTravelGroup(store, travelGroup.id);
+  const customerIds = new Set(members.map((member) => member.customer_client_id).filter(Boolean));
+  const memberCustomers = (store.customers || []).filter((customer) => customerIds.has(customer.client_id));
+  return { travelGroup, members, memberCustomers };
+}
+
+function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, computeClientHash, computeTravelGroupHash }) {
+  let { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  if (travelGroup && client) return { client, travelGroup, leadCustomer: customer };
+
+  const createdAt = nowIso();
+  client = {
+    id: `client_${randomUUID()}`,
+    client_type: "travel_group"
+  };
+  client.client_hash = computeClientHash(client);
+  travelGroup = {
+    id: `group_${randomUUID()}`,
+    client_id: client.id,
+    group_name: normalizeText(booking.client_display_name || customer?.name) || "Travel group",
+    preferred_language: customer?.preferred_language || null,
+    preferred_currency: booking.preferred_currency || customer?.preferred_currency || null,
+    timezone: customer?.timezone || null,
+    notes: null,
+    created_at: createdAt,
+    updated_at: createdAt,
+    archived_at: null
+  };
+  if (!Array.isArray(store.clients)) store.clients = [];
+  if (!Array.isArray(store.travel_groups)) store.travel_groups = [];
+  if (!Array.isArray(store.travel_group_members)) store.travel_group_members = [];
+  store.clients.push(client);
+  store.travel_groups.push(travelGroup);
+  if (customer) {
+    store.travel_group_members.push({
+      id: `groupmem_${randomUUID()}`,
+      travel_group_id: travelGroup.id,
+      customer_client_id: customer.client_id,
+      is_traveling: true,
+      member_roles: ["TravelGroupContact"],
+      notes: null,
+      created_at: createdAt,
+      updated_at: createdAt
+    });
+  }
+  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup, membersForTravelGroup(store, travelGroup.id));
+  booking.client_id = client.id;
+  syncBookingClientSummary(store, booking);
+  return { client, travelGroup, leadCustomer: customer };
+}
+
 async function handleCreateBooking(req, res) {
   let payload;
   try {
@@ -327,7 +413,7 @@ async function handleCreateBooking(req, res) {
     if (existingByKey) {
       sendJson(res, 200, {
         booking_id: existingByKey.id,
-        customer_id: existingByKey.customer_id,
+        client_id: existingByKey.client_id,
         status: "accepted",
         deduplicated: true,
         message: "Booking already captured with this idempotency key"
@@ -343,6 +429,7 @@ async function handleCreateBooking(req, res) {
   const inputPhoneNumber = normalizePhone(payload.phone_number);
   const inputPreferredLanguage = normalizeText(payload.preferred_language) || "English";
   const now = nowIso();
+  let client;
   let customer;
 
   if (customerResolution.matchedCustomer) {
@@ -350,11 +437,21 @@ async function handleCreateBooking(req, res) {
       normalizeEmail,
       normalizePhone
     });
-    const idx = store.customers.findIndex((c) => c.id === customer.id);
+    const idx = store.customers.findIndex((entry) => entry.client_id === customer.client_id);
     store.customers[idx] = customer;
+    client = (store.clients || []).find((entry) => entry.id === customer.client_id) || {
+      id: customer.client_id,
+      client_type: "customer"
+    };
+    client.client_hash = computeClientHash(client);
   } else {
+    client = {
+      id: `client_${randomUUID()}`,
+      client_type: "customer"
+    };
+    client.client_hash = computeClientHash(client);
     customer = {
-      id: `cust_${randomUUID()}`,
+      client_id: client.id,
       name: normalizeText(payload.name),
       email: normalizeEmail(payload.email),
       phone_number: inputPhoneNumber,
@@ -362,6 +459,8 @@ async function handleCreateBooking(req, res) {
       created_at: now,
       updated_at: now
     };
+    customer.customer_hash = computeCustomerHash(customer);
+    store.clients.push(client);
     store.customers.push(customer);
   }
 
@@ -371,7 +470,11 @@ async function handleCreateBooking(req, res) {
 
   const booking = {
     id: `booking_${randomUUID()}`,
-    customer_id: customer.id,
+    client_id: client.id,
+    client_type: client.client_type,
+    client_display_name: customer?.name || "",
+    client_primary_phone_number: customer?.phone_number || null,
+    client_primary_email: customer?.email || null,
     stage: STAGES.NEW,
     atp_staff: null,
     atp_staff_name: null,
@@ -381,7 +484,7 @@ async function handleCreateBooking(req, res) {
     destination: normalizeStringArray(payload.destination),
     style: normalizeStringArray(payload.style),
     travel_month: normalizeText(payload.travelMonth),
-    travelers: safeInt(payload.travelers),
+    travelers: normalizeText(payload.travelers) ? safeInt(payload.travelers) : null,
     duration: normalizeText(payload.duration),
     budget: normalizeText(payload.budget),
     preferred_currency: preferredCurrency,
@@ -406,8 +509,8 @@ async function handleCreateBooking(req, res) {
         decision: customerResolution.decision,
         confidence: customerResolution.confidence,
         reason: customerResolution.reason,
-        matched_customer_id: customerResolution.matchedCustomer?.id || null,
-        duplicate_candidate_customer_ids: customerResolution.duplicateCandidates.map((candidate) => candidate.customer_id),
+        matched_customer_client_id: customerResolution.matchedCustomer?.client_id || null,
+        duplicate_candidate_customer_client_ids: customerResolution.duplicateCandidates.map((candidate) => candidate.customer_client_id),
         duplicate_candidates: customerResolution.duplicateCandidates
       }
     },
@@ -422,9 +525,9 @@ async function handleCreateBooking(req, res) {
     addActivity(
       store,
       booking.id,
-      "CUSTOMER_DUPLICATE_REVIEW",
+      "CLIENT_DUPLICATE_REVIEW",
       "public_api",
-      `Possible existing customers: ${customerResolution.duplicateCandidates.map((candidate) => candidate.customer_id).join(", ")}`
+      `Possible existing customers: ${customerResolution.duplicateCandidates.map((candidate) => candidate.customer_client_id).join(", ")}`
     );
   }
 
@@ -433,7 +536,7 @@ async function handleCreateBooking(req, res) {
   sendJson(res, 201, {
     booking_id: booking.id,
     booking_hash: computeBookingHash(booking),
-    customer_id: customer.id,
+    client_id: client.id,
     status: "accepted",
     deduplicated: customerResolution.decision === "matched_existing_customer",
     atp_staff: booking.atp_staff_name,
@@ -477,8 +580,13 @@ async function handleGetBooking(req, res, [bookingId]) {
     return;
   }
 
-  const customer = store.customers.find((item) => item.id === booking.customer_id) || null;
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking), customer: buildCustomerReadModel(customer) });
+  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  sendJson(res, 200, {
+    booking: await buildBookingReadModel(booking),
+    client: buildClientReadModel(client, customer, travelGroup),
+    customer: buildCustomerReadModel(customer),
+    travelGroup: travelGroup || null
+  });
 }
 
 async function handleListBookingChatEvents(req, res, [bookingId]) {
@@ -498,13 +606,13 @@ async function handleListBookingChatEvents(req, res, [bookingId]) {
   }
 
   ensureMetaChatCollections(store);
-  const bookingCustomer = store.customers.find((item) => item.id === booking.customer_id) || null;
+  const bookingCustomer = (store.customers || []).find((item) => item.client_id === booking.client_id) || null;
   const requestUrl = new URL(req.url, "http://localhost");
   const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 100, 1, 500);
 
   const conversationItems = store.chat_conversations.filter((conversation) => {
     if (normalizeText(conversation.booking_id) === bookingId) return true;
-    if (normalizeText(conversation.customer_id) === normalizeText(booking.customer_id)) return true;
+    if (normalizeText(conversation.client_id) === normalizeText(booking.client_id)) return true;
 
     const channel = normalizeText(conversation.channel).toLowerCase();
     if (channel === "whatsapp" && bookingCustomer?.phone_number) {
@@ -526,7 +634,7 @@ async function handleListBookingChatEvents(req, res, [bookingId]) {
         id: conversation.id,
         channel,
         external_contact_id: conversation.external_contact_id || null,
-        customer_id: conversation.customer_id || null,
+        client_id: conversation.client_id || null,
         booking_id: conversation.booking_id || null,
         last_event_at: conversation.last_event_at || null,
         latest_preview: conversation.latest_preview || null,
@@ -588,6 +696,175 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
   await persistStore(store);
 
   sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+}
+
+async function handlePatchBookingClient(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+  const nextType = normalizeText(payload.client_type);
+  if (nextType !== "customer" && nextType !== "travel_group") {
+    sendJson(res, 422, { error: "Invalid client_type" });
+    return;
+  }
+
+  if (nextType === "travel_group") {
+    const { travelGroup } = ensureTravelGroupForBooking(store, booking, {
+      randomUUID,
+      nowIso,
+      computeClientHash,
+      computeTravelGroupHash
+    });
+    if (normalizeText(payload.group_name)) {
+      travelGroup.group_name = normalizeText(payload.group_name);
+      travelGroup.updated_at = nowIso();
+      travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup, membersForTravelGroup(store, travelGroup.id));
+    }
+    booking.updated_at = nowIso();
+    syncBookingClientSummary(store, booking);
+    await persistStore(store);
+    const { client, customer, travelGroup: currentGroup } = resolveBookingClientContext(store, booking);
+    sendJson(res, 200, {
+      booking: await buildBookingReadModel(booking),
+      client: buildClientReadModel(client, customer, currentGroup),
+      customer: buildCustomerReadModel(customer),
+      travelGroup: currentGroup,
+      ...buildTravelGroupPayload(store, currentGroup)
+    });
+    return;
+  }
+
+  const customerClientId = normalizeText(payload.customer_client_id);
+  if (!customerClientId) {
+    sendJson(res, 422, { error: "customer_client_id is required when switching to customer" });
+    return;
+  }
+  const customer = (store.customers || []).find((item) => item.client_id === customerClientId);
+  const client = (store.clients || []).find((item) => item.id === customerClientId && item.client_type === "customer");
+  if (!customer || !client) {
+    sendJson(res, 422, { error: "Customer client not found" });
+    return;
+  }
+  booking.client_id = customerClientId;
+  booking.updated_at = nowIso();
+  syncBookingClientSummary(store, booking);
+  await persistStore(store);
+  sendJson(res, 200, {
+    booking: await buildBookingReadModel(booking),
+    client: buildClientReadModel(client, customer, null),
+    customer: buildCustomerReadModel(customer),
+    travelGroup: null
+  });
+}
+
+async function handleCreateBookingGroupMember(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+  const { client, travelGroup } = ensureTravelGroupForBooking(store, booking, {
+    randomUUID,
+    nowIso,
+    computeClientHash,
+    computeTravelGroupHash
+  });
+
+  const customerName = normalizeText(payload.name);
+  if (!customerName) {
+    sendJson(res, 422, { error: "name is required" });
+    return;
+  }
+  const createdAt = nowIso();
+  const customerClient = {
+    id: `client_${randomUUID()}`,
+    client_type: "customer"
+  };
+  customerClient.client_hash = computeClientHash(customerClient);
+  const customer = {
+    client_id: customerClient.id,
+    name: customerName,
+    email: normalizeEmail(payload.email) || null,
+    phone_number: normalizePhone(payload.phone_number) || null,
+    preferred_language: normalizeText(payload.preferred_language) || null,
+    notes: normalizeText(payload.notes) || null,
+    created_at: createdAt,
+    updated_at: createdAt
+  };
+  customer.customer_hash = computeCustomerHash(customer);
+
+  const memberRoles = Array.isArray(payload.member_roles)
+    ? payload.member_roles.map((value) => normalizeText(value)).filter(Boolean)
+    : normalizeText(payload.member_role)
+      ? [normalizeText(payload.member_role)]
+      : ["other"];
+
+  const member = {
+    id: `groupmem_${randomUUID()}`,
+    travel_group_id: travelGroup.id,
+    customer_client_id: customer.client_id,
+    is_traveling: payload.is_traveling !== false,
+    member_roles: [...new Set(memberRoles)],
+    notes: normalizeText(payload.member_notes) || null,
+    created_at: createdAt,
+    updated_at: createdAt
+  };
+
+  store.clients.push(customerClient);
+  store.customers.push(customer);
+  store.travel_group_members.push(member);
+  travelGroup.updated_at = createdAt;
+  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup, membersForTravelGroup(store, travelGroup.id));
+  booking.updated_at = createdAt;
+  syncBookingClientSummary(store, booking);
+  await persistStore(store);
+
+  const payloadGroup = buildTravelGroupPayload(store, travelGroup);
+  sendJson(res, 201, {
+    booking: await buildBookingReadModel(booking),
+    client: buildClientReadModel(client, null, travelGroup),
+    customer: null,
+    travelGroup,
+    ...payloadGroup
+  });
 }
 
 async function handlePatchBookingOwner(req, res, [bookingId]) {
@@ -986,9 +1263,14 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
     return;
   }
   if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-  const customer = store.customers.find((item) => item.id === booking.customer_id);
-  if (!customer) {
-    sendJson(res, 422, { error: "Booking customer not found" });
+  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  const invoiceParty = customer || {
+    name: travelGroup?.group_name || booking.client_display_name || "client",
+    email: booking.client_primary_email || null,
+    phone_number: booking.client_primary_phone_number || null
+  };
+  if (!client) {
+    sendJson(res, 422, { error: "Booking client not found" });
     return;
   }
 
@@ -1004,14 +1286,14 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
   const invoice = {
     id: `inv_${randomUUID()}`,
     booking_id: bookingId,
-    customer_id: customer.id,
+    client_id: client.id,
     invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
     version: 1,
     status: "DRAFT",
     currency: safeCurrency(payload.currency),
     issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
     due_date: normalizeText(payload.due_date) || null,
-    title: normalizeText(payload.title) || `Invoice for ${normalizeText(customer.name) || "customer"}`,
+    title: normalizeText(payload.title) || `Invoice for ${normalizeText(invoiceParty.name) || "client"}`,
     notes: normalizeText(payload.notes),
     sent_to_customer: false,
     sent_to_customer_at: null,
@@ -1022,7 +1304,7 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
     updated_at: now
   };
 
-  await writeInvoicePdf(invoice, customer, booking);
+  await writeInvoicePdf(invoice, invoiceParty, booking);
   store.invoices.push(invoice);
   booking.updated_at = now;
   await persistStore(store);
@@ -1052,9 +1334,14 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     return;
   }
   if (!(await assertMatchingBookingHash(payload, booking, res))) return;
-  const customer = store.customers.find((item) => item.id === booking.customer_id);
-  if (!customer) {
-    sendJson(res, 422, { error: "Booking customer not found" });
+  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  const invoiceParty = customer || {
+    name: travelGroup?.group_name || booking.client_display_name || "client",
+    email: booking.client_primary_email || null,
+    phone_number: booking.client_primary_phone_number || null
+  };
+  if (!client) {
+    sendJson(res, 422, { error: "Booking client not found" });
     return;
   }
   const invoice = store.invoices.find((item) => item.id === invoiceId && item.booking_id === bookingId);
@@ -1117,7 +1404,7 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     invoice.total_amount_cents = totalAmountCents;
     invoice.due_amount_cents = dueAmountCents;
     invoice.version = Number(invoice.version || 1) + 1;
-    await writeInvoicePdf(invoice, customer, booking);
+    await writeInvoicePdf(invoice, invoiceParty, booking);
   }
   invoice.updated_at = nowIso();
   booking.updated_at = invoice.updated_at;
@@ -1141,10 +1428,15 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
-  const customer = store.customers.find((item) => item.id === invoice.customer_id) || null;
+  const bookingContext = booking ? resolveBookingClientContext(store, booking) : { customer: null, travelGroup: null };
+  const invoiceParty = bookingContext.customer || {
+    name: bookingContext.travelGroup?.group_name || booking?.client_display_name || "client",
+    email: booking?.client_primary_email || null,
+    phone_number: booking?.client_primary_phone_number || null
+  };
   const pdfPath = invoicePdfPath(invoice.id, invoice.version);
   // Always regenerate so PDF styling/content updates are reflected immediately.
-  await writeInvoicePdf(invoice, customer, booking);
+  await writeInvoicePdf(invoice, invoiceParty, booking);
   res.setHeader("Content-Disposition", `inline; filename=\"${invoice.invoice_number || invoice.id}.pdf\"`);
   await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store");
 }
@@ -1155,6 +1447,8 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
     handleListBookings,
     handleGetBooking,
     handleListBookingChatEvents,
+    handlePatchBookingClient,
+    handleCreateBookingGroupMember,
     handlePatchBookingStage,
     handlePatchBookingOwner,
     handlePatchBookingNotes,

@@ -113,8 +113,10 @@ The abstract model must keep core business entities separate from transport-only
 
 Examples:
 
-- `Booking`
+- `Client`
 - `Customer`
+- `TravelGroup`
+- `Booking`
 - `Tour`
 - `ATPStaff`
 - `Currency`

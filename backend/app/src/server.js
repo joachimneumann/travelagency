@@ -248,7 +248,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
     addActivity,
     persistStore,
     computeBookingHash,
+    computeClientHash,
     computeCustomerHash,
+    computeTravelGroupHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -308,6 +310,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     persistStore,
     randomUUID,
     nowIso,
+    computeClientHash,
     computeCustomerHash,
     computeTravelGroupHash,
     mkdir,
@@ -333,7 +336,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
     readBodyJson,
     persistStore,
     nowIso,
-    computeTravelGroupHash
+    computeTravelGroupHash,
+    computeClientHash,
+    randomUUID
   });
   const tourHandlers = createTourHandlers({
     normalizeText,
@@ -882,6 +887,7 @@ async function readBodyText(req) {
 async function readStore() {
   const raw = await readFile(DATA_PATH, "utf8");
   const parsed = JSON.parse(raw);
+  parsed.clients ||= [];
   parsed.customers ||= [];
   parsed.bookings ||= [];
   parsed.activities ||= [];
@@ -975,13 +981,13 @@ function nowIso() {
 
 function resolveCustomerByExternalContact(store, externalContactId) {
   if (!externalContactId) return null;
-  const exactMatches = store.customers.filter((customer) => isLikelyPhoneMatch(customer.phone_number, externalContactId));
+  const exactMatches = (store.customers || []).filter((customer) => isLikelyPhoneMatch(customer.phone_number, externalContactId));
   if (exactMatches.length === 1) return exactMatches[0];
   return null;
 }
 
-function resolveBookingForCustomer(store, customerId) {
-  if (!customerId) return null;
+function resolveBookingForClient(store, clientId) {
+  if (!clientId) return null;
   const activeStages = new Set([
     STAGES.NEW,
     STAGES.QUALIFIED,
@@ -992,7 +998,7 @@ function resolveBookingForCustomer(store, customerId) {
   ]);
 
   const matches = store.bookings
-    .filter((booking) => booking.customer_id === customerId)
+    .filter((booking) => booking.client_id === clientId)
     .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
   if (!matches.length) return null;
   const active = matches.find((booking) => activeStages.has(booking.stage));
@@ -1131,6 +1137,11 @@ function guessCountryFromRequest(req, ipAddress) {
 function safeInt(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function safeOptionalInt(value) {
+  if (!normalizeText(value)) return null;
+  return safeInt(value);
 }
 
 function safeFloat(value) {
@@ -2184,7 +2195,7 @@ function validateBookingInput(payload) {
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   if (!emailOk) return { ok: false, error: "Invalid email" };
 
-  const travelers = safeInt(payload.travelers);
+  const travelers = safeOptionalInt(payload.travelers);
   if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {
     return { ok: false, error: "Travelers must be between 1 and 30" };
   }
@@ -2690,13 +2701,29 @@ function canEditBooking(principal, booking, staffMember) {
   return false;
 }
 
-function getBookingCustomerLookup(store) {
-  return new Map(store.customers.map((customer) => [customer.id, customer]));
+function getClientLookup(store) {
+  return new Map((store.clients || []).map((client) => [client.id, client]));
+}
+
+function getCustomerLookup(store) {
+  return new Map((store.customers || []).map((customer) => [customer.client_id, customer]));
+}
+
+function getTravelGroupLookupByClient(store) {
+  return new Map((store.travel_groups || []).map((group) => [group.client_id, group]));
+}
+
+function computeClientHash(client) {
+  const payload = {
+    id: client?.id || null,
+    client_type: client?.client_type || null
+  };
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
 function computeCustomerHash(customer) {
   const payload = {
-    id: customer?.id || null,
+    client_id: customer?.client_id || null,
     name: customer?.name || null,
     photo_ref: customer?.photo_ref || null,
     title: customer?.title || null,
@@ -2735,7 +2762,7 @@ function computeTravelGroupHash(group, members = []) {
         .map((member) => ({
           id: member?.id || null,
           travel_group_id: member?.travel_group_id || null,
-          customer_id: member?.customer_id || null,
+          customer_client_id: member?.customer_client_id || null,
           is_traveling: member?.is_traveling ?? null,
           member_roles: Array.isArray(member?.member_roles) ? [...member.member_roles].sort() : [],
           notes: member?.notes || null,
@@ -2746,12 +2773,15 @@ function computeTravelGroupHash(group, members = []) {
     : [];
   const payload = {
     id: group?.id || null,
-    booking_id: group?.booking_id || null,
-    name: group?.name || null,
-    group_type: group?.group_type || null,
+    client_id: group?.client_id || null,
+    group_name: group?.group_name || null,
+    preferred_language: group?.preferred_language || null,
+    preferred_currency: group?.preferred_currency || null,
+    timezone: group?.timezone || null,
     notes: group?.notes || null,
     created_at: group?.created_at || null,
     updated_at: group?.updated_at || null,
+    archived_at: group?.archived_at || null,
     members: normalizedMembers
   };
   return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
@@ -2760,7 +2790,11 @@ function computeTravelGroupHash(group, members = []) {
 function computeBookingHash(booking) {
   const payload = {
     id: booking.id || null,
-    customer_id: booking.customer_id || null,
+    client_id: booking.client_id || null,
+    client_type: booking.client_type || null,
+    client_display_name: booking.client_display_name || null,
+    client_primary_phone_number: booking.client_primary_phone_number || null,
+    client_primary_email: booking.client_primary_email || null,
     stage: booking.stage || null,
     atp_staff: booking.atp_staff || booking.owner_id || null,
     atp_staff_name: booking.atp_staff_name || booking.owner_name || null,
@@ -2820,30 +2854,26 @@ function filterAndSortBookings(store, query) {
   const searchDigits = rawSearch.replace(/[^0-9]+/g, "");
   const searchLetters = rawSearch.replace(/[^a-z]+/g, "");
   const sort = normalizeText(query.get("sort")) || "created_at_desc";
-  const customersById = getBookingCustomerLookup(store);
+  const customersByClientId = getCustomerLookup(store);
   ensureMetaChatCollections(store);
 
   const conversationBookingIds = new Map();
   const conversationIdToConversation = new Map();
-  const bookingCustomerPhones = store.bookings.map((booking) => {
-    const customer = customersById.get(booking.customer_id);
-    return { bookingId: booking.id, phone: customer?.phone_number || "" };
-  });
-  const latestBookingByCustomer = new Map();
+  const latestBookingByClient = new Map();
   const sortedByRecency = [...store.bookings].sort(
     (a, b) =>
       String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
   );
   for (const booking of sortedByRecency) {
-    if (!latestBookingByCustomer.has(booking.customer_id)) {
-      latestBookingByCustomer.set(booking.customer_id, booking.id);
+    if (!latestBookingByClient.has(booking.client_id)) {
+      latestBookingByClient.set(booking.client_id, booking.id);
     }
   }
 
   const getLatestBookingForPhoneMatch = (phone) => {
     if (!phone) return null;
     for (const booking of sortedByRecency) {
-      const customer = customersById.get(booking.customer_id);
+      const customer = customersByClientId.get(booking.client_id);
       const storedPhone = customer?.phone_number || "";
       if (!storedPhone) continue;
       if (isLikelyPhoneMatch(storedPhone, phone)) return booking.id;
@@ -2859,9 +2889,9 @@ function filterAndSortBookings(store, query) {
     const linkedBookingId = normalizeText(conversation.booking_id);
     if (linkedBookingId) matchedBookingIds.add(linkedBookingId);
 
-    const linkedCustomerId = normalizeText(conversation.customer_id);
-    if (linkedCustomerId) {
-      const latestBookingId = latestBookingByCustomer.get(linkedCustomerId);
+    const linkedClientId = normalizeText(conversation.client_id);
+    if (linkedClientId) {
+      const latestBookingId = latestBookingByClient.get(linkedClientId);
       if (latestBookingId) {
         matchedBookingIds.add(latestBookingId);
       }
@@ -2936,7 +2966,7 @@ function filterAndSortBookings(store, query) {
     if (ownerId && booking.owner_id !== ownerId) return false;
     if (!search) return true;
 
-    const customer = customersById.get(booking.customer_id);
+    const customer = customersByClientId.get(booking.client_id);
     const hasDigits = /[0-9]/.test(search);
     const hasLetters = /[a-z]/.test(search);
     const haystack = [
@@ -2945,7 +2975,7 @@ function filterAndSortBookings(store, query) {
       ...normalizeStringArray(booking.style),
       booking.owner_name,
       booking.notes,
-      customer?.name,
+      booking.client_display_name,
       customer?.email,
       bookingChatTextMap.get(booking.id),
       booking.sla_due_at,
@@ -3104,7 +3134,7 @@ function findOrCreateMetaConversation(store, {
   externalConversationId = "",
   externalContactId = "",
   channelAccountId = "",
-  customerId = null,
+  clientId = null,
   bookingId = null
 }) {
   ensureMetaChatCollections(store);
@@ -3130,7 +3160,7 @@ function findOrCreateMetaConversation(store, {
       channel_account_id: normalizedAccountId || null,
       external_conversation_id: normalizedConversationId || normalizedContactId,
       external_contact_id: normalizedContactId,
-      customer_id: customerId || null,
+      client_id: clientId || null,
       booking_id: bookingId || null,
       assigned_atp_staff_id: null,
       latest_preview: null,
@@ -3142,7 +3172,7 @@ function findOrCreateMetaConversation(store, {
     return conversation;
   }
 
-  if (!conversation.customer_id && customerId) conversation.customer_id = customerId;
+  if (!conversation.client_id && clientId) conversation.client_id = clientId;
   if (!conversation.booking_id && bookingId) conversation.booking_id = bookingId;
   conversation.external_conversation_id = normalizedConversationId || conversation.external_conversation_id || normalizedContactId;
   conversation.updated_at = nowIso();
@@ -3241,13 +3271,13 @@ function findOrCreateWhatsAppConversation(store, account, waId) {
   const normalizedWaId = normalizeText(waId);
   if (!normalizedWaId) return null;
   const matchedCustomer = resolveCustomerByExternalContact(store, normalizedWaId);
-  const matchedBooking = resolveBookingForCustomer(store, matchedCustomer?.id || null);
+  const matchedBooking = resolveBookingForClient(store, matchedCustomer?.client_id || null);
   return findOrCreateMetaConversation(store, {
     channel: "whatsapp",
     externalConversationId: normalizedWaId,
     externalContactId: normalizedWaId,
     channelAccountId: account?.id || "",
-    customerId: matchedCustomer?.id || null,
+    clientId: matchedCustomer?.client_id || null,
     bookingId: matchedBooking?.id || null
   });
 }
@@ -3505,13 +3535,13 @@ function processMessengerMetaEntry(store, entry) {
     }
 
     const matchedCustomer = resolveCustomerByExternalContact(store, contactId);
-    const matchedBooking = resolveBookingForCustomer(store, matchedCustomer?.id || null);
+    const matchedBooking = resolveBookingForClient(store, matchedCustomer?.client_id || null);
     const conversation = findOrCreateMetaConversation(store, {
       channel: "messenger",
       externalConversationId: contactId,
       externalContactId: contactId,
       channelAccountId: account?.id || "",
-      customerId: matchedCustomer?.id || null,
+      clientId: matchedCustomer?.client_id || null,
       bookingId: matchedBooking?.id || null
     });
     if (!conversation) {

@@ -30,6 +30,10 @@ import (
 	total: >=0 & int
 }
 
+#BookingClientUpdateResponse: #BookingClientDetail
+
+#BookingGroupMemberCreateResponse: #BookingClientDetail
+
 #BookingChatEvent: {
 	id:             common.#Identifier
 	channel:        string
@@ -49,7 +53,7 @@ import (
 	id:                common.#Identifier
 	channel:           string
 	externalContactId?: string
-	customerId?:       common.#Identifier
+	clientId?:         common.#Identifier
 	bookingId?:        common.#Identifier
 	lastEventAt?:      common.#Timestamp
 	latestPreview?:    string
@@ -75,14 +79,17 @@ import (
 }
 
 #CustomerUpdateResponse: {
+	client: entities.#Client
 	customer: entities.#Customer
 }
 
 #CustomerPhotoUploadResponse: {
+	client: entities.#Client
 	customer: entities.#Customer
 }
 
 #CustomerConsentCreateResponse: {
+	client: entities.#Client
 	customer: entities.#Customer
 	consent: entities.#CustomerConsent
 }

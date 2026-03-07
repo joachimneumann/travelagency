@@ -615,9 +615,56 @@ export const BOOKING_SCHEMA = {
       "kind": "scalar",
       "typeName": "string",
       "isArray": false,
-      "name": "customerId",
+      "name": "client_id",
       "required": true,
-      "wireName": "customerId"
+      "wireName": "client_id"
+    },
+    {
+      "kind": "enum",
+      "typeName": "ClientType",
+      "isArray": false,
+      "enumValues": [
+        "customer",
+        "travel_group"
+      ],
+      "options": [
+        {
+          "value": "customer",
+          "label": "customer"
+        },
+        {
+          "value": "travel_group",
+          "label": "travel_group"
+        }
+      ],
+      "name": "client_type",
+      "required": false,
+      "wireName": "client_type"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "client_display_name",
+      "required": false,
+      "wireName": "client_display_name"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "client_primary_phone_number",
+      "required": false,
+      "wireName": "client_primary_phone_number"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "format": "email",
+      "name": "client_primary_email",
+      "required": false,
+      "wireName": "client_primary_email"
     },
     {
       "kind": "enum",

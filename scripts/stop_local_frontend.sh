@@ -2,21 +2,23 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.local-caddy.yml}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-travelagency_frontend}"
 
 stop_compose_frontend() {
   if [ ! -f "$COMPOSE_FILE" ]; then
     return
   fi
 
-  if ! command -v docker >/dev/null 2>&1; then
+  if ! docker_daemon_available; then
     return
   fi
 
   (
     cd "$ROOT_DIR"
-    FRONTEND_PORT="$FRONTEND_PORT" docker compose -f "$COMPOSE_FILE" down --remove-orphans
+    FRONTEND_PORT="$FRONTEND_PORT" docker_compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" down --remove-orphans
   ) >/dev/null 2>&1 || true
 }
 

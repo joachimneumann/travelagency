@@ -34,10 +34,10 @@ struct BookingsListView: View {
                         BookingDetailView(bookingID: booking.id)
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(booking.destination)
+                            Text(displayBookingTitle(for: booking))
                                 .font(.headline)
                                 .foregroundStyle(.primary)
-                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.assignedStaffName ?? "Unassigned")")
+                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.client_display_name ?? "Unassigned client")")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
@@ -55,6 +55,11 @@ struct BookingsListView: View {
         }
     }
 
+}
+
+private func displayBookingTitle(for booking: Booking) -> String {
+    let destinations = (booking.destination ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    return destinations.isEmpty ? "Booking" : destinations.joined(separator: ", ")
 }
 
 private struct StandardNavigationTitleDisplayModeModifier: ViewModifier {
@@ -138,9 +143,9 @@ struct CustomersListView: View {
                     }
                 }
 
-                ForEach(customers, id: \.id) { customer in
+                ForEach(customers, id: \.client_id) { customer in
                     NavigationLink {
-                        BookingCustomerDetailView(customer: customer)
+                        BookingCustomerDetailView(customerClientID: customer.client_id, initialCustomer: customer)
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(displayName(for: customer))
@@ -167,7 +172,7 @@ struct CustomersListView: View {
     private func displayName(for customer: Customer) -> String {
         let name = customer.name.trimmingCharacters(in: .whitespacesAndNewlines)
         if !name.isEmpty { return name }
-        return customer.email ?? customer.phone_number ?? customer.id
+        return customer.email ?? customer.phone_number ?? customer.client_id
     }
 
     private func subtitle(for customer: Customer) -> String {
@@ -178,6 +183,6 @@ struct CustomersListView: View {
         }
         if !email.isEmpty { return email }
         if !phone.isEmpty { return phone }
-        return customer.id
+        return customer.client_id
     }
 }
