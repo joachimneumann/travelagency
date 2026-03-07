@@ -2,6 +2,15 @@ backend/app/data/invoices/
 backend/app/data/store.json
 .env.staging
 backend/app/node_modules/
+backend/app/data/*
+!backend/app/data/tours/
+!backend/app/data/tours/**
+backend/app/data/store.json
+backend/app/data/store.json.bak_*
+backend/app/data/consent-evidence/
+backend/app/data/customer-photos/
+backend/app/data/invoices/
+backend/app/data/tmp/
 __pycache__/
 *.xcuserstate
 *.xccheckout
