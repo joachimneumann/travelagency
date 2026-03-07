@@ -288,6 +288,49 @@ export const GENERATED_API_ENDPOINTS = {
       }
     ]
   },
+  "travel_groups": {
+    "key": "travel_groups",
+    "path": "/api/v1/travel_groups",
+    "method": "GET",
+    "authenticated": true,
+    "requestType": null,
+    "responseType": "TravelGroupList",
+    "parameters": [
+
+    ]
+  },
+  "travel_group_detail": {
+    "key": "travel_group_detail",
+    "path": "/api/v1/travel_groups/{travelGroupId}",
+    "method": "GET",
+    "authenticated": true,
+    "requestType": null,
+    "responseType": "TravelGroupDetail",
+    "parameters": [
+      {
+        "name": "travelGroupId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "travel_group_update": {
+    "key": "travel_group_update",
+    "path": "/api/v1/travel_groups/{travelGroupId}",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "TravelGroupUpdateRequest",
+    "responseType": "TravelGroupDetail",
+    "parameters": [
+      {
+        "name": "travelGroupId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
   "tours": {
     "key": "tours",
     "path": "/api/v1/tours",
@@ -682,6 +725,57 @@ export function customerConsentCreateRequest({ baseURL = '', params = {}, query 
   return {
     key: "customer_consent_create",
     method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelGroupsPath(params = {}) {
+  return buildPath("/api/v1/travel_groups", params);
+}
+
+export function travelGroupsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelGroupsPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_groups",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelGroupDetailPath(params = {}) {
+  return buildPath("/api/v1/travel_groups/{travelGroupId}", params);
+}
+
+export function travelGroupDetailRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelGroupDetailPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_group_detail",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function travelGroupUpdatePath(params = {}) {
+  return buildPath("/api/v1/travel_groups/{travelGroupId}", params);
+}
+
+export function travelGroupUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelGroupUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_group_update",
+    method: "PATCH",
     authenticated: true,
     url,
     headers,

@@ -309,6 +309,49 @@ export const GENERATED_API_ENDPOINTS = [
     ]
   },
   {
+    "key": "travel_groups",
+    "path": "/api/v1/travel_groups",
+    "method": "GET",
+    "authenticated": true,
+    "requestType": null,
+    "responseType": "TravelGroupList",
+    "parameters": [
+
+    ]
+  },
+  {
+    "key": "travel_group_detail",
+    "path": "/api/v1/travel_groups/{travelGroupId}",
+    "method": "GET",
+    "authenticated": true,
+    "requestType": null,
+    "responseType": "TravelGroupDetail",
+    "parameters": [
+      {
+        "name": "travelGroupId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  {
+    "key": "travel_group_update",
+    "path": "/api/v1/travel_groups/{travelGroupId}",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "TravelGroupUpdateRequest",
+    "responseType": "TravelGroupDetail",
+    "parameters": [
+      {
+        "name": "travelGroupId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  {
     "key": "tours",
     "path": "/api/v1/tours",
     "method": "GET",
@@ -428,7 +471,7 @@ export const PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA = {
     {
       "kind": "scalar",
       "typeName": "string",
-      "isArray": false,
+      "isArray": true,
       "name": "destination",
       "required": false,
       "wireName": "destination"
@@ -436,7 +479,7 @@ export const PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA = {
     {
       "kind": "scalar",
       "typeName": "string",
-      "isArray": false,
+      "isArray": true,
       "name": "style",
       "required": false,
       "wireName": "style"
@@ -780,9 +823,9 @@ export const BOOKING_PRICING_UPDATE_REQUEST_SCHEMA = {
       "kind": "scalar",
       "typeName": "string",
       "isArray": false,
-      "name": "bookingHash",
+      "name": "booking_hash",
       "required": false,
-      "wireName": "bookingHash"
+      "wireName": "booking_hash"
     },
     {
       "kind": "transport",
@@ -809,9 +852,9 @@ export const BOOKING_OFFER_UPDATE_REQUEST_SCHEMA = {
       "kind": "scalar",
       "typeName": "string",
       "isArray": false,
-      "name": "bookingHash",
+      "name": "booking_hash",
       "required": false,
-      "wireName": "bookingHash"
+      "wireName": "booking_hash"
     },
     {
       "kind": "transport",
@@ -1019,6 +1062,14 @@ export const CUSTOMER_UPDATE_REQUEST_SCHEMA = {
   "module": "api",
   "sourceType": "openapi.components.schemas.CustomerUpdateRequest",
   "fields": [
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "customer_hash",
+      "required": false,
+      "wireName": "customer_hash"
+    },
     {
       "kind": "scalar",
       "typeName": "string",
@@ -5897,6 +5948,14 @@ export const CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA = {
   "sourceType": "openapi.components.schemas.CustomerPhotoUploadRequest",
   "fields": [
     {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "customer_hash",
+      "required": false,
+      "wireName": "customer_hash"
+    },
+    {
       "kind": "transport",
       "typeName": "EvidenceUpload",
       "isArray": false,
@@ -5946,6 +6005,14 @@ export const CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA = {
   "module": "api",
   "sourceType": "openapi.components.schemas.CustomerConsentCreateRequest",
   "fields": [
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "customer_hash",
+      "required": false,
+      "wireName": "customer_hash"
+    },
     {
       "kind": "enum",
       "typeName": "CustomerConsentType",
@@ -6053,6 +6120,14 @@ export const CUSTOMER_CONSENT_CREATE_RESPONSE_SCHEMA = {
   "fields": [
     {
       "kind": "transport",
+      "typeName": "Customer",
+      "isArray": false,
+      "name": "customer",
+      "required": true,
+      "wireName": "customer"
+    },
+    {
+      "kind": "transport",
       "typeName": "CustomerConsent",
       "isArray": false,
       "name": "consent",
@@ -6064,6 +6139,162 @@ export const CUSTOMER_CONSENT_CREATE_RESPONSE_SCHEMA = {
 
 export function validateCustomerConsentCreateResponse(value) {
   return __validateShape(value, CUSTOMER_CONSENT_CREATE_RESPONSE_SCHEMA);
+}
+
+export const TRAVEL_GROUP_LIST_SCHEMA = {
+  "name": "TravelGroupList",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "openapi.components.schemas.TravelGroupList",
+  "fields": [
+    {
+      "kind": "transport",
+      "typeName": "TravelGroup",
+      "isArray": true,
+      "name": "items",
+      "required": false,
+      "wireName": "items"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
+      "name": "total",
+      "required": true,
+      "wireName": "total"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
+      "name": "page",
+      "required": true,
+      "wireName": "page"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
+      "name": "page_size",
+      "required": true,
+      "wireName": "page_size"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
+      "name": "total_pages",
+      "required": true,
+      "wireName": "total_pages"
+    }
+  ]
+};
+
+export function validateTravelGroupList(value) {
+  return __validateShape(value, TRAVEL_GROUP_LIST_SCHEMA);
+}
+
+export const TRAVEL_GROUP_DETAIL_SCHEMA = {
+  "name": "TravelGroupDetail",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "openapi.components.schemas.TravelGroupDetail",
+  "fields": [
+    {
+      "kind": "transport",
+      "typeName": "TravelGroup",
+      "isArray": false,
+      "name": "travel_group",
+      "required": true,
+      "wireName": "travel_group"
+    },
+    {
+      "kind": "transport",
+      "typeName": "TravelGroupMember",
+      "isArray": true,
+      "name": "members",
+      "required": false,
+      "wireName": "members"
+    }
+  ]
+};
+
+export function validateTravelGroupDetail(value) {
+  return __validateShape(value, TRAVEL_GROUP_DETAIL_SCHEMA);
+}
+
+export const TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA = {
+  "name": "TravelGroupUpdateRequest",
+  "domain": "api",
+  "module": "api",
+  "sourceType": "openapi.components.schemas.TravelGroupUpdateRequest",
+  "fields": [
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "travel_group_hash",
+      "required": false,
+      "wireName": "travel_group_hash"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "name",
+      "required": false,
+      "wireName": "name"
+    },
+    {
+      "kind": "enum",
+      "typeName": "TravelGroupType",
+      "isArray": false,
+      "enumValues": [
+        "family",
+        "friends",
+        "corporate",
+        "school",
+        "other"
+      ],
+      "options": [
+        {
+          "value": "family",
+          "label": "family"
+        },
+        {
+          "value": "friends",
+          "label": "friends"
+        },
+        {
+          "value": "corporate",
+          "label": "corporate"
+        },
+        {
+          "value": "school",
+          "label": "school"
+        },
+        {
+          "value": "other",
+          "label": "other"
+        }
+      ],
+      "name": "group_type",
+      "required": false,
+      "wireName": "group_type"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "notes",
+      "required": false,
+      "wireName": "notes"
+    }
+  ]
+};
+
+export function validateTravelGroupUpdateRequest(value) {
+  return __validateShape(value, TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA);
 }
 
 export const TOUR_DETAIL_SCHEMA = {

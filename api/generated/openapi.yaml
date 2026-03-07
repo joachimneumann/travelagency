@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-07T01:36:57Z
+# 2026-03-07T06:18:58Z
 
 ---
 openapi: 3.1.0
@@ -3115,6 +3115,9 @@ components:
           type: string
         name:
           type: string
+        customer_hash:
+          type: string
+          nullable: true
         photo_ref:
           type: string
           nullable: true
@@ -3277,6 +3280,9 @@ components:
           type: string
         booking_id:
           type: string
+        travel_group_hash:
+          type: string
+          nullable: true
         name:
           type: string
           nullable: true
@@ -3369,7 +3375,7 @@ components:
       properties:
         id:
           type: string
-        bookingHash:
+        booking_hash:
           type: string
           nullable: true
         customerId:
@@ -3383,11 +3389,13 @@ components:
           type: string
           nullable: true
         destination:
-          type: string
-          nullable: true
+          type: array
+          items:
+            type: string
         style:
-          type: string
-          nullable: true
+          type: array
+          items:
+            type: string
         travelMonth:
           type: string
           nullable: true
@@ -3870,11 +3878,13 @@ components:
       required: []
       properties:
         destination:
-          type: string
-          nullable: true
+          type: array
+          items:
+            type: string
         style:
-          type: string
-          nullable: true
+          type: array
+          items:
+            type: string
         travelMonth:
           type: string
           nullable: true
@@ -3929,7 +3939,7 @@ components:
       required:
       - pricing
       properties:
-        bookingHash:
+        booking_hash:
           type: string
           nullable: true
         pricing:
@@ -3939,7 +3949,7 @@ components:
       required:
       - offer
       properties:
-        bookingHash:
+        booking_hash:
           type: string
           nullable: true
         offer:
@@ -3948,6 +3958,9 @@ components:
       type: object
       required: []
       properties:
+        customer_hash:
+          type: string
+          nullable: true
         name:
           type: string
           nullable: true
@@ -4043,6 +4056,9 @@ components:
       type: object
       required: []
       properties:
+        customer_hash:
+          type: string
+          nullable: true
         photo_upload:
           "$ref": "#/components/schemas/EvidenceUpload"
           nullable: true
@@ -4055,6 +4071,9 @@ components:
       - consent_type
       - status
       properties:
+        customer_hash:
+          type: string
+          nullable: true
         consent_type:
           "$ref": "#/components/schemas/CustomerConsentType"
         status:
@@ -4089,10 +4108,60 @@ components:
     CustomerConsentCreateResponse:
       type: object
       required:
+      - customer
       - consent
       properties:
+        customer:
+          "$ref": "#/components/schemas/Customer"
         consent:
           "$ref": "#/components/schemas/CustomerConsent"
+    TravelGroupList:
+      type: object
+      required:
+      - total
+      - page
+      - page_size
+      - total_pages
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelGroup"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+    TravelGroupDetail:
+      type: object
+      required:
+      - travel_group
+      properties:
+        travel_group:
+          "$ref": "#/components/schemas/TravelGroup"
+        members:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelGroupMember"
+    TravelGroupUpdateRequest:
+      type: object
+      required: []
+      properties:
+        travel_group_hash:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        group_type:
+          "$ref": "#/components/schemas/TravelGroupType"
+          nullable: true
+        notes:
+          type: string
+          nullable: true
     ErrorResponse:
       type: object
       required:
@@ -4736,6 +4805,105 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/CustomerConsentCreateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/travel_groups":
+    get:
+      operationId: travel_groups
+      summary: Travel Groups
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelGroupList"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/travel_groups/{travelGroupId}":
+    get:
+      operationId: travel_group_detail
+      summary: Travel Group Detail
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: travelGroupId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelGroupDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: travel_group_update
+      summary: Travel Group Update
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: travelGroupId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelGroupUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelGroupDetail"
         '401':
           description: Unauthorized
           content:

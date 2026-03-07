@@ -104,6 +104,7 @@ IR: {
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
 					{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
 					{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "first_name", kind: "scalar", typeName: "string", required: false},
@@ -174,6 +175,7 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "travel_group_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "group_type", kind: "enum", typeName: "TravelGroupType", required: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
@@ -228,13 +230,13 @@ IR: {
 			sourceType: "entities.#Booking"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
+				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "customerId", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
 				{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "atpStaffName", kind: "scalar", typeName: "string", required: false},
-				{name: "destination", kind: "scalar", typeName: "string", required: false},
-				{name: "style", kind: "scalar", typeName: "string", required: false},
+				{name: "destination", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
 				{name: "travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "duration", kind: "scalar", typeName: "string", required: false},
@@ -567,8 +569,8 @@ IR: {
 			module:     "api"
 			sourceType: "api.#PublicBookingCreateRequest"
 			fields: [
-				{name: "destination", kind: "scalar", typeName: "string", required: false},
-				{name: "style", kind: "scalar", typeName: "string", required: false},
+				{name: "destination", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
 				{name: "travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "duration", kind: "scalar", typeName: "string", required: false},
@@ -593,7 +595,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingPricingUpdateRequest"
 			fields: [
-				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
+				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "pricing", kind: "valueObject", typeName: "BookingPricing", required: true},
 			]
 		},
@@ -603,7 +605,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingOfferUpdateRequest"
 			fields: [
-				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
+				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
 			]
 		},
@@ -613,6 +615,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#CustomerUpdateRequest"
 			fields: [
+				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
@@ -657,6 +660,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#CustomerPhotoUploadRequest"
 			fields: [
+				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "photo_upload", kind: "transport", typeName: "EvidenceUpload", required: false},
 				{name: "photo", kind: "transport", typeName: "EvidenceUpload", required: false},
 			]
@@ -667,6 +671,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#CustomerConsentCreateRequest"
 			fields: [
+				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
 				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
 				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
@@ -699,7 +704,43 @@ IR: {
 			module:     "api"
 			sourceType: "api.#CustomerConsentCreateResponse"
 			fields: [
+				{name: "customer", kind: "entity", typeName: "Customer", required: true},
 				{name: "consent", kind: "entity", typeName: "CustomerConsent", required: true},
+			]
+		},
+		{
+			name:       "TravelGroupList"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelGroupList"
+			fields: [
+				{name: "items", kind: "entity", typeName: "TravelGroup", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+				{name: "page", kind: "scalar", typeName: "int", required: true},
+				{name: "page_size", kind: "scalar", typeName: "int", required: true},
+				{name: "total_pages", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
+			name:       "TravelGroupDetail"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelGroupDetail"
+			fields: [
+				{name: "travel_group", kind: "entity", typeName: "TravelGroup", required: true},
+				{name: "members", kind: "entity", typeName: "TravelGroupMember", required: true, isArray: true},
+			]
+		},
+		{
+			name:       "TravelGroupUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelGroupUpdateRequest"
+			fields: [
+				{name: "travel_group_hash", kind: "scalar", typeName: "string", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "group_type", kind: "enum", typeName: "TravelGroupType", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

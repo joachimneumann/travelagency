@@ -1,3 +1,5 @@
+import { canonicalPhoneForMatch, normalizePhoneDigits } from "../../domain/phone_matching.js";
+
 export function createBookingHandlers(deps) {
   const {
     readBodyJson,
@@ -5,9 +7,9 @@ export function createBookingHandlers(deps) {
     validateBookingInput,
     readStore,
     normalizeText,
+    normalizeStringArray,
     getRequestIpAddress,
     guessCountryFromRequest,
-    findMatchingCustomer,
     normalizeEmail,
     normalizePhone,
     nowIso,
@@ -21,6 +23,7 @@ export function createBookingHandlers(deps) {
     addActivity,
     persistStore,
     computeBookingHash,
+    computeCustomerHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -66,11 +69,236 @@ function buildCustomerReadModel(customer) {
   if (!customer) return null;
   return {
     ...customer,
+    customer_hash: computeCustomerHash(customer),
     name: normalizeText(customer.name) || "",
     title: normalizeText(customer.title) || null,
     email: normalizeEmail(customer.email) || null,
     phone_number: normalizePhone(customer.phone_number) || null,
     preferred_language: normalizeText(customer.preferred_language) || null
+  };
+}
+
+function normalizeNameForMatch(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function compactNameForMatch(value) {
+  return normalizeNameForMatch(value).replace(/\s+/g, "");
+}
+
+function levenshteinDistance(left, right) {
+  const a = String(left || "");
+  const b = String(right || "");
+  if (!a) return b.length;
+  if (!b) return a.length;
+  const costs = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    let diagonal = costs[0];
+    costs[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const current = costs[j];
+      if (a[i - 1] === b[j - 1]) {
+        costs[j] = diagonal;
+      } else {
+        costs[j] = Math.min(costs[j] + 1, costs[j - 1] + 1, diagonal + 1);
+      }
+      diagonal = current;
+    }
+  }
+  return costs[b.length];
+}
+
+function namesLookSimilar(left, right) {
+  const normalizedLeft = normalizeNameForMatch(left);
+  const normalizedRight = normalizeNameForMatch(right);
+  if (!normalizedLeft || !normalizedRight) return false;
+  if (normalizedLeft === normalizedRight) return true;
+
+  const leftTokens = normalizedLeft.split(" ").filter(Boolean);
+  const rightTokens = normalizedRight.split(" ").filter(Boolean);
+  if (leftTokens.length && rightTokens.length) {
+    const sortedLeft = [...leftTokens].sort().join(" ");
+    const sortedRight = [...rightTokens].sort().join(" ");
+    if (sortedLeft === sortedRight) return true;
+  }
+
+  const compactLeft = compactNameForMatch(left);
+  const compactRight = compactNameForMatch(right);
+  if (!compactLeft || !compactRight) return false;
+
+  const maxLength = Math.max(compactLeft.length, compactRight.length);
+  if (maxLength < 4) return false;
+  const threshold = maxLength <= 8 ? 1 : 2;
+  return levenshteinDistance(compactLeft, compactRight) <= threshold;
+}
+
+function exactPhoneMatch(left, right) {
+  const leftCanonical = canonicalPhoneForMatch(left);
+  const rightCanonical = canonicalPhoneForMatch(right);
+  if (leftCanonical && rightCanonical && leftCanonical === rightCanonical) {
+    return true;
+  }
+  const leftDigits = normalizePhoneDigits(left);
+  const rightDigits = normalizePhoneDigits(right);
+  return Boolean(leftDigits && rightDigits && leftDigits === rightDigits);
+}
+
+function rankConfidence(current, next) {
+  const weights = { low: 1, medium: 2, high: 3 };
+  return (weights[next] || 0) > (weights[current] || 0) ? next : current;
+}
+
+function upsertCandidate(candidateMap, customer, reason, confidence, score) {
+  if (!customer?.id) return;
+  const existing = candidateMap.get(customer.id) || {
+    customer,
+    reasons: [],
+    confidence: "low",
+    score: 0
+  };
+  if (!existing.reasons.includes(reason)) existing.reasons.push(reason);
+  existing.confidence = rankConfidence(existing.confidence, confidence);
+  existing.score = Math.max(existing.score, score);
+  candidateMap.set(customer.id, existing);
+}
+
+function summarizeCandidates(candidateMap) {
+  return Array.from(candidateMap.values())
+    .sort((left, right) => {
+      const scoreDelta = right.score - left.score;
+      if (scoreDelta !== 0) return scoreDelta;
+      return String(right.customer.updated_at || right.customer.created_at || "").localeCompare(
+        String(left.customer.updated_at || left.customer.created_at || "")
+      );
+    })
+    .map((entry) => ({
+      customer_id: entry.customer.id,
+      confidence: entry.confidence,
+      reasons: entry.reasons
+    }));
+}
+
+function mergeMatchedCustomer(existingCustomer, payload, now, preferredLanguage, { normalizeEmail, normalizePhone }) {
+  return {
+    ...existingCustomer,
+    name: String(existingCustomer.name || "").trim() || String(payload.name || "").trim(),
+    email: normalizeEmail(existingCustomer.email) || normalizeEmail(payload.email) || null,
+    phone_number: normalizePhone(existingCustomer.phone_number) || normalizePhone(payload.phone_number) || null,
+    preferred_language: String(existingCustomer.preferred_language || "").trim() || preferredLanguage || null,
+    updated_at: now
+  };
+}
+
+function resolveCustomerForBookingSubmission(customers, payload, { normalizeEmail, isLikelyPhoneMatch }) {
+  const submittedEmail = normalizeEmail(payload.email);
+  const submittedPhoneRaw = payload.phone_number;
+  const submittedName = normalizeNameForMatch(payload.name);
+  const candidateMap = new Map();
+  const exactPhoneMatches = [];
+  const exactEmailMatches = [];
+
+  for (const customer of Array.isArray(customers) ? customers : []) {
+    const customerPhone = customer?.phone_number;
+    const customerEmail = customer?.email;
+    const customerName = customer?.name;
+    const normalizedCustomerName = normalizeNameForMatch(customerName);
+
+    const hasExactPhone = Boolean(submittedPhoneRaw && customerPhone && exactPhoneMatch(customerPhone, submittedPhoneRaw));
+    const hasExactEmail = Boolean(submittedEmail && customerEmail && normalizeEmail(customerEmail) === submittedEmail);
+    const hasSimilarPhone = Boolean(
+      submittedPhoneRaw &&
+      customerPhone &&
+      !hasExactPhone &&
+      isLikelyPhoneMatch(customerPhone, submittedPhoneRaw)
+    );
+    const hasExactName = Boolean(submittedName && normalizedCustomerName && normalizedCustomerName === submittedName);
+    const hasSimilarName = Boolean(
+      submittedName &&
+      normalizedCustomerName &&
+      !hasExactName &&
+      namesLookSimilar(customerName, payload.name)
+    );
+
+    if (hasExactPhone) {
+      exactPhoneMatches.push(customer);
+      upsertCandidate(candidateMap, customer, "exact_phone", "high", 100);
+    } else if (hasSimilarPhone) {
+      upsertCandidate(candidateMap, customer, "similar_phone", "medium", 60);
+    }
+
+    if (hasExactEmail) {
+      exactEmailMatches.push(customer);
+      upsertCandidate(candidateMap, customer, "exact_email", "high", 90);
+    }
+
+    if (hasExactName && !hasExactPhone && !hasExactEmail) {
+      upsertCandidate(candidateMap, customer, "exact_name", "low", 35);
+    } else if (hasSimilarName && !hasExactPhone && !hasExactEmail) {
+      upsertCandidate(candidateMap, customer, "similar_name", "low", 25);
+    }
+  }
+
+  const exactEmailIds = new Set(exactEmailMatches.map((customer) => customer.id));
+  const exactIntersection = exactPhoneMatches.filter((customer) => exactEmailIds.has(customer.id));
+
+  if (exactIntersection.length === 1) {
+    return {
+      decision: "matched_existing_customer",
+      confidence: "high",
+      reason: "exact_phone_and_email",
+      matchedCustomer: exactIntersection[0],
+      duplicateCandidates: []
+    };
+  }
+
+  if (exactPhoneMatches.length === 1 && (exactEmailMatches.length === 0 || exactEmailIds.has(exactPhoneMatches[0].id))) {
+    return {
+      decision: "matched_existing_customer",
+      confidence: "high",
+      reason: "exact_phone",
+      matchedCustomer: exactPhoneMatches[0],
+      duplicateCandidates: []
+    };
+  }
+
+  if (exactEmailMatches.length === 1) {
+    const emailMatch = exactEmailMatches[0];
+    const submittedPhone = canonicalPhoneForMatch(submittedPhoneRaw);
+    const existingPhone = canonicalPhoneForMatch(emailMatch.phone_number);
+    if (!submittedPhone || !existingPhone || submittedPhone === existingPhone) {
+      return {
+        decision: "matched_existing_customer",
+        confidence: "high",
+        reason: "exact_email",
+        matchedCustomer: emailMatch,
+        duplicateCandidates: []
+      };
+    }
+  }
+
+  const duplicateCandidates = summarizeCandidates(candidateMap);
+  if (duplicateCandidates.length) {
+    return {
+      decision: "created_new_customer_with_duplicate_candidate",
+      confidence: duplicateCandidates[0].confidence,
+      reason: duplicateCandidates[0].reasons[0] || "possible_duplicate",
+      matchedCustomer: null,
+      duplicateCandidates
+    };
+  }
+
+  return {
+    decision: "created_new_customer",
+    confidence: "low",
+    reason: "no_match",
+    matchedCustomer: null,
+    duplicateCandidates: []
   };
 }
 
@@ -108,20 +336,20 @@ async function handleCreateBooking(req, res) {
     }
   }
 
-  const customerMatch = findMatchingCustomer(store.customers, payload);
+  const customerResolution = resolveCustomerForBookingSubmission(store.customers, payload, {
+    normalizeEmail,
+    isLikelyPhoneMatch
+  });
   const inputPhoneNumber = normalizePhone(payload.phone_number);
   const inputPreferredLanguage = normalizeText(payload.preferred_language) || "English";
+  const now = nowIso();
   let customer;
 
-  if (customerMatch) {
-    customer = {
-      ...customerMatch,
-      name: normalizeText(payload.name) || customerMatch.name,
-      email: normalizeEmail(payload.email) || customerMatch.email,
-      phone_number: inputPhoneNumber || customerMatch.phone_number,
-      preferred_language: inputPreferredLanguage || customerMatch.preferred_language,
-      updated_at: nowIso()
-    };
+  if (customerResolution.matchedCustomer) {
+    customer = mergeMatchedCustomer(customerResolution.matchedCustomer, payload, now, inputPreferredLanguage, {
+      normalizeEmail,
+      normalizePhone
+    });
     const idx = store.customers.findIndex((c) => c.id === customer.id);
     store.customers[idx] = customer;
   } else {
@@ -131,8 +359,8 @@ async function handleCreateBooking(req, res) {
       email: normalizeEmail(payload.email),
       phone_number: inputPhoneNumber,
       preferred_language: inputPreferredLanguage,
-      created_at: nowIso(),
-      updated_at: nowIso()
+      created_at: now,
+      updated_at: now
     };
     store.customers.push(customer);
   }
@@ -150,8 +378,8 @@ async function handleCreateBooking(req, res) {
     owner_id: null,
     owner_name: null,
     sla_due_at: computeSlaDueAt(STAGES.NEW),
-    destination: normalizeText(payload.destination),
-    style: normalizeText(payload.style),
+    destination: normalizeStringArray(payload.destination),
+    style: normalizeStringArray(payload.style),
     travel_month: normalizeText(payload.travelMonth),
     travelers: safeInt(payload.travelers),
     duration: normalizeText(payload.duration),
@@ -169,15 +397,36 @@ async function handleCreateBooking(req, res) {
       utm_campaign: normalizeText(payload.utm_campaign),
       referrer: normalizeText(payload.referrer),
       tour_id: selectedTourId || null,
-      tour_title: selectedTourTitle || null
+      tour_title: selectedTourTitle || null,
+      submitted_name: normalizeText(payload.name) || null,
+      submitted_email: normalizeEmail(payload.email) || null,
+      submitted_phone_number: inputPhoneNumber || null,
+      submitted_preferred_language: inputPreferredLanguage || null,
+      customer_resolution: {
+        decision: customerResolution.decision,
+        confidence: customerResolution.confidence,
+        reason: customerResolution.reason,
+        matched_customer_id: customerResolution.matchedCustomer?.id || null,
+        duplicate_candidate_customer_ids: customerResolution.duplicateCandidates.map((candidate) => candidate.customer_id),
+        duplicate_candidates: customerResolution.duplicateCandidates
+      }
     },
     idempotency_key: idempotencyKey || null,
-    created_at: nowIso(),
-    updated_at: nowIso()
+    created_at: now,
+    updated_at: now
   };
 
   store.bookings.push(booking);
   addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
+  if (customerResolution.decision === "created_new_customer_with_duplicate_candidate") {
+    addActivity(
+      store,
+      booking.id,
+      "CUSTOMER_DUPLICATE_REVIEW",
+      "public_api",
+      `Possible existing customers: ${customerResolution.duplicateCandidates.map((candidate) => candidate.customer_id).join(", ")}`
+    );
+  }
 
   await persistStore(store);
 
@@ -186,7 +435,7 @@ async function handleCreateBooking(req, res) {
     booking_hash: computeBookingHash(booking),
     customer_id: customer.id,
     status: "accepted",
-    deduplicated: Boolean(customerMatch),
+    deduplicated: customerResolution.decision === "matched_existing_customer",
     atp_staff: booking.atp_staff_name,
     sla_due_at: booking.sla_due_at,
     next_step_message: "Thanks, we will contact you with route options within 48-72h."
@@ -673,12 +922,13 @@ async function handleCreateActivity(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
   const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), detail);
   booking.updated_at = nowIso();
   await persistStore(store);
 
-  sendJson(res, 201, { activity });
+  sendJson(res, 201, { activity, booking: await buildBookingReadModel(booking) });
 }
 
 function buildInvoiceReadModel(invoice) {
@@ -735,6 +985,7 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
   const customer = store.customers.find((item) => item.id === booking.customer_id);
   if (!customer) {
     sendJson(res, 422, { error: "Booking customer not found" });
@@ -773,8 +1024,9 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
 
   await writeInvoicePdf(invoice, customer, booking);
   store.invoices.push(invoice);
+  booking.updated_at = now;
   await persistStore(store);
-  sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice) });
+  sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingReadModel(booking) });
 }
 
 async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
@@ -799,6 +1051,7 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
   const customer = store.customers.find((item) => item.id === booking.customer_id);
   if (!customer) {
     sendJson(res, 422, { error: "Booking customer not found" });
@@ -867,9 +1120,10 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
     await writeInvoicePdf(invoice, customer, booking);
   }
   invoice.updated_at = nowIso();
+  booking.updated_at = invoice.updated_at;
 
   await persistStore(store);
-  sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice) });
+  sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingReadModel(booking) });
 }
 
 async function handleGetInvoicePdf(req, res, [invoiceId]) {

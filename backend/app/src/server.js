@@ -12,6 +12,7 @@ import { buildApiRoutes } from "./http/routes.js";
 import { buildPaginatedListResponse } from "./http/pagination.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
 import { createCustomerHandlers } from "./http/handlers/customers.js";
+import { createTravelGroupHandlers } from "./http/handlers/travel_groups.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import {
   isLikelyPhoneMatch,
@@ -231,9 +232,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
     validateBookingInput,
     readStore,
     normalizeText,
+    normalizeStringArray,
     getRequestIpAddress,
     guessCountryFromRequest,
-    findMatchingCustomer,
     normalizeEmail,
     normalizePhone,
     nowIso,
@@ -247,6 +248,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     addActivity,
     persistStore,
     computeBookingHash,
+    computeCustomerHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -306,6 +308,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     persistStore,
     randomUUID,
     nowIso,
+    computeCustomerHash,
+    computeTravelGroupHash,
     mkdir,
     path,
     writeFile,
@@ -313,6 +317,23 @@ export async function createBackendHandler({ port = PORT } = {}) {
     sendFileWithCache,
     CONSENT_EVIDENCE_DIR,
     CUSTOMER_PHOTOS_DIR
+  });
+  const travelGroupHandlers = createTravelGroupHandlers({
+    sendJson,
+    readStore,
+    getPrincipal,
+    loadAtpStaff,
+    resolvePrincipalAtpStaffMember,
+    canReadAllBookings,
+    canAccessBooking,
+    canEditBooking,
+    buildPaginatedListResponse,
+    paginate,
+    normalizeText,
+    readBodyJson,
+    persistStore,
+    nowIso,
+    computeTravelGroupHash
   });
   const tourHandlers = createTourHandlers({
     normalizeText,
@@ -361,6 +382,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
       handleMobileBootstrap,
       ...bookingHandlers,
       ...customerHandlers,
+      ...travelGroupHandlers,
       ...tourHandlers
     }
   });
@@ -2112,43 +2134,24 @@ function resolveTourImageDiskPath(relativePath) {
   return absolute;
 }
 
-function levenshtein(a, b) {
-  const s = a.toLowerCase();
-  const t = b.toLowerCase();
-  if (!s.length) return t.length;
-  if (!t.length) return s.length;
-
-  const prev = new Array(t.length + 1);
-  const curr = new Array(t.length + 1);
-
-  for (let j = 0; j <= t.length; j += 1) prev[j] = j;
-
-  for (let i = 1; i <= s.length; i += 1) {
-    curr[0] = i;
-    for (let j = 1; j <= t.length; j += 1) {
-      const cost = s[i - 1] === t[j - 1] ? 0 : 1;
-      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
-    }
-    for (let j = 0; j <= t.length; j += 1) prev[j] = curr[j];
-  }
-
-  return curr[t.length];
-}
-
 function chooseOwner(staffList, bookings, destination, language) {
   const activeAtpStaff = staffList.filter((s) => s.active);
-  const normalizedDestination = normalizeText(destination);
+  const normalizedDestinations = normalizeStringArray(destination);
   const normalizedLanguage = normalizeText(language);
 
   let candidates = activeAtpStaff.filter((atp_staff) => {
-    const destinationMatch = atp_staff.destinations?.includes(normalizedDestination);
+    const destinationMatch = normalizedDestinations.length
+      ? normalizedDestinations.some((destination) => atp_staff.destinations?.includes(destination))
+      : false;
     const languageMatch = !normalizedLanguage || atp_staff.languages?.includes(normalizedLanguage);
     return destinationMatch && languageMatch;
   });
 
   if (!candidates.length) {
     candidates = activeAtpStaff.filter((atp_staff) => {
-      const destinationMatch = atp_staff.destinations?.includes(normalizedDestination);
+      const destinationMatch = normalizedDestinations.length
+        ? normalizedDestinations.some((destination) => atp_staff.destinations?.includes(destination))
+        : false;
       return destinationMatch;
     });
   }
@@ -2168,37 +2171,11 @@ function chooseOwner(staffList, bookings, destination, language) {
   return byLoad[0].atp_staff;
 }
 
-function findMatchingCustomer(customers, candidate) {
-  const email = normalizeEmail(candidate.email);
-  const phone = normalizePhone(candidate.phone_number);
-  const name = normalizeText(candidate.name);
-
-  if (email) {
-    const byEmail = customers.find((c) => normalizeEmail(c.email) === email);
-    if (byEmail) return byEmail;
-  }
-
-  if (phone) {
-    const byPhone = customers.find((c) => normalizePhone(c.phone_number) === phone);
-    if (byPhone) return byPhone;
-  }
-
-  if (name.length >= 4) {
-    const byName = customers.find((c) => {
-      const cName = normalizeText(c.name);
-      if (!cName) return false;
-      const distance = levenshtein(name, cName);
-      return distance <= 2;
-    });
-    if (byName) return byName;
-  }
-
-  return null;
-}
-
 function validateBookingInput(payload) {
-  const required = ["name", "email", "destination", "style", "travelers", "duration"];
+  const required = ["name", "email", "duration"];
   const missing = required.filter((key) => !normalizeText(payload[key]));
+  if (!normalizeStringArray(payload.destination).length) missing.push("destination");
+  if (!normalizeStringArray(payload.style).length) missing.push("style");
   if (missing.length) {
     return { ok: false, error: `Missing required fields: ${missing.join(", ")}` };
   }
@@ -2208,7 +2185,7 @@ function validateBookingInput(payload) {
   if (!emailOk) return { ok: false, error: "Invalid email" };
 
   const travelers = safeInt(payload.travelers);
-  if (!travelers || travelers < 1 || travelers > 30) {
+  if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {
     return { ok: false, error: "Travelers must be between 1 and 30" };
   }
 
@@ -2717,6 +2694,69 @@ function getBookingCustomerLookup(store) {
   return new Map(store.customers.map((customer) => [customer.id, customer]));
 }
 
+function computeCustomerHash(customer) {
+  const payload = {
+    id: customer?.id || null,
+    name: customer?.name || null,
+    photo_ref: customer?.photo_ref || null,
+    title: customer?.title || null,
+    first_name: customer?.first_name || null,
+    last_name: customer?.last_name || null,
+    date_of_birth: customer?.date_of_birth || null,
+    nationality: customer?.nationality || null,
+    address_line_1: customer?.address_line_1 || null,
+    address_line_2: customer?.address_line_2 || null,
+    address_city: customer?.address_city || null,
+    address_state_region: customer?.address_state_region || null,
+    address_postal_code: customer?.address_postal_code || null,
+    address_country_code: customer?.address_country_code || null,
+    organization_name: customer?.organization_name || null,
+    organization_address: customer?.organization_address || null,
+    organization_phone_number: customer?.organization_phone_number || null,
+    organization_webpage: customer?.organization_webpage || null,
+    organization_email: customer?.organization_email || null,
+    tax_id: customer?.tax_id || null,
+    phone_number: customer?.phone_number || null,
+    email: customer?.email || null,
+    preferred_language: customer?.preferred_language || null,
+    preferred_currency: customer?.preferred_currency || null,
+    timezone: customer?.timezone || null,
+    notes: customer?.notes || null,
+    created_at: customer?.created_at || null,
+    updated_at: customer?.updated_at || null,
+    archived_at: customer?.archived_at || null
+  };
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
+
+function computeTravelGroupHash(group, members = []) {
+  const normalizedMembers = Array.isArray(members)
+    ? [...members]
+        .map((member) => ({
+          id: member?.id || null,
+          travel_group_id: member?.travel_group_id || null,
+          customer_id: member?.customer_id || null,
+          is_traveling: member?.is_traveling ?? null,
+          member_roles: Array.isArray(member?.member_roles) ? [...member.member_roles].sort() : [],
+          notes: member?.notes || null,
+          created_at: member?.created_at || null,
+          updated_at: member?.updated_at || null
+        }))
+        .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)))
+    : [];
+  const payload = {
+    id: group?.id || null,
+    booking_id: group?.booking_id || null,
+    name: group?.name || null,
+    group_type: group?.group_type || null,
+    notes: group?.notes || null,
+    created_at: group?.created_at || null,
+    updated_at: group?.updated_at || null,
+    members: normalizedMembers
+  };
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
+
 function computeBookingHash(booking) {
   const payload = {
     id: booking.id || null,
@@ -2725,8 +2765,8 @@ function computeBookingHash(booking) {
     atp_staff: booking.atp_staff || booking.owner_id || null,
     atp_staff_name: booking.atp_staff_name || booking.owner_name || null,
     sla_due_at: booking.sla_due_at || null,
-    destination: booking.destination || null,
-    style: booking.style || null,
+    destination: normalizeStringArray(booking.destination).sort(),
+    style: normalizeStringArray(booking.style).sort(),
     travel_month: booking.travel_month || null,
     travelers: booking.travelers ?? null,
     duration: booking.duration || null,
@@ -2901,8 +2941,8 @@ function filterAndSortBookings(store, query) {
     const hasLetters = /[a-z]/.test(search);
     const haystack = [
       booking.id,
-      booking.destination,
-      booking.style,
+      ...normalizeStringArray(booking.destination),
+      ...normalizeStringArray(booking.style),
       booking.owner_name,
       booking.notes,
       customer?.name,

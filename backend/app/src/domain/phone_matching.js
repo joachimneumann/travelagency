@@ -80,6 +80,12 @@ function normalizeVietnamPhoneForMatch(value) {
   return digits;
 }
 
+export function canonicalPhoneForMatch(value) {
+  const canonical = normalizeVietnamPhoneForMatch(value);
+  if (canonical) return canonical;
+  return normalizePhoneDigits(value);
+}
+
 export function isLikelyPhoneMatch(leftRaw, rightRaw) {
   const leftDigits = normalizePhoneDigits(leftRaw);
   const rightDigits = normalizePhoneDigits(rightRaw);

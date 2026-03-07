@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-07T01:36:57Z",
+  "generatedAt": "2026-03-07T06:18:58Z",
   "languages": [
     "English",
     "Vietnamese",
@@ -373,6 +373,44 @@
       "parameters": [
         {
           "name": "customerId",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "travel_groups",
+      "path": "/api/v1/travel_groups",
+      "method": "GET",
+      "authenticated": true,
+      "responseType": "TravelGroupList"
+    },
+    {
+      "key": "travel_group_detail",
+      "path": "/api/v1/travel_groups/{travelGroupId}",
+      "method": "GET",
+      "authenticated": true,
+      "responseType": "TravelGroupDetail",
+      "parameters": [
+        {
+          "name": "travelGroupId",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "travel_group_update",
+      "path": "/api/v1/travel_groups/{travelGroupId}",
+      "method": "PATCH",
+      "authenticated": true,
+      "requestType": "TravelGroupUpdateRequest",
+      "responseType": "TravelGroupDetail",
+      "parameters": [
+        {
+          "name": "travelGroupId",
           "location": "path",
           "required": true,
           "typeName": "Identifier"

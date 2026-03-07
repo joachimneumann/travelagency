@@ -60,22 +60,6 @@
         </button>
 
         <nav class="nav" id="siteNav" aria-label="Main navigation">
-          <div class="filter-menu" aria-label="Primary browse menu">
-            <div class="select-wrap">
-              <label for="navDestination">Destination</label>
-              <select id="navDestination" name="destination">
-                <option value="all">All destinations</option>
-              </select>
-            </div>
-            <div class="select-wrap">
-              <label for="navStyle">Travel style</label>
-              <select id="navStyle" name="style">
-                <option value="all">All styles</option>
-              </select>
-            </div>
-            <button id="clearFilters" class="btn btn-ghost" type="button">Clear filters</button>
-          </div>
-
           <ul class="nav-list">
             <li><a href="#why">Why us</a></li>
             <li><a href="#trust">Trust</a></li>
@@ -104,6 +88,41 @@
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
           <h1 class="hero-title-only">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
+          <div class="filter-menu filter-menu--hero" aria-label="Primary browse menu">
+              <div class="select-wrap">
+              <span class="field-label">Destination</span>
+              <button
+                id="navDestinationTrigger"
+                class="filter-select-trigger"
+                type="button"
+                aria-expanded="false"
+                aria-controls="navDestinationPanel"
+              >
+                <span id="navDestinationSummary">All destinations</span>
+                <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+              </button>
+              <div id="navDestinationPanel" class="filter-select-panel" hidden>
+                <div id="navDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Destination filters"></div>
+              </div>
+            </div>
+              <div class="select-wrap">
+              <span class="field-label">Travel style</span>
+              <button
+                id="navStyleTrigger"
+                class="filter-select-trigger"
+                type="button"
+                aria-expanded="false"
+                aria-controls="navStylePanel"
+              >
+                <span id="navStyleSummary">All travel styles</span>
+                <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+              </button>
+              <div id="navStylePanel" class="filter-select-panel" hidden>
+                <div id="navStyleOptions" class="filter-checkbox-list" role="group" aria-label="Travel style filters"></div>
+              </div>
+            </div>
+            <button id="clearFilters" class="btn btn-ghost" type="button">Show all tours</button>
+          </div>
           <a id="heroScrollLink" class="hero-subtitle-only hero-subtitle-link" href="#tours" aria-label="Scroll to tours">
             <span id="heroDynamicSubtitle">Featured tours you can tailor</span>
             <span class="hero-subtitle-arrow" aria-hidden="true">↓</span>
@@ -372,42 +391,31 @@
             <input id="bookingTourId" type="hidden" name="tourId" />
             <input id="bookingTourTitle" type="hidden" name="tourTitle" />
             <section class="step active" data-step="1">
-              <h3>Step 1: Trip basics</h3>
+              <div hidden aria-hidden="true">
+                <div
+                  id="bookingDestination"
+                  data-booking-static-list
+                  data-booking-input-name="destination"
+                  data-empty-label="All destinations"
+                  aria-label="Destination countries"
+                ></div>
+                <div
+                  id="bookingStyle"
+                  data-booking-static-list
+                  data-booking-input-name="style"
+                  data-empty-label="All travel styles"
+                  aria-label="Travel styles"
+                ></div>
+              </div>
               <div class="field-grid">
-                <div class="field">
-                  <label for="bookingDestination">Destination country</label>
-                  <select id="bookingDestination" name="destination" required>
-                    <option value="">Select a destination</option>
-                    <option>Vietnam</option>
-                    <option>Thailand</option>
-                    <option>Cambodia</option>
-                    <option>Laos</option>
-                    <option>Multi-country</option>
-                  </select>
-                  <span class="error">Please select a destination.</span>
-                </div>
-                <div class="field">
-                  <label for="bookingStyle">Travel style</label>
-                  <select id="bookingStyle" name="style" required>
-                    <option value="">Select a style</option>
-                    <option>Adventure</option>
-                    <option>Culture</option>
-                    <option>Beach</option>
-                    <option>Family</option>
-                    <option>Luxury</option>
-                    <option>Budget</option>
-                    <option>Food</option>
-                  </select>
-                  <span class="error">Please select a travel style.</span>
-                </div>
                 <div class="field">
                   <label for="bookingMonth">Travel month (optional)</label>
                   <input id="bookingMonth" name="travelMonth" type="month" />
                 </div>
                 <div class="field">
-                  <label for="bookingTravelers">Number of travelers</label>
-                  <input id="bookingTravelers" name="travelers" type="number" min="1" max="30" required />
-                  <span class="error">Please enter travelers.</span>
+                  <label for="bookingTravelers">Number of travelers (optional)</label>
+                  <input id="bookingTravelers" name="travelers" type="number" min="1" max="30" placeholder="" />
+                  <span class="error">Travelers must be within the allowed range.</span>
                 </div>
                 <div class="field">
                   <label for="bookingPreferredCurrency">Preferred currency</label>
@@ -436,20 +444,20 @@
 
             <section class="step" data-step="2">
               <h3>Step 2: Contact details</h3>
-              <div class="field-grid">
+                <div class="field-grid">
                 <div class="field">
                   <label for="bookingName">Full name</label>
-                  <input id="bookingName" name="name" type="text" required />
+                  <input id="bookingName" name="name" type="text" autocomplete="name" required />
                   <span class="error">Please enter your name.</span>
                 </div>
                 <div class="field">
                   <label for="bookingEmail">Email</label>
-                  <input id="bookingEmail" name="email" type="email" required />
+                  <input id="bookingEmail" name="email" type="email" autocomplete="email" required />
                   <span class="error">Please enter a valid email.</span>
                 </div>
                 <div class="field">
                   <label for="bookingPhone">WhatsApp or phone</label>
-                  <input id="bookingPhone" name="phone" type="tel" required />
+                  <input id="bookingPhone" name="phone" type="tel" autocomplete="tel" required />
                   <span class="error">Please add a contact number.</span>
                 </div>
                 <div class="field">

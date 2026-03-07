@@ -31,6 +31,16 @@ import entities "travelagency.local/model/entities"
 	travelGroupMembers: [...entities.#TravelGroupMember]
 }
 
+#TravelGroupList: {
+	items: [...entities.#TravelGroup]
+	pagination: #Pagination
+}
+
+#TravelGroupDetail: {
+	travelGroup: entities.#TravelGroup
+	members: [...entities.#TravelGroupMember]
+}
+
 #TourDetail: {
 	tour:    entities.#Tour
 	options: #TourOptions

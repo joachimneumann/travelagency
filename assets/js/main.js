@@ -20,8 +20,8 @@ const state = {
   trips: [],
   filteredTrips: [],
   filters: {
-    dest: "all",
-    style: "all"
+    dest: [],
+    style: []
   },
   rankedTripsDebug: [],
   formStep: 1,
@@ -57,8 +57,14 @@ const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
   brandLogoLink: document.getElementById("brandLogoLink"),
-  navDestination: document.getElementById("navDestination"),
-  navStyle: document.getElementById("navStyle"),
+  navDestinationTrigger: document.getElementById("navDestinationTrigger"),
+  navDestinationSummary: document.getElementById("navDestinationSummary"),
+  navDestinationPanel: document.getElementById("navDestinationPanel"),
+  navDestinationOptions: document.getElementById("navDestinationOptions"),
+  navStyleTrigger: document.getElementById("navStyleTrigger"),
+  navStyleSummary: document.getElementById("navStyleSummary"),
+  navStylePanel: document.getElementById("navStylePanel"),
+  navStyleOptions: document.getElementById("navStyleOptions"),
   backendLoginContainer: document.getElementById("backendLoginContainer"),
   headerBackendLoginMount: document.getElementById("headerBackendLoginMount"),
   footerBackendLoginMount: document.getElementById("footerBackendLoginMount"),
@@ -72,6 +78,7 @@ const els = {
   toursBooking: document.getElementById("toursBooking"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
   heroScrollLink: document.getElementById("heroScrollLink"),
+  bookingTitle: document.getElementById("bookingTitle"),
   tourGrid: document.getElementById("tourGrid"),
   tourActions: document.getElementById("tourActions"),
   showMoreTours: document.getElementById("showMoreTours"),
@@ -95,6 +102,7 @@ const els = {
   stepNext: document.getElementById("stepNext"),
   progressSteps: document.querySelectorAll(".progress-step"),
   formSteps: document.querySelectorAll(".step"),
+  bookingStepTitle: document.getElementById("bookingStepTitle"),
   error: document.getElementById("bookingError"),
   success: document.getElementById("bookingSuccess")
 };
@@ -115,8 +123,8 @@ async function init() {
 
   const savedFilters = JSON.parse(localStorage.getItem("asiatravelplan_filters") || "null");
   const urlFilters = getFiltersFromURL();
-  state.filters.dest = urlFilters.dest || savedFilters?.dest || "all";
-  state.filters.style = urlFilters.style || savedFilters?.style || "all";
+  state.filters.dest = normalizeFilterSelection(urlFilters.dest.length ? urlFilters.dest : savedFilters?.dest);
+  state.filters.style = normalizeFilterSelection(urlFilters.style.length ? urlFilters.style : savedFilters?.style);
 
   try {
     state.trips = await loadTrips();
@@ -127,6 +135,7 @@ async function init() {
   prewarmTourImages(state.trips);
 
   populateFilterOptions(state.trips);
+  setupFilterSelectPanels();
   syncFilterInputs();
   applyFilters();
   setupFilterEvents();
@@ -339,25 +348,25 @@ function updateBackendButtonLabel({ authenticated, user }) {
 }
 
 function setupFilterEvents() {
-  if (!els.navDestination || !els.navStyle) return;
+  if (!els.navDestinationOptions || !els.navStyleOptions) return;
 
-  els.navDestination.addEventListener("change", () => {
-    state.filters.dest = els.navDestination.value;
+  els.navDestinationOptions.addEventListener("change", () => {
+    state.filters.dest = getCheckedValues(els.navDestinationOptions);
     state.visibleToursCount = INITIAL_VISIBLE_TOURS;
     state.showMoreUsed = false;
     onFilterChange();
   });
 
-  els.navStyle.addEventListener("change", () => {
-    state.filters.style = els.navStyle.value;
+  els.navStyleOptions.addEventListener("change", () => {
+    state.filters.style = getCheckedValues(els.navStyleOptions);
     state.visibleToursCount = INITIAL_VISIBLE_TOURS;
     state.showMoreUsed = false;
     onFilterChange();
   });
 
   els.clearFilters.addEventListener("click", () => {
-    state.filters.dest = "all";
-    state.filters.style = "all";
+    state.filters.dest = [];
+    state.filters.style = [];
     state.visibleToursCount = INITIAL_VISIBLE_TOURS;
     state.showMoreUsed = false;
     syncFilterInputs();
@@ -368,6 +377,7 @@ function setupFilterEvents() {
 function onFilterChange() {
   saveFilters();
   updateURLWithFilters();
+  updateFilterTriggerLabels();
   applyFilters();
   prefillBookingFormWithFilters();
 }
@@ -379,8 +389,8 @@ function saveFilters() {
 function applyFilters() {
   const matchingTrips = state.trips.filter((trip) => {
     const destinationCountries = tourDestinationCountries(trip);
-    const matchDest = state.filters.dest === "all" || destinationCountries.includes(state.filters.dest);
-    const matchStyle = state.filters.style === "all" || trip.styles.includes(state.filters.style);
+    const matchDest = !state.filters.dest.length || state.filters.dest.some((destination) => destinationCountries.includes(destination));
+    const matchStyle = !state.filters.style.length || state.filters.style.some((style) => trip.styles.includes(style));
     return matchDest && matchStyle;
   });
   const rankedEntries = rankTripsByPriorityAndRandom(matchingTrips);
@@ -442,7 +452,7 @@ function updateTourActions() {
   const moreCount = Math.min(SHOW_MORE_BATCH, remaining);
   const showMoreAvailable = !state.showMoreUsed && moreCount > 0;
   const showAllAvailable = state.showMoreUsed && remaining > 0;
-  const noFilterSelected = state.filters.dest === "all" && state.filters.style === "all";
+  const noFilterSelected = !state.filters.dest.length && !state.filters.style.length;
 
   els.tourActions.hidden = !(showMoreAvailable || showAllAvailable);
 
@@ -470,20 +480,31 @@ function buildShowMoreToursLabel(moreCount) {
   const destination = state.filters.dest;
   const countText = `${moreCount}`;
 
-  if (style !== "all") {
-    return `show ${countText} more ${style.toLowerCase()} tours`;
+  if (style.length === 1) {
+    return `show ${countText} more ${style[0].toLowerCase()} tours`;
   }
 
-  if (destination !== "all") {
-    return `show ${countText} more tours in ${destination}`;
+  if (destination.length === 1) {
+    return `show ${countText} more tours in ${destination[0]}`;
   }
 
   return moreCount === 1 ? "show more 1 tour" : `show more ${countText} tours`;
 }
 
 function formatFilterValue(value, kind) {
-  if (value !== "all") return value;
+  if (Array.isArray(value) && value.length) return value.join(", ");
   return kind === "destination" ? "All destinations" : "All styles";
+}
+
+function updateFilterTriggerLabels() {
+  if (els.navDestinationSummary) {
+    els.navDestinationSummary.textContent = formatFilterValue(state.filters.dest, "destination");
+  }
+  if (els.navStyleSummary) {
+    els.navStyleSummary.textContent = state.filters.style.length
+      ? state.filters.style.join(", ")
+      : "All travel styles";
+  }
 }
 
 function renderFilterSummary() {
@@ -494,41 +515,66 @@ function renderFilterSummary() {
 }
 
 function renderChip(label, value) {
-  const active = value !== "all";
-  const text = active ? value : `All ${label.toLowerCase()}s`;
+  const active = Array.isArray(value) && value.length > 0;
+  const text = active ? value.join(", ") : `All ${label.toLowerCase()}s`;
   return `<span class="filter-pill ${active ? "active" : ""}">${label}: ${text}</span>`;
 }
 
 function updateTitlesForFilters() {
   const dest = state.filters.dest;
   const style = state.filters.style;
+  const destLabel = formatFilterValue(dest, "destination");
+  const styleLabel = formatFilterValue(style, "style");
 
   let heading = "Featured tours you can tailor";
   let booking = "Browse by destination and style. Filters update instantly and can be shared by URL.";
   let pageTitle = "AsiaTravelPlan | Custom Southeast Asia Holidays";
 
-  if (dest !== "all" && style !== "all") {
-    heading = `${style} tours in ${dest}`;
-    booking = `Showing ${style.toLowerCase()} journeys in ${dest}. Clear filters to see all options.`;
-    pageTitle = `AsiaTravelPlan | ${style} Tours in ${dest}`;
-  } else if (dest !== "all") {
-    heading = `Featured tours in ${dest}`;
-    booking = `Showing all travel styles available in ${dest}.`;
-    pageTitle = `AsiaTravelPlan | Tours in ${dest}`;
-  } else if (style !== "all") {
-    heading = `${style} travel styles across Southeast Asia`;
-    booking = `Showing ${style.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
-    pageTitle = `AsiaTravelPlan | ${style} Southeast Asia Tours`;
+  if (dest.length && style.length) {
+    heading = `${styleLabel} tours in ${destLabel}`;
+    booking = `Showing ${styleLabel.toLowerCase()} journeys in ${destLabel}. Clear filters to see all options.`;
+    pageTitle = `AsiaTravelPlan | ${styleLabel} Tours in ${destLabel}`;
+  } else if (dest.length) {
+    heading = `Featured tours in ${destLabel}`;
+    booking = `Showing all travel styles available in ${destLabel}.`;
+    pageTitle = `AsiaTravelPlan | Tours in ${destLabel}`;
+  } else if (style.length) {
+    heading = `${styleLabel} travel styles across Southeast Asia`;
+    booking = `Showing ${styleLabel.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
+    pageTitle = `AsiaTravelPlan | ${styleLabel} Southeast Asia Tours`;
   }
 
   if (els.toursTitle) els.toursTitle.textContent = heading;
   if (els.toursBooking) els.toursBooking.textContent = booking;
   if (els.heroDynamicSubtitle) {
     els.heroDynamicSubtitle.textContent = heading;
-    const noFilterSelected = dest === "all" && style === "all";
+    const noFilterSelected = !dest.length && !style.length;
     els.heroDynamicSubtitle.hidden = noFilterSelected;
   }
+  if (els.bookingStepTitle) {
+    els.bookingStepTitle.textContent = heading;
+  }
+  updateBookingModalTitle();
   document.title = pageTitle;
+}
+
+function updateBookingModalTitle() {
+  if (!els.bookingTitle) return;
+  const dest = state.filters.dest;
+  const style = state.filters.style;
+  const destLabel = formatFilterValue(dest, "destination");
+  const styleLabel = formatFilterValue(style, "style");
+
+  let title = "Plan your tour with AsiaTravelPlan";
+  if (dest.length && style.length) {
+    title = `Plan your ${styleLabel.toLowerCase()} tour in ${destLabel}`;
+  } else if (dest.length) {
+    title = `Plan your tour in ${destLabel}`;
+  } else if (style.length) {
+    title = `Plan your ${styleLabel.toLowerCase()} tour`;
+  }
+
+  els.bookingTitle.textContent = title;
 }
 
 function renderTrips(trips) {
@@ -601,9 +647,8 @@ function bindTourCardOpenHandlers() {
       const tripId = button.getAttribute("data-trip-id");
       const selected = state.trips.find((trip) => trip.id === tripId);
       if (selected) {
-        const firstDestination = tourDestinationCountries(selected)[0] || "";
-        setBookingField("bookingDestination", firstDestination);
-        setBookingField("bookingStyle", selected.styles[0] || "");
+        setBookingField("bookingDestination", tourDestinationCountries(selected));
+        setBookingField("bookingStyle", selected.styles || []);
         setSelectedTourContext(selected);
       } else {
         clearSelectedTourContext();
@@ -619,13 +664,28 @@ function populateFilterOptions(trips) {
   const destinations = Array.from(new Set(trips.flatMap((trip) => tourDestinationCountries(trip)))).sort();
   const styles = Array.from(new Set(trips.flatMap((trip) => trip.styles))).sort();
 
-  for (const destination of destinations) {
-    els.navDestination.insertAdjacentHTML("beforeend", `<option>${escapeHTML(destination)}</option>`);
+  if (els.navDestinationOptions) {
+    els.navDestinationOptions.innerHTML = destinations
+      .map((destination) => renderFilterCheckbox("destination", destination))
+      .join("");
   }
 
-  for (const style of styles) {
-    els.navStyle.insertAdjacentHTML("beforeend", `<option>${escapeHTML(style)}</option>`);
+  if (els.navStyleOptions) {
+    els.navStyleOptions.innerHTML = styles
+      .map((style) => renderFilterCheckbox("style", style))
+      .join("");
   }
+}
+
+function renderFilterCheckbox(kind, value) {
+  const safeValue = escapeHTML(value);
+  const inputId = `${kind}Filter_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+  return `
+    <label class="filter-checkbox-option" for="${escapeHTML(inputId)}">
+      <input id="${escapeHTML(inputId)}" type="checkbox" value="${safeValue}" />
+      <span>${safeValue}</span>
+    </label>
+  `;
 }
 
 function tourDestinationCountries(trip) {
@@ -636,23 +696,24 @@ function tourDestinationCountries(trip) {
 }
 
 function syncFilterInputs() {
-  els.navDestination.value = state.filters.dest;
-  els.navStyle.value = state.filters.style;
+  setFilterCheckboxes(els.navDestinationOptions, state.filters.dest);
+  setFilterCheckboxes(els.navStyleOptions, state.filters.style);
+  updateFilterTriggerLabels();
 }
 
 function updateURLWithFilters() {
   const url = new URL(window.location.href);
 
-  if (state.filters.dest === "all") {
+  if (!state.filters.dest.length) {
     url.searchParams.delete("dest");
   } else {
-    url.searchParams.set("dest", state.filters.dest);
+    url.searchParams.set("dest", state.filters.dest.join(","));
   }
 
-  if (state.filters.style === "all") {
+  if (!state.filters.style.length) {
     url.searchParams.delete("style");
   } else {
-    url.searchParams.set("style", state.filters.style);
+    url.searchParams.set("style", state.filters.style.join(","));
   }
 
   window.history.replaceState({}, "", url.toString());
@@ -660,9 +721,71 @@ function updateURLWithFilters() {
 
 function getFiltersFromURL() {
   const params = new URLSearchParams(window.location.search);
-  const dest = params.get("dest") || "";
-  const style = params.get("style") || "";
+  const dest = normalizeFilterSelection(params.get("dest"));
+  const style = normalizeFilterSelection(params.get("style"));
   return { dest, style };
+}
+
+function normalizeFilterSelection(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeText(item)).filter(Boolean);
+  }
+  const text = normalizeText(value);
+  if (!text) return [];
+  return text
+    .split(",")
+    .map((item) => normalizeText(item))
+    .filter(Boolean);
+}
+
+function getCheckedValues(container) {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+    .map((option) => normalizeText(option.value))
+    .filter(Boolean);
+}
+
+function setFilterCheckboxes(container, values) {
+  if (!container) return;
+  const selected = new Set(Array.isArray(values) ? values.map((item) => normalizeText(item)).filter(Boolean) : []);
+  Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach((input) => {
+    input.checked = selected.has(normalizeText(input.value));
+  });
+}
+
+function setupFilterSelectPanels() {
+  const controls = [
+    { trigger: els.navDestinationTrigger, panel: els.navDestinationPanel },
+    { trigger: els.navStyleTrigger, panel: els.navStylePanel }
+  ].filter((item) => item.trigger && item.panel);
+
+  if (!controls.length) return;
+
+  const closeAllPanels = () => {
+    controls.forEach(({ trigger, panel }) => {
+      panel.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  controls.forEach(({ trigger, panel }) => {
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const willOpen = panel.hidden;
+      closeAllPanels();
+      panel.hidden = !willOpen;
+      trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+
+    panel.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
+
+  document.addEventListener("click", closeAllPanels);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllPanels();
+  });
 }
 
 async function loadTrips() {
@@ -785,9 +908,8 @@ function setupModal() {
 
     const selected = state.trips.find((trip) => trip.id === tripId);
     if (selected) {
-      const firstDestination = tourDestinationCountries(selected)[0] || "";
-      setBookingField("bookingDestination", firstDestination);
-      setBookingField("bookingStyle", selected.styles[0] || "");
+      setBookingField("bookingDestination", tourDestinationCountries(selected));
+      setBookingField("bookingStyle", selected.styles || []);
       setSelectedTourContext(selected);
       openBookingModal();
       return;
@@ -824,7 +946,7 @@ function openBookingModal() {
   renderFormStep();
   els.bookingModal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
-  const firstInput = els.bookingForm.querySelector(".step.active input, .step.active select, .step.active textarea");
+  const firstInput = els.bookingForm.querySelector(".step.active input:not([type=\"hidden\"]), .step.active select, .step.active textarea");
   if (firstInput) firstInput.focus();
 }
 
@@ -832,7 +954,11 @@ function setSelectedTourContext(selectedTour) {
   state.selectedTour = selectedTour
     ? {
       id: normalizeText(selectedTour.id || ""),
-      title: normalizeText(selectedTour.title || "")
+      title: normalizeText(selectedTour.title || ""),
+      destinations: tourDestinationCountries(selectedTour),
+      styles: Array.isArray(selectedTour.styles)
+        ? selectedTour.styles.map((item) => normalizeText(item)).filter(Boolean)
+        : []
     }
     : null;
 
@@ -1008,9 +1134,12 @@ async function submitBookingForm() {
 
   const formData = new FormData(els.bookingForm);
   const entries = Object.fromEntries(formData.entries());
-  const travelersValue = Number.parseInt(entries.travelers, 10);
+  const selectedDestinations = formData.getAll("destination").map((value) => normalizeText(value)).filter(Boolean);
+  const selectedStyles = formData.getAll("style").map((value) => normalizeText(value)).filter(Boolean);
+  const rawTravelersValue = normalizeText(entries.travelers);
+  const travelersValue = rawTravelersValue ? Number.parseInt(rawTravelersValue, 10) : null;
 
-  if (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS) {
+  if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS)) {
     renderBookingError(`Travelers must be between ${MIN_TRAVELERS} and ${MAX_TRAVELERS}.`);
     els.stepNext.disabled = false;
     els.stepBack.disabled = false;
@@ -1022,8 +1151,8 @@ async function submitBookingForm() {
   }
 
   const payload = {
-    destination: entries.destination || "",
-    style: entries.style || "",
+    destination: selectedDestinations,
+    style: selectedStyles,
     travelMonth: entries.travelMonth || "",
     preferredCurrency: normalizeCurrencyCode(entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY),
     duration: entries.duration || "",
@@ -1150,18 +1279,52 @@ function getQueryParam(name) {
 }
 
 function prefillBookingFormWithFilters() {
-  if (state.filters.dest !== "all") setBookingField("bookingDestination", state.filters.dest);
-  if (state.filters.style !== "all") setBookingField("bookingStyle", state.filters.style);
+  const bookingDestinations = state.selectedTour?.destinations || state.filters.dest;
+  const bookingStyles = state.selectedTour?.styles || state.filters.style;
+  setBookingField("bookingDestination", bookingDestinations);
+  setBookingField("bookingStyle", bookingStyles);
+  if (els.bookingStepTitle) {
+    els.bookingStepTitle.textContent = els.toursTitle?.textContent || "Featured tours you can tailor";
+  }
+  updateBookingModalTitle();
 }
 
 function setBookingField(id, value) {
   const field = document.getElementById(id);
   if (!field || !value) return;
 
-  const optionValues = Array.from(field.options || []).map((option) => option.value);
-  if (optionValues.includes(value)) {
-    field.value = value;
+  const values = Array.isArray(value) ? value.map((item) => normalizeText(item)).filter(Boolean) : [normalizeText(value)];
+  if (field.hasAttribute("data-booking-static-list")) {
+    renderBookingStaticField(field, values);
+    return;
   }
+  if (!values.length) return;
+
+  const optionValues = new Set(Array.from(field.options || []).map((option) => option.value));
+  if (field.multiple) {
+    Array.from(field.options || []).forEach((option) => {
+      option.selected = values.includes(option.value);
+    });
+    return;
+  }
+
+  const firstMatch = values.find((item) => optionValues.has(item));
+  if (firstMatch) {
+    field.value = firstMatch;
+  }
+}
+
+function renderBookingStaticField(field, values) {
+  const inputName = normalizeText(field.getAttribute("data-booking-input-name"));
+  const emptyLabel = normalizeText(field.getAttribute("data-empty-label")) || "Not selected";
+  const items = Array.isArray(values) ? values.filter(Boolean) : [];
+  const summary = items.length ? items.join(", ") : emptyLabel;
+  const hiddenInputs = inputName
+    ? items
+      .map((item) => `<input type="hidden" name="${escapeAttr(inputName)}" value="${escapeAttr(item)}" />`)
+      .join("")
+    : "";
+  field.innerHTML = `<span class="booking-static-field__text">${escapeHTML(summary)}</span>${hiddenInputs}`;
 }
 
 function escapeHTML(value) {

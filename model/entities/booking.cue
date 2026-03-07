@@ -127,9 +127,11 @@ import (
 	createdAt: common.#Timestamp
 }
 
+#BookingInvoice: #Invoice
+
 #Booking: {
 	id:                 common.#Identifier
-	bookingHash?:       string
+	booking_hash?:      string
 	customerId:         common.#Identifier
 	stage:              enums.#BookingStage
 	atpStaff?:          common.#Identifier
@@ -137,8 +139,8 @@ import (
 	ownerId?:           common.#Identifier
 	ownerName?:         string
 	slaDueAt?:          common.#Timestamp
-	destination?:       string
-	style?:             string
+	destination?:       [...string]
+	style?:             [...string]
 	travelMonth?:       string
 	travelers?:         >=common.#MinTravelers & <=common.#MaxTravelers & int
 	duration?:          string

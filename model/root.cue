@@ -47,9 +47,11 @@ import (
 	api: {
 		BookingList:                 apiModel.#BookingList
 		CustomerList:                apiModel.#CustomerList
+		TravelGroupList:             apiModel.#TravelGroupList
 		TourList:                    apiModel.#TourList
 		BookingDetail:               apiModel.#BookingDetail
 		CustomerDetail:              apiModel.#CustomerDetail
+		TravelGroupDetail:           apiModel.#TravelGroupDetail
 		TourDetail:                  apiModel.#TourDetail
 		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
 		AtpStaffListResponse:        apiModel.#AtpStaffListResponse
@@ -68,6 +70,7 @@ import (
 		BookingPricingUpdateRequest:  apiModel.#BookingPricingUpdateRequest
 		BookingOfferUpdateRequest:    apiModel.#BookingOfferUpdateRequest
 		CustomerUpdateRequest:        apiModel.#CustomerUpdateRequest
+		TravelGroupUpdateRequest:     apiModel.#TravelGroupUpdateRequest
 		CustomerPhotoUploadRequest:   apiModel.#CustomerPhotoUploadRequest
 		CustomerConsentCreateRequest: apiModel.#CustomerConsentCreateRequest
 		CustomerUpdateResponse:       apiModel.#CustomerUpdateResponse

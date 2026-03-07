@@ -49,6 +49,14 @@ export const CUSTOMER_SCHEMA = {
       "kind": "scalar",
       "typeName": "string",
       "isArray": false,
+      "name": "customer_hash",
+      "required": false,
+      "wireName": "customer_hash"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
       "name": "photo_ref",
       "required": false,
       "wireName": "photo_ref"
@@ -6418,6 +6426,14 @@ export const TRAVEL_GROUP_SCHEMA = {
       "name": "booking_id",
       "required": true,
       "wireName": "booking_id"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "travel_group_hash",
+      "required": false,
+      "wireName": "travel_group_hash"
     },
     {
       "kind": "scalar",

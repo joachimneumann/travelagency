@@ -7,7 +7,7 @@ import {
 const CUSTOMER_UPDATE_FIELDS = new Set(
   CUSTOMER_UPDATE_REQUEST_SCHEMA.fields
     .map((field) => field.name)
-    .filter((name) => name && name !== "id")
+    .filter((name) => name && name !== "id" && name !== "customer_hash")
 );
 
 const CUSTOMER_UPDATE_FIELDS_BY_NAME = Object.fromEntries(
@@ -26,6 +26,10 @@ const CUSTOMER_CONSENT_FIELDS = Object.fromEntries(
 
 const CUSTOMER_CONSENT_TYPES = new Set(CUSTOMER_CONSENT_FIELDS.consent_type?.enumValues || []);
 const CUSTOMER_CONSENT_STATUSES = new Set(CUSTOMER_CONSENT_FIELDS.status?.enumValues || []);
+
+function normalizeTextValue(value) {
+  return String(value ?? "").trim();
+}
 
 export function createCustomerHandlers(deps) {
   const {
@@ -47,6 +51,8 @@ export function createCustomerHandlers(deps) {
     randomUUID,
     persistStore,
     nowIso,
+    computeCustomerHash,
+    computeTravelGroupHash,
     mkdir,
     path,
     writeFile,
@@ -143,11 +149,24 @@ export function createCustomerHandlers(deps) {
 function buildCustomerReadModel(customer) {
   return {
     ...customer,
+    customer_hash: computeCustomerHash(customer),
     name: normalizeText(customer?.name) || "",
     photo_ref: normalizeText(customer?.photo_ref) || null,
     title: normalizeText(customer?.title) || null,
     phone_number: normalizeText(customer?.phone_number) || null,
     preferred_language: normalizeText(customer?.preferred_language) || null
+  };
+}
+
+function buildTravelGroupReadModel(group, store) {
+  const members = (Array.isArray(store?.travel_group_members) ? store.travel_group_members : [])
+    .filter((member) => member.travel_group_id === group.id)
+    .sort((a, b) => String(a.id || "").localeCompare(String(b.id || "")));
+  return {
+    ...group,
+    name: normalizeText(group?.name) || null,
+    notes: normalizeText(group?.notes) || null,
+    travel_group_hash: computeTravelGroupHash(group, members)
   };
 }
 
@@ -219,6 +238,7 @@ async function handleGetCustomer(req, res, [customerId]) {
   );
   const travelGroups = (Array.isArray(store.travel_groups) ? store.travel_groups : [])
     .filter((group) => relatedTravelGroupIds.has(normalizeText(group.id)))
+    .map((group) => buildTravelGroupReadModel(group, store))
     .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
 
   sendJson(res, 200, {
@@ -252,6 +272,7 @@ async function handlePatchCustomer(req, res, [customerId]) {
     sendJson(res, 404, { error: "Customer not found" });
     return;
   }
+  if (!(await assertMatchingCustomerHash(payload, customer, res))) return;
 
   const patch = normalizeCustomerPatch(payload);
   if (!patch || !Object.keys(patch).length) {
@@ -288,6 +309,7 @@ async function handleCreateCustomerConsent(req, res, [customerId]) {
       sendJson(res, 404, { error: "Customer not found" });
       return;
     }
+    if (!(await assertMatchingCustomerHash(payload, customer, res))) return;
 
     const consent = normalizeCustomerConsentCreate(payload);
     if (!consent) {
@@ -323,8 +345,9 @@ async function handleCreateCustomerConsent(req, res, [customerId]) {
     }
 
     store.customer_consents.unshift(created);
+    customer.updated_at = timestamp;
     await persistStore(store);
-    sendJson(res, 201, { consent: created });
+    sendJson(res, 201, { customer: buildCustomerReadModel(customer), consent: created });
   } catch (error) {
     console.error("handleCreateCustomerConsent failed", error);
     sendJson(res, 500, { error: "Could not create customer consent", detail: String(error?.message || error) });
@@ -352,8 +375,12 @@ async function handleUploadCustomerPhoto(req, res, [customerId]) {
     sendJson(res, 404, { error: "Customer not found" });
     return;
   }
+  if (!(await assertMatchingCustomerHash(payload, customer, res))) return;
 
-  const uploadFieldName = CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA.fields[0]?.name || "photo_upload";
+  const uploadFieldName =
+    CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA.fields.find((field) => field.name === "photo_upload")?.name ||
+    CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA.fields.find((field) => field.name === "photo")?.name ||
+    "photo_upload";
   const upload = normalizeEvidenceUpload(payload[uploadFieldName]);
   if (!upload) {
     sendJson(res, 422, { error: "Invalid customer photo payload" });
@@ -511,6 +538,21 @@ function normalizeEvidenceUpload(value) {
   return { filename, data_base64, mime_type };
 }
 
+async function assertMatchingCustomerHash(payload, customer, res) {
+  const requestHash = normalizeTextValue(payload?.customer_hash);
+  const currentHash = computeCustomerHash(customer);
+  if (!requestHash || requestHash !== currentHash) {
+    sendJson(res, 409, {
+      error: "Customer changed in backend",
+      detail: "The customer has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
+      code: "CUSTOMER_HASH_MISMATCH",
+      customer: buildCustomerReadModel(customer)
+    });
+    return false;
+  }
+  return true;
+}
+
 function normalizeCustomerPatch(payload = {}) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return null;
@@ -524,7 +566,7 @@ function normalizeCustomerPatch(payload = {}) {
     }
 
     const field = CUSTOMER_UPDATE_FIELDS_BY_NAME[key];
-    const normalizedValue = normalizeText(value);
+    const normalizedValue = normalizeTextValue(value);
 
     if (CUSTOMER_UPDATE_DATE_FIELDS.has(key)) {
       patch[key] = normalizedValue;

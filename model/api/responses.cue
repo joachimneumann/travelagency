@@ -83,5 +83,6 @@ import (
 }
 
 #CustomerConsentCreateResponse: {
+	customer: entities.#Customer
 	consent: entities.#CustomerConsent
 }

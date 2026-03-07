@@ -6155,6 +6155,10 @@
           "name": {
             "type": "string"
           },
+          "customer_hash": {
+            "type": "string",
+            "nullable": true
+          },
           "photo_ref": {
             "type": "string",
             "nullable": true
@@ -6372,6 +6376,10 @@
           "booking_id": {
             "type": "string"
           },
+          "travel_group_hash": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
             "type": "string",
             "nullable": true
@@ -6501,7 +6509,7 @@
           "id": {
             "type": "string"
           },
-          "bookingHash": {
+          "booking_hash": {
             "type": "string",
             "nullable": true
           },
@@ -6520,12 +6528,16 @@
             "nullable": true
           },
           "destination": {
-            "type": "string",
-            "nullable": true
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "style": {
-            "type": "string",
-            "nullable": true
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "travelMonth": {
             "type": "string",
@@ -7230,12 +7242,16 @@
         ],
         "properties": {
           "destination": {
-            "type": "string",
-            "nullable": true
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "style": {
-            "type": "string",
-            "nullable": true
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "travelMonth": {
             "type": "string",
@@ -7310,7 +7326,7 @@
           "pricing"
         ],
         "properties": {
-          "bookingHash": {
+          "booking_hash": {
             "type": "string",
             "nullable": true
           },
@@ -7325,7 +7341,7 @@
           "offer"
         ],
         "properties": {
-          "bookingHash": {
+          "booking_hash": {
             "type": "string",
             "nullable": true
           },
@@ -7340,6 +7356,10 @@
 
         ],
         "properties": {
+          "customer_hash": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
             "type": "string",
             "nullable": true
@@ -7470,6 +7490,10 @@
 
         ],
         "properties": {
+          "customer_hash": {
+            "type": "string",
+            "nullable": true
+          },
           "photo_upload": {
             "$ref": "#/components/schemas/EvidenceUpload",
             "nullable": true
@@ -7487,6 +7511,10 @@
           "status"
         ],
         "properties": {
+          "customer_hash": {
+            "type": "string",
+            "nullable": true
+          },
           "consent_type": {
             "$ref": "#/components/schemas/CustomerConsentType"
           },
@@ -7537,11 +7565,85 @@
       "CustomerConsentCreateResponse": {
         "type": "object",
         "required": [
+          "customer",
           "consent"
         ],
         "properties": {
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
           "consent": {
             "$ref": "#/components/schemas/CustomerConsent"
+          }
+        }
+      },
+      "TravelGroupList": {
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size",
+          "total_pages"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TravelGroup"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "page_size": {
+            "type": "integer"
+          },
+          "total_pages": {
+            "type": "integer"
+          }
+        }
+      },
+      "TravelGroupDetail": {
+        "type": "object",
+        "required": [
+          "travel_group"
+        ],
+        "properties": {
+          "travel_group": {
+            "$ref": "#/components/schemas/TravelGroup"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TravelGroupMember"
+            }
+          }
+        }
+      },
+      "TravelGroupUpdateRequest": {
+        "type": "object",
+        "required": [
+
+        ],
+        "properties": {
+          "travel_group_hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "group_type": {
+            "$ref": "#/components/schemas/TravelGroupType",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -8674,6 +8776,181 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CustomerConsentCreateResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/travel_groups": {
+      "get": {
+        "operationId": "travel_groups",
+        "summary": "Travel Groups",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TravelGroupList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/travel_groups/{travelGroupId}": {
+      "get": {
+        "operationId": "travel_group_detail",
+        "summary": "Travel Group Detail",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "travelGroupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TravelGroupDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "travel_group_update",
+        "summary": "Travel Group Update",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "travelGroupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TravelGroupUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TravelGroupDetail"
                 }
               }
             }

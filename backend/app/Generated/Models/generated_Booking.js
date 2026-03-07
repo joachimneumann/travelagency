@@ -607,9 +607,9 @@ export const BOOKING_SCHEMA = {
       "kind": "scalar",
       "typeName": "string",
       "isArray": false,
-      "name": "bookingHash",
+      "name": "booking_hash",
       "required": false,
-      "wireName": "bookingHash"
+      "wireName": "booking_hash"
     },
     {
       "kind": "scalar",
@@ -695,7 +695,7 @@ export const BOOKING_SCHEMA = {
     {
       "kind": "scalar",
       "typeName": "string",
-      "isArray": false,
+      "isArray": true,
       "name": "destination",
       "required": false,
       "wireName": "destination"
@@ -703,7 +703,7 @@ export const BOOKING_SCHEMA = {
     {
       "kind": "scalar",
       "typeName": "string",
-      "isArray": false,
+      "isArray": true,
       "name": "style",
       "required": false,
       "wireName": "style"

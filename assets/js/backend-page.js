@@ -371,14 +371,28 @@ async function loadBookings() {
 
 async function loadTravelGroups() {
   clearError();
+  const params = new URLSearchParams({
+    page: String(state.travelGroups.page),
+    page_size: String(state.travelGroups.pageSize),
+    sort: "updated_at_desc"
+  });
+  if (state.travelGroups.search) params.set("search", state.travelGroups.search);
+
+  const payload = await fetchApi(`/api/v1/travel_groups?${params.toString()}`);
+  if (!payload) return;
+  const pagination = payload.pagination || {};
+
   if (els.travelGroupsNotice) {
-    els.travelGroupsNotice.textContent = "Travel groups endpoint is not configured yet.";
+    els.travelGroupsNotice.textContent = payload.items?.length ? "" : "No travel groups found.";
   }
-  state.travelGroups.totalPages = 1;
-  state.travelGroups.total = 0;
-  state.travelGroups.page = 1;
+  state.travelGroups.totalPages = Math.max(
+    1,
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.travelGroups.pageSize) || 1)
+  );
+  state.travelGroups.total = Number(pagination.total_items || 0);
+  state.travelGroups.page = Number(pagination.page || state.travelGroups.page);
   updatePaginationUi("travelGroups");
-  renderTravelGroups([]);
+  renderTravelGroups(payload.items || []);
   updateDashboardCounts();
 }
 
@@ -593,8 +607,8 @@ function renderBookings(items) {
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
         <td>${escapeHtml(booking.stage)}</td>
         <td>${customerCell}</td>
-        <td>${escapeHtml(booking.destination || "-")}</td>
-        <td>${escapeHtml(booking.style || "-")}</td>
+        <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
+        <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
         <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
         <td>${escapeHtml(formatDateTime(booking.sla_due_at))}</td>
       </tr>`;

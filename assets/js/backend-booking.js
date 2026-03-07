@@ -98,6 +98,10 @@ const state = {
   }
 };
 
+state.dirty = { note: false, offer: false, pricing: false, invoice: false };
+state.originalPricingSnapshot = "";
+state.originalInvoiceSnapshot = "";
+
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
@@ -158,6 +162,62 @@ const els = {
 function setOfferSaveEnabled(enabled) {
   if (!els.offerSaveBtn) return;
   els.offerSaveBtn.disabled = !enabled || !state.permissions.canEditBooking;
+  setBookingSectionDirty("offer", Boolean(enabled) && state.permissions.canEditBooking);
+}
+
+function setDirtySurface(element, isDirty) {
+  if (!element) return;
+  element.classList.add("backend-dirty-frame");
+  element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
+}
+
+function setBookingSectionDirty(sectionKey, isDirty) {
+  const sectionMap = {
+    note: els.actionsPanel,
+    offer: els.offerPanel,
+    pricing: els.pricingPanel,
+    invoice: els.invoicePanel
+  };
+  state.dirty[sectionKey] = Boolean(isDirty);
+  setDirtySurface(sectionMap[sectionKey], state.dirty[sectionKey]);
+}
+
+function captureControlSnapshot(root) {
+  if (!root) return "";
+  const controls = Array.from(root.querySelectorAll("input, select, textarea"));
+  const snapshot = controls.map((control, index) => {
+    const key = control.id || control.name || control.dataset.field || `${control.tagName.toLowerCase()}-${index}`;
+    let value = "";
+    if (control.type === "checkbox" || control.type === "radio") {
+      value = control.checked;
+    } else if (control.type === "file") {
+      value = Array.from(control.files || []).map((file) => `${file.name}:${file.size}:${file.lastModified}`);
+    } else {
+      value = control.value ?? "";
+    }
+    return [key, value];
+  });
+  return JSON.stringify(snapshot);
+}
+
+function updatePricingDirtyState() {
+  const isDirty = state.permissions.canEditBooking && captureControlSnapshot(els.pricingPanel) !== state.originalPricingSnapshot;
+  setBookingSectionDirty("pricing", isDirty);
+}
+
+function markPricingSnapshotClean() {
+  state.originalPricingSnapshot = captureControlSnapshot(els.pricingPanel);
+  setBookingSectionDirty("pricing", false);
+}
+
+function updateInvoiceDirtyState() {
+  const isDirty = state.permissions.canEditBooking && captureControlSnapshot(els.invoicePanel) !== state.originalInvoiceSnapshot;
+  setBookingSectionDirty("invoice", isDirty);
+}
+
+function markInvoiceSnapshotClean() {
+  state.originalInvoiceSnapshot = captureControlSnapshot(els.invoicePanel);
+  setBookingSectionDirty("invoice", false);
 }
 
 init();
@@ -186,6 +246,14 @@ async function init() {
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
+  if (els.pricingPanel) {
+    const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
+    els.pricingPanel.addEventListener("input", schedulePricingDirtyState);
+    els.pricingPanel.addEventListener("change", schedulePricingDirtyState);
+    els.pricingPanel.addEventListener("click", (event) => {
+      if (event.target.closest("button")) schedulePricingDirtyState();
+    });
+  }
   if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
   if (els.offerCurrencyInput)
     els.offerCurrencyInput.addEventListener("change", () => {
@@ -194,6 +262,11 @@ async function init() {
   if (els.offerAddComponentBtn) els.offerAddComponentBtn.addEventListener("click", addOfferComponentFromSelector);
   if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
+  if (els.invoicePanel) {
+    const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
+    els.invoicePanel.addEventListener("input", scheduleInvoiceDirtyState);
+    els.invoicePanel.addEventListener("change", scheduleInvoiceDirtyState);
+  }
   if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.addEventListener("change", renderInvoiceMoneyLabels);
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
   if (els.invoiceIssueTodayBtn) {
@@ -298,8 +371,8 @@ async function loadCustomer() {
           return `<tr>
           <td><a href="${escapeHtml(href)}">${escapeHtml(shortId(booking.id))}</a></td>
           <td>${escapeHtml(booking.stage || "-")}</td>
-          <td>${escapeHtml(booking.destination || "-")}</td>
-          <td>${escapeHtml(booking.style || "-")}</td>
+          <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
+          <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
           <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
           <td>${escapeHtml(formatDateTime(booking.created_at))}</td>
         </tr>`;
@@ -327,8 +400,8 @@ function renderBookingData() {
         ["id", booking.id],
         ["stage", booking.stage],
         ["staff", booking.staff_name || booking.owner_name || "Unassigned"],
-        ["destination", booking.destination],
-        ["style", booking.style],
+        ["destination", Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination],
+        ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
         ["travel_month", booking.travel_month],
         ["travelers", booking.travelers],
         ["duration", booking.duration],
@@ -439,6 +512,7 @@ function renderPricingPanel() {
   renderPricingAdjustmentsTable();
   renderPricingPaymentsTable();
   clearPricingStatus();
+  markPricingSnapshotClean();
 }
 
 function defaultOfferCategoryRules() {
@@ -960,6 +1034,7 @@ function updateNoteSaveButtonState() {
   els.noteSaveBtn.disabled = !canUpdate;
   els.noteSaveBtn.style.opacity = canUpdate ? "1" : "0.55";
   els.noteSaveBtn.style.cursor = canUpdate ? "" : "not-allowed";
+  setBookingSectionDirty("note", canUpdate);
 }
 
 async function savePricing() {
@@ -1343,6 +1418,7 @@ function fillInvoiceForm(invoice) {
   }
   if (els.invoiceNotesInput) els.invoiceNotesInput.value = invoice.notes || "";
   applyInvoicePermissions();
+  markInvoiceSnapshotClean();
 }
 
 function resetInvoiceForm() {
@@ -1360,6 +1436,7 @@ function resetInvoiceForm() {
   if (els.invoiceNotesInput) els.invoiceNotesInput.value = "";
   clearInvoiceStatus();
   applyInvoicePermissions();
+  markInvoiceSnapshotClean();
 }
 
 function invoiceComponentsToText(components, currency) {
@@ -1431,8 +1508,21 @@ async function createInvoice() {
     ? `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(state.selectedInvoiceId)}`
     : `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices`;
   const method = isUpdate ? "PATCH" : "POST";
-  const result = await fetchApi(path, { method, body: payload });
+  const result = await fetchApi(path, {
+    method,
+    body: {
+      ...payload,
+      booking_hash: state.booking.booking_hash
+    }
+  });
   if (!result?.invoice) return;
+  if (result.booking) {
+    state.booking = result.booking;
+    renderBookingHeader();
+    renderBookingData();
+    renderOfferPanel();
+    renderPricingPanel();
+  }
   state.selectedInvoiceId = result.invoice.id;
   setInvoiceStatus(isUpdate ? "Invoice updated." : "Invoice created.");
   await loadInvoices();
@@ -1446,10 +1536,20 @@ async function toggleInvoiceSent(invoiceId, sent) {
     `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(invoiceId)}`,
     {
       method: "PATCH",
-      body: { sent_to_customer: Boolean(sent) }
+      body: {
+        sent_to_customer: Boolean(sent),
+        booking_hash: state.booking.booking_hash
+      }
     }
   );
   if (!result?.invoice) return;
+  if (result.booking) {
+    state.booking = result.booking;
+    renderBookingHeader();
+    renderBookingData();
+    renderOfferPanel();
+    renderPricingPanel();
+  }
   setInvoiceStatus(sent ? "Invoice marked as sent to customer." : "Invoice marked as not sent.");
   await loadInvoices();
 }

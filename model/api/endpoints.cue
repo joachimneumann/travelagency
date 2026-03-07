@@ -246,6 +246,40 @@ package api
 		}]
 	},
 	{
+		key:           "travel_groups"
+		path:          "/api/v1/travel_groups"
+		method:        "GET"
+		authenticated: true
+		responseType:  "TravelGroupList"
+	},
+	{
+		key:           "travel_group_detail"
+		path:          "/api/v1/travel_groups/{travelGroupId}"
+		method:        "GET"
+		authenticated: true
+		responseType:  "TravelGroupDetail"
+		parameters: [{
+			name:     "travelGroupId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "travel_group_update"
+		path:          "/api/v1/travel_groups/{travelGroupId}"
+		method:        "PATCH"
+		authenticated: true
+		requestType:   "TravelGroupUpdateRequest"
+		responseType:  "TravelGroupDetail"
+		parameters: [{
+			name:     "travelGroupId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "tours"
 		path:          "/api/v1/tours"
 		method:        "GET"

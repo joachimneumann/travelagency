@@ -12,8 +12,8 @@ import (
 }
 
 #PublicBookingCreateRequest: {
-	destination?:       string
-	style?:             string
+	destination?:       [...string]
+	style?:             [...string]
 	travelMonth?:       string
 	travelers?:         >=common.#MinTravelers & <=common.#MaxTravelers & int
 	duration?:          string
@@ -33,16 +33,17 @@ import (
 }
 
 #BookingPricingUpdateRequest: {
-	bookingHash?: string
-	pricing:      entities.#BookingPricing
+	booking_hash?: string
+	pricing:       entities.#BookingPricing
 }
 
 #BookingOfferUpdateRequest: {
-	bookingHash?: string
-	offer:        entities.#BookingOffer
+	booking_hash?: string
+	offer:         entities.#BookingOffer
 }
 
 #CustomerUpdateRequest: {
+	customer_hash?:          string
 	name?:                  string
 	photo_ref?:             string
 	title?:                 string
@@ -77,15 +78,24 @@ import (
 }
 
 #CustomerPhotoUploadRequest: {
+	customer_hash?: string
 	photo_upload?: #EvidenceUpload
 	photo?:        #EvidenceUpload
 }
 
 #CustomerConsentCreateRequest: {
+	customer_hash?: string
 	consent_type:   enums.#CustomerConsentType
 	status:         enums.#CustomerConsentStatus
 	captured_via?:  string
 	captured_at?:   common.#Timestamp
 	evidence_ref?:  string
 	evidence_upload?: #EvidenceUpload
+}
+
+#TravelGroupUpdateRequest: {
+	travel_group_hash?: string
+	name?:              string
+	group_type?:        enums.#TravelGroupType
+	notes?:             string
 }

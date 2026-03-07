@@ -129,6 +129,8 @@ const els = {
   heroPhoto: document.getElementById("customerHeroPhoto"),
   heroPhotoPlaceholder: document.getElementById("customerHeroPhotoPlaceholder"),
   error: document.getElementById("detailError"),
+  primaryGroup: document.querySelector(".customer-primary-group"),
+  photoPanel: document.querySelector(".customer-photo-panel"),
   photoInput: document.getElementById("customerPhotoInput"),
   photoUploadBtn: document.getElementById("customerPhotoUploadBtn"),
   photoStatus: document.getElementById("customerPhotoStatus"),
@@ -154,7 +156,6 @@ const els = {
   travelGroupMembersTable: document.getElementById("customerTravelGroupMembersTable"),
   bookingsTable: document.getElementById("customerBookingsTable"),
   saveBtn: document.getElementById("customerSaveBtn"),
-  saveBtnBottom: document.getElementById("customerSaveBtnBottom"),
   saveStatus: document.getElementById("customerSaveStatus"),
   organizationToggle: null
 };
@@ -175,17 +176,29 @@ async function init() {
     els.saveBtn.addEventListener("click", saveCustomerProfile);
     els.saveBtn.disabled = true;
   }
-  if (els.saveBtnBottom) {
-    els.saveBtnBottom.addEventListener("click", saveCustomerProfile);
-    els.saveBtnBottom.disabled = true;
-  }
   if (els.photoUploadBtn) {
     els.photoUploadBtn.addEventListener("click", saveCustomerPhoto);
+  }
+  if (els.photoInput) {
+    els.photoInput.addEventListener("change", updatePhotoDirtyState);
   }
   populateConsentFormOptions();
   if (els.addConsentBtn) els.addConsentBtn.addEventListener("click", () => toggleConsentForm(true));
   if (els.consentCancelBtn) els.consentCancelBtn.addEventListener("click", () => toggleConsentForm(false));
   if (els.consentSaveBtn) els.consentSaveBtn.addEventListener("click", saveCustomerConsent);
+  [
+    els.consentType,
+    els.consentStatusSelect,
+    els.consentCapturedVia,
+    els.consentCapturedAt,
+    els.consentEvidenceRef,
+    els.consentEvidenceFile
+  ]
+    .filter(Boolean)
+    .forEach((control) => {
+      control.addEventListener("input", updateConsentFormDirtyState);
+      control.addEventListener("change", updateConsentFormDirtyState);
+    });
 
   bindSectionNavigation("customers");
   await loadAuthStatus();
@@ -258,6 +271,7 @@ function normalizeCustomer(customer) {
   const normalized = {
     ...customer,
     name: normalizeText(customer.name) || "",
+    customer_hash: normalizeText(customer.customer_hash) || "",
     photo_ref: normalizeText(customer.photo_ref) || "",
     title: normalizeText(customer.title) || "",
     phone_number: normalizeText(customer.phone_number) || "",
@@ -333,6 +347,7 @@ function toggleConsentForm(show) {
   if (!show) {
     resetConsentForm();
   }
+  updateConsentFormDirtyState();
 }
 
 function resetConsentForm() {
@@ -343,6 +358,7 @@ function resetConsentForm() {
   if (els.consentEvidenceRef) els.consentEvidenceRef.value = "";
   if (els.consentEvidenceFile) els.consentEvidenceFile.value = "";
   if (els.consentFormStatus) els.consentFormStatus.textContent = "";
+  updateConsentFormDirtyState();
 }
 
 function populateConsentFormOptions() {
@@ -363,6 +379,34 @@ function populateSelectElement(selectEl, options, { includeBlank = false } = {})
   selectEl.innerHTML = `${blankHtml}${optionHtml}`;
 }
 
+function setDirtySurface(element, isDirty) {
+  if (!(element instanceof HTMLElement)) return;
+  element.classList.add("backend-dirty-frame");
+  element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
+}
+
+function updatePhotoDirtyState() {
+  setDirtySurface(els.photoPanel, Boolean(els.photoInput?.files?.length));
+}
+
+function updateConsentFormDirtyState() {
+  if (!els.consentForm || els.consentForm.hidden) {
+    setDirtySurface(els.consentForm, false);
+    return;
+  }
+  const defaultConsentType = CUSTOMER_CONSENT_TYPE_OPTIONS[0]?.value || "";
+  const defaultConsentStatus = CUSTOMER_CONSENT_STATUS_OPTIONS[0]?.value || "";
+  const isDirty = Boolean(
+    normalizeText(els.consentType?.value) !== normalizeText(defaultConsentType) ||
+    normalizeText(els.consentStatusSelect?.value) !== normalizeText(defaultConsentStatus) ||
+    normalizeText(els.consentCapturedVia?.value) ||
+    normalizeText(els.consentCapturedAt?.value) ||
+    normalizeText(els.consentEvidenceRef?.value) ||
+    els.consentEvidenceFile?.files?.length
+  );
+  setDirtySurface(els.consentForm, isDirty);
+}
+
 async function saveCustomerConsent() {
   if (!state.id) return;
   if (els.consentSaveBtn) els.consentSaveBtn.disabled = true;
@@ -376,6 +420,7 @@ async function saveCustomerConsent() {
     const result = await fetchApi(request.url, {
       method: request.method,
       body: {
+        customer_hash: state.customer?.customer_hash || "",
         consent_type: els.consentType?.value || CUSTOMER_CONSENT_TYPE_OPTIONS[0]?.value || "",
         status: els.consentStatusSelect?.value || CUSTOMER_CONSENT_STATUS_OPTIONS[0]?.value || "",
         captured_via: normalizeText(els.consentCapturedVia?.value) || null,
@@ -389,6 +434,18 @@ async function saveCustomerConsent() {
         els.consentFormStatus.textContent = "Could not save consent.";
       }
       return;
+    }
+    if (result.customer) {
+      state.customer = normalizeCustomer(result.customer);
+      renderCustomerHero(state.customer);
+      renderEditableCustomerGroup(els.customerPrimaryGroup, CUSTOMER_PRIMARY_GROUP_FIELDS, state.customer, "primary");
+      renderEditableCustomerGroup(els.customerAddressGroup, CUSTOMER_ADDRESS_GROUP_FIELDS, state.customer, "address");
+      renderEditableCustomerGroup(els.customerOrganizationGroup, CUSTOMER_ORGANIZATION_GROUP_FIELDS, state.customer, "organization");
+      renderEditableCustomerGroup(els.customerNotesGroup, CUSTOMER_NOTES_GROUP_FIELDS, state.customer, "notes");
+      bindOrganizationToggle();
+      applyOrganizationFieldVisibility(state.isOrganizationCustomer);
+      bindCustomerProfileInputs();
+      renderCustomerSystemMeta(state.customer);
     }
     state.consents = [result.consent, ...(Array.isArray(state.consents) ? state.consents : [])];
     renderCustomerConsents(state.consents);
@@ -420,6 +477,7 @@ async function saveCustomerPhoto() {
     const result = await fetchApi(request.url, {
       method: request.method,
       body: {
+        customer_hash: state.customer?.customer_hash || "",
         photo_upload: photoUpload
       }
     });
@@ -432,6 +490,7 @@ async function saveCustomerPhoto() {
     state.customer = normalizeCustomer(result.customer);
     renderCustomerHero(state.customer);
     if (els.photoInput) els.photoInput.value = "";
+    updatePhotoDirtyState();
     if (els.photoStatus) els.photoStatus.textContent = "Photo uploaded.";
   } catch (error) {
     if (els.photoStatus) {
@@ -870,6 +929,7 @@ async function saveCustomerProfile() {
   if (state.isSaving || !state.customer?.id) return;
 
   const payload = collectEditableCustomerPayload();
+  payload.customer_hash = state.customer.customer_hash;
   state.isSaving = true;
   setSaveEnabled(false);
   setSaveStatus("Saving customer…");
@@ -933,7 +993,8 @@ function bindOrganizationToggle() {
 }
 
 function setSaveEnabled(enabled) {
-  const buttons = [els.saveBtn, els.saveBtnBottom].filter(Boolean);
+  const buttons = [els.saveBtn].filter(Boolean);
+  setDirtySurface(els.primaryGroup, Boolean(enabled) && !state.isSaving);
   if (!buttons.length) return;
   if (state.isSaving) {
     buttons.forEach((button) => {

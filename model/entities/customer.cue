@@ -5,6 +5,7 @@ import enums "travelagency.local/model/enums"
 
 #Customer: {
 	id:                    common.#Identifier
+	customer_hash?:        string
 	name:                  string
 	photo_ref?:            string
 	title?:                string
@@ -59,13 +60,14 @@ import enums "travelagency.local/model/enums"
 }
 
 #TravelGroup: {
-	id:         common.#Identifier
-	booking_id: common.#Identifier
-	name?:      string
-	group_type: enums.#TravelGroupType
-	notes?:     string
-	created_at: common.#Timestamp
-	updated_at: common.#Timestamp
+	id:                common.#Identifier
+	travel_group_hash?: string
+	booking_id:        common.#Identifier
+	name?:             string
+	group_type:        enums.#TravelGroupType
+	notes?:            string
+	created_at:        common.#Timestamp
+	updated_at:        common.#Timestamp
 }
 
 #TravelGroupMember: {

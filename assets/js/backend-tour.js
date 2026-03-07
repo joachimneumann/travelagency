@@ -14,6 +14,8 @@ const state = {
   }
 };
 
+state.originalFormSnapshot = "";
+
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
@@ -35,6 +37,40 @@ const els = {
   imageUpload: document.getElementById("tourImageUpload"),
   heroImage: document.getElementById("tourHeroImage")
 };
+
+function setDirtySurface(element, isDirty) {
+  if (!element) return;
+  element.classList.add("backend-dirty-frame");
+  element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
+}
+
+function captureTourFormSnapshot() {
+  if (!els.form) return "";
+  const controls = Array.from(els.form.querySelectorAll("input, select, textarea"));
+  const snapshot = controls.map((control, index) => {
+    const key = control.id || control.name || `${control.tagName.toLowerCase()}-${index}`;
+    let value = "";
+    if (control.type === "checkbox" || control.type === "radio") {
+      value = control.checked;
+    } else if (control.type === "file") {
+      value = Array.from(control.files || []).map((file) => `${file.name}:${file.size}:${file.lastModified}`);
+    } else {
+      value = control.value ?? "";
+    }
+    return [key, value];
+  });
+  return JSON.stringify(snapshot);
+}
+
+function updateTourDirtyState() {
+  const isDirty = state.permissions.canEditTours && captureTourFormSnapshot() !== state.originalFormSnapshot;
+  setDirtySurface(els.form, isDirty);
+}
+
+function markTourSnapshotClean() {
+  state.originalFormSnapshot = captureTourFormSnapshot();
+  setDirtySurface(els.form, false);
+}
 
 init();
 
@@ -60,6 +96,9 @@ async function init() {
 
   if (els.form) {
     els.form.addEventListener("submit", submitForm);
+    const scheduleTourDirtyState = () => window.setTimeout(updateTourDirtyState, 0);
+    els.form.addEventListener("input", scheduleTourDirtyState);
+    els.form.addEventListener("change", scheduleTourDirtyState);
   }
   const titleInput = document.getElementById("tourTitleInput");
   if (titleInput) {
@@ -74,6 +113,7 @@ async function init() {
     els.imageUpload.addEventListener("change", () => {
       const file = els.imageUpload.files?.[0];
       if (file) setStatus(`Selected image: ${file.name}`);
+      updateTourDirtyState();
     });
   }
 
@@ -123,6 +163,7 @@ async function loadTour() {
   renderDestinationChoices(destinationCountries);
   renderStyleChoices(styles);
   applyTourPermissions();
+  markTourSnapshotClean();
 }
 
 function renderDestinationChoices(selectedValues) {
