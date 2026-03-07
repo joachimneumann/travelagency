@@ -3,6 +3,7 @@ import {
   CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA,
   CUSTOMER_UPDATE_REQUEST_SCHEMA
 } from "../../../Generated/API/generated_APIModels.js";
+import { normalizeText } from "../../../../../shared/js/text.js";
 
 const CUSTOMER_UPDATE_FIELDS = new Set(
   CUSTOMER_UPDATE_REQUEST_SCHEMA.fields
@@ -27,32 +28,28 @@ const CUSTOMER_CONSENT_FIELDS = Object.fromEntries(
 const CUSTOMER_CONSENT_TYPES = new Set(CUSTOMER_CONSENT_FIELDS.consent_type?.enumValues || []);
 const CUSTOMER_CONSENT_STATUSES = new Set(CUSTOMER_CONSENT_FIELDS.status?.enumValues || []);
 
-function normalizeTextValue(value) {
-  return String(value ?? "").trim();
-}
-
 function normalizeEvidenceUpload(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const filename = normalizeTextValue(value.filename);
-  const data_base64 = normalizeTextValue(value.data_base64);
-  const mime_type = normalizeTextValue(value.mime_type).toLowerCase() || "application/octet-stream";
+  const filename = normalizeText(value.filename);
+  const data_base64 = normalizeText(value.data_base64);
+  const mime_type = normalizeText(value.mime_type).toLowerCase() || "application/octet-stream";
   if (!filename || !data_base64) return null;
   return { filename, data_base64, mime_type };
 }
 
 function normalizeCustomerConsentCreate(payload = {}) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
-  const consentType = normalizeTextValue(payload.consent_type);
-  const status = normalizeTextValue(payload.status);
+  const consentType = normalizeText(payload.consent_type);
+  const status = normalizeText(payload.status);
   if (!CUSTOMER_CONSENT_TYPES.has(consentType) || !CUSTOMER_CONSENT_STATUSES.has(status)) {
     return null;
   }
   return {
     consent_type: consentType,
     status,
-    captured_via: normalizeTextValue(payload.captured_via) || null,
-    captured_at: normalizeTextValue(payload.captured_at) || null,
-    evidence_ref: normalizeTextValue(payload.evidence_ref) || null,
+    captured_via: normalizeText(payload.captured_via) || null,
+    captured_at: normalizeText(payload.captured_at) || null,
+    evidence_ref: normalizeText(payload.evidence_ref) || null,
     evidence_upload: normalizeEvidenceUpload(payload.evidence_upload)
   };
 }
@@ -64,7 +61,7 @@ function normalizeCustomerPatch(payload = {}) {
   Object.entries(payload).forEach(([key, value]) => {
     if (!CUSTOMER_UPDATE_FIELDS.has(key) || key === "id") return;
     const field = CUSTOMER_UPDATE_FIELDS_BY_NAME[key];
-    const normalizedValue = normalizeTextValue(value);
+    const normalizedValue = normalizeText(value);
 
     if (CUSTOMER_UPDATE_DATE_FIELDS.has(key)) {
       patch[key] = normalizedValue;
@@ -99,7 +96,6 @@ export function createCustomerHandlers(deps) {
     canReadCustomers,
     sendJson,
     readStore,
-    normalizeText,
     paginate,
     buildPaginatedListResponse,
     buildBookingReadModel,
@@ -164,7 +160,7 @@ export function createCustomerHandlers(deps) {
   };
 
   const assertMatchingCustomerHash = async (payload, customer, client, res) => {
-    const requestHash = normalizeTextValue(payload?.customer_hash);
+    const requestHash = normalizeText(payload?.customer_hash);
     const currentHash = computeCustomerHash(customer);
     if (!requestHash || requestHash !== currentHash) {
       sendJson(res, 409, {

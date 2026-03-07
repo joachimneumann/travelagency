@@ -5,11 +5,14 @@ struct ActivityRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(activity.type)
+            Text(activity.type.rawValue)
                 .font(.headline)
-            if let note = activity.note, !note.isEmpty {
-                Text(note)
-                    .font(.body)
+            Text(activity.detail)
+                .font(.body)
+            if !activity.actor.isEmpty {
+                Text(activity.actor)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             Text(activity.createdAt)
                 .font(.footnote)

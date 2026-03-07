@@ -1,15 +1,17 @@
+import {
+  createApiFetcher,
+  escapeHtml,
+  formatDateTime,
+  normalizeText
+} from "./shared/backend-common.js";
+import {
+  buildBookingHref,
+  buildCustomerHref,
+  buildTourEditHref
+} from "./shared/backend-links.js";
+
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
-
-function resolveApiUrl(pathOrUrl) {
-  const value = String(pathOrUrl || "");
-  if (/^https?:\/\//.test(value)) return value;
-  return `${apiBase}${value}`;
-}
-
-function normalizeText(value) {
-  return String(value ?? "").trim();
-}
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -574,40 +576,13 @@ function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
   return `<button ${attrs}>${escapeHtml(label)}</button>`;
 }
 
-async function fetchApi(path, options = {}) {
-  const method = options.method || "GET";
-  const body = options.body;
-  const suppressNotFound = options.suppressNotFound || false;
-  try {
-    const response = await fetch(resolveApiUrl(path), {
-      method,
-      credentials: "include",
-      headers: {
-        ...(body ? { "Content-Type": "application/json" } : {})
-      },
-      ...(body ? { body: JSON.stringify(body) } : {})
-    });
-
-    let payload = null;
-    try {
-      payload = await response.json();
-    } catch {
-      payload = null;
-    }
-
-    if (!response.ok) {
-      if (suppressNotFound && response.status === 404) return null;
-      showError((payload && payload.error) || "Request failed");
-      return null;
-    }
-
-    return payload;
-  } catch (error) {
-    showError("Could not connect to backend API. Ensure backend is running on localhost:8787.");
-    console.error(error);
-    return null;
-  }
-}
+const fetchApi = createApiFetcher({
+  apiBase,
+  onError: (message) => showError(message),
+  suppressNotFound: false,
+  includeDetailInError: false,
+  connectionErrorMessage: "Could not connect to backend API. Ensure backend is running on localhost:8787."
+});
 
 function updateDashboardCounts() {
   if (els.dashboardCustomersCount) {
@@ -723,21 +698,6 @@ function renderTravelGroups(items) {
   if (els.travelGroupsTable) els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
-function buildCustomerHref(id) {
-  const params = new URLSearchParams({ id });
-  return `customer.html?${params.toString()}`;
-}
-
-function buildBookingHref(id) {
-  const params = new URLSearchParams({ id });
-  return `backend-booking.html?${params.toString()}`;
-}
-
-function buildTourEditHref(id) {
-  const params = new URLSearchParams({ id });
-  return `backend-tour.html?${params.toString()}`;
-}
-
 function showError(message) {
   if (!els.error) return;
   els.error.textContent = message;
@@ -813,25 +773,4 @@ function setStaffStatus(message) {
 function shortId(value) {
   const id = String(value || "");
   return id.length > 6 ? id.slice(-6) : id;
-}
-
-function formatDateTime(value) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
-}
-
-function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

@@ -25,7 +25,7 @@ Runtime persistence note:
 
 Implemented now:
 - Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, staff assignment, SLA timestamps, activity timeline)
-- Frontend booking form integration in `assets/js/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling
+- Frontend booking form integration in `frontend/scripts/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling
 - Keycloak-protected `/api/v1/*` access via backend session cookie (browser) or Keycloak bearer token
 - Booking/customer list pagination and filtering
 - Keycloak OIDC auth flow implemented for backend (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`) with role gating

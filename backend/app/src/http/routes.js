@@ -20,6 +20,7 @@ export function buildApiRoutes({ authRoutes = [], handlers }) {
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/chat$/, handler: handlers.handleListBookingChatEvents },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlers.handlePatchBookingStage },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/client$/, handler: handlers.handlePatchBookingClient },
+    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/client\/create-customer$/, handler: handlers.handleCreateBookingCustomer },
     { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/client\/members$/, handler: handlers.handleCreateBookingGroupMember },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlers.handlePatchBookingOwner },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlers.handlePatchBookingNotes },

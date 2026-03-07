@@ -143,7 +143,7 @@ Open in browser:
 
 ## 5) Integrate with locally executed AsiaTravelPlan webpage
 
-The frontend submit logic in `assets/js/main.js` already supports backend integration.
+The frontend submit logic in `frontend/scripts/main.js` already supports backend integration.
 
 It uses:
 - `window.ASIATRAVELPLAN_API_BASE` if defined
@@ -227,7 +227,7 @@ cd ~/projects/travelagency
 Then open:
 - `http://localhost:8080`
 
-Set API base before loading `assets/js/main.js`:
+Set API base before loading `frontend/scripts/main.js`:
 - This is now auto-set in `index.html` for localhost (`localhost`/`127.0.0.1`) to `http://localhost:8787`.
 
 ### Persistent local Keycloak theme setup

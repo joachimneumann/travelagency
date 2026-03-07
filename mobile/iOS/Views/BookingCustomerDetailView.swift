@@ -244,9 +244,9 @@ struct BookingCustomerDetailView: View {
         Section {
             ForEach(viewModel.consents) { consent in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(consent.consent_type.replacingOccurrences(of: "_", with: " "))
+                    Text(consent.consent_type.rawValue.replacingOccurrences(of: "_", with: " "))
                         .font(.headline)
-                    Text("\(consent.status) • \(consent.captured_at)")
+                    Text("\(consent.status.rawValue) • \(consent.captured_at)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     if let capturedVia = consent.captured_via, !capturedVia.isEmpty {

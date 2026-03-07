@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-07T10:34:44Z",
+  "generatedAt": "2026-03-07T15:14:14Z",
   "languages": [
     "English",
     "Vietnamese",
@@ -247,6 +247,22 @@
       "authenticated": true,
       "requestType": "BookingClientUpdateRequest",
       "responseType": "BookingClientUpdateResponse",
+      "parameters": [
+        {
+          "name": "bookingId",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "booking_client_create_customer",
+      "path": "/api/v1/bookings/{bookingId}/client/create-customer",
+      "method": "POST",
+      "authenticated": true,
+      "requestType": "BookingClientCreateCustomerRequest",
+      "responseType": "BookingClientCreateCustomerResponse",
       "parameters": [
         {
           "name": "bookingId",

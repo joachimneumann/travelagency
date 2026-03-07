@@ -13,7 +13,7 @@ final class BookingsViewModel: ObservableObject {
         defer { isLoading = false }
         do {
             let response = try await apiClient.fetchBookings(session: session)
-            bookings = response.items
+            bookings = response.items ?? []
         } catch {
             errorMessage = error.localizedDescription
         }

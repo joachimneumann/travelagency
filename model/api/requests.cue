@@ -44,9 +44,12 @@ import (
 
 #BookingClientUpdateRequest: {
 	booking_hash?:   string
-	client_type:     entities.#ClientType
 	customer_client_id?: string
-	group_name?:     string
+	travel_group_id?: string
+}
+
+#BookingClientCreateCustomerRequest: {
+	booking_hash?: string
 }
 
 #BookingGroupMemberCreateRequest: {

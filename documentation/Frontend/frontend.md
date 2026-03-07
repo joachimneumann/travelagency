@@ -26,7 +26,7 @@
 - Sticky mobile CTA
 - Modal booking form (3-step)
 - Backend-only tours API integration script
-- Main JS bundle: `assets/js/main.js`
+- Main JS bundle: `frontend/scripts/main.js`
 - Structured data scripts (`TravelAgency`, `WebSite`)
 - Tour hero images managed by backend are converted to WebP and resized to a maximum bounding box of `1000x1000`
 ## 3) Header and navigation (`#top`)

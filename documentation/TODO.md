@@ -1,15 +1,13 @@
-DONE, but not checked
+DONE, but not tested
 =====================
 
 - Check if conflict avoidance is correctly implemented. When a frontend or iOS get a dataset for a customer, group or booking, it also gets a hash of that data. When the user wants to save / update the data, send the hash of the lastly read data together with the changed data. The server will reject the edit if the hash does not match the hash of the data at the time of the update request. 
 Web page: number of travelers?
 
-- I want to allow a booking to have a group as customer. Should we use a new name for this entity? 
-- Make these changes in the model and maintain the documentation and all code consistent with this change.
+- Allow a booking to have a travel_group or a customer as client.
 
 Not DONE
-=====================
-
+========
 
 - add a button to delete a booking.
 - add a button to delete a customer. Only allow this if the customer is ont in any group or in any booking. Show a human readable error message if this is the case.
@@ -18,8 +16,6 @@ Not DONE
 -  Ask for confirmation for all delete actions.
 
 - Buy phone number!!!
-
-- Web page: number of travelers?
 
 - WhatsApp:
     - allow staff to answer messages in frontend and in app

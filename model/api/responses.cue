@@ -32,6 +32,8 @@ import (
 
 #BookingClientUpdateResponse: #BookingClientDetail
 
+#BookingClientCreateCustomerResponse: #BookingClientDetail
+
 #BookingGroupMemberCreateResponse: #BookingClientDetail
 
 #BookingChatEvent: {

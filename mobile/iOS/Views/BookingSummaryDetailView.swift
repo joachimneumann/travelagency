@@ -4,12 +4,15 @@ struct BookingSummaryDetailView: View {
     let booking: Booking
 
     var body: some View {
+        let destinations = booking.destination ?? []
+        let styles = booking.style ?? []
+
         Form {
             Section("Booking") {
                 LabeledContent("Booking ID", value: booking.id)
                 LabeledContent("Stage", value: booking.stage.rawValue)
-                LabeledContent("Destination", value: booking.destination.isEmpty ? "—" : booking.destination)
-                LabeledContent("Style", value: booking.style.isEmpty ? "—" : booking.style)
+                LabeledContent("Destination", value: destinations.isEmpty ? "—" : destinations.joined(separator: ", "))
+                LabeledContent("Style", value: styles.isEmpty ? "—" : styles.joined(separator: ", "))
                 if let travelMonth = booking.travelMonth, !travelMonth.isEmpty {
                     LabeledContent("Travel Month", value: travelMonth)
                 }
@@ -22,10 +25,7 @@ struct BookingSummaryDetailView: View {
                 if let budget = booking.budget, !budget.isEmpty {
                     LabeledContent("Budget", value: budget)
                 }
-                if let source = booking.source, let pageURL = source.pageURL, !pageURL.isEmpty {
-                    LabeledContent("Source", value: pageURL)
-                }
-                LabeledContent("Atp Staff", value: booking.assignedStaffName ?? "Unassigned")
+                LabeledContent("Atp Staff", value: booking.atpStaffName ?? "Unassigned")
             }
         }
         .navigationTitle("Booking")

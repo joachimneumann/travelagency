@@ -1,4 +1,5 @@
 import { TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA } from "../../../Generated/API/generated_APIModels.js";
+import { normalizeText } from "../../../../../shared/js/text.js";
 
 const TRAVEL_GROUP_UPDATE_FIELDS = new Set(
   TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA.fields
@@ -9,10 +10,6 @@ const TRAVEL_GROUP_UPDATE_FIELDS = new Set(
 const TRAVEL_GROUP_UPDATE_FIELDS_BY_NAME = Object.fromEntries(
   TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
 );
-
-function normalizeTextValue(value) {
-  return String(value ?? "").trim();
-}
 
 export function createTravelGroupHandlers(deps) {
   const {
@@ -26,7 +23,6 @@ export function createTravelGroupHandlers(deps) {
     canEditBooking,
     buildPaginatedListResponse,
     paginate,
-    normalizeText,
     readBodyJson,
     persistStore,
     nowIso,
@@ -106,7 +102,7 @@ export function createTravelGroupHandlers(deps) {
     Object.entries(payload).forEach(([key, value]) => {
       if (!TRAVEL_GROUP_UPDATE_FIELDS.has(key)) return;
       const field = TRAVEL_GROUP_UPDATE_FIELDS_BY_NAME[key];
-      const normalizedValue = normalizeTextValue(value);
+      const normalizedValue = normalizeText(value);
       if (field?.kind === "enum") {
         const allowedValues = Array.isArray(field.enumValues) ? new Set(field.enumValues) : null;
         if (normalizedValue && allowedValues && !allowedValues.has(normalizedValue)) return;
@@ -114,7 +110,7 @@ export function createTravelGroupHandlers(deps) {
       create[key] = normalizedValue;
     });
 
-    if (!normalizeTextValue(create.group_name)) return null;
+    if (!normalizeText(create.group_name)) return null;
     return create;
   }
 
@@ -125,7 +121,7 @@ export function createTravelGroupHandlers(deps) {
     Object.entries(payload).forEach(([key, value]) => {
       if (!TRAVEL_GROUP_UPDATE_FIELDS.has(key)) return;
       const field = TRAVEL_GROUP_UPDATE_FIELDS_BY_NAME[key];
-      const normalizedValue = normalizeTextValue(value);
+      const normalizedValue = normalizeText(value);
       if (field?.kind === "enum") {
         const allowedValues = Array.isArray(field.enumValues) ? new Set(field.enumValues) : null;
         if (normalizedValue && allowedValues && !allowedValues.has(normalizedValue)) return;
@@ -137,7 +133,7 @@ export function createTravelGroupHandlers(deps) {
   }
 
   async function assertMatchingTravelGroupHash(payload, group, members, store, res) {
-    const requestHash = normalizeTextValue(payload?.travel_group_hash);
+    const requestHash = normalizeText(payload?.travel_group_hash);
     const currentHash = computeTravelGroupHash(group, members);
     if (!requestHash || requestHash !== currentHash) {
       sendJson(res, 409, {

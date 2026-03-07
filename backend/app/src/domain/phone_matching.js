@@ -1,6 +1,4 @@
-function normalizeText(value) {
-  return String(value || "").trim();
-}
+import { normalizeText } from "../../../../shared/js/text.js";
 
 export function normalizeEmail(value) {
   return normalizeText(value).toLowerCase();

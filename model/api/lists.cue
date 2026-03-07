@@ -22,6 +22,9 @@ import entities "travelagency.local/model/entities"
 	client?:      entities.#ClientSummary
 	customer?:      entities.#Customer
 	travelGroup?: entities.#TravelGroup
+	submittedCustomer?: #BookingSubmittedCustomer
+	customerCandidates?: [...#BookingCustomerCandidate]
+	travelGroupOptions?: [...#TravelGroupOption]
 }
 
 #BookingClientDetail: {
@@ -29,8 +32,35 @@ import entities "travelagency.local/model/entities"
 	client?:      entities.#ClientSummary
 	customer?:      entities.#Customer
 	travelGroup?: entities.#TravelGroup
+	submittedCustomer?: #BookingSubmittedCustomer
+	customerCandidates?: [...#BookingCustomerCandidate]
+	travelGroupOptions?: [...#TravelGroupOption]
 	members?:     [...entities.#TravelGroupMember]
 	memberCustomers?: [...entities.#Customer]
+}
+
+#BookingSubmittedCustomer: {
+	name?:         string
+	email?:        string
+	phone_number?: string
+}
+
+#BookingCustomerCandidate: {
+	customer_client_id:           string
+	name:                         string
+	email?:                       string
+	phone_number?:                string
+	confidence?:                  string
+	reasons?:                     [...string]
+}
+
+#TravelGroupOption: {
+	travel_group_id:  string
+	client_id:        string
+	group_name:       string
+	preferred_language?: string
+	preferred_currency?: string
+	timezone?:        string
 }
 
 #CustomerDetail: {

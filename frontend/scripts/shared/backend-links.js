@@ -1,0 +1,19 @@
+export function buildCustomerHref(id) {
+  const params = new URLSearchParams({ id });
+  return `customer.html?${params.toString()}`;
+}
+
+export function buildBookingHref(id) {
+  const params = new URLSearchParams({ id });
+  return `backend-booking.html?${params.toString()}`;
+}
+
+export function buildTourEditHref(id) {
+  const params = new URLSearchParams({ id });
+  return `backend-tour.html?${params.toString()}`;
+}
+
+export function buildTravelGroupHref(id) {
+  const params = new URLSearchParams({ section: "travelGroups", id });
+  return `backend.html?${params.toString()}`;
+}

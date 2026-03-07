@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-07T10:34:44Z
+# 2026-03-07T15:14:14Z
 
 ---
 openapi: 3.1.0
@@ -3425,7 +3425,6 @@ components:
       type: object
       required:
       - id
-      - client_id
       - stage
       - pricing
       - offer
@@ -3439,6 +3438,7 @@ components:
           nullable: true
         client_id:
           type: string
+          nullable: true
         client_type:
           "$ref": "#/components/schemas/ClientType"
           nullable: true
@@ -4061,18 +4061,22 @@ components:
           "$ref": "#/components/schemas/BookingOffer"
     BookingClientUpdateRequest:
       type: object
-      required:
-      - client_type
+      required: []
       properties:
         booking_hash:
           type: string
           nullable: true
-        client_type:
-          "$ref": "#/components/schemas/ClientType"
         customer_client_id:
           type: string
           nullable: true
-        group_name:
+        travel_group_id:
+          type: string
+          nullable: true
+    BookingClientCreateCustomerRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
           type: string
           nullable: true
     BookingGroupMemberCreateRequest:
@@ -4704,6 +4708,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingClientUpdateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/client/create-customer":
+    post:
+      operationId: booking_client_create_customer
+      summary: Booking Client Create Customer
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingClientCreateCustomerRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
         '401':
           description: Unauthorized
           content:

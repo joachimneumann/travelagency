@@ -5,6 +5,9 @@ struct OfferDetailView: View {
     let offerTitle: String
 
     var body: some View {
+        let categoryRules = offer.categoryRules ?? []
+        let components = offer.components ?? []
+
         Form {
             Section("Offer") {
                 LabeledContent("Currency", value: offer.currency.rawValue)
@@ -15,20 +18,20 @@ struct OfferDetailView: View {
                 LabeledContent("Total with Tax", value: formatMoney(offer.totals.grossAmountCents, currency: offer.currency))
             }
 
-            if !offer.categoryRules.isEmpty {
+            if !categoryRules.isEmpty {
                 Section("Offer Tax Rules") {
-                    ForEach(offer.categoryRules, id: \.category) { rule in
+                    ForEach(categoryRules, id: \.category) { rule in
                         LabeledContent(offerCategoryLabel(rule.category), value: formatPercent(rule.taxRateBasisPoints))
                     }
                 }
             }
 
             Section("Offer Components (\(offerTitle))") {
-                if offer.components.isEmpty {
+                if components.isEmpty {
                     Text("no components yet")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(offer.components) { component in
+                    ForEach(components) { component in
                         NavigationLink {
                             OfferComponentDetailView(component: component, currency: offer.currency)
                         } label: {

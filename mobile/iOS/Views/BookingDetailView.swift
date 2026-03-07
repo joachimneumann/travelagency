@@ -28,7 +28,7 @@ struct BookingDetailView: View {
         .onChange(of: viewModel.booking?.stage) { _, _ in
             syncSelectionsFromBooking()
         }
-        .onChange(of: viewModel.booking?.assignedStaffId) { _, _ in
+        .onChange(of: viewModel.booking?.atp_staff) { _, _ in
             syncSelectionsFromBooking()
         }
         .alert("Booking", isPresented: Binding(
@@ -56,12 +56,8 @@ struct BookingDetailView: View {
             }
             bookingNoteSection()
             whatsAppChatSection()
-            if let offer = booking.offer {
-                offerSection(for: offer)
-            }
-            if let pricing = booking.pricing {
-                paymentsSection(for: pricing)
-            }
+            offerSection(for: booking.offer)
+            paymentsSection(for: booking.pricing)
             if canChangeAssignment {
                 assignmentSection(for: booking)
             }
@@ -190,7 +186,7 @@ struct BookingDetailView: View {
 
     @ViewBuilder
     private func offerSection(for offer: BookingOffer) -> some View {
-        let summary = offer.components.isEmpty ? "No components" : "\(offer.totals.componentsCount) components"
+        let summary = ((offer.components ?? []).isEmpty) ? "No components" : "\(offer.totals.componentsCount) components"
         Section {
             NavigationLink {
                 OfferDetailView(offer: offer, offerTitle: summary)
@@ -281,7 +277,7 @@ struct BookingDetailView: View {
                     await viewModel.updateAssignment(staffID, session: session)
                 }
             }
-            .disabled(selectedAtpStaffID == (booking.assignedStaffId ?? ""))
+            .disabled(selectedAtpStaffID == (booking.atp_staff ?? ""))
         }
     }
 
@@ -326,7 +322,7 @@ struct BookingDetailView: View {
     private func syncSelectionsFromBooking() {
         isApplyingSelection = true
         selectedStage = viewModel.booking?.stage.rawValue ?? ""
-        selectedAtpStaffID = viewModel.booking?.assignedStaffId ?? ""
+        selectedAtpStaffID = viewModel.booking?.atp_staff ?? ""
         isApplyingSelection = false
     }
 
@@ -339,14 +335,13 @@ struct BookingDetailView: View {
     }
 
     private func paymentSubtitle(for pricing: BookingPricing) -> String {
-        let paid = pricing.payments.filter { $0.status == .paid }.count
-        let total = pricing.payments.count
-        return "\(paid) or \(total) paid"
+        _ = pricing
+        return "Detailed schedules not in current mobile contract"
     }
 }
 
 private func displayClientType(_ value: ClientType?) -> String {
-    let raw = String(describing: value ?? "customer")
+    let raw = value?.rawValue ?? "customer"
     return raw.replacingOccurrences(of: "_", with: " ")
 }
 

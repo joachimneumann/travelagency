@@ -167,22 +167,80 @@ function rankConfidence(current, next) {
   return (weights[next] || 0) > (weights[current] || 0) ? next : current;
 }
 
-function upsertCandidate(candidateMap, customer, reason, confidence, score) {
-  if (!customer?.client_id) return;
-  const existing = candidateMap.get(customer.client_id) || {
-    customer,
-    reasons: [],
-    confidence: "low",
-    score: 0
+function buildSubmittedCustomer(booking) {
+  return {
+    name: normalizeText(booking?.source?.submitted_name) || null,
+    email: normalizeEmail(booking?.source?.submitted_email) || null,
+    phone_number: normalizePhone(booking?.source?.submitted_phone_number) || null
   };
-  if (!existing.reasons.includes(reason)) existing.reasons.push(reason);
-  existing.confidence = rankConfidence(existing.confidence, confidence);
-  existing.score = Math.max(existing.score, score);
-  candidateMap.set(customer.client_id, existing);
 }
 
-function summarizeCandidates(candidateMap) {
-  return Array.from(candidateMap.values())
+function rankCustomerCandidatesForBookingSubmission(customers, submitted, { normalizeEmail, isLikelyPhoneMatch }) {
+  const submittedEmail = normalizeEmail(submitted?.email);
+  const submittedPhoneRaw = submitted?.phone_number;
+  const submittedName = normalizeNameForMatch(submitted?.name);
+  const entries = Array.isArray(customers)
+    ? customers.map((customer) => {
+        const customerPhone = customer?.phone_number;
+        const customerEmail = customer?.email;
+        const customerName = customer?.name;
+        const normalizedCustomerName = normalizeNameForMatch(customerName);
+        const reasons = [];
+        let confidence = "low";
+        let score = 0;
+
+        const hasExactPhone = Boolean(submittedPhoneRaw && customerPhone && exactPhoneMatch(customerPhone, submittedPhoneRaw));
+        const hasExactEmail = Boolean(submittedEmail && customerEmail && normalizeEmail(customerEmail) === submittedEmail);
+        const hasSimilarPhone = Boolean(
+          submittedPhoneRaw &&
+          customerPhone &&
+          !hasExactPhone &&
+          isLikelyPhoneMatch(customerPhone, submittedPhoneRaw)
+        );
+        const hasExactName = Boolean(submittedName && normalizedCustomerName && normalizedCustomerName === submittedName);
+        const hasSimilarName = Boolean(
+          submittedName &&
+          normalizedCustomerName &&
+          !hasExactName &&
+          namesLookSimilar(customerName, submitted?.name)
+        );
+
+        if (hasExactPhone) {
+          reasons.push("exact_phone");
+          confidence = rankConfidence(confidence, "high");
+          score = Math.max(score, 100);
+        } else if (hasSimilarPhone) {
+          reasons.push("similar_phone");
+          confidence = rankConfidence(confidence, "medium");
+          score = Math.max(score, 60);
+        }
+
+        if (hasExactEmail) {
+          reasons.push("exact_email");
+          confidence = rankConfidence(confidence, "high");
+          score = Math.max(score, 90);
+        }
+
+        if (hasExactName) {
+          reasons.push("exact_name");
+          confidence = rankConfidence(confidence, "low");
+          score = Math.max(score, hasExactPhone || hasExactEmail ? 95 : 35);
+        } else if (hasSimilarName) {
+          reasons.push("similar_name");
+          confidence = rankConfidence(confidence, "low");
+          score = Math.max(score, 25);
+        }
+
+        return {
+          customer,
+          confidence,
+          reasons,
+          score
+        };
+      })
+    : [];
+
+  return entries
     .sort((left, right) => {
       const scoreDelta = right.score - left.score;
       if (scoreDelta !== 0) return scoreDelta;
@@ -190,129 +248,15 @@ function summarizeCandidates(candidateMap) {
         String(left.customer.updated_at || left.customer.created_at || "")
       );
     })
+    .slice(0, 10)
     .map((entry) => ({
       customer_client_id: entry.customer.client_id,
-      confidence: entry.confidence,
+      name: normalizeText(entry.customer.name) || "",
+      email: normalizeEmail(entry.customer.email) || null,
+      phone_number: normalizePhone(entry.customer.phone_number) || null,
+      confidence: entry.score > 0 ? entry.confidence : null,
       reasons: entry.reasons
     }));
-}
-
-function mergeMatchedCustomer(existingCustomer, payload, now, preferredLanguage, { normalizeEmail, normalizePhone }) {
-  return {
-    ...existingCustomer,
-    name: String(existingCustomer.name || "").trim() || String(payload.name || "").trim(),
-    email: normalizeEmail(existingCustomer.email) || normalizeEmail(payload.email) || null,
-    phone_number: normalizePhone(existingCustomer.phone_number) || normalizePhone(payload.phone_number) || null,
-    preferred_language: String(existingCustomer.preferred_language || "").trim() || preferredLanguage || null,
-    updated_at: now
-  };
-}
-
-function resolveCustomerForBookingSubmission(customers, payload, { normalizeEmail, isLikelyPhoneMatch }) {
-  const submittedEmail = normalizeEmail(payload.email);
-  const submittedPhoneRaw = payload.phone_number;
-  const submittedName = normalizeNameForMatch(payload.name);
-  const candidateMap = new Map();
-  const exactPhoneMatches = [];
-  const exactEmailMatches = [];
-
-  for (const customer of Array.isArray(customers) ? customers : []) {
-    const customerPhone = customer?.phone_number;
-    const customerEmail = customer?.email;
-    const customerName = customer?.name;
-    const normalizedCustomerName = normalizeNameForMatch(customerName);
-
-    const hasExactPhone = Boolean(submittedPhoneRaw && customerPhone && exactPhoneMatch(customerPhone, submittedPhoneRaw));
-    const hasExactEmail = Boolean(submittedEmail && customerEmail && normalizeEmail(customerEmail) === submittedEmail);
-    const hasSimilarPhone = Boolean(
-      submittedPhoneRaw &&
-      customerPhone &&
-      !hasExactPhone &&
-      isLikelyPhoneMatch(customerPhone, submittedPhoneRaw)
-    );
-    const hasExactName = Boolean(submittedName && normalizedCustomerName && normalizedCustomerName === submittedName);
-    const hasSimilarName = Boolean(
-      submittedName &&
-      normalizedCustomerName &&
-      !hasExactName &&
-      namesLookSimilar(customerName, payload.name)
-    );
-
-    if (hasExactPhone) {
-      exactPhoneMatches.push(customer);
-      upsertCandidate(candidateMap, customer, "exact_phone", "high", 100);
-    } else if (hasSimilarPhone) {
-      upsertCandidate(candidateMap, customer, "similar_phone", "medium", 60);
-    }
-
-    if (hasExactEmail) {
-      exactEmailMatches.push(customer);
-      upsertCandidate(candidateMap, customer, "exact_email", "high", 90);
-    }
-
-    if (hasExactName && !hasExactPhone && !hasExactEmail) {
-      upsertCandidate(candidateMap, customer, "exact_name", "low", 35);
-    } else if (hasSimilarName && !hasExactPhone && !hasExactEmail) {
-      upsertCandidate(candidateMap, customer, "similar_name", "low", 25);
-    }
-  }
-
-  const exactEmailIds = new Set(exactEmailMatches.map((customer) => customer.client_id));
-  const exactIntersection = exactPhoneMatches.filter((customer) => exactEmailIds.has(customer.client_id));
-
-  if (exactIntersection.length === 1) {
-    return {
-      decision: "matched_existing_customer",
-      confidence: "high",
-      reason: "exact_phone_and_email",
-      matchedCustomer: exactIntersection[0],
-      duplicateCandidates: []
-    };
-  }
-
-  if (exactPhoneMatches.length === 1 && (exactEmailMatches.length === 0 || exactEmailIds.has(exactPhoneMatches[0].client_id))) {
-    return {
-      decision: "matched_existing_customer",
-      confidence: "high",
-      reason: "exact_phone",
-      matchedCustomer: exactPhoneMatches[0],
-      duplicateCandidates: []
-    };
-  }
-
-  if (exactEmailMatches.length === 1) {
-    const emailMatch = exactEmailMatches[0];
-    const submittedPhone = canonicalPhoneForMatch(submittedPhoneRaw);
-    const existingPhone = canonicalPhoneForMatch(emailMatch.phone_number);
-    if (!submittedPhone || !existingPhone || submittedPhone === existingPhone) {
-      return {
-        decision: "matched_existing_customer",
-        confidence: "high",
-        reason: "exact_email",
-        matchedCustomer: emailMatch,
-        duplicateCandidates: []
-      };
-    }
-  }
-
-  const duplicateCandidates = summarizeCandidates(candidateMap);
-  if (duplicateCandidates.length) {
-    return {
-      decision: "created_new_customer_with_duplicate_candidate",
-      confidence: duplicateCandidates[0].confidence,
-      reason: duplicateCandidates[0].reasons[0] || "possible_duplicate",
-      matchedCustomer: null,
-      duplicateCandidates
-    };
-  }
-
-  return {
-    decision: "created_new_customer",
-    confidence: "low",
-    reason: "no_match",
-    matchedCustomer: null,
-    duplicateCandidates: []
-  };
 }
 
 function resolveBookingClientContext(store, booking) {
@@ -341,6 +285,19 @@ function buildTravelGroupPayload(store, travelGroup) {
   const customerIds = new Set(members.map((member) => member.customer_client_id).filter(Boolean));
   const memberCustomers = (store.customers || []).filter((customer) => customerIds.has(customer.client_id));
   return { travelGroup, members, memberCustomers };
+}
+
+function buildTravelGroupOptions(store) {
+  return (store.travel_groups || [])
+    .map((group) => ({
+      travel_group_id: group.id,
+      client_id: group.client_id,
+      group_name: normalizeText(group.group_name) || "Travel group",
+      preferred_language: normalizeText(group.preferred_language) || null,
+      preferred_currency: normalizeText(group.preferred_currency) || null,
+      timezone: normalizeText(group.timezone) || null
+    }))
+    .sort((left, right) => left.group_name.localeCompare(right.group_name));
 }
 
 function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, computeClientHash, computeTravelGroupHash }) {
@@ -388,6 +345,29 @@ function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, compu
   return { client, travelGroup, leadCustomer: customer };
 }
 
+async function buildBookingClientResponse(store, booking) {
+  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  const submittedCustomer = buildSubmittedCustomer(booking);
+  const response = {
+    booking: await buildBookingReadModel(booking),
+    client: buildClientReadModel(client, customer, travelGroup),
+    customer: buildCustomerReadModel(customer),
+    travelGroup: travelGroup || null,
+    submittedCustomer,
+    customerCandidates: rankCustomerCandidatesForBookingSubmission(store.customers, submittedCustomer, {
+      normalizeEmail,
+      isLikelyPhoneMatch
+    }),
+    travelGroupOptions: buildTravelGroupOptions(store)
+  };
+  if (travelGroup) {
+    const payloadGroup = buildTravelGroupPayload(store, travelGroup);
+    response.members = payloadGroup.members;
+    response.memberCustomers = payloadGroup.memberCustomers;
+  }
+  return response;
+}
+
 async function handleCreateBooking(req, res) {
   let payload;
   try {
@@ -422,47 +402,9 @@ async function handleCreateBooking(req, res) {
     }
   }
 
-  const customerResolution = resolveCustomerForBookingSubmission(store.customers, payload, {
-    normalizeEmail,
-    isLikelyPhoneMatch
-  });
   const inputPhoneNumber = normalizePhone(payload.phone_number);
   const inputPreferredLanguage = normalizeText(payload.preferred_language) || "English";
   const now = nowIso();
-  let client;
-  let customer;
-
-  if (customerResolution.matchedCustomer) {
-    customer = mergeMatchedCustomer(customerResolution.matchedCustomer, payload, now, inputPreferredLanguage, {
-      normalizeEmail,
-      normalizePhone
-    });
-    const idx = store.customers.findIndex((entry) => entry.client_id === customer.client_id);
-    store.customers[idx] = customer;
-    client = (store.clients || []).find((entry) => entry.id === customer.client_id) || {
-      id: customer.client_id,
-      client_type: "customer"
-    };
-    client.client_hash = computeClientHash(client);
-  } else {
-    client = {
-      id: `client_${randomUUID()}`,
-      client_type: "customer"
-    };
-    client.client_hash = computeClientHash(client);
-    customer = {
-      client_id: client.id,
-      name: normalizeText(payload.name),
-      email: normalizeEmail(payload.email),
-      phone_number: inputPhoneNumber,
-      preferred_language: inputPreferredLanguage,
-      created_at: now,
-      updated_at: now
-    };
-    customer.customer_hash = computeCustomerHash(customer);
-    store.clients.push(client);
-    store.customers.push(customer);
-  }
 
   const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || BASE_CURRENCY);
   const selectedTourId = normalizeText(payload.tourId || payload.tour_id);
@@ -470,11 +412,11 @@ async function handleCreateBooking(req, res) {
 
   const booking = {
     id: `booking_${randomUUID()}`,
-    client_id: client.id,
-    client_type: client.client_type,
-    client_display_name: customer?.name || "",
-    client_primary_phone_number: customer?.phone_number || null,
-    client_primary_email: customer?.email || null,
+    client_id: null,
+    client_type: null,
+    client_display_name: "",
+    client_primary_phone_number: null,
+    client_primary_email: null,
     stage: STAGES.NEW,
     atp_staff: null,
     atp_staff_name: null,
@@ -504,15 +446,7 @@ async function handleCreateBooking(req, res) {
       submitted_name: normalizeText(payload.name) || null,
       submitted_email: normalizeEmail(payload.email) || null,
       submitted_phone_number: inputPhoneNumber || null,
-      submitted_preferred_language: inputPreferredLanguage || null,
-      customer_resolution: {
-        decision: customerResolution.decision,
-        confidence: customerResolution.confidence,
-        reason: customerResolution.reason,
-        matched_customer_client_id: customerResolution.matchedCustomer?.client_id || null,
-        duplicate_candidate_customer_client_ids: customerResolution.duplicateCandidates.map((candidate) => candidate.customer_client_id),
-        duplicate_candidates: customerResolution.duplicateCandidates
-      }
+      submitted_preferred_language: inputPreferredLanguage || null
     },
     idempotency_key: idempotencyKey || null,
     created_at: now,
@@ -521,24 +455,16 @@ async function handleCreateBooking(req, res) {
 
   store.bookings.push(booking);
   addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
-  if (customerResolution.decision === "created_new_customer_with_duplicate_candidate") {
-    addActivity(
-      store,
-      booking.id,
-      "CLIENT_DUPLICATE_REVIEW",
-      "public_api",
-      `Possible existing customers: ${customerResolution.duplicateCandidates.map((candidate) => candidate.customer_client_id).join(", ")}`
-    );
-  }
+  addActivity(store, booking.id, "CLIENT_UNASSIGNED", "public_api", "Booking created without assigned client");
 
   await persistStore(store);
 
   sendJson(res, 201, {
     booking_id: booking.id,
     booking_hash: computeBookingHash(booking),
-    client_id: client.id,
+    client_id: null,
     status: "accepted",
-    deduplicated: customerResolution.decision === "matched_existing_customer",
+    deduplicated: false,
     atp_staff: booking.atp_staff_name,
     sla_due_at: booking.sla_due_at,
     next_step_message: "Thanks, we will contact you with route options within 48-72h."
@@ -580,13 +506,7 @@ async function handleGetBooking(req, res, [bookingId]) {
     return;
   }
 
-  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
-  sendJson(res, 200, {
-    booking: await buildBookingReadModel(booking),
-    client: buildClientReadModel(client, customer, travelGroup),
-    customer: buildCustomerReadModel(customer),
-    travelGroup: travelGroup || null
-  });
+  sendJson(res, 200, await buildBookingClientResponse(store, booking));
 }
 
 async function handleListBookingChatEvents(req, res, [bookingId]) {
@@ -722,59 +642,109 @@ async function handlePatchBookingClient(req, res, [bookingId]) {
   }
   if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
-  const nextType = normalizeText(payload.client_type);
-  if (nextType !== "customer" && nextType !== "travel_group") {
-    sendJson(res, 422, { error: "Invalid client_type" });
+  const customerClientId = normalizeText(payload.customer_client_id);
+  const travelGroupId = normalizeText(payload.travel_group_id);
+
+  if (customerClientId && travelGroupId) {
+    sendJson(res, 422, { error: "Provide either customer_client_id or travel_group_id" });
     return;
   }
 
-  if (nextType === "travel_group") {
-    const { travelGroup } = ensureTravelGroupForBooking(store, booking, {
-      randomUUID,
-      nowIso,
-      computeClientHash,
-      computeTravelGroupHash
-    });
-    if (normalizeText(payload.group_name)) {
-      travelGroup.group_name = normalizeText(payload.group_name);
-      travelGroup.updated_at = nowIso();
-      travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup, membersForTravelGroup(store, travelGroup.id));
+  if (customerClientId) {
+    const customer = (store.customers || []).find((item) => item.client_id === customerClientId);
+    const client = (store.clients || []).find((item) => item.id === customerClientId && item.client_type === "customer");
+    if (!customer || !client) {
+      sendJson(res, 422, { error: "Customer client not found" });
+      return;
     }
+    booking.client_id = customerClientId;
     booking.updated_at = nowIso();
     syncBookingClientSummary(store, booking);
+    addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Assigned to customer ${customer.name}`);
     await persistStore(store);
-    const { client, customer, travelGroup: currentGroup } = resolveBookingClientContext(store, booking);
-    sendJson(res, 200, {
-      booking: await buildBookingReadModel(booking),
-      client: buildClientReadModel(client, customer, currentGroup),
-      customer: buildCustomerReadModel(customer),
-      travelGroup: currentGroup,
-      ...buildTravelGroupPayload(store, currentGroup)
-    });
+    sendJson(res, 200, await buildBookingClientResponse(store, booking));
     return;
   }
 
-  const customerClientId = normalizeText(payload.customer_client_id);
-  if (!customerClientId) {
-    sendJson(res, 422, { error: "customer_client_id is required when switching to customer" });
+  if (!travelGroupId) {
+    sendJson(res, 422, { error: "customer_client_id or travel_group_id is required" });
     return;
   }
-  const customer = (store.customers || []).find((item) => item.client_id === customerClientId);
-  const client = (store.clients || []).find((item) => item.id === customerClientId && item.client_type === "customer");
-  if (!customer || !client) {
-    sendJson(res, 422, { error: "Customer client not found" });
+
+  const travelGroup = (store.travel_groups || []).find((item) => item.id === travelGroupId);
+  const client = travelGroup
+    ? (store.clients || []).find((item) => item.id === travelGroup.client_id && item.client_type === "travel_group")
+    : null;
+  if (!travelGroup || !client) {
+    sendJson(res, 422, { error: "Travel group not found" });
     return;
   }
-  booking.client_id = customerClientId;
+  booking.client_id = client.id;
   booking.updated_at = nowIso();
   syncBookingClientSummary(store, booking);
+  addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Assigned to travel group ${travelGroup.group_name}`);
   await persistStore(store);
-  sendJson(res, 200, {
-    booking: await buildBookingReadModel(booking),
-    client: buildClientReadModel(client, customer, null),
-    customer: buildCustomerReadModel(customer),
-    travelGroup: null
-  });
+  sendJson(res, 200, await buildBookingClientResponse(store, booking));
+}
+
+async function handleCreateBookingCustomer(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+  const submittedCustomer = buildSubmittedCustomer(booking);
+  const customerName = normalizeText(submittedCustomer.name);
+  if (!customerName) {
+    sendJson(res, 422, { error: "Submitted customer name is missing" });
+    return;
+  }
+
+  const createdAt = nowIso();
+  const customerClient = {
+    id: `client_${randomUUID()}`,
+    client_type: "customer"
+  };
+  customerClient.client_hash = computeClientHash(customerClient);
+  const customer = {
+    client_id: customerClient.id,
+    name: customerName,
+    email: normalizeEmail(submittedCustomer.email) || null,
+    phone_number: normalizePhone(submittedCustomer.phone_number) || null,
+    preferred_language: normalizeText(booking?.source?.submitted_preferred_language) || null,
+    created_at: createdAt,
+    updated_at: createdAt
+  };
+  customer.customer_hash = computeCustomerHash(customer);
+
+  if (!Array.isArray(store.clients)) store.clients = [];
+  if (!Array.isArray(store.customers)) store.customers = [];
+  store.clients.push(customerClient);
+  store.customers.push(customer);
+  booking.client_id = customerClient.id;
+  booking.updated_at = createdAt;
+  syncBookingClientSummary(store, booking);
+  addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Created and assigned customer ${customer.name}`);
+  await persistStore(store);
+  sendJson(res, 201, await buildBookingClientResponse(store, booking));
 }
 
 async function handleCreateBookingGroupMember(req, res, [bookingId]) {
@@ -1448,6 +1418,7 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
     handleGetBooking,
     handleListBookingChatEvents,
     handlePatchBookingClient,
+    handleCreateBookingCustomer,
     handleCreateBookingGroupMember,
     handlePatchBookingStage,
     handlePatchBookingOwner,

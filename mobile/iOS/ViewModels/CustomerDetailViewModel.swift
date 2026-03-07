@@ -31,12 +31,12 @@ struct CustomerEditDraft: Equatable {
         name = customer.name
         title = customer.title ?? ""
         dateOfBirth = CustomerDetailViewModel.dateFormatter.date(from: customer.date_of_birth ?? "")
-        nationality = customer.nationality ?? ""
+        nationality = customer.nationality?.rawValue ?? ""
         phoneNumber = customer.phone_number ?? ""
         email = customer.email ?? ""
         preferredLanguage = customer.preferred_language?.rawValue ?? ""
         preferredCurrency = customer.preferred_currency?.rawValue ?? ""
-        timezone = customer.timezone ?? ""
+        timezone = customer.timezone?.rawValue ?? ""
         organizationName = customer.organization_name ?? ""
         organizationAddress = customer.organization_address ?? ""
         organizationPhoneNumber = customer.organization_phone_number ?? ""
@@ -55,7 +55,7 @@ struct CustomerEditDraft: Equatable {
         addressLine2 = customer.address_line_2 ?? ""
         addressPostalCode = customer.address_postal_code ?? ""
         addressCity = customer.address_city ?? ""
-        addressCountryCode = customer.address_country_code ?? ""
+        addressCountryCode = customer.address_country_code?.rawValue ?? ""
         addressStateRegion = customer.address_state_region ?? ""
         notes = customer.notes ?? ""
     }

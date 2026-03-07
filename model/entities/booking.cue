@@ -132,7 +132,7 @@ import (
 #Booking: {
 	id:                 common.#Identifier
 	booking_hash?:      string
-	client_id:          common.#Identifier
+	client_id?:         common.#Identifier
 	client_type?:       enums.#ClientType
 	client_display_name?: string
 	client_primary_phone_number?: string

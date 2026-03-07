@@ -38,8 +38,8 @@ final class BookingDetailViewModel: ObservableObject {
             travelGroup = detailResponse.travelGroup
             noteDraft = detailResponse.booking.notes ?? ""
             originalNote = detailResponse.booking.notes ?? ""
-            activities = try await activityPayload.activities
-            invoices = try await invoicePayload.items
+            activities = try await activityPayload.activities ?? []
+            invoices = try await invoicePayload.items ?? []
             let chatResponse = try await chatPayload
             chatEvents = chatResponse.items
             chatConversations = chatResponse.conversations
@@ -91,7 +91,7 @@ final class BookingDetailViewModel: ObservableObject {
             self.noteDraft = response.booking.notes ?? ""
             self.originalNote = response.booking.notes ?? ""
             let activityPayload = try await apiClient.fetchActivities(bookingID: booking.id, session: session)
-            self.activities = activityPayload.activities
+            self.activities = activityPayload.activities ?? []
             let chatPayload = try await apiClient.fetchBookingChat(bookingID: booking.id, session: session)
             self.chatEvents = chatPayload.items
             self.chatConversations = chatPayload.conversations
@@ -112,7 +112,7 @@ final class BookingDetailViewModel: ObservableObject {
             self.noteDraft = detailResponse.booking.notes ?? ""
             self.originalNote = detailResponse.booking.notes ?? ""
             let activityPayload = try await apiClient.fetchActivities(bookingID: bookingID, session: session)
-            self.activities = activityPayload.activities
+            self.activities = activityPayload.activities ?? []
             let chatPayload = try await apiClient.fetchBookingChat(bookingID: bookingID, session: session)
             self.chatEvents = chatPayload.items
             self.chatConversations = chatPayload.conversations

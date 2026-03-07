@@ -261,7 +261,7 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "client_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "client_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "client_type", kind: "enum", typeName: "ClientType", required: false},
 				{name: "client_display_name", kind: "scalar", typeName: "string", required: false},
 				{name: "client_primary_phone_number", kind: "scalar", typeName: "string", required: false},
@@ -667,9 +667,17 @@ IR: {
 			sourceType: "api.#BookingClientUpdateRequest"
 			fields: [
 				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "client_type", kind: "enum", typeName: "ClientType", required: true},
 				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "group_name", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_group_id", kind: "scalar", typeName: "Identifier", required: false},
+			]
+		},
+		{
+			name:       "BookingClientCreateCustomerRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingClientCreateCustomerRequest"
+			fields: [
+				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { normalizeText } from "../../../shared/js/text.js";
 
 export function createAuth({ port }) {
   const cfg = {
@@ -461,8 +462,4 @@ function extractHost(headerValue) {
   const raw = normalizeText(headerValue);
   if (!raw) return "";
   return raw.split(":")[0];
-}
-
-function normalizeText(value) {
-  return String(value || "").trim();
 }

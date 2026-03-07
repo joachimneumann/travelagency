@@ -182,7 +182,7 @@ Instructions
 Deliver a complete project with this folder structure (or better):
 	•	/index.html
 	•	/assets/css/styles.css
-	•	/assets/js/main.js
+	•	/frontend/scripts/main.js
 	•	/assets/img/* (downloaded + optimized images)
 	•	/assets/img/credits.md (image sources)
 	•	/public/v1/tours

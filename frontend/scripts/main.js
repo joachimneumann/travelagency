@@ -6,15 +6,16 @@
 import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
-} from "../../frontend/Generated/Models/generated_Currency.js";
+} from "../Generated/Models/generated_Currency.js";
 import {
   MAX_TRAVELERS as GENERATED_MAX_TRAVELERS,
   MIN_TRAVELERS as GENERATED_MIN_TRAVELERS
-} from "../../frontend/Generated/Models/generated_FormConstraints.js";
+} from "../Generated/Models/generated_FormConstraints.js";
 import {
   publicBookingsRequest,
   publicToursRequest
-} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+} from "../Generated/API/generated_APIRequestFactory.js";
+import { normalizeText } from "../../shared/js/text.js";
 
 const state = {
   trips: [],
@@ -974,10 +975,6 @@ function setSelectedTourContext(selectedTour) {
 
 function clearSelectedTourContext() {
   setSelectedTourContext(null);
-}
-
-function normalizeText(value) {
-  return String(value || "").trim();
 }
 
 function closeBookingModal() {

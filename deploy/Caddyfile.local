@@ -27,6 +27,6 @@
   }
 
   file_server {
-    hide .git .gitignore backend deploy documentation scripts docker-compose*.yml .env* README* AGENTS.md
+    hide /srv/.git /srv/.gitignore /srv/backend /srv/deploy /srv/documentation /srv/scripts /srv/docker-compose*.yml /srv/.env* /srv/README* /srv/AGENTS.md
   }
 }

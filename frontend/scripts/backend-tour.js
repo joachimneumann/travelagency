@@ -1,3 +1,10 @@
+import {
+  createApiFetcher,
+  escapeHtml,
+  resolveApiUrl,
+  setDirtySurface
+} from "./shared/backend-common.js";
+
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 
@@ -37,12 +44,6 @@ const els = {
   imageUpload: document.getElementById("tourImageUpload"),
   heroImage: document.getElementById("tourHeroImage")
 };
-
-function setDirtySurface(element, isDirty) {
-  if (!element) return;
-  element.classList.add("backend-dirty-frame");
-  element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
-}
 
 function captureTourFormSnapshot() {
   if (!els.form) return "";
@@ -318,33 +319,12 @@ async function fileToBase64(file) {
   });
 }
 
-async function fetchApi(path, options = {}) {
-  const method = options.method || "GET";
-  const body = options.body;
-
-  try {
-    const response = await fetch(`${apiBase}${path}`, {
-      method,
-      credentials: "include",
-      headers: {
-        ...(body ? { "Content-Type": "application/json" } : {})
-      },
-      ...(body ? { body: JSON.stringify(body) } : {})
-    });
-
-    const payload = await response.json();
-    if (!response.ok) {
-      showError(payload.error || "Request failed");
-      return null;
-    }
-
-    return payload;
-  } catch (error) {
-    showError("Could not connect to backend API.");
-    console.error(error);
-    return null;
-  }
-}
+const fetchApi = createApiFetcher({
+  apiBase,
+  onError: (message) => showError(message),
+  includeDetailInError: false,
+  connectionErrorMessage: "Could not connect to backend API."
+});
 
 async function loadAuthStatus() {
   try {
@@ -474,11 +454,7 @@ function tourStyles(tour) {
 }
 
 function absolutizeApiUrl(urlValue) {
-  const value = String(urlValue || "").trim();
-  if (!value) return value;
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  if (value.startsWith("/")) return `${apiBase}${value}`;
-  return `${apiBase}/${value}`;
+  return resolveApiUrl(apiBase, urlValue);
 }
 
 function getInput(id) {
@@ -531,13 +507,4 @@ function normalizeCompareText(value) {
     .trim()
     .replace(/\s+/g, " ")
     .toLowerCase();
-}
-
-function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

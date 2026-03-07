@@ -1,22 +1,36 @@
 import {
   CUSTOMER_SCHEMA,
   CUSTOMER_CONSENT_SCHEMA,
-  CUSTOMER_DOCUMENT_SCHEMA,
+  CUSTOMER_DOCUMENT_SCHEMA
+} from "../Generated/Models/generated_Customer.js";
+import {
   TRAVEL_GROUP_SCHEMA
-} from "../../frontend/Generated/Models/generated_Aux.js";
+} from "../Generated/Models/generated_TravelGroup.js";
 import {
   CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA
-} from "../../frontend/Generated/API/generated_APIModels.js";
+} from "../Generated/API/generated_APIModels.js";
 import {
   normalizeCurrencyCode
-} from "../../frontend/Generated/Models/generated_Currency.js";
-import { normalizeLocalDateTimeToIso } from "./shared/datetime.js";
+} from "../Generated/Models/generated_Currency.js";
+import { normalizeLocalDateTimeToIso } from "../../shared/js/datetime.js";
+import {
+  createApiFetcher,
+  escapeHtml,
+  formatDateTime,
+  normalizeText,
+  resolveApiUrl,
+  setDirtySurface
+} from "./shared/backend-common.js";
+import {
+  buildBookingHref,
+  buildTravelGroupHref
+} from "./shared/backend-links.js";
 import {
   customerConsentCreateRequest,
   customerDetailRequest,
   customerPhotoUploadRequest,
   customerUpdateRequest
-} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+} from "../Generated/API/generated_APIRequestFactory.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -405,12 +419,6 @@ function populateSelectElement(selectEl, options, { includeBlank = false } = {})
     .join("");
   const blankHtml = includeBlank ? '<option value="">(select)</option>' : "";
   selectEl.innerHTML = `${blankHtml}${optionHtml}`;
-}
-
-function setDirtySurface(element, isDirty) {
-  if (!(element instanceof HTMLElement)) return;
-  element.classList.add("backend-dirty-frame");
-  element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
 }
 
 function updateConsentFormDirtyState() {
@@ -1080,16 +1088,6 @@ function clearSaveStatus() {
   setSaveStatus("");
 }
 
-function buildBookingHref(id) {
-  const params = new URLSearchParams({ id });
-  return `backend-booking.html?${params.toString()}`;
-}
-
-function buildTravelGroupHref(id) {
-  const params = new URLSearchParams({ section: "travelGroups", id });
-  return `backend.html?${params.toString()}`;
-}
-
 function customerFieldInputId(fieldName) {
   return `customer-field-${String(fieldName || "").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
@@ -1135,18 +1133,6 @@ function formatDateOnly(value) {
   const d = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return String(value || "-");
   return d.toISOString().slice(0, 10);
-}
-
-function formatDateTime(value) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
 }
 
 function formatDateOnlyForInput(value) {
@@ -1218,41 +1204,12 @@ async function loadAuthStatus() {
   }
 }
 
-async function fetchApi(path, options = {}) {
-  const method = options.method || "GET";
-  const body = options.body;
-  try {
-    const response = await fetch(resolveApiUrl(path), {
-      method,
-      credentials: "include",
-      headers: {
-        ...(body ? { "Content-Type": "application/json" } : {})
-      },
-      ...(body ? { body: JSON.stringify(body) } : {})
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      const message = payload?.detail
-        ? `${payload.error || "Request failed"}: ${payload.detail}`
-        : payload?.error || "Request failed";
-      showError(message);
-      return null;
-    }
-
-    clearError();
-    return payload;
-  } catch (error) {
-    showError("Could not connect to backend API.");
-    console.error(error);
-    return null;
-  }
-}
-
-function resolveApiUrl(pathOrUrl) {
-  const value = String(pathOrUrl || "");
-  if (/^https?:\/\//.test(value)) return value;
-  return `${apiBase}${value}`;
-}
+const fetchApi = createApiFetcher({
+  apiBase,
+  onError: (message) => showError(message),
+  onSuccess: () => clearError(),
+  connectionErrorMessage: "Could not connect to backend API."
+});
 
 function showError(message) {
   if (!els.error) return;
@@ -1264,17 +1221,4 @@ function clearError() {
   if (!els.error) return;
   els.error.textContent = "";
   els.error.classList.remove("show");
-}
-
-function normalizeText(value) {
-  return String(value || "").trim();
-}
-
-function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

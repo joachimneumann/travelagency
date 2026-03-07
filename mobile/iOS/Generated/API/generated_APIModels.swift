@@ -13,6 +13,7 @@ import Foundation
         case api = "api"
         case features = "features"
         }
+
     }
 
     struct GeneratedAuthMeResponse: Codable, Equatable {
@@ -23,6 +24,7 @@ import Foundation
         case authenticated = "authenticated"
         case principal = "principal"
         }
+
     }
 
     struct GeneratedPublicBookingCreateRequest: Codable, Equatable {
@@ -65,6 +67,7 @@ import Foundation
         case utmCampaign = "utmCampaign"
         case idempotencyKey = "idempotencyKey"
         }
+
     }
 
     struct GeneratedBookingDetail: Codable, Equatable {
@@ -79,6 +82,7 @@ import Foundation
         case customer = "customer"
         case travelGroup = "travelGroup"
         }
+
     }
 
     struct GeneratedTourList: Codable, Equatable {
@@ -89,6 +93,7 @@ import Foundation
         case items = "items"
         case pagination = "pagination"
         }
+
     }
 
     struct GeneratedBookingList: Codable, Equatable {
@@ -99,6 +104,7 @@ import Foundation
         case items = "items"
         case pagination = "pagination"
         }
+
     }
 
     struct GeneratedBookingChatResponse: Codable, Equatable {
@@ -115,20 +121,20 @@ import Foundation
         case conversations = "conversations"
         case conversationTotal = "conversationTotal"
         }
+
     }
 
     struct GeneratedBookingClientUpdateRequest: Codable, Equatable {
     let booking_hash: String?
-    let client_type: GeneratedClientType
     let customer_client_id: String?
-    let group_name: String?
+    let travel_group_id: String?
 
         private enum CodingKeys: String, CodingKey {
         case booking_hash = "booking_hash"
-        case client_type = "client_type"
         case customer_client_id = "customer_client_id"
-        case group_name = "group_name"
+        case travel_group_id = "travel_group_id"
         }
+
     }
 
     struct GeneratedBookingClientUpdateResponse: Codable, Equatable {
@@ -147,6 +153,16 @@ import Foundation
         case members = "members"
         case memberCustomers = "memberCustomers"
         }
+
+    }
+
+    struct GeneratedBookingClientCreateCustomerRequest: Codable, Equatable {
+    let booking_hash: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case booking_hash = "booking_hash"
+        }
+
     }
 
     struct GeneratedBookingGroupMemberCreateRequest: Codable, Equatable {
@@ -169,6 +185,7 @@ import Foundation
         case is_traveling = "is_traveling"
         case member_notes = "member_notes"
         }
+
     }
 
     struct GeneratedBookingGroupMemberCreateResponse: Codable, Equatable {
@@ -187,6 +204,7 @@ import Foundation
         case members = "members"
         case memberCustomers = "memberCustomers"
         }
+
     }
 
     struct GeneratedBookingPricingUpdateRequest: Codable, Equatable {
@@ -197,6 +215,7 @@ import Foundation
         case booking_hash = "booking_hash"
         case pricing = "pricing"
         }
+
     }
 
     struct GeneratedBookingOfferUpdateRequest: Codable, Equatable {
@@ -207,6 +226,7 @@ import Foundation
         case booking_hash = "booking_hash"
         case offer = "offer"
         }
+
     }
 
     struct GeneratedBookingActivitiesResponse: Codable, Equatable {
@@ -219,6 +239,7 @@ import Foundation
         case activities = "activities"
         case total = "total"
         }
+
     }
 
     struct GeneratedBookingInvoicesResponse: Codable, Equatable {
@@ -229,6 +250,7 @@ import Foundation
         case items = "items"
         case total = "total"
         }
+
     }
 
     struct GeneratedAtpStaffListResponse: Codable, Equatable {
@@ -239,6 +261,7 @@ import Foundation
         case items = "items"
         case total = "total"
         }
+
     }
 
     struct GeneratedCustomerList: Codable, Equatable {
@@ -249,6 +272,7 @@ import Foundation
         case items = "items"
         case pagination = "pagination"
         }
+
     }
 
     struct GeneratedCustomerDetail: Codable, Equatable {
@@ -269,6 +293,7 @@ import Foundation
         case travelGroups = "travelGroups"
         case travelGroupMembers = "travelGroupMembers"
         }
+
     }
 
     struct GeneratedCustomerUpdateRequest: Codable, Equatable {
@@ -327,6 +352,7 @@ import Foundation
         case timezone = "timezone"
         case notes = "notes"
         }
+
     }
 
     struct GeneratedCustomerUpdateResponse: Codable, Equatable {
@@ -337,6 +363,7 @@ import Foundation
         case client = "client"
         case customer = "customer"
         }
+
     }
 
     struct GeneratedCustomerPhotoUploadRequest: Codable, Equatable {
@@ -349,6 +376,7 @@ import Foundation
         case photo_upload = "photo_upload"
         case photo = "photo"
         }
+
     }
 
     struct GeneratedCustomerPhotoUploadResponse: Codable, Equatable {
@@ -359,6 +387,7 @@ import Foundation
         case client = "client"
         case customer = "customer"
         }
+
     }
 
     struct GeneratedCustomerConsentCreateRequest: Codable, Equatable {
@@ -379,6 +408,7 @@ import Foundation
         case evidence_ref = "evidence_ref"
         case evidence_upload = "evidence_upload"
         }
+
     }
 
     struct GeneratedCustomerConsentCreateResponse: Codable, Equatable {
@@ -391,6 +421,7 @@ import Foundation
         case customer = "customer"
         case consent = "consent"
         }
+
     }
 
     struct GeneratedTravelGroupList: Codable, Equatable {
@@ -407,6 +438,7 @@ import Foundation
         case page_size = "page_size"
         case total_pages = "total_pages"
         }
+
     }
 
     struct GeneratedTravelGroupDetail: Codable, Equatable {
@@ -421,6 +453,7 @@ import Foundation
         case members = "members"
         case memberCustomers = "memberCustomers"
         }
+
     }
 
     struct GeneratedTravelGroupUpdateRequest: Codable, Equatable {
@@ -439,6 +472,7 @@ import Foundation
         case timezone = "timezone"
         case notes = "notes"
         }
+
     }
 
     struct GeneratedTourDetail: Codable, Equatable {
@@ -449,6 +483,7 @@ import Foundation
         case tour = "tour"
         case options = "options"
         }
+
     }
 
     struct GeneratedMobileAppVersionGate: Codable, Equatable {
@@ -461,6 +496,7 @@ import Foundation
         case latestVersion = "latestVersion"
         case forceUpdate = "forceUpdate"
         }
+
     }
 
     struct GeneratedAPIContractVersion: Codable, Equatable {
@@ -469,6 +505,7 @@ import Foundation
         private enum CodingKeys: String, CodingKey {
         case contractVersion = "contractVersion"
         }
+
     }
 
     struct GeneratedFeatureFlags: Codable, Equatable {
@@ -481,6 +518,7 @@ import Foundation
         case customers = "customers"
         case tours = "tours"
         }
+
     }
 
     struct GeneratedClientSummary: Codable, Equatable, Identifiable {
@@ -499,6 +537,7 @@ import Foundation
         case primary_phone_number = "primary_phone_number"
         case primary_email = "primary_email"
         }
+
     }
 
     struct GeneratedPagination: Codable, Equatable {
@@ -511,6 +550,7 @@ import Foundation
         case pageSize = "pageSize"
         case totalItems = "totalItems"
         }
+
     }
 
     struct GeneratedBookingChatEvent: Codable, Equatable, Identifiable {
@@ -541,6 +581,7 @@ import Foundation
         case conversationId = "conversationId"
         case openUrl = "openUrl"
         }
+
     }
 
     struct GeneratedBookingChatConversation: Codable, Equatable, Identifiable {
@@ -563,6 +604,7 @@ import Foundation
         case latestPreview = "latestPreview"
         case openUrl = "openUrl"
         }
+
     }
 
     struct GeneratedAtpStaffDirectoryEntry: Codable, Equatable, Identifiable {
@@ -581,6 +623,7 @@ import Foundation
         case destinations = "destinations"
         case languages = "languages"
         }
+
     }
 
     struct GeneratedClient: Codable, Equatable, Identifiable {
@@ -593,6 +636,7 @@ import Foundation
         case client_type = "client_type"
         case client_hash = "client_hash"
         }
+
     }
 
     struct GeneratedEvidenceUpload: Codable, Equatable {
@@ -605,6 +649,7 @@ import Foundation
         case mime_type = "mime_type"
         case data_base64 = "data_base64"
         }
+
     }
 
     struct GeneratedTourOptions: Codable, Equatable {
@@ -615,5 +660,6 @@ import Foundation
         case destinations = "destinations"
         case styles = "styles"
         }
+
     }
 

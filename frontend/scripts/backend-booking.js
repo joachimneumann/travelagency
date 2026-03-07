@@ -1,41 +1,35 @@
 import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
-} from "../../frontend/Generated/Models/generated_Currency.js";
+} from "../Generated/Models/generated_Currency.js";
 import {
-  BOOKING_CLIENT_UPDATE_REQUEST_SCHEMA,
-  BOOKING_GROUP_MEMBER_CREATE_REQUEST_SCHEMA,
   atpStaffRequest,
   bookingActivitiesRequest,
   bookingAssignmentRequest,
   bookingChatRequest,
   bookingClientRequest,
+  bookingClientCreateCustomerRequest,
   bookingDetailRequest,
-  bookingGroupMembersRequest,
   bookingInvoicesRequest,
   bookingNoteRequest,
   bookingOfferRequest,
   bookingPricingRequest,
   bookingStageRequest,
-} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
-import { normalizeLocalDateTimeToIso } from "./shared/datetime.js";
-
-const BOOKING_CLIENT_UPDATE_FIELDS = Object.fromEntries(
-  BOOKING_CLIENT_UPDATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
-);
-const BOOKING_GROUP_MEMBER_CREATE_FIELDS = Object.fromEntries(
-  BOOKING_GROUP_MEMBER_CREATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
-);
+} from "../Generated/API/generated_APIRequestFactory.js";
+import { normalizeLocalDateTimeToIso } from "../../shared/js/datetime.js";
+import {
+  createApiFetcher,
+  escapeHtml,
+  formatDateTime,
+  normalizeText,
+  resolveApiUrl,
+  setDirtySurface
+} from "./shared/backend-common.js";
+import { buildBookingHref } from "./shared/backend-links.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
-
-function resolveApiUrl(pathOrUrl) {
-  const value = String(pathOrUrl || "");
-  if (/^https?:\/\//.test(value)) return value;
-  return `${apiBase}${value}`;
-}
 
 const STAGES = [
   "NEW",
@@ -81,8 +75,9 @@ const state = {
   client: null,
   customer: null,
   travelGroup: null,
-  travelGroupMembers: [],
-  travelGroupCustomers: [],
+  submittedCustomer: null,
+  customerCandidates: [],
+  travelGroupOptions: [],
   staff: [],
   invoices: [],
   selectedInvoiceId: "",
@@ -128,19 +123,13 @@ const els = {
   actionsPanel: document.getElementById("bookingActionsPanel"),
   ownerSelect: document.getElementById("bookingOwnerSelect"),
   stageSelect: document.getElementById("bookingStageSelect"),
-  clientTypeSelect: document.getElementById("bookingClientTypeSelect"),
-  clientGroupNameInput: document.getElementById("bookingClientGroupNameInput"),
-  clientTypeSaveBtn: document.getElementById("bookingClientTypeSaveBtn"),
+  submittedCustomerLine: document.getElementById("bookingSubmittedCustomerLine"),
+  suggestedCustomerSelect: document.getElementById("bookingSuggestedCustomerSelect"),
+  assignCustomerBtn: document.getElementById("bookingAssignCustomerBtn"),
+  createCustomerBtn: document.getElementById("bookingCreateCustomerBtn"),
+  assignGroupSelect: document.getElementById("bookingAssignGroupSelect"),
+  assignGroupBtn: document.getElementById("bookingAssignGroupBtn"),
   clientStatus: document.getElementById("bookingClientStatus"),
-  groupMembersWrap: document.getElementById("bookingGroupMembersWrap"),
-  groupMembersTable: document.getElementById("bookingGroupMembersTable"),
-  groupMemberNameInput: document.getElementById("bookingGroupMemberNameInput"),
-  groupMemberEmailInput: document.getElementById("bookingGroupMemberEmailInput"),
-  groupMemberPhoneInput: document.getElementById("bookingGroupMemberPhoneInput"),
-  groupMemberLanguageInput: document.getElementById("bookingGroupMemberLanguageInput"),
-  groupMemberRoleSelect: document.getElementById("bookingGroupMemberRoleSelect"),
-  groupMemberTravelingInput: document.getElementById("bookingGroupMemberTravelingInput"),
-  groupMemberAddBtn: document.getElementById("bookingGroupMemberAddBtn"),
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
   actionStatus: document.getElementById("bookingActionStatus"),
@@ -189,12 +178,6 @@ function setOfferSaveEnabled(enabled) {
   if (!els.offerSaveBtn) return;
   els.offerSaveBtn.disabled = !enabled || !state.permissions.canEditBooking;
   setBookingSectionDirty("offer", Boolean(enabled) && state.permissions.canEditBooking);
-}
-
-function setDirtySurface(element, isDirty) {
-  if (!element) return;
-  element.classList.add("backend-dirty-frame");
-  element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
 }
 
 function setBookingSectionDirty(sectionKey, isDirty) {
@@ -270,8 +253,11 @@ async function init() {
 
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
-  if (els.clientTypeSaveBtn) els.clientTypeSaveBtn.addEventListener("click", saveClientType);
-  if (els.groupMemberAddBtn) els.groupMemberAddBtn.addEventListener("click", addGroupMember);
+  if (els.suggestedCustomerSelect) els.suggestedCustomerSelect.addEventListener("change", updateClientAssignmentButtons);
+  if (els.assignGroupSelect) els.assignGroupSelect.addEventListener("change", updateClientAssignmentButtons);
+  if (els.assignCustomerBtn) els.assignCustomerBtn.addEventListener("click", assignSelectedCustomer);
+  if (els.createCustomerBtn) els.createCustomerBtn.addEventListener("click", createAndAssignCustomer);
+  if (els.assignGroupBtn) els.assignGroupBtn.addEventListener("click", assignSelectedGroup);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingPanel) {
@@ -309,8 +295,6 @@ async function init() {
   }
 
   bindSectionNavigation("bookings");
-  populateBookingClientOptions();
-
   if (!state.id) {
     showError("Missing record id.");
     return;
@@ -482,142 +466,122 @@ function applyBookingClientPayload(payload = {}) {
   state.client = payload.client || null;
   state.customer = payload.customer || null;
   state.travelGroup = payload.travelGroup || null;
-  state.travelGroupMembers = Array.isArray(payload.members) ? payload.members : [];
-  state.travelGroupCustomers = Array.isArray(payload.memberCustomers) ? payload.memberCustomers : [];
+  state.submittedCustomer = payload.submittedCustomer || null;
+  state.customerCandidates = Array.isArray(payload.customerCandidates) ? payload.customerCandidates : [];
+  state.travelGroupOptions = Array.isArray(payload.travelGroupOptions) ? payload.travelGroupOptions : [];
 }
 
 function renderClientPanel() {
-  if (!state.booking || !els.clientTypeSelect) return;
-  const currentType = normalizeText(state.booking.client_type || state.client?.client_type || "customer") || "customer";
-  els.clientTypeSelect.value = currentType;
-  els.clientTypeSelect.disabled = !state.permissions.canEditBooking || currentType === "travel_group";
-  if (els.clientGroupNameInput) {
-    els.clientGroupNameInput.value = state.travelGroup?.group_name || state.booking.client_display_name || "";
-    els.clientGroupNameInput.disabled = !state.permissions.canEditBooking || currentType !== "travel_group";
+  if (!state.booking) return;
+  if (els.submittedCustomerLine) {
+    const submitted = state.submittedCustomer || {};
+    const parts = [submitted.name, submitted.email, submitted.phone_number].filter(Boolean);
+    els.submittedCustomerLine.textContent = parts.length ? parts.join(", ") : "No submitted customer information";
   }
-  if (els.clientTypeSaveBtn) {
-    els.clientTypeSaveBtn.disabled = !state.permissions.canEditBooking;
+  if (els.suggestedCustomerSelect) {
+    const options = ['<option value="">Select existing customer</option>']
+      .concat(
+        (state.customerCandidates || []).map((candidate) => {
+          const parts = [candidate.name, candidate.email, candidate.phone_number].filter(Boolean).join(" · ");
+          return `<option value="${escapeHtml(candidate.customer_client_id)}">${escapeHtml(parts || candidate.customer_client_id)}</option>`;
+        })
+      )
+      .join("");
+    const currentValue = els.suggestedCustomerSelect.value;
+    els.suggestedCustomerSelect.innerHTML = options;
+    els.suggestedCustomerSelect.value = currentValue && (state.customerCandidates || []).some((item) => item.customer_client_id === currentValue)
+      ? currentValue
+      : "";
+    els.suggestedCustomerSelect.disabled = !state.permissions.canEditBooking;
   }
-  [
-    els.groupMemberNameInput,
-    els.groupMemberEmailInput,
-    els.groupMemberPhoneInput,
-    els.groupMemberLanguageInput,
-    els.groupMemberRoleSelect,
-    els.groupMemberTravelingInput,
-    els.groupMemberAddBtn
-  ].forEach((element) => {
-    if (element) element.disabled = !state.permissions.canEditBooking || currentType !== "travel_group";
-  });
-  if (els.groupMembersWrap) {
-    els.groupMembersWrap.hidden = currentType !== "travel_group";
+  if (els.assignGroupSelect) {
+    const options = ['<option value="">Select existing group</option>']
+      .concat(
+        (state.travelGroupOptions || []).map((group) =>
+          `<option value="${escapeHtml(group.travel_group_id)}">${escapeHtml(group.group_name || group.travel_group_id)}</option>`
+        )
+      )
+      .join("");
+    const currentValue = els.assignGroupSelect.value;
+    els.assignGroupSelect.innerHTML = options;
+    els.assignGroupSelect.value = currentValue && (state.travelGroupOptions || []).some((item) => item.travel_group_id === currentValue)
+      ? currentValue
+      : "";
+    els.assignGroupSelect.disabled = !state.permissions.canEditBooking;
   }
-  renderGroupMembersTable();
-}
-
-function populateBookingClientOptions() {
-  populateSelectFromField(els.clientTypeSelect, BOOKING_CLIENT_UPDATE_FIELDS.client_type);
-  populateSelectFromField(els.groupMemberLanguageInput, BOOKING_GROUP_MEMBER_CREATE_FIELDS.preferred_language, { includeBlank: true });
-  populateSelectFromField(els.groupMemberRoleSelect, BOOKING_GROUP_MEMBER_CREATE_FIELDS.member_roles, { includeBlank: false });
-  if (els.groupMemberRoleSelect && !els.groupMemberRoleSelect.value) {
-    els.groupMemberRoleSelect.value = "other";
-  }
-  if (els.groupMemberLanguageInput && !els.groupMemberLanguageInput.value) {
-    els.groupMemberLanguageInput.value = "";
-  }
-}
-
-function populateSelectFromField(selectEl, field, { includeBlank = false } = {}) {
-  if (!(selectEl instanceof HTMLSelectElement) || !field) return;
-  const options = Array.isArray(field.options) ? field.options : [];
-  const blank = includeBlank ? '<option value=""></option>' : "";
-  selectEl.innerHTML = `${blank}${options
-    .map((option) => `<option value="${escapeHtml(option.value || "")}">${escapeHtml(option.label || option.value || "")}</option>`)
-    .join("")}`;
-}
-
-function renderGroupMembersTable() {
-  if (!els.groupMembersTable) return;
-  const members = Array.isArray(state.travelGroupMembers) ? state.travelGroupMembers : [];
-  const customersByClientId = new Map((state.travelGroupCustomers || []).map((customer) => [customer.client_id, customer]));
-  const header = "<thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Roles</th><th>Traveling</th></tr></thead>";
-  const rows = members
-    .map((member) => {
-      const customer = customersByClientId.get(member.customer_client_id) || null;
-      return `<tr>
-        <td>${escapeHtml(customer?.name || shortId(member.customer_client_id || "-"))}</td>
-        <td>${escapeHtml(customer?.email || "-")}</td>
-        <td>${escapeHtml(customer?.phone_number || "-")}</td>
-        <td>${escapeHtml(Array.isArray(member.member_roles) ? member.member_roles.join(", ") : "-")}</td>
-        <td>${member.is_traveling === false ? "No" : "Yes"}</td>
-      </tr>`;
-    })
-    .join("");
-  const body = rows || '<tr><td colspan="5">No group members yet</td></tr>';
-  els.groupMembersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-}
-
-async function saveClientType() {
-  if (!state.permissions.canEditBooking || !state.booking || !els.clientTypeSelect) return;
-  const clientType = normalizeText(els.clientTypeSelect.value || "customer");
-  const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash,
-      client_type: clientType,
-      group_name: clientType === "travel_group" ? normalizeText(els.clientGroupNameInput?.value) || null : null
-    }
-  });
-  if (!result?.booking) return;
-  applyBookingClientPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  setClientStatus(clientType === "travel_group" ? "Client converted to travel group." : "Client updated.");
-}
-
-async function addGroupMember() {
-  if (!state.permissions.canEditBooking || !state.booking) return;
-  const name = normalizeText(els.groupMemberNameInput?.value);
-  if (!name) {
-    setClientStatus("Name is required.");
-    return;
-  }
-  const request = bookingGroupMembersRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash,
-      name,
-      email: normalizeText(els.groupMemberEmailInput?.value) || null,
-      phone_number: normalizeText(els.groupMemberPhoneInput?.value) || null,
-      preferred_language: normalizeText(els.groupMemberLanguageInput?.value) || null,
-      member_roles: [normalizeText(els.groupMemberRoleSelect?.value) || "other"],
-      is_traveling: Boolean(els.groupMemberTravelingInput?.checked)
-    }
-  });
-  if (!result?.booking) return;
-  applyBookingClientPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  clearGroupMemberForm();
-  setClientStatus("Group member added.");
-}
-
-function clearGroupMemberForm() {
-  if (els.groupMemberNameInput) els.groupMemberNameInput.value = "";
-  if (els.groupMemberEmailInput) els.groupMemberEmailInput.value = "";
-  if (els.groupMemberPhoneInput) els.groupMemberPhoneInput.value = "";
-  if (els.groupMemberLanguageInput) els.groupMemberLanguageInput.value = "";
-  if (els.groupMemberRoleSelect) els.groupMemberRoleSelect.value = "other";
-  if (els.groupMemberTravelingInput) els.groupMemberTravelingInput.checked = true;
+  if (els.createCustomerBtn) els.createCustomerBtn.disabled = !state.permissions.canEditBooking;
+  updateClientAssignmentButtons();
 }
 
 function setClientStatus(message) {
   if (!els.clientStatus) return;
   els.clientStatus.textContent = message;
+}
+
+function updateClientAssignmentButtons() {
+  if (els.assignCustomerBtn) {
+    els.assignCustomerBtn.disabled =
+      !state.permissions.canEditBooking || !(normalizeText(els.suggestedCustomerSelect?.value) || "");
+  }
+  if (els.assignGroupBtn) {
+    els.assignGroupBtn.disabled =
+      !state.permissions.canEditBooking || !(normalizeText(els.assignGroupSelect?.value) || "");
+  }
+}
+
+async function assignSelectedCustomer() {
+  const customerClientId = normalizeText(els.suggestedCustomerSelect?.value);
+  if (!state.permissions.canEditBooking || !state.booking || !customerClientId) return;
+  const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      booking_hash: state.booking.booking_hash,
+      customer_client_id: customerClientId
+    }
+  });
+  if (!result?.booking) return;
+  applyBookingClientPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  setClientStatus("Booking assigned to customer.");
+}
+
+async function createAndAssignCustomer() {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  const request = bookingClientCreateCustomerRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      booking_hash: state.booking.booking_hash
+    }
+  });
+  if (!result?.booking) return;
+  applyBookingClientPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  setClientStatus("New customer created and assigned.");
+}
+
+async function assignSelectedGroup() {
+  const travelGroupId = normalizeText(els.assignGroupSelect?.value);
+  if (!state.permissions.canEditBooking || !state.booking || !travelGroupId) return;
+  const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      booking_hash: state.booking.booking_hash,
+      travel_group_id: travelGroupId
+    }
+  });
+  if (!result?.booking) return;
+  applyBookingClientPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  setClientStatus("Booking assigned to travel group.");
 }
 
 function renderPricingPanel() {
@@ -2151,35 +2115,12 @@ function toEntries(obj) {
     }));
 }
 
-async function fetchApi(path, options = {}) {
-  const method = options.method || "GET";
-  const body = options.body;
-
-  try {
-    const response = await fetch(resolveApiUrl(path), {
-      method,
-      credentials: "include",
-      headers: {
-        ...(body ? { "Content-Type": "application/json" } : {})
-      },
-      ...(body ? { body: JSON.stringify(body) } : {})
-    });
-
-    const payload = await response.json();
-    if (!response.ok) {
-      const message = payload?.detail ? `${payload.error || "Request failed"}: ${payload.detail}` : payload.error || "Request failed";
-      showError(message);
-      return null;
-    }
-
-    clearError();
-    return payload;
-  } catch (error) {
-    showError("Could not connect to backend API.");
-    console.error(error);
-    return null;
-  }
-}
+const fetchApi = createApiFetcher({
+  apiBase,
+  onError: (message) => showError(message),
+  onSuccess: () => clearError(),
+  connectionErrorMessage: "Could not connect to backend API."
+});
 
 async function fetchBookingMutation(path, options = {}) {
   const method = options.method || "GET";
@@ -2223,11 +2164,6 @@ async function fetchBookingMutation(path, options = {}) {
     console.error(error);
     return null;
   }
-}
-
-function buildBookingHref(id) {
-  const params = new URLSearchParams({ id });
-  return `backend-booking.html?${params.toString()}`;
 }
 
 function setStatus(message) {
@@ -2282,25 +2218,4 @@ function clearError() {
 function shortId(value) {
   const id = String(value || "");
   return id.length > 6 ? id.slice(-6) : id;
-}
-
-function formatDateTime(value) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
-}
-
-function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

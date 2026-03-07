@@ -40,10 +40,6 @@
 
         struct GeneratedSourceAttribution: Codable, Equatable {
 
-
-        private enum CodingKeys: String, CodingKey {
-
-        }
     }
 
     struct GeneratedBookingActivity: Codable, Equatable, Identifiable {
@@ -62,22 +58,15 @@
         case detail = "detail"
         case createdAt = "createdAt"
         }
+
     }
 
     struct GeneratedBookingInvoice: Codable, Equatable {
 
-
-        private enum CodingKeys: String, CodingKey {
-
-        }
     }
 
     struct GeneratedBookingPricing: Codable, Equatable {
 
-
-        private enum CodingKeys: String, CodingKey {
-
-        }
     }
 
     struct GeneratedBookingOfferCategoryRule: Codable, Equatable {
@@ -88,6 +77,7 @@
         case category = "category"
         case taxRateBasisPoints = "taxRateBasisPoints"
         }
+
     }
 
     struct GeneratedBookingOfferComponent: Codable, Equatable, Identifiable {
@@ -120,6 +110,7 @@
         case createdAt = "createdAt"
         case updatedAt = "updatedAt"
         }
+
     }
 
     struct GeneratedBookingOfferTotals: Codable, Equatable {
@@ -134,6 +125,7 @@
         case grossAmountCents = "grossAmountCents"
         case componentsCount = "componentsCount"
         }
+
     }
 
     struct GeneratedBookingOffer: Codable, Equatable {
@@ -150,12 +142,13 @@
         case totals = "totals"
         case totalPriceCents = "totalPriceCents"
         }
+
     }
 
     struct GeneratedBooking: Codable, Equatable, Identifiable {
     let id: String
     let booking_hash: String?
-    let client_id: String
+    let client_id: String?
     let client_type: GeneratedClientType?
     let client_display_name: String?
     let client_primary_phone_number: String?
@@ -202,5 +195,6 @@
         case createdAt = "createdAt"
         case updatedAt = "updatedAt"
         }
+
     }
 
