@@ -1,3 +1,32 @@
+import {
+  CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA,
+  CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA,
+  CUSTOMER_UPDATE_REQUEST_SCHEMA
+} from "../../../Generated/API/generated_APIModels.js";
+
+const CUSTOMER_UPDATE_FIELDS = new Set(
+  CUSTOMER_UPDATE_REQUEST_SCHEMA.fields
+    .map((field) => field.name)
+    .filter((name) => name && name !== "id")
+);
+
+const CUSTOMER_UPDATE_FIELDS_BY_NAME = Object.fromEntries(
+  CUSTOMER_UPDATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
+);
+
+const CUSTOMER_UPDATE_DATE_FIELDS = new Set(
+  CUSTOMER_UPDATE_REQUEST_SCHEMA.fields
+    .filter((field) => field.format === "date" || field.format === "date-time")
+    .map((field) => field.name)
+);
+
+const CUSTOMER_CONSENT_FIELDS = Object.fromEntries(
+  CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
+);
+
+const CUSTOMER_CONSENT_TYPES = new Set(CUSTOMER_CONSENT_FIELDS.consent_type?.enumValues || []);
+const CUSTOMER_CONSENT_STATUSES = new Set(CUSTOMER_CONSENT_FIELDS.status?.enumValues || []);
+
 export function createCustomerHandlers(deps) {
   const {
     getPrincipal,
@@ -111,46 +140,14 @@ export function createCustomerHandlers(deps) {
     await sendFileWithCache(req, res, filePath, "public, max-age=300");
   };
 
-const CUSTOMER_UPDATE_FIELDS = new Set([
-  "id",
-  "name",
-  "photo_ref",
-  "title",
-  "first_name",
-  "last_name",
-  "date_of_birth",
-  "nationality",
-  "address_line_1",
-  "address_line_2",
-  "address_city",
-  "address_state_region",
-  "address_postal_code",
-  "address_country_code",
-  "organization_name",
-  "organization_address",
-  "organization_phone_number",
-  "organization_webpage",
-  "organization_email",
-  "tax_id",
-  "phone_number",
-  "email",
-  "preferred_language",
-  "preferred_currency",
-  "timezone",
-  "notes",
-  "created_at",
-  "updated_at",
-  "archived_at",
-  "phone",
-  "language"
-]);
-
 function buildCustomerReadModel(customer) {
   return {
     ...customer,
     name: normalizeText(customer?.name) || "",
     photo_ref: normalizeText(customer?.photo_ref) || null,
-    title: normalizeText(customer?.title) || null
+    title: normalizeText(customer?.title) || null,
+    phone_number: normalizeText(customer?.phone_number) || null,
+    preferred_language: normalizeText(customer?.preferred_language) || null
   };
 }
 
@@ -169,7 +166,15 @@ async function handleListCustomers(req, res) {
     .map((customer) => buildCustomerReadModel(customer))
     .filter((customer) => {
       if (!search) return true;
-      const haystack = [customer.name, customer.email, customer.phone, customer.language].filter(Boolean).join(" ").toLowerCase();
+      const haystack = [
+        customer.name,
+        customer.email,
+        customer.phone_number,
+        customer.preferred_language
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
       return haystack.includes(search);
     })
     .sort((a, b) =>
@@ -201,8 +206,29 @@ async function handleGetCustomer(req, res, [customerId]) {
   const consents = (Array.isArray(store.customer_consents) ? store.customer_consents : [])
     .filter((consent) => consent.customer_id === customer.id)
     .sort((a, b) => String(b.captured_at || "").localeCompare(String(a.captured_at || "")));
+  const documents = (Array.isArray(store.customer_documents) ? store.customer_documents : [])
+    .filter((document) => document.customer_id === customer.id)
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  const travelGroupMembers = (Array.isArray(store.travel_group_members) ? store.travel_group_members : [])
+    .filter((member) => member.customer_id === customer.id)
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  const relatedTravelGroupIds = new Set(
+    travelGroupMembers
+      .map((member) => normalizeText(member.travel_group_id))
+      .filter(Boolean)
+  );
+  const travelGroups = (Array.isArray(store.travel_groups) ? store.travel_groups : [])
+    .filter((group) => relatedTravelGroupIds.has(normalizeText(group.id)))
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
 
-  sendJson(res, 200, { customer: buildCustomerReadModel(customer), bookings: bookingsReadModel, consents });
+  sendJson(res, 200, {
+    customer: buildCustomerReadModel(customer),
+    bookings: bookingsReadModel,
+    consents,
+    documents,
+    travelGroups,
+    travelGroupMembers
+  });
 }
 
 async function handlePatchCustomer(req, res, [customerId]) {
@@ -327,7 +353,8 @@ async function handleUploadCustomerPhoto(req, res, [customerId]) {
     return;
   }
 
-  const upload = normalizeEvidenceUpload(payload.photo_upload || payload.photo);
+  const uploadFieldName = CUSTOMER_PHOTO_UPLOAD_REQUEST_SCHEMA.fields[0]?.name || "photo_upload";
+  const upload = normalizeEvidenceUpload(payload[uploadFieldName]);
   if (!upload) {
     sendJson(res, 422, { error: "Invalid customer photo payload" });
     return;
@@ -460,9 +487,7 @@ function normalizeCustomerConsentCreate(payload = {}) {
   const normalizeConsentText = (value) => String(value || "").trim();
   const consentType = normalizeConsentText(payload.consent_type);
   const status = normalizeConsentText(payload.status);
-  const allowedTypes = new Set(["privacy_policy", "marketing_email", "marketing_whatsapp", "profiling"]);
-  const allowedStatuses = new Set(["granted", "withdrawn", "unknown"]);
-  if (!allowedTypes.has(consentType) || !allowedStatuses.has(status)) {
+  if (!CUSTOMER_CONSENT_TYPES.has(consentType) || !CUSTOMER_CONSENT_STATUSES.has(status)) {
     return null;
   }
 
@@ -498,21 +523,25 @@ function normalizeCustomerPatch(payload = {}) {
       return;
     }
 
-    if (key === "created_at" || key === "updated_at" || key === "archived_at" || key === "date_of_birth") {
-      patch[key] = normalizeText(value);
+    const field = CUSTOMER_UPDATE_FIELDS_BY_NAME[key];
+    const normalizedValue = normalizeText(value);
+
+    if (CUSTOMER_UPDATE_DATE_FIELDS.has(key)) {
+      patch[key] = normalizedValue;
       return;
     }
 
-    patch[key] = normalizeText(value);
+    if (field?.kind === "enum") {
+      const allowedValues = Array.isArray(field.enumValues) ? new Set(field.enumValues) : null;
+      if (normalizedValue && allowedValues && !allowedValues.has(normalizedValue)) {
+        return;
+      }
+      patch[key] = normalizedValue;
+      return;
+    }
+
+    patch[key] = normalizedValue;
   });
-
-  if (Object.prototype.hasOwnProperty.call(patch, "phone_number") && !Object.prototype.hasOwnProperty.call(patch, "phone")) {
-    patch.phone = patch.phone_number;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(patch, "preferred_language") && !Object.prototype.hasOwnProperty.call(patch, "language")) {
-    patch.language = patch.preferred_language;
-  }
 
   return patch;
 }
@@ -524,13 +553,5 @@ function applyCustomerPatch(customer, patch = {}) {
 
   if (Object.prototype.hasOwnProperty.call(patch, "name")) {
     customer.name = patch.name || customer.name || "";
-  }
-
-  if (Object.prototype.hasOwnProperty.call(patch, "phone_number")) {
-    customer.phone = patch.phone_number || customer.phone;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(patch, "preferred_language")) {
-    customer.language = patch.preferred_language || customer.language;
   }
 }

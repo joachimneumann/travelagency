@@ -932,6 +932,7 @@ function renderFormStep() {
 
   els.stepBack.style.visibility = state.formStep === 1 ? "hidden" : "visible";
   els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;
+  els.stepNext.hidden = state.bookingSubmitted;
   els.stepNext.disabled = state.bookingSubmitted;
   els.stepNext.textContent = state.formStep === 3 ? "Submit request" : "Next";
   if (els.stepClose) {
@@ -1030,8 +1031,8 @@ async function submitBookingForm() {
     budget: entries.budget || "",
     name: entries.name || "",
     email: entries.email || "",
-    phone: entries.phone || "",
-    language: entries.language || "",
+    phone_number: entries.phone || "",
+    preferred_language: entries.language || "",
     notes: entries.notes || "",
     tourId: entries.tourId || "",
     tourTitle: entries.tourTitle || "",
@@ -1062,9 +1063,9 @@ async function submitBookingForm() {
     }
     state.bookingSubmitted = true;
     els.success.classList.add("show");
-    els.stepNext.textContent = "Submitted";
+    els.stepNext.hidden = true;
     els.stepNext.disabled = true;
-    els.stepNext.classList.add("is-submitted");
+    els.stepNext.classList.remove("is-submitted");
     els.stepBack.disabled = true;
     if (els.stepClose) {
       els.stepClose.hidden = false;
@@ -1092,6 +1093,7 @@ function clearBookingFeedback() {
     els.success.classList.remove("show");
   }
   if (els.stepNext) {
+    els.stepNext.hidden = state.bookingSubmitted;
     els.stepNext.disabled = state.bookingSubmitted;
     els.stepNext.classList.toggle("is-submitted", state.bookingSubmitted);
     if (els.stepClose) {

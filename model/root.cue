@@ -34,6 +34,14 @@ import (
 		PaymentStatus:         enumModel.#PaymentStatus
 		PricingAdjustmentType: enumModel.#PricingAdjustmentType
 		OfferCategory:         enumModel.#OfferCategory
+		CountryCode:           enumModel.#CountryCode
+		TimezoneCode:          enumModel.#TimezoneCode
+		CustomerConsentType:   enumModel.#CustomerConsentType
+		CustomerConsentStatus: enumModel.#CustomerConsentStatus
+		CustomerDocumentType:  enumModel.#CustomerDocumentType
+		TravelGroupType:       enumModel.#TravelGroupType
+		TravelGroupMemberRole: enumModel.#TravelGroupMemberRole
+		BookingActivityType:   enumModel.#BookingActivityType
 	}
 
 	api: {
@@ -56,10 +64,16 @@ import (
 		Pagination:                  apiModel.#Pagination
 		ErrorResponse:               apiModel.#ErrorResponse
 		PaginatedRequest:            apiModel.#PaginatedRequest
-		PublicBookingCreateRequest:  apiModel.#PublicBookingCreateRequest
-		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
-		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
-		Endpoints:                   apiModel.#Endpoints
+		PublicBookingCreateRequest:   apiModel.#PublicBookingCreateRequest
+		BookingPricingUpdateRequest:  apiModel.#BookingPricingUpdateRequest
+		BookingOfferUpdateRequest:    apiModel.#BookingOfferUpdateRequest
+		CustomerUpdateRequest:        apiModel.#CustomerUpdateRequest
+		CustomerPhotoUploadRequest:   apiModel.#CustomerPhotoUploadRequest
+		CustomerConsentCreateRequest: apiModel.#CustomerConsentCreateRequest
+		CustomerUpdateResponse:       apiModel.#CustomerUpdateResponse
+		CustomerPhotoUploadResponse:  apiModel.#CustomerPhotoUploadResponse
+		CustomerConsentCreateResponse: apiModel.#CustomerConsentCreateResponse
+		Endpoints:                    apiModel.#Endpoints
 	}
 }
 

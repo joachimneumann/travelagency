@@ -53,6 +53,32 @@ IR: {
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
+		countries: [for country in enumModel.CountryCatalog {{code: country}}]
+		timezones: [for timezone in enumModel.TimezoneCatalog {{code: timezone}}]
+		customerConsentTypes: [for consentType in enumModel.CustomerConsentTypeCatalog {{code: consentType}}]
+		customerConsentStatuses: [for consentStatus in enumModel.CustomerConsentStatusCatalog {{code: consentStatus}}]
+		customerDocumentTypes: [for documentType in enumModel.CustomerDocumentTypeCatalog {{code: documentType}}]
+		travelGroupTypes: [for groupType in enumModel.TravelGroupTypeCatalog {{code: groupType}}]
+		travelGroupMemberRoles: [for role in enumModel.TravelGroupMemberRoleCatalog {{code: role}}]
+		bookingActivityTypes: [for activityType in enumModel.BookingActivityTypeCatalog {{code: activityType}}]
+	}
+
+	enumTypes: {
+		LanguageCode: {catalog: "languages"}
+		CurrencyCode: {catalog: "currencies"}
+		ATPStaffRole: {catalog: "roles"}
+		BookingStage: {catalog: "stages"}
+		PaymentStatus: {catalog: "paymentStatuses"}
+		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
+		OfferCategory: {catalog: "offerCategories"}
+		CountryCode: {catalog: "countries"}
+		TimezoneCode: {catalog: "timezones"}
+		CustomerConsentType: {catalog: "customerConsentTypes"}
+		CustomerConsentStatus: {catalog: "customerConsentStatuses"}
+		CustomerDocumentType: {catalog: "customerDocumentTypes"}
+		TravelGroupType: {catalog: "travelGroupTypes"}
+		TravelGroupMemberRole: {catalog: "travelGroupMemberRoles"}
+		BookingActivityType: {catalog: "bookingActivityTypes"}
 	}
 
 	types: [
@@ -78,17 +104,18 @@ IR: {
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
 					{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "first_name", kind: "scalar", typeName: "string", required: false},
 				{name: "last_name", kind: "scalar", typeName: "string", required: false},
 				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "nationality", kind: "scalar", typeName: "string", required: false},
+				{name: "nationality", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "address_line_1", kind: "scalar", typeName: "string", required: false},
 				{name: "address_line_2", kind: "scalar", typeName: "string", required: false},
 				{name: "address_city", kind: "scalar", typeName: "string", required: false},
 				{name: "address_state_region", kind: "scalar", typeName: "string", required: false},
 				{name: "address_postal_code", kind: "scalar", typeName: "string", required: false},
-				{name: "address_country_code", kind: "scalar", typeName: "string", required: false},
+				{name: "address_country_code", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "organization_name", kind: "scalar", typeName: "string", required: false},
 				{name: "organization_address", kind: "scalar", typeName: "string", required: false},
 				{name: "organization_phone_number", kind: "scalar", typeName: "string", required: false},
@@ -99,7 +126,7 @@ IR: {
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
 				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
-				{name: "timezone", kind: "scalar", typeName: "string", required: false},
+				{name: "timezone", kind: "enum", typeName: "TimezoneCode", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -114,8 +141,8 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "customer_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "consent_type", kind: "scalar", typeName: "string", required: true},
-				{name: "status", kind: "scalar", typeName: "string", required: true},
+				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
+				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
 				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
 				{name: "captured_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "evidence_ref", kind: "scalar", typeName: "string", required: false},
@@ -130,10 +157,10 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "customer_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "document_type", kind: "scalar", typeName: "string", required: true},
+				{name: "document_type", kind: "enum", typeName: "CustomerDocumentType", required: true},
 				{name: "document_number", kind: "scalar", typeName: "string", required: false},
 				{name: "document_picture_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "issuing_country", kind: "scalar", typeName: "string", required: false},
+				{name: "issuing_country", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "expires_on", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -148,7 +175,7 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
-				{name: "group_type", kind: "scalar", typeName: "string", required: true},
+				{name: "group_type", kind: "enum", typeName: "TravelGroupType", required: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -164,7 +191,7 @@ IR: {
 				{name: "travel_group_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "customer_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "is_traveling", kind: "scalar", typeName: "bool", required: false},
-				{name: "member_roles", kind: "scalar", typeName: "string", required: true, isArray: true},
+				{name: "member_roles", kind: "enum", typeName: "TravelGroupMemberRole", required: true, isArray: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -275,6 +302,20 @@ IR: {
 				{name: "components", kind: "valueObject", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "totals", kind: "valueObject", typeName: "BookingOfferTotals", required: true},
 				{name: "totalPriceCents", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
+			name:       "BookingActivity"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingActivity"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "bookingId", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "type", kind: "enum", typeName: "BookingActivityType", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: true},
+				{name: "detail", kind: "scalar", typeName: "string", required: true},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: true},
 			]
 		},
 		{
@@ -535,8 +576,8 @@ IR: {
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "phone", kind: "scalar", typeName: "string", required: false},
-				{name: "language", kind: "scalar", typeName: "string", required: false},
+				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "pageUrl", kind: "scalar", typeName: "string", required: false},
 				{name: "referrer", kind: "scalar", typeName: "string", required: false},
@@ -564,6 +605,101 @@ IR: {
 			fields: [
 				{name: "bookingHash", kind: "scalar", typeName: "string", required: false},
 				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
+			]
+		},
+		{
+			name:       "CustomerUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CustomerUpdateRequest"
+			fields: [
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "first_name", kind: "scalar", typeName: "string", required: false},
+				{name: "last_name", kind: "scalar", typeName: "string", required: false},
+				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "nationality", kind: "enum", typeName: "CountryCode", required: false},
+				{name: "address_line_1", kind: "scalar", typeName: "string", required: false},
+				{name: "address_line_2", kind: "scalar", typeName: "string", required: false},
+				{name: "address_city", kind: "scalar", typeName: "string", required: false},
+				{name: "address_state_region", kind: "scalar", typeName: "string", required: false},
+				{name: "address_postal_code", kind: "scalar", typeName: "string", required: false},
+				{name: "address_country_code", kind: "enum", typeName: "CountryCode", required: false},
+				{name: "organization_name", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_address", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_webpage", kind: "scalar", typeName: "string", required: false},
+				{name: "organization_email", kind: "scalar", typeName: "Email", required: false},
+				{name: "tax_id", kind: "scalar", typeName: "string", required: false},
+				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "email", kind: "scalar", typeName: "Email", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "timezone", kind: "enum", typeName: "TimezoneCode", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "EvidenceUpload"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#EvidenceUpload"
+			fields: [
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
+				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
+			name:       "CustomerPhotoUploadRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CustomerPhotoUploadRequest"
+			fields: [
+				{name: "photo_upload", kind: "transport", typeName: "EvidenceUpload", required: false},
+				{name: "photo", kind: "transport", typeName: "EvidenceUpload", required: false},
+			]
+		},
+		{
+			name:       "CustomerConsentCreateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CustomerConsentCreateRequest"
+			fields: [
+				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
+				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
+				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
+				{name: "captured_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "evidence_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "evidence_upload", kind: "transport", typeName: "EvidenceUpload", required: false},
+			]
+		},
+		{
+			name:       "CustomerUpdateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CustomerUpdateResponse"
+			fields: [
+				{name: "customer", kind: "entity", typeName: "Customer", required: true},
+			]
+		},
+		{
+			name:       "CustomerPhotoUploadResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CustomerPhotoUploadResponse"
+			fields: [
+				{name: "customer", kind: "entity", typeName: "Customer", required: true},
+			]
+		},
+		{
+			name:       "CustomerConsentCreateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CustomerConsentCreateResponse"
+			fields: [
+				{name: "consent", kind: "entity", typeName: "CustomerConsent", required: true},
 			]
 		},
 		{

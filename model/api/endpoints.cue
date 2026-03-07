@@ -204,6 +204,48 @@ package api
 		}]
 	},
 	{
+		key:           "customer_update"
+		path:          "/api/v1/customers/{customerId}"
+		method:        "PATCH"
+		authenticated: true
+		requestType:   "CustomerUpdateRequest"
+		responseType:  "CustomerUpdateResponse"
+		parameters: [{
+			name:     "customerId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "customer_photo_upload"
+		path:          "/api/v1/customers/{customerId}/photo"
+		method:        "POST"
+		authenticated: true
+		requestType:   "CustomerPhotoUploadRequest"
+		responseType:  "CustomerPhotoUploadResponse"
+		parameters: [{
+			name:     "customerId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "customer_consent_create"
+		path:          "/api/v1/customers/{customerId}/consents"
+		method:        "POST"
+		authenticated: true
+		requestType:   "CustomerConsentCreateRequest"
+		responseType:  "CustomerConsentCreateResponse"
+		parameters: [{
+			name:     "customerId"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "tours"
 		path:          "/api/v1/tours"
 		method:        "GET"

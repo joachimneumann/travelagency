@@ -11,13 +11,13 @@ import enums "travelagency.local/model/enums"
 	first_name?:           string
 	last_name?:            string
 	date_of_birth?:        common.#DateOnly
-	nationality?:          string
+	nationality?:          enums.#CountryCode
 	address_line_1?:       string
 	address_line_2?:       string
 	address_city?:         string
 	address_state_region?: string
 	address_postal_code?:  string
-	address_country_code?: string
+	address_country_code?: enums.#CountryCode
 	organization_name?:    string
 	organization_address?: string
 	organization_phone_number?: string
@@ -28,7 +28,7 @@ import enums "travelagency.local/model/enums"
 	email?:                common.#Email
 	preferred_language?:    enums.#LanguageCode
 	preferred_currency?:    enums.#CurrencyCode
-	timezone?:              string
+	timezone?:              enums.#TimezoneCode
 	notes?:                string
 	created_at:            common.#Timestamp
 	updated_at:            common.#Timestamp
@@ -38,8 +38,8 @@ import enums "travelagency.local/model/enums"
 #CustomerConsent: {
 	id:             common.#Identifier
 	customer_id:     common.#Identifier
-	consent_type:   "privacy_policy" | "marketing_email" | "marketing_whatsapp" | "profiling"
-	status:         "granted" | "withdrawn" | "unknown"
+	consent_type:   enums.#CustomerConsentType
+	status:         enums.#CustomerConsentStatus
 	captured_via?:  string
 	captured_at:    common.#Timestamp
 	evidence_ref?:  string
@@ -49,10 +49,10 @@ import enums "travelagency.local/model/enums"
 #CustomerDocument: {
 	id:                    common.#Identifier
 	customer_id:           common.#Identifier
-	document_type:         "passport" | "national_id" | "visa" | "other"
+	document_type:         enums.#CustomerDocumentType
 	document_number?:      string
 	document_picture_ref?: string
-	issuing_country?:      string
+	issuing_country?:      enums.#CountryCode
 	expires_on?:           common.#DateOnly
 	created_at:            common.#Timestamp
 	updated_at:            common.#Timestamp
@@ -62,7 +62,7 @@ import enums "travelagency.local/model/enums"
 	id:         common.#Identifier
 	booking_id: common.#Identifier
 	name?:      string
-	group_type: "family" | "friends" | "corporate" | "school" | "other"
+	group_type: enums.#TravelGroupType
 	notes?:     string
 	created_at: common.#Timestamp
 	updated_at: common.#Timestamp
@@ -73,7 +73,7 @@ import enums "travelagency.local/model/enums"
 	travel_group_id:  common.#Identifier
 	customer_id:      common.#Identifier
 	is_traveling?:    bool
-	member_roles:     [...("TravelGroupContact" | "decision_maker" | "payer" | "assistant" | "other")]
+	member_roles:     [...enums.#TravelGroupMemberRole]
 	notes?:           string
 	created_at:       common.#Timestamp
 	updated_at:       common.#Timestamp

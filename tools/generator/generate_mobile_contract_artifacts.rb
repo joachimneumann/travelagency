@@ -182,7 +182,7 @@ def render_js_type_exports(types)
   end.join("\n")
 end
 
-def render_js_currency_module(currency_entries)
+def render_js_currency_module(currency_entries, header = JS_RUNTIME_HEADER)
   currency_hash = currency_entries.each_with_object({}) do |entry, acc|
     acc[entry.fetch('code')] = {
       'code' => entry.fetch('code'),
@@ -192,7 +192,7 @@ def render_js_currency_module(currency_entries)
   end
 
   <<~JS
-    #{JS_RUNTIME_HEADER}
+    #{header}
     export const GENERATED_CURRENCIES = #{js_literal(currency_hash)};
     export const GENERATED_CURRENCY_CODES = Object.freeze(Object.keys(GENERATED_CURRENCIES));
 
@@ -409,7 +409,7 @@ def render_js_api_client_module(endpoints, header = JS_RUNTIME_HEADER)
   JS
 end
 
-def render_swift_currency(currency_entries)
+def render_swift_currency(currency_entries, header = SWIFT_RUNTIME_HEADER)
   currency_cases = currency_entries.map { |entry| "    case #{swift_case(entry.fetch('code'))} = \"#{entry.fetch('code')}\"" }.join("\n")
   currency_catalog_entries = currency_entries.map do |entry|
     code_case = swift_case(entry.fetch('code'))
@@ -419,7 +419,7 @@ def render_swift_currency(currency_entries)
   <<~SWIFT
     import Foundation
 
-    #{SWIFT_RUNTIME_HEADER}
+    #{header}
     enum GeneratedCurrencyCode: String, CaseIterable, Codable, Hashable {
 #{currency_cases}
 
@@ -695,13 +695,28 @@ def canonical_runtime_type_name(name)
   end
 end
 
+def openapi_enum_schema_name(type_name)
+  type_name == 'CurrencyCode' ? 'ATPCurrencyCode' : type_name
+end
+
+def enum_options_from_catalog(entries)
+  Array(entries).map do |entry|
+    if entry.is_a?(Hash)
+      code = entry.fetch('code')
+      { 'value' => code, 'label' => entry['label'] || code }
+    else
+      { 'value' => entry, 'label' => entry }
+    end
+  end
+end
+
 def openapi_enum_schema_names(schemas)
   schemas.each_with_object(Set.new) do |(name, schema), acc|
     acc << name if schema.is_a?(Hash) && schema['enum'].is_a?(Array)
   end
 end
 
-def field_type_from_openapi_schema(field_schema, enum_names, transport_kind)
+def field_type_from_openapi_schema(field_schema, enum_names, schemas, transport_kind)
   schema = field_schema.dup
   is_array = schema['type'] == 'array'
   schema = schema['items'] if is_array
@@ -710,31 +725,44 @@ def field_type_from_openapi_schema(field_schema, enum_names, transport_kind)
     ref_name = ref_name_from_schema_ref(schema['$ref'])
     kind = enum_names.include?(ref_name) ? 'enum' : transport_kind
     type_name = canonical_runtime_type_name(ref_name)
-    return [kind, type_name, is_array]
+    field = {
+      'kind' => kind,
+      'typeName' => type_name,
+      'isArray' => is_array
+    }
+    if enum_names.include?(ref_name)
+      enum_schema = schemas[ref_name] || {}
+      field['enumValues'] = Array(enum_schema['enum'])
+      field['options'] = Array(enum_schema['x-enum-options'])
+    end
+    field['format'] = schema['format'] if schema['format']
+    return field
   end
 
-  kind = 'scalar'
   type_name = case schema['type']
               when 'integer' then 'int'
               when 'boolean' then 'bool'
               else 'string'
               end
-  [kind, type_name, is_array]
+  field = {
+    'kind' => 'scalar',
+    'typeName' => type_name,
+    'isArray' => is_array
+  }
+  field['format'] = schema['format'] if schema['format']
+  field
 end
 
-def openapi_object_schema_to_type(name, schema, enum_names, domain:, mod:, source_type:, transport_kind:)
+def openapi_object_schema_to_type(name, schema, enum_names, schemas:, domain:, mod:, source_type:, transport_kind:)
   properties = schema.fetch('properties', {})
   required = Array(schema['required'])
   fields = properties.map do |prop_name, prop_schema|
-    kind, type_name, is_array = field_type_from_openapi_schema(prop_schema, enum_names, transport_kind)
-    {
+    field = field_type_from_openapi_schema(prop_schema, enum_names, schemas, transport_kind)
+    field.merge(
       'name' => prop_name,
-      'kind' => kind,
-      'typeName' => type_name,
       'required' => required.include?(prop_name),
-      'isArray' => is_array,
       'wireName' => prop_name
-    }
+    )
   end
 
   {
@@ -756,6 +784,7 @@ def openapi_types_for_schema_names(schema_names, schemas, enum_names, domain:, m
       schema_name,
       schema,
       enum_names,
+      schemas: schemas,
       domain: domain,
       mod: mod,
       source_type: "openapi.components.schemas.#{schema_name}",
@@ -864,8 +893,16 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
   prop = case field.fetch('kind')
          when 'scalar'
            case field.fetch('typeName')
-           when 'string', 'Identifier', 'Timestamp', 'Email', 'Url'
+           when 'string', 'Identifier'
              { type: 'string' }
+           when 'Timestamp'
+             { type: 'string', format: 'date-time' }
+           when 'DateOnly'
+             { type: 'string', format: 'date' }
+           when 'Email'
+             { type: 'string', format: 'email' }
+           when 'Url'
+             { type: 'string', format: 'uri' }
            when 'int'
              { type: 'integer' }
            when 'bool'
@@ -874,14 +911,7 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
              { type: 'string' }
            end
          when 'enum'
-           ref_name = field.fetch('typeName')
-           ref_name = 'ATPCurrencyCode' if ref_name == 'CurrencyCode'
-           ref_name = 'ATPStaffRole' if ref_name == 'ATPStaffRole'
-           ref_name = 'BookingStage' if ref_name == 'BookingStage'
-           ref_name = 'PaymentStatus' if ref_name == 'PaymentStatus'
-           ref_name = 'PricingAdjustmentType' if ref_name == 'PricingAdjustmentType'
-           ref_name = 'OfferCategory' if ref_name == 'OfferCategory'
-           openapi_schema_ref(ref_name)
+           openapi_schema_ref(openapi_enum_schema_name(field.fetch('typeName')))
          when 'entity', 'valueObject', 'transport'
            openapi_schema_ref(field.fetch('typeName'))
          else
@@ -897,39 +927,24 @@ def build_openapi_schemas(ir, traveler_constraints)
   types = ir.fetch('types')
   type_index = types.each_with_object({}) { |t, acc| acc[t.fetch('name')] = t }
 
-  enum_schema_names = %w[ATPCurrencyCode LanguageCode ATPStaffRole BookingStage PaymentStatus PricingAdjustmentType OfferCategory]
+  enum_type_index = ir.fetch('enumTypes')
+  enum_schema_names = enum_type_index.keys.map { |type_name| openapi_enum_schema_name(type_name) }
 
-  # Enum schemas from catalogs (camelCase not needed for enum values)
   schemas = {}
-  schemas['ATPCurrencyCode'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'currencies')),
-    'x-currency-catalog' => ir.dig('catalogs', 'currencies')
-  }
-  schemas['LanguageCode'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'languages'))
-  }
-  schemas['ATPStaffRole'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'roles'))
-  }
-  schemas['BookingStage'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'stages'))
-  }
-  schemas['PaymentStatus'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'paymentStatuses'))
-  }
-  schemas['PricingAdjustmentType'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'pricingAdjustmentTypes'))
-  }
-  schemas['OfferCategory'] = {
-    type: 'string',
-    enum: catalog_codes(ir.dig('catalogs', 'offerCategories'))
-  }
+  enum_type_index.each do |type_name, definition|
+    catalog_name = definition.fetch('catalog')
+    catalog_entries = Array(ir.dig('catalogs', catalog_name))
+    schema_name = openapi_enum_schema_name(type_name)
+    schemas[schema_name] = {
+      type: 'string',
+      enum: catalog_codes(catalog_entries),
+      'x-enum-catalog' => catalog_entries,
+      'x-enum-options' => enum_options_from_catalog(catalog_entries)
+    }
+    if type_name == 'CurrencyCode'
+      schemas[schema_name]['x-currency-catalog'] = catalog_entries
+    end
+  end
   schemas['TravelerConstraints'] = {
     type: 'object',
     required: %w[min max],
@@ -1258,7 +1273,7 @@ end
 
 frontend_model_outputs = {
   'generated_Language.js' => render_js_language_module(frontend_language_codes, JS_OPENAPI_HEADER),
-  'generated_Currency.js' => render_js_currency_module(frontend_currency_catalog),
+  'generated_Currency.js' => render_js_currency_module(frontend_currency_catalog, JS_OPENAPI_HEADER),
   'generated_FormConstraints.js' => render_js_form_constraints_module(frontend_traveler_constraints, JS_OPENAPI_HEADER),
   'generated_ATPStaff.js' => render_js_atp_staff_module(frontend_atp_staff_types, frontend_roles, JS_OPENAPI_HEADER),
   'generated_Booking.js' => render_js_booking_module(
@@ -1285,9 +1300,12 @@ frontend_api_outputs = {
   'generated_APIClient.js' => render_js_api_client_module(openapi_endpoint_list, JS_OPENAPI_HEADER)
 }
 
+backend_model_outputs = frontend_model_outputs.transform_values(&:dup)
+backend_api_outputs = frontend_api_outputs.transform_values(&:dup)
+
 ios_model_outputs = {
   'generated_Language.swift' => render_swift_language(frontend_language_codes, SWIFT_OPENAPI_HEADER),
-  'generated_Currency.swift' => render_swift_currency(frontend_currency_catalog),
+  'generated_Currency.swift' => render_swift_currency(frontend_currency_catalog, SWIFT_OPENAPI_HEADER),
   'generated_FormConstraints.swift' => render_swift_form_constraints(frontend_traveler_constraints, SWIFT_OPENAPI_HEADER),
   'generated_ATPStaff.swift' => render_swift_atp_staff(frontend_roles, frontend_atp_staff_types, SWIFT_OPENAPI_HEADER),
   'generated_Booking.swift' => render_swift_booking(

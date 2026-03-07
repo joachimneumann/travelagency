@@ -471,11 +471,7 @@ function cloneOffer(offer) {
     };
   });
 
-  const sourceComponents = Array.isArray(source.components)
-    ? source.components
-    : Array.isArray(source.items)
-      ? source.items
-      : [];
+  const sourceComponents = Array.isArray(source.components) ? source.components : [];
 
   return {
     currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
@@ -1070,7 +1066,7 @@ function normalizePhoneDigits(value) {
 }
 
 function resolveChatPhoneNumber(items) {
-  const customerPhone = String(state.customer?.phone || "").trim();
+  const customerPhone = String(state.customer?.phone_number || "").trim();
   if (customerPhone) return customerPhone;
   const firstSender = (Array.isArray(items) ? items : []).find((item) => String(item?.sender_contact || "").trim());
   return String(firstSender?.sender_contact || "").trim();

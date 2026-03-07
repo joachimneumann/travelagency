@@ -5,17 +5,17 @@ import {
   TRAVEL_GROUP_SCHEMA,
   TRAVEL_GROUP_MEMBER_SCHEMA
 } from "../../frontend/Generated/Models/generated_Aux.js";
+import { CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA } from "../../frontend/Generated/API/generated_APIModels.js";
 import {
-  GENERATED_CURRENCY_CODES,
   normalizeCurrencyCode
 } from "../../frontend/Generated/Models/generated_Currency.js";
-import {
-  GENERATED_LANGUAGE_CODES,
-  formatLanguageCodeLabel,
-  normalizeLanguageCode
-} from "../../frontend/Generated/Models/generated_Language.js";
 import { normalizeLocalDateTimeToIso } from "./shared/datetime.js";
-import { customerDetailRequest } from "../../frontend/Generated/API/generated_APIRequestFactory.js";
+import {
+  customerConsentCreateRequest,
+  customerDetailRequest,
+  customerPhotoUploadRequest,
+  customerUpdateRequest
+} from "../../frontend/Generated/API/generated_APIRequestFactory.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -46,279 +46,22 @@ const CUSTOMER_FIELD_UI_CONFIG = {
   notes: { editable: true, control: "textarea", rows: 4 }
 };
 
-const COUNTRY_CODE_OPTIONS = [
-  "AD",
-  "AE",
-  "AF",
-  "AG",
-  "AI",
-  "AL",
-  "AM",
-  "AO",
-  "AQ",
-  "AR",
-  "AS",
-  "AT",
-  "AU",
-  "AW",
-  "AX",
-  "AZ",
-  "BA",
-  "BB",
-  "BD",
-  "BE",
-  "BF",
-  "BG",
-  "BH",
-  "BI",
-  "BJ",
-  "BL",
-  "BM",
-  "BN",
-  "BO",
-  "BQ",
-  "BR",
-  "BS",
-  "BT",
-  "BV",
-  "BW",
-  "BY",
-  "BZ",
-  "CA",
-  "CC",
-  "CD",
-  "CF",
-  "CG",
-  "CH",
-  "CI",
-  "CK",
-  "CL",
-  "CM",
-  "CN",
-  "CO",
-  "CR",
-  "CU",
-  "CV",
-  "CW",
-  "CX",
-  "CY",
-  "CZ",
-  "DE",
-  "DJ",
-  "DK",
-  "DM",
-  "DO",
-  "DZ",
-  "EC",
-  "EE",
-  "EG",
-  "EH",
-  "ER",
-  "ES",
-  "ET",
-  "FI",
-  "FJ",
-  "FK",
-  "FM",
-  "FO",
-  "FR",
-  "GA",
-  "GB",
-  "GD",
-  "GE",
-  "GF",
-  "GG",
-  "GH",
-  "GI",
-  "GL",
-  "GM",
-  "GN",
-  "GP",
-  "GQ",
-  "GR",
-  "GS",
-  "GT",
-  "GU",
-  "GW",
-  "GY",
-  "HK",
-  "HM",
-  "HN",
-  "HR",
-  "HT",
-  "HU",
-  "ID",
-  "IE",
-  "IL",
-  "IM",
-  "IN",
-  "IO",
-  "IQ",
-  "IR",
-  "IS",
-  "IT",
-  "JE",
-  "JM",
-  "JO",
-  "JP",
-  "KE",
-  "KG",
-  "KH",
-  "KI",
-  "KM",
-  "KN",
-  "KP",
-  "KR",
-  "KW",
-  "KY",
-  "KZ",
-  "LA",
-  "LB",
-  "LC",
-  "LI",
-  "LK",
-  "LR",
-  "LS",
-  "LT",
-  "LU",
-  "LV",
-  "LY",
-  "MA",
-  "MC",
-  "MD",
-  "ME",
-  "MF",
-  "MG",
-  "MH",
-  "MK",
-  "ML",
-  "MM",
-  "MN",
-  "MO",
-  "MP",
-  "MQ",
-  "MR",
-  "MS",
-  "MT",
-  "MU",
-  "MV",
-  "MW",
-  "MX",
-  "MY",
-  "MZ",
-  "NA",
-  "NC",
-  "NE",
-  "NF",
-  "NG",
-  "NI",
-  "NL",
-  "NO",
-  "NP",
-  "NR",
-  "NU",
-  "NZ",
-  "OM",
-  "PA",
-  "PE",
-  "PF",
-  "PG",
-  "PH",
-  "PK",
-  "PL",
-  "PM",
-  "PN",
-  "PR",
-  "PS",
-  "PT",
-  "PW",
-  "PY",
-  "QA",
-  "RE",
-  "RO",
-  "RS",
-  "RU",
-  "RW",
-  "SA",
-  "SB",
-  "SC",
-  "SD",
-  "SE",
-  "SG",
-  "SH",
-  "SI",
-  "SJ",
-  "SK",
-  "SL",
-  "SM",
-  "SN",
-  "SO",
-  "SR",
-  "SS",
-  "ST",
-  "SV",
-  "SX",
-  "SY",
-  "SZ",
-  "TC",
-  "TD",
-  "TF",
-  "TG",
-  "TH",
-  "TJ",
-  "TK",
-  "TL",
-  "TM",
-  "TN",
-  "TO",
-  "TR",
-  "TT",
-  "TV",
-  "TW",
-  "TZ",
-  "UA",
-  "UG",
-  "UM",
-  "US",
-  "UY",
-  "UZ",
-  "VA",
-  "VC",
-  "VE",
-  "VG",
-  "VI",
-  "VN",
-  "VU",
-  "WF",
-  "WS",
-  "YE",
-  "YT",
-  "ZA",
-  "ZM",
-  "ZW"
-].map((code) => ({
-  value: code,
-  label: formatCountryOptionLabel(code)
-}));
+const CUSTOMER_CONSENT_CREATE_FIELDS = Object.fromEntries(
+  CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
+);
 
-const PREFERRED_LANGUAGE_OPTIONS = GENERATED_LANGUAGE_CODES.map((code) => ({
-  value: code,
-  label: formatLanguageCodeLabel(code)
-}));
+function selectOptionsFromField(field) {
+  if (!Array.isArray(field?.options)) return [];
+  return field.options
+    .map((option) => ({
+      value: String(option?.value || ""),
+      label: String(option?.label || option?.value || "")
+    }))
+    .filter((option) => option.value);
+}
 
-const PREFERRED_CURRENCY_OPTIONS = GENERATED_CURRENCY_CODES.map((code) => ({
-  value: code,
-  label: code
-}));
-
-const TIMEZONE_OPTIONS = (
-  typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function"
-    ? Intl.supportedValuesOf("timeZone")
-    : ["UTC", "Asia/Ho_Chi_Minh", "Europe/Berlin", "America/New_York"]
-).map((timezone) => ({
-  value: timezone,
-  label: timezone.replace(/_/g, " ")
-}));
+const CUSTOMER_CONSENT_TYPE_OPTIONS = selectOptionsFromField(CUSTOMER_CONSENT_CREATE_FIELDS.consent_type);
+const CUSTOMER_CONSENT_STATUS_OPTIONS = selectOptionsFromField(CUSTOMER_CONSENT_CREATE_FIELDS.status);
 
 const CUSTOMER_PRIMARY_GROUP_FIELD_NAMES = [
   "title",
@@ -349,19 +92,11 @@ const CUSTOMER_EDIT_FIELDS = CUSTOMER_SCHEMA.fields
   .filter((field) => !["id", "first_name", "last_name"].includes(field.name))
   .map((field) => {
     const config = CUSTOMER_FIELD_UI_CONFIG[field.name] || {};
-    const selectConfig =
-      field.name === "nationality" || field.name === "address_country_code"
-        ? { control: "select", options: COUNTRY_CODE_OPTIONS }
-        : field.name === "preferred_language"
-          ? { control: "select", options: PREFERRED_LANGUAGE_OPTIONS }
-          : field.name === "preferred_currency"
-            ? { control: "select", options: PREFERRED_CURRENCY_OPTIONS }
-            : field.name === "timezone"
-              ? { control: "select", options: TIMEZONE_OPTIONS }
-              : {};
     return {
       ...field,
-      ...selectConfig,
+      ...(field.kind === "enum" && Array.isArray(field.options) && field.options.length
+        ? { control: "select", options: selectOptionsFromField(field) }
+        : {}),
       ...config,
       editable: config.editable ?? true
     };
@@ -447,6 +182,7 @@ async function init() {
   if (els.photoUploadBtn) {
     els.photoUploadBtn.addEventListener("click", saveCustomerPhoto);
   }
+  populateConsentFormOptions();
   if (els.addConsentBtn) els.addConsentBtn.addEventListener("click", () => toggleConsentForm(true));
   if (els.consentCancelBtn) els.consentCancelBtn.addEventListener("click", () => toggleConsentForm(false));
   if (els.consentSaveBtn) els.consentSaveBtn.addEventListener("click", saveCustomerConsent);
@@ -524,10 +260,8 @@ function normalizeCustomer(customer) {
     name: normalizeText(customer.name) || "",
     photo_ref: normalizeText(customer.photo_ref) || "",
     title: normalizeText(customer.title) || "",
-    phone_number: normalizeText(customer.phone_number) || normalizeText(customer.phone) || "",
-    phone: normalizeText(customer.phone) || normalizeText(customer.phone_number) || "",
-    preferred_language: normalizeText(customer.preferred_language) || normalizeText(customer.language) || "",
-    language: normalizeText(customer.language) || normalizeText(customer.preferred_language) || "",
+    phone_number: normalizeText(customer.phone_number) || "",
+    preferred_language: normalizeText(customer.preferred_language) || "",
     first_name: normalizeText(customer.first_name) || "",
     last_name: normalizeText(customer.last_name) || "",
     date_of_birth: normalizeText(customer.date_of_birth) || "",
@@ -602,13 +336,31 @@ function toggleConsentForm(show) {
 }
 
 function resetConsentForm() {
-  if (els.consentType) els.consentType.value = "privacy_policy";
-  if (els.consentStatusSelect) els.consentStatusSelect.value = "granted";
+  if (els.consentType) els.consentType.value = CUSTOMER_CONSENT_TYPE_OPTIONS[0]?.value || "";
+  if (els.consentStatusSelect) els.consentStatusSelect.value = CUSTOMER_CONSENT_STATUS_OPTIONS[0]?.value || "";
   if (els.consentCapturedVia) els.consentCapturedVia.value = "";
   if (els.consentCapturedAt) els.consentCapturedAt.value = "";
   if (els.consentEvidenceRef) els.consentEvidenceRef.value = "";
   if (els.consentEvidenceFile) els.consentEvidenceFile.value = "";
   if (els.consentFormStatus) els.consentFormStatus.textContent = "";
+}
+
+function populateConsentFormOptions() {
+  populateSelectElement(els.consentType, CUSTOMER_CONSENT_TYPE_OPTIONS);
+  populateSelectElement(els.consentStatusSelect, CUSTOMER_CONSENT_STATUS_OPTIONS);
+  resetConsentForm();
+}
+
+function populateSelectElement(selectEl, options, { includeBlank = false } = {}) {
+  if (!(selectEl instanceof HTMLSelectElement)) return;
+  const optionHtml = options
+    .map(
+      (option) =>
+        `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
+    )
+    .join("");
+  const blankHtml = includeBlank ? '<option value="">(select)</option>' : "";
+  selectEl.innerHTML = `${blankHtml}${optionHtml}`;
 }
 
 async function saveCustomerConsent() {
@@ -617,11 +369,15 @@ async function saveCustomerConsent() {
   if (els.consentFormStatus) els.consentFormStatus.textContent = "";
   try {
     const evidenceUpload = await readConsentEvidenceUpload();
-    const result = await fetchApi(`${apiOrigin}/api/v1/customers/${encodeURIComponent(state.id)}/consents`, {
-      method: "POST",
+    const request = customerConsentCreateRequest({
+      baseURL: apiOrigin,
+      params: { customerId: state.id }
+    });
+    const result = await fetchApi(request.url, {
+      method: request.method,
       body: {
-        consent_type: els.consentType?.value || "privacy_policy",
-        status: els.consentStatusSelect?.value || "granted",
+        consent_type: els.consentType?.value || CUSTOMER_CONSENT_TYPE_OPTIONS[0]?.value || "",
+        status: els.consentStatusSelect?.value || CUSTOMER_CONSENT_STATUS_OPTIONS[0]?.value || "",
         captured_via: normalizeText(els.consentCapturedVia?.value) || null,
         captured_at: normalizeLocalDateTimeToIso(els.consentCapturedAt?.value),
         evidence_ref: normalizeText(els.consentEvidenceRef?.value) || null,
@@ -657,8 +413,12 @@ async function saveCustomerPhoto() {
   if (els.photoUploadBtn) els.photoUploadBtn.disabled = true;
   if (els.photoStatus) els.photoStatus.textContent = "";
   try {
-    const result = await fetchApi(`${apiOrigin}/api/v1/customers/${encodeURIComponent(state.id)}/photo`, {
-      method: "POST",
+    const request = customerPhotoUploadRequest({
+      baseURL: apiOrigin,
+      params: { customerId: state.id }
+    });
+    const result = await fetchApi(request.url, {
+      method: request.method,
       body: {
         photo_upload: photoUpload
       }
@@ -881,7 +641,7 @@ function renderEditableFieldInput(field, value) {
     return `<textarea id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" rows="2">${escapeHtml(asText)}</textarea>`;
   }
 
-  if (field.typeName === "DateOnly") {
+  if (field.format === "date") {
     const dateValue = formatDateOnlyForInput(value);
     const displayValue = formatDateOnlyForDisplay(dateValue);
     return `
@@ -907,7 +667,7 @@ function renderEditableFieldInput(field, value) {
     `;
   }
 
-  if (field.typeName === "Timestamp") {
+  if (field.format === "date-time") {
     const dateTimeValue = formatDateTimeForInput(value);
     return `<input type="datetime-local" id="${fieldId}" data-customer-field="${escapeHtml(field.name)}" value="${escapeHtml(dateTimeValue)}" />`;
   }
@@ -918,10 +678,11 @@ function renderEditableFieldInput(field, value) {
 }
 
 function getInputTypeForField(field) {
+  if (field.format === "email") return "email";
+  if (field.format === "uri") return "url";
   if (field.name === "email") return "email";
   if (field.name.includes("phone")) return "tel";
   if (field.name === "phone_number") return "tel";
-  if (field.name.includes("date")) return "date";
   return "text";
 }
 
@@ -963,9 +724,9 @@ function renderRelatedBookings(bookings) {
 
 function renderCustomerSystemMeta(customer) {
   if (!els.systemMeta) return;
-  const createdAt = formatFieldValue(customer?.created_at, { typeName: "Timestamp" });
-  const updatedAt = formatFieldValue(customer?.updated_at, { typeName: "Timestamp" });
-  const archivedAt = formatFieldValue(customer?.archived_at, { typeName: "Timestamp" });
+  const createdAt = formatFieldValue(customer?.created_at, { format: "date-time" });
+  const updatedAt = formatFieldValue(customer?.updated_at, { format: "date-time" });
+  const archivedAt = formatFieldValue(customer?.archived_at, { format: "date-time" });
   els.systemMeta.innerHTML = `
     <strong>Created At</strong> ${escapeHtml(createdAt)}
     &nbsp;&nbsp;&nbsp;
@@ -1073,16 +834,6 @@ function collectEditableCustomerPayload() {
     payload[field.name] = getFieldValueFromInput(field, el);
   });
 
-  if (Object.prototype.hasOwnProperty.call(payload, "phone_number") && !Object.prototype.hasOwnProperty.call(payload, "phone")) {
-    payload.phone = payload.phone_number;
-  }
-  if (
-    Object.prototype.hasOwnProperty.call(payload, "preferred_language") &&
-    !Object.prototype.hasOwnProperty.call(payload, "language")
-  ) {
-    payload.preferred_language = normalizeLanguageCode(payload.preferred_language) || payload.preferred_language;
-    payload.language = payload.preferred_language;
-  }
   if (Object.prototype.hasOwnProperty.call(payload, "preferred_currency")) {
     payload.preferred_currency = normalizeCurrencyCode(payload.preferred_currency) || payload.preferred_currency;
   }
@@ -1104,11 +855,11 @@ function getFieldValueFromInput(field, element) {
       .filter(Boolean);
   }
 
-  if (field.typeName === "DateOnly") {
+  if (field.format === "date") {
     return normalizeText(element.value);
   }
 
-  if (field.typeName === "Timestamp") {
+  if (field.format === "date-time") {
     return normalizeLocalDateTimeToIso(element.value);
   }
 
@@ -1123,8 +874,12 @@ async function saveCustomerProfile() {
   setSaveEnabled(false);
   setSaveStatus("Saving customer…");
 
-  const result = await fetchApi(`/api/v1/customers/${encodeURIComponent(state.id)}`, {
-    method: "PATCH",
+  const request = customerUpdateRequest({
+    baseURL: apiOrigin,
+    params: { customerId: state.id }
+  });
+  const result = await fetchApi(request.url, {
+    method: request.method,
     body: payload
   });
 
@@ -1230,15 +985,18 @@ function formatFieldValue(value, field = {}) {
     return JSON.stringify(value);
   }
 
-  if (field.typeName === "Timestamp") return formatDateTime(value);
-  if (field.typeName === "DateOnly") return formatDateOnly(value);
+  if (field.kind === "enum" && Array.isArray(field.options)) {
+    const matched = field.options.find((option) => String(option?.value || "") === String(value));
+    if (matched) return String(matched.label || matched.value || value);
+  }
+  if (field.format === "date-time") return formatDateTime(value);
+  if (field.format === "date") return formatDateOnly(value);
   if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
 }
 
 function fieldLabel(raw) {
   const overrides = {
-    notes: "",
     photo_ref: "Customer Photo",
     address_line_1: "Address Line 1",
     address_line_2: "Address Line 2",
@@ -1251,17 +1009,6 @@ function fieldLabel(raw) {
   return String(raw || "")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function formatCountryOptionLabel(code) {
-  const normalized = String(code || "").trim().toUpperCase();
-  if (!normalized) return "";
-  try {
-    const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
-    return `${displayNames.of(normalized) || normalized} (${normalized})`;
-  } catch {
-    return normalized;
-  }
 }
 
 function formatDateOnly(value) {

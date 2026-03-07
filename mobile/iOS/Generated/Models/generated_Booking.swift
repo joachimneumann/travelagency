@@ -46,11 +46,21 @@
         }
     }
 
-    struct GeneratedBookingActivity: Codable, Equatable {
-
+    struct GeneratedBookingActivity: Codable, Equatable, Identifiable {
+    let id: String
+    let bookingId: String
+    let type: GeneratedBookingActivityType
+    let actor: String
+    let detail: String
+    let createdAt: String
 
         private enum CodingKeys: String, CodingKey {
-
+        case id = "id"
+        case bookingId = "bookingId"
+        case type = "type"
+        case actor = "actor"
+        case detail = "detail"
+        case createdAt = "createdAt"
         }
     }
 

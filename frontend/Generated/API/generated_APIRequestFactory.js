@@ -240,6 +240,54 @@ export const GENERATED_API_ENDPOINTS = {
       }
     ]
   },
+  "customer_update": {
+    "key": "customer_update",
+    "path": "/api/v1/customers/{customerId}",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "CustomerUpdateRequest",
+    "responseType": "CustomerUpdateResponse",
+    "parameters": [
+      {
+        "name": "customerId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "customer_photo_upload": {
+    "key": "customer_photo_upload",
+    "path": "/api/v1/customers/{customerId}/photo",
+    "method": "POST",
+    "authenticated": true,
+    "requestType": "CustomerPhotoUploadRequest",
+    "responseType": "CustomerPhotoUploadResponse",
+    "parameters": [
+      {
+        "name": "customerId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "customer_consent_create": {
+    "key": "customer_consent_create",
+    "path": "/api/v1/customers/{customerId}/consents",
+    "method": "POST",
+    "authenticated": true,
+    "requestType": "CustomerConsentCreateRequest",
+    "responseType": "CustomerConsentCreateResponse",
+    "parameters": [
+      {
+        "name": "customerId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
   "tours": {
     "key": "tours",
     "path": "/api/v1/tours",
@@ -583,6 +631,57 @@ export function customerDetailRequest({ baseURL = '', params = {}, query = {}, b
   return {
     key: "customer_detail",
     method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function customerUpdatePath(params = {}) {
+  return buildPath("/api/v1/customers/{customerId}", params);
+}
+
+export function customerUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = customerUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "customer_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function customerPhotoUploadPath(params = {}) {
+  return buildPath("/api/v1/customers/{customerId}/photo", params);
+}
+
+export function customerPhotoUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = customerPhotoUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "customer_photo_upload",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function customerConsentCreatePath(params = {}) {
+  return buildPath("/api/v1/customers/{customerId}/consents", params);
+}
+
+export function customerConsentCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = customerConsentCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "customer_consent_create",
+    method: "POST",
     authenticated: true,
     url,
     headers,

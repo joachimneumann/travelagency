@@ -36,51 +36,76 @@ export const ATPSTAFF_SCHEMA = {
   "sourceType": "openapi.components.schemas.ATPStaff",
   "fields": [
     {
-      "name": "id",
       "kind": "scalar",
       "typeName": "string",
-      "required": true,
       "isArray": false,
+      "name": "id",
+      "required": true,
       "wireName": "id"
     },
     {
-      "name": "preferredUsername",
       "kind": "scalar",
       "typeName": "string",
-      "required": true,
       "isArray": false,
+      "name": "preferredUsername",
+      "required": true,
       "wireName": "preferredUsername"
     },
     {
-      "name": "displayName",
       "kind": "scalar",
       "typeName": "string",
-      "required": false,
       "isArray": false,
+      "name": "displayName",
+      "required": false,
       "wireName": "displayName"
     },
     {
-      "name": "email",
       "kind": "scalar",
       "typeName": "string",
-      "required": false,
       "isArray": false,
+      "format": "email",
+      "name": "email",
+      "required": false,
       "wireName": "email"
     },
     {
-      "name": "roles",
       "kind": "enum",
       "typeName": "ATPStaffRole",
-      "required": false,
       "isArray": true,
+      "enumValues": [
+        "atp_admin",
+        "atp_manager",
+        "atp_accountant",
+        "atp_staff"
+      ],
+      "options": [
+        {
+          "value": "atp_admin",
+          "label": "atp_admin"
+        },
+        {
+          "value": "atp_manager",
+          "label": "atp_manager"
+        },
+        {
+          "value": "atp_accountant",
+          "label": "atp_accountant"
+        },
+        {
+          "value": "atp_staff",
+          "label": "atp_staff"
+        }
+      ],
+      "name": "roles",
+      "required": false,
       "wireName": "roles"
     },
     {
-      "name": "atpStaffId",
       "kind": "scalar",
       "typeName": "string",
-      "required": false,
       "isArray": false,
+      "name": "atpStaffId",
+      "required": false,
       "wireName": "atpStaffId"
     }
   ]

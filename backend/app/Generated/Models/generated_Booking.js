@@ -1,4 +1,4 @@
-// Generated from the normalized model IR exported from model/ir.
+// Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
 function __assertObject(value, schemaName) {
@@ -54,150 +54,224 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
   "OTHER"
 ]);
 
-export const BOOKING_SCHEMA = {
-  "name": "Booking",
+export const SOURCE_ATTRIBUTION_SCHEMA = {
+  "name": "SourceAttribution",
   "domain": "booking",
   "module": "entities",
-  "sourceType": "entities.#Booking",
+  "sourceType": "openapi.components.schemas.SourceAttribution",
+  "fields": [
+
+  ]
+};
+
+export function validateSourceAttribution(value) {
+  return __validateShape(value, SOURCE_ATTRIBUTION_SCHEMA);
+}
+
+export const BOOKING_ACTIVITY_SCHEMA = {
+  "name": "BookingActivity",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "openapi.components.schemas.BookingActivity",
   "fields": [
     {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
       "name": "id",
-      "kind": "scalar",
-      "typeName": "Identifier",
-      "required": true
+      "required": true,
+      "wireName": "id"
     },
     {
-      "name": "bookingHash",
       "kind": "scalar",
       "typeName": "string",
-      "required": false
+      "isArray": false,
+      "name": "bookingId",
+      "required": true,
+      "wireName": "bookingId"
     },
     {
-      "name": "customerId",
-      "kind": "scalar",
-      "typeName": "Identifier",
-      "required": true
-    },
-    {
-      "name": "stage",
       "kind": "enum",
-      "typeName": "BookingStage",
-      "required": true
+      "typeName": "BookingActivityType",
+      "isArray": false,
+      "enumValues": [
+        "BOOKING_CREATED",
+        "STAGE_CHANGED",
+        "ASSIGNMENT_CHANGED",
+        "NOTE_UPDATED",
+        "PRICING_UPDATED",
+        "OFFER_UPDATED",
+        "INVOICE_CREATED",
+        "INVOICE_UPDATED",
+        "PAYMENT_UPDATED"
+      ],
+      "options": [
+        {
+          "value": "BOOKING_CREATED",
+          "label": "BOOKING_CREATED"
+        },
+        {
+          "value": "STAGE_CHANGED",
+          "label": "STAGE_CHANGED"
+        },
+        {
+          "value": "ASSIGNMENT_CHANGED",
+          "label": "ASSIGNMENT_CHANGED"
+        },
+        {
+          "value": "NOTE_UPDATED",
+          "label": "NOTE_UPDATED"
+        },
+        {
+          "value": "PRICING_UPDATED",
+          "label": "PRICING_UPDATED"
+        },
+        {
+          "value": "OFFER_UPDATED",
+          "label": "OFFER_UPDATED"
+        },
+        {
+          "value": "INVOICE_CREATED",
+          "label": "INVOICE_CREATED"
+        },
+        {
+          "value": "INVOICE_UPDATED",
+          "label": "INVOICE_UPDATED"
+        },
+        {
+          "value": "PAYMENT_UPDATED",
+          "label": "PAYMENT_UPDATED"
+        }
+      ],
+      "name": "type",
+      "required": true,
+      "wireName": "type"
     },
     {
-      "name": "atp_staff",
-      "kind": "scalar",
-      "typeName": "Identifier",
-      "required": false
-    },
-    {
-      "name": "atpStaffName",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "destination",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "style",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "travelMonth",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "travelers",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": false
-    },
-    {
-      "name": "duration",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "budget",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
-    },
-    {
-      "name": "preferredCurrency",
-      "kind": "enum",
-      "typeName": "CurrencyCode",
-      "required": false
-    },
-    {
-      "name": "notes",
       "kind": "scalar",
       "typeName": "string",
-      "required": false
+      "isArray": false,
+      "name": "actor",
+      "required": true,
+      "wireName": "actor"
     },
     {
-      "name": "pricing",
-      "kind": "valueObject",
-      "typeName": "BookingPricing",
-      "required": true
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "detail",
+      "required": true,
+      "wireName": "detail"
     },
     {
-      "name": "offer",
-      "kind": "valueObject",
-      "typeName": "BookingOffer",
-      "required": true
-    },
-    {
-      "name": "source",
-      "kind": "valueObject",
-      "typeName": "SourceAttribution",
-      "required": false
-    },
-    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "format": "date-time",
       "name": "createdAt",
-      "kind": "scalar",
-      "typeName": "Timestamp",
-      "required": true
-    },
-    {
-      "name": "updatedAt",
-      "kind": "scalar",
-      "typeName": "Timestamp",
-      "required": true
+      "required": true,
+      "wireName": "createdAt"
     }
   ]
 };
 
-export function validateBooking(value) {
-  return __validateShape(value, BOOKING_SCHEMA);
+export function validateBookingActivity(value) {
+  return __validateShape(value, BOOKING_ACTIVITY_SCHEMA);
+}
+
+export const BOOKING_INVOICE_SCHEMA = {
+  "name": "BookingInvoice",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "openapi.components.schemas.BookingInvoice",
+  "fields": [
+
+  ]
+};
+
+export function validateBookingInvoice(value) {
+  return __validateShape(value, BOOKING_INVOICE_SCHEMA);
+}
+
+export const BOOKING_PRICING_SCHEMA = {
+  "name": "BookingPricing",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "openapi.components.schemas.BookingPricing",
+  "fields": [
+
+  ]
+};
+
+export function validateBookingPricing(value) {
+  return __validateShape(value, BOOKING_PRICING_SCHEMA);
 }
 
 export const BOOKING_OFFER_CATEGORY_RULE_SCHEMA = {
   "name": "BookingOfferCategoryRule",
   "domain": "booking",
   "module": "entities",
-  "sourceType": "entities.#BookingOfferCategoryRule",
+  "sourceType": "openapi.components.schemas.BookingOfferCategoryRule",
   "fields": [
     {
-      "name": "category",
       "kind": "enum",
       "typeName": "OfferCategory",
-      "required": true
+      "isArray": false,
+      "enumValues": [
+        "ACCOMMODATION",
+        "TRANSPORTATION",
+        "TOURS_ACTIVITIES",
+        "GUIDE_SUPPORT_SERVICES",
+        "MEALS",
+        "FEES_TAXES",
+        "DISCOUNTS_CREDITS",
+        "OTHER"
+      ],
+      "options": [
+        {
+          "value": "ACCOMMODATION",
+          "label": "ACCOMMODATION"
+        },
+        {
+          "value": "TRANSPORTATION",
+          "label": "TRANSPORTATION"
+        },
+        {
+          "value": "TOURS_ACTIVITIES",
+          "label": "TOURS_ACTIVITIES"
+        },
+        {
+          "value": "GUIDE_SUPPORT_SERVICES",
+          "label": "GUIDE_SUPPORT_SERVICES"
+        },
+        {
+          "value": "MEALS",
+          "label": "MEALS"
+        },
+        {
+          "value": "FEES_TAXES",
+          "label": "FEES_TAXES"
+        },
+        {
+          "value": "DISCOUNTS_CREDITS",
+          "label": "DISCOUNTS_CREDITS"
+        },
+        {
+          "value": "OTHER",
+          "label": "OTHER"
+        }
+      ],
+      "name": "category",
+      "required": true,
+      "wireName": "category"
     },
     {
-      "name": "taxRateBasisPoints",
       "kind": "scalar",
       "typeName": "int",
-      "required": true
+      "isArray": false,
+      "name": "taxRateBasisPoints",
+      "required": true,
+      "wireName": "taxRateBasisPoints"
     }
   ]
 };
@@ -210,85 +284,181 @@ export const BOOKING_OFFER_COMPONENT_SCHEMA = {
   "name": "BookingOfferComponent",
   "domain": "booking",
   "module": "entities",
-  "sourceType": "entities.#BookingOfferComponent",
+  "sourceType": "openapi.components.schemas.BookingOfferComponent",
   "fields": [
     {
-      "name": "id",
       "kind": "scalar",
-      "typeName": "Identifier",
-      "required": true
+      "typeName": "string",
+      "isArray": false,
+      "name": "id",
+      "required": true,
+      "wireName": "id"
     },
     {
-      "name": "category",
       "kind": "enum",
       "typeName": "OfferCategory",
-      "required": true
+      "isArray": false,
+      "enumValues": [
+        "ACCOMMODATION",
+        "TRANSPORTATION",
+        "TOURS_ACTIVITIES",
+        "GUIDE_SUPPORT_SERVICES",
+        "MEALS",
+        "FEES_TAXES",
+        "DISCOUNTS_CREDITS",
+        "OTHER"
+      ],
+      "options": [
+        {
+          "value": "ACCOMMODATION",
+          "label": "ACCOMMODATION"
+        },
+        {
+          "value": "TRANSPORTATION",
+          "label": "TRANSPORTATION"
+        },
+        {
+          "value": "TOURS_ACTIVITIES",
+          "label": "TOURS_ACTIVITIES"
+        },
+        {
+          "value": "GUIDE_SUPPORT_SERVICES",
+          "label": "GUIDE_SUPPORT_SERVICES"
+        },
+        {
+          "value": "MEALS",
+          "label": "MEALS"
+        },
+        {
+          "value": "FEES_TAXES",
+          "label": "FEES_TAXES"
+        },
+        {
+          "value": "DISCOUNTS_CREDITS",
+          "label": "DISCOUNTS_CREDITS"
+        },
+        {
+          "value": "OTHER",
+          "label": "OTHER"
+        }
+      ],
+      "name": "category",
+      "required": true,
+      "wireName": "category"
     },
     {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
       "name": "label",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": true
+      "required": true,
+      "wireName": "label"
     },
     {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
       "name": "details",
-      "kind": "scalar",
-      "typeName": "string",
-      "required": false
+      "required": false,
+      "wireName": "details"
     },
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "quantity",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": true
+      "required": true,
+      "wireName": "quantity"
     },
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "unitAmountCents",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": true
+      "required": true,
+      "wireName": "unitAmountCents"
     },
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "taxRateBasisPoints",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": true
+      "required": true,
+      "wireName": "taxRateBasisPoints"
     },
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "lineTotalAmountCents",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": false
+      "required": false,
+      "wireName": "lineTotalAmountCents"
     },
     {
-      "name": "currency",
       "kind": "enum",
       "typeName": "CurrencyCode",
-      "required": true
+      "isArray": false,
+      "enumValues": [
+        "USD",
+        "EURO",
+        "VND",
+        "THB"
+      ],
+      "options": [
+        {
+          "value": "USD",
+          "label": "USD"
+        },
+        {
+          "value": "EURO",
+          "label": "EURO"
+        },
+        {
+          "value": "VND",
+          "label": "VND"
+        },
+        {
+          "value": "THB",
+          "label": "THB"
+        }
+      ],
+      "name": "currency",
+      "required": true,
+      "wireName": "currency"
     },
     {
-      "name": "notes",
       "kind": "scalar",
       "typeName": "string",
-      "required": false
+      "isArray": false,
+      "name": "notes",
+      "required": false,
+      "wireName": "notes"
     },
     {
-      "name": "sortOrder",
       "kind": "scalar",
       "typeName": "int",
-      "required": false
+      "isArray": false,
+      "name": "sortOrder",
+      "required": false,
+      "wireName": "sortOrder"
     },
     {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "format": "date-time",
       "name": "createdAt",
-      "kind": "scalar",
-      "typeName": "Timestamp",
-      "required": false
+      "required": false,
+      "wireName": "createdAt"
     },
     {
-      "name": "updatedAt",
       "kind": "scalar",
-      "typeName": "Timestamp",
-      "required": false
+      "typeName": "string",
+      "isArray": false,
+      "format": "date-time",
+      "name": "updatedAt",
+      "required": false,
+      "wireName": "updatedAt"
     }
   ]
 };
@@ -301,31 +471,39 @@ export const BOOKING_OFFER_TOTALS_SCHEMA = {
   "name": "BookingOfferTotals",
   "domain": "booking",
   "module": "entities",
-  "sourceType": "entities.#BookingOfferTotals",
+  "sourceType": "openapi.components.schemas.BookingOfferTotals",
   "fields": [
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "netAmountCents",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": true
+      "required": true,
+      "wireName": "netAmountCents"
     },
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "taxAmountCents",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": true
+      "required": true,
+      "wireName": "taxAmountCents"
     },
     {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
       "name": "grossAmountCents",
-      "kind": "scalar",
-      "typeName": "int",
-      "required": true
+      "required": true,
+      "wireName": "grossAmountCents"
     },
     {
-      "name": "componentsCount",
       "kind": "scalar",
       "typeName": "int",
-      "required": true
+      "isArray": false,
+      "name": "componentsCount",
+      "required": true,
+      "wireName": "componentsCount"
     }
   ]
 };
@@ -338,44 +516,316 @@ export const BOOKING_OFFER_SCHEMA = {
   "name": "BookingOffer",
   "domain": "booking",
   "module": "entities",
-  "sourceType": "entities.#BookingOffer",
+  "sourceType": "openapi.components.schemas.BookingOffer",
   "fields": [
     {
-      "name": "currency",
       "kind": "enum",
       "typeName": "CurrencyCode",
-      "required": true
+      "isArray": false,
+      "enumValues": [
+        "USD",
+        "EURO",
+        "VND",
+        "THB"
+      ],
+      "options": [
+        {
+          "value": "USD",
+          "label": "USD"
+        },
+        {
+          "value": "EURO",
+          "label": "EURO"
+        },
+        {
+          "value": "VND",
+          "label": "VND"
+        },
+        {
+          "value": "THB",
+          "label": "THB"
+        }
+      ],
+      "name": "currency",
+      "required": true,
+      "wireName": "currency"
     },
     {
-      "name": "categoryRules",
-      "kind": "valueObject",
+      "kind": "entity",
       "typeName": "BookingOfferCategoryRule",
-      "required": true,
-      "isArray": true
+      "isArray": true,
+      "name": "categoryRules",
+      "required": false,
+      "wireName": "categoryRules"
     },
     {
-      "name": "components",
-      "kind": "valueObject",
+      "kind": "entity",
       "typeName": "BookingOfferComponent",
-      "required": true,
-      "isArray": true
+      "isArray": true,
+      "name": "components",
+      "required": false,
+      "wireName": "components"
     },
     {
-      "name": "totals",
-      "kind": "valueObject",
+      "kind": "entity",
       "typeName": "BookingOfferTotals",
-      "required": true
+      "isArray": false,
+      "name": "totals",
+      "required": true,
+      "wireName": "totals"
     },
     {
-      "name": "totalPriceCents",
       "kind": "scalar",
       "typeName": "int",
-      "required": true
+      "isArray": false,
+      "name": "totalPriceCents",
+      "required": true,
+      "wireName": "totalPriceCents"
     }
   ]
 };
 
 export function validateBookingOffer(value) {
   return __validateShape(value, BOOKING_OFFER_SCHEMA);
+}
+
+export const BOOKING_SCHEMA = {
+  "name": "Booking",
+  "domain": "booking",
+  "module": "entities",
+  "sourceType": "openapi.components.schemas.Booking",
+  "fields": [
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "id",
+      "required": true,
+      "wireName": "id"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "bookingHash",
+      "required": false,
+      "wireName": "bookingHash"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "customerId",
+      "required": true,
+      "wireName": "customerId"
+    },
+    {
+      "kind": "enum",
+      "typeName": "BookingStage",
+      "isArray": false,
+      "enumValues": [
+        "NEW",
+        "QUALIFIED",
+        "PROPOSAL_SENT",
+        "NEGOTIATION",
+        "INVOICE_SENT",
+        "PAYMENT_RECEIVED",
+        "WON",
+        "LOST",
+        "POST_TRIP"
+      ],
+      "options": [
+        {
+          "value": "NEW",
+          "label": "NEW"
+        },
+        {
+          "value": "QUALIFIED",
+          "label": "QUALIFIED"
+        },
+        {
+          "value": "PROPOSAL_SENT",
+          "label": "PROPOSAL_SENT"
+        },
+        {
+          "value": "NEGOTIATION",
+          "label": "NEGOTIATION"
+        },
+        {
+          "value": "INVOICE_SENT",
+          "label": "INVOICE_SENT"
+        },
+        {
+          "value": "PAYMENT_RECEIVED",
+          "label": "PAYMENT_RECEIVED"
+        },
+        {
+          "value": "WON",
+          "label": "WON"
+        },
+        {
+          "value": "LOST",
+          "label": "LOST"
+        },
+        {
+          "value": "POST_TRIP",
+          "label": "POST_TRIP"
+        }
+      ],
+      "name": "stage",
+      "required": true,
+      "wireName": "stage"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "atp_staff",
+      "required": false,
+      "wireName": "atp_staff"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "atpStaffName",
+      "required": false,
+      "wireName": "atpStaffName"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "destination",
+      "required": false,
+      "wireName": "destination"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "style",
+      "required": false,
+      "wireName": "style"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "travelMonth",
+      "required": false,
+      "wireName": "travelMonth"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "int",
+      "isArray": false,
+      "name": "travelers",
+      "required": false,
+      "wireName": "travelers"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "duration",
+      "required": false,
+      "wireName": "duration"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "budget",
+      "required": false,
+      "wireName": "budget"
+    },
+    {
+      "kind": "enum",
+      "typeName": "CurrencyCode",
+      "isArray": false,
+      "enumValues": [
+        "USD",
+        "EURO",
+        "VND",
+        "THB"
+      ],
+      "options": [
+        {
+          "value": "USD",
+          "label": "USD"
+        },
+        {
+          "value": "EURO",
+          "label": "EURO"
+        },
+        {
+          "value": "VND",
+          "label": "VND"
+        },
+        {
+          "value": "THB",
+          "label": "THB"
+        }
+      ],
+      "name": "preferredCurrency",
+      "required": false,
+      "wireName": "preferredCurrency"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "name": "notes",
+      "required": false,
+      "wireName": "notes"
+    },
+    {
+      "kind": "entity",
+      "typeName": "BookingPricing",
+      "isArray": false,
+      "name": "pricing",
+      "required": true,
+      "wireName": "pricing"
+    },
+    {
+      "kind": "entity",
+      "typeName": "BookingOffer",
+      "isArray": false,
+      "name": "offer",
+      "required": true,
+      "wireName": "offer"
+    },
+    {
+      "kind": "entity",
+      "typeName": "SourceAttribution",
+      "isArray": false,
+      "name": "source",
+      "required": false,
+      "wireName": "source"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "format": "date-time",
+      "name": "createdAt",
+      "required": true,
+      "wireName": "createdAt"
+    },
+    {
+      "kind": "scalar",
+      "typeName": "string",
+      "isArray": false,
+      "format": "date-time",
+      "name": "updatedAt",
+      "required": true,
+      "wireName": "updatedAt"
+    }
+  ]
+};
+
+export function validateBooking(value) {
+  return __validateShape(value, BOOKING_SCHEMA);
 }
 

@@ -73,3 +73,15 @@ import (
 	authenticated: bool
 	principal?:    entities.#ATPStaff
 }
+
+#CustomerUpdateResponse: {
+	customer: entities.#Customer
+}
+
+#CustomerPhotoUploadResponse: {
+	customer: entities.#Customer
+}
+
+#CustomerConsentCreateResponse: {
+	consent: entities.#CustomerConsent
+}

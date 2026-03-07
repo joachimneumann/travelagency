@@ -1,21 +1,29 @@
-// Generated from the normalized model IR exported from model/ir.
+// Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
-export const GENERATED_CONTRACT_VERSION = "0.1.0";
+export const GENERATED_CONTRACT_VERSION = "2026-03-02.1";
 export const GENERATED_API_ENDPOINTS = {
   "mobile_bootstrap": {
     "key": "mobile_bootstrap",
     "path": "/public/v1/mobile/bootstrap",
     "method": "GET",
     "authenticated": false,
-    "responseType": "MobileBootstrap"
+    "requestType": null,
+    "responseType": "MobileBootstrap",
+    "parameters": [
+
+    ]
   },
   "auth_me": {
     "key": "auth_me",
     "path": "/auth/me",
     "method": "GET",
     "authenticated": true,
-    "responseType": "AuthMeResponse"
+    "requestType": null,
+    "responseType": "AuthMeResponse",
+    "parameters": [
+
+    ]
   },
   "public_bookings": {
     "key": "public_bookings",
@@ -23,27 +31,39 @@ export const GENERATED_API_ENDPOINTS = {
     "method": "POST",
     "authenticated": false,
     "requestType": "PublicBookingCreateRequest",
-    "responseType": "BookingDetail"
+    "responseType": "BookingDetail",
+    "parameters": [
+
+    ]
   },
   "public_tours": {
     "key": "public_tours",
     "path": "/public/v1/tours",
     "method": "GET",
     "authenticated": false,
-    "responseType": "TourList"
+    "requestType": null,
+    "responseType": "TourList",
+    "parameters": [
+
+    ]
   },
   "bookings": {
     "key": "bookings",
     "path": "/api/v1/bookings",
     "method": "GET",
     "authenticated": true,
-    "responseType": "BookingList"
+    "requestType": null,
+    "responseType": "BookingList",
+    "parameters": [
+
+    ]
   },
   "booking_detail": {
     "key": "booking_detail",
     "path": "/api/v1/bookings/{bookingId}",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingDetail",
     "parameters": [
       {
@@ -59,6 +79,7 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/bookings/{bookingId}/chat",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingChatResponse",
     "parameters": [
       {
@@ -74,6 +95,7 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/bookings/{bookingId}/stage",
     "method": "PATCH",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingDetail",
     "parameters": [
       {
@@ -89,6 +111,7 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/bookings/{bookingId}/owner",
     "method": "PATCH",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingDetail",
     "parameters": [
       {
@@ -104,6 +127,7 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/bookings/{bookingId}/notes",
     "method": "PATCH",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingDetail",
     "parameters": [
       {
@@ -151,6 +175,7 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/bookings/{bookingId}/activities",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingActivitiesResponse",
     "parameters": [
       {
@@ -166,6 +191,7 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/bookings/{bookingId}/invoices",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
     "responseType": "BookingInvoicesResponse",
     "parameters": [
       {
@@ -181,21 +207,78 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/atp_staff",
     "method": "GET",
     "authenticated": true,
-    "responseType": "AtpStaffListResponse"
+    "requestType": null,
+    "responseType": "AtpStaffListResponse",
+    "parameters": [
+
+    ]
   },
   "customers": {
     "key": "customers",
     "path": "/api/v1/customers",
     "method": "GET",
     "authenticated": true,
-    "responseType": "CustomerList"
+    "requestType": null,
+    "responseType": "CustomerList",
+    "parameters": [
+
+    ]
   },
   "customer_detail": {
     "key": "customer_detail",
     "path": "/api/v1/customers/{customerId}",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
     "responseType": "CustomerDetail",
+    "parameters": [
+      {
+        "name": "customerId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "customer_update": {
+    "key": "customer_update",
+    "path": "/api/v1/customers/{customerId}",
+    "method": "PATCH",
+    "authenticated": true,
+    "requestType": "CustomerUpdateRequest",
+    "responseType": "CustomerUpdateResponse",
+    "parameters": [
+      {
+        "name": "customerId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "customer_photo_upload": {
+    "key": "customer_photo_upload",
+    "path": "/api/v1/customers/{customerId}/photo",
+    "method": "POST",
+    "authenticated": true,
+    "requestType": "CustomerPhotoUploadRequest",
+    "responseType": "CustomerPhotoUploadResponse",
+    "parameters": [
+      {
+        "name": "customerId",
+        "location": "path",
+        "required": true,
+        "typeName": "Identifier"
+      }
+    ]
+  },
+  "customer_consent_create": {
+    "key": "customer_consent_create",
+    "path": "/api/v1/customers/{customerId}/consents",
+    "method": "POST",
+    "authenticated": true,
+    "requestType": "CustomerConsentCreateRequest",
+    "responseType": "CustomerConsentCreateResponse",
     "parameters": [
       {
         "name": "customerId",
@@ -210,13 +293,18 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/tours",
     "method": "GET",
     "authenticated": true,
-    "responseType": "TourList"
+    "requestType": null,
+    "responseType": "TourList",
+    "parameters": [
+
+    ]
   },
   "tour_detail": {
     "key": "tour_detail",
     "path": "/api/v1/tours/{tourId}",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
     "responseType": "TourDetail",
     "parameters": [
       {
@@ -232,6 +320,8 @@ export const GENERATED_API_ENDPOINTS = {
     "path": "/api/v1/tours/{tourId}/image",
     "method": "GET",
     "authenticated": true,
+    "requestType": null,
+    "responseType": null,
     "parameters": [
       {
         "name": "tourId",
@@ -541,6 +631,57 @@ export function customerDetailRequest({ baseURL = '', params = {}, query = {}, b
   return {
     key: "customer_detail",
     method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function customerUpdatePath(params = {}) {
+  return buildPath("/api/v1/customers/{customerId}", params);
+}
+
+export function customerUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = customerUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "customer_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function customerPhotoUploadPath(params = {}) {
+  return buildPath("/api/v1/customers/{customerId}/photo", params);
+}
+
+export function customerPhotoUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = customerPhotoUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "customer_photo_upload",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function customerConsentCreatePath(params = {}) {
+  return buildPath("/api/v1/customers/{customerId}/consents", params);
+}
+
+export function customerConsentCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = customerConsentCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "customer_consent_create",
+    method: "POST",
     authenticated: true,
     url,
     headers,

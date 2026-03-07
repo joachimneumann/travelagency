@@ -81,7 +81,7 @@
                   <label for="customerPhotoInput">Customer Photo</label>
                   <input id="customerPhotoInput" type="file" accept="image/*" />
                 </div>
-                <div class="customer-photo-panel__actions">
+              <div class="customer-photo-panel__actions">
                   <button id="customerPhotoUploadBtn" class="btn btn-ghost" type="button">Upload photo</button>
                   <span id="customerPhotoStatus" class="micro"></span>
                 </div>
@@ -90,7 +90,6 @@
               <div class="customer-organization-group" id="customerOrganizationGroup"></div>
               <h2 class="section-title u-title-compact">Address</h2>
               <div class="customer-address-group" id="customerAddressGroup"></div>
-              <h2 class="section-title u-title-compact">Notes</h2>
               <div id="customerNotesGroup"></div>
             </div>
             <p id="customerSaveStatus" class="section-booking" hidden></p>
@@ -105,20 +104,11 @@
               <div class="field-grid">
                 <div class="field">
                   <label for="customerConsentType">Consent Type</label>
-                  <select id="customerConsentType">
-                    <option value="privacy_policy">privacy_policy</option>
-                    <option value="marketing_email">marketing_email</option>
-                    <option value="marketing_whatsapp">marketing_whatsapp</option>
-                    <option value="profiling">profiling</option>
-                  </select>
+                  <select id="customerConsentType"></select>
                 </div>
                 <div class="field">
                   <label for="customerConsentStatus">Status</label>
-                  <select id="customerConsentStatus">
-                    <option value="granted">granted</option>
-                    <option value="withdrawn">withdrawn</option>
-                    <option value="unknown">unknown</option>
-                  </select>
+                  <select id="customerConsentStatus"></select>
                 </div>
                 <div class="field">
                   <label for="customerConsentCapturedVia">Captured Via</label>
@@ -189,6 +179,6 @@
       </section>
     </main>
 
-    <script type="module" src="assets/js/backend-customer.js?v=20260306b"></script>
+    <script type="module" src="assets/js/backend-customer.js?v=20260307a"></script>
   </body>
 </html>

@@ -14,6 +14,12 @@ import { createBookingHandlers } from "./http/handlers/bookings.js";
 import { createCustomerHandlers } from "./http/handlers/customers.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import {
+  isLikelyPhoneMatch,
+  normalizeEmail,
+  normalizePhone,
+  normalizePhoneDigits
+} from "./domain/phone_matching.js";
+import {
   currencyDefinition as generatedCurrencyDefinition,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../Generated/Models/generated_Currency.js";
@@ -859,6 +865,9 @@ async function readStore() {
   parsed.activities ||= [];
   parsed.invoices ||= [];
   parsed.customer_consents ||= [];
+  parsed.customer_documents ||= [];
+  parsed.travel_groups ||= [];
+  parsed.travel_group_members ||= [];
   parsed.chat_channel_accounts ||= [];
   parsed.chat_conversations ||= [];
   parsed.chat_events ||= [];
@@ -942,125 +951,9 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function normalizeEmail(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function normalizePhone(value) {
-  return String(value || "").replace(/[^\d+]/g, "").trim();
-}
-
-function normalizePhoneDigits(value) {
-  return String(value || "").replace(/[^\d]/g, "");
-}
-
-const VN_OLD_TO_NEW_MOBILE_PREFIX = Object.freeze({
-  "162": "32",
-  "163": "33",
-  "164": "34",
-  "165": "35",
-  "166": "36",
-  "167": "37",
-  "168": "38",
-  "169": "39",
-  "120": "70",
-  "121": "79",
-  "122": "77",
-  "126": "76",
-  "128": "78",
-  "123": "83",
-  "124": "84",
-  "125": "85",
-  "127": "81",
-  "129": "82",
-  "186": "56",
-  "188": "58",
-  "199": "59"
-});
-
-function normalizeVietnamMobileCore(coreRaw) {
-  const core = normalizePhoneDigits(coreRaw);
-  if (!core) return "";
-
-  // Legacy 11-digit mobile number without leading zero, e.g. 168xxxxxxx.
-  if (core.length === 10) {
-    const mapped = VN_OLD_TO_NEW_MOBILE_PREFIX[core.slice(0, 3)];
-    if (mapped) return `${mapped}${core.slice(3)}`;
-  }
-
-  // Current 10-digit mobile number without leading zero, e.g. 38xxxxxxx.
-  if (core.length === 9) return core;
-  return core;
-}
-
-function normalizeVietnamPhoneForMatch(value) {
-  let digits = normalizePhoneDigits(value);
-  if (!digits) return "";
-  if (digits.startsWith("00")) digits = digits.slice(2);
-
-  if (digits.startsWith("84")) {
-    const normalizedCore = normalizeVietnamMobileCore(digits.slice(2));
-    if (normalizedCore.length === 9) return `0${normalizedCore}`;
-    return `84${normalizedCore}`;
-  }
-
-  if (digits.startsWith("0")) {
-    const normalizedCore = normalizeVietnamMobileCore(digits.slice(1));
-    if (normalizedCore.length === 9) return `0${normalizedCore}`;
-    return `0${normalizedCore}`;
-  }
-
-  if (digits.length === 10 && VN_OLD_TO_NEW_MOBILE_PREFIX[digits.slice(0, 3)]) {
-    const normalizedCore = normalizeVietnamMobileCore(digits);
-    if (normalizedCore.length === 9) return `0${normalizedCore}`;
-  }
-
-  if (digits.length === 9) {
-    return `0${digits}`;
-  }
-
-  return digits;
-}
-
-function isLikelyPhoneMatch(leftRaw, rightRaw) {
-  const leftDigits = normalizePhoneDigits(leftRaw);
-  const rightDigits = normalizePhoneDigits(rightRaw);
-  if (!leftDigits || !rightDigits) return false;
-
-  const left = normalizeVietnamPhoneForMatch(leftRaw);
-  const right = normalizeVietnamPhoneForMatch(rightRaw);
-  const leftCandidates = new Set([leftDigits, left].filter(Boolean));
-  const rightCandidates = new Set([rightDigits, right].filter(Boolean));
-
-  if (leftCandidates.has(rightDigits) || rightCandidates.has(leftDigits)) {
-    return true;
-  }
-
-  for (const leftValue of leftCandidates) {
-    for (const rightValue of rightCandidates) {
-      if (!leftValue || !rightValue) continue;
-      if (leftValue === rightValue) return true;
-
-      if (leftValue.length >= 9 && rightValue.length >= 9) {
-        if (leftValue.includes(rightValue) || rightValue.includes(leftValue)) {
-          return true;
-        }
-      }
-
-      const minLen = Math.min(leftValue.length, rightValue.length);
-      if (minLen < 9) continue;
-      for (let tailLength = Math.min(10, minLen); tailLength >= 9; tailLength -= 1) {
-        if (leftValue.slice(-tailLength) === rightValue.slice(-tailLength)) return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 function resolveCustomerByExternalContact(store, externalContactId) {
   if (!externalContactId) return null;
-  const exactMatches = store.customers.filter((customer) => isLikelyPhoneMatch(customer.phone, externalContactId));
+  const exactMatches = store.customers.filter((customer) => isLikelyPhoneMatch(customer.phone_number, externalContactId));
   if (exactMatches.length === 1) return exactMatches[0];
   return null;
 }
@@ -2277,7 +2170,7 @@ function chooseOwner(staffList, bookings, destination, language) {
 
 function findMatchingCustomer(customers, candidate) {
   const email = normalizeEmail(candidate.email);
-  const phone = normalizePhone(candidate.phone);
+  const phone = normalizePhone(candidate.phone_number);
   const name = normalizeText(candidate.name);
 
   if (email) {
@@ -2286,7 +2179,7 @@ function findMatchingCustomer(customers, candidate) {
   }
 
   if (phone) {
-    const byPhone = customers.find((c) => normalizePhone(c.phone) === phone);
+    const byPhone = customers.find((c) => normalizePhone(c.phone_number) === phone);
     if (byPhone) return byPhone;
   }
 
@@ -2304,7 +2197,7 @@ function findMatchingCustomer(customers, candidate) {
 }
 
 function validateBookingInput(payload) {
-  const required = ["name", "email", "destination", "style", "travelMonth", "travelers", "duration"];
+  const required = ["name", "email", "destination", "style", "travelers", "duration"];
   const missing = required.filter((key) => !normalizeText(payload[key]));
   if (missing.length) {
     return { ok: false, error: `Missing required fields: ${missing.join(", ")}` };
@@ -2574,9 +2467,7 @@ function normalizeBookingOffer(rawOffer, preferredCurrency = BASE_CURRENCY) {
   const category_rules = OFFER_CATEGORY_ORDER.map((category) => ruleMap.get(category));
   const sourceComponents = Array.isArray(offer.components)
     ? offer.components
-    : Array.isArray(offer.items)
-      ? offer.items
-      : [];
+    : [];
   const components = sourceComponents.map((component, index) => {
     const category = normalizeOfferCategory(component?.category);
         const categoryRule = ruleMap.get(category);
@@ -2896,7 +2787,7 @@ function filterAndSortBookings(store, query) {
   const conversationIdToConversation = new Map();
   const bookingCustomerPhones = store.bookings.map((booking) => {
     const customer = customersById.get(booking.customer_id);
-    return { bookingId: booking.id, phone: customer?.phone || "" };
+    return { bookingId: booking.id, phone: customer?.phone_number || "" };
   });
   const latestBookingByCustomer = new Map();
   const sortedByRecency = [...store.bookings].sort(
@@ -2913,7 +2804,7 @@ function filterAndSortBookings(store, query) {
     if (!phone) return null;
     for (const booking of sortedByRecency) {
       const customer = customersById.get(booking.customer_id);
-      const storedPhone = customer?.phone || "";
+      const storedPhone = customer?.phone_number || "";
       if (!storedPhone) continue;
       if (isLikelyPhoneMatch(storedPhone, phone)) return booking.id;
     }

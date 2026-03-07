@@ -6,17 +6,18 @@ import Foundation
     struct GeneratedCustomer: Codable, Equatable, Identifiable {
     let id: String
     let name: String
+    let photo_ref: String?
     let title: String?
     let first_name: String?
     let last_name: String?
     let date_of_birth: String?
-    let nationality: String?
+    let nationality: GeneratedCountryCode?
     let address_line_1: String?
     let address_line_2: String?
     let address_city: String?
     let address_state_region: String?
     let address_postal_code: String?
-    let address_country_code: String?
+    let address_country_code: GeneratedCountryCode?
     let organization_name: String?
     let organization_address: String?
     let organization_phone_number: String?
@@ -27,7 +28,7 @@ import Foundation
     let email: String?
     let preferred_language: GeneratedLanguageCode?
     let preferred_currency: GeneratedCurrencyCode?
-    let timezone: String?
+    let timezone: GeneratedTimezoneCode?
     let notes: String?
     let created_at: String
     let updated_at: String
@@ -36,6 +37,7 @@ import Foundation
         private enum CodingKeys: String, CodingKey {
         case id = "id"
         case name = "name"
+        case photo_ref = "photo_ref"
         case title = "title"
         case first_name = "first_name"
         case last_name = "last_name"
@@ -68,8 +70,8 @@ import Foundation
     struct GeneratedCustomerConsent: Codable, Equatable, Identifiable {
     let id: String
     let customer_id: String
-    let consent_type: String
-    let status: String
+    let consent_type: GeneratedCustomerConsentType
+    let status: GeneratedCustomerConsentStatus
     let captured_via: String?
     let captured_at: String
     let evidence_ref: String?
@@ -90,10 +92,10 @@ import Foundation
     struct GeneratedCustomerDocument: Codable, Equatable, Identifiable {
     let id: String
     let customer_id: String
-    let document_type: String
+    let document_type: GeneratedCustomerDocumentType
     let document_number: String?
     let document_picture_ref: String?
-    let issuing_country: String?
+    let issuing_country: GeneratedCountryCode?
     let expires_on: String?
     let created_at: String
     let updated_at: String
@@ -115,7 +117,7 @@ import Foundation
     let id: String
     let booking_id: String
     let name: String?
-    let group_type: String
+    let group_type: GeneratedTravelGroupType
     let notes: String?
     let created_at: String
     let updated_at: String
@@ -136,7 +138,7 @@ import Foundation
     let travel_group_id: String
     let customer_id: String
     let is_traveling: Bool?
-    let member_roles: [String]?
+    let member_roles: [GeneratedTravelGroupMemberRole]?
     let notes: String?
     let created_at: String
     let updated_at: String

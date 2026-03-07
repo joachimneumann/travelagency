@@ -46,6 +46,12 @@ case "customers":
   return RequestFactory.customersRequest(options);
 case "customer_detail":
   return RequestFactory.customerDetailRequest(options);
+case "customer_update":
+  return RequestFactory.customerUpdateRequest(options);
+case "customer_photo_upload":
+  return RequestFactory.customerPhotoUploadRequest(options);
+case "customer_consent_create":
+  return RequestFactory.customerConsentCreateRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_detail":

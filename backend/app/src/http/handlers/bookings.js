@@ -67,7 +67,10 @@ function buildCustomerReadModel(customer) {
   return {
     ...customer,
     name: normalizeText(customer.name) || "",
-    title: normalizeText(customer.title) || null
+    title: normalizeText(customer.title) || null,
+    email: normalizeEmail(customer.email) || null,
+    phone_number: normalizePhone(customer.phone_number) || null,
+    preferred_language: normalizeText(customer.preferred_language) || null
   };
 }
 
@@ -106,6 +109,8 @@ async function handleCreateBooking(req, res) {
   }
 
   const customerMatch = findMatchingCustomer(store.customers, payload);
+  const inputPhoneNumber = normalizePhone(payload.phone_number);
+  const inputPreferredLanguage = normalizeText(payload.preferred_language) || "English";
   let customer;
 
   if (customerMatch) {
@@ -113,8 +118,8 @@ async function handleCreateBooking(req, res) {
       ...customerMatch,
       name: normalizeText(payload.name) || customerMatch.name,
       email: normalizeEmail(payload.email) || customerMatch.email,
-      phone: normalizePhone(payload.phone) || customerMatch.phone,
-      language: normalizeText(payload.language) || customerMatch.language,
+      phone_number: inputPhoneNumber || customerMatch.phone_number,
+      preferred_language: inputPreferredLanguage || customerMatch.preferred_language,
       updated_at: nowIso()
     };
     const idx = store.customers.findIndex((c) => c.id === customer.id);
@@ -124,8 +129,8 @@ async function handleCreateBooking(req, res) {
       id: `cust_${randomUUID()}`,
       name: normalizeText(payload.name),
       email: normalizeEmail(payload.email),
-      phone: normalizePhone(payload.phone),
-      language: normalizeText(payload.language) || "English",
+      phone_number: inputPhoneNumber,
+      preferred_language: inputPreferredLanguage,
       created_at: nowIso(),
       updated_at: nowIso()
     };
@@ -253,8 +258,8 @@ async function handleListBookingChatEvents(req, res, [bookingId]) {
     if (normalizeText(conversation.customer_id) === normalizeText(booking.customer_id)) return true;
 
     const channel = normalizeText(conversation.channel).toLowerCase();
-    if (channel === "whatsapp" && bookingCustomer?.phone) {
-      return isLikelyPhoneMatch(bookingCustomer.phone, conversation.external_contact_id);
+    if (channel === "whatsapp" && bookingCustomer?.phone_number) {
+      return isLikelyPhoneMatch(bookingCustomer.phone_number, conversation.external_contact_id);
     }
     return false;
   });

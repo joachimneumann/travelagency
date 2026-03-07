@@ -23,6 +23,9 @@
     static let atpStaff = "/api/v1/atp_staff"
     static let customers = "/api/v1/customers"
     static let customerDetail = "/api/v1/customers/{customerId}"
+    static let customerUpdate = "/api/v1/customers/{customerId}"
+    static let customerPhotoUpload = "/api/v1/customers/{customerId}/photo"
+    static let customerConsentCreate = "/api/v1/customers/{customerId}/consents"
     static let tours = "/api/v1/tours"
     static let tourDetail = "/api/v1/tours/{tourId}"
     static let tourImage = "/api/v1/tours/{tourId}/image"
@@ -99,6 +102,18 @@ static func customersPath() -> String {
 
 static func customerDetailPath(customerId: String) -> String {
     "/api/v1/customers/\(customerId)"
+}
+
+static func customerUpdatePath(customerId: String) -> String {
+    "/api/v1/customers/\(customerId)"
+}
+
+static func customerPhotoUploadPath(customerId: String) -> String {
+    "/api/v1/customers/\(customerId)/photo"
+}
+
+static func customerConsentCreatePath(customerId: String) -> String {
+    "/api/v1/customers/\(customerId)/consents"
 }
 
 static func toursPath() -> String {
@@ -180,6 +195,18 @@ static func customersURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {
 
 static func customerDetailURL(baseURL: URL, customerId: String, queryItems: [URLQueryItem] = []) -> URL {
     buildURL(baseURL: baseURL, path: customerDetailPath(customerId: customerId), queryItems: queryItems)
+}
+
+static func customerUpdateURL(baseURL: URL, customerId: String, queryItems: [URLQueryItem] = []) -> URL {
+    buildURL(baseURL: baseURL, path: customerUpdatePath(customerId: customerId), queryItems: queryItems)
+}
+
+static func customerPhotoUploadURL(baseURL: URL, customerId: String, queryItems: [URLQueryItem] = []) -> URL {
+    buildURL(baseURL: baseURL, path: customerPhotoUploadPath(customerId: customerId), queryItems: queryItems)
+}
+
+static func customerConsentCreateURL(baseURL: URL, customerId: String, queryItems: [URLQueryItem] = []) -> URL {
+    buildURL(baseURL: baseURL, path: customerConsentCreatePath(customerId: customerId), queryItems: queryItems)
 }
 
 static func toursURL(baseURL: URL, queryItems: [URLQueryItem] = []) -> URL {

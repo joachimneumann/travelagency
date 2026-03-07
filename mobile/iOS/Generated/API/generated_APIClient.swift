@@ -21,6 +21,9 @@
     case atpStaff
     case customers
     case customerDetail
+    case customerUpdate
+    case customerPhotoUpload
+    case customerConsentCreate
     case tours
     case tourDetail
     case tourImage
@@ -46,6 +49,9 @@
         case .atpStaff: return "GET"
         case .customers: return "GET"
         case .customerDetail: return "GET"
+        case .customerUpdate: return "PATCH"
+        case .customerPhotoUpload: return "POST"
+        case .customerConsentCreate: return "POST"
         case .tours: return "GET"
         case .tourDetail: return "GET"
         case .tourImage: return "GET"

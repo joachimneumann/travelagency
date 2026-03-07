@@ -618,8 +618,8 @@ function renderCustomers(items) {
         <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.id))}</a></td>
         <td>${escapeHtml(customer.name || "-")}</td>
         <td>${escapeHtml(customer.email || "-")}</td>
-        <td>${escapeHtml(customer.phone_number || customer.phone || "-")}</td>
-        <td>${escapeHtml(customer.preferred_language || customer.language || "-")}</td>
+        <td>${escapeHtml(customer.phone_number || "-")}</td>
+        <td>${escapeHtml(customer.preferred_language || "-")}</td>
         <td>${escapeHtml(formatDateTime(customer.updated_at))}</td>
       </tr>`;
     })

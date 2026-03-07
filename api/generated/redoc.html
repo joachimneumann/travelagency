@@ -56,6 +56,55 @@
       }
     },
     "schemas": {
+      "LanguageCode": {
+        "type": "string",
+        "enum": [
+          "English",
+          "Vietnamese",
+          "French",
+          "German",
+          "Spanish"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "English"
+          },
+          {
+            "code": "Vietnamese"
+          },
+          {
+            "code": "French"
+          },
+          {
+            "code": "German"
+          },
+          {
+            "code": "Spanish"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "English",
+            "label": "English"
+          },
+          {
+            "value": "Vietnamese",
+            "label": "Vietnamese"
+          },
+          {
+            "value": "French",
+            "label": "French"
+          },
+          {
+            "value": "German",
+            "label": "German"
+          },
+          {
+            "value": "Spanish",
+            "label": "Spanish"
+          }
+        ]
+      },
       "ATPCurrencyCode": {
         "type": "string",
         "enum": [
@@ -63,6 +112,46 @@
           "EURO",
           "VND",
           "THB"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "USD",
+            "symbol": "$",
+            "decimalPlaces": 2
+          },
+          {
+            "code": "EURO",
+            "symbol": "€",
+            "decimalPlaces": 2
+          },
+          {
+            "code": "VND",
+            "symbol": "₫",
+            "decimalPlaces": 0
+          },
+          {
+            "code": "THB",
+            "symbol": "฿",
+            "decimalPlaces": 0
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "USD",
+            "label": "USD"
+          },
+          {
+            "value": "EURO",
+            "label": "EURO"
+          },
+          {
+            "value": "VND",
+            "label": "VND"
+          },
+          {
+            "value": "THB",
+            "label": "THB"
+          }
         ],
         "x-currency-catalog": [
           {
@@ -87,16 +176,6 @@
           }
         ]
       },
-      "LanguageCode": {
-        "type": "string",
-        "enum": [
-          "English",
-          "Vietnamese",
-          "French",
-          "German",
-          "Spanish"
-        ]
-      },
       "ATPStaffRole": {
         "type": "string",
         "enum": [
@@ -104,6 +183,38 @@
           "atp_manager",
           "atp_accountant",
           "atp_staff"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "atp_admin"
+          },
+          {
+            "code": "atp_manager"
+          },
+          {
+            "code": "atp_accountant"
+          },
+          {
+            "code": "atp_staff"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "atp_admin",
+            "label": "atp_admin"
+          },
+          {
+            "value": "atp_manager",
+            "label": "atp_manager"
+          },
+          {
+            "value": "atp_accountant",
+            "label": "atp_accountant"
+          },
+          {
+            "value": "atp_staff",
+            "label": "atp_staff"
+          }
         ]
       },
       "BookingStage": {
@@ -118,6 +229,73 @@
           "WON",
           "LOST",
           "POST_TRIP"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "NEW"
+          },
+          {
+            "code": "QUALIFIED"
+          },
+          {
+            "code": "PROPOSAL_SENT"
+          },
+          {
+            "code": "NEGOTIATION"
+          },
+          {
+            "code": "INVOICE_SENT"
+          },
+          {
+            "code": "PAYMENT_RECEIVED"
+          },
+          {
+            "code": "WON"
+          },
+          {
+            "code": "LOST"
+          },
+          {
+            "code": "POST_TRIP"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "NEW",
+            "label": "NEW"
+          },
+          {
+            "value": "QUALIFIED",
+            "label": "QUALIFIED"
+          },
+          {
+            "value": "PROPOSAL_SENT",
+            "label": "PROPOSAL_SENT"
+          },
+          {
+            "value": "NEGOTIATION",
+            "label": "NEGOTIATION"
+          },
+          {
+            "value": "INVOICE_SENT",
+            "label": "INVOICE_SENT"
+          },
+          {
+            "value": "PAYMENT_RECEIVED",
+            "label": "PAYMENT_RECEIVED"
+          },
+          {
+            "value": "WON",
+            "label": "WON"
+          },
+          {
+            "value": "LOST",
+            "label": "LOST"
+          },
+          {
+            "value": "POST_TRIP",
+            "label": "POST_TRIP"
+          }
         ]
       },
       "PaymentStatus": {
@@ -126,6 +304,31 @@
           "PENDING",
           "PAID",
           "VOID"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "PENDING"
+          },
+          {
+            "code": "PAID"
+          },
+          {
+            "code": "VOID"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "PENDING",
+            "label": "PENDING"
+          },
+          {
+            "value": "PAID",
+            "label": "PAID"
+          },
+          {
+            "value": "VOID",
+            "label": "VOID"
+          }
         ]
       },
       "PricingAdjustmentType": {
@@ -134,6 +337,31 @@
           "DISCOUNT",
           "CREDIT",
           "SURCHARGE"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "DISCOUNT"
+          },
+          {
+            "code": "CREDIT"
+          },
+          {
+            "code": "SURCHARGE"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "DISCOUNT",
+            "label": "DISCOUNT"
+          },
+          {
+            "value": "CREDIT",
+            "label": "CREDIT"
+          },
+          {
+            "value": "SURCHARGE",
+            "label": "SURCHARGE"
+          }
         ]
       },
       "OfferCategory": {
@@ -147,6 +375,5706 @@
           "FEES_TAXES",
           "DISCOUNTS_CREDITS",
           "OTHER"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "ACCOMMODATION"
+          },
+          {
+            "code": "TRANSPORTATION"
+          },
+          {
+            "code": "TOURS_ACTIVITIES"
+          },
+          {
+            "code": "GUIDE_SUPPORT_SERVICES"
+          },
+          {
+            "code": "MEALS"
+          },
+          {
+            "code": "FEES_TAXES"
+          },
+          {
+            "code": "DISCOUNTS_CREDITS"
+          },
+          {
+            "code": "OTHER"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "ACCOMMODATION",
+            "label": "ACCOMMODATION"
+          },
+          {
+            "value": "TRANSPORTATION",
+            "label": "TRANSPORTATION"
+          },
+          {
+            "value": "TOURS_ACTIVITIES",
+            "label": "TOURS_ACTIVITIES"
+          },
+          {
+            "value": "GUIDE_SUPPORT_SERVICES",
+            "label": "GUIDE_SUPPORT_SERVICES"
+          },
+          {
+            "value": "MEALS",
+            "label": "MEALS"
+          },
+          {
+            "value": "FEES_TAXES",
+            "label": "FEES_TAXES"
+          },
+          {
+            "value": "DISCOUNTS_CREDITS",
+            "label": "DISCOUNTS_CREDITS"
+          },
+          {
+            "value": "OTHER",
+            "label": "OTHER"
+          }
+        ]
+      },
+      "CountryCode": {
+        "type": "string",
+        "enum": [
+          "AD",
+          "AE",
+          "AF",
+          "AG",
+          "AI",
+          "AL",
+          "AM",
+          "AO",
+          "AQ",
+          "AR",
+          "AS",
+          "AT",
+          "AU",
+          "AW",
+          "AX",
+          "AZ",
+          "BA",
+          "BB",
+          "BD",
+          "BE",
+          "BF",
+          "BG",
+          "BH",
+          "BI",
+          "BJ",
+          "BL",
+          "BM",
+          "BN",
+          "BO",
+          "BQ",
+          "BR",
+          "BS",
+          "BT",
+          "BV",
+          "BW",
+          "BY",
+          "BZ",
+          "CA",
+          "CC",
+          "CD",
+          "CF",
+          "CG",
+          "CH",
+          "CI",
+          "CK",
+          "CL",
+          "CM",
+          "CN",
+          "CO",
+          "CR",
+          "CU",
+          "CV",
+          "CW",
+          "CX",
+          "CY",
+          "CZ",
+          "DE",
+          "DJ",
+          "DK",
+          "DM",
+          "DO",
+          "DZ",
+          "EC",
+          "EE",
+          "EG",
+          "EH",
+          "ER",
+          "ES",
+          "ET",
+          "FI",
+          "FJ",
+          "FK",
+          "FM",
+          "FO",
+          "FR",
+          "GA",
+          "GB",
+          "GD",
+          "GE",
+          "GF",
+          "GG",
+          "GH",
+          "GI",
+          "GL",
+          "GM",
+          "GN",
+          "GP",
+          "GQ",
+          "GR",
+          "GS",
+          "GT",
+          "GU",
+          "GW",
+          "GY",
+          "HK",
+          "HM",
+          "HN",
+          "HR",
+          "HT",
+          "HU",
+          "ID",
+          "IE",
+          "IL",
+          "IM",
+          "IN",
+          "IO",
+          "IQ",
+          "IR",
+          "IS",
+          "IT",
+          "JE",
+          "JM",
+          "JO",
+          "JP",
+          "KE",
+          "KG",
+          "KH",
+          "KI",
+          "KM",
+          "KN",
+          "KP",
+          "KR",
+          "KW",
+          "KY",
+          "KZ",
+          "LA",
+          "LB",
+          "LC",
+          "LI",
+          "LK",
+          "LR",
+          "LS",
+          "LT",
+          "LU",
+          "LV",
+          "LY",
+          "MA",
+          "MC",
+          "MD",
+          "ME",
+          "MF",
+          "MG",
+          "MH",
+          "MK",
+          "ML",
+          "MM",
+          "MN",
+          "MO",
+          "MP",
+          "MQ",
+          "MR",
+          "MS",
+          "MT",
+          "MU",
+          "MV",
+          "MW",
+          "MX",
+          "MY",
+          "MZ",
+          "NA",
+          "NC",
+          "NE",
+          "NF",
+          "NG",
+          "NI",
+          "NL",
+          "NO",
+          "NP",
+          "NR",
+          "NU",
+          "NZ",
+          "OM",
+          "PA",
+          "PE",
+          "PF",
+          "PG",
+          "PH",
+          "PK",
+          "PL",
+          "PM",
+          "PN",
+          "PR",
+          "PS",
+          "PT",
+          "PW",
+          "PY",
+          "QA",
+          "RE",
+          "RO",
+          "RS",
+          "RU",
+          "RW",
+          "SA",
+          "SB",
+          "SC",
+          "SD",
+          "SE",
+          "SG",
+          "SH",
+          "SI",
+          "SJ",
+          "SK",
+          "SL",
+          "SM",
+          "SN",
+          "SO",
+          "SR",
+          "SS",
+          "ST",
+          "SV",
+          "SX",
+          "SY",
+          "SZ",
+          "TC",
+          "TD",
+          "TF",
+          "TG",
+          "TH",
+          "TJ",
+          "TK",
+          "TL",
+          "TM",
+          "TN",
+          "TO",
+          "TR",
+          "TT",
+          "TV",
+          "TW",
+          "TZ",
+          "UA",
+          "UG",
+          "UM",
+          "US",
+          "UY",
+          "UZ",
+          "VA",
+          "VC",
+          "VE",
+          "VG",
+          "VI",
+          "VN",
+          "VU",
+          "WF",
+          "WS",
+          "YE",
+          "YT",
+          "ZA",
+          "ZM",
+          "ZW"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "AD"
+          },
+          {
+            "code": "AE"
+          },
+          {
+            "code": "AF"
+          },
+          {
+            "code": "AG"
+          },
+          {
+            "code": "AI"
+          },
+          {
+            "code": "AL"
+          },
+          {
+            "code": "AM"
+          },
+          {
+            "code": "AO"
+          },
+          {
+            "code": "AQ"
+          },
+          {
+            "code": "AR"
+          },
+          {
+            "code": "AS"
+          },
+          {
+            "code": "AT"
+          },
+          {
+            "code": "AU"
+          },
+          {
+            "code": "AW"
+          },
+          {
+            "code": "AX"
+          },
+          {
+            "code": "AZ"
+          },
+          {
+            "code": "BA"
+          },
+          {
+            "code": "BB"
+          },
+          {
+            "code": "BD"
+          },
+          {
+            "code": "BE"
+          },
+          {
+            "code": "BF"
+          },
+          {
+            "code": "BG"
+          },
+          {
+            "code": "BH"
+          },
+          {
+            "code": "BI"
+          },
+          {
+            "code": "BJ"
+          },
+          {
+            "code": "BL"
+          },
+          {
+            "code": "BM"
+          },
+          {
+            "code": "BN"
+          },
+          {
+            "code": "BO"
+          },
+          {
+            "code": "BQ"
+          },
+          {
+            "code": "BR"
+          },
+          {
+            "code": "BS"
+          },
+          {
+            "code": "BT"
+          },
+          {
+            "code": "BV"
+          },
+          {
+            "code": "BW"
+          },
+          {
+            "code": "BY"
+          },
+          {
+            "code": "BZ"
+          },
+          {
+            "code": "CA"
+          },
+          {
+            "code": "CC"
+          },
+          {
+            "code": "CD"
+          },
+          {
+            "code": "CF"
+          },
+          {
+            "code": "CG"
+          },
+          {
+            "code": "CH"
+          },
+          {
+            "code": "CI"
+          },
+          {
+            "code": "CK"
+          },
+          {
+            "code": "CL"
+          },
+          {
+            "code": "CM"
+          },
+          {
+            "code": "CN"
+          },
+          {
+            "code": "CO"
+          },
+          {
+            "code": "CR"
+          },
+          {
+            "code": "CU"
+          },
+          {
+            "code": "CV"
+          },
+          {
+            "code": "CW"
+          },
+          {
+            "code": "CX"
+          },
+          {
+            "code": "CY"
+          },
+          {
+            "code": "CZ"
+          },
+          {
+            "code": "DE"
+          },
+          {
+            "code": "DJ"
+          },
+          {
+            "code": "DK"
+          },
+          {
+            "code": "DM"
+          },
+          {
+            "code": "DO"
+          },
+          {
+            "code": "DZ"
+          },
+          {
+            "code": "EC"
+          },
+          {
+            "code": "EE"
+          },
+          {
+            "code": "EG"
+          },
+          {
+            "code": "EH"
+          },
+          {
+            "code": "ER"
+          },
+          {
+            "code": "ES"
+          },
+          {
+            "code": "ET"
+          },
+          {
+            "code": "FI"
+          },
+          {
+            "code": "FJ"
+          },
+          {
+            "code": "FK"
+          },
+          {
+            "code": "FM"
+          },
+          {
+            "code": "FO"
+          },
+          {
+            "code": "FR"
+          },
+          {
+            "code": "GA"
+          },
+          {
+            "code": "GB"
+          },
+          {
+            "code": "GD"
+          },
+          {
+            "code": "GE"
+          },
+          {
+            "code": "GF"
+          },
+          {
+            "code": "GG"
+          },
+          {
+            "code": "GH"
+          },
+          {
+            "code": "GI"
+          },
+          {
+            "code": "GL"
+          },
+          {
+            "code": "GM"
+          },
+          {
+            "code": "GN"
+          },
+          {
+            "code": "GP"
+          },
+          {
+            "code": "GQ"
+          },
+          {
+            "code": "GR"
+          },
+          {
+            "code": "GS"
+          },
+          {
+            "code": "GT"
+          },
+          {
+            "code": "GU"
+          },
+          {
+            "code": "GW"
+          },
+          {
+            "code": "GY"
+          },
+          {
+            "code": "HK"
+          },
+          {
+            "code": "HM"
+          },
+          {
+            "code": "HN"
+          },
+          {
+            "code": "HR"
+          },
+          {
+            "code": "HT"
+          },
+          {
+            "code": "HU"
+          },
+          {
+            "code": "ID"
+          },
+          {
+            "code": "IE"
+          },
+          {
+            "code": "IL"
+          },
+          {
+            "code": "IM"
+          },
+          {
+            "code": "IN"
+          },
+          {
+            "code": "IO"
+          },
+          {
+            "code": "IQ"
+          },
+          {
+            "code": "IR"
+          },
+          {
+            "code": "IS"
+          },
+          {
+            "code": "IT"
+          },
+          {
+            "code": "JE"
+          },
+          {
+            "code": "JM"
+          },
+          {
+            "code": "JO"
+          },
+          {
+            "code": "JP"
+          },
+          {
+            "code": "KE"
+          },
+          {
+            "code": "KG"
+          },
+          {
+            "code": "KH"
+          },
+          {
+            "code": "KI"
+          },
+          {
+            "code": "KM"
+          },
+          {
+            "code": "KN"
+          },
+          {
+            "code": "KP"
+          },
+          {
+            "code": "KR"
+          },
+          {
+            "code": "KW"
+          },
+          {
+            "code": "KY"
+          },
+          {
+            "code": "KZ"
+          },
+          {
+            "code": "LA"
+          },
+          {
+            "code": "LB"
+          },
+          {
+            "code": "LC"
+          },
+          {
+            "code": "LI"
+          },
+          {
+            "code": "LK"
+          },
+          {
+            "code": "LR"
+          },
+          {
+            "code": "LS"
+          },
+          {
+            "code": "LT"
+          },
+          {
+            "code": "LU"
+          },
+          {
+            "code": "LV"
+          },
+          {
+            "code": "LY"
+          },
+          {
+            "code": "MA"
+          },
+          {
+            "code": "MC"
+          },
+          {
+            "code": "MD"
+          },
+          {
+            "code": "ME"
+          },
+          {
+            "code": "MF"
+          },
+          {
+            "code": "MG"
+          },
+          {
+            "code": "MH"
+          },
+          {
+            "code": "MK"
+          },
+          {
+            "code": "ML"
+          },
+          {
+            "code": "MM"
+          },
+          {
+            "code": "MN"
+          },
+          {
+            "code": "MO"
+          },
+          {
+            "code": "MP"
+          },
+          {
+            "code": "MQ"
+          },
+          {
+            "code": "MR"
+          },
+          {
+            "code": "MS"
+          },
+          {
+            "code": "MT"
+          },
+          {
+            "code": "MU"
+          },
+          {
+            "code": "MV"
+          },
+          {
+            "code": "MW"
+          },
+          {
+            "code": "MX"
+          },
+          {
+            "code": "MY"
+          },
+          {
+            "code": "MZ"
+          },
+          {
+            "code": "NA"
+          },
+          {
+            "code": "NC"
+          },
+          {
+            "code": "NE"
+          },
+          {
+            "code": "NF"
+          },
+          {
+            "code": "NG"
+          },
+          {
+            "code": "NI"
+          },
+          {
+            "code": "NL"
+          },
+          {
+            "code": "NO"
+          },
+          {
+            "code": "NP"
+          },
+          {
+            "code": "NR"
+          },
+          {
+            "code": "NU"
+          },
+          {
+            "code": "NZ"
+          },
+          {
+            "code": "OM"
+          },
+          {
+            "code": "PA"
+          },
+          {
+            "code": "PE"
+          },
+          {
+            "code": "PF"
+          },
+          {
+            "code": "PG"
+          },
+          {
+            "code": "PH"
+          },
+          {
+            "code": "PK"
+          },
+          {
+            "code": "PL"
+          },
+          {
+            "code": "PM"
+          },
+          {
+            "code": "PN"
+          },
+          {
+            "code": "PR"
+          },
+          {
+            "code": "PS"
+          },
+          {
+            "code": "PT"
+          },
+          {
+            "code": "PW"
+          },
+          {
+            "code": "PY"
+          },
+          {
+            "code": "QA"
+          },
+          {
+            "code": "RE"
+          },
+          {
+            "code": "RO"
+          },
+          {
+            "code": "RS"
+          },
+          {
+            "code": "RU"
+          },
+          {
+            "code": "RW"
+          },
+          {
+            "code": "SA"
+          },
+          {
+            "code": "SB"
+          },
+          {
+            "code": "SC"
+          },
+          {
+            "code": "SD"
+          },
+          {
+            "code": "SE"
+          },
+          {
+            "code": "SG"
+          },
+          {
+            "code": "SH"
+          },
+          {
+            "code": "SI"
+          },
+          {
+            "code": "SJ"
+          },
+          {
+            "code": "SK"
+          },
+          {
+            "code": "SL"
+          },
+          {
+            "code": "SM"
+          },
+          {
+            "code": "SN"
+          },
+          {
+            "code": "SO"
+          },
+          {
+            "code": "SR"
+          },
+          {
+            "code": "SS"
+          },
+          {
+            "code": "ST"
+          },
+          {
+            "code": "SV"
+          },
+          {
+            "code": "SX"
+          },
+          {
+            "code": "SY"
+          },
+          {
+            "code": "SZ"
+          },
+          {
+            "code": "TC"
+          },
+          {
+            "code": "TD"
+          },
+          {
+            "code": "TF"
+          },
+          {
+            "code": "TG"
+          },
+          {
+            "code": "TH"
+          },
+          {
+            "code": "TJ"
+          },
+          {
+            "code": "TK"
+          },
+          {
+            "code": "TL"
+          },
+          {
+            "code": "TM"
+          },
+          {
+            "code": "TN"
+          },
+          {
+            "code": "TO"
+          },
+          {
+            "code": "TR"
+          },
+          {
+            "code": "TT"
+          },
+          {
+            "code": "TV"
+          },
+          {
+            "code": "TW"
+          },
+          {
+            "code": "TZ"
+          },
+          {
+            "code": "UA"
+          },
+          {
+            "code": "UG"
+          },
+          {
+            "code": "UM"
+          },
+          {
+            "code": "US"
+          },
+          {
+            "code": "UY"
+          },
+          {
+            "code": "UZ"
+          },
+          {
+            "code": "VA"
+          },
+          {
+            "code": "VC"
+          },
+          {
+            "code": "VE"
+          },
+          {
+            "code": "VG"
+          },
+          {
+            "code": "VI"
+          },
+          {
+            "code": "VN"
+          },
+          {
+            "code": "VU"
+          },
+          {
+            "code": "WF"
+          },
+          {
+            "code": "WS"
+          },
+          {
+            "code": "YE"
+          },
+          {
+            "code": "YT"
+          },
+          {
+            "code": "ZA"
+          },
+          {
+            "code": "ZM"
+          },
+          {
+            "code": "ZW"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "AD",
+            "label": "AD"
+          },
+          {
+            "value": "AE",
+            "label": "AE"
+          },
+          {
+            "value": "AF",
+            "label": "AF"
+          },
+          {
+            "value": "AG",
+            "label": "AG"
+          },
+          {
+            "value": "AI",
+            "label": "AI"
+          },
+          {
+            "value": "AL",
+            "label": "AL"
+          },
+          {
+            "value": "AM",
+            "label": "AM"
+          },
+          {
+            "value": "AO",
+            "label": "AO"
+          },
+          {
+            "value": "AQ",
+            "label": "AQ"
+          },
+          {
+            "value": "AR",
+            "label": "AR"
+          },
+          {
+            "value": "AS",
+            "label": "AS"
+          },
+          {
+            "value": "AT",
+            "label": "AT"
+          },
+          {
+            "value": "AU",
+            "label": "AU"
+          },
+          {
+            "value": "AW",
+            "label": "AW"
+          },
+          {
+            "value": "AX",
+            "label": "AX"
+          },
+          {
+            "value": "AZ",
+            "label": "AZ"
+          },
+          {
+            "value": "BA",
+            "label": "BA"
+          },
+          {
+            "value": "BB",
+            "label": "BB"
+          },
+          {
+            "value": "BD",
+            "label": "BD"
+          },
+          {
+            "value": "BE",
+            "label": "BE"
+          },
+          {
+            "value": "BF",
+            "label": "BF"
+          },
+          {
+            "value": "BG",
+            "label": "BG"
+          },
+          {
+            "value": "BH",
+            "label": "BH"
+          },
+          {
+            "value": "BI",
+            "label": "BI"
+          },
+          {
+            "value": "BJ",
+            "label": "BJ"
+          },
+          {
+            "value": "BL",
+            "label": "BL"
+          },
+          {
+            "value": "BM",
+            "label": "BM"
+          },
+          {
+            "value": "BN",
+            "label": "BN"
+          },
+          {
+            "value": "BO",
+            "label": "BO"
+          },
+          {
+            "value": "BQ",
+            "label": "BQ"
+          },
+          {
+            "value": "BR",
+            "label": "BR"
+          },
+          {
+            "value": "BS",
+            "label": "BS"
+          },
+          {
+            "value": "BT",
+            "label": "BT"
+          },
+          {
+            "value": "BV",
+            "label": "BV"
+          },
+          {
+            "value": "BW",
+            "label": "BW"
+          },
+          {
+            "value": "BY",
+            "label": "BY"
+          },
+          {
+            "value": "BZ",
+            "label": "BZ"
+          },
+          {
+            "value": "CA",
+            "label": "CA"
+          },
+          {
+            "value": "CC",
+            "label": "CC"
+          },
+          {
+            "value": "CD",
+            "label": "CD"
+          },
+          {
+            "value": "CF",
+            "label": "CF"
+          },
+          {
+            "value": "CG",
+            "label": "CG"
+          },
+          {
+            "value": "CH",
+            "label": "CH"
+          },
+          {
+            "value": "CI",
+            "label": "CI"
+          },
+          {
+            "value": "CK",
+            "label": "CK"
+          },
+          {
+            "value": "CL",
+            "label": "CL"
+          },
+          {
+            "value": "CM",
+            "label": "CM"
+          },
+          {
+            "value": "CN",
+            "label": "CN"
+          },
+          {
+            "value": "CO",
+            "label": "CO"
+          },
+          {
+            "value": "CR",
+            "label": "CR"
+          },
+          {
+            "value": "CU",
+            "label": "CU"
+          },
+          {
+            "value": "CV",
+            "label": "CV"
+          },
+          {
+            "value": "CW",
+            "label": "CW"
+          },
+          {
+            "value": "CX",
+            "label": "CX"
+          },
+          {
+            "value": "CY",
+            "label": "CY"
+          },
+          {
+            "value": "CZ",
+            "label": "CZ"
+          },
+          {
+            "value": "DE",
+            "label": "DE"
+          },
+          {
+            "value": "DJ",
+            "label": "DJ"
+          },
+          {
+            "value": "DK",
+            "label": "DK"
+          },
+          {
+            "value": "DM",
+            "label": "DM"
+          },
+          {
+            "value": "DO",
+            "label": "DO"
+          },
+          {
+            "value": "DZ",
+            "label": "DZ"
+          },
+          {
+            "value": "EC",
+            "label": "EC"
+          },
+          {
+            "value": "EE",
+            "label": "EE"
+          },
+          {
+            "value": "EG",
+            "label": "EG"
+          },
+          {
+            "value": "EH",
+            "label": "EH"
+          },
+          {
+            "value": "ER",
+            "label": "ER"
+          },
+          {
+            "value": "ES",
+            "label": "ES"
+          },
+          {
+            "value": "ET",
+            "label": "ET"
+          },
+          {
+            "value": "FI",
+            "label": "FI"
+          },
+          {
+            "value": "FJ",
+            "label": "FJ"
+          },
+          {
+            "value": "FK",
+            "label": "FK"
+          },
+          {
+            "value": "FM",
+            "label": "FM"
+          },
+          {
+            "value": "FO",
+            "label": "FO"
+          },
+          {
+            "value": "FR",
+            "label": "FR"
+          },
+          {
+            "value": "GA",
+            "label": "GA"
+          },
+          {
+            "value": "GB",
+            "label": "GB"
+          },
+          {
+            "value": "GD",
+            "label": "GD"
+          },
+          {
+            "value": "GE",
+            "label": "GE"
+          },
+          {
+            "value": "GF",
+            "label": "GF"
+          },
+          {
+            "value": "GG",
+            "label": "GG"
+          },
+          {
+            "value": "GH",
+            "label": "GH"
+          },
+          {
+            "value": "GI",
+            "label": "GI"
+          },
+          {
+            "value": "GL",
+            "label": "GL"
+          },
+          {
+            "value": "GM",
+            "label": "GM"
+          },
+          {
+            "value": "GN",
+            "label": "GN"
+          },
+          {
+            "value": "GP",
+            "label": "GP"
+          },
+          {
+            "value": "GQ",
+            "label": "GQ"
+          },
+          {
+            "value": "GR",
+            "label": "GR"
+          },
+          {
+            "value": "GS",
+            "label": "GS"
+          },
+          {
+            "value": "GT",
+            "label": "GT"
+          },
+          {
+            "value": "GU",
+            "label": "GU"
+          },
+          {
+            "value": "GW",
+            "label": "GW"
+          },
+          {
+            "value": "GY",
+            "label": "GY"
+          },
+          {
+            "value": "HK",
+            "label": "HK"
+          },
+          {
+            "value": "HM",
+            "label": "HM"
+          },
+          {
+            "value": "HN",
+            "label": "HN"
+          },
+          {
+            "value": "HR",
+            "label": "HR"
+          },
+          {
+            "value": "HT",
+            "label": "HT"
+          },
+          {
+            "value": "HU",
+            "label": "HU"
+          },
+          {
+            "value": "ID",
+            "label": "ID"
+          },
+          {
+            "value": "IE",
+            "label": "IE"
+          },
+          {
+            "value": "IL",
+            "label": "IL"
+          },
+          {
+            "value": "IM",
+            "label": "IM"
+          },
+          {
+            "value": "IN",
+            "label": "IN"
+          },
+          {
+            "value": "IO",
+            "label": "IO"
+          },
+          {
+            "value": "IQ",
+            "label": "IQ"
+          },
+          {
+            "value": "IR",
+            "label": "IR"
+          },
+          {
+            "value": "IS",
+            "label": "IS"
+          },
+          {
+            "value": "IT",
+            "label": "IT"
+          },
+          {
+            "value": "JE",
+            "label": "JE"
+          },
+          {
+            "value": "JM",
+            "label": "JM"
+          },
+          {
+            "value": "JO",
+            "label": "JO"
+          },
+          {
+            "value": "JP",
+            "label": "JP"
+          },
+          {
+            "value": "KE",
+            "label": "KE"
+          },
+          {
+            "value": "KG",
+            "label": "KG"
+          },
+          {
+            "value": "KH",
+            "label": "KH"
+          },
+          {
+            "value": "KI",
+            "label": "KI"
+          },
+          {
+            "value": "KM",
+            "label": "KM"
+          },
+          {
+            "value": "KN",
+            "label": "KN"
+          },
+          {
+            "value": "KP",
+            "label": "KP"
+          },
+          {
+            "value": "KR",
+            "label": "KR"
+          },
+          {
+            "value": "KW",
+            "label": "KW"
+          },
+          {
+            "value": "KY",
+            "label": "KY"
+          },
+          {
+            "value": "KZ",
+            "label": "KZ"
+          },
+          {
+            "value": "LA",
+            "label": "LA"
+          },
+          {
+            "value": "LB",
+            "label": "LB"
+          },
+          {
+            "value": "LC",
+            "label": "LC"
+          },
+          {
+            "value": "LI",
+            "label": "LI"
+          },
+          {
+            "value": "LK",
+            "label": "LK"
+          },
+          {
+            "value": "LR",
+            "label": "LR"
+          },
+          {
+            "value": "LS",
+            "label": "LS"
+          },
+          {
+            "value": "LT",
+            "label": "LT"
+          },
+          {
+            "value": "LU",
+            "label": "LU"
+          },
+          {
+            "value": "LV",
+            "label": "LV"
+          },
+          {
+            "value": "LY",
+            "label": "LY"
+          },
+          {
+            "value": "MA",
+            "label": "MA"
+          },
+          {
+            "value": "MC",
+            "label": "MC"
+          },
+          {
+            "value": "MD",
+            "label": "MD"
+          },
+          {
+            "value": "ME",
+            "label": "ME"
+          },
+          {
+            "value": "MF",
+            "label": "MF"
+          },
+          {
+            "value": "MG",
+            "label": "MG"
+          },
+          {
+            "value": "MH",
+            "label": "MH"
+          },
+          {
+            "value": "MK",
+            "label": "MK"
+          },
+          {
+            "value": "ML",
+            "label": "ML"
+          },
+          {
+            "value": "MM",
+            "label": "MM"
+          },
+          {
+            "value": "MN",
+            "label": "MN"
+          },
+          {
+            "value": "MO",
+            "label": "MO"
+          },
+          {
+            "value": "MP",
+            "label": "MP"
+          },
+          {
+            "value": "MQ",
+            "label": "MQ"
+          },
+          {
+            "value": "MR",
+            "label": "MR"
+          },
+          {
+            "value": "MS",
+            "label": "MS"
+          },
+          {
+            "value": "MT",
+            "label": "MT"
+          },
+          {
+            "value": "MU",
+            "label": "MU"
+          },
+          {
+            "value": "MV",
+            "label": "MV"
+          },
+          {
+            "value": "MW",
+            "label": "MW"
+          },
+          {
+            "value": "MX",
+            "label": "MX"
+          },
+          {
+            "value": "MY",
+            "label": "MY"
+          },
+          {
+            "value": "MZ",
+            "label": "MZ"
+          },
+          {
+            "value": "NA",
+            "label": "NA"
+          },
+          {
+            "value": "NC",
+            "label": "NC"
+          },
+          {
+            "value": "NE",
+            "label": "NE"
+          },
+          {
+            "value": "NF",
+            "label": "NF"
+          },
+          {
+            "value": "NG",
+            "label": "NG"
+          },
+          {
+            "value": "NI",
+            "label": "NI"
+          },
+          {
+            "value": "NL",
+            "label": "NL"
+          },
+          {
+            "value": "NO",
+            "label": "NO"
+          },
+          {
+            "value": "NP",
+            "label": "NP"
+          },
+          {
+            "value": "NR",
+            "label": "NR"
+          },
+          {
+            "value": "NU",
+            "label": "NU"
+          },
+          {
+            "value": "NZ",
+            "label": "NZ"
+          },
+          {
+            "value": "OM",
+            "label": "OM"
+          },
+          {
+            "value": "PA",
+            "label": "PA"
+          },
+          {
+            "value": "PE",
+            "label": "PE"
+          },
+          {
+            "value": "PF",
+            "label": "PF"
+          },
+          {
+            "value": "PG",
+            "label": "PG"
+          },
+          {
+            "value": "PH",
+            "label": "PH"
+          },
+          {
+            "value": "PK",
+            "label": "PK"
+          },
+          {
+            "value": "PL",
+            "label": "PL"
+          },
+          {
+            "value": "PM",
+            "label": "PM"
+          },
+          {
+            "value": "PN",
+            "label": "PN"
+          },
+          {
+            "value": "PR",
+            "label": "PR"
+          },
+          {
+            "value": "PS",
+            "label": "PS"
+          },
+          {
+            "value": "PT",
+            "label": "PT"
+          },
+          {
+            "value": "PW",
+            "label": "PW"
+          },
+          {
+            "value": "PY",
+            "label": "PY"
+          },
+          {
+            "value": "QA",
+            "label": "QA"
+          },
+          {
+            "value": "RE",
+            "label": "RE"
+          },
+          {
+            "value": "RO",
+            "label": "RO"
+          },
+          {
+            "value": "RS",
+            "label": "RS"
+          },
+          {
+            "value": "RU",
+            "label": "RU"
+          },
+          {
+            "value": "RW",
+            "label": "RW"
+          },
+          {
+            "value": "SA",
+            "label": "SA"
+          },
+          {
+            "value": "SB",
+            "label": "SB"
+          },
+          {
+            "value": "SC",
+            "label": "SC"
+          },
+          {
+            "value": "SD",
+            "label": "SD"
+          },
+          {
+            "value": "SE",
+            "label": "SE"
+          },
+          {
+            "value": "SG",
+            "label": "SG"
+          },
+          {
+            "value": "SH",
+            "label": "SH"
+          },
+          {
+            "value": "SI",
+            "label": "SI"
+          },
+          {
+            "value": "SJ",
+            "label": "SJ"
+          },
+          {
+            "value": "SK",
+            "label": "SK"
+          },
+          {
+            "value": "SL",
+            "label": "SL"
+          },
+          {
+            "value": "SM",
+            "label": "SM"
+          },
+          {
+            "value": "SN",
+            "label": "SN"
+          },
+          {
+            "value": "SO",
+            "label": "SO"
+          },
+          {
+            "value": "SR",
+            "label": "SR"
+          },
+          {
+            "value": "SS",
+            "label": "SS"
+          },
+          {
+            "value": "ST",
+            "label": "ST"
+          },
+          {
+            "value": "SV",
+            "label": "SV"
+          },
+          {
+            "value": "SX",
+            "label": "SX"
+          },
+          {
+            "value": "SY",
+            "label": "SY"
+          },
+          {
+            "value": "SZ",
+            "label": "SZ"
+          },
+          {
+            "value": "TC",
+            "label": "TC"
+          },
+          {
+            "value": "TD",
+            "label": "TD"
+          },
+          {
+            "value": "TF",
+            "label": "TF"
+          },
+          {
+            "value": "TG",
+            "label": "TG"
+          },
+          {
+            "value": "TH",
+            "label": "TH"
+          },
+          {
+            "value": "TJ",
+            "label": "TJ"
+          },
+          {
+            "value": "TK",
+            "label": "TK"
+          },
+          {
+            "value": "TL",
+            "label": "TL"
+          },
+          {
+            "value": "TM",
+            "label": "TM"
+          },
+          {
+            "value": "TN",
+            "label": "TN"
+          },
+          {
+            "value": "TO",
+            "label": "TO"
+          },
+          {
+            "value": "TR",
+            "label": "TR"
+          },
+          {
+            "value": "TT",
+            "label": "TT"
+          },
+          {
+            "value": "TV",
+            "label": "TV"
+          },
+          {
+            "value": "TW",
+            "label": "TW"
+          },
+          {
+            "value": "TZ",
+            "label": "TZ"
+          },
+          {
+            "value": "UA",
+            "label": "UA"
+          },
+          {
+            "value": "UG",
+            "label": "UG"
+          },
+          {
+            "value": "UM",
+            "label": "UM"
+          },
+          {
+            "value": "US",
+            "label": "US"
+          },
+          {
+            "value": "UY",
+            "label": "UY"
+          },
+          {
+            "value": "UZ",
+            "label": "UZ"
+          },
+          {
+            "value": "VA",
+            "label": "VA"
+          },
+          {
+            "value": "VC",
+            "label": "VC"
+          },
+          {
+            "value": "VE",
+            "label": "VE"
+          },
+          {
+            "value": "VG",
+            "label": "VG"
+          },
+          {
+            "value": "VI",
+            "label": "VI"
+          },
+          {
+            "value": "VN",
+            "label": "VN"
+          },
+          {
+            "value": "VU",
+            "label": "VU"
+          },
+          {
+            "value": "WF",
+            "label": "WF"
+          },
+          {
+            "value": "WS",
+            "label": "WS"
+          },
+          {
+            "value": "YE",
+            "label": "YE"
+          },
+          {
+            "value": "YT",
+            "label": "YT"
+          },
+          {
+            "value": "ZA",
+            "label": "ZA"
+          },
+          {
+            "value": "ZM",
+            "label": "ZM"
+          },
+          {
+            "value": "ZW",
+            "label": "ZW"
+          }
+        ]
+      },
+      "TimezoneCode": {
+        "type": "string",
+        "enum": [
+          "Africa/Abidjan",
+          "Africa/Accra",
+          "Africa/Addis_Ababa",
+          "Africa/Algiers",
+          "Africa/Asmera",
+          "Africa/Bamako",
+          "Africa/Bangui",
+          "Africa/Banjul",
+          "Africa/Bissau",
+          "Africa/Blantyre",
+          "Africa/Brazzaville",
+          "Africa/Bujumbura",
+          "Africa/Cairo",
+          "Africa/Casablanca",
+          "Africa/Ceuta",
+          "Africa/Conakry",
+          "Africa/Dakar",
+          "Africa/Dar_es_Salaam",
+          "Africa/Djibouti",
+          "Africa/Douala",
+          "Africa/El_Aaiun",
+          "Africa/Freetown",
+          "Africa/Gaborone",
+          "Africa/Harare",
+          "Africa/Johannesburg",
+          "Africa/Juba",
+          "Africa/Kampala",
+          "Africa/Khartoum",
+          "Africa/Kigali",
+          "Africa/Kinshasa",
+          "Africa/Lagos",
+          "Africa/Libreville",
+          "Africa/Lome",
+          "Africa/Luanda",
+          "Africa/Lubumbashi",
+          "Africa/Lusaka",
+          "Africa/Malabo",
+          "Africa/Maputo",
+          "Africa/Maseru",
+          "Africa/Mbabane",
+          "Africa/Mogadishu",
+          "Africa/Monrovia",
+          "Africa/Nairobi",
+          "Africa/Ndjamena",
+          "Africa/Niamey",
+          "Africa/Nouakchott",
+          "Africa/Ouagadougou",
+          "Africa/Porto-Novo",
+          "Africa/Sao_Tome",
+          "Africa/Tripoli",
+          "Africa/Tunis",
+          "Africa/Windhoek",
+          "America/Adak",
+          "America/Anchorage",
+          "America/Anguilla",
+          "America/Antigua",
+          "America/Araguaina",
+          "America/Argentina/La_Rioja",
+          "America/Argentina/Rio_Gallegos",
+          "America/Argentina/Salta",
+          "America/Argentina/San_Juan",
+          "America/Argentina/San_Luis",
+          "America/Argentina/Tucuman",
+          "America/Argentina/Ushuaia",
+          "America/Aruba",
+          "America/Asuncion",
+          "America/Bahia",
+          "America/Bahia_Banderas",
+          "America/Barbados",
+          "America/Belem",
+          "America/Belize",
+          "America/Blanc-Sablon",
+          "America/Boa_Vista",
+          "America/Bogota",
+          "America/Boise",
+          "America/Buenos_Aires",
+          "America/Cambridge_Bay",
+          "America/Campo_Grande",
+          "America/Cancun",
+          "America/Caracas",
+          "America/Catamarca",
+          "America/Cayenne",
+          "America/Cayman",
+          "America/Chicago",
+          "America/Chihuahua",
+          "America/Ciudad_Juarez",
+          "America/Coral_Harbour",
+          "America/Cordoba",
+          "America/Costa_Rica",
+          "America/Creston",
+          "America/Cuiaba",
+          "America/Curacao",
+          "America/Danmarkshavn",
+          "America/Dawson",
+          "America/Dawson_Creek",
+          "America/Denver",
+          "America/Detroit",
+          "America/Dominica",
+          "America/Edmonton",
+          "America/Eirunepe",
+          "America/El_Salvador",
+          "America/Fort_Nelson",
+          "America/Fortaleza",
+          "America/Glace_Bay",
+          "America/Godthab",
+          "America/Goose_Bay",
+          "America/Grand_Turk",
+          "America/Grenada",
+          "America/Guadeloupe",
+          "America/Guatemala",
+          "America/Guayaquil",
+          "America/Guyana",
+          "America/Halifax",
+          "America/Havana",
+          "America/Hermosillo",
+          "America/Indiana/Knox",
+          "America/Indiana/Marengo",
+          "America/Indiana/Petersburg",
+          "America/Indiana/Tell_City",
+          "America/Indiana/Vevay",
+          "America/Indiana/Vincennes",
+          "America/Indiana/Winamac",
+          "America/Indianapolis",
+          "America/Inuvik",
+          "America/Iqaluit",
+          "America/Jamaica",
+          "America/Jujuy",
+          "America/Juneau",
+          "America/Kentucky/Monticello",
+          "America/Kralendijk",
+          "America/La_Paz",
+          "America/Lima",
+          "America/Los_Angeles",
+          "America/Louisville",
+          "America/Lower_Princes",
+          "America/Maceio",
+          "America/Managua",
+          "America/Manaus",
+          "America/Marigot",
+          "America/Martinique",
+          "America/Matamoros",
+          "America/Mazatlan",
+          "America/Mendoza",
+          "America/Menominee",
+          "America/Merida",
+          "America/Metlakatla",
+          "America/Mexico_City",
+          "America/Miquelon",
+          "America/Moncton",
+          "America/Monterrey",
+          "America/Montevideo",
+          "America/Montserrat",
+          "America/Nassau",
+          "America/New_York",
+          "America/Nome",
+          "America/Noronha",
+          "America/North_Dakota/Beulah",
+          "America/North_Dakota/Center",
+          "America/North_Dakota/New_Salem",
+          "America/Ojinaga",
+          "America/Panama",
+          "America/Paramaribo",
+          "America/Phoenix",
+          "America/Port-au-Prince",
+          "America/Port_of_Spain",
+          "America/Porto_Velho",
+          "America/Puerto_Rico",
+          "America/Punta_Arenas",
+          "America/Rankin_Inlet",
+          "America/Recife",
+          "America/Regina",
+          "America/Resolute",
+          "America/Rio_Branco",
+          "America/Santarem",
+          "America/Santiago",
+          "America/Santo_Domingo",
+          "America/Sao_Paulo",
+          "America/Scoresbysund",
+          "America/Sitka",
+          "America/St_Barthelemy",
+          "America/St_Johns",
+          "America/St_Kitts",
+          "America/St_Lucia",
+          "America/St_Thomas",
+          "America/St_Vincent",
+          "America/Swift_Current",
+          "America/Tegucigalpa",
+          "America/Thule",
+          "America/Tijuana",
+          "America/Toronto",
+          "America/Tortola",
+          "America/Vancouver",
+          "America/Whitehorse",
+          "America/Winnipeg",
+          "America/Yakutat",
+          "Antarctica/Casey",
+          "Antarctica/Davis",
+          "Antarctica/DumontDUrville",
+          "Antarctica/Macquarie",
+          "Antarctica/Mawson",
+          "Antarctica/McMurdo",
+          "Antarctica/Palmer",
+          "Antarctica/Rothera",
+          "Antarctica/Syowa",
+          "Antarctica/Troll",
+          "Antarctica/Vostok",
+          "Arctic/Longyearbyen",
+          "Asia/Aden",
+          "Asia/Almaty",
+          "Asia/Amman",
+          "Asia/Anadyr",
+          "Asia/Aqtau",
+          "Asia/Aqtobe",
+          "Asia/Ashgabat",
+          "Asia/Atyrau",
+          "Asia/Baghdad",
+          "Asia/Bahrain",
+          "Asia/Baku",
+          "Asia/Bangkok",
+          "Asia/Barnaul",
+          "Asia/Beirut",
+          "Asia/Bishkek",
+          "Asia/Brunei",
+          "Asia/Calcutta",
+          "Asia/Chita",
+          "Asia/Colombo",
+          "Asia/Damascus",
+          "Asia/Dhaka",
+          "Asia/Dili",
+          "Asia/Dubai",
+          "Asia/Dushanbe",
+          "Asia/Famagusta",
+          "Asia/Gaza",
+          "Asia/Hebron",
+          "Asia/Hong_Kong",
+          "Asia/Hovd",
+          "Asia/Irkutsk",
+          "Asia/Jakarta",
+          "Asia/Jayapura",
+          "Asia/Jerusalem",
+          "Asia/Kabul",
+          "Asia/Kamchatka",
+          "Asia/Karachi",
+          "Asia/Katmandu",
+          "Asia/Khandyga",
+          "Asia/Krasnoyarsk",
+          "Asia/Kuala_Lumpur",
+          "Asia/Kuching",
+          "Asia/Kuwait",
+          "Asia/Macau",
+          "Asia/Magadan",
+          "Asia/Makassar",
+          "Asia/Manila",
+          "Asia/Muscat",
+          "Asia/Nicosia",
+          "Asia/Novokuznetsk",
+          "Asia/Novosibirsk",
+          "Asia/Omsk",
+          "Asia/Oral",
+          "Asia/Phnom_Penh",
+          "Asia/Pontianak",
+          "Asia/Pyongyang",
+          "Asia/Qatar",
+          "Asia/Qostanay",
+          "Asia/Qyzylorda",
+          "Asia/Rangoon",
+          "Asia/Riyadh",
+          "Asia/Saigon",
+          "Asia/Sakhalin",
+          "Asia/Samarkand",
+          "Asia/Seoul",
+          "Asia/Shanghai",
+          "Asia/Singapore",
+          "Asia/Srednekolymsk",
+          "Asia/Taipei",
+          "Asia/Tashkent",
+          "Asia/Tbilisi",
+          "Asia/Tehran",
+          "Asia/Thimphu",
+          "Asia/Tokyo",
+          "Asia/Tomsk",
+          "Asia/Ulaanbaatar",
+          "Asia/Urumqi",
+          "Asia/Ust-Nera",
+          "Asia/Vientiane",
+          "Asia/Vladivostok",
+          "Asia/Yakutsk",
+          "Asia/Yekaterinburg",
+          "Asia/Yerevan",
+          "Atlantic/Azores",
+          "Atlantic/Bermuda",
+          "Atlantic/Canary",
+          "Atlantic/Cape_Verde",
+          "Atlantic/Faeroe",
+          "Atlantic/Madeira",
+          "Atlantic/Reykjavik",
+          "Atlantic/South_Georgia",
+          "Atlantic/St_Helena",
+          "Atlantic/Stanley",
+          "Australia/Adelaide",
+          "Australia/Brisbane",
+          "Australia/Broken_Hill",
+          "Australia/Darwin",
+          "Australia/Eucla",
+          "Australia/Hobart",
+          "Australia/Lindeman",
+          "Australia/Lord_Howe",
+          "Australia/Melbourne",
+          "Australia/Perth",
+          "Australia/Sydney",
+          "Europe/Amsterdam",
+          "Europe/Andorra",
+          "Europe/Astrakhan",
+          "Europe/Athens",
+          "Europe/Belgrade",
+          "Europe/Berlin",
+          "Europe/Bratislava",
+          "Europe/Brussels",
+          "Europe/Bucharest",
+          "Europe/Budapest",
+          "Europe/Busingen",
+          "Europe/Chisinau",
+          "Europe/Copenhagen",
+          "Europe/Dublin",
+          "Europe/Gibraltar",
+          "Europe/Guernsey",
+          "Europe/Helsinki",
+          "Europe/Isle_of_Man",
+          "Europe/Istanbul",
+          "Europe/Jersey",
+          "Europe/Kaliningrad",
+          "Europe/Kiev",
+          "Europe/Kirov",
+          "Europe/Lisbon",
+          "Europe/Ljubljana",
+          "Europe/London",
+          "Europe/Luxembourg",
+          "Europe/Madrid",
+          "Europe/Malta",
+          "Europe/Mariehamn",
+          "Europe/Minsk",
+          "Europe/Monaco",
+          "Europe/Moscow",
+          "Europe/Oslo",
+          "Europe/Paris",
+          "Europe/Podgorica",
+          "Europe/Prague",
+          "Europe/Riga",
+          "Europe/Rome",
+          "Europe/Samara",
+          "Europe/San_Marino",
+          "Europe/Sarajevo",
+          "Europe/Saratov",
+          "Europe/Simferopol",
+          "Europe/Skopje",
+          "Europe/Sofia",
+          "Europe/Stockholm",
+          "Europe/Tallinn",
+          "Europe/Tirane",
+          "Europe/Ulyanovsk",
+          "Europe/Vaduz",
+          "Europe/Vatican",
+          "Europe/Vienna",
+          "Europe/Vilnius",
+          "Europe/Volgograd",
+          "Europe/Warsaw",
+          "Europe/Zagreb",
+          "Europe/Zurich",
+          "Indian/Antananarivo",
+          "Indian/Chagos",
+          "Indian/Christmas",
+          "Indian/Cocos",
+          "Indian/Comoro",
+          "Indian/Kerguelen",
+          "Indian/Mahe",
+          "Indian/Maldives",
+          "Indian/Mauritius",
+          "Indian/Mayotte",
+          "Indian/Reunion",
+          "Pacific/Apia",
+          "Pacific/Auckland",
+          "Pacific/Bougainville",
+          "Pacific/Chatham",
+          "Pacific/Easter",
+          "Pacific/Efate",
+          "Pacific/Enderbury",
+          "Pacific/Fakaofo",
+          "Pacific/Fiji",
+          "Pacific/Funafuti",
+          "Pacific/Galapagos",
+          "Pacific/Gambier",
+          "Pacific/Guadalcanal",
+          "Pacific/Guam",
+          "Pacific/Honolulu",
+          "Pacific/Kiritimati",
+          "Pacific/Kosrae",
+          "Pacific/Kwajalein",
+          "Pacific/Majuro",
+          "Pacific/Marquesas",
+          "Pacific/Midway",
+          "Pacific/Nauru",
+          "Pacific/Niue",
+          "Pacific/Norfolk",
+          "Pacific/Noumea",
+          "Pacific/Pago_Pago",
+          "Pacific/Palau",
+          "Pacific/Pitcairn",
+          "Pacific/Ponape",
+          "Pacific/Port_Moresby",
+          "Pacific/Rarotonga",
+          "Pacific/Saipan",
+          "Pacific/Tahiti",
+          "Pacific/Tarawa",
+          "Pacific/Tongatapu",
+          "Pacific/Truk",
+          "Pacific/Wake",
+          "Pacific/Wallis"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "Africa/Abidjan"
+          },
+          {
+            "code": "Africa/Accra"
+          },
+          {
+            "code": "Africa/Addis_Ababa"
+          },
+          {
+            "code": "Africa/Algiers"
+          },
+          {
+            "code": "Africa/Asmera"
+          },
+          {
+            "code": "Africa/Bamako"
+          },
+          {
+            "code": "Africa/Bangui"
+          },
+          {
+            "code": "Africa/Banjul"
+          },
+          {
+            "code": "Africa/Bissau"
+          },
+          {
+            "code": "Africa/Blantyre"
+          },
+          {
+            "code": "Africa/Brazzaville"
+          },
+          {
+            "code": "Africa/Bujumbura"
+          },
+          {
+            "code": "Africa/Cairo"
+          },
+          {
+            "code": "Africa/Casablanca"
+          },
+          {
+            "code": "Africa/Ceuta"
+          },
+          {
+            "code": "Africa/Conakry"
+          },
+          {
+            "code": "Africa/Dakar"
+          },
+          {
+            "code": "Africa/Dar_es_Salaam"
+          },
+          {
+            "code": "Africa/Djibouti"
+          },
+          {
+            "code": "Africa/Douala"
+          },
+          {
+            "code": "Africa/El_Aaiun"
+          },
+          {
+            "code": "Africa/Freetown"
+          },
+          {
+            "code": "Africa/Gaborone"
+          },
+          {
+            "code": "Africa/Harare"
+          },
+          {
+            "code": "Africa/Johannesburg"
+          },
+          {
+            "code": "Africa/Juba"
+          },
+          {
+            "code": "Africa/Kampala"
+          },
+          {
+            "code": "Africa/Khartoum"
+          },
+          {
+            "code": "Africa/Kigali"
+          },
+          {
+            "code": "Africa/Kinshasa"
+          },
+          {
+            "code": "Africa/Lagos"
+          },
+          {
+            "code": "Africa/Libreville"
+          },
+          {
+            "code": "Africa/Lome"
+          },
+          {
+            "code": "Africa/Luanda"
+          },
+          {
+            "code": "Africa/Lubumbashi"
+          },
+          {
+            "code": "Africa/Lusaka"
+          },
+          {
+            "code": "Africa/Malabo"
+          },
+          {
+            "code": "Africa/Maputo"
+          },
+          {
+            "code": "Africa/Maseru"
+          },
+          {
+            "code": "Africa/Mbabane"
+          },
+          {
+            "code": "Africa/Mogadishu"
+          },
+          {
+            "code": "Africa/Monrovia"
+          },
+          {
+            "code": "Africa/Nairobi"
+          },
+          {
+            "code": "Africa/Ndjamena"
+          },
+          {
+            "code": "Africa/Niamey"
+          },
+          {
+            "code": "Africa/Nouakchott"
+          },
+          {
+            "code": "Africa/Ouagadougou"
+          },
+          {
+            "code": "Africa/Porto-Novo"
+          },
+          {
+            "code": "Africa/Sao_Tome"
+          },
+          {
+            "code": "Africa/Tripoli"
+          },
+          {
+            "code": "Africa/Tunis"
+          },
+          {
+            "code": "Africa/Windhoek"
+          },
+          {
+            "code": "America/Adak"
+          },
+          {
+            "code": "America/Anchorage"
+          },
+          {
+            "code": "America/Anguilla"
+          },
+          {
+            "code": "America/Antigua"
+          },
+          {
+            "code": "America/Araguaina"
+          },
+          {
+            "code": "America/Argentina/La_Rioja"
+          },
+          {
+            "code": "America/Argentina/Rio_Gallegos"
+          },
+          {
+            "code": "America/Argentina/Salta"
+          },
+          {
+            "code": "America/Argentina/San_Juan"
+          },
+          {
+            "code": "America/Argentina/San_Luis"
+          },
+          {
+            "code": "America/Argentina/Tucuman"
+          },
+          {
+            "code": "America/Argentina/Ushuaia"
+          },
+          {
+            "code": "America/Aruba"
+          },
+          {
+            "code": "America/Asuncion"
+          },
+          {
+            "code": "America/Bahia"
+          },
+          {
+            "code": "America/Bahia_Banderas"
+          },
+          {
+            "code": "America/Barbados"
+          },
+          {
+            "code": "America/Belem"
+          },
+          {
+            "code": "America/Belize"
+          },
+          {
+            "code": "America/Blanc-Sablon"
+          },
+          {
+            "code": "America/Boa_Vista"
+          },
+          {
+            "code": "America/Bogota"
+          },
+          {
+            "code": "America/Boise"
+          },
+          {
+            "code": "America/Buenos_Aires"
+          },
+          {
+            "code": "America/Cambridge_Bay"
+          },
+          {
+            "code": "America/Campo_Grande"
+          },
+          {
+            "code": "America/Cancun"
+          },
+          {
+            "code": "America/Caracas"
+          },
+          {
+            "code": "America/Catamarca"
+          },
+          {
+            "code": "America/Cayenne"
+          },
+          {
+            "code": "America/Cayman"
+          },
+          {
+            "code": "America/Chicago"
+          },
+          {
+            "code": "America/Chihuahua"
+          },
+          {
+            "code": "America/Ciudad_Juarez"
+          },
+          {
+            "code": "America/Coral_Harbour"
+          },
+          {
+            "code": "America/Cordoba"
+          },
+          {
+            "code": "America/Costa_Rica"
+          },
+          {
+            "code": "America/Creston"
+          },
+          {
+            "code": "America/Cuiaba"
+          },
+          {
+            "code": "America/Curacao"
+          },
+          {
+            "code": "America/Danmarkshavn"
+          },
+          {
+            "code": "America/Dawson"
+          },
+          {
+            "code": "America/Dawson_Creek"
+          },
+          {
+            "code": "America/Denver"
+          },
+          {
+            "code": "America/Detroit"
+          },
+          {
+            "code": "America/Dominica"
+          },
+          {
+            "code": "America/Edmonton"
+          },
+          {
+            "code": "America/Eirunepe"
+          },
+          {
+            "code": "America/El_Salvador"
+          },
+          {
+            "code": "America/Fort_Nelson"
+          },
+          {
+            "code": "America/Fortaleza"
+          },
+          {
+            "code": "America/Glace_Bay"
+          },
+          {
+            "code": "America/Godthab"
+          },
+          {
+            "code": "America/Goose_Bay"
+          },
+          {
+            "code": "America/Grand_Turk"
+          },
+          {
+            "code": "America/Grenada"
+          },
+          {
+            "code": "America/Guadeloupe"
+          },
+          {
+            "code": "America/Guatemala"
+          },
+          {
+            "code": "America/Guayaquil"
+          },
+          {
+            "code": "America/Guyana"
+          },
+          {
+            "code": "America/Halifax"
+          },
+          {
+            "code": "America/Havana"
+          },
+          {
+            "code": "America/Hermosillo"
+          },
+          {
+            "code": "America/Indiana/Knox"
+          },
+          {
+            "code": "America/Indiana/Marengo"
+          },
+          {
+            "code": "America/Indiana/Petersburg"
+          },
+          {
+            "code": "America/Indiana/Tell_City"
+          },
+          {
+            "code": "America/Indiana/Vevay"
+          },
+          {
+            "code": "America/Indiana/Vincennes"
+          },
+          {
+            "code": "America/Indiana/Winamac"
+          },
+          {
+            "code": "America/Indianapolis"
+          },
+          {
+            "code": "America/Inuvik"
+          },
+          {
+            "code": "America/Iqaluit"
+          },
+          {
+            "code": "America/Jamaica"
+          },
+          {
+            "code": "America/Jujuy"
+          },
+          {
+            "code": "America/Juneau"
+          },
+          {
+            "code": "America/Kentucky/Monticello"
+          },
+          {
+            "code": "America/Kralendijk"
+          },
+          {
+            "code": "America/La_Paz"
+          },
+          {
+            "code": "America/Lima"
+          },
+          {
+            "code": "America/Los_Angeles"
+          },
+          {
+            "code": "America/Louisville"
+          },
+          {
+            "code": "America/Lower_Princes"
+          },
+          {
+            "code": "America/Maceio"
+          },
+          {
+            "code": "America/Managua"
+          },
+          {
+            "code": "America/Manaus"
+          },
+          {
+            "code": "America/Marigot"
+          },
+          {
+            "code": "America/Martinique"
+          },
+          {
+            "code": "America/Matamoros"
+          },
+          {
+            "code": "America/Mazatlan"
+          },
+          {
+            "code": "America/Mendoza"
+          },
+          {
+            "code": "America/Menominee"
+          },
+          {
+            "code": "America/Merida"
+          },
+          {
+            "code": "America/Metlakatla"
+          },
+          {
+            "code": "America/Mexico_City"
+          },
+          {
+            "code": "America/Miquelon"
+          },
+          {
+            "code": "America/Moncton"
+          },
+          {
+            "code": "America/Monterrey"
+          },
+          {
+            "code": "America/Montevideo"
+          },
+          {
+            "code": "America/Montserrat"
+          },
+          {
+            "code": "America/Nassau"
+          },
+          {
+            "code": "America/New_York"
+          },
+          {
+            "code": "America/Nome"
+          },
+          {
+            "code": "America/Noronha"
+          },
+          {
+            "code": "America/North_Dakota/Beulah"
+          },
+          {
+            "code": "America/North_Dakota/Center"
+          },
+          {
+            "code": "America/North_Dakota/New_Salem"
+          },
+          {
+            "code": "America/Ojinaga"
+          },
+          {
+            "code": "America/Panama"
+          },
+          {
+            "code": "America/Paramaribo"
+          },
+          {
+            "code": "America/Phoenix"
+          },
+          {
+            "code": "America/Port-au-Prince"
+          },
+          {
+            "code": "America/Port_of_Spain"
+          },
+          {
+            "code": "America/Porto_Velho"
+          },
+          {
+            "code": "America/Puerto_Rico"
+          },
+          {
+            "code": "America/Punta_Arenas"
+          },
+          {
+            "code": "America/Rankin_Inlet"
+          },
+          {
+            "code": "America/Recife"
+          },
+          {
+            "code": "America/Regina"
+          },
+          {
+            "code": "America/Resolute"
+          },
+          {
+            "code": "America/Rio_Branco"
+          },
+          {
+            "code": "America/Santarem"
+          },
+          {
+            "code": "America/Santiago"
+          },
+          {
+            "code": "America/Santo_Domingo"
+          },
+          {
+            "code": "America/Sao_Paulo"
+          },
+          {
+            "code": "America/Scoresbysund"
+          },
+          {
+            "code": "America/Sitka"
+          },
+          {
+            "code": "America/St_Barthelemy"
+          },
+          {
+            "code": "America/St_Johns"
+          },
+          {
+            "code": "America/St_Kitts"
+          },
+          {
+            "code": "America/St_Lucia"
+          },
+          {
+            "code": "America/St_Thomas"
+          },
+          {
+            "code": "America/St_Vincent"
+          },
+          {
+            "code": "America/Swift_Current"
+          },
+          {
+            "code": "America/Tegucigalpa"
+          },
+          {
+            "code": "America/Thule"
+          },
+          {
+            "code": "America/Tijuana"
+          },
+          {
+            "code": "America/Toronto"
+          },
+          {
+            "code": "America/Tortola"
+          },
+          {
+            "code": "America/Vancouver"
+          },
+          {
+            "code": "America/Whitehorse"
+          },
+          {
+            "code": "America/Winnipeg"
+          },
+          {
+            "code": "America/Yakutat"
+          },
+          {
+            "code": "Antarctica/Casey"
+          },
+          {
+            "code": "Antarctica/Davis"
+          },
+          {
+            "code": "Antarctica/DumontDUrville"
+          },
+          {
+            "code": "Antarctica/Macquarie"
+          },
+          {
+            "code": "Antarctica/Mawson"
+          },
+          {
+            "code": "Antarctica/McMurdo"
+          },
+          {
+            "code": "Antarctica/Palmer"
+          },
+          {
+            "code": "Antarctica/Rothera"
+          },
+          {
+            "code": "Antarctica/Syowa"
+          },
+          {
+            "code": "Antarctica/Troll"
+          },
+          {
+            "code": "Antarctica/Vostok"
+          },
+          {
+            "code": "Arctic/Longyearbyen"
+          },
+          {
+            "code": "Asia/Aden"
+          },
+          {
+            "code": "Asia/Almaty"
+          },
+          {
+            "code": "Asia/Amman"
+          },
+          {
+            "code": "Asia/Anadyr"
+          },
+          {
+            "code": "Asia/Aqtau"
+          },
+          {
+            "code": "Asia/Aqtobe"
+          },
+          {
+            "code": "Asia/Ashgabat"
+          },
+          {
+            "code": "Asia/Atyrau"
+          },
+          {
+            "code": "Asia/Baghdad"
+          },
+          {
+            "code": "Asia/Bahrain"
+          },
+          {
+            "code": "Asia/Baku"
+          },
+          {
+            "code": "Asia/Bangkok"
+          },
+          {
+            "code": "Asia/Barnaul"
+          },
+          {
+            "code": "Asia/Beirut"
+          },
+          {
+            "code": "Asia/Bishkek"
+          },
+          {
+            "code": "Asia/Brunei"
+          },
+          {
+            "code": "Asia/Calcutta"
+          },
+          {
+            "code": "Asia/Chita"
+          },
+          {
+            "code": "Asia/Colombo"
+          },
+          {
+            "code": "Asia/Damascus"
+          },
+          {
+            "code": "Asia/Dhaka"
+          },
+          {
+            "code": "Asia/Dili"
+          },
+          {
+            "code": "Asia/Dubai"
+          },
+          {
+            "code": "Asia/Dushanbe"
+          },
+          {
+            "code": "Asia/Famagusta"
+          },
+          {
+            "code": "Asia/Gaza"
+          },
+          {
+            "code": "Asia/Hebron"
+          },
+          {
+            "code": "Asia/Hong_Kong"
+          },
+          {
+            "code": "Asia/Hovd"
+          },
+          {
+            "code": "Asia/Irkutsk"
+          },
+          {
+            "code": "Asia/Jakarta"
+          },
+          {
+            "code": "Asia/Jayapura"
+          },
+          {
+            "code": "Asia/Jerusalem"
+          },
+          {
+            "code": "Asia/Kabul"
+          },
+          {
+            "code": "Asia/Kamchatka"
+          },
+          {
+            "code": "Asia/Karachi"
+          },
+          {
+            "code": "Asia/Katmandu"
+          },
+          {
+            "code": "Asia/Khandyga"
+          },
+          {
+            "code": "Asia/Krasnoyarsk"
+          },
+          {
+            "code": "Asia/Kuala_Lumpur"
+          },
+          {
+            "code": "Asia/Kuching"
+          },
+          {
+            "code": "Asia/Kuwait"
+          },
+          {
+            "code": "Asia/Macau"
+          },
+          {
+            "code": "Asia/Magadan"
+          },
+          {
+            "code": "Asia/Makassar"
+          },
+          {
+            "code": "Asia/Manila"
+          },
+          {
+            "code": "Asia/Muscat"
+          },
+          {
+            "code": "Asia/Nicosia"
+          },
+          {
+            "code": "Asia/Novokuznetsk"
+          },
+          {
+            "code": "Asia/Novosibirsk"
+          },
+          {
+            "code": "Asia/Omsk"
+          },
+          {
+            "code": "Asia/Oral"
+          },
+          {
+            "code": "Asia/Phnom_Penh"
+          },
+          {
+            "code": "Asia/Pontianak"
+          },
+          {
+            "code": "Asia/Pyongyang"
+          },
+          {
+            "code": "Asia/Qatar"
+          },
+          {
+            "code": "Asia/Qostanay"
+          },
+          {
+            "code": "Asia/Qyzylorda"
+          },
+          {
+            "code": "Asia/Rangoon"
+          },
+          {
+            "code": "Asia/Riyadh"
+          },
+          {
+            "code": "Asia/Saigon"
+          },
+          {
+            "code": "Asia/Sakhalin"
+          },
+          {
+            "code": "Asia/Samarkand"
+          },
+          {
+            "code": "Asia/Seoul"
+          },
+          {
+            "code": "Asia/Shanghai"
+          },
+          {
+            "code": "Asia/Singapore"
+          },
+          {
+            "code": "Asia/Srednekolymsk"
+          },
+          {
+            "code": "Asia/Taipei"
+          },
+          {
+            "code": "Asia/Tashkent"
+          },
+          {
+            "code": "Asia/Tbilisi"
+          },
+          {
+            "code": "Asia/Tehran"
+          },
+          {
+            "code": "Asia/Thimphu"
+          },
+          {
+            "code": "Asia/Tokyo"
+          },
+          {
+            "code": "Asia/Tomsk"
+          },
+          {
+            "code": "Asia/Ulaanbaatar"
+          },
+          {
+            "code": "Asia/Urumqi"
+          },
+          {
+            "code": "Asia/Ust-Nera"
+          },
+          {
+            "code": "Asia/Vientiane"
+          },
+          {
+            "code": "Asia/Vladivostok"
+          },
+          {
+            "code": "Asia/Yakutsk"
+          },
+          {
+            "code": "Asia/Yekaterinburg"
+          },
+          {
+            "code": "Asia/Yerevan"
+          },
+          {
+            "code": "Atlantic/Azores"
+          },
+          {
+            "code": "Atlantic/Bermuda"
+          },
+          {
+            "code": "Atlantic/Canary"
+          },
+          {
+            "code": "Atlantic/Cape_Verde"
+          },
+          {
+            "code": "Atlantic/Faeroe"
+          },
+          {
+            "code": "Atlantic/Madeira"
+          },
+          {
+            "code": "Atlantic/Reykjavik"
+          },
+          {
+            "code": "Atlantic/South_Georgia"
+          },
+          {
+            "code": "Atlantic/St_Helena"
+          },
+          {
+            "code": "Atlantic/Stanley"
+          },
+          {
+            "code": "Australia/Adelaide"
+          },
+          {
+            "code": "Australia/Brisbane"
+          },
+          {
+            "code": "Australia/Broken_Hill"
+          },
+          {
+            "code": "Australia/Darwin"
+          },
+          {
+            "code": "Australia/Eucla"
+          },
+          {
+            "code": "Australia/Hobart"
+          },
+          {
+            "code": "Australia/Lindeman"
+          },
+          {
+            "code": "Australia/Lord_Howe"
+          },
+          {
+            "code": "Australia/Melbourne"
+          },
+          {
+            "code": "Australia/Perth"
+          },
+          {
+            "code": "Australia/Sydney"
+          },
+          {
+            "code": "Europe/Amsterdam"
+          },
+          {
+            "code": "Europe/Andorra"
+          },
+          {
+            "code": "Europe/Astrakhan"
+          },
+          {
+            "code": "Europe/Athens"
+          },
+          {
+            "code": "Europe/Belgrade"
+          },
+          {
+            "code": "Europe/Berlin"
+          },
+          {
+            "code": "Europe/Bratislava"
+          },
+          {
+            "code": "Europe/Brussels"
+          },
+          {
+            "code": "Europe/Bucharest"
+          },
+          {
+            "code": "Europe/Budapest"
+          },
+          {
+            "code": "Europe/Busingen"
+          },
+          {
+            "code": "Europe/Chisinau"
+          },
+          {
+            "code": "Europe/Copenhagen"
+          },
+          {
+            "code": "Europe/Dublin"
+          },
+          {
+            "code": "Europe/Gibraltar"
+          },
+          {
+            "code": "Europe/Guernsey"
+          },
+          {
+            "code": "Europe/Helsinki"
+          },
+          {
+            "code": "Europe/Isle_of_Man"
+          },
+          {
+            "code": "Europe/Istanbul"
+          },
+          {
+            "code": "Europe/Jersey"
+          },
+          {
+            "code": "Europe/Kaliningrad"
+          },
+          {
+            "code": "Europe/Kiev"
+          },
+          {
+            "code": "Europe/Kirov"
+          },
+          {
+            "code": "Europe/Lisbon"
+          },
+          {
+            "code": "Europe/Ljubljana"
+          },
+          {
+            "code": "Europe/London"
+          },
+          {
+            "code": "Europe/Luxembourg"
+          },
+          {
+            "code": "Europe/Madrid"
+          },
+          {
+            "code": "Europe/Malta"
+          },
+          {
+            "code": "Europe/Mariehamn"
+          },
+          {
+            "code": "Europe/Minsk"
+          },
+          {
+            "code": "Europe/Monaco"
+          },
+          {
+            "code": "Europe/Moscow"
+          },
+          {
+            "code": "Europe/Oslo"
+          },
+          {
+            "code": "Europe/Paris"
+          },
+          {
+            "code": "Europe/Podgorica"
+          },
+          {
+            "code": "Europe/Prague"
+          },
+          {
+            "code": "Europe/Riga"
+          },
+          {
+            "code": "Europe/Rome"
+          },
+          {
+            "code": "Europe/Samara"
+          },
+          {
+            "code": "Europe/San_Marino"
+          },
+          {
+            "code": "Europe/Sarajevo"
+          },
+          {
+            "code": "Europe/Saratov"
+          },
+          {
+            "code": "Europe/Simferopol"
+          },
+          {
+            "code": "Europe/Skopje"
+          },
+          {
+            "code": "Europe/Sofia"
+          },
+          {
+            "code": "Europe/Stockholm"
+          },
+          {
+            "code": "Europe/Tallinn"
+          },
+          {
+            "code": "Europe/Tirane"
+          },
+          {
+            "code": "Europe/Ulyanovsk"
+          },
+          {
+            "code": "Europe/Vaduz"
+          },
+          {
+            "code": "Europe/Vatican"
+          },
+          {
+            "code": "Europe/Vienna"
+          },
+          {
+            "code": "Europe/Vilnius"
+          },
+          {
+            "code": "Europe/Volgograd"
+          },
+          {
+            "code": "Europe/Warsaw"
+          },
+          {
+            "code": "Europe/Zagreb"
+          },
+          {
+            "code": "Europe/Zurich"
+          },
+          {
+            "code": "Indian/Antananarivo"
+          },
+          {
+            "code": "Indian/Chagos"
+          },
+          {
+            "code": "Indian/Christmas"
+          },
+          {
+            "code": "Indian/Cocos"
+          },
+          {
+            "code": "Indian/Comoro"
+          },
+          {
+            "code": "Indian/Kerguelen"
+          },
+          {
+            "code": "Indian/Mahe"
+          },
+          {
+            "code": "Indian/Maldives"
+          },
+          {
+            "code": "Indian/Mauritius"
+          },
+          {
+            "code": "Indian/Mayotte"
+          },
+          {
+            "code": "Indian/Reunion"
+          },
+          {
+            "code": "Pacific/Apia"
+          },
+          {
+            "code": "Pacific/Auckland"
+          },
+          {
+            "code": "Pacific/Bougainville"
+          },
+          {
+            "code": "Pacific/Chatham"
+          },
+          {
+            "code": "Pacific/Easter"
+          },
+          {
+            "code": "Pacific/Efate"
+          },
+          {
+            "code": "Pacific/Enderbury"
+          },
+          {
+            "code": "Pacific/Fakaofo"
+          },
+          {
+            "code": "Pacific/Fiji"
+          },
+          {
+            "code": "Pacific/Funafuti"
+          },
+          {
+            "code": "Pacific/Galapagos"
+          },
+          {
+            "code": "Pacific/Gambier"
+          },
+          {
+            "code": "Pacific/Guadalcanal"
+          },
+          {
+            "code": "Pacific/Guam"
+          },
+          {
+            "code": "Pacific/Honolulu"
+          },
+          {
+            "code": "Pacific/Kiritimati"
+          },
+          {
+            "code": "Pacific/Kosrae"
+          },
+          {
+            "code": "Pacific/Kwajalein"
+          },
+          {
+            "code": "Pacific/Majuro"
+          },
+          {
+            "code": "Pacific/Marquesas"
+          },
+          {
+            "code": "Pacific/Midway"
+          },
+          {
+            "code": "Pacific/Nauru"
+          },
+          {
+            "code": "Pacific/Niue"
+          },
+          {
+            "code": "Pacific/Norfolk"
+          },
+          {
+            "code": "Pacific/Noumea"
+          },
+          {
+            "code": "Pacific/Pago_Pago"
+          },
+          {
+            "code": "Pacific/Palau"
+          },
+          {
+            "code": "Pacific/Pitcairn"
+          },
+          {
+            "code": "Pacific/Ponape"
+          },
+          {
+            "code": "Pacific/Port_Moresby"
+          },
+          {
+            "code": "Pacific/Rarotonga"
+          },
+          {
+            "code": "Pacific/Saipan"
+          },
+          {
+            "code": "Pacific/Tahiti"
+          },
+          {
+            "code": "Pacific/Tarawa"
+          },
+          {
+            "code": "Pacific/Tongatapu"
+          },
+          {
+            "code": "Pacific/Truk"
+          },
+          {
+            "code": "Pacific/Wake"
+          },
+          {
+            "code": "Pacific/Wallis"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "Africa/Abidjan",
+            "label": "Africa/Abidjan"
+          },
+          {
+            "value": "Africa/Accra",
+            "label": "Africa/Accra"
+          },
+          {
+            "value": "Africa/Addis_Ababa",
+            "label": "Africa/Addis_Ababa"
+          },
+          {
+            "value": "Africa/Algiers",
+            "label": "Africa/Algiers"
+          },
+          {
+            "value": "Africa/Asmera",
+            "label": "Africa/Asmera"
+          },
+          {
+            "value": "Africa/Bamako",
+            "label": "Africa/Bamako"
+          },
+          {
+            "value": "Africa/Bangui",
+            "label": "Africa/Bangui"
+          },
+          {
+            "value": "Africa/Banjul",
+            "label": "Africa/Banjul"
+          },
+          {
+            "value": "Africa/Bissau",
+            "label": "Africa/Bissau"
+          },
+          {
+            "value": "Africa/Blantyre",
+            "label": "Africa/Blantyre"
+          },
+          {
+            "value": "Africa/Brazzaville",
+            "label": "Africa/Brazzaville"
+          },
+          {
+            "value": "Africa/Bujumbura",
+            "label": "Africa/Bujumbura"
+          },
+          {
+            "value": "Africa/Cairo",
+            "label": "Africa/Cairo"
+          },
+          {
+            "value": "Africa/Casablanca",
+            "label": "Africa/Casablanca"
+          },
+          {
+            "value": "Africa/Ceuta",
+            "label": "Africa/Ceuta"
+          },
+          {
+            "value": "Africa/Conakry",
+            "label": "Africa/Conakry"
+          },
+          {
+            "value": "Africa/Dakar",
+            "label": "Africa/Dakar"
+          },
+          {
+            "value": "Africa/Dar_es_Salaam",
+            "label": "Africa/Dar_es_Salaam"
+          },
+          {
+            "value": "Africa/Djibouti",
+            "label": "Africa/Djibouti"
+          },
+          {
+            "value": "Africa/Douala",
+            "label": "Africa/Douala"
+          },
+          {
+            "value": "Africa/El_Aaiun",
+            "label": "Africa/El_Aaiun"
+          },
+          {
+            "value": "Africa/Freetown",
+            "label": "Africa/Freetown"
+          },
+          {
+            "value": "Africa/Gaborone",
+            "label": "Africa/Gaborone"
+          },
+          {
+            "value": "Africa/Harare",
+            "label": "Africa/Harare"
+          },
+          {
+            "value": "Africa/Johannesburg",
+            "label": "Africa/Johannesburg"
+          },
+          {
+            "value": "Africa/Juba",
+            "label": "Africa/Juba"
+          },
+          {
+            "value": "Africa/Kampala",
+            "label": "Africa/Kampala"
+          },
+          {
+            "value": "Africa/Khartoum",
+            "label": "Africa/Khartoum"
+          },
+          {
+            "value": "Africa/Kigali",
+            "label": "Africa/Kigali"
+          },
+          {
+            "value": "Africa/Kinshasa",
+            "label": "Africa/Kinshasa"
+          },
+          {
+            "value": "Africa/Lagos",
+            "label": "Africa/Lagos"
+          },
+          {
+            "value": "Africa/Libreville",
+            "label": "Africa/Libreville"
+          },
+          {
+            "value": "Africa/Lome",
+            "label": "Africa/Lome"
+          },
+          {
+            "value": "Africa/Luanda",
+            "label": "Africa/Luanda"
+          },
+          {
+            "value": "Africa/Lubumbashi",
+            "label": "Africa/Lubumbashi"
+          },
+          {
+            "value": "Africa/Lusaka",
+            "label": "Africa/Lusaka"
+          },
+          {
+            "value": "Africa/Malabo",
+            "label": "Africa/Malabo"
+          },
+          {
+            "value": "Africa/Maputo",
+            "label": "Africa/Maputo"
+          },
+          {
+            "value": "Africa/Maseru",
+            "label": "Africa/Maseru"
+          },
+          {
+            "value": "Africa/Mbabane",
+            "label": "Africa/Mbabane"
+          },
+          {
+            "value": "Africa/Mogadishu",
+            "label": "Africa/Mogadishu"
+          },
+          {
+            "value": "Africa/Monrovia",
+            "label": "Africa/Monrovia"
+          },
+          {
+            "value": "Africa/Nairobi",
+            "label": "Africa/Nairobi"
+          },
+          {
+            "value": "Africa/Ndjamena",
+            "label": "Africa/Ndjamena"
+          },
+          {
+            "value": "Africa/Niamey",
+            "label": "Africa/Niamey"
+          },
+          {
+            "value": "Africa/Nouakchott",
+            "label": "Africa/Nouakchott"
+          },
+          {
+            "value": "Africa/Ouagadougou",
+            "label": "Africa/Ouagadougou"
+          },
+          {
+            "value": "Africa/Porto-Novo",
+            "label": "Africa/Porto-Novo"
+          },
+          {
+            "value": "Africa/Sao_Tome",
+            "label": "Africa/Sao_Tome"
+          },
+          {
+            "value": "Africa/Tripoli",
+            "label": "Africa/Tripoli"
+          },
+          {
+            "value": "Africa/Tunis",
+            "label": "Africa/Tunis"
+          },
+          {
+            "value": "Africa/Windhoek",
+            "label": "Africa/Windhoek"
+          },
+          {
+            "value": "America/Adak",
+            "label": "America/Adak"
+          },
+          {
+            "value": "America/Anchorage",
+            "label": "America/Anchorage"
+          },
+          {
+            "value": "America/Anguilla",
+            "label": "America/Anguilla"
+          },
+          {
+            "value": "America/Antigua",
+            "label": "America/Antigua"
+          },
+          {
+            "value": "America/Araguaina",
+            "label": "America/Araguaina"
+          },
+          {
+            "value": "America/Argentina/La_Rioja",
+            "label": "America/Argentina/La_Rioja"
+          },
+          {
+            "value": "America/Argentina/Rio_Gallegos",
+            "label": "America/Argentina/Rio_Gallegos"
+          },
+          {
+            "value": "America/Argentina/Salta",
+            "label": "America/Argentina/Salta"
+          },
+          {
+            "value": "America/Argentina/San_Juan",
+            "label": "America/Argentina/San_Juan"
+          },
+          {
+            "value": "America/Argentina/San_Luis",
+            "label": "America/Argentina/San_Luis"
+          },
+          {
+            "value": "America/Argentina/Tucuman",
+            "label": "America/Argentina/Tucuman"
+          },
+          {
+            "value": "America/Argentina/Ushuaia",
+            "label": "America/Argentina/Ushuaia"
+          },
+          {
+            "value": "America/Aruba",
+            "label": "America/Aruba"
+          },
+          {
+            "value": "America/Asuncion",
+            "label": "America/Asuncion"
+          },
+          {
+            "value": "America/Bahia",
+            "label": "America/Bahia"
+          },
+          {
+            "value": "America/Bahia_Banderas",
+            "label": "America/Bahia_Banderas"
+          },
+          {
+            "value": "America/Barbados",
+            "label": "America/Barbados"
+          },
+          {
+            "value": "America/Belem",
+            "label": "America/Belem"
+          },
+          {
+            "value": "America/Belize",
+            "label": "America/Belize"
+          },
+          {
+            "value": "America/Blanc-Sablon",
+            "label": "America/Blanc-Sablon"
+          },
+          {
+            "value": "America/Boa_Vista",
+            "label": "America/Boa_Vista"
+          },
+          {
+            "value": "America/Bogota",
+            "label": "America/Bogota"
+          },
+          {
+            "value": "America/Boise",
+            "label": "America/Boise"
+          },
+          {
+            "value": "America/Buenos_Aires",
+            "label": "America/Buenos_Aires"
+          },
+          {
+            "value": "America/Cambridge_Bay",
+            "label": "America/Cambridge_Bay"
+          },
+          {
+            "value": "America/Campo_Grande",
+            "label": "America/Campo_Grande"
+          },
+          {
+            "value": "America/Cancun",
+            "label": "America/Cancun"
+          },
+          {
+            "value": "America/Caracas",
+            "label": "America/Caracas"
+          },
+          {
+            "value": "America/Catamarca",
+            "label": "America/Catamarca"
+          },
+          {
+            "value": "America/Cayenne",
+            "label": "America/Cayenne"
+          },
+          {
+            "value": "America/Cayman",
+            "label": "America/Cayman"
+          },
+          {
+            "value": "America/Chicago",
+            "label": "America/Chicago"
+          },
+          {
+            "value": "America/Chihuahua",
+            "label": "America/Chihuahua"
+          },
+          {
+            "value": "America/Ciudad_Juarez",
+            "label": "America/Ciudad_Juarez"
+          },
+          {
+            "value": "America/Coral_Harbour",
+            "label": "America/Coral_Harbour"
+          },
+          {
+            "value": "America/Cordoba",
+            "label": "America/Cordoba"
+          },
+          {
+            "value": "America/Costa_Rica",
+            "label": "America/Costa_Rica"
+          },
+          {
+            "value": "America/Creston",
+            "label": "America/Creston"
+          },
+          {
+            "value": "America/Cuiaba",
+            "label": "America/Cuiaba"
+          },
+          {
+            "value": "America/Curacao",
+            "label": "America/Curacao"
+          },
+          {
+            "value": "America/Danmarkshavn",
+            "label": "America/Danmarkshavn"
+          },
+          {
+            "value": "America/Dawson",
+            "label": "America/Dawson"
+          },
+          {
+            "value": "America/Dawson_Creek",
+            "label": "America/Dawson_Creek"
+          },
+          {
+            "value": "America/Denver",
+            "label": "America/Denver"
+          },
+          {
+            "value": "America/Detroit",
+            "label": "America/Detroit"
+          },
+          {
+            "value": "America/Dominica",
+            "label": "America/Dominica"
+          },
+          {
+            "value": "America/Edmonton",
+            "label": "America/Edmonton"
+          },
+          {
+            "value": "America/Eirunepe",
+            "label": "America/Eirunepe"
+          },
+          {
+            "value": "America/El_Salvador",
+            "label": "America/El_Salvador"
+          },
+          {
+            "value": "America/Fort_Nelson",
+            "label": "America/Fort_Nelson"
+          },
+          {
+            "value": "America/Fortaleza",
+            "label": "America/Fortaleza"
+          },
+          {
+            "value": "America/Glace_Bay",
+            "label": "America/Glace_Bay"
+          },
+          {
+            "value": "America/Godthab",
+            "label": "America/Godthab"
+          },
+          {
+            "value": "America/Goose_Bay",
+            "label": "America/Goose_Bay"
+          },
+          {
+            "value": "America/Grand_Turk",
+            "label": "America/Grand_Turk"
+          },
+          {
+            "value": "America/Grenada",
+            "label": "America/Grenada"
+          },
+          {
+            "value": "America/Guadeloupe",
+            "label": "America/Guadeloupe"
+          },
+          {
+            "value": "America/Guatemala",
+            "label": "America/Guatemala"
+          },
+          {
+            "value": "America/Guayaquil",
+            "label": "America/Guayaquil"
+          },
+          {
+            "value": "America/Guyana",
+            "label": "America/Guyana"
+          },
+          {
+            "value": "America/Halifax",
+            "label": "America/Halifax"
+          },
+          {
+            "value": "America/Havana",
+            "label": "America/Havana"
+          },
+          {
+            "value": "America/Hermosillo",
+            "label": "America/Hermosillo"
+          },
+          {
+            "value": "America/Indiana/Knox",
+            "label": "America/Indiana/Knox"
+          },
+          {
+            "value": "America/Indiana/Marengo",
+            "label": "America/Indiana/Marengo"
+          },
+          {
+            "value": "America/Indiana/Petersburg",
+            "label": "America/Indiana/Petersburg"
+          },
+          {
+            "value": "America/Indiana/Tell_City",
+            "label": "America/Indiana/Tell_City"
+          },
+          {
+            "value": "America/Indiana/Vevay",
+            "label": "America/Indiana/Vevay"
+          },
+          {
+            "value": "America/Indiana/Vincennes",
+            "label": "America/Indiana/Vincennes"
+          },
+          {
+            "value": "America/Indiana/Winamac",
+            "label": "America/Indiana/Winamac"
+          },
+          {
+            "value": "America/Indianapolis",
+            "label": "America/Indianapolis"
+          },
+          {
+            "value": "America/Inuvik",
+            "label": "America/Inuvik"
+          },
+          {
+            "value": "America/Iqaluit",
+            "label": "America/Iqaluit"
+          },
+          {
+            "value": "America/Jamaica",
+            "label": "America/Jamaica"
+          },
+          {
+            "value": "America/Jujuy",
+            "label": "America/Jujuy"
+          },
+          {
+            "value": "America/Juneau",
+            "label": "America/Juneau"
+          },
+          {
+            "value": "America/Kentucky/Monticello",
+            "label": "America/Kentucky/Monticello"
+          },
+          {
+            "value": "America/Kralendijk",
+            "label": "America/Kralendijk"
+          },
+          {
+            "value": "America/La_Paz",
+            "label": "America/La_Paz"
+          },
+          {
+            "value": "America/Lima",
+            "label": "America/Lima"
+          },
+          {
+            "value": "America/Los_Angeles",
+            "label": "America/Los_Angeles"
+          },
+          {
+            "value": "America/Louisville",
+            "label": "America/Louisville"
+          },
+          {
+            "value": "America/Lower_Princes",
+            "label": "America/Lower_Princes"
+          },
+          {
+            "value": "America/Maceio",
+            "label": "America/Maceio"
+          },
+          {
+            "value": "America/Managua",
+            "label": "America/Managua"
+          },
+          {
+            "value": "America/Manaus",
+            "label": "America/Manaus"
+          },
+          {
+            "value": "America/Marigot",
+            "label": "America/Marigot"
+          },
+          {
+            "value": "America/Martinique",
+            "label": "America/Martinique"
+          },
+          {
+            "value": "America/Matamoros",
+            "label": "America/Matamoros"
+          },
+          {
+            "value": "America/Mazatlan",
+            "label": "America/Mazatlan"
+          },
+          {
+            "value": "America/Mendoza",
+            "label": "America/Mendoza"
+          },
+          {
+            "value": "America/Menominee",
+            "label": "America/Menominee"
+          },
+          {
+            "value": "America/Merida",
+            "label": "America/Merida"
+          },
+          {
+            "value": "America/Metlakatla",
+            "label": "America/Metlakatla"
+          },
+          {
+            "value": "America/Mexico_City",
+            "label": "America/Mexico_City"
+          },
+          {
+            "value": "America/Miquelon",
+            "label": "America/Miquelon"
+          },
+          {
+            "value": "America/Moncton",
+            "label": "America/Moncton"
+          },
+          {
+            "value": "America/Monterrey",
+            "label": "America/Monterrey"
+          },
+          {
+            "value": "America/Montevideo",
+            "label": "America/Montevideo"
+          },
+          {
+            "value": "America/Montserrat",
+            "label": "America/Montserrat"
+          },
+          {
+            "value": "America/Nassau",
+            "label": "America/Nassau"
+          },
+          {
+            "value": "America/New_York",
+            "label": "America/New_York"
+          },
+          {
+            "value": "America/Nome",
+            "label": "America/Nome"
+          },
+          {
+            "value": "America/Noronha",
+            "label": "America/Noronha"
+          },
+          {
+            "value": "America/North_Dakota/Beulah",
+            "label": "America/North_Dakota/Beulah"
+          },
+          {
+            "value": "America/North_Dakota/Center",
+            "label": "America/North_Dakota/Center"
+          },
+          {
+            "value": "America/North_Dakota/New_Salem",
+            "label": "America/North_Dakota/New_Salem"
+          },
+          {
+            "value": "America/Ojinaga",
+            "label": "America/Ojinaga"
+          },
+          {
+            "value": "America/Panama",
+            "label": "America/Panama"
+          },
+          {
+            "value": "America/Paramaribo",
+            "label": "America/Paramaribo"
+          },
+          {
+            "value": "America/Phoenix",
+            "label": "America/Phoenix"
+          },
+          {
+            "value": "America/Port-au-Prince",
+            "label": "America/Port-au-Prince"
+          },
+          {
+            "value": "America/Port_of_Spain",
+            "label": "America/Port_of_Spain"
+          },
+          {
+            "value": "America/Porto_Velho",
+            "label": "America/Porto_Velho"
+          },
+          {
+            "value": "America/Puerto_Rico",
+            "label": "America/Puerto_Rico"
+          },
+          {
+            "value": "America/Punta_Arenas",
+            "label": "America/Punta_Arenas"
+          },
+          {
+            "value": "America/Rankin_Inlet",
+            "label": "America/Rankin_Inlet"
+          },
+          {
+            "value": "America/Recife",
+            "label": "America/Recife"
+          },
+          {
+            "value": "America/Regina",
+            "label": "America/Regina"
+          },
+          {
+            "value": "America/Resolute",
+            "label": "America/Resolute"
+          },
+          {
+            "value": "America/Rio_Branco",
+            "label": "America/Rio_Branco"
+          },
+          {
+            "value": "America/Santarem",
+            "label": "America/Santarem"
+          },
+          {
+            "value": "America/Santiago",
+            "label": "America/Santiago"
+          },
+          {
+            "value": "America/Santo_Domingo",
+            "label": "America/Santo_Domingo"
+          },
+          {
+            "value": "America/Sao_Paulo",
+            "label": "America/Sao_Paulo"
+          },
+          {
+            "value": "America/Scoresbysund",
+            "label": "America/Scoresbysund"
+          },
+          {
+            "value": "America/Sitka",
+            "label": "America/Sitka"
+          },
+          {
+            "value": "America/St_Barthelemy",
+            "label": "America/St_Barthelemy"
+          },
+          {
+            "value": "America/St_Johns",
+            "label": "America/St_Johns"
+          },
+          {
+            "value": "America/St_Kitts",
+            "label": "America/St_Kitts"
+          },
+          {
+            "value": "America/St_Lucia",
+            "label": "America/St_Lucia"
+          },
+          {
+            "value": "America/St_Thomas",
+            "label": "America/St_Thomas"
+          },
+          {
+            "value": "America/St_Vincent",
+            "label": "America/St_Vincent"
+          },
+          {
+            "value": "America/Swift_Current",
+            "label": "America/Swift_Current"
+          },
+          {
+            "value": "America/Tegucigalpa",
+            "label": "America/Tegucigalpa"
+          },
+          {
+            "value": "America/Thule",
+            "label": "America/Thule"
+          },
+          {
+            "value": "America/Tijuana",
+            "label": "America/Tijuana"
+          },
+          {
+            "value": "America/Toronto",
+            "label": "America/Toronto"
+          },
+          {
+            "value": "America/Tortola",
+            "label": "America/Tortola"
+          },
+          {
+            "value": "America/Vancouver",
+            "label": "America/Vancouver"
+          },
+          {
+            "value": "America/Whitehorse",
+            "label": "America/Whitehorse"
+          },
+          {
+            "value": "America/Winnipeg",
+            "label": "America/Winnipeg"
+          },
+          {
+            "value": "America/Yakutat",
+            "label": "America/Yakutat"
+          },
+          {
+            "value": "Antarctica/Casey",
+            "label": "Antarctica/Casey"
+          },
+          {
+            "value": "Antarctica/Davis",
+            "label": "Antarctica/Davis"
+          },
+          {
+            "value": "Antarctica/DumontDUrville",
+            "label": "Antarctica/DumontDUrville"
+          },
+          {
+            "value": "Antarctica/Macquarie",
+            "label": "Antarctica/Macquarie"
+          },
+          {
+            "value": "Antarctica/Mawson",
+            "label": "Antarctica/Mawson"
+          },
+          {
+            "value": "Antarctica/McMurdo",
+            "label": "Antarctica/McMurdo"
+          },
+          {
+            "value": "Antarctica/Palmer",
+            "label": "Antarctica/Palmer"
+          },
+          {
+            "value": "Antarctica/Rothera",
+            "label": "Antarctica/Rothera"
+          },
+          {
+            "value": "Antarctica/Syowa",
+            "label": "Antarctica/Syowa"
+          },
+          {
+            "value": "Antarctica/Troll",
+            "label": "Antarctica/Troll"
+          },
+          {
+            "value": "Antarctica/Vostok",
+            "label": "Antarctica/Vostok"
+          },
+          {
+            "value": "Arctic/Longyearbyen",
+            "label": "Arctic/Longyearbyen"
+          },
+          {
+            "value": "Asia/Aden",
+            "label": "Asia/Aden"
+          },
+          {
+            "value": "Asia/Almaty",
+            "label": "Asia/Almaty"
+          },
+          {
+            "value": "Asia/Amman",
+            "label": "Asia/Amman"
+          },
+          {
+            "value": "Asia/Anadyr",
+            "label": "Asia/Anadyr"
+          },
+          {
+            "value": "Asia/Aqtau",
+            "label": "Asia/Aqtau"
+          },
+          {
+            "value": "Asia/Aqtobe",
+            "label": "Asia/Aqtobe"
+          },
+          {
+            "value": "Asia/Ashgabat",
+            "label": "Asia/Ashgabat"
+          },
+          {
+            "value": "Asia/Atyrau",
+            "label": "Asia/Atyrau"
+          },
+          {
+            "value": "Asia/Baghdad",
+            "label": "Asia/Baghdad"
+          },
+          {
+            "value": "Asia/Bahrain",
+            "label": "Asia/Bahrain"
+          },
+          {
+            "value": "Asia/Baku",
+            "label": "Asia/Baku"
+          },
+          {
+            "value": "Asia/Bangkok",
+            "label": "Asia/Bangkok"
+          },
+          {
+            "value": "Asia/Barnaul",
+            "label": "Asia/Barnaul"
+          },
+          {
+            "value": "Asia/Beirut",
+            "label": "Asia/Beirut"
+          },
+          {
+            "value": "Asia/Bishkek",
+            "label": "Asia/Bishkek"
+          },
+          {
+            "value": "Asia/Brunei",
+            "label": "Asia/Brunei"
+          },
+          {
+            "value": "Asia/Calcutta",
+            "label": "Asia/Calcutta"
+          },
+          {
+            "value": "Asia/Chita",
+            "label": "Asia/Chita"
+          },
+          {
+            "value": "Asia/Colombo",
+            "label": "Asia/Colombo"
+          },
+          {
+            "value": "Asia/Damascus",
+            "label": "Asia/Damascus"
+          },
+          {
+            "value": "Asia/Dhaka",
+            "label": "Asia/Dhaka"
+          },
+          {
+            "value": "Asia/Dili",
+            "label": "Asia/Dili"
+          },
+          {
+            "value": "Asia/Dubai",
+            "label": "Asia/Dubai"
+          },
+          {
+            "value": "Asia/Dushanbe",
+            "label": "Asia/Dushanbe"
+          },
+          {
+            "value": "Asia/Famagusta",
+            "label": "Asia/Famagusta"
+          },
+          {
+            "value": "Asia/Gaza",
+            "label": "Asia/Gaza"
+          },
+          {
+            "value": "Asia/Hebron",
+            "label": "Asia/Hebron"
+          },
+          {
+            "value": "Asia/Hong_Kong",
+            "label": "Asia/Hong_Kong"
+          },
+          {
+            "value": "Asia/Hovd",
+            "label": "Asia/Hovd"
+          },
+          {
+            "value": "Asia/Irkutsk",
+            "label": "Asia/Irkutsk"
+          },
+          {
+            "value": "Asia/Jakarta",
+            "label": "Asia/Jakarta"
+          },
+          {
+            "value": "Asia/Jayapura",
+            "label": "Asia/Jayapura"
+          },
+          {
+            "value": "Asia/Jerusalem",
+            "label": "Asia/Jerusalem"
+          },
+          {
+            "value": "Asia/Kabul",
+            "label": "Asia/Kabul"
+          },
+          {
+            "value": "Asia/Kamchatka",
+            "label": "Asia/Kamchatka"
+          },
+          {
+            "value": "Asia/Karachi",
+            "label": "Asia/Karachi"
+          },
+          {
+            "value": "Asia/Katmandu",
+            "label": "Asia/Katmandu"
+          },
+          {
+            "value": "Asia/Khandyga",
+            "label": "Asia/Khandyga"
+          },
+          {
+            "value": "Asia/Krasnoyarsk",
+            "label": "Asia/Krasnoyarsk"
+          },
+          {
+            "value": "Asia/Kuala_Lumpur",
+            "label": "Asia/Kuala_Lumpur"
+          },
+          {
+            "value": "Asia/Kuching",
+            "label": "Asia/Kuching"
+          },
+          {
+            "value": "Asia/Kuwait",
+            "label": "Asia/Kuwait"
+          },
+          {
+            "value": "Asia/Macau",
+            "label": "Asia/Macau"
+          },
+          {
+            "value": "Asia/Magadan",
+            "label": "Asia/Magadan"
+          },
+          {
+            "value": "Asia/Makassar",
+            "label": "Asia/Makassar"
+          },
+          {
+            "value": "Asia/Manila",
+            "label": "Asia/Manila"
+          },
+          {
+            "value": "Asia/Muscat",
+            "label": "Asia/Muscat"
+          },
+          {
+            "value": "Asia/Nicosia",
+            "label": "Asia/Nicosia"
+          },
+          {
+            "value": "Asia/Novokuznetsk",
+            "label": "Asia/Novokuznetsk"
+          },
+          {
+            "value": "Asia/Novosibirsk",
+            "label": "Asia/Novosibirsk"
+          },
+          {
+            "value": "Asia/Omsk",
+            "label": "Asia/Omsk"
+          },
+          {
+            "value": "Asia/Oral",
+            "label": "Asia/Oral"
+          },
+          {
+            "value": "Asia/Phnom_Penh",
+            "label": "Asia/Phnom_Penh"
+          },
+          {
+            "value": "Asia/Pontianak",
+            "label": "Asia/Pontianak"
+          },
+          {
+            "value": "Asia/Pyongyang",
+            "label": "Asia/Pyongyang"
+          },
+          {
+            "value": "Asia/Qatar",
+            "label": "Asia/Qatar"
+          },
+          {
+            "value": "Asia/Qostanay",
+            "label": "Asia/Qostanay"
+          },
+          {
+            "value": "Asia/Qyzylorda",
+            "label": "Asia/Qyzylorda"
+          },
+          {
+            "value": "Asia/Rangoon",
+            "label": "Asia/Rangoon"
+          },
+          {
+            "value": "Asia/Riyadh",
+            "label": "Asia/Riyadh"
+          },
+          {
+            "value": "Asia/Saigon",
+            "label": "Asia/Saigon"
+          },
+          {
+            "value": "Asia/Sakhalin",
+            "label": "Asia/Sakhalin"
+          },
+          {
+            "value": "Asia/Samarkand",
+            "label": "Asia/Samarkand"
+          },
+          {
+            "value": "Asia/Seoul",
+            "label": "Asia/Seoul"
+          },
+          {
+            "value": "Asia/Shanghai",
+            "label": "Asia/Shanghai"
+          },
+          {
+            "value": "Asia/Singapore",
+            "label": "Asia/Singapore"
+          },
+          {
+            "value": "Asia/Srednekolymsk",
+            "label": "Asia/Srednekolymsk"
+          },
+          {
+            "value": "Asia/Taipei",
+            "label": "Asia/Taipei"
+          },
+          {
+            "value": "Asia/Tashkent",
+            "label": "Asia/Tashkent"
+          },
+          {
+            "value": "Asia/Tbilisi",
+            "label": "Asia/Tbilisi"
+          },
+          {
+            "value": "Asia/Tehran",
+            "label": "Asia/Tehran"
+          },
+          {
+            "value": "Asia/Thimphu",
+            "label": "Asia/Thimphu"
+          },
+          {
+            "value": "Asia/Tokyo",
+            "label": "Asia/Tokyo"
+          },
+          {
+            "value": "Asia/Tomsk",
+            "label": "Asia/Tomsk"
+          },
+          {
+            "value": "Asia/Ulaanbaatar",
+            "label": "Asia/Ulaanbaatar"
+          },
+          {
+            "value": "Asia/Urumqi",
+            "label": "Asia/Urumqi"
+          },
+          {
+            "value": "Asia/Ust-Nera",
+            "label": "Asia/Ust-Nera"
+          },
+          {
+            "value": "Asia/Vientiane",
+            "label": "Asia/Vientiane"
+          },
+          {
+            "value": "Asia/Vladivostok",
+            "label": "Asia/Vladivostok"
+          },
+          {
+            "value": "Asia/Yakutsk",
+            "label": "Asia/Yakutsk"
+          },
+          {
+            "value": "Asia/Yekaterinburg",
+            "label": "Asia/Yekaterinburg"
+          },
+          {
+            "value": "Asia/Yerevan",
+            "label": "Asia/Yerevan"
+          },
+          {
+            "value": "Atlantic/Azores",
+            "label": "Atlantic/Azores"
+          },
+          {
+            "value": "Atlantic/Bermuda",
+            "label": "Atlantic/Bermuda"
+          },
+          {
+            "value": "Atlantic/Canary",
+            "label": "Atlantic/Canary"
+          },
+          {
+            "value": "Atlantic/Cape_Verde",
+            "label": "Atlantic/Cape_Verde"
+          },
+          {
+            "value": "Atlantic/Faeroe",
+            "label": "Atlantic/Faeroe"
+          },
+          {
+            "value": "Atlantic/Madeira",
+            "label": "Atlantic/Madeira"
+          },
+          {
+            "value": "Atlantic/Reykjavik",
+            "label": "Atlantic/Reykjavik"
+          },
+          {
+            "value": "Atlantic/South_Georgia",
+            "label": "Atlantic/South_Georgia"
+          },
+          {
+            "value": "Atlantic/St_Helena",
+            "label": "Atlantic/St_Helena"
+          },
+          {
+            "value": "Atlantic/Stanley",
+            "label": "Atlantic/Stanley"
+          },
+          {
+            "value": "Australia/Adelaide",
+            "label": "Australia/Adelaide"
+          },
+          {
+            "value": "Australia/Brisbane",
+            "label": "Australia/Brisbane"
+          },
+          {
+            "value": "Australia/Broken_Hill",
+            "label": "Australia/Broken_Hill"
+          },
+          {
+            "value": "Australia/Darwin",
+            "label": "Australia/Darwin"
+          },
+          {
+            "value": "Australia/Eucla",
+            "label": "Australia/Eucla"
+          },
+          {
+            "value": "Australia/Hobart",
+            "label": "Australia/Hobart"
+          },
+          {
+            "value": "Australia/Lindeman",
+            "label": "Australia/Lindeman"
+          },
+          {
+            "value": "Australia/Lord_Howe",
+            "label": "Australia/Lord_Howe"
+          },
+          {
+            "value": "Australia/Melbourne",
+            "label": "Australia/Melbourne"
+          },
+          {
+            "value": "Australia/Perth",
+            "label": "Australia/Perth"
+          },
+          {
+            "value": "Australia/Sydney",
+            "label": "Australia/Sydney"
+          },
+          {
+            "value": "Europe/Amsterdam",
+            "label": "Europe/Amsterdam"
+          },
+          {
+            "value": "Europe/Andorra",
+            "label": "Europe/Andorra"
+          },
+          {
+            "value": "Europe/Astrakhan",
+            "label": "Europe/Astrakhan"
+          },
+          {
+            "value": "Europe/Athens",
+            "label": "Europe/Athens"
+          },
+          {
+            "value": "Europe/Belgrade",
+            "label": "Europe/Belgrade"
+          },
+          {
+            "value": "Europe/Berlin",
+            "label": "Europe/Berlin"
+          },
+          {
+            "value": "Europe/Bratislava",
+            "label": "Europe/Bratislava"
+          },
+          {
+            "value": "Europe/Brussels",
+            "label": "Europe/Brussels"
+          },
+          {
+            "value": "Europe/Bucharest",
+            "label": "Europe/Bucharest"
+          },
+          {
+            "value": "Europe/Budapest",
+            "label": "Europe/Budapest"
+          },
+          {
+            "value": "Europe/Busingen",
+            "label": "Europe/Busingen"
+          },
+          {
+            "value": "Europe/Chisinau",
+            "label": "Europe/Chisinau"
+          },
+          {
+            "value": "Europe/Copenhagen",
+            "label": "Europe/Copenhagen"
+          },
+          {
+            "value": "Europe/Dublin",
+            "label": "Europe/Dublin"
+          },
+          {
+            "value": "Europe/Gibraltar",
+            "label": "Europe/Gibraltar"
+          },
+          {
+            "value": "Europe/Guernsey",
+            "label": "Europe/Guernsey"
+          },
+          {
+            "value": "Europe/Helsinki",
+            "label": "Europe/Helsinki"
+          },
+          {
+            "value": "Europe/Isle_of_Man",
+            "label": "Europe/Isle_of_Man"
+          },
+          {
+            "value": "Europe/Istanbul",
+            "label": "Europe/Istanbul"
+          },
+          {
+            "value": "Europe/Jersey",
+            "label": "Europe/Jersey"
+          },
+          {
+            "value": "Europe/Kaliningrad",
+            "label": "Europe/Kaliningrad"
+          },
+          {
+            "value": "Europe/Kiev",
+            "label": "Europe/Kiev"
+          },
+          {
+            "value": "Europe/Kirov",
+            "label": "Europe/Kirov"
+          },
+          {
+            "value": "Europe/Lisbon",
+            "label": "Europe/Lisbon"
+          },
+          {
+            "value": "Europe/Ljubljana",
+            "label": "Europe/Ljubljana"
+          },
+          {
+            "value": "Europe/London",
+            "label": "Europe/London"
+          },
+          {
+            "value": "Europe/Luxembourg",
+            "label": "Europe/Luxembourg"
+          },
+          {
+            "value": "Europe/Madrid",
+            "label": "Europe/Madrid"
+          },
+          {
+            "value": "Europe/Malta",
+            "label": "Europe/Malta"
+          },
+          {
+            "value": "Europe/Mariehamn",
+            "label": "Europe/Mariehamn"
+          },
+          {
+            "value": "Europe/Minsk",
+            "label": "Europe/Minsk"
+          },
+          {
+            "value": "Europe/Monaco",
+            "label": "Europe/Monaco"
+          },
+          {
+            "value": "Europe/Moscow",
+            "label": "Europe/Moscow"
+          },
+          {
+            "value": "Europe/Oslo",
+            "label": "Europe/Oslo"
+          },
+          {
+            "value": "Europe/Paris",
+            "label": "Europe/Paris"
+          },
+          {
+            "value": "Europe/Podgorica",
+            "label": "Europe/Podgorica"
+          },
+          {
+            "value": "Europe/Prague",
+            "label": "Europe/Prague"
+          },
+          {
+            "value": "Europe/Riga",
+            "label": "Europe/Riga"
+          },
+          {
+            "value": "Europe/Rome",
+            "label": "Europe/Rome"
+          },
+          {
+            "value": "Europe/Samara",
+            "label": "Europe/Samara"
+          },
+          {
+            "value": "Europe/San_Marino",
+            "label": "Europe/San_Marino"
+          },
+          {
+            "value": "Europe/Sarajevo",
+            "label": "Europe/Sarajevo"
+          },
+          {
+            "value": "Europe/Saratov",
+            "label": "Europe/Saratov"
+          },
+          {
+            "value": "Europe/Simferopol",
+            "label": "Europe/Simferopol"
+          },
+          {
+            "value": "Europe/Skopje",
+            "label": "Europe/Skopje"
+          },
+          {
+            "value": "Europe/Sofia",
+            "label": "Europe/Sofia"
+          },
+          {
+            "value": "Europe/Stockholm",
+            "label": "Europe/Stockholm"
+          },
+          {
+            "value": "Europe/Tallinn",
+            "label": "Europe/Tallinn"
+          },
+          {
+            "value": "Europe/Tirane",
+            "label": "Europe/Tirane"
+          },
+          {
+            "value": "Europe/Ulyanovsk",
+            "label": "Europe/Ulyanovsk"
+          },
+          {
+            "value": "Europe/Vaduz",
+            "label": "Europe/Vaduz"
+          },
+          {
+            "value": "Europe/Vatican",
+            "label": "Europe/Vatican"
+          },
+          {
+            "value": "Europe/Vienna",
+            "label": "Europe/Vienna"
+          },
+          {
+            "value": "Europe/Vilnius",
+            "label": "Europe/Vilnius"
+          },
+          {
+            "value": "Europe/Volgograd",
+            "label": "Europe/Volgograd"
+          },
+          {
+            "value": "Europe/Warsaw",
+            "label": "Europe/Warsaw"
+          },
+          {
+            "value": "Europe/Zagreb",
+            "label": "Europe/Zagreb"
+          },
+          {
+            "value": "Europe/Zurich",
+            "label": "Europe/Zurich"
+          },
+          {
+            "value": "Indian/Antananarivo",
+            "label": "Indian/Antananarivo"
+          },
+          {
+            "value": "Indian/Chagos",
+            "label": "Indian/Chagos"
+          },
+          {
+            "value": "Indian/Christmas",
+            "label": "Indian/Christmas"
+          },
+          {
+            "value": "Indian/Cocos",
+            "label": "Indian/Cocos"
+          },
+          {
+            "value": "Indian/Comoro",
+            "label": "Indian/Comoro"
+          },
+          {
+            "value": "Indian/Kerguelen",
+            "label": "Indian/Kerguelen"
+          },
+          {
+            "value": "Indian/Mahe",
+            "label": "Indian/Mahe"
+          },
+          {
+            "value": "Indian/Maldives",
+            "label": "Indian/Maldives"
+          },
+          {
+            "value": "Indian/Mauritius",
+            "label": "Indian/Mauritius"
+          },
+          {
+            "value": "Indian/Mayotte",
+            "label": "Indian/Mayotte"
+          },
+          {
+            "value": "Indian/Reunion",
+            "label": "Indian/Reunion"
+          },
+          {
+            "value": "Pacific/Apia",
+            "label": "Pacific/Apia"
+          },
+          {
+            "value": "Pacific/Auckland",
+            "label": "Pacific/Auckland"
+          },
+          {
+            "value": "Pacific/Bougainville",
+            "label": "Pacific/Bougainville"
+          },
+          {
+            "value": "Pacific/Chatham",
+            "label": "Pacific/Chatham"
+          },
+          {
+            "value": "Pacific/Easter",
+            "label": "Pacific/Easter"
+          },
+          {
+            "value": "Pacific/Efate",
+            "label": "Pacific/Efate"
+          },
+          {
+            "value": "Pacific/Enderbury",
+            "label": "Pacific/Enderbury"
+          },
+          {
+            "value": "Pacific/Fakaofo",
+            "label": "Pacific/Fakaofo"
+          },
+          {
+            "value": "Pacific/Fiji",
+            "label": "Pacific/Fiji"
+          },
+          {
+            "value": "Pacific/Funafuti",
+            "label": "Pacific/Funafuti"
+          },
+          {
+            "value": "Pacific/Galapagos",
+            "label": "Pacific/Galapagos"
+          },
+          {
+            "value": "Pacific/Gambier",
+            "label": "Pacific/Gambier"
+          },
+          {
+            "value": "Pacific/Guadalcanal",
+            "label": "Pacific/Guadalcanal"
+          },
+          {
+            "value": "Pacific/Guam",
+            "label": "Pacific/Guam"
+          },
+          {
+            "value": "Pacific/Honolulu",
+            "label": "Pacific/Honolulu"
+          },
+          {
+            "value": "Pacific/Kiritimati",
+            "label": "Pacific/Kiritimati"
+          },
+          {
+            "value": "Pacific/Kosrae",
+            "label": "Pacific/Kosrae"
+          },
+          {
+            "value": "Pacific/Kwajalein",
+            "label": "Pacific/Kwajalein"
+          },
+          {
+            "value": "Pacific/Majuro",
+            "label": "Pacific/Majuro"
+          },
+          {
+            "value": "Pacific/Marquesas",
+            "label": "Pacific/Marquesas"
+          },
+          {
+            "value": "Pacific/Midway",
+            "label": "Pacific/Midway"
+          },
+          {
+            "value": "Pacific/Nauru",
+            "label": "Pacific/Nauru"
+          },
+          {
+            "value": "Pacific/Niue",
+            "label": "Pacific/Niue"
+          },
+          {
+            "value": "Pacific/Norfolk",
+            "label": "Pacific/Norfolk"
+          },
+          {
+            "value": "Pacific/Noumea",
+            "label": "Pacific/Noumea"
+          },
+          {
+            "value": "Pacific/Pago_Pago",
+            "label": "Pacific/Pago_Pago"
+          },
+          {
+            "value": "Pacific/Palau",
+            "label": "Pacific/Palau"
+          },
+          {
+            "value": "Pacific/Pitcairn",
+            "label": "Pacific/Pitcairn"
+          },
+          {
+            "value": "Pacific/Ponape",
+            "label": "Pacific/Ponape"
+          },
+          {
+            "value": "Pacific/Port_Moresby",
+            "label": "Pacific/Port_Moresby"
+          },
+          {
+            "value": "Pacific/Rarotonga",
+            "label": "Pacific/Rarotonga"
+          },
+          {
+            "value": "Pacific/Saipan",
+            "label": "Pacific/Saipan"
+          },
+          {
+            "value": "Pacific/Tahiti",
+            "label": "Pacific/Tahiti"
+          },
+          {
+            "value": "Pacific/Tarawa",
+            "label": "Pacific/Tarawa"
+          },
+          {
+            "value": "Pacific/Tongatapu",
+            "label": "Pacific/Tongatapu"
+          },
+          {
+            "value": "Pacific/Truk",
+            "label": "Pacific/Truk"
+          },
+          {
+            "value": "Pacific/Wake",
+            "label": "Pacific/Wake"
+          },
+          {
+            "value": "Pacific/Wallis",
+            "label": "Pacific/Wallis"
+          }
+        ]
+      },
+      "CustomerConsentType": {
+        "type": "string",
+        "enum": [
+          "privacy_policy",
+          "marketing_email",
+          "marketing_whatsapp",
+          "profiling"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "privacy_policy"
+          },
+          {
+            "code": "marketing_email"
+          },
+          {
+            "code": "marketing_whatsapp"
+          },
+          {
+            "code": "profiling"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "privacy_policy",
+            "label": "privacy_policy"
+          },
+          {
+            "value": "marketing_email",
+            "label": "marketing_email"
+          },
+          {
+            "value": "marketing_whatsapp",
+            "label": "marketing_whatsapp"
+          },
+          {
+            "value": "profiling",
+            "label": "profiling"
+          }
+        ]
+      },
+      "CustomerConsentStatus": {
+        "type": "string",
+        "enum": [
+          "granted",
+          "withdrawn",
+          "unknown"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "granted"
+          },
+          {
+            "code": "withdrawn"
+          },
+          {
+            "code": "unknown"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "granted",
+            "label": "granted"
+          },
+          {
+            "value": "withdrawn",
+            "label": "withdrawn"
+          },
+          {
+            "value": "unknown",
+            "label": "unknown"
+          }
+        ]
+      },
+      "CustomerDocumentType": {
+        "type": "string",
+        "enum": [
+          "passport",
+          "national_id",
+          "visa",
+          "other"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "passport"
+          },
+          {
+            "code": "national_id"
+          },
+          {
+            "code": "visa"
+          },
+          {
+            "code": "other"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "passport",
+            "label": "passport"
+          },
+          {
+            "value": "national_id",
+            "label": "national_id"
+          },
+          {
+            "value": "visa",
+            "label": "visa"
+          },
+          {
+            "value": "other",
+            "label": "other"
+          }
+        ]
+      },
+      "TravelGroupType": {
+        "type": "string",
+        "enum": [
+          "family",
+          "friends",
+          "corporate",
+          "school",
+          "other"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "family"
+          },
+          {
+            "code": "friends"
+          },
+          {
+            "code": "corporate"
+          },
+          {
+            "code": "school"
+          },
+          {
+            "code": "other"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "family",
+            "label": "family"
+          },
+          {
+            "value": "friends",
+            "label": "friends"
+          },
+          {
+            "value": "corporate",
+            "label": "corporate"
+          },
+          {
+            "value": "school",
+            "label": "school"
+          },
+          {
+            "value": "other",
+            "label": "other"
+          }
+        ]
+      },
+      "TravelGroupMemberRole": {
+        "type": "string",
+        "enum": [
+          "TravelGroupContact",
+          "decision_maker",
+          "payer",
+          "assistant",
+          "other"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "TravelGroupContact"
+          },
+          {
+            "code": "decision_maker"
+          },
+          {
+            "code": "payer"
+          },
+          {
+            "code": "assistant"
+          },
+          {
+            "code": "other"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "TravelGroupContact",
+            "label": "TravelGroupContact"
+          },
+          {
+            "value": "decision_maker",
+            "label": "decision_maker"
+          },
+          {
+            "value": "payer",
+            "label": "payer"
+          },
+          {
+            "value": "assistant",
+            "label": "assistant"
+          },
+          {
+            "value": "other",
+            "label": "other"
+          }
+        ]
+      },
+      "BookingActivityType": {
+        "type": "string",
+        "enum": [
+          "BOOKING_CREATED",
+          "STAGE_CHANGED",
+          "ASSIGNMENT_CHANGED",
+          "NOTE_UPDATED",
+          "PRICING_UPDATED",
+          "OFFER_UPDATED",
+          "INVOICE_CREATED",
+          "INVOICE_UPDATED",
+          "PAYMENT_UPDATED"
+        ],
+        "x-enum-catalog": [
+          {
+            "code": "BOOKING_CREATED"
+          },
+          {
+            "code": "STAGE_CHANGED"
+          },
+          {
+            "code": "ASSIGNMENT_CHANGED"
+          },
+          {
+            "code": "NOTE_UPDATED"
+          },
+          {
+            "code": "PRICING_UPDATED"
+          },
+          {
+            "code": "OFFER_UPDATED"
+          },
+          {
+            "code": "INVOICE_CREATED"
+          },
+          {
+            "code": "INVOICE_UPDATED"
+          },
+          {
+            "code": "PAYMENT_UPDATED"
+          }
+        ],
+        "x-enum-options": [
+          {
+            "value": "BOOKING_CREATED",
+            "label": "BOOKING_CREATED"
+          },
+          {
+            "value": "STAGE_CHANGED",
+            "label": "STAGE_CHANGED"
+          },
+          {
+            "value": "ASSIGNMENT_CHANGED",
+            "label": "ASSIGNMENT_CHANGED"
+          },
+          {
+            "value": "NOTE_UPDATED",
+            "label": "NOTE_UPDATED"
+          },
+          {
+            "value": "PRICING_UPDATED",
+            "label": "PRICING_UPDATED"
+          },
+          {
+            "value": "OFFER_UPDATED",
+            "label": "OFFER_UPDATED"
+          },
+          {
+            "value": "INVOICE_CREATED",
+            "label": "INVOICE_CREATED"
+          },
+          {
+            "value": "INVOICE_UPDATED",
+            "label": "INVOICE_UPDATED"
+          },
+          {
+            "value": "PAYMENT_UPDATED",
+            "label": "PAYMENT_UPDATED"
+          }
         ]
       },
       "TravelerConstraints": {
@@ -174,10 +6102,6 @@
         "type": "object",
         "description": "Defined in model (referenced as SourceAttribution)."
       },
-      "BookingActivity": {
-        "type": "object",
-        "description": "Defined in model (referenced as BookingActivity)."
-      },
       "BookingInvoice": {
         "type": "object",
         "description": "Defined in model (referenced as BookingInvoice)."
@@ -201,6 +6125,7 @@
           },
           "email": {
             "type": "string",
+            "format": "email",
             "nullable": true
           },
           "roles": {
@@ -230,6 +6155,10 @@
           "name": {
             "type": "string"
           },
+          "photo_ref": {
+            "type": "string",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "nullable": true
@@ -244,10 +6173,11 @@
           },
           "date_of_birth": {
             "type": "string",
+            "format": "date",
             "nullable": true
           },
           "nationality": {
-            "type": "string",
+            "$ref": "#/components/schemas/CountryCode",
             "nullable": true
           },
           "address_line_1": {
@@ -271,7 +6201,7 @@
             "nullable": true
           },
           "address_country_code": {
-            "type": "string",
+            "$ref": "#/components/schemas/CountryCode",
             "nullable": true
           },
           "organization_name": {
@@ -292,6 +6222,7 @@
           },
           "organization_email": {
             "type": "string",
+            "format": "email",
             "nullable": true
           },
           "tax_id": {
@@ -304,6 +6235,7 @@
           },
           "email": {
             "type": "string",
+            "format": "email",
             "nullable": true
           },
           "preferred_language": {
@@ -315,7 +6247,7 @@
             "nullable": true
           },
           "timezone": {
-            "type": "string",
+            "$ref": "#/components/schemas/TimezoneCode",
             "nullable": true
           },
           "notes": {
@@ -323,13 +6255,16 @@
             "nullable": true
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "archived_at": {
             "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         }
@@ -352,24 +6287,26 @@
             "type": "string"
           },
           "consent_type": {
-            "type": "string"
+            "$ref": "#/components/schemas/CustomerConsentType"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/CustomerConsentStatus"
           },
           "captured_via": {
             "type": "string",
             "nullable": true
           },
           "captured_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "evidence_ref": {
             "type": "string",
             "nullable": true
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -390,7 +6327,7 @@
             "type": "string"
           },
           "document_type": {
-            "type": "string"
+            "$ref": "#/components/schemas/CustomerDocumentType"
           },
           "document_number": {
             "type": "string",
@@ -401,18 +6338,21 @@
             "nullable": true
           },
           "issuing_country": {
-            "type": "string",
+            "$ref": "#/components/schemas/CountryCode",
             "nullable": true
           },
           "expires_on": {
             "type": "string",
+            "format": "date",
             "nullable": true
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -437,17 +6377,19 @@
             "nullable": true
           },
           "group_type": {
-            "type": "string"
+            "$ref": "#/components/schemas/TravelGroupType"
           },
           "notes": {
             "type": "string",
             "nullable": true
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -477,7 +6419,7 @@
           "member_roles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/TravelGroupMemberRole"
             }
           },
           "notes": {
@@ -485,10 +6427,12 @@
             "nullable": true
           },
           "created_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -618,10 +6562,12 @@
             "nullable": true
           },
           "createdAt": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updatedAt": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -691,10 +6637,12 @@
           },
           "createdAt": {
             "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "updatedAt": {
             "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         }
@@ -750,6 +6698,38 @@
           },
           "totalPriceCents": {
             "type": "integer"
+          }
+        }
+      },
+      "BookingActivity": {
+        "type": "object",
+        "required": [
+          "id",
+          "bookingId",
+          "type",
+          "actor",
+          "detail",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bookingId": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/BookingActivityType"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1029,10 +7009,12 @@
           },
           "sentAt": {
             "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "receivedAt": {
             "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "conversationId": {
@@ -1071,6 +7053,7 @@
           },
           "lastEventAt": {
             "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "latestPreview": {
@@ -1280,14 +7263,15 @@
           },
           "email": {
             "type": "string",
+            "format": "email",
             "nullable": true
           },
-          "phone": {
+          "phone_number": {
             "type": "string",
             "nullable": true
           },
-          "language": {
-            "type": "string",
+          "preferred_language": {
+            "$ref": "#/components/schemas/LanguageCode",
             "nullable": true
           },
           "notes": {
@@ -1347,6 +7331,217 @@
           },
           "offer": {
             "$ref": "#/components/schemas/BookingOffer"
+          }
+        }
+      },
+      "CustomerUpdateRequest": {
+        "type": "object",
+        "required": [
+
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "photo_ref": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "first_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "nationality": {
+            "$ref": "#/components/schemas/CountryCode",
+            "nullable": true
+          },
+          "address_line_1": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_line_2": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_city": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_state_region": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_postal_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "address_country_code": {
+            "$ref": "#/components/schemas/CountryCode",
+            "nullable": true
+          },
+          "organization_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_address": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_phone_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_webpage": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "tax_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "preferred_language": {
+            "$ref": "#/components/schemas/LanguageCode",
+            "nullable": true
+          },
+          "preferred_currency": {
+            "$ref": "#/components/schemas/ATPCurrencyCode",
+            "nullable": true
+          },
+          "timezone": {
+            "$ref": "#/components/schemas/TimezoneCode",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "EvidenceUpload": {
+        "type": "object",
+        "required": [
+          "filename",
+          "data_base64"
+        ],
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_base64": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerPhotoUploadRequest": {
+        "type": "object",
+        "required": [
+
+        ],
+        "properties": {
+          "photo_upload": {
+            "$ref": "#/components/schemas/EvidenceUpload",
+            "nullable": true
+          },
+          "photo": {
+            "$ref": "#/components/schemas/EvidenceUpload",
+            "nullable": true
+          }
+        }
+      },
+      "CustomerConsentCreateRequest": {
+        "type": "object",
+        "required": [
+          "consent_type",
+          "status"
+        ],
+        "properties": {
+          "consent_type": {
+            "$ref": "#/components/schemas/CustomerConsentType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CustomerConsentStatus"
+          },
+          "captured_via": {
+            "type": "string",
+            "nullable": true
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "evidence_ref": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidence_upload": {
+            "$ref": "#/components/schemas/EvidenceUpload",
+            "nullable": true
+          }
+        }
+      },
+      "CustomerUpdateResponse": {
+        "type": "object",
+        "required": [
+          "customer"
+        ],
+        "properties": {
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          }
+        }
+      },
+      "CustomerPhotoUploadResponse": {
+        "type": "object",
+        "required": [
+          "customer"
+        ],
+        "properties": {
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          }
+        }
+      },
+      "CustomerConsentCreateResponse": {
+        "type": "object",
+        "required": [
+          "consent"
+        ],
+        "properties": {
+          "consent": {
+            "$ref": "#/components/schemas/CustomerConsent"
           }
         }
       },
@@ -2257,6 +8452,228 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CustomerDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "customer_update",
+        "summary": "Customer Update",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerUpdateResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/photo": {
+      "post": {
+        "operationId": "customer_photo_upload",
+        "summary": "Customer Photo Upload",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerPhotoUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerPhotoUploadResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerPhotoUploadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/customers/{customerId}/consents": {
+      "post": {
+        "operationId": "customer_consent_create",
+        "summary": "Customer Consent Create",
+        "tags": [
+          "V1"
+        ],
+        "security": [
+          {
+            "bearerAuth": [
+
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerConsentCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerConsentCreateResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerConsentCreateResponse"
                 }
               }
             }

@@ -35,8 +35,8 @@ import Foundation
     let preferredCurrency: GeneratedCurrencyCode?
     let name: String?
     let email: String?
-    let phone: String?
-    let language: String?
+    let phone_number: String?
+    let preferred_language: GeneratedLanguageCode?
     let notes: String?
     let pageUrl: String?
     let referrer: String?
@@ -55,8 +55,8 @@ import Foundation
         case preferredCurrency = "preferredCurrency"
         case name = "name"
         case email = "email"
-        case phone = "phone"
-        case language = "language"
+        case phone_number = "phone_number"
+        case preferred_language = "preferred_language"
         case notes = "notes"
         case pageUrl = "pageUrl"
         case referrer = "referrer"
@@ -193,6 +193,114 @@ import Foundation
         }
     }
 
+    struct GeneratedCustomerUpdateRequest: Codable, Equatable {
+    let name: String?
+    let photo_ref: String?
+    let title: String?
+    let first_name: String?
+    let last_name: String?
+    let date_of_birth: String?
+    let nationality: GeneratedCountryCode?
+    let address_line_1: String?
+    let address_line_2: String?
+    let address_city: String?
+    let address_state_region: String?
+    let address_postal_code: String?
+    let address_country_code: GeneratedCountryCode?
+    let organization_name: String?
+    let organization_address: String?
+    let organization_phone_number: String?
+    let organization_webpage: String?
+    let organization_email: String?
+    let tax_id: String?
+    let phone_number: String?
+    let email: String?
+    let preferred_language: GeneratedLanguageCode?
+    let preferred_currency: GeneratedCurrencyCode?
+    let timezone: GeneratedTimezoneCode?
+    let notes: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case name = "name"
+        case photo_ref = "photo_ref"
+        case title = "title"
+        case first_name = "first_name"
+        case last_name = "last_name"
+        case date_of_birth = "date_of_birth"
+        case nationality = "nationality"
+        case address_line_1 = "address_line_1"
+        case address_line_2 = "address_line_2"
+        case address_city = "address_city"
+        case address_state_region = "address_state_region"
+        case address_postal_code = "address_postal_code"
+        case address_country_code = "address_country_code"
+        case organization_name = "organization_name"
+        case organization_address = "organization_address"
+        case organization_phone_number = "organization_phone_number"
+        case organization_webpage = "organization_webpage"
+        case organization_email = "organization_email"
+        case tax_id = "tax_id"
+        case phone_number = "phone_number"
+        case email = "email"
+        case preferred_language = "preferred_language"
+        case preferred_currency = "preferred_currency"
+        case timezone = "timezone"
+        case notes = "notes"
+        }
+    }
+
+    struct GeneratedCustomerUpdateResponse: Codable, Equatable {
+    let customer: GeneratedCustomer
+
+        private enum CodingKeys: String, CodingKey {
+        case customer = "customer"
+        }
+    }
+
+    struct GeneratedCustomerPhotoUploadRequest: Codable, Equatable {
+    let photo_upload: GeneratedEvidenceUpload?
+    let photo: GeneratedEvidenceUpload?
+
+        private enum CodingKeys: String, CodingKey {
+        case photo_upload = "photo_upload"
+        case photo = "photo"
+        }
+    }
+
+    struct GeneratedCustomerPhotoUploadResponse: Codable, Equatable {
+    let customer: GeneratedCustomer
+
+        private enum CodingKeys: String, CodingKey {
+        case customer = "customer"
+        }
+    }
+
+    struct GeneratedCustomerConsentCreateRequest: Codable, Equatable {
+    let consent_type: GeneratedCustomerConsentType
+    let status: GeneratedCustomerConsentStatus
+    let captured_via: String?
+    let captured_at: String?
+    let evidence_ref: String?
+    let evidence_upload: GeneratedEvidenceUpload?
+
+        private enum CodingKeys: String, CodingKey {
+        case consent_type = "consent_type"
+        case status = "status"
+        case captured_via = "captured_via"
+        case captured_at = "captured_at"
+        case evidence_ref = "evidence_ref"
+        case evidence_upload = "evidence_upload"
+        }
+    }
+
+    struct GeneratedCustomerConsentCreateResponse: Codable, Equatable {
+    let consent: GeneratedCustomerConsent
+
+        private enum CodingKeys: String, CodingKey {
+        case consent = "consent"
+        }
+    }
+
     struct GeneratedTourDetail: Codable, Equatable {
     let tour: GeneratedTour
     let options: GeneratedTourOptions
@@ -314,6 +422,18 @@ import Foundation
         case usernames = "usernames"
         case destinations = "destinations"
         case languages = "languages"
+        }
+    }
+
+    struct GeneratedEvidenceUpload: Codable, Equatable {
+    let filename: String
+    let mime_type: String?
+    let data_base64: String
+
+        private enum CodingKeys: String, CodingKey {
+        case filename = "filename"
+        case mime_type = "mime_type"
+        case data_base64 = "data_base64"
         }
     }
 
