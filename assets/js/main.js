@@ -493,7 +493,7 @@ function buildShowMoreToursLabel(moreCount) {
 
 function formatFilterValue(value, kind) {
   if (Array.isArray(value) && value.length) return value.join(", ");
-  return kind === "destination" ? "All destinations" : "All styles";
+  return kind === "destination" ? "All destinations" : "All travel styles";
 }
 
 function updateFilterTriggerLabels() {
@@ -728,14 +728,16 @@ function getFiltersFromURL() {
 
 function normalizeFilterSelection(value) {
   if (Array.isArray(value)) {
-    return value.map((item) => normalizeText(item)).filter(Boolean);
+    return value
+      .map((item) => normalizeText(item))
+      .filter((item) => item && item.toLowerCase() !== "all");
   }
   const text = normalizeText(value);
   if (!text) return [];
   return text
     .split(",")
     .map((item) => normalizeText(item))
-    .filter(Boolean);
+    .filter((item) => item && item.toLowerCase() !== "all");
 }
 
 function getCheckedValues(container) {
