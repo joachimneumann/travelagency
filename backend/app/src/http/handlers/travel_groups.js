@@ -404,15 +404,6 @@ export function createTravelGroupHandlers(deps) {
       return;
     }
 
-    const members = memberCustomerIdsForGroup(group);
-    if (members.length > 0) {
-      sendJson(res, 409, {
-        error: "Cannot delete travel group",
-        detail: `This travel group still has ${members.length === 1 ? "1 member" : `${members.length} members`}. Remove all members first.`
-      });
-      return;
-    }
-
     store.travel_groups = Array.isArray(store.travel_groups) ? store.travel_groups.filter((item) => item.id !== travelGroupId) : [];
     store.clients = Array.isArray(store.clients) ? store.clients.filter((item) => item.id !== group.client_id) : [];
 

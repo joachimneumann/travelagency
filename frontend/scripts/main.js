@@ -205,23 +205,15 @@ function setupHeroScroll() {
 function setupBackendLogin() {
   if (!els.backendLoginBtn) return;
 
-  els.backendLoginBtn.addEventListener("click", async () => {
+  els.backendLoginBtn.addEventListener("click", () => {
     const backendUrl = `${window.location.origin}/backend.html`;
-    const returnTo = backendUrl;
-    const loginUrl = `${BACKEND_BASE_URL}/auth/login?return_to=${encodeURIComponent(returnTo)}`;
-    try {
-      const response = await fetch(`${BACKEND_BASE_URL}/auth/me`, {
-        credentials: "include"
-      });
-      const payload = await response.json();
-      if (response.ok && payload?.authenticated) {
-        window.location.href = backendUrl;
-        return;
-      }
-    } catch {
-      // Fall through to login redirect.
-    }
-    window.location.href = loginUrl;
+    const loginParams = new URLSearchParams({
+      return_to: backendUrl,
+      prompt: "login"
+    });
+    const loginUrl = `${API_BASE_ORIGIN}/auth/login?${loginParams.toString()}`;
+    const freshLoginUrl = `${API_BASE_ORIGIN}/auth/logout?return_to=${encodeURIComponent(loginUrl)}`;
+    window.location.href = freshLoginUrl;
   });
 }
 

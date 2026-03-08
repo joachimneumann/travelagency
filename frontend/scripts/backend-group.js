@@ -47,7 +47,8 @@ const els = {
   systemMeta: document.getElementById("groupSystemMeta"),
   saveBtn: document.getElementById("groupSaveBtn"),
   saveStatus: document.getElementById("groupSaveStatus"),
-  deleteBtn: document.getElementById("groupDeleteBtn")
+  deleteBtn: document.getElementById("groupDeleteBtn"),
+  deleteReason: document.getElementById("groupDeleteReason")
 };
 
 let heroCopyClipboardPoll = null;
@@ -117,6 +118,7 @@ function render() {
   renderBookings();
   renderSystemMeta();
   syncDirtyUi();
+  syncDeleteButtonState();
 }
 
 function getCurrentGroupIdentifier() {
@@ -280,6 +282,8 @@ async function saveTravelGroup() {
 
 async function deleteTravelGroup() {
   if (!state.travelGroup) return;
+  syncDeleteButtonState();
+  if (!travelGroupCanBeDeleted()) return;
   if (!window.confirm(`Delete travel group ${state.travelGroup.group_name || state.travelGroup.id}?`)) return;
   const payload = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(state.travelGroup.id)}`, {
     method: "DELETE",
@@ -297,6 +301,29 @@ function showError(message) {
 
 function clearError() {
   if (els.error) els.error.textContent = "";
+}
+
+function travelGroupCanBeDeleted() {
+  return !travelGroupDeleteBlockedReason();
+}
+
+function travelGroupDeleteBlockedReason() {
+  const bookingCount = Array.isArray(state.bookings) ? state.bookings.length : 0;
+  if (bookingCount > 0) {
+    return `This travel group is still assigned to ${bookingCount === 1 ? "1 booking" : `${bookingCount} bookings`}. Reassign or delete those bookings first.`;
+  }
+  return "";
+}
+
+function syncDeleteButtonState() {
+  if (!els.deleteBtn) return;
+  const blockedReason = travelGroupDeleteBlockedReason();
+  els.deleteBtn.disabled = !travelGroupCanBeDeleted();
+  els.deleteBtn.title = blockedReason || "";
+  if (els.deleteReason) {
+    els.deleteReason.hidden = !blockedReason;
+    els.deleteReason.textContent = blockedReason;
+  }
 }
 
 function shortId(value) {

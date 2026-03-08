@@ -121,3 +121,38 @@
   height: 1rem;
   margin: 0;
 }
+
+.group-page .customer-danger-zone__delete {
+  background: #cb4a4a;
+  border-color: #cb4a4a;
+  color: #fff;
+}
+
+.group-page .customer-danger-zone__delete:disabled {
+  background: #cfd4da;
+  border-color: #cfd4da;
+  color: rgba(22, 49, 61, 0.62);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.group-page .customer-danger-zone__delete:hover,
+.group-page .customer-danger-zone__delete:focus-visible {
+  background: #b33c3c;
+  border-color: #b33c3c;
+  color: #fff;
+}
+
+.group-page .customer-danger-zone__delete:disabled:hover,
+.group-page .customer-danger-zone__delete:disabled:focus-visible {
+  background: #cfd4da;
+  border-color: #cfd4da;
+  color: rgba(22, 49, 61, 0.62);
+}
+
+.group-page .customer-danger-zone__reason {
+  margin: 0.65rem 0 0;
+  color: rgba(22, 49, 61, 0.74);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}

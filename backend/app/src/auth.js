@@ -297,6 +297,7 @@ export function createAuth({ port }) {
     const quickLoginRequested =
       quickLoginAllowedHost && normalizeText(requestUrl.searchParams.get("quick_login")) === "1";
     const quickLoginUser = normalizeText(requestUrl.searchParams.get("quick_login_user")) || "joachim";
+    const forcePromptLogin = normalizeText(requestUrl.searchParams.get("prompt")) === "login";
     const state = randomUUID();
     authRequests.set(state, {
       return_to: returnTo,
@@ -318,7 +319,7 @@ export function createAuth({ port }) {
         authUrl.searchParams.set("login_hint", quickLoginUser);
       }
     }
-    if (cfg.keycloakForceLoginPrompt) {
+    if (cfg.keycloakForceLoginPrompt || forcePromptLogin) {
       authUrl.searchParams.set("prompt", "login");
       authUrl.searchParams.set("max_age", "0");
     }
@@ -416,7 +417,34 @@ export function createAuth({ port }) {
 
     const requestUrl = new URL(req.url, "http://localhost");
     const returnTo = buildSafeReturnTo(requestUrl.searchParams.get("return_to"), "/backend.html");
-    redirect(res, returnTo);
+    if (!cfg.keycloakEnabled) {
+      redirect(res, returnTo);
+      return;
+    }
+
+    try {
+      const discovery = await getKeycloakDiscovery();
+      const endSessionEndpoint = normalizeText(discovery?.end_session_endpoint);
+      if (!endSessionEndpoint) {
+        redirect(res, returnTo);
+        return;
+      }
+
+      const logoutUrl = new URL(endSessionEndpoint);
+      if (session?.id_token) {
+        logoutUrl.searchParams.set("id_token_hint", String(session.id_token));
+      } else {
+        logoutUrl.searchParams.set("client_id", cfg.keycloakClientId);
+      }
+      logoutUrl.searchParams.set(
+        "post_logout_redirect_uri",
+        returnTo || cfg.keycloakPostLogoutRedirectUri || "/backend.html"
+      );
+      redirect(res, logoutUrl.toString());
+      return;
+    } catch {
+      redirect(res, returnTo);
+    }
   }
 
   async function handleAuthMe(req, res) {
