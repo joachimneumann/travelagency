@@ -1,6 +1,7 @@
 .backend-nav__meta {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: flex-end;
   align-items: flex-end;
   gap: 0.25rem;
 }
@@ -38,7 +39,8 @@
 }
 
 .backend-main-nav {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  margin-left: auto;
   align-items: flex-start;
   gap: 0.55rem;
   flex-wrap: wrap;
@@ -51,7 +53,7 @@
 
 .backend-main-nav .backend-nav__meta .nav-list {
   justify-content: flex-end;
-  width: 100%;
+  width: auto;
 }
 
 .backend-main-nav .backend-section-nav-wrap {
@@ -141,13 +143,42 @@
   line-height: 1.15;
 }
 
+@media (max-width: 1000px) {
+  #backendHomeLink {
+    display: none;
+  }
+
+  #backendNavMount {
+    margin-left: auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .backend-main-nav {
+    justify-content: flex-end;
+  }
+
+  .backend-main-nav .backend-section-nav-wrap {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .backend-main-nav .backend-section-nav-wrap,
+  .backend-main-nav .backend-nav__meta,
+  .backend-main-nav .backend-nav__meta .nav-list,
+  .backend-main-nav .backend-section-nav {
+    justify-content: flex-end;
+  }
+}
+
 @media (max-width: 760px) {
   .backend-main-nav {
     position: static;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-end;
     gap: 0.45rem;
     background: transparent;
     border: 0;
@@ -157,11 +188,12 @@
 
   .backend-main-nav .backend-nav__meta {
     margin-left: 0;
-    width: 100%;
+    width: auto;
   }
 
   .backend-main-nav .backend-nav__meta .nav-list {
-    justify-content: flex-start;
+    flex-direction: row;
+    justify-content: flex-end;
     width: auto;
   }
 
@@ -171,7 +203,7 @@
   }
 
   .backend-main-nav .backend-section-nav {
-    justify-content: flex-start;
+    justify-content: flex-end;
     width: 100%;
   }
 

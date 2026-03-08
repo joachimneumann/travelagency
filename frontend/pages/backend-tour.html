@@ -15,43 +15,7 @@
           <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
         </a>
 
-        <nav class="nav backend-main-nav" aria-label="Backend navigation">
-          <div class="backend-section-nav-wrap">
-            <div class="backend-section-nav" role="tablist" aria-label="Backend sections">
-              <button type="button" class="backend-section-nav__item" data-backend-section="dashboard" title="Dashboard" aria-label="Dashboard">
-                <span class="backend-section-nav__icon" aria-hidden="true">🏠</span>
-              </button>
-              <button type="button" class="backend-section-nav__item" data-backend-section="customers" title="Customers" aria-label="Customers">
-                <span class="backend-section-nav__icon" aria-hidden="true">👤</span>
-              </button>
-              <button type="button" class="backend-section-nav__item" data-backend-section="travelGroups" title="Travel Groups" aria-label="Travel Groups">
-                <span class="backend-section-nav__icon" aria-hidden="true">👤👤👤</span>
-              </button>
-              <button type="button" class="backend-section-nav__item" data-backend-section="bookings" title="Bookings" aria-label="Bookings">
-                <span class="backend-section-nav__icon" aria-hidden="true">📋</span>
-              </button>
-              <button type="button" class="backend-section-nav__item" data-backend-section="tours" title="Tours" aria-label="Tours">
-                <span class="backend-section-nav__icon" aria-hidden="true">🗺️</span>
-              </button>
-              <button type="button" class="backend-section-nav__item" data-backend-section="settings" title="Reports and Settings" aria-label="Reports and Settings">
-                <span class="backend-section-nav__icon" aria-hidden="true">📊</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="backend-nav__meta">
-            <ul class="nav-list">
-              <li><a id="backToBackend" href="backend.html">Backend</a></li>
-              <li class="backend-nav__website"><a href="index.html">Website</a></li>
-              <li class="backend-nav__logout">
-                <a class="backend-nav__logout-link" id="backendLogoutLink" href="#">
-                  <span class="backend-nav__logout-title">Logout</span>
-                  <span class="backend-nav__user" id="backendUserLabel"></span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </nav>
+        <div id="backendNavMount"></div>
       </div>
     </header>
 
@@ -131,6 +95,10 @@
       </section>
     </main>
 
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "tours", showBackLink: true });
+    </script>
     <script type="module" src="frontend/scripts/backend-tour.js"></script>
   </body>
 </html>
