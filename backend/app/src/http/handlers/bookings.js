@@ -208,27 +208,27 @@ function rankCustomerCandidatesForBookingSubmission(customers, submitted, { norm
         if (hasExactPhone) {
           reasons.push("exact_phone");
           confidence = rankConfidence(confidence, "high");
-          score = Math.max(score, 100);
+          score += 120;
         } else if (hasSimilarPhone) {
           reasons.push("similar_phone");
           confidence = rankConfidence(confidence, "medium");
-          score = Math.max(score, 60);
+          score += 60;
         }
 
         if (hasExactEmail) {
           reasons.push("exact_email");
           confidence = rankConfidence(confidence, "high");
-          score = Math.max(score, 90);
+          score += 100;
         }
 
         if (hasExactName) {
           reasons.push("exact_name");
           confidence = rankConfidence(confidence, "low");
-          score = Math.max(score, hasExactPhone || hasExactEmail ? 95 : 35);
+          score += hasExactPhone || hasExactEmail ? 30 : 18;
         } else if (hasSimilarName) {
           reasons.push("similar_name");
           confidence = rankConfidence(confidence, "low");
-          score = Math.max(score, 25);
+          score += 8;
         }
 
         return {
@@ -631,20 +631,28 @@ async function handlePatchBookingClient(req, res, [bookingId]) {
 
   const customerClientId = normalizeText(payload.customer_client_id);
   const travelGroupId = normalizeText(payload.travel_group_id);
+  const clientLookupId = normalizeText(payload.client_lookup_id);
 
-  if (customerClientId && travelGroupId) {
-    sendJson(res, 422, { error: "Provide either customer_client_id or travel_group_id" });
+  if ([customerClientId, travelGroupId, clientLookupId].filter(Boolean).length > 1) {
+    sendJson(res, 422, { error: "Provide only one of customer_client_id, travel_group_id, or client_lookup_id" });
     return;
   }
 
-  if (customerClientId) {
-    const customer = (store.customers || []).find((item) => item.client_id === customerClientId);
-    const client = (store.clients || []).find((item) => item.id === customerClientId && item.client_type === "customer");
+  const resolvedCustomerClientId = clientLookupId
+    ? normalizeText((store.customers || []).find((item) => item.client_id === clientLookupId)?.client_id)
+    : customerClientId;
+  const resolvedTravelGroupId = clientLookupId
+    ? normalizeText((store.travel_groups || []).find((item) => item.id === clientLookupId || item.client_id === clientLookupId)?.id)
+    : travelGroupId;
+
+  if (resolvedCustomerClientId) {
+    const customer = (store.customers || []).find((item) => item.client_id === resolvedCustomerClientId);
+    const client = (store.clients || []).find((item) => item.id === resolvedCustomerClientId && item.client_type === "customer");
     if (!customer || !client) {
       sendJson(res, 422, { error: "Customer client not found" });
       return;
     }
-    booking.client_id = customerClientId;
+    booking.client_id = resolvedCustomerClientId;
     booking.updated_at = nowIso();
     syncBookingClientFields(store, booking);
     addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Assigned to customer ${customer.name}`);
@@ -653,12 +661,12 @@ async function handlePatchBookingClient(req, res, [bookingId]) {
     return;
   }
 
-  if (!travelGroupId) {
-    sendJson(res, 422, { error: "customer_client_id or travel_group_id is required" });
+  if (!resolvedTravelGroupId) {
+    sendJson(res, 422, { error: "customer_client_id, travel_group_id, or client_lookup_id is required" });
     return;
   }
 
-  const travelGroup = (store.travel_groups || []).find((item) => item.id === travelGroupId);
+  const travelGroup = (store.travel_groups || []).find((item) => item.id === resolvedTravelGroupId);
   const client = travelGroup
     ? (store.clients || []).find((item) => item.id === travelGroup.client_id && item.client_type === "travel_group")
     : null;
