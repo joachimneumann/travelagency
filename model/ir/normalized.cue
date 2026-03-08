@@ -166,6 +166,12 @@ IR: {
 				{name: "group_name", kind: "scalar", typeName: "string", required: true},
 				{name: "group_contact_customer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "traveler_customer_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
+				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_duration", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "archived_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -231,8 +237,9 @@ IR: {
 				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "duration", kind: "scalar", typeName: "string", required: false},
-				{name: "budget", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_duration", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -583,8 +590,9 @@ IR: {
 				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "duration", kind: "scalar", typeName: "string", required: false},
-				{name: "budget", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_duration", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
@@ -636,6 +644,17 @@ IR: {
 			sourceType: "api.#BookingClientCreateCustomerRequest"
 			fields: [
 				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingClientCreateGroupRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingClientCreateGroupRequest"
+			fields: [
+				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+				{name: "group_name", kind: "scalar", typeName: "string", required: true},
+				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: false},
 			]
 		},
 		{
@@ -819,6 +838,12 @@ IR: {
 				{name: "group_name", kind: "scalar", typeName: "string", required: false},
 				{name: "group_contact_customer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "traveler_customer_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_duration", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

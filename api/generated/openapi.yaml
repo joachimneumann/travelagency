@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-08T10:45:00Z
+# 2026-03-08T17:29:40Z
 
 ---
 openapi: 3.1.0
@@ -3324,6 +3324,24 @@ components:
           type: array
           items:
             type: string
+        travel_month:
+          type: string
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        travel_duration:
+          type: string
+          nullable: true
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -3452,11 +3470,14 @@ components:
         number_of_travelers:
           type: integer
           nullable: true
-        duration:
+        travel_duration:
           type: string
           nullable: true
-        budget:
-          type: string
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
           nullable: true
         preferredCurrency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
@@ -3978,11 +3999,14 @@ components:
         number_of_travelers:
           type: integer
           nullable: true
-        duration:
+        travel_duration:
           type: string
           nullable: true
-        budget:
-          type: string
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
           nullable: true
         preferredCurrency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
@@ -4056,6 +4080,19 @@ components:
       required: []
       properties:
         booking_hash:
+          type: string
+          nullable: true
+    BookingClientCreateGroupRequest:
+      type: object
+      required:
+      - group_name
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        group_name:
+          type: string
+        customer_client_id:
           type: string
           nullable: true
     BookingGroupMemberCreateRequest:
@@ -4361,6 +4398,24 @@ components:
           type: array
           items:
             type: string
+        travel_month:
+          type: string
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        travel_duration:
+          type: string
+          nullable: true
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
     ErrorResponse:
       type: object
       required:
@@ -4714,6 +4769,51 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/BookingClientCreateCustomerRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{bookingId}/client/create-group":
+    post:
+      operationId: booking_client_create_group
+      summary: Booking Client Create Group
+      tags:
+      - V1
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingClientCreateGroupRequest"
       responses:
         '200':
           description: Success

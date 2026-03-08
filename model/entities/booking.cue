@@ -77,8 +77,9 @@ import (
 	style?: [...string]
 	travelMonth?:         string
 	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
-	duration?:            string
-	budget?:              string
+	travel_duration?:     string
+	budget_lower_USD?:    >=0 & int
+	budget_upper_USD?:    >=0 & int
 	preferredCurrency?:   enums.#CurrencyCode
 	notes?:               string
 	pricing:              #BookingPricing

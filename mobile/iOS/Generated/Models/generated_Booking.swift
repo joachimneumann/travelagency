@@ -160,8 +160,9 @@
     let style: [String]?
     let travelMonth: String?
     let number_of_travelers: Int?
-    let duration: String?
-    let budget: String?
+    let travel_duration: String?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
     let preferredCurrency: GeneratedCurrencyCode?
     let notes: String?
     let service_level_agreement_due_at: String?
@@ -186,8 +187,9 @@
         case style = "style"
         case travelMonth = "travelMonth"
         case number_of_travelers = "number_of_travelers"
-        case duration = "duration"
-        case budget = "budget"
+        case travel_duration = "travel_duration"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
         case preferredCurrency = "preferredCurrency"
         case notes = "notes"
         case service_level_agreement_due_at = "service_level_agreement_due_at"

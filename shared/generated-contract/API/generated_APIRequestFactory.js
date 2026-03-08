@@ -216,6 +216,23 @@ export function bookingClientCreateCustomerRequest({ baseURL = '', params = {}, 
   };
 }
 
+export function bookingClientCreateGroupPath(params = {}) {
+  return buildPath("/api/v1/bookings/{bookingId}/client/create-group", params);
+}
+
+export function bookingClientCreateGroupRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingClientCreateGroupPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_client_create_group",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingGroupMembersPath(params = {}) {
   return buildPath("/api/v1/bookings/{bookingId}/client/members", params);
 }

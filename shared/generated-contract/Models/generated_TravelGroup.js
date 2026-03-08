@@ -15,6 +15,12 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
     schemaField({"name":"group_name","required":true,"wireName":"group_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"group_contact_customer_id","required":false,"wireName":"group_contact_customer_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"traveler_customer_ids","required":false,"wireName":"traveler_customer_ids"}, SHARED_FIELD_DEFS.FIELD_14),
+    schemaField({"name":"travel_month","required":false,"wireName":"travel_month"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"travel_duration","required":false,"wireName":"travel_duration"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"budget_lower_USD","required":false,"wireName":"budget_lower_USD"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"budget_upper_USD","required":false,"wireName":"budget_upper_USD"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":true,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"archived_at","required":false,"wireName":"archived_at"}, SHARED_FIELD_DEFS.FIELD_5)

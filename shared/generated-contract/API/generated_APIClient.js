@@ -36,6 +36,8 @@ case "booking_client":
   return RequestFactory.bookingClientRequest(options);
 case "booking_client_create_customer":
   return RequestFactory.bookingClientCreateCustomerRequest(options);
+case "booking_client_create_group":
+  return RequestFactory.bookingClientCreateGroupRequest(options);
 case "booking_group_members":
   return RequestFactory.bookingGroupMembersRequest(options);
 case "booking_pricing":

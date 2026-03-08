@@ -11,6 +11,7 @@ import {
   bookingChatRequest,
   bookingClientRequest,
   bookingClientCreateCustomerRequest,
+  bookingClientCreateGroupRequest,
   bookingDetailRequest,
   bookingInvoicesRequest,
   bookingNoteRequest,
@@ -66,6 +67,7 @@ const state = {
   travelGroup: null,
   submittedCustomer: null,
   clientAssignmentPanelOpen: false,
+  clientAssignmentGroupName: "",
   customerCandidates: [],
   originalClientKey: null,
   staff: [],
@@ -123,10 +125,15 @@ const els = {
   clientChangeBtn: document.getElementById("bookingClientChangeBtn"),
   clientAssignmentPanel: document.getElementById("bookingClientAssignmentPanel"),
   clientAssignmentTitle: document.getElementById("bookingClientAssignmentTitle"),
+  clientAssignmentSummary: document.getElementById("bookingClientAssignmentSummary"),
+  clientGroupNameField: document.getElementById("bookingClientGroupNameField"),
+  clientGroupNameInput: document.getElementById("bookingClientGroupNameInput"),
+  clientSelectTitle: document.getElementById("bookingClientSelectTitle"),
+  clientSimilarControls: document.getElementById("bookingClientSimilarControls"),
   suggestedCustomerSelect: document.getElementById("bookingSuggestedCustomerSelect"),
   assignCustomerBtn: document.getElementById("bookingAssignCustomerBtn"),
-  clientLookupInput: document.getElementById("bookingClientLookupInput"),
-  clientLookupBtn: document.getElementById("bookingClientLookupBtn"),
+  createCustomerBtn: document.getElementById("bookingCreateCustomerBtn"),
+  createGroupBtn: document.getElementById("bookingCreateGroupBtn"),
   clientStatus: document.getElementById("bookingClientStatus"),
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
@@ -255,9 +262,15 @@ async function init() {
   if (els.clientChangeBtn) els.clientChangeBtn.addEventListener("click", toggleClientAssignmentPanel);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.suggestedCustomerSelect) els.suggestedCustomerSelect.addEventListener("change", updateClientAssignmentButtons);
-  if (els.clientLookupInput) els.clientLookupInput.addEventListener("input", updateClientAssignmentButtons);
+  if (els.clientGroupNameInput) {
+    els.clientGroupNameInput.addEventListener("input", () => {
+      state.clientAssignmentGroupName = els.clientGroupNameInput.value || "";
+      updateClientAssignmentButtons();
+    });
+  }
   if (els.assignCustomerBtn) els.assignCustomerBtn.addEventListener("click", assignSelectedCustomer);
-  if (els.clientLookupBtn) els.clientLookupBtn.addEventListener("click", assignLookupClient);
+  if (els.createCustomerBtn) els.createCustomerBtn.addEventListener("click", createAndAssignCustomer);
+  if (els.createGroupBtn) els.createGroupBtn.addEventListener("click", createAndAssignGroupWithNewCustomer);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingPanel) {
@@ -409,6 +422,14 @@ async function copyHeroIdToClipboard() {
 function renderBookingData() {
   if (!state.booking) return;
   const booking = state.booking;
+  const formatBudgetRange = (lower, upper) => {
+    const numericLower = Number(lower);
+    const numericUpper = Number(upper);
+    if (!Number.isFinite(numericLower) && !Number.isFinite(numericUpper)) return null;
+    if (Number.isFinite(numericLower) && Number.isFinite(numericUpper)) return `$${numericLower}-$${numericUpper}`;
+    if (Number.isFinite(numericLower)) return `$${numericLower}+`;
+    return `Up to $${numericUpper}`;
+  };
   const sections = [
     {
       title: "Booking",
@@ -420,8 +441,8 @@ function renderBookingData() {
         ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
         ["travel_month", booking.travel_month],
         ["number_of_travelers", booking.number_of_travelers],
-        ["duration", booking.duration],
-        ["budget", booking.budget],
+        ["travel_duration", booking.travel_duration],
+        ["budget_range_USD", formatBudgetRange(booking.budget_lower_USD, booking.budget_upper_USD)],
         ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],
         ["updated_at", formatDateTime(booking.updated_at)]
@@ -525,6 +546,9 @@ function applyBookingClientPayload(payload = {}) {
   state.travelGroup = payload.travelGroup || null;
   state.submittedCustomer = payload.submittedCustomer || null;
   state.customerCandidates = Array.isArray(payload.customerCandidates) ? payload.customerCandidates : [];
+  if (!state.clientAssignmentGroupName && state.travelGroup?.group_name) {
+    state.clientAssignmentGroupName = state.travelGroup.group_name;
+  }
   if (state.originalClientKey === null) {
     state.originalClientKey = currentClientKey();
   }
@@ -534,6 +558,28 @@ function currentClientKey() {
   if (state.travelGroup?.id) return `group:${state.travelGroup.id}`;
   if (state.customer?.client_id) return `customer:${state.customer.client_id}`;
   return "none";
+}
+
+function isGroupBookingAssignment() {
+  return Number(state.booking?.number_of_travelers || 0) > 1;
+}
+
+function submittedCustomerLabel() {
+  const submitted = state.submittedCustomer || {};
+  const submittedParts = [submitted.name, submitted.email, submitted.phone_number].filter(Boolean);
+  return submittedParts.length ? submittedParts.join(", ") : "No submitted customer information";
+}
+
+function submittedCustomerName() {
+  return normalizeText(state.submittedCustomer?.name) || "";
+}
+
+function currentGroupNameDraft() {
+  return normalizeText(state.clientAssignmentGroupName) || "";
+}
+
+function canCreateCustomerFromBooking() {
+  return Boolean(submittedCustomerName());
 }
 
 function renderClientPanel() {
@@ -556,21 +602,38 @@ function renderClientPanel() {
     els.clientAssignmentPanel.hidden = !state.clientAssignmentPanelOpen;
     els.clientAssignmentPanel.classList.toggle("is-open", state.clientAssignmentPanelOpen);
   }
-  const submitted = state.submittedCustomer || {};
-  const submittedParts = [submitted.name, submitted.email, submitted.phone_number].filter(Boolean);
-  const submittedLabel = submittedParts.length ? submittedParts.join(", ") : "No submitted customer information";
+  const groupMode = isGroupBookingAssignment();
+  const hasCandidates = (state.customerCandidates || []).length > 0;
+  const suggestedGroupName = state.travelGroup?.group_name || submittedCustomerName();
+  if (!state.clientAssignmentGroupName && suggestedGroupName) {
+    state.clientAssignmentGroupName = suggestedGroupName;
+  }
   if (els.clientAssignmentTitle) {
-    els.clientAssignmentTitle.textContent = `Information in booking form: ${submittedLabel}`;
+    els.clientAssignmentTitle.textContent = groupMode ? "Assign to a travel group" : "Assign to a customer";
+  }
+  if (els.clientAssignmentSummary) {
+    els.clientAssignmentSummary.textContent = `Information in booking form: ${submittedCustomerLabel()}`;
+  }
+  if (els.clientGroupNameField) {
+    els.clientGroupNameField.hidden = !groupMode;
+  }
+  if (els.clientGroupNameInput) {
+    if (els.clientGroupNameInput.value !== state.clientAssignmentGroupName) {
+      els.clientGroupNameInput.value = state.clientAssignmentGroupName;
+    }
+    els.clientGroupNameInput.disabled = !state.permissions.canEditBooking || !groupMode;
+  }
+  if (els.clientSelectTitle) {
+    els.clientSelectTitle.hidden = !groupMode;
   }
   if (els.suggestedCustomerSelect) {
-    const options = ['<option value="">Similar Customers</option>']
+    const options = ['<option value="">Similar Customer</option>']
       .concat(
         (state.customerCandidates || []).map((candidate) => {
           const parts = [candidate.name, candidate.email, candidate.phone_number].filter(Boolean).join(" · ");
           return `<option value="${escapeHtml(candidate.customer_client_id)}">${escapeHtml(parts || candidate.customer_client_id)}</option>`;
         })
       )
-      .concat('<option value="__create_new_customer__">create new customer</option>')
       .join("");
     const currentValue = els.suggestedCustomerSelect.value;
     els.suggestedCustomerSelect.innerHTML = options;
@@ -579,8 +642,20 @@ function renderClientPanel() {
       : "";
     els.suggestedCustomerSelect.disabled = !state.permissions.canEditBooking;
   }
-  if (els.clientLookupInput) {
-    els.clientLookupInput.disabled = !state.permissions.canEditBooking;
+  if (els.clientSimilarControls) {
+    els.clientSimilarControls.hidden = !hasCandidates;
+  }
+  if (els.createCustomerBtn) {
+    els.createCustomerBtn.hidden = groupMode;
+    els.createCustomerBtn.textContent = submittedCustomerName()
+      ? `create a new customer for ${submittedCustomerName()}`
+      : "create a new customer";
+  }
+  if (els.createGroupBtn) {
+    els.createGroupBtn.hidden = !groupMode;
+    els.createGroupBtn.textContent = submittedCustomerName()
+      ? `create the group contact for ${submittedCustomerName()}`
+      : "create the group contact";
   }
   updateClientAssignmentButtons();
 }
@@ -596,23 +671,27 @@ function toggleClientAssignmentPanel() {
 }
 
 function updateClientAssignmentButtons() {
+  const groupMode = isGroupBookingAssignment();
+  const hasGroupName = Boolean(currentGroupNameDraft());
   if (els.assignCustomerBtn) {
     const selectedValue = normalizeText(els.suggestedCustomerSelect?.value) || "";
-    els.assignCustomerBtn.textContent = selectedValue === "__create_new_customer__" ? "Create" : "Select";
+    els.assignCustomerBtn.textContent = "Select";
     els.assignCustomerBtn.disabled =
-      !state.permissions.canEditBooking || !selectedValue;
+      !state.permissions.canEditBooking || !selectedValue || (groupMode && !hasGroupName);
   }
-  if (els.clientLookupBtn) {
-    els.clientLookupBtn.disabled =
-      !state.permissions.canEditBooking || !(normalizeText(els.clientLookupInput?.value) || "");
+  if (els.createCustomerBtn) {
+    els.createCustomerBtn.disabled = !state.permissions.canEditBooking || !canCreateCustomerFromBooking();
+  }
+  if (els.createGroupBtn) {
+    els.createGroupBtn.disabled = !state.permissions.canEditBooking || !canCreateCustomerFromBooking() || !hasGroupName;
   }
 }
 
 async function assignSelectedCustomer() {
   const customerClientId = normalizeText(els.suggestedCustomerSelect?.value);
   if (!state.permissions.canEditBooking || !state.booking || !customerClientId) return;
-  if (customerClientId === "__create_new_customer__") {
-    await createAndAssignCustomer();
+  if (isGroupBookingAssignment()) {
+    await createAndAssignGroup(customerClientId);
     return;
   }
   const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
@@ -625,26 +704,6 @@ async function assignSelectedCustomer() {
   });
   if (!result?.booking) return;
   applyBookingClientPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-    setClientStatus("");
-}
-
-async function assignLookupClient() {
-  const clientLookupId = normalizeText(els.clientLookupInput?.value);
-  if (!state.permissions.canEditBooking || !state.booking || !clientLookupId) return;
-  const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash,
-      client_lookup_id: clientLookupId
-    }
-  });
-  if (!result?.booking) return;
-  applyBookingClientPayload(result);
-  if (els.clientLookupInput) els.clientLookupInput.value = "";
   renderBookingHeader();
   renderBookingData();
   renderActionControls();
@@ -685,6 +744,38 @@ async function createAndAssignCustomer() {
   renderBookingData();
   renderActionControls();
   setClientStatus("New customer created and assigned.");
+}
+
+async function createAndAssignGroup(customerClientId = null) {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  const groupName = currentGroupNameDraft();
+  if (!groupName) {
+    setClientStatus("Group name is required.");
+    return;
+  }
+  const request = bookingClientCreateGroupRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      booking_hash: state.booking.booking_hash,
+      group_name: groupName,
+      customer_client_id: customerClientId || undefined
+    }
+  });
+  if (!result?.booking) return;
+  applyBookingClientPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  setClientStatus("Travel group created and assigned.");
+}
+
+async function createAndAssignGroupWithNewCustomer() {
+  if (!canCreateCustomerFromBooking()) {
+    setClientStatus("Submitted customer name is required.");
+    return;
+  }
+  await createAndAssignGroup();
 }
 
 function renderPricingPanel() {

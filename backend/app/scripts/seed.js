@@ -29,7 +29,12 @@ const MONTHS = [
   "December"
 ];
 const DURATIONS = ["5-7 days", "7-10 days", "10-14 days", "14-18 days"];
-const BUDGETS = ["$1500-$2500", "$2500-$3500", "$3500-$5000", "$5000+"];
+const BUDGETS = [
+  { lower: 1500, upper: 2500 },
+  { lower: 2500, upper: 3500 },
+  { lower: 3500, upper: 5000 },
+  { lower: 5000, upper: null }
+];
 
 const FIRST_NAMES = ["Alex", "Jordan", "Taylor", "Sam", "Chris", "Riley", "Jamie", "Morgan", "Casey", "Robin"];
 const LAST_NAMES = ["Nguyen", "Tran", "Smith", "Garcia", "Lee", "Brown", "Martin", "Wilson", "Khan", "Patel"];
@@ -120,6 +125,7 @@ async function main() {
     store.clients.push(client);
     store.customers.push(customer);
 
+    const budget = pick(BUDGETS);
     const booking = {
       id: `booking_${randomUUID()}`,
       client_id: client.id,
@@ -135,8 +141,9 @@ async function main() {
       style,
       travel_month: pick(MONTHS),
       number_of_travelers: randomInt(1, 6),
-      duration: pick(DURATIONS),
-      budget: pick(BUDGETS),
+      travel_duration: pick(DURATIONS),
+      budget_lower_USD: budget.lower,
+      budget_upper_USD: budget.upper,
       notes: "Seeded test booking",
       source: {
         page_url: "https://asiatravelplan.com/",

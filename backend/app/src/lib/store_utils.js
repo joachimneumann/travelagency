@@ -18,6 +18,19 @@ export function createStoreUtils({
   convertBookingPricingToBaseCurrency,
   convertBookingOfferToBaseCurrency
 }) {
+  function parseLegacyBudgetRange(value) {
+    const text = normalizeText(value);
+    if (!text || /[€₫฿]/.test(text)) return { budget_lower_USD: null, budget_upper_USD: null };
+    const matches = text.match(/\d[\d,]*/g) || [];
+    const numbers = matches
+      .map((item) => Number.parseInt(item.replace(/,/g, ""), 10))
+      .filter((item) => Number.isInteger(item) && item >= 0);
+    if (!numbers.length) return { budget_lower_USD: null, budget_upper_USD: null };
+    if (text.includes("+")) return { budget_lower_USD: numbers[0], budget_upper_USD: null };
+    if (numbers.length >= 2) return { budget_lower_USD: numbers[0], budget_upper_USD: numbers[1] };
+    return { budget_lower_USD: numbers[0], budget_upper_USD: null };
+  }
+
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
@@ -43,6 +56,16 @@ export function createStoreUtils({
     parsed.chat_events ||= [];
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       syncBookingAtpStaffFields(booking);
+      if (!booking.travel_duration && booking.duration) {
+        booking.travel_duration = normalizeText(booking.duration) || null;
+      }
+      if (booking.budget_lower_USD === undefined && booking.budget_upper_USD === undefined) {
+        const budgetRange = parseLegacyBudgetRange(booking.budget);
+        booking.budget_lower_USD = budgetRange.budget_lower_USD;
+        booking.budget_upper_USD = budgetRange.budget_upper_USD;
+      }
+      delete booking.duration;
+      delete booking.budget;
       booking.pricing = normalizeBookingPricing(booking.pricing);
       booking.offer = normalizeBookingOffer(booking.offer, getBookingPreferredCurrency(booking));
       booking.pricing = await convertBookingPricingToBaseCurrency(booking.pricing);

@@ -32,8 +32,9 @@ import Foundation
     let style: [String]?
     let travelMonth: String?
     let number_of_travelers: Int?
-    let duration: String?
-    let budget: String?
+    let travel_duration: String?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
     let preferredCurrency: GeneratedCurrencyCode?
     let name: String?
     let email: String?
@@ -51,8 +52,9 @@ import Foundation
         case style = "style"
         case travelMonth = "travelMonth"
         case number_of_travelers = "number_of_travelers"
-        case duration = "duration"
-        case budget = "budget"
+        case travel_duration = "travel_duration"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
         case preferredCurrency = "preferredCurrency"
         case name = "name"
         case email = "email"
@@ -159,6 +161,19 @@ import Foundation
 
         private enum CodingKeys: String, CodingKey {
         case booking_hash = "booking_hash"
+        }
+
+    }
+
+    struct GeneratedBookingClientCreateGroupRequest: Codable, Equatable {
+    let booking_hash: String?
+    let group_name: String
+    let customer_client_id: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case booking_hash = "booking_hash"
+        case group_name = "group_name"
+        case customer_client_id = "customer_client_id"
         }
 
     }
@@ -459,12 +474,24 @@ import Foundation
     let group_name: String?
     let group_contact_customer_id: String?
     let traveler_customer_ids: [String]?
+    let travel_month: String?
+    let number_of_travelers: Int?
+    let travel_duration: String?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
+    let notes: String?
 
         private enum CodingKeys: String, CodingKey {
         case travel_group_hash = "travel_group_hash"
         case group_name = "group_name"
         case group_contact_customer_id = "group_contact_customer_id"
         case traveler_customer_ids = "traveler_customer_ids"
+        case travel_month = "travel_month"
+        case number_of_travelers = "number_of_travelers"
+        case travel_duration = "travel_duration"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
+        case notes = "notes"
         }
 
     }

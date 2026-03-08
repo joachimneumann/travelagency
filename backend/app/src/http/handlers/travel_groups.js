@@ -1,6 +1,16 @@
 import { normalizeText } from "../../../../../shared/js/text.js";
 
-const TRAVEL_GROUP_UPDATE_FIELDS = new Set(["group_name", "group_contact_customer_id", "traveler_customer_ids"]);
+const TRAVEL_GROUP_UPDATE_FIELDS = new Set([
+  "group_name",
+  "group_contact_customer_id",
+  "traveler_customer_ids",
+  "travel_month",
+  "number_of_travelers",
+  "travel_duration",
+  "budget_lower_USD",
+  "budget_upper_USD",
+  "notes"
+]);
 
 export function createTravelGroupHandlers(deps) {
   const {
@@ -26,6 +36,14 @@ export function createTravelGroupHandlers(deps) {
     return Array.from(
       new Set((Array.isArray(group?.traveler_customer_ids) ? group.traveler_customer_ids : []).map((id) => normalizeText(id)).filter(Boolean))
     );
+  }
+
+  function normalizeOptionalInt(value, { min = 0 } = {}) {
+    const text = normalizeText(value);
+    if (!text) return null;
+    const parsed = Number.parseInt(text, 10);
+    if (!Number.isInteger(parsed) || parsed < min) return null;
+    return parsed;
   }
 
   function memberCustomersForGroup(store, group) {
@@ -61,6 +79,12 @@ export function createTravelGroupHandlers(deps) {
       group_contact_customer_id: normalizeText(group?.group_contact_customer_id) || null,
       group_contact_customer_name: normalizeText(groupContactCustomer?.name) || null,
       traveler_customer_ids: memberCustomerIdsForGroup(group),
+      travel_month: normalizeText(group?.travel_month) || null,
+      number_of_travelers: Number.isInteger(group?.number_of_travelers) ? group.number_of_travelers : null,
+      travel_duration: normalizeText(group?.travel_duration) || null,
+      budget_lower_USD: Number.isInteger(group?.budget_lower_USD) ? group.budget_lower_USD : null,
+      budget_upper_USD: Number.isInteger(group?.budget_upper_USD) ? group.budget_upper_USD : null,
+      notes: normalizeText(group?.notes) || null,
       travel_group_hash: computeTravelGroupHash(group)
     };
   }
@@ -136,6 +160,14 @@ export function createTravelGroupHandlers(deps) {
         create[key] = Array.isArray(value) ? Array.from(new Set(value.map((entry) => normalizeText(entry)).filter(Boolean))) : [];
         return;
       }
+      if (key === "number_of_travelers") {
+        create[key] = normalizeOptionalInt(value, { min: 1 });
+        return;
+      }
+      if (key === "budget_lower_USD" || key === "budget_upper_USD") {
+        create[key] = normalizeOptionalInt(value, { min: 0 });
+        return;
+      }
       create[key] = normalizeText(value);
     });
 
@@ -152,6 +184,14 @@ export function createTravelGroupHandlers(deps) {
       if (!TRAVEL_GROUP_UPDATE_FIELDS.has(key)) return;
       if (key === "traveler_customer_ids") {
         patch[key] = Array.isArray(value) ? Array.from(new Set(value.map((entry) => normalizeText(entry)).filter(Boolean))) : [];
+        return;
+      }
+      if (key === "number_of_travelers") {
+        patch[key] = normalizeOptionalInt(value, { min: 1 });
+        return;
+      }
+      if (key === "budget_lower_USD" || key === "budget_upper_USD") {
+        patch[key] = normalizeOptionalInt(value, { min: 0 });
         return;
       }
       patch[key] = normalizeText(value);
@@ -271,6 +311,12 @@ export function createTravelGroupHandlers(deps) {
       group_name: create.group_name,
       group_contact_customer_id: create.group_contact_customer_id || null,
       traveler_customer_ids: Array.isArray(create.traveler_customer_ids) ? create.traveler_customer_ids : [],
+      travel_month: create.travel_month || null,
+      number_of_travelers: Number.isInteger(create.number_of_travelers) ? create.number_of_travelers : null,
+      travel_duration: create.travel_duration || null,
+      budget_lower_USD: Number.isInteger(create.budget_lower_USD) ? create.budget_lower_USD : null,
+      budget_upper_USD: Number.isInteger(create.budget_upper_USD) ? create.budget_upper_USD : null,
+      notes: create.notes || null,
       created_at: now,
       updated_at: now,
       archived_at: null

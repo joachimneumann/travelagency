@@ -30,6 +30,27 @@ function optional(value) {
   return normalized || null;
 }
 
+function parseLegacyBudgetRange(value) {
+  const normalized = text(value);
+  if (!normalized || /[€₫฿]/.test(normalized)) {
+    return { budget_lower_USD: null, budget_upper_USD: null };
+  }
+  const matches = normalized.match(/\d[\d,]*/g) || [];
+  const numbers = matches
+    .map((item) => Number.parseInt(item.replace(/,/g, ""), 10))
+    .filter((item) => Number.isInteger(item) && item >= 0);
+  if (!numbers.length) {
+    return { budget_lower_USD: null, budget_upper_USD: null };
+  }
+  if (normalized.includes("+")) {
+    return { budget_lower_USD: numbers[0], budget_upper_USD: null };
+  }
+  if (numbers.length >= 2) {
+    return { budget_lower_USD: numbers[0], budget_upper_USD: numbers[1] };
+  }
+  return { budget_lower_USD: numbers[0], budget_upper_USD: null };
+}
+
 function currencyCode(value) {
   const normalized = text(value).toUpperCase();
   return normalized || null;
@@ -112,8 +133,9 @@ function computeBookingHash(booking) {
     style: arrayOfStrings(booking?.style),
     travel_month: booking?.travel_month || null,
     number_of_travelers: booking?.number_of_travelers ?? null,
-    duration: booking?.duration || null,
-    budget: booking?.budget || null,
+    travel_duration: booking?.travel_duration || booking?.duration || null,
+    budget_lower_USD: booking?.budget_lower_USD ?? null,
+    budget_upper_USD: booking?.budget_upper_USD ?? null,
     preferred_currency: booking?.preferred_currency || null,
     notes: booking?.notes || null,
     pricing: booking?.pricing || null,
@@ -209,6 +231,7 @@ async function main() {
 
   const travelGroupById = new Map(normalizedTravelGroups.map((group) => [group.id, group]));
   const normalizedBookings = bookings.map((booking) => {
+    const budgetRange = parseLegacyBudgetRange(booking.budget);
     const normalized = {
       ...booking,
       id: text(booking.id),
@@ -225,8 +248,9 @@ async function main() {
       style: arrayOfStrings(booking.style),
       travel_month: optional(booking.travel_month),
       number_of_travelers: booking.number_of_travelers ?? null,
-      duration: optional(booking.duration),
-      budget: optional(booking.budget),
+      travel_duration: optional(booking.travel_duration || booking.duration),
+      budget_lower_USD: booking.budget_lower_USD ?? budgetRange.budget_lower_USD,
+      budget_upper_USD: booking.budget_upper_USD ?? budgetRange.budget_upper_USD,
       preferred_currency: currencyCode(booking.preferred_currency),
       notes: optional(booking.notes),
       pricing: booking.pricing || null,

@@ -132,6 +132,7 @@ Admin API:
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/client`
 - `POST /api/v1/bookings/:bookingId/client/create-customer`
+- `POST /api/v1/bookings/:bookingId/client/create-group`
 - `POST /api/v1/bookings/:bookingId/client/members`
 - `PATCH /api/v1/bookings/:bookingId/owner`
 - `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
@@ -216,7 +217,28 @@ Branded frontend backoffice pages (served by website):
   - change staff assignment
   - change stage
   - edit the single booking note
+  - change client assignment from booking form information
 - Travel groups have dedicated list/detail/update endpoints and can be created from `backend.html`.
+
+Booking client assignment from `booking.html`:
+- The page keeps the `change` button next to the current client.
+- Opening the panel shows `Information in booking form: ...` built from the submitted booking name, email, and phone number.
+- Similar customers are ranked by similarity before display.
+  - exact/similar phone number has the highest weight
+  - exact email has the next highest weight
+  - name similarity is used as a weaker fallback
+- If `number_of_travelers` is missing or `1`:
+  - if at least one similar customer exists, show a dropdown whose first option is `Similar Customer`
+  - the `Select` button stays disabled until a customer is chosen
+  - assigning that customer updates non-empty submitted fields on the customer: `name`, `email`, `phone_number`, `preferred_language`, `preferred_currency`
+  - the panel also shows `create a new customer for {name}`; this creates a new customer from the submitted booking form fields and assigns the booking to that customer
+- If `number_of_travelers` is greater than `1`:
+  - show a required `group name` field
+  - show `Select group contact:`
+  - if similar customers exist, show the same similarity-sorted dropdown and keep `Select` disabled until both a customer and a non-empty group name are provided
+  - show `create the group contact for {name}`; this stays disabled until `group name` is filled and the submitted booking name exists
+  - selecting or creating the group contact creates a travel group, sets `group_contact_customer_id`, assigns the booking to that group, and copies these booking fields into the group:
+    `travel_month`, `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
 
 Booking concurrency model:
 - every booking read model includes `booking_hash`
@@ -384,17 +406,18 @@ curl -X POST http://localhost:8787/public/v1/bookings \
     "destination": "Vietnam",
     "style": "Adventure",
     "travelMonth": "November",
-    "duration": "10-14 days",
-    "travelers": "2",
-    "budget": "$2500-$3500",
+    "travel_duration": "10-14 days",
+    "number_of_travelers": 2,
+    "budget_lower_USD": 2500,
+    "budget_upper_USD": 3500,
     "name": "Alex Morgan",
     "email": "alex@example.com",
-    "phone": "+1 415 555 0100",
-    "language": "English",
+    "phone_number": "+1 415 555 0100",
+    "preferred_language": "English",
     "notes": "Interested in private guides and food tours",
-    "utm_source": "google",
-    "utm_medium": "cpc",
-    "utm_campaign": "sea_winter",
+    "utmSource": "google",
+    "utmMedium": "cpc",
+    "utmCampaign": "sea_winter",
     "pageUrl": "https://asiatravelplan.com/",
     "referrer": "https://google.com"
   }'

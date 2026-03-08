@@ -183,6 +183,7 @@ Delivered endpoints and features:
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/client`
 - `POST /api/v1/bookings/:bookingId/client/create-customer`
+- `POST /api/v1/bookings/:bookingId/client/create-group`
 - `POST /api/v1/bookings/:bookingId/client/members`
 - `PATCH /api/v1/bookings/:bookingId/owner`
 - `PATCH /api/v1/bookings/:bookingId/notes`
@@ -217,7 +218,22 @@ Delivered endpoints and features:
 - Branded frontend backoffice pages:
   - `/backend.html` (filters + pagination for customers, travel groups, bookings, tours)
   - `/customer.html` (customer profile detail/edit page)
-  - `/booking.html` (role-aware staff/stage/note actions, booking client conversion, group member management)
+  - `/booking.html` (role-aware staff/stage/note actions, booking client assignment, group member management)
+
+`booking.html` client assignment behavior:
+- The page keeps a `change` action next to the current client.
+- Similar-customer suggestions are ranked primarily by phone number, then by email, then by name similarity.
+- For bookings with no `number_of_travelers` or with `number_of_travelers = 1`:
+  - show a `Similar Customer` dropdown only when at least one similar customer exists
+  - enable `Select` only after a customer is chosen
+  - assigning an existing customer also updates non-empty submitted booking fields on that customer (`name`, `email`, `phone_number`, `preferred_language`, `preferred_currency`)
+  - support `create a new customer for {name}` from the submitted booking form data
+- For bookings with `number_of_travelers > 1`:
+  - require a `group name`
+  - show `Select group contact:`
+  - allow choosing a similar customer as group contact or creating a new group contact from the booking form
+  - once a group contact is selected/created, create the travel group, assign the booking to it, and persist these booking fields on the group:
+    `travel_month`, `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)
 
@@ -307,7 +323,7 @@ Frontend changes:
 Backend endpoint:
 - `POST /public/v1/bookings`
 - Accepts:
-  - destination, style, month, travelers, duration, budget
+  - destination, style, month, travelers, travel_duration, budget_lower_USD, budget_upper_USD
   - name, email, phone/whatsapp, language
   - notes, utm_source/utm_medium/utm_campaign, page_url
   - backend additionally captures request `ip_address` and `ip_country_guess`

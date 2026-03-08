@@ -18,6 +18,7 @@
     static let bookingNote = "/api/v1/bookings/{bookingId}/notes"
     static let bookingClient = "/api/v1/bookings/{bookingId}/client"
     static let bookingClientCreateCustomer = "/api/v1/bookings/{bookingId}/client/create-customer"
+    static let bookingClientCreateGroup = "/api/v1/bookings/{bookingId}/client/create-group"
     static let bookingGroupMembers = "/api/v1/bookings/{bookingId}/client/members"
     static let bookingPricing = "/api/v1/bookings/{bookingId}/pricing"
     static let bookingOffer = "/api/v1/bookings/{bookingId}/offer"
@@ -89,6 +90,10 @@ static func bookingClientPath(bookingId: String) -> String {
 
 static func bookingClientCreateCustomerPath(bookingId: String) -> String {
     "/api/v1/bookings/\(bookingId)/client/create-customer"
+}
+
+static func bookingClientCreateGroupPath(bookingId: String) -> String {
+    "/api/v1/bookings/\(bookingId)/client/create-group"
 }
 
 static func bookingGroupMembersPath(bookingId: String) -> String {
@@ -210,6 +215,10 @@ static func bookingClientURL(baseURL: URL, bookingId: String, queryItems: [URLQu
 
 static func bookingClientCreateCustomerURL(baseURL: URL, bookingId: String, queryItems: [URLQueryItem] = []) -> URL {
     buildURL(baseURL: baseURL, path: bookingClientCreateCustomerPath(bookingId: bookingId), queryItems: queryItems)
+}
+
+static func bookingClientCreateGroupURL(baseURL: URL, bookingId: String, queryItems: [URLQueryItem] = []) -> URL {
+    buildURL(baseURL: baseURL, path: bookingClientCreateGroupPath(bookingId: bookingId), queryItems: queryItems)
 }
 
 static func bookingGroupMembersURL(baseURL: URL, bookingId: String, queryItems: [URLQueryItem] = []) -> URL {

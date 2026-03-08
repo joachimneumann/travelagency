@@ -61,8 +61,18 @@
               <div id="bookingClientAssignmentPanel" class="booking-client-assignment-panel" hidden>
                 <div class="booking-client-assignment-panel__inner">
                   <h3 id="bookingClientAssignmentTitle" class="booking-client-assignment-title">Assign to a customer</h3>
+                  <p id="bookingClientAssignmentSummary" class="booking-client-assignment-subtitle" style="margin: 0 0 0.75rem;"></p>
 
-                  <div class="backend-controls booking-client-assign-controls">
+                  <div id="bookingClientGroupNameField" class="field" hidden>
+                    <label for="bookingClientGroupNameInput">group name</label>
+                    <input id="bookingClientGroupNameInput" type="text" placeholder="enter the group name" />
+                  </div>
+
+                  <h4 id="bookingClientSelectTitle" class="booking-client-assignment-title booking-client-assignment-subtitle" style="margin: 0.75rem 0 0.4rem;" hidden>
+                    Select group contact:
+                  </h4>
+
+                  <div id="bookingClientSimilarControls" class="backend-controls booking-client-assign-controls" hidden>
                     <div class="field booking-client-assign-controls__grow">
                       <select id="bookingSuggestedCustomerSelect"></select>
                     </div>
@@ -71,14 +81,9 @@
                     </div>
                   </div>
 
-                  <div class="backend-controls booking-client-assign-controls booking-client-assign-controls--lookup">
-                    <div class="field booking-client-assign-controls__grow">
-                      <label for="bookingClientLookupInput" class="booking-client-assignment-title booking-client-assignment-subtitle">Use Customer ID or Travel Group ID</label>
-                      <input id="bookingClientLookupInput" type="text" placeholder="enter the long ID (client_xxxxxx)" />
-                    </div>
-                    <div class="field booking-client-assign-controls__action">
-                      <button class="btn btn-primary" id="bookingClientLookupBtn" type="button" disabled>Select</button>
-                    </div>
+                  <div class="backend-controls" style="margin-top: 0.75rem;">
+                    <button class="btn btn-primary" id="bookingCreateCustomerBtn" type="button">create a new customer</button>
+                    <button class="btn btn-primary" id="bookingCreateGroupBtn" type="button" hidden>create the group contact</button>
                   </div>
                 </div>
               </div>

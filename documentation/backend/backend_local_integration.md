@@ -84,17 +84,18 @@ curl -X POST http://localhost:8787/public/v1/bookings \
     "destination": "Vietnam",
     "style": "Adventure",
     "travelMonth": "2026-11",
-    "duration": "9-12 days",
-    "travelers": "2",
-    "budget": "$900-$1,400 / week",
+    "travel_duration": "9-12 days",
+    "number_of_travelers": 2,
+    "budget_lower_USD": 900,
+    "budget_upper_USD": 1400,
     "name": "Alex Morgan",
     "email": "alex@example.com",
-    "phone": "+1 415 555 0100",
-    "language": "English",
+    "phone_number": "+1 415 555 0100",
+    "preferred_language": "English",
     "notes": "Interested in family-friendly options",
-    "utm_source": "google",
-    "utm_medium": "cpc",
-    "utm_campaign": "asiatravelplan_local_test",
+    "utmSource": "google",
+    "utmMedium": "cpc",
+    "utmCampaign": "asiatravelplan_local_test",
     "pageUrl": "http://localhost:8080/",
     "referrer": "https://google.com"
   }'
@@ -165,6 +166,7 @@ Branded backend web UI:
 - customer IDs open `customer.html`
 - travel group IDs can be opened from the travel-groups section in `backend.html`
 - booking IDs open `booking.html`
+- in `booking.html`, the client `change` flow uses booking form data to either assign a similar customer or create a customer/group contact; multi-traveler bookings require a `group name` and create a travel group with booking trip context
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
 - Clicking `backend` triggers Keycloak login (`/auth/login`) in the main window and returns to `backend.html`.

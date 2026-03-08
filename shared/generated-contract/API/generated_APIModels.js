@@ -45,8 +45,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"style","required":false,"wireName":"style"}, SHARED_FIELD_DEFS.FIELD_14),
     schemaField({"name":"travelMonth","required":false,"wireName":"travelMonth"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_7),
-    schemaField({"name":"duration","required":false,"wireName":"duration"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"budget","required":false,"wireName":"budget"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"travel_duration","required":false,"wireName":"travel_duration"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"budget_lower_USD","required":false,"wireName":"budget_lower_USD"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"budget_upper_USD","required":false,"wireName":"budget_upper_USD"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"preferredCurrency","required":false,"wireName":"preferredCurrency"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"name","required":false,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"email","required":false,"wireName":"email"}, SHARED_FIELD_DEFS.FIELD_2),
@@ -177,6 +178,22 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateBookingClientCreateCustomerRequest(value) {
         return validateShape(value, BOOKING_CLIENT_CREATE_CUSTOMER_REQUEST_SCHEMA);
+      }
+
+      export const BOOKING_CLIENT_CREATE_GROUP_REQUEST_SCHEMA = {
+        name: "BookingClientCreateGroupRequest",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.BookingClientCreateGroupRequest",
+        fields: [
+    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"group_name","required":true,"wireName":"group_name"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"customer_client_id","required":false,"wireName":"customer_client_id"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateBookingClientCreateGroupRequest(value) {
+        return validateShape(value, BOOKING_CLIENT_CREATE_GROUP_REQUEST_SCHEMA);
       }
 
       export const BOOKING_GROUP_MEMBER_CREATE_REQUEST_SCHEMA = {
@@ -495,7 +512,13 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"travel_group_hash","required":false,"wireName":"travel_group_hash"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"group_name","required":false,"wireName":"group_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"group_contact_customer_id","required":false,"wireName":"group_contact_customer_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"traveler_customer_ids","required":false,"wireName":"traveler_customer_ids"}, SHARED_FIELD_DEFS.FIELD_14)
+    schemaField({"name":"traveler_customer_ids","required":false,"wireName":"traveler_customer_ids"}, SHARED_FIELD_DEFS.FIELD_14),
+    schemaField({"name":"travel_month","required":false,"wireName":"travel_month"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"travel_duration","required":false,"wireName":"travel_duration"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"budget_lower_USD","required":false,"wireName":"budget_lower_USD"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"budget_upper_USD","required":false,"wireName":"budget_upper_USD"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 

@@ -16,6 +16,7 @@
     case bookingNote
     case bookingClient
     case bookingClientCreateCustomer
+    case bookingClientCreateGroup
     case bookingGroupMembers
     case bookingPricing
     case bookingOffer
@@ -51,6 +52,7 @@
         case .bookingNote: return "PATCH"
         case .bookingClient: return "PATCH"
         case .bookingClientCreateCustomer: return "POST"
+        case .bookingClientCreateGroup: return "POST"
         case .bookingGroupMembers: return "POST"
         case .bookingPricing: return "PATCH"
         case .bookingOffer: return "PATCH"

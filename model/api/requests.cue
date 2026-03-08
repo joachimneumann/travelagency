@@ -16,8 +16,9 @@ import (
 	style?:             [...string]
 	travelMonth?:       string
 	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
-	duration?:          string
-	budget?:            string
+	travel_duration?:   string
+	budget_lower_USD?:  >=0 & int
+	budget_upper_USD?:  >=0 & int
 	preferredCurrency?: enums.#CurrencyCode
 	name?:              string
 	email?:             common.#Email
@@ -50,6 +51,12 @@ import (
 
 #BookingClientCreateCustomerRequest: {
 	booking_hash?: string
+}
+
+#BookingClientCreateGroupRequest: {
+	booking_hash?:       string
+	group_name:          string
+	customer_client_id?: string
 }
 
 #BookingGroupMemberCreateRequest: {
@@ -119,10 +126,22 @@ import (
 	group_name?:                string
 	group_contact_customer_id?: string
 	traveler_customer_ids?:     [...string]
+	travel_month?:              string
+	number_of_travelers?:       >=common.#MinTravelers & <=common.#MaxTravelers & int
+	travel_duration?:           string
+	budget_lower_USD?:          >=0 & int
+	budget_upper_USD?:          >=0 & int
+	notes?:                     string
 }
 
 #TravelGroupCreateRequest: {
 	group_name:                 string
 	group_contact_customer_id?: string
 	traveler_customer_ids?:     [...string]
+	travel_month?:              string
+	number_of_travelers?:       >=common.#MinTravelers & <=common.#MaxTravelers & int
+	travel_duration?:           string
+	budget_lower_USD?:          >=0 & int
+	budget_upper_USD?:          >=0 & int
+	notes?:                     string
 }

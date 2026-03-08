@@ -19,16 +19,29 @@ struct BookingSummaryDetailView: View {
                 if let travelers = booking.number_of_travelers {
                     LabeledContent("Travelers", value: String(travelers))
                 }
-                if let duration = booking.duration, !duration.isEmpty {
-                    LabeledContent("Duration", value: duration)
+                if let travelDuration = booking.travel_duration, !travelDuration.isEmpty {
+                    LabeledContent("Travel duration", value: travelDuration)
                 }
-                if let budget = booking.budget, !budget.isEmpty {
-                    LabeledContent("Budget", value: budget)
+                if let budgetRange = formatBudgetRange(lower: booking.budget_lower_USD, upper: booking.budget_upper_USD) {
+                    LabeledContent("Budget (USD)", value: budgetRange)
                 }
                 LabeledContent("ATP staff", value: booking.atp_staff_name ?? "Unassigned")
             }
         }
         .navigationTitle("Booking")
         .modifier(InlineNavigationTitleDisplayModeModifier())
+    }
+
+    private func formatBudgetRange(lower: Int?, upper: Int?) -> String? {
+        if let lower, let upper {
+            return "$\(lower)-$\(upper)"
+        }
+        if let lower {
+            return "$\(lower)+"
+        }
+        if let upper {
+            return "Up to $\(upper)"
+        }
+        return nil
     }
 }

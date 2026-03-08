@@ -164,7 +164,7 @@ Current inventory:
 - Multi-step form (`#bookingForm`) with validation
 
 Step 1: Trip basics
-- destination, style, month, travelers, travel duration, budget
+- destination, style, month, travelers, travel duration, budget lower/upper in USD
 
 Step 2: Contact details
 - name, email, phone/WhatsApp, language

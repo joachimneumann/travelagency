@@ -106,6 +106,27 @@ function compactNameForMatch(value) {
   return normalizeNameForMatch(value).replace(/\s+/g, "");
 }
 
+function parseLegacyBudgetRange(value) {
+  const text = normalizeText(value);
+  if (!text || /[€₫฿]/.test(text)) {
+    return { budget_lower_USD: null, budget_upper_USD: null };
+  }
+  const matches = text.match(/\d[\d,]*/g) || [];
+  const numbers = matches
+    .map((item) => Number.parseInt(item.replace(/,/g, ""), 10))
+    .filter((item) => Number.isInteger(item) && item >= 0);
+  if (!numbers.length) {
+    return { budget_lower_USD: null, budget_upper_USD: null };
+  }
+  if (text.includes("+")) {
+    return { budget_lower_USD: numbers[0], budget_upper_USD: null };
+  }
+  if (numbers.length >= 2) {
+    return { budget_lower_USD: numbers[0], budget_upper_USD: numbers[1] };
+  }
+  return { budget_lower_USD: numbers[0], budget_upper_USD: null };
+}
+
 function levenshteinDistance(left, right) {
   const a = String(left || "");
   const b = String(right || "");
@@ -172,7 +193,31 @@ function buildSubmittedCustomer(booking) {
   return {
     name: normalizeText(booking?.source?.submitted_name) || null,
     email: normalizeEmail(booking?.source?.submitted_email) || null,
-    phone_number: normalizePhone(booking?.source?.submitted_phone_number) || null
+    phone_number: normalizePhone(booking?.source?.submitted_phone_number) || null,
+    preferred_language: normalizeText(booking?.source?.submitted_preferred_language) || null,
+    preferred_currency: normalizeText(booking?.source?.submitted_preferred_currency) || null
+  };
+}
+
+function mergeSubmittedBookingFieldsIntoCustomer(customer, booking) {
+  if (!customer) return customer;
+  const submittedCustomer = buildSubmittedCustomer(booking);
+  if (submittedCustomer.name) customer.name = submittedCustomer.name;
+  if (submittedCustomer.email) customer.email = submittedCustomer.email;
+  if (submittedCustomer.phone_number) customer.phone_number = submittedCustomer.phone_number;
+  if (submittedCustomer.preferred_language) customer.preferred_language = submittedCustomer.preferred_language;
+  if (submittedCustomer.preferred_currency) customer.preferred_currency = submittedCustomer.preferred_currency;
+  return customer;
+}
+
+function buildTravelGroupFieldsFromBooking(booking) {
+  return {
+    travel_month: normalizeText(booking?.travel_month) || null,
+    number_of_travelers: Number.isInteger(booking?.number_of_travelers) ? booking.number_of_travelers : null,
+    travel_duration: normalizeText(booking?.travel_duration) || null,
+    budget_lower_USD: Number.isInteger(booking?.budget_lower_USD) ? booking.budget_lower_USD : null,
+    budget_upper_USD: Number.isInteger(booking?.budget_upper_USD) ? booking.budget_upper_USD : null,
+    notes: normalizeText(booking?.notes) || null
   };
 }
 
@@ -309,6 +354,7 @@ function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, compu
     group_name: normalizeText(booking.client_display_name || customer?.name) || "Travel group",
     group_contact_customer_id: customer?.client_id || null,
     traveler_customer_ids: customer?.client_id ? [customer.client_id] : [],
+    ...buildTravelGroupFieldsFromBooking(booking),
     created_at: createdAt,
     updated_at: createdAt,
     archived_at: null
@@ -414,12 +460,17 @@ async function handleCreateBooking(req, res) {
   }
 
   const inputPhoneNumber = normalizePhone(payload.phone_number);
-  const inputPreferredLanguage = normalizeText(payload.preferred_language) || "English";
+  const inputPreferredLanguage = normalizeText(payload.preferred_language) || null;
+  const submittedPreferredCurrencyRaw = normalizeText(payload.preferredCurrency || payload.preferred_currency);
+  const inputPreferredCurrency = submittedPreferredCurrencyRaw ? safeCurrency(submittedPreferredCurrencyRaw) : null;
   const now = nowIso();
 
-  const preferredCurrency = safeCurrency(payload.preferredCurrency || payload.preferred_currency || BASE_CURRENCY);
+  const preferredCurrency = inputPreferredCurrency || safeCurrency(BASE_CURRENCY);
   const selectedTourId = normalizeText(payload.tourId || payload.tour_id);
   const selectedTourTitle = normalizeText(payload.tourTitle || payload.tour_title);
+  const legacyBudgetRange = parseLegacyBudgetRange(payload.budget);
+  const budgetLowerUSD = normalizeText(payload.budget_lower_USD) ? safeInt(payload.budget_lower_USD) : legacyBudgetRange.budget_lower_USD;
+  const budgetUpperUSD = normalizeText(payload.budget_upper_USD) ? safeInt(payload.budget_upper_USD) : legacyBudgetRange.budget_upper_USD;
 
   const booking = {
     id: `booking_${randomUUID()}`,
@@ -436,8 +487,9 @@ async function handleCreateBooking(req, res) {
     style: normalizeStringArray(payload.style),
     travel_month: normalizeText(payload.travelMonth),
     number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
-    duration: normalizeText(payload.duration),
-    budget: normalizeText(payload.budget),
+    travel_duration: normalizeText(payload.travel_duration || payload.duration),
+    budget_lower_USD: Number.isInteger(budgetLowerUSD) ? budgetLowerUSD : null,
+    budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
     preferred_currency: preferredCurrency,
     notes: normalizeText(payload.notes),
     pricing: defaultBookingPricing(),
@@ -455,7 +507,8 @@ async function handleCreateBooking(req, res) {
       submitted_name: normalizeText(payload.name) || null,
       submitted_email: normalizeEmail(payload.email) || null,
       submitted_phone_number: inputPhoneNumber || null,
-      submitted_preferred_language: inputPreferredLanguage || null
+      submitted_preferred_language: inputPreferredLanguage || null,
+      submitted_preferred_currency: inputPreferredCurrency || null
     },
     idempotency_key: idempotencyKey || null,
     created_at: now,
@@ -705,6 +758,9 @@ async function handlePatchBookingClient(req, res, [bookingId]) {
       sendJson(res, 422, { error: "Customer client not found" });
       return;
     }
+    mergeSubmittedBookingFieldsIntoCustomer(customer, booking);
+    customer.updated_at = nowIso();
+    customer.customer_hash = computeCustomerHash(customer);
     booking.client_id = resolvedCustomerClientId;
     booking.updated_at = nowIso();
     syncBookingClientFields(store, booking);
@@ -775,12 +831,14 @@ async function handleCreateBookingCustomer(req, res, [bookingId]) {
   const customer = {
     client_id: customerClient.id,
     name: customerName,
-    email: normalizeEmail(submittedCustomer.email) || null,
-    phone_number: normalizePhone(submittedCustomer.phone_number) || null,
-    preferred_language: normalizeText(booking?.source?.submitted_preferred_language) || null,
+    email: null,
+    phone_number: null,
+    preferred_language: null,
+    preferred_currency: null,
     created_at: createdAt,
     updated_at: createdAt
   };
+  mergeSubmittedBookingFieldsIntoCustomer(customer, booking);
   customer.customer_hash = computeCustomerHash(customer);
 
   if (!Array.isArray(store.clients)) store.clients = [];
@@ -791,6 +849,113 @@ async function handleCreateBookingCustomer(req, res, [bookingId]) {
   booking.updated_at = createdAt;
   syncBookingClientFields(store, booking);
   addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Created and assigned customer ${customer.name}`);
+  await persistStore(store);
+  sendJson(res, 201, await buildBookingClientResponse(store, booking));
+}
+
+async function handleCreateBookingGroup(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+  const groupName = normalizeText(payload.group_name);
+  if (!groupName) {
+    sendJson(res, 422, { error: "group_name is required" });
+    return;
+  }
+
+  let groupContactCustomer = null;
+  const existingCustomerClientId = normalizeText(payload.customer_client_id);
+  const createdAt = nowIso();
+
+  if (existingCustomerClientId) {
+    groupContactCustomer = (store.customers || []).find((item) => item.client_id === existingCustomerClientId);
+    const existingClient = (store.clients || []).find((item) => item.id === existingCustomerClientId && item.client_type === "customer");
+    if (!groupContactCustomer || !existingClient) {
+      sendJson(res, 422, { error: "Customer client not found" });
+      return;
+    }
+    mergeSubmittedBookingFieldsIntoCustomer(groupContactCustomer, booking);
+    groupContactCustomer.updated_at = createdAt;
+    groupContactCustomer.customer_hash = computeCustomerHash(groupContactCustomer);
+  } else {
+    const submittedCustomer = buildSubmittedCustomer(booking);
+    const customerName = normalizeText(submittedCustomer.name);
+    if (!customerName) {
+      sendJson(res, 422, { error: "Submitted customer name is missing" });
+      return;
+    }
+    const customerClient = {
+      id: `client_${randomUUID()}`,
+      client_type: "customer"
+    };
+    customerClient.client_hash = computeClientHash(customerClient);
+    groupContactCustomer = {
+      client_id: customerClient.id,
+      name: customerName,
+      email: null,
+      phone_number: null,
+      preferred_language: null,
+      preferred_currency: null,
+      created_at: createdAt,
+      updated_at: createdAt
+    };
+    mergeSubmittedBookingFieldsIntoCustomer(groupContactCustomer, booking);
+    groupContactCustomer.customer_hash = computeCustomerHash(groupContactCustomer);
+    if (!Array.isArray(store.clients)) store.clients = [];
+    if (!Array.isArray(store.customers)) store.customers = [];
+    store.clients.push(customerClient);
+    store.customers.push(groupContactCustomer);
+  }
+
+  if (!Array.isArray(store.clients)) store.clients = [];
+  if (!Array.isArray(store.travel_groups)) store.travel_groups = [];
+
+  const groupClient = {
+    id: `client_${randomUUID()}`,
+    client_type: "travel_group"
+  };
+  groupClient.client_hash = computeClientHash(groupClient);
+
+  const travelGroup = {
+    id: `travel_group_${randomUUID()}`,
+    client_id: groupClient.id,
+    group_name: groupName,
+    group_contact_customer_id: groupContactCustomer.client_id,
+    traveler_customer_ids: [],
+    ...buildTravelGroupFieldsFromBooking(booking),
+    created_at: createdAt,
+    updated_at: createdAt,
+    archived_at: null
+  };
+  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup);
+
+  store.clients.push(groupClient);
+  store.travel_groups.push(travelGroup);
+  booking.client_id = groupClient.id;
+  booking.updated_at = createdAt;
+  syncBookingClientFields(store, booking);
+  addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Created and assigned travel group ${travelGroup.group_name}`);
+
   await persistStore(store);
   sendJson(res, 201, await buildBookingClientResponse(store, booking));
 }
@@ -1458,6 +1623,7 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
     handleListBookingChatEvents,
     handlePatchBookingClient,
     handleCreateBookingCustomer,
+    handleCreateBookingGroup,
     handleCreateBookingGroupMember,
     handlePatchBookingStage,
     handlePatchBookingOwner,

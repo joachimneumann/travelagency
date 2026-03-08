@@ -49,10 +49,34 @@ const MAX_TRAVELERS = Number.isFinite(Number(GENERATED_MAX_TRAVELERS)) &&
   ? Number(GENERATED_MAX_TRAVELERS)
   : 30;
 const BOOKING_BUDGET_OPTIONS = {
-  USD: ["not decided yet", "$500-$900 / week", "$900-$1,400 / week", "$1,400-$2,200 / week", "$2,200+ / week"],
-  EURO: ["not decided yet", "€450-€800 / week", "€800-€1,250 / week", "€1,250-€2,000 / week", "€2,000+ / week"],
-  VND: ["not decided yet", "12,000,000₫-22,000,000₫ / week", "22,000,000₫-35,000,000₫ / week", "35,000,000₫-55,000,000₫ / week", "55,000,000₫+ / week"],
-  THB: ["not decided yet", "17,000฿-30,000฿ / week", "30,000฿-47,000฿ / week", "47,000฿-74,000฿ / week", "74,000฿+ / week"]
+  USD: [
+    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
+    { value: "usd_500_900", label: "$500-$900 / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
+    { value: "usd_900_1400", label: "$900-$1,400 / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
+    { value: "usd_1400_2200", label: "$1,400-$2,200 / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
+    { value: "usd_2200_plus", label: "$2,200+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
+  ],
+  EURO: [
+    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
+    { value: "usd_500_900", label: "€450-€800 / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
+    { value: "usd_900_1400", label: "€800-€1,250 / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
+    { value: "usd_1400_2200", label: "€1,250-€2,000 / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
+    { value: "usd_2200_plus", label: "€2,000+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
+  ],
+  VND: [
+    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
+    { value: "usd_500_900", label: "12,000,000₫-22,000,000₫ / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
+    { value: "usd_900_1400", label: "22,000,000₫-35,000,000₫ / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
+    { value: "usd_1400_2200", label: "35,000,000₫-55,000,000₫ / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
+    { value: "usd_2200_plus", label: "55,000,000₫+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
+  ],
+  THB: [
+    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
+    { value: "usd_500_900", label: "17,000฿-30,000฿ / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
+    { value: "usd_900_1400", label: "30,000฿-47,000฿ / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
+    { value: "usd_1400_2200", label: "47,000฿-74,000฿ / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
+    { value: "usd_2200_plus", label: "74,000฿+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
+  ]
 };
 
 const els = {
@@ -273,14 +297,20 @@ function renderBudgetOptions(currencyCode) {
   const options = BOOKING_BUDGET_OPTIONS[currency] || BOOKING_BUDGET_OPTIONS[DEFAULT_BOOKING_CURRENCY];
   const previousValue = els.bookingBudget.value;
   els.bookingBudget.innerHTML = "";
-  options.forEach((optionValue) => {
+  options.forEach((optionConfig) => {
     const option = document.createElement("option");
-    option.value = optionValue;
-    option.textContent = optionValue === "not decided yet" ? "Not decided yet" : optionValue;
+    option.value = optionConfig.value;
+    option.textContent = optionConfig.label;
     els.bookingBudget.appendChild(option);
   });
-  els.bookingBudget.value = options.includes(previousValue) ? previousValue : "not decided yet";
+  els.bookingBudget.value = options.some((optionConfig) => optionConfig.value === previousValue) ? previousValue : "not_decided_yet";
   els.bookingBudgetLabel.textContent = `Budget range (${currency})`;
+}
+
+function getSelectedBudgetOption(currencyCode, value) {
+  const currency = normalizeCurrencyCode(currencyCode);
+  const options = BOOKING_BUDGET_OPTIONS[currency] || BOOKING_BUDGET_OPTIONS[DEFAULT_BOOKING_CURRENCY];
+  return options.find((option) => option.value === value) || options[0];
 }
 
 async function loadWebsiteAuthStatus() {
@@ -1137,6 +1167,10 @@ async function submitBookingForm() {
   const selectedStyles = formData.getAll("style").map((value) => normalizeText(value)).filter(Boolean);
   const rawTravelersValue = normalizeText(entries.number_of_travelers);
   const travelersValue = rawTravelersValue ? Number.parseInt(rawTravelersValue, 10) : null;
+  const selectedBudgetOption = getSelectedBudgetOption(
+    entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY,
+    entries.budget_range || "not_decided_yet"
+  );
 
   if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS)) {
     renderBookingError(`Travelers must be between ${MIN_TRAVELERS} and ${MAX_TRAVELERS}.`);
@@ -1154,9 +1188,10 @@ async function submitBookingForm() {
     style: selectedStyles,
     travelMonth: entries.travelMonth || "",
     preferredCurrency: normalizeCurrencyCode(entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY),
-    duration: entries.duration || "",
+    travel_duration: entries.travel_duration || "",
     number_of_travelers: travelersValue,
-    budget: entries.budget || "",
+    budget_lower_USD: selectedBudgetOption.budgetLowerUSD,
+    budget_upper_USD: selectedBudgetOption.budgetUpperUSD,
     name: entries.name || "",
     email: entries.email || "",
     phone_number: entries.phone || "",

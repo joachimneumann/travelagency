@@ -169,6 +169,17 @@
         ]
       },
       {
+        key: "booking_client_create_group",
+        path: "/api/v1/bookings/{bookingId}/client/create-group",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingClientCreateGroupRequest",
+        responseType: "BookingClientCreateCustomerResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_group_members",
         path: "/api/v1/bookings/{bookingId}/client/members",
         method: "POST",
