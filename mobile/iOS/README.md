@@ -22,7 +22,8 @@ Current scope:
 Included now:
 - Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
 - project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `~/projects/travelagency/api/generated/openapi.yaml`
+- generator: `~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb`
+- generated contract: `~/projects/travelagency/api/generated/openapi.yaml`
 - generated models: `~/projects/travelagency/mobile/iOS/Generated`
 - URL scheme registration in `Resources/Info.plist`
 - PKCE authorization code exchange against Keycloak
@@ -35,7 +36,12 @@ Included now:
   - if backend reports a conflict, reload booking data and discard local edits
   - save via `PATCH /api/v1/bookings/:bookingId/notes`
 
-Regenerate the contract artifacts after changing the OpenAPI file:
+Contract/codegen notes:
+- edit `model/` or `tools/generator/`, then regenerate; do not hand-edit `api/generated/openapi.yaml`
+- `api/generated/mobile-api.meta.json` carries the generated `modelVersion`, endpoint registry, and catalogs
+- JS runtimes consume `shared/generated-contract/` through re-export modules, while iOS gets standalone Swift files in `mobile/iOS/Generated/`
+
+Regenerate the contract artifacts after changing `model/` or `tools/generator/`:
 
 ```bash
 ruby ~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb

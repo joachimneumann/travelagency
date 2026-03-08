@@ -134,16 +134,32 @@ ATP uses this derivation flow:
 
 ### 3.1 Current implementation note
 
-The generated contract is the target transport contract, but ATP currently still has a small set of hand-written endpoints that are not yet modeled in `model/api/`.
+ATP now implements Layer 1 as a CUE model under `model/`.
 
-Examples include:
-- integration endpoints (for example Meta/WhatsApp webhook paths)
-- selected admin/internal helper endpoints
-- selected booking chat transport shapes
+Current source structure:
+- `model/root.cue` composes `model/entities/`, `model/api/`, `model/common/`, and `model/enums/`
+- `model/ir/normalized.cue` exports the normalized IR used by the generator
+- `model/ir/catalogs.cue` exports enum catalogs and currency metadata
 
-These should be treated as transitional and either:
-- moved into the abstract model + generated contract flow, or
-- explicitly documented as runtime-internal and non-contract.
+Current generation flow:
+1. `cue export ./ir -e IR` produces the normalized model IR
+2. `cue export ./api -e #TravelerConstraints` exports traveler constraints
+3. `tools/generator/generate_mobile_contract_artifacts.rb` writes:
+   - `api/generated/openapi.yaml`
+   - `api/generated/mobile-api.meta.json`
+   - `shared/generated-contract/` JS modules
+   - backend/frontend generated JS re-export modules
+   - iOS generated Swift files
+
+The generated contract is the main transport contract, but ATP still has a small set of hand-written or partially modeled endpoints outside that flow.
+
+Current exceptions include:
+- Meta webhook integration endpoints
+- `POST /api/v1/offers/exchange-rates`
+- `POST /api/v1/atp_staff`
+- tour write/upload endpoints (`POST/PATCH /api/v1/tours`, `POST /api/v1/tours/:tourId/image`)
+
+These should either move into `model/api/` or stay explicitly documented as runtime-internal.
 
 ## 4. Runtime Responsibilities
 
@@ -198,109 +214,145 @@ ATP keeps the model split explicit:
 - `model/entities/` contains core domain entities
 - `model/api/` contains transport-only payloads
 
-### 5.1 Backend
+### 5.1 Generated contract artifacts
+
+- `~/projects/travelagency/api/generated/openapi.yaml`
+- `~/projects/travelagency/api/generated/mobile-api.meta.json`
+- `~/projects/travelagency/api/generated/README.md`
+
+`openapi.yaml` is the generated OpenAPI 3.1 contract.
+
+`mobile-api.meta.json` contains:
+- `modelVersion`
+- `generatorVersion`
+- endpoint registry
+- enum catalogs
+- traveler constraints
+- generated timestamp metadata
+
+### 5.2 Shared JS contract
+
+- `~/projects/travelagency/shared/generated-contract/Models/generated_Currency.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_Language.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_ATPStaff.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_Booking.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_Customer.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_TravelGroup.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_Aux.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_FormConstraints.js`
+- `~/projects/travelagency/shared/generated-contract/Models/generated_SchemaRuntime.js`
+- `~/projects/travelagency/shared/generated-contract/API/generated_APIRuntime.js`
+- `~/projects/travelagency/shared/generated-contract/API/generated_APIModels.js`
+- `~/projects/travelagency/shared/generated-contract/API/generated_APIRequestFactory.js`
+- `~/projects/travelagency/shared/generated-contract/API/generated_APIClient.js`
+
+This is the canonical JS contract output.
+
+### 5.3 Backend JS re-export modules
 
 - `~/projects/travelagency/backend/app/Generated/Models/generated_Currency.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_Language.js`
 - `~/projects/travelagency/backend/app/Generated/Models/generated_ATPStaff.js`
 - `~/projects/travelagency/backend/app/Generated/Models/generated_Booking.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_Customer.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_TravelGroup.js`
 - `~/projects/travelagency/backend/app/Generated/Models/generated_Aux.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_FormConstraints.js`
+- `~/projects/travelagency/backend/app/Generated/Models/generated_SchemaRuntime.js`
+- `~/projects/travelagency/backend/app/Generated/API/generated_APIRuntime.js`
 - `~/projects/travelagency/backend/app/Generated/API/generated_APIModels.js`
 - `~/projects/travelagency/backend/app/Generated/API/generated_APIRequestFactory.js`
 - `~/projects/travelagency/backend/app/Generated/API/generated_APIClient.js`
 
-`generated_Booking.js` includes booking-related structures for:
+Backend JS generated files re-export `shared/generated-contract/` so the runtime uses one canonical JS contract.
 
-- pricing
-- payments
-- invoices
-- booking-related activities
-
-### 5.2 Frontend
+### 5.4 Frontend JS re-export modules
 
 - `~/projects/travelagency/frontend/Generated/Models/generated_Currency.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_Language.js`
 - `~/projects/travelagency/frontend/Generated/Models/generated_ATPStaff.js`
 - `~/projects/travelagency/frontend/Generated/Models/generated_Booking.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_Customer.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_TravelGroup.js`
 - `~/projects/travelagency/frontend/Generated/Models/generated_Aux.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_FormConstraints.js`
+- `~/projects/travelagency/frontend/Generated/Models/generated_SchemaRuntime.js`
+- `~/projects/travelagency/frontend/Generated/API/generated_APIRuntime.js`
 - `~/projects/travelagency/frontend/Generated/API/generated_APIModels.js`
 - `~/projects/travelagency/frontend/Generated/API/generated_APIRequestFactory.js`
 - `~/projects/travelagency/frontend/Generated/API/generated_APIClient.js`
 
-### 5.3 iOS
+Frontend JS generated files also re-export `shared/generated-contract/`.
+
+### 5.5 iOS generated Swift files
 
 - `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Currency.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Language.swift`
 - `~/projects/travelagency/mobile/iOS/Generated/Models/generated_ATPStaff.swift`
 - `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Booking.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Customer.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_TravelGroup.swift`
 - `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Aux.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_FormConstraints.swift`
+- `~/projects/travelagency/mobile/iOS/Generated/Models/generated_Enums.swift`
 - `~/projects/travelagency/mobile/iOS/Generated/API/generated_APIModels.swift`
 - `~/projects/travelagency/mobile/iOS/Generated/API/generated_APIRequestFactory.swift`
 - `~/projects/travelagency/mobile/iOS/Generated/API/generated_APIClient.swift`
 
 ## 6. Generated File Responsibilities
 
-### 6.1 `generated_Currency`
+### 6.1 Model bundles
+
+Current domain-oriented generated model bundles are:
+- `generated_Currency`
+- `generated_Language`
+- `generated_ATPStaff`
+- `generated_Booking`
+- `generated_Customer`
+- `generated_TravelGroup`
+- `generated_Aux`
+- `generated_FormConstraints`
+
+These files contain generated schemas, enums, metadata, and structural validators for the modeled types in their domain area.
+
+Examples:
+- `generated_Currency` contains currency catalog metadata and currency-code enums
+- `generated_Booking` contains booking, pricing, offer, payment, invoice, and activity structures
+- `generated_Customer` contains `Client`, `Customer`, `CustomerConsent`, and `CustomerDocument`
+- `generated_TravelGroup` contains `TravelGroup` and `TravelGroupMember`
+- `generated_FormConstraints` contains generated traveler-count limits and similar UI-facing constraints
+- `generated_Language` and `generated_Enums.swift` provide language and enum helpers for Swift/iOS output
+
+### 6.2 `generated_SchemaRuntime`
+
+Contains shared JS schema helpers used by generated validators and API models.
+
+### 6.3 `generated_APIRuntime`
 
 Contains:
+- endpoint registry
+- route metadata
+- contract version constants
+- shared endpoint lookup data
 
-- valid currencies
-- symbols
-- decimal places
-- canonical currency metadata
-- currency-related enums and helpers
+### 6.4 `generated_APIModels`
 
-### 6.2 `generated_ATPStaff`
+Contains transport-only request and response schemas derived from `model/api/` plus OpenAPI path definitions.
 
-Contains:
-
-- atp_staff transport structures
-- atp_staff roles
-- authenticated atp_staff payloads
-- atp_staff-related enums and helpers
-
-### 6.3 `generated_Booking`
-
-Contains:
-
-- booking entity structures
-- pricing structures
-- payment structures
-- invoice structures
-- booking-related enums
-
-Transport wrappers, list payloads, and endpoint-specific request or response shapes do not belong here.
-
-### 6.4 `generated_Aux`
-
-Contains:
-
-- supporting enums and model types not owned by Currency, ATPStaff, or Booking
-- non-transport shared value objects when they are not first-class entities
-
-Transport-only payloads do not belong here.
-
-Transport-only payloads belong in `model/api/` and in generated API-facing output, for example:
-
-- bootstrap structures
-- list wrappers
-- generic paging structures
-- error shapes
+Examples:
+- bootstrap payloads
+- list/detail wrappers
+- paging structures
 - endpoint-specific request and response payloads
+- generated validation helpers for those payloads
 
 ### 6.5 `generated_APIRequestFactory`
 
-Contains:
-
-- path builders
-- query builders
-- request payload helpers
-- API request construction helpers
+Contains path builders, query helpers, and request-construction helpers for generated endpoints.
 
 ### 6.6 `generated_APIClient`
 
-Contains:
-
-- typed API calls
-- response decoding entry points
-- transport-level request execution helpers
+Contains the generated client wrapper around the request factory for JS and Swift runtimes.
 
 
 ## 6.7 Entity and Transport Boundary
@@ -334,6 +386,7 @@ The generator is responsible for:
 
 - generating Layer 2 frontend and iOS API code
 - generating Layer 3 backend, frontend, and iOS models
+- emitting one canonical shared JS contract plus backend/frontend re-export layers
 - keeping runtime models aligned with the abstract model description and the generated API specification
 - separating generated code by domain area
 - keeping transport-only shapes in API-oriented output
@@ -350,38 +403,20 @@ The generator is not responsible for:
 
 ## 8. Current Implementation Status and Next Steps
 
-At the time of writing, the abstract model description (Layer 1) is not yet implemented as a separate artifact.
+ATP is already using the intended model-first flow.
 
-ATP currently uses:
+Current state:
+- `model/` is the implemented abstract model
+- `api/generated/openapi.yaml` is the generated transport contract
+- `mobile-api.meta.json` is the generated compatibility/catalog metadata consumed by tests and mobile bootstrap
+- backend/frontend/iOS generated sources are emitted from that contract
 
-- the backend model and business code as the practical source of domain truth
-- the generated OpenAPI specification (`api/generated/openapi.yaml`) as the transport contract and generator input
+Current contract rules:
+- field names in generated output come from the modeled field names; ATP currently preserves a mix of existing snake_case and camelCase names where the model requires them
+- finite status/type sets are generated as explicit enums
+- naming or shape changes must happen in `model/` and then be regenerated, not patched directly in `api/generated/`
 
-The goal is to evolve towards the full four-layer design by introducing a minimal abstract model description that sits above both the backend model and the generated API specification.
-
-### 8.1 Interim rules for the API contract
-
-Until the abstract model description is introduced, the following rules apply to the API contract:
-
-- JSON field names in the generated OpenAPI specification use **camelCase** consistently at the transport layer.
-- Status and type fields that have a finite set of values are modeled as **enums** in the generated OpenAPI specification, not as free-form strings.
-- Legacy or storage-oriented naming (for example, snake_case or database column names) is kept inside the backend and storage layers, not exposed as new transport field names.
-
-These rules keep the mobile and frontend models predictable while the abstract model is being designed.
-
-### 8.2 Planned abstract model introduction
-
-The planned next step is to introduce a minimal abstract model artifact that:
-
-- defines the core ATP entities (user, role, booking, customer, tour, pricing, payment, invoice, currency, stage, activity, permissions)
-- defines canonical field names and business meaning at the model level
-- feeds both the backend model generation and the API specification generation
-
-Once this abstract model exists, the intended derivation flow for ATP is:
-
-1. abstract model description → generated API specification
-2. abstract model description → generated backend model
-3. generated API specification → generated frontend and iOS API code and models
-4. generated backend model → storage adapters / storage model
-
-This keeps the ATP implementation aligned with the general architecture described in `software_architecture.md` while acknowledging the current incremental adoption path.
+Next steps:
+1. move the remaining hand-written endpoints into `model/api/`
+2. add missing request/response bodies for transitional endpoints already exposed by generated route constants
+3. keep backend contract tests aligned with `mobile-api.meta.json` and the generated request factory contract version

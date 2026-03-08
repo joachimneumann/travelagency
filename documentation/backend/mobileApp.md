@@ -6,7 +6,8 @@ Current implementation scaffold:
 - `~/projects/travelagency/mobile/iOS`
 - Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
 - project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- contract source: `~/projects/travelagency/api/generated/openapi.yaml`
+- generator: `~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb`
+- generated contract: `~/projects/travelagency/api/generated/openapi.yaml`
 
 The app scope is intentionally narrow:
 - allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
@@ -96,13 +97,35 @@ Logout behavior:
 The mobile app should treat the OpenAPI contract as the only stable interface.
 It should not infer response shapes from backend internals or JSON storage.
 
-Contract source of truth:
-- `~/projects/travelagency/api/generated/openapi.yaml`
+Model source of truth:
+- `~/projects/travelagency/model/entities/`
+- `~/projects/travelagency/model/api/`
+- `~/projects/travelagency/model/enums/`
+- `~/projects/travelagency/model/common/`
+- `~/projects/travelagency/model/ir/`
 
-Generated artifacts:
+Generated contract artifacts:
+- `~/projects/travelagency/api/generated/openapi.yaml`
 - `~/projects/travelagency/api/generated/mobile-api.meta.json`
+
+Generated runtime artifacts:
+- `~/projects/travelagency/shared/generated-contract/`
+- `~/projects/travelagency/frontend/Generated/`
+- `~/projects/travelagency/backend/app/Generated/`
 - `~/projects/travelagency/mobile/iOS/Generated/Models/`
 - `~/projects/travelagency/mobile/iOS/Generated/API/`
+
+Current generation flow:
+- `tools/generator/generate_mobile_contract_artifacts.rb` exports normalized IR from `model/ir` and traveler constraints from `model/api`
+- the generator writes the OpenAPI 3.1 contract and metadata into `api/generated/`
+- the generator writes the shared JS contract into `shared/generated-contract/`
+- backend and frontend JS generated files re-export those shared modules
+- iOS gets standalone Swift sources in `mobile/iOS/Generated/`
+
+Notes:
+- `api/generated/openapi.yaml` is generated output, not a hand-edited source file
+- `mobile-api.meta.json` carries catalogs, endpoint metadata, and the `modelVersion` used by `/public/v1/mobile/bootstrap`
+- some mutation paths are already generated as stable endpoint constants before all request bodies are fully modeled; keep backend docs authoritative for transitional payload details such as booking assignment (`atp_staff`)
 
 The mobile app should call backend APIs with bearer tokens:
 

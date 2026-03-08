@@ -110,33 +110,52 @@ This keeps backend business logic (bookings/customers/pipeline) separate from OI
 ## API Endpoints
 
 Public:
+- `GET /integrations/meta/webhook/status`
 - `GET /public/v1/mobile/bootstrap`
 - `POST /public/v1/bookings`
 - `GET /public/v1/tours`
 - `GET /public/v1/tour-images/:path`
+- `GET /public/v1/customer-photos/:path`
+- `GET /public/v1/customer-consent-evidence/:path`
 - `GET /integrations/meta/webhook` (Meta webhook verification challenge)
 - `POST /integrations/meta/webhook` (Meta webhook ingestion, read-only)
+- `GET /staging-access/login`
+- `POST /staging-access/login`
+- `GET /staging-access/check`
+- `GET /staging-access/logout`
 
 Admin API:
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
+- `DELETE /api/v1/bookings/:bookingId`
 - `GET /api/v1/bookings/:bookingId/chat` (read-only Meta chat timeline for booking/customer)
 - `PATCH /api/v1/bookings/:bookingId/stage`
+- `PATCH /api/v1/bookings/:bookingId/client`
+- `POST /api/v1/bookings/:bookingId/client/create-customer`
+- `POST /api/v1/bookings/:bookingId/client/members`
 - `PATCH /api/v1/bookings/:bookingId/owner`
 - `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
 - `PATCH /api/v1/bookings/:bookingId/pricing` (replace the booking commercials model)
 - `PATCH /api/v1/bookings/:bookingId/offer` (offers are normalized and converted to base currency before persistence)
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
+- `GET /api/v1/bookings/:bookingId/invoices`
+- `POST /api/v1/bookings/:bookingId/invoices`
+- `PATCH /api/v1/bookings/:bookingId/invoices/:invoiceId`
+- `GET /api/v1/invoices/:invoiceId/pdf`
 - `POST /api/v1/offers/exchange-rates` (preview converted offer line totals and total while editing display currency; frontend displays backend output directly)
 - `GET /api/v1/customers`
 - `GET /api/v1/customers/:customerId`
+- `PATCH /api/v1/customers/:customerId`
+- `DELETE /api/v1/customers/:customerId`
 - `POST /api/v1/customers/:customerId/consents`
 - `POST /api/v1/customers/:customerId/photo`
 - `GET /api/v1/travel_groups`
 - `GET /api/v1/travel_groups/:travelGroupId`
 - `PATCH /api/v1/travel_groups/:travelGroupId`
 - `POST /api/v1/travel_groups`
+- `DELETE /api/v1/travel_groups/:travelGroupId`
+- `DELETE /api/v1/travel_groups/:travelGroupId/members/:customerClientId`
 - `GET /api/v1/atp_staff`
 - `POST /api/v1/atp_staff`
 - `GET /api/v1/tours`
@@ -315,18 +334,34 @@ Auth:
 ## Mobile Contract
 
 The mobile app should not follow backend internals or `store.json` structure directly.
-The single contract source is:
-- [~/projects/travelagency/api/generated/openapi.yaml](~/projects/travelagency/api/generated/openapi.yaml)
+The model source of truth is:
+- [~/projects/travelagency/model/entities](~/projects/travelagency/model/entities)
+- [~/projects/travelagency/model/api](~/projects/travelagency/model/api)
+- [~/projects/travelagency/model/enums](~/projects/travelagency/model/enums)
+- [~/projects/travelagency/model/common](~/projects/travelagency/model/common)
+- [~/projects/travelagency/model/ir](~/projects/travelagency/model/ir)
 
-Generated artifacts:
+Generated contract artifacts:
+- [~/projects/travelagency/api/generated/openapi.yaml](~/projects/travelagency/api/generated/openapi.yaml)
 - [~/projects/travelagency/api/generated/mobile-api.meta.json](~/projects/travelagency/api/generated/mobile-api.meta.json)
+
+Generated runtime artifacts:
+- [~/projects/travelagency/shared/generated-contract](~/projects/travelagency/shared/generated-contract)
+- [~/projects/travelagency/backend/app/Generated](~/projects/travelagency/backend/app/Generated)
+- [~/projects/travelagency/frontend/Generated](~/projects/travelagency/frontend/Generated)
 - [~/projects/travelagency/mobile/iOS/Generated/Models](~/projects/travelagency/mobile/iOS/Generated/Models)
 - [~/projects/travelagency/mobile/iOS/Generated/API](~/projects/travelagency/mobile/iOS/Generated/API)
 
-Regenerate after editing the OpenAPI file:
+Notes:
+- `api/generated/openapi.yaml` and `mobile-api.meta.json` are generated outputs from `model/`, not hand-edited inputs
+- `/public/v1/mobile/bootstrap` currently returns `mobile-api.meta.json.modelVersion` as the app-facing contract version
+- backend/frontend generated JS files mostly re-export the shared contract in `shared/generated-contract/`
+
+Regenerate after editing `model/` or `tools/generator/`:
 
 ```bash
 ruby ~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
+ruby ~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
 ```
 
 Contract validation tests:

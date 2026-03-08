@@ -9,7 +9,7 @@ Scope decision:
 Primary goal:
 - Move AsiaTravelPlan from static booking capture to a production backend that runs the full booking -> quote -> confirmed trip operations lifecycle.
 
-## 1.1 Implementation Status (Updated March 6, 2026)
+## 1.1 Implementation Status (Updated March 8, 2026)
 
 Current implemented code lives in:
 - `backend/app/src/server.js`
@@ -27,6 +27,13 @@ Implemented now:
 - Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, staff assignment, Service Level Agreement timestamps, activity timeline)
 - Frontend booking form integration in `frontend/scripts/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling
 - Keycloak-protected `/api/v1/*` access via backend session cookie (browser) or Keycloak bearer token
+- CUE model-driven contract/codegen pipeline:
+  - source model in `model/`
+  - generated OpenAPI contract in `api/generated/openapi.yaml`
+  - generated metadata in `api/generated/mobile-api.meta.json`
+  - shared JS contract in `shared/generated-contract/`
+  - runtime re-exports in `backend/app/Generated/` and `frontend/Generated/`
+  - generated Swift artifacts in `mobile/iOS/Generated/`
 - Booking/customer list pagination and filtering
 - Keycloak OIDC auth flow implemented for backend (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`) with role gating
 - Auth internals refactored into dedicated module `src/auth.js` (route handlers, session state, OIDC discovery/token verification, API auth checks)
@@ -163,17 +170,50 @@ Exit criteria:
 - 100% web bookings captured in CRM with no manual copy/paste.
 
 Delivered endpoints and features:
+- `GET /public/v1/mobile/bootstrap`
 - `POST /public/v1/bookings`
 - `GET /api/v1/bookings` with `page`, `page_size`, `stage`, `atp_staff`, `search`, `sort`
+- `GET /public/v1/tours`
+- `GET /public/v1/tour-images/:path`
+- `GET /public/v1/customer-photos/:path`
+- `GET /public/v1/customer-consent-evidence/:path`
 - `GET /api/v1/bookings/:bookingId`
+- `DELETE /api/v1/bookings/:bookingId`
+- `GET /api/v1/bookings/:bookingId/chat`
 - `PATCH /api/v1/bookings/:bookingId/stage`
+- `PATCH /api/v1/bookings/:bookingId/client`
+- `POST /api/v1/bookings/:bookingId/client/create-customer`
+- `POST /api/v1/bookings/:bookingId/client/members`
 - `PATCH /api/v1/bookings/:bookingId/owner`
+- `PATCH /api/v1/bookings/:bookingId/notes`
+- `PATCH /api/v1/bookings/:bookingId/pricing`
+- `PATCH /api/v1/bookings/:bookingId/offer`
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
+- `GET /api/v1/bookings/:bookingId/invoices`
+- `POST /api/v1/bookings/:bookingId/invoices`
+- `PATCH /api/v1/bookings/:bookingId/invoices/:invoiceId`
+- `GET /api/v1/invoices/:invoiceId/pdf`
+- `POST /api/v1/offers/exchange-rates`
 - `GET /api/v1/atp_staff`
 - `POST /api/v1/atp_staff`
 - `GET /api/v1/customers` with pagination/search
+- `GET /api/v1/customers/:customerId`
+- `PATCH /api/v1/customers/:customerId`
+- `DELETE /api/v1/customers/:customerId`
+- `POST /api/v1/customers/:customerId/photo`
+- `POST /api/v1/customers/:customerId/consents`
 - `GET /api/v1/travel_groups` with pagination/search
+- `POST /api/v1/travel_groups`
+- `GET /api/v1/travel_groups/:travelGroupId`
+- `PATCH /api/v1/travel_groups/:travelGroupId`
+- `DELETE /api/v1/travel_groups/:travelGroupId`
+- `DELETE /api/v1/travel_groups/:travelGroupId/members/:customerClientId`
+- `GET /api/v1/tours`
+- `GET /api/v1/tours/:tourId`
+- `POST /api/v1/tours`
+- `PATCH /api/v1/tours/:tourId`
+- `POST /api/v1/tours/:tourId/image`
 - Branded frontend backoffice pages:
   - `/backend.html` (filters + pagination for customers, travel groups, bookings, tours)
   - `/customer.html` (customer profile detail/edit page)

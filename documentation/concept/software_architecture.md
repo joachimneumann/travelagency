@@ -456,9 +456,9 @@ In systems like ATP that adopt this architecture incrementally, it is acceptable
 
 - use the abstract model description as the source of truth
 - generate the API specification from it
-- keep the generated API specification transport-oriented and **camelCase** at the JSON layer
+- keep the generated API specification transport-oriented with field names defined explicitly by the model and generator
 - represent status and type fields as **explicit enums** in the contract where the value set is finite
-- avoid leaking storage naming or database-column concerns into new API field names
+- avoid leaking new storage naming or database-column concerns into the contract
 - keep frontend and mobile models generated from the API specification rather than hand-written copies
 
 That gives a system that is easier to understand, easier to evolve, and less likely to drift across backend, frontend, and mobile.
