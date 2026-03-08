@@ -114,6 +114,7 @@ export function createCustomerHandlers(deps) {
     computeTravelGroupHash,
     mkdir,
     path,
+    rm,
     writeFile,
     stat,
     sendFileWithCache,
@@ -148,16 +149,30 @@ export function createCustomerHandlers(deps) {
   });
 
   const buildTravelGroupReadModel = (group, store) => {
+    const groupContactCustomer = store
+      ? (Array.isArray(store?.customers) ? store.customers : []).find((customer) => customer.client_id === normalizeText(group?.group_contact_customer_id)) || null
+      : null;
     return {
       ...group,
       group_name: normalizeText(group?.group_name) || "",
       group_contact_customer_id: normalizeText(group?.group_contact_customer_id) || null,
+      group_contact_customer_name: normalizeText(groupContactCustomer?.name) || null,
       traveler_customer_ids: Array.isArray(group?.traveler_customer_ids)
         ? Array.from(new Set(group.traveler_customer_ids.map((id) => normalizeText(id)).filter(Boolean)))
         : [],
       travel_group_hash: computeTravelGroupHash(group)
     };
   };
+
+  const travelGroupsForCustomer = (store, customerClientId) =>
+    (Array.isArray(store.travel_groups) ? store.travel_groups : [])
+      .filter((group) => {
+        const travelerIds = Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids : [];
+        return travelerIds.includes(customerClientId) || group.group_contact_customer_id === customerClientId;
+      });
+
+  const directBookingsForCustomer = (store, customerClientId) =>
+    (Array.isArray(store.bookings) ? store.bookings : []).filter((booking) => booking.client_id === customerClientId);
 
   const assertMatchingCustomerHash = async (payload, customer, client, res) => {
     const requestHash = normalizeText(payload?.customer_hash);
@@ -197,6 +212,13 @@ export function createCustomerHandlers(deps) {
     if (!sourceBuffer.length) throw new Error("Empty photo payload");
     await writeFile(outputPath, sourceBuffer);
     return `/public/v1/customer-photos/${customerClientId}/${outputName}`;
+  };
+
+  const deleteCustomerFiles = async (customerClientId) => {
+    await Promise.all([
+      rm(path.join(CUSTOMER_PHOTOS_DIR, customerClientId), { recursive: true, force: true }),
+      rm(path.join(CONSENT_EVIDENCE_DIR, customerClientId), { recursive: true, force: true })
+    ]);
   };
 
   const handlePublicConsentEvidence = async (req, res, [relativePath]) => {
@@ -295,8 +317,7 @@ export function createCustomerHandlers(deps) {
     }
 
     const bookings = await Promise.all(
-      (store.bookings || [])
-        .filter((booking) => booking.client_id === customer.client_id)
+      directBookingsForCustomer(store, customer.client_id)
         .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
         .map(async (booking) => await buildBookingReadModel(booking))
     );
@@ -307,11 +328,7 @@ export function createCustomerHandlers(deps) {
     const documents = (Array.isArray(store.customer_documents) ? store.customer_documents : [])
       .filter((document) => document.customer_client_id === customer.client_id)
       .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    const travelGroups = (Array.isArray(store.travel_groups) ? store.travel_groups : [])
-      .filter((group) => {
-        const travelerIds = Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids : [];
-        return travelerIds.includes(customer.client_id) || group.group_contact_customer_id === customer.client_id;
-      })
+    const travelGroups = travelGroupsForCustomer(store, customer.client_id)
       .map((group) => buildTravelGroupReadModel(group, store))
       .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
     const travelGroupMembers = travelGroups
@@ -331,6 +348,66 @@ export function createCustomerHandlers(deps) {
       travelGroups,
       travelGroupMembers
     });
+  }
+
+  async function handleDeleteCustomer(req, res, [customerClientId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    if (!canReadCustomers(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const store = await readStore();
+    const customer = (store.customers || []).find((item) => item.client_id === customerClientId);
+    const client = (store.clients || []).find((item) => item.id === customerClientId && item.client_type === "customer");
+    if (!customer || !client) {
+      sendJson(res, 404, { error: "Customer not found" });
+      return;
+    }
+    if (!(await assertMatchingCustomerHash(payload, customer, client, res))) return;
+
+    const memberships = travelGroupsForCustomer(store, customerClientId);
+    if (memberships.length > 0) {
+      const names = memberships
+        .map((group) => normalizeText(group.group_name) || "travel group")
+        .filter(Boolean)
+        .slice(0, 3);
+      sendJson(res, 409, {
+        error: "Cannot delete customer",
+        detail: `This customer is still assigned to ${memberships.length === 1 ? "a travel group" : "travel groups"}${names.length ? ` (${names.join(", ")})` : ""}. Remove the group assignments first.`
+      });
+      return;
+    }
+
+    const bookings = directBookingsForCustomer(store, customerClientId);
+    if (bookings.length > 0) {
+      sendJson(res, 409, {
+        error: "Cannot delete customer",
+        detail: `This customer is still assigned to ${bookings.length === 1 ? "1 booking" : `${bookings.length} bookings`}. Reassign or delete those bookings first.`
+      });
+      return;
+    }
+
+    store.customers = Array.isArray(store.customers) ? store.customers.filter((item) => item.client_id !== customerClientId) : [];
+    store.clients = Array.isArray(store.clients) ? store.clients.filter((item) => item.id !== customerClientId) : [];
+    store.customer_consents = Array.isArray(store.customer_consents)
+      ? store.customer_consents.filter((item) => item.customer_client_id !== customerClientId)
+      : [];
+    store.customer_documents = Array.isArray(store.customer_documents)
+      ? store.customer_documents.filter((item) => item.customer_client_id !== customerClientId)
+      : [];
+
+    await deleteCustomerFiles(customerClientId);
+    await persistStore(store);
+    sendJson(res, 200, { deleted: true, customer_client_id: customerClientId });
   }
 
   async function handlePatchCustomer(req, res, [customerClientId]) {
@@ -587,6 +664,7 @@ export function createCustomerHandlers(deps) {
     handleListCustomers,
     handleGetCustomer,
     handlePatchCustomer,
+    handleDeleteCustomer,
     handleUploadCustomerPhoto,
     handleCreateCustomerConsent,
     handlePublicCustomerPhoto,

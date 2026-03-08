@@ -4,9 +4,6 @@ import {
   CUSTOMER_DOCUMENT_SCHEMA
 } from "../Generated/Models/generated_Customer.js";
 import {
-  TRAVEL_GROUP_SCHEMA
-} from "../Generated/Models/generated_TravelGroup.js";
-import {
   CUSTOMER_CONSENT_CREATE_REQUEST_SCHEMA
 } from "../Generated/API/generated_APIModels.js";
 import {
@@ -172,6 +169,7 @@ const els = {
   travelGroupMembersTable: document.getElementById("customerTravelGroupMembersTable"),
   bookingsTable: document.getElementById("customerBookingsTable"),
   saveBtn: document.getElementById("customerSaveBtn"),
+  deleteBtn: document.getElementById("customerDeleteBtn"),
   saveStatus: document.getElementById("customerSaveStatus"),
   organizationToggle: null
 };
@@ -193,6 +191,9 @@ async function init() {
   if (els.saveBtn) {
     els.saveBtn.addEventListener("click", saveCustomerProfile);
     els.saveBtn.disabled = true;
+  }
+  if (els.deleteBtn) {
+    els.deleteBtn.addEventListener("click", deleteCustomer);
   }
   if (els.photoPicker) {
     els.photoPicker.addEventListener("click", () => {
@@ -585,12 +586,43 @@ function renderCustomerDocuments(documents) {
 }
 
 function renderTravelGroups(groups) {
-  renderEntityCollectionTable(
-    els.travelGroupsTable,
-    "Travel Groups",
-    Array.isArray(groups) ? groups : [],
-    TRAVEL_GROUP_SCHEMA.fields
-  );
+  if (!els.travelGroupsTable) return;
+  const items = Array.isArray(groups) ? groups : [];
+  const header = `
+    <thead>
+      <tr>
+        <th>Travel group</th>
+        <th>Contact</th>
+        <th>Members</th>
+        <th>Updated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  `;
+  const rows = items
+    .map((group) => {
+      const groupId = normalizeText(group.id);
+      const href = buildTravelGroupHref(groupId);
+      const memberCount = Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids.length : 0;
+      return `
+        <tr>
+          <td><a href="${escapeHtml(href)}">${escapeHtml(normalizeText(group.group_name) || groupId || "-")}</a></td>
+          <td>${escapeHtml(normalizeText(group.group_contact_customer_name) || normalizeText(group.group_contact_customer_id) || "-")}</td>
+          <td>${escapeHtml(String(memberCount))}</td>
+          <td>${escapeHtml(formatDateTime(group.updated_at || group.created_at))}</td>
+          <td><button class="btn btn-ghost" type="button" data-delete-travel-group="${escapeHtml(groupId)}">Delete group</button></td>
+        </tr>
+      `;
+    })
+    .join("");
+  const body = rows || `<tr><td colspan="5">${escapeHtml("No Travel Groups")}</td></tr>`;
+  els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.travelGroupsTable.querySelectorAll("[data-delete-travel-group]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const groupId = normalizeText(button.getAttribute("data-delete-travel-group"));
+      void deleteTravelGroup(groupId);
+    });
+  });
 }
 
 function renderTravelGroupMembers(members) {
@@ -609,17 +641,26 @@ function renderTravelGroupMembers(members) {
         .filter(Boolean)
     )
   );
-  const header = `<thead><tr><th>Travel group</th></tr></thead>`;
+  const header = `<thead><tr><th>Travel group</th><th>Actions</th></tr></thead>`;
   const rows = uniqueGroupIds
     .map((groupId) => {
       const group = groupsById.get(groupId);
       const label = normalizeText(group?.group_name) || normalizeText(group?.name) || normalizeText(groupId) || "-";
       const href = buildTravelGroupHref(groupId);
-      return `<tr><td><a href="${escapeHtml(href)}">${escapeHtml(label)}</a></td></tr>`;
+      return `<tr>
+        <td><a href="${escapeHtml(href)}">${escapeHtml(label)}</a></td>
+        <td><button class="btn btn-ghost" type="button" data-remove-group-member="${escapeHtml(groupId)}">Remove from group</button></td>
+      </tr>`;
     })
     .join("");
-  const body = rows || `<tr><td>${escapeHtml("No travel group memberships")}</td></tr>`;
+  const body = rows || `<tr><td colspan="2">${escapeHtml("No travel group memberships")}</td></tr>`;
   els.travelGroupMembersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.travelGroupMembersTable.querySelectorAll("[data-remove-group-member]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const groupId = normalizeText(button.getAttribute("data-remove-group-member"));
+      void removeCustomerFromTravelGroup(groupId);
+    });
+  });
 }
 
 function renderEditableCustomerTable(tableEl, fields, entity) {
@@ -1023,6 +1064,63 @@ async function saveCustomerProfile() {
   bindCustomerProfileInputs();
   setSaveEnabled(false);
   setSaveStatus("Customer updated.");
+}
+
+async function deleteCustomer() {
+  if (!state.customer?.client_id) return;
+  const label = normalizeText(state.customer?.name) || "this customer";
+  if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
+
+  if (els.deleteBtn) els.deleteBtn.disabled = true;
+  clearSaveStatus();
+  const result = await fetchApi(`/api/v1/customers/${encodeURIComponent(state.customer.client_id)}`, {
+    method: "DELETE",
+    body: {
+      customer_hash: state.customer.customer_hash
+    }
+  });
+  if (els.deleteBtn) els.deleteBtn.disabled = false;
+  if (!result?.deleted) return;
+
+  window.location.href = "backend.html?section=customers";
+}
+
+async function removeCustomerFromTravelGroup(travelGroupId) {
+  if (!state.customer?.client_id || !travelGroupId) return;
+  const group = (state.travelGroups || []).find((item) => normalizeText(item.id) === travelGroupId);
+  const groupName = normalizeText(group?.group_name) || "this travel group";
+  if (!window.confirm(`Remove this customer from ${groupName}?`)) return;
+
+  clearSaveStatus();
+  const result = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(travelGroupId)}/members/${encodeURIComponent(state.customer.client_id)}`, {
+    method: "DELETE",
+    body: {
+      travel_group_hash: normalizeText(group?.travel_group_hash) || ""
+    }
+  });
+  if (!result?.travel_group) return;
+
+  setSaveStatus("Customer removed from group.");
+  await loadCustomer();
+}
+
+async function deleteTravelGroup(travelGroupId) {
+  if (!travelGroupId) return;
+  const group = (state.travelGroups || []).find((item) => normalizeText(item.id) === travelGroupId);
+  const groupName = normalizeText(group?.group_name) || "this travel group";
+  if (!window.confirm(`Delete ${groupName}? This cannot be undone.`)) return;
+
+  clearSaveStatus();
+  const result = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(travelGroupId)}`, {
+    method: "DELETE",
+    body: {
+      travel_group_hash: normalizeText(group?.travel_group_hash) || ""
+    }
+  });
+  if (!result?.deleted) return;
+
+  setSaveStatus("Travel group deleted.");
+  await loadCustomer();
 }
 
 function shouldEnableOrganizationFields(customer = {}) {

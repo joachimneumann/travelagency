@@ -120,6 +120,7 @@ const els = {
   userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
+  deleteBtn: document.getElementById("bookingDeleteBtn"),
   error: document.getElementById("detailError"),
   bookingDataView: document.getElementById("bookingDataView"),
   actionsPanel: document.getElementById("bookingActionsPanel"),
@@ -258,6 +259,7 @@ async function init() {
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.clientChangeBtn) els.clientChangeBtn.addEventListener("click", toggleClientAssignmentPanel);
+  if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.suggestedCustomerSelect) els.suggestedCustomerSelect.addEventListener("change", updateClientAssignmentButtons);
   if (els.clientLookupInput) els.clientLookupInput.addEventListener("input", updateClientAssignmentButtons);
   if (els.assignCustomerBtn) els.assignCustomerBtn.addEventListener("click", assignSelectedCustomer);
@@ -463,6 +465,10 @@ function renderActionControls() {
     updateNoteSaveButtonState();
   }
   if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.deleteBtn) {
+    els.deleteBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+    els.deleteBtn.disabled = !state.permissions.canEditBooking;
+  }
 }
 
 function applyBookingClientPayload(payload = {}) {
@@ -595,6 +601,25 @@ async function assignLookupClient() {
   renderBookingData();
   renderActionControls();
   setClientStatus("Booking assigned.");
+}
+
+async function deleteBooking() {
+  if (!state.permissions.canEditBooking || !state.booking?.id) return;
+  const label = normalizeText(state.client?.display_name) || normalizeText(state.booking?.client_display_name) || state.booking.id;
+  if (!window.confirm(`Delete booking for ${label}? This cannot be undone.`)) return;
+
+  if (els.deleteBtn) els.deleteBtn.disabled = true;
+  clearStatus();
+  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}`, {
+    method: "DELETE",
+    body: {
+      booking_hash: state.booking.booking_hash
+    }
+  });
+  if (els.deleteBtn) els.deleteBtn.disabled = false;
+  if (!result?.deleted) return;
+
+  window.location.href = "backend.html?section=bookings";
 }
 
 async function createAndAssignCustomer() {

@@ -497,6 +497,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     writeInvoicePdf,
     randomUUID,
     invoicePdfPath,
+    rm,
     sendFileWithCache
   });
   const customerHandlers = createCustomerHandlers({
@@ -522,6 +523,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     computeTravelGroupHash,
     mkdir,
     path,
+    rm,
     writeFile,
     stat,
     sendFileWithCache,

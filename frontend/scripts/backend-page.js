@@ -680,22 +680,49 @@ function renderTours(items) {
 }
 
 function renderTravelGroups(items) {
-  const header = `<thead><tr><th>ID</th><th>Client</th><th>Name</th><th>Contact</th><th>Travelers</th><th>Updated</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Client</th><th>Name</th><th>Contact</th><th>Travelers</th><th>Updated</th><th>Actions</th></tr></thead>`;
   const rows = items
     .map((group) => {
       return `<tr>
         <td>${escapeHtml(shortId(group.id))}</td>
         <td>${escapeHtml(shortId(group.client_id || "-"))}</td>
         <td>${escapeHtml(group.group_name || group.name || "-")}</td>
-        <td>${escapeHtml(shortId(group.group_contact_customer_id || "-"))}</td>
+        <td>${escapeHtml(group.group_contact_customer_name || shortId(group.group_contact_customer_id || "-"))}</td>
         <td>${escapeHtml(String(Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids.length : 0))}</td>
         <td>${escapeHtml(formatDateTime(group.updated_at || group.updatedAt))}</td>
+        <td><button class="btn btn-ghost" type="button" data-delete-travel-group="${escapeHtml(group.id || "")}" data-travel-group-hash="${escapeHtml(group.travel_group_hash || "")}">Delete</button></td>
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="6">No travel groups found</td></tr>`;
-  if (els.travelGroupsTable) els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  const body = rows || `<tr><td colspan="7">No travel groups found</td></tr>`;
+  if (els.travelGroupsTable) {
+    els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+    els.travelGroupsTable.querySelectorAll("[data-delete-travel-group]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const travelGroupId = button.getAttribute("data-delete-travel-group") || "";
+        const travelGroupHash = button.getAttribute("data-travel-group-hash") || "";
+        void deleteTravelGroup(travelGroupId, travelGroupHash);
+      });
+    });
+  }
+}
+
+async function deleteTravelGroup(travelGroupId, travelGroupHash) {
+  const groupId = normalizeText(travelGroupId);
+  if (!groupId) return;
+  if (!window.confirm(`Delete travel group ${groupId}? This cannot be undone.`)) return;
+
+  clearError();
+  const payload = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(groupId)}`, {
+    method: "DELETE",
+    body: {
+      travel_group_hash: normalizeText(travelGroupHash) || ""
+    }
+  });
+  if (!payload?.deleted) return;
+
+  await loadTravelGroups();
 }
 
 function showError(message) {

@@ -64,6 +64,7 @@ export function createBookingHandlers(deps) {
     writeInvoicePdf,
     randomUUID,
     invoicePdfPath,
+    rm,
     sendFileWithCache
   } = deps;
 
@@ -355,6 +356,33 @@ async function buildBookingClientResponse(store, booking) {
   return response;
 }
 
+async function deleteBookingArtifacts(store, bookingId) {
+  const removedInvoices = Array.isArray(store.invoices)
+    ? store.invoices.filter((invoice) => invoice.booking_id === bookingId)
+    : [];
+
+  store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
+  store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
+  store.invoices = Array.isArray(store.invoices) ? store.invoices.filter((invoice) => invoice.booking_id !== bookingId) : [];
+
+  ensureMetaChatCollections(store);
+  for (const conversation of store.chat_conversations) {
+    if (normalizeText(conversation.booking_id) === bookingId) {
+      conversation.booking_id = null;
+    }
+  }
+
+  await Promise.all(
+    removedInvoices.map(async (invoice) => {
+      try {
+        await rm(invoicePdfPath(invoice.id, invoice.version), { force: true });
+      } catch {
+        // Ignore cleanup failures so the booking delete is not blocked by a stale PDF file.
+      }
+    })
+  );
+}
+
 async function handleCreateBooking(req, res) {
   let payload;
   try {
@@ -494,6 +522,36 @@ async function handleGetBooking(req, res, [bookingId]) {
   }
 
   sendJson(res, 200, await buildBookingClientResponse(store, booking));
+}
+
+async function handleDeleteBooking(req, res, [bookingId]) {
+  let payload;
+  try {
+    payload = await readBodyJson(req);
+  } catch {
+    sendJson(res, 400, { error: "Invalid JSON payload" });
+    return;
+  }
+
+  const store = await readStore();
+  const booking = store.bookings.find((item) => item.id === bookingId);
+  if (!booking) {
+    sendJson(res, 404, { error: "Booking not found" });
+    return;
+  }
+
+  const principal = getPrincipal(req);
+  const atp_staff = await loadAtpStaff();
+  const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+  if (!canEditBooking(principal, booking, staffMember)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+  if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+  await deleteBookingArtifacts(store, bookingId);
+  await persistStore(store);
+  sendJson(res, 200, { deleted: true, booking_id: bookingId });
 }
 
 async function handleListBookingChatEvents(req, res, [bookingId]) {
@@ -1401,6 +1459,7 @@ async function handleGetInvoicePdf(req, res, [invoiceId]) {
     handleCreateBooking,
     handleListBookings,
     handleGetBooking,
+    handleDeleteBooking,
     handleListBookingChatEvents,
     handlePatchBookingClient,
     handleCreateBookingCustomer,
