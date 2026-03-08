@@ -5,12 +5,12 @@ export function buildCustomerHref(id) {
 
 export function buildBookingHref(id) {
   const params = new URLSearchParams({ id });
-  return `backend-booking.html?${params.toString()}`;
+  return `booking.html?${params.toString()}`;
 }
 
 export function buildTourEditHref(id) {
   const params = new URLSearchParams({ id });
-  return `backend-tour.html?${params.toString()}`;
+  return `tour.html?${params.toString()}`;
 }
 
 export function buildTravelGroupHref(id) {

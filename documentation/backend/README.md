@@ -190,9 +190,9 @@ Branded frontend backoffice pages (served by website):
   - paginated searchable Bookings table
   - paginated searchable Tours table
 - `customer.html`: dedicated customer detail page with grouped editable customer profile fields
-- `/backend-tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
+- `/tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
 - `backend.html` header includes `Website` and `Logout` actions.
-- `/backend-booking.html`: role-aware booking detail page with booking actions
+- `/booking.html`: role-aware booking detail page with booking actions
   - booking activities list
   - change staff assignment
   - change stage

@@ -29,7 +29,8 @@ const state = {
   bookingSubmitted: false,
   visibleToursCount: 3,
   showMoreUsed: false,
-  selectedTour: null
+  selectedTour: null,
+  websiteAuthenticated: false
 };
 
 const TRIPS_REQUEST_VERSION = Date.now();
@@ -207,6 +208,10 @@ function setupBackendLogin() {
 
   els.backendLoginBtn.addEventListener("click", () => {
     const backendUrl = `${window.location.origin}/backend.html`;
+    if (state.websiteAuthenticated) {
+      window.location.href = backendUrl;
+      return;
+    }
     const loginParams = new URLSearchParams({
       return_to: backendUrl,
       prompt: "login"
@@ -287,14 +292,17 @@ async function loadWebsiteAuthStatus() {
     });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
+      state.websiteAuthenticated = false;
       placeBackendLogin(false);
       updateBackendButtonLabel({ authenticated: false, user: "" });
       return;
     }
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
+    state.websiteAuthenticated = true;
     placeBackendLogin(true);
     updateBackendButtonLabel({ authenticated: true, user });
   } catch {
+    state.websiteAuthenticated = false;
     placeBackendLogin(false);
     updateBackendButtonLabel({ authenticated: false, user: "" });
   } finally {

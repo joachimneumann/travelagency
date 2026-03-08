@@ -158,7 +158,8 @@
 
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "dashboard" });
+      const section = new URLSearchParams(window.location.search).get("section") || "dashboard";
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
     </script>
     <script type="module" src="frontend/scripts/backend-page.js"></script>
   </body>

@@ -31,9 +31,9 @@ Features available now:
 - Staff creation API for managers/admins (`POST /api/v1/atp_staff`)
 - Admin API (Keycloak protected)
 - Keycloak login/session support (`/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`)
-- Branded frontend backoffice pages (`/backend.html`, `/backend-booking.html`, `/customer.html`, `/backend-tour.html`)
+- Branded frontend backoffice pages (`/backend.html`, `/booking.html`, `/customer.html`, `/tour.html`)
 - `backend.html` lists tours
-- clicking a tour ID opens `backend-tour.html` for editing
+- clicking a tour ID opens `tour.html` for editing
   - destination and styles are edited with checkbox groups
   - image upload converts to WebP (max 1000px) automatically
 
@@ -138,8 +138,8 @@ curl -H 'Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>' \
 Open in browser:
 - `http://localhost:8080/backend.html`
 - `http://localhost:8080/customer.html?id=<customer_id>`
-- `http://localhost:8080/backend-booking.html?id=<booking_id>`
-- `http://localhost:8080/backend-tour.html`
+- `http://localhost:8080/booking.html?id=<booking_id>`
+- `http://localhost:8080/tour.html`
 
 ## 5) Integrate with locally executed AsiaTravelPlan webpage
 
@@ -161,10 +161,10 @@ Branded backend web UI:
   - role-based Bookings table
   - role-based Tours table
   - staff creation panel for managers/admins
-- tour IDs open `backend-tour.html` for admin editing and accountant read-only viewing
+- tour IDs open `tour.html` for admin editing and accountant read-only viewing
 - customer IDs open `customer.html`
 - travel group IDs can be opened from the travel-groups section in `backend.html`
-- booking IDs open `backend-booking.html`
+- booking IDs open `booking.html`
 - Backend pages include `Website` and `Logout` actions in the header.
 - The main site header now includes a single `backend` button (no dropdown).
 - Clicking `backend` triggers Keycloak login (`/auth/login`) in the main window and returns to `backend.html`.

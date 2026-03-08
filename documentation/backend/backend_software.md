@@ -32,9 +32,9 @@ Implemented now:
 - Auth internals refactored into dedicated module `src/auth.js` (route handlers, session state, OIDC discovery/token verification, API auth checks)
 - Branded website backoffice pages implemented:
   - `backend.html`: paginated searchable customers + bookings + tours tables (default newest 10 each)
-  - `backend-tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
+  - `tour.html` is the dedicated tour edit page linked from tour IDs in `backend.html`
   - `customer.html`: dedicated customer detail page with grouped editable customer fields
-  - `backend-booking.html`: booking detail page with booking actions (staff/stage updates, notes, booking client conversion, travel-group member management)
+  - `booking.html`: booking detail page with booking actions (staff/stage updates, notes, booking client conversion, travel-group member management)
   - Website header includes `backend` login button and `Logged in as` status from `/auth/me`
   - Backend page header includes `Website` and `Logout` actions
   - travel groups have dedicated list/detail/create/update endpoints and are editable from the backend UI
@@ -177,7 +177,7 @@ Delivered endpoints and features:
 - Branded frontend backoffice pages:
   - `/backend.html` (filters + pagination for customers, travel groups, bookings, tours)
   - `/customer.html` (customer profile detail/edit page)
-  - `/backend-booking.html` (role-aware staff/stage/note actions, booking client conversion, group member management)
+  - `/booking.html` (role-aware staff/stage/note actions, booking client conversion, group member management)
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)
 
