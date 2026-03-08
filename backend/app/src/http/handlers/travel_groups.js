@@ -53,11 +53,13 @@ export function createTravelGroupHandlers(deps) {
     return (Array.isArray(store?.customers) ? store.customers : []).find((customer) => customer.client_id === customerClientId) || null;
   }
 
-  function buildTravelGroupReadModel(group) {
+  function buildTravelGroupReadModel(group, store = null) {
+    const groupContactCustomer = store ? groupContactCustomerForGroup(store, group) : null;
     return {
       ...group,
       group_name: normalizeText(group?.group_name) || "",
       group_contact_customer_id: normalizeText(group?.group_contact_customer_id) || null,
+      group_contact_customer_name: normalizeText(groupContactCustomer?.name) || null,
       traveler_customer_ids: memberCustomerIdsForGroup(group),
       travel_group_hash: computeTravelGroupHash(group)
     };
@@ -79,7 +81,7 @@ export function createTravelGroupHandlers(deps) {
     const groupContactCustomer = groupContactCustomerForGroup(store, group);
     return {
       client: buildClientReadModel(clientForGroup(store, group), group, groupContactCustomer),
-      travel_group: buildTravelGroupReadModel(group),
+      travel_group: buildTravelGroupReadModel(group, store),
       members,
       memberCustomers: memberCustomersForGroup(store, group)
     };
@@ -100,6 +102,27 @@ export function createTravelGroupHandlers(deps) {
 
   function canCreateOrEditStandaloneGroup(principal, staffMember) {
     return canReadAllBookings(principal) || Boolean(staffMember);
+  }
+
+  function canMutateGroup(principal, staffMember, store, group) {
+    const bookings = relatedBookings(store, group);
+    if (!bookings.length) {
+      return canCreateOrEditStandaloneGroup(principal, staffMember);
+    }
+    return bookings.some((booking) => canEditBooking(principal, booking, staffMember));
+  }
+
+  function syncGroupBookings(store, group) {
+    const groupContactCustomer = groupContactCustomerForGroup(store, group);
+    const timestamp = nowIso();
+    for (const booking of Array.isArray(store?.bookings) ? store.bookings : []) {
+      if (booking.client_id !== group.client_id) continue;
+      booking.client_type = "travel_group";
+      booking.client_display_name = normalizeText(group.group_name) || booking.client_display_name || "";
+      booking.client_primary_phone_number = normalizeText(groupContactCustomer?.phone_number) || null;
+      booking.client_primary_email = normalizeText(groupContactCustomer?.email) || null;
+      booking.updated_at = timestamp;
+    }
   }
 
   function normalizeTravelGroupCreate(payload = {}) {
@@ -166,7 +189,7 @@ export function createTravelGroupHandlers(deps) {
 
     const visible = (Array.isArray(store.travel_groups) ? store.travel_groups : [])
       .filter((group) => canReadGroup(principal, relatedBookings(store, group), staffMember))
-      .map((group) => buildTravelGroupReadModel(group))
+      .map((group) => buildTravelGroupReadModel(group, store))
       .filter((group) => {
         if (!search) return true;
         const haystack = [
@@ -279,9 +302,7 @@ export function createTravelGroupHandlers(deps) {
     const principal = getPrincipal(req);
     const atp_staff = await loadAtpStaff();
     const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
-    const bookings = relatedBookings(store, group);
-    if ((!bookings.length && !canCreateOrEditStandaloneGroup(principal, staffMember)) ||
-      (bookings.length && !bookings.some((booking) => canEditBooking(principal, booking, staffMember)))) {
+    if (!canMutateGroup(principal, staffMember, store, group)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -299,15 +320,111 @@ export function createTravelGroupHandlers(deps) {
     });
     group.updated_at = nowIso();
     group.travel_group_hash = computeTravelGroupHash(group);
+    syncGroupBookings(store, group);
 
     await persistStore(store);
     sendJson(res, 200, buildTravelGroupDetail(store, group));
+  }
+
+  async function handleDeleteTravelGroupMember(req, res, [travelGroupId, customerClientId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const store = await readStore();
+    const group = (Array.isArray(store.travel_groups) ? store.travel_groups : []).find((item) => item.id === travelGroupId);
+    if (!group) {
+      sendJson(res, 404, { error: "Travel group not found" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const atp_staff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+    if (!canMutateGroup(principal, staffMember, store, group)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertMatchingTravelGroupHash(payload, group, store, res))) return;
+
+    const members = memberCustomerIdsForGroup(group);
+    if (!members.includes(customerClientId)) {
+      sendJson(res, 404, { error: "Customer is not a member of this travel group" });
+      return;
+    }
+
+    group.traveler_customer_ids = members.filter((id) => id !== customerClientId);
+    if (normalizeText(group.group_contact_customer_id) === customerClientId) {
+      group.group_contact_customer_id = group.traveler_customer_ids[0] || null;
+    }
+    group.updated_at = nowIso();
+    group.travel_group_hash = computeTravelGroupHash(group);
+    syncGroupBookings(store, group);
+
+    await persistStore(store);
+    sendJson(res, 200, buildTravelGroupDetail(store, group));
+  }
+
+  async function handleDeleteTravelGroup(req, res, [travelGroupId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const store = await readStore();
+    const group = (Array.isArray(store.travel_groups) ? store.travel_groups : []).find((item) => item.id === travelGroupId);
+    if (!group) {
+      sendJson(res, 404, { error: "Travel group not found" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const atp_staff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atp_staff);
+    if (!canMutateGroup(principal, staffMember, store, group)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertMatchingTravelGroupHash(payload, group, store, res))) return;
+
+    const bookings = relatedBookings(store, group);
+    if (bookings.length > 0) {
+      sendJson(res, 409, {
+        error: "Cannot delete travel group",
+        detail: `This travel group is still assigned to ${bookings.length === 1 ? "1 booking" : `${bookings.length} bookings`}. Reassign or delete those bookings first.`
+      });
+      return;
+    }
+
+    const members = memberCustomerIdsForGroup(group);
+    if (members.length > 0) {
+      sendJson(res, 409, {
+        error: "Cannot delete travel group",
+        detail: `This travel group still has ${members.length === 1 ? "1 member" : `${members.length} members`}. Remove all members first.`
+      });
+      return;
+    }
+
+    store.travel_groups = Array.isArray(store.travel_groups) ? store.travel_groups.filter((item) => item.id !== travelGroupId) : [];
+    store.clients = Array.isArray(store.clients) ? store.clients.filter((item) => item.id !== group.client_id) : [];
+
+    await persistStore(store);
+    sendJson(res, 200, { deleted: true, travel_group_id: travelGroupId });
   }
 
   return {
     handleListTravelGroups,
     handleCreateTravelGroup,
     handleGetTravelGroup,
-    handlePatchTravelGroup
+    handlePatchTravelGroup,
+    handleDeleteTravelGroupMember,
+    handleDeleteTravelGroup
   };
 }
