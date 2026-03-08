@@ -11,6 +11,11 @@ import {
   buildTravelGroupHref,
   buildTourEditHref
 } from "./shared/backend-links.js";
+import {
+  fetchCustomerSearchPage,
+  renderCustomerTable
+} from "./shared/customer-search.js";
+import { renderPagination } from "./shared/backend-pagination.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -337,14 +342,12 @@ function bindSearch(searchBtn, searchInput, model, reloadFn) {
 
 async function loadCustomers() {
   clearError();
-
-  const params = new URLSearchParams({
-    page: String(state.customers.page),
-    page_size: String(state.customers.pageSize)
+  const payload = await fetchCustomerSearchPage({
+    fetchApi,
+    page: state.customers.page,
+    pageSize: state.customers.pageSize,
+    search: state.customers.search
   });
-  if (state.customers.search) params.set("search", state.customers.search);
-
-  const payload = await fetchApi(`/api/v1/customers?${params.toString()}`);
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -355,7 +358,12 @@ async function loadCustomers() {
   state.customers.total = Number(pagination.total_items || 0);
   state.customers.page = Number(pagination.page || state.customers.page);
   updatePaginationUi("customers");
-  renderCustomers(payload.items || []);
+  renderCustomerTable({
+    tableEl: els.customersTable,
+    items: payload.items || [],
+    mode: "browse",
+    emptyMessage: "No customers found"
+  });
   updateDashboardCounts();
 }
 
@@ -510,74 +518,6 @@ function updatePaginationUi(section) {
   }
 }
 
-function renderPagination(container, pager, onPageChange) {
-  const current = pager.page;
-  const total = pager.totalPages;
-
-  const parts = [
-    buttonHtml({ label: "Previous", disabled: current <= 1, page: current - 1, cls: "backend-page-btn" })
-  ];
-
-  for (const page of visiblePages(current, total)) {
-    if (page === "...") {
-      parts.push(`<span class="backend-page-ellipsis">...</span>`);
-      continue;
-    }
-
-    parts.push(
-      buttonHtml({
-        label: String(page),
-        disabled: page === current,
-        page,
-        current: page === current,
-        cls: "backend-page-btn"
-      })
-    );
-  }
-
-  parts.push(buttonHtml({ label: "Next", disabled: current >= total, page: current + 1, cls: "backend-page-btn" }));
-  container.innerHTML = parts.join("");
-
-  container.querySelectorAll("button[data-page]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const page = Number(btn.getAttribute("data-page"));
-      if (!Number.isFinite(page)) return;
-      if (page < 1 || page > total) return;
-      onPageChange(page);
-    });
-  });
-}
-
-function visiblePages(current, total) {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  const pages = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-
-  if (start > 2) pages.push("...");
-  for (let page = start; page <= end; page += 1) pages.push(page);
-  if (end < total - 1) pages.push("...");
-
-  pages.push(total);
-  return pages;
-}
-
-function buttonHtml({ label, disabled, page, current = false, cls = "" }) {
-  const attrs = [
-    `class="${cls}"`,
-    'type="button"',
-    `data-page="${page}"`,
-    disabled ? "disabled" : "",
-    current ? 'aria-current="page"' : ""
-  ]
-    .filter(Boolean)
-    .join(" ");
-  return `<button ${attrs}>${escapeHtml(label)}</button>`;
-}
-
 const fetchApi = createApiFetcher({
   apiBase,
   onError: (message) => showError(message),
@@ -645,26 +585,6 @@ function renderBookings(items) {
       `No bookings found${state.bookings.search ? ` for "${state.bookings.search}"` : ""}`
     )}</td></tr>`;
   if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-}
-
-function renderCustomers(items) {
-  const header = `<thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Language</th><th>Updated</th></tr></thead>`;
-  const rows = items
-    .map((customer) => {
-      const customerHref = buildCustomerHref(customer.client_id || customer.id);
-      return `<tr>
-        <td><a href="${escapeHtml(customerHref)}">${escapeHtml(shortId(customer.client_id || customer.id))}</a></td>
-        <td>${escapeHtml(customer.name || "-")}</td>
-        <td>${escapeHtml(customer.email || "-")}</td>
-        <td>${escapeHtml(customer.phone_number || "-")}</td>
-        <td>${escapeHtml(customer.preferred_language || "-")}</td>
-        <td>${escapeHtml(formatDateTime(customer.updated_at))}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const body = rows || `<tr><td colspan="6">No customers found</td></tr>`;
-  if (els.customersTable) els.customersTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function renderTours(items) {

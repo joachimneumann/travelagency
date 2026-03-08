@@ -91,6 +91,47 @@
   margin-bottom: 1rem;
 }
 
+.group-page .group-contact__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.group-page .group-contact__title {
+  color: #16313d;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.group-page .group-contact__current {
+  color: rgba(22, 49, 61, 0.82);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.group-page .group-contact__change-panel {
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(229, 184, 168, 0.18);
+  border: 1px solid rgba(229, 184, 168, 0.5);
+}
+
+.group-page .group-contact__change-panel[hidden] {
+  display: none;
+}
+
+.group-page .group-contact__controls {
+  margin-bottom: 0.75rem;
+}
+
+.group-page .group-contact__search-field {
+  flex: 0 1 280px;
+  min-width: 180px;
+  max-width: 280px;
+}
+
 .group-page .group-form-grid,
 .group-page .group-travelers {
   border-radius: 18px;
@@ -102,24 +143,62 @@
   border: 1px solid rgba(172, 208, 224, 0.45);
 }
 
-.group-page .group-travelers__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 0.75rem 1rem;
+.group-page .group-travelers__current-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .group-page .group-travelers__item {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: space-between;
+  gap: 1rem;
   min-width: 0;
   color: #16313d;
 }
 
-.group-page .group-travelers__item input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
+.group-page .group-travelers__item span {
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.group-page .group-travelers__remove {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #cb4a4a;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.1rem 0.45rem;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.group-page .group-travelers__remove:hover,
+.group-page .group-travelers__remove:focus-visible {
+  background: rgba(237, 191, 176, 0.42);
+  color: #9f2d2d;
+  outline: none;
+}
+
+.group-page .group-travelers__toggle {
+  margin-top: 1rem;
+}
+
+.group-page .group-travelers__change-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(229, 184, 168, 0.18);
+  border: 1px solid rgba(229, 184, 168, 0.5);
+}
+
+.group-page .group-travelers__change-panel[hidden] {
+  display: none;
 }
 
 .group-page .customer-danger-zone__delete {

@@ -22,8 +22,19 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <h1 class="section-title" id="detailTitle">Booking</h1>
-          <p class="section-booking" id="detailSubTitle" hidden></p>
+          <div class="booking-hero">
+            <div class="booking-hero__photo" aria-hidden="true">
+              <img class="booking-hero__photo-image" src="assets/img/profile_booking.gray.png" alt="" />
+            </div>
+            <div class="booking-hero__copy">
+              <h1 class="booking-hero__name" id="detailTitle">Booking</h1>
+              <div class="booking-hero__id-row">
+                <p class="booking-hero__id" id="detailSubTitle">ID: -</p>
+                <button class="booking-hero__id-copy" id="bookingHeroCopyBtn" type="button">copy</button>
+                <span class="booking-hero__id-copy-status" id="bookingHeroCopyStatus" aria-live="polite"></span>
+              </div>
+            </div>
+          </div>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 

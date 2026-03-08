@@ -51,16 +51,44 @@
                   <input id="groupNameInput" type="text" />
                 </div>
                 <div class="field full">
-                  <label for="groupContactSelect">Group Contact</label>
-                  <select id="groupContactSelect">
-                    <option value="">No group contact</option>
-                  </select>
+                  <div class="group-contact__header">
+                    <span class="group-contact__title">Group Contact</span>
+                    <button id="groupContactToggleBtn" class="btn btn-ghost btn-sm" type="button">change</button>
+                  </div>
+                  <div class="group-contact__current" id="groupContactCurrent">no group contact</div>
+                  <div class="group-contact__change-panel" id="groupContactChangePanel" hidden>
+                    <div class="backend-controls group-contact__controls">
+                      <div class="field group-contact__search-field">
+                        <label for="groupContactSearch">Search customers</label>
+                        <input id="groupContactSearch" type="text" placeholder="id, name, email, phone..." />
+                      </div>
+                      <button id="groupContactSearchBtn" class="btn btn-ghost" type="button">Search</button>
+                    </div>
+                    <div class="backend-table-wrap">
+                      <table class="backend-table" id="groupContactResultsTable"></table>
+                    </div>
+                    <div class="backend-pagination" id="groupContactResultsPagination" aria-label="Group contact search pagination"></div>
+                  </div>
                 </div>
               </div>
 
               <h2 class="section-title u-title-compact">Travelers</h2>
               <div class="group-travelers backend-dirty-frame" id="groupTravelersPanel">
-                <div class="group-travelers__list" id="groupTravelersList"></div>
+                <div class="group-travelers__current-list" id="groupTravelersList"></div>
+                <button id="groupTravelersToggleBtn" class="btn btn-ghost btn-sm group-travelers__toggle" type="button">add traveler</button>
+                <div class="group-travelers__change-panel" id="groupTravelersChangePanel" hidden>
+                  <div class="backend-controls group-contact__controls">
+                    <div class="field group-contact__search-field">
+                      <label for="groupTravelerSearch">Search customers</label>
+                      <input id="groupTravelerSearch" type="text" placeholder="id, name, email, phone..." />
+                    </div>
+                    <button id="groupTravelerSearchBtn" class="btn btn-ghost" type="button">Search</button>
+                  </div>
+                  <div class="backend-table-wrap">
+                    <table class="backend-table" id="groupTravelerResultsTable"></table>
+                  </div>
+                  <div class="backend-pagination" id="groupTravelerResultsPagination" aria-label="Traveler search pagination"></div>
+                </div>
               </div>
             </div>
             <p id="groupSaveStatus" class="section-booking" hidden></p>

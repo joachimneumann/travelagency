@@ -100,6 +100,9 @@ state.dirty = { note: false, offer: false, pricing: false, invoice: false };
 state.originalPricingSnapshot = "";
 state.originalInvoiceSnapshot = "";
 
+let heroCopyClipboardPoll = null;
+let heroCopiedValue = "";
+
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
@@ -108,6 +111,8 @@ const els = {
   userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
+  heroCopyBtn: document.getElementById("bookingHeroCopyBtn"),
+  heroCopyStatus: document.getElementById("bookingHeroCopyStatus"),
   deleteBtn: document.getElementById("bookingDeleteBtn"),
   error: document.getElementById("detailError"),
   bookingDataView: document.getElementById("bookingDataView"),
@@ -244,6 +249,7 @@ async function init() {
   populateCurrencySelect(els.offerCurrencyInput);
   populateCurrencySelect(els.invoiceCurrencyInput);
 
+  if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.clientChangeBtn) els.clientChangeBtn.addEventListener("click", toggleClientAssignmentPanel);
@@ -340,10 +346,63 @@ async function loadBookingPage() {
 
 function renderBookingHeader() {
   if (!state.booking) return;
-  if (els.title) els.title.textContent = `Booking ${shortId(state.booking.id)}`;
+  if (els.title) els.title.textContent = "Booking";
   if (els.subtitle) {
-    els.subtitle.textContent = "";
-    els.subtitle.hidden = true;
+    els.subtitle.textContent = `ID: ${state.booking.id}`;
+    els.subtitle.hidden = false;
+  }
+  if (heroCopiedValue && heroCopiedValue !== getCurrentBookingIdentifier()) {
+    clearHeroCopyStatus();
+  }
+}
+
+function getCurrentBookingIdentifier() {
+  return normalizeText(state.booking?.id) || "";
+}
+
+function setHeroCopyStatus(message, copiedValue = "") {
+  if (els.heroCopyStatus) {
+    els.heroCopyStatus.textContent = message || "";
+  }
+  heroCopiedValue = copiedValue || "";
+  if (heroCopyClipboardPoll) {
+    window.clearInterval(heroCopyClipboardPoll);
+    heroCopyClipboardPoll = null;
+  }
+  if (heroCopiedValue) {
+    startHeroClipboardWatcher();
+  }
+}
+
+function clearHeroCopyStatus() {
+  setHeroCopyStatus("");
+}
+
+function startHeroClipboardWatcher() {
+  if (!heroCopiedValue || !navigator.clipboard?.readText) return;
+  heroCopyClipboardPoll = window.setInterval(async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText !== heroCopiedValue) {
+        clearHeroCopyStatus();
+      }
+    } catch {
+      if (heroCopyClipboardPoll) {
+        window.clearInterval(heroCopyClipboardPoll);
+        heroCopyClipboardPoll = null;
+      }
+    }
+  }, 1800);
+}
+
+async function copyHeroIdToClipboard() {
+  const id = getCurrentBookingIdentifier();
+  if (!id || !navigator.clipboard?.writeText) return;
+  try {
+    await navigator.clipboard.writeText(id);
+    setHeroCopyStatus("copied", id);
+  } catch {
+    setHeroCopyStatus("copy failed");
   }
 }
 
@@ -501,7 +560,7 @@ function renderClientPanel() {
   const submittedParts = [submitted.name, submitted.email, submitted.phone_number].filter(Boolean);
   const submittedLabel = submittedParts.length ? submittedParts.join(", ") : "No submitted customer information";
   if (els.clientAssignmentTitle) {
-    els.clientAssignmentTitle.textContent = `Assign ${submittedLabel} to a customer`;
+    els.clientAssignmentTitle.textContent = `Information in booking form: ${submittedLabel}`;
   }
   if (els.suggestedCustomerSelect) {
     const options = ['<option value="">Similar Customers</option>']

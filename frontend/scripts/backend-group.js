@@ -10,6 +10,11 @@ import {
   buildBookingHref,
   buildCustomerHref
 } from "./shared/backend-links.js";
+import {
+  fetchCustomerSearchPage,
+  renderCustomerTable
+} from "./shared/customer-search.js";
+import { renderPagination } from "./shared/backend-pagination.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -22,6 +27,12 @@ const state = {
   memberCustomers: [],
   bookings: [],
   allCustomers: [],
+  contactSearchResults: [],
+  contactSearch: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
+  contactPanelOpen: false,
+  travelerSearchResults: [],
+  travelerSearch: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
+  travelerPanelOpen: false,
   isSaving: false,
   dirty: {
     primary: false,
@@ -41,7 +52,19 @@ const els = {
   primaryGroup: document.getElementById("groupPrimaryGroup"),
   travelersPanel: document.getElementById("groupTravelersPanel"),
   nameInput: document.getElementById("groupNameInput"),
-  contactSelect: document.getElementById("groupContactSelect"),
+  contactCurrent: document.getElementById("groupContactCurrent"),
+  contactToggleBtn: document.getElementById("groupContactToggleBtn"),
+  contactChangePanel: document.getElementById("groupContactChangePanel"),
+  contactSearch: document.getElementById("groupContactSearch"),
+  contactSearchBtn: document.getElementById("groupContactSearchBtn"),
+  contactResultsTable: document.getElementById("groupContactResultsTable"),
+  contactResultsPagination: document.getElementById("groupContactResultsPagination"),
+  travelersToggleBtn: document.getElementById("groupTravelersToggleBtn"),
+  travelerChangePanel: document.getElementById("groupTravelersChangePanel"),
+  travelerSearch: document.getElementById("groupTravelerSearch"),
+  travelerSearchBtn: document.getElementById("groupTravelerSearchBtn"),
+  travelerResultsTable: document.getElementById("groupTravelerResultsTable"),
+  travelerResultsPagination: document.getElementById("groupTravelerResultsPagination"),
   travelersList: document.getElementById("groupTravelersList"),
   bookingsTable: document.getElementById("groupBookingsTable"),
   systemMeta: document.getElementById("groupSystemMeta"),
@@ -79,10 +102,47 @@ async function init() {
       void copyHeroIdToClipboard();
     });
   }
+  if (els.contactToggleBtn) {
+    els.contactToggleBtn.addEventListener("click", () => {
+      void toggleContactPanel();
+    });
+  }
+  if (els.contactSearchBtn) {
+    els.contactSearchBtn.addEventListener("click", () => {
+      state.contactSearch.page = 1;
+      void searchCustomersForContact();
+    });
+  }
+  if (els.contactSearch) {
+    els.contactSearch.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      state.contactSearch.page = 1;
+      void searchCustomersForContact();
+    });
+  }
+  if (els.travelersToggleBtn) {
+    els.travelersToggleBtn.addEventListener("click", () => {
+      void toggleTravelerPanel();
+    });
+  }
+  if (els.travelerSearchBtn) {
+    els.travelerSearchBtn.addEventListener("click", () => {
+      state.travelerSearch.page = 1;
+      void searchCustomersForTravelers();
+    });
+  }
+  if (els.travelerSearch) {
+    els.travelerSearch.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      state.travelerSearch.page = 1;
+      void searchCustomersForTravelers();
+    });
+  }
   if (els.saveBtn) els.saveBtn.addEventListener("click", saveTravelGroup);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteTravelGroup);
   if (els.nameInput) els.nameInput.addEventListener("input", () => markDirty("primary", true));
-  if (els.contactSelect) els.contactSelect.addEventListener("change", () => markDirty("primary", true));
   await loadAuthStatus();
   await Promise.all([loadTravelGroup(), loadCustomers()]);
   render();
@@ -113,8 +173,10 @@ function render() {
   if (els.heroId) els.heroId.textContent = `ID: ${identifier || "-"}`;
   if (heroCopiedValue && heroCopiedValue !== identifier) clearHeroCopyStatus();
   if (els.nameInput) els.nameInput.value = group.group_name || "";
-  renderCustomerSelect();
+  renderContactSummary();
+  renderContactSearchResults();
   renderTravelers();
+  renderTravelerSearchResults();
   renderBookings();
   renderSystemMeta();
   syncDirtyUi();
@@ -166,35 +228,193 @@ async function copyHeroIdToClipboard() {
   }
 }
 
-function renderCustomerSelect() {
-  if (!els.contactSelect) return;
-  const customers = [...state.allCustomers].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
-  const options = ['<option value="">No group contact</option>']
-    .concat(customers.map((customer) => {
-      const label = [customer.name, customer.email, customer.phone_number].filter(Boolean).join(" · ");
-      return `<option value="${escapeHtml(customer.client_id || "")}">${escapeHtml(label || (customer.client_id || ""))}</option>`;
-    }))
-    .join("");
-  els.contactSelect.innerHTML = options;
-  els.contactSelect.value = normalizeText(state.travelGroup?.group_contact_customer_id) || "";
+function renderContactSummary() {
+  if (!els.contactCurrent) return;
+  const contactId = normalizeText(state.travelGroup?.group_contact_customer_id);
+  const customer = state.allCustomers.find((item) => normalizeText(item.client_id) === contactId) || null;
+  if (!customer) {
+    els.contactCurrent.textContent = "no group contact";
+    return;
+  }
+  const href = buildCustomerHref(customer.client_id || "");
+  const label = [customer.name, customer.email, customer.phone_number].filter(Boolean).join(" · ");
+  els.contactCurrent.innerHTML = `<a href="${escapeHtml(href)}">${escapeHtml(label || customer.client_id || "group contact")}</a>`;
+}
+
+function renderContactSearchResults() {
+  renderCustomerTable({
+    tableEl: els.contactResultsTable,
+    items: state.contactSearchResults,
+    mode: "select",
+    emptyMessage: "no customer found",
+    actionLabel: "Select",
+    actionColumnFirst: true
+  });
+  if (els.contactResultsPagination) {
+    renderPagination(els.contactResultsPagination, state.contactSearch, (page) => {
+      state.contactSearch.page = page;
+      void searchCustomersForContact();
+    });
+  }
+  if (!els.contactResultsTable) return;
+  els.contactResultsTable.querySelectorAll("button[data-customer-select]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const customerClientId = normalizeText(button.getAttribute("data-customer-select"));
+      if (!customerClientId) return;
+      void assignGroupContact(customerClientId);
+    });
+  });
+}
+
+async function toggleContactPanel() {
+  state.contactPanelOpen = !state.contactPanelOpen;
+  if (els.contactChangePanel) els.contactChangePanel.hidden = !state.contactPanelOpen;
+  if (state.contactPanelOpen) {
+    await searchCustomersForContact();
+    if (els.contactSearch) els.contactSearch.focus();
+  }
+}
+
+async function toggleTravelerPanel() {
+  state.travelerPanelOpen = !state.travelerPanelOpen;
+  if (els.travelerChangePanel) els.travelerChangePanel.hidden = !state.travelerPanelOpen;
+  if (state.travelerPanelOpen) {
+    await searchCustomersForTravelers();
+    if (els.travelerSearch) els.travelerSearch.focus();
+  }
+}
+
+async function searchCustomersForContact() {
+  state.contactSearch.search = els.contactSearch?.value || "";
+  const payload = await fetchCustomerSearchPage({
+    fetchApi,
+    page: state.contactSearch.page,
+    pageSize: state.contactSearch.pageSize,
+    search: state.contactSearch.search
+  });
+  if (!payload) return;
+  state.contactSearchResults = Array.isArray(payload.items) ? payload.items : [];
+  const pagination = payload.pagination || {};
+  state.contactSearch.totalPages = Math.max(
+    1,
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.contactSearch.pageSize) || 1)
+  );
+  state.contactSearch.total = Number(pagination.total_items || 0);
+  state.contactSearch.page = Number(pagination.page || state.contactSearch.page);
+  renderContactSearchResults();
+}
+
+async function assignGroupContact(customerClientId) {
+  if (!state.travelGroup) return;
+  const payload = await patchTravelGroup({
+    group_contact_customer_id: customerClientId
+  });
+  if (!payload) return;
+  if (els.saveStatus) {
+    els.saveStatus.hidden = false;
+    els.saveStatus.textContent = "Group contact updated.";
+  }
+  render();
 }
 
 function renderTravelers() {
   if (!els.travelersList) return;
-  const selectedIds = new Set(Array.isArray(state.travelGroup?.traveler_customer_ids) ? state.travelGroup.traveler_customer_ids.map((value) => normalizeText(value)).filter(Boolean) : []);
-  const customers = [...state.allCustomers].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
-  const rows = customers.map((customer) => {
-    const customerId = normalizeText(customer.client_id);
-    const label = [customer.name, customer.email, customer.phone_number].filter(Boolean).join(" · ");
-    return `<label class="group-travelers__item">
-      <input type="checkbox" value="${escapeHtml(customerId)}" ${selectedIds.has(customerId) ? "checked" : ""} />
+  const travelerIds = currentTravelerIds();
+  const rows = travelerIds.map((customerId) => {
+    const customer = state.allCustomers.find((item) => normalizeText(item.client_id) === customerId) || null;
+    const label = customer
+      ? [customer.name, customer.email, customer.phone_number].filter(Boolean).join(" · ")
+      : customerId;
+    return `<div class="group-travelers__item">
       <span>${escapeHtml(label || customerId)}</span>
-    </label>`;
+      <button class="group-travelers__remove" type="button" data-traveler-remove="${escapeHtml(customerId)}" aria-label="Remove traveler">×</button>
+    </div>`;
   }).join("");
-  els.travelersList.innerHTML = rows || '<p class="micro">No customers available.</p>';
-  els.travelersList.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-    input.addEventListener("change", () => markDirty("travelers", true));
+  els.travelersList.innerHTML = rows || '<p class="micro">No travelers added.</p>';
+  els.travelersList.querySelectorAll("button[data-traveler-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const customerId = normalizeText(button.getAttribute("data-traveler-remove"));
+      if (!customerId) return;
+      void removeTraveler(customerId);
+    });
   });
+}
+
+function renderTravelerSearchResults() {
+  const selectedIds = new Set(currentTravelerIds());
+  renderCustomerTable({
+    tableEl: els.travelerResultsTable,
+    items: state.travelerSearchResults,
+    mode: "select",
+    emptyMessage: "no customer found",
+    actionLabel: "Add",
+    actionColumnFirst: true,
+    isActionDisabled: (customer) => selectedIds.has(normalizeText(customer.client_id || customer.id))
+  });
+  if (els.travelerResultsPagination) {
+    renderPagination(els.travelerResultsPagination, state.travelerSearch, (page) => {
+      state.travelerSearch.page = page;
+      void searchCustomersForTravelers();
+    });
+  }
+  if (!els.travelerResultsTable) return;
+  els.travelerResultsTable.querySelectorAll("button[data-customer-select]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const customerClientId = normalizeText(button.getAttribute("data-customer-select"));
+      if (!customerClientId) return;
+      void addTraveler(customerClientId);
+    });
+  });
+}
+
+async function searchCustomersForTravelers() {
+  state.travelerSearch.search = els.travelerSearch?.value || "";
+  const payload = await fetchCustomerSearchPage({
+    fetchApi,
+    page: state.travelerSearch.page,
+    pageSize: state.travelerSearch.pageSize,
+    search: state.travelerSearch.search
+  });
+  if (!payload) return;
+  state.travelerSearchResults = Array.isArray(payload.items) ? payload.items : [];
+  const pagination = payload.pagination || {};
+  state.travelerSearch.totalPages = Math.max(
+    1,
+    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.travelerSearch.pageSize) || 1)
+  );
+  state.travelerSearch.total = Number(pagination.total_items || 0);
+  state.travelerSearch.page = Number(pagination.page || state.travelerSearch.page);
+  renderTravelerSearchResults();
+}
+
+async function addTraveler(customerClientId) {
+  const travelerIds = new Set(currentTravelerIds());
+  travelerIds.add(customerClientId);
+  const payload = await patchTravelGroup({
+    traveler_customer_ids: Array.from(travelerIds)
+  });
+  if (!payload) return;
+  if (els.saveStatus) {
+    els.saveStatus.hidden = false;
+    els.saveStatus.textContent = "Traveler added.";
+  }
+  render();
+}
+
+async function removeTraveler(customerClientId) {
+  const customer = state.allCustomers.find((item) => normalizeText(item.client_id) === customerClientId);
+  const label = customer ? (customer.name || customerClientId) : customerClientId;
+  if (!window.confirm(`Remove traveler ${label}?`)) return;
+  const travelerIds = currentTravelerIds().filter((id) => id !== customerClientId);
+  const payload = await patchTravelGroup({
+    traveler_customer_ids: travelerIds
+  });
+  if (!payload) return;
+  if (els.saveStatus) {
+    els.saveStatus.hidden = false;
+    els.saveStatus.textContent = "Traveler removed.";
+  }
+  render();
 }
 
 function renderBookings() {
@@ -219,20 +439,15 @@ function renderSystemMeta() {
 }
 
 function currentTravelerIds() {
-  if (!els.travelersList) return [];
-  return Array.from(els.travelersList.querySelectorAll('input[type="checkbox"]:checked'))
-    .map((input) => normalizeText(input.value))
-    .filter(Boolean);
+  return Array.isArray(state.travelGroup?.traveler_customer_ids)
+    ? state.travelGroup.traveler_customer_ids.map((value) => normalizeText(value)).filter(Boolean)
+    : [];
 }
 
 function travelGroupChanged() {
   const group = state.travelGroup;
   if (!group) return false;
-  const originalTravelers = JSON.stringify(Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids : []);
-  const currentTravelers = JSON.stringify(currentTravelerIds());
-  return normalizeText(els.nameInput?.value) !== normalizeText(group.group_name)
-    || normalizeText(els.contactSelect?.value) !== normalizeText(group.group_contact_customer_id)
-    || originalTravelers !== currentTravelers;
+  return normalizeText(els.nameInput?.value) !== normalizeText(group.group_name);
 }
 
 function markDirty(section, dirty) {
@@ -243,10 +458,27 @@ function markDirty(section, dirty) {
 function syncDirtyUi() {
   const primaryDirty = travelGroupChanged();
   state.dirty.primary = primaryDirty;
-  state.dirty.travelers = primaryDirty;
+  state.dirty.travelers = false;
   setDirtySurface(els.primaryGroup, state.dirty.primary);
   setDirtySurface(els.travelersPanel, state.dirty.travelers);
   if (els.saveBtn) els.saveBtn.disabled = state.isSaving || !primaryDirty;
+}
+
+async function patchTravelGroup(patch) {
+  if (!state.travelGroup) return null;
+  const payload = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(state.travelGroup.id)}`, {
+    method: "PATCH",
+    body: {
+      travel_group_hash: state.travelGroup.travel_group_hash,
+      ...patch
+    }
+  });
+  if (!payload) return null;
+  state.client = payload.client || state.client;
+  state.travelGroup = payload.travel_group || state.travelGroup;
+  state.memberCustomers = Array.isArray(payload.memberCustomers) ? payload.memberCustomers : state.memberCustomers;
+  state.bookings = Array.isArray(payload.bookings) ? payload.bookings : state.bookings;
+  return payload;
 }
 
 async function saveTravelGroup() {
@@ -257,14 +489,10 @@ async function saveTravelGroup() {
     els.saveStatus.hidden = false;
     els.saveStatus.textContent = "Saving...";
   }
-  const payload = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(state.travelGroup.id)}`, {
-    method: "PATCH",
-    body: {
-      travel_group_hash: state.travelGroup.travel_group_hash,
-      group_name: normalizeText(els.nameInput?.value),
-      group_contact_customer_id: normalizeText(els.contactSelect?.value) || null,
-      traveler_customer_ids: currentTravelerIds()
-    }
+  const payload = await patchTravelGroup({
+    group_name: normalizeText(els.nameInput?.value),
+    group_contact_customer_id: normalizeText(state.travelGroup?.group_contact_customer_id) || null,
+    traveler_customer_ids: currentTravelerIds()
   });
   state.isSaving = false;
   if (!payload) {
@@ -272,10 +500,6 @@ async function saveTravelGroup() {
     if (els.saveStatus) els.saveStatus.textContent = "Could not update travel group.";
     return;
   }
-  state.client = payload.client || state.client;
-  state.travelGroup = payload.travel_group || state.travelGroup;
-  state.memberCustomers = Array.isArray(payload.memberCustomers) ? payload.memberCustomers : state.memberCustomers;
-  state.bookings = Array.isArray(payload.bookings) ? payload.bookings : state.bookings;
   if (els.saveStatus) els.saveStatus.textContent = "Updated.";
   render();
 }
