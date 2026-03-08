@@ -1,15 +1,6 @@
-import { TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../../../../shared/js/text.js";
 
-const TRAVEL_GROUP_UPDATE_FIELDS = new Set(
-  TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA.fields
-    .map((field) => field.name)
-    .filter((name) => name && name !== "travel_group_hash")
-);
-
-const TRAVEL_GROUP_UPDATE_FIELDS_BY_NAME = Object.fromEntries(
-  TRAVEL_GROUP_UPDATE_REQUEST_SCHEMA.fields.map((field) => [field.name, field])
-);
+const TRAVEL_GROUP_UPDATE_FIELDS = new Set(["group_name", "group_contact_customer_id", "traveler_customer_ids"]);
 
 export function createTravelGroupHandlers(deps) {
   const {
@@ -31,50 +22,66 @@ export function createTravelGroupHandlers(deps) {
     randomUUID
   } = deps;
 
-  function membersForGroup(store, groupId) {
-    return (Array.isArray(store?.travel_group_members) ? store.travel_group_members : [])
-      .filter((member) => member.travel_group_id === groupId)
-      .sort((a, b) => String(a.id || "").localeCompare(String(b.id || "")));
+  function memberCustomerIdsForGroup(group) {
+    return Array.from(
+      new Set((Array.isArray(group?.traveler_customer_ids) ? group.traveler_customer_ids : []).map((id) => normalizeText(id)).filter(Boolean))
+    );
   }
 
-  function memberCustomersForGroup(store, members) {
-    const customerIds = new Set((members || []).map((member) => normalizeText(member.customer_client_id)).filter(Boolean));
+  function memberCustomersForGroup(store, group) {
+    const customerIds = new Set(memberCustomerIdsForGroup(group));
     return (Array.isArray(store?.customers) ? store.customers : [])
       .filter((customer) => customerIds.has(normalizeText(customer.client_id)))
       .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+  }
+
+  function membersForGroup(group) {
+    return memberCustomerIdsForGroup(group).map((customerClientId, index) => ({
+      id: `travel_group_member_${group.id}_${index + 1}`,
+      travel_group_id: group.id,
+      customer_client_id: customerClientId
+    }));
   }
 
   function clientForGroup(store, group) {
     return (Array.isArray(store?.clients) ? store.clients : []).find((client) => client.id === group.client_id) || null;
   }
 
-  function buildTravelGroupReadModel(group, members = []) {
+  function groupContactCustomerForGroup(store, group) {
+    const customerClientId = normalizeText(group?.group_contact_customer_id);
+    if (!customerClientId) return null;
+    return (Array.isArray(store?.customers) ? store.customers : []).find((customer) => customer.client_id === customerClientId) || null;
+  }
+
+  function buildTravelGroupReadModel(group) {
     return {
       ...group,
       group_name: normalizeText(group?.group_name) || "",
-      notes: normalizeText(group?.notes) || null,
-      travel_group_hash: computeTravelGroupHash(group, members)
+      group_contact_customer_id: normalizeText(group?.group_contact_customer_id) || null,
+      traveler_customer_ids: memberCustomerIdsForGroup(group),
+      travel_group_hash: computeTravelGroupHash(group)
     };
   }
 
-  function buildClientReadModel(client, group) {
+  function buildClientReadModel(client, group, groupContactCustomer = null) {
     if (!client) return null;
     return {
       ...client,
       client_hash: computeClientHash(client),
       display_name: normalizeText(group?.group_name) || "",
-      primary_phone_number: null,
-      primary_email: null
+      primary_phone_number: normalizeText(groupContactCustomer?.phone_number) || null,
+      primary_email: normalizeText(groupContactCustomer?.email) || null
     };
   }
 
   function buildTravelGroupDetail(store, group) {
-    const members = membersForGroup(store, group.id);
+    const members = membersForGroup(group);
+    const groupContactCustomer = groupContactCustomerForGroup(store, group);
     return {
-      client: buildClientReadModel(clientForGroup(store, group), group),
-      travel_group: buildTravelGroupReadModel(group, members),
+      client: buildClientReadModel(clientForGroup(store, group), group, groupContactCustomer),
+      travel_group: buildTravelGroupReadModel(group),
       members,
-      memberCustomers: memberCustomersForGroup(store, members)
+      memberCustomers: memberCustomersForGroup(store, group)
     };
   }
 
@@ -101,16 +108,15 @@ export function createTravelGroupHandlers(deps) {
     const create = {};
     Object.entries(payload).forEach(([key, value]) => {
       if (!TRAVEL_GROUP_UPDATE_FIELDS.has(key)) return;
-      const field = TRAVEL_GROUP_UPDATE_FIELDS_BY_NAME[key];
-      const normalizedValue = normalizeText(value);
-      if (field?.kind === "enum") {
-        const allowedValues = Array.isArray(field.enumValues) ? new Set(field.enumValues) : null;
-        if (normalizedValue && allowedValues && !allowedValues.has(normalizedValue)) return;
+      if (key === "traveler_customer_ids") {
+        create[key] = Array.isArray(value) ? Array.from(new Set(value.map((entry) => normalizeText(entry)).filter(Boolean))) : [];
+        return;
       }
-      create[key] = normalizedValue;
+      create[key] = normalizeText(value);
     });
 
     if (!normalizeText(create.group_name)) return null;
+    if (!Array.isArray(create.traveler_customer_ids)) create.traveler_customer_ids = [];
     return create;
   }
 
@@ -120,21 +126,19 @@ export function createTravelGroupHandlers(deps) {
     const patch = {};
     Object.entries(payload).forEach(([key, value]) => {
       if (!TRAVEL_GROUP_UPDATE_FIELDS.has(key)) return;
-      const field = TRAVEL_GROUP_UPDATE_FIELDS_BY_NAME[key];
-      const normalizedValue = normalizeText(value);
-      if (field?.kind === "enum") {
-        const allowedValues = Array.isArray(field.enumValues) ? new Set(field.enumValues) : null;
-        if (normalizedValue && allowedValues && !allowedValues.has(normalizedValue)) return;
+      if (key === "traveler_customer_ids") {
+        patch[key] = Array.isArray(value) ? Array.from(new Set(value.map((entry) => normalizeText(entry)).filter(Boolean))) : [];
+        return;
       }
-      patch[key] = normalizedValue;
+      patch[key] = normalizeText(value);
     });
 
     return patch;
   }
 
-  async function assertMatchingTravelGroupHash(payload, group, members, store, res) {
+  async function assertMatchingTravelGroupHash(payload, group, store, res) {
     const requestHash = normalizeText(payload?.travel_group_hash);
-    const currentHash = computeTravelGroupHash(group, members);
+    const currentHash = computeTravelGroupHash(group);
     if (!requestHash || requestHash !== currentHash) {
       sendJson(res, 409, {
         error: "Travel group changed in backend",
@@ -162,14 +166,15 @@ export function createTravelGroupHandlers(deps) {
 
     const visible = (Array.isArray(store.travel_groups) ? store.travel_groups : [])
       .filter((group) => canReadGroup(principal, relatedBookings(store, group), staffMember))
-      .map((group) => buildTravelGroupReadModel(group, membersForGroup(store, group.id)))
+      .map((group) => buildTravelGroupReadModel(group))
       .filter((group) => {
         if (!search) return true;
         const haystack = [
           group.id,
           group.client_id,
           group.group_name,
-          group.notes
+          group.group_contact_customer_id,
+          ...(Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids : [])
         ]
           .filter(Boolean)
           .join(" ")
@@ -240,15 +245,13 @@ export function createTravelGroupHandlers(deps) {
       id: `travel_group_${randomUUID()}`,
       client_id: client.id,
       group_name: create.group_name,
-      preferred_language: create.preferred_language || null,
-      preferred_currency: create.preferred_currency || null,
-      timezone: create.timezone || null,
-      notes: create.notes || null,
+      group_contact_customer_id: create.group_contact_customer_id || null,
+      traveler_customer_ids: Array.isArray(create.traveler_customer_ids) ? create.traveler_customer_ids : [],
       created_at: now,
       updated_at: now,
       archived_at: null
     };
-    group.travel_group_hash = computeTravelGroupHash(group, []);
+    group.travel_group_hash = computeTravelGroupHash(group);
 
     store.clients.push(client);
     store.travel_groups.push(group);
@@ -283,8 +286,7 @@ export function createTravelGroupHandlers(deps) {
       return;
     }
 
-    const members = membersForGroup(store, group.id);
-    if (!(await assertMatchingTravelGroupHash(payload, group, members, store, res))) return;
+    if (!(await assertMatchingTravelGroupHash(payload, group, store, res))) return;
 
     const patch = normalizeTravelGroupPatch(payload);
     if (!patch || !Object.keys(patch).length) {
@@ -296,6 +298,7 @@ export function createTravelGroupHandlers(deps) {
       group[key] = value;
     });
     group.updated_at = nowIso();
+    group.travel_group_hash = computeTravelGroupHash(group);
 
     await persistStore(store);
     sendJson(res, 200, buildTravelGroupDetail(store, group));

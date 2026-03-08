@@ -11,7 +11,6 @@ import (
 	entities: {
 		ATPStaff: entityModel.#ATPStaff
 		Client: entityModel.#Client
-		ClientSummary: entityModel.#ClientSummary
 		Customer: entityModel.#Customer
 		CustomerConsent: entityModel.#CustomerConsent
 		CustomerDocument: entityModel.#CustomerDocument

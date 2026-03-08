@@ -317,12 +317,12 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.CustomerDetail",
         fields: [
-    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_33),
     schemaField({"name":"customer","required":true,"wireName":"customer"}, SHARED_FIELD_DEFS.FIELD_34),
     schemaField({"name":"bookings","required":false,"wireName":"bookings"}, SHARED_FIELD_DEFS.FIELD_38),
-    schemaField({"name":"consents","required":false,"wireName":"consents"}, SHARED_FIELD_DEFS.FIELD_49),
-    schemaField({"name":"documents","required":false,"wireName":"documents"}, SHARED_FIELD_DEFS.FIELD_50),
-    schemaField({"name":"travelGroups","required":false,"wireName":"travelGroups"}, SHARED_FIELD_DEFS.FIELD_51),
+    schemaField({"name":"consents","required":false,"wireName":"consents"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"documents","required":false,"wireName":"documents"}, SHARED_FIELD_DEFS.FIELD_49),
+    schemaField({"name":"travelGroups","required":false,"wireName":"travelGroups"}, SHARED_FIELD_DEFS.FIELD_50),
     schemaField({"name":"travelGroupMembers","required":false,"wireName":"travelGroupMembers"}, SHARED_FIELD_DEFS.FIELD_41)
         ]
       };
@@ -376,7 +376,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.CustomerUpdateResponse",
         fields: [
-    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_33),
     schemaField({"name":"customer","required":true,"wireName":"customer"}, SHARED_FIELD_DEFS.FIELD_34)
         ]
       };
@@ -392,8 +392,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.CustomerPhotoUploadRequest",
         fields: [
     schemaField({"name":"customer_hash","required":false,"wireName":"customer_hash"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"photo_upload","required":false,"wireName":"photo_upload"}, SHARED_FIELD_DEFS.FIELD_52),
-    schemaField({"name":"photo","required":false,"wireName":"photo"}, SHARED_FIELD_DEFS.FIELD_52)
+    schemaField({"name":"photo_upload","required":false,"wireName":"photo_upload"}, SHARED_FIELD_DEFS.FIELD_51),
+    schemaField({"name":"photo","required":false,"wireName":"photo"}, SHARED_FIELD_DEFS.FIELD_51)
         ]
       };
 
@@ -407,7 +407,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.CustomerPhotoUploadResponse",
         fields: [
-    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_33),
     schemaField({"name":"customer","required":true,"wireName":"customer"}, SHARED_FIELD_DEFS.FIELD_34)
         ]
       };
@@ -428,7 +428,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"captured_via","required":false,"wireName":"captured_via"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"captured_at","required":false,"wireName":"captured_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"evidence_ref","required":false,"wireName":"evidence_ref"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"evidence_upload","required":false,"wireName":"evidence_upload"}, SHARED_FIELD_DEFS.FIELD_52)
+    schemaField({"name":"evidence_upload","required":false,"wireName":"evidence_upload"}, SHARED_FIELD_DEFS.FIELD_51)
         ]
       };
 
@@ -442,9 +442,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.CustomerConsentCreateResponse",
         fields: [
-    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_33),
     schemaField({"name":"customer","required":true,"wireName":"customer"}, SHARED_FIELD_DEFS.FIELD_34),
-    schemaField({"name":"consent","required":true,"wireName":"consent"}, SHARED_FIELD_DEFS.FIELD_53)
+    schemaField({"name":"consent","required":true,"wireName":"consent"}, SHARED_FIELD_DEFS.FIELD_52)
         ]
       };
 
@@ -458,7 +458,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.TravelGroupList",
         fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_51),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_50),
     schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"page","required":true,"wireName":"page"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"page_size","required":true,"wireName":"page_size"}, SHARED_FIELD_DEFS.FIELD_7),
@@ -476,7 +476,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.TravelGroupDetail",
         fields: [
-    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"client","required":true,"wireName":"client"}, SHARED_FIELD_DEFS.FIELD_33),
     schemaField({"name":"travel_group","required":true,"wireName":"travel_group"}, SHARED_FIELD_DEFS.FIELD_35),
     schemaField({"name":"members","required":false,"wireName":"members"}, SHARED_FIELD_DEFS.FIELD_41),
     schemaField({"name":"memberCustomers","required":false,"wireName":"memberCustomers"}, SHARED_FIELD_DEFS.FIELD_42)
@@ -495,10 +495,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"travel_group_hash","required":false,"wireName":"travel_group_hash"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"group_name","required":false,"wireName":"group_name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"preferred_language","required":false,"wireName":"preferred_language"}, SHARED_FIELD_DEFS.FIELD_20),
-    schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"timezone","required":false,"wireName":"timezone"}, SHARED_FIELD_DEFS.FIELD_21),
-    schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"group_contact_customer_id","required":false,"wireName":"group_contact_customer_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"traveler_customer_ids","required":false,"wireName":"traveler_customer_ids"}, SHARED_FIELD_DEFS.FIELD_14)
         ]
       };
 
@@ -512,8 +510,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         module: "api",
         sourceType: "openapi.components.schemas.TourDetail",
         fields: [
-    schemaField({"name":"tour","required":true,"wireName":"tour"}, SHARED_FIELD_DEFS.FIELD_54),
-    schemaField({"name":"options","required":true,"wireName":"options"}, SHARED_FIELD_DEFS.FIELD_55)
+    schemaField({"name":"tour","required":true,"wireName":"tour"}, SHARED_FIELD_DEFS.FIELD_53),
+    schemaField({"name":"options","required":true,"wireName":"options"}, SHARED_FIELD_DEFS.FIELD_54)
         ]
       };
 
@@ -567,23 +565,20 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, FEATURE_FLAGS_SCHEMA);
       }
 
-      export const CLIENT_SUMMARY_SCHEMA = {
-        name: "ClientSummary",
+      export const CLIENT_SCHEMA = {
+        name: "Client",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.ClientSummary",
+        sourceType: "openapi.components.schemas.Client",
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"client_type","required":true,"wireName":"client_type"}, SHARED_FIELD_DEFS.FIELD_12),
-    schemaField({"name":"client_hash","required":false,"wireName":"client_hash"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"display_name","required":true,"wireName":"display_name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"primary_phone_number","required":false,"wireName":"primary_phone_number"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"primary_email","required":false,"wireName":"primary_email"}, SHARED_FIELD_DEFS.FIELD_2)
+    schemaField({"name":"client_hash","required":true,"wireName":"client_hash"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateClientSummary(value) {
-        return validateShape(value, CLIENT_SUMMARY_SCHEMA);
+      export function validateClient(value) {
+        return validateShape(value, CLIENT_SCHEMA);
       }
 
       export const PAGINATION_SCHEMA = {
@@ -665,22 +660,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateAtpStaffDirectoryEntry(value) {
         return validateShape(value, ATP_STAFF_DIRECTORY_ENTRY_SCHEMA);
-      }
-
-      export const CLIENT_SCHEMA = {
-        name: "Client",
-        domain: "api",
-        module: "api",
-        sourceType: "openapi.components.schemas.Client",
-        fields: [
-    schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"client_type","required":true,"wireName":"client_type"}, SHARED_FIELD_DEFS.FIELD_12),
-    schemaField({"name":"client_hash","required":true,"wireName":"client_hash"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateClient(value) {
-        return validateShape(value, CLIENT_SCHEMA);
       }
 
       export const EVIDENCE_UPLOAD_SCHEMA = {

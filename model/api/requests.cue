@@ -115,18 +115,14 @@ import (
 }
 
 #TravelGroupUpdateRequest: {
-	travel_group_hash?: string
-	group_name?:        string
-	preferred_language?: enums.#LanguageCode
-	preferred_currency?: enums.#CurrencyCode
-	timezone?:          enums.#TimezoneCode
-	notes?:             string
+	travel_group_hash?:         string
+	group_name?:                string
+	group_contact_customer_id?: string
+	traveler_customer_ids?:     [...string]
 }
 
 #TravelGroupCreateRequest: {
-	group_name:          string
-	preferred_language?: enums.#LanguageCode
-	preferred_currency?: enums.#CurrencyCode
-	timezone?:           enums.#TimezoneCode
-	notes?:              string
+	group_name:                 string
+	group_contact_customer_id?: string
+	traveler_customer_ids?:     [...string]
 }

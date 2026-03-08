@@ -67,14 +67,14 @@ export function createBookingHandlers(deps) {
     sendFileWithCache
   } = deps;
 
-function buildClientReadModel(client, customer = null, group = null) {
+function buildClientReadModel(client, customer = null, group = null, groupContactCustomer = null) {
   if (!client) return null;
   return {
     ...client,
     client_hash: computeClientHash(client),
     display_name: normalizeText(customer?.name || group?.group_name) || "",
-    primary_email: normalizeEmail(customer?.email) || null,
-    primary_phone_number: normalizePhone(customer?.phone_number) || null
+    primary_email: normalizeEmail(customer?.email || groupContactCustomer?.email) || null,
+    primary_phone_number: normalizePhone(customer?.phone_number || groupContactCustomer?.phone_number) || null
   };
 }
 
@@ -263,25 +263,30 @@ function resolveBookingClientContext(store, booking) {
   const client = (store.clients || []).find((item) => item.id === booking.client_id) || null;
   const customer = (store.customers || []).find((item) => item.client_id === booking.client_id) || null;
   const travelGroup = (store.travel_groups || []).find((item) => item.client_id === booking.client_id) || null;
-  return { client, customer, travelGroup };
+  const groupContactCustomer = travelGroup
+    ? (store.customers || []).find((item) => item.client_id === travelGroup.group_contact_customer_id) || null
+    : null;
+  return { client, customer, travelGroup, groupContactCustomer };
 }
 
-function syncBookingClientSummary(store, booking) {
-  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+function syncBookingClientFields(store, booking) {
+  const { client, customer, travelGroup, groupContactCustomer } = resolveBookingClientContext(store, booking);
   booking.client_type = client?.client_type || booking.client_type || null;
   booking.client_display_name = travelGroup?.group_name || customer?.name || booking.client_display_name || "";
-  booking.client_primary_phone_number = customer?.phone_number || booking.client_primary_phone_number || null;
-  booking.client_primary_email = customer?.email || booking.client_primary_email || null;
+  booking.client_primary_phone_number = customer?.phone_number || groupContactCustomer?.phone_number || booking.client_primary_phone_number || null;
+  booking.client_primary_email = customer?.email || groupContactCustomer?.email || booking.client_primary_email || null;
 }
 
-function membersForTravelGroup(store, travelGroupId) {
-  return (store.travel_group_members || [])
-    .filter((member) => member.travel_group_id === travelGroupId)
-    .sort((a, b) => String(a.created_at || a.id || "").localeCompare(String(b.created_at || b.id || "")));
+function membersForTravelGroup(travelGroup) {
+  return (Array.isArray(travelGroup?.traveler_customer_ids) ? travelGroup.traveler_customer_ids : []).map((customerClientId, index) => ({
+    id: `travel_group_member_${travelGroup.id}_${index + 1}`,
+    travel_group_id: travelGroup.id,
+    customer_client_id: customerClientId
+  }));
 }
 
 function buildTravelGroupPayload(store, travelGroup) {
-  const members = membersForTravelGroup(store, travelGroup.id);
+  const members = membersForTravelGroup(travelGroup);
   const customerIds = new Set(members.map((member) => member.customer_client_id).filter(Boolean));
   const memberCustomers = (store.customers || []).filter((customer) => customerIds.has(customer.client_id));
   return { travelGroup, members, memberCustomers };
@@ -292,10 +297,7 @@ function buildTravelGroupOptions(store) {
     .map((group) => ({
       travel_group_id: group.id,
       client_id: group.client_id,
-      group_name: normalizeText(group.group_name) || "Travel group",
-      preferred_language: normalizeText(group.preferred_language) || null,
-      preferred_currency: normalizeText(group.preferred_currency) || null,
-      timezone: normalizeText(group.timezone) || null
+      group_name: normalizeText(group.group_name) || "Travel group"
     }))
     .sort((left, right) => left.group_name.localeCompare(right.group_name));
 }
@@ -314,43 +316,28 @@ function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, compu
     id: `group_${randomUUID()}`,
     client_id: client.id,
     group_name: normalizeText(booking.client_display_name || customer?.name) || "Travel group",
-    preferred_language: customer?.preferred_language || null,
-    preferred_currency: booking.preferred_currency || customer?.preferred_currency || null,
-    timezone: customer?.timezone || null,
-    notes: null,
+    group_contact_customer_id: customer?.client_id || null,
+    traveler_customer_ids: customer?.client_id ? [customer.client_id] : [],
     created_at: createdAt,
     updated_at: createdAt,
     archived_at: null
   };
   if (!Array.isArray(store.clients)) store.clients = [];
   if (!Array.isArray(store.travel_groups)) store.travel_groups = [];
-  if (!Array.isArray(store.travel_group_members)) store.travel_group_members = [];
   store.clients.push(client);
   store.travel_groups.push(travelGroup);
-  if (customer) {
-    store.travel_group_members.push({
-      id: `groupmem_${randomUUID()}`,
-      travel_group_id: travelGroup.id,
-      customer_client_id: customer.client_id,
-      is_traveling: true,
-      member_roles: ["TravelGroupContact"],
-      notes: null,
-      created_at: createdAt,
-      updated_at: createdAt
-    });
-  }
-  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup, membersForTravelGroup(store, travelGroup.id));
+  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup);
   booking.client_id = client.id;
-  syncBookingClientSummary(store, booking);
+  syncBookingClientFields(store, booking);
   return { client, travelGroup, leadCustomer: customer };
 }
 
 async function buildBookingClientResponse(store, booking) {
-  const { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
+  const { client, customer, travelGroup, groupContactCustomer } = resolveBookingClientContext(store, booking);
   const submittedCustomer = buildSubmittedCustomer(booking);
   const response = {
     booking: await buildBookingReadModel(booking),
-    client: buildClientReadModel(client, customer, travelGroup),
+    client: buildClientReadModel(client, customer, travelGroup, groupContactCustomer),
     customer: buildCustomerReadModel(customer),
     travelGroup: travelGroup || null,
     submittedCustomer,
@@ -659,7 +646,7 @@ async function handlePatchBookingClient(req, res, [bookingId]) {
     }
     booking.client_id = customerClientId;
     booking.updated_at = nowIso();
-    syncBookingClientSummary(store, booking);
+    syncBookingClientFields(store, booking);
     addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Assigned to customer ${customer.name}`);
     await persistStore(store);
     sendJson(res, 200, await buildBookingClientResponse(store, booking));
@@ -681,7 +668,7 @@ async function handlePatchBookingClient(req, res, [bookingId]) {
   }
   booking.client_id = client.id;
   booking.updated_at = nowIso();
-  syncBookingClientSummary(store, booking);
+  syncBookingClientFields(store, booking);
   addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Assigned to travel group ${travelGroup.group_name}`);
   await persistStore(store);
   sendJson(res, 200, await buildBookingClientResponse(store, booking));
@@ -741,7 +728,7 @@ async function handleCreateBookingCustomer(req, res, [bookingId]) {
   store.customers.push(customer);
   booking.client_id = customerClient.id;
   booking.updated_at = createdAt;
-  syncBookingClientSummary(store, booking);
+  syncBookingClientFields(store, booking);
   addActivity(store, booking.id, "CLIENT_ASSIGNED", actorLabel(principal, "atp_staff"), `Created and assigned customer ${customer.name}`);
   await persistStore(store);
   sendJson(res, 201, await buildBookingClientResponse(store, booking));
@@ -801,36 +788,26 @@ async function handleCreateBookingGroupMember(req, res, [bookingId]) {
   };
   customer.customer_hash = computeCustomerHash(customer);
 
-  const memberRoles = Array.isArray(payload.member_roles)
-    ? payload.member_roles.map((value) => normalizeText(value)).filter(Boolean)
-    : normalizeText(payload.member_role)
-      ? [normalizeText(payload.member_role)]
-      : ["other"];
-
-  const member = {
-    id: `groupmem_${randomUUID()}`,
-    travel_group_id: travelGroup.id,
-    customer_client_id: customer.client_id,
-    is_traveling: payload.is_traveling !== false,
-    member_roles: [...new Set(memberRoles)],
-    notes: normalizeText(payload.member_notes) || null,
-    created_at: createdAt,
-    updated_at: createdAt
-  };
-
   store.clients.push(customerClient);
   store.customers.push(customer);
-  store.travel_group_members.push(member);
+  const travelerCustomerIds = Array.isArray(travelGroup.traveler_customer_ids) ? [...travelGroup.traveler_customer_ids] : [];
+  if (payload.is_traveling !== false && !travelerCustomerIds.includes(customer.client_id)) {
+    travelerCustomerIds.push(customer.client_id);
+  }
+  travelGroup.traveler_customer_ids = travelerCustomerIds;
+  if (!travelGroup.group_contact_customer_id) {
+    travelGroup.group_contact_customer_id = customer.client_id;
+  }
   travelGroup.updated_at = createdAt;
-  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup, membersForTravelGroup(store, travelGroup.id));
+  travelGroup.travel_group_hash = computeTravelGroupHash(travelGroup);
   booking.updated_at = createdAt;
-  syncBookingClientSummary(store, booking);
+  syncBookingClientFields(store, booking);
   await persistStore(store);
 
   const payloadGroup = buildTravelGroupPayload(store, travelGroup);
   sendJson(res, 201, {
     booking: await buildBookingReadModel(booking),
-    client: buildClientReadModel(client, null, travelGroup),
+    client: buildClientReadModel(client, null, travelGroup, customer),
     customer: null,
     travelGroup,
     ...payloadGroup

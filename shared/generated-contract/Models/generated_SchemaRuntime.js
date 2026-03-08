@@ -3834,7 +3834,7 @@
 },
   FIELD_33: {
   "kind": "transport",
-  "typeName": "ClientSummary",
+  "typeName": "Client",
   "isArray": false
 },
   FIELD_34: {
@@ -3909,40 +3909,35 @@
 },
   FIELD_48: {
   "kind": "transport",
-  "typeName": "Client",
-  "isArray": false
-},
-  FIELD_49: {
-  "kind": "transport",
   "typeName": "CustomerConsent",
   "isArray": true
 },
-  FIELD_50: {
+  FIELD_49: {
   "kind": "transport",
   "typeName": "CustomerDocument",
   "isArray": true
 },
-  FIELD_51: {
+  FIELD_50: {
   "kind": "transport",
   "typeName": "TravelGroup",
   "isArray": true
 },
-  FIELD_52: {
+  FIELD_51: {
   "kind": "transport",
   "typeName": "EvidenceUpload",
   "isArray": false
 },
-  FIELD_53: {
+  FIELD_52: {
   "kind": "transport",
   "typeName": "CustomerConsent",
   "isArray": false
 },
-  FIELD_54: {
+  FIELD_53: {
   "kind": "transport",
   "typeName": "Tour",
   "isArray": false
 },
-  FIELD_55: {
+  FIELD_54: {
   "kind": "transport",
   "typeName": "TourOptions",
   "isArray": false

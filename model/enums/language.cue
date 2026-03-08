@@ -1,12 +1,5 @@
 package enums
 
-#LanguageCode:
-	"English" |
-	"Vietnamese" |
-	"French" |
-	"German" |
-	"Spanish"
-
 LanguageCatalog: [
 	"English",
 	"Vietnamese",
@@ -14,3 +7,5 @@ LanguageCatalog: [
 	"German",
 	"Spanish",
 ]
+
+#LanguageCode: or(LanguageCatalog)

@@ -1,9 +1,9 @@
 package enums
 
-#PaymentStatus: "PENDING" | "PAID" | "VOID"
-
 PaymentStatusCatalog: [
 	"PENDING",
 	"PAID",
 	"VOID",
 ]
+
+#PaymentStatus: or(PaymentStatusCatalog)

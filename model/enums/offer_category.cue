@@ -1,7 +1,5 @@
 package enums
 
-#OfferCategory: "ACCOMMODATION" | "TRANSPORTATION" | "TOURS_ACTIVITIES" | "GUIDE_SUPPORT_SERVICES" | "MEALS" | "FEES_TAXES" | "DISCOUNTS_CREDITS" | "OTHER"
-
 OfferCategoryCatalog: [
 	"ACCOMMODATION",
 	"TRANSPORTATION",
@@ -12,3 +10,5 @@ OfferCategoryCatalog: [
 	"DISCOUNTS_CREDITS",
 	"OTHER",
 ]
+
+#OfferCategory: or(OfferCategoryCatalog)

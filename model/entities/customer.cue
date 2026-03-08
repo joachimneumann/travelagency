@@ -5,21 +5,6 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#Client: {
-	id:          common.#Identifier
-	client_type: enums.#ClientType
-	client_hash: string
-}
-
-#ClientSummary: {
-	id:                   common.#Identifier
-	client_type:          enums.#ClientType
-	client_hash?:         string
-	display_name:         string
-	primary_phone_number?: string
-	primary_email?:       common.#Email
-}
-
 #Customer: {
 	client_id:    common.#Identifier
 	customer_hash?: string
@@ -79,20 +64,6 @@ import (
 	expires_on?:          common.#DateOnly
 	created_at:           common.#Timestamp
 	updated_at:           common.#Timestamp
-}
-
-#TravelGroup: {
-	id:                 common.#Identifier
-	client_id:          common.#Identifier
-	travel_group_hash?: string
-	group_name:         string
-	preferred_language?: enums.#LanguageCode
-	preferred_currency?: enums.#CurrencyCode
-	timezone?:          enums.#TimezoneCode
-	notes?:             string
-	created_at:         common.#Timestamp
-	updated_at:         common.#Timestamp
-	archived_at?:       common.#Timestamp
 }
 
 #TravelGroupMember: {

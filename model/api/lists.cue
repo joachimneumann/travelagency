@@ -19,7 +19,7 @@ import entities "travelagency.local/model/entities"
 
 #BookingDetail: {
 	booking:      entities.#Booking
-	client?:      entities.#ClientSummary
+	client?:      entities.#Client
 	customer?:      entities.#Customer
 	travelGroup?: entities.#TravelGroup
 	submittedCustomer?: #BookingSubmittedCustomer
@@ -29,7 +29,7 @@ import entities "travelagency.local/model/entities"
 
 #BookingClientDetail: {
 	booking:      entities.#Booking
-	client?:      entities.#ClientSummary
+	client?:      entities.#Client
 	customer?:      entities.#Customer
 	travelGroup?: entities.#TravelGroup
 	submittedCustomer?: #BookingSubmittedCustomer

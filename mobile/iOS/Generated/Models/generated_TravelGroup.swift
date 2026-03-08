@@ -8,10 +8,8 @@ import Foundation
     let client_id: String
     let travel_group_hash: String?
     let group_name: String
-    let preferred_language: GeneratedLanguageCode?
-    let preferred_currency: GeneratedCurrencyCode?
-    let timezone: GeneratedTimezoneCode?
-    let notes: String?
+    let group_contact_customer_id: String?
+    let traveler_customer_ids: [String]?
     let created_at: String
     let updated_at: String
     let archived_at: String?
@@ -21,10 +19,8 @@ import Foundation
         case client_id = "client_id"
         case travel_group_hash = "travel_group_hash"
         case group_name = "group_name"
-        case preferred_language = "preferred_language"
-        case preferred_currency = "preferred_currency"
-        case timezone = "timezone"
-        case notes = "notes"
+        case group_contact_customer_id = "group_contact_customer_id"
+        case traveler_customer_ids = "traveler_customer_ids"
         case created_at = "created_at"
         case updated_at = "updated_at"
         case archived_at = "archived_at"

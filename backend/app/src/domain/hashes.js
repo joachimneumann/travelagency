@@ -25,8 +25,8 @@ export function computeCustomerHash(customer) {
   return hashPayload(customer, ["customer_hash"]);
 }
 
-export function computeTravelGroupHash(group, members = []) {
-  return hashPayload({ ...group, members }, ["travel_group_hash"]);
+export function computeTravelGroupHash(group) {
+  return hashPayload(group, ["travel_group_hash"]);
 }
 
 export function computeBookingHash(booking) {

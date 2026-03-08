@@ -1,7 +1,5 @@
 package enums
 
-#BookingStage: "NEW" | "QUALIFIED" | "PROPOSAL_SENT" | "NEGOTIATION" | "INVOICE_SENT" | "PAYMENT_RECEIVED" | "WON" | "LOST" | "POST_TRIP"
-
 BookingStageCatalog: [
 	"NEW",
 	"QUALIFIED",
@@ -13,3 +11,5 @@ BookingStageCatalog: [
 	"LOST",
 	"POST_TRIP",
 ]
+
+#BookingStage: or(BookingStageCatalog)

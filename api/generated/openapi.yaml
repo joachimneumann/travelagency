@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-07T15:14:14Z
+# 2026-03-08T06:18:41Z
 
 ---
 openapi: 3.1.0
@@ -3129,29 +3129,6 @@ components:
           "$ref": "#/components/schemas/ClientType"
         client_hash:
           type: string
-    ClientSummary:
-      type: object
-      required:
-      - id
-      - client_type
-      - display_name
-      properties:
-        id:
-          type: string
-        client_type:
-          "$ref": "#/components/schemas/ClientType"
-        client_hash:
-          type: string
-          nullable: true
-        display_name:
-          type: string
-        primary_phone_number:
-          type: string
-          nullable: true
-        primary_email:
-          type: string
-          format: email
-          nullable: true
     Customer:
       type: object
       required:
@@ -3334,18 +3311,13 @@ components:
           nullable: true
         group_name:
           type: string
-        preferred_language:
-          "$ref": "#/components/schemas/LanguageCode"
-          nullable: true
-        preferred_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-          nullable: true
-        timezone:
-          "$ref": "#/components/schemas/TimezoneCode"
-          nullable: true
-        notes:
+        group_contact_customer_id:
           type: string
           nullable: true
+        traveler_customer_ids:
+          type: array
+          items:
+            type: string
         created_at:
           type: string
           format: date-time
@@ -3655,7 +3627,7 @@ components:
         booking:
           "$ref": "#/components/schemas/Booking"
         client:
-          "$ref": "#/components/schemas/ClientSummary"
+          "$ref": "#/components/schemas/Client"
           nullable: true
         customer:
           "$ref": "#/components/schemas/Customer"
@@ -3671,7 +3643,7 @@ components:
         booking:
           "$ref": "#/components/schemas/Booking"
         client:
-          "$ref": "#/components/schemas/ClientSummary"
+          "$ref": "#/components/schemas/Client"
           nullable: true
         customer:
           "$ref": "#/components/schemas/Customer"
@@ -4287,7 +4259,7 @@ components:
         booking:
           "$ref": "#/components/schemas/Booking"
         client:
-          "$ref": "#/components/schemas/ClientSummary"
+          "$ref": "#/components/schemas/Client"
           nullable: true
         customer:
           "$ref": "#/components/schemas/Customer"
@@ -4311,7 +4283,7 @@ components:
         booking:
           "$ref": "#/components/schemas/Booking"
         client:
-          "$ref": "#/components/schemas/ClientSummary"
+          "$ref": "#/components/schemas/Client"
           nullable: true
         customer:
           "$ref": "#/components/schemas/Customer"
@@ -4375,18 +4347,13 @@ components:
         group_name:
           type: string
           nullable: true
-        preferred_language:
-          "$ref": "#/components/schemas/LanguageCode"
-          nullable: true
-        preferred_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-          nullable: true
-        timezone:
-          "$ref": "#/components/schemas/TimezoneCode"
-          nullable: true
-        notes:
+        group_contact_customer_id:
           type: string
           nullable: true
+        traveler_customer_ids:
+          type: array
+          items:
+            type: string
     ErrorResponse:
       type: object
       required:

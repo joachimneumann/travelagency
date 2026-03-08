@@ -1,7 +1,5 @@
 package enums
 
-#TravelGroupType: "family" | "friends" | "corporate" | "school" | "other"
-
 TravelGroupTypeCatalog: [
 	"family",
 	"friends",
@@ -10,7 +8,7 @@ TravelGroupTypeCatalog: [
 	"other",
 ]
 
-#TravelGroupMemberRole: "TravelGroupContact" | "decision_maker" | "payer" | "assistant" | "other"
+#TravelGroupType: or(TravelGroupTypeCatalog)
 
 TravelGroupMemberRoleCatalog: [
 	"TravelGroupContact",
@@ -19,3 +17,5 @@ TravelGroupMemberRoleCatalog: [
 	"assistant",
 	"other",
 ]
+
+#TravelGroupMemberRole: or(TravelGroupMemberRoleCatalog)

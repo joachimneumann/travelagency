@@ -1,7 +1,5 @@
 package enums
 
-#CustomerConsentType: "privacy_policy" | "marketing_email" | "marketing_whatsapp" | "profiling"
-
 CustomerConsentTypeCatalog: [
 	"privacy_policy",
 	"marketing_email",
@@ -9,10 +7,12 @@ CustomerConsentTypeCatalog: [
 	"profiling",
 ]
 
-#CustomerConsentStatus: "granted" | "withdrawn" | "unknown"
+#CustomerConsentType: or(CustomerConsentTypeCatalog)
 
 CustomerConsentStatusCatalog: [
 	"granted",
 	"withdrawn",
 	"unknown",
 ]
+
+#CustomerConsentStatus: or(CustomerConsentStatusCatalog)

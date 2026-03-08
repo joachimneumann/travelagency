@@ -22,7 +22,6 @@ typealias BookingActivity = GeneratedBookingActivity
 typealias Booking = GeneratedBooking
 typealias Client = GeneratedClient
 typealias ClientType = GeneratedClientType
-typealias ClientSummary = GeneratedClientSummary
 typealias Customer = GeneratedCustomer
 typealias CustomerConsent = GeneratedCustomerConsent
 typealias CustomerDocument = GeneratedCustomerDocument

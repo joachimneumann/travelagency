@@ -680,15 +680,15 @@ function renderTours(items) {
 }
 
 function renderTravelGroups(items) {
-  const header = `<thead><tr><th>ID</th><th>Client</th><th>Name</th><th>Language</th><th>Currency</th><th>Updated</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Client</th><th>Name</th><th>Contact</th><th>Travelers</th><th>Updated</th></tr></thead>`;
   const rows = items
     .map((group) => {
       return `<tr>
-        <td>${escapeHtml(group.id || "-")}</td>
+        <td>${escapeHtml(shortId(group.id))}</td>
         <td>${escapeHtml(shortId(group.client_id || "-"))}</td>
         <td>${escapeHtml(group.group_name || group.name || "-")}</td>
-        <td>${escapeHtml(group.preferred_language || "-")}</td>
-        <td>${escapeHtml(group.preferred_currency || "-")}</td>
+        <td>${escapeHtml(shortId(group.group_contact_customer_id || "-"))}</td>
+        <td>${escapeHtml(String(Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids.length : 0))}</td>
         <td>${escapeHtml(formatDateTime(group.updated_at || group.updatedAt))}</td>
       </tr>`;
     })

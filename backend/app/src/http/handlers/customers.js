@@ -148,14 +148,14 @@ export function createCustomerHandlers(deps) {
   });
 
   const buildTravelGroupReadModel = (group, store) => {
-    const members = (Array.isArray(store?.travel_group_members) ? store.travel_group_members : [])
-      .filter((member) => member.travel_group_id === group.id)
-      .sort((a, b) => String(a.id || "").localeCompare(String(b.id || "")));
     return {
       ...group,
       group_name: normalizeText(group?.group_name) || "",
-      notes: normalizeText(group?.notes) || null,
-      travel_group_hash: computeTravelGroupHash(group, members)
+      group_contact_customer_id: normalizeText(group?.group_contact_customer_id) || null,
+      traveler_customer_ids: Array.isArray(group?.traveler_customer_ids)
+        ? Array.from(new Set(group.traveler_customer_ids.map((id) => normalizeText(id)).filter(Boolean)))
+        : [],
+      travel_group_hash: computeTravelGroupHash(group)
     };
   };
 
@@ -307,16 +307,20 @@ export function createCustomerHandlers(deps) {
     const documents = (Array.isArray(store.customer_documents) ? store.customer_documents : [])
       .filter((document) => document.customer_client_id === customer.client_id)
       .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    const travelGroupMembers = (Array.isArray(store.travel_group_members) ? store.travel_group_members : [])
-      .filter((member) => member.customer_client_id === customer.client_id)
-      .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    const relatedTravelGroupIds = new Set(
-      travelGroupMembers.map((member) => normalizeText(member.travel_group_id)).filter(Boolean)
-    );
     const travelGroups = (Array.isArray(store.travel_groups) ? store.travel_groups : [])
-      .filter((group) => relatedTravelGroupIds.has(normalizeText(group.id)))
+      .filter((group) => {
+        const travelerIds = Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids : [];
+        return travelerIds.includes(customer.client_id) || group.group_contact_customer_id === customer.client_id;
+      })
       .map((group) => buildTravelGroupReadModel(group, store))
       .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    const travelGroupMembers = travelGroups
+      .filter((group) => Array.isArray(group.traveler_customer_ids) && group.traveler_customer_ids.includes(customer.client_id))
+      .map((group, index) => ({
+        id: `travel_group_member_${group.id}_${index + 1}`,
+        travel_group_id: group.id,
+        customer_client_id: customer.client_id
+      }));
 
     sendJson(res, 200, {
       client: buildClientReadModel(client, customer, null),

@@ -1,8 +1,30 @@
 package enums
 
-#CurrencyCode: "USD" | "EURO" | "VND" | "THB"
+CurrencyCatalog: [
+	{
+		code:          "USD"
+		displaySymbol: "$"
+		decimalPlaces: 2
+	},
+	{
+		code:          "EURO"
+		displaySymbol: "€"
+		decimalPlaces: 2
+	},
+	{
+		code:          "VND"
+		displaySymbol: "₫"
+		decimalPlaces: 0
+	},
+	{
+		code:          "THB"
+		displaySymbol: "฿"
+		decimalPlaces: 0
+	},
+]
 
-#CurrencyDisplaySymbol: "$" | "€" | "₫" | "฿"
+#CurrencyCode: or([for currency in CurrencyCatalog {currency.code}])
+#CurrencyDisplaySymbol: or([for currency in CurrencyCatalog {currency.displaySymbol}])
 
 #CurrencyDefinition: {
 	code:          #CurrencyCode
@@ -11,31 +33,11 @@ package enums
 }
 
 #CurrencyMeta: {
-	USD: {
-		code:          "USD"
-		displaySymbol: "$"
-		decimalPlaces: 2
-	}
-	EURO: {
-		code:          "EURO"
-		displaySymbol: "€"
-		decimalPlaces: 2
-	}
-	VND: {
-		code:          "VND"
-		displaySymbol: "₫"
-		decimalPlaces: 0
-	}
-	THB: {
-		code:          "THB"
-		displaySymbol: "฿"
-		decimalPlaces: 0
+	for currency in CurrencyCatalog {
+		"\(currency.code)": {
+			code:          currency.code
+			displaySymbol: currency.displaySymbol
+			decimalPlaces: currency.decimalPlaces
+		}
 	}
 }
-
-CurrencyCatalog: [
-	#CurrencyMeta.USD,
-	#CurrencyMeta.EURO,
-	#CurrencyMeta.VND,
-	#CurrencyMeta.THB,
-]

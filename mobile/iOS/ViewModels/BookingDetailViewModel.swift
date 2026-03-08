@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 final class BookingDetailViewModel: ObservableObject {
     @Published private(set) var booking: Booking?
-    @Published private(set) var client: ClientSummary?
+    @Published private(set) var client: Client?
     @Published private(set) var customer: Customer?
     @Published private(set) var travelGroup: TravelGroup?
     @Published private(set) var activities: [BookingActivity] = []
