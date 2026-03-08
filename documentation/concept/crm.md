@@ -19,7 +19,7 @@ Serious CRM systems usually combine these capability groups:
 - communication history across email, phone, chat, and forms
 - automation and workflow rules
 - sales support features such as forecasting, quoting, routing, and reminders
-- customer service features such as ticketing, SLAs, knowledge base, and case handling
+- customer service features such as ticketing, Service Level Agreements, knowledge base, and case handling
 - marketing features such as forms, segmentation, campaigns, journeys, and attribution
 - reporting, dashboards, and pipeline analytics
 - customization, permissions, mobile access, and integrations
@@ -33,7 +33,7 @@ For AsiaTravelPlan, the relevant subset is narrower:
 - assignment and handoff between staff
 - activity timeline
 - notes and communication history
-- tasks, reminders, and SLA follow-up
+- tasks, reminders, and Service Level Agreement follow-up
 - quoting / itinerary / invoice linkage
 - reporting on funnel, conversion, response time, and source attribution
 
@@ -101,7 +101,7 @@ Typical capabilities:
 Good CRM systems also make activities actionable:
 - task queues
 - overdue reminders
-- due dates and SLAs
+- due dates and Service Level Agreements
 - next-step suggestions
 - team dashboards for pending work
 
@@ -131,7 +131,7 @@ Typical capabilities:
 - trigger-based workflows
 - lead / booking routing
 - assignment rules
-- SLA reminders
+- Service Level Agreement reminders
 - follow-up sequences
 - task creation on stage changes
 - automatic field updates
@@ -216,7 +216,7 @@ Typical capabilities:
 - case / ticket management
 - omnichannel inbox
 - queues and routing
-- SLAs and escalations
+- Service Level Agreements and escalations
 - customer portal
 - knowledge base
 - self-service content
@@ -374,7 +374,7 @@ These are clearly justified:
 - assignment to staff
 - activity timeline
 - single editable booking note plus change history events
-- reminders / SLA follow-up
+- reminders / Service Level Agreement follow-up
 - search, filters, and saved operational views
 - source attribution
 - invoice linkage
@@ -437,7 +437,7 @@ A sensible order is:
 
 ### Phase 2: Operational discipline
 - tasks
-- SLA dashboard
+- Service Level Agreement dashboard
 - better reporting
 - assignment balancing
 - booking conflict handling and concurrency control

@@ -15,7 +15,7 @@ import (
 	destination?:       [...string]
 	style?:             [...string]
 	travelMonth?:       string
-	travelers?:         >=common.#MinTravelers & <=common.#MaxTravelers & int
+	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
 	duration?:          string
 	budget?:            string
 	preferredCurrency?: enums.#CurrencyCode

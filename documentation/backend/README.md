@@ -5,7 +5,7 @@ This service implements Milestone 1 from `backend/backend_software.md`:
 - Customer deduplication and profile creation
 - Booking pipeline stages and transitions
 - Staff assignment on bookings
-- SLA due timestamps
+- Service Level Agreement due timestamps
 - Booking activity timeline
 - Branded admin pages for pipeline, booking detail, customer detail, and tour detail
 
@@ -176,9 +176,9 @@ Booking list query params (`GET /api/v1/bookings`):
 - `page` (default `1`)
 - `page_size` (default `25`, max `100`)
 - `stage` (`NEW|QUALIFIED|PROPOSAL_SENT|NEGOTIATION|WON|LOST|POST_TRIP`)
-- `owner_id` (exact match for assigned staff id)
+- `atp_staff` (exact match for assigned staff id)
 - `search` (matches booking id, destination, style, assigned staff, notes, customer name/email)
-- `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `sla_due_at_asc`, `sla_due_at_desc`)
+- `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `service_level_agreement_due_at_asc`, `service_level_agreement_due_at_desc`)
 
 Default ordering:
 - Bookings: newest first (`created_at desc`)

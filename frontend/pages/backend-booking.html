@@ -24,9 +24,6 @@
         <div class="container">
           <h1 class="section-title" id="detailTitle">Booking</h1>
           <p class="section-booking" id="detailSubTitle" hidden></p>
-          <div style="margin: 0 0 1rem;">
-            <button class="btn btn-ghost" id="bookingDeleteBtn" type="button">Delete booking</button>
-          </div>
 
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
@@ -258,13 +255,18 @@
             <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
             <div id="bookingDataView"></div>
           </article>
+
+          <section class="booking-danger-zone">
+            <h2 class="section-title u-title-compact">DANGER ZONE</h2>
+            <button class="btn booking-danger-zone__delete" id="bookingDeleteBtn" type="button">Delete booking</button>
+          </section>
         </div>
       </section>
     </main>
 
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings", showBackLink: true });
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
     <script type="module" src="frontend/scripts/backend-booking.js?v=20260304b"></script>
   </body>

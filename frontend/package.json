@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "css:dev": "tailwindcss -c ./tailwind.config.cjs -i ../assets/css/tailwind.input.css -o ../assets/css/tailwind.generated.css --watch",
-    "css:build": "NODE_ENV=production postcss ../assets/css/tailwind.input.css -o ../assets/css/tailwind.generated.css"
+    "css:dev": "tailwindcss -c ./tailwind.config.cjs -i ../shared/css/tailwind.input.css -o ../shared/css/tailwind.generated.css --watch",
+    "css:build": "NODE_ENV=production postcss ../shared/css/tailwind.input.css -o ../shared/css/tailwind.generated.css"
   },
   "devDependencies": {
     "@fullhuman/postcss-purgecss": "^5.0.0",

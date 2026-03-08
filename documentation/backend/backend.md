@@ -36,7 +36,7 @@ Functional requirements:
   - Past trips, quote history, spend and margin contribution
 - Support booking lifecycle stages:
   - New -> Qualified -> Proposal Sent -> Negotiation -> Won/Lost -> Post-Trip
-- Assign staff and SLA deadlines for each booking
+- Assign staff and Service Level Agreement deadlines for each booking
 - Track interaction timeline:
   - Calls, emails, WhatsApp chats, notes, tasks, documents
 - Store booking source attribution (campaign, referral, direct, partner)
@@ -104,7 +104,7 @@ Functional requirements:
 
 Data requirements:
 - Time-zone aware scheduling
-- SLA timestamps (planned vs actual)
+- Service Level Agreement timestamps (planned vs actual)
 - Incident repository linked to trip, partner, and responsible unit
 
 ## 3.5 Local Guide Management
@@ -117,7 +117,7 @@ Functional requirements:
 - Vetting and compliance records (documents + expiry reminders)
 - Assignment engine:
   - Match by language, location, trip style, traveler profile, rating
-- Confirm/decline workflow with response SLA
+- Confirm/decline workflow with response Service Level Agreement
 - Guide briefing pack generation (guest profile, itinerary, notes, constraints)
 - Attendance/check-in and completion confirmation
 - Guide payout calculations and payment status tracking
@@ -139,7 +139,7 @@ Functional requirements:
   - Seasonal rates, child policy, occupancy rules, stop-sell periods
 - Inventory/allotment tracking where applicable
 - Supplier request and confirmation workflows
-- SLA tracking (response time, reconfirmation, service failure rate)
+- Service Level Agreement tracking (response time, reconfirmation, service failure rate)
 - Quality management:
   - Complaints, incident linkage, corrective action logs
 - Partner settlement:
@@ -158,7 +158,7 @@ Functional requirements:
 - Team structures (sales, operations, finance, admin, management)
 - Work queues and task assignment:
   - New bookings, quote deadlines, pending confirmations, pre-departure checks
-- SLA dashboards per team and individual
+- Service Level Agreement dashboards per team and individual
 - Shift/on-call schedule for emergency support
 - Internal notes, handover logs, and approval flows
 - Performance metrics:
@@ -195,7 +195,7 @@ Data requirements:
 Functional requirements:
 - Ticketing/case management linked to customer and trip
 - Case categories (pre-trip, in-trip, post-trip, complaints, refund)
-- Priority and severity levels with SLA timers
+- Priority and severity levels with Service Level Agreement timers
 - Escalation workflow (ops booking -> manager -> emergency)
 - Resolution notes and compensation tracking
 - Post-resolution customer feedback capture
@@ -248,11 +248,11 @@ Functional requirements:
 - Operational KPIs:
   - Confirmation booking time, incident rate, on-time service delivery
 - Supplier KPIs:
-  - Acceptance rate, SLA compliance, complaint rates
+  - Acceptance rate, Service Level Agreement compliance, complaint rates
 - Guide KPIs:
   - Utilization, ratings, reliability
 - Staff KPIs:
-  - Throughput, SLA adherence, quality metrics
+  - Throughput, Service Level Agreement adherence, quality metrics
 - Cohort and repeat-customer analysis
 - Pipeline forecasting
 
@@ -356,7 +356,7 @@ Core entities:
 ## 6) Required Workflow Automations
 
 - New booking auto-routing by destination/style/language
-- Follow-up reminders when SLA thresholds are near breach
+- Follow-up reminders when Service Level Agreement thresholds are near breach
 - Auto-create pre-departure checklist at booking confirmation
 - Auto-alert operations on unconfirmed critical services
 - Auto-notify finance for due deposits and overdue balances
@@ -410,11 +410,11 @@ Core entities:
 
 The backend is considered production-ready when:
 - 100% of website bookings are captured and trackable in CRM
-- Quote turnaround meets internal SLA target (for example <= 48-72h)
+- Quote turnaround meets internal Service Level Agreement target (for example <= 48-72h)
 - Each confirmed booking has complete service-order traceability
 - Guide and partner assignments are visible and auditable per trip day
 - Finance can reconcile customer payments and supplier payables per booking
-- Support incidents are tracked end-to-end with measurable closure SLAs
+- Support incidents are tracked end-to-end with measurable closure Service Level Agreements
 - Role permissions and audit logs pass internal security review
 - Backup/restore and incident-response drills pass defined RTO/RPO targets
 
@@ -476,7 +476,7 @@ This requirements document is aligned with:
 
 ## 13.3 What to Build In-House (Core Product)
 
-- Booking-to-booking CRM workflow tailored to AsiaTravelPlan (pipeline + SLA routing).
+- Booking-to-booking CRM workflow tailored to AsiaTravelPlan (pipeline + Service Level Agreement routing).
 - Modular itinerary and quote engine:
   - Versioned proposals
   - Inclusion/exclusion generation
@@ -571,11 +571,11 @@ Deliverable:
 
 - Dispatch board, run sheets, incident management, escalation timers.
 - Payment and invoicing integration, deposits, and reconciliation v1.
-- SLA alerts, reminder automation, pre-departure checklists.
+- Service Level Agreement alerts, reminder automation, pre-departure checklists.
 - Data retention/consent workflows and compliance admin tooling.
 
 Deliverable:
-- Operations and finance run reliably with measurable SLA control.
+- Operations and finance run reliably with measurable Service Level Agreement control.
 
 ## Phase 3 (Weeks 15-20): Optimization and Scale
 

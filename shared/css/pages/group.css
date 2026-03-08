@@ -1,0 +1,123 @@
+.group-page .group-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.group-page .group-hero__copy {
+  min-width: 0;
+}
+
+.group-page .group-hero__photo {
+  width: 104px;
+  height: 104px;
+  flex: 0 0 104px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: rgba(226, 241, 248, 0.42);
+  border: 1px solid rgba(172, 208, 224, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.group-page .group-hero__photo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.group-page .group-hero__id-block {
+  margin: 0.45rem 0 1.35rem;
+}
+
+.group-page .group-hero__id-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.group-page .group-hero__id {
+  display: block;
+  margin: 0;
+  color: rgba(22, 49, 61, 0.68);
+  font-size: 0.94rem;
+}
+
+.group-page .group-hero__id-copy {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(22, 49, 61, 0.68);
+  font: inherit;
+  font-size: 0.94rem;
+  font-weight: 600;
+  padding: 0.12rem 0.55rem;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.group-page .group-hero__id-copy:hover,
+.group-page .group-hero__id-copy:focus-visible {
+  background: rgba(237, 191, 176, 0.42);
+  color: rgba(22, 49, 61, 0.92);
+  outline: none;
+}
+
+.group-page .group-hero__id-copy-status {
+  margin-left: 0.35rem;
+  color: rgba(22, 49, 61, 0.6);
+  font-size: 0.84rem;
+  line-height: 1.3;
+  min-height: 0;
+}
+
+.group-page .group-hero__name {
+  margin: 0;
+  color: #16313d;
+  font-size: clamp(2rem, 4vw, 3.15rem);
+  line-height: 1.04;
+}
+
+.group-page .group-primary-group__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.group-page .group-form-grid,
+.group-page .group-travelers {
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.group-page .group-travelers {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(172, 208, 224, 0.45);
+}
+
+.group-page .group-travelers__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.group-page .group-travelers__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  color: #16313d;
+}
+
+.group-page .group-travelers__item input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}

@@ -26,15 +26,18 @@
             <button class="customer-hero__photo customer-hero__photo-button" id="customerPhotoPicker" type="button" aria-label="Choose customer photo">
               <img class="customer-hero__photo-image" id="customerHeroPhoto" alt="Customer photo" hidden />
               <div class="customer-hero__photo-placeholder" id="customerHeroPhotoPlaceholder" aria-hidden="true">
-                <svg class="customer-hero__photo-placeholder-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="32" cy="22" r="12" fill="currentColor" />
-                  <path d="M12 54C12 42.9543 20.9543 34 32 34C43.0457 34 52 42.9543 52 54V56H12V54Z" fill="currentColor" />
-                </svg>
+                <img class="customer-hero__photo-placeholder-image" src="assets/img/profile_person.png" alt="" />
               </div>
             </button>
             <div class="customer-hero__copy">
               <h1 class="customer-hero__name" id="customerHeroName">Customer</h1>
-              <span class="customer-hero__id" id="customerHeroId">ID: -</span>
+              <div class="customer-hero__id-block">
+                <div class="customer-hero__id-row">
+                  <span class="customer-hero__id" id="customerHeroId">ID: -</span>
+                  <button class="customer-hero__id-copy" id="customerHeroCopyBtn" type="button">copy</button>
+                  <div class="customer-hero__id-copy-status" id="customerHeroCopyStatus" hidden></div>
+                </div>
+              </div>
             </div>
           </div>
           <input id="customerPhotoInput" class="customer-photo-input" type="file" accept="image/*" />
@@ -45,7 +48,6 @@
             <div class="customer-primary-group">
               <div class="customer-primary-group__header">
                 <button id="customerSaveBtn" class="btn btn-primary" type="button" disabled>Update</button>
-                <button id="customerDeleteBtn" class="btn btn-ghost" type="button">Delete customer</button>
               </div>
               <div id="customerPrimaryGroup"></div>
               <div class="customer-organization-group" id="customerOrganizationGroup"></div>
@@ -131,13 +133,19 @@
             <p class="customer-system-meta" id="customerSystemMeta"></p>
           </section>
 
+          <section class="customer-danger-zone">
+            <h2 class="section-title u-title-compact">DANGER ZONE</h2>
+            <button id="customerDeleteBtn" class="btn customer-danger-zone__delete" type="button">Delete customer</button>
+            <p class="customer-danger-zone__reason" id="customerDeleteReason" hidden></p>
+          </section>
+
         </div>
       </section>
     </main>
 
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "customers", showBackLink: true });
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "customers" });
     </script>
     <script type="module" src="frontend/scripts/backend-customer.js?v=20260307a"></script>
   </body>

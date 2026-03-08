@@ -48,6 +48,7 @@ const state = {
   customer: null,
   consents: [],
   travelGroups: [],
+  bookings: [],
   isSaving: false,
   isOrganizationCustomer: false
 };
@@ -138,6 +139,8 @@ const els = {
   back: document.getElementById("backToBackend"),
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
+  heroCopyBtn: document.getElementById("customerHeroCopyBtn"),
+  heroCopyStatus: document.getElementById("customerHeroCopyStatus"),
   userLabel: document.getElementById("backendUserLabel"),
   heroId: document.getElementById("customerHeroId"),
   heroName: document.getElementById("customerHeroName"),
@@ -170,11 +173,14 @@ const els = {
   bookingsTable: document.getElementById("customerBookingsTable"),
   saveBtn: document.getElementById("customerSaveBtn"),
   deleteBtn: document.getElementById("customerDeleteBtn"),
+  deleteReason: document.getElementById("customerDeleteReason"),
   saveStatus: document.getElementById("customerSaveStatus"),
   organizationToggle: null
 };
 
 let pendingPhotoObjectUrl = null;
+let heroCopyClipboardPoll = null;
+let heroCopiedValue = "";
 
 init();
 
@@ -186,6 +192,11 @@ async function init() {
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/index.html`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
+  }
+  if (els.heroCopyBtn) {
+    els.heroCopyBtn.addEventListener("click", () => {
+      void copyHeroIdToClipboard();
+    });
   }
 
   if (els.saveBtn) {
@@ -200,6 +211,9 @@ async function init() {
       if (!els.photoInput || els.photoPicker.disabled) return;
       els.photoInput.click();
     });
+  }
+  if (els.heroPhoto) {
+    els.heroPhoto.addEventListener("error", handleCustomerHeroPhotoLoadError);
   }
   if (els.photoInput) {
     els.photoInput.addEventListener("change", handleCustomerPhotoSelection);
@@ -276,7 +290,9 @@ async function loadCustomer() {
   state.travelGroups = Array.isArray(payload.travelGroups) ? payload.travelGroups : [];
   renderTravelGroups(state.travelGroups);
   renderTravelGroupMembers(payload.travelGroupMembers || []);
-  renderRelatedBookings(payload.bookings || []);
+  state.bookings = Array.isArray(payload.bookings) ? payload.bookings : [];
+  renderRelatedBookings(state.bookings);
+  syncDeleteButtonState();
 
   setSaveEnabled(false);
   clearSaveStatus();
@@ -286,9 +302,53 @@ function renderCustomerHero(customer, client = null) {
   updateCustomerHeroName(customer.name || "Customer");
   updateCustomerHeroPhoto(customer.photo_ref);
 
-  if (els.heroId) {
-    const identifier = normalizeText(client?.id) || normalizeText(customer?.client_id) || state.id;
-    els.heroId.textContent = identifier ? `ID: ${identifier}` : "ID: -";
+  const identifier = getCurrentCustomerIdentifier(customer, client);
+  if (els.heroId) els.heroId.textContent = identifier ? `ID: ${identifier}` : "ID: -";
+  if (heroCopiedValue && heroCopiedValue !== identifier) clearHeroCopyStatus();
+}
+
+function getCurrentCustomerIdentifier(customer = state.customer, client = state.client) {
+  return normalizeText(client?.id) || normalizeText(customer?.client_id) || state.id;
+}
+
+function setHeroCopyStatus(message) {
+  if (!els.heroCopyStatus) return;
+  els.heroCopyStatus.textContent = message || "";
+  els.heroCopyStatus.hidden = !message;
+}
+
+function clearHeroCopyStatus() {
+  heroCopiedValue = "";
+  setHeroCopyStatus("");
+  if (heroCopyClipboardPoll) {
+    window.clearInterval(heroCopyClipboardPoll);
+    heroCopyClipboardPoll = null;
+  }
+}
+
+function startHeroClipboardWatcher(expectedValue) {
+  if (!navigator.clipboard?.readText) return;
+  if (heroCopyClipboardPoll) window.clearInterval(heroCopyClipboardPoll);
+  heroCopyClipboardPoll = window.setInterval(async () => {
+    try {
+      const currentClipboard = await navigator.clipboard.readText();
+      if (currentClipboard !== expectedValue) clearHeroCopyStatus();
+    } catch (_error) {
+      // Ignore clipboard read permission failures. Reload also clears the status.
+    }
+  }, 1500);
+}
+
+async function copyHeroIdToClipboard() {
+  const identifier = getCurrentCustomerIdentifier();
+  if (!identifier || !navigator.clipboard?.writeText) return;
+  try {
+    await navigator.clipboard.writeText(identifier);
+    heroCopiedValue = identifier;
+    setHeroCopyStatus("copied");
+    startHeroClipboardWatcher(identifier);
+  } catch (_error) {
+    clearHeroCopyStatus();
   }
 }
 
@@ -345,6 +405,20 @@ function updateCustomerHeroPhoto(value) {
   if (els.heroPhotoPlaceholder) {
     els.heroPhotoPlaceholder.hidden = hasPhoto;
     els.heroPhotoPlaceholder.style.display = hasPhoto ? "none" : "flex";
+  }
+}
+
+function handleCustomerHeroPhotoLoadError() {
+  if (els.heroPhoto) {
+    els.heroPhoto.removeAttribute("src");
+    els.heroPhoto.hidden = true;
+  }
+  if (els.photoPicker) {
+    els.photoPicker.classList.remove("has-photo");
+  }
+  if (els.heroPhotoPlaceholder) {
+    els.heroPhotoPlaceholder.hidden = false;
+    els.heroPhotoPlaceholder.style.display = "flex";
   }
 }
 
@@ -869,7 +943,7 @@ function renderRelatedBookings(bookings) {
           <td>${escapeHtml(booking.stage || "-")}</td>
           <td>${escapeHtml(booking.destination || "-")}</td>
           <td>${escapeHtml(booking.style || "-")}</td>
-          <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
+          <td>${escapeHtml(booking.atp_staff_name || "Unassigned")}</td>
           <td>${escapeHtml(formatDateTime(booking.updated_at))}</td>
         </tr>
       `;
@@ -1068,6 +1142,10 @@ async function saveCustomerProfile() {
 
 async function deleteCustomer() {
   if (!state.customer?.client_id) return;
+  if (!customerCanBeDeleted()) {
+    setSaveStatus(customerDeleteBlockedReason());
+    return;
+  }
   const label = normalizeText(state.customer?.name) || "this customer";
   if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
 
@@ -1079,7 +1157,7 @@ async function deleteCustomer() {
       customer_hash: state.customer.customer_hash
     }
   });
-  if (els.deleteBtn) els.deleteBtn.disabled = false;
+  syncDeleteButtonState();
   if (!result?.deleted) return;
 
   window.location.href = "backend.html?section=customers";
@@ -1184,6 +1262,38 @@ function setSaveStatus(message) {
 
 function clearSaveStatus() {
   setSaveStatus("");
+}
+
+function customerCanBeDeleted() {
+  const hasGroups = Array.isArray(state.travelGroups) && state.travelGroups.length > 0;
+  const hasBookings = Array.isArray(state.bookings) && state.bookings.length > 0;
+  return !hasGroups && !hasBookings;
+}
+
+function customerDeleteBlockedReason() {
+  const groupCount = Array.isArray(state.travelGroups) ? state.travelGroups.length : 0;
+  const bookingCount = Array.isArray(state.bookings) ? state.bookings.length : 0;
+  if (groupCount > 0 && bookingCount > 0) {
+    return `This customer is still assigned to ${bookingCount === 1 ? "1 booking" : `${bookingCount} bookings`} and ${groupCount === 1 ? "1 travel group" : `${groupCount} travel groups`}. Remove those assignments first.`;
+  }
+  if (groupCount > 0) {
+    return `This customer is still assigned to ${groupCount === 1 ? "1 travel group" : `${groupCount} travel groups`}. Remove the group assignments first.`;
+  }
+  if (bookingCount > 0) {
+    return `This customer is still assigned to ${bookingCount === 1 ? "1 booking" : `${bookingCount} bookings`}. Reassign or delete those bookings first.`;
+  }
+  return "";
+}
+
+function syncDeleteButtonState() {
+  if (!els.deleteBtn) return;
+  const blockedReason = customerDeleteBlockedReason();
+  els.deleteBtn.disabled = !customerCanBeDeleted();
+  els.deleteBtn.title = blockedReason || "";
+  if (els.deleteReason) {
+    els.deleteReason.hidden = !blockedReason;
+    els.deleteReason.textContent = blockedReason;
+  }
 }
 
 function customerFieldInputId(fieldName) {

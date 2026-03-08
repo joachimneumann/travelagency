@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AsiaTravelPlan Travel Group</title>
+    <meta name="description" content="AsiaTravelPlan travel group detail" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=4" />
+  </head>
+  <body class="group-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+        <div id="backendNavMount"></div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div class="group-hero">
+            <div class="group-hero__photo" aria-hidden="true">
+              <img class="group-hero__photo-image" src="assets/img/profile_group.png" alt="" />
+            </div>
+            <div class="group-hero__copy">
+              <h1 class="group-hero__name" id="groupHeroName">Travel Group</h1>
+              <div class="group-hero__id-block">
+                <div class="group-hero__id-row">
+                  <span class="group-hero__id" id="groupHeroId">ID: -</span>
+                  <button class="group-hero__id-copy" id="groupHeroCopyBtn" type="button">copy</button>
+                  <div class="group-hero__id-copy-status" id="groupHeroCopyStatus" hidden></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <section class="u-stack-md">
+            <div class="group-primary-group">
+              <div class="group-primary-group__header">
+                <button id="groupSaveBtn" class="btn btn-primary" type="button" disabled>Update</button>
+              </div>
+
+              <div class="field-grid group-form-grid backend-dirty-frame" id="groupPrimaryGroup">
+                <div class="field full">
+                  <label for="groupNameInput">Group Name</label>
+                  <input id="groupNameInput" type="text" />
+                </div>
+                <div class="field full">
+                  <label for="groupContactSelect">Group Contact</label>
+                  <select id="groupContactSelect">
+                    <option value="">No group contact</option>
+                  </select>
+                </div>
+              </div>
+
+              <h2 class="section-title u-title-compact">Travelers</h2>
+              <div class="group-travelers backend-dirty-frame" id="groupTravelersPanel">
+                <div class="group-travelers__list" id="groupTravelersList"></div>
+              </div>
+            </div>
+            <p id="groupSaveStatus" class="section-booking" hidden></p>
+          </section>
+
+          <section class="u-stack-md">
+            <h2 class="section-title u-title-compact">Related bookings</h2>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="groupBookingsTable"></table>
+            </div>
+          </section>
+
+          <section>
+            <p class="customer-system-meta" id="groupSystemMeta"></p>
+          </section>
+
+          <section class="customer-danger-zone">
+            <h2 class="section-title u-title-compact">DANGER ZONE</h2>
+            <button id="groupDeleteBtn" class="btn customer-danger-zone__delete" type="button">Delete group</button>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "travelGroups" });
+    </script>
+    <script type="module" src="frontend/scripts/backend-group.js?v=20260308a"></script>
+  </body>
+</html>

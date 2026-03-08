@@ -16,7 +16,7 @@ export function createBookingHandlers(deps) {
     safeCurrency,
     BASE_CURRENCY,
     STAGES,
-    computeSlaDueAt,
+    computeServiceLevelAgreementDueAt,
     safeInt,
     defaultBookingPricing,
     defaultBookingOffer,
@@ -293,16 +293,6 @@ function buildTravelGroupPayload(store, travelGroup) {
   return { travelGroup, members, memberCustomers };
 }
 
-function buildTravelGroupOptions(store) {
-  return (store.travel_groups || [])
-    .map((group) => ({
-      travel_group_id: group.id,
-      client_id: group.client_id,
-      group_name: normalizeText(group.group_name) || "Travel group"
-    }))
-    .sort((left, right) => left.group_name.localeCompare(right.group_name));
-}
-
 function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, computeClientHash, computeTravelGroupHash }) {
   let { client, customer, travelGroup } = resolveBookingClientContext(store, booking);
   if (travelGroup && client) return { client, travelGroup, leadCustomer: customer };
@@ -337,7 +327,7 @@ async function buildBookingClientResponse(store, booking) {
   const { client, customer, travelGroup, groupContactCustomer } = resolveBookingClientContext(store, booking);
   const submittedCustomer = buildSubmittedCustomer(booking);
   const response = {
-    booking: await buildBookingReadModel(booking),
+    booking: await buildBookingResponse(store, booking),
     client: buildClientReadModel(client, customer, travelGroup, groupContactCustomer),
     customer: buildCustomerReadModel(customer),
     travelGroup: travelGroup || null,
@@ -345,14 +335,20 @@ async function buildBookingClientResponse(store, booking) {
     customerCandidates: rankCustomerCandidatesForBookingSubmission(store.customers, submittedCustomer, {
       normalizeEmail,
       isLikelyPhoneMatch
-    }),
-    travelGroupOptions: buildTravelGroupOptions(store)
+    })
   };
   if (travelGroup) {
     const payloadGroup = buildTravelGroupPayload(store, travelGroup);
     response.members = payloadGroup.members;
     response.memberCustomers = payloadGroup.memberCustomers;
   }
+  return response;
+}
+
+async function buildBookingResponse(store, booking) {
+  const response = await buildBookingReadModel(booking);
+  const { travelGroup } = resolveBookingClientContext(store, booking);
+  response.travel_group_id = travelGroup?.id || null;
   return response;
 }
 
@@ -435,13 +431,11 @@ async function handleCreateBooking(req, res) {
     stage: STAGES.NEW,
     atp_staff: null,
     atp_staff_name: null,
-    owner_id: null,
-    owner_name: null,
-    sla_due_at: computeSlaDueAt(STAGES.NEW),
+    service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
     destination: normalizeStringArray(payload.destination),
     style: normalizeStringArray(payload.style),
     travel_month: normalizeText(payload.travelMonth),
-    travelers: normalizeText(payload.travelers) ? safeInt(payload.travelers) : null,
+    number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
     duration: normalizeText(payload.duration),
     budget: normalizeText(payload.budget),
     preferred_currency: preferredCurrency,
@@ -480,8 +474,9 @@ async function handleCreateBooking(req, res) {
     client_id: null,
     status: "accepted",
     deduplicated: false,
-    atp_staff: booking.atp_staff_name,
-    sla_due_at: booking.sla_due_at,
+    atp_staff: booking.atp_staff,
+    atp_staff_name: booking.atp_staff_name,
+    service_level_agreement_due_at: booking.service_level_agreement_due_at,
     next_step_message: "Thanks, we will contact you with route options within 48-72h."
   });
 }
@@ -500,7 +495,7 @@ async function handleListBookings(req, res) {
   const visible = await Promise.all(
     filtered
       .filter((booking) => canAccessBooking(principal, booking, staffMember))
-      .map(async (booking) => buildBookingReadModel(booking))
+      .map(async (booking) => buildBookingResponse(store, booking))
   );
   const paged = paginate(visible, requestUrl.searchParams);
   sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));
@@ -654,13 +649,13 @@ async function handlePatchBookingStage(req, res, [bookingId]) {
   }
 
   booking.stage = nextStage;
-  booking.sla_due_at = computeSlaDueAt(nextStage);
+  booking.service_level_agreement_due_at = computeServiceLevelAgreementDueAt(nextStage);
   booking.updated_at = nowIso();
 
   addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Stage updated to ${nextStage}`);
   await persistStore(store);
 
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingResponse(store, booking) });
 }
 
 async function handlePatchBookingClient(req, res, [bookingId]) {
@@ -872,7 +867,7 @@ async function handleCreateBookingGroupMember(req, res, [bookingId]) {
 
   const payloadGroup = buildTravelGroupPayload(store, travelGroup);
   sendJson(res, 201, {
-    booking: await buildBookingReadModel(booking),
+    booking: await buildBookingResponse(store, booking),
     client: buildClientReadModel(client, null, travelGroup, customer),
     customer: null,
     travelGroup,
@@ -889,7 +884,7 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
     return;
   }
 
-  const ownerIdRaw = normalizeText(payload.owner_id);
+  const atpStaffIdRaw = normalizeText(payload.atp_staff);
   const principal = getPrincipal(req);
   const store = await readStore();
   const booking = store.bookings.find((item) => item.id === bookingId);
@@ -903,32 +898,32 @@ async function handlePatchBookingOwner(req, res, [bookingId]) {
   }
   if (!(await assertMatchingBookingHash(payload, booking, res))) return;
 
-  if (!ownerIdRaw) {
+  if (!atpStaffIdRaw) {
     booking.atp_staff = null;
     booking.atp_staff_name = null;
     syncBookingAtpStaffFields(booking);
     booking.updated_at = nowIso();
     addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), "AtpStaff unassigned");
     await persistStore(store);
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+    sendJson(res, 200, { booking: await buildBookingResponse(store, booking) });
     return;
   }
 
   const atp_staff = await loadAtpStaff();
-  const owner = atp_staff.find((member) => member.id === ownerIdRaw && member.active);
-  if (!owner) {
+  const assignedStaff = atp_staff.find((member) => member.id === atpStaffIdRaw && member.active);
+  if (!assignedStaff) {
     sendJson(res, 422, { error: "AtpStaff member not found or inactive" });
     return;
   }
 
-  booking.atp_staff = owner.id;
-  booking.atp_staff_name = owner.name;
+  booking.atp_staff = assignedStaff.id;
+  booking.atp_staff_name = assignedStaff.name;
   syncBookingAtpStaffFields(booking);
   booking.updated_at = nowIso();
-  addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${owner.name}`);
+  addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${assignedStaff.name}`);
   await persistStore(store);
 
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingResponse(store, booking) });
 }
 
 async function handlePatchBookingNotes(req, res, [bookingId]) {
@@ -959,7 +954,7 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
   const currentNotes = normalizeText(booking.notes);
 
   if (nextNotes === currentNotes) {
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
+    sendJson(res, 200, { booking: await buildBookingResponse(store, booking), unchanged: true });
     return;
   }
 
@@ -974,7 +969,7 @@ async function handlePatchBookingNotes(req, res, [bookingId]) {
   );
   await persistStore(store);
 
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingResponse(store, booking) });
 }
 
 async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -1011,7 +1006,7 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
   const nextPricingJson = JSON.stringify(nextPricingBase);
   const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
   if (nextPricingJson === currentPricingJson) {
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
+    sendJson(res, 200, { booking: await buildBookingResponse(store, booking), unchanged: true });
     return;
   }
 
@@ -1026,7 +1021,7 @@ async function handlePatchBookingPricing(req, res, [bookingId]) {
   );
   await persistStore(store);
 
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingResponse(store, booking) });
 }
 
 async function handlePatchBookingOffer(req, res, [bookingId]) {
@@ -1065,7 +1060,7 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
     normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY)
   );
   if (nextOfferJson === currentOfferJson) {
-    sendJson(res, 200, { booking: await buildBookingReadModel(booking), unchanged: true });
+    sendJson(res, 200, { booking: await buildBookingResponse(store, booking), unchanged: true });
     return;
   }
 
@@ -1080,7 +1075,7 @@ async function handlePatchBookingOffer(req, res, [bookingId]) {
   );
   await persistStore(store);
 
-  sendJson(res, 200, { booking: await buildBookingReadModel(booking) });
+  sendJson(res, 200, { booking: await buildBookingResponse(store, booking) });
 }
 
 async function handlePostOfferExchangeRates(req, res) {
@@ -1218,7 +1213,7 @@ async function handleCreateActivity(req, res, [bookingId]) {
   booking.updated_at = nowIso();
   await persistStore(store);
 
-  sendJson(res, 201, { activity, booking: await buildBookingReadModel(booking) });
+  sendJson(res, 201, { activity, booking: await buildBookingResponse(store, booking) });
 }
 
 function buildInvoiceReadModel(invoice) {
@@ -1321,7 +1316,7 @@ async function handleCreateBookingInvoice(req, res, [bookingId]) {
   store.invoices.push(invoice);
   booking.updated_at = now;
   await persistStore(store);
-  sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingReadModel(booking) });
+  sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingResponse(store, booking) });
 }
 
 async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
@@ -1423,7 +1418,7 @@ async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
   booking.updated_at = invoice.updated_at;
 
   await persistStore(store);
-  sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingReadModel(booking) });
+  sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingResponse(store, booking) });
 }
 
 async function handleGetInvoicePdf(req, res, [invoiceId]) {

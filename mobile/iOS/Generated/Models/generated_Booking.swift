@@ -155,15 +155,16 @@
     let client_primary_email: String?
     let stage: GeneratedBookingStage
     let atp_staff: String?
-    let atpStaffName: String?
+    let atp_staff_name: String?
     let destination: [String]?
     let style: [String]?
     let travelMonth: String?
-    let travelers: Int?
+    let number_of_travelers: Int?
     let duration: String?
     let budget: String?
     let preferredCurrency: GeneratedCurrencyCode?
     let notes: String?
+    let service_level_agreement_due_at: String?
     let pricing: GeneratedBookingPricing
     let offer: GeneratedBookingOffer
     let source: GeneratedSourceAttribution?
@@ -180,15 +181,16 @@
         case client_primary_email = "client_primary_email"
         case stage = "stage"
         case atp_staff = "atp_staff"
-        case atpStaffName = "atpStaffName"
+        case atp_staff_name = "atp_staff_name"
         case destination = "destination"
         case style = "style"
         case travelMonth = "travelMonth"
-        case travelers = "travelers"
+        case number_of_travelers = "number_of_travelers"
         case duration = "duration"
         case budget = "budget"
         case preferredCurrency = "preferredCurrency"
         case notes = "notes"
+        case service_level_agreement_due_at = "service_level_agreement_due_at"
         case pricing = "pricing"
         case offer = "offer"
         case source = "source"

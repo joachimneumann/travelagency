@@ -89,7 +89,7 @@ struct BookingDetailView: View {
 
     @ViewBuilder
     private func clientSection() -> some View {
-        let label = viewModel.travelGroup?.group_name ?? viewModel.customer?.name ?? viewModel.client?.display_name ?? "Client"
+        let label = viewModel.travelGroup?.group_name ?? viewModel.customer?.name ?? fallbackClientLabel(viewModel.client)
         let typeLabel = displayClientType(viewModel.client?.client_type)
         Section {
             VStack(alignment: .leading, spacing: 4) {
@@ -100,6 +100,18 @@ struct BookingDetailView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+        }
+    }
+
+    private func fallbackClientLabel(_ client: Client?) -> String {
+        guard let client else { return "No client" }
+        switch client.client_type.rawValue {
+        case "travel_group":
+            return "Travel group"
+        case "customer":
+            return "Customer"
+        default:
+            return "Client"
         }
     }
 

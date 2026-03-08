@@ -24,7 +24,7 @@ Runtime persistence note:
 - It is no longer tracked in Git and must be treated as runtime data.
 
 Implemented now:
-- Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, staff assignment, SLA timestamps, activity timeline)
+- Milestone 1 core backend (booking ingestion, customer dedup, stage pipeline, staff assignment, Service Level Agreement timestamps, activity timeline)
 - Frontend booking form integration in `frontend/scripts/main.js` using `POST /public/v1/bookings` with idempotency key and inline error handling
 - Keycloak-protected `/api/v1/*` access via backend session cookie (browser) or Keycloak bearer token
 - Booking/customer list pagination and filtering
@@ -155,7 +155,7 @@ Status: **Implemented in local backend app**
 Deliverables:
 - Booking ingestion API
 - Client/customer profile and deduplication
-- Pipeline stages + staff assignment + SLA clocks
+- Pipeline stages + staff assignment + Service Level Agreement clocks
 - Activity timeline (notes, tasks, contact logs)
 - Admin views for booking triage and follow-up
 
@@ -164,7 +164,7 @@ Exit criteria:
 
 Delivered endpoints and features:
 - `POST /public/v1/bookings`
-- `GET /api/v1/bookings` with `page`, `page_size`, `stage`, `owner_id`, `search`, `sort`
+- `GET /api/v1/bookings` with `page`, `page_size`, `stage`, `atp_staff`, `search`, `sort`
 - `GET /api/v1/bookings/:bookingId`
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner`
@@ -219,7 +219,7 @@ Exit criteria:
 Deliverables:
 - Backend catalog manager for tours
 - Publishing pipeline to website tour feed
-- KPI dashboards (booking conversion, quote SLA, margin, incident rate)
+- KPI dashboards (booking conversion, quote Service Level Agreement, margin, incident rate)
 - Data retention and compliance workflows
 
 Exit criteria:
@@ -276,7 +276,7 @@ Backend endpoint:
 
 Operational behavior:
 - Booking is stored in CRM with `staff` initially unassigned.
-- System creates follow-up task with SLA timer.
+- System creates follow-up task with Service Level Agreement timer.
 - Manager/admin can later assign the booking to staff.
 
 ## 6.2 Tour Catalog Integration (`#tourGrid`)

@@ -11,7 +11,7 @@ export function createBookingViewHelpers({
   nowIso,
   safeCurrency,
   safeOptionalInt,
-  computeSlaDueAt,
+  computeServiceLevelAgreementDueAt,
   randomUUID,
   clamp,
   safeInt,
@@ -67,7 +67,7 @@ export function createBookingViewHelpers({
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!emailOk) return { ok: false, error: "Invalid email" };
 
-    const travelers = safeOptionalInt(payload.travelers);
+    const travelers = safeOptionalInt(payload.number_of_travelers);
     if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {
       return { ok: false, error: "Travelers must be between 1 and 30" };
     }
@@ -115,16 +115,14 @@ export function createBookingViewHelpers({
   }
 
   function getBookingAtpStaffId(booking) {
-    return normalizeText(booking?.atp_staff || booking?.owner_id);
+    return normalizeText(booking?.atp_staff);
   }
 
   function syncBookingAtpStaffFields(booking) {
-    const staffId = normalizeText(booking.atp_staff || booking.owner_id);
-    const staffName = normalizeText(booking.atp_staff_name || booking.owner_name);
+    const staffId = normalizeText(booking.atp_staff);
+    const staffName = normalizeText(booking.atp_staff_name);
     booking.atp_staff = staffId || null;
     booking.atp_staff_name = staffName || null;
-    booking.owner_id = staffId || null;
-    booking.owner_name = staffName || null;
     return booking;
   }
 
@@ -177,7 +175,7 @@ export function createBookingViewHelpers({
   function filterAndSortBookings(store, query, deps = {}) {
     const { getCustomerLookup = () => new Map(), ensureMetaChatCollections = () => {} } = deps;
     const stage = normalizeStageFilter(query.get("stage"));
-    const ownerId = normalizeText(query.get("owner_id"));
+    const atpStaffId = normalizeText(query.get("atp_staff"));
     const rawSearch = normalizeText(query.get("search")).toLowerCase();
     const rawSearchNoSpace = rawSearch.replace(/\s+/g, "");
     const search = rawSearch.replace(/[^a-z0-9]+/g, "");
@@ -288,7 +286,7 @@ export function createBookingViewHelpers({
 
     const filtered = store.bookings.filter((booking) => {
       if (stage && booking.stage !== stage) return false;
-      if (ownerId && booking.owner_id !== ownerId) return false;
+      if (atpStaffId && booking.atp_staff !== atpStaffId) return false;
       if (!search) return true;
 
       const customer = customersByClientId.get(booking.client_id);
@@ -298,12 +296,12 @@ export function createBookingViewHelpers({
         booking.id,
         ...normalizeStringArray(booking.destination),
         ...normalizeStringArray(booking.style),
-        booking.owner_name,
+        booking.atp_staff_name,
         booking.notes,
         booking.client_display_name,
         customer?.email,
         bookingChatTextMap.get(booking.id),
-        booking.sla_due_at,
+        booking.service_level_agreement_due_at,
         JSON.stringify(booking.pricing),
         JSON.stringify(booking.offer)
       ]
@@ -344,12 +342,12 @@ export function createBookingViewHelpers({
           return a.created_at.localeCompare(b.created_at);
         case "updated_at_desc":
           return b.updated_at.localeCompare(a.updated_at);
-        case "sla_due_at_asc":
-          return String(a.sla_due_at || "9999-12-31T23:59:59.999Z").localeCompare(
-            String(b.sla_due_at || "9999-12-31T23:59:59.999Z")
+        case "service_level_agreement_due_at_asc":
+          return String(a.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z").localeCompare(
+            String(b.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z")
           );
-        case "sla_due_at_desc":
-          return String(b.sla_due_at || "").localeCompare(String(a.sla_due_at || ""));
+        case "service_level_agreement_due_at_desc":
+          return String(b.service_level_agreement_due_at || "").localeCompare(String(a.service_level_agreement_due_at || ""));
         case "created_at_desc":
         default:
           return b.created_at.localeCompare(a.created_at);
@@ -358,7 +356,7 @@ export function createBookingViewHelpers({
 
     return {
       items: sorted,
-      filters: { stage: stage || null, owner_id: ownerId || null, search: search || null },
+      filters: { stage: stage || null, atp_staff: atpStaffId || null, search: search || null },
       sort
     };
   }

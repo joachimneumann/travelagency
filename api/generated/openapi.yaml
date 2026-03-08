@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-08T06:18:41Z
+# 2026-03-08T10:45:00Z
 
 ---
 openapi: 3.1.0
@@ -3127,6 +3127,12 @@ components:
           type: string
         client_type:
           "$ref": "#/components/schemas/ClientType"
+        customer_id:
+          type: string
+          nullable: true
+        travel_group_id:
+          type: string
+          nullable: true
         client_hash:
           type: string
     Customer:
@@ -3429,7 +3435,7 @@ components:
         atp_staff:
           type: string
           nullable: true
-        atpStaffName:
+        atp_staff_name:
           type: string
           nullable: true
         destination:
@@ -3443,7 +3449,7 @@ components:
         travelMonth:
           type: string
           nullable: true
-        travelers:
+        number_of_travelers:
           type: integer
           nullable: true
         duration:
@@ -3457,6 +3463,10 @@ components:
           nullable: true
         notes:
           type: string
+          nullable: true
+        service_level_agreement_due_at:
+          type: string
+          format: date-time
           nullable: true
         pricing:
           "$ref": "#/components/schemas/BookingPricing"
@@ -3965,7 +3975,7 @@ components:
         travelMonth:
           type: string
           nullable: true
-        travelers:
+        number_of_travelers:
           type: integer
           nullable: true
         duration:
@@ -4006,9 +4016,6 @@ components:
           type: string
           nullable: true
         utmCampaign:
-          type: string
-          nullable: true
-        idempotencyKey:
           type: string
           nullable: true
     BookingPricingUpdateRequest:

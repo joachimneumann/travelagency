@@ -1110,7 +1110,7 @@ function validateCurrentStep() {
       if (!Number.isFinite(numeric) || belowMin || aboveMax) {
         field.classList.add("invalid");
         isValid = false;
-        if (!travelersRangeError && (input.id === "bookingTravelers" || input.name === "travelers")) {
+        if (!travelersRangeError && (input.id === "bookingTravelers" || input.name === "number_of_travelers")) {
           const minDisplay = min !== null ? min : MIN_TRAVELERS;
           const maxDisplay = max !== null ? max : MAX_TRAVELERS;
           travelersRangeError = `Travelers must be between ${minDisplay} and ${maxDisplay}.`;
@@ -1135,7 +1135,7 @@ async function submitBookingForm() {
   const entries = Object.fromEntries(formData.entries());
   const selectedDestinations = formData.getAll("destination").map((value) => normalizeText(value)).filter(Boolean);
   const selectedStyles = formData.getAll("style").map((value) => normalizeText(value)).filter(Boolean);
-  const rawTravelersValue = normalizeText(entries.travelers);
+  const rawTravelersValue = normalizeText(entries.number_of_travelers);
   const travelersValue = rawTravelersValue ? Number.parseInt(rawTravelersValue, 10) : null;
 
   if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS)) {
@@ -1155,7 +1155,7 @@ async function submitBookingForm() {
     travelMonth: entries.travelMonth || "",
     preferredCurrency: normalizeCurrencyCode(entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY),
     duration: entries.duration || "",
-    travelers: travelersValue,
+    number_of_travelers: travelersValue,
     budget: entries.budget || "",
     name: entries.name || "",
     email: entries.email || "",

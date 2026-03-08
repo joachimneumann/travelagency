@@ -1,18 +1,1 @@
-/*
-  Frontend CSS entrypoint
-  - Keep this file small and composable.
-  - New styles belong in modular files.
-  - site.css contains the baseline site styles.
-*/
-
-@import "./tokens.css";
-@import "./base.css";
-@import "./utilities.css";
-@import "./site.css";
-@import "./components/backend-nav.css";
-@import "./components/backend-login.css";
-@import "./tailwind.generated.css";
-@import "./pages/home.css";
-@import "./pages/customer.css";
-@import "./pages/backend-booking.css";
-@import "./pages/not-found.css";
+@import "../../shared/css/styles.css";

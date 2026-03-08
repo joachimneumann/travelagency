@@ -165,7 +165,7 @@ const ALLOWED_STAGE_TRANSITIONS = {
   [STAGES.POST_TRIP]: STAGE_ORDER
 };
 
-const SLA_HOURS = {
+const SERVICE_LEVEL_AGREEMENT_HOURS = {
   [STAGES.NEW]: 2,
   [STAGES.QUALIFIED]: 8,
   [STAGES.PROPOSAL_SENT]: 24,
@@ -340,7 +340,7 @@ const {
   nowIso,
   safeCurrency,
   safeOptionalInt,
-  computeSlaDueAt,
+  computeServiceLevelAgreementDueAt,
   randomUUID,
   clamp,
   safeInt,
@@ -445,7 +445,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     safeCurrency,
     BASE_CURRENCY,
     STAGES,
-    computeSlaDueAt,
+    computeServiceLevelAgreementDueAt,
     safeInt,
     defaultBookingPricing,
     defaultBookingOffer,
@@ -656,8 +656,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
   console.log(`AsiaTravelPlan backend listening on http://localhost:${server.address().port}`);
 }
 
-function computeSlaDueAt(stage, from = new Date()) {
-  const hours = SLA_HOURS[stage] ?? 0;
+function computeServiceLevelAgreementDueAt(stage, from = new Date()) {
+  const hours = SERVICE_LEVEL_AGREEMENT_HOURS[stage] ?? 0;
   if (!hours) return null;
   return new Date(from.getTime() + hours * 60 * 60 * 1000).toISOString();
 }

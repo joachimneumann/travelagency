@@ -14,6 +14,6 @@ export function buildTourEditHref(id) {
 }
 
 export function buildTravelGroupHref(id) {
-  const params = new URLSearchParams({ section: "travelGroups", id });
-  return `backend.html?${params.toString()}`;
+  const params = new URLSearchParams({ id });
+  return `group.html?${params.toString()}`;
 }

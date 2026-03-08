@@ -44,7 +44,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"destination","required":false,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_14),
     schemaField({"name":"style","required":false,"wireName":"style"}, SHARED_FIELD_DEFS.FIELD_14),
     schemaField({"name":"travelMonth","required":false,"wireName":"travelMonth"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"travelers","required":false,"wireName":"travelers"}, SHARED_FIELD_DEFS.FIELD_7),
+    schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"duration","required":false,"wireName":"duration"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"budget","required":false,"wireName":"budget"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"preferredCurrency","required":false,"wireName":"preferredCurrency"}, SHARED_FIELD_DEFS.FIELD_8),
@@ -57,8 +57,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"referrer","required":false,"wireName":"referrer"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"utmSource","required":false,"wireName":"utmSource"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"utmMedium","required":false,"wireName":"utmMedium"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"utmCampaign","required":false,"wireName":"utmCampaign"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"idempotencyKey","required":false,"wireName":"idempotencyKey"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"utmCampaign","required":false,"wireName":"utmCampaign"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
@@ -573,6 +572,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"client_type","required":true,"wireName":"client_type"}, SHARED_FIELD_DEFS.FIELD_12),
+    schemaField({"name":"customer_id","required":false,"wireName":"customer_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"travel_group_id","required":false,"wireName":"travel_group_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"client_hash","required":true,"wireName":"client_hash"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };

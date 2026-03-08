@@ -25,7 +25,7 @@ Features available now:
 - Public backend-hosted tour images (`GET /public/v1/tour-images/:path`)
 - Booking pipeline and stage transitions
 - Customer deduplication
-- Booking staff assignment + SLA due timestamps
+- Booking staff assignment + Service Level Agreement due timestamps
 - Booking activity timeline
 - Staff lookup API for assignment controls (`GET /api/v1/atp_staff`)
 - Staff creation API for managers/admins (`POST /api/v1/atp_staff`)
@@ -122,9 +122,9 @@ curl -b cookie.txt \
 Supported filters on `GET /api/v1/bookings`:
 - `page`, `page_size`
 - `stage`
-- `owner_id` (assigned staff id)
+- `atp_staff` (assigned staff id)
 - `search`
-- `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `sla_due_at_asc`, `sla_due_at_desc`)
+- `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `service_level_agreement_due_at_asc`, `service_level_agreement_due_at_desc`)
 
 Bearer token example (service-to-service):
 

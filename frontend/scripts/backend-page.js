@@ -4,9 +4,11 @@ import {
   formatDateTime,
   normalizeText
 } from "./shared/backend-common.js";
+import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
 import {
   buildBookingHref,
   buildCustomerHref,
+  buildTravelGroupHref,
   buildTourEditHref
 } from "./shared/backend-links.js";
 
@@ -81,10 +83,10 @@ const SECTION_CONFIG = [
 ];
 
 const ROLES = {
-  ADMIN: "atp_admin",
-  MANAGER: "atp_manager",
-  ACCOUNTANT: "atp_accountant",
-  STAFF: "atp_staff"
+  ADMIN: GENERATED_ATP_STAFF_ROLES[0],
+  MANAGER: GENERATED_ATP_STAFF_ROLES[1],
+  ACCOUNTANT: GENERATED_ATP_STAFF_ROLES[2],
+  STAFF: GENERATED_ATP_STAFF_ROLES[3]
 };
 
 const state = {
@@ -605,25 +607,34 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Client</th><th>Destination</th><th>Style</th><th>Staff</th><th>SLA due</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Client</th><th>Destination</th><th>Style</th><th>Staff</th><th>Service Level Agreement due</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
-      const clientHref = buildCustomerHref(booking.client_id || "");
-      const clientLabel = booking.client_display_name || shortId(booking.client_id);
-      const clientCell = booking.client_id
-        ? booking.client_type === "customer" && canOpenCustomer
-          ? `<a href="${escapeHtml(clientHref)}">${escapeHtml(clientLabel)}</a>`
-          : escapeHtml(clientLabel)
-        : "-";
+      const clientLabelBase = booking.client_display_name || shortId(booking.client_id);
+      let clientCell = "-";
+      if (booking.client_id) {
+        if (booking.client_type === "customer") {
+          const customerHref = buildCustomerHref(booking.client_id || "");
+          clientCell = canOpenCustomer
+            ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(clientLabelBase)}</a>`
+            : escapeHtml(clientLabelBase);
+        } else if (booking.client_type === "travel_group") {
+          const groupId = booking.travel_group_id || booking.client_id || "";
+          const groupHref = buildTravelGroupHref(groupId);
+          clientCell = `<a href="${escapeHtml(groupHref)}">${escapeHtml(clientLabelBase)} (group)</a>`;
+        } else {
+          clientCell = escapeHtml(clientLabelBase);
+        }
+      }
       return `<tr>
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
         <td>${escapeHtml(booking.stage)}</td>
         <td>${clientCell}</td>
         <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
         <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
-        <td>${escapeHtml(booking.staff_name || booking.owner_name || "Unassigned")}</td>
-        <td>${escapeHtml(formatDateTime(booking.sla_due_at))}</td>
+        <td>${escapeHtml(booking.atp_staff_name || "Unassigned")}</td>
+        <td>${escapeHtml(formatDateTime(booking.service_level_agreement_due_at))}</td>
       </tr>`;
     })
     .join("");
@@ -680,31 +691,23 @@ function renderTours(items) {
 }
 
 function renderTravelGroups(items) {
-  const header = `<thead><tr><th>ID</th><th>Client</th><th>Name</th><th>Contact</th><th>Travelers</th><th>Updated</th><th>Actions</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Travelers</th><th>Updated</th></tr></thead>`;
   const rows = items
     .map((group) => {
+      const href = buildTravelGroupHref(group.id || "");
       return `<tr>
-        <td>${escapeHtml(shortId(group.id))}</td>
-        <td>${escapeHtml(shortId(group.client_id || "-"))}</td>
+        <td><a href="${escapeHtml(href)}">${escapeHtml(shortId(group.id))}</a></td>
         <td>${escapeHtml(group.group_name || group.name || "-")}</td>
         <td>${escapeHtml(group.group_contact_customer_name || shortId(group.group_contact_customer_id || "-"))}</td>
         <td>${escapeHtml(String(Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids.length : 0))}</td>
         <td>${escapeHtml(formatDateTime(group.updated_at || group.updatedAt))}</td>
-        <td><button class="btn btn-ghost" type="button" data-delete-travel-group="${escapeHtml(group.id || "")}" data-travel-group-hash="${escapeHtml(group.travel_group_hash || "")}">Delete</button></td>
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="7">No travel groups found</td></tr>`;
+  const body = rows || `<tr><td colspan="5">No travel groups found</td></tr>`;
   if (els.travelGroupsTable) {
     els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-    els.travelGroupsTable.querySelectorAll("[data-delete-travel-group]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const travelGroupId = button.getAttribute("data-delete-travel-group") || "";
-        const travelGroupHash = button.getAttribute("data-travel-group-hash") || "";
-        void deleteTravelGroup(travelGroupId, travelGroupHash);
-      });
-    });
   }
 }
 

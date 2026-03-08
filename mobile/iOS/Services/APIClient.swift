@@ -154,7 +154,7 @@ final class APIClient {
         try await send(
             requestURL: MobileAPIRequestFactory.bookingAssignmentURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
             method: "PATCH",
-            body: ["owner_id": staffID ?? NSNull(), "booking_hash": bookingHash],
+            body: ["atp_staff": staffID ?? NSNull(), "booking_hash": bookingHash],
             session: session
         )
     }

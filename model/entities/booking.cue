@@ -15,25 +15,6 @@ import (
 	utmCampaign?:    string
 }
 
-#PricingAdjustment: {
-	id:         common.#Identifier
-	type:       enums.#PricingAdjustmentType
-	label:      string & !=""
-	netAmount:  common.#MoneyAmount
-	notes?:     string
-	createdAt?: common.#Timestamp
-	updatedAt?: common.#Timestamp
-}
-
-#InvoiceComponent: {
-	id?:          common.#Identifier
-	label:        string & !=""
-	description?: string
-	quantity:     >0 & int
-	unitNet:      common.#MoneyAmount
-	taxRate:      >=0 & number
-}
-
 #BookingPayment: {
 	id:         common.#Identifier
 	label:      string & !=""
@@ -45,19 +26,6 @@ import (
 	notes?:     string
 	createdAt?: common.#Timestamp
 	updatedAt?: common.#Timestamp
-}
-
-#Invoice: {
-	id:             common.#Identifier
-	invoiceNumber?: string
-	currency:       enums.#CurrencyCode
-	issueDate?:     common.#DateOnly
-	dueDate?:       common.#DateOnly
-	components: [...#InvoiceComponent]
-	notes?:          string
-	sentToCustomer?: bool
-	createdAt?:      common.#Timestamp
-	updatedAt?:      common.#Timestamp
 }
 
 #BookingPricingSummary: {
@@ -94,31 +62,28 @@ import (
 #BookingInvoice: #Invoice
 
 #Booking: {
-	id:                 common.#Identifier
-	booking_hash?:      string
-	client_id?:         common.#Identifier
-	client_type?:       enums.#ClientType
-	client_display_name?: string
+	id:                           common.#Identifier
+	booking_hash?:                string
+	client_id?:                   common.#Identifier
+	client_type?:                 enums.#ClientType
+	client_display_name?:         string
 	client_primary_phone_number?: string
-	client_primary_email?: common.#Email
-	stage:              enums.#BookingStage
-	atpStaff?:          common.#Identifier
-	atpStaffName?:      string
-	ownerId?:           common.#Identifier
-	ownerName?:         string
-	slaDueAt?:          common.#Timestamp
-	destination?:       [...string]
-	style?:             [...string]
-	travelMonth?:       string
-	travelers?:         >=common.#MinTravelers & <=common.#MaxTravelers & int
-	duration?:          string
-	budget?:            string
-	preferredCurrency?: enums.#CurrencyCode
-	notes?:             string
-	pricing:            #BookingPricing
-	offer:              #BookingOffer
-	source?:            #SourceAttribution
-	idempotencyKey?:    string
-	createdAt:          common.#Timestamp
-	updatedAt:          common.#Timestamp
+	client_primary_email?:        common.#Email
+	stage:                        enums.#BookingStage
+	atp_staff?:                   common.#Identifier
+	atp_staff_name?:              string
+	serviceLevelAgreementDueAt?:  common.#Timestamp
+	destination?: [...string]
+	style?: [...string]
+	travelMonth?:         string
+	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
+	duration?:            string
+	budget?:              string
+	preferredCurrency?:   enums.#CurrencyCode
+	notes?:               string
+	pricing:              #BookingPricing
+	offer:                #BookingOffer
+	source?:              #SourceAttribution
+	createdAt:            common.#Timestamp
+	updatedAt:            common.#Timestamp
 }

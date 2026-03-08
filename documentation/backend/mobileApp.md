@@ -127,7 +127,7 @@ Recommended first endpoints:
 Note:
 - the current assignment route path is `PATCH /api/v1/bookings/:bookingId/owner`
 - semantically this is a staff assignment endpoint
-- request body must send `owner_id`
+- request body must send `atp_staff`
 
 ## 5) Current backend role behavior
 

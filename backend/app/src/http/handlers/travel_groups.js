@@ -83,7 +83,8 @@ export function createTravelGroupHandlers(deps) {
       client: buildClientReadModel(clientForGroup(store, group), group, groupContactCustomer),
       travel_group: buildTravelGroupReadModel(group, store),
       members,
-      memberCustomers: memberCustomersForGroup(store, group)
+      memberCustomers: memberCustomersForGroup(store, group),
+      bookings: relatedBookings(store, group)
     };
   }
 

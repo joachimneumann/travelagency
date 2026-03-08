@@ -1,15 +1,1 @@
-:root {
-  --bg: #fdfdfd;
-  --surface: #ffffff;
-  --text: #1c2b35;
-  --muted: #5c6c76;
-  --line: #deeaef;
-  --accent: #ff6f4d;
-  --accent-soft: #ffe3d9;
-  --secondary: #1fa7a0;
-  --radius: 14px;
-  --shadow: 0 12px 30px rgba(19, 52, 68, 0.1);
-  --menu-font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-  --menu-font-size-main: 0.92rem;
-  --menu-font-size-sub: 0.78rem;
-}
+@import "../../shared/css/tokens.css";

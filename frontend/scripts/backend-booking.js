@@ -2,6 +2,8 @@ import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../Generated/Models/generated_Currency.js";
+import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
+import { GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST, GENERATED_OFFER_CATEGORIES as GENERATED_OFFER_CATEGORY_LIST } from "../Generated/Models/generated_Booking.js";
 import {
   atpStaffRequest,
   bookingActivitiesRequest,
@@ -31,36 +33,23 @@ const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
 
-const STAGES = [
-  "NEW",
-  "QUALIFIED",
-  "PROPOSAL_SENT",
-  "NEGOTIATION",
-  "INVOICE_SENT",
-  "PAYMENT_RECEIVED",
-  "WON",
-  "LOST",
-  "POST_TRIP"
-];
-
-const OFFER_CATEGORIES = [
-  { code: "ACCOMMODATION", label: "Accommodation" },
-  { code: "TRANSPORTATION", label: "Transportation" },
-  { code: "TOURS_ACTIVITIES", label: "Tours & Activities" },
-  { code: "GUIDE_SUPPORT_SERVICES", label: "Guide & Support Services" },
-  { code: "MEALS", label: "Meals" },
-  { code: "FEES_TAXES", label: "Fees & Taxes" },
-  { code: "DISCOUNTS_CREDITS", label: "Discounts & Credits" },
-  { code: "OTHER", label: "Other" }
-];
+const STAGES = GENERATED_BOOKING_STAGE_LIST;
+const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({
+  code,
+  label: code
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+}));
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 
 const ROLES = {
-  ADMIN: "atp_admin",
-  MANAGER: "atp_manager",
-  ACCOUNTANT: "atp_accountant",
-  STAFF: "atp_staff"
+  ADMIN: GENERATED_ATP_STAFF_ROLES[0],
+  MANAGER: GENERATED_ATP_STAFF_ROLES[1],
+  ACCOUNTANT: GENERATED_ATP_STAFF_ROLES[2],
+  STAFF: GENERATED_ATP_STAFF_ROLES[3]
 };
 
 const state = {
@@ -78,7 +67,6 @@ const state = {
   submittedCustomer: null,
   clientAssignmentPanelOpen: false,
   customerCandidates: [],
-  travelGroupOptions: [],
   originalClientKey: null,
   staff: [],
   invoices: [],
@@ -368,14 +356,14 @@ function renderBookingData() {
       entries: [
         ["id", booking.id],
         ["stage", booking.stage],
-        ["staff", booking.staff_name || booking.owner_name || "Unassigned"],
+        ["staff", booking.atp_staff_name || "Unassigned"],
         ["destination", Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination],
         ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
         ["travel_month", booking.travel_month],
-        ["travelers", booking.travelers],
+        ["number_of_travelers", booking.number_of_travelers],
         ["duration", booking.duration],
         ["budget", booking.budget],
-        ["sla_due_at", formatDateTime(booking.sla_due_at)],
+        ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],
         ["updated_at", formatDateTime(booking.updated_at)]
       ]
@@ -449,7 +437,7 @@ function renderActionControls() {
       .concat((state.staff || []).map((staff) => `<option value="${escapeHtml(staff.id)}">${escapeHtml(staff.name)}</option>`))
       .join("");
     els.ownerSelect.innerHTML = options;
-    els.ownerSelect.value = state.booking.staff || state.booking.owner_id || "";
+    els.ownerSelect.value = state.booking.atp_staff || "";
     els.ownerSelect.disabled = !state.permissions.canChangeAssignment;
   }
 
@@ -478,7 +466,6 @@ function applyBookingClientPayload(payload = {}) {
   state.travelGroup = payload.travelGroup || null;
   state.submittedCustomer = payload.submittedCustomer || null;
   state.customerCandidates = Array.isArray(payload.customerCandidates) ? payload.customerCandidates : [];
-  state.travelGroupOptions = Array.isArray(payload.travelGroupOptions) ? payload.travelGroupOptions : [];
   if (state.originalClientKey === null) {
     state.originalClientKey = currentClientKey();
   }
@@ -551,8 +538,10 @@ function toggleClientAssignmentPanel() {
 
 function updateClientAssignmentButtons() {
   if (els.assignCustomerBtn) {
+    const selectedValue = normalizeText(els.suggestedCustomerSelect?.value) || "";
+    els.assignCustomerBtn.textContent = selectedValue === "__create_new_customer__" ? "Create" : "Select";
     els.assignCustomerBtn.disabled =
-      !state.permissions.canEditBooking || !(normalizeText(els.suggestedCustomerSelect?.value) || "");
+      !state.permissions.canEditBooking || !selectedValue;
   }
   if (els.clientLookupBtn) {
     els.clientLookupBtn.disabled =
@@ -1113,7 +1102,7 @@ async function saveOwner() {
     method: "PATCH",
     body: {
       booking_hash: state.booking.booking_hash,
-      owner_id: els.ownerSelect.value || null,
+      atp_staff: els.ownerSelect.value || null,
       actor: state.user
     }
   });

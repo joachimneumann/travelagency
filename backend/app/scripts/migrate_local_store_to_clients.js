@@ -32,21 +32,20 @@ function optional(value) {
 
 function currencyCode(value) {
   const normalized = text(value).toUpperCase();
-  if (!normalized) return null;
-  if (normalized === "EURO") return "EUR";
-  return normalized;
+  return normalized || null;
 }
 
 function arrayOfStrings(value) {
   if (Array.isArray(value)) return value.map((entry) => text(entry)).filter(Boolean);
-  const normalized = text(value);
-  return normalized ? [normalized] : [];
+  return [];
 }
 
 function computeClientHash(client) {
   return hashPayload({
     id: client?.id || null,
-    client_type: client?.client_type || null
+    client_type: client?.client_type || null,
+    customer_id: client?.customer_id || null,
+    travel_group_id: client?.travel_group_id || null
   });
 }
 
@@ -84,27 +83,16 @@ function computeCustomerHash(customer) {
   });
 }
 
-function computeTravelGroupHash(group, members) {
+function computeTravelGroupHash(group) {
   return hashPayload({
     id: group?.id || null,
     client_id: group?.client_id || null,
     group_name: group?.group_name || null,
-    preferred_language: group?.preferred_language || null,
-    preferred_currency: group?.preferred_currency || null,
-    timezone: group?.timezone || null,
-    notes: group?.notes || null,
+    group_contact_customer_id: group?.group_contact_customer_id || null,
+    traveler_customer_ids: Array.isArray(group?.traveler_customer_ids) ? group.traveler_customer_ids : [],
     created_at: group?.created_at || null,
     updated_at: group?.updated_at || null,
-    archived_at: group?.archived_at || null,
-    members: (members || []).map((member) => ({
-      id: member?.id || null,
-      customer_client_id: member?.customer_client_id || null,
-      is_traveling: member?.is_traveling ?? null,
-      member_roles: Array.isArray(member?.member_roles) ? member.member_roles : [],
-      notes: member?.notes || null,
-      created_at: member?.created_at || null,
-      updated_at: member?.updated_at || null
-    }))
+    archived_at: group?.archived_at || null
   });
 }
 
@@ -119,13 +107,11 @@ function computeBookingHash(booking) {
     stage: booking?.stage || null,
     atp_staff: booking?.atp_staff || null,
     atp_staff_name: booking?.atp_staff_name || null,
-    owner_id: booking?.owner_id || null,
-    owner_name: booking?.owner_name || null,
-    sla_due_at: booking?.sla_due_at || null,
-    destination: Array.isArray(booking?.destination) ? booking.destination : [],
-    style: Array.isArray(booking?.style) ? booking.style : [],
+    service_level_agreement_due_at: booking?.service_level_agreement_due_at || null,
+    destination: arrayOfStrings(booking?.destination),
+    style: arrayOfStrings(booking?.style),
     travel_month: booking?.travel_month || null,
-    travelers: booking?.travelers ?? null,
+    number_of_travelers: booking?.number_of_travelers ?? null,
     duration: booking?.duration || null,
     budget: booking?.budget || null,
     preferred_currency: booking?.preferred_currency || null,
@@ -138,227 +124,175 @@ function computeBookingHash(booking) {
   });
 }
 
-function normalizeCustomer(legacyCustomer) {
-  const clientId = text(legacyCustomer.id);
-  const customer = {
-    client_id: clientId,
-    name: text(legacyCustomer.name),
-    photo_ref: optional(legacyCustomer.photo_ref),
-    title: optional(legacyCustomer.title),
-    first_name: optional(legacyCustomer.first_name),
-    last_name: optional(legacyCustomer.last_name),
-    date_of_birth: optional(legacyCustomer.date_of_birth),
-    nationality: optional(legacyCustomer.nationality),
-    address_line_1: optional(legacyCustomer.address_line_1),
-    address_line_2: optional(legacyCustomer.address_line_2),
-    address_city: optional(legacyCustomer.address_city),
-    address_state_region: optional(legacyCustomer.address_state_region),
-    address_postal_code: optional(legacyCustomer.address_postal_code),
-    address_country_code: optional(legacyCustomer.address_country_code),
-    organization_name: optional(legacyCustomer.organization_name),
-    organization_address: optional(legacyCustomer.organization_address),
-    organization_phone_number: optional(legacyCustomer.organization_phone_number),
-    organization_webpage: optional(legacyCustomer.organization_webpage),
-    organization_email: optional(legacyCustomer.organization_email),
-    tax_id: optional(legacyCustomer.tax_id),
-    phone_number: optional(legacyCustomer.phone_number || legacyCustomer.phone),
-    email: optional(legacyCustomer.email),
-    preferred_language: optional(legacyCustomer.preferred_language || legacyCustomer.language),
-    preferred_currency: currencyCode(legacyCustomer.preferred_currency),
-    timezone: optional(legacyCustomer.timezone),
-    notes: optional(legacyCustomer.notes),
-    created_at: text(legacyCustomer.created_at) || new Date().toISOString(),
-    updated_at: text(legacyCustomer.updated_at) || text(legacyCustomer.created_at) || new Date().toISOString(),
-    archived_at: optional(legacyCustomer.archived_at)
-  };
-  customer.customer_hash = computeCustomerHash(customer);
-  return customer;
-}
-
-function normalizeClient(clientId, clientType = "customer") {
-  const client = {
-    id: clientId,
-    client_type: clientType
-  };
-  client.client_hash = computeClientHash(client);
-  return client;
-}
-
 async function main() {
   const raw = await fs.readFile(STORE_PATH, "utf8");
   const store = JSON.parse(raw);
 
-  const legacyCustomers = Array.isArray(store.customers) ? store.customers : [];
-  const legacyCustomerConsents = Array.isArray(store.customer_consents) ? store.customer_consents : [];
-  const legacyCustomerDocuments = Array.isArray(store.customer_documents) ? store.customer_documents : [];
+  const clients = Array.isArray(store.clients) ? store.clients : [];
+  const customers = Array.isArray(store.customers) ? store.customers : [];
+  const customerConsents = Array.isArray(store.customer_consents) ? store.customer_consents : [];
+  const customerDocuments = Array.isArray(store.customer_documents) ? store.customer_documents : [];
   const travelGroups = Array.isArray(store.travel_groups) ? store.travel_groups : [];
   const travelGroupMembers = Array.isArray(store.travel_group_members) ? store.travel_group_members : [];
+  const bookings = Array.isArray(store.bookings) ? store.bookings : [];
+  const activities = Array.isArray(store.activities) ? store.activities : [];
+  const invoices = Array.isArray(store.invoices) ? store.invoices : [];
+  const chatEvents = Array.isArray(store.chat_events) ? store.chat_events : [];
+  const chatConversations = Array.isArray(store.chat_conversations) ? store.chat_conversations : [];
+  const chatChannelAccounts = Array.isArray(store.chat_channel_accounts) ? store.chat_channel_accounts : [];
 
-  const migratedCustomers = legacyCustomers.map((customer) => normalizeCustomer(customer));
-  const customerIds = new Set(migratedCustomers.map((customer) => customer.client_id));
-  const clients = migratedCustomers.map((customer) => normalizeClient(customer.client_id, "customer"));
+  const normalizedCustomers = customers.map((customer) => ({
+    ...customer,
+    client_id: text(customer.client_id),
+    name: text(customer.name),
+    photo_ref: optional(customer.photo_ref),
+    title: optional(customer.title),
+    first_name: optional(customer.first_name),
+    last_name: optional(customer.last_name),
+    date_of_birth: optional(customer.date_of_birth),
+    nationality: optional(customer.nationality),
+    address_line_1: optional(customer.address_line_1),
+    address_line_2: optional(customer.address_line_2),
+    address_city: optional(customer.address_city),
+    address_state_region: optional(customer.address_state_region),
+    address_postal_code: optional(customer.address_postal_code),
+    address_country_code: optional(customer.address_country_code),
+    organization_name: optional(customer.organization_name),
+    organization_address: optional(customer.organization_address),
+    organization_phone_number: optional(customer.organization_phone_number),
+    organization_webpage: optional(customer.organization_webpage),
+    organization_email: optional(customer.organization_email),
+    tax_id: optional(customer.tax_id),
+    phone_number: optional(customer.phone_number),
+    email: optional(customer.email),
+    preferred_language: optional(customer.preferred_language),
+    preferred_currency: currencyCode(customer.preferred_currency),
+    timezone: optional(customer.timezone),
+    notes: optional(customer.notes),
+    created_at: text(customer.created_at) || new Date().toISOString(),
+    updated_at: text(customer.updated_at) || text(customer.created_at) || new Date().toISOString(),
+    archived_at: optional(customer.archived_at)
+  })).map((customer) => ({
+    ...customer,
+    customer_hash: computeCustomerHash(customer)
+  }));
 
-  const migratedTravelGroups = travelGroups.map((group) => {
-    const existingClientId = text(group.client_id);
-    const fallbackClientId = text(group.id) ? `client_${text(group.id)}` : "";
-    const clientId = existingClientId || fallbackClientId;
+  const customerByClientId = new Map(normalizedCustomers.map((customer) => [customer.client_id, customer]));
+  const normalizedTravelGroups = travelGroups.map((group) => ({
+    ...group,
+    id: text(group.id),
+    client_id: text(group.client_id),
+    group_name: text(group.group_name),
+    group_contact_customer_id: optional(group.group_contact_customer_id),
+    traveler_customer_ids: arrayOfStrings(group.traveler_customer_ids),
+    created_at: text(group.created_at) || new Date().toISOString(),
+    updated_at: text(group.updated_at) || text(group.created_at) || new Date().toISOString(),
+    archived_at: optional(group.archived_at)
+  })).map((group) => ({
+    ...group,
+    travel_group_hash: computeTravelGroupHash(group)
+  }));
+
+  const normalizedClients = clients.map((client) => {
     const normalized = {
-      id: text(group.id),
-      client_id: clientId,
-      group_name: text(group.group_name || group.name) || "Travel group",
-      preferred_language: optional(group.preferred_language),
-      preferred_currency: currencyCode(group.preferred_currency),
-      timezone: optional(group.timezone),
-      notes: optional(group.notes),
-      created_at: text(group.created_at) || new Date().toISOString(),
-      updated_at: text(group.updated_at) || text(group.created_at) || new Date().toISOString(),
-      archived_at: optional(group.archived_at)
+      ...client,
+      id: text(client.id),
+      client_type: text(client.client_type),
+      customer_id: optional(client.customer_id),
+      travel_group_id: optional(client.travel_group_id)
     };
-    const groupMembers = travelGroupMembers
-      .filter((member) => text(member.travel_group_id) === normalized.id)
-      .map((member) => ({
-        id: text(member.id),
-        travel_group_id: normalized.id,
-        customer_client_id: text(member.customer_client_id || member.customer_id),
-        is_traveling: member.is_traveling ?? false,
-        member_roles: Array.isArray(member.member_roles) ? member.member_roles : [],
-        notes: optional(member.notes),
-        created_at: text(member.created_at) || new Date().toISOString(),
-        updated_at: text(member.updated_at) || text(member.created_at) || new Date().toISOString()
-      }))
-      .filter((member) => member.customer_client_id && customerIds.has(member.customer_client_id));
-    normalized.travel_group_hash = computeTravelGroupHash(normalized, groupMembers);
-    return normalized;
+    return {
+      ...normalized,
+      client_hash: computeClientHash(normalized)
+    };
   });
 
-  const migratedTravelGroupMembers = travelGroupMembers
+  const travelGroupById = new Map(normalizedTravelGroups.map((group) => [group.id, group]));
+  const normalizedBookings = bookings.map((booking) => {
+    const normalized = {
+      ...booking,
+      id: text(booking.id),
+      client_id: optional(booking.client_id),
+      client_type: optional(booking.client_type),
+      client_display_name: optional(booking.client_display_name),
+      client_primary_phone_number: optional(booking.client_primary_phone_number),
+      client_primary_email: optional(booking.client_primary_email),
+      stage: text(booking.stage),
+      atp_staff: optional(booking.atp_staff),
+      atp_staff_name: optional(booking.atp_staff_name),
+      service_level_agreement_due_at: optional(booking.service_level_agreement_due_at),
+      destination: arrayOfStrings(booking.destination),
+      style: arrayOfStrings(booking.style),
+      travel_month: optional(booking.travel_month),
+      number_of_travelers: booking.number_of_travelers ?? null,
+      duration: optional(booking.duration),
+      budget: optional(booking.budget),
+      preferred_currency: currencyCode(booking.preferred_currency),
+      notes: optional(booking.notes),
+      pricing: booking.pricing || null,
+      offer: booking.offer || null,
+      source: booking.source || null,
+      created_at: text(booking.created_at) || new Date().toISOString(),
+      updated_at: text(booking.updated_at) || text(booking.created_at) || new Date().toISOString()
+    };
+
+    if (normalized.client_type === "customer") {
+      const customer = normalized.client_id ? customerByClientId.get(normalized.client_id) : null;
+      normalized.client_display_name = customer?.name || normalized.client_display_name;
+      normalized.client_primary_phone_number = customer?.phone_number || normalized.client_primary_phone_number;
+      normalized.client_primary_email = customer?.email || normalized.client_primary_email;
+    } else if (normalized.client_type === "travel_group") {
+      const group = normalized.client_id
+        ? normalizedTravelGroups.find((entry) => entry.client_id === normalized.client_id)
+        : null;
+      const contact = group?.group_contact_customer_id ? customerByClientId.get(group.group_contact_customer_id) : null;
+      normalized.client_display_name = group?.group_name || normalized.client_display_name;
+      normalized.client_primary_phone_number = contact?.phone_number || normalized.client_primary_phone_number;
+      normalized.client_primary_email = contact?.email || normalized.client_primary_email;
+    }
+
+    return {
+      ...normalized,
+      booking_hash: computeBookingHash(normalized)
+    };
+  });
+
+  const normalizedTravelGroupMembers = travelGroupMembers
     .map((member) => ({
+      ...member,
       id: text(member.id),
       travel_group_id: text(member.travel_group_id),
-      customer_client_id: text(member.customer_client_id || member.customer_id),
+      customer_client_id: text(member.customer_client_id),
       is_traveling: member.is_traveling ?? false,
       member_roles: Array.isArray(member.member_roles) ? member.member_roles : [],
       notes: optional(member.notes),
       created_at: text(member.created_at) || new Date().toISOString(),
       updated_at: text(member.updated_at) || text(member.created_at) || new Date().toISOString()
     }))
-    .filter((member) => member.travel_group_id && member.customer_client_id && customerIds.has(member.customer_client_id));
+    .filter((member) => member.travel_group_id && member.customer_client_id && travelGroupById.has(member.travel_group_id));
 
-  for (const group of migratedTravelGroups) {
-    if (group.client_id && !clients.some((client) => client.id === group.client_id)) {
-      clients.push(normalizeClient(group.client_id, "travel_group"));
-    }
-  }
-
-  const customerByClientId = new Map(migratedCustomers.map((customer) => [customer.client_id, customer]));
-  const groupByClientId = new Map(migratedTravelGroups.map((group) => [group.client_id, group]));
-
-  const migratedBookings = (Array.isArray(store.bookings) ? store.bookings : []).map((booking) => {
-    const clientId = text(booking.client_id || booking.customer_id);
-    const customer = customerByClientId.get(clientId) || null;
-    const group = groupByClientId.get(clientId) || null;
-    const normalized = {
-      ...booking,
-      client_id: clientId,
-      client_type: group ? "travel_group" : "customer",
-      client_display_name: group ? group.group_name : text(customer?.name),
-      client_primary_phone_number: group ? null : optional(customer?.phone_number),
-      client_primary_email: group ? null : optional(customer?.email),
-      destination: arrayOfStrings(booking.destination),
-      style: arrayOfStrings(booking.style),
-      travel_month: optional(booking.travel_month),
-      preferred_currency: currencyCode(booking.preferred_currency),
-      updated_at: text(booking.updated_at) || text(booking.created_at) || new Date().toISOString()
-    };
-    delete normalized.customer_id;
-    normalized.booking_hash = computeBookingHash(normalized);
-    return normalized;
-  });
-
-  const migratedConsents = legacyCustomerConsents
-    .map((consent) => ({
-      ...consent,
-      customer_client_id: text(consent.customer_client_id || consent.customer_id)
-    }))
-    .filter((consent) => consent.customer_client_id && customerIds.has(consent.customer_client_id))
-    .map((consent) => {
-      const normalized = { ...consent };
-      delete normalized.customer_id;
-      return normalized;
-    });
-
-  const migratedDocuments = legacyCustomerDocuments
-    .map((document) => ({
-      ...document,
-      customer_client_id: text(document.customer_client_id || document.customer_id)
-    }))
-    .filter((document) => document.customer_client_id && customerIds.has(document.customer_client_id))
-    .map((document) => {
-      const normalized = { ...document };
-      delete normalized.customer_id;
-      return normalized;
-    });
-
-  const migratedChatConversations = (Array.isArray(store.chat_conversations) ? store.chat_conversations : []).map((conversation) => {
-    const normalized = {
-      ...conversation,
-      client_id: text(conversation.client_id || conversation.customer_id) || null
-    };
-    delete normalized.customer_id;
-    return normalized;
-  });
-
-  const migratedChatEvents = (Array.isArray(store.chat_events) ? store.chat_events : []).map((event) => {
-    const normalized = {
-      ...event,
-      client_id: text(event.client_id || event.customer_id) || null
-    };
-    delete normalized.customer_id;
-    return normalized;
-  });
-
-  const migratedInvoices = (Array.isArray(store.invoices) ? store.invoices : []).map((invoice) => {
-    const normalized = {
-      ...invoice,
-      client_id: text(invoice.client_id || invoice.customer_id) || null
-    };
-    delete normalized.customer_id;
-    return normalized;
-  });
-
-  const migratedStore = {
-    ...store,
-    clients,
-    customers: migratedCustomers,
-    customer_consents: migratedConsents,
-    customer_documents: migratedDocuments,
-    travel_groups: migratedTravelGroups,
-    travel_group_members: migratedTravelGroupMembers,
-    bookings: migratedBookings,
-    chat_conversations: migratedChatConversations,
-    chat_events: migratedChatEvents,
-    invoices: migratedInvoices
+  const normalizedStore = {
+    clients: normalizedClients,
+    customers: normalizedCustomers,
+    customer_consents: customerConsents,
+    customer_documents: customerDocuments,
+    travel_groups: normalizedTravelGroups,
+    travel_group_members: normalizedTravelGroupMembers,
+    bookings: normalizedBookings,
+    activities,
+    invoices,
+    chat_events: chatEvents,
+    chat_conversations: chatConversations,
+    chat_channel_accounts: chatChannelAccounts
   };
 
   const backupPath = `${STORE_PATH}.bak_${nowStamp()}`;
-  await fs.writeFile(backupPath, raw);
-  await fs.writeFile(STORE_PATH, `${JSON.stringify(migratedStore, null, 2)}\n`);
-
-  const summary = {
-    backup: backupPath,
-    clients: migratedStore.clients.length,
-    customers: migratedStore.customers.length,
-    customer_consents: migratedStore.customer_consents.length,
-    customer_documents: migratedStore.customer_documents.length,
-    bookings: migratedStore.bookings.length,
-    travel_groups: migratedStore.travel_groups.length,
-    travel_group_members: migratedStore.travel_group_members.length
-  };
-
-  process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+  await fs.copyFile(STORE_PATH, backupPath);
+  await fs.writeFile(STORE_PATH, `${JSON.stringify(normalizedStore, null, 2)}\n`, "utf8");
+  console.log(`Migrated local store to canonical client model. Backup: ${path.basename(backupPath)}`);
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error("Migration failed:", error);
   process.exit(1);
 });

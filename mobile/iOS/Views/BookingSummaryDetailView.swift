@@ -16,7 +16,7 @@ struct BookingSummaryDetailView: View {
                 if let travelMonth = booking.travelMonth, !travelMonth.isEmpty {
                     LabeledContent("Travel Month", value: travelMonth)
                 }
-                if let travelers = booking.travelers {
+                if let travelers = booking.number_of_travelers {
                     LabeledContent("Travelers", value: String(travelers))
                 }
                 if let duration = booking.duration, !duration.isEmpty {
@@ -25,7 +25,7 @@ struct BookingSummaryDetailView: View {
                 if let budget = booking.budget, !budget.isEmpty {
                     LabeledContent("Budget", value: budget)
                 }
-                LabeledContent("Atp Staff", value: booking.atpStaffName ?? "Unassigned")
+                LabeledContent("ATP staff", value: booking.atp_staff_name ?? "Unassigned")
             }
         }
         .navigationTitle("Booking")

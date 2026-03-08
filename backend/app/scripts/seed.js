@@ -59,7 +59,7 @@ function buildEmail(name, i) {
   return `${base}.${i}@example.com`;
 }
 
-function stageSla(stage, fromIso) {
+function stageServiceLevelAgreement(stage, fromIso) {
   const map = {
     NEW: 2,
     QUALIFIED: 8,
@@ -128,13 +128,13 @@ async function main() {
       client_primary_phone_number: customer.phone_number,
       client_primary_email: customer.email,
       stage,
-      owner_id: owner?.id || null,
-      owner_name: owner?.name || null,
-      sla_due_at: stageSla(stage, updatedAt),
+      atp_staff: owner?.id || null,
+      atp_staff_name: owner?.name || null,
+      service_level_agreement_due_at: stageServiceLevelAgreement(stage, updatedAt),
       destination,
       style,
       travel_month: pick(MONTHS),
-      travelers: randomInt(1, 6),
+      number_of_travelers: randomInt(1, 6),
       duration: pick(DURATIONS),
       budget: pick(BUDGETS),
       notes: "Seeded test booking",

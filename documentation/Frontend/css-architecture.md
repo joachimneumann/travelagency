@@ -9,15 +9,15 @@
 
 ## File structure
 
-- Entry: `assets/css/styles.css`
-- Site baseline: `assets/css/site.css`
-- Tokens: `assets/css/tokens.css`
-- Base: `assets/css/base.css`
-- Utilities: `assets/css/utilities.css`
-- Components: `assets/css/components/*.css`
-- Page-scoped styles: `assets/css/pages/*.css`
-- Tailwind input: `assets/css/tailwind.input.css`
-- Tailwind output: `assets/css/tailwind.generated.css`
+- Entry: `shared/css/styles.css`
+- Site baseline: `shared/css/site.css`
+- Tokens: `shared/css/tokens.css`
+- Base: `shared/css/base.css`
+- Utilities: `shared/css/utilities.css`
+- Components: `shared/css/components/*.css`
+- Page-scoped styles: `shared/css/pages/*.css`
+- Tailwind input: `shared/css/tailwind.input.css`
+- Tailwind output: `shared/css/tailwind.generated.css`
 
 ## Naming rules for new styles
 
@@ -40,11 +40,11 @@ npm run css:build
 
 Production build uses PostCSS + Tailwind + PurgeCSS and writes:
 
-- `assets/css/tailwind.generated.css`
+- `shared/css/tailwind.generated.css`
 
 ## Migration policy
 
-- New UI work must go into modular files under `assets/css/components/`.
-- Page-specific overrides belong in `assets/css/pages/`.
+- New UI work must go into modular files under `shared/css/components/`.
+- Page-specific overrides belong in `shared/css/pages/`.
 - Keep shared constants in `tokens.css` and global defaults in `base.css`.
 - Put repeated spacing/title/visibility helpers in `utilities.css` instead of inline `style=""`.

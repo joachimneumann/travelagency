@@ -14,7 +14,7 @@
 - Canonical URL: `https://asiatravelplan.com/`
 - Open Graph + Twitter metadata present
 - Favicon + web manifest linked
-- Main stylesheet: `assets/css/styles.css` loaded directly as a normal stylesheet (`?v=3`)
+- Main stylesheet: `shared/css/styles.css` loaded directly as a normal stylesheet (`?v=3`)
 - LCP hero poster preloaded from `assets/video/rice field.webp?v=2`
 
 ## 2) Global layout
@@ -197,22 +197,22 @@ Two JSON-LD blocks:
 
 ## 10) Frontend CSS architecture (current)
 
-- `assets/css/styles.css` is now an entrypoint only
+- `shared/css/styles.css` is now an entrypoint only
 - Current imported layers:
-  - `assets/css/tokens.css`
-  - `assets/css/base.css`
-  - `assets/css/utilities.css`
-  - `assets/css/site.css`
-  - `assets/css/components/*.css`
-  - `assets/css/pages/*.css`
-  - `assets/css/tailwind.generated.css`
-- `assets/css/site.css` contains shared site and backend styles, but page-specific overrides now live in `assets/css/pages/*.css`
+  - `shared/css/tokens.css`
+  - `shared/css/base.css`
+  - `shared/css/utilities.css`
+  - `shared/css/site.css`
+  - `shared/css/components/*.css`
+  - `shared/css/pages/*.css`
+  - `shared/css/tailwind.generated.css`
+- `shared/css/site.css` contains shared site and backend styles, but page-specific overrides now live in `shared/css/pages/*.css`
 - New styles must be added to modular files under:
-  - `assets/css/tokens.css`
-  - `assets/css/base.css`
-  - `assets/css/components/*.css`
-  - `assets/css/pages/*.css` for page-scoped styling
-- Reusable spacing/visibility helpers now live in `assets/css/utilities.css`
+  - `shared/css/tokens.css`
+  - `shared/css/base.css`
+  - `shared/css/components/*.css`
+  - `shared/css/pages/*.css` for page-scoped styling
+- Reusable spacing/visibility helpers now live in `shared/css/utilities.css`
 - Naming convention for new styles:
   - BEM classes only (example: `backend-nav__logout`, `backend-login__user`)
   - Avoid introducing new ID-based style selectors
@@ -220,5 +220,5 @@ Two JSON-LD blocks:
   - `frontend/package.json`
   - `frontend/tailwind.config.cjs`
   - `frontend/postcss.config.cjs`
-  - Input: `assets/css/tailwind.input.css`
-  - Output: `assets/css/tailwind.generated.css`
+  - Input: `shared/css/tailwind.input.css`
+  - Output: `shared/css/tailwind.generated.css`

@@ -31,7 +31,7 @@ import Foundation
     let destination: [String]?
     let style: [String]?
     let travelMonth: String?
-    let travelers: Int?
+    let number_of_travelers: Int?
     let duration: String?
     let budget: String?
     let preferredCurrency: GeneratedCurrencyCode?
@@ -45,13 +45,12 @@ import Foundation
     let utmSource: String?
     let utmMedium: String?
     let utmCampaign: String?
-    let idempotencyKey: String?
 
         private enum CodingKeys: String, CodingKey {
         case destination = "destination"
         case style = "style"
         case travelMonth = "travelMonth"
-        case travelers = "travelers"
+        case number_of_travelers = "number_of_travelers"
         case duration = "duration"
         case budget = "budget"
         case preferredCurrency = "preferredCurrency"
@@ -65,7 +64,6 @@ import Foundation
         case utmSource = "utmSource"
         case utmMedium = "utmMedium"
         case utmCampaign = "utmCampaign"
-        case idempotencyKey = "idempotencyKey"
         }
 
     }
@@ -520,11 +518,15 @@ import Foundation
     struct GeneratedClient: Codable, Equatable, Identifiable {
     let id: String
     let client_type: GeneratedClientType
+    let customer_id: String?
+    let travel_group_id: String?
     let client_hash: String
 
         private enum CodingKeys: String, CodingKey {
         case id = "id"
         case client_type = "client_type"
+        case customer_id = "customer_id"
+        case travel_group_id = "travel_group_id"
         case client_hash = "client_hash"
         }
 
