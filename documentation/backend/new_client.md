@@ -38,8 +38,9 @@ When the group contact is selected or created:
 4. Copy these booking fields into the travel group:
    - `travel_month`
    - `number_of_travelers`
+5. Copy these booking fields into the booking:
    - `travel_duration`
    - `budget_lower_USD`
    - `budget_upper_USD`
    - `notes`
-5. Assign the booking to the created travel group.
+6. Assign the booking to the created travel group.

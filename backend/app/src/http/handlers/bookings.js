@@ -213,11 +213,7 @@ function mergeSubmittedBookingFieldsIntoCustomer(customer, booking) {
 function buildTravelGroupFieldsFromBooking(booking) {
   return {
     travel_month: normalizeText(booking?.travel_month) || null,
-    number_of_travelers: Number.isInteger(booking?.number_of_travelers) ? booking.number_of_travelers : null,
-    travel_duration: normalizeText(booking?.travel_duration) || null,
-    budget_lower_USD: Number.isInteger(booking?.budget_lower_USD) ? booking.budget_lower_USD : null,
-    budget_upper_USD: Number.isInteger(booking?.budget_upper_USD) ? booking.budget_upper_USD : null,
-    notes: normalizeText(booking?.notes) || null
+    number_of_travelers: Number.isInteger(booking?.number_of_travelers) ? booking.number_of_travelers : null
   };
 }
 

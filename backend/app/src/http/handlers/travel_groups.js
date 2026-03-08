@@ -6,9 +6,6 @@ const TRAVEL_GROUP_UPDATE_FIELDS = new Set([
   "traveler_customer_ids",
   "travel_month",
   "number_of_travelers",
-  "travel_duration",
-  "budget_lower_USD",
-  "budget_upper_USD",
   "notes"
 ]);
 
@@ -81,9 +78,6 @@ export function createTravelGroupHandlers(deps) {
       traveler_customer_ids: memberCustomerIdsForGroup(group),
       travel_month: normalizeText(group?.travel_month) || null,
       number_of_travelers: Number.isInteger(group?.number_of_travelers) ? group.number_of_travelers : null,
-      travel_duration: normalizeText(group?.travel_duration) || null,
-      budget_lower_USD: Number.isInteger(group?.budget_lower_USD) ? group.budget_lower_USD : null,
-      budget_upper_USD: Number.isInteger(group?.budget_upper_USD) ? group.budget_upper_USD : null,
       notes: normalizeText(group?.notes) || null,
       travel_group_hash: computeTravelGroupHash(group)
     };
@@ -164,10 +158,6 @@ export function createTravelGroupHandlers(deps) {
         create[key] = normalizeOptionalInt(value, { min: 1 });
         return;
       }
-      if (key === "budget_lower_USD" || key === "budget_upper_USD") {
-        create[key] = normalizeOptionalInt(value, { min: 0 });
-        return;
-      }
       create[key] = normalizeText(value);
     });
 
@@ -188,10 +178,6 @@ export function createTravelGroupHandlers(deps) {
       }
       if (key === "number_of_travelers") {
         patch[key] = normalizeOptionalInt(value, { min: 1 });
-        return;
-      }
-      if (key === "budget_lower_USD" || key === "budget_upper_USD") {
-        patch[key] = normalizeOptionalInt(value, { min: 0 });
         return;
       }
       patch[key] = normalizeText(value);
@@ -313,9 +299,6 @@ export function createTravelGroupHandlers(deps) {
       traveler_customer_ids: Array.isArray(create.traveler_customer_ids) ? create.traveler_customer_ids : [],
       travel_month: create.travel_month || null,
       number_of_travelers: Number.isInteger(create.number_of_travelers) ? create.number_of_travelers : null,
-      travel_duration: create.travel_duration || null,
-      budget_lower_USD: Number.isInteger(create.budget_lower_USD) ? create.budget_lower_USD : null,
-      budget_upper_USD: Number.isInteger(create.budget_upper_USD) ? create.budget_upper_USD : null,
       notes: create.notes || null,
       created_at: now,
       updated_at: now,

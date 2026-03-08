@@ -6,6 +6,16 @@ Web page: number of travelers?
 
 - Allow a booking to have a travel_group or a customer as client.
 
+I would like to change the datastructure.
+client should be minimal, only one containing:
+id: common.#Identifier
+client_type: enums.#ClientType
+id_of_client: common.#Identifier
+
+The apps would then need to read the display_name:, phone_number and email from id_of_client.
+if id_of_client points to a customer, the information is there. if id_of_client points to a travel_grup, the information is in the group contact.
+
+
 Not DONE
 ========
 
@@ -21,3 +31,10 @@ Not DONE
     - allow staff to answer messages in frontend and in app
     - Receive and send photos/videos and files
     - Store received photos/videos and files and allow the atp staff to download them to phone / computer
+
+clean model:
+travelGroupOptions
+
+remove from model?
+==================
+idempotencyKey
