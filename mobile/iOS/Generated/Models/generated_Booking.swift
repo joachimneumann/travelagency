@@ -158,11 +158,13 @@
     let atp_staff_name: String?
     let destination: [String]?
     let style: [String]?
-    let travelMonth: String?
+    let web_form_travel_month: String?
+    let travel_start_day: String?
+    let travel_end_day: String?
     let number_of_travelers: Int?
-    let travel_duration: String?
-    let budget_lower_USD: Int?
-    let budget_upper_USD: Int?
+    let web_form_travel_duration: String?
+    let web_form_travel_duration_days_min: Int?
+    let web_form_travel_duration_days_max: Int?
     let preferredCurrency: GeneratedCurrencyCode?
     let notes: String?
     let service_level_agreement_due_at: String?
@@ -185,11 +187,13 @@
         case atp_staff_name = "atp_staff_name"
         case destination = "destination"
         case style = "style"
-        case travelMonth = "travelMonth"
+        case web_form_travel_month = "web_form_travel_month"
+        case travel_start_day = "travel_start_day"
+        case travel_end_day = "travel_end_day"
         case number_of_travelers = "number_of_travelers"
-        case travel_duration = "travel_duration"
-        case budget_lower_USD = "budget_lower_USD"
-        case budget_upper_USD = "budget_upper_USD"
+        case web_form_travel_duration = "web_form_travel_duration"
+        case web_form_travel_duration_days_min = "web_form_travel_duration_days_min"
+        case web_form_travel_duration_days_max = "web_form_travel_duration_days_max"
         case preferredCurrency = "preferredCurrency"
         case notes = "notes"
         case service_level_agreement_due_at = "service_level_agreement_due_at"

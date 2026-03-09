@@ -68,6 +68,7 @@ const state = {
   submittedCustomer: null,
   clientAssignmentPanelOpen: false,
   clientAssignmentGroupName: "",
+  clientAssignmentMode: "AAAA",
   customerCandidates: [],
   originalClientKey: null,
   staff: [],
@@ -128,6 +129,9 @@ const els = {
   clientAssignmentSummary: document.getElementById("bookingClientAssignmentSummary"),
   clientGroupNameField: document.getElementById("bookingClientGroupNameField"),
   clientGroupNameInput: document.getElementById("bookingClientGroupNameInput"),
+  clientModeToggleField: document.getElementById("bookingClientModeToggleField"),
+  clientModeAaaaBtn: document.getElementById("bookingClientModeAaaaBtn"),
+  clientModeBbbbBtn: document.getElementById("bookingClientModeBbbbBtn"),
   clientSelectTitle: document.getElementById("bookingClientSelectTitle"),
   clientSimilarControls: document.getElementById("bookingClientSimilarControls"),
   suggestedCustomerSelect: document.getElementById("bookingSuggestedCustomerSelect"),
@@ -266,6 +270,18 @@ async function init() {
     els.clientGroupNameInput.addEventListener("input", () => {
       state.clientAssignmentGroupName = els.clientGroupNameInput.value || "";
       updateClientAssignmentButtons();
+    });
+  }
+  if (els.clientModeAaaaBtn) {
+    els.clientModeAaaaBtn.addEventListener("click", () => {
+      state.clientAssignmentMode = "AAAA";
+      renderClientPanel();
+    });
+  }
+  if (els.clientModeBbbbBtn) {
+    els.clientModeBbbbBtn.addEventListener("click", () => {
+      state.clientAssignmentMode = "BBBB";
+      renderClientPanel();
     });
   }
   if (els.assignCustomerBtn) els.assignCustomerBtn.addEventListener("click", assignSelectedCustomer);
@@ -439,9 +455,9 @@ function renderBookingData() {
         ["staff", booking.atp_staff_name || "Unassigned"],
         ["destination", Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination],
         ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
-        ["travel_month", booking.travel_month],
+        ["web_form_travel_month", booking.web_form_travel_month],
         ["number_of_travelers", booking.number_of_travelers],
-        ["travel_duration", booking.travel_duration],
+        ["web_form_travel_duration", booking.web_form_travel_duration],
         ["budget_range_USD", formatBudgetRange(booking.budget_lower_USD, booking.budget_upper_USD)],
         ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],
@@ -570,6 +586,15 @@ function submittedCustomerLabel() {
   return submittedParts.length ? submittedParts.join(", ") : "No submitted customer information";
 }
 
+function submittedCustomerSummaryLabel() {
+  const label = submittedCustomerLabel();
+  const travelerCount = Number(state.booking?.number_of_travelers || 0);
+  if (travelerCount > 1) {
+    return `web form (${travelerCount} travelers) from ${label}`;
+  }
+  return `web form from ${label}`;
+}
+
 function submittedCustomerName() {
   return normalizeText(state.submittedCustomer?.name) || "";
 }
@@ -604,24 +629,33 @@ function renderClientPanel() {
   }
   const groupMode = isGroupBookingAssignment();
   const hasCandidates = (state.customerCandidates || []).length > 0;
-  const suggestedGroupName = state.travelGroup?.group_name || submittedCustomerName();
-  if (!state.clientAssignmentGroupName && suggestedGroupName) {
-    state.clientAssignmentGroupName = suggestedGroupName;
+  if (!state.clientAssignmentGroupName && state.travelGroup?.group_name) {
+    state.clientAssignmentGroupName = state.travelGroup.group_name;
   }
   if (els.clientAssignmentTitle) {
     els.clientAssignmentTitle.textContent = groupMode ? "Assign to a travel group" : "Assign to a customer";
   }
   if (els.clientAssignmentSummary) {
-    els.clientAssignmentSummary.textContent = `Information in booking form: ${submittedCustomerLabel()}`;
+    els.clientAssignmentSummary.textContent = submittedCustomerSummaryLabel();
   }
   if (els.clientGroupNameField) {
     els.clientGroupNameField.hidden = !groupMode;
+  }
+  if (els.clientModeToggleField) {
+    els.clientModeToggleField.hidden = !groupMode;
   }
   if (els.clientGroupNameInput) {
     if (els.clientGroupNameInput.value !== state.clientAssignmentGroupName) {
       els.clientGroupNameInput.value = state.clientAssignmentGroupName;
     }
     els.clientGroupNameInput.disabled = !state.permissions.canEditBooking || !groupMode;
+  }
+  if (els.clientModeAaaaBtn && els.clientModeBbbbBtn) {
+    const aaaaActive = state.clientAssignmentMode !== "BBBB";
+    els.clientModeAaaaBtn.classList.toggle("is-active", aaaaActive);
+    els.clientModeBbbbBtn.classList.toggle("is-active", !aaaaActive);
+    els.clientModeAaaaBtn.setAttribute("aria-pressed", aaaaActive ? "true" : "false");
+    els.clientModeBbbbBtn.setAttribute("aria-pressed", !aaaaActive ? "true" : "false");
   }
   if (els.clientSelectTitle) {
     els.clientSelectTitle.hidden = !groupMode;
@@ -837,7 +871,7 @@ function cloneOffer(offer) {
   const sourceComponents = Array.isArray(source.components) ? source.components : [];
 
   return {
-    currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
+    currency: normalizeCurrencyCode(source.currency || state.booking?.preferredCurrency || "USD"),
     category_rules,
     components: sourceComponents.map((component, index) => ({
       id: String(component?.id || ""),
@@ -849,7 +883,7 @@ function cloneOffer(offer) {
       tax_rate_basis_points: Number.isFinite(Number(component?.tax_rate_basis_points))
         ? Math.max(0, Math.round(Number(component.tax_rate_basis_points)))
             : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
-      currency: normalizeCurrencyCode(component?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+      currency: normalizeCurrencyCode(component?.currency || source.currency || state.booking?.preferredCurrency || "USD"),
       notes: String(component?.notes || ""),
       sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index
     })),
@@ -909,7 +943,7 @@ function renderOfferPanel() {
   if (!els.offerPanel || !state.booking) return;
   const offer = cloneOffer(state.booking.offer || {});
   state.offerDraft = offer;
-  const currency = normalizeCurrencyCode(offer.currency || state.booking.preferred_currency || "USD");
+  const currency = normalizeCurrencyCode(offer.currency || state.booking.preferredCurrency || "USD");
   state.offerDraft.currency = currency;
 
   if (els.offerCurrencyInput) {
@@ -936,7 +970,7 @@ function renderOfferComponentsTable() {
   if (!els.offerComponentsTable) return;
   const readOnly = !state.permissions.canEditBooking;
   const showActionsCol = !readOnly;
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
   const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
   const hasMultiQuantityComponent = (offerComponents || []).some(
     (component) => Math.max(1, Number(component?.quantity || 1)) !== 1
@@ -1028,7 +1062,7 @@ function readOfferDraftComponentsForRender() {
   if (!rows.length) {
     return fallbackComponents;
   }
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
   return rows.map((_, index) => {
     const category = normalizeOfferCategory(state.offerDraft?.components?.[index]?.category || "OTHER");
     const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
@@ -1077,7 +1111,7 @@ function computeOfferDraftTotalsFromComponents(components) {
     net_amount_cents += line.net_amount_cents;
     tax_amount_cents += line.tax_amount_cents;
   }
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
   return {
     currency,
     net_amount_cents,
@@ -1969,7 +2003,7 @@ function collectOfferCategoryRules() {
 }
 
 function collectOfferComponents({ throwOnError = true } = {}) {
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
   const rows = Array.from(document.querySelectorAll("[data-offer-component-details]"));
   const components = [];
   for (const input of rows) {
@@ -2005,7 +2039,7 @@ function collectOfferComponents({ throwOnError = true } = {}) {
 }
 
 function collectOfferPayload() {
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
   const category_rules = collectOfferCategoryRules();
   const components = collectOfferComponents();
   return {
@@ -2059,7 +2093,7 @@ async function handleOfferCurrencyChange() {
   }
 
   const nextCurrency = normalizeCurrencyCode(els.offerCurrencyInput.value);
-  const currentCurrency = normalizeCurrencyCode(state.offerDraft.currency || state.booking.preferred_currency || "USD");
+  const currentCurrency = normalizeCurrencyCode(state.offerDraft.currency || state.booking.preferredCurrency || "USD");
   if (!nextCurrency || nextCurrency === currentCurrency) {
     setSelectValue(els.offerCurrencyInput, currentCurrency);
     return;

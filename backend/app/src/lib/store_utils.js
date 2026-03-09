@@ -56,15 +56,11 @@ export function createStoreUtils({
     parsed.chat_events ||= [];
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       syncBookingAtpStaffFields(booking);
-      if (!booking.travel_duration && booking.duration) {
-        booking.travel_duration = normalizeText(booking.duration) || null;
-      }
-      if (booking.budget_lower_USD === undefined && booking.budget_upper_USD === undefined) {
+            if (booking.budget_lower_USD === undefined && booking.budget_upper_USD === undefined) {
         const budgetRange = parseLegacyBudgetRange(booking.budget);
         booking.budget_lower_USD = budgetRange.budget_lower_USD;
         booking.budget_upper_USD = budgetRange.budget_upper_USD;
       }
-      delete booking.duration;
       delete booking.budget;
       booking.pricing = normalizeBookingPricing(booking.pricing);
       booking.offer = normalizeBookingOffer(booking.offer, getBookingPreferredCurrency(booking));

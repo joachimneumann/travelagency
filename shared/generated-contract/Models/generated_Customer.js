@@ -16,7 +16,7 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"first_name","required":false,"wireName":"first_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"last_name","required":false,"wireName":"last_name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"date_of_birth","required":false,"wireName":"date_of_birth"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"date_of_birth","required":false,"wireName":"date_of_birth"}, SHARED_FIELD_DEFS.FIELD_15),
     schemaField({"name":"nationality","required":false,"wireName":"nationality"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"address_line_1","required":false,"wireName":"address_line_1"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"address_line_2","required":false,"wireName":"address_line_2"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -79,7 +79,7 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
     schemaField({"name":"document_number","required":false,"wireName":"document_number"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"document_picture_ref","required":false,"wireName":"document_picture_ref"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"issuing_country","required":false,"wireName":"issuing_country"}, SHARED_FIELD_DEFS.FIELD_19),
-    schemaField({"name":"expires_on","required":false,"wireName":"expires_on"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"expires_on","required":false,"wireName":"expires_on"}, SHARED_FIELD_DEFS.FIELD_15),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":true,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]

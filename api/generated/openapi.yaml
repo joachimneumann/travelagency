@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-08T17:29:40Z
+# 2026-03-09T01:40:58Z
 
 ---
 openapi: 3.1.0
@@ -59,6 +59,59 @@ components:
         label: German
       - value: Spanish
         label: Spanish
+    MonthCode:
+      type: string
+      enum:
+      - jan
+      - feb
+      - mar
+      - apr
+      - may
+      - jun
+      - jul
+      - aug
+      - sep
+      - oct
+      - nov
+      - dec
+      x-enum-catalog:
+      - code: jan
+      - code: feb
+      - code: mar
+      - code: apr
+      - code: may
+      - code: jun
+      - code: jul
+      - code: aug
+      - code: sep
+      - code: oct
+      - code: nov
+      - code: dec
+      x-enum-options:
+      - value: jan
+        label: jan
+      - value: feb
+        label: feb
+      - value: mar
+        label: mar
+      - value: apr
+        label: apr
+      - value: may
+        label: may
+      - value: jun
+        label: jun
+      - value: jul
+        label: jul
+      - value: aug
+        label: aug
+      - value: sep
+        label: sep
+      - value: oct
+        label: oct
+      - value: nov
+        label: nov
+      - value: dec
+        label: dec
     ATPCurrencyCode:
       type: string
       enum:
@@ -3324,19 +3377,7 @@ components:
           type: array
           items:
             type: string
-        travel_month:
-          type: string
-          nullable: true
         number_of_travelers:
-          type: integer
-          nullable: true
-        travel_duration:
-          type: string
-          nullable: true
-        budget_lower_USD:
-          type: integer
-          nullable: true
-        budget_upper_USD:
           type: integer
           nullable: true
         notes:
@@ -3393,7 +3434,7 @@ components:
         title:
           type: string
           nullable: true
-        destinationCountries:
+        destinations:
           type: array
           items:
             type: string
@@ -3401,22 +3442,42 @@ components:
           type: array
           items:
             type: string
-        durationDays:
+        travel_duration_days:
           type: integer
           nullable: true
-        priceFrom:
-          "$ref": "#/components/schemas/TourPriceFrom"
-          nullable: true
-    TourPriceFrom:
-      type: object
-      required:
-      - currency
-      - minor
-      properties:
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-        minor:
+        budget_lower_USD:
           type: integer
+          nullable: true
+        priority:
+          type: integer
+          nullable: true
+        rating:
+          type: number
+          nullable: true
+        seasonality_start_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        seasonality_end_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        shortDescription:
+          type: string
+          nullable: true
+        highlights:
+          type: array
+          items:
+            type: string
+        image:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
     Booking:
       type: object
       required:
@@ -3464,19 +3525,27 @@ components:
           type: array
           items:
             type: string
-        travelMonth:
+        web_form_travel_month:
           type: string
+          nullable: true
+        travel_start_day:
+          type: string
+          format: date
+          nullable: true
+        travel_end_day:
+          type: string
+          format: date
           nullable: true
         number_of_travelers:
           type: integer
           nullable: true
-        travel_duration:
+        web_form_travel_duration:
           type: string
           nullable: true
-        budget_lower_USD:
+        web_form_travel_duration_days_min:
           type: integer
           nullable: true
-        budget_upper_USD:
+        web_form_travel_duration_days_max:
           type: integer
           nullable: true
         preferredCurrency:
@@ -3993,19 +4062,27 @@ components:
           type: array
           items:
             type: string
-        travelMonth:
+        web_form_travel_month:
           type: string
+          nullable: true
+        travel_start_day:
+          type: string
+          format: date
+          nullable: true
+        travel_end_day:
+          type: string
+          format: date
           nullable: true
         number_of_travelers:
           type: integer
           nullable: true
-        travel_duration:
+        web_form_travel_duration:
           type: string
           nullable: true
-        budget_lower_USD:
+        web_form_travel_duration_days_min:
           type: integer
           nullable: true
-        budget_upper_USD:
+        web_form_travel_duration_days_max:
           type: integer
           nullable: true
         preferredCurrency:
@@ -4398,19 +4475,7 @@ components:
           type: array
           items:
             type: string
-        travel_month:
-          type: string
-          nullable: true
         number_of_travelers:
-          type: integer
-          nullable: true
-        travel_duration:
-          type: string
-          nullable: true
-        budget_lower_USD:
-          type: integer
-          nullable: true
-        budget_upper_USD:
           type: integer
           nullable: true
         notes:

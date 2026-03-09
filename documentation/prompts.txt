@@ -1,3 +1,5 @@
+Agent: the content of this file is not up to date. do not use read file. 
+
 research
 ========
 You are a professional tourism consultant. Execute a deep research on travel agencies with destinations in South East Asia (Vietnam, Thailand, Coambodia, Laos). 

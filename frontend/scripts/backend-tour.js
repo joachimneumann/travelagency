@@ -4,6 +4,7 @@ import {
   resolveApiUrl,
   setDirtySurface
 } from "./shared/backend-common.js";
+import { MONTH_CODE_CATALOG } from "../../shared/generated-contract/Models/generated_Aux.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -36,10 +37,12 @@ const els = {
   form: document.getElementById("tourForm"),
   status: document.getElementById("tourFormStatus"),
   cancel: document.getElementById("tourCancelBtn"),
-  destinationHidden: document.getElementById("tourDestinationCountries"),
+  destinationHidden: document.getElementById("tourDestinations"),
   destinationChoices: document.getElementById("tourDestinationChoices"),
   stylesHidden: document.getElementById("tourStyles"),
   styleChoices: document.getElementById("tourStyleChoices"),
+  seasonalityStartMonth: document.getElementById("tourSeasonalityStartMonth"),
+  seasonalityEndMonth: document.getElementById("tourSeasonalityEndMonth"),
   changeImageBtn: document.getElementById("tourChangeImageBtn"),
   imageUpload: document.getElementById("tourImageUpload"),
   heroImage: document.getElementById("tourHeroImage")
@@ -94,6 +97,7 @@ async function init() {
   }
 
   await loadAuthStatus();
+  renderMonthOptions();
 
   if (els.form) {
     els.form.addEventListener("submit", submitForm);
@@ -146,22 +150,23 @@ async function loadTour() {
   state.options.styles = Array.isArray(payload.options?.styles) ? payload.options.styles : [];
 
   const tour = state.tour;
-  const destinationCountries = tourDestinations(tour);
+  const destinations = tourDestinations(tour);
   const styles = tourStyles(tour);
-  updateHeader(tour, destinationCountries, styles);
+  updateHeader(tour, destinations, styles);
 
   setInput("tourId", tour.id || "");
   setInput("tourTitleInput", tour.title || "");
-  setInput("tourDurationDays", toInputNumber(tour.durationDays));
-  setInput("tourPriceFrom", toInputNumber(tour.priceFrom));
+  setInput("tourTravelDurationDays", toInputNumber(tour.travel_duration_days));
+  setInput("tourBudgetLowerUSD", toInputNumber(tour.budget_lower_USD));
   setInput("tourPriority", toInputNumber(tour.priority));
   setInput("tourRating", toInputNumber(tour.rating));
-  setInput("tourSeasonality", tour.seasonality || "");
+  setInput("tourSeasonalityStartMonth", tour.seasonality_start_month || "");
+  setInput("tourSeasonalityEndMonth", tour.seasonality_end_month || "");
   setInput("tourShortDescription", tour.shortDescription || "");
   setInput("tourHighlights", Array.isArray(tour.highlights) ? tour.highlights.join("\n") : "");
   updateHeroImage(tour.image || "");
 
-  renderDestinationChoices(destinationCountries);
+  renderDestinationChoices(destinations);
   renderStyleChoices(styles);
   applyTourPermissions();
   markTourSnapshotClean();
@@ -202,6 +207,20 @@ function renderStyleChoices(selectedValues) {
   if (els.stylesHidden) {
     els.stylesHidden.value = selectedValues.join(", ");
   }
+}
+
+function renderMonthOptions() {
+  renderSelectOptions(els.seasonalityStartMonth, MONTH_CODE_CATALOG || []);
+  renderSelectOptions(els.seasonalityEndMonth, MONTH_CODE_CATALOG || []);
+}
+
+function renderSelectOptions(select, values) {
+  if (!select) return;
+  const currentValue = select.value || "";
+  select.innerHTML = `<option value=""></option>${values
+    .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)
+    .join("")}`;
+  select.value = currentValue;
 }
 
 function renderCheckboxes({ container, inputName, values, selectedValues = [], singleSelect = false, onChange }) {
@@ -249,18 +268,19 @@ async function submitForm(event) {
 
   const payload = {
     title: getInput("tourTitleInput"),
-    destinationCountries: selectedDestinationCountries,
+    destinations: selectedDestinationCountries,
     styles: selectedStyles,
-    durationDays: toNumberOrNull(getInput("tourDurationDays")),
-    priceFrom: toNumberOrNull(getInput("tourPriceFrom")),
+    travel_duration_days: toNumberOrNull(getInput("tourTravelDurationDays")),
+    budget_lower_USD: toNumberOrNull(getInput("tourBudgetLowerUSD")),
     priority: toNumberOrNull(getInput("tourPriority")),
     rating: toNumberOrNull(getInput("tourRating")),
-    seasonality: getInput("tourSeasonality"),
+    seasonality_start_month: getInput("tourSeasonalityStartMonth"),
+    seasonality_end_month: getInput("tourSeasonalityEndMonth"),
     shortDescription: getInput("tourShortDescription"),
     highlights: getInput("tourHighlights")
   };
 
-  if (!payload.title || !payload.destinationCountries.length || !payload.styles.length) {
+  if (!payload.title || !payload.destinations.length || !payload.styles.length) {
     setStatus("Title, at least one Destination Country, and at least one Style are required.");
     return;
   }
@@ -443,8 +463,8 @@ function updateHeader(tour, destinations, styles) {
 }
 
 function tourDestinations(tour) {
-  if (Array.isArray(tour?.destinationCountries) && tour.destinationCountries.length) {
-    return tour.destinationCountries.map((value) => String(value || "").trim()).filter(Boolean);
+  if (Array.isArray(tour?.destinations) && tour.destinations.length) {
+    return tour.destinations.map((value) => String(value || "").trim()).filter(Boolean);
   }
   return [];
 }

@@ -6,7 +6,7 @@ export function createTourHandlers(deps) {
     safeFloat,
     normalizeHighlights,
     toTourImagePublicUrl,
-    tourDestinationCountries,
+    tourDestinations,
     readTours,
     sendJson,
     clamp,
@@ -40,26 +40,30 @@ function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
   if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id);
   if (isCreate || payload.title !== undefined) next.title = normalizeText(payload.title);
   if (payload.shortDescription !== undefined) next.shortDescription = normalizeText(payload.shortDescription);
-  if (isCreate || payload.destinationCountries !== undefined) {
-    const destinationCountries = normalizeStringArray(payload.destinationCountries);
-    next.destinationCountries = destinationCountries;
+  if (isCreate || payload.destinations !== undefined) {
+    next.destinations = normalizeStringArray(payload.destinations);
   }
   if (isCreate || payload.styles !== undefined) next.styles = normalizeStringArray(payload.styles);
   if (payload.image !== undefined) next.image = toTourImagePublicUrl(payload.image);
-  if (payload.seasonality !== undefined) next.seasonality = normalizeText(payload.seasonality);
+  if (payload.seasonality_start_month !== undefined) {
+    next.seasonality_start_month = normalizeText(payload.seasonality_start_month);
+  }
+  if (payload.seasonality_end_month !== undefined) {
+    next.seasonality_end_month = normalizeText(payload.seasonality_end_month);
+  }
   if (payload.highlights !== undefined || isCreate) next.highlights = normalizeHighlights(payload.highlights);
 
   if (payload.priority !== undefined || isCreate) {
     const priority = safeInt(payload.priority);
     next.priority = priority === null ? 50 : priority;
   }
-  if (payload.durationDays !== undefined || isCreate) {
-    const durationDays = safeInt(payload.durationDays);
-    next.durationDays = durationDays === null ? 0 : durationDays;
+  if (payload.travel_duration_days !== undefined || isCreate) {
+    const travel_duration_days = safeInt(payload.travel_duration_days);
+    next.travel_duration_days = travel_duration_days === null ? 0 : travel_duration_days;
   }
-  if (payload.priceFrom !== undefined || isCreate) {
-    const priceFrom = safeInt(payload.priceFrom);
-    next.priceFrom = priceFrom === null ? 0 : priceFrom;
+  if (payload.budget_lower_USD !== undefined || isCreate) {
+    const budget_lower_USD = safeInt(payload.budget_lower_USD);
+    next.budget_lower_USD = budget_lower_USD === null ? 0 : budget_lower_USD;
   }
   if (payload.rating !== undefined || isCreate) {
     const rating = safeFloat(payload.rating);
@@ -71,7 +75,7 @@ function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
 
 function validateTourInput(tour, { isCreate = false } = {}) {
   if (isCreate && !tour.title) return "title is required";
-  if (isCreate && !tourDestinationCountries(tour).length) return "destinationCountries is required";
+  if (isCreate && !tourDestinations(tour).length) return "destinations is required";
   if (isCreate && (!Array.isArray(tour.styles) || !tour.styles.length)) return "styles is required";
   return "";
 }
@@ -83,7 +87,7 @@ function filterAndSortTours(tours, query) {
   const sort = normalizeText(query.get("sort")) || "updated_at_desc";
 
   const filtered = tours.filter((tour) => {
-    const destinationMatch = !destination || tourDestinationCountries(tour).includes(destination);
+    const destinationMatch = !destination || tourDestinations(tour).includes(destination);
     const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
     if (!destinationMatch || !styleMatch) return false;
     if (!search) return true;
@@ -91,7 +95,7 @@ function filterAndSortTours(tours, query) {
       tour.id,
       tour.title,
       tour.shortDescription,
-      ...tourDestinationCountries(tour),
+      ...tourDestinations(tour),
       ...(Array.isArray(tour.highlights) ? tour.highlights : []),
       ...(Array.isArray(tour.styles) ? tour.styles : [])
     ]
@@ -126,7 +130,7 @@ async function handlePublicListTours(req, res) {
   const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || tours.length || 1000, 1, 5000);
 
   const filtered = tours.filter((tour) => {
-    const destinationMatch = !destination || tourDestinationCountries(tour).includes(destination);
+    const destinationMatch = !destination || tourDestinations(tour).includes(destination);
     const styleMatch = !style || (Array.isArray(tour.styles) && tour.styles.includes(style));
     return destinationMatch && styleMatch;
   });

@@ -233,7 +233,7 @@ Delivered endpoints and features:
   - show `Select group contact:`
   - allow choosing a similar customer as group contact or creating a new group contact from the booking form
   - once a group contact is selected/created, create the travel group, assign the booking to it, and persist these booking fields on the group:
-    `travel_month`, `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
+    `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
 
 ## Milestone 2: Quote and Itinerary Engine (Weeks 6-8)
 

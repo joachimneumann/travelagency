@@ -5,6 +5,7 @@ import enumModel "travelagency.local/model/enums"
 IR: {
 	catalogs: {
 		languages: [for language in enumModel.LanguageCatalog {{code: language}}]
+		months: [for month in enumModel.MonthCatalog {{code: month}}]
 		roles: [for role in enumModel.ATPStaffRoleCatalog {{code: role}}]
 		stages: [for stage in enumModel.BookingStageCatalog {{code: stage}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]

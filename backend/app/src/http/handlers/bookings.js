@@ -212,7 +212,6 @@ function mergeSubmittedBookingFieldsIntoCustomer(customer, booking) {
 
 function buildTravelGroupFieldsFromBooking(booking) {
   return {
-    travel_month: normalizeText(booking?.travel_month) || null,
     number_of_travelers: Number.isInteger(booking?.number_of_travelers) ? booking.number_of_travelers : null
   };
 }
@@ -481,9 +480,17 @@ async function handleCreateBooking(req, res) {
     service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
     destination: normalizeStringArray(payload.destination),
     style: normalizeStringArray(payload.style),
-    travel_month: normalizeText(payload.travelMonth),
+    web_form_travel_month: normalizeText(payload.web_form_travel_month),
+    travel_start_day: normalizeText(payload.travel_start_day),
+    travel_end_day: normalizeText(payload.travel_end_day),
     number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
-    travel_duration: normalizeText(payload.travel_duration || payload.duration),
+    web_form_travel_duration: normalizeText(payload.web_form_travel_duration),
+    web_form_travel_duration_days_min: normalizeText(payload.web_form_travel_duration_days_min)
+      ? safeInt(payload.web_form_travel_duration_days_min)
+      : null,
+    web_form_travel_duration_days_max: normalizeText(payload.web_form_travel_duration_days_max)
+      ? safeInt(payload.web_form_travel_duration_days_max)
+      : null,
     budget_lower_USD: Number.isInteger(budgetLowerUSD) ? budgetLowerUSD : null,
     budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
     preferred_currency: preferredCurrency,

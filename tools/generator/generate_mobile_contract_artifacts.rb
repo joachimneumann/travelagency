@@ -153,6 +153,8 @@ def swift_type_for_field(field)
              'String'
            when 'int'
              'Int'
+           when 'float'
+             'Double'
            when 'bool'
              'Bool'
            else
@@ -962,6 +964,7 @@ def field_type_from_openapi_schema(field_schema, enum_names, schemas, transport_
 
   type_name = case schema['type']
               when 'integer' then 'int'
+              when 'number' then 'float'
               when 'boolean' then 'bool'
               else 'string'
               end
@@ -1126,6 +1129,8 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
              { type: 'string', format: 'uri' }
            when 'int'
              { type: 'integer' }
+           when 'float'
+             { type: 'number' }
            when 'bool'
              { type: 'boolean' }
            else

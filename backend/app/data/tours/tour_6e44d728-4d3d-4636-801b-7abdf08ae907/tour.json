@@ -6,18 +6,19 @@
     "Food"
   ],
   "priority": 50,
-  "durationDays": 9,
-  "priceFrom": 910,
+  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_6e44d728-4d3d-4636-801b-7abdf08ae907/tour_6e44d728-4d3d-4636-801b-7abdf08ae907.webp",
   "highlights": [
     "Signature stop in Bangkok",
     "Route highlight around Chiang Mai",
     "Smooth transfer planning via Phuket"
   ],
-  "seasonality": "Best Nov-Mar",
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "mar",
   "rating": 4.8,
   "legacy_id": "trip-thailand-food-classic",
-  "destinationCountries": [
+  "destinations": [
     "Thailand"
-  ]
+  ],
+  "budget_lower_USD": 910
 }

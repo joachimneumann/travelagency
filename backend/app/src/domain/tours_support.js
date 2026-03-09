@@ -3,8 +3,8 @@ import { normalizeText } from "../../../../shared/js/text.js";
 import { normalizeStringArray } from "../lib/collection_utils.js";
 
 export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
-  function tourDestinationCountries(tour) {
-    return normalizeStringArray(tour?.destinationCountries);
+  function tourDestinations(tour) {
+    return normalizeStringArray(tour?.destinations);
   }
 
   function normalizeHighlights(value) {
@@ -31,14 +31,15 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
       ...tour,
       title: normalizeText(tour?.title),
       shortDescription: normalizeText(tour?.shortDescription),
-      destinationCountries: tourDestinationCountries(tour),
+      destinations: tourDestinations(tour),
       styles: normalizeStringArray(tour?.styles),
       image: toTourImagePublicUrl(tour?.image),
-      seasonality: normalizeText(tour?.seasonality),
+      seasonality_start_month: normalizeText(tour?.seasonality_start_month),
+      seasonality_end_month: normalizeText(tour?.seasonality_end_month),
       highlights: normalizeHighlights(tour?.highlights),
       priority: safeInt(tour?.priority) ?? 50,
-      durationDays: safeInt(tour?.durationDays) ?? 0,
-      priceFrom: safeInt(tour?.priceFrom) ?? 0,
+      travel_duration_days: safeInt(tour?.travel_duration_days) ?? 0,
+      budget_lower_USD: safeInt(tour?.budget_lower_USD) ?? 0,
       rating: safeFloat(tour?.rating) ?? 0
     };
   }
@@ -46,7 +47,7 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
   function collectTourOptions(tours) {
     const items = Array.isArray(tours) ? tours : [];
     return {
-      destinations: Array.from(new Set(items.flatMap((tour) => tourDestinationCountries(tour)))).sort(),
+      destinations: Array.from(new Set(items.flatMap((tour) => tourDestinations(tour)))).sort(),
       styles: Array.from(new Set(items.flatMap((tour) => normalizeStringArray(tour?.styles)))).sort()
     };
   }
@@ -62,7 +63,7 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
   }
 
   return {
-    tourDestinationCountries,
+    tourDestinations,
     normalizeHighlights,
     toTourImagePublicUrl,
     normalizeTourForRead,

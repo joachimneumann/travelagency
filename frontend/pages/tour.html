@@ -47,8 +47,16 @@
               <textarea id="tourHighlights" name="highlights" rows="4"></textarea>
             </div>
             <div class="field">
-              <label for="tourSeasonality">Seasonality</label>
-              <input id="tourSeasonality" name="seasonality" type="text" />
+              <label for="tourSeasonalityStartMonth">Seasonality Start Month</label>
+              <select id="tourSeasonalityStartMonth" name="seasonality_start_month">
+                <option value=""></option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tourSeasonalityEndMonth">Seasonality End Month</label>
+              <select id="tourSeasonalityEndMonth" name="seasonality_end_month">
+                <option value=""></option>
+              </select>
             </div>
             <div class="field">
               <label for="tourTitleInput">Title</label>
@@ -57,7 +65,7 @@
             </div>
             <div class="field">
               <span class="field-label">Destinations</span>
-              <input id="tourDestinationCountries" name="destinationCountries" type="hidden" required />
+              <input id="tourDestinations" name="destinations" type="hidden" required />
               <div id="tourDestinationChoices" class="backend-checkbox-grid"></div>
             </div>
             <div class="field">
@@ -66,12 +74,12 @@
               <div id="tourStyleChoices" class="backend-checkbox-grid"></div>
             </div>
             <div class="field">
-              <label for="tourDurationDays">Duration (Days)</label>
-              <input id="tourDurationDays" name="durationDays" type="number" min="1" step="1" />
+              <label for="tourTravelDurationDays">Duration (Days)</label>
+              <input id="tourTravelDurationDays" name="travel_duration_days" type="number" min="1" step="1" />
             </div>
             <div class="field">
-              <label for="tourPriceFrom">Price from</label>
-              <input id="tourPriceFrom" name="priceFrom" type="number" min="0" step="1" />
+              <label for="tourBudgetLowerUSD">Budget Lower USD</label>
+              <input id="tourBudgetLowerUSD" name="budget_lower_USD" type="number" min="0" step="1" />
             </div>
             <div class="field">
               <label for="tourPriority">Web page ranking priority (0-100)</label>

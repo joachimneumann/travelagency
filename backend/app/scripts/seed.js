@@ -14,20 +14,6 @@ const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "WON", "LOST
 const DESTINATIONS = ["Vietnam", "Thailand", "Cambodia", "Laos"];
 const STYLES = ["Adventure", "Culture", "Family", "Food", "Luxury", "Beach", "Budget"];
 const LANGUAGES = ["English", "Vietnamese", "French", "German", "Spanish"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
 const DURATIONS = ["5-7 days", "7-10 days", "10-14 days", "14-18 days"];
 const BUDGETS = [
   { lower: 1500, upper: 2500 },
@@ -139,9 +125,12 @@ async function main() {
       service_level_agreement_due_at: stageServiceLevelAgreement(stage, updatedAt),
       destination,
       style,
-      travel_month: pick(MONTHS),
+      travel_start_day: null,
+      travel_end_day: null,
       number_of_travelers: randomInt(1, 6),
-      travel_duration: pick(DURATIONS),
+      web_form_travel_duration: pick(DURATIONS),
+      web_form_travel_duration_days_min: null,
+      web_form_travel_duration_days_max: null,
       budget_lower_USD: budget.lower,
       budget_upper_USD: budget.upper,
       notes: "Seeded test booking",

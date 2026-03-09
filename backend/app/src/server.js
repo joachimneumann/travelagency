@@ -400,7 +400,7 @@ const {
 });
 
 const {
-  tourDestinationCountries,
+  tourDestinations,
   normalizeHighlights,
   toTourImagePublicUrl,
   normalizeTourForRead,
@@ -555,7 +555,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     safeFloat,
     normalizeHighlights,
     toTourImagePublicUrl,
-    tourDestinationCountries,
+    tourDestinations,
     readTours,
     sendJson,
     clamp,

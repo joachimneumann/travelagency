@@ -37,4 +37,25 @@ travelGroupOptions
 
 remove from model?
 ==================
-idempotencyKey
+
+
+Keep in travelgroup, initially set from Contact.
+preferred_language
+preferred_currency
+timezone
+
+booking:
+Travel month (optional)
+Number of travelers (optional)
+duration rename to travel_duration
+remove budget
+budget_lower_USD
+budget_upper_USD
+Notes
+
+Customer:
+Full name
+Email
+WhatsApp or phone
+Preferred language
+Preferred currency

@@ -292,6 +292,21 @@ import Foundation
     case other = "other"
       }
 
+      enum GeneratedMonthCode: String, CaseIterable, Codable, Hashable {
+    case jan = "jan"
+    case feb = "feb"
+    case mar = "mar"
+    case apr = "apr"
+    case may = "may"
+    case jun = "jun"
+    case jul = "jul"
+    case aug = "aug"
+    case sep = "sep"
+    case oct = "oct"
+    case nov = "nov"
+    case dec = "dec"
+      }
+
       enum GeneratedTimezoneCode: String, CaseIterable, Codable, Hashable {
     case africaAbidjan = "Africa/Abidjan"
     case africaAccra = "Africa/Accra"

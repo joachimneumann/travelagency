@@ -9,7 +9,6 @@ import common "travelagency.local/model/common"
 	group_name:                 string
 	group_contact_customer_id?: common.#Identifier
 	traveler_customer_ids: [...common.#Identifier]
-	travel_month?:        string
 	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
 	notes?:               string
 	created_at:           common.#Timestamp

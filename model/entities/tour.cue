@@ -5,22 +5,18 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#TourPriceFrom: {
-	currency: enums.#CurrencyCode
-	minor:    >=0 & int
-}
-
 #Tour: {
 	id:     common.#Identifier
 	title?: string
-	destinationCountries: [...string]
+	destinations: [...string]
 	styles: [...string]
-	durationDays?:     >=0 & int
-	priceFrom?:        #TourPriceFrom
-	priority?:         int
-	rating?:           int
-	seasonality?:      string
-	shortDescription?: string
+	travel_duration_days?:    >=0 & int
+	budget_lower_USD?:        >=0 & int
+	priority?:                int
+	rating?:                  >=0 & number
+	seasonality_start_month?: enums.#MonthCode
+	seasonality_end_month?:   enums.#MonthCode
+	shortDescription?:        string
 	highlights?: [...string]
 	image?:     string
 	createdAt?: common.#Timestamp

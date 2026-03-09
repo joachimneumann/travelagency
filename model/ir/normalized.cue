@@ -38,6 +38,7 @@ IR: {
 
 	enumTypes: {
 		LanguageCode: {catalog: "languages"}
+		MonthCode: {catalog: "months"}
 		CurrencyCode: {catalog: "currencies"}
 		ATPStaffRole: {catalog: "roles"}
 		BookingStage: {catalog: "stages"}
@@ -166,7 +167,6 @@ IR: {
 				{name: "group_name", kind: "scalar", typeName: "string", required: true},
 				{name: "group_contact_customer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "traveler_customer_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
-				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -198,20 +198,19 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "destinationCountries", kind: "scalar", typeName: "string", required: true, isArray: true},
+				{name: "destinations", kind: "scalar", typeName: "string", required: true, isArray: true},
 				{name: "styles", kind: "scalar", typeName: "string", required: true, isArray: true},
-				{name: "durationDays", kind: "scalar", typeName: "int", required: false},
-				{name: "priceFrom", kind: "valueObject", typeName: "TourPriceFrom", required: false},
-			]
-		},
-		{
-			name:       "TourPriceFrom"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#TourPriceFrom"
-			fields: [
-				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "minor", kind: "scalar", typeName: "int", required: true},
+				{name: "travel_duration_days", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "priority", kind: "scalar", typeName: "int", required: false},
+				{name: "rating", kind: "scalar", typeName: "float", required: false},
+				{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
+				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
+				{name: "shortDescription", kind: "scalar", typeName: "string", required: false},
+				{name: "highlights", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "image", kind: "scalar", typeName: "string", required: false},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{
@@ -232,8 +231,13 @@ IR: {
 				{name: "atp_staff_name", kind: "scalar", typeName: "string", required: false},
 				{name: "destination", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
+				{name: "web_form_travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "web_form_travel_duration", kind: "scalar", typeName: "string", required: false},
+				{name: "web_form_travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
+				{name: "web_form_travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -582,8 +586,13 @@ IR: {
 			fields: [
 				{name: "destination", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "travelMonth", kind: "scalar", typeName: "string", required: false},
+				{name: "web_form_travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "web_form_travel_duration", kind: "scalar", typeName: "string", required: false},
+				{name: "web_form_travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
+				{name: "web_form_travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
@@ -829,7 +838,6 @@ IR: {
 				{name: "group_name", kind: "scalar", typeName: "string", required: false},
 				{name: "group_contact_customer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "traveler_customer_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
-				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 			]

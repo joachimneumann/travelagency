@@ -7,19 +7,20 @@
     "Luxury"
   ],
   "priority": 50,
-  "durationDays": 12,
-  "priceFrom": 1840,
+  "travel_duration_days": 12,
   "image": "/public/v1/tour-images/tour_0355ab8f-ecad-45cf-a317-56666041b02a/tour_0355ab8f-ecad-45cf-a317-56666041b02a.webp",
   "highlights": [
     "Signature stop in Luang Prabang",
     "Route highlight around Vang Vieng",
     "Smooth transfer planning via Mekong River"
   ],
-  "seasonality": "Best Nov-Feb",
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
   "rating": 5,
   "legacy_id": "trip-laos-luxury-classic",
-  "destinationCountries": [
+  "updated_at": "2026-02-26T16:06:11.187Z",
+  "destinations": [
     "Laos"
   ],
-  "updated_at": "2026-02-26T16:06:11.187Z"
+  "budget_lower_USD": 1840
 }

@@ -30,11 +30,13 @@ import Foundation
     struct GeneratedPublicBookingCreateRequest: Codable, Equatable {
     let destination: [String]?
     let style: [String]?
-    let travelMonth: String?
+    let web_form_travel_month: String?
+    let travel_start_day: String?
+    let travel_end_day: String?
     let number_of_travelers: Int?
-    let travel_duration: String?
-    let budget_lower_USD: Int?
-    let budget_upper_USD: Int?
+    let web_form_travel_duration: String?
+    let web_form_travel_duration_days_min: Int?
+    let web_form_travel_duration_days_max: Int?
     let preferredCurrency: GeneratedCurrencyCode?
     let name: String?
     let email: String?
@@ -50,11 +52,13 @@ import Foundation
         private enum CodingKeys: String, CodingKey {
         case destination = "destination"
         case style = "style"
-        case travelMonth = "travelMonth"
+        case web_form_travel_month = "web_form_travel_month"
+        case travel_start_day = "travel_start_day"
+        case travel_end_day = "travel_end_day"
         case number_of_travelers = "number_of_travelers"
-        case travel_duration = "travel_duration"
-        case budget_lower_USD = "budget_lower_USD"
-        case budget_upper_USD = "budget_upper_USD"
+        case web_form_travel_duration = "web_form_travel_duration"
+        case web_form_travel_duration_days_min = "web_form_travel_duration_days_min"
+        case web_form_travel_duration_days_max = "web_form_travel_duration_days_max"
         case preferredCurrency = "preferredCurrency"
         case name = "name"
         case email = "email"
@@ -474,11 +478,7 @@ import Foundation
     let group_name: String?
     let group_contact_customer_id: String?
     let traveler_customer_ids: [String]?
-    let travel_month: String?
     let number_of_travelers: Int?
-    let travel_duration: String?
-    let budget_lower_USD: Int?
-    let budget_upper_USD: Int?
     let notes: String?
 
         private enum CodingKeys: String, CodingKey {
@@ -486,11 +486,7 @@ import Foundation
         case group_name = "group_name"
         case group_contact_customer_id = "group_contact_customer_id"
         case traveler_customer_ids = "traveler_customer_ids"
-        case travel_month = "travel_month"
         case number_of_travelers = "number_of_travelers"
-        case travel_duration = "travel_duration"
-        case budget_lower_USD = "budget_lower_USD"
-        case budget_upper_USD = "budget_upper_USD"
         case notes = "notes"
         }
 

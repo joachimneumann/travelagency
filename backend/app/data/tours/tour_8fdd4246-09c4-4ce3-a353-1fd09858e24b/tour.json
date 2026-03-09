@@ -7,20 +7,21 @@
     "Beach"
   ],
   "priority": 50,
-  "durationDays": 10,
-  "priceFrom": 900,
+  "travel_duration_days": 10,
   "image": "/public/v1/tour-images/tour_8fdd4246-09c4-4ce3-a353-1fd09858e24b/tour_8fdd4246-09c4-4ce3-a353-1fd09858e24b.webp",
   "highlights": [
     "Signature stop in Siem Reap",
     "Route highlight around Phnom Penh",
     "Smooth transfer planning via Tonle Sap"
   ],
-  "seasonality": "Best Nov-Feb",
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
   "rating": 4.8,
   "updated_at": "2026-02-26T13:45:45.497Z",
   "legacy_id": "trip-cambodia-adventure-classic",
-  "destinationCountries": [
+  "destinations": [
     "Cambodia",
     "Laos"
-  ]
+  ],
+  "budget_lower_USD": 900
 }

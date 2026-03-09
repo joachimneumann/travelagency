@@ -55,10 +55,7 @@ export function createBookingViewHelpers({
   }
 
   function validateBookingInput(payload) {
-    if (!normalizeText(payload.travel_duration) && normalizeText(payload.duration)) {
-      payload.travel_duration = payload.duration;
-    }
-    const required = ["name", "email", "travel_duration"];
+        const required = ["name", "email", "web_form_travel_duration"];
     const missing = required.filter((key) => !normalizeText(payload[key]));
     if (!normalizeStringArray(payload.destination).length) missing.push("destination");
     if (!normalizeStringArray(payload.style).length) missing.push("style");
@@ -143,17 +140,16 @@ export function createBookingViewHelpers({
 
   async function buildBookingReadModel(booking) {
     const normalizedBooking = { ...booking };
-    if (!normalizedBooking.travel_duration && normalizedBooking.duration) {
-      normalizedBooking.travel_duration = normalizedBooking.duration;
-    }
-    delete normalizedBooking.duration;
     delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
+    const bookingHash = computeBookingHash(normalizedBooking);
+    delete normalizedBooking.preferred_currency;
     return {
       ...normalizedBooking,
+      preferredCurrency,
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, preferredCurrency),
-      booking_hash: computeBookingHash(normalizedBooking)
+      booking_hash: bookingHash
     };
   }
 

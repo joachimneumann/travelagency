@@ -14,23 +14,27 @@ import (
 #PublicBookingCreateRequest: {
 	destination?: [...string]
 	style?: [...string]
-	travelMonth?:         string
-	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
-	travel_duration?:     string
-	budget_lower_USD?:    >=0 & int
-	budget_upper_USD?:    >=0 & int
-	preferredCurrency?:   enums.#CurrencyCode
-	name?:                string
-	email?:               common.#Email
-	phone_number?:        string
-	preferred_language?:  enums.#LanguageCode
-	notes?:               string
-	pageUrl?:             common.#Url | string
-	referrer?:            common.#Url | string
-	utmSource?:           string
-	utmMedium?:           string
-	utmCampaign?:         string
-	idempotencyKey?:      string
+	web_form_travel_month?:             string
+	travel_start_day?:                  common.#DateOnly
+	travel_end_day?:                    common.#DateOnly
+	number_of_travelers?:               >=common.#MinTravelers & <=common.#MaxTravelers & int
+	web_form_travel_duration?:          string
+	web_form_travel_duration_days_min?: >=0 & int
+	web_form_travel_duration_days_max?: >=0 & int
+	budget_lower_USD?:                  >=0 & int
+	budget_upper_USD?:                  >=0 & int
+	preferredCurrency?:                 enums.#CurrencyCode
+	name?:                              string
+	email?:                             common.#Email
+	phone_number?:                      string
+	preferred_language?:                enums.#LanguageCode
+	notes?:                             string
+	pageUrl?:                           common.#Url | string
+	referrer?:                          common.#Url | string
+	utmSource?:                         string
+	utmMedium?:                         string
+	utmCampaign?:                       string
+	idempotencyKey?:                    string
 }
 
 #BookingPricingUpdateRequest: {
@@ -126,7 +130,6 @@ import (
 	group_name?:                string
 	group_contact_customer_id?: string
 	traveler_customer_ids?: [...string]
-	travel_month?:        string
 	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
 	notes?:               string
 }
@@ -135,7 +138,6 @@ import (
 	group_name:                 string
 	group_contact_customer_id?: string
 	traveler_customer_ids?: [...string]
-	travel_month?:        string
 	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
 	notes?:               string
 }

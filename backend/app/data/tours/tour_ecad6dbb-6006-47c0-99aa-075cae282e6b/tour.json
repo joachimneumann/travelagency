@@ -6,18 +6,19 @@
     "Budget"
   ],
   "priority": 50,
-  "durationDays": 8,
-  "priceFrom": 610,
+  "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_ecad6dbb-6006-47c0-99aa-075cae282e6b/tour_ecad6dbb-6006-47c0-99aa-075cae282e6b.webp",
   "highlights": [
     "Signature stop in Siem Reap",
     "Route highlight around Phnom Penh",
     "Smooth transfer planning via Tonle Sap"
   ],
-  "seasonality": "Best Nov-Feb",
+  "seasonality_start_month": "nov",
+  "seasonality_end_month": "feb",
   "rating": 4.6,
   "legacy_id": "trip-cambodia-budget-classic",
-  "destinationCountries": [
+  "destinations": [
     "Cambodia"
-  ]
+  ],
+  "budget_lower_USD": 610
 }

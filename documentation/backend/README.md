@@ -184,6 +184,15 @@ Tour API caching:
 - `GET /public/v1/tours` returns `ETag` and `Cache-Control` (`max-age=120`, `stale-while-revalidate=600`).
 - Website frontend also keeps a short local cache and prewarms visible image URLs.
 
+Website booking form prefill from tour cards:
+- When the user opens the booking form from a specific tour, the frontend preselects values from that tour.
+- `web_form_travel_month` is initialized from the first month of the tour seasonality window, using `seasonality_start_month`.
+- `web_form_travel_duration` is initialized from `travel_duration_days` by mapping the tour length into the matching duration bucket (`3-5 days`, `6-8 days`, `9-12 days`, `13-16 days`, `17+ days`).
+- The budget range shown on page 2 is chosen from the configured weekly booking budget ranges, not from the total tour price.
+- Weekly budget matching uses this calculation:
+  - `weekly_budget_lower_usd = budget_lower_USD / (travel_duration_days / 7)`
+- The selected budget bucket is then rendered in the visitor's currently selected preferred currency (`USD`, `EURO`, `VND`, `THB`), while the matching itself still uses the canonical USD thresholds from `BOOKING_BUDGET_OPTIONS`.
+
 `/api/v1/*` authentication:
 - Keycloak backend session cookie (browser flows)
 - Or `Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>`
@@ -238,7 +247,7 @@ Booking client assignment from `booking.html`:
   - if similar customers exist, show the same similarity-sorted dropdown and keep `Select` disabled until both a customer and a non-empty group name are provided
   - show `create the group contact for {name}`; this stays disabled until `group name` is filled and the submitted booking name exists
   - selecting or creating the group contact creates a travel group, sets `group_contact_customer_id`, assigns the booking to that group, and copies these booking fields into the group:
-    `travel_month`, `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
+    `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
 
 Booking concurrency model:
 - every booking read model includes `booking_hash`

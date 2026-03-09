@@ -592,15 +592,15 @@ function renderTours(items) {
   const rows = items
     .map((tour) => {
       const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
-      const countries = Array.isArray(tour.destinationCountries) ? tour.destinationCountries.join(", ") : "";
+      const countries = Array.isArray(tour.destinations) ? tour.destinations.join(", ") : "";
       const href = buildTourEditHref(tour.id);
       return `<tr>
         <td><a href="${escapeHtml(href)}" title="${escapeHtml(tour.id)}">${escapeHtml(shortId(tour.id))}</a></td>
         <td>${escapeHtml(tour.title || "-")}</td>
         <td>${escapeHtml(countries || "-")}</td>
         <td>${escapeHtml(styles || "-")}</td>
-        <td>${escapeHtml(String(tour.durationDays ?? "-"))}</td>
-        <td>${escapeHtml(formatIntegerWithGrouping(tour.priceFrom ?? "-"))}</td>
+        <td>${escapeHtml(String(tour.travel_duration_days ?? "-"))}</td>
+        <td>${escapeHtml(formatIntegerWithGrouping(tour.budget_lower_USD ?? "-"))}</td>
         <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
       </tr>`;
     })

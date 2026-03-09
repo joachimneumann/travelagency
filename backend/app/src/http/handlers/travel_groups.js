@@ -4,7 +4,6 @@ const TRAVEL_GROUP_UPDATE_FIELDS = new Set([
   "group_name",
   "group_contact_customer_id",
   "traveler_customer_ids",
-  "travel_month",
   "number_of_travelers",
   "notes"
 ]);
@@ -76,7 +75,6 @@ export function createTravelGroupHandlers(deps) {
       group_contact_customer_id: normalizeText(group?.group_contact_customer_id) || null,
       group_contact_customer_name: normalizeText(groupContactCustomer?.name) || null,
       traveler_customer_ids: memberCustomerIdsForGroup(group),
-      travel_month: normalizeText(group?.travel_month) || null,
       number_of_travelers: Number.isInteger(group?.number_of_travelers) ? group.number_of_travelers : null,
       notes: normalizeText(group?.notes) || null,
       travel_group_hash: computeTravelGroupHash(group)
@@ -297,7 +295,6 @@ export function createTravelGroupHandlers(deps) {
       group_name: create.group_name,
       group_contact_customer_id: create.group_contact_customer_id || null,
       traveler_customer_ids: Array.isArray(create.traveler_customer_ids) ? create.traveler_customer_ids : [],
-      travel_month: create.travel_month || null,
       number_of_travelers: Number.isInteger(create.number_of_travelers) ? create.number_of_travelers : null,
       notes: create.notes || null,
       created_at: now,

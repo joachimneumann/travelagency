@@ -75,16 +75,20 @@ import (
 	serviceLevelAgreementDueAt?:  common.#Timestamp
 	destination?: [...string]
 	style?: [...string]
-	travelMonth?:         string
-	number_of_travelers?: >=common.#MinTravelers & <=common.#MaxTravelers & int
-	travel_duration?:     string
-	budget_lower_USD?:    >=0 & int
-	budget_upper_USD?:    >=0 & int
-	preferredCurrency?:   enums.#CurrencyCode
-	notes?:               string
-	pricing:              #BookingPricing
-	offer:                #BookingOffer
-	source?:              #SourceAttribution
-	createdAt:            common.#Timestamp
-	updatedAt:            common.#Timestamp
+	web_form_travel_month?:             string
+	travel_start_day?:                  common.#DateOnly
+	travel_end_day?:                    common.#DateOnly
+	number_of_travelers?:               >=common.#MinTravelers & <=common.#MaxTravelers & int
+	web_form_travel_duration?:          string
+	web_form_travel_duration_days_min?: >=0 & int
+	web_form_travel_duration_days_max?: >=0 & int
+	budget_lower_USD?:                  >=0 & int
+	budget_upper_USD?:                  >=0 & int
+	preferredCurrency?:                 enums.#CurrencyCode
+	notes?:                             string
+	pricing:                            #BookingPricing
+	offer:                              #BookingOffer
+	source?:                            #SourceAttribution
+	createdAt:                          common.#Timestamp
+	updatedAt:                          common.#Timestamp
 }
