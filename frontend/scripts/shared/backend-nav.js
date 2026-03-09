@@ -16,7 +16,7 @@ function buildSectionButton(section, title, icon) {
 
 export function resolveBackendSectionHref(section) {
   if (section === "people") return "people.html";
-  return `backend.html?section=${encodeURIComponent(section || "dashboard")}`;
+  return `backend.html?section=${encodeURIComponent(section || "bookings")}`;
 }
 
 export function mountBackendNav(mount, options = {}) {
@@ -27,7 +27,6 @@ export function mountBackendNav(mount, options = {}) {
     <nav class="nav backend-main-nav" aria-label="Backend navigation">
       <div class="backend-section-nav-wrap">
         <div class="backend-section-nav" role="tablist" aria-label="Backend sections">
-          ${buildSectionButton("dashboard", "Dashboard", { type: "image", src: "assets/img/profile_dashboard.png" })}
           ${buildSectionButton("bookings", "Bookings", { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
           ${buildSectionButton("people", "People", { type: "image", src: "assets/img/profile_person.png" })}
           ${buildSectionButton("settings", "Reports and Settings", "📊")}

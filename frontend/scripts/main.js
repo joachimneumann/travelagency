@@ -141,6 +141,15 @@ const els = {
   bookingPreferredCurrency: document.getElementById("bookingPreferredCurrency"),
   bookingBudget: document.getElementById("bookingBudget"),
   bookingBudgetLabel: document.getElementById("bookingBudgetLabel"),
+  bookingLanguage: document.getElementById("bookingLanguage"),
+  bookingDestinationTrigger: document.getElementById("bookingDestinationTrigger"),
+  bookingDestinationSummary: document.getElementById("bookingDestinationSummary"),
+  bookingDestinationPanel: document.getElementById("bookingDestinationPanel"),
+  bookingDestinationOptions: document.getElementById("bookingDestinationOptions"),
+  bookingStyleTrigger: document.getElementById("bookingStyleTrigger"),
+  bookingStyleSummary: document.getElementById("bookingStyleSummary"),
+  bookingStylePanel: document.getElementById("bookingStylePanel"),
+  bookingStyleOptions: document.getElementById("bookingStyleOptions"),
   bookingTourId: document.getElementById("bookingTourId"),
   bookingTourTitle: document.getElementById("bookingTourTitle"),
   stepBack: document.getElementById("stepBack"),
@@ -837,6 +846,18 @@ function populateFilterOptions(trips) {
       .map((style) => renderFilterCheckbox("style", style))
       .join("");
   }
+
+  if (els.bookingDestinationOptions) {
+    els.bookingDestinationOptions.innerHTML = destinations
+      .map((destination) => renderFilterCheckbox("bookingDestination", destination))
+      .join("");
+  }
+
+  if (els.bookingStyleOptions) {
+    els.bookingStyleOptions.innerHTML = styles
+      .map((style) => renderFilterCheckbox("bookingStyle", style))
+      .join("");
+  }
 }
 
 function renderFilterCheckbox(kind, value) {
@@ -920,7 +941,9 @@ function setFilterCheckboxes(container, values) {
 function setupFilterSelectPanels() {
   const controls = [
     { trigger: els.navDestinationTrigger, panel: els.navDestinationPanel },
-    { trigger: els.navStyleTrigger, panel: els.navStylePanel }
+    { trigger: els.navStyleTrigger, panel: els.navStylePanel },
+    { trigger: els.bookingDestinationTrigger, panel: els.bookingDestinationPanel },
+    { trigger: els.bookingStyleTrigger, panel: els.bookingStylePanel }
   ].filter((item) => item.trigger && item.panel);
 
   if (!controls.length) return;
@@ -950,6 +973,18 @@ function setupFilterSelectPanels() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeAllPanels();
   });
+
+  if (els.bookingDestinationOptions) {
+    els.bookingDestinationOptions.addEventListener("change", () => {
+      updateBookingSelectionFromOptions("bookingDestination", els.bookingDestinationOptions);
+    });
+  }
+
+  if (els.bookingStyleOptions) {
+    els.bookingStyleOptions.addEventListener("change", () => {
+      updateBookingSelectionFromOptions("bookingStyle", els.bookingStyleOptions);
+    });
+  }
 }
 
 async function loadTrips() {
@@ -1510,7 +1545,7 @@ function prefillBookingFormWithFilters() {
 
 function setBookingField(id, value) {
   const field = document.getElementById(id);
-  if (!field || !value) return;
+  if (!field) return;
 
   const values = Array.isArray(value) ? value.map((item) => normalizeText(item)).filter(Boolean) : [normalizeText(value)];
   if (field.hasAttribute("data-booking-static-list")) {
@@ -1544,6 +1579,29 @@ function renderBookingStaticField(field, values) {
       .join("")
     : "";
   field.innerHTML = `<span class="booking-static-field__text">${escapeHTML(summary)}</span>${hiddenInputs}`;
+  syncBookingSelectionUi(field.id, items, emptyLabel);
+}
+
+function updateBookingSelectionFromOptions(fieldId, optionsContainer) {
+  const values = getCheckedValues(optionsContainer);
+  setBookingField(fieldId, values);
+}
+
+function syncBookingSelectionUi(fieldId, values, emptyLabel = "Not selected") {
+  const selectedValues = Array.isArray(values) ? values.filter(Boolean) : [];
+  if (fieldId === "bookingDestination") {
+    setFilterCheckboxes(els.bookingDestinationOptions, selectedValues);
+    if (els.bookingDestinationSummary) {
+      els.bookingDestinationSummary.textContent = selectedValues.length ? selectedValues.join(", ") : emptyLabel;
+    }
+    return;
+  }
+  if (fieldId === "bookingStyle") {
+    setFilterCheckboxes(els.bookingStyleOptions, selectedValues);
+    if (els.bookingStyleSummary) {
+      els.bookingStyleSummary.textContent = selectedValues.length ? selectedValues.join(", ") : emptyLabel;
+    }
+  }
 }
 
 function escapeHTML(value) {

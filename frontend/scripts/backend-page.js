@@ -22,14 +22,9 @@ const els = {
   error: document.getElementById("backendError"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
 
-  dashboardPanel: document.getElementById("dashboardPanel"),
   bookingsPanel: document.getElementById("bookingsPanel"),
   toursPanel: document.getElementById("toursPanel"),
   settingsPanel: document.getElementById("settingsPanel"),
-
-  dashboardBookingsCount: document.getElementById("dashboardBookingsCount"),
-  dashboardToursCount: document.getElementById("dashboardToursCount"),
-  dashboardStaffCount: document.getElementById("dashboardStaffCount"),
 
   bookingsSearch: document.getElementById("bookingsSearch"),
   bookingsSearchBtn: document.getElementById("bookingsSearchBtn"),
@@ -57,7 +52,6 @@ const els = {
 };
 
 const SECTION_CONFIG = [
-  { id: "dashboard", canAccess: () => true },
   { id: "bookings", canAccess: () => state.permissions.canReadBookings },
   { id: "tours", canAccess: () => state.permissions.canReadTours },
   { id: "settings", canAccess: () => state.permissions.canReadSettings }
@@ -82,7 +76,7 @@ const state = {
   bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" },
   staff: [],
-  activeSection: "dashboard"
+  activeSection: "bookings"
 };
 
 function formatIntegerWithGrouping(value) {
@@ -113,7 +107,6 @@ async function init() {
   if (state.permissions.canReadBookings) loadBookings();
   if (state.permissions.canManageStaff) loadStaff();
   if (state.permissions.canReadTours) loadTours();
-  updateDashboardCounts();
 }
 
 async function loadBackendAuthStatus() {
@@ -236,7 +229,7 @@ function sectionPanel(sectionId) {
 
 function firstAllowedSection() {
   const section = SECTION_CONFIG.find((item) => item.canAccess());
-  return section ? section.id : "dashboard";
+  return section ? section.id : "bookings";
 }
 
 function resolveRequestedSection() {
@@ -264,9 +257,6 @@ function showSection(sectionId, options = { updateUrl: true }) {
   if (options.updateUrl) {
     const params = new URLSearchParams(window.location.search);
     params.set("section", section);
-    if (!params.get("user") && state.user) {
-      params.set("user", state.user);
-    }
     window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
   }
 }
@@ -330,7 +320,6 @@ async function loadBookings() {
   state.bookings.page = Number(pagination.page || state.bookings.page);
   updatePaginationUi("bookings");
   renderBookings(payload.items || []);
-  updateDashboardCounts();
 }
 
 async function loadTours() {
@@ -358,7 +347,6 @@ async function loadTours() {
   populateTourFilterOptions(payload);
   updatePaginationUi("tours");
   renderTours(payload.items || []);
-  updateDashboardCounts();
 }
 
 function populateTourFilterOptions(payload) {
@@ -411,18 +399,6 @@ const fetchApi = createApiFetcher({
   includeDetailInError: false,
   connectionErrorMessage: "Could not connect to backend API. Ensure backend is running on localhost:8787."
 });
-
-function updateDashboardCounts() {
-  if (els.dashboardBookingsCount) {
-    els.dashboardBookingsCount.textContent = formatIntegerWithGrouping(state.bookings.total);
-  }
-  if (els.dashboardToursCount) {
-    els.dashboardToursCount.textContent = formatIntegerWithGrouping(state.tours.total);
-  }
-  if (els.dashboardStaffCount) {
-    els.dashboardStaffCount.textContent = formatIntegerWithGrouping(state.staff.length);
-  }
-}
 
 function renderBookings(items) {
   if (els.bookingsClearSearchBtn) {
@@ -502,7 +478,6 @@ async function loadStaff() {
   if (!payload) return;
   state.staff = Array.isArray(payload.items) ? payload.items : [];
   renderStaff(state.staff);
-  updateDashboardCounts();
 }
 
 function renderStaff(items) {

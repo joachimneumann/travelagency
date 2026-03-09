@@ -24,30 +24,6 @@
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <section class="backend-section" id="dashboardPanel">
-            <h2 class="section-title u-title-medium">Dashboard</h2>
-            <div class="backend-kpi-grid" aria-live="polite">
-              <div class="backend-kpi-card">
-                <h3>Bookings</h3>
-                <strong id="dashboardBookingsCount">0</strong>
-              </div>
-              <div class="backend-kpi-card">
-                <h3>People Search</h3>
-                <strong>Open</strong>
-                <p class="micro" style="margin-top: 0.5rem;"><a href="people.html">Search people across bookings</a></p>
-              </div>
-              <div class="backend-kpi-card">
-                <h3>Tours</h3>
-                <strong id="dashboardToursCount">0</strong>
-              </div>
-              <div class="backend-kpi-card">
-                <h3>ATP Staff</h3>
-                <strong id="dashboardStaffCount">0</strong>
-              </div>
-            </div>
-            <p class="micro">Use the menu above to switch between backend areas.</p>
-          </section>
-
           <section class="backend-section" id="bookingsPanel">
             <h2 class="section-title u-title-medium">Bookings</h2>
             <div class="backend-controls">
@@ -125,7 +101,7 @@
 
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
-      const section = new URLSearchParams(window.location.search).get("section") || "dashboard";
+      const section = new URLSearchParams(window.location.search).get("section") || "bookings";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
     </script>
     <script type="module" src="frontend/scripts/backend-page.js"></script>

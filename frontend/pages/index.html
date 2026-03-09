@@ -470,8 +470,44 @@
             </section>
 
             <section class="step" data-step="3">
-              <h3>Step 3: Notes</h3>
+              <h3>Step 3: Trip details and notes</h3>
               <div class="field-grid">
+                <div class="field">
+                  <div class="select-wrap">
+                    <label for="bookingDestinationTrigger">Destinations</label>
+                    <button
+                      id="bookingDestinationTrigger"
+                      class="filter-select-trigger"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="bookingDestinationPanel"
+                    >
+                      <span id="bookingDestinationSummary">All destinations</span>
+                      <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div id="bookingDestinationPanel" class="filter-select-panel" hidden>
+                      <div id="bookingDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Booking destinations"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="select-wrap">
+                    <label for="bookingStyleTrigger">Travel styles</label>
+                    <button
+                      id="bookingStyleTrigger"
+                      class="filter-select-trigger"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="bookingStylePanel"
+                    >
+                      <span id="bookingStyleSummary">All travel styles</span>
+                      <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div id="bookingStylePanel" class="filter-select-panel" hidden>
+                      <div id="bookingStyleOptions" class="filter-checkbox-list" role="group" aria-label="Booking travel styles"></div>
+                    </div>
+                  </div>
+                </div>
                 <div class="field full">
                   <label for="bookingNotes">Trip notes (optional)</label>
                   <textarea id="bookingNotes" name="notes" placeholder="Tell us interests, pace preferences, or special requests."></textarea>
