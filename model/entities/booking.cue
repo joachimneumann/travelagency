@@ -18,6 +18,7 @@ import (
 #BookingWebFormSubmission: {
 	destinations?: [...enums.#CountryCode]
 	travel_style?: [...string]
+	booking_name?:            string
 	travel_month?:             string
 	number_of_travelers?:      >=0 & <=common.#MaxTravelers & int
 	preferred_currency?:       enums.#CurrencyCode
@@ -81,6 +82,7 @@ import (
 
 #Booking: {
 	id:                          common.#Identifier
+	name?:                       string
 	booking_hash?:               string
 	stage:                       enums.#BookingStage
 	atp_staff?:                  common.#Identifier

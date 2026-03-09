@@ -36,6 +36,7 @@ import (
 	}
 
 #PublicBookingCreateRequest: #WebsiteBookingForm & {
+	booking_name?:   string
 	tourId?:         string
 	tourTitle?:      string
 	pageUrl?:        common.#Url | string

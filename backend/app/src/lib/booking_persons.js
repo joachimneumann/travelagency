@@ -191,6 +191,7 @@ function normalizeWebFormSubmission(booking) {
     ...submission,
     destinations: normalizeStringArray(submission.destinations || booking?.destinations || booking?.destination),
     travel_style: normalizeStringArray(submission.travel_style || booking?.travel_styles || booking?.style),
+    booking_name: optionalText(submission.booking_name || booking?.name || booking?.source?.tour_title),
     travel_month: optionalText(submission.travel_month || booking?.travel_month),
     number_of_travelers: optionalInt(submission.number_of_travelers ?? booking?.number_of_travelers ?? booking?.travelers),
     preferred_currency: optionalUppercaseText(submission.preferred_currency || booking?.preferred_currency),
@@ -212,6 +213,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedTravelStyles = normalizeStringArray(booking?.travel_styles || booking?.style);
   const normalizedBooking = {
     ...booking,
+    name: optionalText(booking?.name || booking?.source?.tour_title || booking?.tour_title),
     atp_staff: optionalText(booking?.atp_staff || booking?.staff || booking?.owner_id),
     atp_staff_name: optionalText(booking?.atp_staff_name || booking?.staff_name || booking?.owner_name),
     service_level_agreement_due_at: optionalText(booking?.service_level_agreement_due_at || booking?.sla_due_at),

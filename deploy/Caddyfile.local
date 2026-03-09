@@ -9,6 +9,12 @@
   @site_root path /
   rewrite @site_root /frontend/pages/index.html
 
+  @persons_page path /persons.html
+  handle @persons_page {
+    rewrite * /frontend/pages/persons.html
+    file_server
+  }
+
   @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html
   rewrite @html_pages /frontend/pages{path}
 

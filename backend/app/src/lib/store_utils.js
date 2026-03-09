@@ -7,6 +7,7 @@ export function createStoreUtils({
   dataPath,
   toursDir,
   invoicesDir,
+  bookingPersonPhotosDir,
   tempUploadDir,
   atpStaffPath,
   writeQueueRef,
@@ -33,6 +34,7 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
+    await mkdir(bookingPersonPhotosDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
   }
 

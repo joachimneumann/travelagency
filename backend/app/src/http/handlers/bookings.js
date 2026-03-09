@@ -58,6 +58,12 @@ export function createBookingHandlers(deps) {
     writeInvoicePdf,
     randomUUID,
     invoicePdfPath,
+    mkdir,
+    path,
+    execFile,
+    TEMP_UPLOAD_DIR,
+    BOOKING_PERSON_PHOTOS_DIR,
+    writeFile,
     rm,
     sendFileWithCache
   } = deps;
@@ -108,6 +114,104 @@ export function createBookingHandlers(deps) {
         return normalized;
       })
       .filter(Boolean);
+  }
+
+  function normalizeBookingPersonAddress(address) {
+    if (!address || typeof address !== "object" || Array.isArray(address)) return undefined;
+    const normalized = {
+      line_1: normalizeText(address.line_1),
+      line_2: normalizeText(address.line_2),
+      city: normalizeText(address.city),
+      state_region: normalizeText(address.state_region),
+      postal_code: normalizeText(address.postal_code),
+      country_code: normalizeText(address.country_code).toUpperCase()
+    };
+    if (Object.values(normalized).some(Boolean)) return normalized;
+    return undefined;
+  }
+
+  function normalizeBookingPersonDocuments(documents) {
+    return (Array.isArray(documents) ? documents : [])
+      .map((document, index) => {
+        if (!document || typeof document !== "object" || Array.isArray(document)) return null;
+        return {
+          ...document,
+          id: normalizeText(document.id) || `document_${index + 1}`,
+          document_type: normalizeText(document.document_type),
+          document_number: normalizeText(document.document_number),
+          document_picture_ref: normalizeText(document.document_picture_ref),
+          issuing_country: normalizeText(document.issuing_country).toUpperCase(),
+          expires_on: normalizeText(document.expires_on),
+          created_at: normalizeText(document.created_at) || null,
+          updated_at: normalizeText(document.updated_at) || null
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function normalizeBookingPersonConsents(consents) {
+    return (Array.isArray(consents) ? consents : [])
+      .map((consent, index) => {
+        if (!consent || typeof consent !== "object" || Array.isArray(consent)) return null;
+        return {
+          ...consent,
+          id: normalizeText(consent.id) || `consent_${index + 1}`,
+          consent_type: normalizeText(consent.consent_type),
+          status: normalizeText(consent.status),
+          captured_via: normalizeText(consent.captured_via),
+          captured_at: normalizeText(consent.captured_at) || null,
+          evidence_ref: normalizeText(consent.evidence_ref),
+          updated_at: normalizeText(consent.updated_at) || null
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function normalizeBookingPersonsPayload(bookingId, persons) {
+    return (Array.isArray(persons) ? persons : [])
+      .map((person, index) => {
+        if (!person || typeof person !== "object" || Array.isArray(person)) return null;
+        const emails = normalizePersonEmails(person);
+        const phoneNumbers = normalizePersonPhoneNumbers(person);
+        return {
+          id: normalizeText(person.id) || `${normalizeText(bookingId) || "booking"}_person_${index + 1}`,
+          name: normalizeText(person.name) || `Traveler ${index + 1}`,
+          photo_ref: normalizeText(person.photo_ref),
+          emails,
+          phone_numbers: phoneNumbers,
+          preferred_language: normalizeText(person.preferred_language) || null,
+          date_of_birth: normalizeText(person.date_of_birth) || null,
+          nationality: normalizeText(person.nationality).toUpperCase() || null,
+          address: normalizeBookingPersonAddress(person.address),
+          roles: normalizePersonRoles(person),
+          consents: normalizeBookingPersonConsents(person.consents),
+          documents: normalizeBookingPersonDocuments(person.documents),
+          notes: normalizeText(person.notes) || null
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function resolveBookingPersonPhotoDiskPath(rawRelativePath) {
+    const relativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
+    if (!relativePath) return null;
+    const absolutePath = path.resolve(BOOKING_PERSON_PHOTOS_DIR, relativePath);
+    if (!absolutePath.startsWith(path.resolve(BOOKING_PERSON_PHOTOS_DIR) + path.sep)) return null;
+    return absolutePath;
+  }
+
+  async function processBookingPersonImageToWebp(inputPath, outputPath) {
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await execFile("magick", [
+      inputPath,
+      "-auto-orient",
+      "-resize",
+      "1000x1000>",
+      "-strip",
+      "-quality",
+      "82",
+      outputPath
+    ]);
   }
 
   function getSubmittedContact(booking) {
@@ -165,6 +269,7 @@ export function createBookingHandlers(deps) {
     const persons = getBookingPersons(booking);
     return [
       normalizeText(booking?.id),
+      normalizeText(booking?.name),
       normalizeText(booking?.stage),
       normalizeText(booking?.notes),
       normalizeText(booking?.atp_staff_name),
@@ -354,6 +459,7 @@ export function createBookingHandlers(deps) {
     const submission = {
       destinations: normalizeStringArray(payload.destinations),
       travel_style: normalizeStringArray(payload.travel_style),
+      booking_name: normalizeText(payload.booking_name || payload.tourTitle || payload.tour_title) || null,
       travel_month: normalizeText(payload.travel_month) || null,
       number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
       preferred_currency: preferredCurrency,
@@ -369,8 +475,11 @@ export function createBookingHandlers(deps) {
       submittedAt: now
     };
 
+    const initialBookingName = normalizeText(payload.booking_name || payload.tourTitle || payload.tour_title) || null;
+
     const booking = {
       id: bookingId,
+      name: initialBookingName,
       stage: STAGES.NEW,
       atp_staff: null,
       atp_staff_name: null,
@@ -583,6 +692,51 @@ export function createBookingHandlers(deps) {
     sendJson(res, 200, await buildBookingDetailResponse(booking));
   }
 
+  async function handlePatchBookingName(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    const atpStaff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
+    if (!canEditBooking(principal, booking, staffMember)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+    const nextName = normalizeText(payload.name) || null;
+    const currentName = normalizeText(booking.name) || null;
+    if (nextName === currentName) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      return;
+    }
+
+    booking.name = nextName;
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "NOTE_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      nextName ? `Booking name set to ${nextName}` : "Booking name cleared"
+    );
+    await persistStore(store);
+
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
   async function handlePatchBookingOwner(req, res, [bookingId]) {
     let payload;
     try {
@@ -631,6 +785,141 @@ export function createBookingHandlers(deps) {
     addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${assignedStaff.name}`);
     await persistStore(store);
 
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
+  async function handlePatchBookingPersons(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    if (!Array.isArray(payload.persons)) {
+      sendJson(res, 422, { error: "persons must be an array" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    const atpStaff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
+    if (!canEditBooking(principal, booking, staffMember)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+    const nextPersons = normalizeBookingPersonsPayload(booking.id, payload.persons);
+    const currentPersonsJson = JSON.stringify(getBookingPersons(booking));
+    const nextPersonsJson = JSON.stringify(nextPersons);
+    if (currentPersonsJson === nextPersonsJson) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      return;
+    }
+
+    booking.persons = nextPersons;
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "NOTE_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      "Booking persons updated"
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
+  async function handlePublicBookingPersonPhoto(req, res, [rawRelativePath]) {
+    const absolutePath = resolveBookingPersonPhotoDiskPath(rawRelativePath);
+    if (!absolutePath) {
+      sendJson(res, 404, { error: "Not found" });
+      return;
+    }
+    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+  }
+
+  async function handleUploadBookingPersonPhoto(req, res, [bookingId, personId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    const atpStaff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
+    if (!canEditBooking(principal, booking, staffMember)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+
+    const persons = normalizeBookingPersonsPayload(booking.id, booking.persons);
+    const personIndex = persons.findIndex((person) => person.id === personId);
+    if (personIndex < 0) {
+      sendJson(res, 404, { error: "Person not found" });
+      return;
+    }
+
+    const filename = normalizeText(payload.filename) || `${personId}.upload`;
+    const base64 = normalizeText(payload.data_base64);
+    if (!base64) {
+      sendJson(res, 422, { error: "data_base64 is required" });
+      return;
+    }
+
+    const sourceBuffer = Buffer.from(base64, "base64");
+    if (!sourceBuffer.length) {
+      sendJson(res, 422, { error: "Invalid base64 image payload" });
+      return;
+    }
+
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${personId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputName = `${personId}-${Date.now()}.webp`;
+    const outputRelativePath = `${bookingId}/${outputName}`;
+    const outputPath = path.join(BOOKING_PERSON_PHOTOS_DIR, outputRelativePath);
+
+    try {
+      await writeFile(tempInputPath, sourceBuffer);
+      await processBookingPersonImageToWebp(tempInputPath, outputPath);
+    } catch (error) {
+      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
+      return;
+    } finally {
+      await rm(tempInputPath, { force: true });
+    }
+
+    persons[personIndex] = {
+      ...persons[personIndex],
+      photo_ref: `/public/v1/booking-person-photos/${outputRelativePath}`
+    };
+    booking.persons = persons;
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "NOTE_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      `Photo uploaded for ${normalizeText(persons[personIndex].name) || "person"}`
+    );
+    await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking));
   }
 
@@ -1147,8 +1436,12 @@ export function createBookingHandlers(deps) {
     handleGetBooking,
     handleDeleteBooking,
     handleListBookingChatEvents,
+    handlePublicBookingPersonPhoto,
+    handlePatchBookingName,
     handlePatchBookingStage,
     handlePatchBookingOwner,
+    handlePatchBookingPersons,
+    handleUploadBookingPersonPhoto,
     handlePatchBookingNotes,
     handlePatchBookingPricing,
     handlePatchBookingOffer,

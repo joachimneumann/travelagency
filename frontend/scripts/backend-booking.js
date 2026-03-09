@@ -3,7 +3,12 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../Generated/Models/generated_Currency.js";
 import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
-import { GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST, GENERATED_OFFER_CATEGORIES as GENERATED_OFFER_CATEGORY_LIST } from "../Generated/Models/generated_Booking.js";
+import { GENERATED_LANGUAGE_CODES } from "../Generated/Models/generated_Language.js";
+import {
+  BOOKING_PERSON_SCHEMA,
+  GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST,
+  GENERATED_OFFER_CATEGORIES as GENERATED_OFFER_CATEGORY_LIST
+} from "../Generated/Models/generated_Booking.js";
 import {
   atpStaffRequest,
   bookingActivitiesRequest,
@@ -56,8 +61,13 @@ const ROLES = Object.freeze({
   STAFF: GENERATED_ROLE_LOOKUP.STAFF
 });
 
+const BOOKING_PERSON_ROLE_OPTIONS = Object.freeze(
+  (BOOKING_PERSON_SCHEMA.fields.find((field) => field.name === "roles")?.options || []).map((option) => option.value)
+);
+
 const state = {
   id: qs.get("id") || "",
+  user: "",
   roles: [],
   permissions: {
     canChangeAssignment: false,
@@ -65,6 +75,7 @@ const state = {
     canEditBooking: false
   },
   booking: null,
+  personDrafts: [],
   staff: [],
   invoices: [],
   selectedInvoiceId: "",
@@ -93,8 +104,9 @@ const state = {
   }
 };
 
-state.dirty = { note: false, offer: false, pricing: false, invoice: false };
+state.dirty = { note: false, persons: false, offer: false, pricing: false, invoice: false };
 state.originalPricingSnapshot = "";
+state.originalPersonsSnapshot = "";
 state.originalInvoiceSnapshot = "";
 
 let heroCopyClipboardPoll = null;
@@ -106,14 +118,23 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
+  tourTitle: document.getElementById("detailTourTitle"),
   title: document.getElementById("detailTitle"),
   subtitle: document.getElementById("detailSubTitle"),
+  heroImage: document.getElementById("bookingHeroImage"),
+  bookingNameInput: document.getElementById("bookingNameInput"),
+  bookingNameSaveBtn: document.getElementById("bookingNameSaveBtn"),
   heroCopyBtn: document.getElementById("bookingHeroCopyBtn"),
   heroCopyStatus: document.getElementById("bookingHeroCopyStatus"),
   deleteBtn: document.getElementById("bookingDeleteBtn"),
   error: document.getElementById("detailError"),
   bookingDataView: document.getElementById("bookingDataView"),
   actionsPanel: document.getElementById("bookingActionsPanel"),
+  personsEditorPanel: document.getElementById("personsEditorPanel"),
+  personsEditorList: document.getElementById("bookingPersonsEditorList"),
+  personsEditorAddBtn: document.getElementById("bookingPersonAddBtn"),
+  personsEditorSaveBtn: document.getElementById("bookingPersonsSaveBtn"),
+  personsEditorStatus: document.getElementById("bookingPersonsEditorStatus"),
   ownerSelect: document.getElementById("bookingOwnerSelect"),
   stageSelect: document.getElementById("bookingStageSelect"),
   personsSummary: document.getElementById("bookingPersonsSummary"),
@@ -171,6 +192,7 @@ function setOfferSaveEnabled(enabled) {
 function setBookingSectionDirty(sectionKey, isDirty) {
   const sectionMap = {
     note: els.actionsPanel,
+    persons: els.personsEditorPanel,
     offer: els.offerPanel,
     pricing: els.pricingPanel,
     invoice: els.invoicePanel
@@ -241,6 +263,7 @@ async function init() {
   populateOfferCategorySelect(els.offerComponentCategorySelect);
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
+  if (els.bookingNameSaveBtn) els.bookingNameSaveBtn.addEventListener("click", saveBookingName);
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
@@ -261,6 +284,13 @@ async function init() {
     });
   if (els.offerAddComponentBtn) els.offerAddComponentBtn.addEventListener("click", addOfferComponentFromSelector);
   if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
+  if (els.personsEditorAddBtn) els.personsEditorAddBtn.addEventListener("click", addPersonDraft);
+  if (els.personsEditorSaveBtn) els.personsEditorSaveBtn.addEventListener("click", savePersonDrafts);
+  if (els.personsEditorList) {
+    els.personsEditorList.addEventListener("input", handlePersonsEditorInput);
+    els.personsEditorList.addEventListener("change", handlePersonsEditorInput);
+    els.personsEditorList.addEventListener("click", handlePersonsEditorClick);
+  }
   if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
   if (els.invoicePanel) {
     const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
@@ -322,6 +352,7 @@ async function loadBookingPage() {
   renderBookingHeader();
   renderBookingData();
   renderActionControls();
+  renderPersonsEditor();
   renderPricingPanel();
   renderOfferPanel();
   await loadActivities();
@@ -333,7 +364,12 @@ async function loadBookingPage() {
 function renderBookingHeader() {
   if (!state.booking) return;
   const primaryContact = getPrimaryContact(state.booking);
-  const title = primaryContact?.name || getSubmittedContact(state.booking)?.name || "Booking";
+  const tourTitle = normalizeText(state.booking.source?.tour_title) || normalizeText(state.booking.web_form_submission?.booking_name) || "";
+  const title = normalizeText(state.booking.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || "Booking";
+  if (els.tourTitle) {
+    els.tourTitle.textContent = tourTitle;
+    els.tourTitle.hidden = !tourTitle;
+  }
   if (els.title) els.title.textContent = title;
   if (els.subtitle) {
     els.subtitle.textContent = `ID: ${state.booking.id}`;
@@ -342,6 +378,23 @@ function renderBookingHeader() {
   if (heroCopiedValue && heroCopiedValue !== getCurrentBookingIdentifier()) {
     clearHeroCopyStatus();
   }
+  renderBookingHeroImage();
+}
+
+function renderBookingHeroImage() {
+  if (!els.heroImage) return;
+  const persons = getBookingPersons(state.booking);
+  const preferredPerson =
+    persons.find((person) => normalizeText(person.photo_ref) && person.roles.some((role) => role !== "traveler")) ||
+    persons.find((person) => normalizeText(person.photo_ref)) ||
+    null;
+  els.heroImage.src = resolvePersonPhotoSrc(preferredPerson?.photo_ref);
+  els.heroImage.alt = preferredPerson?.name ? `${preferredPerson.name}` : "";
+}
+
+function resolvePersonPhotoSrc(photoRef) {
+  const imagePath = normalizeText(photoRef) || "assets/img/profile_person.png";
+  return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
 }
 
 function getCurrentBookingIdentifier() {
@@ -398,7 +451,6 @@ function renderBookingData() {
   if (!state.booking) return;
   const booking = state.booking;
   const persons = getBookingPersons(booking);
-  const primaryContact = getPrimaryContact(booking);
   const submittedContact = getSubmittedContact(booking);
   const travelerCount = getTravelerCount(booking);
   const mismatchWarning = buildTravelerMismatchMessage(booking);
@@ -412,9 +464,10 @@ function renderBookingData() {
   };
   const sections = [
     {
-      title: "Booking",
+      title: "Booking Data",
       entries: [
         ["id", booking.id],
+        ["name", booking.name],
         ["stage", booking.stage],
         ["staff", booking.atp_staff_name || "Unassigned"],
         ["destination", Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination],
@@ -433,10 +486,6 @@ function renderBookingData() {
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
     },
     {
-      title: "Primary contact",
-      entries: buildContactEntries(primaryContact || submittedContact)
-    },
-    {
       title: "Persons",
       entries: buildPersonEntries(persons)
     },
@@ -452,7 +501,31 @@ function renderBookingData() {
         ["referrer", booking.source?.referrer],
         ["utm_source", booking.source?.utm_source],
         ["utm_medium", booking.source?.utm_medium],
-        ["utm_campaign", booking.source?.utm_campaign]
+        ["utm_campaign", booking.source?.utm_campaign],
+        ["tour_id", booking.source?.tour_id],
+        ["tour_title", booking.source?.tour_title]
+      ]
+        .filter(([, value]) => value !== undefined && value !== null && value !== "")
+        .map(([key, value]) => ({ key, value: String(value ?? "-") }))
+    },
+    {
+      title: "web_form_submission",
+      entries: [
+        ["name", booking.web_form_submission?.name || submittedContact?.name],
+        ["email", booking.web_form_submission?.email || submittedContact?.email],
+        ["phone_number", booking.web_form_submission?.phone_number || submittedContact?.phone_number],
+        ["preferred_language", booking.web_form_submission?.preferred_language],
+        ["preferred_currency", booking.web_form_submission?.preferred_currency],
+        ["destinations", Array.isArray(booking.web_form_submission?.destinations) ? booking.web_form_submission.destinations.join(", ") : booking.web_form_submission?.destinations],
+        ["travel_style", Array.isArray(booking.web_form_submission?.travel_style) ? booking.web_form_submission.travel_style.join(", ") : booking.web_form_submission?.travel_style],
+        ["travel_month", booking.web_form_submission?.travel_month],
+        ["number_of_travelers", booking.web_form_submission?.number_of_travelers],
+        ["travel_duration_days_min", booking.web_form_submission?.travel_duration_days_min],
+        ["travel_duration_days_max", booking.web_form_submission?.travel_duration_days_max],
+        ["budget_lower_USD", booking.web_form_submission?.budget_lower_USD],
+        ["budget_upper_USD", booking.web_form_submission?.budget_upper_USD],
+        ["notes", booking.web_form_submission?.notes],
+        ["submittedAt", formatDateTime(booking.web_form_submission?.submittedAt)]
       ]
         .filter(([, value]) => value !== undefined && value !== null && value !== "")
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
@@ -472,12 +545,14 @@ function renderSections(sections) {
         })
         .join("");
       return `
-        <div style="margin-bottom: 0.9rem;">
-          <h3 style="margin: 0 0 0.4rem; font-size: 0.98rem;">${escapeHtml(section.title)}</h3>
-          <div class="backend-table-wrap">
-            <table class="backend-table"><tbody>${rows || '<tr><td colspan="2">-</td></tr>'}</tbody></table>
+        <details class="booking-collapsible">
+          <summary class="booking-collapsible__summary">${escapeHtml(section.title)}</summary>
+          <div class="booking-collapsible__body">
+            <div class="backend-table-wrap">
+              <table class="backend-table"><tbody>${rows || '<tr><td colspan="2">-</td></tr>'}</tbody></table>
+            </div>
           </div>
-        </div>
+        </details>
       `;
     })
     .join("");
@@ -486,6 +561,15 @@ function renderSections(sections) {
 
 function renderActionControls() {
   if (!state.booking) return;
+
+  if (els.bookingNameInput) {
+    els.bookingNameInput.value = normalizeText(state.booking.name) || "";
+    els.bookingNameInput.disabled = !state.permissions.canEditBooking;
+  }
+  if (els.bookingNameSaveBtn) {
+    els.bookingNameSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+    els.bookingNameSaveBtn.disabled = !state.permissions.canEditBooking;
+  }
 
   if (els.stageSelect) {
     const options = STAGES.map((stage) => `<option value="${escapeHtml(stage)}">${escapeHtml(stage)}</option>`).join("");
@@ -522,6 +606,8 @@ function renderActionControls() {
 
 function applyBookingPayload(payload = {}) {
   state.booking = payload.booking || state.booking || null;
+  state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+  markPersonsSnapshotClean();
 }
 
 function getBookingPersons(booking) {
@@ -609,6 +695,336 @@ function renderPersonsSummary() {
   }
 }
 
+function formatPersonRoleLabel(role) {
+  return String(role || "")
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function clonePersonDraft(person = {}, index = 0) {
+  return {
+    _is_new: false,
+    id: normalizeText(person.id) || `${state.id || "booking"}_person_${index + 1}`,
+    name: normalizeText(person.name) || "",
+    photo_ref: normalizeText(person.photo_ref) || "",
+    emails: Array.isArray(person.emails) ? [...person.emails] : [],
+    phone_numbers: Array.isArray(person.phone_numbers) ? [...person.phone_numbers] : [],
+    preferred_language: normalizeText(person.preferred_language) || "",
+    date_of_birth: normalizeText(person.date_of_birth) || "",
+    nationality: normalizeText(person.nationality) || "",
+    address: person.address && typeof person.address === "object" ? { ...person.address } : {},
+    roles: normalizeStringList(person.roles),
+    consents: Array.isArray(person.consents) ? person.consents.map((consent) => ({ ...consent })) : [],
+    documents: Array.isArray(person.documents) ? person.documents.map((document) => ({ ...document })) : [],
+    notes: normalizeText(person.notes) || ""
+  };
+}
+
+function buildEmptyPersonDraft() {
+  return {
+    _is_new: true,
+    id: `${state.id || "booking"}_person_${Date.now()}`,
+    name: "",
+    photo_ref: "",
+    emails: [],
+    phone_numbers: [],
+    preferred_language: "",
+    date_of_birth: "",
+    nationality: "",
+    address: {},
+    roles: ["traveler"],
+    consents: [],
+    documents: [],
+    notes: ""
+  };
+}
+
+function serializePersonDrafts(drafts = state.personDrafts) {
+  return JSON.stringify(
+    (Array.isArray(drafts) ? drafts : []).map((draft, index) => buildPersonPayloadFromDraft(draft, index))
+  );
+}
+
+function markPersonsSnapshotClean() {
+  state.originalPersonsSnapshot = serializePersonDrafts();
+  setBookingSectionDirty("persons", false);
+  updatePersonsEditorSaveButton();
+}
+
+function updatePersonsDirtyState() {
+  const isDirty = state.permissions.canEditBooking && serializePersonDrafts() !== state.originalPersonsSnapshot;
+  setBookingSectionDirty("persons", isDirty);
+  updatePersonsEditorSaveButton();
+}
+
+function setPersonsEditorStatus(message) {
+  if (!els.personsEditorStatus) return;
+  els.personsEditorStatus.textContent = message || "";
+}
+
+function updatePersonsEditorSaveButton() {
+  if (!els.personsEditorSaveBtn) return;
+  const isDirty = Boolean(state.dirty.persons) && state.permissions.canEditBooking;
+  els.personsEditorSaveBtn.disabled = !isDirty;
+}
+
+function buildPersonPayloadFromDraft(draft, index) {
+  const address = draft?.address && typeof draft.address === "object" ? {
+    line_1: normalizeText(draft.address.line_1),
+    line_2: normalizeText(draft.address.line_2),
+    city: normalizeText(draft.address.city),
+    state_region: normalizeText(draft.address.state_region),
+    postal_code: normalizeText(draft.address.postal_code),
+    country_code: normalizeText(draft.address.country_code).toUpperCase()
+  } : {};
+  const cleanedAddress = Object.fromEntries(Object.entries(address).filter(([, value]) => value));
+
+  return {
+    id: normalizeText(draft?.id) || `${state.id || "booking"}_person_${index + 1}`,
+    name: normalizeText(draft?.name) || `Traveler ${index + 1}`,
+    photo_ref: normalizeText(draft?.photo_ref) || undefined,
+    emails: collectCommaSeparatedValues(draft?.emails),
+    phone_numbers: collectCommaSeparatedValues(draft?.phone_numbers),
+    preferred_language: normalizeText(draft?.preferred_language) || undefined,
+    date_of_birth: normalizeText(draft?.date_of_birth) || undefined,
+    nationality: normalizeText(draft?.nationality).toUpperCase() || undefined,
+    address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
+    roles: normalizeStringList(draft?.roles),
+    consents: Array.isArray(draft?.consents) ? draft.consents.map((consent) => ({ ...consent })) : [],
+    documents: Array.isArray(draft?.documents) ? draft.documents.map((document) => ({ ...document })) : [],
+    notes: normalizeText(draft?.notes) || undefined
+  };
+}
+
+function collectCommaSeparatedValues(values) {
+  const items = Array.isArray(values) ? values : String(values || "").split(",");
+  return Array.from(new Set(items.map((value) => normalizeText(value)).filter(Boolean)));
+}
+
+function renderPersonsEditor() {
+  if (!els.personsEditorList) return;
+  const canEdit = state.permissions.canEditBooking;
+  if (els.personsEditorAddBtn) {
+    els.personsEditorAddBtn.style.display = canEdit ? "" : "none";
+    els.personsEditorAddBtn.disabled = !canEdit;
+  }
+  if (els.personsEditorSaveBtn) {
+    els.personsEditorSaveBtn.style.display = canEdit ? "" : "none";
+  }
+
+  if (!state.personDrafts.length) {
+    els.personsEditorList.innerHTML = `<div class="booking-person-card__empty">No persons listed on this booking.</div>`;
+    updatePersonsEditorSaveButton();
+    return;
+  }
+
+  els.personsEditorList.innerHTML = state.personDrafts
+    .map((person, index) => {
+      const title = normalizeText(person.name) || `Person ${index + 1}`;
+      const subtitleParts = [];
+      if (person.roles.length) subtitleParts.push(person.roles.map(formatPersonRoleLabel).join(", "));
+      if (person._is_new) subtitleParts.push("Save to persist this person");
+      const roleOptions = BOOKING_PERSON_ROLE_OPTIONS.map((role) => `
+        <label class="booking-person-card__role">
+          <input type="checkbox" data-person-index="${index}" data-person-role="${escapeHtml(role)}" ${person.roles.includes(role) ? "checked" : ""} ${canEdit ? "" : "disabled"} />
+          <span>${escapeHtml(formatPersonRoleLabel(role))}</span>
+        </label>
+      `).join("");
+      const languageOptions = [
+        '<option value="">Select language</option>',
+        ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}" ${person.preferred_language === language ? "selected" : ""}>${escapeHtml(language)}</option>`)
+      ].join("");
+      return `
+        <section class="booking-person-card" data-person-index="${index}">
+          <div class="booking-person-card__header">
+            <div class="booking-person-card__photo">
+              <img src="${escapeHtml(resolvePersonPhotoSrc(person.photo_ref))}" alt="${escapeHtml(title)}" />
+            </div>
+            <div class="booking-person-card__meta">
+              <h3 class="booking-person-card__title">${escapeHtml(title)}</h3>
+              <p class="booking-person-card__subtitle">${escapeHtml(subtitleParts.join(" | ") || person.id)}</p>
+            </div>
+            <div class="booking-person-card__actions">
+              <button class="btn btn-ghost" type="button" data-person-delete="${index}" ${canEdit ? "" : "disabled"}>Delete</button>
+            </div>
+          </div>
+          <div class="booking-person-card__grid">
+            <div class="field">
+              <label>Name</label>
+              <input type="text" value="${escapeHtml(person.name)}" data-person-index="${index}" data-person-field="name" ${canEdit ? "" : "disabled"} />
+            </div>
+            <div class="field">
+              <label>Preferred language</label>
+              <select data-person-index="${index}" data-person-field="preferred_language" ${canEdit ? "" : "disabled"}>${languageOptions}</select>
+            </div>
+            <div class="field">
+              <label>Emails</label>
+              <input type="text" value="${escapeHtml(person.emails.join(", "))}" data-person-index="${index}" data-person-field="emails" placeholder="name@example.com, second@example.com" ${canEdit ? "" : "disabled"} />
+            </div>
+            <div class="field">
+              <label>Phone numbers</label>
+              <input type="text" value="${escapeHtml(person.phone_numbers.join(", "))}" data-person-index="${index}" data-person-field="phone_numbers" placeholder="+84..., +49..." ${canEdit ? "" : "disabled"} />
+            </div>
+            <div class="field">
+              <label>Date of birth</label>
+              <input type="date" value="${escapeHtml(person.date_of_birth)}" data-person-index="${index}" data-person-field="date_of_birth" ${canEdit ? "" : "disabled"} />
+            </div>
+            <div class="field">
+              <label>Nationality</label>
+              <input type="text" value="${escapeHtml(person.nationality)}" data-person-index="${index}" data-person-field="nationality" placeholder="ISO code, e.g. DE" maxlength="2" ${canEdit ? "" : "disabled"} />
+            </div>
+            <div class="field field--full">
+              <label>Roles</label>
+              <div class="booking-person-card__role-list">${roleOptions}</div>
+            </div>
+            <div class="field field--full">
+              <label>Notes</label>
+              <textarea rows="3" data-person-index="${index}" data-person-field="notes" ${canEdit ? "" : "disabled"}>${escapeHtml(person.notes)}</textarea>
+            </div>
+            <div class="field field--full">
+              <label>Picture</label>
+              <div class="booking-person-card__upload">
+                <input type="file" id="bookingPersonUpload_${escapeHtml(person.id)}" accept="image/*" ${canEdit ? "" : "disabled"} />
+                <button class="btn btn-ghost" type="button" data-person-upload="${index}" ${canEdit && !person._is_new ? "" : "disabled"}>Upload picture</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    })
+    .join("");
+
+  updatePersonsEditorSaveButton();
+}
+
+function handlePersonsEditorInput(event) {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+  const index = Number(target.dataset.personIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
+  const draft = state.personDrafts[index];
+  if (!draft) return;
+
+  if (target.dataset.personRole) {
+    const role = normalizeText(target.dataset.personRole);
+    const nextRoles = new Set(draft.roles);
+    if (target.checked) nextRoles.add(role);
+    else nextRoles.delete(role);
+    draft.roles = Array.from(nextRoles);
+    updatePersonsDirtyState();
+    return;
+  }
+
+  const field = target.dataset.personField;
+  if (!field) return;
+  const value = target.value;
+  if (field === "emails" || field === "phone_numbers") {
+    draft[field] = collectCommaSeparatedValues(value);
+  } else {
+    draft[field] = value;
+  }
+  updatePersonsDirtyState();
+}
+
+async function handlePersonsEditorClick(event) {
+  const deleteButton = event.target.closest("[data-person-delete]");
+  if (deleteButton) {
+    const index = Number(deleteButton.getAttribute("data-person-delete"));
+    if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
+    const person = state.personDrafts[index];
+    if (!window.confirm(`Delete ${normalizeText(person?.name) || "this person"} from the booking?`)) return;
+    state.personDrafts.splice(index, 1);
+    renderPersonsEditor();
+    updatePersonsDirtyState();
+    setPersonsEditorStatus("Person removed locally. Save persons to persist the change.");
+    return;
+  }
+
+  const uploadButton = event.target.closest("[data-person-upload]");
+  if (uploadButton) {
+    const index = Number(uploadButton.getAttribute("data-person-upload"));
+    if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
+    await uploadPersonPhoto(index);
+  }
+}
+
+function addPersonDraft() {
+  state.personDrafts.push(buildEmptyPersonDraft());
+  renderPersonsEditor();
+  updatePersonsDirtyState();
+  setPersonsEditorStatus("New person added locally. Save persons to persist it.");
+}
+
+async function savePersonDrafts() {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  setPersonsEditorStatus("Saving persons...");
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/persons`, {
+    method: "PATCH",
+    body: {
+      booking_hash: state.booking.booking_hash,
+      persons: state.personDrafts.map((draft, index) => buildPersonPayloadFromDraft(draft, index)),
+      actor: state.user
+    }
+  });
+  if (!result?.booking) return;
+
+  applyBookingPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
+  setPersonsEditorStatus(result.unchanged ? "Persons unchanged." : "Persons saved.");
+}
+
+async function uploadPersonPhoto(index) {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  const person = state.personDrafts[index];
+  if (!person || person._is_new) {
+    setPersonsEditorStatus("Save the new person first before uploading a picture.");
+    return;
+  }
+  const input = document.getElementById(`bookingPersonUpload_${person.id}`);
+  const file = input?.files?.[0] || null;
+  if (!file) {
+    setPersonsEditorStatus("Select an image file first.");
+    return;
+  }
+
+  setPersonsEditorStatus(`Uploading picture for ${normalizeText(person.name) || "person"}...`);
+  const base64 = await fileToBase64(file);
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/persons/${encodeURIComponent(person.id)}/photo`, {
+    method: "POST",
+    body: {
+      booking_hash: state.booking.booking_hash,
+      filename: file.name,
+      data_base64: base64,
+      actor: state.user
+    }
+  });
+  if (!result?.booking) return;
+
+  applyBookingPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
+  setPersonsEditorStatus("Picture uploaded.");
+}
+
+async function fileToBase64(file) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = String(reader.result || "");
+      const comma = value.indexOf(",");
+      resolve(comma >= 0 ? value.slice(comma + 1) : value);
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function buildContactEntries(contact) {
   if (!contact) return [];
   return [
@@ -672,6 +1088,27 @@ async function deleteBooking() {
   if (!result?.deleted) return;
 
   window.location.href = "backend.html?section=bookings";
+}
+
+async function saveBookingName() {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  const nextName = normalizeText(els.bookingNameInput?.value) || "";
+  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/name`, {
+    method: "PATCH",
+    body: {
+      booking_hash: state.booking.booking_hash,
+      name: nextName,
+      actor: state.user
+    }
+  });
+  if (!result?.booking) return;
+
+  applyBookingPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
+  setStatus(result.unchanged ? "Booking name unchanged." : "Booking name updated.");
 }
 
 function renderPricingPanel() {
@@ -2243,12 +2680,13 @@ async function fetchBookingMutation(path, options = {}) {
     const payload = await response.json();
     if (!response.ok) {
       if (response.status === 409 && payload?.code === "BOOKING_HASH_MISMATCH" && payload?.booking) {
-        state.booking = payload.booking;
+        applyBookingPayload({ booking: payload.booking });
         if (els.noteInput) els.noteInput.value = state.booking.notes || "";
         state.originalNote = String(state.booking.notes || "");
         renderBookingHeader();
         renderBookingData();
         renderActionControls();
+        renderPersonsEditor();
         renderPricingPanel();
         renderOfferPanel();
         loadActivities();
@@ -2289,6 +2727,7 @@ async function loadAuthStatus() {
     }
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
+    state.user = user || "";
     if (els.userLabel) {
       els.userLabel.textContent = user || "";
     }
@@ -2298,6 +2737,7 @@ async function loadAuthStatus() {
       canEditBooking: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF)
     };
   } catch {
+    state.user = "";
     if (els.userLabel) els.userLabel.textContent = "";
     // leave defaults
   }

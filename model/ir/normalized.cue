@@ -347,6 +347,7 @@ IR: {
 			fields: [
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
@@ -369,6 +370,7 @@ IR: {
 			sourceType: "entities.#Booking"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
 				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
 				{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
@@ -649,6 +651,7 @@ IR: {
 				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "pageUrl", kind: "scalar", typeName: "string", required: false},
 				{name: "referrer", kind: "scalar", typeName: "string", required: false},
 				{name: "utm_source", kind: "scalar", typeName: "string", required: false},

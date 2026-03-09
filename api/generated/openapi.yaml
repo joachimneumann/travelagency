@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-09T15:58:52Z
+# 2026-03-09T17:11:47Z
 
 ---
 openapi: 3.1.0
@@ -3642,6 +3642,9 @@ components:
           type: array
           items:
             type: string
+        booking_name:
+          type: string
+          nullable: true
         travel_month:
           type: string
           nullable: true
@@ -3695,6 +3698,9 @@ components:
       properties:
         id:
           type: string
+        name:
+          type: string
+          nullable: true
         booking_hash:
           type: string
           nullable: true
@@ -4135,6 +4141,9 @@ components:
         preferred_language:
           "$ref": "#/components/schemas/LanguageCode"
         notes:
+          type: string
+          nullable: true
+        booking_name:
           type: string
           nullable: true
         pageUrl:

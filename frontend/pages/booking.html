@@ -24,9 +24,10 @@
         <div class="container">
           <div class="booking-hero">
             <div class="booking-hero__photo" aria-hidden="true">
-              <img class="booking-hero__photo-image" src="assets/img/profile_booking.gray.png" alt="" />
+              <img class="booking-hero__photo-image" id="bookingHeroImage" src="assets/img/profile_person.png" alt="" />
             </div>
             <div class="booking-hero__copy">
+              <p class="booking-hero__tour" id="detailTourTitle" hidden>Tour</p>
               <h1 class="booking-hero__name" id="detailTitle">Booking</h1>
               <div class="booking-hero__id-row">
                 <p class="booking-hero__id" id="detailSubTitle">ID: -</p>
@@ -39,6 +40,16 @@
           <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <article id="bookingActionsPanel" style="margin-bottom: 1rem;">
+            <div class="backend-controls">
+              <div class="field">
+                <label for="bookingNameInput">Booking name</label>
+                <div class="backend-controls" style="align-items: center; gap: 0.55rem;">
+                  <input id="bookingNameInput" type="text" placeholder="Booking name" style="flex: 1;" />
+                  <button class="btn btn-primary" id="bookingNameSaveBtn" type="button">update</button>
+                </div>
+              </div>
+            </div>
+
             <div class="backend-controls">
               <div class="field">
                 <label for="bookingOwnerSelect">ATP staff:</label>
@@ -65,6 +76,16 @@
                 <span id="bookingActionStatus" class="micro"></span>
               </div>
             </div>
+          </article>
+
+          <article id="personsEditorPanel" style="margin-bottom: 1rem;">
+            <div class="backend-controls" style="align-items: center; margin-bottom: 0.65rem;">
+              <h2 class="section-title" style="font-size: 1.05rem; margin: 0; flex: 1;">Persons</h2>
+              <button class="btn btn-ghost" id="bookingPersonAddBtn" type="button">Add person</button>
+              <button class="btn btn-primary" id="bookingPersonsSaveBtn" type="button">Save persons</button>
+            </div>
+            <span id="bookingPersonsEditorStatus" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
+            <div id="bookingPersonsEditorList" class="booking-persons-editor-list"></div>
           </article>
 
           <article id="metaChatPanel" class="wa-chat-panel" style="margin-bottom: 1rem;">
@@ -211,7 +232,7 @@
             </div>
           </article>
 
-          <article style="margin-bottom: 1rem;">
+          <article class="booking-data-panel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
             <div id="bookingDataView"></div>
           </article>
@@ -228,6 +249,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/backend-booking.js?v=20260309a"></script>
+    <script type="module" src="frontend/scripts/backend-booking.js?v=20260310a"></script>
   </body>
 </html>

@@ -1397,6 +1397,7 @@ async function submitBookingForm() {
     phone_number: entries.phone_number || "",
     preferred_language: entries.preferred_language || "",
     notes: entries.notes || "",
+    booking_name: entries.tourTitle || state.selectedTour?.title || "",
     tourId: entries.tourId || "",
     tourTitle: entries.tourTitle || "",
     pageUrl: window.location.href,

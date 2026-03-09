@@ -57,6 +57,7 @@ const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
 const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
+const BOOKING_PERSON_PHOTOS_DIR = path.join(APP_ROOT, "data", "booking_person_photos");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
@@ -322,6 +323,7 @@ const {
   dataPath: DATA_PATH,
   toursDir: TOURS_DIR,
   invoicesDir: INVOICES_DIR,
+  bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   atpStaffPath: ATP_STAFF_PATH,
   writeQueueRef,
@@ -447,6 +449,12 @@ export async function createBackendHandler({ port = PORT } = {}) {
     writeInvoicePdf,
     randomUUID,
     invoicePdfPath,
+    mkdir,
+    path,
+    execFile,
+    TEMP_UPLOAD_DIR,
+    BOOKING_PERSON_PHOTOS_DIR,
+    writeFile,
     rm,
     sendFileWithCache
   });

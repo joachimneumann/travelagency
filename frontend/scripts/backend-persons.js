@@ -218,8 +218,7 @@ function buildPersonGroupKey(person, booking) {
 }
 
 function buildBookingLabel(booking) {
-  const destination = Array.isArray(booking?.destination) ? booking.destination.join(", ") : normalizeText(booking?.destination);
-  return destination ? `${booking.id} (${destination})` : String(booking?.id || "-");
+  return normalizeText(booking?.name) || normalizeText(booking?.id) || "-";
 }
 
 function getFilteredPersons() {
