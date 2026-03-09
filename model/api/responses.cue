@@ -30,44 +30,38 @@ import (
 	total: >=0 & int
 }
 
-#BookingClientUpdateResponse: #BookingClientDetail
-
-#BookingClientCreateCustomerResponse: #BookingClientDetail
-
-#BookingGroupMemberCreateResponse: #BookingClientDetail
-
 #BookingChatEvent: {
-	id:             common.#Identifier
-	channel:        string
-	direction:      string
-	eventType:      string
+	id:              common.#Identifier
+	channel:         string
+	direction:       string
+	eventType:       string
 	externalStatus?: string
-	textPreview:    string
-	senderDisplay?: string
-	senderContact?: string
-	sentAt?:        common.#Timestamp
-	receivedAt?:    common.#Timestamp
-	conversationId: common.#Identifier
-	openUrl?:       string
+	textPreview:     string
+	senderDisplay?:  string
+	senderContact?:  string
+	sentAt?:         common.#Timestamp
+	receivedAt?:     common.#Timestamp
+	conversationId:  common.#Identifier
+	openUrl?:        string
 }
 
 #BookingChatConversation: {
-	id:                common.#Identifier
-	channel:           string
+	id:                 common.#Identifier
+	channel:            string
 	externalContactId?: string
-	clientId?:         common.#Identifier
-	bookingId?:        common.#Identifier
-	lastEventAt?:      common.#Timestamp
-	latestPreview?:    string
-	openUrl?:          string
+	clientId?:          common.#Identifier
+	bookingId?:         common.#Identifier
+	lastEventAt?:       common.#Timestamp
+	latestPreview?:     string
+	openUrl?:           string
 }
 
 #BookingChatResponse: {
-	mode?:              string
-	items:              [...#BookingChatEvent]
-	total:              >=0 & int
-	conversations:      [...#BookingChatConversation]
-	conversationTotal:  >=0 & int
+	mode?: string
+	items: [...#BookingChatEvent]
+	total: >=0 & int
+	conversations: [...#BookingChatConversation]
+	conversationTotal: >=0 & int
 }
 
 #TourOptions: {
@@ -78,20 +72,4 @@ import (
 #AuthMeResponse: {
 	authenticated: bool
 	principal?:    entities.#ATPStaff
-}
-
-#CustomerUpdateResponse: {
-	client: entities.#Client
-	customer: entities.#Customer
-}
-
-#CustomerPhotoUploadResponse: {
-	client: entities.#Client
-	customer: entities.#Customer
-}
-
-#CustomerConsentCreateResponse: {
-	client: entities.#Client
-	customer: entities.#Customer
-	consent: entities.#CustomerConsent
 }

@@ -9,15 +9,13 @@ import (
 
 #AbstractModel: {
 	entities: {
-		ATPStaff:          entityModel.#ATPStaff
-		Client:            entityModel.#Client
-		Customer:          entityModel.#Customer
-		CustomerConsent:   entityModel.#CustomerConsent
-		CustomerDocument:  entityModel.#CustomerDocument
-		Booking:           entityModel.#Booking
-		Tour:              entityModel.#Tour
-		TravelGroup:       entityModel.#TravelGroup
-		TravelGroupMember: entityModel.#TravelGroupMember
+		ATPStaff:              entityModel.#ATPStaff
+		Booking:               entityModel.#Booking
+		BookingPerson:         entityModel.#BookingPerson
+		BookingPersonAddress:  entityModel.#BookingPersonAddress
+		BookingPersonConsent:  entityModel.#BookingPersonConsent
+		BookingPersonDocument: entityModel.#BookingPersonDocument
+		Tour:                  entityModel.#Tour
 	}
 
 	common: {
@@ -32,54 +30,41 @@ import (
 		CurrencyMeta:          enumModel.#CurrencyMeta
 		ATPStaffRole:          enumModel.#ATPStaffRole
 		BookingStage:          enumModel.#BookingStage
+		BookingPersonRole:     enumModel.#BookingPersonRole
 		PaymentStatus:         enumModel.#PaymentStatus
 		PricingAdjustmentType: enumModel.#PricingAdjustmentType
 		OfferCategory:         enumModel.#OfferCategory
 		CountryCode:           enumModel.#CountryCode
 		TimezoneCode:          enumModel.#TimezoneCode
-		ClientType:            enumModel.#ClientType
 		CustomerConsentType:   enumModel.#CustomerConsentType
 		CustomerConsentStatus: enumModel.#CustomerConsentStatus
 		CustomerDocumentType:  enumModel.#CustomerDocumentType
-		TravelGroupType:       enumModel.#TravelGroupType
-		TravelGroupMemberRole: enumModel.#TravelGroupMemberRole
 		BookingActivityType:   enumModel.#BookingActivityType
 	}
 
 	api: {
-		BookingList:                   apiModel.#BookingList
-		CustomerList:                  apiModel.#CustomerList
-		TravelGroupList:               apiModel.#TravelGroupList
-		TourList:                      apiModel.#TourList
-		BookingDetail:                 apiModel.#BookingDetail
-		CustomerDetail:                apiModel.#CustomerDetail
-		TravelGroupDetail:             apiModel.#TravelGroupDetail
-		TourDetail:                    apiModel.#TourDetail
-		AtpStaffDirectoryEntry:        apiModel.#AtpStaffDirectoryEntry
-		AtpStaffListResponse:          apiModel.#AtpStaffListResponse
-		BookingActivitiesResponse:     apiModel.#BookingActivitiesResponse
-		BookingInvoicesResponse:       apiModel.#BookingInvoicesResponse
-		TourOptions:                   apiModel.#TourOptions
-		AuthMeResponse:                apiModel.#AuthMeResponse
-		MobileBootstrap:               apiModel.#MobileBootstrap
-		FeatureFlags:                  apiModel.#FeatureFlags
-		MobileAppVersionGate:          apiModel.#MobileAppVersionGate
-		APIContractVersion:            apiModel.#APIContractVersion
-		Pagination:                    apiModel.#Pagination
-		ErrorResponse:                 apiModel.#ErrorResponse
-		PaginatedRequest:              apiModel.#PaginatedRequest
-		WebsiteBookingForm:            apiModel.#WebsiteBookingForm
-		PublicBookingCreateRequest:    apiModel.#PublicBookingCreateRequest
-		BookingPricingUpdateRequest:   apiModel.#BookingPricingUpdateRequest
-		BookingOfferUpdateRequest:     apiModel.#BookingOfferUpdateRequest
-		CustomerUpdateRequest:         apiModel.#CustomerUpdateRequest
-		TravelGroupUpdateRequest:      apiModel.#TravelGroupUpdateRequest
-		CustomerPhotoUploadRequest:    apiModel.#CustomerPhotoUploadRequest
-		CustomerConsentCreateRequest:  apiModel.#CustomerConsentCreateRequest
-		CustomerUpdateResponse:        apiModel.#CustomerUpdateResponse
-		CustomerPhotoUploadResponse:   apiModel.#CustomerPhotoUploadResponse
-		CustomerConsentCreateResponse: apiModel.#CustomerConsentCreateResponse
-		Endpoints:                     apiModel.#Endpoints
+		BookingList:                 apiModel.#BookingList
+		TourList:                    apiModel.#TourList
+		BookingDetail:               apiModel.#BookingDetail
+		TourDetail:                  apiModel.#TourDetail
+		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
+		AtpStaffListResponse:        apiModel.#AtpStaffListResponse
+		BookingActivitiesResponse:   apiModel.#BookingActivitiesResponse
+		BookingInvoicesResponse:     apiModel.#BookingInvoicesResponse
+		TourOptions:                 apiModel.#TourOptions
+		AuthMeResponse:              apiModel.#AuthMeResponse
+		MobileBootstrap:             apiModel.#MobileBootstrap
+		FeatureFlags:                apiModel.#FeatureFlags
+		MobileAppVersionGate:        apiModel.#MobileAppVersionGate
+		APIContractVersion:          apiModel.#APIContractVersion
+		Pagination:                  apiModel.#Pagination
+		ErrorResponse:               apiModel.#ErrorResponse
+		PaginatedRequest:            apiModel.#PaginatedRequest
+		WebsiteBookingForm:          apiModel.#WebsiteBookingForm
+		PublicBookingCreateRequest:  apiModel.#PublicBookingCreateRequest
+		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
+		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
+		Endpoints:                   apiModel.#Endpoints
 	}
 }
 
