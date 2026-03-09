@@ -106,27 +106,6 @@ function compactNameForMatch(value) {
   return normalizeNameForMatch(value).replace(/\s+/g, "");
 }
 
-function parseLegacyBudgetRange(value) {
-  const text = normalizeText(value);
-  if (!text || /[€₫฿]/.test(text)) {
-    return { budget_lower_USD: null, budget_upper_USD: null };
-  }
-  const matches = text.match(/\d[\d,]*/g) || [];
-  const numbers = matches
-    .map((item) => Number.parseInt(item.replace(/,/g, ""), 10))
-    .filter((item) => Number.isInteger(item) && item >= 0);
-  if (!numbers.length) {
-    return { budget_lower_USD: null, budget_upper_USD: null };
-  }
-  if (text.includes("+")) {
-    return { budget_lower_USD: numbers[0], budget_upper_USD: null };
-  }
-  if (numbers.length >= 2) {
-    return { budget_lower_USD: numbers[0], budget_upper_USD: numbers[1] };
-  }
-  return { budget_lower_USD: numbers[0], budget_upper_USD: null };
-}
-
 function levenshteinDistance(left, right) {
   const a = String(left || "");
   const b = String(right || "");
@@ -190,12 +169,13 @@ function rankConfidence(current, next) {
 }
 
 function buildSubmittedCustomer(booking) {
+  const submission = booking?.web_form_submission || {};
   return {
-    name: normalizeText(booking?.source?.submitted_name) || null,
-    email: normalizeEmail(booking?.source?.submitted_email) || null,
-    phone_number: normalizePhone(booking?.source?.submitted_phone_number) || null,
-    preferred_language: normalizeText(booking?.source?.submitted_preferred_language) || null,
-    preferred_currency: normalizeText(booking?.source?.submitted_preferred_currency) || null
+    name: normalizeText(submission.name) || null,
+    email: normalizeEmail(submission.email) || null,
+    phone_number: normalizePhone(submission.phone_number) || null,
+    preferred_language: normalizeText(submission.preferred_language) || null,
+    preferred_currency: normalizeText(submission.preferred_currency) || null
   };
 }
 
@@ -456,16 +436,17 @@ async function handleCreateBooking(req, res) {
 
   const inputPhoneNumber = normalizePhone(payload.phone_number);
   const inputPreferredLanguage = normalizeText(payload.preferred_language) || null;
-  const submittedPreferredCurrencyRaw = normalizeText(payload.preferredCurrency || payload.preferred_currency);
+  const submittedPreferredCurrencyRaw = normalizeText(payload.preferred_currency);
   const inputPreferredCurrency = submittedPreferredCurrencyRaw ? safeCurrency(submittedPreferredCurrencyRaw) : null;
   const now = nowIso();
 
   const preferredCurrency = inputPreferredCurrency || safeCurrency(BASE_CURRENCY);
   const selectedTourId = normalizeText(payload.tourId || payload.tour_id);
   const selectedTourTitle = normalizeText(payload.tourTitle || payload.tour_title);
-  const legacyBudgetRange = parseLegacyBudgetRange(payload.budget);
-  const budgetLowerUSD = normalizeText(payload.budget_lower_USD) ? safeInt(payload.budget_lower_USD) : legacyBudgetRange.budget_lower_USD;
-  const budgetUpperUSD = normalizeText(payload.budget_upper_USD) ? safeInt(payload.budget_upper_USD) : legacyBudgetRange.budget_upper_USD;
+  const budgetLowerUSD = normalizeText(payload.budget_lower_USD) ? safeInt(payload.budget_lower_USD) : null;
+  const budgetUpperUSD = normalizeText(payload.budget_upper_USD) ? safeInt(payload.budget_upper_USD) : null;
+  const travelDurationMin = normalizeText(payload.travel_duration_days_min) ? safeInt(payload.travel_duration_days_min) : null;
+  const travelDurationMax = normalizeText(payload.travel_duration_days_max) ? safeInt(payload.travel_duration_days_max) : null;
 
   const booking = {
     id: `booking_${randomUUID()}`,
@@ -478,23 +459,33 @@ async function handleCreateBooking(req, res) {
     atp_staff: null,
     atp_staff_name: null,
     service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
-    destination: normalizeStringArray(payload.destination),
-    style: normalizeStringArray(payload.style),
-    web_form_travel_month: normalizeText(payload.web_form_travel_month),
-    travel_start_day: normalizeText(payload.travel_start_day),
-    travel_end_day: normalizeText(payload.travel_end_day),
+    destination: normalizeStringArray(payload.destinations),
+    style: normalizeStringArray(payload.travel_style),
+    web_form_travel_month: normalizeText(payload.travel_month),
+    travel_start_day: null,
+    travel_end_day: null,
     number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
-    web_form_travel_duration: normalizeText(payload.web_form_travel_duration),
-    web_form_travel_duration_days_min: normalizeText(payload.web_form_travel_duration_days_min)
-      ? safeInt(payload.web_form_travel_duration_days_min)
-      : null,
-    web_form_travel_duration_days_max: normalizeText(payload.web_form_travel_duration_days_max)
-      ? safeInt(payload.web_form_travel_duration_days_max)
-      : null,
     budget_lower_USD: Number.isInteger(budgetLowerUSD) ? budgetLowerUSD : null,
     budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
     preferred_currency: preferredCurrency,
     notes: normalizeText(payload.notes),
+    web_form_submission: {
+      destinations: normalizeStringArray(payload.destinations),
+      travel_style: normalizeStringArray(payload.travel_style),
+      travel_month: normalizeText(payload.travel_month) || null,
+      number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
+      preferred_currency: inputPreferredCurrency || null,
+      travel_duration_days_min: travelDurationMin,
+      travel_duration_days_max: travelDurationMax,
+      name: normalizeText(payload.name) || null,
+      email: normalizeEmail(payload.email) || null,
+      phone_number: inputPhoneNumber || null,
+      budget_lower_USD: Number.isInteger(budgetLowerUSD) ? budgetLowerUSD : null,
+      budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
+      preferred_language: inputPreferredLanguage || null,
+      notes: normalizeText(payload.notes) || null,
+      submittedAt: now
+    },
     pricing: defaultBookingPricing(),
     offer: defaultBookingOffer(preferredCurrency),
     source: {
@@ -506,12 +497,7 @@ async function handleCreateBooking(req, res) {
       utm_campaign: normalizeText(payload.utm_campaign),
       referrer: normalizeText(payload.referrer),
       tour_id: selectedTourId || null,
-      tour_title: selectedTourTitle || null,
-      submitted_name: normalizeText(payload.name) || null,
-      submitted_email: normalizeEmail(payload.email) || null,
-      submitted_phone_number: inputPhoneNumber || null,
-      submitted_preferred_language: inputPreferredLanguage || null,
-      submitted_preferred_currency: inputPreferredCurrency || null
+      tour_title: selectedTourTitle || null
     },
     idempotency_key: idempotencyKey || null,
     created_at: now,

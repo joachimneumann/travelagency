@@ -286,20 +286,25 @@
 },
   FIELD_16: {
   "kind": "entity",
-  "typeName": "BookingPricing",
+  "typeName": "BookingWebFormSubmission",
   "isArray": false
 },
   FIELD_17: {
   "kind": "entity",
-  "typeName": "BookingOffer",
+  "typeName": "BookingPricing",
   "isArray": false
 },
   FIELD_18: {
   "kind": "entity",
-  "typeName": "SourceAttribution",
+  "typeName": "BookingOffer",
   "isArray": false
 },
   FIELD_19: {
+  "kind": "entity",
+  "typeName": "SourceAttribution",
+  "isArray": false
+},
+  FIELD_20: {
   "kind": "enum",
   "typeName": "CountryCode",
   "isArray": false,
@@ -1553,7 +1558,7 @@
     }
   ]
 },
-  FIELD_20: {
+  FIELD_21: {
   "kind": "enum",
   "typeName": "LanguageCode",
   "isArray": false,
@@ -1587,7 +1592,7 @@
     }
   ]
 },
-  FIELD_21: {
+  FIELD_22: {
   "kind": "enum",
   "typeName": "TimezoneCode",
   "isArray": false,
@@ -3681,7 +3686,7 @@
     }
   ]
 },
-  FIELD_22: {
+  FIELD_23: {
   "kind": "enum",
   "typeName": "CustomerConsentType",
   "isArray": false,
@@ -3710,7 +3715,7 @@
     }
   ]
 },
-  FIELD_23: {
+  FIELD_24: {
   "kind": "enum",
   "typeName": "CustomerConsentStatus",
   "isArray": false,
@@ -3734,7 +3739,7 @@
     }
   ]
 },
-  FIELD_24: {
+  FIELD_25: {
   "kind": "enum",
   "typeName": "CustomerDocumentType",
   "isArray": false,
@@ -3763,12 +3768,12 @@
     }
   ]
 },
-  FIELD_25: {
+  FIELD_26: {
   "kind": "scalar",
   "typeName": "bool",
   "isArray": false
 },
-  FIELD_26: {
+  FIELD_27: {
   "kind": "enum",
   "typeName": "TravelGroupMemberRole",
   "isArray": true,
@@ -3802,12 +3807,12 @@
     }
   ]
 },
-  FIELD_27: {
+  FIELD_28: {
   "kind": "scalar",
   "typeName": "float",
   "isArray": false
 },
-  FIELD_28: {
+  FIELD_29: {
   "kind": "enum",
   "typeName": "MonthCode",
   "isArray": false,
@@ -3876,137 +3881,137 @@
     }
   ]
 },
-  FIELD_29: {
+  FIELD_30: {
   "kind": "transport",
   "typeName": "MobileAppVersionGate",
   "isArray": false
 },
-  FIELD_30: {
+  FIELD_31: {
   "kind": "transport",
   "typeName": "APIContractVersion",
   "isArray": false
 },
-  FIELD_31: {
+  FIELD_32: {
   "kind": "transport",
   "typeName": "FeatureFlags",
   "isArray": false
 },
-  FIELD_32: {
+  FIELD_33: {
   "kind": "transport",
   "typeName": "ATPStaff",
   "isArray": false
 },
-  FIELD_33: {
-  "kind": "transport",
-  "typeName": "Booking",
-  "isArray": false
-},
   FIELD_34: {
   "kind": "transport",
-  "typeName": "Client",
+  "typeName": "Booking",
   "isArray": false
 },
   FIELD_35: {
   "kind": "transport",
-  "typeName": "Customer",
+  "typeName": "Client",
   "isArray": false
 },
   FIELD_36: {
   "kind": "transport",
-  "typeName": "TravelGroup",
+  "typeName": "Customer",
   "isArray": false
 },
   FIELD_37: {
   "kind": "transport",
+  "typeName": "TravelGroup",
+  "isArray": false
+},
+  FIELD_38: {
+  "kind": "transport",
   "typeName": "Tour",
   "isArray": true
 },
-  FIELD_38: {
+  FIELD_39: {
   "kind": "transport",
   "typeName": "Pagination",
   "isArray": false
 },
-  FIELD_39: {
+  FIELD_40: {
   "kind": "transport",
   "typeName": "Booking",
   "isArray": true
 },
-  FIELD_40: {
+  FIELD_41: {
   "kind": "transport",
   "typeName": "BookingChatEvent",
   "isArray": true
 },
-  FIELD_41: {
+  FIELD_42: {
   "kind": "transport",
   "typeName": "BookingChatConversation",
   "isArray": true
 },
-  FIELD_42: {
+  FIELD_43: {
   "kind": "transport",
   "typeName": "TravelGroupMember",
   "isArray": true
 },
-  FIELD_43: {
+  FIELD_44: {
   "kind": "transport",
   "typeName": "Customer",
   "isArray": true
 },
-  FIELD_44: {
+  FIELD_45: {
   "kind": "transport",
   "typeName": "BookingPricing",
   "isArray": false
 },
-  FIELD_45: {
+  FIELD_46: {
   "kind": "transport",
   "typeName": "BookingOffer",
   "isArray": false
 },
-  FIELD_46: {
+  FIELD_47: {
   "kind": "transport",
   "typeName": "BookingActivity",
   "isArray": true
 },
-  FIELD_47: {
+  FIELD_48: {
   "kind": "transport",
   "typeName": "BookingInvoice",
   "isArray": true
 },
-  FIELD_48: {
+  FIELD_49: {
   "kind": "transport",
   "typeName": "AtpStaffDirectoryEntry",
   "isArray": true
 },
-  FIELD_49: {
-  "kind": "transport",
-  "typeName": "CustomerConsent",
-  "isArray": true
-},
   FIELD_50: {
   "kind": "transport",
-  "typeName": "CustomerDocument",
+  "typeName": "CustomerConsent",
   "isArray": true
 },
   FIELD_51: {
   "kind": "transport",
-  "typeName": "TravelGroup",
+  "typeName": "CustomerDocument",
   "isArray": true
 },
   FIELD_52: {
   "kind": "transport",
-  "typeName": "EvidenceUpload",
-  "isArray": false
+  "typeName": "TravelGroup",
+  "isArray": true
 },
   FIELD_53: {
   "kind": "transport",
-  "typeName": "CustomerConsent",
+  "typeName": "EvidenceUpload",
   "isArray": false
 },
   FIELD_54: {
   "kind": "transport",
-  "typeName": "Tour",
+  "typeName": "CustomerConsent",
   "isArray": false
 },
   FIELD_55: {
+  "kind": "transport",
+  "typeName": "Tour",
+  "isArray": false
+},
+  FIELD_56: {
   "kind": "transport",
   "typeName": "TourOptions",
   "isArray": false
@@ -4024,6 +4029,13 @@ export function assertObject(value, schemaName) {
   }
 }
 
+export function isPresentValue(value) {
+  if (value === undefined || value === null) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'string') return value.trim() !== '';
+  return true;
+}
+
 export function validateShape(value, schema) {
   assertObject(value, schema.name);
   for (const field of schema.fields) {
@@ -4034,6 +4046,12 @@ export function validateShape(value, schema) {
     if (fieldValue === undefined || fieldValue === null) continue;
     if (field.isArray && !Array.isArray(fieldValue)) {
       throw new TypeError(`${schema.name}.${field.name} must be an array`);
+    }
+  }
+  for (const group of Array.isArray(schema.requireOneOf) ? schema.requireOneOf : []) {
+    if (!Array.isArray(group) || !group.length) continue;
+    if (!group.some((fieldName) => isPresentValue(value[fieldName]))) {
+      throw new TypeError(`${schema.name} requires at least one of: ${group.join(', ')}`);
     }
   }
   return value;

@@ -15,6 +15,24 @@ import (
 	utmCampaign?:    string
 }
 
+#BookingWebFormSubmission: {
+	destinations?: [...string]
+	travel_style?: [...string]
+	travel_month?:             string
+	number_of_travelers?:      >=common.#MinTravelers & <=common.#MaxTravelers & int
+	preferred_currency?:       enums.#CurrencyCode
+	travel_duration_days_min?: >=0 & int
+	travel_duration_days_max?: >=0 & int
+	name?:                     string
+	email?:                    common.#Email
+	phone_number?:             string
+	budget_lower_USD?:         >=0 & int
+	budget_upper_USD?:         >=0 & int
+	preferred_language?:       enums.#LanguageCode
+	notes?:                    string
+	submittedAt?:              common.#Timestamp
+}
+
 #BookingPayment: {
 	id:         common.#Identifier
 	label:      string & !=""
@@ -75,20 +93,18 @@ import (
 	serviceLevelAgreementDueAt?:  common.#Timestamp
 	destination?: [...string]
 	style?: [...string]
-	web_form_travel_month?:             string
-	travel_start_day?:                  common.#DateOnly
-	travel_end_day?:                    common.#DateOnly
-	number_of_travelers?:               >=common.#MinTravelers & <=common.#MaxTravelers & int
-	web_form_travel_duration?:          string
-	web_form_travel_duration_days_min?: >=0 & int
-	web_form_travel_duration_days_max?: >=0 & int
-	budget_lower_USD?:                  >=0 & int
-	budget_upper_USD?:                  >=0 & int
-	preferredCurrency?:                 enums.#CurrencyCode
-	notes?:                             string
-	pricing:                            #BookingPricing
-	offer:                              #BookingOffer
-	source?:                            #SourceAttribution
-	createdAt:                          common.#Timestamp
-	updatedAt:                          common.#Timestamp
+	web_form_travel_month?: string
+	travel_start_day?:      common.#DateOnly
+	travel_end_day?:        common.#DateOnly
+	number_of_travelers?:   >=common.#MinTravelers & <=common.#MaxTravelers & int
+	budget_lower_USD?:      >=0 & int
+	budget_upper_USD?:      >=0 & int
+	preferredCurrency?:     enums.#CurrencyCode
+	notes?:                 string
+	web_form_submission?:   #BookingWebFormSubmission
+	pricing:                #BookingPricing
+	offer:                  #BookingOffer
+	source?:                #SourceAttribution
+	createdAt:              common.#Timestamp
+	updatedAt:              common.#Timestamp
 }

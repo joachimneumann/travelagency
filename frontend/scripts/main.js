@@ -4,17 +4,23 @@
 */
 
 import {
+  GENERATED_CURRENCY_CODES,
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../Generated/Models/generated_Currency.js";
+import { GENERATED_LANGUAGE_CODES } from "../Generated/Models/generated_Language.js";
 import {
   MAX_TRAVELERS as GENERATED_MAX_TRAVELERS,
   MIN_TRAVELERS as GENERATED_MIN_TRAVELERS
 } from "../Generated/Models/generated_FormConstraints.js";
 import {
-  publicBookingsRequest,
   publicToursRequest
 } from "../Generated/API/generated_APIRequestFactory.js";
+import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js";
+import {
+  PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA,
+  validatePublicBookingCreateRequest
+} from "../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../shared/js/text.js";
 
 const state = {
@@ -298,10 +304,52 @@ function normalizeCurrencyCode(value) {
 
 function setupBookingBudgetOptions() {
   if (!els.bookingPreferredCurrency || !els.bookingBudget) return;
+  populateGeneratedWebFormOptions();
   els.bookingPreferredCurrency.value = normalizeCurrencyCode(els.bookingPreferredCurrency.value || DEFAULT_BOOKING_CURRENCY);
   renderBudgetOptions(els.bookingPreferredCurrency.value);
   els.bookingPreferredCurrency.addEventListener("change", () => {
     renderBudgetOptions(els.bookingPreferredCurrency.value);
+  });
+}
+
+function populateGeneratedWebFormOptions() {
+  populateSelectOptions(els.bookingPreferredCurrency, GENERATED_CURRENCY_CODES, {
+    includePlaceholder: false,
+    selectedValue: normalizeCurrencyCode(els.bookingPreferredCurrency?.value || DEFAULT_BOOKING_CURRENCY)
+  });
+  populateSelectOptions(els.bookingLanguage, GENERATED_LANGUAGE_CODES, {
+    includePlaceholder: true,
+    placeholderLabel: "Select language",
+    selectedValue: normalizeText(els.bookingLanguage?.value)
+  });
+  applyGeneratedRequiredAttributes();
+}
+
+function populateSelectOptions(select, values, { includePlaceholder = false, placeholderLabel = "Select", selectedValue = "" } = {}) {
+  if (!select) return;
+  const options = [];
+  if (includePlaceholder) {
+    options.push(`<option value="">${escapeHTML(placeholderLabel)}</option>`);
+  }
+  options.push(...values.map((value) => `<option value="${escapeAttr(value)}">${escapeHTML(value)}</option>`));
+  select.innerHTML = options.join("");
+  select.value = values.includes(selectedValue) ? selectedValue : includePlaceholder ? "" : values[0] || "";
+}
+
+function applyGeneratedRequiredAttributes() {
+  if (!els.bookingForm) return;
+  const requiredNames = new Set(
+    Array.isArray(PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA?.fields)
+      ? PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA.fields.filter((field) => field.required).map((field) => field.name)
+      : []
+  );
+  els.bookingForm.querySelectorAll("input[name], select[name], textarea[name]").forEach((input) => {
+    if (!input.name) return;
+    if (requiredNames.has(input.name)) {
+      input.setAttribute("required", "");
+    } else {
+      input.removeAttribute("required");
+    }
   });
 }
 
@@ -1243,6 +1291,27 @@ function validateCurrentStep() {
     }
   });
 
+  const stepInputs = Array.from(activeStep.querySelectorAll("input[name], select[name], textarea[name]"));
+  const stepNames = new Set(stepInputs.map((input) => input.name).filter(Boolean));
+  const requireOneOfGroups = Array.isArray(PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA?.requireOneOf)
+    ? PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA.requireOneOf
+    : [];
+  requireOneOfGroups.forEach((group) => {
+    if (!Array.isArray(group) || !group.some((fieldName) => stepNames.has(fieldName))) return;
+    const hasValue = group.some((fieldName) => {
+      const input = stepInputs.find((candidate) => candidate.name === fieldName);
+      return normalizeText(input?.value) !== "";
+    });
+    if (hasValue) return;
+    group.forEach((fieldName) => {
+      const input = stepInputs.find((candidate) => candidate.name === fieldName);
+      const field = input?.closest(".field");
+      if (field) field.classList.add("invalid");
+    });
+    renderBookingError("Please enter an email or phone number.");
+    isValid = false;
+  });
+
   if (travelersRangeError) {
     renderBookingError(travelersRangeError);
   }
@@ -1257,15 +1326,15 @@ async function submitBookingForm() {
 
   const formData = new FormData(els.bookingForm);
   const entries = Object.fromEntries(formData.entries());
-  const selectedDestinations = formData.getAll("destination").map((value) => normalizeText(value)).filter(Boolean);
-  const selectedStyles = formData.getAll("style").map((value) => normalizeText(value)).filter(Boolean);
+  const selectedDestinations = formData.getAll("destinations").map((value) => normalizeText(value)).filter(Boolean);
+  const selectedStyles = formData.getAll("travel_style").map((value) => normalizeText(value)).filter(Boolean);
   const rawTravelersValue = normalizeText(entries.number_of_travelers);
   const travelersValue = rawTravelersValue ? Number.parseInt(rawTravelersValue, 10) : null;
   const selectedBudgetOption = getSelectedBudgetOption(
-    entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY,
-    entries.budget_range || "not_decided_yet"
+    entries.preferred_currency || DEFAULT_BOOKING_CURRENCY,
+    els.bookingBudget?.value || "not_decided_yet"
   );
-  const selectedDurationRange = parseTravelDurationRange(entries.web_form_travel_duration);
+  const selectedDurationRange = parseTravelDurationRange(els.bookingDuration?.value || "");
 
   if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS)) {
     renderBookingError(`Travelers must be between ${MIN_TRAVELERS} and ${MAX_TRAVELERS}.`);
@@ -1279,20 +1348,19 @@ async function submitBookingForm() {
   }
 
   const payload = {
-    destination: selectedDestinations,
-    style: selectedStyles,
-    web_form_travel_month: entries.web_form_travel_month || "",
-    preferredCurrency: normalizeCurrencyCode(entries.preferredCurrency || DEFAULT_BOOKING_CURRENCY),
-    web_form_travel_duration: entries.web_form_travel_duration || "",
-    web_form_travel_duration_days_min: selectedDurationRange.min,
-    web_form_travel_duration_days_max: selectedDurationRange.max,
+    destinations: selectedDestinations,
+    travel_style: selectedStyles,
+    travel_month: entries.travel_month || "",
     number_of_travelers: travelersValue,
+    preferred_currency: normalizeCurrencyCode(entries.preferred_currency || DEFAULT_BOOKING_CURRENCY),
+    travel_duration_days_min: selectedDurationRange.min,
+    travel_duration_days_max: selectedDurationRange.max,
     budget_lower_USD: selectedBudgetOption.budgetLowerUSD,
     budget_upper_USD: selectedBudgetOption.budgetUpperUSD,
     name: entries.name || "",
     email: entries.email || "",
-    phone_number: entries.phone || "",
-    preferred_language: entries.language || "",
+    phone_number: entries.phone_number || "",
+    preferred_language: entries.preferred_language || "",
     notes: entries.notes || "",
     tourId: entries.tourId || "",
     tourTitle: entries.tourTitle || "",
@@ -1302,10 +1370,10 @@ async function submitBookingForm() {
     utm_medium: getQueryParam("utm_medium"),
     utm_campaign: getQueryParam("utm_campaign")
   };
-
   const idempotencyKey = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   try {
+    validatePublicBookingCreateRequest(payload);
     const bookingRequest = publicBookingsRequest({ baseURL: API_BASE_ORIGIN });
     const response = await fetch(bookingRequest.url, {
       method: bookingRequest.method,

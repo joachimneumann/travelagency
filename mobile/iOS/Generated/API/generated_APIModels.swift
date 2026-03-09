@@ -28,48 +28,52 @@ import Foundation
     }
 
     struct GeneratedPublicBookingCreateRequest: Codable, Equatable {
-    let destination: [String]?
-    let style: [String]?
-    let web_form_travel_month: String?
-    let travel_start_day: String?
-    let travel_end_day: String?
+    let destinations: [String]?
+    let travel_style: [String]?
+    let travel_month: String?
     let number_of_travelers: Int?
-    let web_form_travel_duration: String?
-    let web_form_travel_duration_days_min: Int?
-    let web_form_travel_duration_days_max: Int?
-    let preferredCurrency: GeneratedCurrencyCode?
-    let name: String?
+    let preferred_currency: GeneratedCurrencyCode
+    let travel_duration_days_min: Int?
+    let travel_duration_days_max: Int?
+    let name: String
     let email: String?
     let phone_number: String?
-    let preferred_language: GeneratedLanguageCode?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
+    let preferred_language: GeneratedLanguageCode
     let notes: String?
     let pageUrl: String?
     let referrer: String?
-    let utmSource: String?
-    let utmMedium: String?
-    let utmCampaign: String?
+    let utm_source: String?
+    let utm_medium: String?
+    let utm_campaign: String?
+    let idempotencyKey: String?
+    let tourId: String?
+    let tourTitle: String?
 
         private enum CodingKeys: String, CodingKey {
-        case destination = "destination"
-        case style = "style"
-        case web_form_travel_month = "web_form_travel_month"
-        case travel_start_day = "travel_start_day"
-        case travel_end_day = "travel_end_day"
+        case destinations = "destinations"
+        case travel_style = "travel_style"
+        case travel_month = "travel_month"
         case number_of_travelers = "number_of_travelers"
-        case web_form_travel_duration = "web_form_travel_duration"
-        case web_form_travel_duration_days_min = "web_form_travel_duration_days_min"
-        case web_form_travel_duration_days_max = "web_form_travel_duration_days_max"
-        case preferredCurrency = "preferredCurrency"
+        case preferred_currency = "preferred_currency"
+        case travel_duration_days_min = "travel_duration_days_min"
+        case travel_duration_days_max = "travel_duration_days_max"
         case name = "name"
         case email = "email"
         case phone_number = "phone_number"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
         case preferred_language = "preferred_language"
         case notes = "notes"
         case pageUrl = "pageUrl"
         case referrer = "referrer"
-        case utmSource = "utmSource"
-        case utmMedium = "utmMedium"
-        case utmCampaign = "utmCampaign"
+        case utm_source = "utm_source"
+        case utm_medium = "utm_medium"
+        case utm_campaign = "utm_campaign"
+        case idempotencyKey = "idempotencyKey"
+        case tourId = "tourId"
+        case tourTitle = "tourTitle"
         }
 
     }
@@ -661,6 +665,43 @@ import Foundation
         private enum CodingKeys: String, CodingKey {
         case destinations = "destinations"
         case styles = "styles"
+        }
+
+    }
+
+    struct GeneratedBookingWebFormSubmission: Codable, Equatable {
+    let destinations: [String]?
+    let travel_style: [String]?
+    let travel_month: String?
+    let number_of_travelers: Int?
+    let preferred_currency: GeneratedCurrencyCode?
+    let travel_duration_days_min: Int?
+    let travel_duration_days_max: Int?
+    let name: String?
+    let email: String?
+    let phone_number: String?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
+    let preferred_language: GeneratedLanguageCode?
+    let notes: String?
+    let submittedAt: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case destinations = "destinations"
+        case travel_style = "travel_style"
+        case travel_month = "travel_month"
+        case number_of_travelers = "number_of_travelers"
+        case preferred_currency = "preferred_currency"
+        case travel_duration_days_min = "travel_duration_days_min"
+        case travel_duration_days_max = "travel_duration_days_max"
+        case name = "name"
+        case email = "email"
+        case phone_number = "phone_number"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
+        case preferred_language = "preferred_language"
+        case notes = "notes"
+        case submittedAt = "submittedAt"
         }
 
     }

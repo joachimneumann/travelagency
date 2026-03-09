@@ -55,17 +55,19 @@ export function createBookingViewHelpers({
   }
 
   function validateBookingInput(payload) {
-        const required = ["name", "email", "web_form_travel_duration"];
+    const required = ["name", "preferred_currency", "preferred_language"];
     const missing = required.filter((key) => !normalizeText(payload[key]));
-    if (!normalizeStringArray(payload.destination).length) missing.push("destination");
-    if (!normalizeStringArray(payload.style).length) missing.push("style");
+    if (!normalizeStringArray(payload.destinations).length) missing.push("destinations");
+    if (!normalizeStringArray(payload.travel_style).length) missing.push("travel_style");
     if (missing.length) {
       return { ok: false, error: `Missing required fields: ${missing.join(", ")}` };
     }
 
     const email = normalizeEmail(payload.email);
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!emailOk) return { ok: false, error: "Invalid email" };
+    const phone = normalizeText(payload.phone_number);
+    const emailOk = email ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) : false;
+    if (!emailOk && !phone) return { ok: false, error: "Either email or phone_number must be present" };
+    if (email && !emailOk) return { ok: false, error: "Invalid email" };
 
     const travelers = safeOptionalInt(payload.number_of_travelers);
     if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {

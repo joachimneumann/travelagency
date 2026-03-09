@@ -162,11 +162,9 @@
     let travel_start_day: String?
     let travel_end_day: String?
     let number_of_travelers: Int?
-    let web_form_travel_duration: String?
-    let web_form_travel_duration_days_min: Int?
-    let web_form_travel_duration_days_max: Int?
     let preferredCurrency: GeneratedCurrencyCode?
     let notes: String?
+    let web_form_submission: GeneratedBookingWebFormSubmission?
     let service_level_agreement_due_at: String?
     let pricing: GeneratedBookingPricing
     let offer: GeneratedBookingOffer
@@ -191,11 +189,9 @@
         case travel_start_day = "travel_start_day"
         case travel_end_day = "travel_end_day"
         case number_of_travelers = "number_of_travelers"
-        case web_form_travel_duration = "web_form_travel_duration"
-        case web_form_travel_duration_days_min = "web_form_travel_duration_days_min"
-        case web_form_travel_duration_days_max = "web_form_travel_duration_days_max"
         case preferredCurrency = "preferredCurrency"
         case notes = "notes"
+        case web_form_submission = "web_form_submission"
         case service_level_agreement_due_at = "service_level_agreement_due_at"
         case pricing = "pricing"
         case offer = "offer"

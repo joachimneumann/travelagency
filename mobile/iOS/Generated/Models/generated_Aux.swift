@@ -40,3 +40,38 @@ import Foundation
 
     }
 
+    struct GeneratedWebsiteBookingForm: Codable, Equatable {
+    let destinations: [String]?
+    let travel_style: [String]?
+    let travel_month: String?
+    let number_of_travelers: Int?
+    let preferred_currency: GeneratedCurrencyCode
+    let travel_duration_days_min: Int?
+    let travel_duration_days_max: Int?
+    let name: String
+    let email: String?
+    let phone_number: String?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
+    let preferred_language: GeneratedLanguageCode
+    let notes: String?
+
+        private enum CodingKeys: String, CodingKey {
+        case destinations = "destinations"
+        case travel_style = "travel_style"
+        case travel_month = "travel_month"
+        case number_of_travelers = "number_of_travelers"
+        case preferred_currency = "preferred_currency"
+        case travel_duration_days_min = "travel_duration_days_min"
+        case travel_duration_days_max = "travel_duration_days_max"
+        case name = "name"
+        case email = "email"
+        case phone_number = "phone_number"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
+        case preferred_language = "preferred_language"
+        case notes = "notes"
+        }
+
+    }
+

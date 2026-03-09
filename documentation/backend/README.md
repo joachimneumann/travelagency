@@ -186,12 +186,33 @@ Tour API caching:
 
 Website booking form prefill from tour cards:
 - When the user opens the booking form from a specific tour, the frontend preselects values from that tour.
-- `web_form_travel_month` is initialized from the first month of the tour seasonality window, using `seasonality_start_month`.
-- `web_form_travel_duration` is initialized from `travel_duration_days` by mapping the tour length into the matching duration bucket (`3-5 days`, `6-8 days`, `9-12 days`, `13-16 days`, `17+ days`).
+- `travel_month` is initialized from the first month of the tour seasonality window, using `seasonality_start_month`.
+- `travel_duration_days_min` and `travel_duration_days_max` are initialized from `travel_duration_days` by mapping the tour length into the matching duration bucket (`3-5 days`, `6-8 days`, `9-12 days`, `13-16 days`, `17+ days`).
 - The budget range shown on page 2 is chosen from the configured weekly booking budget ranges, not from the total tour price.
 - Weekly budget matching uses this calculation:
   - `weekly_budget_lower_usd = budget_lower_USD / (travel_duration_days / 7)`
 - The selected budget bucket is then rendered in the visitor's currently selected preferred currency (`USD`, `EURO`, `VND`, `THB`), while the matching itself still uses the canonical USD thresholds from `BOOKING_BUDGET_OPTIONS`.
+
+Website booking form storage:
+- The public website form is modeled as a transport contract, not as an entity.
+- When a booking is created, the submitted form values are stored immutably on the booking in `web_form_submission`.
+- `web_form_submission` contains:
+  - `destinations`
+  - `travel_style`
+  - `travel_month`
+  - `number_of_travelers`
+  - `preferred_currency`
+  - `travel_duration_days_min`
+  - `travel_duration_days_max`
+  - `name`
+  - `email`
+  - `phone_number`
+  - `budget_lower_USD`
+  - `budget_upper_USD`
+  - `preferred_language`
+  - `notes`
+  - `submittedAt`
+- Booking reassignment and customer creation flows must read submitted customer/contact data from `booking.web_form_submission`, not from `source`.
 
 `/api/v1/*` authentication:
 - Keycloak backend session cookie (browser flows)

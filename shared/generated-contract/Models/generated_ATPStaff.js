@@ -14,6 +14,7 @@ export const GENERATED_ATP_STAFF_ROLES = Object.freeze([
         domain: "atp_staff",
         module: "entities",
         sourceType: "openapi.components.schemas.ATPStaff",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"preferredUsername","required":true,"wireName":"preferredUsername"}, SHARED_FIELD_DEFS.FIELD_1),

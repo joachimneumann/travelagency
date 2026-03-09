@@ -290,6 +290,7 @@ def render_js_type_exports(types, shared_field_names)
         domain: #{type.fetch('domain').inspect},
         module: #{type.fetch('module').inspect},
         sourceType: #{type.fetch('sourceType').inspect},
+        requireOneOf: #{js_inline_literal(type['requireOneOf'] || [])},
         fields: [
 #{field_lines}
         ]
@@ -394,6 +395,13 @@ def render_js_schema_runtime_module(shared_field_definitions, header = JS_RUNTIM
       }
     }
 
+    export function isPresentValue(value) {
+      if (value === undefined || value === null) return false;
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === 'string') return value.trim() !== '';
+      return true;
+    }
+
     export function validateShape(value, schema) {
       assertObject(value, schema.name);
       for (const field of schema.fields) {
@@ -404,6 +412,12 @@ def render_js_schema_runtime_module(shared_field_definitions, header = JS_RUNTIM
         if (fieldValue === undefined || fieldValue === null) continue;
         if (field.isArray && !Array.isArray(fieldValue)) {
           throw new TypeError(`${schema.name}.${field.name} must be an array`);
+        }
+      }
+      for (const group of Array.isArray(schema.requireOneOf) ? schema.requireOneOf : []) {
+        if (!Array.isArray(group) || !group.length) continue;
+        if (!group.some((fieldName) => isPresentValue(value[fieldName]))) {
+          throw new TypeError(`${schema.name} requires at least one of: ${group.join(', ')}`);
         }
       }
       return value;
@@ -994,7 +1008,8 @@ def openapi_object_schema_to_type(name, schema, enum_names, schemas:, domain:, m
     'domain' => domain,
     'module' => mod,
     'sourceType' => source_type,
-    'fields' => fields
+    'fields' => fields,
+    'requireOneOf' => Array(schema['x-require-one-of'])
   }
 end
 
@@ -1217,6 +1232,8 @@ def build_openapi_schemas(ir, traveler_constraints)
       required: required,
       properties: properties
     }
+    require_one_of = Array(type['requireOneOf'])
+    schemas[name]['x-require-one-of'] = require_one_of unless require_one_of.empty?
   end
 
   schemas
@@ -1447,6 +1464,7 @@ frontend_travel_group_type_names = %w[
 frontend_aux_type_names = %w[
   Tour
   TourPriceFrom
+  WebsiteBookingForm
 ]
 
 frontend_api_type_names = openapi_transport_names.to_a.reject do |name|

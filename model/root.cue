@@ -9,14 +9,14 @@ import (
 
 #AbstractModel: {
 	entities: {
-		ATPStaff: entityModel.#ATPStaff
-		Client: entityModel.#Client
-		Customer: entityModel.#Customer
-		CustomerConsent: entityModel.#CustomerConsent
-		CustomerDocument: entityModel.#CustomerDocument
-		Booking:  entityModel.#Booking
-		Tour:     entityModel.#Tour
-		TravelGroup: entityModel.#TravelGroup
+		ATPStaff:          entityModel.#ATPStaff
+		Client:            entityModel.#Client
+		Customer:          entityModel.#Customer
+		CustomerConsent:   entityModel.#CustomerConsent
+		CustomerDocument:  entityModel.#CustomerDocument
+		Booking:           entityModel.#Booking
+		Tour:              entityModel.#Tour
+		TravelGroup:       entityModel.#TravelGroup
 		TravelGroupMember: entityModel.#TravelGroupMember
 	}
 
@@ -47,38 +47,39 @@ import (
 	}
 
 	api: {
-		BookingList:                 apiModel.#BookingList
+		BookingList:                   apiModel.#BookingList
 		CustomerList:                  apiModel.#CustomerList
-		TravelGroupList:             apiModel.#TravelGroupList
-		TourList:                    apiModel.#TourList
-		BookingDetail:               apiModel.#BookingDetail
+		TravelGroupList:               apiModel.#TravelGroupList
+		TourList:                      apiModel.#TourList
+		BookingDetail:                 apiModel.#BookingDetail
 		CustomerDetail:                apiModel.#CustomerDetail
-		TravelGroupDetail:           apiModel.#TravelGroupDetail
-		TourDetail:                  apiModel.#TourDetail
-		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
-		AtpStaffListResponse:        apiModel.#AtpStaffListResponse
-		BookingActivitiesResponse:   apiModel.#BookingActivitiesResponse
-		BookingInvoicesResponse:     apiModel.#BookingInvoicesResponse
-		TourOptions:                 apiModel.#TourOptions
-		AuthMeResponse:              apiModel.#AuthMeResponse
-		MobileBootstrap:             apiModel.#MobileBootstrap
-		FeatureFlags:                apiModel.#FeatureFlags
-		MobileAppVersionGate:        apiModel.#MobileAppVersionGate
-		APIContractVersion:          apiModel.#APIContractVersion
-		Pagination:                  apiModel.#Pagination
-		ErrorResponse:               apiModel.#ErrorResponse
-		PaginatedRequest:            apiModel.#PaginatedRequest
-		PublicBookingCreateRequest:   apiModel.#PublicBookingCreateRequest
-		BookingPricingUpdateRequest:  apiModel.#BookingPricingUpdateRequest
-		BookingOfferUpdateRequest:    apiModel.#BookingOfferUpdateRequest
-		CustomerUpdateRequest:          apiModel.#CustomerUpdateRequest
-		TravelGroupUpdateRequest:     apiModel.#TravelGroupUpdateRequest
-		CustomerPhotoUploadRequest:     apiModel.#CustomerPhotoUploadRequest
-		CustomerConsentCreateRequest:   apiModel.#CustomerConsentCreateRequest
-		CustomerUpdateResponse:         apiModel.#CustomerUpdateResponse
-		CustomerPhotoUploadResponse:    apiModel.#CustomerPhotoUploadResponse
-		CustomerConsentCreateResponse:  apiModel.#CustomerConsentCreateResponse
-		Endpoints:                    apiModel.#Endpoints
+		TravelGroupDetail:             apiModel.#TravelGroupDetail
+		TourDetail:                    apiModel.#TourDetail
+		AtpStaffDirectoryEntry:        apiModel.#AtpStaffDirectoryEntry
+		AtpStaffListResponse:          apiModel.#AtpStaffListResponse
+		BookingActivitiesResponse:     apiModel.#BookingActivitiesResponse
+		BookingInvoicesResponse:       apiModel.#BookingInvoicesResponse
+		TourOptions:                   apiModel.#TourOptions
+		AuthMeResponse:                apiModel.#AuthMeResponse
+		MobileBootstrap:               apiModel.#MobileBootstrap
+		FeatureFlags:                  apiModel.#FeatureFlags
+		MobileAppVersionGate:          apiModel.#MobileAppVersionGate
+		APIContractVersion:            apiModel.#APIContractVersion
+		Pagination:                    apiModel.#Pagination
+		ErrorResponse:                 apiModel.#ErrorResponse
+		PaginatedRequest:              apiModel.#PaginatedRequest
+		WebsiteBookingForm:            apiModel.#WebsiteBookingForm
+		PublicBookingCreateRequest:    apiModel.#PublicBookingCreateRequest
+		BookingPricingUpdateRequest:   apiModel.#BookingPricingUpdateRequest
+		BookingOfferUpdateRequest:     apiModel.#BookingOfferUpdateRequest
+		CustomerUpdateRequest:         apiModel.#CustomerUpdateRequest
+		TravelGroupUpdateRequest:      apiModel.#TravelGroupUpdateRequest
+		CustomerPhotoUploadRequest:    apiModel.#CustomerPhotoUploadRequest
+		CustomerConsentCreateRequest:  apiModel.#CustomerConsentCreateRequest
+		CustomerUpdateResponse:        apiModel.#CustomerUpdateResponse
+		CustomerPhotoUploadResponse:   apiModel.#CustomerPhotoUploadResponse
+		CustomerConsentCreateResponse: apiModel.#CustomerConsentCreateResponse
+		Endpoints:                     apiModel.#Endpoints
 	}
 }
 

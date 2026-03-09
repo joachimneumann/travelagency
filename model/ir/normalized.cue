@@ -22,6 +22,7 @@ import (
 	module:     "entities" | "api" | "common" | "enums"
 	sourceType: string & !=""
 	fields: [...#FieldDefinition]
+	requireOneOf?: [...[...string]]
 }
 
 #CatalogEntry: {
@@ -235,17 +236,38 @@ IR: {
 				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "web_form_travel_duration", kind: "scalar", typeName: "string", required: false},
-				{name: "web_form_travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
-				{name: "web_form_travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
 				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "web_form_submission", kind: "valueObject", typeName: "BookingWebFormSubmission", required: false},
 				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "pricing", kind: "valueObject", typeName: "BookingPricing", required: true},
 				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
 				{name: "source", kind: "valueObject", typeName: "SourceAttribution", required: false},
 				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: true},
+			]
+		},
+		{
+			name:       "BookingWebFormSubmission"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingWebFormSubmission"
+			fields: [
+				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "email", kind: "scalar", typeName: "Email", required: false},
+				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "submittedAt", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{
@@ -579,31 +601,57 @@ IR: {
 			]
 		},
 		{
+			name:       "WebsiteBookingForm"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#WebsiteBookingForm"
+			requireOneOf: [["email", "phone_number"]]
+			fields: [
+				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "email", kind: "scalar", typeName: "Email", required: false},
+				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "PublicBookingCreateRequest"
 			domain:     "api"
 			module:     "api"
 			sourceType: "api.#PublicBookingCreateRequest"
+			requireOneOf: [["email", "phone_number"]]
 			fields: [
-				{name: "destination", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "web_form_travel_month", kind: "scalar", typeName: "string", required: false},
-				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "web_form_travel_duration", kind: "scalar", typeName: "string", required: false},
-				{name: "web_form_travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
-				{name: "web_form_travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
-				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
 				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "pageUrl", kind: "scalar", typeName: "string", required: false},
 				{name: "referrer", kind: "scalar", typeName: "string", required: false},
-				{name: "utmSource", kind: "scalar", typeName: "string", required: false},
-				{name: "utmMedium", kind: "scalar", typeName: "string", required: false},
-				{name: "utmCampaign", kind: "scalar", typeName: "string", required: false},
+				{name: "utm_source", kind: "scalar", typeName: "string", required: false},
+				{name: "utm_medium", kind: "scalar", typeName: "string", required: false},
+				{name: "utm_campaign", kind: "scalar", typeName: "string", required: false},
+				{name: "idempotencyKey", kind: "scalar", typeName: "string", required: false},
+				{name: "tourId", kind: "scalar", typeName: "string", required: false},
+				{name: "tourTitle", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

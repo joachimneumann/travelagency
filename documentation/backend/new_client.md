@@ -32,8 +32,6 @@ in the model of the booking
 - add travel_end_day
 regenerating the contract so the rename/addition is reflected consistently in generated frontend/backend/iOS code
 
-NOT DONE:
-
 in the model of the booking 
 - add web_form_travel_duration_days_min
 - add web_form_travel_duration_days_max
@@ -45,9 +43,7 @@ travel_month as the first month in tour (seasonality_start_month)
 Take the budget_lower_USD from the web form and find the range in BOOKING_BUDGET_OPTIONS that matches this price.
 In the web form, then show the travel_month and this price range, converted to the preferred currency
 
-
-
-Create a model for ther web form:
+Create a model for the web form:
 destinations (list)
 travel_style (list)
 travel_month (optional)
@@ -64,70 +60,50 @@ preferred_language
 notes (optional)
 Eiter email or phone_number must be present
 
-## Case 1: `number_of_travelers` is missing or `1`
-- The panel starts with `web form: ...` built from the submitted name, email, and phone number.
+generate code for the web form from this model, remove hard-coded code.
 
-- If at least one similar customer exists, show a dropdown with first option `Similar Customer`.
-- Keep the `Select` button disabled until a customer is chosen.
-- When an existing customer is assigned, update these customer fields from non-empty web form values:
-  - `name`
-  - `email`
-  - `phone_number`
-  - `preferred_language`
-  - `preferred_currency`
-- Also show `create a new customer for {name}`.
-- Pressing that button creates a new customer from the submitted web form fields and assigns the booking to that customer.
+NOT DONE:
 
-## Case 2: `number_of_travelers` is greater than `1`
-- The panel starts with `web form: (X travelers) from xxx` built from the submitted name, email, and phone number.
+When assigning a new client or changing the client in booking:
 
-- Show a `group name` text field, initally empty.
+- The panel starts with `web form request: ...` built from the submitted name, email, and phone number.
 
-- Show the title `Select group contact:`.
+Case 1: `number_of_travelers` is missing or `1`
+In this case, we assign a customer to the booking.
 
-- If a similar customers exist, show a pill with two option in the style of swiftui .pickerstyle .segmented
-Option 1: select existing customer as group contact
-Option 2: create new group contact
+case 1.1: No similar customer exists
+    Show `create a new customer for {name}` button. When pressed set these customer fields from the booking web_form_submission data:
+    - name
+    - email (if available)
+    - phone_number (if available)
+    - preferred_language
 
-If no similar customers exist, do not show the pill, only implement option 2
+Case 1.2: at least one similar customer exists
+    Show a pill with three options in the style of swiftui .pickerstyle .segmented
+    Case 1.2.1: new customer
+        Show what is described in case 1.1
+    Case 1.2.2: similar customer
+        Show a dropdown of similar customers with first option `Similar Customer`.
+        After selecting an existing customer, show a button "select as client".
+        When the button is pressed, the check if these values are identical:
+        - name
+        - email (if available)
+        - phone_number (if available)
+        - preferred_language
+        If they are not identical show a question for each non-identical value that forces the user to choose between
+        a) keep the xxx: xxx in the customer
+        b) overwrite xxx with xxx from the web form
+    Case 1.2.3: all customers
+        Show search field that allows the atp_staff to search for a customer. To the right of this field show a button "search"
+        In the paginated search results table, show a button "select" in the first column.
+        The other columns are: ID (link to customer), name, email, and phone_number
+        When the "select" button is pressed for one of the customers, do the same value check as described in case 1.2.2
 
-If option 1 is selected in the pill:
-Show the same similarity-sorted dropdown, but keep `Select` disabled until both a similar customer is chosen and `group name` is non-empty.
-When an existing customer is selected: 
-Step 1:
-Overwrite these values in the existing customer if they did exist in the web form:
-name
-email
-phone_number
-preferred_language
-preferred_currency
-timezone
-Step 2:
-create a group with the specified group name and the number of travellers and setthe ID of the selected group contact
-
-If option 2 is selected in the pill:
-show a button "create group". when pressed:
-Step 1:
-create a new customer with the values from the web form:
-name
-email
-phone_number
-preferred_language
-preferred_currency
-timezone
-Step 2:
-create a group with the specified group name and the number of travellers and set the ID of the selected group contact
-
-In both options:
-1. Set the customer id as `group_contact_customer_id`.
-2. Copy these booking fields into the travel group:
-   - `travel_month` (muss sich das booking merken ???!?)
-   - `number_of_travelers` (muss sich das booking merken ???!?)
-3. Assign the booking to the created travel group.
-
-XXXX sicherstellen, das dies berteits geschen ist!!! :
-Copy these booking fields into the booking:
-   - `travel_duration`
-   - `budget_lower_USD`
-   - `budget_upper_USD`
-   - `notes`
+Case 2: `number_of_travelers` is greater than `1`
+    Show a `group name` text field, initally empty.
+    
+    Show the title `Select group contact:`
+    Use the same UI and logic as Case 1.2 with the three options, 
+    but here, it choses the group contact, not the customer.
+    
+    When the group contact has been created or selected set the customer id as `group_contact_customer_id`.

@@ -457,7 +457,6 @@ function renderBookingData() {
         ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
         ["web_form_travel_month", booking.web_form_travel_month],
         ["number_of_travelers", booking.number_of_travelers],
-        ["web_form_travel_duration", booking.web_form_travel_duration],
         ["budget_range_USD", formatBudgetRange(booking.budget_lower_USD, booking.budget_upper_USD)],
         ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],

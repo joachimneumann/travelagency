@@ -39,6 +39,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.SourceAttribution",
+        requireOneOf: [],
         fields: [
 
         ]
@@ -53,6 +54,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingActivity",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"bookingId","required":true,"wireName":"bookingId"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -72,6 +74,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingInvoice",
+        requireOneOf: [],
         fields: [
 
         ]
@@ -86,6 +89,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingPricing",
+        requireOneOf: [],
         fields: [
 
         ]
@@ -100,6 +104,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingOfferCategoryRule",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_6),
     schemaField({"name":"taxRateBasisPoints","required":true,"wireName":"taxRateBasisPoints"}, SHARED_FIELD_DEFS.FIELD_7)
@@ -115,6 +120,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingOfferComponent",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_6),
@@ -141,6 +147,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingOfferTotals",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"netAmountCents","required":true,"wireName":"netAmountCents"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"taxAmountCents","required":true,"wireName":"taxAmountCents"}, SHARED_FIELD_DEFS.FIELD_7),
@@ -158,6 +165,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.BookingOffer",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"categoryRules","required":false,"wireName":"categoryRules"}, SHARED_FIELD_DEFS.FIELD_9),
@@ -176,6 +184,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         domain: "booking",
         module: "entities",
         sourceType: "openapi.components.schemas.Booking",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -193,15 +202,13 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"travel_start_day","required":false,"wireName":"travel_start_day"}, SHARED_FIELD_DEFS.FIELD_15),
     schemaField({"name":"travel_end_day","required":false,"wireName":"travel_end_day"}, SHARED_FIELD_DEFS.FIELD_15),
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_7),
-    schemaField({"name":"web_form_travel_duration","required":false,"wireName":"web_form_travel_duration"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"web_form_travel_duration_days_min","required":false,"wireName":"web_form_travel_duration_days_min"}, SHARED_FIELD_DEFS.FIELD_7),
-    schemaField({"name":"web_form_travel_duration_days_max","required":false,"wireName":"web_form_travel_duration_days_max"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"preferredCurrency","required":false,"wireName":"preferredCurrency"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"web_form_submission","required":false,"wireName":"web_form_submission"}, SHARED_FIELD_DEFS.FIELD_16),
     schemaField({"name":"service_level_agreement_due_at","required":false,"wireName":"service_level_agreement_due_at"}, SHARED_FIELD_DEFS.FIELD_5),
-    schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_16),
-    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"source","required":false,"wireName":"source"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"source","required":false,"wireName":"source"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"createdAt","required":true,"wireName":"createdAt"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updatedAt","required":true,"wireName":"updatedAt"}, SHARED_FIELD_DEFS.FIELD_5)
         ]

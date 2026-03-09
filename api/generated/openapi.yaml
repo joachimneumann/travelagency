@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-09T01:40:58Z
+# 2026-03-09T02:21:36Z
 
 ---
 openapi: 3.1.0
@@ -3539,20 +3539,14 @@ components:
         number_of_travelers:
           type: integer
           nullable: true
-        web_form_travel_duration:
-          type: string
-          nullable: true
-        web_form_travel_duration_days_min:
-          type: integer
-          nullable: true
-        web_form_travel_duration_days_max:
-          type: integer
-          nullable: true
         preferredCurrency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
         notes:
           type: string
+          nullable: true
+        web_form_submission:
+          "$ref": "#/components/schemas/BookingWebFormSubmission"
           nullable: true
         service_level_agreement_due_at:
           type: string
@@ -3571,6 +3565,59 @@ components:
         updatedAt:
           type: string
           format: date-time
+    BookingWebFormSubmission:
+      type: object
+      required: []
+      properties:
+        destinations:
+          type: array
+          items:
+            type: string
+        travel_style:
+          type: array
+          items:
+            type: string
+        travel_month:
+          type: string
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        preferred_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        travel_duration_days_min:
+          type: integer
+          nullable: true
+        travel_duration_days_max:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
+          nullable: true
+        preferred_language:
+          "$ref": "#/components/schemas/LanguageCode"
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
     BookingOfferCategoryRule:
       type: object
       required:
@@ -4050,47 +4097,37 @@ components:
         principal:
           "$ref": "#/components/schemas/ATPStaff"
           nullable: true
-    PublicBookingCreateRequest:
+    WebsiteBookingForm:
       type: object
-      required: []
+      required:
+      - preferred_currency
+      - name
+      - preferred_language
       properties:
-        destination:
+        destinations:
           type: array
           items:
             type: string
-        style:
+        travel_style:
           type: array
           items:
             type: string
-        web_form_travel_month:
+        travel_month:
           type: string
-          nullable: true
-        travel_start_day:
-          type: string
-          format: date
-          nullable: true
-        travel_end_day:
-          type: string
-          format: date
           nullable: true
         number_of_travelers:
           type: integer
           nullable: true
-        web_form_travel_duration:
-          type: string
-          nullable: true
-        web_form_travel_duration_days_min:
-          type: integer
-          nullable: true
-        web_form_travel_duration_days_max:
-          type: integer
-          nullable: true
-        preferredCurrency:
+        preferred_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
+        travel_duration_days_min:
+          type: integer
+          nullable: true
+        travel_duration_days_max:
+          type: integer
           nullable: true
         name:
           type: string
-          nullable: true
         email:
           type: string
           format: email
@@ -4098,9 +4135,66 @@ components:
         phone_number:
           type: string
           nullable: true
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
+          nullable: true
         preferred_language:
           "$ref": "#/components/schemas/LanguageCode"
+        notes:
+          type: string
           nullable: true
+      x-require-one-of:
+      - - email
+        - phone_number
+    PublicBookingCreateRequest:
+      type: object
+      required:
+      - preferred_currency
+      - name
+      - preferred_language
+      properties:
+        destinations:
+          type: array
+          items:
+            type: string
+        travel_style:
+          type: array
+          items:
+            type: string
+        travel_month:
+          type: string
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        preferred_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        travel_duration_days_min:
+          type: integer
+          nullable: true
+        travel_duration_days_max:
+          type: integer
+          nullable: true
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
+          nullable: true
+        preferred_language:
+          "$ref": "#/components/schemas/LanguageCode"
         notes:
           type: string
           nullable: true
@@ -4110,15 +4204,27 @@ components:
         referrer:
           type: string
           nullable: true
-        utmSource:
+        utm_source:
           type: string
           nullable: true
-        utmMedium:
+        utm_medium:
           type: string
           nullable: true
-        utmCampaign:
+        utm_campaign:
           type: string
           nullable: true
+        idempotencyKey:
+          type: string
+          nullable: true
+        tourId:
+          type: string
+          nullable: true
+        tourTitle:
+          type: string
+          nullable: true
+      x-require-one-of:
+      - - email
+        - phone_number
     BookingPricingUpdateRequest:
       type: object
       required:

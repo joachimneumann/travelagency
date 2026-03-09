@@ -8,6 +8,7 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
         domain: "travel_group",
         module: "entities",
         sourceType: "openapi.components.schemas.TravelGroup",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"client_id","required":true,"wireName":"client_id"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -32,12 +33,13 @@ import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_Schem
         domain: "travel_group",
         module: "entities",
         sourceType: "openapi.components.schemas.TravelGroupMember",
+        requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"travel_group_id","required":true,"wireName":"travel_group_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"customer_client_id","required":true,"wireName":"customer_client_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"is_traveling","required":false,"wireName":"is_traveling"}, SHARED_FIELD_DEFS.FIELD_25),
-    schemaField({"name":"member_roles","required":false,"wireName":"member_roles"}, SHARED_FIELD_DEFS.FIELD_26),
+    schemaField({"name":"is_traveling","required":false,"wireName":"is_traveling"}, SHARED_FIELD_DEFS.FIELD_26),
+    schemaField({"name":"member_roles","required":false,"wireName":"member_roles"}, SHARED_FIELD_DEFS.FIELD_27),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":true,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)

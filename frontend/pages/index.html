@@ -394,14 +394,14 @@
                 <div
                   id="bookingDestination"
                   data-booking-static-list
-                  data-booking-input-name="destination"
+                  data-booking-input-name="destinations"
                   data-empty-label="All destinations"
                   aria-label="Destination countries"
                 ></div>
                 <div
                   id="bookingStyle"
                   data-booking-static-list
-                  data-booking-input-name="style"
+                  data-booking-input-name="travel_style"
                   data-empty-label="All travel styles"
                   aria-label="Travel styles"
                 ></div>
@@ -409,7 +409,7 @@
               <div class="field-grid">
                 <div class="field">
                   <label for="bookingMonth">Travel month (optional)</label>
-                  <input id="bookingMonth" name="web_form_travel_month" type="month" />
+                  <input id="bookingMonth" name="travel_month" type="month" />
                 </div>
                 <div class="field">
                   <label for="bookingTravelers">Number of travelers (optional)</label>
@@ -418,17 +418,12 @@
                 </div>
                 <div class="field">
                   <label for="bookingPreferredCurrency">Preferred currency</label>
-                  <select id="bookingPreferredCurrency" name="preferredCurrency" required>
-                    <option value="USD">USD</option>
-                    <option value="EURO">EURO</option>
-                    <option value="VND">VND</option>
-                    <option value="THB">THB</option>
-                  </select>
+                  <select id="bookingPreferredCurrency" name="preferred_currency"></select>
                   <span class="error">Please choose a currency.</span>
                 </div>
                 <div class="field">
                   <label for="bookingDuration">Travel duration</label>
-                  <select id="bookingDuration" name="web_form_travel_duration" required>
+                  <select id="bookingDuration">
                     <option value="not decided yet" selected>Not decided yet</option>
                     <option>3-5 days</option>
                     <option>6-8 days</option>
@@ -451,31 +446,24 @@
                 </div>
                 <div class="field">
                   <label for="bookingEmail">Email</label>
-                  <input id="bookingEmail" name="email" type="email" autocomplete="email" required />
-                  <span class="error">Please enter a valid email.</span>
+                  <input id="bookingEmail" name="email" type="email" autocomplete="email" />
+                  <span class="error">Please enter a valid email or phone number.</span>
                 </div>
                 <div class="field">
                   <label for="bookingPhone">WhatsApp or phone</label>
-                  <input id="bookingPhone" name="phone" type="tel" autocomplete="tel" required />
-                  <span class="error">Please add a contact number.</span>
+                  <input id="bookingPhone" name="phone_number" type="tel" autocomplete="tel" />
+                  <span class="error">Please enter an email or phone number.</span>
                 </div>
                 <div class="field">
                   <label for="bookingBudget" id="bookingBudgetLabel">Budget range (USD)</label>
-                  <select id="bookingBudget" name="budget_range" required>
+                  <select id="bookingBudget">
                     <option value="not decided yet" selected>Not decided yet</option>
                   </select>
                   <span class="error">Please choose a budget range.</span>
                 </div>
                 <div class="field">
                   <label for="bookingLanguage">Preferred language</label>
-                  <select id="bookingLanguage" name="language" required>
-                    <option value="">Select language</option>
-                    <option>English</option>
-                    <option>French</option>
-                    <option>German</option>
-                    <option>Spanish</option>
-                    <option>Other</option>
-                  </select>
+                  <select id="bookingLanguage" name="preferred_language"></select>
                   <span class="error">Please choose a language.</span>
                 </div>
               </div>
