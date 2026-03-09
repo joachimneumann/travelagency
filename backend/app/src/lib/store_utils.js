@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeStoredBookingRecord } from "./booking_persons.js";
 
 export function createStoreUtils({
   dataPath,
@@ -55,18 +56,19 @@ export function createStoreUtils({
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
-      syncBookingAtpStaffFields(booking);
-            if (booking.budget_lower_USD === undefined && booking.budget_upper_USD === undefined) {
+      const normalizedBooking = normalizeStoredBookingRecord(booking, parsed);
+      syncBookingAtpStaffFields(normalizedBooking);
+      if (normalizedBooking.budget_lower_USD === undefined && normalizedBooking.budget_upper_USD === undefined) {
         const budgetRange = parseLegacyBudgetRange(booking.budget);
-        booking.budget_lower_USD = budgetRange.budget_lower_USD;
-        booking.budget_upper_USD = budgetRange.budget_upper_USD;
+        normalizedBooking.budget_lower_USD = budgetRange.budget_lower_USD;
+        normalizedBooking.budget_upper_USD = budgetRange.budget_upper_USD;
       }
-      delete booking.budget;
-      booking.pricing = normalizeBookingPricing(booking.pricing);
-      booking.offer = normalizeBookingOffer(booking.offer, getBookingPreferredCurrency(booking));
-      booking.pricing = await convertBookingPricingToBaseCurrency(booking.pricing);
-      booking.offer = await convertBookingOfferToBaseCurrency(booking.offer);
-      return booking;
+      delete normalizedBooking.budget;
+      normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
+      normalizedBooking.offer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
+      normalizedBooking.pricing = await convertBookingPricingToBaseCurrency(normalizedBooking.pricing);
+      normalizedBooking.offer = await convertBookingOfferToBaseCurrency(normalizedBooking.offer);
+      return normalizedBooking;
     }));
     parsed.bookings = convertedBookings;
     return parsed;

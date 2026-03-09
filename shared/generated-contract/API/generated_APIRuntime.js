@@ -9,18 +9,6 @@
   "typeName": "Identifier"
 },
   PARAM_2: {
-  "name": "customerClientId",
-  "location": "path",
-  "required": true,
-  "typeName": "Identifier"
-},
-  PARAM_3: {
-  "name": "travelGroupId",
-  "location": "path",
-  "required": true,
-  "typeName": "Identifier"
-},
-  PARAM_4: {
   "name": "tourId",
   "location": "path",
   "required": true,
@@ -147,50 +135,6 @@
         ]
       },
       {
-        key: "booking_client",
-        path: "/api/v1/bookings/{bookingId}/client",
-        method: "PATCH",
-        authenticated: true,
-        requestType: "BookingClientUpdateRequest",
-        responseType: "BookingClientUpdateResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_client_create_customer",
-        path: "/api/v1/bookings/{bookingId}/client/create-customer",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingClientCreateCustomerRequest",
-        responseType: "BookingClientCreateCustomerResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_client_create_group",
-        path: "/api/v1/bookings/{bookingId}/client/create-group",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingClientCreateGroupRequest",
-        responseType: "BookingClientCreateCustomerResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_group_members",
-        path: "/api/v1/bookings/{bookingId}/client/members",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingGroupMemberCreateRequest",
-        responseType: "BookingGroupMemberCreateResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
         key: "booking_pricing",
         path: "/api/v1/bookings/{bookingId}/pricing",
         method: "PATCH",
@@ -246,105 +190,6 @@
         ]
       },
       {
-        key: "customers",
-        path: "/api/v1/customers",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "CustomerList",
-        parameters: [
-
-        ]
-      },
-      {
-        key: "customer_detail",
-        path: "/api/v1/customers/{customerClientId}",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "CustomerDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
-        ]
-      },
-      {
-        key: "customer_update",
-        path: "/api/v1/customers/{customerClientId}",
-        method: "PATCH",
-        authenticated: true,
-        requestType: "CustomerUpdateRequest",
-        responseType: "CustomerUpdateResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
-        ]
-      },
-      {
-        key: "customer_photo_upload",
-        path: "/api/v1/customers/{customerClientId}/photo",
-        method: "POST",
-        authenticated: true,
-        requestType: "CustomerPhotoUploadRequest",
-        responseType: "CustomerPhotoUploadResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
-        ]
-      },
-      {
-        key: "customer_consent_create",
-        path: "/api/v1/customers/{customerClientId}/consents",
-        method: "POST",
-        authenticated: true,
-        requestType: "CustomerConsentCreateRequest",
-        responseType: "CustomerConsentCreateResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
-        ]
-      },
-      {
-        key: "travel_groups",
-        path: "/api/v1/travel_groups",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "TravelGroupList",
-        parameters: [
-
-        ]
-      },
-      {
-        key: "travel_group_create",
-        path: "/api/v1/travel_groups",
-        method: "POST",
-        authenticated: true,
-        requestType: "TravelGroupCreateRequest",
-        responseType: "TravelGroupDetail",
-        parameters: [
-
-        ]
-      },
-      {
-        key: "travel_group_detail",
-        path: "/api/v1/travel_groups/{travelGroupId}",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "TravelGroupDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
-        ]
-      },
-      {
-        key: "travel_group_update",
-        path: "/api/v1/travel_groups/{travelGroupId}",
-        method: "PATCH",
-        authenticated: true,
-        requestType: "TravelGroupUpdateRequest",
-        responseType: "TravelGroupDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
-        ]
-      },
-      {
         key: "tours",
         path: "/api/v1/tours",
         method: "GET",
@@ -363,7 +208,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -374,7 +219,7 @@
         requestType: null,
         responseType: null,
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       }
     ];

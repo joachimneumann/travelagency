@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-09T02:21:36Z
+# 2026-03-09T13:34:14Z
 
 ---
 openapi: 3.1.0
@@ -216,6 +216,35 @@ components:
         label: LOST
       - value: POST_TRIP
         label: POST_TRIP
+    BookingPersonRole:
+      type: string
+      enum:
+      - traveler
+      - primary_contact
+      - decision_maker
+      - payer
+      - assistant
+      - other
+      x-enum-catalog:
+      - code: traveler
+      - code: primary_contact
+      - code: decision_maker
+      - code: payer
+      - code: assistant
+      - code: other
+      x-enum-options:
+      - value: traveler
+        label: traveler
+      - value: primary_contact
+        label: primary_contact
+      - value: decision_maker
+        label: decision_maker
+      - value: payer
+        label: payer
+      - value: assistant
+        label: assistant
+      - value: other
+        label: other
     PaymentStatus:
       type: string
       enum:
@@ -2961,19 +2990,6 @@ components:
         label: Pacific/Wake
       - value: Pacific/Wallis
         label: Pacific/Wallis
-    ClientType:
-      type: string
-      enum:
-      - customer
-      - travel_group
-      x-enum-catalog:
-      - code: customer
-      - code: travel_group
-      x-enum-options:
-      - value: customer
-        label: customer
-      - value: travel_group
-        label: travel_group
     CustomerConsentType:
       type: string
       enum:
@@ -3033,56 +3049,6 @@ components:
         label: visa
       - value: other
         label: other
-    TravelGroupType:
-      type: string
-      enum:
-      - family
-      - friends
-      - corporate
-      - school
-      - other
-      x-enum-catalog:
-      - code: family
-      - code: friends
-      - code: corporate
-      - code: school
-      - code: other
-      x-enum-options:
-      - value: family
-        label: family
-      - value: friends
-        label: friends
-      - value: corporate
-        label: corporate
-      - value: school
-        label: school
-      - value: other
-        label: other
-    TravelGroupMemberRole:
-      type: string
-      enum:
-      - TravelGroupContact
-      - decision_maker
-      - payer
-      - assistant
-      - other
-      x-enum-catalog:
-      - code: TravelGroupContact
-      - code: decision_maker
-      - code: payer
-      - code: assistant
-      - code: other
-      x-enum-options:
-      - value: TravelGroupContact
-        label: TravelGroupContact
-      - value: decision_maker
-        label: decision_maker
-      - value: payer
-        label: payer
-      - value: assistant
-        label: assistant
-      - value: other
-        label: other
     BookingActivityType:
       type: string
       enum:
@@ -3136,15 +3102,9 @@ components:
         max:
           type: integer
           const: 30
-    BookingPricing:
+    MoneyAmount:
       type: object
-      description: Defined in model (referenced as BookingPricing).
-    SourceAttribution:
-      type: object
-      description: Defined in model (referenced as SourceAttribution).
-    BookingInvoice:
-      type: object
-      description: Defined in model (referenced as BookingInvoice).
+      description: Defined in model (referenced as MoneyAmount).
     ATPStaff:
       type: object
       required:
@@ -3169,261 +3129,6 @@ components:
         atpStaffId:
           type: string
           nullable: true
-    Client:
-      type: object
-      required:
-      - id
-      - client_type
-      - client_hash
-      properties:
-        id:
-          type: string
-        client_type:
-          "$ref": "#/components/schemas/ClientType"
-        customer_id:
-          type: string
-          nullable: true
-        travel_group_id:
-          type: string
-          nullable: true
-        client_hash:
-          type: string
-    Customer:
-      type: object
-      required:
-      - client_id
-      - name
-      - created_at
-      - updated_at
-      properties:
-        client_id:
-          type: string
-        customer_hash:
-          type: string
-          nullable: true
-        name:
-          type: string
-        photo_ref:
-          type: string
-          nullable: true
-        title:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        date_of_birth:
-          type: string
-          format: date
-          nullable: true
-        nationality:
-          "$ref": "#/components/schemas/CountryCode"
-          nullable: true
-        address_line_1:
-          type: string
-          nullable: true
-        address_line_2:
-          type: string
-          nullable: true
-        address_city:
-          type: string
-          nullable: true
-        address_state_region:
-          type: string
-          nullable: true
-        address_postal_code:
-          type: string
-          nullable: true
-        address_country_code:
-          "$ref": "#/components/schemas/CountryCode"
-          nullable: true
-        organization_name:
-          type: string
-          nullable: true
-        organization_address:
-          type: string
-          nullable: true
-        organization_phone_number:
-          type: string
-          nullable: true
-        organization_webpage:
-          type: string
-          nullable: true
-        organization_email:
-          type: string
-          format: email
-          nullable: true
-        tax_id:
-          type: string
-          nullable: true
-        phone_number:
-          type: string
-          nullable: true
-        email:
-          type: string
-          format: email
-          nullable: true
-        preferred_language:
-          "$ref": "#/components/schemas/LanguageCode"
-          nullable: true
-        preferred_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-          nullable: true
-        timezone:
-          "$ref": "#/components/schemas/TimezoneCode"
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        archived_at:
-          type: string
-          format: date-time
-          nullable: true
-    CustomerConsent:
-      type: object
-      required:
-      - id
-      - customer_client_id
-      - consent_type
-      - status
-      - captured_at
-      - updated_at
-      properties:
-        id:
-          type: string
-        customer_client_id:
-          type: string
-        consent_type:
-          "$ref": "#/components/schemas/CustomerConsentType"
-        status:
-          "$ref": "#/components/schemas/CustomerConsentStatus"
-        captured_via:
-          type: string
-          nullable: true
-        captured_at:
-          type: string
-          format: date-time
-        evidence_ref:
-          type: string
-          nullable: true
-        updated_at:
-          type: string
-          format: date-time
-    CustomerDocument:
-      type: object
-      required:
-      - id
-      - customer_client_id
-      - document_type
-      - created_at
-      - updated_at
-      properties:
-        id:
-          type: string
-        customer_client_id:
-          type: string
-        document_type:
-          "$ref": "#/components/schemas/CustomerDocumentType"
-        document_number:
-          type: string
-          nullable: true
-        document_picture_ref:
-          type: string
-          nullable: true
-        issuing_country:
-          "$ref": "#/components/schemas/CountryCode"
-          nullable: true
-        expires_on:
-          type: string
-          format: date
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-    TravelGroup:
-      type: object
-      required:
-      - id
-      - client_id
-      - group_name
-      - created_at
-      - updated_at
-      properties:
-        id:
-          type: string
-        client_id:
-          type: string
-        travel_group_hash:
-          type: string
-          nullable: true
-        group_name:
-          type: string
-        group_contact_customer_id:
-          type: string
-          nullable: true
-        traveler_customer_ids:
-          type: array
-          items:
-            type: string
-        number_of_travelers:
-          type: integer
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        archived_at:
-          type: string
-          format: date-time
-          nullable: true
-    TravelGroupMember:
-      type: object
-      required:
-      - id
-      - travel_group_id
-      - customer_client_id
-      - created_at
-      - updated_at
-      properties:
-        id:
-          type: string
-        travel_group_id:
-          type: string
-        customer_client_id:
-          type: string
-        is_traveling:
-          type: boolean
-          nullable: true
-        member_roles:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMemberRole"
-        notes:
-          type: string
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
     Tour:
       type: object
       required:
@@ -3478,156 +3183,349 @@ components:
           type: string
           format: date-time
           nullable: true
-    Booking:
+    SourceAttribution:
+      type: object
+      required: []
+      properties:
+        pageUrl:
+          type: string
+          nullable: true
+        ipAddress:
+          type: string
+          nullable: true
+        ipCountryGuess:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+        utmSource:
+          type: string
+          nullable: true
+        utmMedium:
+          type: string
+          nullable: true
+        utmCampaign:
+          type: string
+          nullable: true
+    BookingPersonAddress:
+      type: object
+      required: []
+      properties:
+        line_1:
+          type: string
+          nullable: true
+        line_2:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        state_region:
+          type: string
+          nullable: true
+        postal_code:
+          type: string
+          nullable: true
+        country_code:
+          "$ref": "#/components/schemas/CountryCode"
+          nullable: true
+    BookingPersonConsent:
       type: object
       required:
       - id
-      - stage
-      - pricing
-      - offer
-      - createdAt
-      - updatedAt
+      - consent_type
+      - status
+      - captured_at
+      - updated_at
       properties:
         id:
           type: string
-        booking_hash:
+        consent_type:
+          "$ref": "#/components/schemas/CustomerConsentType"
+        status:
+          "$ref": "#/components/schemas/CustomerConsentStatus"
+        captured_via:
           type: string
           nullable: true
-        client_id:
+        captured_at:
+          type: string
+          format: date-time
+        evidence_ref:
           type: string
           nullable: true
-        client_type:
-          "$ref": "#/components/schemas/ClientType"
-          nullable: true
-        client_display_name:
+        updated_at:
+          type: string
+          format: date-time
+    BookingPersonDocument:
+      type: object
+      required:
+      - id
+      - document_type
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+        document_type:
+          "$ref": "#/components/schemas/CustomerDocumentType"
+        document_number:
           type: string
           nullable: true
-        client_primary_phone_number:
+        document_picture_ref:
           type: string
           nullable: true
-        client_primary_email:
-          type: string
-          format: email
+        issuing_country:
+          "$ref": "#/components/schemas/CountryCode"
           nullable: true
-        stage:
-          "$ref": "#/components/schemas/BookingStage"
-        atp_staff:
-          type: string
-          nullable: true
-        atp_staff_name:
-          type: string
-          nullable: true
-        destination:
-          type: array
-          items:
-            type: string
-        style:
-          type: array
-          items:
-            type: string
-        web_form_travel_month:
-          type: string
-          nullable: true
-        travel_start_day:
-          type: string
-          format: date
-          nullable: true
-        travel_end_day:
+        expires_on:
           type: string
           format: date
           nullable: true
-        number_of_travelers:
-          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BookingPerson:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        photo_ref:
+          type: string
           nullable: true
-        preferredCurrency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+        phone_numbers:
+          type: array
+          items:
+            type: string
+        preferred_language:
+          "$ref": "#/components/schemas/LanguageCode"
           nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        nationality:
+          "$ref": "#/components/schemas/CountryCode"
+          nullable: true
+        address:
+          "$ref": "#/components/schemas/BookingPersonAddress"
+          nullable: true
+        roles:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPersonRole"
+        consents:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPersonConsent"
+        documents:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPersonDocument"
         notes:
           type: string
           nullable: true
-        web_form_submission:
-          "$ref": "#/components/schemas/BookingWebFormSubmission"
-          nullable: true
-        service_level_agreement_due_at:
+    PricingAdjustment:
+      type: object
+      required:
+      - id
+      - type
+      - label
+      - netAmount
+      properties:
+        id:
           type: string
-          format: date-time
-          nullable: true
-        pricing:
-          "$ref": "#/components/schemas/BookingPricing"
-        offer:
-          "$ref": "#/components/schemas/BookingOffer"
-        source:
-          "$ref": "#/components/schemas/SourceAttribution"
+        type:
+          "$ref": "#/components/schemas/PricingAdjustmentType"
+        label:
+          type: string
+        netAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        notes:
+          type: string
           nullable: true
         createdAt:
           type: string
           format: date-time
+          nullable: true
         updatedAt:
           type: string
           format: date-time
-    BookingWebFormSubmission:
+          nullable: true
+    InvoiceComponent:
       type: object
-      required: []
+      required:
+      - label
+      - quantity
+      - unitNet
+      - taxRate
       properties:
-        destinations:
-          type: array
-          items:
-            type: string
-        travel_style:
-          type: array
-          items:
-            type: string
-        travel_month:
+        id:
           type: string
           nullable: true
-        number_of_travelers:
-          type: integer
+        label:
+          type: string
+        description:
+          type: string
           nullable: true
-        preferred_currency:
+        quantity:
+          type: integer
+        unitNet:
+          "$ref": "#/components/schemas/MoneyAmount"
+        taxRate:
+          type: number
+    BookingInvoice:
+      type: object
+      required:
+      - id
+      - currency
+      properties:
+        id:
+          type: string
+        invoiceNumber:
+          type: string
+          nullable: true
+        currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
+        issueDate:
+          type: string
+          format: date
           nullable: true
-        travel_duration_days_min:
-          type: integer
+        dueDate:
+          type: string
+          format: date
           nullable: true
-        travel_duration_days_max:
-          type: integer
-          nullable: true
-        name:
+        components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/InvoiceComponent"
+        notes:
           type: string
           nullable: true
-        email:
+        sentToCustomer:
+          type: boolean
+          nullable: true
+        createdAt:
           type: string
-          format: email
+          format: date-time
           nullable: true
-        phone_number:
+        updatedAt:
           type: string
+          format: date-time
           nullable: true
-        budget_lower_USD:
-          type: integer
+    BookingPayment:
+      type: object
+      required:
+      - id
+      - label
+      - status
+      - netAmount
+      - taxRate
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        status:
+          "$ref": "#/components/schemas/PaymentStatus"
+        netAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        taxRate:
+          type: number
+        dueDate:
+          type: string
+          format: date
           nullable: true
-        budget_upper_USD:
-          type: integer
-          nullable: true
-        preferred_language:
-          "$ref": "#/components/schemas/LanguageCode"
+        paidAt:
+          type: string
+          format: date-time
           nullable: true
         notes:
           type: string
           nullable: true
-        submittedAt:
+        createdAt:
           type: string
           format: date-time
           nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    BookingPricingSummary:
+      type: object
+      required:
+      - agreedNetAmount
+      - adjustedNetAmount
+      - scheduledNetAmount
+      - unscheduledNetAmount
+      - scheduledTaxAmount
+      - scheduledGrossAmount
+      - paidGrossAmount
+      - outstandingGrossAmount
+      - isScheduleBalanced
+      properties:
+        agreedNetAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        adjustedNetAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        scheduledNetAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        unscheduledNetAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        scheduledTaxAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        scheduledGrossAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        paidGrossAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        outstandingGrossAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        isScheduleBalanced:
+          type: boolean
+    BookingPricing:
+      type: object
+      required:
+      - currency
+      - agreedNetAmount
+      - summary
+      properties:
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        agreedNetAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        adjustments:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PricingAdjustment"
+        payments:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPayment"
+        summary:
+          "$ref": "#/components/schemas/BookingPricingSummary"
     BookingOfferCategoryRule:
       type: object
       required:
       - category
-      - taxRateBasisPoints
+      - taxRate
       properties:
         category:
           "$ref": "#/components/schemas/OfferCategory"
-        taxRateBasisPoints:
-          type: integer
+        taxRate:
+          type: number
     BookingOfferComponent:
       type: object
       required:
@@ -3635,8 +3533,8 @@ components:
       - category
       - label
       - quantity
-      - unitAmountCents
-      - taxRateBasisPoints
+      - unitNet
+      - taxRate
       - currency
       properties:
         id:
@@ -3650,15 +3548,15 @@ components:
           nullable: true
         quantity:
           type: integer
-        unitAmountCents:
-          type: integer
-        taxRateBasisPoints:
-          type: integer
+        unitNet:
+          "$ref": "#/components/schemas/MoneyAmount"
+        taxRate:
+          type: number
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
         lineTotalAmountCents:
           type: integer
           nullable: true
-        currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
         notes:
           type: string
           nullable: true
@@ -3676,17 +3574,17 @@ components:
     BookingOfferTotals:
       type: object
       required:
-      - netAmountCents
-      - taxAmountCents
-      - grossAmountCents
+      - netAmount
+      - taxAmount
+      - grossAmount
       - componentsCount
       properties:
-        netAmountCents:
-          type: integer
-        taxAmountCents:
-          type: integer
-        grossAmountCents:
-          type: integer
+        netAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        taxAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
+        grossAmount:
+          "$ref": "#/components/schemas/MoneyAmount"
         componentsCount:
           type: integer
     BookingOffer:
@@ -3733,6 +3631,128 @@ components:
         createdAt:
           type: string
           format: date-time
+    BookingWebFormSubmission:
+      type: object
+      required: []
+      properties:
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_style:
+          type: array
+          items:
+            type: string
+        travel_month:
+          type: string
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        preferred_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        travel_duration_days_min:
+          type: integer
+          nullable: true
+        travel_duration_days_max:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone_number:
+          type: string
+          nullable: true
+        budget_lower_USD:
+          type: integer
+          nullable: true
+        budget_upper_USD:
+          type: integer
+          nullable: true
+        preferred_language:
+          "$ref": "#/components/schemas/LanguageCode"
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+    Booking:
+      type: object
+      required:
+      - id
+      - stage
+      - pricing
+      - offer
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: string
+        booking_hash:
+          type: string
+          nullable: true
+        stage:
+          "$ref": "#/components/schemas/BookingStage"
+        atp_staff:
+          type: string
+          nullable: true
+        serviceLevelAgreementDueAt:
+          type: string
+          format: date-time
+          nullable: true
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_styles:
+          type: array
+          items:
+            type: string
+        travel_start_day:
+          type: string
+          format: date
+          nullable: true
+        travel_end_day:
+          type: string
+          format: date
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        preferredCurrency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        persons:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPerson"
+        web_form_submission:
+          "$ref": "#/components/schemas/BookingWebFormSubmission"
+          nullable: true
+        pricing:
+          "$ref": "#/components/schemas/BookingPricing"
+        offer:
+          "$ref": "#/components/schemas/BookingOffer"
+        source:
+          "$ref": "#/components/schemas/SourceAttribution"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     BookingList:
       type: object
       required:
@@ -3742,17 +3762,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/Booking"
-        pagination:
-          "$ref": "#/components/schemas/Pagination"
-    CustomerList:
-      type: object
-      required:
-      - pagination
-      properties:
-        items:
-          type: array
-          items:
-            "$ref": "#/components/schemas/Customer"
         pagination:
           "$ref": "#/components/schemas/Pagination"
     TourList:
@@ -3773,69 +3782,6 @@ components:
       properties:
         booking:
           "$ref": "#/components/schemas/Booking"
-        client:
-          "$ref": "#/components/schemas/Client"
-          nullable: true
-        customer:
-          "$ref": "#/components/schemas/Customer"
-          nullable: true
-        travelGroup:
-          "$ref": "#/components/schemas/TravelGroup"
-          nullable: true
-    BookingClientDetail:
-      type: object
-      required:
-      - booking
-      properties:
-        booking:
-          "$ref": "#/components/schemas/Booking"
-        client:
-          "$ref": "#/components/schemas/Client"
-          nullable: true
-        customer:
-          "$ref": "#/components/schemas/Customer"
-          nullable: true
-        travelGroup:
-          "$ref": "#/components/schemas/TravelGroup"
-          nullable: true
-        members:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMember"
-        memberCustomers:
-          type: array
-          items:
-            "$ref": "#/components/schemas/Customer"
-    CustomerDetail:
-      type: object
-      required:
-      - client
-      - customer
-      properties:
-        client:
-          "$ref": "#/components/schemas/Client"
-        customer:
-          "$ref": "#/components/schemas/Customer"
-        bookings:
-          type: array
-          items:
-            "$ref": "#/components/schemas/Booking"
-        consents:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CustomerConsent"
-        documents:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CustomerDocument"
-        travelGroups:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroup"
-        travelGroupMembers:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMember"
     TourOptions:
       type: object
       required: []
@@ -4245,154 +4191,6 @@ components:
           nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
-    BookingClientUpdateRequest:
-      type: object
-      required: []
-      properties:
-        booking_hash:
-          type: string
-          nullable: true
-        customer_client_id:
-          type: string
-          nullable: true
-        travel_group_id:
-          type: string
-          nullable: true
-    BookingClientCreateCustomerRequest:
-      type: object
-      required: []
-      properties:
-        booking_hash:
-          type: string
-          nullable: true
-    BookingClientCreateGroupRequest:
-      type: object
-      required:
-      - group_name
-      properties:
-        booking_hash:
-          type: string
-          nullable: true
-        group_name:
-          type: string
-        customer_client_id:
-          type: string
-          nullable: true
-    BookingGroupMemberCreateRequest:
-      type: object
-      required:
-      - name
-      properties:
-        booking_hash:
-          type: string
-          nullable: true
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-          nullable: true
-        phone_number:
-          type: string
-          nullable: true
-        preferred_language:
-          "$ref": "#/components/schemas/LanguageCode"
-          nullable: true
-        member_roles:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMemberRole"
-        is_traveling:
-          type: boolean
-          nullable: true
-        member_notes:
-          type: string
-          nullable: true
-    CustomerUpdateRequest:
-      type: object
-      required: []
-      properties:
-        customer_hash:
-          type: string
-          nullable: true
-        name:
-          type: string
-          nullable: true
-        photo_ref:
-          type: string
-          nullable: true
-        title:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        date_of_birth:
-          type: string
-          format: date
-          nullable: true
-        nationality:
-          "$ref": "#/components/schemas/CountryCode"
-          nullable: true
-        address_line_1:
-          type: string
-          nullable: true
-        address_line_2:
-          type: string
-          nullable: true
-        address_city:
-          type: string
-          nullable: true
-        address_state_region:
-          type: string
-          nullable: true
-        address_postal_code:
-          type: string
-          nullable: true
-        address_country_code:
-          "$ref": "#/components/schemas/CountryCode"
-          nullable: true
-        organization_name:
-          type: string
-          nullable: true
-        organization_address:
-          type: string
-          nullable: true
-        organization_phone_number:
-          type: string
-          nullable: true
-        organization_webpage:
-          type: string
-          nullable: true
-        organization_email:
-          type: string
-          format: email
-          nullable: true
-        tax_id:
-          type: string
-          nullable: true
-        phone_number:
-          type: string
-          nullable: true
-        email:
-          type: string
-          format: email
-          nullable: true
-        preferred_language:
-          "$ref": "#/components/schemas/LanguageCode"
-          nullable: true
-        preferred_currency:
-          "$ref": "#/components/schemas/ATPCurrencyCode"
-          nullable: true
-        timezone:
-          "$ref": "#/components/schemas/TimezoneCode"
-          nullable: true
-        notes:
-          type: string
-          nullable: true
     EvidenceUpload:
       type: object
       required:
@@ -4406,187 +4204,6 @@ components:
           nullable: true
         data_base64:
           type: string
-    CustomerPhotoUploadRequest:
-      type: object
-      required: []
-      properties:
-        customer_hash:
-          type: string
-          nullable: true
-        photo_upload:
-          "$ref": "#/components/schemas/EvidenceUpload"
-          nullable: true
-        photo:
-          "$ref": "#/components/schemas/EvidenceUpload"
-          nullable: true
-    CustomerConsentCreateRequest:
-      type: object
-      required:
-      - consent_type
-      - status
-      properties:
-        customer_hash:
-          type: string
-          nullable: true
-        consent_type:
-          "$ref": "#/components/schemas/CustomerConsentType"
-        status:
-          "$ref": "#/components/schemas/CustomerConsentStatus"
-        captured_via:
-          type: string
-          nullable: true
-        captured_at:
-          type: string
-          format: date-time
-          nullable: true
-        evidence_ref:
-          type: string
-          nullable: true
-        evidence_upload:
-          "$ref": "#/components/schemas/EvidenceUpload"
-          nullable: true
-    CustomerUpdateResponse:
-      type: object
-      required:
-      - client
-      - customer
-      properties:
-        client:
-          "$ref": "#/components/schemas/Client"
-        customer:
-          "$ref": "#/components/schemas/Customer"
-    CustomerPhotoUploadResponse:
-      type: object
-      required:
-      - client
-      - customer
-      properties:
-        client:
-          "$ref": "#/components/schemas/Client"
-        customer:
-          "$ref": "#/components/schemas/Customer"
-    CustomerConsentCreateResponse:
-      type: object
-      required:
-      - client
-      - customer
-      - consent
-      properties:
-        client:
-          "$ref": "#/components/schemas/Client"
-        customer:
-          "$ref": "#/components/schemas/Customer"
-        consent:
-          "$ref": "#/components/schemas/CustomerConsent"
-    BookingClientUpdateResponse:
-      type: object
-      required:
-      - booking
-      properties:
-        booking:
-          "$ref": "#/components/schemas/Booking"
-        client:
-          "$ref": "#/components/schemas/Client"
-          nullable: true
-        customer:
-          "$ref": "#/components/schemas/Customer"
-          nullable: true
-        travelGroup:
-          "$ref": "#/components/schemas/TravelGroup"
-          nullable: true
-        members:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMember"
-        memberCustomers:
-          type: array
-          items:
-            "$ref": "#/components/schemas/Customer"
-    BookingGroupMemberCreateResponse:
-      type: object
-      required:
-      - booking
-      properties:
-        booking:
-          "$ref": "#/components/schemas/Booking"
-        client:
-          "$ref": "#/components/schemas/Client"
-          nullable: true
-        customer:
-          "$ref": "#/components/schemas/Customer"
-          nullable: true
-        travelGroup:
-          "$ref": "#/components/schemas/TravelGroup"
-          nullable: true
-        members:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMember"
-        memberCustomers:
-          type: array
-          items:
-            "$ref": "#/components/schemas/Customer"
-    TravelGroupList:
-      type: object
-      required:
-      - total
-      - page
-      - page_size
-      - total_pages
-      properties:
-        items:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroup"
-        total:
-          type: integer
-        page:
-          type: integer
-        page_size:
-          type: integer
-        total_pages:
-          type: integer
-    TravelGroupDetail:
-      type: object
-      required:
-      - client
-      - travel_group
-      properties:
-        client:
-          "$ref": "#/components/schemas/Client"
-        travel_group:
-          "$ref": "#/components/schemas/TravelGroup"
-        members:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelGroupMember"
-        memberCustomers:
-          type: array
-          items:
-            "$ref": "#/components/schemas/Customer"
-    TravelGroupUpdateRequest:
-      type: object
-      required: []
-      properties:
-        travel_group_hash:
-          type: string
-          nullable: true
-        group_name:
-          type: string
-          nullable: true
-        group_contact_customer_id:
-          type: string
-          nullable: true
-        traveler_customer_ids:
-          type: array
-          items:
-            type: string
-        number_of_travelers:
-          type: integer
-          nullable: true
-        notes:
-          type: string
-          nullable: true
     ErrorResponse:
       type: object
       required:
@@ -4881,180 +4498,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/client":
-    patch:
-      operationId: booking_client
-      summary: Booking Client
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: bookingId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingClientUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingClientUpdateResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/client/create-customer":
-    post:
-      operationId: booking_client_create_customer
-      summary: Booking Client Create Customer
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: bookingId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingClientCreateCustomerRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/client/create-group":
-    post:
-      operationId: booking_client_create_group
-      summary: Booking Client Create Group
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: bookingId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingClientCreateGroupRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingClientCreateCustomerResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/client/members":
-    post:
-      operationId: booking_group_members
-      summary: Booking Group Members
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: bookingId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingGroupMemberCreateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingGroupMemberCreateResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingGroupMemberCreateResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{bookingId}/pricing":
     patch:
       operationId: booking_pricing
@@ -5215,333 +4658,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/AtpStaffListResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/customers":
-    get:
-      operationId: customers
-      summary: Customers
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerList"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/customers/{customerClientId}":
-    get:
-      operationId: customer_detail
-      summary: Customer Detail
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: customerClientId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    patch:
-      operationId: customer_update
-      summary: Customer Update
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: customerClientId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/CustomerUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerUpdateResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/customers/{customerClientId}/photo":
-    post:
-      operationId: customer_photo_upload
-      summary: Customer Photo Upload
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: customerClientId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/CustomerPhotoUploadRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerPhotoUploadResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerPhotoUploadResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/customers/{customerClientId}/consents":
-    post:
-      operationId: customer_consent_create
-      summary: Customer Consent Create
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: customerClientId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/CustomerConsentCreateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerConsentCreateResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/CustomerConsentCreateResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/travel_groups":
-    get:
-      operationId: travel_groups
-      summary: Travel Groups
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TravelGroupList"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    post:
-      operationId: travel_group_create
-      summary: Travel Group Create
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/TravelGroupCreateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TravelGroupDetail"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TravelGroupDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/travel_groups/{travelGroupId}":
-    get:
-      operationId: travel_group_detail
-      summary: Travel Group Detail
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: travelGroupId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TravelGroupDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    patch:
-      operationId: travel_group_update
-      summary: Travel Group Update
-      tags:
-      - V1
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: travelGroupId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/TravelGroupUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TravelGroupDetail"
         '401':
           description: Unauthorized
           content:

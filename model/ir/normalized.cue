@@ -43,17 +43,15 @@ IR: {
 		CurrencyCode: {catalog: "currencies"}
 		ATPStaffRole: {catalog: "roles"}
 		BookingStage: {catalog: "stages"}
+		BookingPersonRole: {catalog: "bookingPersonRoles"}
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
-		ClientType: {catalog: "clientTypes"}
 		CustomerConsentType: {catalog: "customerConsentTypes"}
 		CustomerConsentStatus: {catalog: "customerConsentStatuses"}
 		CustomerDocumentType: {catalog: "customerDocumentTypes"}
-		TravelGroupType: {catalog: "travelGroupTypes"}
-		TravelGroupMemberRole: {catalog: "travelGroupMemberRoles"}
 		BookingActivityType: {catalog: "bookingActivityTypes"}
 	}
 
@@ -70,125 +68,6 @@ IR: {
 				{name: "email", kind: "scalar", typeName: "Email", required: false},
 				{name: "roles", kind: "enum", typeName: "ATPStaffRole", required: true, isArray: true},
 				{name: "atpStaffId", kind: "scalar", typeName: "Identifier", required: false},
-			]
-		},
-		{
-			name:       "Client"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#Client"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "client_type", kind: "enum", typeName: "ClientType", required: true},
-				{name: "customer_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "travel_group_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "client_hash", kind: "scalar", typeName: "string", required: true},
-			]
-		},
-		{
-			name:       "Customer"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#Customer"
-			fields: [
-				{name: "client_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "first_name", kind: "scalar", typeName: "string", required: false},
-				{name: "last_name", kind: "scalar", typeName: "string", required: false},
-				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "nationality", kind: "enum", typeName: "CountryCode", required: false},
-				{name: "address_line_1", kind: "scalar", typeName: "string", required: false},
-				{name: "address_line_2", kind: "scalar", typeName: "string", required: false},
-				{name: "address_city", kind: "scalar", typeName: "string", required: false},
-				{name: "address_state_region", kind: "scalar", typeName: "string", required: false},
-				{name: "address_postal_code", kind: "scalar", typeName: "string", required: false},
-				{name: "address_country_code", kind: "enum", typeName: "CountryCode", required: false},
-				{name: "organization_name", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_address", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_webpage", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_email", kind: "scalar", typeName: "Email", required: false},
-				{name: "tax_id", kind: "scalar", typeName: "string", required: false},
-				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
-				{name: "timezone", kind: "enum", typeName: "TimezoneCode", required: false},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "archived_at", kind: "scalar", typeName: "Timestamp", required: false},
-			]
-		},
-		{
-			name:       "CustomerConsent"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#CustomerConsent"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
-				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
-				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
-				{name: "captured_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "evidence_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
-			]
-		},
-		{
-			name:       "CustomerDocument"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#CustomerDocument"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "document_type", kind: "enum", typeName: "CustomerDocumentType", required: true},
-				{name: "document_number", kind: "scalar", typeName: "string", required: false},
-				{name: "document_picture_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "issuing_country", kind: "enum", typeName: "CountryCode", required: false},
-				{name: "expires_on", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
-			]
-		},
-		{
-			name:       "TravelGroup"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#TravelGroup"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "client_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "travel_group_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "group_name", kind: "scalar", typeName: "string", required: true},
-				{name: "group_contact_customer_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "traveler_customer_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
-				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "archived_at", kind: "scalar", typeName: "Timestamp", required: false},
-			]
-		},
-		{
-			name:       "TravelGroupMember"
-			domain:     "aux"
-			module:     "entities"
-			sourceType: "entities.#TravelGroupMember"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "travel_group_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "is_traveling", kind: "scalar", typeName: "bool", required: false},
-				{name: "member_roles", kind: "enum", typeName: "TravelGroupMemberRole", required: true, isArray: true},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
 			]
 		},
 		{
@@ -215,59 +94,179 @@ IR: {
 			]
 		},
 		{
-			name:       "Booking"
+			name:       "SourceAttribution"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#Booking"
+			sourceType: "entities.#SourceAttribution"
 			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "client_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "client_type", kind: "enum", typeName: "ClientType", required: false},
-				{name: "client_display_name", kind: "scalar", typeName: "string", required: false},
-				{name: "client_primary_phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "client_primary_email", kind: "scalar", typeName: "Email", required: false},
-				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
-				{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "atp_staff_name", kind: "scalar", typeName: "string", required: false},
-				{name: "destination", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "style", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "web_form_travel_month", kind: "scalar", typeName: "string", required: false},
-				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "web_form_submission", kind: "valueObject", typeName: "BookingWebFormSubmission", required: false},
-				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "pricing", kind: "valueObject", typeName: "BookingPricing", required: true},
-				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
-				{name: "source", kind: "valueObject", typeName: "SourceAttribution", required: false},
-				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "pageUrl", kind: "scalar", typeName: "string", required: false},
+				{name: "ipAddress", kind: "scalar", typeName: "string", required: false},
+				{name: "ipCountryGuess", kind: "scalar", typeName: "string", required: false},
+				{name: "referrer", kind: "scalar", typeName: "string", required: false},
+				{name: "utmSource", kind: "scalar", typeName: "string", required: false},
+				{name: "utmMedium", kind: "scalar", typeName: "string", required: false},
+				{name: "utmCampaign", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{
-			name:       "BookingWebFormSubmission"
+			name:       "BookingPersonAddress"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingWebFormSubmission"
+			sourceType: "entities.#BookingPersonAddress"
 			fields: [
-				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
-				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
-				{name: "travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
-				{name: "travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: false},
-				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
-				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "line_1", kind: "scalar", typeName: "string", required: false},
+				{name: "line_2", kind: "scalar", typeName: "string", required: false},
+				{name: "city", kind: "scalar", typeName: "string", required: false},
+				{name: "state_region", kind: "scalar", typeName: "string", required: false},
+				{name: "postal_code", kind: "scalar", typeName: "string", required: false},
+				{name: "country_code", kind: "enum", typeName: "CountryCode", required: false},
+			]
+		},
+		{
+			name:       "BookingPersonConsent"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingPersonConsent"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
+				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
+				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
+				{name: "captured_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "evidence_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
+			]
+		},
+		{
+			name:       "BookingPersonDocument"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingPersonDocument"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "document_type", kind: "enum", typeName: "CustomerDocumentType", required: true},
+				{name: "document_number", kind: "scalar", typeName: "string", required: false},
+				{name: "document_picture_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "issuing_country", kind: "enum", typeName: "CountryCode", required: false},
+				{name: "expires_on", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
+			]
+		},
+		{
+			name:       "BookingPerson"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingPerson"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: true},
+				{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "emails", kind: "scalar", typeName: "Email", required: false, isArray: true},
+				{name: "phone_numbers", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "nationality", kind: "enum", typeName: "CountryCode", required: false},
+				{name: "address", kind: "entity", typeName: "BookingPersonAddress", required: false},
+				{name: "roles", kind: "enum", typeName: "BookingPersonRole", required: false, isArray: true},
+				{name: "consents", kind: "entity", typeName: "BookingPersonConsent", required: false, isArray: true},
+				{name: "documents", kind: "entity", typeName: "BookingPersonDocument", required: false, isArray: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "submittedAt", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "PricingAdjustment"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#PricingAdjustment"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "type", kind: "enum", typeName: "PricingAdjustmentType", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "netAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "InvoiceComponent"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#InvoiceComponent"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "description", kind: "scalar", typeName: "string", required: false},
+				{name: "quantity", kind: "scalar", typeName: "int", required: true},
+				{name: "unitNet", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "taxRate", kind: "scalar", typeName: "float", required: true},
+			]
+		},
+		{
+			name:       "BookingInvoice"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingInvoice"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "invoiceNumber", kind: "scalar", typeName: "string", required: false},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "issueDate", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "dueDate", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "components", kind: "entity", typeName: "InvoiceComponent", required: true, isArray: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "sentToCustomer", kind: "scalar", typeName: "bool", required: false},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "BookingPayment"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingPayment"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "status", kind: "enum", typeName: "PaymentStatus", required: true},
+				{name: "netAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "taxRate", kind: "scalar", typeName: "float", required: true},
+				{name: "dueDate", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "paidAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "BookingPricingSummary"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingPricingSummary"
+			fields: [
+				{name: "agreedNetAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "adjustedNetAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "scheduledNetAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "unscheduledNetAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "scheduledTaxAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "scheduledGrossAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "paidGrossAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "outstandingGrossAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "isScheduleBalanced", kind: "scalar", typeName: "bool", required: true},
+			]
+		},
+		{
+			name:       "BookingPricing"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingPricing"
+			fields: [
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "agreedNetAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "adjustments", kind: "entity", typeName: "PricingAdjustment", required: true, isArray: true},
+				{name: "payments", kind: "entity", typeName: "BookingPayment", required: true, isArray: true},
+				{name: "summary", kind: "entity", typeName: "BookingPricingSummary", required: true},
 			]
 		},
 		{
@@ -277,7 +276,7 @@ IR: {
 			sourceType: "entities.#BookingOfferCategoryRule"
 			fields: [
 				{name: "category", kind: "enum", typeName: "OfferCategory", required: true},
-				{name: "taxRateBasisPoints", kind: "scalar", typeName: "int", required: true},
+				{name: "taxRate", kind: "scalar", typeName: "float", required: true},
 			]
 		},
 		{
@@ -291,10 +290,10 @@ IR: {
 				{name: "label", kind: "scalar", typeName: "string", required: true},
 				{name: "details", kind: "scalar", typeName: "string", required: false},
 				{name: "quantity", kind: "scalar", typeName: "int", required: true},
-				{name: "unitAmountCents", kind: "scalar", typeName: "int", required: true},
-				{name: "taxRateBasisPoints", kind: "scalar", typeName: "int", required: true},
-				{name: "lineTotalAmountCents", kind: "scalar", typeName: "int", required: false},
+				{name: "unitNet", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "taxRate", kind: "scalar", typeName: "float", required: true},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "lineTotalAmountCents", kind: "scalar", typeName: "int", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "sortOrder", kind: "scalar", typeName: "int", required: false},
 				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
@@ -307,9 +306,9 @@ IR: {
 			module:     "entities"
 			sourceType: "entities.#BookingOfferTotals"
 			fields: [
-				{name: "netAmountCents", kind: "scalar", typeName: "int", required: true},
-				{name: "taxAmountCents", kind: "scalar", typeName: "int", required: true},
-				{name: "grossAmountCents", kind: "scalar", typeName: "int", required: true},
+				{name: "netAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "taxAmount", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "grossAmount", kind: "transport", typeName: "MoneyAmount", required: true},
 				{name: "componentsCount", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -320,9 +319,9 @@ IR: {
 			sourceType: "entities.#BookingOffer"
 			fields: [
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "categoryRules", kind: "valueObject", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
-				{name: "components", kind: "valueObject", typeName: "BookingOfferComponent", required: true, isArray: true},
-				{name: "totals", kind: "valueObject", typeName: "BookingOfferTotals", required: true},
+				{name: "categoryRules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
+				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "totals", kind: "entity", typeName: "BookingOfferTotals", required: true},
 				{name: "totalPriceCents", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -341,22 +340,62 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingWebFormSubmission"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingWebFormSubmission"
+			fields: [
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "travel_duration_days_min", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_duration_days_max", kind: "scalar", typeName: "int", required: false},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "email", kind: "scalar", typeName: "Email", required: false},
+				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
+				{name: "budget_lower_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "budget_upper_USD", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "submittedAt", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "Booking"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#Booking"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
+				{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "serviceLevelAgreementDueAt", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "preferredCurrency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
+				{name: "web_form_submission", kind: "entity", typeName: "BookingWebFormSubmission", required: false},
+				{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
+				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+				{name: "source", kind: "entity", typeName: "SourceAttribution", required: false},
+				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: true},
+			]
+		},
+		{
 			name:       "BookingList"
 			domain:     "api"
 			module:     "api"
 			sourceType: "api.#BookingList"
 			fields: [
 				{name: "items", kind: "entity", typeName: "Booking", required: true, isArray: true},
-				{name: "pagination", kind: "transport", typeName: "Pagination", required: true},
-			]
-		},
-		{
-			name:       "CustomerList"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerList"
-			fields: [
-				{name: "items", kind: "entity", typeName: "Customer", required: true, isArray: true},
 				{name: "pagination", kind: "transport", typeName: "Pagination", required: true},
 			]
 		},
@@ -377,38 +416,6 @@ IR: {
 			sourceType: "api.#BookingDetail"
 			fields: [
 				{name: "booking", kind: "entity", typeName: "Booking", required: true},
-				{name: "client", kind: "entity", typeName: "Client", required: false},
-				{name: "customer", kind: "entity", typeName: "Customer", required: false},
-				{name: "travelGroup", kind: "entity", typeName: "TravelGroup", required: false},
-			]
-		},
-		{
-			name:       "BookingClientDetail"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingClientDetail"
-			fields: [
-				{name: "booking", kind: "entity", typeName: "Booking", required: true},
-				{name: "client", kind: "entity", typeName: "Client", required: false},
-				{name: "customer", kind: "entity", typeName: "Customer", required: false},
-				{name: "travelGroup", kind: "entity", typeName: "TravelGroup", required: false},
-				{name: "members", kind: "entity", typeName: "TravelGroupMember", required: false, isArray: true},
-				{name: "memberCustomers", kind: "entity", typeName: "Customer", required: false, isArray: true},
-			]
-		},
-		{
-			name:       "CustomerDetail"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerDetail"
-			fields: [
-				{name: "client", kind: "entity", typeName: "Client", required: true},
-				{name: "customer", kind: "entity", typeName: "Customer", required: true},
-				{name: "bookings", kind: "entity", typeName: "Booking", required: true, isArray: true},
-				{name: "consents", kind: "entity", typeName: "CustomerConsent", required: true, isArray: true},
-				{name: "documents", kind: "entity", typeName: "CustomerDocument", required: true, isArray: true},
-				{name: "travelGroups", kind: "entity", typeName: "TravelGroup", required: true, isArray: true},
-				{name: "travelGroupMembers", kind: "entity", typeName: "TravelGroupMember", required: true, isArray: true},
 			]
 		},
 		{
@@ -461,8 +468,8 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingActivitiesResponse"
 			fields: [
-				{name: "items", kind: "valueObject", typeName: "BookingActivity", required: true, isArray: true},
-				{name: "activities", kind: "valueObject", typeName: "BookingActivity", required: true, isArray: true},
+				{name: "items", kind: "entity", typeName: "BookingActivity", required: true, isArray: true},
+				{name: "activities", kind: "entity", typeName: "BookingActivity", required: true, isArray: true},
 				{name: "total", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -472,7 +479,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingInvoicesResponse"
 			fields: [
-				{name: "items", kind: "valueObject", typeName: "BookingInvoice", required: true, isArray: true},
+				{name: "items", kind: "entity", typeName: "BookingInvoice", required: true, isArray: true},
 				{name: "total", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -661,7 +668,7 @@ IR: {
 			sourceType: "api.#BookingPricingUpdateRequest"
 			fields: [
 				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "pricing", kind: "valueObject", typeName: "BookingPricing", required: true},
+				{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
 			]
 		},
 		{
@@ -671,88 +678,7 @@ IR: {
 			sourceType: "api.#BookingOfferUpdateRequest"
 			fields: [
 				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "offer", kind: "valueObject", typeName: "BookingOffer", required: true},
-			]
-		},
-		{
-			name:       "BookingClientUpdateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingClientUpdateRequest"
-			fields: [
-				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "travel_group_id", kind: "scalar", typeName: "Identifier", required: false},
-			]
-		},
-		{
-			name:       "BookingClientCreateCustomerRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingClientCreateCustomerRequest"
-			fields: [
-				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingClientCreateGroupRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingClientCreateGroupRequest"
-			fields: [
-				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "group_name", kind: "scalar", typeName: "string", required: true},
-				{name: "customer_client_id", kind: "scalar", typeName: "Identifier", required: false},
-			]
-		},
-		{
-			name:       "BookingGroupMemberCreateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingGroupMemberCreateRequest"
-			fields: [
-				{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "member_roles", kind: "enum", typeName: "TravelGroupMemberRole", required: false, isArray: true},
-				{name: "is_traveling", kind: "scalar", typeName: "bool", required: false},
-				{name: "member_notes", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "CustomerUpdateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerUpdateRequest"
-			fields: [
-				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: false},
-				{name: "photo_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "first_name", kind: "scalar", typeName: "string", required: false},
-				{name: "last_name", kind: "scalar", typeName: "string", required: false},
-				{name: "date_of_birth", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "nationality", kind: "enum", typeName: "CountryCode", required: false},
-				{name: "address_line_1", kind: "scalar", typeName: "string", required: false},
-				{name: "address_line_2", kind: "scalar", typeName: "string", required: false},
-				{name: "address_city", kind: "scalar", typeName: "string", required: false},
-				{name: "address_state_region", kind: "scalar", typeName: "string", required: false},
-				{name: "address_postal_code", kind: "scalar", typeName: "string", required: false},
-				{name: "address_country_code", kind: "enum", typeName: "CountryCode", required: false},
-				{name: "organization_name", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_address", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_webpage", kind: "scalar", typeName: "string", required: false},
-				{name: "organization_email", kind: "scalar", typeName: "Email", required: false},
-				{name: "tax_id", kind: "scalar", typeName: "string", required: false},
-				{name: "phone_number", kind: "scalar", typeName: "string", required: false},
-				{name: "email", kind: "scalar", typeName: "Email", required: false},
-				{name: "preferred_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
-				{name: "timezone", kind: "enum", typeName: "TimezoneCode", required: false},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
 			]
 		},
 		{
@@ -764,130 +690,6 @@ IR: {
 				{name: "filename", kind: "scalar", typeName: "string", required: true},
 				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
 				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
-			]
-		},
-		{
-			name:       "CustomerPhotoUploadRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerPhotoUploadRequest"
-			fields: [
-				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "photo_upload", kind: "transport", typeName: "EvidenceUpload", required: false},
-				{name: "photo", kind: "transport", typeName: "EvidenceUpload", required: false},
-			]
-		},
-		{
-			name:       "CustomerConsentCreateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerConsentCreateRequest"
-			fields: [
-				{name: "customer_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
-				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
-				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
-				{name: "captured_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "evidence_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "evidence_upload", kind: "transport", typeName: "EvidenceUpload", required: false},
-			]
-		},
-		{
-			name:       "CustomerUpdateResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerUpdateResponse"
-			fields: [
-				{name: "client", kind: "entity", typeName: "Client", required: true},
-				{name: "customer", kind: "entity", typeName: "Customer", required: true},
-			]
-		},
-		{
-			name:       "CustomerPhotoUploadResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerPhotoUploadResponse"
-			fields: [
-				{name: "client", kind: "entity", typeName: "Client", required: true},
-				{name: "customer", kind: "entity", typeName: "Customer", required: true},
-			]
-		},
-		{
-			name:       "CustomerConsentCreateResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#CustomerConsentCreateResponse"
-			fields: [
-				{name: "client", kind: "entity", typeName: "Client", required: true},
-				{name: "customer", kind: "entity", typeName: "Customer", required: true},
-				{name: "consent", kind: "entity", typeName: "CustomerConsent", required: true},
-			]
-		},
-		{
-			name:       "BookingClientUpdateResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingClientUpdateResponse"
-			fields: [
-				{name: "booking", kind: "entity", typeName: "Booking", required: true},
-				{name: "client", kind: "entity", typeName: "Client", required: false},
-				{name: "customer", kind: "entity", typeName: "Customer", required: false},
-				{name: "travelGroup", kind: "entity", typeName: "TravelGroup", required: false},
-				{name: "members", kind: "entity", typeName: "TravelGroupMember", required: false, isArray: true},
-				{name: "memberCustomers", kind: "entity", typeName: "Customer", required: false, isArray: true},
-			]
-		},
-		{
-			name:       "BookingGroupMemberCreateResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingGroupMemberCreateResponse"
-			fields: [
-				{name: "booking", kind: "entity", typeName: "Booking", required: true},
-				{name: "client", kind: "entity", typeName: "Client", required: false},
-				{name: "customer", kind: "entity", typeName: "Customer", required: false},
-				{name: "travelGroup", kind: "entity", typeName: "TravelGroup", required: false},
-				{name: "members", kind: "entity", typeName: "TravelGroupMember", required: false, isArray: true},
-				{name: "memberCustomers", kind: "entity", typeName: "Customer", required: false, isArray: true},
-			]
-		},
-		{
-			name:       "TravelGroupList"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TravelGroupList"
-			fields: [
-				{name: "items", kind: "entity", typeName: "TravelGroup", required: true, isArray: true},
-				{name: "total", kind: "scalar", typeName: "int", required: true},
-				{name: "page", kind: "scalar", typeName: "int", required: true},
-				{name: "page_size", kind: "scalar", typeName: "int", required: true},
-				{name: "total_pages", kind: "scalar", typeName: "int", required: true},
-			]
-		},
-		{
-			name:       "TravelGroupDetail"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TravelGroupDetail"
-			fields: [
-				{name: "client", kind: "entity", typeName: "Client", required: true},
-				{name: "travel_group", kind: "entity", typeName: "TravelGroup", required: true},
-				{name: "members", kind: "entity", typeName: "TravelGroupMember", required: true, isArray: true},
-				{name: "memberCustomers", kind: "entity", typeName: "Customer", required: true, isArray: true},
-			]
-		},
-		{
-			name:       "TravelGroupUpdateRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TravelGroupUpdateRequest"
-			fields: [
-				{name: "travel_group_hash", kind: "scalar", typeName: "string", required: false},
-				{name: "group_name", kind: "scalar", typeName: "string", required: false},
-				{name: "group_contact_customer_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "traveler_customer_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
-				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

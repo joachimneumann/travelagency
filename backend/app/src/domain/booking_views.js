@@ -20,16 +20,93 @@ export function createBookingViewHelpers({
   computeBookingHash,
   sendJson
 }) {
-  function resolveCustomerByExternalContact(store, externalContactId) {
-    if (!externalContactId) return null;
-    const exactMatches = (store.customers || []).filter((customer) => isLikelyPhoneMatch(customer.phone_number, externalContactId));
-    if (exactMatches.length === 1) return exactMatches[0];
-    return null;
+  function normalizePersonEmails(person) {
+    return Array.from(
+      new Set(
+        [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
+          .map((value) => normalizeEmail(value))
+          .filter(Boolean)
+      )
+    );
   }
 
-  function resolveBookingForClient(store, clientId) {
-    if (!clientId) return null;
-    const activeStages = new Set([
+  function normalizePersonPhoneNumbers(person) {
+    return Array.from(
+      new Set(
+        [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
+          .map((value) => normalizeText(value))
+          .filter(Boolean)
+      )
+    );
+  }
+
+  function normalizePersonRoles(person) {
+    return Array.from(new Set((Array.isArray(person?.roles) ? person.roles : []).map((value) => normalizeText(value)).filter(Boolean)));
+  }
+
+  function getBookingPersons(booking) {
+    const persons = Array.isArray(booking?.persons) ? booking.persons : [];
+    return persons
+      .map((person, index) => {
+        if (!person || typeof person !== "object" || Array.isArray(person)) return null;
+        return {
+          ...person,
+          id: normalizeText(person.id) || `${normalizeText(booking?.id) || "booking"}_person_${index + 1}`,
+          name: normalizeText(person.name) || `Traveler ${index + 1}`,
+          emails: normalizePersonEmails(person),
+          phone_numbers: normalizePersonPhoneNumbers(person),
+          roles: normalizePersonRoles(person)
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function getSubmittedContact(booking) {
+    const submission = booking?.web_form_submission || {};
+    return {
+      name: normalizeText(submission.name) || null,
+      email: normalizeEmail(submission.email) || null,
+      phone_number: normalizeText(submission.phone_number) || null
+    };
+  }
+
+  function getBookingPrimaryContact(booking) {
+    const persons = getBookingPersons(booking);
+    return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
+  }
+
+  function getBookingContactProfile(booking) {
+    const primary = getBookingPrimaryContact(booking);
+    const submitted = getSubmittedContact(booking);
+    return {
+      name: normalizeText(primary?.name) || submitted.name || normalizeText(booking?.client_display_name) || null,
+      email: primary?.emails?.[0] || submitted.email || normalizeEmail(booking?.client_primary_email) || null,
+      phone_number: primary?.phone_numbers?.[0] || submitted.phone_number || normalizeText(booking?.client_primary_phone_number) || null
+    };
+  }
+
+  function bookingContactMatches(booking, externalContactId) {
+    const normalizedContact = normalizeText(externalContactId);
+    if (!normalizedContact) return false;
+    const email = normalizeEmail(normalizedContact);
+    const persons = getBookingPersons(booking);
+    const submitted = getSubmittedContact(booking);
+    const phones = [
+      submitted.phone_number,
+      normalizeText(booking?.client_primary_phone_number),
+      ...persons.flatMap((person) => person.phone_numbers)
+    ].filter(Boolean);
+    const emails = [
+      submitted.email,
+      normalizeEmail(booking?.client_primary_email),
+      ...persons.flatMap((person) => person.emails)
+    ].filter(Boolean);
+    if (email && emails.includes(email)) return true;
+    return phones.some((phone) => isLikelyPhoneMatch(phone, normalizedContact));
+  }
+
+  function activeBookingStages() {
+    return new Set([
       stages.NEW,
       stages.QUALIFIED,
       stages.PROPOSAL_SENT,
@@ -37,12 +114,41 @@ export function createBookingViewHelpers({
       stages.INVOICE_SENT,
       stages.PAYMENT_RECEIVED
     ]);
+  }
 
-    const matches = store.bookings
-      .filter((booking) => booking.client_id === clientId)
+  function resolveBookingForExternalContact(store, externalContactId) {
+    if (!externalContactId) return null;
+    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
+      .filter((booking) => bookingContactMatches(booking, externalContactId))
       .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
     if (!matches.length) return null;
-    const active = matches.find((booking) => activeStages.has(booking.stage));
+    const active = matches.find((booking) => activeBookingStages().has(booking.stage));
+    return active || matches[0];
+  }
+
+  function resolveCustomerByExternalContact(store, externalContactId) {
+    const booking = resolveBookingForExternalContact(store, externalContactId);
+    if (!booking) return null;
+    const primary = getBookingPrimaryContact(booking);
+    const contact = getBookingContactProfile(booking);
+    return {
+      client_id: booking.id,
+      booking_id: booking.id,
+      person_id: normalizeText(primary?.id) || null,
+      name: contact.name || "",
+      email: contact.email || null,
+      phone_number: contact.phone_number || null
+    };
+  }
+
+  function resolveBookingForClient(store, clientId) {
+    const normalizedClientId = normalizeText(clientId);
+    if (!normalizedClientId) return null;
+    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
+      .filter((booking) => normalizeText(booking.id) === normalizedClientId || normalizeText(booking.client_id) === normalizedClientId)
+      .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
+    if (!matches.length) return null;
+    const active = matches.find((booking) => activeBookingStages().has(booking.stage));
     return active || matches[0];
   }
 
@@ -180,7 +286,7 @@ export function createBookingViewHelpers({
   }
 
   function filterAndSortBookings(store, query, deps = {}) {
-    const { getCustomerLookup = () => new Map(), ensureMetaChatCollections = () => {} } = deps;
+    const { ensureMetaChatCollections = () => {} } = deps;
     const stage = normalizeStageFilter(query.get("stage"));
     const atpStaffId = normalizeText(query.get("atp_staff"));
     const rawSearch = normalizeText(query.get("search")).toLowerCase();
@@ -189,7 +295,6 @@ export function createBookingViewHelpers({
     const searchDigits = rawSearch.replace(/[^0-9]+/g, "");
     const searchLetters = rawSearch.replace(/[^a-z]+/g, "");
     const sort = normalizeText(query.get("sort")) || "created_at_desc";
-    const customersByClientId = getCustomerLookup(store);
     ensureMetaChatCollections(store);
 
     const conversationBookingIds = new Map();
@@ -199,20 +304,15 @@ export function createBookingViewHelpers({
       (a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
     );
     for (const booking of sortedByRecency) {
-      if (!latestBookingByClient.has(booking.client_id)) {
-        latestBookingByClient.set(booking.client_id, booking.id);
+      const keys = [normalizeText(booking.id), normalizeText(booking.client_id)].filter(Boolean);
+      for (const key of keys) {
+        if (!latestBookingByClient.has(key)) latestBookingByClient.set(key, booking.id);
       }
     }
 
-    const getLatestBookingForPhoneMatch = (phone) => {
-      if (!phone) return null;
-      for (const booking of sortedByRecency) {
-        const customer = customersByClientId.get(booking.client_id);
-        const storedPhone = customer?.phone_number || "";
-        if (!storedPhone) continue;
-        if (isLikelyPhoneMatch(storedPhone, phone)) return booking.id;
-      }
-      return null;
+    const getLatestBookingForContactMatch = (contact) => {
+      const matched = resolveBookingForExternalContact(store, contact);
+      return matched?.id || null;
     };
 
     for (const conversation of store.chat_conversations) {
@@ -229,10 +329,9 @@ export function createBookingViewHelpers({
         if (latestBookingId) matchedBookingIds.add(latestBookingId);
       }
 
-      const channel = normalizeText(conversation.channel).toLowerCase();
       const externalContactId = normalizeText(conversation.external_contact_id);
-      if (channel === "whatsapp" && externalContactId) {
-        const latestBookingId = getLatestBookingForPhoneMatch(externalContactId);
+      if (externalContactId) {
+        const latestBookingId = getLatestBookingForContactMatch(externalContactId);
         if (latestBookingId) matchedBookingIds.add(latestBookingId);
       }
 
@@ -242,13 +341,6 @@ export function createBookingViewHelpers({
       conversationIdToConversation.set(conversationId, conversation);
     }
 
-    const getBookingIdsFromPhoneMatch = (phone) => {
-      const matched = new Set();
-      const latestBookingId = getLatestBookingForPhoneMatch(phone);
-      if (latestBookingId) matched.add(latestBookingId);
-      return matched;
-    };
-
     const bookingChatTextMap = new Map();
     for (const event of store.chat_events) {
       const conversationId = normalizeText(event.conversation_id);
@@ -257,18 +349,16 @@ export function createBookingViewHelpers({
 
       const matchedBookingIds = new Set(conversationBookingIds.get(conversationId) || []);
       if (!matchedBookingIds.size) {
-        const senderContact = String(event.sender_contact || "").replace(/\D+/g, "");
-        if (senderContact) {
-          for (const id of getBookingIdsFromPhoneMatch(senderContact)) matchedBookingIds.add(id);
-        }
+        const senderContact = normalizeText(event.sender_contact);
+        const matchedBookingId = getLatestBookingForContactMatch(senderContact);
+        if (matchedBookingId) matchedBookingIds.add(matchedBookingId);
       }
 
       if (!matchedBookingIds.size) {
         const conversation = conversationIdToConversation.get(conversationId);
-        const conversationContact = conversation ? String(conversation.external_contact_id || "").replace(/\D+/g, "") : "";
-        if (conversationContact) {
-          for (const id of getBookingIdsFromPhoneMatch(conversationContact)) matchedBookingIds.add(id);
-        }
+        const conversationContact = normalizeText(conversation?.external_contact_id);
+        const matchedBookingId = getLatestBookingForContactMatch(conversationContact);
+        if (matchedBookingId) matchedBookingIds.add(matchedBookingId);
       }
       if (!matchedBookingIds.size) continue;
 
@@ -280,7 +370,6 @@ export function createBookingViewHelpers({
         normalizedMessage.replace(/[^0-9]+/g, ""),
         normalizedMessage.replace(/[^a-z]+/g, "")
       ];
-
       const nextText = messageVariants.some((variant) => String(variant || "").trim())
         ? [...new Set(messageVariants)].join(" ")
         : eventText;
@@ -296,17 +385,19 @@ export function createBookingViewHelpers({
       if (atpStaffId && booking.atp_staff !== atpStaffId) return false;
       if (!search) return true;
 
-      const customer = customersByClientId.get(booking.client_id);
-      const hasDigits = /[0-9]/.test(search);
-      const hasLetters = /[a-z]/.test(search);
+      const contact = getBookingContactProfile(booking);
+      const persons = getBookingPersons(booking);
       const haystack = [
         booking.id,
-        ...normalizeStringArray(booking.destination),
-        ...normalizeStringArray(booking.style),
+        ...normalizeStringArray(booking.destinations || booking.destination),
+        ...normalizeStringArray(booking.travel_styles || booking.style),
         booking.atp_staff_name,
         booking.notes,
         booking.client_display_name,
-        customer?.email,
+        contact.name,
+        contact.email,
+        contact.phone_number,
+        ...persons.flatMap((person) => [person.name, ...person.emails, ...person.phone_numbers]),
         bookingChatTextMap.get(booking.id),
         booking.service_level_agreement_due_at,
         JSON.stringify(booking.pricing),
@@ -318,6 +409,9 @@ export function createBookingViewHelpers({
         .replace(/[^a-z0-9]+/g, "");
       const normalizedHaystack = haystack.toLowerCase().replace(/[^a-z0-9]+/g, "");
       const normalizedHaystackNoSpace = haystack.replace(/\s+/g, "").toLowerCase();
+      const hasDigits = /[0-9]/.test(search);
+      const hasLetters = /[a-z]/.test(search);
+
       if (hasDigits && hasLetters) {
         const mixedSearch = `${searchDigits}${searchLetters}`;
         const mixedSearchAlt = `${searchLetters}${searchDigits}`;
@@ -346,9 +440,9 @@ export function createBookingViewHelpers({
     const sorted = [...filtered].sort((a, b) => {
       switch (sort) {
         case "created_at_asc":
-          return a.created_at.localeCompare(b.created_at);
+          return String(a.created_at || "").localeCompare(String(b.created_at || ""));
         case "updated_at_desc":
-          return b.updated_at.localeCompare(a.updated_at);
+          return String(b.updated_at || "").localeCompare(String(a.updated_at || ""));
         case "service_level_agreement_due_at_asc":
           return String(a.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z").localeCompare(
             String(b.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z")
@@ -357,7 +451,7 @@ export function createBookingViewHelpers({
           return String(b.service_level_agreement_due_at || "").localeCompare(String(a.service_level_agreement_due_at || ""));
         case "created_at_desc":
         default:
-          return b.created_at.localeCompare(a.created_at);
+          return String(b.created_at || "").localeCompare(String(a.created_at || ""));
       }
     });
 

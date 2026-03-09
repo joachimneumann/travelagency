@@ -22,6 +22,7 @@ FRONTEND_GENERATED_MODELS_DIR = File.join(ROOT, 'frontend', 'Generated', 'Models
 FRONTEND_GENERATED_API_DIR = File.join(ROOT, 'frontend', 'Generated', 'API')
 IOS_GENERATED_MODELS_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated', 'Models')
 IOS_GENERATED_API_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated', 'API')
+SKIP_IOS_OUTPUTS = ENV['SKIP_IOS'] == '1'
 
 OUTPUT_DIRS = [
   CONTRACT_GENERATED_DIR,
@@ -30,7 +31,10 @@ OUTPUT_DIRS = [
   BACKEND_GENERATED_MODELS_DIR,
   BACKEND_GENERATED_API_DIR,
   FRONTEND_GENERATED_MODELS_DIR,
-  FRONTEND_GENERATED_API_DIR,
+  FRONTEND_GENERATED_API_DIR
+].freeze
+
+IOS_OUTPUT_DIRS = [
   IOS_GENERATED_MODELS_DIR,
   IOS_GENERATED_API_DIR
 ].freeze
@@ -1337,6 +1341,7 @@ end
 
 FileUtils.mkdir_p(CONTRACT_GENERATED_DIR)
 OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) }
+IOS_OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) } unless SKIP_IOS_OUTPUTS
 
 ir = load_ir_json
 traveler_constraints = load_traveler_constraints_json
@@ -1436,10 +1441,15 @@ frontend_atp_staff_types = openapi_types_for_schema_names(
 
 frontend_booking_type_names = %w[
   SourceAttribution
+  BookingPersonAddress
+  BookingPersonConsent
+  BookingPersonDocument
+  BookingPerson
+  BookingWebFormSubmission
   BookingActivity
   InvoiceComponent
   BookingInvoice
-  BookingPricingAdjustment
+  PricingAdjustment
   BookingPayment
   BookingPricingSummary
   BookingPricing
@@ -1450,17 +1460,6 @@ frontend_booking_type_names = %w[
   Booking
 ]
 
-frontend_customer_type_names = %w[
-  Customer
-  CustomerConsent
-  CustomerDocument
-]
-
-frontend_travel_group_type_names = %w[
-  TravelGroup
-  TravelGroupMember
-]
-
 frontend_aux_type_names = %w[
   Tour
   TourPriceFrom
@@ -1469,8 +1468,6 @@ frontend_aux_type_names = %w[
 
 frontend_api_type_names = openapi_transport_names.to_a.reject do |name|
   frontend_booking_type_names.include?(name) ||
-    frontend_customer_type_names.include?(name) ||
-    frontend_travel_group_type_names.include?(name) ||
     frontend_aux_type_names.include?(name) ||
     name == 'ATPStaff'
 end
@@ -1480,24 +1477,6 @@ frontend_booking_types = openapi_types_for_schema_names(
   openapi_schemas,
   openapi_enum_names,
   domain: 'booking',
-  mod: 'entities',
-  transport_kind: 'entity'
-)
-
-frontend_customer_types = openapi_types_for_schema_names(
-  frontend_customer_type_names,
-  openapi_schemas,
-  openapi_enum_names,
-  domain: 'customer',
-  mod: 'entities',
-  transport_kind: 'entity'
-)
-
-frontend_travel_group_types = openapi_types_for_schema_names(
-  frontend_travel_group_type_names,
-  openapi_schemas,
-  openapi_enum_names,
-  domain: 'travel_group',
   mod: 'entities',
   transport_kind: 'entity'
 )
@@ -1523,8 +1502,6 @@ frontend_api_types = openapi_types_for_schema_names(
 frontend_shared_field_definitions, frontend_shared_field_names = build_js_shared_field_definitions(
   frontend_atp_staff_types +
     frontend_booking_types +
-    frontend_customer_types +
-    frontend_travel_group_types +
     frontend_aux_types +
     frontend_api_types
 )
@@ -1541,16 +1518,6 @@ shared_model_outputs = {
     frontend_payment_statuses,
     frontend_adjustment_types,
     frontend_offer_categories,
-    frontend_shared_field_names,
-    JS_OPENAPI_HEADER
-  ),
-  'generated_Customer.js' => render_js_aux_module(
-    frontend_customer_types,
-    frontend_shared_field_names,
-    JS_OPENAPI_HEADER
-  ),
-  'generated_TravelGroup.js' => render_js_aux_module(
-    frontend_travel_group_types,
     frontend_shared_field_names,
     JS_OPENAPI_HEADER
   ),
@@ -1613,14 +1580,6 @@ ios_model_outputs = {
     frontend_booking_types,
     SWIFT_OPENAPI_HEADER
   ),
-  'generated_Customer.swift' => render_swift_aux(
-    frontend_customer_types,
-    SWIFT_OPENAPI_HEADER
-  ),
-  'generated_TravelGroup.swift' => render_swift_aux(
-    frontend_travel_group_types,
-    SWIFT_OPENAPI_HEADER
-  ),
   'generated_Aux.swift' => render_swift_aux(
     frontend_aux_types,
     SWIFT_OPENAPI_HEADER
@@ -1654,9 +1613,11 @@ end
 frontend_api_outputs.each do |filename, content|
   write_file(File.join(FRONTEND_GENERATED_API_DIR, filename), content)
 end
-ios_model_outputs.each do |filename, content|
-  write_file(File.join(IOS_GENERATED_MODELS_DIR, filename), content)
-end
-ios_api_outputs.each do |filename, content|
-  write_file(File.join(IOS_GENERATED_API_DIR, filename), content)
+unless SKIP_IOS_OUTPUTS
+  ios_model_outputs.each do |filename, content|
+    write_file(File.join(IOS_GENERATED_MODELS_DIR, filename), content)
+  end
+  ios_api_outputs.each do |filename, content|
+    write_file(File.join(IOS_GENERATED_API_DIR, filename), content)
+  end
 end

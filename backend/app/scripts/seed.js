@@ -9,19 +9,17 @@ const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 
-const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "WON", "LOST", "POST_TRIP"];
-
+const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "WON", "LOST", "POST_TRIP"];
 const DESTINATIONS = ["Vietnam", "Thailand", "Cambodia", "Laos"];
 const STYLES = ["Adventure", "Culture", "Family", "Food", "Luxury", "Beach", "Budget"];
 const LANGUAGES = ["English", "Vietnamese", "French", "German", "Spanish"];
-const DURATIONS = ["5-7 days", "7-10 days", "10-14 days", "14-18 days"];
+const CURRENCIES = ["USD", "EUR", "VND"];
 const BUDGETS = [
   { lower: 1500, upper: 2500 },
   { lower: 2500, upper: 3500 },
   { lower: 3500, upper: 5000 },
   { lower: 5000, upper: null }
 ];
-
 const FIRST_NAMES = ["Alex", "Jordan", "Taylor", "Sam", "Chris", "Riley", "Jamie", "Morgan", "Casey", "Robin"];
 const LAST_NAMES = ["Nguyen", "Tran", "Smith", "Garcia", "Lee", "Brown", "Martin", "Wilson", "Khan", "Patel"];
 
@@ -56,6 +54,8 @@ function stageServiceLevelAgreement(stage, fromIso) {
     QUALIFIED: 8,
     PROPOSAL_SENT: 24,
     NEGOTIATION: 48,
+    INVOICE_SENT: 24,
+    PAYMENT_RECEIVED: 0,
     WON: 24,
     LOST: 0,
     POST_TRIP: 0
@@ -65,21 +65,38 @@ function stageServiceLevelAgreement(stage, fromIso) {
   return new Date(new Date(fromIso).getTime() + hours * 60 * 60 * 1000).toISOString();
 }
 
-async function readJson(p) {
-  const raw = await readFile(p, "utf8");
+async function readJson(filePath) {
+  const raw = await readFile(filePath, "utf8");
   return JSON.parse(raw);
+}
+
+function emptyStore(base = {}) {
+  return {
+    ...base,
+    bookings: Array.isArray(base.bookings) ? base.bookings : [],
+    activities: Array.isArray(base.activities) ? base.activities : [],
+    invoices: Array.isArray(base.invoices) ? base.invoices : [],
+    chat_channel_accounts: Array.isArray(base.chat_channel_accounts) ? base.chat_channel_accounts : [],
+    chat_conversations: Array.isArray(base.chat_conversations) ? base.chat_conversations : [],
+    chat_events: Array.isArray(base.chat_events) ? base.chat_events : [],
+    customers: [],
+    clients: [],
+    customer_consents: [],
+    customer_documents: [],
+    travel_groups: [],
+    travel_group_members: []
+  };
 }
 
 async function main() {
   const count = parseCountArg(process.argv);
-  const store = await readJson(DATA_PATH);
-  const atp_staff = await readJson(ATP_STAFF_PATH);
-  const activeAtpStaff = atp_staff.filter((s) => s.active);
+  const store = emptyStore(await readJson(DATA_PATH));
+  const atpStaff = await readJson(ATP_STAFF_PATH);
+  const activeAtpStaff = atpStaff.filter((member) => member.active);
 
-  store.clients ||= [];
-  store.customers ||= [];
-  store.bookings ||= [];
-  store.activities ||= [];
+  store.bookings = [];
+  store.activities = [];
+  store.invoices = [];
 
   for (let i = 0; i < count; i += 1) {
     const firstName = pick(FIRST_NAMES);
@@ -88,79 +105,114 @@ async function main() {
     const email = buildEmail(name, i + 1);
     const phoneNumber = `+1${randomInt(2000000000, 9999999999)}`;
     const preferredLanguage = pick(LANGUAGES);
-    const destination = [pick(DESTINATIONS)];
-    const style = [pick(STYLES)];
+    const preferredCurrency = pick(CURRENCIES);
+    const destinations = [pick(DESTINATIONS)];
+    const travelStyles = [pick(STYLES)];
     const stage = pick(STAGES);
     const createdAt = nowMinusHours(randomInt(2, 24 * 40));
     const updatedAt = new Date(new Date(createdAt).getTime() + randomInt(1, 120) * 60 * 1000).toISOString();
     const owner = activeAtpStaff.length ? activeAtpStaff[i % activeAtpStaff.length] : null;
-
-    const client = {
-      id: `client_${randomUUID()}`,
-      client_type: "customer"
-    };
-    const customer = {
-      client_id: client.id,
-      name,
-      email,
-      phone_number: phoneNumber,
-      preferred_language: preferredLanguage,
-      created_at: createdAt,
-      updated_at: updatedAt
-    };
-    store.clients.push(client);
-    store.customers.push(customer);
-
     const budget = pick(BUDGETS);
+    const travelersCount = randomInt(1, 6);
+    const bookingId = `booking_${randomUUID()}`;
+
+    const primaryPerson = {
+      id: `${bookingId}_person_1`,
+      name,
+      emails: [email],
+      phone_numbers: [phoneNumber],
+      preferred_language: preferredLanguage,
+      roles: ["primary_contact", "traveler"]
+    };
+
+    const extraPersons = Array.from({ length: Math.max(0, travelersCount - 1) }, (_, index) => {
+      const travelerName = `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`;
+      return {
+        id: `${bookingId}_person_${index + 2}`,
+        name: travelerName,
+        emails: [buildEmail(travelerName, i + index + 100)],
+        phone_numbers: [],
+        preferred_language: preferredLanguage,
+        roles: ["traveler"]
+      };
+    });
+
     const booking = {
-      id: `booking_${randomUUID()}`,
-      client_id: client.id,
-      client_type: "customer",
-      client_display_name: customer.name,
-      client_primary_phone_number: customer.phone_number,
-      client_primary_email: customer.email,
+      id: bookingId,
       stage,
       atp_staff: owner?.id || null,
       atp_staff_name: owner?.name || null,
       service_level_agreement_due_at: stageServiceLevelAgreement(stage, updatedAt),
-      destination,
-      style,
+      destinations,
+      destination: destinations,
+      travel_styles: travelStyles,
+      style: travelStyles,
       travel_start_day: null,
       travel_end_day: null,
-      number_of_travelers: randomInt(1, 6),
-      budget_lower_USD: budget.lower,
-      budget_upper_USD: budget.upper,
+      number_of_travelers: travelersCount,
+      preferred_currency: preferredCurrency,
       notes: "Seeded test booking",
+      persons: [primaryPerson, ...extraPersons],
       web_form_submission: {
-        destinations: destination,
-        travel_style: style,
+        destinations,
+        travel_style: travelStyles,
         travel_month: null,
-        number_of_travelers: randomInt(1, 6),
-        preferred_currency: currency,
+        number_of_travelers: travelersCount,
+        preferred_currency: preferredCurrency,
         travel_duration_days_min: null,
         travel_duration_days_max: null,
-        name: customer.name,
-        email: customer.email,
-        phone_number: customer.phone_number,
+        name,
+        email,
+        phone_number: phoneNumber,
         budget_lower_USD: budget.lower,
         budget_upper_USD: budget.upper,
-        preferred_language: customer.preferred_language || "English",
+        preferred_language: preferredLanguage,
         notes: "Seeded test booking",
         submittedAt: createdAt
+      },
+      pricing: {
+        currency: preferredCurrency,
+        agreed_net_amount_cents: 0,
+        adjustments: [],
+        payments: []
+      },
+      offer: {
+        currency: preferredCurrency,
+        category_rules: [
+          { category: "ACCOMMODATION", tax_rate_basis_points: 1000 },
+          { category: "TRANSPORTATION", tax_rate_basis_points: 1000 },
+          { category: "TOURS_ACTIVITIES", tax_rate_basis_points: 1000 },
+          { category: "GUIDE_SUPPORT_SERVICES", tax_rate_basis_points: 1000 },
+          { category: "MEALS", tax_rate_basis_points: 1000 },
+          { category: "FEES_TAXES", tax_rate_basis_points: 1000 },
+          { category: "DISCOUNTS_CREDITS", tax_rate_basis_points: 1000 },
+          { category: "OTHER", tax_rate_basis_points: 1000 }
+        ],
+        components: [],
+        totals: {
+          net_amount_cents: 0,
+          tax_amount_cents: 0,
+          gross_amount_cents: 0,
+          total_price_cents: 0,
+          items_count: 0
+        },
+        total_price_cents: 0
       },
       source: {
         page_url: "https://asiatravelplan.com/",
         utm_source: "seed",
         utm_medium: "script",
-        utm_campaign: "milestone_1",
-        referrer: "https://example.com"
+        utm_campaign: "booking_owned_persons",
+        referrer: "https://example.com",
+        tour_id: null,
+        tour_title: null
       },
       idempotency_key: null,
       created_at: createdAt,
       updated_at: updatedAt
     };
-    store.bookings.push(booking);
 
+    store.bookings.push(booking);
     store.activities.push(
       {
         id: `act_${randomUUID()}`,
@@ -175,14 +227,14 @@ async function main() {
         booking_id: booking.id,
         type: "NOTE",
         actor: "seed_script",
-        detail: `Traveler interested in ${style[0].toLowerCase()} itinerary in ${destination[0]}`,
+        detail: `Traveler interested in ${travelStyles[0].toLowerCase()} itinerary in ${destinations[0]}`,
         created_at: updatedAt
       }
     );
   }
 
   await writeFile(DATA_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-  console.log(`Seed complete: +${count} clients, +${count} customers, +${count} bookings, +${count * 2} activities`);
+  console.log(`Seed complete: +${count} bookings, +${count * 2} activities`);
 }
 
 main().catch((error) => {

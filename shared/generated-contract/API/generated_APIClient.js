@@ -32,14 +32,6 @@ case "booking_assignment":
   return RequestFactory.bookingAssignmentRequest(options);
 case "booking_note":
   return RequestFactory.bookingNoteRequest(options);
-case "booking_client":
-  return RequestFactory.bookingClientRequest(options);
-case "booking_client_create_customer":
-  return RequestFactory.bookingClientCreateCustomerRequest(options);
-case "booking_client_create_group":
-  return RequestFactory.bookingClientCreateGroupRequest(options);
-case "booking_group_members":
-  return RequestFactory.bookingGroupMembersRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
@@ -50,24 +42,6 @@ case "booking_invoices":
   return RequestFactory.bookingInvoicesRequest(options);
 case "atp_staff":
   return RequestFactory.atpStaffRequest(options);
-case "customers":
-  return RequestFactory.customersRequest(options);
-case "customer_detail":
-  return RequestFactory.customerDetailRequest(options);
-case "customer_update":
-  return RequestFactory.customerUpdateRequest(options);
-case "customer_photo_upload":
-  return RequestFactory.customerPhotoUploadRequest(options);
-case "customer_consent_create":
-  return RequestFactory.customerConsentCreateRequest(options);
-case "travel_groups":
-  return RequestFactory.travelGroupsRequest(options);
-case "travel_group_create":
-  return RequestFactory.travelGroupCreateRequest(options);
-case "travel_group_detail":
-  return RequestFactory.travelGroupDetailRequest(options);
-case "travel_group_update":
-  return RequestFactory.travelGroupUpdateRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_detail":

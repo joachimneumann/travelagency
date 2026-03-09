@@ -13,12 +13,11 @@ import { createHttpHelpers } from "./http/http_helpers.js";
 import { createStagingAccessHandlers } from "./http/staging_access.js";
 import { createPricingHelpers } from "./domain/pricing.js";
 import { createBookingViewHelpers } from "./domain/booking_views.js";
-import { computeBookingHash, computeClientHash, computeCustomerHash, computeTravelGroupHash } from "./domain/hashes.js";
+import { computeBookingHash } from "./domain/hashes.js";
 import { createAccessHelpers } from "./domain/access.js";
 import { createTourHelpers } from "./domain/tours_support.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
-import { createCustomerHandlers } from "./http/handlers/customers.js";
-import { createTravelGroupHandlers } from "./http/handlers/travel_groups.js";
+import { createAtpStaffHandlers } from "./http/handlers/atp_staff.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import { createMetaWebhookHandlers } from "./integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "./lib/invoice_pdf.js";
@@ -421,7 +420,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
     getPrincipal,
     staffUsernames,
     resolvePrincipalAtpStaffMember,
-    canReadCustomers,
     canViewAtpStaffDirectory,
     canManageAtpStaff,
     canReadTours,
@@ -452,18 +450,11 @@ export async function createBackendHandler({ port = PORT } = {}) {
     addActivity,
     persistStore,
     computeBookingHash,
-    computeClientHash,
-    computeCustomerHash,
-    computeTravelGroupHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
     canReadAllBookings,
-    filterAndSortBookings: (store, query) =>
-      filterAndSortBookings(store, query, {
-        getCustomerLookup,
-        ensureMetaChatCollections
-      }),
+    filterAndSortBookings: (store, query) => filterAndSortBookings(store, query, { ensureMetaChatCollections }),
     canAccessBooking,
     buildBookingReadModel,
     paginate,
@@ -500,14 +491,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     rm,
     sendFileWithCache
   });
-  const customerHandlers = createCustomerHandlers({
+  const atpStaffHandlers = createAtpStaffHandlers({
     getPrincipal,
-    canReadCustomers,
-    sendJson,
-    readStore,
-    paginate,
-    buildPaginatedListResponse,
-    buildBookingReadModel,
     canViewAtpStaffDirectory,
     loadAtpStaff,
     staffUsernames,
@@ -515,38 +500,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     readBodyJson,
     normalizeStringArray,
     persistAtpStaff,
-    persistStore,
     randomUUID,
-    nowIso,
-    computeClientHash,
-    computeCustomerHash,
-    computeTravelGroupHash,
-    mkdir,
-    path,
-    rm,
-    writeFile,
-    stat,
-    sendFileWithCache,
-    CONSENT_EVIDENCE_DIR,
-    CUSTOMER_PHOTOS_DIR
-  });
-  const travelGroupHandlers = createTravelGroupHandlers({
-    sendJson,
-    readStore,
-    getPrincipal,
-    loadAtpStaff,
-    resolvePrincipalAtpStaffMember,
-    canReadAllBookings,
-    canAccessBooking,
-    canEditBooking,
-    buildPaginatedListResponse,
-    paginate,
-    readBodyJson,
-    persistStore,
-    nowIso,
-    computeTravelGroupHash,
-    computeClientHash,
-    randomUUID
+    sendJson
   });
   const tourHandlers = createTourHandlers({
     normalizeText,
@@ -594,8 +549,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
       handleStagingAccessLogout,
       handleMobileBootstrap,
       ...bookingHandlers,
-      ...customerHandlers,
-      ...travelGroupHandlers,
+      ...atpStaffHandlers,
       ...tourHandlers
     }
   });
@@ -662,10 +616,6 @@ function computeServiceLevelAgreementDueAt(stage, from = new Date()) {
   return new Date(from.getTime() + hours * 60 * 60 * 1000).toISOString();
 }
 
-function getCustomerLookup(store) {
-  return new Map((Array.isArray(store?.customers) ? store.customers : []).map((customer) => [customer.client_id, customer]));
-}
-
 async function handleHealth(_req, res) {
   sendJson(res, 200, {
     ok: true,
@@ -711,7 +661,7 @@ async function handleMobileBootstrap(_req, res) {
       },
       features: {
         bookings: true,
-        customers: true,
+        customers: false,
         tours: false
       }
     });

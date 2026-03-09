@@ -10,11 +10,14 @@ export function createAccessHelpers({ auth, appRoles }) {
   }
 
   function staffUsernames(staffMembers) {
-    return new Set(
-      (Array.isArray(staffMembers) ? staffMembers : [])
-        .flatMap((member) => Array.isArray(member?.usernames) ? member.usernames : [])
-        .map((value) => normalizeText(value).toLowerCase())
-        .filter(Boolean)
+    const members = Array.isArray(staffMembers) ? staffMembers : [staffMembers];
+    return Array.from(
+      new Set(
+        members
+          .flatMap((member) => Array.isArray(member?.usernames) ? member.usernames : [])
+          .map((value) => normalizeText(value).toLowerCase())
+          .filter(Boolean)
+      )
     );
   }
 
