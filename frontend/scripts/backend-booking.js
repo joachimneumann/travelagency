@@ -110,8 +110,8 @@ const els = {
   actionsPanel: document.getElementById("bookingActionsPanel"),
   ownerSelect: document.getElementById("bookingOwnerSelect"),
   stageSelect: document.getElementById("bookingStageSelect"),
-  peopleSummary: document.getElementById("bookingPeopleSummary"),
-  peopleStatus: document.getElementById("bookingPeopleStatus"),
+  personsSummary: document.getElementById("bookingPersonsSummary"),
+  personsStatus: document.getElementById("bookingPersonsStatus"),
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
   actionStatus: document.getElementById("bookingActionStatus"),
@@ -414,9 +414,9 @@ function renderBookingData() {
         ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
         ["web_form_travel_month", booking.web_form_travel_month],
         ["number_of_travelers", booking.number_of_travelers],
-        ["people_listed", persons.length],
+        ["persons_listed", persons.length],
         ["travelers_marked", travelerCount],
-        ["people_warning", mismatchWarning],
+        ["persons_warning", mismatchWarning],
         ["budget_range_USD", formatBudgetRange(booking.budget_lower_USD, booking.budget_upper_USD)],
         ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],
@@ -430,8 +430,8 @@ function renderBookingData() {
       entries: buildContactEntries(primaryContact || submittedContact)
     },
     {
-      title: "People",
-      entries: buildPeopleEntries(persons)
+      title: "Persons",
+      entries: buildPersonEntries(persons)
     },
     {
       title: "Source",
@@ -496,7 +496,7 @@ function renderActionControls() {
   }
 
   if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
-  renderPeopleSummary();
+  renderPersonsSummary();
   if (els.noteInput) {
     els.noteInput.disabled = !state.permissions.canEditBooking;
     els.noteInput.value = state.booking.notes || "";
@@ -580,25 +580,25 @@ function buildTravelerMismatchMessage(booking) {
   if (!declared) return "";
   const listed = getTravelerCount(booking);
   if (declared === listed) return "";
-  return `Declared travelers: ${declared}. Listed people/travelers: ${listed}.`;
+  return `Declared travelers: ${declared}. Listed persons/travelers: ${listed}.`;
 }
 
-function renderPeopleSummary() {
+function renderPersonsSummary() {
   const persons = getBookingPersons(state.booking);
   const primaryContact = getPrimaryContact(state.booking);
   const submittedContact = getSubmittedContact(state.booking);
   const travelerCount = getTravelerCount(state.booking);
   const mismatchWarning = buildTravelerMismatchMessage(state.booking);
-  if (els.peopleSummary) {
+  if (els.personsSummary) {
     const summaryParts = [];
     const contactName = primaryContact?.name || submittedContact?.name;
     if (contactName) summaryParts.push(`Primary contact: ${contactName}`);
-    summaryParts.push(`${persons.length} people listed`);
+    summaryParts.push(`${persons.length} persons listed`);
     summaryParts.push(`${travelerCount} traveler${travelerCount === 1 ? "" : "s"} marked`);
-    els.peopleSummary.textContent = summaryParts.join(" | ");
+    els.personsSummary.textContent = summaryParts.join(" | ");
   }
-  if (els.peopleStatus) {
-    els.peopleStatus.textContent = mismatchWarning || "People are stored directly on this booking.";
+  if (els.personsStatus) {
+    els.personsStatus.textContent = mismatchWarning || "Persons are stored directly on this booking.";
   }
 }
 
@@ -614,7 +614,7 @@ function buildContactEntries(contact) {
     .map(([key, value]) => ({ key, value: String(value) }));
 }
 
-function buildPeopleEntries(persons) {
+function buildPersonEntries(persons) {
   return (Array.isArray(persons) ? persons : []).map((person, index) => {
     const summaryParts = [];
     if (person.roles.length) summaryParts.push(`roles: ${person.roles.join(", ")}`);

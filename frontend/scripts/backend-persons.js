@@ -11,7 +11,7 @@ const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 
 const state = {
   bookings: [],
-  people: [],
+  persons: [],
   search: normalizeText(qs.get("search"))
 };
 
@@ -19,12 +19,12 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
-  error: document.getElementById("peopleError"),
-  search: document.getElementById("peopleSearch"),
-  searchBtn: document.getElementById("peopleSearchBtn"),
-  clearBtn: document.getElementById("peopleClearBtn"),
-  countInfo: document.getElementById("peopleCountInfo"),
-  table: document.getElementById("peopleTable")
+  error: document.getElementById("personsError"),
+  search: document.getElementById("personsSearch"),
+  searchBtn: document.getElementById("personsSearchBtn"),
+  clearBtn: document.getElementById("personsClearBtn"),
+  countInfo: document.getElementById("personsCountInfo"),
+  table: document.getElementById("personsTable")
 };
 
 const fetchApi = createApiFetcher({
@@ -43,21 +43,21 @@ async function init() {
   if (els.search) els.search.value = state.search;
   bindControls();
   await loadAuthStatus();
-  await loadPeople();
+  await loadPersons();
 }
 
 function bindControls() {
   if (els.searchBtn) {
     els.searchBtn.addEventListener("click", () => {
       state.search = normalizeText(els.search?.value);
-      renderPeopleTable();
+      renderPersonsTable();
     });
   }
   if (els.clearBtn) {
     els.clearBtn.addEventListener("click", () => {
       state.search = "";
       if (els.search) els.search.value = "";
-      renderPeopleTable();
+      renderPersonsTable();
     });
   }
   if (els.search) {
@@ -65,7 +65,7 @@ function bindControls() {
       if (event.key !== "Enter") return;
       event.preventDefault();
       state.search = normalizeText(els.search.value);
-      renderPeopleTable();
+      renderPersonsTable();
     });
   }
 }
@@ -85,7 +85,7 @@ async function loadAuthStatus() {
   }
 }
 
-async function loadPeople() {
+async function loadPersons() {
   clearError();
   if (els.countInfo) els.countInfo.textContent = "Loading...";
   const bookings = await fetchAllBookings();
@@ -94,8 +94,8 @@ async function loadPeople() {
     return;
   }
   state.bookings = bookings;
-  state.people = buildPeopleIndex(bookings);
-  renderPeopleTable();
+  state.persons = buildPersonsIndex(bookings);
+  renderPersonsTable();
 }
 
 async function fetchAllBookings() {
@@ -114,11 +114,11 @@ async function fetchAllBookings() {
   return items;
 }
 
-function buildPeopleIndex(bookings) {
+function buildPersonsIndex(bookings) {
   const byKey = new Map();
 
   for (const booking of Array.isArray(bookings) ? bookings : []) {
-    for (const person of getPeopleFromBooking(booking)) {
+    for (const person of getPersonsFromBooking(booking)) {
       const key = buildPersonGroupKey(person, booking);
       const existing = byKey.get(key) || {
         key,
@@ -157,7 +157,7 @@ function buildPeopleIndex(bookings) {
     .sort((left, right) => String(right.updatedAt || "").localeCompare(String(left.updatedAt || "")));
 }
 
-function getPeopleFromBooking(booking) {
+function getPersonsFromBooking(booking) {
   const persons = Array.isArray(booking?.persons) ? booking.persons : [];
   const normalizedPersons = persons
     .filter((person) => person && typeof person === "object" && !Array.isArray(person))
@@ -222,10 +222,10 @@ function buildBookingLabel(booking) {
   return destination ? `${booking.id} (${destination})` : String(booking?.id || "-");
 }
 
-function getFilteredPeople() {
+function getFilteredPersons() {
   const query = normalizeText(state.search).toLowerCase();
-  if (!query) return state.people;
-  return state.people.filter((person) => {
+  if (!query) return state.persons;
+  return state.persons.filter((person) => {
     const haystack = [
       person.name,
       ...person.emails,
@@ -240,10 +240,10 @@ function getFilteredPeople() {
   });
 }
 
-function renderPeopleTable() {
+function renderPersonsTable() {
   const query = normalizeText(state.search);
-  const filtered = getFilteredPeople();
-  const totalPeople = state.people.length;
+  const filtered = getFilteredPersons();
+  const totalPersons = state.persons.length;
   const totalBookings = state.bookings.length;
 
   const params = new URLSearchParams(window.location.search);
@@ -257,7 +257,7 @@ function renderPeopleTable() {
   window.history.replaceState({}, "", nextUrl);
 
   if (els.countInfo) {
-    els.countInfo.textContent = `${filtered.length} of ${totalPeople} people across ${totalBookings} bookings`;
+    els.countInfo.textContent = `${filtered.length} of ${totalPersons} persons across ${totalBookings} bookings`;
   }
 
   if (!els.table) return;
@@ -280,7 +280,7 @@ function renderPeopleTable() {
       </tr>`;
     })
     .join("");
-  const body = rows || '<tr><td colspan="5">No matching people</td></tr>';
+  const body = rows || '<tr><td colspan="5">No matching persons</td></tr>';
   els.table.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 

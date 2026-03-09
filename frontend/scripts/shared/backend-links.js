@@ -8,11 +8,11 @@ export function buildBookingHref(id) {
   return `booking.html?${params.toString()}`;
 }
 
-export function buildPeopleHref(search = "") {
+export function buildPersonsHref(search = "") {
   const params = new URLSearchParams();
   if (String(search || "").trim()) params.set("search", String(search).trim());
   const query = params.toString();
-  return query ? `people.html?${query}` : "people.html";
+  return query ? `persons.html?${query}` : "persons.html";
 }
 
 export function buildTourEditHref(id) {

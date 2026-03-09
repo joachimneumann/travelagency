@@ -140,7 +140,7 @@ function bindSectionNavigation() {
   const buttons = Array.from(els.sectionNavButtons || []);
   buttons.forEach((button) => {
     const section = button.dataset.backendSection;
-    if (section === "people") {
+    if (section === "persons") {
       button.classList.remove("is-hidden");
       button.addEventListener("click", () => {
         window.location.href = resolveBackendSectionHref(section);
@@ -405,7 +405,7 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Primary contact</th><th>People</th><th>Destination</th><th>Style</th><th>Staff</th><th>Service Level Agreement due</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Primary contact</th><th>Persons</th><th>Destination</th><th>Style</th><th>Staff</th><th>Service Level Agreement due</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
@@ -416,12 +416,12 @@ function renderBookings(items) {
         primaryContact?.emails?.[0],
         primaryContact?.phone_numbers?.[0]
       ].filter(Boolean).join(" | ") || "-";
-      const peopleSummary = `${persons.length} listed / ${getTravelerCount(booking)} travelers`;
+      const personsSummary = `${persons.length} listed / ${getTravelerCount(booking)} travelers`;
       return `<tr>
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
         <td>${escapeHtml(booking.stage)}</td>
         <td>${escapeHtml(primaryLabel)}</td>
-        <td>${escapeHtml(peopleSummary)}</td>
+        <td>${escapeHtml(personsSummary)}</td>
         <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
         <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
         <td>${escapeHtml(booking.atp_staff_name || "Unassigned")}</td>

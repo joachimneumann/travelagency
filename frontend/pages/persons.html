@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AsiaTravelPlan People</title>
-    <meta name="description" content="AsiaTravelPlan people search" />
+    <title>AsiaTravelPlan Persons</title>
+    <meta name="description" content="AsiaTravelPlan person search" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/css/styles.css?v=4" />
   </head>
@@ -22,25 +22,25 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <div id="peopleError" class="backend-message" role="alert" aria-live="assertive"></div>
+          <div id="personsError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <section class="backend-section">
-            <h1 class="section-title u-title-medium">People</h1>
-            <p class="micro" style="margin-bottom: 0.85rem;">Search booking-owned people and open their related bookings.</p>
+            <h1 class="section-title u-title-medium">Persons</h1>
+            <p class="micro" style="margin-bottom: 0.85rem;">Search booking-owned persons and open their related bookings.</p>
 
             <div class="backend-controls">
               <div class="field" style="flex: 1;">
-                <input id="peopleSearch" type="search" placeholder="name, email, phone..." />
+                <input id="personsSearch" type="search" placeholder="name, email, phone..." />
               </div>
-              <button class="btn btn-primary" id="peopleSearchBtn" type="button">Search</button>
-              <button class="btn btn-ghost" id="peopleClearBtn" type="button">Clear</button>
-              <span id="peopleCountInfo" class="micro"></span>
+              <button class="btn btn-primary" id="personsSearchBtn" type="button">Search</button>
+              <button class="btn btn-ghost" id="personsClearBtn" type="button">Clear</button>
+              <span id="personsCountInfo" class="micro"></span>
             </div>
 
-            <p class="micro" id="peopleSearchNote" style="margin-top: 0.75rem;">People are read from bookings. The same person can appear more than once across different bookings.</p>
+            <p class="micro" id="personsSearchNote" style="margin-top: 0.75rem;">Persons are read from bookings. The same person can appear more than once across different bookings.</p>
 
             <div class="backend-table-wrap" style="margin-top: 1rem;">
-              <table class="backend-table" id="peopleTable"></table>
+              <table class="backend-table" id="personsTable"></table>
             </div>
           </section>
         </div>
@@ -49,8 +49,8 @@
 
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "people" });
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "persons" });
     </script>
-    <script type="module" src="frontend/scripts/backend-people.js?v=20260309a"></script>
+    <script type="module" src="frontend/scripts/backend-persons.js?v=20260309b"></script>
   </body>
 </html>
