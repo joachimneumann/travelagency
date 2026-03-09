@@ -35,7 +35,7 @@ export function createAccessHelpers({ auth, appRoles }) {
     }) || null;
   }
 
-  function canReadCustomers(principal) {
+  function canReadBackend(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
       hasRole(principal, appRoles.MANAGER) ||
       hasRole(principal, appRoles.ACCOUNTANT) ||
@@ -43,7 +43,7 @@ export function createAccessHelpers({ auth, appRoles }) {
   }
 
   function canViewAtpStaffDirectory(principal) {
-    return canReadCustomers(principal);
+    return canReadBackend(principal);
   }
 
   function canManageAtpStaff(principal) {
@@ -51,7 +51,7 @@ export function createAccessHelpers({ auth, appRoles }) {
   }
 
   function canReadTours(principal) {
-    return canReadCustomers(principal);
+    return canReadBackend(principal);
   }
 
   function canEditTours(principal) {
@@ -64,7 +64,7 @@ export function createAccessHelpers({ auth, appRoles }) {
     getPrincipal,
     staffUsernames,
     resolvePrincipalAtpStaffMember,
-    canReadCustomers,
+    canReadBackend,
     canViewAtpStaffDirectory,
     canManageAtpStaff,
     canReadTours,

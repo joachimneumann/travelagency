@@ -49,9 +49,9 @@ IR: {
 		OfferCategory: {catalog: "offerCategories"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
-		CustomerConsentType: {catalog: "customerConsentTypes"}
-		CustomerConsentStatus: {catalog: "customerConsentStatuses"}
-		CustomerDocumentType: {catalog: "customerDocumentTypes"}
+		PersonConsentType: {catalog: "personConsentTypes"}
+		PersonConsentStatus: {catalog: "personConsentStatuses"}
+		PersonDocumentType: {catalog: "personDocumentTypes"}
 		BookingActivityType: {catalog: "bookingActivityTypes"}
 	}
 
@@ -129,8 +129,8 @@ IR: {
 			sourceType: "entities.#BookingPersonConsent"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "consent_type", kind: "enum", typeName: "CustomerConsentType", required: true},
-				{name: "status", kind: "enum", typeName: "CustomerConsentStatus", required: true},
+				{name: "consent_type", kind: "enum", typeName: "PersonConsentType", required: true},
+				{name: "status", kind: "enum", typeName: "PersonConsentStatus", required: true},
 				{name: "captured_via", kind: "scalar", typeName: "string", required: false},
 				{name: "captured_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "evidence_ref", kind: "scalar", typeName: "string", required: false},
@@ -144,7 +144,7 @@ IR: {
 			sourceType: "entities.#BookingPersonDocument"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "document_type", kind: "enum", typeName: "CustomerDocumentType", required: true},
+				{name: "document_type", kind: "enum", typeName: "PersonDocumentType", required: true},
 				{name: "document_number", kind: "scalar", typeName: "string", required: false},
 				{name: "document_picture_ref", kind: "scalar", typeName: "string", required: false},
 				{name: "issuing_country", kind: "enum", typeName: "CountryCode", required: false},
@@ -216,7 +216,7 @@ IR: {
 				{name: "dueDate", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "components", kind: "entity", typeName: "InvoiceComponent", required: true, isArray: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
-				{name: "sentToCustomer", kind: "scalar", typeName: "bool", required: false},
+				{name: "sentToRecipient", kind: "scalar", typeName: "bool", required: false},
 				{name: "createdAt", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updatedAt", kind: "scalar", typeName: "Timestamp", required: false},
 			]
@@ -512,7 +512,6 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "channel", kind: "scalar", typeName: "string", required: true},
 				{name: "externalContactId", kind: "scalar", typeName: "string", required: false},
-				{name: "clientId", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "bookingId", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "lastEventAt", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "latestPreview", kind: "scalar", typeName: "string", required: false},
@@ -550,7 +549,6 @@ IR: {
 			sourceType: "api.#FeatureFlags"
 			fields: [
 				{name: "bookings", kind: "scalar", typeName: "bool", required: true},
-				{name: "customers", kind: "scalar", typeName: "bool", required: true},
 				{name: "tours", kind: "scalar", typeName: "bool", required: true},
 			]
 		},

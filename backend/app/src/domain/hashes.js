@@ -17,18 +17,6 @@ function hashPayload(payload, omittedKeys = []) {
   return createHash("sha256").update(JSON.stringify(prepared)).digest("hex");
 }
 
-export function computeClientHash(client) {
-  return hashPayload(client, ["client_hash"]);
-}
-
-export function computeCustomerHash(customer) {
-  return hashPayload(customer, ["customer_hash"]);
-}
-
-export function computeTravelGroupHash(group) {
-  return hashPayload(group, ["travel_group_hash"]);
-}
-
 export function computeBookingHash(booking) {
   return hashPayload(booking, ["booking_hash"]);
 }

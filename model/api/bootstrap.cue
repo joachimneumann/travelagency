@@ -1,9 +1,8 @@
 package api
 
 #FeatureFlags: {
-	bookings:  bool
-	customers: bool
-	tours:     bool
+	bookings: bool
+	tours:    bool
 }
 
 #MobileAppVersionGate: {

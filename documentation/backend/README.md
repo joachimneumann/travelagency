@@ -1,17 +1,12 @@
-# AsiaTravelPlan Backend App (Milestone 1)
+# AsiaTravelPlan Backend App
 
-This service implements Milestone 1 from `backend/backend_software.md`:
-- Booking ingestion API
-- Customer deduplication and profile creation
-- Booking pipeline stages and transitions
-- Staff assignment on bookings
-- Service Level Agreement due timestamps
-- Booking activity timeline
-- Branded admin pages for pipeline, booking detail, customer detail, and tour detail
+This backend now uses a booking-owned person model.
 
-Related documentation:
-- `mobileApp.md`: how to build a native iPhone app against this backend and Keycloak setup
-- Mobile source scaffold: `~/projects/travelagency/mobile/iOS`
+Core principles:
+- `booking` is the operational record
+- `booking.persons[]` stores the contact and traveler data for that booking
+- there is no separate shared master-data model for booking contacts or traveler groups
+- incoming website form data is stored as an immutable `booking.web_form_submission` snapshot
 
 ## Run
 
@@ -22,141 +17,85 @@ npm start
 
 Default URL: `http://localhost:8787`
 
-Environment variables:
-- `PORT` (default `8787`)
-- `CORS_ORIGIN` (default `*`)
-- `KEYCLOAK_ENABLED` (`true`/`false`, default `false`)
-- `KEYCLOAK_BASE_URL` (example: `http://localhost:8081`)
-- `KEYCLOAK_REALM` (example: `asiatravelplan`)
-- `KEYCLOAK_CLIENT_ID` (example: `asiatravelplan-backend`)
-- `KEYCLOAK_CLIENT_SECRET` (Keycloak confidential client secret)
-- `KEYCLOAK_REDIRECT_URI` (default `http://localhost:8787/auth/callback`)
-- `KEYCLOAK_POST_LOGOUT_REDIRECT_URI` (optional; must be allowed by Keycloak client if set)
-- `KEYCLOAK_ALLOWED_ROLES` (comma-separated, default `atp_admin,atp_manager,atp_accountant,atp_staff`)
-- `KEYCLOAK_FORCE_LOGIN_PROMPT` (`true`/`false`, default `false`)
-- `RETURN_TO_ALLOWED_ORIGINS` (comma-separated absolute origins allowed for `return_to`; default `http://localhost:8080,http://localhost:8787`)
-- `MOBILE_MIN_SUPPORTED_APP_VERSION` (minimum iOS app version allowed to continue after bootstrap)
-- `MOBILE_LATEST_APP_VERSION` (latest published iOS app version shown to users)
-- `MOBILE_FORCE_UPDATE` (`true`/`false`, forces all app builds to stop at the update screen)
-- `META_WEBHOOK_ENABLED` (`true`/`false`, enables read-only Meta webhook ingestion)
-- `META_WEBHOOK_VERIFY_TOKEN` (Meta webhook verify token, required when `META_WEBHOOK_ENABLED=true`)
-- `META_APP_SECRET` (Meta app secret for webhook signature verification)
-- `BASE_CURRENCY` (optional canonical storage currency, defaults to `USD`; valid values from catalog: `USD`, `EURO`, `VND`, `THB`)
-- `EXCHANGE_RATE_<FROM>_<TO>` (optional override, e.g. `EXCHANGE_RATE_USD_VND=23000`)
+Important environment variables:
+- `PORT`
+- `CORS_ORIGIN`
+- `KEYCLOAK_ENABLED`
+- `KEYCLOAK_BASE_URL`
+- `KEYCLOAK_REALM`
+- `KEYCLOAK_CLIENT_ID`
+- `KEYCLOAK_CLIENT_SECRET`
+- `KEYCLOAK_REDIRECT_URI`
+- `KEYCLOAK_POST_LOGOUT_REDIRECT_URI`
+- `KEYCLOAK_ALLOWED_ROLES`
+- `META_WEBHOOK_ENABLED`
+- `META_WEBHOOK_VERIFY_TOKEN`
+- `META_APP_SECRET`
+- `BASE_CURRENCY`
+- `EXCHANGE_RATE_<FROM>_<TO>`
 
-Cross-origin browser usage note:
-- When frontend is served from `http://localhost:8080` and backend from `http://localhost:8787`, use:
-  - `CORS_ORIGIN='http://localhost:8080'`
-- Backend sends `Access-Control-Allow-Credentials: true`, and frontend backend pages send `credentials: "include"` so Keycloak session cookies are used for `/api/v1/*`.
+## Storage
 
-## Local Keycloak With Persistent Theme
-
-For local Docker-based Keycloak with the custom login theme mounted persistently, use:
-- `~/projects/travelagency/docker-compose.local-keycloak.yml`
-- `~/projects/travelagency/backend/keycloak-theme/asiatravelplan`
-
-Helper scripts:
-- `~/projects/travelagency/scripts/start_local_keycloak.sh`
-- `~/projects/travelagency/scripts/stop_local_keycloak.sh`
-- `~/projects/travelagency/scripts/restart_local_keycloak.sh`
-
-Start Keycloak:
-
-```bash
-cd ~/projects/travelagency
-./scripts/start_local_keycloak.sh
-```
-
-This setup:
-- exposes Keycloak on `http://localhost:8081`
-- mounts the custom theme into `/opt/keycloak/themes/asiatravelplan`
-- disables theme cache for local development
-
-After startup, set the Keycloak realm login theme to `asiatravelplan` in:
-- `Realm settings` -> `Themes` -> `Login theme`
-
-## Data Storage
-
-JSON files are used for local persistence:
-- `data/store.json`
-- `data/tours/<tour_id>/tour.json`
-- `data/tours/<tour_id>/tour_<uuid>.webp`
+Runtime JSON persistence:
+- `backend/app/data/store.json`
+- `backend/app/data/tours/<tour_id>/tour.json`
+- `backend/app/data/invoices/`
 - `backend/app/config/atp_staff.json`
 
-Runtime data note:
-- `backend/app/data/store.json` is no longer tracked in Git.
-- The backend still reads and writes that exact path.
-- Local startup creates an empty `store.json` automatically if it is missing.
-- Staging deploys must preserve the server's existing `backend/app/data/store.json`.
-- Preferred staging update command on the server:
-  - `./scripts/update_staging.sh backend`
-  - `./scripts/update_staging.sh keycloak`
-  - `./scripts/update_staging.sh caddy`
-  - `./scripts/update_staging.sh all`
+Notes:
+- `backend/app/data/store.json` is runtime data and is not tracked in Git
+- startup creates an empty store automatically if the file is missing
+- bookings, activities, invoices, chats, and tours are the active persisted domains
 
-## Auth Module Split
+## Current Architecture
 
-Authentication internals are now isolated in:
-- `src/auth.js`
+Implemented now:
+- public booking ingestion
+- public tour catalog
+- booking pipeline stages and assignment
+- booking notes, pricing, offer, activities, invoices
+- booking-owned persons
+- ATP staff directory
+- Keycloak-protected backend access
+- Meta webhook ingestion linked to bookings
 
-`src/server.js` now only wires auth at the route and request-gate level:
-- `const auth = createAuth({ port })`
-- `...auth.routes` for `/auth/*` handlers
-- `auth.pruneState()` on each request
-- `auth.authorizeApiRequest(req, requestUrl)` for `/api/v1/*` gate
+Administrative pages:
+- `/backend.html`
+- `/booking.html`
+- `/persons.html`
+- `/tour.html`
 
-This keeps backend business logic (bookings/customers/pipeline) separate from OIDC/session internals.
+`/persons.html` is a booking-derived person search page. It is not a standalone person CRUD domain.
 
 ## API Endpoints
 
 Public:
 - `GET /integrations/meta/webhook/status`
+- `GET /integrations/meta/webhook`
+- `POST /integrations/meta/webhook`
 - `GET /public/v1/mobile/bootstrap`
-- `POST /public/v1/bookings`
 - `GET /public/v1/tours`
 - `GET /public/v1/tour-images/:path`
-- `GET /public/v1/customer-photos/:path`
-- `GET /public/v1/customer-consent-evidence/:path`
-- `GET /integrations/meta/webhook` (Meta webhook verification challenge)
-- `POST /integrations/meta/webhook` (Meta webhook ingestion, read-only)
-- `GET /staging-access/login`
-- `POST /staging-access/login`
-- `GET /staging-access/check`
-- `GET /staging-access/logout`
+- `POST /public/v1/bookings`
+- staging access endpoints under `/staging-access/*`
 
 Admin API:
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
 - `DELETE /api/v1/bookings/:bookingId`
-- `GET /api/v1/bookings/:bookingId/chat` (read-only Meta chat timeline for booking/customer)
+- `GET /api/v1/bookings/:bookingId/chat`
 - `PATCH /api/v1/bookings/:bookingId/stage`
-- `PATCH /api/v1/bookings/:bookingId/client`
-- `POST /api/v1/bookings/:bookingId/client/create-customer`
-- `POST /api/v1/bookings/:bookingId/client/create-group`
-- `POST /api/v1/bookings/:bookingId/client/members`
 - `PATCH /api/v1/bookings/:bookingId/owner`
-- `PATCH /api/v1/bookings/:bookingId/notes` (single editable booking note with conflict detection)
-- `PATCH /api/v1/bookings/:bookingId/pricing` (replace the booking commercials model)
-- `PATCH /api/v1/bookings/:bookingId/offer` (offers are normalized and converted to base currency before persistence)
+- `PATCH /api/v1/bookings/:bookingId/notes`
+- `PATCH /api/v1/bookings/:bookingId/pricing`
+- `PATCH /api/v1/bookings/:bookingId/offer`
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/bookings/:bookingId/invoices`
 - `POST /api/v1/bookings/:bookingId/invoices`
 - `PATCH /api/v1/bookings/:bookingId/invoices/:invoiceId`
 - `GET /api/v1/invoices/:invoiceId/pdf`
-- `POST /api/v1/offers/exchange-rates` (preview converted offer line totals and total while editing display currency; frontend displays backend output directly)
-- `GET /api/v1/customers`
-- `GET /api/v1/customers/:customerId`
-- `PATCH /api/v1/customers/:customerId`
-- `DELETE /api/v1/customers/:customerId`
-- `POST /api/v1/customers/:customerId/consents`
-- `POST /api/v1/customers/:customerId/photo`
-- `GET /api/v1/travel_groups`
-- `GET /api/v1/travel_groups/:travelGroupId`
-- `PATCH /api/v1/travel_groups/:travelGroupId`
-- `POST /api/v1/travel_groups`
-- `DELETE /api/v1/travel_groups/:travelGroupId`
-- `DELETE /api/v1/travel_groups/:travelGroupId/members/:customerClientId`
+- `POST /api/v1/offers/exchange-rates`
 - `GET /api/v1/atp_staff`
 - `POST /api/v1/atp_staff`
 - `GET /api/v1/tours`
@@ -165,320 +104,70 @@ Admin API:
 - `PATCH /api/v1/tours/:tourId`
 - `POST /api/v1/tours/:tourId/image`
 
-Tour ID format:
-- Tours now use generated IDs like `tour_<uuid>` (same pattern style as bookings/customers).
-- `POST /api/v1/tours` always generates the tour ID server-side.
+## Website Booking Form
 
-Tour image handling:
-- Tour images are stored per tour under `backend/app/data/tours/<tour_id>/`.
-- `POST /api/v1/tours/:tourId/image` accepts JSON:
-  - `filename`
-  - `data_base64`
-- Backend uses ImageMagick to:
-  - auto-orient image
-  - resize to max `1000x1000`
-  - strip metadata
-  - convert to optimized `.webp`
-- Public image URLs are served from `/public/v1/tour-images/...` with long-lived immutable cache headers.
-Tour API caching:
-- `GET /public/v1/tours` returns `ETag` and `Cache-Control` (`max-age=120`, `stale-while-revalidate=600`).
-- Website frontend also keeps a short local cache and prewarms visible image URLs.
+When a public booking is created:
+- the submitted form is stored in `booking.web_form_submission`
+- the backend also normalizes a first booking person from the submitted contact fields
+- later edits happen on `booking.persons[]`, not on a separate customer record
 
-Website booking form prefill from tour cards:
-- When the user opens the booking form from a specific tour, the frontend preselects values from that tour.
-- `travel_month` is initialized from the first month of the tour seasonality window, using `seasonality_start_month`.
-- `travel_duration_days_min` and `travel_duration_days_max` are initialized from `travel_duration_days` by mapping the tour length into the matching duration bucket (`3-5 days`, `6-8 days`, `9-12 days`, `13-16 days`, `17+ days`).
-- The budget range shown on page 2 is chosen from the configured weekly booking budget ranges, not from the total tour price.
-- Weekly budget matching uses this calculation:
-  - `weekly_budget_lower_usd = budget_lower_USD / (travel_duration_days / 7)`
-- The selected budget bucket is then rendered in the visitor's currently selected preferred currency (`USD`, `EURO`, `VND`, `THB`), while the matching itself still uses the canonical USD thresholds from `BOOKING_BUDGET_OPTIONS`.
+Relevant website fields:
+- destinations
+- travel style
+- travel month
+- number of travelers
+- preferred currency
+- preferred language
+- travel duration min/max
+- contact name, email, phone
+- budget lower/upper USD
+- notes
 
-Website booking form storage:
-- The public website form is modeled as a transport contract, not as an entity.
-- When a booking is created, the submitted form values are stored immutably on the booking in `web_form_submission`.
-- `web_form_submission` contains:
-  - `destinations`
-  - `travel_style`
-  - `travel_month`
-  - `number_of_travelers`
-  - `preferred_currency`
-  - `travel_duration_days_min`
-  - `travel_duration_days_max`
-  - `name`
-  - `email`
-  - `phone_number`
-  - `budget_lower_USD`
-  - `budget_upper_USD`
-  - `preferred_language`
-  - `notes`
-  - `submittedAt`
-- Booking reassignment and customer creation flows must read submitted customer/contact data from `booking.web_form_submission`, not from `source`.
+## Booking List and Detail
 
-`/api/v1/*` authentication:
-- Keycloak backend session cookie (browser flows)
-- Or `Authorization: Bearer <KEYCLOAK_ACCESS_TOKEN>`
-
-When Keycloak is enabled:
-- `/api/v1/*` accepts either authenticated backend session cookie or Keycloak bearer token.
-- If `KEYCLOAK_ENABLED=false`, `/api/v1/*` requests are rejected with `401`.
-
-Booking list query params (`GET /api/v1/bookings`):
-- `page` (default `1`)
-- `page_size` (default `25`, max `100`)
-- `stage` (`NEW|QUALIFIED|PROPOSAL_SENT|NEGOTIATION|WON|LOST|POST_TRIP`)
-- `atp_staff` (exact match for assigned staff id)
-- `search` (matches booking id, destination, style, assigned staff, notes, customer name/email)
-- `sort` (`created_at_desc`, `created_at_asc`, `updated_at_desc`, `service_level_agreement_due_at_asc`, `service_level_agreement_due_at_desc`)
-
-Default ordering:
-- Bookings: newest first (`created_at desc`)
-- Customers: newest first (`created_at desc`, then `updated_at`)
-
-Branded frontend backoffice pages (served by website):
-- `/backend.html`: AsiaTravelPlan-branded dashboard with:
-  - paginated searchable Customers table
-  - paginated searchable Bookings table
-  - paginated searchable Tours table
-- `customer.html`: dedicated customer detail page with grouped editable customer profile fields
-- `/tour.html`: dedicated tour edit page (opened by clicking a tour ID in `backend.html`)
-- `backend.html` header includes `Website` and `Logout` actions.
-- `/booking.html`: role-aware booking detail page with booking actions
-  - booking activities list
-  - change staff assignment
-  - change stage
-  - edit the single booking note
-  - change client assignment from booking form information
-- Travel groups have dedicated list/detail/update endpoints and can be created from `backend.html`.
-
-Booking client assignment from `booking.html`:
-- The page keeps the `change` button next to the current client.
-- Opening the panel shows `Information in booking form: ...` built from the submitted booking name, email, and phone number.
-- Similar customers are ranked by similarity before display.
-  - exact/similar phone number has the highest weight
-  - exact email has the next highest weight
-  - name similarity is used as a weaker fallback
-- If `number_of_travelers` is missing or `1`:
-  - if at least one similar customer exists, show a dropdown whose first option is `Similar Customer`
-  - the `Select` button stays disabled until a customer is chosen
-  - assigning that customer updates non-empty submitted fields on the customer: `name`, `email`, `phone_number`, `preferred_language`, `preferred_currency`
-  - the panel also shows `create a new customer for {name}`; this creates a new customer from the submitted booking form fields and assigns the booking to that customer
-- If `number_of_travelers` is greater than `1`:
-  - show a required `group name` field
-  - show `Select group contact:`
-  - if similar customers exist, show the same similarity-sorted dropdown and keep `Select` disabled until both a customer and a non-empty group name are provided
-  - show `create the group contact for {name}`; this stays disabled until `group name` is filled and the submitted booking name exists
-  - selecting or creating the group contact creates a travel group, sets `group_contact_customer_id`, assigns the booking to that group, and copies these booking fields into the group:
-    `number_of_travelers`, `travel_duration`, `budget_lower_USD`, `budget_upper_USD`, `notes`
-
-Booking concurrency model:
-- every booking read model includes `booking_hash`
-- every customer read model includes `customer_hash`
-- every travel-group read model includes `travel_group_hash`
-- clients must send the current hash back with any matching mutation
-  - stage change
-  - staff assignment change
-  - note save
-- if the hash does not match, backend rejects the write and returns the refreshed booking
-- clients must show:
-  - `The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.`
-
-Booking note model:
-- each booking has exactly one editable `notes` field
-- note edits use the same `booking_hash` concurrency check as other booking writes
-
-Booking pricing model:
-- the agreed commercial base is stored as `pricing.agreed_net_amount_cents`
-- all amounts are stored in integer cents
-- taxes are stored as basis points per payment (`tax_rate_basis_points`)
-- canonical storage currency is `BASE_CURRENCY` (default `USD`)
-- all stored booking `pricing` and `offer` values are normalized and persisted in `BASE_CURRENCY`
-- the booking may contain typed adjustments:
-  - `DISCOUNT`
-  - `CREDIT`
-  - `SURCHARGE`
-- the booking may contain zero or more scheduled payments
-- each payment stores:
-  - label
-  - due date
-  - net amount
-  - tax rate
-  - derived tax amount
-  - derived gross amount
-  - payment status (`PENDING` or `PAID`)
-  - optional paid timestamp
-- backend derives and returns:
-  - adjusted net amount
-  - unscheduled net amount
-  - scheduled tax total
-  - scheduled gross total
-  - paid gross total
-  - outstanding gross total
-  - schedule balance flag
-- partial schedules are allowed
-- the sum of scheduled payment net amounts must not exceed the adjusted booking net amount
-- the remaining not-yet-scheduled amount is returned as `unscheduled_net_amount_cents`
-- pricing mutations also use `booking_hash`
-- if the booking changed in the meantime, the frontend/mobile client must refresh and ask the user to enter the change again
-- read models are converted from storage currency to display currency on demand:
-  - booking preference (`preferred_currency`) takes priority
-  - fallback to stored `pricing.currency`
-  - fallback to `BASE_CURRENCY`
-- conversion behavior:
-  - runtime conversion uses Frankfurter + ER API provider chain with fallback to configured overrides (`EXCHANGE_RATE_<FROM>_<TO>`)
-  - all values are always returned to clients in the requested display currency; clients do **not** perform rate math themselves
-  - conversion for offers uses a strict USD-hop path per component:
-    - each component is converted `source -> USD` using the resolved source-to-base rate
-    - the component unit is rounded to USD decimals
-    - then converted `USD -> target` and rounded to target decimals
-    - per-component line tax is calculated in target currency
-    - line total is summed across converted components to produce total
-  - total offer values are not obtained by converting a single USD total; total is calculated from converted line totals
-  - if no live rate is available, stale cached rates or explicit overrides are used before returning hard failure
-- money display precision is catalog-driven:
-  - `USD`, `EURO`: 2 decimal places
-  - `VND`, `THB`: 0 decimal places
-
-## Role Model
-
-Allowed backend roles:
-- `atp_admin`
-- `atp_manager`
-- `atp_accountant`
+`GET /api/v1/bookings` supports:
+- `page`
+- `page_size`
+- `stage`
 - `atp_staff`
+- `search`
+- `sort`
 
-Role behavior:
-- `atp_staff`
-  - read and write only bookings assigned to that staff member
-  - staff identity is mapped from Keycloak `preferred_username` to `backend/app/config/atp_staff.json -> usernames[]`
-- `atp_manager`
-  - see and edit all bookings
-  - change staff assignments
-  - create staff records
-  - see customers
-- `atp_admin`
-  - see and edit all bookings
-  - change staff assignments
-  - create staff records
-  - see customers
-  - see and edit tours
-- `atp_accountant`
-  - see all bookings
-  - may change booking stage only
-  - read-only access to tours
+The booking list and detail views use booking-owned people:
+- primary contact comes from `booking.persons`
+- traveler counts come from `booking.number_of_travelers` and person roles
+- chat matching is based on booking contact phone/email data
 
-Booking assignment model:
-- each new booking is created with `atp_staff = null`
-- staff assignment is added later by `atp_manager` or `atp_admin`
-- `atp_staff` booking access depends on Keycloak `preferred_username` matching `backend/app/config/atp_staff.json -> usernames[]`
+## Roles
 
-Website header integration:
-- Main site has a `backend` button (no dropdown) that redirects to `/auth/login`.
-- Main site shows `Logged in as: ...` below the backend button using `/auth/me` and session cookies.
+Current role behavior:
+- `atp_staff`: read and edit only assigned bookings
+- `atp_manager`: read and edit all bookings, change assignment, create ATP staff
+- `atp_admin`: same as manager plus tour editing
+- `atp_accountant`: read all bookings, change stage, read tours
 
-Health:
-- `GET /health`
+For `atp_staff`, booking access is resolved by matching Keycloak `preferred_username` to `backend/app/config/atp_staff.json -> usernames[]`.
 
-Auth:
-- `GET /auth/login`
-- `GET /auth/callback`
-- `GET /auth/logout`
+## Local Keycloak
 
-## Mobile Contract
+Helper scripts:
+- `scripts/start_local_keycloak.sh`
+- `scripts/stop_local_keycloak.sh`
+- `scripts/restart_local_keycloak.sh`
 
-The mobile app should not follow backend internals or `store.json` structure directly.
-The model source of truth is:
-- [~/projects/travelagency/model/entities](~/projects/travelagency/model/entities)
-- [~/projects/travelagency/model/api](~/projects/travelagency/model/api)
-- [~/projects/travelagency/model/enums](~/projects/travelagency/model/enums)
-- [~/projects/travelagency/model/common](~/projects/travelagency/model/common)
-- [~/projects/travelagency/model/ir](~/projects/travelagency/model/ir)
+Recommended local setup:
+- Keycloak on `http://localhost:8081`
+- backend on `http://localhost:8787`
+- frontend on `http://localhost:8080`
 
-Generated contract artifacts:
-- [~/projects/travelagency/api/generated/openapi.yaml](~/projects/travelagency/api/generated/openapi.yaml)
-- [~/projects/travelagency/api/generated/mobile-api.meta.json](~/projects/travelagency/api/generated/mobile-api.meta.json)
+Required local Keycloak client:
+- realm: your chosen local realm, commonly `master`
+- client id: `asiatravelplan-backend`
+- type: OpenID Connect confidential client
+- redirect URI: `http://localhost:8787/auth/callback`
 
-Generated runtime artifacts:
-- [~/projects/travelagency/shared/generated-contract](~/projects/travelagency/shared/generated-contract)
-- [~/projects/travelagency/backend/app/Generated](~/projects/travelagency/backend/app/Generated)
-- [~/projects/travelagency/frontend/Generated](~/projects/travelagency/frontend/Generated)
-- [~/projects/travelagency/mobile/iOS/Generated/Models](~/projects/travelagency/mobile/iOS/Generated/Models)
-- [~/projects/travelagency/mobile/iOS/Generated/API](~/projects/travelagency/mobile/iOS/Generated/API)
+## Notes
 
-Notes:
-- `api/generated/openapi.yaml` and `mobile-api.meta.json` are generated outputs from `model/`, not hand-edited inputs
-- `/public/v1/mobile/bootstrap` currently returns `mobile-api.meta.json.modelVersion` as the app-facing contract version
-- backend/frontend generated JS files mostly re-export the shared contract in `shared/generated-contract/`
-
-Regenerate after editing `model/` or `tools/generator/`:
-
-```bash
-ruby ~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
-ruby ~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
-```
-
-Contract validation tests:
-
-```bash
-cd ~/projects/travelagency/backend/app
-npm test
-```
-
-The iPhone app startup gate reads `GET /public/v1/mobile/bootstrap` and stops with a `Please update` screen when the installed app version is below `MOBILE_MIN_SUPPORTED_APP_VERSION` or when `MOBILE_FORCE_UPDATE=true`.
-- `GET /auth/me`
-
-## Example Booking Request
-
-```bash
-curl -X POST http://localhost:8787/public/v1/bookings \
-  -H 'Content-Type: application/json' \
-  -H 'Idempotency-Key: demo-001' \
-  -d '{
-    "destination": "Vietnam",
-    "style": "Adventure",
-    "travelMonth": "November",
-    "travel_duration": "10-14 days",
-    "number_of_travelers": 2,
-    "budget_lower_USD": 2500,
-    "budget_upper_USD": 3500,
-    "name": "Alex Morgan",
-    "email": "alex@example.com",
-    "phone_number": "+1 415 555 0100",
-    "preferred_language": "English",
-    "notes": "Interested in private guides and food tours",
-    "utmSource": "google",
-    "utmMedium": "cpc",
-    "utmCampaign": "sea_winter",
-    "pageUrl": "https://asiatravelplan.com/",
-    "referrer": "https://google.com"
-  }'
-```
-
-## Seed Test Data
-
-```bash
-cd backend/app
-npm run seed -- --count 40
-```
-
-Booking source attribution captured on ingest:
-- client-reported `page_url`
-- backend-captured `ip_address`
-- backend `ip_country_guess` as a display label from trusted proxy country headers when present, otherwise `Local/Private` or `Unknown` (for example `Vietnam (VN)`)
-
-## Enable Keycloak Auth (Example)
-
-```bash
-cd backend/app
-npm install
-KEYCLOAK_ENABLED=true \
-KEYCLOAK_BASE_URL='http://localhost:8081' \
-KEYCLOAK_REALM='asiatravelplan' \
-KEYCLOAK_CLIENT_ID='asiatravelplan-backend' \
-KEYCLOAK_CLIENT_SECRET='YOUR_CLIENT_SECRET' \
-KEYCLOAK_REDIRECT_URI='http://localhost:8787/auth/callback' \
-KEYCLOAK_ALLOWED_ROLES='atp_admin,atp_manager,atp_accountant,atp_staff' \
-npm start
-```
-
-Open:
-- `http://localhost:8787/auth/login?return_to=/backend.html`
+- The generated OpenAPI contract in `api/generated/openapi.yaml` is the transport contract.
+- The active model source is under `model/`.
+- Mobile documentation may describe future usage, but the backend contract and model already follow the booking-owned person architecture.

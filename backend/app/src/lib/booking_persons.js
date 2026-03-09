@@ -133,43 +133,7 @@ function normalizeDocuments(person, fallbackPrefix = "document") {
     .filter(Boolean);
 }
 
-function mergeArrays(left, right) {
-  return Array.from(new Set([...(Array.isArray(left) ? left : []), ...(Array.isArray(right) ? right : [])].filter(Boolean)));
-}
-
-function mergeBookingPersons(existing, incoming) {
-  if (!existing) return incoming;
-  return compactObject({
-    id: existing.id || incoming.id,
-    name: existing.name || incoming.name,
-    photo_ref: existing.photo_ref || incoming.photo_ref,
-    emails: mergeArrays(existing.emails, incoming.emails),
-    phone_numbers: mergeArrays(existing.phone_numbers, incoming.phone_numbers),
-    preferred_language: existing.preferred_language || incoming.preferred_language,
-    date_of_birth: existing.date_of_birth || incoming.date_of_birth,
-    nationality: existing.nationality || incoming.nationality,
-    address: existing.address || incoming.address,
-    roles: mergeArrays(existing.roles, incoming.roles),
-    consents: mergeArrays(existing.consents, incoming.consents),
-    documents: mergeArrays(existing.documents, incoming.documents),
-    notes: existing.notes || incoming.notes
-  });
-}
-
-function buildLookupMap(items, keyResolver) {
-  const lookup = new Map();
-  for (const item of Array.isArray(items) ? items : []) {
-    const key = keyResolver(item);
-    if (key) lookup.set(key, item);
-  }
-  return lookup;
-}
-
-function customerKey(customer) {
-  return optionalText(customer?.client_id || customer?.id);
-}
-
-function normalizeBookingPerson(person, index = 0, bookingId = "booking") {
+export function normalizeBookingPerson(person, index = 0, bookingId = "booking") {
   if (!person || typeof person !== "object" || Array.isArray(person)) return null;
   const normalized = compactObject({
     id: optionalText(person.id) || `${bookingId}_person_${index + 1}`,
@@ -192,18 +156,6 @@ function normalizeBookingPerson(person, index = 0, bookingId = "booking") {
   return normalized?.id && normalized?.name ? normalized : null;
 }
 
-function buildBookingPersonFromCustomer(customer, options = {}) {
-  const { roles = [], consents = [], documents = [], fallbackId = "booking_person_1" } = options;
-  const id = customerKey(customer) || fallbackId;
-  return normalizeBookingPerson({
-    ...customer,
-    id,
-    roles,
-    consents,
-    documents
-  }, 0, id);
-}
-
 function buildFallbackSubmissionPerson(booking) {
   const submission = booking?.web_form_submission;
   if (!submission || typeof submission !== "object" || Array.isArray(submission)) return null;
@@ -219,6 +171,15 @@ function buildFallbackSubmissionPerson(booking) {
     preferred_language: optionalText(submission.preferred_language || submission.language),
     roles: ["primary_contact", "traveler"]
   }, 0, optionalText(booking?.id) || "booking");
+}
+
+function normalizeBookingPersons(booking) {
+  const bookingId = optionalText(booking?.id) || "booking";
+  const persons = Array.isArray(booking?.persons) ? booking.persons : [];
+  const normalized = persons
+    .map((person, index) => normalizeBookingPerson(person, index, bookingId))
+    .filter(Boolean);
+  return normalized.length ? normalized : [buildFallbackSubmissionPerson(booking)].filter(Boolean);
 }
 
 function normalizeWebFormSubmission(booking) {
@@ -246,112 +207,7 @@ function normalizeWebFormSubmission(booking) {
   });
 }
 
-export function buildBookingPersonsFromLegacy(booking, store = {}) {
-  const bookingId = optionalText(booking?.id) || "booking";
-  if (Array.isArray(booking?.persons) && booking.persons.length) {
-    return booking.persons
-      .map((person, index) => normalizeBookingPerson(person, index, bookingId))
-      .filter(Boolean);
-  }
-
-  const customers = Array.isArray(store.customers) ? store.customers : [];
-  const customerConsents = Array.isArray(store.customer_consents) ? store.customer_consents : [];
-  const customerDocuments = Array.isArray(store.customer_documents) ? store.customer_documents : [];
-  const travelGroups = Array.isArray(store.travel_groups) ? store.travel_groups : [];
-  const travelGroupMembers = Array.isArray(store.travel_group_members) ? store.travel_group_members : [];
-
-  const customersById = buildLookupMap(customers, (customer) => optionalText(customer?.id));
-  const customersByClientId = buildLookupMap(customers, (customer) => optionalText(customer?.client_id));
-  const consentsByCustomerId = new Map();
-  const documentsByCustomerId = new Map();
-
-  for (const consent of customerConsents) {
-    const key = optionalText(consent?.customer_client_id || consent?.customer_id);
-    if (!key) continue;
-    const items = consentsByCustomerId.get(key) || [];
-    items.push(consent);
-    consentsByCustomerId.set(key, items);
-  }
-
-  for (const document of customerDocuments) {
-    const key = optionalText(document?.customer_client_id || document?.customer_id);
-    if (!key) continue;
-    const items = documentsByCustomerId.get(key) || [];
-    items.push(document);
-    documentsByCustomerId.set(key, items);
-  }
-
-  const personsById = new Map();
-
-  const upsertPerson = (person) => {
-    if (!person) return;
-    const key = optionalText(person.id) || `${bookingId}_person_${personsById.size + 1}`;
-    const merged = mergeBookingPersons(personsById.get(key), { ...person, id: key });
-    personsById.set(key, merged);
-  };
-
-  const customerToPerson = (customer, roles = [], fallbackId = `${bookingId}_person_${personsById.size + 1}`) => {
-    if (!customer) return null;
-    const id = customerKey(customer) || fallbackId;
-    return buildBookingPersonFromCustomer(customer, {
-      fallbackId,
-      roles,
-      consents: consentsByCustomerId.get(id) || consentsByCustomerId.get(optionalText(customer?.id)) || [],
-      documents: documentsByCustomerId.get(id) || documentsByCustomerId.get(optionalText(customer?.id)) || []
-    });
-  };
-
-  const legacyCustomerId = optionalText(booking?.customer_id);
-  if (legacyCustomerId) {
-    upsertPerson(customerToPerson(customersById.get(legacyCustomerId), ["primary_contact", "traveler"], `${bookingId}_primary_contact`));
-  }
-
-  const legacyClientId = optionalText(booking?.client_id);
-  const legacyClientType = optionalText(booking?.client_type);
-  if (legacyClientType === "customer" && legacyClientId) {
-    upsertPerson(customerToPerson(customersByClientId.get(legacyClientId), ["primary_contact", "traveler"], `${bookingId}_primary_contact`));
-  }
-
-  if (legacyClientType === "travel_group" && legacyClientId) {
-    const group = travelGroups.find((entry) => optionalText(entry?.client_id) === legacyClientId || optionalText(entry?.id) === legacyClientId);
-    const memberLookup = new Map(
-      travelGroupMembers
-        .filter((member) => optionalText(member?.travel_group_id) === optionalText(group?.id))
-        .map((member) => [optionalText(member?.customer_client_id), member])
-    );
-
-    const contactCustomerId = optionalText(group?.group_contact_customer_id);
-    if (contactCustomerId) {
-      const member = memberLookup.get(contactCustomerId);
-      upsertPerson(
-        customerToPerson(customersByClientId.get(contactCustomerId), normalizeRoles(member?.member_roles, {
-          is_traveling: member?.is_traveling === true,
-          is_lead_contact: true
-        }), `${bookingId}_primary_contact`)
-      );
-    }
-
-    for (const travelerCustomerId of normalizeStringArray(group?.traveler_customer_ids)) {
-      const member = memberLookup.get(travelerCustomerId);
-      upsertPerson(
-        customerToPerson(customersByClientId.get(travelerCustomerId), normalizeRoles(member?.member_roles, {
-          is_traveling: member?.is_traveling !== false,
-          is_lead_contact: travelerCustomerId === contactCustomerId
-        }), `${bookingId}_${travelerCustomerId}`)
-      );
-    }
-  }
-
-  if (!personsById.size) {
-    upsertPerson(buildFallbackSubmissionPerson(booking));
-  }
-
-  return [...personsById.values()]
-    .map((person, index) => normalizeBookingPerson(person, index, bookingId))
-    .filter(Boolean);
-}
-
-export function normalizeStoredBookingRecord(booking, store = {}) {
+export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedDestinations = normalizeStringArray(booking?.destinations || booking?.destination);
   const normalizedTravelStyles = normalizeStringArray(booking?.travel_styles || booking?.style);
   const normalizedBooking = {
@@ -367,7 +223,7 @@ export function normalizeStoredBookingRecord(booking, store = {}) {
     preferred_currency: optionalUppercaseText(booking?.preferred_currency || booking?.web_form_submission?.preferred_currency),
     notes: optionalText(booking?.notes),
     web_form_submission: normalizeWebFormSubmission(booking),
-    persons: buildBookingPersonsFromLegacy(booking, store)
+    persons: normalizeBookingPersons(booking)
   };
 
   return compactObject({

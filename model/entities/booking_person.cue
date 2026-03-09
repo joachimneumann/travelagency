@@ -16,8 +16,8 @@ import (
 
 #BookingPersonConsent: {
 	id:            common.#Identifier
-	consent_type:  enums.#CustomerConsentType
-	status:        enums.#CustomerConsentStatus
+	consent_type:  enums.#PersonConsentType
+	status:        enums.#PersonConsentStatus
 	captured_via?: string
 	captured_at:   common.#Timestamp
 	evidence_ref?: string
@@ -26,7 +26,7 @@ import (
 
 #BookingPersonDocument: {
 	id:                    common.#Identifier
-	document_type:         enums.#CustomerDocumentType
+	document_type:         enums.#PersonDocumentType
 	document_number?:      string
 	document_picture_ref?: string
 	issuing_country?:      enums.#CountryCode

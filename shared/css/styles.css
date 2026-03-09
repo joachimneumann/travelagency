@@ -13,7 +13,5 @@
 @import "./components/backend-login.css";
 @import "./tailwind.generated.css";
 @import "./pages/home.css";
-@import "./pages/customer.css";
-@import "./pages/group.css";
 @import "./pages/backend-booking.css";
 @import "./pages/not-found.css";

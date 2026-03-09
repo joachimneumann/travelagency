@@ -43,12 +43,18 @@ const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 
-const ROLES = {
-  ADMIN: GENERATED_ATP_STAFF_ROLES[0],
-  MANAGER: GENERATED_ATP_STAFF_ROLES[1],
-  ACCOUNTANT: GENERATED_ATP_STAFF_ROLES[2],
-  STAFF: GENERATED_ATP_STAFF_ROLES[3]
-};
+const GENERATED_ROLE_LOOKUP = Object.freeze(
+  Object.fromEntries(
+    GENERATED_ATP_STAFF_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
+  )
+);
+
+const ROLES = Object.freeze({
+  ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
+  MANAGER: GENERATED_ROLE_LOOKUP.MANAGER,
+  ACCOUNTANT: GENERATED_ROLE_LOOKUP.ACCOUNTANT,
+  STAFF: GENERATED_ROLE_LOOKUP.STAFF
+});
 
 const state = {
   id: qs.get("id") || "",
@@ -232,6 +238,7 @@ async function init() {
   populateCurrencySelect(els.pricingCurrencyInput);
   populateCurrencySelect(els.offerCurrencyInput);
   populateCurrencySelect(els.invoiceCurrencyInput);
+  populateOfferCategorySelect(els.offerComponentCategorySelect);
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
@@ -1534,10 +1541,10 @@ function renderInvoiceSelect() {
 
 function renderInvoicesTable() {
   if (!els.invoicesTable) return;
-  const header = `<thead><tr><th>PDF</th><th>Invoice</th><th>Version</th><th>Sent to customer</th><th>Total</th><th>Updated</th><th>Actions</th></tr></thead>`;
+  const header = `<thead><tr><th>PDF</th><th>Invoice</th><th>Version</th><th>Sent to recipient</th><th>Total</th><th>Updated</th><th>Actions</th></tr></thead>`;
   const rows = state.invoices
     .map((invoice) => {
-      const checked = invoice.sent_to_customer ? "checked" : "";
+      const checked = invoice.sent_to_recipient ? "checked" : "";
       const disabled = state.permissions.canEditBooking ? "" : "disabled";
       return `<tr>
         <td><a class="btn btn-ghost" href="${escapeHtml(`${apiBase}/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`)}" target="_blank" rel="noopener">PDF</a></td>
@@ -1717,7 +1724,7 @@ async function toggleInvoiceSent(invoiceId, sent) {
     {
       method: "PATCH",
       body: {
-        sent_to_customer: Boolean(sent),
+        sent_to_recipient: Boolean(sent),
         booking_hash: state.booking.booking_hash
       }
     }
@@ -1730,7 +1737,7 @@ async function toggleInvoiceSent(invoiceId, sent) {
     renderOfferPanel();
     renderPricingPanel();
   }
-  setInvoiceStatus(sent ? "Invoice marked as sent to customer." : "Invoice marked as not sent.");
+  setInvoiceStatus(sent ? "Invoice marked as sent to recipient." : "Invoice marked as not sent.");
   await loadInvoices();
 }
 
@@ -2105,6 +2112,18 @@ function populateCurrencySelect(selectEl) {
     .map((code) => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`)
     .join("");
   selectEl.value = selectedValue;
+}
+
+function populateOfferCategorySelect(selectEl) {
+  if (!(selectEl instanceof HTMLSelectElement)) return;
+  const currentValue = String(selectEl.value || "").trim().toUpperCase();
+  selectEl.innerHTML = [
+    '<option value="" selected disabled>Category</option>',
+    ...OFFER_CATEGORIES.map((category) => `<option value="${escapeHtml(category.code)}">${escapeHtml(category.label)}</option>`)
+  ].join("");
+  if (currentValue && OFFER_CATEGORIES.some((category) => category.code === currentValue)) {
+    selectEl.value = currentValue;
+  }
 }
 
 function formatMoneyDisplay(value, currency) {

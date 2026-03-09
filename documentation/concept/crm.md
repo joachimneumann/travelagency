@@ -459,7 +459,7 @@ A sensible order is:
 
 A modern CRM system typically offers far more than contact storage. It usually combines record management, pipeline management, communications, automation, reporting, service tools, marketing tools, permissions, integrations, mobile access, and increasingly AI.
 
-For AsiaTravelPlan, the correct target is not the entire CRM universe. The correct target is a focused travel CRM built around bookings, customers, assignment, follow-up, communication history, and revenue workflow.
+For AsiaTravelPlan, the correct target is not the entire CRM universe. The correct target is a focused travel CRM built around bookings, booking persons, assignment, follow-up, communication history, and revenue workflow.
 
 That is large enough to be valuable and small enough to execute.
 

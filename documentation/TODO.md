@@ -1,61 +1,14 @@
-DONE, but not tested
-=====================
+# TODO
 
-- Check if conflict avoidance is correctly implemented. When a frontend or iOS get a dataset for a customer, group or booking, it also gets a hash of that data. When the user wants to save / update the data, send the hash of the lastly read data together with the changed data. The server will reject the edit if the hash does not match the hash of the data at the time of the update request. 
-Web page: number of travelers?
+## Current Focus
 
-- Allow a booking to have a travel_group or a customer as client.
+- Review conflict detection for booking edits that use `booking_hash`.
+- Expand booking-person editing only where there is a clear operational need.
+- Add confirmation to destructive actions where still missing.
+- Improve WhatsApp workflows for staff replies and media handling.
+- Keep model, generated contract, backend, and frontend aligned on booking-owned persons.
 
-I would like to change the datastructure.
-client should be minimal, only one containing:
-id: common.#Identifier
-client_type: enums.#ClientType
-id_of_client: common.#Identifier
+## Notes
 
-The apps would then need to read the display_name:, phone_number and email from id_of_client.
-if id_of_client points to a customer, the information is there. if id_of_client points to a travel_grup, the information is in the group contact.
-
-
-Not DONE
-========
-
-- add a button to delete a booking.
-- add a button to delete a customer. Only allow this if the customer is ont in any group or in any booking. Show a human readable error message if this is the case.
-- add a button to remove a member from a group. make sure that the group assignments are updated in the customer info (backend and frontend) 
-- add a button to delete a group. Only allow this only if the number of group members is 0.
--  Ask for confirmation for all delete actions.
-
-- Buy phone number!!!
-
-- WhatsApp:
-    - allow staff to answer messages in frontend and in app
-    - Receive and send photos/videos and files
-    - Store received photos/videos and files and allow the atp staff to download them to phone / computer
-
-clean model:
-travelGroupOptions
-
-remove from model?
-==================
-
-
-Keep in travelgroup, initially set from Contact.
-preferred_language
-preferred_currency
-timezone
-
-booking:
-Travel month (optional)
-Number of travelers (optional)
-duration rename to travel_duration
-remove budget
-budget_lower_USD
-budget_upper_USD
-Notes
-
-Customer:
-Full name
-Email
-WhatsApp or phone
-Preferred language
-Preferred currency
+- The older client/customer/group architecture has been removed.
+- Any new work should start from `booking` plus `booking.persons[]`.

@@ -14,9 +14,9 @@ IR: {
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
 		countries: [for country in enumModel.CountryCatalog {{code: country}}]
 		timezones: [for timezone in enumModel.TimezoneCatalog {{code: timezone}}]
-		customerConsentTypes: [for consentType in enumModel.CustomerConsentTypeCatalog {{code: consentType}}]
-		customerConsentStatuses: [for consentStatus in enumModel.CustomerConsentStatusCatalog {{code: consentStatus}}]
-		customerDocumentTypes: [for documentType in enumModel.CustomerDocumentTypeCatalog {{code: documentType}}]
+		personConsentTypes: [for consentType in enumModel.PersonConsentTypeCatalog {{code: consentType}}]
+		personConsentStatuses: [for consentStatus in enumModel.PersonConsentStatusCatalog {{code: consentStatus}}]
+		personDocumentTypes: [for documentType in enumModel.PersonDocumentTypeCatalog {{code: documentType}}]
 		bookingActivityTypes: [for activityType in enumModel.BookingActivityTypeCatalog {{code: activityType}}]
 		currencies: [
 			for currency in enumModel.CurrencyCatalog {

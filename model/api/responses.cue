@@ -49,7 +49,6 @@ import (
 	id:                 common.#Identifier
 	channel:            string
 	externalContactId?: string
-	clientId?:          common.#Identifier
 	bookingId?:         common.#Identifier
 	lastEventAt?:       common.#Timestamp
 	latestPreview?:     string

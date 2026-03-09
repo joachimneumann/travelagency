@@ -57,12 +57,18 @@ const SECTION_CONFIG = [
   { id: "settings", canAccess: () => state.permissions.canReadSettings }
 ];
 
-const ROLES = {
-  ADMIN: GENERATED_ATP_STAFF_ROLES[0],
-  MANAGER: GENERATED_ATP_STAFF_ROLES[1],
-  ACCOUNTANT: GENERATED_ATP_STAFF_ROLES[2],
-  STAFF: GENERATED_ATP_STAFF_ROLES[3]
-};
+const GENERATED_ROLE_LOOKUP = Object.freeze(
+  Object.fromEntries(
+    GENERATED_ATP_STAFF_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
+  )
+);
+
+const ROLES = Object.freeze({
+  ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
+  MANAGER: GENERATED_ROLE_LOOKUP.MANAGER,
+  ACCOUNTANT: GENERATED_ROLE_LOOKUP.ACCOUNTANT,
+  STAFF: GENERATED_ROLE_LOOKUP.STAFF
+});
 
 const state = {
   roles: [],

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-09T13:34:14Z
+# 2026-03-09T15:58:52Z
 
 ---
 openapi: 3.1.0
@@ -24,7 +24,6 @@ tags:
 - name: Auth
 - name: Public
 - name: Bookings
-- name: Customers
 - name: Staff
 - name: Tours
 components:
@@ -2990,7 +2989,7 @@ components:
         label: Pacific/Wake
       - value: Pacific/Wallis
         label: Pacific/Wallis
-    CustomerConsentType:
+    PersonConsentType:
       type: string
       enum:
       - privacy_policy
@@ -3011,7 +3010,7 @@ components:
         label: marketing_whatsapp
       - value: profiling
         label: profiling
-    CustomerConsentStatus:
+    PersonConsentStatus:
       type: string
       enum:
       - granted
@@ -3028,7 +3027,7 @@ components:
         label: withdrawn
       - value: unknown
         label: unknown
-    CustomerDocumentType:
+    PersonDocumentType:
       type: string
       enum:
       - passport
@@ -3242,9 +3241,9 @@ components:
         id:
           type: string
         consent_type:
-          "$ref": "#/components/schemas/CustomerConsentType"
+          "$ref": "#/components/schemas/PersonConsentType"
         status:
-          "$ref": "#/components/schemas/CustomerConsentStatus"
+          "$ref": "#/components/schemas/PersonConsentStatus"
         captured_via:
           type: string
           nullable: true
@@ -3268,7 +3267,7 @@ components:
         id:
           type: string
         document_type:
-          "$ref": "#/components/schemas/CustomerDocumentType"
+          "$ref": "#/components/schemas/PersonDocumentType"
         document_number:
           type: string
           nullable: true
@@ -3415,7 +3414,7 @@ components:
         notes:
           type: string
           nullable: true
-        sentToCustomer:
+        sentToRecipient:
           type: boolean
           nullable: true
         createdAt:
@@ -3921,9 +3920,6 @@ components:
         externalContactId:
           type: string
           nullable: true
-        clientId:
-          type: string
-          nullable: true
         bookingId:
           type: string
           nullable: true
@@ -3975,12 +3971,9 @@ components:
       type: object
       required:
       - bookings
-      - customers
       - tours
       properties:
         bookings:
-          type: boolean
-        customers:
           type: boolean
         tours:
           type: boolean

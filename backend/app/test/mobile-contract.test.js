@@ -94,7 +94,6 @@ function assertISODateLike(value, label) {
 
 async function resetStore() {
   await writeFile(STORE_PATH, `${JSON.stringify({
-    customers: [],
     bookings: [],
     activities: [],
     invoices: [],
@@ -160,7 +159,6 @@ test("public mobile bootstrap matches contract metadata", async () => {
   assert.equal(result.body.app.force_update, false);
   assert.deepEqual(result.body.features, {
     bookings: true,
-    customers: false,
     tours: false
   });
 });

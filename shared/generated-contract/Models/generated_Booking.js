@@ -228,7 +228,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"dueDate","required":false,"wireName":"dueDate"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_23),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"sentToCustomer","required":false,"wireName":"sentToCustomer"}, SHARED_FIELD_DEFS.FIELD_24),
+    schemaField({"name":"sentToRecipient","required":false,"wireName":"sentToRecipient"}, SHARED_FIELD_DEFS.FIELD_24),
     schemaField({"name":"createdAt","required":false,"wireName":"createdAt"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"updatedAt","required":false,"wireName":"updatedAt"}, SHARED_FIELD_DEFS.FIELD_7)
         ]

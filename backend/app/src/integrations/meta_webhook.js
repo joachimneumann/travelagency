@@ -17,8 +17,8 @@ export function createMetaWebhookHandlers({
   persistStore,
   sendJson,
   safeEqualText,
-  resolveCustomerByExternalContact,
-  resolveBookingForClient,
+  resolveBookingContactByExternalContact,
+  resolveBookingById,
   getMetaConversationOpenUrl
 }) {
   const status = {
@@ -111,7 +111,6 @@ export function createMetaWebhookHandlers({
     externalConversationId = "",
     externalContactId = "",
     channelAccountId = "",
-    clientId = null,
     bookingId = null
   }) {
     ensureMetaChatCollections(store);
@@ -137,7 +136,6 @@ export function createMetaWebhookHandlers({
         channel_account_id: normalizedAccountId || null,
         external_conversation_id: normalizedConversationId || normalizedContactId,
         external_contact_id: normalizedContactId,
-        client_id: clientId || null,
         booking_id: bookingId || null,
         assigned_atp_staff_id: null,
         latest_preview: null,
@@ -149,7 +147,6 @@ export function createMetaWebhookHandlers({
       return conversation;
     }
 
-    if (!conversation.client_id && clientId) conversation.client_id = clientId;
     if (!conversation.booking_id && bookingId) conversation.booking_id = bookingId;
     conversation.external_conversation_id = normalizedConversationId || conversation.external_conversation_id || normalizedContactId;
     conversation.updated_at = nowIso();
@@ -247,14 +244,13 @@ export function createMetaWebhookHandlers({
   function findOrCreateWhatsAppConversation(store, account, waId) {
     const normalizedWaId = normalizeText(waId);
     if (!normalizedWaId) return null;
-    const matchedContact = resolveCustomerByExternalContact(store, normalizedWaId);
-    const matchedBooking = resolveBookingForClient(store, matchedContact?.client_id || null);
+    const matchedContact = resolveBookingContactByExternalContact(store, normalizedWaId);
+    const matchedBooking = resolveBookingById(store, matchedContact?.booking_id || null);
     return findOrCreateMetaConversation(store, {
       channel: "whatsapp",
       externalConversationId: normalizedWaId,
       externalContactId: normalizedWaId,
       channelAccountId: account?.id || "",
-      clientId: matchedBooking?.id || null,
       bookingId: matchedBooking?.id || null
     });
   }
@@ -511,14 +507,13 @@ export function createMetaWebhookHandlers({
         continue;
       }
 
-      const matchedContact = resolveCustomerByExternalContact(store, contactId);
-      const matchedBooking = resolveBookingForClient(store, matchedContact?.client_id || null);
+      const matchedContact = resolveBookingContactByExternalContact(store, contactId);
+      const matchedBooking = resolveBookingById(store, matchedContact?.booking_id || null);
       const conversation = findOrCreateMetaConversation(store, {
         channel: "messenger",
         externalConversationId: contactId,
         externalContactId: contactId,
         channelAccountId: account?.id || "",
-        clientId: matchedBooking?.id || null,
         bookingId: matchedBooking?.id || null
       });
       if (!conversation) {

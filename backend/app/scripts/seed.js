@@ -78,13 +78,7 @@ function emptyStore(base = {}) {
     invoices: Array.isArray(base.invoices) ? base.invoices : [],
     chat_channel_accounts: Array.isArray(base.chat_channel_accounts) ? base.chat_channel_accounts : [],
     chat_conversations: Array.isArray(base.chat_conversations) ? base.chat_conversations : [],
-    chat_events: Array.isArray(base.chat_events) ? base.chat_events : [],
-    customers: [],
-    clients: [],
-    customer_consents: [],
-    customer_documents: [],
-    travel_groups: [],
-    travel_group_members: []
+    chat_events: Array.isArray(base.chat_events) ? base.chat_events : []
   };
 }
 

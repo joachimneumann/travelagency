@@ -1,462 +1,80 @@
 # AsiaTravelPlan Mobile App Guide
 
-This document defines the first iPhone app for AsiaTravelPlan.
+This document should follow the same booking-owned person model as the web backend.
 
-Current implementation scaffold:
-- `~/projects/travelagency/mobile/iOS`
-- Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
-- project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- generator: `~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb`
-- generated contract: `~/projects/travelagency/api/generated/openapi.yaml`
+Current status:
+- iOS is not the active focus right now
+- when mobile work resumes, it should consume the existing generated contract
+- mobile must not reintroduce removed master-data concepts that are no longer part of the booking model
 
-The app scope is intentionally narrow:
-- allow login only for `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
-- show bookings
-- allow booking actions according to role
-- include read-only customer directory workflows for allowed roles
+## Required Domain Shape
 
-The app should not try to reproduce the full website backend.
+Mobile should treat these as the active domains:
+- booking
+- booking persons
+- ATP staff
+- tours
+- invoices
+- activities
 
-## 1) App scope
+Important rules:
+- `booking.persons[]` contains the contact and traveler data
+- `booking.web_form_submission` is the immutable inbound snapshot
+- there is no standalone shared person directory in the active architecture
 
-The mobile app should be a native iPhone app, not a wrapper around `backend.html`.
+## Recommended First Mobile Scope
 
-Version 1 should include:
 - login with Keycloak
 - booking list
 - booking detail
-- booking commercials summary
-- payment schedule visibility
 - booking stage changes where allowed
 - booking note editing where allowed
 - booking activity visibility
-- booking staff assignment only for manager/admin
-- customer list with search
-- customer detail
-- customer contact actions (call/WhatsApp links)
-- logout
+- booking invoice visibility
+- booking person summary visibility
 
-Later phase:
-- customer interaction workflows
-- richer customer communication inbox
-- two-way communication features
-
-Out of scope for the first mobile version:
+Out of scope for the first mobile phase:
+- standalone person CRUD
+- separate shared master-data workflows
 - tour editing
-- staff management UI
-- full finance UI
-- customer administration/editing UI
+- staff administration UI
 
-## 2) Allowed roles only
+## Contract Source of Truth
 
-The app must allow access only when the authenticated user has at least one of these roles:
-- `atp_admin`
-- `atp_manager`
-- `atp_accountant`
-- `atp_staff`
+Source model:
+- `model/entities/`
+- `model/api/`
+- `model/enums/`
+- `model/common/`
+- `model/ir/`
 
-All other users must be treated as unauthorized.
+Generated artifacts:
+- `api/generated/openapi.yaml`
+- `api/generated/mobile-api.meta.json`
+- `shared/generated-contract/`
+- `backend/app/Generated/`
+- `frontend/Generated/`
+- `mobile/iOS/Generated/`
 
-This should be enforced in two places:
-1. backend authorization
-2. app session gating after login
+## Role Expectations
 
-If the token does not contain one of those roles, the app should:
-- clear local session state
-- show an unauthorized message
-- not enter the booking UI
+- `atp_staff`: assigned bookings only
+- `atp_manager`: all bookings, assignment changes
+- `atp_admin`: manager rights plus tours
+- `atp_accountant`: booking read access, stage changes, tours read-only
 
-## 3) Authentication architecture
+## Keycloak
 
-Use:
-- Swift
-- SwiftUI
-- `ASWebAuthenticationSession`
-- OpenID Connect Authorization Code Flow with PKCE
-- Keychain for token storage
+Do not use the confidential web backend client inside the app.
 
-Do not use the confidential web client `asiatravelplan-backend` inside the iPhone app.
-
-Create a separate Keycloak client for mobile, for example:
+Use a separate mobile client, for example:
 - `asiatravelplan-ios`
 
-Recommended Keycloak client setup:
-- Client type: `OpenID Connect`
-- Client authentication: `Off`
-- Standard flow: `On`
-- PKCE: enabled or required
-- Redirect URI: `asiatravelplan://auth/callback`
-- Valid post logout redirect URI: `asiatravelplan://auth/callback`
+Recommended:
+- OpenID Connect
+- PKCE
+- redirect URI like `asiatravelplan://auth/callback`
 
-Logout behavior:
-- `Sign out` in the app clears the local Keychain session and also calls the Keycloak end-session endpoint through `ASWebAuthenticationSession`
-- if the client does not allow `asiatravelplan://auth/callback` as a post-logout redirect URI, remote logout will fail
+## Important Constraint
 
-## 4) API access model
-
-The mobile app should treat the OpenAPI contract as the only stable interface.
-It should not infer response shapes from backend internals or JSON storage.
-
-Model source of truth:
-- `~/projects/travelagency/model/entities/`
-- `~/projects/travelagency/model/api/`
-- `~/projects/travelagency/model/enums/`
-- `~/projects/travelagency/model/common/`
-- `~/projects/travelagency/model/ir/`
-
-Generated contract artifacts:
-- `~/projects/travelagency/api/generated/openapi.yaml`
-- `~/projects/travelagency/api/generated/mobile-api.meta.json`
-
-Generated runtime artifacts:
-- `~/projects/travelagency/shared/generated-contract/`
-- `~/projects/travelagency/frontend/Generated/`
-- `~/projects/travelagency/backend/app/Generated/`
-- `~/projects/travelagency/mobile/iOS/Generated/Models/`
-- `~/projects/travelagency/mobile/iOS/Generated/API/`
-
-Current generation flow:
-- `tools/generator/generate_mobile_contract_artifacts.rb` exports normalized IR from `model/ir` and traveler constraints from `model/api`
-- the generator writes the OpenAPI 3.1 contract and metadata into `api/generated/`
-- the generator writes the shared JS contract into `shared/generated-contract/`
-- backend and frontend JS generated files re-export those shared modules
-- iOS gets standalone Swift sources in `mobile/iOS/Generated/`
-
-Notes:
-- `api/generated/openapi.yaml` is generated output, not a hand-edited source file
-- `mobile-api.meta.json` carries catalogs, endpoint metadata, and the `modelVersion` used by `/public/v1/mobile/bootstrap`
-- some mutation paths are already generated as stable endpoint constants before all request bodies are fully modeled; keep backend docs authoritative for transitional payload details such as booking assignment (`atp_staff`)
-
-The mobile app should call backend APIs with bearer tokens:
-
-```http
-GET /api/v1/bookings?page=1&page_size=20&sort=created_at_desc
-Authorization: Bearer <access_token>
-```
-
-The app should target the same backend API used by the browser backend.
-
-Recommended first endpoints:
-- `GET /public/v1/mobile/bootstrap`
-- `GET /api/v1/bookings`
-- `GET /api/v1/bookings/:bookingId`
-- `PATCH /api/v1/bookings/:bookingId/pricing`
-- `PATCH /api/v1/bookings/:bookingId/stage`
-- `PATCH /api/v1/bookings/:bookingId/owner`
-- `GET /api/v1/bookings/:bookingId/activities`
-- `POST /api/v1/bookings/:bookingId/activities`
-- `GET /api/v1/bookings/:bookingId/invoices`
-
-Note:
-- the current assignment route path is `PATCH /api/v1/bookings/:bookingId/owner`
-- semantically this is a staff assignment endpoint
-- request body must send `atp_staff`
-
-## 5) Current backend role behavior
-
-The backend now enforces this booking/tour authorization model.
-
-`atp_staff`
-- can read only bookings assigned to that staff member
-- can edit only bookings assigned to that staff member
-- cannot change staff assignments
-- cannot access tours
-
-`atp_manager`
-- can read all bookings
-- can edit all bookings
-- can change booking staff assignments
-- can create new staff records
-- does not edit tours
-
-`atp_admin`
-- can read all bookings
-- can edit all bookings
-- can change booking staff assignments
-- can create new staff records
-- can read and edit tours
-
-`atp_accountant`
-- can read all bookings
-- cannot edit bookings generally
-- can change booking stage
-- has read-only access to tours
-
-This is the source of truth for the mobile UI.
-The app should reflect these permissions, but the backend must remain authoritative.
-
-## 6) Staff identity mapping
-
-For `atp_staff`, the backend resolves access based on the Keycloak username.
-
-Required mapping rule:
-- Keycloak `preferred_username` must match one of the entries in `backend/app/config/atp_staff.json -> usernames[]`
-
-Example:
-
-```json
-{
-  "id": "staff_123",
-  "name": "Joachim",
-  "active": true,
-  "usernames": ["joachim"]
-}
-```
-
-If the logged-in `atp_staff` user cannot be mapped to a staff record, the backend will not allow staff-scoped booking access.
-
-## 7) Recommended mobile UI behavior by role
-
-The first mobile version mirrors the web backend entry points and section visibility.
-
-Sections:
-- Dashboard (always visible)
-- Customers (admin/manager)
-- Travel Groups (admin/manager/accountant/staff)
-- Bookings (admin/manager/accountant/staff)
-- Tours (admin/accountant; read-only)
-- Reports/Settings (admin/manager)
-
-`atp_staff`
-- show only assigned bookings
-- allow editing the single booking note only on assigned bookings
-- allow stage changes only on assigned bookings
-- hide staff assignment controls
-- show Customers: no
-- show Travel Groups: yes
-- show Tours: no
-- show Reports/Settings: no
-
-`atp_manager`
-- show all bookings
-- allow booking editing
-- show staff assignment controls
-- show Customers: yes
-- show Travel Groups: yes
-- show Tours: no
-- show Reports/Settings: no
-
-`atp_admin`
-- show all bookings
-- allow booking editing
-- show staff assignment controls
-- show Customers: yes
-- show Travel Groups: yes
-- show Tours: yes
-- show Reports/Settings: yes
-- if tours are added later to mobile, allow editing
-
-`atp_accountant`
-- show all bookings
-- allow stage changes only
-- keep other booking actions read-only
-- show Customers: no
-- show Travel Groups: yes
-- show Tours: yes (read-only)
-- show Reports/Settings: no
-- if tours are added later to mobile, allow read-only viewing only
-
-## 8) First-version screens
-
-Recommended screens:
-- Login
-- Booking list
-- Booking detail
-- Booking commercials summary
-- Payment schedule list
-- Booking stage update
-- Booking activity timeline
-- Single booking note editor
-- Staff assignment picker for manager/admin only
-- Customer list
-- Customer detail
-- Settings / logout
-
-Later screens:
-- customer interaction inbox
-- customer detail
-- customer contact actions
-
-## 9) Token handling rules
-
-Store tokens only in:
-- iOS Keychain
-
-Do not store tokens in:
-- `UserDefaults`
-- plain files
-
-Use:
-- access token for API calls
-- refresh token for renewal
-
-Recommended behavior:
-- refresh shortly before expiry
-- on refresh failure, log out cleanly
-
-## 10) Suggested app structure
-
-## 11) Booking commercials model
-
-The mobile app should render the same commercials structure as the web backend.
-
-Use these concepts:
-- `agreed_net_amount_cents`
-  - the negotiated base price before typed adjustments
-- typed adjustments
-  - `DISCOUNT`
-  - `CREDIT`
-  - `SURCHARGE`
-- payment schedule entries
-  - each entry represents one installment payment
-- payment status
-  - `PENDING`
-  - `PAID`
-- tax per payment
-  - stored as `tax_rate_basis_points`
-  - different payments may use different tax rates
-
-Derived values must come from the backend, not from mobile-only calculations:
-- adjusted net amount
-- unscheduled net amount
-- scheduled tax total
-- scheduled gross total
-- paid gross total
-- outstanding gross total
-- schedule balance flag
-
-Scheduling rule:
-- partial payment schedules are valid
-- scheduled payment net total must not exceed adjusted booking net total
-- any remaining amount to schedule is provided by the backend as `unscheduled_net_amount_cents`
-
-Mobile should display:
-- booking currency
-- agreed net amount
-- adjustments summary
-- adjusted net amount
-- payment schedule with:
-  - label
-  - due date
-  - gross amount
-  - tax rate
-  - paid/pending status
-  - paid timestamp if present
-
-The iPhone app currently treats this as a read model.
-Editing of commercials can stay web-first while the data model stabilizes.
-
-Suggested modules:
-- `Auth`
-- `Networking`
-- `Models`
-- `Bookings`
-- `Session`
-- `Settings`
-
-Later:
-- `Customers`
-
-Suggested services:
-- `AuthService`
-- `TokenStore`
-- `APIClient`
-- `SessionStore`
-- `RoleService`
-
-`RoleService` should expose:
-- `isATPAdmin`
-
-Booking note behavior:
-- a booking has exactly one editable note field: `booking.notes`
-- the app must not append note activities for normal note editing
-- every booking returned by the backend includes `booking_hash`
-- when the app updates a booking field, it must send the current `booking_hash`
-- if backend reports a hash mismatch, the app must:
-  - reload the booking from the backend
-  - replace the local editor state with the refreshed backend data
-  - show:
-    - `The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.`
-- only if the note is unchanged should the app call:
-  - `PATCH /api/v1/bookings/:bookingId/notes`
-  - with `notes` and `booking_hash`
-- `isATPManager`
-- `isATPAccountant`
-- `isATPStaff`
-- `isAllowedATPStaff`
-
-## 11) Recommended backend support for mobile
-
-Current version/bootstrap endpoint:
-
-`GET /public/v1/mobile/bootstrap`
-
-Current response:
-
-```json
-{
-  "app": {
-    "min_supported_version": "1.0.0",
-    "latest_version": "1.0.0",
-    "force_update": false
-  },
-  "api": {
-    "contract_version": "2026-03-01.1"
-  },
-  "features": {
-    "bookings": true,
-    "customers": false,
-    "tours": false
-  }
-}
-```
-
-Startup rule:
-- app starts
-- fetches `/public/v1/mobile/bootstrap`
-- compares installed app version against `min_supported_version`
-- if installed build is too old, show `Please update` and stop app usage
-
-This is the intended behavior for in-house distribution. Backward compatibility beyond the minimum supported version is not a goal.
-
-The mobile app will be simpler if the backend provides:
-
-1. `GET /api/v1/me`
-- current identity
-- resolved roles
-- possibly resolved staff record id
-
-Suggested response shape:
-
-```json
-{
-  "authenticated": true,
-  "user": {
-    "sub": "...",
-    "preferred_username": "joachim",
-    "email": "info@asiatravelplan.com",
-    "roles": ["atp_admin"]
-  }
-}
-```
-
-2. stable booking payload fields
-- `staff`
-- `staff_name`
-- current stage
-- activities
-
-3. stable staff assignment behavior
-- manager/admin only
-- assignment endpoint path: `PATCH /api/v1/bookings/:bookingId/owner`
-
-## 12) Summary
-
-The correct first iPhone app is:
-- native
-- authenticated through Keycloak with PKCE
-- restricted to `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
-- focused on bookings first
-- prepared for later customer interaction
-
-That will keep the app aligned with the real backend permissions instead of copying the browser backend UI mechanically.
+When mobile work resumes, generated contract artifacts and booking/person vocabulary must stay aligned with the current web/backend implementation. Mobile should follow the model, not preserve older naming.

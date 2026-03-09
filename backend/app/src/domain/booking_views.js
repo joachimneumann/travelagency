@@ -79,9 +79,9 @@ export function createBookingViewHelpers({
     const primary = getBookingPrimaryContact(booking);
     const submitted = getSubmittedContact(booking);
     return {
-      name: normalizeText(primary?.name) || submitted.name || normalizeText(booking?.client_display_name) || null,
-      email: primary?.emails?.[0] || submitted.email || normalizeEmail(booking?.client_primary_email) || null,
-      phone_number: primary?.phone_numbers?.[0] || submitted.phone_number || normalizeText(booking?.client_primary_phone_number) || null
+      name: normalizeText(primary?.name) || submitted.name || null,
+      email: primary?.emails?.[0] || submitted.email || null,
+      phone_number: primary?.phone_numbers?.[0] || submitted.phone_number || null
     };
   }
 
@@ -93,12 +93,10 @@ export function createBookingViewHelpers({
     const submitted = getSubmittedContact(booking);
     const phones = [
       submitted.phone_number,
-      normalizeText(booking?.client_primary_phone_number),
       ...persons.flatMap((person) => person.phone_numbers)
     ].filter(Boolean);
     const emails = [
       submitted.email,
-      normalizeEmail(booking?.client_primary_email),
       ...persons.flatMap((person) => person.emails)
     ].filter(Boolean);
     if (email && emails.includes(email)) return true;
@@ -126,13 +124,12 @@ export function createBookingViewHelpers({
     return active || matches[0];
   }
 
-  function resolveCustomerByExternalContact(store, externalContactId) {
+  function resolveBookingContactByExternalContact(store, externalContactId) {
     const booking = resolveBookingForExternalContact(store, externalContactId);
     if (!booking) return null;
     const primary = getBookingPrimaryContact(booking);
     const contact = getBookingContactProfile(booking);
     return {
-      client_id: booking.id,
       booking_id: booking.id,
       person_id: normalizeText(primary?.id) || null,
       name: contact.name || "",
@@ -141,11 +138,11 @@ export function createBookingViewHelpers({
     };
   }
 
-  function resolveBookingForClient(store, clientId) {
-    const normalizedClientId = normalizeText(clientId);
-    if (!normalizedClientId) return null;
+  function resolveBookingById(store, bookingId) {
+    const normalizedBookingId = normalizeText(bookingId);
+    if (!normalizedBookingId) return null;
     const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
-      .filter((booking) => normalizeText(booking.id) === normalizedClientId || normalizeText(booking.client_id) === normalizedClientId)
+      .filter((booking) => normalizeText(booking.id) === normalizedBookingId)
       .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
     if (!matches.length) return null;
     const active = matches.find((booking) => activeBookingStages().has(booking.stage));
@@ -299,15 +296,13 @@ export function createBookingViewHelpers({
 
     const conversationBookingIds = new Map();
     const conversationIdToConversation = new Map();
-    const latestBookingByClient = new Map();
+    const latestBookingById = new Map();
     const sortedByRecency = [...store.bookings].sort(
       (a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
     );
     for (const booking of sortedByRecency) {
-      const keys = [normalizeText(booking.id), normalizeText(booking.client_id)].filter(Boolean);
-      for (const key of keys) {
-        if (!latestBookingByClient.has(key)) latestBookingByClient.set(key, booking.id);
-      }
+      const key = normalizeText(booking.id);
+      if (key && !latestBookingById.has(key)) latestBookingById.set(key, booking.id);
     }
 
     const getLatestBookingForContactMatch = (contact) => {
@@ -323,9 +318,9 @@ export function createBookingViewHelpers({
       const linkedBookingId = normalizeText(conversation.booking_id);
       if (linkedBookingId) matchedBookingIds.add(linkedBookingId);
 
-      const linkedClientId = normalizeText(conversation.client_id);
-      if (linkedClientId) {
-        const latestBookingId = latestBookingByClient.get(linkedClientId);
+      const linkedBookingIdentity = normalizeText(conversation.booking_id);
+      if (linkedBookingIdentity) {
+        const latestBookingId = latestBookingById.get(linkedBookingIdentity);
         if (latestBookingId) matchedBookingIds.add(latestBookingId);
       }
 
@@ -393,7 +388,6 @@ export function createBookingViewHelpers({
         ...normalizeStringArray(booking.travel_styles || booking.style),
         booking.atp_staff_name,
         booking.notes,
-        booking.client_display_name,
         contact.name,
         contact.email,
         contact.phone_number,
@@ -479,8 +473,8 @@ export function createBookingViewHelpers({
   }
 
   return {
-    resolveCustomerByExternalContact,
-    resolveBookingForClient,
+    resolveBookingContactByExternalContact,
+    resolveBookingById,
     getMetaConversationOpenUrl,
     validateBookingInput,
     addActivity,

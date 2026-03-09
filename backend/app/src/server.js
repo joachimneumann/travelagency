@@ -40,6 +40,13 @@ import {
   normalizePhoneDigits
 } from "./domain/phone_matching.js";
 import {
+  GENERATED_BOOKING_STAGES,
+  GENERATED_OFFER_CATEGORIES,
+  GENERATED_PAYMENT_STATUSES,
+  GENERATED_PRICING_ADJUSTMENT_TYPES
+} from "../Generated/Models/generated_Booking.js";
+import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
+import {
   currencyDefinition as generatedCurrencyDefinition,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../Generated/Models/generated_Currency.js";
@@ -50,8 +57,6 @@ const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
 const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
-const CONSENT_EVIDENCE_DIR = path.join(APP_ROOT, "data", "consent-evidence");
-const CUSTOMER_PHOTOS_DIR = path.join(APP_ROOT, "data", "customer-photos");
 const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
 const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
@@ -82,87 +87,43 @@ const COMPANY_PROFILE = {
   email: "info@asiatravelplan.com"
 };
 
-const STAGES = {
-  NEW: "NEW",
-  QUALIFIED: "QUALIFIED",
-  PROPOSAL_SENT: "PROPOSAL_SENT",
-  NEGOTIATION: "NEGOTIATION",
-  INVOICE_SENT: "INVOICE_SENT",
-  PAYMENT_RECEIVED: "PAYMENT_RECEIVED",
-  WON: "WON",
-  LOST: "LOST",
-  POST_TRIP: "POST_TRIP"
-};
+const STAGES = Object.freeze(Object.fromEntries(GENERATED_BOOKING_STAGES.map((value) => [value, value])));
+const STAGE_ORDER = GENERATED_BOOKING_STAGES;
 
-const STAGE_ORDER = [
-  STAGES.NEW,
-  STAGES.QUALIFIED,
-  STAGES.PROPOSAL_SENT,
-  STAGES.NEGOTIATION,
-  STAGES.INVOICE_SENT,
-  STAGES.PAYMENT_RECEIVED,
-  STAGES.WON,
-  STAGES.LOST,
-  STAGES.POST_TRIP
-];
+const GENERATED_APP_ROLE_LOOKUP = Object.freeze(
+  Object.fromEntries(
+    GENERATED_ATP_STAFF_ROLES.map((value) => [String(value).replace(/^atp_/, "").toUpperCase(), value])
+  )
+);
 
-const APP_ROLES = {
-  ADMIN: "atp_admin",
-  MANAGER: "atp_manager",
-  ACCOUNTANT: "atp_accountant",
-  ATP_STAFF: "atp_staff"
-};
+const APP_ROLES = Object.freeze({
+  ADMIN: GENERATED_APP_ROLE_LOOKUP.ADMIN,
+  MANAGER: GENERATED_APP_ROLE_LOOKUP.MANAGER,
+  ACCOUNTANT: GENERATED_APP_ROLE_LOOKUP.ACCOUNTANT,
+  ATP_STAFF: GENERATED_APP_ROLE_LOOKUP.STAFF
+});
 
 const FX_RATE_CACHE_TTL_MS = 5 * 60 * 1000;
 const fxRateCache = new Map();
 const FX_RATE_CACHE_STALE_MS = 30 * 60 * 1000;
 
-const PRICING_ADJUSTMENT_TYPES = {
-  DISCOUNT: "DISCOUNT",
-  CREDIT: "CREDIT",
-  SURCHARGE: "SURCHARGE"
-};
+const PRICING_ADJUSTMENT_TYPES = Object.freeze(
+  Object.fromEntries(GENERATED_PRICING_ADJUSTMENT_TYPES.map((value) => [value, value]))
+);
 
-const PAYMENT_STATUSES = {
-  PENDING: "PENDING",
-  PAID: "PAID"
-};
+const PAYMENT_STATUSES = Object.freeze(Object.fromEntries(GENERATED_PAYMENT_STATUSES.map((value) => [value, value])));
 
-const OFFER_CATEGORIES = {
-  ACCOMMODATION: "ACCOMMODATION",
-  TRANSPORTATION: "TRANSPORTATION",
-  TOURS_ACTIVITIES: "TOURS_ACTIVITIES",
-  GUIDE_SUPPORT_SERVICES: "GUIDE_SUPPORT_SERVICES",
-  MEALS: "MEALS",
-  FEES_TAXES: "FEES_TAXES",
-  DISCOUNTS_CREDITS: "DISCOUNTS_CREDITS",
-  OTHER: "OTHER"
-};
+const OFFER_CATEGORIES = Object.freeze(
+  Object.fromEntries(GENERATED_OFFER_CATEGORIES.map((value) => [value, value]))
+);
 
-const OFFER_CATEGORY_ORDER = [
-  OFFER_CATEGORIES.ACCOMMODATION,
-  OFFER_CATEGORIES.TRANSPORTATION,
-  OFFER_CATEGORIES.TOURS_ACTIVITIES,
-  OFFER_CATEGORIES.GUIDE_SUPPORT_SERVICES,
-  OFFER_CATEGORIES.MEALS,
-  OFFER_CATEGORIES.FEES_TAXES,
-  OFFER_CATEGORIES.DISCOUNTS_CREDITS,
-  OFFER_CATEGORIES.OTHER
-];
+const OFFER_CATEGORY_ORDER = GENERATED_OFFER_CATEGORIES;
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 
-const ALLOWED_STAGE_TRANSITIONS = {
-  [STAGES.NEW]: STAGE_ORDER,
-  [STAGES.QUALIFIED]: STAGE_ORDER,
-  [STAGES.PROPOSAL_SENT]: STAGE_ORDER,
-  [STAGES.NEGOTIATION]: STAGE_ORDER,
-  [STAGES.INVOICE_SENT]: STAGE_ORDER,
-  [STAGES.PAYMENT_RECEIVED]: STAGE_ORDER,
-  [STAGES.WON]: STAGE_ORDER,
-  [STAGES.LOST]: STAGE_ORDER,
-  [STAGES.POST_TRIP]: STAGE_ORDER
-};
+const ALLOWED_STAGE_TRANSITIONS = Object.freeze(
+  Object.fromEntries(STAGE_ORDER.map((stage) => [stage, STAGE_ORDER]))
+);
 
 const SERVICE_LEVEL_AGREEMENT_HOURS = {
   [STAGES.NEW]: 2,
@@ -312,8 +273,8 @@ const {
 });
 
 const {
-  resolveCustomerByExternalContact,
-  resolveBookingForClient,
+  resolveBookingContactByExternalContact,
+  resolveBookingById,
   getMetaConversationOpenUrl,
   validateBookingInput,
   addActivity,
@@ -361,8 +322,6 @@ const {
   dataPath: DATA_PATH,
   toursDir: TOURS_DIR,
   invoicesDir: INVOICES_DIR,
-  consentEvidenceDir: CONSENT_EVIDENCE_DIR,
-  customerPhotosDir: CUSTOMER_PHOTOS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   atpStaffPath: ATP_STAFF_PATH,
   writeQueueRef,
@@ -393,8 +352,8 @@ const {
   persistStore,
   sendJson,
   safeEqualText,
-  resolveCustomerByExternalContact,
-  resolveBookingForClient,
+  resolveBookingContactByExternalContact,
+  resolveBookingById,
   getMetaConversationOpenUrl
 });
 
@@ -661,7 +620,6 @@ async function handleMobileBootstrap(_req, res) {
       },
       features: {
         bookings: true,
-        customers: false,
         tours: false
       }
     });

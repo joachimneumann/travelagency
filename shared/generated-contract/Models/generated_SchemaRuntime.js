@@ -1298,7 +1298,7 @@
 },
   FIELD_5: {
   "kind": "enum",
-  "typeName": "CustomerConsentType",
+  "typeName": "PersonConsentType",
   "isArray": false,
   "enumValues": [
     "privacy_policy",
@@ -1327,7 +1327,7 @@
 },
   FIELD_6: {
   "kind": "enum",
-  "typeName": "CustomerConsentStatus",
+  "typeName": "PersonConsentStatus",
   "isArray": false,
   "enumValues": [
     "granted",
@@ -1357,7 +1357,7 @@
 },
   FIELD_8: {
   "kind": "enum",
-  "typeName": "CustomerDocumentType",
+  "typeName": "PersonDocumentType",
   "isArray": false,
   "enumValues": [
     "passport",

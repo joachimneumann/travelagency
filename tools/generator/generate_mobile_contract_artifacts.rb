@@ -1308,7 +1308,6 @@ def build_openapi_doc(ir, traveler_constraints)
       { name: 'Auth' },
       { name: 'Public' },
       { name: 'Bookings' },
-      { name: 'Customers' },
       { name: 'Staff' },
       { name: 'Tours' }
     ],

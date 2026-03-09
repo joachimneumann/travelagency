@@ -7,8 +7,6 @@ export function createStoreUtils({
   dataPath,
   toursDir,
   invoicesDir,
-  consentEvidenceDir,
-  customerPhotosDir,
   tempUploadDir,
   atpStaffPath,
   writeQueueRef,
@@ -35,23 +33,15 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
-    await mkdir(consentEvidenceDir, { recursive: true });
-    await mkdir(customerPhotosDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
   }
 
   async function readStore() {
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
-    parsed.clients ||= [];
-    parsed.customers ||= [];
     parsed.bookings ||= [];
     parsed.activities ||= [];
     parsed.invoices ||= [];
-    parsed.customer_consents ||= [];
-    parsed.customer_documents ||= [];
-    parsed.travel_groups ||= [];
-    parsed.travel_group_members ||= [];
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];

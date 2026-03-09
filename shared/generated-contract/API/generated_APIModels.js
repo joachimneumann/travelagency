@@ -276,7 +276,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"bookings","required":true,"wireName":"bookings"}, SHARED_FIELD_DEFS.FIELD_24),
-    schemaField({"name":"customers","required":true,"wireName":"customers"}, SHARED_FIELD_DEFS.FIELD_24),
     schemaField({"name":"tours","required":true,"wireName":"tours"}, SHARED_FIELD_DEFS.FIELD_24)
         ]
       };
@@ -338,7 +337,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"channel","required":true,"wireName":"channel"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"externalContactId","required":false,"wireName":"externalContactId"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"clientId","required":false,"wireName":"clientId"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"bookingId","required":false,"wireName":"bookingId"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"lastEventAt","required":false,"wireName":"lastEventAt"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"latestPreview","required":false,"wireName":"latestPreview"}, SHARED_FIELD_DEFS.FIELD_1),

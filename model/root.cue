@@ -36,9 +36,9 @@ import (
 		OfferCategory:         enumModel.#OfferCategory
 		CountryCode:           enumModel.#CountryCode
 		TimezoneCode:          enumModel.#TimezoneCode
-		CustomerConsentType:   enumModel.#CustomerConsentType
-		CustomerConsentStatus: enumModel.#CustomerConsentStatus
-		CustomerDocumentType:  enumModel.#CustomerDocumentType
+		PersonConsentType:     enumModel.#PersonConsentType
+		PersonConsentStatus:   enumModel.#PersonConsentStatus
+		PersonDocumentType:    enumModel.#PersonDocumentType
 		BookingActivityType:   enumModel.#BookingActivityType
 	}
 

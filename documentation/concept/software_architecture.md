@@ -2,463 +2,292 @@
 
 ## Purpose
 
-This document describes a software architecture for a system with:
+This document explains the architectural shape of the current AsiaTravelPlan system.
 
-- a backend
-- a web frontend
-- one or more mobile apps
-- generated code shared across those runtimes
+It is not a generic template. It describes the actual structure used in this repository:
+- one model source of truth
+- generated transport artifacts
+- handwritten runtime workflow code
+- booking-owned person data
 
-The architecture is based on one single point of truth, one generated transport artifact, and a four-layer design.
+## Architecture Summary
 
-## Single Point of Truth
+The system is built around one rule:
 
-The system should define exactly one source of truth.
+The CUE model in `model/` defines the shared meaning of the system.
 
-### Abstract model description
+Everything else should either be:
+- generated from that model
+- or handwritten runtime logic that consumes the generated artifacts
 
-The abstract model description defines the business domain independently from transport, user interface, and storage.
+The active operational domains are:
+- bookings
+- booking persons
+- ATP staff
+- tours
+- pricing
+- invoices
+- activities
+- chat timelines linked to bookings
 
-It describes:
+The system intentionally does not use a separate shared master-data layer for contacts or traveler groups.
 
-- core entities in `entities/`
-- relationships
-- enumerations
+## The Source of Truth
+
+### Model
+
+The source of truth lives under:
+- `model/entities/`
+- `model/api/`
+- `model/enums/`
+- `model/common/`
+- `model/ir/`
+
+This model defines:
+- entity shapes
+- transport shapes
+- enums and catalogs
+- naming
 - invariants
-- canonical terminology
-- business meaning of fields
 
-It should not describe:
+Important current domain decision:
+- `booking.persons[]` is the editable person structure
+- `booking.web_form_submission` is the immutable inbound snapshot
 
-- HTTP routes
-- JSON persistence layout
-- database tables
-- frontend framework structures
-- mobile framework structures
+### Why This Matters
 
-Its purpose is to define what the system means.
+Without a single source of truth, drift happens in three places:
+- backend starts inventing fields not present in the model
+- frontend starts hardcoding enums or response assumptions
+- generated contract stops matching real runtime behavior
 
-### Generated API specification
+The architecture is designed to prevent that.
 
-The API specification defines how clients communicate with the backend.
+## Model Boundary
 
-It describes:
+The CUE model is split intentionally.
 
-- endpoints
-- HTTP methods
-- request shapes
-- response shapes
-- path and query parameters
-- authentication requirements
-- versioning and compatibility metadata
+### `model/entities/`
 
-Its purpose is to define how the system is accessed.
-
-## Why the Generated API Specification Is Needed
-
-The abstract model description and the generated API specification solve different problems.
-
-### Why the abstract model description is needed
-
-Without an abstract model, the system tends to drift into implementation-defined concepts.
-
-Typical failure modes:
-
-- business meaning exists only in backend code
-- frontend and mobile invent their own interpretations of fields
-- the same concept is represented differently in different runtimes
-
-The abstract model prevents conceptual drift.
-
-### Why the generated API specification is needed
-
-Without an API specification, each client has to infer the protocol from backend implementation details.
-
-Typical failure modes:
-
-- routes are duplicated by hand
-- field names are guessed manually
-- mobile and frontend drift apart
-- backend changes break clients unexpectedly
-
-The API specification prevents protocol drift.
-
-## Relationship Between the Model and the Generated API Specification
-
-The abstract model description and the generated API specification are related, but they are not the same thing.
-
-- The abstract model describes business meaning.
-- The generated API specification describes transport behavior.
-
-The intended direction is:
-
-- the API specification is generated from the abstract model description
-- generated code is derived from the API specification
-
-The API specification is a generated transport artifact and should not become an independent business model.
-
-The abstract model should separate:
-
-- `entities/` for core domain entities and value objects
-- `api/` for transport-only payloads such as list wrappers, bootstrap payloads, paging wrappers, and error shapes
-
-
-## Entity and Transport Boundary
-
-The abstract model must keep core business entities separate from transport-only payloads.
-
-### `entities/`
-
-`entities/` contains only domain entities and domain value objects.
+Contains business entities and value objects.
 
 Examples:
-
-- `Client`
-- `Customer`
-- `TravelGroup`
 - `Booking`
-- `Tour`
+- `BookingPerson`
+- `Invoice`
 - `ATPStaff`
-- `Currency`
+- `Tour`
 
-These types represent business meaning. They are not request wrappers, list envelopes, or transport error payloads.
+These types describe what the business data means.
 
-### `api/`
+### `model/api/`
 
-`api/` contains only transport-oriented shapes.
+Contains transport-only shapes.
 
 Examples:
-
-- `BookingList`
-- `TourList`
+- list responses
 - bootstrap payloads
-- paging wrappers
+- endpoint request and response envelopes
 - error shapes
-- endpoint-specific request and response payloads
 
-These types represent how data is transported, not what the core domain is.
+These types describe how data moves across HTTP.
 
-Generated API output should preserve this split:
+### `model/enums/` and `model/common/`
 
-- entity-oriented generated files should come from `entities/`
-- transport-oriented generated files should come from `api/`
+Contain reusable definitions such as:
+- currencies
+- languages
+- booking stages
+- offer categories
+- identifiers
+- dates
 
-## Four-Layer Architecture
+### `model/ir/`
 
-The architecture should be understood as four layers.
+Contains the normalized intermediate representation used by the generator.
 
-### Layer 1: Abstract model description
+This layer exists so code generation works from one normalized shape instead of trying to interpret every source file ad hoc.
 
-This is the conceptual business layer.
+## Generation Flow
 
-It defines:
+The generation flow is:
 
-- domain entities
-- business relationships
-- field meaning
-- invariants
-- domain vocabulary
+1. CUE model defines entities, transport shapes, and enums.
+2. `model/ir` exports normalized IR and catalogs.
+3. `tools/generator/generate_mobile_contract_artifacts.rb` generates artifacts.
+4. Runtime code consumes those artifacts.
 
-This layer is independent of:
+Generated outputs include:
+- `api/generated/openapi.yaml`
+- `api/generated/mobile-api.meta.json`
+- `shared/generated-contract/`
+- `backend/app/Generated/`
+- `frontend/Generated/`
+- `mobile/iOS/Generated/`
 
-- transport
-- UI
-- storage
+The generator should own:
+- transport schemas
+- enum catalogs
+- request builders
+- runtime model exports
 
-It is the most stable layer.
+Runtime code should not maintain parallel copies of those definitions.
 
-### Layer 2: API contract, API code for frontend and mobile
+## Four Layers
 
-This layer turns the abstract model into a transport contract and generated client-facing protocol code.
+### Layer 1: Domain model
 
-It includes:
+Owned by CUE in `model/`.
 
-- the API specification
-- generated API request builders for the frontend
-- generated API request builders for mobile
-- generated API client code for the frontend
-- generated API client code for mobile
-- generated transport models from `model/api/`
-- generated enums and metadata that belong to the transport layer
+Responsibilities:
+- define domain meaning
+- define transport meaning
+- define shared enums and catalogs
 
-This layer is the communication boundary between backend and clients.
+This is the most stable layer.
 
-It answers questions such as:
+### Layer 2: Generated contract
 
-- what endpoint exists
-- what request is valid
-- what response shape is valid
-- how the frontend calls the backend
-- how the mobile app calls the backend
+Owned by the generator.
 
-### Layer 3: Backend model, frontend model, mobile model
+Responsibilities:
+- publish the transport contract
+- expose generated request builders
+- expose generated models and catalogs for backend, frontend, and later mobile
 
-This layer contains runtime-specific models derived from the shared sources.
-These models are generated by a generator rather than maintained as independent hand-written copies.
+This is the shared communication layer between runtimes.
 
-It includes:
+### Layer 3: Runtime application code
 
-- backend model
-- frontend model
-- mobile model
+Owned by handwritten backend/frontend code.
 
-These models are not identical copies of each other. They are platform-specific realizations of the same shared concepts, produced by generation rules for each runtime.
+Responsibilities:
+- workflow logic
+- authorization
+- persistence orchestration
+- UI behavior
+- chat/webhook integration
+- pricing, offer, and invoice calculations
 
-#### Backend model
+This layer may add behavior, but it should not redefine the shared data contract.
 
-The backend model should be derived from the abstract model description.
+### Layer 4: Persistence
 
-It should be storage-agnostic and contain:
+Owned by storage adapters.
 
-- backend structural types
-- enums
-- generated validators
-- generated metadata needed by backend code
+Current local/runtime persistence is:
+- JSON store for bookings and related runtime data
+- per-tour folders for tours and images
+- invoice files/assets
 
-It should not contain hand-written domain behavior.
+Persistence is allowed to have storage-specific normalization, but that normalization must still map back to the modeled runtime shape.
 
-#### Frontend model
+## Runtime Responsibilities by Area
 
-The frontend model should be derived from the API specification.
+### Backend
 
-It should contain:
+The backend is responsible for:
+- authentication and authorization
+- booking workflows
+- stage transitions
+- ATP staff assignment rules
+- pricing normalization and calculations
+- invoice creation and PDF generation
+- chat/webhook ingestion
+- persistence
 
-- view-facing representations of API data
-- generated entity models from `entities/`
-- generated transport models from `api/`
-- generated enums and metadata catalogs
-- client-side transport model structures
-- UI-adapter logic where needed
+The backend should use generated enums and transport shapes instead of maintaining handwritten parallel catalogs.
 
-#### Mobile model
+### Frontend
 
-The mobile model should also be derived from the API specification.
+The frontend is responsible for:
+- public booking form
+- public tours catalog
+- backend workspace pages
+- booking detail page
+- person search page
+- tour edit page
 
-It should contain:
+The frontend should use generated request builders, generated enums, and generated transport models whenever possible.
 
-- mobile-facing representations of API data
-- generated entity models from `entities/`
-- generated transport models from `api/`
-- generated enums and metadata catalogs
-- mobile transport model structures
-- platform-specific adapters where needed
+### Mobile
 
-A mobile model may intentionally be smaller than the frontend or backend model. That is acceptable.
+Mobile is currently secondary, but the architectural rule is already defined:
+- mobile should consume the same generated contract
+- mobile should use the same booking-owned person vocabulary
+- mobile must not reintroduce removed master-data concepts
 
-The important rule is:
+## Current Domain Shape
 
-- it must be a subset or projection of the same shared concepts
-- it must not become a separately invented model
+The active data shape is centered on the booking.
 
-### Layer 4: Storage adapters / storage model
+Key implications:
+- a booking owns its contact and traveler data
+- person changes are local to that booking
+- cross-booking deduplication is not the primary write model
+- inbound website data already fits the booking shape
 
-This is the persistence layer.
+Advantages:
+- simpler permissions
+- fewer cross-record write conflicts
+- easier inbound form handling
+- easier maintenance
 
-It maps the backend model to a concrete storage technology.
+Tradeoff:
+- duplicates across bookings are allowed
+
+This tradeoff is intentional.
+
+## Where Handwritten Code Is Still Acceptable
+
+Not everything has to be generated.
+
+Handwritten code is still the right place for:
+- authorization rules
+- workflow transitions
+- storage adapters
+- pricing calculations
+- PDF rendering
+- webhook integration
+- UI layout and interaction
+
+But handwritten code should not become the source of truth for:
+- enum definitions
+- transport field names
+- endpoint shapes
+- shared domain naming
+
+## Exceptions
+
+Some current endpoints or behaviors are still partly handwritten outside the modeled transport layer.
 
 Examples:
+- Meta webhook endpoints
+- offer exchange-rate preview endpoint
+- some ATP staff write flows
+- some tour upload behavior
 
-- JSON file storage
-- relational database schema
-- document storage
-- search index representation
-- external persistence adapters
+These are acceptable only if they remain explicitly documented and do not drift into shadow schemas.
 
-This layer may vary significantly depending on implementation needs.
+## Naming Rules
 
-That is expected.
+The active architecture should consistently use:
+- `person` / `persons`
+- `booking person`
+- `booking-owned`
 
-Storage concerns should be allowed to differ from business concerns.
+Avoid:
+- `people`
+- removed legacy master-data labels
+- duplicate runtime vocabularies for the same concept
 
-## Recommended Derivation Flow
+## Practical Review Rule
 
-The recommended derivation flow is:
+When changing the system, ask these questions in order:
 
-1. abstract model description -> generated API specification
-2. abstract model description -> generated backend model
-3. generated API specification -> frontend API code and mobile API code
-4. generated API specification -> frontend model and mobile model
-5. generated backend model -> storage adapters / storage model
+1. Should this change start in `model/`?
+2. Should the generator own this shape or enum?
+3. Is the backend/frontend adding behavior, not redefining shared meaning?
+4. Does the final runtime still reflect booking-owned persons?
 
-This is better than deriving the persistence structure directly from the abstract model.
-
-If storage is generated directly from the abstract model without an explicit backend model, storage-specific concerns tend to leak into domain design.
-
-The intent is that the generator consumes the abstract model description and the generated API specification, then emits the runtime-specific model layer for backend, frontend, and mobile.
-
-## Responsibilities by Layer
-
-### Abstract model description owns
-
-- business concepts
-- canonical terminology
-- relationships
-- invariants
-- semantic meaning
-
-### Generated API specification owns
-
-- transport contract
-- endpoint definitions
-- request and response schemas
-- compatibility metadata
-- authentication surface
-- transport-only types derived from `model/api/`
-
-### Generated backend model owns
-
-- structural backend types
-- enums
-- generated validators
-- generated metadata used by backend code
-
-### Hand-written backend domain code owns
-
-- business logic
-- domain validation rules beyond generated structural validation
-- calculations
-- permissions
-- transition rules
-
-### Frontend and mobile API code own
-
-- route construction
-- request construction
-- response decoding
-- transport-level client helpers
-
-### Frontend and mobile models own
-
-- runtime-specific typed representations
-- presentation adapters where needed
-- metadata consumption from generated sources
-
-### Storage adapters own
-
-- persistence-specific mapping
-- database layout
-- JSON structure
-- indexing choices
-- storage optimization
-
-## What Should Be Generated
-
-A generator should produce the parts that are repetitive, cross-platform, and contract-driven.
-
-That typically includes:
-
-- generated API request code for the frontend
-- generated API client code for the frontend
-- generated API request code for mobile
-- generated API client code for mobile
-- generated frontend model code
-- generated mobile model code
-- generated enums and metadata catalogs
-- generated compatibility metadata
-
-The backend may also derive part of its model or validation structures from the shared sources, depending on the implementation strategy.
-
-## What Should Remain Hand-Written
-
-The following should usually remain hand-written:
-
-- backend business logic
-- backend persistence logic
-- frontend UI flow
-- frontend page or screen controllers
-- mobile screen composition
-- mobile navigation
-- platform-specific interaction logic
-
-Generated code should remain narrow and predictable.
-
-## Why This Architecture Scales
-
-This architecture scales because it separates concerns cleanly.
-
-- The abstract model keeps business meaning stable.
-- The generated API specification keeps communication stable.
-- Generated API code reduces duplication.
-- Runtime-specific models remain aligned but platform-appropriate.
-- Storage can evolve independently.
-
-This makes it practical to:
-
-- change storage technology
-- add a new client
-- reduce the mobile surface area
-- evolve the API without duplicating protocol knowledge everywhere
-
-## Mobile-Specific Scope Reduction
-
-A mobile app often does not need the full system surface.
-
-That is normal.
-
-A mobile app may intentionally use:
-
-- fewer endpoints
-- fewer fields
-- fewer editing capabilities
-- fewer administrative concepts
-
-This does not violate the architecture, as long as the mobile app still derives its API code and model code from the same shared sources.
-
-The system should therefore support:
-
-- a full backend surface
-- a full or broad frontend surface
-- a reduced mobile surface
-
-without changing the underlying meaning of the shared concepts.
-
-## Versioning and Compatibility
-
-The generated API specification should include explicit compatibility signals, especially for mobile.
-
-Typical examples:
-
-- contract version
-- minimum supported app version
-- latest recommended app version
-- feature flags or capability indicators
-
-This allows a mobile app to stop early when it is no longer compatible, instead of continuing with partial or broken behavior.
-
-## Summary
-
-This architecture is built on one single point of truth:
-
-1. abstract model description
-
-It also uses one generated transport artifact:
-
-- API specification
-
-And it is organized into four layers:
-
-1. abstract model description
-2. API contract, API code for frontend and mobile
-3. backend model, frontend model, mobile model
-4. storage adapters / storage model
-
-The central idea is simple:
-
-- define business meaning once
-- define transport behavior once
-- generate the repetitive client-facing protocol code
-- keep runtime-specific models aligned
-- allow persistence to vary independently
-
-### Practical adoption notes
-
-In systems like ATP that adopt this architecture incrementally, it is acceptable to:
-
-- use the abstract model description as the source of truth
-- generate the API specification from it
-- keep the generated API specification transport-oriented with field names defined explicitly by the model and generator
-- represent status and type fields as **explicit enums** in the contract where the value set is finite
-- avoid leaking new storage naming or database-column concerns into the contract
-- keep frontend and mobile models generated from the API specification rather than hand-written copies
-
-That gives a system that is easier to understand, easier to evolve, and less likely to drift across backend, frontend, and mobile.
+If the answer to the first two is yes, the change should not start in handwritten runtime code.

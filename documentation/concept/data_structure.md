@@ -1,153 +1,106 @@
-# Data Structure (Concept)
+# Data Structure (Current Concept)
 
-## 1) Client anchor and customer profile
+## Core Decision
 
-### 1.1 Client
+AsiaTravelPlan now uses a booking-owned person structure.
 
-`Client`
-- `id` (string, immutable, system-generated)
-- `client_type` (`customer` | `travel_group`)
-- `client_hash` (string, concurrency token)
+This means:
+- no separate shared person-master-data entity
+- no separate booking anchor entity outside the booking itself
+- the booking contains the contact and traveler information needed to operate that booking
 
-Purpose:
-- stable booking-facing reference
-- polymorphic anchor for one individual customer or one travel group
-
-Invariant:
-- exactly one subtype record exists for every `Client`
-- if `client_type == customer`, one `Customer` exists for `Client.id`
-- if `client_type == travel_group`, one `TravelGroup` exists for `Client.id`
-
-### 1.2 Customer
-
-`Customer`
-- `client_id` (FK -> `Client.id`, required)
-- `customer_hash` (string, concurrency token)
-- `name` (required)
-- `photo_ref` (optional)
-- `title` (optional)
-- `first_name` (optional)
-- `last_name` (optional)
-- `date_of_birth` (optional)
-- `nationality` (optional, ISO-3166-1 alpha-2)
-- `address_line_1` (optional)
-- `address_line_2` (optional)
-- `address_city` (optional)
-- `address_state_region` (optional)
-- `address_postal_code` (optional)
-- `address_country_code` (optional, ISO-3166-1 alpha-2)
-- `organization_name` (optional)
-- `tax_id` (optional)
-- `organization_address` (optional)
-- `organization_phone_number` (optional)
-- `organization_webpage` (optional)
-- `organization_email` (optional)
-- `phone_number` (optional)
-- `email` (optional)
-- `preferred_language` (optional, generated language enum)
-- `preferred_currency` (optional, generated currency enum)
-- `timezone` (optional, IANA timezone)
-- `notes` (optional)
-- `created_at` (datetime)
-- `updated_at` (datetime)
-- `archived_at` (datetime, optional)
-
-### 1.3 CustomerConsent
-
-`CustomerConsent`
-- `id`
-- `customer_client_id` (FK -> `Customer.client_id`)
-- `consent_type` (`privacy_policy` | `marketing_email` | `marketing_whatsapp` | `profiling`)
-- `status` (`granted` | `withdrawn` | `unknown`)
-- `captured_via` (optional)
-- `captured_at` (datetime)
-- `evidence_ref` (optional)
-- `updated_at`
-
-### 1.4 CustomerDocument
-
-`CustomerDocument`
-- `id`
-- `customer_client_id` (FK -> `Customer.client_id`)
-- `document_type` (`passport` | `national_id` | `visa` | `other`)
-- `document_number` (optional)
-- `document_picture_ref` (optional)
-- `issuing_country` (optional)
-- `expires_on` (date, optional)
-- `created_at`
-- `updated_at`
-
-Security note:
-- store only encrypted `CustomerDocument` payloads and secure file references
-
-## 2) Group travel
-
-### 2.1 TravelGroup
-
-`TravelGroup`
-- `id`
-- `client_id` (FK -> `Client.id`, required)
-- `travel_group_hash` (string, concurrency token)
-- `group_name` (required)
-- `preferred_language` (optional)
-- `preferred_currency` (optional)
-- `timezone` (optional)
-- `notes` (optional)
-- `created_at`
-- `updated_at`
-- `archived_at` (optional)
-
-### 2.2 TravelGroupMember
-
-`TravelGroupMember`
-- `id`
-- `travel_group_id` (FK -> `TravelGroup.id`, required)
-- `customer_client_id` (FK -> `Customer.client_id`, required)
-- `is_traveling` (bool, default false)
-- `member_roles` (required, array<enum>):
-  - `TravelGroupContact`
-  - `other`
-- `notes` (optional)
-- `created_at`
-- `updated_at`
-
-## 3) Booking relationship
-
-A booking belongs to exactly one `Client`.
+## Booking
 
 `Booking`
-- `client_id` (FK -> `Client.id`, required)
-- `booking_hash` (string, concurrency token)
+- `id`
+- `booking_hash`
+- stage, assignment, notes
+- commercial data such as pricing, offer, invoices
+- `number_of_travelers`
+- `web_form_submission`
+- `persons[]`
 
-Read models should also expose resolved client summary fields for convenience:
-- `client_type`
-- `client_display_name`
-- `client_primary_phone_number`
-- `client_primary_email`
+`web_form_submission`
+- immutable snapshot of the original website submission
+- used for audit and input traceability
 
-## 4) Constraints and invariants
+`persons[]`
+- editable operational person records for the booking
 
-- A `Client` is either `customer` or `travel_group`.
-- A `Customer` cannot exist without a matching `Client`.
-- A `TravelGroup` cannot exist without a matching `Client`.
-- A `TravelGroup` has one or more `TravelGroupMember` rows.
-- Each `TravelGroup` must have at least one member with role `TravelGroupContact`.
-- `TravelGroupMember.customer_client_id` must reference an existing `Customer`.
-- Unknown traveler flow:
-  - create a minimal `Customer` first, then attach it to a `TravelGroup`.
-- False merges are worse than duplicates:
-  - exact normalized phone/email may reuse an existing customer
-  - fuzzy matches should create duplicate-review candidates, not silent merges
+## BookingPerson
 
-## 5) Search indexing recommendations
+`BookingPerson`
+- `id`
+- `name`
+- `emails[]`
+- `phone_numbers[]`
+- `preferred_language`
+- `date_of_birth`
+- `nationality`
+- `roles[]`
+- `address`
+- `photo_ref`
+- `documents[]`
+- `consents[]`
+- `notes`
 
-Include these fields in booking/customer search:
-- booking id
-- client display name
-- customer name
-- phone number
-- email
-- travel group name
-- destination
-- style
-- notes
+Important role examples:
+- `primary_contact`
+- `traveler`
+- `decision_maker`
+- `payer`
+- `assistant`
+
+Multiple roles are allowed on the same person.
+
+## BookingPersonAddress
+
+`BookingPersonAddress`
+- `line_1`
+- `line_2`
+- `city`
+- `state_region`
+- `postal_code`
+- `country_code`
+
+## BookingPersonConsent
+
+`BookingPersonConsent`
+- `id`
+- `consent_type`
+- `status`
+- `captured_via`
+- `captured_at`
+- `evidence_ref`
+- `updated_at`
+
+## BookingPersonDocument
+
+`BookingPersonDocument`
+- `id`
+- `document_type`
+- `document_number`
+- `document_picture_ref`
+- `issuing_country`
+- `expires_on`
+- `created_at`
+- `updated_at`
+
+## Invariants
+
+- `booking.persons[]` is the editable person source of truth for that booking
+- `web_form_submission` remains the original inbound snapshot
+- one booking may list fewer or more persons than `number_of_travelers`
+- UI may warn when those counts differ, but the model allows it
+- a booking should usually have one `primary_contact`
+
+## Why This Shape
+
+Advantages:
+- simpler data structure
+- easier permission separation for ATP staff
+- no cross-booking write conflicts
+- inbound web form already matches the booking shape
+
+Tradeoff:
+- duplicates across bookings are allowed by design

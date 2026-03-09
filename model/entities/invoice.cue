@@ -32,7 +32,7 @@ import (
 	dueDate?:       common.#DateOnly
 	components: [...#InvoiceComponent]
 	notes?:          string
-	sentToCustomer?: bool
+	sentToRecipient?: bool
 	createdAt?:      common.#Timestamp
 	updatedAt?:      common.#Timestamp
 }

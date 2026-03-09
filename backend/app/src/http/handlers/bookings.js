@@ -110,7 +110,7 @@ export function createBookingHandlers(deps) {
       .filter(Boolean);
   }
 
-  function getSubmittedCustomer(booking) {
+  function getSubmittedContact(booking) {
     const submission = booking?.web_form_submission || {};
     return {
       name: normalizeText(submission.name) || null,
@@ -122,7 +122,7 @@ export function createBookingHandlers(deps) {
   }
 
   function buildPrimaryContactFromSubmission(booking) {
-    const submitted = getSubmittedCustomer(booking);
+    const submitted = getSubmittedContact(booking);
     if (!submitted.name && !submitted.email && !submitted.phone_number) return null;
     return {
       id: `${normalizeText(booking?.id) || "booking"}_primary_contact`,
@@ -149,7 +149,7 @@ export function createBookingHandlers(deps) {
 
   function getBookingContactProfile(booking) {
     const primary = getBookingPrimaryContact(booking);
-    const submitted = getSubmittedCustomer(booking);
+    const submitted = getSubmittedContact(booking);
     const emails = primary ? normalizePersonEmails(primary) : [];
     const phoneNumbers = primary ? normalizePersonPhoneNumbers(primary) : [];
     return {
@@ -259,7 +259,7 @@ export function createBookingHandlers(deps) {
 
   function getBookingConversationMatchValues(booking) {
     const persons = getBookingPersons(booking);
-    const submitted = getSubmittedCustomer(booking);
+    const submitted = getSubmittedContact(booking);
     return {
       phones: unique(
         [
@@ -312,13 +312,6 @@ export function createBookingHandlers(deps) {
         }
       })
     );
-  }
-
-  function sendDeprecatedClientEndpoint(res) {
-    sendJson(res, 410, {
-      error: "Deprecated endpoint",
-      detail: "Booking customer/group assignment endpoints were removed. booking.persons is now the source of truth."
-    });
   }
 
   async function handleCreateBooking(req, res) {
@@ -527,7 +520,6 @@ export function createBookingHandlers(deps) {
           id: conversation.id,
           channel,
           external_contact_id: conversation.external_contact_id || null,
-          client_id: conversation.client_id || null,
           booking_id: conversation.booking_id || null,
           last_event_at: conversation.last_event_at || null,
           latest_preview: conversation.latest_preview || null,
@@ -589,22 +581,6 @@ export function createBookingHandlers(deps) {
     await persistStore(store);
 
     sendJson(res, 200, await buildBookingDetailResponse(booking));
-  }
-
-  async function handlePatchBookingClient(_req, res) {
-    sendDeprecatedClientEndpoint(res);
-  }
-
-  async function handleCreateBookingCustomer(_req, res) {
-    sendDeprecatedClientEndpoint(res);
-  }
-
-  async function handleCreateBookingGroup(_req, res) {
-    sendDeprecatedClientEndpoint(res);
-  }
-
-  async function handleCreateBookingGroupMember(_req, res) {
-    sendDeprecatedClientEndpoint(res);
   }
 
   async function handlePatchBookingOwner(req, res, [bookingId]) {
@@ -950,8 +926,8 @@ export function createBookingHandlers(deps) {
     return {
       ...invoice,
       components: Array.isArray(invoice?.components) ? invoice.components : [],
-      sent_to_customer: Boolean(invoice.sent_to_customer),
-      sent_to_customer_at: invoice.sent_to_customer_at || null,
+      sent_to_recipient: Boolean(invoice.sent_to_recipient),
+      sent_to_recipient_at: invoice.sent_to_recipient_at || null,
       pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
     };
   }
@@ -1024,17 +1000,16 @@ export function createBookingHandlers(deps) {
     const invoice = {
       id: `inv_${randomUUID()}`,
       booking_id: bookingId,
-      client_id: bookingId,
       invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
       version: 1,
       status: "DRAFT",
       currency: safeCurrency(payload.currency),
       issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
       due_date: normalizeText(payload.due_date) || null,
-      title: normalizeText(payload.title) || `Invoice for ${normalizeText(invoiceParty.name) || "client"}`,
+      title: normalizeText(payload.title) || `Invoice for ${normalizeText(invoiceParty.name) || "recipient"}`,
       notes: normalizeText(payload.notes),
-      sent_to_customer: false,
-      sent_to_customer_at: null,
+      sent_to_recipient: false,
+      sent_to_recipient_at: null,
       components,
       total_amount_cents: totalAmountCents,
       due_amount_cents: dueAmountCents,
@@ -1100,10 +1075,10 @@ export function createBookingHandlers(deps) {
       payload.components !== undefined ||
       payload.due_amount_cents !== undefined;
 
-    if (payload.sent_to_customer !== undefined) {
-      const sent = Boolean(payload.sent_to_customer);
-      invoice.sent_to_customer = sent;
-      invoice.sent_to_customer_at = sent ? invoice.sent_to_customer_at || nowIso() : null;
+    if (payload.sent_to_recipient !== undefined) {
+      const sent = Boolean(payload.sent_to_recipient);
+      invoice.sent_to_recipient = sent;
+      invoice.sent_to_recipient_at = sent ? invoice.sent_to_recipient_at || nowIso() : null;
       if (invoice.status !== "PAID") {
         invoice.status = sent ? "INVOICE_SENT" : "DRAFT";
       }
@@ -1172,10 +1147,6 @@ export function createBookingHandlers(deps) {
     handleGetBooking,
     handleDeleteBooking,
     handleListBookingChatEvents,
-    handlePatchBookingClient,
-    handleCreateBookingCustomer,
-    handleCreateBookingGroup,
-    handleCreateBookingGroupMember,
     handlePatchBookingStage,
     handlePatchBookingOwner,
     handlePatchBookingNotes,
