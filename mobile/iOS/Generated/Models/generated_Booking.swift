@@ -148,24 +148,21 @@
     struct GeneratedBooking: Codable, Equatable, Identifiable {
     let id: String
     let booking_hash: String?
-    let client_id: String?
-    let client_type: GeneratedClientType?
-    let client_display_name: String?
-    let client_primary_phone_number: String?
-    let client_primary_email: String?
     let stage: GeneratedBookingStage
     let atp_staff: String?
     let atp_staff_name: String?
-    let destination: [String]?
-    let style: [String]?
-    let web_form_travel_month: String?
+    let destinations: [GeneratedCountryCode]?
+    let travel_styles: [String]?
     let travel_start_day: String?
     let travel_end_day: String?
     let number_of_travelers: Int?
+    let budget_lower_USD: Int?
+    let budget_upper_USD: Int?
     let preferredCurrency: GeneratedCurrencyCode?
     let notes: String?
+    let persons: [GeneratedBookingPerson]?
     let web_form_submission: GeneratedBookingWebFormSubmission?
-    let service_level_agreement_due_at: String?
+    let serviceLevelAgreementDueAt: String?
     let pricing: GeneratedBookingPricing
     let offer: GeneratedBookingOffer
     let source: GeneratedSourceAttribution?
@@ -175,24 +172,21 @@
         private enum CodingKeys: String, CodingKey {
         case id = "id"
         case booking_hash = "booking_hash"
-        case client_id = "client_id"
-        case client_type = "client_type"
-        case client_display_name = "client_display_name"
-        case client_primary_phone_number = "client_primary_phone_number"
-        case client_primary_email = "client_primary_email"
         case stage = "stage"
         case atp_staff = "atp_staff"
         case atp_staff_name = "atp_staff_name"
-        case destination = "destination"
-        case style = "style"
-        case web_form_travel_month = "web_form_travel_month"
+        case destinations = "destinations"
+        case travel_styles = "travel_styles"
         case travel_start_day = "travel_start_day"
         case travel_end_day = "travel_end_day"
         case number_of_travelers = "number_of_travelers"
+        case budget_lower_USD = "budget_lower_USD"
+        case budget_upper_USD = "budget_upper_USD"
         case preferredCurrency = "preferredCurrency"
         case notes = "notes"
+        case persons = "persons"
         case web_form_submission = "web_form_submission"
-        case service_level_agreement_due_at = "service_level_agreement_due_at"
+        case serviceLevelAgreementDueAt = "serviceLevelAgreementDueAt"
         case pricing = "pricing"
         case offer = "offer"
         case source = "source"

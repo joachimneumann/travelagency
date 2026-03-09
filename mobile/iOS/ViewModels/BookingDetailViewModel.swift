@@ -3,9 +3,6 @@ import Foundation
 @MainActor
 final class BookingDetailViewModel: ObservableObject {
     @Published private(set) var booking: Booking?
-    @Published private(set) var client: Client?
-    @Published private(set) var customer: Customer?
-    @Published private(set) var travelGroup: TravelGroup?
     @Published private(set) var activities: [BookingActivity] = []
     @Published private(set) var invoices: [BookingInvoice] = []
     @Published private(set) var chatEvents: [BookingChatEvent] = []
@@ -33,9 +30,6 @@ final class BookingDetailViewModel: ObservableObject {
 
             let detailResponse = try await detail
             booking = detailResponse.booking
-            client = detailResponse.client
-            customer = detailResponse.customer
-            travelGroup = detailResponse.travelGroup
             noteDraft = detailResponse.booking.notes ?? ""
             originalNote = detailResponse.booking.notes ?? ""
             activities = try await activityPayload.activities ?? []
@@ -106,9 +100,6 @@ final class BookingDetailViewModel: ObservableObject {
         do {
             let detailResponse = try await apiClient.fetchBookingDetail(id: bookingID, session: session)
             self.booking = detailResponse.booking
-            self.client = detailResponse.client
-            self.customer = detailResponse.customer
-            self.travelGroup = detailResponse.travelGroup
             self.noteDraft = detailResponse.booking.notes ?? ""
             self.originalNote = detailResponse.booking.notes ?? ""
             let activityPayload = try await apiClient.fetchActivities(bookingID: bookingID, session: session)

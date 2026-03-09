@@ -22,28 +22,15 @@ export function createBookingViewHelpers({
 }) {
   function resolveCustomerByExternalContact(store, externalContactId) {
     if (!externalContactId) return null;
-    const exactMatches = (store.customers || []).filter((customer) => isLikelyPhoneMatch(customer.phone_number, externalContactId));
-    if (exactMatches.length === 1) return exactMatches[0];
-    return null;
+    return (store.bookings || []).find((booking) => {
+      const persons = Array.isArray(booking.persons) ? booking.persons : [];
+      return persons.some((person) => Array.isArray(person.phone_numbers) && person.phone_numbers.some((phone) => isLikelyPhoneMatch(phone, externalContactId)));
+    }) || null;
   }
 
   function resolveBookingForClient(store, clientId) {
     if (!clientId) return null;
-    const activeStages = new Set([
-      stages.NEW,
-      stages.QUALIFIED,
-      stages.PROPOSAL_SENT,
-      stages.NEGOTIATION,
-      stages.INVOICE_SENT,
-      stages.PAYMENT_RECEIVED
-    ]);
-
-    const matches = store.bookings
-      .filter((booking) => booking.client_id === clientId)
-      .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
-    if (!matches.length) return null;
-    const active = matches.find((booking) => activeStages.has(booking.stage));
-    return active || matches[0];
+    return (store.bookings || []).find((booking) => booking.id === clientId) || null;
   }
 
   function getMetaConversationOpenUrl(channel, externalContactId) {
@@ -70,8 +57,8 @@ export function createBookingViewHelpers({
     if (email && !emailOk) return { ok: false, error: "Invalid email" };
 
     const travelers = safeOptionalInt(payload.number_of_travelers);
-    if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {
-      return { ok: false, error: "Travelers must be between 1 and 30" };
+    if (travelers !== null && travelers !== undefined && (travelers < 0 || travelers > 30)) {
+      return { ok: false, error: "Travelers must be between 0 and 30" };
     }
 
     return { ok: true };
@@ -103,12 +90,8 @@ export function createBookingViewHelpers({
   }
 
   function canChangeBookingStage(principal, booking, staffMember) {
-    if (hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER) || hasRole(principal, appRoles.ACCOUNTANT)) {
-      return true;
-    }
-    if (hasRole(principal, appRoles.ATP_STAFF) && staffMember) {
-      return getBookingAtpStaffId(booking) === staffMember.id;
-    }
+    if (hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER) || hasRole(principal, appRoles.ACCOUNTANT)) return true;
+    if (hasRole(principal, appRoles.ATP_STAFF) && staffMember) return normalizeText(booking?.atp_staff) === staffMember.id;
     return false;
   }
 
@@ -116,23 +99,15 @@ export function createBookingViewHelpers({
     return normalizeText(principal?.preferred_username || principal?.email || principal?.sub || fallback) || fallback;
   }
 
-  function getBookingAtpStaffId(booking) {
-    return normalizeText(booking?.atp_staff);
-  }
-
   function syncBookingAtpStaffFields(booking) {
-    const staffId = normalizeText(booking.atp_staff);
-    const staffName = normalizeText(booking.atp_staff_name);
-    booking.atp_staff = staffId || null;
-    booking.atp_staff_name = staffName || null;
+    booking.atp_staff = normalizeText(booking.atp_staff) || null;
+    booking.atp_staff_name = normalizeText(booking.atp_staff_name) || null;
     return booking;
   }
 
   function canAccessBooking(principal, booking, staffMember) {
     if (canReadAllBookings(principal)) return true;
-    if (hasRole(principal, appRoles.ATP_STAFF) && staffMember) {
-      return getBookingAtpStaffId(booking) === staffMember.id;
-    }
+    if (hasRole(principal, appRoles.ATP_STAFF) && staffMember) return normalizeText(booking?.atp_staff) === staffMember.id;
     return false;
   }
 
@@ -140,9 +115,13 @@ export function createBookingViewHelpers({
     return canChangeBookingStage(principal, booking, staffMember);
   }
 
+  function bookingPrimaryPerson(booking) {
+    const persons = Array.isArray(booking?.persons) ? booking.persons : [];
+    return persons.find((person) => person?.is_lead_contact) || persons[0] || null;
+  }
+
   async function buildBookingReadModel(booking) {
     const normalizedBooking = { ...booking };
-    delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const bookingHash = computeBookingHash(normalizedBooking);
     delete normalizedBooking.preferred_currency;
@@ -179,8 +158,7 @@ export function createBookingViewHelpers({
     return stageOrder.includes(stage) ? stage : "";
   }
 
-  function filterAndSortBookings(store, query, deps = {}) {
-    const { getCustomerLookup = () => new Map(), ensureMetaChatCollections = () => {} } = deps;
+  function filterAndSortBookings(store, query) {
     const stage = normalizeStageFilter(query.get("stage"));
     const atpStaffId = normalizeText(query.get("atp_staff"));
     const rawSearch = normalizeText(query.get("search")).toLowerCase();
@@ -189,183 +167,60 @@ export function createBookingViewHelpers({
     const searchDigits = rawSearch.replace(/[^0-9]+/g, "");
     const searchLetters = rawSearch.replace(/[^a-z]+/g, "");
     const sort = normalizeText(query.get("sort")) || "created_at_desc";
-    const customersByClientId = getCustomerLookup(store);
-    ensureMetaChatCollections(store);
 
-    const conversationBookingIds = new Map();
-    const conversationIdToConversation = new Map();
-    const latestBookingByClient = new Map();
-    const sortedByRecency = [...store.bookings].sort(
-      (a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
-    );
-    for (const booking of sortedByRecency) {
-      if (!latestBookingByClient.has(booking.client_id)) {
-        latestBookingByClient.set(booking.client_id, booking.id);
-      }
-    }
-
-    const getLatestBookingForPhoneMatch = (phone) => {
-      if (!phone) return null;
-      for (const booking of sortedByRecency) {
-        const customer = customersByClientId.get(booking.client_id);
-        const storedPhone = customer?.phone_number || "";
-        if (!storedPhone) continue;
-        if (isLikelyPhoneMatch(storedPhone, phone)) return booking.id;
-      }
-      return null;
-    };
-
-    for (const conversation of store.chat_conversations) {
-      const conversationId = normalizeText(conversation.id);
-      if (!conversationId) continue;
-
-      const matchedBookingIds = new Set();
-      const linkedBookingId = normalizeText(conversation.booking_id);
-      if (linkedBookingId) matchedBookingIds.add(linkedBookingId);
-
-      const linkedClientId = normalizeText(conversation.client_id);
-      if (linkedClientId) {
-        const latestBookingId = latestBookingByClient.get(linkedClientId);
-        if (latestBookingId) matchedBookingIds.add(latestBookingId);
-      }
-
-      const channel = normalizeText(conversation.channel).toLowerCase();
-      const externalContactId = normalizeText(conversation.external_contact_id);
-      if (channel === "whatsapp" && externalContactId) {
-        const latestBookingId = getLatestBookingForPhoneMatch(externalContactId);
-        if (latestBookingId) matchedBookingIds.add(latestBookingId);
-      }
-
-      if (matchedBookingIds.size > 0) {
-        conversationBookingIds.set(conversationId, [...matchedBookingIds]);
-      }
-      conversationIdToConversation.set(conversationId, conversation);
-    }
-
-    const getBookingIdsFromPhoneMatch = (phone) => {
-      const matched = new Set();
-      const latestBookingId = getLatestBookingForPhoneMatch(phone);
-      if (latestBookingId) matched.add(latestBookingId);
-      return matched;
-    };
-
-    const bookingChatTextMap = new Map();
-    for (const event of store.chat_events) {
-      const conversationId = normalizeText(event.conversation_id);
-      const eventText = normalizeText(event.text_preview).toLowerCase();
-      if (!eventText) continue;
-
-      const matchedBookingIds = new Set(conversationBookingIds.get(conversationId) || []);
-      if (!matchedBookingIds.size) {
-        const senderContact = String(event.sender_contact || "").replace(/\D+/g, "");
-        if (senderContact) {
-          for (const id of getBookingIdsFromPhoneMatch(senderContact)) matchedBookingIds.add(id);
-        }
-      }
-
-      if (!matchedBookingIds.size) {
-        const conversation = conversationIdToConversation.get(conversationId);
-        const conversationContact = conversation ? String(conversation.external_contact_id || "").replace(/\D+/g, "") : "";
-        if (conversationContact) {
-          for (const id of getBookingIdsFromPhoneMatch(conversationContact)) matchedBookingIds.add(id);
-        }
-      }
-      if (!matchedBookingIds.size) continue;
-
-      const normalizedMessage = eventText.toLowerCase().replace(/[^a-z0-9]+/g, "");
-      const messageVariants = [
-        eventText,
-        normalizedMessage,
-        eventText.replace(/\s+/g, ""),
-        normalizedMessage.replace(/[^0-9]+/g, ""),
-        normalizedMessage.replace(/[^a-z]+/g, "")
-      ];
-
-      const nextText = messageVariants.some((variant) => String(variant || "").trim())
-        ? [...new Set(messageVariants)].join(" ")
-        : eventText;
-
-      for (const bookingId of matchedBookingIds) {
-        const existing = bookingChatTextMap.get(bookingId) || "";
-        bookingChatTextMap.set(bookingId, existing ? `${existing} ${nextText}` : nextText);
-      }
-    }
-
-    const filtered = store.bookings.filter((booking) => {
+    const filtered = (store.bookings || []).filter((booking) => {
       if (stage && booking.stage !== stage) return false;
       if (atpStaffId && booking.atp_staff !== atpStaffId) return false;
       if (!search) return true;
 
-      const customer = customersByClientId.get(booking.client_id);
-      const hasDigits = /[0-9]/.test(search);
-      const hasLetters = /[a-z]/.test(search);
+      const primaryPerson = bookingPrimaryPerson(booking);
+      const persons = Array.isArray(booking.persons) ? booking.persons : [];
       const haystack = [
         booking.id,
-        ...normalizeStringArray(booking.destination),
-        ...normalizeStringArray(booking.style),
+        ...normalizeStringArray(booking.destinations),
+        ...normalizeStringArray(booking.travel_styles),
         booking.atp_staff_name,
         booking.notes,
-        booking.client_display_name,
-        customer?.email,
-        bookingChatTextMap.get(booking.id),
+        primaryPerson?.name,
+        ...(primaryPerson?.emails || []),
+        ...(primaryPerson?.phone_numbers || []),
+        ...persons.flatMap((person) => [person?.name, ...(person?.emails || []), ...(person?.phone_numbers || [])]),
+        booking.web_form_submission?.name,
+        booking.web_form_submission?.email,
+        booking.web_form_submission?.phone_number,
         booking.service_level_agreement_due_at,
         JSON.stringify(booking.pricing),
         JSON.stringify(booking.offer)
       ]
         .filter(Boolean)
         .join(" ")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "");
-      const normalizedHaystack = haystack.toLowerCase().replace(/[^a-z0-9]+/g, "");
+        .toLowerCase();
+      const normalizedHaystack = haystack.replace(/[^a-z0-9]+/g, "");
       const normalizedHaystackNoSpace = haystack.replace(/\s+/g, "").toLowerCase();
+      const hasDigits = /[0-9]/.test(search);
+      const hasLetters = /[a-z]/.test(search);
       if (hasDigits && hasLetters) {
         const mixedSearch = `${searchDigits}${searchLetters}`;
         const mixedSearchAlt = `${searchLetters}${searchDigits}`;
         const mixedSearchNoSpace = rawSearchNoSpace.replace(/[^a-z0-9]+/g, "");
-        return (
-          normalizedHaystack.includes(mixedSearch) ||
-          normalizedHaystackNoSpace.includes(mixedSearch) ||
-          normalizedHaystack.includes(mixedSearchAlt) ||
-          normalizedHaystackNoSpace.includes(mixedSearchAlt) ||
-          normalizedHaystack.includes(mixedSearchNoSpace) ||
-          normalizedHaystackNoSpace.includes(mixedSearchNoSpace)
-        );
+        return normalizedHaystack.includes(mixedSearch) || normalizedHaystackNoSpace.includes(mixedSearch) || normalizedHaystack.includes(mixedSearchAlt) || normalizedHaystackNoSpace.includes(mixedSearchAlt) || normalizedHaystack.includes(mixedSearchNoSpace) || normalizedHaystackNoSpace.includes(mixedSearchNoSpace);
       }
-
-      return (
-        haystack.includes(rawSearch) ||
-        normalizedHaystack.includes(search) ||
-        normalizedHaystack.includes(rawSearchNoSpace) ||
-        (searchDigits &&
-          (normalizedHaystack.includes(searchDigits) || normalizedHaystackNoSpace.includes(searchDigits))) ||
-        (searchLetters &&
-          (normalizedHaystack.includes(searchLetters) || normalizedHaystackNoSpace.includes(searchLetters)))
-      );
+      return haystack.includes(rawSearch) || normalizedHaystack.includes(search) || normalizedHaystack.includes(rawSearchNoSpace) || (searchDigits && (normalizedHaystack.includes(searchDigits) || normalizedHaystackNoSpace.includes(searchDigits))) || (searchLetters && (normalizedHaystack.includes(searchLetters) || normalizedHaystackNoSpace.includes(searchLetters)));
     });
 
     const sorted = [...filtered].sort((a, b) => {
       switch (sort) {
-        case "created_at_asc":
-          return a.created_at.localeCompare(b.created_at);
-        case "updated_at_desc":
-          return b.updated_at.localeCompare(a.updated_at);
-        case "service_level_agreement_due_at_asc":
-          return String(a.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z").localeCompare(
-            String(b.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z")
-          );
-        case "service_level_agreement_due_at_desc":
-          return String(b.service_level_agreement_due_at || "").localeCompare(String(a.service_level_agreement_due_at || ""));
+        case "created_at_asc": return a.created_at.localeCompare(b.created_at);
+        case "updated_at_desc": return String(b.updated_at || b.created_at).localeCompare(String(a.updated_at || a.created_at));
+        case "service_level_agreement_due_at_asc": return String(a.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z").localeCompare(String(b.service_level_agreement_due_at || "9999-12-31T23:59:59.999Z"));
+        case "service_level_agreement_due_at_desc": return String(b.service_level_agreement_due_at || "").localeCompare(String(a.service_level_agreement_due_at || ""));
         case "created_at_desc":
         default:
-          return b.created_at.localeCompare(a.created_at);
+          return String(b.created_at).localeCompare(String(a.created_at));
       }
     });
 
-    return {
-      items: sorted,
-      filters: { stage: stage || null, atp_staff: atpStaffId || null, search: search || null },
-      sort
-    };
+    return { items: sorted, filters: { stage: stage || null, atp_staff: atpStaffId || null, search: search || null }, sort };
   }
 
   function paginate(items, query) {
@@ -374,14 +229,7 @@ export function createBookingViewHelpers({
     const total = items.length;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const offset = (page - 1) * pageSize;
-
-    return {
-      items: items.slice(offset, offset + pageSize),
-      page,
-      page_size: pageSize,
-      total,
-      total_pages: totalPages
-    };
+    return { items: items.slice(offset, offset + pageSize), page, page_size: pageSize, total, total_pages: totalPages };
   }
 
   return {

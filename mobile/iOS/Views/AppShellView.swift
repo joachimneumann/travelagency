@@ -8,7 +8,6 @@ struct AppShellView: View {
         NavigationStack {
             DashboardView(
                 canReadCustomers: canReadCustomers,
-                canReadTravelGroups: canReadTravelGroups,
                 canReadBookings: canReadBookings,
                 canReadSettings: canReadSettings
             )
@@ -24,10 +23,6 @@ struct AppShellView: View {
         guard let session = sessionStore.session else { return false }
         return roleService.canReadAllBookings(session.client)
             || roleService.canEditAssignedBookings(session.client)
-    }
-
-    private var canReadTravelGroups: Bool {
-        canReadBookings
     }
 
     private var canReadSettings: Bool {

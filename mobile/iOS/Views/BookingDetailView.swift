@@ -22,15 +22,9 @@ struct BookingDetailView: View {
             await viewModel.load(bookingID: bookingID, session: session)
             syncSelectionsFromBooking()
         }
-        .onChange(of: viewModel.booking?.id) { _, _ in
-            syncSelectionsFromBooking()
-        }
-        .onChange(of: viewModel.booking?.stage) { _, _ in
-            syncSelectionsFromBooking()
-        }
-        .onChange(of: viewModel.booking?.atp_staff) { _, _ in
-            syncSelectionsFromBooking()
-        }
+        .onChange(of: viewModel.booking?.id) { _, _ in syncSelectionsFromBooking() }
+        .onChange(of: viewModel.booking?.stage) { _, _ in syncSelectionsFromBooking() }
+        .onChange(of: viewModel.booking?.atp_staff) { _, _ in syncSelectionsFromBooking() }
         .alert("Booking", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -50,12 +44,10 @@ struct BookingDetailView: View {
                 readOnlyStageSection(booking)
             }
             bookingSummarySection(for: booking)
-            clientSection()
-            if let customer = viewModel.customer {
-                customerSection(customer)
-            }
+            personsSection(for: booking)
+            submissionSection(for: booking)
             bookingNoteSection()
-            whatsAppChatSection()
+            whatsAppChatSection(for: booking)
             offerSection(for: booking.offer)
             paymentsSection(for: booking.pricing)
             if canChangeAssignment {
@@ -69,71 +61,52 @@ struct BookingDetailView: View {
         }
     }
 
-    @ViewBuilder
     private func bookingSummarySection(for booking: Booking) -> some View {
-        Section {
-            NavigationLink {
-                BookingSummaryDetailView(booking: booking)
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Booking")
-                        .font(.headline)
-                    Text("\(joinedList(booking.destination)) | \(joinedList(booking.style))")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
+        Section("Booking") {
+            LabeledContent("Destinations", value: joinedList(booking.destinations))
+            LabeledContent("Travel styles", value: joinedList(booking.travel_styles))
+            LabeledContent("Preferred currency", value: booking.preferredCurrency?.rawValue ?? "-")
+            LabeledContent("Travel start day", value: booking.travel_start_day ?? "-")
+            LabeledContent("Travel end day", value: booking.travel_end_day ?? "-")
         }
     }
 
-    @ViewBuilder
-    private func clientSection() -> some View {
-        let label = viewModel.travelGroup?.group_name ?? viewModel.customer?.name ?? fallbackClientLabel(viewModel.client)
-        let typeLabel = displayClientType(viewModel.client?.client_type)
-        Section {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Client")
-                    .font(.headline)
-                Text("\(label) • \(typeLabel)")
-                    .font(.subheadline)
+    private func personsSection(for booking: Booking) -> some View {
+        Section("Persons") {
+            let rows = (booking.persons?.isEmpty == false) ? (booking.persons ?? []) : [fallbackPerson(for: booking)].compactMap { $0 }
+            if rows.isEmpty {
+                Text("No persons yet")
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-        }
-    }
-
-    private func fallbackClientLabel(_ client: Client?) -> String {
-        guard let client else { return "No client" }
-        switch client.client_type.rawValue {
-        case "travel_group":
-            return "Travel group"
-        case "customer":
-            return "Customer"
-        default:
-            return "Client"
-        }
-    }
-
-    @ViewBuilder
-    private func customerSection(_ customer: Customer) -> some View {
-        Section {
-            NavigationLink {
-                BookingCustomerDetailView(customerClientID: customer.client_id, initialCustomer: customer)
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Customer")
-                        .font(.headline)
-                    Text(customer.name.trimmingCharacters(in: .whitespacesAndNewlines))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+            } else {
+                ForEach(rows.indices, id: \.self) { index in
+                    let person = rows[index]
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(person.name.isEmpty ? "Unnamed person" : person.name)
+                            .font(.headline)
+                        Text(verbatim: bookingPersonLine(person))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text(verbatim: personFlags(person))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 2)
                 }
             }
         }
     }
 
-    @ViewBuilder
+    private func submissionSection(for booking: Booking) -> some View {
+        Section("Web form submission") {
+            LabeledContent("Name", value: booking.web_form_submission?.name ?? "-")
+            LabeledContent("Email", value: booking.web_form_submission?.email ?? "-")
+            LabeledContent("Phone number", value: booking.web_form_submission?.phone_number ?? "-")
+            LabeledContent("Preferred language", value: booking.web_form_submission?.preferred_language?.rawValue ?? "-")
+            LabeledContent("Travel month", value: booking.web_form_submission?.travel_month ?? "-")
+            LabeledContent("Number of travelers", value: stringValue(booking.web_form_submission?.number_of_travelers))
+        }
+    }
+
     private func bookingNoteSection() -> some View {
         Section {
             NavigationLink {
@@ -161,8 +134,7 @@ struct BookingDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private func whatsAppChatSection() -> some View {
+    private func whatsAppChatSection(for booking: Booking) -> some View {
         let events = viewModel.chatEvents
         let latest = events.max { left, right in
             let leftKey = left.sentAt ?? left.createdAt ?? left.receivedAt ?? ""
@@ -173,7 +145,7 @@ struct BookingDetailView: View {
             NavigationLink {
                 WhatsAppChatThreadView(
                     events: events,
-                    customerPhone: viewModel.customer?.phone_number,
+                    customerPhone: primaryPhone(for: booking),
                     onRefresh: {
                         guard let session = await sessionStore.validSession() else { return }
                         await viewModel.refreshChat(session: session)
@@ -183,23 +155,18 @@ struct BookingDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("WhatsApp Chat")
                         .font(.headline)
-                    Text(
-                        events.isEmpty
-                            ? "No messages yet"
-                            : "\(events.count) messages · \(formatSummaryText(from: latest?.textPreview ?? "", maxLength: 56))"
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    Text(events.isEmpty ? "No messages yet" : "\(events.count) messages · \(formatSummaryText(from: latest?.textPreview ?? "", maxLength: 56))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
         }
     }
 
-    @ViewBuilder
     private func offerSection(for offer: BookingOffer) -> some View {
         let summary = ((offer.components ?? []).isEmpty) ? "No components" : "\(offer.totals.componentsCount) components"
-        Section {
+        return Section {
             NavigationLink {
                 OfferDetailView(offer: offer, offerTitle: summary)
             } label: {
@@ -215,7 +182,6 @@ struct BookingDetailView: View {
         }
     }
 
-    @ViewBuilder
     private func paymentsSection(for pricing: BookingPricing) -> some View {
         Section {
             NavigationLink {
@@ -233,7 +199,6 @@ struct BookingDetailView: View {
         }
     }
 
-    @ViewBuilder
     private func stageSection(for booking: Booking) -> some View {
         Section {
             HStack {
@@ -251,15 +216,12 @@ struct BookingDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .fixedSize(horizontal: true, vertical: false)
                 .onChange(of: selectedStage) { _, newValue in
-                    Task {
-                        await stageChanged(newValue, booking: booking)
-                    }
+                    Task { await stageChanged(newValue, booking: booking) }
                 }
             }
         }
     }
 
-    @ViewBuilder
     private func readOnlyStageSection(_ booking: Booking) -> some View {
         Section {
             HStack {
@@ -272,7 +234,6 @@ struct BookingDetailView: View {
         }
     }
 
-    @ViewBuilder
     private func assignmentSection(for booking: Booking) -> some View {
         Section("Assignment") {
             Picker("AtpStaff", selection: $selectedAtpStaffID) {
@@ -293,10 +254,9 @@ struct BookingDetailView: View {
         }
     }
 
-    @ViewBuilder
     private func activitiesSection() -> some View {
         let activities: [BookingActivity] = viewModel.activities
-        Section {
+        return Section {
             NavigationLink {
                 ActivitiesDetailView(activities: activities)
             } label: {
@@ -352,14 +312,26 @@ struct BookingDetailView: View {
     }
 }
 
-private func displayClientType(_ value: ClientType?) -> String {
-    let raw = value?.rawValue ?? "customer"
-    return raw.replacingOccurrences(of: "_", with: " ")
-}
-
 private func joinedList(_ values: [String]?) -> String {
     let entries = (values ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
     return entries.isEmpty ? "—" : entries.joined(separator: ", ")
+}
+
+private func stringValue<T>(_ value: T?) -> String {
+    guard let value else { return "-" }
+    return String(describing: value)
+}
+
+private func personFlags(_ person: BookingPerson) -> String {
+    var flags: [String] = []
+    if person.is_lead_contact == true { flags.append("Lead contact") }
+    if person.is_traveling == false { flags.append("Not traveling") }
+    return flags.isEmpty ? "-" : flags.joined(separator: " • ")
+}
+
+private func primaryPhone(for booking: Booking) -> String? {
+    let person = primaryPerson(for: booking) ?? fallbackPerson(for: booking)
+    return person?.phone_numbers?.first
 }
 
 private struct WhatsAppChatThreadView: View {
@@ -386,259 +358,31 @@ private struct WhatsAppChatThreadView: View {
         return trimmed.isEmpty ? "-" : trimmed
     }
 
-    private var timelineRows: [WhatsAppTimelineRow] {
-        var rows: [WhatsAppTimelineRow] = []
-        var previousDay = ""
-        for event in orderedEvents {
-            let timestamp = event.sentAt ?? event.createdAt ?? event.receivedAt
-            let dayKey = chatDayKey(from: timestamp)
-            if !dayKey.isEmpty, dayKey != previousDay {
-                rows.append(
-                    WhatsAppTimelineRow(
-                        id: "day-\(dayKey)",
-                        dayLabel: chatDayLabel(from: timestamp),
-                        event: nil
-                    )
-                )
-                previousDay = dayKey
-            }
-            rows.append(WhatsAppTimelineRow(id: event.id, dayLabel: nil, event: event))
-        }
-        return rows
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 16) {
-                Text("Channel: WhatsApp")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.16, green: 0.25, blue: 0.29))
-                Text("Phone: \(phoneLabel)")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(red: 0.16, green: 0.25, blue: 0.29))
-                Spacer(minLength: 8)
+        List {
+            Section {
+                HStack {
+                    Text("WhatsApp")
+                    Spacer()
+                    Text(phoneLabel)
+                        .foregroundStyle(.secondary)
+                }
                 if let waURL {
                     Link("Open WhatsApp", destination: waURL)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                } else {
-                    Text("Open WhatsApp")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                }
+                Button("Refresh") {
+                    Task { await onRefresh() }
+                }
+            }
+            ForEach(orderedEvents) { event in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.textPreview.isEmpty ? (event.externalStatus ?? "-") : event.textPreview)
+                    Text(event.sentAt ?? event.receivedAt ?? event.createdAt ?? "-")
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
-            .background(Color(red: 0.94, green: 0.96, blue: 0.97))
-
-            ScrollView {
-                LazyVStack(spacing: 10) {
-                    if timelineRows.isEmpty {
-                        Text("No WhatsApp messages yet.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 24)
-                    } else {
-                        ForEach(timelineRows) { row in
-                            if let dayLabel = row.dayLabel {
-                                WhatsAppDaySeparator(label: dayLabel)
-                            } else if let event = row.event {
-                                WhatsAppChatBubbleRow(event: event)
-                            }
-                        }
-                    }
-                }
-                .frame(maxWidth: 760)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 22)
-                .padding(.vertical, 14)
-            }
         }
-        .background(WhatsAppChatBackground().ignoresSafeArea())
-        .navigationTitle("WhatsApp Chat")
-        .modifier(InlineNavigationTitleDisplayModeModifier())
-        .refreshable {
-            await onRefresh()
-        }
+        .navigationTitle("WhatsApp")
     }
-}
-
-private struct WhatsAppTimelineRow: Identifiable {
-    let id: String
-    let dayLabel: String?
-    let event: BookingChatEvent?
-}
-
-private struct WhatsAppDaySeparator: View {
-    let label: String
-
-    var body: some View {
-        HStack {
-            Spacer(minLength: 0)
-            Text(label)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color(red: 0.27, green: 0.37, blue: 0.42))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(
-                    Capsule()
-                        .fill(Color(red: 0.85, green: 0.91, blue: 0.93).opacity(0.92))
-                )
-                .overlay(
-                    Capsule()
-                        .stroke(Color(red: 0.79, green: 0.86, blue: 0.89), lineWidth: 1)
-                )
-            Spacer(minLength: 0)
-        }
-    }
-}
-
-private struct WhatsAppChatBubbleRow: View {
-    let event: BookingChatEvent
-
-    private var isOutbound: Bool { event.direction.lowercased() == "outbound" }
-    private var isStatus: Bool { event.eventType.lowercased() == "status" }
-    private var parsedStatus: (status: String, message: String?) {
-        let preview = event.textPreview.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard preview.lowercased().hasPrefix("status:") else {
-            return (event.externalStatus ?? "", nil)
-        }
-        let statusBody = String(preview.dropFirst("Status:".count)).trimmingCharacters(in: .whitespacesAndNewlines)
-        if let splitRange = statusBody.range(of: " - ") {
-            let statusText = String(statusBody[..<splitRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-            let messageText = String(statusBody[splitRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
-            return (statusText, messageText.isEmpty ? nil : messageText)
-        }
-        return (statusBody, nil)
-    }
-
-    private var bubbleText: String {
-        if isStatus {
-            if let message = parsedStatus.message, !message.isEmpty {
-                return message
-            }
-            return "Status update"
-        }
-        return event.textPreview.isEmpty ? "-" : event.textPreview
-    }
-
-    private var statusLine: String? {
-        let raw = parsedStatus.status.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { return nil }
-        return raw
-    }
-
-    private var isStatusBanner: Bool {
-        isStatus && (parsedStatus.message?.isEmpty ?? true)
-    }
-
-    private var alignsOutbound: Bool {
-        if isStatus, parsedStatus.message != nil {
-            return true
-        }
-        return isOutbound
-    }
-
-    private var bubbleColor: Color {
-        if isStatusBanner { return Color(red: 1.0, green: 0.97, blue: 0.83) }
-        if alignsOutbound { return Color(red: 0.85, green: 0.99, blue: 0.83) }
-        return .white
-    }
-
-    private var metaLine: String {
-        chatClockTime(from: event.sentAt ?? event.createdAt ?? event.receivedAt)
-    }
-
-    var body: some View {
-        HStack {
-            if isStatusBanner {
-                Spacer(minLength: 24)
-                bubble
-                Spacer(minLength: 24)
-            } else if alignsOutbound {
-                Spacer(minLength: 44)
-                bubble
-            } else {
-                bubble
-                Spacer(minLength: 44)
-            }
-        }
-    }
-
-    private var bubble: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(bubbleText)
-                .font(.system(size: 19, weight: .regular, design: .rounded))
-                .foregroundStyle(Color(red: 0.07, green: 0.11, blue: 0.13))
-                .multilineTextAlignment(.leading)
-            if let statusLine {
-                Text(statusLine)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .italic()
-                    .foregroundStyle(Color(red: 0.32, green: 0.39, blue: 0.43))
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            HStack {
-                Spacer(minLength: 0)
-                Text(metaLine)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(red: 0.38, green: 0.45, blue: 0.49))
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(bubbleColor)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.black.opacity(0.06), lineWidth: 1)
-        )
-        .frame(maxWidth: 316, alignment: .leading)
-    }
-}
-
-private struct WhatsAppChatBackground: View {
-    var body: some View {
-        ZStack {
-            Color(red: 0.94, green: 0.92, blue: 0.89)
-            LinearGradient(
-                colors: [Color.black.opacity(0.035), Color.clear, Color.black.opacity(0.02)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-    }
-}
-
-private func chatClockTime(from rawTimestamp: String?) -> String {
-    guard let parsedDate = parseChatDate(rawTimestamp) else { return "--:--" }
-    let formatter = DateFormatter()
-    formatter.dateFormat = "HH:mm"
-    return formatter.string(from: parsedDate)
-}
-
-private func chatDayKey(from rawTimestamp: String?) -> String {
-    guard let parsedDate = parseChatDate(rawTimestamp) else { return "" }
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd"
-    return formatter.string(from: parsedDate)
-}
-
-private func chatDayLabel(from rawTimestamp: String?) -> String {
-    guard let parsedDate = parseChatDate(rawTimestamp) else { return "" }
-    let formatter = DateFormatter()
-    formatter.dateFormat = "dd.MM.yyyy"
-    return formatter.string(from: parsedDate)
-}
-
-private func parseChatDate(_ rawTimestamp: String?) -> Date? {
-    guard let rawTimestamp, !rawTimestamp.isEmpty else { return nil }
-    let isoWithFractional = ISO8601DateFormatter()
-    isoWithFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    let isoWithoutFractional = ISO8601DateFormatter()
-    isoWithoutFractional.formatOptions = [.withInternetDateTime]
-    return isoWithFractional.date(from: rawTimestamp) ?? isoWithoutFractional.date(from: rawTimestamp)
 }

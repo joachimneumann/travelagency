@@ -1,6 +1,5 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { normalizeText } from "../../../../shared/js/text.js";
 
 export function createStoreUtils({
   dataPath,
@@ -18,19 +17,6 @@ export function createStoreUtils({
   convertBookingPricingToBaseCurrency,
   convertBookingOfferToBaseCurrency
 }) {
-  function parseLegacyBudgetRange(value) {
-    const text = normalizeText(value);
-    if (!text || /[€₫฿]/.test(text)) return { budget_lower_USD: null, budget_upper_USD: null };
-    const matches = text.match(/\d[\d,]*/g) || [];
-    const numbers = matches
-      .map((item) => Number.parseInt(item.replace(/,/g, ""), 10))
-      .filter((item) => Number.isInteger(item) && item >= 0);
-    if (!numbers.length) return { budget_lower_USD: null, budget_upper_USD: null };
-    if (text.includes("+")) return { budget_lower_USD: numbers[0], budget_upper_USD: null };
-    if (numbers.length >= 2) return { budget_lower_USD: numbers[0], budget_upper_USD: numbers[1] };
-    return { budget_lower_USD: numbers[0], budget_upper_USD: null };
-  }
-
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
@@ -42,26 +28,14 @@ export function createStoreUtils({
   async function readStore() {
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
-    parsed.clients ||= [];
-    parsed.customers ||= [];
     parsed.bookings ||= [];
     parsed.activities ||= [];
     parsed.invoices ||= [];
-    parsed.customer_consents ||= [];
-    parsed.customer_documents ||= [];
-    parsed.travel_groups ||= [];
-    parsed.travel_group_members ||= [];
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       syncBookingAtpStaffFields(booking);
-            if (booking.budget_lower_USD === undefined && booking.budget_upper_USD === undefined) {
-        const budgetRange = parseLegacyBudgetRange(booking.budget);
-        booking.budget_lower_USD = budgetRange.budget_lower_USD;
-        booking.budget_upper_USD = budgetRange.budget_upper_USD;
-      }
-      delete booking.budget;
       booking.pricing = normalizeBookingPricing(booking.pricing);
       booking.offer = normalizeBookingOffer(booking.offer, getBookingPreferredCurrency(booking));
       booking.pricing = await convertBookingPricingToBaseCurrency(booking.pricing);
@@ -97,11 +71,10 @@ export function createStoreUtils({
       try {
         const raw = await readFile(tourPath, "utf8");
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object" && normalizeText(parsed.id)) {
+        if (parsed && typeof parsed === "object" && parsed.id) {
           items.push(parsed);
         }
       } catch {
-        // Ignore unreadable tour folders.
       }
     }
     return items;
@@ -109,7 +82,7 @@ export function createStoreUtils({
 
   async function persistTour(tour) {
     writeQueueRef.current = writeQueueRef.current.then(async () => {
-      const id = normalizeText(tour?.id);
+      const id = String(tour?.id || "").trim();
       if (!id) throw new Error("Tour id is required");
       await mkdir(tourFolderPath(id), { recursive: true });
       await writeFile(tourJsonPath(id), `${JSON.stringify(tour, null, 2)}\n`, "utf8");

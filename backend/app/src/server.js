@@ -13,12 +13,10 @@ import { createHttpHelpers } from "./http/http_helpers.js";
 import { createStagingAccessHandlers } from "./http/staging_access.js";
 import { createPricingHelpers } from "./domain/pricing.js";
 import { createBookingViewHelpers } from "./domain/booking_views.js";
-import { computeBookingHash, computeClientHash, computeCustomerHash, computeTravelGroupHash } from "./domain/hashes.js";
+import { computeBookingHash } from "./domain/hashes.js";
 import { createAccessHelpers } from "./domain/access.js";
 import { createTourHelpers } from "./domain/tours_support.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
-import { createCustomerHandlers } from "./http/handlers/customers.js";
-import { createTravelGroupHandlers } from "./http/handlers/travel_groups.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import { createMetaWebhookHandlers } from "./integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "./lib/invoice_pdf.js";
@@ -452,9 +450,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
     addActivity,
     persistStore,
     computeBookingHash,
-    computeClientHash,
-    computeCustomerHash,
-    computeTravelGroupHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -499,54 +494,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
     invoicePdfPath,
     rm,
     sendFileWithCache
-  });
-  const customerHandlers = createCustomerHandlers({
-    getPrincipal,
-    canReadCustomers,
-    sendJson,
-    readStore,
-    paginate,
-    buildPaginatedListResponse,
-    buildBookingReadModel,
-    canViewAtpStaffDirectory,
-    loadAtpStaff,
-    staffUsernames,
-    canManageAtpStaff,
-    readBodyJson,
-    normalizeStringArray,
-    persistAtpStaff,
-    persistStore,
-    randomUUID,
-    nowIso,
-    computeClientHash,
-    computeCustomerHash,
-    computeTravelGroupHash,
-    mkdir,
-    path,
-    rm,
-    writeFile,
-    stat,
-    sendFileWithCache,
-    CONSENT_EVIDENCE_DIR,
-    CUSTOMER_PHOTOS_DIR
-  });
-  const travelGroupHandlers = createTravelGroupHandlers({
-    sendJson,
-    readStore,
-    getPrincipal,
-    loadAtpStaff,
-    resolvePrincipalAtpStaffMember,
-    canReadAllBookings,
-    canAccessBooking,
-    canEditBooking,
-    buildPaginatedListResponse,
-    paginate,
-    readBodyJson,
-    persistStore,
-    nowIso,
-    computeTravelGroupHash,
-    computeClientHash,
-    randomUUID
   });
   const tourHandlers = createTourHandlers({
     normalizeText,
@@ -594,8 +541,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
       handleStagingAccessLogout,
       handleMobileBootstrap,
       ...bookingHandlers,
-      ...customerHandlers,
-      ...travelGroupHandlers,
       ...tourHandlers
     }
   });

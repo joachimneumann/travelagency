@@ -345,32 +345,13 @@ function ensureTravelGroupForBooking(store, booking, { randomUUID, nowIso, compu
 }
 
 async function buildBookingClientResponse(store, booking) {
-  const { client, customer, travelGroup, groupContactCustomer } = resolveBookingClientContext(store, booking);
-  const submittedCustomer = buildSubmittedCustomer(booking);
-  const response = {
-    booking: await buildBookingResponse(store, booking),
-    client: buildClientReadModel(client, customer, travelGroup, groupContactCustomer),
-    customer: buildCustomerReadModel(customer),
-    travelGroup: travelGroup || null,
-    submittedCustomer,
-    customerCandidates: rankCustomerCandidatesForBookingSubmission(store.customers, submittedCustomer, {
-      normalizeEmail,
-      isLikelyPhoneMatch
-    })
+  return {
+    booking: await buildBookingResponse(store, booking)
   };
-  if (travelGroup) {
-    const payloadGroup = buildTravelGroupPayload(store, travelGroup);
-    response.members = payloadGroup.members;
-    response.memberCustomers = payloadGroup.memberCustomers;
-  }
-  return response;
 }
 
 async function buildBookingResponse(store, booking) {
-  const response = await buildBookingReadModel(booking);
-  const { travelGroup } = resolveBookingClientContext(store, booking);
-  response.travel_group_id = travelGroup?.id || null;
-  return response;
+  return await buildBookingReadModel(booking);
 }
 
 async function deleteBookingArtifacts(store, bookingId) {
@@ -425,7 +406,6 @@ async function handleCreateBooking(req, res) {
     if (existingByKey) {
       sendJson(res, 200, {
         booking_id: existingByKey.id,
-        client_id: existingByKey.client_id,
         status: "accepted",
         deduplicated: true,
         message: "Booking already captured with this idempotency key"
@@ -435,6 +415,7 @@ async function handleCreateBooking(req, res) {
   }
 
   const inputPhoneNumber = normalizePhone(payload.phone_number);
+  const inputEmail = normalizeEmail(payload.email);
   const inputPreferredLanguage = normalizeText(payload.preferred_language) || null;
   const submittedPreferredCurrencyRaw = normalizeText(payload.preferred_currency);
   const inputPreferredCurrency = submittedPreferredCurrencyRaw ? safeCurrency(submittedPreferredCurrencyRaw) : null;
@@ -450,18 +431,12 @@ async function handleCreateBooking(req, res) {
 
   const booking = {
     id: `booking_${randomUUID()}`,
-    client_id: null,
-    client_type: null,
-    client_display_name: "",
-    client_primary_phone_number: null,
-    client_primary_email: null,
     stage: STAGES.NEW,
     atp_staff: null,
     atp_staff_name: null,
     service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
-    destination: normalizeStringArray(payload.destinations),
-    style: normalizeStringArray(payload.travel_style),
-    web_form_travel_month: normalizeText(payload.travel_month),
+    destinations: normalizeStringArray(payload.destinations),
+    travel_styles: normalizeStringArray(payload.travel_style),
     travel_start_day: null,
     travel_end_day: null,
     number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
@@ -469,6 +444,16 @@ async function handleCreateBooking(req, res) {
     budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
     preferred_currency: preferredCurrency,
     notes: normalizeText(payload.notes),
+    persons: [{
+      id: `booking_person_${randomUUID()}`,
+      name: normalizeText(payload.name) || "",
+      emails: inputEmail ? [inputEmail] : [],
+      phone_numbers: inputPhoneNumber ? [inputPhoneNumber] : [],
+      preferred_language: inputPreferredLanguage || null,
+      is_lead_contact: true,
+      is_traveling: true,
+      notes: null
+    }],
     web_form_submission: {
       destinations: normalizeStringArray(payload.destinations),
       travel_style: normalizeStringArray(payload.travel_style),
@@ -478,7 +463,7 @@ async function handleCreateBooking(req, res) {
       travel_duration_days_min: travelDurationMin,
       travel_duration_days_max: travelDurationMax,
       name: normalizeText(payload.name) || null,
-      email: normalizeEmail(payload.email) || null,
+      email: inputEmail || null,
       phone_number: inputPhoneNumber || null,
       budget_lower_USD: Number.isInteger(budgetLowerUSD) ? budgetLowerUSD : null,
       budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
@@ -506,14 +491,12 @@ async function handleCreateBooking(req, res) {
 
   store.bookings.push(booking);
   addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
-  addActivity(store, booking.id, "CLIENT_UNASSIGNED", "public_api", "Booking created without assigned client");
 
   await persistStore(store);
 
   sendJson(res, 201, {
     booking_id: booking.id,
     booking_hash: computeBookingHash(booking),
-    client_id: null,
     status: "accepted",
     deduplicated: false,
     atp_staff: booking.atp_staff,
@@ -608,7 +591,7 @@ async function handleListBookingChatEvents(req, res, [bookingId]) {
   }
 
   ensureMetaChatCollections(store);
-  const bookingCustomer = (store.customers || []).find((item) => item.client_id === booking.client_id) || null;
+  const primaryPerson = (Array.isArray(booking.persons) ? booking.persons.find((person) => person?.is_lead_contact) || booking.persons[0] : null) || null;
   const requestUrl = new URL(req.url, "http://localhost");
   const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 100, 1, 500);
 
@@ -617,8 +600,8 @@ async function handleListBookingChatEvents(req, res, [bookingId]) {
     if (normalizeText(conversation.client_id) === normalizeText(booking.client_id)) return true;
 
     const channel = normalizeText(conversation.channel).toLowerCase();
-    if (channel === "whatsapp" && bookingCustomer?.phone_number) {
-      return isLikelyPhoneMatch(bookingCustomer.phone_number, conversation.external_contact_id);
+    if (channel === "whatsapp" && Array.isArray(primaryPerson?.phone_numbers)) {
+      return primaryPerson.phone_numbers.some((phone) => isLikelyPhoneMatch(phone, conversation.external_contact_id));
     }
     return false;
   });

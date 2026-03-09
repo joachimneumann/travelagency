@@ -6,30 +6,52 @@ struct BookingsListView: View {
 
     var body: some View {
         content
-        .navigationTitle("Bookings")
-        .modifier(StandardNavigationTitleDisplayModeModifier())
-        .task {
-            guard let session = await sessionStore.validSession() else { return }
-            await viewModel.load(session: session)
-        }
-        .alert("Bookings", isPresented: Binding(
-            get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
-        }
+            .navigationTitle("Bookings")
+            .modifier(StandardNavigationTitleDisplayModeModifier())
+            .task {
+                guard let session = await sessionStore.validSession() else { return }
+                await viewModel.load(session: session)
+            }
+            .alert("Bookings", isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage ?? "Unknown error")
+            }
     }
+
     @ViewBuilder
     private var content: some View {
         if viewModel.isLoading && viewModel.bookings.isEmpty {
             ProgressView("Loading bookings...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         } else {
-            let bookings: [Booking] = viewModel.bookings
             List {
-                ForEach(bookings, id: \.id) { booking in
+                searchSection(
+                    title: "Search bookings",
+                    searchDraft: $viewModel.searchDraft,
+                    isLoading: viewModel.isLoading,
+                    appliedSearch: viewModel.appliedSearch,
+                    onSearch: {
+                        guard let session = await sessionStore.validSession() else { return }
+                        await viewModel.applySearch(session: session)
+                    },
+                    onClear: {
+                        guard let session = await sessionStore.validSession() else { return }
+                        await viewModel.clearSearch(session: session)
+                    }
+                )
+
+                if viewModel.bookings.isEmpty {
+                    Section {
+                        Text(viewModel.appliedSearch.isEmpty ? "No bookings yet" : "No bookings found for \"\(viewModel.appliedSearch)\"")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                ForEach(viewModel.bookings, id: \.id) { booking in
                     NavigationLink {
                         BookingDetailView(bookingID: booking.id)
                     } label: {
@@ -37,10 +59,10 @@ struct BookingsListView: View {
                             Text(displayBookingTitle(for: booking))
                                 .font(.headline)
                                 .foregroundStyle(.primary)
-                            Text(verbatim: "\(booking.stage.rawValue) • \(booking.client_display_name ?? "Unassigned client")")
+                            Text(verbatim: bookingSubtitle(for: booking))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                                .lineLimit(1)
+                                .lineLimit(2)
                         }
                         .padding(.vertical, 2)
                     }
@@ -53,22 +75,6 @@ struct BookingsListView: View {
                 }
             }
         }
-    }
-
-}
-
-private func displayBookingTitle(for booking: Booking) -> String {
-    let destinations = (booking.destination ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-    return destinations.isEmpty ? "Booking" : destinations.joined(separator: ", ")
-}
-
-private struct StandardNavigationTitleDisplayModeModifier: ViewModifier {
-    func body(content: Content) -> some View {
-#if os(iOS)
-        content.navigationBarTitleDisplayMode(.automatic)
-#else
-        content
-#endif
     }
 }
 
@@ -78,83 +84,62 @@ struct CustomersListView: View {
 
     var body: some View {
         content
-        .navigationTitle("Customers")
-        .modifier(StandardNavigationTitleDisplayModeModifier())
-        .task {
-            guard let session = await sessionStore.validSession() else { return }
-            await viewModel.load(session: session)
-        }
-        .alert("Customers", isPresented: Binding(
-            get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
-        }
+            .navigationTitle("Customer Search")
+            .modifier(StandardNavigationTitleDisplayModeModifier())
+            .task {
+                guard let session = await sessionStore.validSession() else { return }
+                await viewModel.load(session: session)
+            }
+            .alert("Customer Search", isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage ?? "Unknown error")
+            }
     }
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading && viewModel.customers.isEmpty {
-            ProgressView("Loading customers...")
+        if viewModel.isLoading && viewModel.bookings.isEmpty {
+            ProgressView("Loading bookings...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         } else {
-            let customers: [Customer] = viewModel.customers
             List {
-                Section {
-                    HStack(spacing: 8) {
-                        TextField("Search customers", text: $viewModel.searchDraft)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .onSubmit {
-                                Task {
-                                    guard let session = await sessionStore.validSession() else { return }
-                                    await viewModel.applySearch(session: session)
-                                }
-                            }
-                        Button("Search") {
-                            Task {
-                                guard let session = await sessionStore.validSession() else { return }
-                                await viewModel.applySearch(session: session)
-                            }
-                        }
-                        .disabled(viewModel.isLoading)
+                searchSection(
+                    title: "Search persons inside bookings",
+                    searchDraft: $viewModel.searchDraft,
+                    isLoading: viewModel.isLoading,
+                    appliedSearch: viewModel.appliedSearch,
+                    onSearch: {
+                        guard let session = await sessionStore.validSession() else { return }
+                        await viewModel.applySearch(session: session)
+                    },
+                    onClear: {
+                        guard let session = await sessionStore.validSession() else { return }
+                        await viewModel.clearSearch(session: session)
                     }
-                    if !viewModel.appliedSearch.isEmpty {
-                        Button("Clear Search") {
-                            Task {
-                                guard let session = await sessionStore.validSession() else { return }
-                                await viewModel.clearSearch(session: session)
-                            }
-                        }
-                        .disabled(viewModel.isLoading)
-                    }
-                }
+                )
 
-                if customers.isEmpty {
+                if flattenedRows.isEmpty {
                     Section {
-                        Text(
-                            viewModel.appliedSearch.isEmpty
-                                ? "No customers yet"
-                                : "No customers found for \"\(viewModel.appliedSearch)\""
-                        )
-                        .foregroundStyle(.secondary)
+                        Text(viewModel.appliedSearch.isEmpty ? "No booking persons yet" : "No matches found for \"\(viewModel.appliedSearch)\"")
+                            .foregroundStyle(.secondary)
                     }
                 }
 
-                ForEach(customers, id: \.client_id) { customer in
+                ForEach(flattenedRows, id: \.id) { row in
                     NavigationLink {
-                        BookingCustomerDetailView(customerClientID: customer.client_id, initialCustomer: customer)
+                        BookingDetailView(bookingID: row.booking.id)
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(displayName(for: customer))
+                            Text(row.person.name.isEmpty ? "Unnamed person" : row.person.name)
                                 .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(verbatim: subtitle(for: customer))
+                            Text(verbatim: row.subtitle)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                                .lineLimit(1)
+                                .lineLimit(2)
                         }
                         .padding(.vertical, 2)
                     }
@@ -169,20 +154,95 @@ struct CustomersListView: View {
         }
     }
 
-    private func displayName(for customer: Customer) -> String {
-        let name = customer.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !name.isEmpty { return name }
-        return customer.email ?? customer.phone_number ?? customer.client_id
-    }
-
-    private func subtitle(for customer: Customer) -> String {
-        let email = (customer.email ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let phone = (customer.phone_number ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if !email.isEmpty && !phone.isEmpty {
-            return "\(email) • \(phone)"
+    private var flattenedRows: [BookingPersonSearchRow] {
+        viewModel.bookings.flatMap { booking in
+            let persons = (booking.persons?.isEmpty == false) ? (booking.persons ?? []) : [fallbackPerson(for: booking)].compactMap { $0 }
+            return persons.map { person in
+                BookingPersonSearchRow(
+                    id: "\(booking.id)-\(person.id ?? person.name)",
+                    booking: booking,
+                    person: person,
+                    subtitle: bookingPersonSubtitle(for: person, booking: booking)
+                )
+            }
         }
-        if !email.isEmpty { return email }
-        if !phone.isEmpty { return phone }
-        return customer.client_id
     }
+}
+
+private struct BookingPersonSearchRow: Identifiable {
+    let id: String
+    let booking: Booking
+    let person: BookingPerson
+    let subtitle: String
+}
+
+private func searchSection(title: String, searchDraft: Binding<String>, isLoading: Bool, appliedSearch: String, onSearch: @escaping () async -> Void, onClear: @escaping () async -> Void) -> some View {
+    Section {
+        Text(title)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        HStack(spacing: 8) {
+            TextField("Search", text: searchDraft)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .onSubmit {
+                    Task { await onSearch() }
+                }
+            Button("Search") {
+                Task { await onSearch() }
+            }
+            .disabled(isLoading)
+        }
+        if !appliedSearch.isEmpty {
+            Button("Clear Search") {
+                Task { await onClear() }
+            }
+            .disabled(isLoading)
+        }
+    }
+}
+
+private func displayBookingTitle(for booking: Booking) -> String {
+    let destinations = (booking.destinations ?? []).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    return destinations.isEmpty ? "Booking" : destinations.joined(separator: ", ")
+}
+
+private func bookingSubtitle(for booking: Booking) -> String {
+    let person = primaryPerson(for: booking) ?? fallbackPerson(for: booking)
+    let personText = person.map(bookingPersonLine) ?? "No person yet"
+    return "\(booking.stage.rawValue) • \(personText)"
+}
+
+private func bookingPersonSubtitle(for person: BookingPerson, booking: Booking) -> String {
+    let contact = bookingPersonLine(person)
+    let destinations = displayBookingTitle(for: booking)
+    return "\(contact) • \(destinations)"
+}
+
+private func primaryPerson(for booking: Booking) -> BookingPerson? {
+    let persons = booking.persons ?? []
+    return persons.first(where: { $0.is_lead_contact == true }) ?? persons.first
+}
+
+private func fallbackPerson(for booking: Booking) -> BookingPerson? {
+    guard let submission = booking.web_form_submission else { return nil }
+    guard !(submission.name ?? "").isEmpty || submission.email != nil || submission.phone_number != nil else { return nil }
+    return BookingPerson(
+        id: nil,
+        name: submission.name ?? "",
+        emails: submission.email.map { [$0] },
+        phone_numbers: submission.phone_number.map { [$0] },
+        preferred_language: submission.preferred_language,
+        date_of_birth: nil,
+        nationality: nil,
+        notes: nil,
+        is_lead_contact: true,
+        is_traveling: true
+    )
+}
+
+private func bookingPersonLine(_ person: BookingPerson) -> String {
+    let parts = [person.name] + (person.emails ?? []) + (person.phone_numbers ?? [])
+    let normalized = parts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    return normalized.isEmpty ? "Unnamed person" : normalized.joined(separator: " • ")
 }

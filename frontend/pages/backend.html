@@ -1,163 +1,67 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AsiaTravelPlan Backend</title>
-    <meta name="description" content="AsiaTravelPlan backend workspace" />
-    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+    <link rel="stylesheet" href="shared/css/styles.css?v=20260309a" />
   </head>
-  <body>
-    <header class="header" id="top">
-      <div class="container header-wrap">
-        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
-          <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
-        </a>
-
-        <div id="backendNavMount"></div>
-      </div>
+  <body class="backend-page">
+    <header class="backend-header">
+      <div id="backendNavMount"></div>
     </header>
 
-    <main id="main-content">
-      <section class="section">
-        <div class="container">
-          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
-
-          <section class="backend-section" id="dashboardPanel">
-            <h2 class="section-title u-title-medium">Dashboard</h2>
-            <div class="backend-kpi-grid" aria-live="polite">
-              <div class="backend-kpi-card">
-                <h3>Customers</h3>
-                <strong id="dashboardCustomersCount">0</strong>
-              </div>
-              <div class="backend-kpi-card">
-                <h3>Bookings</h3>
-                <strong id="dashboardBookingsCount">0</strong>
-              </div>
-              <div class="backend-kpi-card">
-                <h3>Tours</h3>
-                <strong id="dashboardToursCount">0</strong>
-              </div>
-              <div class="backend-kpi-card">
-                <h3>Travel Groups</h3>
-                <strong id="dashboardTravelGroupsCount">0</strong>
-              </div>
-            </div>
-            <p class="micro">Use the menu above to switch between backend areas.</p>
-          </section>
-
-          <section class="backend-section" id="customersPanel">
-            <h2 class="section-title u-title-medium">Customers</h2>
-            <div class="backend-controls">
-              <div class="field">
-                                <input id="customersSearch" type="text" placeholder="id, name, email, phone..." />
-              </div>
-              <button class="btn btn-ghost" id="customersSearchBtn" type="button">Search</button>
-              <span id="customersCountInfo" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="customersTable"></table>
-            </div>
-            <div class="backend-pagination" id="customersPagination" aria-label="Customers pagination"></div>
-          </section>
-
-          <section class="backend-section" id="travelGroupsPanel">
-            <h2 class="section-title u-title-medium">Travel Groups</h2>
-            <div class="backend-controls">
-              <div class="field">
-                                <input id="travelGroupName" type="text" placeholder="Group name" />
-              </div>
-              <button class="btn btn-ghost" id="travelGroupCreateBtn" type="button">Create</button>
-              <span class="micro" id="travelGroupCreateStatus"></span>
-            </div>
-            <p class="micro" id="travelGroupsNotice"></p>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="travelGroupsTable"></table>
-            </div>
-            <div class="backend-pagination" id="travelGroupsPagination" aria-label="Travel groups pagination"></div>
-          </section>
-
-          <section class="backend-section" id="bookingsPanel">
-            <h2 class="section-title u-title-medium">Bookings</h2>
-            <div class="backend-controls">
-              <div class="field">
-                                <input id="bookingsSearch" type="text" placeholder="id, customer, destination, atp_staff, whatsapp chat..." />
-              </div>
-              <button class="btn btn-ghost" id="bookingsSearchBtn" type="button">Search</button>
-              <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden>Clear Search</button>
-              <span id="bookingsCountInfo" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="bookingsTable"></table>
-            </div>
-            <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
-          </section>
-
-          <section class="backend-section" id="toursPanel">
-            <h2 class="section-title u-title-medium">Tours</h2>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="toursDestination">Destination</label>
-                <select id="toursDestination">
-                  <option value="all">All destinations</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="toursStyle">Style</label>
-                <select id="toursStyle">
-                  <option value="all">All styles</option>
-                </select>
-              </div>
-              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button">Clear filters</button>
-              <div class="field">
-                <label for="toursSearch">Search tours</label>
-                <input id="toursSearch" type="text" placeholder="id, title, country, style..." />
-              </div>
-              <button class="btn btn-ghost" id="toursSearchBtn" type="button">Search</button>
-              <span id="toursCountInfo" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="toursTable"></table>
-            </div>
-            <div class="backend-pagination" id="toursPagination" aria-label="Tours pagination"></div>
-          </section>
-
-          <section class="backend-section" id="settingsPanel">
-            <h2 class="section-title u-title-medium">Reports / Settings</h2>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="staffName">Name</label>
-                <input id="staffName" type="text" placeholder="Full name" />
-              </div>
-              <div class="field">
-                <label for="staffUsernames">Keycloak usernames</label>
-                <input id="staffUsernames" type="text" placeholder="comma,separated,usernames" />
-              </div>
-              <div class="field">
-                <label for="staffDestinations">Destinations</label>
-                <input id="staffDestinations" type="text" placeholder="Vietnam, Thailand" />
-              </div>
-              <div class="field">
-                <label for="staffLanguages">Languages</label>
-                <input id="staffLanguages" type="text" placeholder="English, Vietnamese" />
-              </div>
-              <button class="btn btn-primary" id="staffCreateBtn" type="button">Create atp_staff</button>
-              <span id="staffStatus" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="staffTable"></table>
-            </div>
-          </section>
+    <main class="backend-layout backend-layout--wide">
+      <section class="backend-section" id="dashboardPanel">
+        <h1>Dashboard</h1>
+        <div class="backend-stats-grid">
+          <article class="backend-stat-card"><span class="micro">Bookings</span><strong id="dashboardBookingsCount">0</strong></article>
+          <article class="backend-stat-card"><span class="micro">Searchable person records</span><strong id="dashboardCustomersCount">0</strong></article>
+          <article class="backend-stat-card"><span class="micro">Tours</span><strong id="dashboardToursCount">0</strong></article>
         </div>
+      </section>
+
+      <section class="backend-section" id="bookingsPanel" hidden>
+        <div class="backend-toolbar">
+          <input id="bookingsSearch" type="text" placeholder="id, destination, person, email, phone..." />
+          <button class="btn btn-ghost" id="bookingsSearchBtn" type="button">Search</button>
+          <button class="btn btn-ghost" id="bookingsClearBtn" type="button">Clear Search</button>
+          <span id="bookingsCountInfo" class="micro"></span>
+        </div>
+        <div class="backend-table-wrap">
+          <table class="backend-table" id="bookingsTable"></table>
+        </div>
+        <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
+      </section>
+
+      <section class="backend-section" id="customersPanel" hidden>
+        <div class="backend-toolbar">
+          <input id="customersSearch" type="text" placeholder="name, email, phone..." />
+          <button class="btn btn-ghost" id="customersSearchBtn" type="button">Search</button>
+          <button class="btn btn-ghost" id="customersClearBtn" type="button">Clear Search</button>
+          <span id="customersCountInfo" class="micro"></span>
+        </div>
+        <p class="micro">Customer search finds bookings by the persons stored inside each booking.</p>
+        <div class="backend-table-wrap">
+          <table class="backend-table" id="customersTable"></table>
+        </div>
+        <div class="backend-pagination" id="customersPagination" aria-label="Customer search pagination"></div>
+      </section>
+
+      <section class="backend-section" id="toursPanel" hidden>
+        <h1>Tours</h1>
+        <p class="micro" id="toursCountInfo"></p>
+        <div class="backend-table-wrap">
+          <table class="backend-table" id="toursTable"></table>
+        </div>
+      </section>
+
+      <section class="backend-section" id="settingsPanel" hidden>
+        <h1>Reports / Settings</h1>
+        <p class="micro">Settings remain booking-centric in this branch. ATP staff management and contract tools stay available through the backend API.</p>
       </section>
     </main>
 
-    <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
-      const section = new URLSearchParams(window.location.search).get("section") || "dashboard";
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
-    </script>
-    <script type="module" src="frontend/scripts/backend-page.js"></script>
+    <script type="module" src="frontend/scripts/backend-page.js?v=20260309a"></script>
   </body>
 </html>

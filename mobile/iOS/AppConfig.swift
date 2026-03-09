@@ -19,25 +19,12 @@ typealias BookingOfferTotals = GeneratedBookingOfferTotals
 typealias BookingOffer = GeneratedBookingOffer
 typealias BookingInvoice = GeneratedBookingInvoice
 typealias BookingActivity = GeneratedBookingActivity
+typealias BookingPerson = GeneratedBookingPerson
 typealias Booking = GeneratedBooking
-typealias Client = GeneratedClient
-typealias ClientType = GeneratedClientType
-typealias Customer = GeneratedCustomer
-typealias CustomerConsent = GeneratedCustomerConsent
-typealias CustomerDocument = GeneratedCustomerDocument
-typealias TravelGroup = GeneratedTravelGroup
-typealias TravelGroupMember = GeneratedTravelGroupMember
 
 typealias BookingListResponse = GeneratedBookingList
-typealias CustomerListResponse = GeneratedCustomerList
 typealias BookingDetailResponse = GeneratedBookingDetail
 typealias BookingUpdateResponse = GeneratedBookingDetail
-typealias CustomerDetailResponse = GeneratedCustomerDetail
-typealias CustomerUpdateResponse = GeneratedCustomerUpdateResponse
-typealias CustomerPhotoUploadResponse = GeneratedCustomerPhotoUploadResponse
-typealias CustomerConsentCreateResponse = GeneratedCustomerConsentCreateResponse
-typealias TravelGroupListResponse = GeneratedTravelGroupList
-typealias TravelGroupDetailResponse = GeneratedTravelGroupDetail
 typealias AtpStaffDirectoryEntry = GeneratedAtpStaffDirectoryEntry
 typealias AtpStaffMember = GeneratedAtpStaffDirectoryEntry
 typealias AtpStaffListResponse = GeneratedAtpStaffListResponse
@@ -107,7 +94,6 @@ struct BookingChatConversation: Codable, Equatable, Identifiable {
     let id: String
     let channel: String
     let externalContactID: String?
-    let clientID: String?
     let bookingID: String?
     let lastEventAt: String?
     let latestPreview: String?
@@ -117,7 +103,6 @@ struct BookingChatConversation: Codable, Equatable, Identifiable {
         case id
         case channel
         case externalContactID = "external_contact_id"
-        case clientID = "client_id"
         case bookingID = "booking_id"
         case lastEventAt = "last_event_at"
         case latestPreview = "latest_preview"
@@ -157,46 +142,17 @@ enum MobileAPIRequestFactory {
         GeneratedAPIRequestFactory.mobileBootstrapURL(baseURL: baseURL)
     }
 
-    static func bookingsURL(baseURL: URL, page: Int, pageSize: Int, sort: String = "created_at_desc") -> URL {
-        GeneratedAPIRequestFactory.bookingsURL(
-            baseURL: baseURL,
-            queryItems: [
-                URLQueryItem(name: "page", value: String(page)),
-                URLQueryItem(name: "page_size", value: String(pageSize)),
-                URLQueryItem(name: "sort", value: sort)
-            ]
-        )
-    }
-
-    static func customersURL(baseURL: URL, page: Int, pageSize: Int, search: String? = nil) -> URL {
-        var queryItems: [URLQueryItem] = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "page_size", value: String(pageSize))
-        ]
-        let trimmedSearch = (search ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedSearch.isEmpty {
-            queryItems.append(URLQueryItem(name: "search", value: trimmedSearch))
-        }
-        return GeneratedAPIRequestFactory.customersURL(
-            baseURL: baseURL,
-            queryItems: queryItems
-        )
-    }
-
-    static func travelGroupsURL(baseURL: URL, page: Int, pageSize: Int, search: String? = nil) -> URL {
+    static func bookingsURL(baseURL: URL, page: Int, pageSize: Int, sort: String = "created_at_desc", search: String? = nil) -> URL {
         var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "page_size", value: String(pageSize)),
-            URLQueryItem(name: "sort", value: "updated_at_desc")
+            URLQueryItem(name: "sort", value: sort)
         ]
         let trimmedSearch = (search ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedSearch.isEmpty {
             queryItems.append(URLQueryItem(name: "search", value: trimmedSearch))
         }
-        return GeneratedAPIRequestFactory.travelGroupsURL(
-            baseURL: baseURL,
-            queryItems: queryItems
-        )
+        return GeneratedAPIRequestFactory.bookingsURL(baseURL: baseURL, queryItems: queryItems)
     }
 
     static func bookingDetailURL(baseURL: URL, bookingID: String) -> URL {
