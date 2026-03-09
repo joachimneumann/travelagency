@@ -28,61 +28,31 @@
             <h2 class="section-title u-title-medium">Dashboard</h2>
             <div class="backend-kpi-grid" aria-live="polite">
               <div class="backend-kpi-card">
-                <h3>Customers</h3>
-                <strong id="dashboardCustomersCount">0</strong>
-              </div>
-              <div class="backend-kpi-card">
                 <h3>Bookings</h3>
                 <strong id="dashboardBookingsCount">0</strong>
+              </div>
+              <div class="backend-kpi-card">
+                <h3>People Search</h3>
+                <strong>Open</strong>
+                <p class="micro" style="margin-top: 0.5rem;"><a href="people.html">Search people across bookings</a></p>
               </div>
               <div class="backend-kpi-card">
                 <h3>Tours</h3>
                 <strong id="dashboardToursCount">0</strong>
               </div>
               <div class="backend-kpi-card">
-                <h3>Travel Groups</h3>
-                <strong id="dashboardTravelGroupsCount">0</strong>
+                <h3>ATP Staff</h3>
+                <strong id="dashboardStaffCount">0</strong>
               </div>
             </div>
             <p class="micro">Use the menu above to switch between backend areas.</p>
-          </section>
-
-          <section class="backend-section" id="customersPanel">
-            <h2 class="section-title u-title-medium">Customers</h2>
-            <div class="backend-controls">
-              <div class="field">
-                                <input id="customersSearch" type="text" placeholder="id, name, email, phone..." />
-              </div>
-              <button class="btn btn-ghost" id="customersSearchBtn" type="button">Search</button>
-              <span id="customersCountInfo" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="customersTable"></table>
-            </div>
-            <div class="backend-pagination" id="customersPagination" aria-label="Customers pagination"></div>
-          </section>
-
-          <section class="backend-section" id="travelGroupsPanel">
-            <h2 class="section-title u-title-medium">Travel Groups</h2>
-            <div class="backend-controls">
-              <div class="field">
-                                <input id="travelGroupName" type="text" placeholder="Group name" />
-              </div>
-              <button class="btn btn-ghost" id="travelGroupCreateBtn" type="button">Create</button>
-              <span class="micro" id="travelGroupCreateStatus"></span>
-            </div>
-            <p class="micro" id="travelGroupsNotice"></p>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="travelGroupsTable"></table>
-            </div>
-            <div class="backend-pagination" id="travelGroupsPagination" aria-label="Travel groups pagination"></div>
           </section>
 
           <section class="backend-section" id="bookingsPanel">
             <h2 class="section-title u-title-medium">Bookings</h2>
             <div class="backend-controls">
               <div class="field">
-                                <input id="bookingsSearch" type="text" placeholder="id, customer, destination, atp_staff, whatsapp chat..." />
+                <input id="bookingsSearch" type="text" placeholder="id, person, destination, atp staff, whatsapp chat..." />
               </div>
               <button class="btn btn-ghost" id="bookingsSearchBtn" type="button">Search</button>
               <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden>Clear Search</button>

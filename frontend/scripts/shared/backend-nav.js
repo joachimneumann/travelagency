@@ -14,6 +14,11 @@ function buildSectionButton(section, title, icon) {
   `;
 }
 
+export function resolveBackendSectionHref(section) {
+  if (section === "people") return "people.html";
+  return `backend.html?section=${encodeURIComponent(section || "dashboard")}`;
+}
+
 export function mountBackendNav(mount, options = {}) {
   if (!mount) return;
   const currentSection = options.currentSection || "";
@@ -24,8 +29,7 @@ export function mountBackendNav(mount, options = {}) {
         <div class="backend-section-nav" role="tablist" aria-label="Backend sections">
           ${buildSectionButton("dashboard", "Dashboard", { type: "image", src: "assets/img/profile_dashboard.png" })}
           ${buildSectionButton("bookings", "Bookings", { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
-          ${buildSectionButton("customers", "Customers", { type: "image", src: "assets/img/profile_person.png" })}
-          ${buildSectionButton("travelGroups", "Travel Groups", { type: "image", src: "assets/img/profile_group.png" })}
+          ${buildSectionButton("people", "People", { type: "image", src: "assets/img/profile_person.png" })}
           ${buildSectionButton("settings", "Reports and Settings", "📊")}
           ${buildSectionButton("tours", "Tours", "🗺️")}
         </div>
@@ -57,7 +61,7 @@ export function mountBackendNav(mount, options = {}) {
     button.addEventListener("click", () => {
       const section = button.getAttribute("data-backend-section");
       if (!section) return;
-      window.location.href = `backend.html?section=${encodeURIComponent(section)}`;
+      window.location.href = resolveBackendSectionHref(section);
     });
   });
 }

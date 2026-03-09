@@ -9,9 +9,6 @@ import {
   bookingActivitiesRequest,
   bookingAssignmentRequest,
   bookingChatRequest,
-  bookingClientRequest,
-  bookingClientCreateCustomerRequest,
-  bookingClientCreateGroupRequest,
   bookingDetailRequest,
   bookingInvoicesRequest,
   bookingNoteRequest,
@@ -28,7 +25,7 @@ import {
   resolveApiUrl,
   setDirtySurface
 } from "./shared/backend-common.js";
-import { buildBookingHref, buildCustomerHref, buildTravelGroupHref } from "./shared/backend-links.js";
+import { resolveBackendSectionHref } from "./shared/backend-nav.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -62,15 +59,6 @@ const state = {
     canEditBooking: false
   },
   booking: null,
-  client: null,
-  customer: null,
-  travelGroup: null,
-  submittedCustomer: null,
-  clientAssignmentPanelOpen: false,
-  clientAssignmentGroupName: "",
-  clientAssignmentMode: "AAAA",
-  customerCandidates: [],
-  originalClientKey: null,
   staff: [],
   invoices: [],
   selectedInvoiceId: "",
@@ -122,23 +110,8 @@ const els = {
   actionsPanel: document.getElementById("bookingActionsPanel"),
   ownerSelect: document.getElementById("bookingOwnerSelect"),
   stageSelect: document.getElementById("bookingStageSelect"),
-  clientCurrent: document.getElementById("bookingClientCurrent"),
-  clientChangeBtn: document.getElementById("bookingClientChangeBtn"),
-  clientAssignmentPanel: document.getElementById("bookingClientAssignmentPanel"),
-  clientAssignmentTitle: document.getElementById("bookingClientAssignmentTitle"),
-  clientAssignmentSummary: document.getElementById("bookingClientAssignmentSummary"),
-  clientGroupNameField: document.getElementById("bookingClientGroupNameField"),
-  clientGroupNameInput: document.getElementById("bookingClientGroupNameInput"),
-  clientModeToggleField: document.getElementById("bookingClientModeToggleField"),
-  clientModeAaaaBtn: document.getElementById("bookingClientModeAaaaBtn"),
-  clientModeBbbbBtn: document.getElementById("bookingClientModeBbbbBtn"),
-  clientSelectTitle: document.getElementById("bookingClientSelectTitle"),
-  clientSimilarControls: document.getElementById("bookingClientSimilarControls"),
-  suggestedCustomerSelect: document.getElementById("bookingSuggestedCustomerSelect"),
-  assignCustomerBtn: document.getElementById("bookingAssignCustomerBtn"),
-  createCustomerBtn: document.getElementById("bookingCreateCustomerBtn"),
-  createGroupBtn: document.getElementById("bookingCreateGroupBtn"),
-  clientStatus: document.getElementById("bookingClientStatus"),
+  peopleSummary: document.getElementById("bookingPeopleSummary"),
+  peopleStatus: document.getElementById("bookingPeopleStatus"),
   noteInput: document.getElementById("bookingNoteInput"),
   noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
   actionStatus: document.getElementById("bookingActionStatus"),
@@ -263,30 +236,7 @@ async function init() {
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
-  if (els.clientChangeBtn) els.clientChangeBtn.addEventListener("click", toggleClientAssignmentPanel);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
-  if (els.suggestedCustomerSelect) els.suggestedCustomerSelect.addEventListener("change", updateClientAssignmentButtons);
-  if (els.clientGroupNameInput) {
-    els.clientGroupNameInput.addEventListener("input", () => {
-      state.clientAssignmentGroupName = els.clientGroupNameInput.value || "";
-      updateClientAssignmentButtons();
-    });
-  }
-  if (els.clientModeAaaaBtn) {
-    els.clientModeAaaaBtn.addEventListener("click", () => {
-      state.clientAssignmentMode = "AAAA";
-      renderClientPanel();
-    });
-  }
-  if (els.clientModeBbbbBtn) {
-    els.clientModeBbbbBtn.addEventListener("click", () => {
-      state.clientAssignmentMode = "BBBB";
-      renderClientPanel();
-    });
-  }
-  if (els.assignCustomerBtn) els.assignCustomerBtn.addEventListener("click", assignSelectedCustomer);
-  if (els.createCustomerBtn) els.createCustomerBtn.addEventListener("click", createAndAssignCustomer);
-  if (els.createGroupBtn) els.createGroupBtn.addEventListener("click", createAndAssignGroupWithNewCustomer);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
   if (els.pricingPanel) {
@@ -345,7 +295,7 @@ function bindSectionNavigation(activeSection) {
       button.removeAttribute("aria-current");
     }
     button.addEventListener("click", () => {
-      window.location.href = `backend.html?section=${encodeURIComponent(section)}`;
+      window.location.href = resolveBackendSectionHref(section);
     });
   });
 }
@@ -359,7 +309,7 @@ async function loadBookingPage() {
   const [bookingPayload, staffPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
 
-  applyBookingClientPayload(bookingPayload);
+  applyBookingPayload(bookingPayload);
   state.staff = Array.isArray(staffPayload?.items) ? staffPayload.items : [];
 
   renderBookingHeader();
@@ -375,7 +325,9 @@ async function loadBookingPage() {
 
 function renderBookingHeader() {
   if (!state.booking) return;
-  if (els.title) els.title.textContent = "Booking";
+  const primaryContact = getPrimaryContact(state.booking);
+  const title = primaryContact?.name || getSubmittedContact(state.booking)?.name || "Booking";
+  if (els.title) els.title.textContent = title;
   if (els.subtitle) {
     els.subtitle.textContent = `ID: ${state.booking.id}`;
     els.subtitle.hidden = false;
@@ -438,6 +390,11 @@ async function copyHeroIdToClipboard() {
 function renderBookingData() {
   if (!state.booking) return;
   const booking = state.booking;
+  const persons = getBookingPersons(booking);
+  const primaryContact = getPrimaryContact(booking);
+  const submittedContact = getSubmittedContact(booking);
+  const travelerCount = getTravelerCount(booking);
+  const mismatchWarning = buildTravelerMismatchMessage(booking);
   const formatBudgetRange = (lower, upper) => {
     const numericLower = Number(lower);
     const numericUpper = Number(upper);
@@ -457,29 +414,31 @@ function renderBookingData() {
         ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
         ["web_form_travel_month", booking.web_form_travel_month],
         ["number_of_travelers", booking.number_of_travelers],
+        ["people_listed", persons.length],
+        ["travelers_marked", travelerCount],
+        ["people_warning", mismatchWarning],
         ["budget_range_USD", formatBudgetRange(booking.budget_lower_USD, booking.budget_upper_USD)],
         ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],
         ["updated_at", formatDateTime(booking.updated_at)]
       ]
-        .filter(([, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined && value !== null && value !== "")
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
     },
     {
-      title: "Client",
-      entries: toEntries(state.client || {})
+      title: "Primary contact",
+      entries: buildContactEntries(primaryContact || submittedContact)
     },
     {
-      title: "Customer",
-      entries: toEntries(state.customer || {})
-    },
-    {
-      title: "Travel group",
-      entries: toEntries(state.travelGroup || {})
+      title: "People",
+      entries: buildPeopleEntries(persons)
     },
     {
       title: "Source",
       entries: [
+        ["submitted_name", submittedContact?.name],
+        ["submitted_email", submittedContact?.email],
+        ["submitted_phone_number", submittedContact?.phone_number],
         ["page_url", booking.source?.page_url],
         ["ip_address", booking.source?.ip_address],
         ["ip_country_guess", booking.source?.ip_country_guess],
@@ -488,7 +447,7 @@ function renderBookingData() {
         ["utm_medium", booking.source?.utm_medium],
         ["utm_campaign", booking.source?.utm_campaign]
       ]
-        .filter(([, value]) => value !== undefined)
+        .filter(([, value]) => value !== undefined && value !== null && value !== "")
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
     }
   ];
@@ -537,7 +496,7 @@ function renderActionControls() {
   }
 
   if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
-  renderClientPanel();
+  renderPeopleSummary();
   if (els.noteInput) {
     els.noteInput.disabled = !state.permissions.canEditBooking;
     els.noteInput.value = state.booking.notes || "";
@@ -554,198 +513,144 @@ function renderActionControls() {
   }
 }
 
-function applyBookingClientPayload(payload = {}) {
+function applyBookingPayload(payload = {}) {
   state.booking = payload.booking || state.booking || null;
-  state.client = payload.client || null;
-  state.customer = payload.customer || null;
-  state.travelGroup = payload.travelGroup || null;
-  state.submittedCustomer = payload.submittedCustomer || null;
-  state.customerCandidates = Array.isArray(payload.customerCandidates) ? payload.customerCandidates : [];
-  if (!state.clientAssignmentGroupName && state.travelGroup?.group_name) {
-    state.clientAssignmentGroupName = state.travelGroup.group_name;
+}
+
+function getBookingPersons(booking) {
+  if (!Array.isArray(booking?.persons)) return [];
+  return booking.persons
+    .filter((person) => person && typeof person === "object" && !Array.isArray(person))
+    .map((person, index) => ({
+      ...person,
+      id: normalizeText(person.id) || `person_${index + 1}`,
+      name: normalizeText(person.name) || `Person ${index + 1}`,
+      roles: normalizeStringList(person.roles),
+      emails: collectPersonEmails(person),
+      phone_numbers: collectPersonPhoneNumbers(person)
+    }));
+}
+
+function normalizeStringList(values) {
+  return Array.from(new Set((Array.isArray(values) ? values : []).map((value) => normalizeText(value)).filter(Boolean)));
+}
+
+function collectPersonEmails(person) {
+  return Array.from(
+    new Set(
+      [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    )
+  );
+}
+
+function collectPersonPhoneNumbers(person) {
+  return Array.from(
+    new Set(
+      [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
+        .map((value) => normalizeText(value))
+        .filter(Boolean)
+    )
+  );
+}
+
+function getSubmittedContact(booking) {
+  const submission = booking?.web_form_submission || {};
+  return {
+    name: normalizeText(submission.name) || "",
+    email: normalizeText(submission.email) || "",
+    phone_number: normalizeText(submission.phone_number) || ""
+  };
+}
+
+function getPrimaryContact(booking) {
+  const persons = getBookingPersons(booking);
+  return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
+}
+
+function getTravelerCount(booking) {
+  const persons = getBookingPersons(booking);
+  const travelers = persons.filter((person) => person.roles.includes("traveler"));
+  return travelers.length || persons.length;
+}
+
+function buildTravelerMismatchMessage(booking) {
+  const declared = Number(booking?.number_of_travelers || 0);
+  if (!declared) return "";
+  const listed = getTravelerCount(booking);
+  if (declared === listed) return "";
+  return `Declared travelers: ${declared}. Listed people/travelers: ${listed}.`;
+}
+
+function renderPeopleSummary() {
+  const persons = getBookingPersons(state.booking);
+  const primaryContact = getPrimaryContact(state.booking);
+  const submittedContact = getSubmittedContact(state.booking);
+  const travelerCount = getTravelerCount(state.booking);
+  const mismatchWarning = buildTravelerMismatchMessage(state.booking);
+  if (els.peopleSummary) {
+    const summaryParts = [];
+    const contactName = primaryContact?.name || submittedContact?.name;
+    if (contactName) summaryParts.push(`Primary contact: ${contactName}`);
+    summaryParts.push(`${persons.length} people listed`);
+    summaryParts.push(`${travelerCount} traveler${travelerCount === 1 ? "" : "s"} marked`);
+    els.peopleSummary.textContent = summaryParts.join(" | ");
   }
-  if (state.originalClientKey === null) {
-    state.originalClientKey = currentClientKey();
+  if (els.peopleStatus) {
+    els.peopleStatus.textContent = mismatchWarning || "People are stored directly on this booking.";
   }
 }
 
-function currentClientKey() {
-  if (state.travelGroup?.id) return `group:${state.travelGroup.id}`;
-  if (state.customer?.client_id) return `customer:${state.customer.client_id}`;
-  return "none";
+function buildContactEntries(contact) {
+  if (!contact) return [];
+  return [
+    ["name", contact.name],
+    ["email", contact.emails?.[0] || contact.email],
+    ["phone_number", contact.phone_numbers?.[0] || contact.phone_number],
+    ["roles", Array.isArray(contact.roles) && contact.roles.length ? contact.roles.join(", ") : null]
+  ]
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .map(([key, value]) => ({ key, value: String(value) }));
 }
 
-function isGroupBookingAssignment() {
-  return Number(state.booking?.number_of_travelers || 0) > 1;
-}
-
-function submittedCustomerLabel() {
-  const submitted = state.submittedCustomer || {};
-  const submittedParts = [submitted.name, submitted.email, submitted.phone_number].filter(Boolean);
-  return submittedParts.length ? submittedParts.join(", ") : "No submitted customer information";
-}
-
-function submittedCustomerSummaryLabel() {
-  const label = submittedCustomerLabel();
-  const travelerCount = Number(state.booking?.number_of_travelers || 0);
-  if (travelerCount > 1) {
-    return `web form (${travelerCount} travelers) from ${label}`;
-  }
-  return `web form from ${label}`;
-}
-
-function submittedCustomerName() {
-  return normalizeText(state.submittedCustomer?.name) || "";
-}
-
-function currentGroupNameDraft() {
-  return normalizeText(state.clientAssignmentGroupName) || "";
-}
-
-function canCreateCustomerFromBooking() {
-  return Boolean(submittedCustomerName());
-}
-
-function renderClientPanel() {
-  if (!state.booking) return;
-  if (els.clientCurrent) {
-    els.clientCurrent.classList.toggle("is-changed", state.originalClientKey !== null && currentClientKey() !== state.originalClientKey);
-    if (state.travelGroup?.group_name) {
-      els.clientCurrent.innerHTML = `<a class="booking-client-current-link" href="${escapeHtml(
-        buildTravelGroupHref(state.travelGroup.id)
-      )}">${escapeHtml(`${state.travelGroup.group_name} (group)`)}</a>`;
-    } else if (state.customer?.name) {
-      els.clientCurrent.innerHTML = `<a class="booking-client-current-link" href="${escapeHtml(
-        buildCustomerHref(state.customer.client_id)
-      )}">${escapeHtml(state.customer.name)}</a>`;
-    } else {
-      els.clientCurrent.textContent = "no client";
+function buildPeopleEntries(persons) {
+  return (Array.isArray(persons) ? persons : []).map((person, index) => {
+    const summaryParts = [];
+    if (person.roles.length) summaryParts.push(`roles: ${person.roles.join(", ")}`);
+    if (person.emails.length) summaryParts.push(`email: ${person.emails.join(", ")}`);
+    if (person.phone_numbers.length) summaryParts.push(`phone: ${person.phone_numbers.join(", ")}`);
+    if (person.date_of_birth) summaryParts.push(`born: ${person.date_of_birth}`);
+    if (person.nationality) summaryParts.push(`nationality: ${person.nationality}`);
+    if (person.address?.country_code || person.address?.city || person.address?.street_address) {
+      summaryParts.push(`address: ${formatPersonAddress(person.address)}`);
     }
-  }
-  if (els.clientAssignmentPanel) {
-    els.clientAssignmentPanel.hidden = !state.clientAssignmentPanelOpen;
-    els.clientAssignmentPanel.classList.toggle("is-open", state.clientAssignmentPanelOpen);
-  }
-  const groupMode = isGroupBookingAssignment();
-  const hasCandidates = (state.customerCandidates || []).length > 0;
-  if (!state.clientAssignmentGroupName && state.travelGroup?.group_name) {
-    state.clientAssignmentGroupName = state.travelGroup.group_name;
-  }
-  if (els.clientAssignmentTitle) {
-    els.clientAssignmentTitle.textContent = groupMode ? "Assign to a travel group" : "Assign to a customer";
-  }
-  if (els.clientAssignmentSummary) {
-    els.clientAssignmentSummary.textContent = submittedCustomerSummaryLabel();
-  }
-  if (els.clientGroupNameField) {
-    els.clientGroupNameField.hidden = !groupMode;
-  }
-  if (els.clientModeToggleField) {
-    els.clientModeToggleField.hidden = !groupMode;
-  }
-  if (els.clientGroupNameInput) {
-    if (els.clientGroupNameInput.value !== state.clientAssignmentGroupName) {
-      els.clientGroupNameInput.value = state.clientAssignmentGroupName;
-    }
-    els.clientGroupNameInput.disabled = !state.permissions.canEditBooking || !groupMode;
-  }
-  if (els.clientModeAaaaBtn && els.clientModeBbbbBtn) {
-    const aaaaActive = state.clientAssignmentMode !== "BBBB";
-    els.clientModeAaaaBtn.classList.toggle("is-active", aaaaActive);
-    els.clientModeBbbbBtn.classList.toggle("is-active", !aaaaActive);
-    els.clientModeAaaaBtn.setAttribute("aria-pressed", aaaaActive ? "true" : "false");
-    els.clientModeBbbbBtn.setAttribute("aria-pressed", !aaaaActive ? "true" : "false");
-  }
-  if (els.clientSelectTitle) {
-    els.clientSelectTitle.hidden = !groupMode;
-  }
-  if (els.suggestedCustomerSelect) {
-    const options = ['<option value="">Similar Customer</option>']
-      .concat(
-        (state.customerCandidates || []).map((candidate) => {
-          const parts = [candidate.name, candidate.email, candidate.phone_number].filter(Boolean).join(" · ");
-          return `<option value="${escapeHtml(candidate.customer_client_id)}">${escapeHtml(parts || candidate.customer_client_id)}</option>`;
-        })
-      )
-      .join("");
-    const currentValue = els.suggestedCustomerSelect.value;
-    els.suggestedCustomerSelect.innerHTML = options;
-    els.suggestedCustomerSelect.value = currentValue && (state.customerCandidates || []).some((item) => item.customer_client_id === currentValue)
-      ? currentValue
-      : "";
-    els.suggestedCustomerSelect.disabled = !state.permissions.canEditBooking;
-  }
-  if (els.clientSimilarControls) {
-    els.clientSimilarControls.hidden = !hasCandidates;
-  }
-  if (els.createCustomerBtn) {
-    els.createCustomerBtn.hidden = groupMode;
-    els.createCustomerBtn.textContent = submittedCustomerName()
-      ? `create a new customer for ${submittedCustomerName()}`
-      : "create a new customer";
-  }
-  if (els.createGroupBtn) {
-    els.createGroupBtn.hidden = !groupMode;
-    els.createGroupBtn.textContent = submittedCustomerName()
-      ? `create the group contact for ${submittedCustomerName()}`
-      : "create the group contact";
-  }
-  updateClientAssignmentButtons();
-}
-
-function setClientStatus(message) {
-  if (!els.clientStatus) return;
-  els.clientStatus.textContent = message;
-}
-
-function toggleClientAssignmentPanel() {
-  state.clientAssignmentPanelOpen = !state.clientAssignmentPanelOpen;
-  renderClientPanel();
-}
-
-function updateClientAssignmentButtons() {
-  const groupMode = isGroupBookingAssignment();
-  const hasGroupName = Boolean(currentGroupNameDraft());
-  if (els.assignCustomerBtn) {
-    const selectedValue = normalizeText(els.suggestedCustomerSelect?.value) || "";
-    els.assignCustomerBtn.textContent = "Select";
-    els.assignCustomerBtn.disabled =
-      !state.permissions.canEditBooking || !selectedValue || (groupMode && !hasGroupName);
-  }
-  if (els.createCustomerBtn) {
-    els.createCustomerBtn.disabled = !state.permissions.canEditBooking || !canCreateCustomerFromBooking();
-  }
-  if (els.createGroupBtn) {
-    els.createGroupBtn.disabled = !state.permissions.canEditBooking || !canCreateCustomerFromBooking() || !hasGroupName;
-  }
-}
-
-async function assignSelectedCustomer() {
-  const customerClientId = normalizeText(els.suggestedCustomerSelect?.value);
-  if (!state.permissions.canEditBooking || !state.booking || !customerClientId) return;
-  if (isGroupBookingAssignment()) {
-    await createAndAssignGroup(customerClientId);
-    return;
-  }
-  const request = bookingClientRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash,
-      customer_client_id: customerClientId
-    }
+    if (Array.isArray(person.documents) && person.documents.length) summaryParts.push(`documents: ${person.documents.length}`);
+    if (Array.isArray(person.consents) && person.consents.length) summaryParts.push(`consents: ${person.consents.length}`);
+    if (person.photo_ref) summaryParts.push("photo attached");
+    return {
+      key: `${index + 1}. ${person.name}`,
+      value: summaryParts.join(" | ") || "No details"
+    };
   });
-  if (!result?.booking) return;
-  applyBookingClientPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  setClientStatus("Booking assigned.");
+}
+
+function formatPersonAddress(address) {
+  if (!address || typeof address !== "object") return "";
+  return [
+    normalizeText(address.street_address),
+    normalizeText(address.city),
+    normalizeText(address.postal_code),
+    normalizeText(address.region),
+    normalizeText(address.country_code)
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 async function deleteBooking() {
   if (!state.permissions.canEditBooking || !state.booking?.id) return;
-  const label = normalizeText(state.client?.display_name) || normalizeText(state.booking?.client_display_name) || state.booking.id;
+  const label = normalizeText(getPrimaryContact(state.booking)?.name) || state.booking.id;
   if (!window.confirm(`Delete booking for ${label}? This cannot be undone.`)) return;
 
   if (els.deleteBtn) els.deleteBtn.disabled = true;
@@ -760,55 +665,6 @@ async function deleteBooking() {
   if (!result?.deleted) return;
 
   window.location.href = "backend.html?section=bookings";
-}
-
-async function createAndAssignCustomer() {
-  if (!state.permissions.canEditBooking || !state.booking) return;
-  const request = bookingClientCreateCustomerRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash
-    }
-  });
-  if (!result?.booking) return;
-  applyBookingClientPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  setClientStatus("New customer created and assigned.");
-}
-
-async function createAndAssignGroup(customerClientId = null) {
-  if (!state.permissions.canEditBooking || !state.booking) return;
-  const groupName = currentGroupNameDraft();
-  if (!groupName) {
-    setClientStatus("Group name is required.");
-    return;
-  }
-  const request = bookingClientCreateGroupRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash,
-      group_name: groupName,
-      customer_client_id: customerClientId || undefined
-    }
-  });
-  if (!result?.booking) return;
-  applyBookingClientPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  setClientStatus("Travel group created and assigned.");
-}
-
-async function createAndAssignGroupWithNewCustomer() {
-  if (!canCreateCustomerFromBooking()) {
-    setClientStatus("Submitted customer name is required.");
-    return;
-  }
-  await createAndAssignGroup();
 }
 
 function renderPricingPanel() {
@@ -1463,8 +1319,10 @@ function normalizePhoneDigits(value) {
 }
 
 function resolveChatPhoneNumber(items) {
-  const customerPhone = String(state.customer?.phone_number || "").trim();
-  if (customerPhone) return customerPhone;
+  const primaryPhone = String(getPrimaryContact(state.booking)?.phone_numbers?.[0] || "").trim();
+  if (primaryPhone) return primaryPhone;
+  const submittedPhone = String(getSubmittedContact(state.booking)?.phone_number || "").trim();
+  if (submittedPhone) return submittedPhone;
   const firstSender = (Array.isArray(items) ? items : []).find((item) => String(item?.sender_contact || "").trim());
   return String(firstSender?.sender_contact || "").trim();
 }
@@ -1614,7 +1472,7 @@ function renderMetaChatPanel() {
       </div>`;
     })
     .join("");
-  els.metaChatTable.innerHTML = rows || '<div class="wa-empty">No chat events for this booking/customer yet</div>';
+  els.metaChatTable.innerHTML = rows || '<div class="wa-empty">No chat events for this booking yet</div>';
   const canvas = els.metaChatTable.parentElement;
   if (canvas) {
     canvas.scrollTop = canvas.scrollHeight;

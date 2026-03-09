@@ -7,14 +7,9 @@ import {
 import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
 import {
   buildBookingHref,
-  buildCustomerHref,
-  buildTravelGroupHref,
   buildTourEditHref
 } from "./shared/backend-links.js";
-import {
-  fetchCustomerSearchPage,
-  renderCustomerTable
-} from "./shared/customer-search.js";
+import { resolveBackendSectionHref } from "./shared/backend-nav.js";
 import { renderPagination } from "./shared/backend-pagination.js";
 
 const qs = new URLSearchParams(window.location.search);
@@ -28,22 +23,13 @@ const els = {
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
 
   dashboardPanel: document.getElementById("dashboardPanel"),
-  customersPanel: document.getElementById("customersPanel"),
-  travelGroupsPanel: document.getElementById("travelGroupsPanel"),
   bookingsPanel: document.getElementById("bookingsPanel"),
   toursPanel: document.getElementById("toursPanel"),
   settingsPanel: document.getElementById("settingsPanel"),
 
-  dashboardCustomersCount: document.getElementById("dashboardCustomersCount"),
   dashboardBookingsCount: document.getElementById("dashboardBookingsCount"),
   dashboardToursCount: document.getElementById("dashboardToursCount"),
-  dashboardTravelGroupsCount: document.getElementById("dashboardTravelGroupsCount"),
-
-  customersSearch: document.getElementById("customersSearch"),
-  customersSearchBtn: document.getElementById("customersSearchBtn"),
-  customersCountInfo: document.getElementById("customersCountInfo"),
-  customersPagination: document.getElementById("customersPagination"),
-  customersTable: document.getElementById("customersTable"),
+  dashboardStaffCount: document.getElementById("dashboardStaffCount"),
 
   bookingsSearch: document.getElementById("bookingsSearch"),
   bookingsSearchBtn: document.getElementById("bookingsSearchBtn"),
@@ -51,14 +37,6 @@ const els = {
   bookingsCountInfo: document.getElementById("bookingsCountInfo"),
   bookingsPagination: document.getElementById("bookingsPagination"),
   bookingsTable: document.getElementById("bookingsTable"),
-
-  travelGroupsCountInfo: document.getElementById("travelGroupsCountInfo"),
-  travelGroupsPagination: document.getElementById("travelGroupsPagination"),
-  travelGroupsTable: document.getElementById("travelGroupsTable"),
-  travelGroupsNotice: document.getElementById("travelGroupsNotice"),
-  travelGroupName: document.getElementById("travelGroupName"),
-  travelGroupCreateBtn: document.getElementById("travelGroupCreateBtn"),
-  travelGroupCreateStatus: document.getElementById("travelGroupCreateStatus"),
 
   toursSearch: document.getElementById("toursSearch"),
   toursDestination: document.getElementById("toursDestination"),
@@ -80,8 +58,6 @@ const els = {
 
 const SECTION_CONFIG = [
   { id: "dashboard", canAccess: () => true },
-  { id: "customers", canAccess: () => state.permissions.canReadCustomers },
-  { id: "travelGroups", canAccess: () => state.permissions.canReadTravelGroups },
   { id: "bookings", canAccess: () => state.permissions.canReadBookings },
   { id: "tours", canAccess: () => state.permissions.canReadTours },
   { id: "settings", canAccess: () => state.permissions.canReadSettings }
@@ -97,17 +73,13 @@ const ROLES = {
 const state = {
   roles: [],
   permissions: {
-    canReadCustomers: false,
     canReadBookings: false,
-    canReadTravelGroups: false,
     canReadSettings: false,
     canManageStaff: false,
     canReadTours: false,
     canEditTours: false
   },
-  customers: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
-  travelGroups: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" },
   staff: [],
   activeSection: "dashboard"
@@ -138,9 +110,7 @@ async function init() {
   applyRoleVisibility();
   bindControls();
 
-  if (state.permissions.canReadCustomers) loadCustomers();
   if (state.permissions.canReadBookings) loadBookings();
-  if (state.permissions.canReadTravelGroups) loadTravelGroups();
   if (state.permissions.canManageStaff) loadStaff();
   if (state.permissions.canReadTours) loadTours();
   updateDashboardCounts();
@@ -159,9 +129,7 @@ async function loadBackendAuthStatus() {
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
     const isAdmin = hasAnyRole(ROLES.ADMIN, ROLES.MANAGER);
     state.permissions = {
-      canReadCustomers: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
       canReadBookings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
-      canReadTravelGroups: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
       canManageStaff: isAdmin,
       canReadSettings: isAdmin,
       canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
@@ -179,6 +147,13 @@ function bindSectionNavigation() {
   const buttons = Array.from(els.sectionNavButtons || []);
   buttons.forEach((button) => {
     const section = button.dataset.backendSection;
+    if (section === "people") {
+      button.classList.remove("is-hidden");
+      button.addEventListener("click", () => {
+        window.location.href = resolveBackendSectionHref(section);
+      });
+      return;
+    }
     const allowed = isSectionAllowed(section);
     button.classList.toggle("is-hidden", !allowed);
 
@@ -197,9 +172,6 @@ function bindSectionNavigation() {
 }
 
 function bindSearchControls() {
-  if (state.permissions.canReadCustomers) {
-    bindSearch(els.customersSearchBtn, els.customersSearch, state.customers, loadCustomers);
-  }
   if (state.permissions.canReadBookings) {
     bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
     if (els.bookingsClearSearchBtn) {
@@ -240,10 +212,6 @@ function bindSearchControls() {
       if (els.toursStyle) els.toursStyle.value = "all";
       loadTours();
     });
-  }
-
-  if (state.permissions.canReadTravelGroups && els.travelGroupCreateBtn) {
-    els.travelGroupCreateBtn.addEventListener("click", createTravelGroup);
   }
 
   if (state.permissions.canManageStaff && els.staffCreateBtn) {
@@ -340,33 +308,6 @@ function bindSearch(searchBtn, searchInput, model, reloadFn) {
   }
 }
 
-async function loadCustomers() {
-  clearError();
-  const payload = await fetchCustomerSearchPage({
-    fetchApi,
-    page: state.customers.page,
-    pageSize: state.customers.pageSize,
-    search: state.customers.search
-  });
-  if (!payload) return;
-  const pagination = payload.pagination || {};
-
-  state.customers.totalPages = Math.max(
-    1,
-    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.customers.pageSize) || 1)
-  );
-  state.customers.total = Number(pagination.total_items || 0);
-  state.customers.page = Number(pagination.page || state.customers.page);
-  updatePaginationUi("customers");
-  renderCustomerTable({
-    tableEl: els.customersTable,
-    items: payload.items || [],
-    mode: "browse",
-    emptyMessage: "No customers found"
-  });
-  updateDashboardCounts();
-}
-
 async function loadBookings() {
   clearError();
 
@@ -390,59 +331,6 @@ async function loadBookings() {
   updatePaginationUi("bookings");
   renderBookings(payload.items || []);
   updateDashboardCounts();
-}
-
-async function loadTravelGroups() {
-  clearError();
-  const params = new URLSearchParams({
-    page: String(state.travelGroups.page),
-    page_size: String(state.travelGroups.pageSize),
-    sort: "updated_at_desc"
-  });
-  if (state.travelGroups.search) params.set("search", state.travelGroups.search);
-
-  const payload = await fetchApi(`/api/v1/travel_groups?${params.toString()}`);
-  if (!payload) return;
-  const pagination = payload.pagination || {};
-
-  if (els.travelGroupsNotice) {
-    els.travelGroupsNotice.textContent = payload.items?.length ? "" : "No travel groups found.";
-  }
-  state.travelGroups.totalPages = Math.max(
-    1,
-    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.travelGroups.pageSize) || 1)
-  );
-  state.travelGroups.total = Number(pagination.total_items || 0);
-  state.travelGroups.page = Number(pagination.page || state.travelGroups.page);
-  updatePaginationUi("travelGroups");
-  renderTravelGroups(payload.items || []);
-  updateDashboardCounts();
-}
-
-async function createTravelGroup() {
-  const groupName = normalizeText(els.travelGroupName?.value);
-  if (!groupName) {
-    showError("Group name is required.");
-    if (els.travelGroupName) els.travelGroupName.focus();
-    return;
-  }
-
-  clearError();
-  if (els.travelGroupCreateBtn) els.travelGroupCreateBtn.disabled = true;
-  if (els.travelGroupCreateStatus) els.travelGroupCreateStatus.textContent = "";
-
-  const payload = await fetchApi("/api/v1/travel_groups", {
-    method: "POST",
-    body: { group_name: groupName }
-  });
-
-  if (els.travelGroupCreateBtn) els.travelGroupCreateBtn.disabled = false;
-  if (!payload?.travel_group) return;
-
-  if (els.travelGroupName) els.travelGroupName.value = "";
-  if (els.travelGroupCreateStatus) els.travelGroupCreateStatus.textContent = "Travel group created.";
-  state.travelGroups.page = 1;
-  await loadTravelGroups();
 }
 
 async function loadTours() {
@@ -510,10 +398,8 @@ function updatePaginationUi(section) {
   if (pagination) {
     renderPagination(pagination, model, (page) => {
       model.page = page;
-      if (section === "customers") loadCustomers();
       if (section === "bookings") loadBookings();
       if (section === "tours") loadTours();
-      if (section === "travelGroups") loadTravelGroups();
     });
   }
 }
@@ -527,50 +413,39 @@ const fetchApi = createApiFetcher({
 });
 
 function updateDashboardCounts() {
-  if (els.dashboardCustomersCount) {
-    els.dashboardCustomersCount.textContent = formatIntegerWithGrouping(state.customers.total);
-  }
   if (els.dashboardBookingsCount) {
     els.dashboardBookingsCount.textContent = formatIntegerWithGrouping(state.bookings.total);
   }
   if (els.dashboardToursCount) {
     els.dashboardToursCount.textContent = formatIntegerWithGrouping(state.tours.total);
   }
-  if (els.dashboardTravelGroupsCount) {
-    els.dashboardTravelGroupsCount.textContent = formatIntegerWithGrouping(state.travelGroups.total);
+  if (els.dashboardStaffCount) {
+    els.dashboardStaffCount.textContent = formatIntegerWithGrouping(state.staff.length);
   }
 }
 
 function renderBookings(items) {
-  const canOpenCustomer = state.permissions.canReadCustomers;
   if (els.bookingsClearSearchBtn) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Client</th><th>Destination</th><th>Style</th><th>Staff</th><th>Service Level Agreement due</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Primary contact</th><th>People</th><th>Destination</th><th>Style</th><th>Staff</th><th>Service Level Agreement due</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
-      const clientLabelBase = booking.client_display_name || shortId(booking.client_id);
-      let clientCell = "-";
-      if (booking.client_id) {
-        if (booking.client_type === "customer") {
-          const customerHref = buildCustomerHref(booking.client_id || "");
-          clientCell = canOpenCustomer
-            ? `<a href="${escapeHtml(customerHref)}">${escapeHtml(clientLabelBase)}</a>`
-            : escapeHtml(clientLabelBase);
-        } else if (booking.client_type === "travel_group") {
-          const groupId = booking.travel_group_id || booking.client_id || "";
-          const groupHref = buildTravelGroupHref(groupId);
-          clientCell = `<a href="${escapeHtml(groupHref)}">${escapeHtml(clientLabelBase)} (group)</a>`;
-        } else {
-          clientCell = escapeHtml(clientLabelBase);
-        }
-      }
+      const persons = getBookingPersons(booking);
+      const primaryContact = getPrimaryContact(booking);
+      const primaryLabel = [
+        primaryContact?.name,
+        primaryContact?.emails?.[0],
+        primaryContact?.phone_numbers?.[0]
+      ].filter(Boolean).join(" | ") || "-";
+      const peopleSummary = `${persons.length} listed / ${getTravelerCount(booking)} travelers`;
       return `<tr>
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
         <td>${escapeHtml(booking.stage)}</td>
-        <td>${clientCell}</td>
+        <td>${escapeHtml(primaryLabel)}</td>
+        <td>${escapeHtml(peopleSummary)}</td>
         <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
         <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
         <td>${escapeHtml(booking.atp_staff_name || "Unassigned")}</td>
@@ -581,7 +456,7 @@ function renderBookings(items) {
 
   const body =
     rows ||
-    `<tr><td colspan="7">${escapeHtml(
+    `<tr><td colspan="8">${escapeHtml(
       `No bookings found${state.bookings.search ? ` for "${state.bookings.search}"` : ""}`
     )}</td></tr>`;
   if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
@@ -609,45 +484,6 @@ function renderTours(items) {
   const body = rows || `<tr><td colspan="7">No tours found</td></tr>`;
   if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
-
-function renderTravelGroups(items) {
-  const header = `<thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Travelers</th><th>Updated</th></tr></thead>`;
-  const rows = items
-    .map((group) => {
-      const href = buildTravelGroupHref(group.id || "");
-      return `<tr>
-        <td><a href="${escapeHtml(href)}">${escapeHtml(shortId(group.id))}</a></td>
-        <td>${escapeHtml(group.group_name || group.name || "-")}</td>
-        <td>${escapeHtml(group.group_contact_customer_name || shortId(group.group_contact_customer_id || "-"))}</td>
-        <td>${escapeHtml(String(Array.isArray(group.traveler_customer_ids) ? group.traveler_customer_ids.length : 0))}</td>
-        <td>${escapeHtml(formatDateTime(group.updated_at || group.updatedAt))}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const body = rows || `<tr><td colspan="5">No travel groups found</td></tr>`;
-  if (els.travelGroupsTable) {
-    els.travelGroupsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  }
-}
-
-async function deleteTravelGroup(travelGroupId, travelGroupHash) {
-  const groupId = normalizeText(travelGroupId);
-  if (!groupId) return;
-  if (!window.confirm(`Delete travel group ${groupId}? This cannot be undone.`)) return;
-
-  clearError();
-  const payload = await fetchApi(`/api/v1/travel_groups/${encodeURIComponent(groupId)}`, {
-    method: "DELETE",
-    body: {
-      travel_group_hash: normalizeText(travelGroupHash) || ""
-    }
-  });
-  if (!payload?.deleted) return;
-
-  await loadTravelGroups();
-}
-
 function showError(message) {
   if (!els.error) return;
   els.error.textContent = message;
@@ -666,6 +502,7 @@ async function loadStaff() {
   if (!payload) return;
   state.staff = Array.isArray(payload.items) ? payload.items : [];
   renderStaff(state.staff);
+  updateDashboardCounts();
 }
 
 function renderStaff(items) {
@@ -718,6 +555,42 @@ async function createStaff() {
 function setStaffStatus(message) {
   if (!els.staffStatus) return;
   els.staffStatus.textContent = message;
+}
+
+function getBookingPersons(booking) {
+  if (!Array.isArray(booking?.persons)) return [];
+  return booking.persons
+    .filter((person) => person && typeof person === "object" && !Array.isArray(person))
+    .map((person) => ({
+      ...person,
+      name: normalizeText(person.name) || "",
+      roles: Array.from(new Set((Array.isArray(person.roles) ? person.roles : []).map((value) => normalizeText(value)).filter(Boolean))),
+      emails: Array.from(
+        new Set(
+          [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
+            .map((value) => normalizeText(value))
+            .filter(Boolean)
+        )
+      ),
+      phone_numbers: Array.from(
+        new Set(
+          [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
+            .map((value) => normalizeText(value))
+            .filter(Boolean)
+        )
+      )
+    }));
+}
+
+function getPrimaryContact(booking) {
+  const persons = getBookingPersons(booking);
+  return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
+}
+
+function getTravelerCount(booking) {
+  const persons = getBookingPersons(booking);
+  const travelers = persons.filter((person) => person.roles.includes("traveler"));
+  return travelers.length || persons.length;
 }
 
 function shortId(value) {
