@@ -1,109 +1,246 @@
-# Booking Client Assignment In `booking.html`
+# Booking Client Assignment in `booking.html`
 
-The booking detail page keeps the `change` button next to the current client and uses the submitted booking form data to decide how client assignment works.
+The panel starts with `web form request: ...` built from the submitted `name`, `email`, and `phone_number` from `booking.web_form_submission`.
 
-## Shared rules
-- Similar customers are sorted by similarity before display. The criteria for accepting a similar name is quite strict.
-- Phone number and email matches have higher weight than name similarity.
+`booking.web_form_submission` is immutable and is only used as the reference snapshot for client assignment and merge decisions.
 
+## Case 1: `number_of_travelers` is missing, `0`, or `1`
 
+In this case, the booking is assigned to a customer.
 
-DONE: 
-In the model of the tour and the generated code:
-- rename destinationCountries to destinations
-- rename priceFrom to budget_lower_USD
-in the model and code of the booking:
-rename travelMonth to web_form_travel_month
-rename travel_duration to web_form_ttravel_duration
+### Case 1.1: No similar customer exists
 
-In the model of the tour and the generated code:
-create a model enum for the months (three letter abbreviation)
-change seasonality ("Best Nov-Feb") to seasonality_start_month (nov) and seasonality_end_month (feb) using that enum.
-update the data in backend/app/data/tours to match this and update the code to match this new variables
+- Show a pill with two options in the style of swiftui `.pickerstyle(.segmented)`:
+  - `new customer`
+  - `search customer`
 
-With respect to the duration of the tour:
-In the model of the tour rename durationDays to travel_duration_days
-In the model of the booking add:
-travel_start_day
-travel_end_day
+#### Case 1.1.1: `new customer`
 
-in the model of the booking 
-- add travel_start_day
-- add travel_end_day
-regenerating the contract so the rename/addition is reflected consistently in generated frontend/backend/iOS code
+- Show a button `create a new customer for {booking.web_form_submission.name}`.
+- When pressed, create a new customer and set these customer fields from `booking.web_form_submission`:
+  - `name`
+  - `email` (if available)
+  - `phone_number` (if available)
+  - `preferred_language`
+- Then assign this customer to the booking.
 
-in the model of the booking 
-- add web_form_travel_duration_days_min
-- add web_form_travel_duration_days_max
-regenerating the contract so the rename/addition is reflected consistently in generated frontend/backend/iOS code
+#### Case 1.1.2: `search customer`
 
-web form:
-When the user starts filling the form for a tour, preselect the following according to this tour:
-travel_month as the first month in tour (seasonality_start_month)
-Take the budget_lower_USD from the web form and find the range in BOOKING_BUDGET_OPTIONS that matches this price.
-In the web form, then show the travel_month and this price range, converted to the preferred currency
+- Show a search field and to the right a button `search`.
+- With empty search term, show the normal paginated customer list.
+- In the paginated search results table, show:
+  - first column: button `select`
+  - other columns:
+    - `ID` (link to customer)
+    - `name`
+    - `email`
+    - `phone_number`
 
-Create a model for the web form:
-destinations (list)
-travel_style (list)
-travel_month (optional)
-number_of_travelers (optional)
-preferred_currency
-travel_duration_days_min
-travel_duration_days_max
-name
-email
-phone_number
-budget_lower_USD
-budget_upper_USD
-preferred_language
-notes (optional)
-Eiter email or phone_number must be present
+##### Case 1.1.2.a: Selected customer data is identical
 
-generate code for the web form from this model, remove hard-coded code.
+- Compare these fields:
+  - `name`
+  - `email` (if present in web form)
+  - `phone_number` (if present in web form)
+  - `preferred_language` (if present in web form)
+- If all relevant values are identical, assign the selected customer directly to the booking.
 
-NOT DONE:
+##### Case 1.1.2.b: Selected customer data is not identical
 
-When assigning a new client or changing the client in booking:
+- Before showing merge actions, show a warning if the selected customer:
+  - is group contact of one or more travel groups
+  - is assigned as client to one or more bookings
+- Show a structured merge table for each differing field.
+- Columns:
+  - `field`
+  - `existing customer value`
+  - `web form value`
+- Action: For each differing field, force the user to choose one of:
+  - `keep existing`
+  - `overwrite with web form`
+- Missing values in the web form do not count as conflicts and do not trigger a choice.
+- After all choices are made, show a button `select customer`.
+- When pressed:
+  - update the customer according to the chosen merge actions
+  - assign the customer to the booking
 
-- The panel starts with `web form request: ...` built from the submitted name, email, and phone number.
+### Case 1.2: At least one similar customer exists
 
-Case 1: `number_of_travelers` is missing or `1`
-In this case, we assign a customer to the booking.
+- Show a pill with three options in the style of swiftui `.pickerstyle(.segmented)`:
+  - `new customer`
+  - `similar customer`
+  - `search customer`
 
-case 1.1: No similar customer exists
-    Show `create a new customer for {name}` button. When pressed set these customer fields from the booking web_form_submission data:
-    - name
-    - email (if available)
-    - phone_number (if available)
-    - preferred_language
+#### Case 1.2.1: `new customer`
 
-Case 1.2: at least one similar customer exists
-    Show a pill with three options in the style of swiftui .pickerstyle .segmented
-    Case 1.2.1: new customer
-        Show what is described in case 1.1
-    Case 1.2.2: similar customer
-        Show a dropdown of similar customers with first option `Similar Customer`.
-        After selecting an existing customer, show a button "select as client".
-        When the button is pressed, the check if these values are identical:
-        - name
-        - email (if available)
-        - phone_number (if available)
-        - preferred_language
-        If they are not identical show a question for each non-identical value that forces the user to choose between
-        a) keep the xxx: xxx in the customer
-        b) overwrite xxx with xxx from the web form
-    Case 1.2.3: all customers
-        Show search field that allows the atp_staff to search for a customer. To the right of this field show a button "search"
-        In the paginated search results table, show a button "select" in the first column.
-        The other columns are: ID (link to customer), name, email, and phone_number
-        When the "select" button is pressed for one of the customers, do the same value check as described in case 1.2.2
+- Show the same UI and behavior as in Case 1.1.1.
 
-Case 2: `number_of_travelers` is greater than `1`
-    Show a `group name` text field, initally empty.
-    
-    Show the title `Select group contact:`
-    Use the same UI and logic as Case 1.2 with the three options, 
-    but here, it choses the group contact, not the customer.
-    
-    When the group contact has been created or selected set the customer id as `group_contact_customer_id`.
+#### Case 1.2.2: `similar customer`
+
+- Show a dropdown of similar customers with a first option `Similar Customer`.
+- After selecting an existing customer, show a button `select as client`, enabled only after selecting a customer.
+
+##### Case 1.2.2.a: Selected customer data is identical
+
+- Compare these fields:
+  - `name`
+  - `email` (if present in web form)
+  - `phone_number` (if present in web form)
+  - `preferred_language` (if present in web form)
+- If all relevant values are identical, assign the selected customer directly to the booking.
+- No merge UI is shown.
+
+##### Case 1.2.2.b: Selected customer data is not identical
+
+- Before showing merge actions, show a warning if the selected customer:
+  - is group contact of one or more travel groups
+  - is assigned as client to one or more bookings
+- Show a structured merge table for each differing field.
+- Columns:
+  - `field`
+  - `existing customer value`
+  - `web form value`
+- Action: For each differing field, force the user to choose one of:
+  - `keep existing`
+  - `overwrite with web form`
+- Missing values in the web form do not count as conflicts and do not trigger a choice.
+- After all choices are made, show a button `select customer`.
+- When pressed:
+  - update the customer according to the chosen merge actions
+  - assign the customer to the booking
+
+#### Case 1.2.3: `search customer`
+
+- Show the same UI and behavior as in Case 1.1.2.
+
+##### Case 1.2.3.a: Selected customer data is identical
+
+- If the selected customer matches the web form data as described in Case 1.1.2.a, assign directly.
+
+##### Case 1.2.3.b: Selected customer data is not identical
+
+- Show the same warning, merge table, and confirmation logic as in Case 1.1.2.b.
+
+- Assign the customer ID as booking client.
+
+## Case 2: `number_of_travelers` is greater than `1`
+
+- Show a segmented control in the style of swiftui `.pickerstyle(.segmented)` with:
+  - `use existing group`
+  - `new group (recommended)`
+
+### Case 2.1: `use existing group`
+
+- Show a search field and a button `search`.
+- With empty search term, show the normal paginated travel group list.
+- Search can match either of:
+  - `group_name`
+  - `group_contact_customer_id`
+  - group contact name
+  - group contact email
+  - group contact phone_number
+- In the paginated results table, show:
+  - first column: button `select`
+  - other columns:
+    - `ID` (link to group)
+    - `group_name`
+    - `group contact`
+    - `group contact email`
+    - `group contact phone_number`
+- When the button `select` is pressed for an existing group, assign this group as booking client.
+
+### Case 2.2: `new group (recommended)`
+
+- Show a `group name (required)` text field, initially empty.
+- This field is visible only while the option `new group (recommended)` is active.
+- Its value persists when the user switches between `use existing group` and `new group (recommended)`.
+- Show the title `Select group contact`.
+- Show a second pill with three options in the style of swiftui `.pickerstyle(.segmented)`:
+  - `new group contact`
+  - `find similar group contact`
+  - `search customers`
+- These options choose the `group_contact_customer_id` for the new group.
+
+#### Case 2.2.1: `new group contact`
+
+- Show a button `create new customer and group` (disabled if group name is empty).
+- When pressed:
+  - create a new customer from `booking.web_form_submission` using:
+    - `name`
+    - `email` (if available)
+    - `phone_number` (if available)
+    - `preferred_language`
+  - create a new travel group and set:
+    - `group_contact_customer_id` to the new customer
+    - `group_name` to the entered group name
+  - assign the new group's client ID as booking client
+
+#### Case 2.2.2: `find similar group contact`
+
+- Show a dropdown of similar customers with first option `Similar Customer` and an initially disabled button `select as group contact`.
+- After selecting a customer, enable the button.
+
+##### Case 2.2.2.a: Selected customer data is identical
+
+- If relevant fields are identical as described in Case 1.2.2.a:
+  - use the selected customer as `group_contact_customer_id`
+  - create a new group
+  - set `group_name`
+  - assign the new group's client ID as booking client
+
+##### Case 2.2.2.b: Selected customer data is not identical
+
+- Before showing merge actions, show a warning if the selected customer:
+  - is group contact of one or more travel groups
+  - is assigned as client to one or more bookings
+- Show the same structured merge table as in Case 1.2.2.b.
+- After all merge choices are made and confirmed:
+  - update the selected customer according to the chosen merge actions
+  - use that customer as `group_contact_customer_id`
+  - create a new group
+  - set `group_name`
+  - assign the new group's client ID as booking client
+
+#### Case 2.2.3: `search customers`
+
+- Show a search field and a button `search`.
+- With empty search term, show the normal paginated customer list.
+- In the paginated search results table, show:
+  - first column: button `select`
+  - other columns:
+    - `ID` (link to customer)
+    - `name`
+    - `email`
+    - `phone_number`
+
+##### Case 2.2.3.a: Selected customer data is identical
+
+- Use the selected customer as `group_contact_customer_id`, create the group, and assign the new group's client ID as booking client.
+
+##### Case 2.2.3.b: Selected customer data is not identical
+
+- Before showing merge actions, show a warning if the selected customer:
+  - is group contact of one or more travel groups
+  - is assigned as client to one or more bookings
+- Show the same structured merge table and logic as in Case 2.2.2.b.
+
+## General merge rules
+
+- Phone number and email are stronger identity signals than name.
+- Exact phone/email matches should be ranked above name-only matches.
+- Name-only matches should be treated as weak matches.
+- Default merge action should always be `keep existing`.
+- The user must explicitly opt in to overwrite existing customer data.
+
+## Similarity threshold
+
+- A strong match is:
+  - exact normalized `phone_number` match
+  - or exact normalized `email` match
+- A medium match is:
+  - exact normalized name match together with any contact overlap
+  - or a likely phone match after phone normalization
+- A weak match is:
+  - similar name only, without `phone_number` or `email` support
+- Only strong and medium matches are shown in the default similar customer dropdown.
+- Weak name-only matches do not count as similar customer candidates by default, but they may still appear in `search customer` results.
