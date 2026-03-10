@@ -126,6 +126,7 @@ const state = {
     isPolling: false
   },
   persons_autosave_timer: null,
+  persons_autosave_person_id: "",
   persons_save_in_flight: null,
   persons_save_queued: false
 };
@@ -144,7 +145,6 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
-  tourTitle: document.getElementById("detail_tour_title"),
   title: document.getElementById("detail_title"),
   titleInput: document.getElementById("detail_title_input"),
   titleEditBtn: document.getElementById("detail_title_edit_btn"),
@@ -160,6 +160,7 @@ const els = {
   persons_editor_panel: document.getElementById("persons_editor_panel"),
   personsEditorList: document.getElementById("booking_persons_editor_list"),
   personsEditorStatus: document.getElementById("booking_persons_editor_status"),
+  personsMismatchWarning: document.getElementById("booking_persons_mismatch_warning"),
   personModal: document.getElementById("booking_person_modal"),
   personModalSubtitle: document.getElementById("booking_person_modal_subtitle"),
   personModalCloseBtn: document.getElementById("booking_person_modal_close_btn"),
@@ -175,7 +176,6 @@ const els = {
   personModalEmails: document.getElementById("booking_person_modal_emails"),
   personModalPhoneNumbers: document.getElementById("booking_person_modal_phone_numbers"),
   personModalRoles: document.getElementById("booking_person_modal_roles"),
-  personModalTravelDocumentStatus: document.getElementById("booking_person_modal_travel_document_status"),
   personModalAddressLine1: document.getElementById("booking_person_modal_address_line_1"),
   personModalAddressLine2: document.getElementById("booking_person_modal_address_line_2"),
   personModalCity: document.getElementById("booking_person_modal_city"),
@@ -430,12 +430,7 @@ async function loadBookingPage() {
 function renderBookingHeader() {
   if (!state.booking) return;
   const primaryContact = getPrimaryContact(state.booking);
-  const tourTitle = normalizeText(state.booking.web_form_submission?.booking_name) || "";
   const title = normalizeText(state.booking.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || "Booking";
-  if (els.tourTitle) {
-    els.tourTitle.textContent = tourTitle;
-    els.tourTitle.hidden = !tourTitle;
-  }
   if (els.title) els.title.textContent = title;
   if (els.titleInput && document.activeElement !== els.titleInput) {
     els.titleInput.value = title;
@@ -466,15 +461,19 @@ function renderBookingHeroImage() {
     els.heroImage.src = resolvePersonPhotoSrc(preferredPhotoPerson.photo_ref);
     els.heroImage.alt = preferredPhotoPerson.name ? `${preferredPhotoPerson.name}` : "";
     els.heroImage.hidden = false;
+    els.heroImage.style.display = "block";
     if (els.heroInitials) els.heroInitials.hidden = true;
+    if (els.heroInitials) els.heroInitials.style.display = "none";
     return;
   }
 
   if (preferredNamedPerson) {
     els.heroImage.hidden = true;
+    els.heroImage.style.display = "none";
     if (els.heroInitials) {
       els.heroInitials.textContent = getPersonInitials(preferredNamedPerson.name);
       els.heroInitials.hidden = false;
+      els.heroInitials.style.display = "block";
     }
     return;
   }
@@ -482,7 +481,9 @@ function renderBookingHeroImage() {
   els.heroImage.src = "assets/img/profile_person.png";
   els.heroImage.alt = "";
   els.heroImage.hidden = false;
+   els.heroImage.style.display = "block";
   if (els.heroInitials) els.heroInitials.hidden = true;
+  if (els.heroInitials) els.heroInitials.style.display = "none";
 }
 
 function resolvePersonPhotoSrc(photoRef) {
@@ -645,7 +646,7 @@ function applyBookingPayload(payload = {}) {
     state.active_person_index = state.personDrafts.findIndex((person) => person.id === active_person_id);
     if (state.active_person_index < 0) {
       state.active_person_id = "";
-      closePersonModal();
+      finalizeClosePersonModal();
     } else {
       state.active_person_id = state.personDrafts[state.active_person_index]?.id || "";
     }
@@ -705,18 +706,35 @@ function getPrimaryContact(booking) {
   return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
 }
 
-function getTravelerCount(booking) {
-  const persons = getBookingPersons(booking);
-  const travelers = persons.filter((person) => person.roles.includes("traveler"));
-  return travelers.length || persons.length;
+function isTravelingPerson(person) {
+  return normalizeStringList(person?.roles).includes("traveler");
+}
+
+function getDisplayedTravelerCount() {
+  return state.personDrafts.filter((person) => !person?._is_new && isTravelingPerson(person)).length;
 }
 
 function buildTravelerMismatchMessage(booking) {
-  const declared = Number(booking?.number_of_travelers || 0);
+  const declared = Number(booking?.web_form_submission?.number_of_travelers || 0);
   if (!declared) return "";
-  const listed = getTravelerCount(booking);
+  const listed = getDisplayedTravelerCount();
   if (declared === listed) return "";
-  return `Declared travelers: ${declared}. Listed persons/travelers: ${listed}.`;
+  const declaredLabel = `${declared} traveler${declared === 1 ? "" : "s"}`;
+  if (listed < declared) {
+    const listedLabel = listed === 1 ? "one traveler only" : `${listed} travelers only`;
+    return `The web form indicates ${declaredLabel}, but this booking currently has ${listedLabel}.`;
+  }
+  if (listed === 1) {
+    return `The web form indicates ${declaredLabel}, but this booking currently has one traveler.`;
+  }
+  return `The web form indicates ${declaredLabel}, but this booking currently has ${listed} travelers.`;
+}
+
+function renderTravelerMismatchWarning() {
+  if (!els.personsMismatchWarning) return;
+  const message = buildTravelerMismatchMessage(state.booking);
+  els.personsMismatchWarning.textContent = message;
+  els.personsMismatchWarning.hidden = !message;
 }
 
 function formatPersonRoleLabel(role) {
@@ -884,7 +902,25 @@ function getPersonIdentityStatus(person) {
   if (personHasCompleteIdentityDocument(person, "national_id")) {
     return { is_complete: true, label: "ID card" };
   }
-  return { is_complete: false, label: "Passport / ID card" };
+  return { is_complete: false, label: "" };
+}
+
+function personHasCompleteContact(person) {
+  return collectPersonEmails(person).length > 0 && collectPersonPhoneNumbers(person).length > 0;
+}
+
+function personHasCompleteAddress(person) {
+  return Boolean(
+    normalizeText(person?.address?.line_1) &&
+    normalizeText(person?.address?.city) &&
+    normalizeText(person?.address?.postal_code) &&
+    normalizeText(person?.address?.country_code)
+  );
+}
+
+function renderPersonCardStatusLine(label, isComplete) {
+  if (!isComplete) return "";
+  return `<span class="booking-person-card__identity"><span class="booking-person-card__identity-check" aria-hidden="true">&#10003;</span><span>${escapeHtml(label)}</span></span>`;
 }
 
 function getPersonTravelDocumentStatus(person) {
@@ -917,6 +953,16 @@ function getPersonPrimaryRoleLabel(person) {
   const priority = ["primary_contact", "decision_maker", "payer", "assistant", "traveler"];
   const selected_role = priority.find((role) => roles.includes(role)) || roles[0] || "traveler";
   return formatPersonRoleLabel(selected_role);
+}
+
+function getPersonFooterRoleLabel(person) {
+  const roleLabels = normalizeStringList(person?.roles)
+    .filter((role) => role !== "traveler")
+    .map(formatPersonRoleLabel);
+  if (!isTravelingPerson(person)) {
+    return ["Not traveling", ...roleLabels].join(", ");
+  }
+  return roleLabels.join(", ");
 }
 
 function getHeroPersonRoleRank(person) {
@@ -975,6 +1021,7 @@ function clearPersonsAutosaveTimer() {
     window.clearTimeout(state.persons_autosave_timer);
     state.persons_autosave_timer = null;
   }
+  state.persons_autosave_person_id = "";
 }
 
 function getBookingRevision(field) {
@@ -982,12 +1029,17 @@ function getBookingRevision(field) {
   return Number.isFinite(value) && value >= 0 ? Math.trunc(value) : 0;
 }
 
-function schedulePersonsAutosave(delay_ms = 700) {
+function schedulePersonsAutosave(person_id = state.active_person_id, delay_ms = 700) {
   if (!state.permissions.canEditBooking || !state.booking) return;
+  const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
+  if (!targetPersonId) return;
   clearPersonsAutosaveTimer();
+  state.persons_autosave_person_id = targetPersonId;
   state.persons_autosave_timer = window.setTimeout(() => {
     state.persons_autosave_timer = null;
-    void savePersonDrafts();
+    const autosavePersonId = state.persons_autosave_person_id;
+    state.persons_autosave_person_id = "";
+    void savePersonDrafts(autosavePersonId);
   }, delay_ms);
 }
 
@@ -1021,6 +1073,27 @@ function buildPersonPayloadFromDraft(draft, index) {
   };
 }
 
+function personDraftHasMeaningfulInput(draft) {
+  if (!draft || typeof draft !== "object") return false;
+  const roles = normalizeStringList(draft.roles);
+  const hasNonDefaultRoles = roles.length !== 1 || roles[0] !== "traveler";
+  const addressValues = draft.address && typeof draft.address === "object" ? Object.values(draft.address) : [];
+  return Boolean(
+    normalizeText(draft.name) ||
+    normalizeText(draft.photo_ref) ||
+    collectCommaSeparatedValues(draft.emails).length ||
+    collectCommaSeparatedValues(draft.phone_numbers).length ||
+    normalizeText(draft.preferred_language) ||
+    normalizeText(draft.date_of_birth) ||
+    normalizeText(draft.nationality) ||
+    addressValues.some((value) => normalizeText(value)) ||
+    hasNonDefaultRoles ||
+    (Array.isArray(draft.consents) && draft.consents.length) ||
+    (Array.isArray(draft.documents) && draft.documents.some(documentHasAnyData)) ||
+    normalizeText(draft.notes)
+  );
+}
+
 function collectCommaSeparatedValues(values) {
   const items = Array.isArray(values) ? values : String(values || "").split(",");
   return Array.from(new Set(items.map((value) => normalizeText(value)).filter(Boolean)));
@@ -1033,10 +1106,16 @@ function renderPersonsEditor({ include_modal = true } = {}) {
   const person_cards = state.personDrafts.map((person, index) => {
       const title = normalizeText(person.name) || "Unnamed person";
       const identity = getPersonIdentityStatus(person);
-      const role_label = getPersonPrimaryRoleLabel(person);
-      const subtitle = person._is_new ? "Saving..." : person.roles.map(formatPersonRoleLabel).join(", ");
+      const hasCompleteContact = personHasCompleteContact(person);
+      const hasCompleteAddress = personHasCompleteAddress(person);
+      const role_label = getPersonFooterRoleLabel(person);
       const photo_src = resolvePersonPhotoSrc(person.photo_ref);
       const initials = getPersonInitials(title);
+      const status_markup = [
+        renderPersonCardStatusLine(identity.label, identity.is_complete),
+        renderPersonCardStatusLine("Contact", hasCompleteContact),
+        renderPersonCardStatusLine("Address", hasCompleteAddress)
+      ].join("");
       const image_markup = normalizeText(person.photo_ref)
         ? `<img src="${escapeHtml(photo_src)}" alt="${escapeHtml(title)}" />`
         : `<span class="booking-person-card__initials">${escapeHtml(initials)}</span>`;
@@ -1045,11 +1124,8 @@ function renderPersonsEditor({ include_modal = true } = {}) {
           <span class="booking-person-card__media">${image_markup}</span>
           <span class="booking-person-card__content">
             <span class="booking-person-card__title">${escapeHtml(title)}</span>
-            <span class="booking-person-card__identity ${identity.is_complete ? "is-complete" : ""}">
-              <span class="booking-person-card__identity-badge">${identity.is_complete ? "OK" : "..."}</span>
-              <span>${escapeHtml(identity.label)}</span>
-            </span>
-            <span class="booking-person-card__subtitle">${escapeHtml(subtitle || person.id)}</span>
+            <span class="booking-person-card__status-list">${status_markup}</span>
+            <span class="booking-person-card__subtitle"></span>
           </span>
           <span class="booking-person-card__role-footer">${escapeHtml(role_label)}</span>
         </button>
@@ -1062,14 +1138,16 @@ function renderPersonsEditor({ include_modal = true } = {}) {
         <span class="booking-person-card__media booking-person-card__media--add">
           <img src="assets/img/profile_person.png" alt="" />
         </span>
-        <span class="booking-person-card__add-badge" aria-hidden="true">+</span>
+        <span class="booking-person-card__add-cta">
+          <span class="booking-person-card__add-button">new</span>
+        </span>
       </span>
     </button>
   ` : "";
 
   if (!person_cards.length && !add_card) {
     els.personsEditorList.innerHTML = `<div class="booking-person-card__empty">No persons listed on this booking.</div>`;
-    closePersonModal();
+    finalizeClosePersonModal();
     updatePersonsEditorSaveButton();
     return;
   }
@@ -1077,6 +1155,7 @@ function renderPersonsEditor({ include_modal = true } = {}) {
   els.personsEditorList.innerHTML = `${person_cards.join("")}${add_card}`;
 
   if (include_modal) renderPersonModal();
+  renderTravelerMismatchWarning();
   updatePersonsEditorSaveButton();
 }
 
@@ -1093,33 +1172,14 @@ function handlePersonsEditorListClick(event) {
   openPersonModal(index);
 }
 
-async function addPersonDraft() {
+function addPersonDraft() {
   if (!state.permissions.canEditBooking || !state.booking) return;
-  setPersonsEditorStatus("Creating person...");
   const draft = buildEmptyPersonDraft();
-  const request = bookingPersonCreateRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      expected_persons_revision: getBookingRevision("persons_revision"),
-      person: buildPersonPayloadFromDraft(draft, state.personDrafts.length),
-      actor: state.user
-    }
-  });
-  if (!result?.booking) {
-    setPersonsEditorStatus("Could not create person.");
-    return;
-  }
-
-  applyBookingPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
+  state.personDrafts.push(draft);
   renderPersonsEditor();
-  const createdPersonId = result.booking?.persons?.[result.booking.persons.length - 1]?.id || "";
-  const createdIndex = state.personDrafts.findIndex((person) => person.id === createdPersonId);
-  if (createdIndex >= 0) openPersonModal(createdIndex);
-  setPersonsEditorStatus("Person created.");
+  updatePersonsDirtyState();
+  openPersonModal(state.personDrafts.length - 1);
+  setPersonsEditorStatus("");
 }
 
 async function savePersonDrafts(person_id = state.active_person_id) {
@@ -1132,13 +1192,21 @@ async function savePersonDrafts(person_id = state.active_person_id) {
   const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
   const personIndex = state.personDrafts.findIndex((draft) => draft.id === targetPersonId);
   const currentDraft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
-  if (!currentDraft || currentDraft._is_new) return false;
+  if (!currentDraft) return false;
   clearPersonsAutosaveTimer();
-  setPersonsEditorStatus(`Saving ${normalizeText(currentDraft.name) || "person"}...`);
-  const request = bookingPersonUpdateRequest({
-    baseURL: apiOrigin,
-    params: { booking_id: state.booking.id, person_id: targetPersonId }
-  });
+  const isNewDraft = currentDraft._is_new === true;
+  if (isNewDraft && !personDraftHasMeaningfulInput(currentDraft)) return true;
+  const request = isNewDraft
+    ? bookingPersonCreateRequest({
+        baseURL: apiOrigin,
+        params: { booking_id: state.booking.id }
+      })
+    : bookingPersonUpdateRequest({
+        baseURL: apiOrigin,
+        params: { booking_id: state.booking.id, person_id: targetPersonId }
+      });
+  const existingPersonIds = new Set(getBookingPersons(state.booking).map((person) => person.id));
+  const activeLocalPersonId = normalizeText(state.active_person_id);
   const save_operation = (async () => {
     const result = await fetchBookingMutation(request.url, {
       method: request.method,
@@ -1150,12 +1218,21 @@ async function savePersonDrafts(person_id = state.active_person_id) {
     });
     if (!result?.booking) return false;
 
+    const createdPersonId = isNewDraft
+      ? normalizeText(
+          result.booking?.persons?.find((person) => !existingPersonIds.has(normalizeText(person?.id)))?.id ||
+          result.booking?.persons?.[result.booking.persons.length - 1]?.id
+        )
+      : "";
     applyBookingPayload(result);
     renderBookingHeader();
     renderBookingData();
     renderActionControls();
     renderPersonsEditor();
-    setPersonsEditorStatus(result.unchanged ? "Person unchanged." : "Person saved.");
+    if (isNewDraft && activeLocalPersonId === targetPersonId && createdPersonId) {
+      const createdIndex = state.personDrafts.findIndex((person) => person.id === createdPersonId);
+      if (createdIndex >= 0) openPersonModal(createdIndex);
+    }
     return true;
   })();
   state.persons_save_in_flight = save_operation;
@@ -1177,7 +1254,7 @@ function openPersonModal(index) {
   if (els.personModal) els.personModal.setAttribute("aria-hidden", "false");
 }
 
-function closePersonModal() {
+function finalizeClosePersonModal() {
   if (els.personModal) els.personModal.setAttribute("aria-hidden", "true");
   state.active_person_index = -1;
   state.active_person_id = "";
@@ -1185,10 +1262,28 @@ function closePersonModal() {
   if (els.personModalPhotoInput) els.personModalPhotoInput.value = "";
 }
 
+async function closePersonModal() {
+  const activeIndex = state.active_person_index;
+  const draft = state.personDrafts[activeIndex];
+  clearPersonsAutosaveTimer();
+  if (draft?._is_new && !personDraftHasMeaningfulInput(draft)) {
+    state.personDrafts.splice(activeIndex, 1);
+    finalizeClosePersonModal();
+    renderPersonsEditor({ include_modal: false });
+    updatePersonsDirtyState();
+    setPersonsEditorStatus("");
+    return;
+  }
+  if (draft && state.permissions.canEditBooking && state.dirty.persons) {
+    const saved = await savePersonDrafts(draft.id);
+    if (!saved && personDraftHasMeaningfulInput(draft)) return;
+  }
+  finalizeClosePersonModal();
+}
+
 function triggerPersonPhotoPicker() {
   const draft = state.personDrafts[state.active_person_index];
   if (!state.permissions.canEditBooking || !draft || draft._is_new) {
-    setPersonsEditorStatus(draft?._is_new ? "Person is still being created. Try again in a moment." : "");
     return;
   }
   if (els.personModalPhotoInput) els.personModalPhotoInput.click();
@@ -1196,7 +1291,7 @@ function triggerPersonPhotoPicker() {
 
 function handlePersonModalKeydown(event) {
   if (event.key !== "Escape" || els.personModal?.getAttribute("aria-hidden") !== "false") return;
-  closePersonModal();
+  void closePersonModal();
 }
 
 function renderPersonModal() {
@@ -1204,7 +1299,7 @@ function renderPersonModal() {
   const draft = state.personDrafts[state.active_person_index];
   const is_open = els.personModal.getAttribute("aria-hidden") === "false";
   if (!draft) {
-    if (is_open) closePersonModal();
+    if (is_open) finalizeClosePersonModal();
     return;
   }
 
@@ -1214,7 +1309,7 @@ function renderPersonModal() {
   const photo_src = resolvePersonPhotoSrc(draft.photo_ref);
 
   if (els.personModalSubtitle) {
-    els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}${draft._is_new ? " | Saving..." : ""}`;
+    els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}`;
   }
   if (els.personModalPhoto) {
     const has_photo = Boolean(normalizeText(draft.photo_ref));
@@ -1307,22 +1402,25 @@ function renderPersonModal() {
     els.personModalDeleteBtn.style.display = can_edit ? "" : "none";
   }
   updatePersonModalDocumentSwitcher(draft, active_document_type, can_edit);
-  updatePersonModalDocumentStatus();
 }
 
 function updatePersonModalDocumentSwitcher(draft, active_document_type, can_edit) {
   const passport_switch = document.getElementById("booking_person_modal_switch_passport");
   const national_id_switch = document.getElementById("booking_person_modal_switch_national_id");
   const switches = [
-    [passport_switch, "passport"],
-    [national_id_switch, "national_id"]
+    [passport_switch, "passport", "Passport"],
+    [national_id_switch, "national_id", "ID card"]
   ];
-  switches.forEach(([button, document_type]) => {
+  switches.forEach(([button, document_type, label]) => {
     if (!(button instanceof HTMLButtonElement)) return;
     const is_active = active_document_type === document_type;
+    const is_complete = personHasCompleteIdentityDocument(draft, document_type);
     button.classList.toggle("is-active", is_active);
     button.setAttribute("aria-selected", String(is_active));
     button.disabled = !can_edit;
+    button.innerHTML = is_complete
+      ? `${escapeHtml(label)} <span class="booking-person-modal__document-switch-check" aria-hidden="true">&#10003;</span>`
+      : escapeHtml(label);
   });
   document.querySelectorAll("[data-document-panel]").forEach((panel) => {
     const matches = panel.getAttribute("data-document-panel") === active_document_type;
@@ -1342,16 +1440,6 @@ function updatePersonModalDocumentSwitcher(draft, active_document_type, can_edit
   });
 }
 
-function updatePersonModalDocumentStatus() {
-  const draft = state.personDrafts[state.active_person_index];
-  if (!draft) return;
-  const travel_document = getPersonTravelDocumentStatus(draft);
-  if (els.personModalTravelDocumentStatus) {
-    els.personModalTravelDocumentStatus.textContent = travel_document.label;
-    els.personModalTravelDocumentStatus.classList.toggle("is-complete", travel_document.is_complete);
-  }
-}
-
 function updateNationalIdExpirationInputState(can_edit = state.permissions.canEditBooking) {
   const expires_input = document.getElementById("booking_person_modal_national_id_expires_on");
   const no_expiration_input = document.getElementById("booking_person_modal_national_id_no_expiration_date");
@@ -1364,7 +1452,7 @@ function refreshOpenPersonModalHeader() {
   const draft = state.personDrafts[state.active_person_index];
   if (!draft) return;
   if (els.personModalSubtitle) {
-    els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}${draft._is_new ? " | Saving..." : ""}`;
+    els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}`;
   }
   if (els.personModalInitials && !normalizeText(draft.photo_ref)) {
     els.personModalInitials.textContent = getPersonInitials(draft.name);
@@ -1419,14 +1507,13 @@ function handlePersonModalInput(event) {
     state.active_person_document_type || getPreferredPersonDocumentType(draft),
     state.permissions.canEditBooking
   );
-  updatePersonModalDocumentStatus();
   updatePersonsDirtyState();
-  schedulePersonsAutosave();
+  schedulePersonsAutosave(draft.id);
 }
 
 async function handlePersonModalClick(event) {
   if (event.target === els.personModal) {
-    closePersonModal();
+    await closePersonModal();
     return;
   }
   const draft = state.personDrafts[state.active_person_index];
@@ -1449,17 +1536,16 @@ async function handlePersonModalClick(event) {
     renderPersonsEditor({ include_modal: false });
     renderPersonModal();
     updatePersonsDirtyState();
-    schedulePersonsAutosave();
+    schedulePersonsAutosave(draft.id);
     return;
   }
   if (event.target.closest("#booking_person_modal_delete_btn")) {
     if (!window.confirm(`Remove ${normalizeText(draft.name) || "this person"} from the booking?`)) return;
     if (draft._is_new) {
       state.personDrafts.splice(state.active_person_index, 1);
-      closePersonModal();
+      finalizeClosePersonModal();
       renderPersonsEditor();
       updatePersonsDirtyState();
-      setPersonsEditorStatus("Unsaved person removed.");
       return;
     }
     const request = bookingPersonDeleteRequest({
@@ -1474,13 +1560,12 @@ async function handlePersonModalClick(event) {
       }
     });
     if (!result?.booking) return;
-    closePersonModal();
+    finalizeClosePersonModal();
     applyBookingPayload(result);
     renderBookingHeader();
     renderBookingData();
     renderActionControls();
     renderPersonsEditor();
-    setPersonsEditorStatus("Person removed.");
     return;
   }
 }
@@ -1489,16 +1574,12 @@ async function uploadPersonPhoto(index, input = els.personModalPhotoInput) {
   if (!state.permissions.canEditBooking || !state.booking) return;
   const person = state.personDrafts[index];
   if (!person || person._is_new) {
-    setPersonsEditorStatus("Person is still being created. Try again in a moment.");
     return;
   }
   const file = input?.files?.[0] || null;
   if (!file) {
-    setPersonsEditorStatus("Select an image file first.");
     return;
   }
-
-  setPersonsEditorStatus(`Uploading picture for ${normalizeText(person.name) || "person"}...`);
   const base64 = await fileToBase64(file);
   const request = bookingPersonPhotoRequest({
     baseURL: apiOrigin,
@@ -1521,7 +1602,6 @@ async function uploadPersonPhoto(index, input = els.personModalPhotoInput) {
   renderActionControls();
   renderPersonsEditor();
   if (state.active_person_index >= 0) openPersonModal(state.active_person_index);
-  setPersonsEditorStatus("Picture uploaded.");
 }
 
 async function fileToBase64(file) {
@@ -1630,7 +1710,6 @@ async function saveBookingName(next_name_override = null) {
   renderActionControls();
   renderPersonsEditor();
   stopBookingTitleEdit();
-  setStatus(result.unchanged ? "Booking name unchanged." : "Booking name updated.");
 }
 
 function startBookingTitleEdit() {
@@ -2164,7 +2243,6 @@ async function saveOwner() {
   state.booking = result.booking;
   renderBookingHeader();
   renderBookingData();
-  setStatus("Staff updated.");
   await loadActivities();
 }
 
@@ -2183,7 +2261,6 @@ async function saveStage() {
   state.booking = result.booking;
   renderBookingHeader();
   renderBookingData();
-  setStatus("Stage updated.");
   await loadActivities();
 }
 
@@ -2191,7 +2268,6 @@ async function saveNote() {
   if (!state.booking || !els.noteInput) return;
   if (!hasBookingNoteChanged()) {
     updateNoteSaveButtonState();
-    setStatus("No changes to update.");
     return;
   }
   const request = bookingNotesRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
@@ -2212,7 +2288,6 @@ async function saveNote() {
   renderBookingHeader();
   renderBookingData();
   renderActionControls();
-  setStatus(result.unchanged ? "Note unchanged." : "Note updated.");
   await loadActivities();
 }
 

@@ -210,6 +210,7 @@
 .select-wrap > label {
   display: block;
   text-align: left;
+  padding-left: 0.32rem;
 }
 
 .select-wrap select {
@@ -1448,6 +1449,7 @@ textarea:focus-visible {
 .field .field-label {
   font-size: 0.84rem;
   font-weight: 700;
+  padding-left: 0.32rem;
 }
 
 .field input,

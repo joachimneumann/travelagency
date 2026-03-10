@@ -28,7 +28,6 @@
               <span class="booking-hero__photo-initials" id="booking_hero_initials" hidden>P</span>
             </div>
             <div class="booking-hero__copy">
-              <p class="booking-hero__tour" id="detail_tour_title" hidden>Tour</p>
               <div class="booking-hero__title-row">
                 <h1 class="booking-hero__name" id="detail_title">Booking</h1>
                 <input class="booking-hero__name-input" id="detail_title_input" type="text" hidden />
@@ -58,9 +57,8 @@
             </div>
 
             <div class="field">
-              <label for="booking_note_input">Booking Notes: Call notes, qualification details, traveler preferences...</label>
-              <div class="backend-controls" style="align-items: flex-start; margin-top: 0.35rem; gap: 0.6rem;">
-                <textarea id="booking_note_input" rows="4" placeholder="Write the current booking note..." style="flex: 1;"></textarea>
+              <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
+                <textarea id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;"></textarea>
                 <button class="btn btn-primary" id="booking_note_save_btn" type="button">update</button>
                 <span id="booking_action_status" class="micro"></span>
               </div>
@@ -70,6 +68,7 @@
           <article id="persons_editor_panel" style="margin-bottom: 1rem;">
             <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
             <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+            <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
           </article>
 
           <div
@@ -78,14 +77,11 @@
             aria-hidden="true"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="booking_person_modal_title"
+            aria-label="Person details"
           >
             <div class="modal-panel booking-person-modal__panel" role="document">
               <div class="modal-head booking-person-modal__head">
-                <div>
-                  <h2 id="booking_person_modal_title" style="margin: 0;">Person details</h2>
-                  <p class="micro" id="booking_person_modal_subtitle" style="margin: 0.25rem 0 0;"></p>
-                </div>
+                <div></div>
                 <button class="btn btn-ghost" id="booking_person_modal_close_btn" type="button" aria-label="Close person details">&times;</button>
               </div>
               <div class="modal-body booking-person-modal__body">
@@ -128,7 +124,6 @@
                 <section class="booking-person-modal__travel-document">
                   <div class="booking-person-modal__document-head">
                     <h3 style="margin: 0;">Travel document</h3>
-                    <span class="booking-person-modal__document-status" id="booking_person_modal_travel_document_status">Incomplete</span>
                   </div>
                   <div class="booking-person-modal__grid">
                     <div class="field">
@@ -390,10 +385,14 @@
           </article>
 
           <article style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Activities</h2>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="activities_table"></table>
-            </div>
+            <details class="booking-collapsible">
+              <summary class="booking-collapsible__summary">Activities</summary>
+              <div class="booking-collapsible__body">
+                <div class="backend-table-wrap">
+                  <table class="backend-table" id="activities_table"></table>
+                </div>
+              </div>
+            </details>
           </article>
 
           <article class="booking-data-panel" style="margin-bottom: 1rem;">
@@ -412,6 +411,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/backend-booking.js?v=20260310e"></script>
+    <script type="module" src="frontend/scripts/backend-booking.js?v=20260310f"></script>
   </body>
 </html>
