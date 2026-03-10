@@ -97,23 +97,6 @@ IR: {
 				]
 			},
 			{
-				name:       "SourceAttribution"
-				domain:     "booking"
-				module:     "entities"
-				sourceType: "entities.#SourceAttribution"
-				fields: [
-					{name: "page_url", kind: "scalar", typeName: "string", required: false},
-					{name: "ip_address", kind: "scalar", typeName: "string", required: false},
-					{name: "ip_country_guess", kind: "scalar", typeName: "string", required: false},
-					{name: "referrer", kind: "scalar", typeName: "string", required: false},
-					{name: "utm_source", kind: "scalar", typeName: "string", required: false},
-					{name: "utm_medium", kind: "scalar", typeName: "string", required: false},
-					{name: "utm_campaign", kind: "scalar", typeName: "string", required: false},
-					{name: "tour_id", kind: "scalar", typeName: "Identifier", required: false},
-					{name: "tour_title", kind: "scalar", typeName: "string", required: false},
-				]
-			},
-			{
 				name:       "BookingPersonAddress"
 				domain:     "booking"
 				module:     "entities"
@@ -150,9 +133,12 @@ IR: {
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 					{name: "document_type", kind: "enum", typeName: "PersonDocumentType", required: true},
+					{name: "holder_name", kind: "scalar", typeName: "string", required: false},
 					{name: "document_number", kind: "scalar", typeName: "string", required: false},
 					{name: "document_picture_ref", kind: "scalar", typeName: "string", required: false},
 					{name: "issuing_country", kind: "enum", typeName: "CountryCode", required: false},
+					{name: "issued_on", kind: "scalar", typeName: "DateOnly", required: false},
+					{name: "no_expiration_date", kind: "scalar", typeName: "bool", required: false},
 					{name: "expires_on", kind: "scalar", typeName: "DateOnly", required: false},
 					{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 					{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -366,6 +352,14 @@ IR: {
 					{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 					{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
 					{name: "booking_name", kind: "scalar", typeName: "string", required: false},
+					{name: "tour_id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "page_url", kind: "scalar", typeName: "string", required: false},
+					{name: "ip_address", kind: "scalar", typeName: "string", required: false},
+					{name: "ip_country_guess", kind: "scalar", typeName: "string", required: false},
+					{name: "referrer", kind: "scalar", typeName: "string", required: false},
+					{name: "utm_source", kind: "scalar", typeName: "string", required: false},
+					{name: "utm_medium", kind: "scalar", typeName: "string", required: false},
+					{name: "utm_campaign", kind: "scalar", typeName: "string", required: false},
 					{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 					{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 					{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
@@ -404,7 +398,6 @@ IR: {
 					{name: "web_form_submission", kind: "entity", typeName: "BookingWebFormSubmission", required: false},
 					{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
 					{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
-					{name: "source", kind: "entity", typeName: "SourceAttribution", required: false},
 					{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 					{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
 				]
@@ -774,7 +767,6 @@ IR: {
 					{name: "notes", kind: "scalar", typeName: "string", required: false},
 					{name: "booking_name", kind: "scalar", typeName: "string", required: false},
 					{name: "tour_id", kind: "scalar", typeName: "Identifier", required: false},
-					{name: "tour_title", kind: "scalar", typeName: "string", required: false},
 					{name: "page_url", kind: "scalar", typeName: "string", required: false},
 					{name: "referrer", kind: "scalar", typeName: "string", required: false},
 					{name: "utm_source", kind: "scalar", typeName: "string", required: false},

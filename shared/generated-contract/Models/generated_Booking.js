@@ -34,29 +34,6 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
   "OTHER"
 ]);
 
-      export const SOURCE_ATTRIBUTION_SCHEMA = {
-        name: "SourceAttribution",
-        domain: "booking",
-        module: "entities",
-        sourceType: "openapi.components.schemas.SourceAttribution",
-        requireOneOf: [],
-        fields: [
-    schemaField({"name":"page_url","required":false,"wireName":"page_url"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"ip_address","required":false,"wireName":"ip_address"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"ip_country_guess","required":false,"wireName":"ip_country_guess"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"referrer","required":false,"wireName":"referrer"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"utm_source","required":false,"wireName":"utm_source"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"utm_medium","required":false,"wireName":"utm_medium"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"utm_campaign","required":false,"wireName":"utm_campaign"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"tour_id","required":false,"wireName":"tour_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"tour_title","required":false,"wireName":"tour_title"}, SHARED_FIELD_DEFS.FIELD_1)
-        ]
-      };
-
-      export function validateSourceAttribution(value) {
-        return validateShape(value, SOURCE_ATTRIBUTION_SCHEMA);
-      }
-
       export const BOOKING_PERSON_ADDRESS_SCHEMA = {
         name: "BookingPersonAddress",
         domain: "booking",
@@ -107,9 +84,12 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"document_type","required":true,"wireName":"document_type"}, SHARED_FIELD_DEFS.FIELD_9),
+    schemaField({"name":"holder_name","required":false,"wireName":"holder_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"document_number","required":false,"wireName":"document_number"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"document_picture_ref","required":false,"wireName":"document_picture_ref"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"issuing_country","required":false,"wireName":"issuing_country"}, SHARED_FIELD_DEFS.FIELD_6),
+    schemaField({"name":"issued_on","required":false,"wireName":"issued_on"}, SHARED_FIELD_DEFS.FIELD_10),
+    schemaField({"name":"no_expiration_date","required":false,"wireName":"no_expiration_date"}, SHARED_FIELD_DEFS.FIELD_4),
     schemaField({"name":"expires_on","required":false,"wireName":"expires_on"}, SHARED_FIELD_DEFS.FIELD_10),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":true,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
@@ -157,6 +137,14 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"travel_style","required":false,"wireName":"travel_style"}, SHARED_FIELD_DEFS.FIELD_12),
     schemaField({"name":"booking_name","required":false,"wireName":"booking_name"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"tour_id","required":false,"wireName":"tour_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"page_url","required":false,"wireName":"page_url"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"ip_address","required":false,"wireName":"ip_address"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"ip_country_guess","required":false,"wireName":"ip_country_guess"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"referrer","required":false,"wireName":"referrer"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"utm_source","required":false,"wireName":"utm_source"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"utm_medium","required":false,"wireName":"utm_medium"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"utm_campaign","required":false,"wireName":"utm_campaign"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"travel_month","required":false,"wireName":"travel_month"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"number_of_travelers","required":false,"wireName":"number_of_travelers"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"preferred_currency","required":false,"wireName":"preferred_currency"}, SHARED_FIELD_DEFS.FIELD_20),
@@ -445,7 +433,6 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
     schemaField({"name":"web_form_submission","required":false,"wireName":"web_form_submission"}, SHARED_FIELD_DEFS.FIELD_35),
     schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_36),
     schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_37),
-    schemaField({"name":"source","required":false,"wireName":"source"}, SHARED_FIELD_DEFS.FIELD_38),
     schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"updated_at","required":true,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]

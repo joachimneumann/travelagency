@@ -38,7 +38,6 @@ import (
 #PublicBookingCreateRequest: #WebsiteBookingForm & {
 	booking_name?:    string
 	tour_id?:         string
-	tour_title?:      string
 	page_url?:        common.#Url | string
 	referrer?:        common.#Url | string
 	utm_source?:      string

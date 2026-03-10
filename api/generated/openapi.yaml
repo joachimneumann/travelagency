@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-10T05:52:28Z
+# 2026-03-10T09:52:05Z
 
 ---
 openapi: 3.1.0
@@ -3194,37 +3194,6 @@ components:
           type: string
           format: date-time
           nullable: true
-    SourceAttribution:
-      type: object
-      required: []
-      properties:
-        page_url:
-          type: string
-          nullable: true
-        ip_address:
-          type: string
-          nullable: true
-        ip_country_guess:
-          type: string
-          nullable: true
-        referrer:
-          type: string
-          nullable: true
-        utm_source:
-          type: string
-          nullable: true
-        utm_medium:
-          type: string
-          nullable: true
-        utm_campaign:
-          type: string
-          nullable: true
-        tour_id:
-          type: string
-          nullable: true
-        tour_title:
-          type: string
-          nullable: true
     BookingPersonAddress:
       type: object
       required: []
@@ -3286,6 +3255,9 @@ components:
           type: string
         document_type:
           "$ref": "#/components/schemas/PersonDocumentType"
+        holder_name:
+          type: string
+          nullable: true
         document_number:
           type: string
           nullable: true
@@ -3294,6 +3266,13 @@ components:
           nullable: true
         issuing_country:
           "$ref": "#/components/schemas/CountryCode"
+          nullable: true
+        issued_on:
+          type: string
+          format: date
+          nullable: true
+        no_expiration_date:
+          type: boolean
           nullable: true
         expires_on:
           type: string
@@ -3703,6 +3682,30 @@ components:
         booking_name:
           type: string
           nullable: true
+        tour_id:
+          type: string
+          nullable: true
+        page_url:
+          type: string
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        ip_country_guess:
+          type: string
+          nullable: true
+        referrer:
+          type: string
+          nullable: true
+        utm_source:
+          type: string
+          nullable: true
+        utm_medium:
+          type: string
+          nullable: true
+        utm_campaign:
+          type: string
+          nullable: true
         travel_month:
           type: string
           nullable: true
@@ -3807,9 +3810,6 @@ components:
           "$ref": "#/components/schemas/BookingPricing"
         offer:
           "$ref": "#/components/schemas/BookingOffer"
-        source:
-          "$ref": "#/components/schemas/SourceAttribution"
-          nullable: true
         created_at:
           type: string
           format: date-time
@@ -4339,9 +4339,6 @@ components:
           type: string
           nullable: true
         tour_id:
-          type: string
-          nullable: true
-        tour_title:
           type: string
           nullable: true
         page_url:

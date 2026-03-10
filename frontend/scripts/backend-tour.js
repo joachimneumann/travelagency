@@ -11,6 +11,8 @@ const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 
 const state = {
   id: qs.get("id") || "",
+  is_create_mode: !normalizeText(qs.get("id") || ""),
+  authenticated: false,
   roles: [],
   permissions: {
     canEditTours: false
@@ -27,9 +29,9 @@ state.originalFormSnapshot = "";
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
-  logoutLink: document.getElementById("backendLogoutLink"),
+  logoutLink: null,
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
-  userLabel: document.getElementById("backendUserLabel"),
+  userLabel: null,
   title: document.getElementById("tour_title"),
   subtitle: document.getElementById("tour_subtitle"),
   error: document.getElementById("tour_error"),
@@ -47,6 +49,11 @@ const els = {
   imageUpload: document.getElementById("tour_image_upload"),
   heroImage: document.getElementById("tour_hero_image")
 };
+
+function refreshBackendNavElements() {
+  els.logoutLink = document.getElementById("backendLogoutLink");
+  els.userLabel = document.getElementById("backendUserLabel");
+}
 
 function captureTourFormSnapshot() {
   if (!els.form) return "";
@@ -79,7 +86,8 @@ function markTourSnapshotClean() {
 init();
 
 async function init() {
-  const backHref = "backend.html";
+  refreshBackendNavElements();
+  const backHref = "backend.html?section=tours";
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.back) els.back.href = backHref;
@@ -91,12 +99,11 @@ async function init() {
 
   bindSectionNavigation("tours");
 
-  if (!state.id) {
-    showError("Missing tour id.");
+  await loadAuthStatus();
+  if (!state.authenticated) {
+    redirectToBackendLogin();
     return;
   }
-
-  await loadAuthStatus();
   renderMonthOptions();
 
   if (els.form) {
@@ -122,7 +129,12 @@ async function init() {
     });
   }
 
-  loadTour();
+  if (state.is_create_mode) {
+    await initializeNewTourForm();
+    return;
+  }
+
+  await loadTour();
 }
 
 function bindSectionNavigation(activeSection) {
@@ -169,6 +181,47 @@ async function loadTour() {
   renderDestinationChoices(destinations);
   renderStyleChoices(styles);
   applyTourPermissions();
+  markTourSnapshotClean();
+}
+
+async function initializeNewTourForm() {
+  const payload = await fetchApi("/api/v1/tours?page=1&page_size=1");
+  state.options.destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
+  state.options.styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
+  state.tour = {
+    id: "",
+    title: "",
+    destinations: [],
+    styles: [],
+    travel_duration_days: null,
+    budget_lower_usd: null,
+    priority: 50,
+    rating: 0,
+    seasonality_start_month: "",
+    seasonality_end_month: "",
+    short_description: "",
+    highlights: [],
+    image: ""
+  };
+
+  updateHeader({ title: "New tour" }, [], []);
+  if (els.subtitle) els.subtitle.textContent = "Create a new tour";
+  setInput("tour_id", "(new)");
+  setInput("tour_titleInput", "");
+  setInput("tour_travel_duration_days", "");
+  setInput("tour_budget_lower_usd", "");
+  setInput("tour_priority", "50");
+  setInput("tour_rating", "0");
+  setInput("tour_seasonality_start_month", "");
+  setInput("tour_seasonality_end_month", "");
+  setInput("tour_short_description", "");
+  setInput("tour_highlights", "");
+  updateHeroImage("");
+  renderDestinationChoices([]);
+  renderStyleChoices([]);
+  applyTourPermissions();
+  clearError();
+  setStatus("New tour");
   markTourSnapshotClean();
 }
 
@@ -300,15 +353,17 @@ async function submitForm(event) {
   }
 
   setStatus("Saving...");
-  const result = await fetchApi(`/api/v1/tours/${encodeURIComponent(state.id)}`, {
-    method: "PATCH",
+  const is_create = state.is_create_mode;
+  const result = await fetchApi(is_create ? "/api/v1/tours" : `/api/v1/tours/${encodeURIComponent(state.id)}`, {
+    method: is_create ? "POST" : "PATCH",
     body: payload
   });
   if (!result) return;
-  if (result.tour) {
-    state.tour = result.tour;
-    updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
-  }
+  if (!result.tour) return;
+  state.tour = result.tour;
+  state.id = String(result.tour.id || "");
+  state.is_create_mode = false;
+  updateHeader(state.tour, tour_destinations(state.tour), tour_styles(state.tour));
 
   const file = els.imageUpload?.files?.[0] || null;
   if (file) {
@@ -324,8 +379,12 @@ async function submitForm(event) {
     if (!imageResult) return;
   }
 
-  setStatus("Tour updated.");
+  setStatus(is_create ? "Tour created." : "Tour updated.");
   if (els.imageUpload) els.imageUpload.value = "";
+  if (is_create) {
+    window.location.href = `tour.html?id=${encodeURIComponent(state.id)}`;
+    return;
+  }
   await loadTour();
 }
 
@@ -351,20 +410,36 @@ const fetchApi = createApiFetcher({
 
 async function loadAuthStatus() {
   try {
+    refreshBackendNavElements();
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
+      state.authenticated = false;
       if (els.userLabel) els.userLabel.textContent = "";
       return;
     }
+    state.authenticated = true;
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
     if (els.userLabel) els.userLabel.textContent = user || "";
-    state.permissions.canEditTours = state.roles.includes("atp_admin");
+    state.permissions.canEditTours =
+      state.roles.includes("atp_admin") ||
+      state.roles.includes("atp_manager") ||
+      state.roles.includes("atp_staff");
   } catch {
+    state.authenticated = false;
     if (els.userLabel) els.userLabel.textContent = "";
     // leave defaults
   }
+}
+
+function redirectToBackendLogin() {
+  const returnTo = `${window.location.origin}/tour.html?id=${encodeURIComponent(state.id)}`;
+  const loginParams = new URLSearchParams({
+    return_to: returnTo,
+    prompt: "login"
+  });
+  window.location.href = `${apiBase}/auth/login?${loginParams.toString()}`;
 }
 
 function applyTourPermissions() {

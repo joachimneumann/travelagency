@@ -38,6 +38,7 @@ import {
   setDirtySurface
 } from "./shared/backend-common.js";
 import { resolveBackendSectionHref } from "./shared/backend-nav.js";
+import { SHARED_FIELD_DEFS } from "../../shared/generated-contract/Models/generated_SchemaRuntime.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -71,6 +72,16 @@ const ROLES = Object.freeze({
 const BOOKING_PERSON_ROLE_OPTIONS = Object.freeze(
   (BOOKING_PERSON_SCHEMA.fields.find((field) => field.name === "roles")?.options || []).map((option) => option.value)
 );
+const HERO_PERSON_ROLE_PRIORITY = Object.freeze([
+  "primary_contact",
+  "decision_maker",
+  "payer",
+  "traveler",
+  "assistant",
+  "other"
+]);
+
+const COUNTRY_CODE_OPTIONS = Object.freeze(SHARED_FIELD_DEFS.FIELD_6?.options || []);
 
 const state = {
   id: qs.get("id") || "",
@@ -83,6 +94,9 @@ const state = {
   },
   booking: null,
   personDrafts: [],
+  active_person_index: -1,
+  active_person_id: "",
+  active_person_document_type: "passport",
   staff: [],
   invoices: [],
   selectedInvoiceId: "",
@@ -108,7 +122,10 @@ const state = {
     initialized: false,
     pollTimer: null,
     isPolling: false
-  }
+  },
+  persons_autosave_timer: null,
+  persons_save_in_flight: null,
+  persons_save_queued: false
 };
 
 state.dirty = { note: false, persons: false, offer: false, pricing: false, invoice: false };
@@ -127,10 +144,11 @@ const els = {
   userLabel: document.getElementById("backendUserLabel"),
   tourTitle: document.getElementById("detail_tour_title"),
   title: document.getElementById("detail_title"),
+  titleInput: document.getElementById("detail_title_input"),
+  titleEditBtn: document.getElementById("detail_title_edit_btn"),
   subtitle: document.getElementById("detail_sub_title"),
   heroImage: document.getElementById("booking_hero_image"),
-  booking_name_input: document.getElementById("booking_name_input"),
-  booking_name_save_btn: document.getElementById("booking_name_save_btn"),
+  heroInitials: document.getElementById("booking_hero_initials"),
   heroCopyBtn: document.getElementById("booking_hero_copy_btn"),
   heroCopyStatus: document.getElementById("booking_hero_copy_status"),
   deleteBtn: document.getElementById("booking_delete_btn"),
@@ -139,9 +157,30 @@ const els = {
   actionsPanel: document.getElementById("booking_actions_panel"),
   persons_editor_panel: document.getElementById("persons_editor_panel"),
   personsEditorList: document.getElementById("booking_persons_editor_list"),
-  personsEditorAddBtn: document.getElementById("booking_person_add_btn"),
-  personsEditorSaveBtn: document.getElementById("booking_persons_save_btn"),
   personsEditorStatus: document.getElementById("booking_persons_editor_status"),
+  personModal: document.getElementById("booking_person_modal"),
+  personModalSubtitle: document.getElementById("booking_person_modal_subtitle"),
+  personModalCloseBtn: document.getElementById("booking_person_modal_close_btn"),
+  personModalAvatarBtn: document.getElementById("booking_person_modal_avatar_btn"),
+  personModalPhoto: document.getElementById("booking_person_modal_photo"),
+  personModalInitials: document.getElementById("booking_person_modal_initials"),
+  personModalName: document.getElementById("booking_person_modal_name"),
+  personModalPhotoInput: document.getElementById("booking_person_modal_photo_input"),
+  personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
+  personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
+  personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
+  personModalNationality: document.getElementById("booking_person_modal_nationality"),
+  personModalEmails: document.getElementById("booking_person_modal_emails"),
+  personModalPhoneNumbers: document.getElementById("booking_person_modal_phone_numbers"),
+  personModalRoles: document.getElementById("booking_person_modal_roles"),
+  personModalTravelDocumentStatus: document.getElementById("booking_person_modal_travel_document_status"),
+  personModalAddressLine1: document.getElementById("booking_person_modal_address_line_1"),
+  personModalAddressLine2: document.getElementById("booking_person_modal_address_line_2"),
+  personModalCity: document.getElementById("booking_person_modal_city"),
+  personModalStateRegion: document.getElementById("booking_person_modal_state_region"),
+  personModalPostalCode: document.getElementById("booking_person_modal_postal_code"),
+  personModalCountryCode: document.getElementById("booking_person_modal_country_code"),
+  personModalNotes: document.getElementById("booking_person_modal_notes"),
   ownerSelect: document.getElementById("booking_owner_select"),
   stageSelect: document.getElementById("booking_stage_select"),
   personsSummary: document.getElementById("booking_persons_summary"),
@@ -189,6 +228,13 @@ const els = {
   invoice_status: document.getElementById("invoice_status"),
   invoices_table: document.getElementById("invoices_table")
 };
+
+const PERSON_MODAL_AUTOFILL_CONFIG = Object.freeze({
+  booking_person_modal_passport_holder_name_autofill: { document_type: "passport", field: "holder_name", source: "name" },
+  booking_person_modal_passport_issuing_country_autofill: { document_type: "passport", field: "issuing_country", source: "nationality" },
+  booking_person_modal_national_id_holder_name_autofill: { document_type: "national_id", field: "holder_name", source: "name" },
+  booking_person_modal_national_id_issuing_country_autofill: { document_type: "national_id", field: "issuing_country", source: "nationality" }
+});
 
 function setOfferSaveEnabled(enabled) {
   if (!els.offer_save_btn) return;
@@ -270,7 +316,13 @@ async function init() {
   populateOfferCategorySelect(els.offer_component_category_select);
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
-  if (els.booking_name_save_btn) els.booking_name_save_btn.addEventListener("click", saveBookingName);
+  if (els.titleEditBtn) els.titleEditBtn.addEventListener("click", startBookingTitleEdit);
+  if (els.titleInput) {
+    els.titleInput.addEventListener("keydown", handleBookingTitleInputKeydown);
+    els.titleInput.addEventListener("blur", () => {
+      void commitBookingTitleEdit();
+    });
+  }
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
@@ -291,13 +343,20 @@ async function init() {
     });
   if (els.offer_add_component_btn) els.offer_add_component_btn.addEventListener("click", addOfferComponentFromSelector);
   if (els.offer_save_btn) els.offer_save_btn.addEventListener("click", saveOffer);
-  if (els.personsEditorAddBtn) els.personsEditorAddBtn.addEventListener("click", addPersonDraft);
-  if (els.personsEditorSaveBtn) els.personsEditorSaveBtn.addEventListener("click", savePersonDrafts);
-  if (els.personsEditorList) {
-    els.personsEditorList.addEventListener("input", handlePersonsEditorInput);
-    els.personsEditorList.addEventListener("change", handlePersonsEditorInput);
-    els.personsEditorList.addEventListener("click", handlePersonsEditorClick);
+  if (els.personsEditorList) els.personsEditorList.addEventListener("click", handlePersonsEditorListClick);
+  if (els.personModal) els.personModal.addEventListener("click", handlePersonModalClick);
+  if (els.personModal) {
+    els.personModal.addEventListener("input", handlePersonModalInput);
+    els.personModal.addEventListener("change", handlePersonModalInput);
   }
+  if (els.personModalAvatarBtn) els.personModalAvatarBtn.addEventListener("click", triggerPersonPhotoPicker);
+  if (els.personModalPhotoInput) {
+    els.personModalPhotoInput.addEventListener("change", async () => {
+      await uploadPersonPhoto(state.active_person_index, els.personModalPhotoInput);
+    });
+  }
+  if (els.personModalCloseBtn) els.personModalCloseBtn.addEventListener("click", closePersonModal);
+  window.addEventListener("keydown", handlePersonModalKeydown);
   if (els.invoice_select) els.invoice_select.addEventListener("change", onInvoiceSelectChange);
   if (els.invoice_panel) {
     const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
@@ -371,15 +430,24 @@ async function loadBookingPage() {
 function renderBookingHeader() {
   if (!state.booking) return;
   const primaryContact = getPrimaryContact(state.booking);
-  const tourTitle = normalizeText(state.booking.source?.tour_title) || normalizeText(state.booking.web_form_submission?.booking_name) || "";
+  const tourTitle = normalizeText(state.booking.web_form_submission?.booking_name) || "";
   const title = normalizeText(state.booking.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || "Booking";
   if (els.tourTitle) {
     els.tourTitle.textContent = tourTitle;
     els.tourTitle.hidden = !tourTitle;
   }
   if (els.title) els.title.textContent = title;
+  if (els.titleInput && document.activeElement !== els.titleInput) {
+    els.titleInput.value = title;
+  }
+  if (els.titleEditBtn) {
+    els.titleEditBtn.hidden = !state.permissions.canEditBooking;
+    els.titleEditBtn.disabled = !state.permissions.canEditBooking;
+  }
   if (els.subtitle) {
-    els.subtitle.textContent = `ID: ${state.booking.id}`;
+    const bookingId = normalizeText(state.booking.id);
+    const shortId = bookingId ? bookingId.slice(-6) : "-";
+    els.subtitle.textContent = `ID: ${shortId}`;
     els.subtitle.hidden = false;
   }
   if (heroCopiedValue && heroCopiedValue !== getCurrentBookingIdentifier()) {
@@ -391,12 +459,30 @@ function renderBookingHeader() {
 function renderBookingHeroImage() {
   if (!els.heroImage) return;
   const persons = getBookingPersons(state.booking);
-  const preferredPerson =
-    persons.find((person) => normalizeText(person.photo_ref) && person.roles.some((role) => role !== "traveler")) ||
-    persons.find((person) => normalizeText(person.photo_ref)) ||
-    null;
-  els.heroImage.src = resolvePersonPhotoSrc(preferredPerson?.photo_ref);
-  els.heroImage.alt = preferredPerson?.name ? `${preferredPerson.name}` : "";
+  const preferredPhotoPerson = selectPreferredHeroPerson(persons, (person) => normalizeText(person.photo_ref));
+  const preferredNamedPerson = selectPreferredHeroPerson(persons, (person) => normalizeText(person.name));
+
+  if (preferredPhotoPerson) {
+    els.heroImage.src = resolvePersonPhotoSrc(preferredPhotoPerson.photo_ref);
+    els.heroImage.alt = preferredPhotoPerson.name ? `${preferredPhotoPerson.name}` : "";
+    els.heroImage.hidden = false;
+    if (els.heroInitials) els.heroInitials.hidden = true;
+    return;
+  }
+
+  if (preferredNamedPerson) {
+    els.heroImage.hidden = true;
+    if (els.heroInitials) {
+      els.heroInitials.textContent = getPersonInitials(preferredNamedPerson.name);
+      els.heroInitials.hidden = false;
+    }
+    return;
+  }
+
+  els.heroImage.src = "assets/img/profile_person.png";
+  els.heroImage.alt = "";
+  els.heroImage.hidden = false;
+  if (els.heroInitials) els.heroInitials.hidden = true;
 }
 
 function resolvePersonPhotoSrc(photoRef) {
@@ -457,70 +543,14 @@ async function copyHeroIdToClipboard() {
 function renderBookingData() {
   if (!state.booking) return;
   const booking = state.booking;
-  const persons = getBookingPersons(booking);
   const submittedContact = getSubmittedContact(booking);
-  const travelerCount = getTravelerCount(booking);
-  const mismatchWarning = buildTravelerMismatchMessage(booking);
-  const formatBudgetRange = (lower, upper) => {
-    const numericLower = Number(lower);
-    const numericUpper = Number(upper);
-    if (!Number.isFinite(numericLower) && !Number.isFinite(numericUpper)) return null;
-    if (Number.isFinite(numericLower) && Number.isFinite(numericUpper)) return `$${numericLower}-$${numericUpper}`;
-    if (Number.isFinite(numericLower)) return `$${numericLower}+`;
-    return `Up to $${numericUpper}`;
-  };
-  const sections = [
-    {
-      title: "Booking Data",
-      entries: [
-        ["id", booking.id],
-        ["name", booking.name],
-        ["stage", booking.stage],
-        ["staff", booking.atp_staff_name || "Unassigned"],
-        ["destinations", Array.isArray(booking.destinations) ? booking.destinations.join(", ") : booking.destinations],
-        ["travel_styles", Array.isArray(booking.travel_styles) ? booking.travel_styles.join(", ") : booking.travel_styles],
-        ["web_form_travel_month", booking.web_form_travel_month],
-        ["number_of_travelers", booking.number_of_travelers],
-        ["persons_listed", persons.length],
-        ["travelers_marked", travelerCount],
-        ["persons_warning", mismatchWarning],
-        ["budget_range_usd", formatBudgetRange(booking.web_form_submission?.budget_lower_usd, booking.web_form_submission?.budget_upper_usd)],
-        ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
-        ["created_at", formatDateTime(booking.created_at)],
-        ["updated_at", formatDateTime(booking.updated_at)]
-      ]
-        .filter(([, value]) => value !== undefined && value !== null && value !== "")
-        .map(([key, value]) => ({ key, value: String(value ?? "-") }))
-    },
-    {
-      title: "Persons",
-      entries: buildPersonEntries(persons)
-    },
-    {
-      title: "Source",
-      entries: [
-        ["submitted_name", submittedContact?.name],
-        ["submitted_email", submittedContact?.email],
-        ["submitted_phone_number", submittedContact?.phone_number],
-        ["page_url", booking.source?.page_url],
-        ["ip_address", booking.source?.ip_address],
-        ["ip_country_guess", booking.source?.ip_country_guess],
-        ["referrer", booking.source?.referrer],
-        ["utm_source", booking.source?.utm_source],
-        ["utm_medium", booking.source?.utm_medium],
-        ["utm_campaign", booking.source?.utm_campaign],
-        ["tour_id", booking.source?.tour_id],
-        ["tour_title", booking.source?.tour_title]
-      ]
-        .filter(([, value]) => value !== undefined && value !== null && value !== "")
-        .map(([key, value]) => ({ key, value: String(value ?? "-") }))
-    },
-    {
-      title: "web_form_submission",
+  const sections = [{
+      title: "Web form submission",
       entries: [
         ["name", booking.web_form_submission?.name || submittedContact?.name],
         ["email", booking.web_form_submission?.email || submittedContact?.email],
         ["phone_number", booking.web_form_submission?.phone_number || submittedContact?.phone_number],
+        ["booking_name", booking.web_form_submission?.booking_name],
         ["preferred_language", booking.web_form_submission?.preferred_language],
         ["preferred_currency", booking.web_form_submission?.preferred_currency],
         ["destinations", Array.isArray(booking.web_form_submission?.destinations) ? booking.web_form_submission.destinations.join(", ") : booking.web_form_submission?.destinations],
@@ -531,13 +561,19 @@ function renderBookingData() {
         ["travel_duration_days_max", booking.web_form_submission?.travel_duration_days_max],
         ["budget_lower_usd", booking.web_form_submission?.budget_lower_usd],
         ["budget_upper_usd", booking.web_form_submission?.budget_upper_usd],
+        ["tour_id", booking.web_form_submission?.tour_id],
+        ["page_url", booking.web_form_submission?.page_url],
+        ["ip_address", booking.web_form_submission?.ip_address],
+        ["ip_country_guess", booking.web_form_submission?.ip_country_guess],
+        ["referrer", booking.web_form_submission?.referrer],
+        ["utm_source", booking.web_form_submission?.utm_source],
+        ["utm_medium", booking.web_form_submission?.utm_medium],
+        ["utm_campaign", booking.web_form_submission?.utm_campaign],
         ["notes", booking.web_form_submission?.notes],
         ["submitted_at", formatDateTime(booking.web_form_submission?.submitted_at)]
       ]
-        .filter(([, value]) => value !== undefined && value !== null && value !== "")
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
-    }
-  ];
+    }];
 
   renderSections(sections);
 }
@@ -568,15 +604,6 @@ function renderSections(sections) {
 
 function renderActionControls() {
   if (!state.booking) return;
-
-  if (els.booking_name_input) {
-    els.booking_name_input.value = normalizeText(state.booking.name) || "";
-    els.booking_name_input.disabled = !state.permissions.canEditBooking;
-  }
-  if (els.booking_name_save_btn) {
-    els.booking_name_save_btn.style.display = state.permissions.canEditBooking ? "" : "none";
-    els.booking_name_save_btn.disabled = !state.permissions.canEditBooking;
-  }
 
   if (els.stageSelect) {
     const options = STAGES.map((stage) => `<option value="${escapeHtml(stage)}">${escapeHtml(stage)}</option>`).join("");
@@ -612,8 +639,18 @@ function renderActionControls() {
 }
 
 function applyBookingPayload(payload = {}) {
+  const active_person_id = state.active_person_id;
   state.booking = payload.booking || state.booking || null;
   state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+  if (active_person_id) {
+    state.active_person_index = state.personDrafts.findIndex((person) => person.id === active_person_id);
+    if (state.active_person_index < 0) {
+      state.active_person_id = "";
+      closePersonModal();
+    } else {
+      state.active_person_id = state.personDrafts[state.active_person_index]?.id || "";
+    }
+  }
   markPersonsSnapshotClean();
 }
 
@@ -624,7 +661,7 @@ function getBookingPersons(booking) {
     .map((person, index) => ({
       ...person,
       id: normalizeText(person.id) || `person_${index + 1}`,
-      name: normalizeText(person.name) || `Person ${index + 1}`,
+      name: normalizeText(person.name) || "",
       roles: normalizeStringList(person.roles),
       emails: collectPersonEmails(person),
       phone_numbers: collectPersonPhoneNumbers(person)
@@ -709,6 +746,35 @@ function formatPersonRoleLabel(role) {
     .join(" ");
 }
 
+function documentHasAnyData(document) {
+  if (!document || typeof document !== "object") return false;
+  return [
+    document.holder_name,
+    document.document_number,
+    document.document_picture_ref,
+    document.issuing_country,
+    document.issued_on,
+    document.expires_on,
+    document.no_expiration_date === true ? "true" : ""
+  ].some((value) => normalizeText(value));
+}
+
+function normalizePersonDocumentDraft(document = {}, document_type = "passport") {
+  return {
+    id: normalizeText(document.id) || "",
+    document_type: normalizeText(document.document_type) || document_type,
+    holder_name: normalizeText(document.holder_name) || "",
+    document_number: normalizeText(document.document_number) || "",
+    document_picture_ref: normalizeText(document.document_picture_ref) || "",
+    issuing_country: normalizeText(document.issuing_country).toUpperCase() || "",
+    issued_on: normalizeText(document.issued_on) || "",
+    no_expiration_date: document.no_expiration_date === true,
+    expires_on: normalizeText(document.expires_on) || "",
+    created_at: normalizeText(document.created_at) || "",
+    updated_at: normalizeText(document.updated_at) || ""
+  };
+}
+
 function clonePersonDraft(person = {}, index = 0) {
   return {
     _is_new: false,
@@ -723,7 +789,9 @@ function clonePersonDraft(person = {}, index = 0) {
     address: person.address && typeof person.address === "object" ? { ...person.address } : {},
     roles: normalizeStringList(person.roles),
     consents: Array.isArray(person.consents) ? person.consents.map((consent) => ({ ...consent })) : [],
-    documents: Array.isArray(person.documents) ? person.documents.map((document) => ({ ...document })) : [],
+    documents: Array.isArray(person.documents)
+      ? person.documents.map((document) => normalizePersonDocumentDraft(document, normalizeText(document?.document_type) || "other"))
+      : [],
     notes: normalizeText(person.notes) || ""
   };
 }
@@ -745,6 +813,152 @@ function buildEmptyPersonDraft() {
     documents: [],
     notes: ""
   };
+}
+
+function getPersonDocument(draft, document_type) {
+  return (Array.isArray(draft?.documents) ? draft.documents : []).find(
+    (document) => normalizeText(document?.document_type) === normalizeText(document_type)
+  ) || null;
+}
+
+function ensurePersonDocument(draft, document_type) {
+  if (!draft) return null;
+  draft.documents = Array.isArray(draft.documents) ? draft.documents : [];
+  const existing = getPersonDocument(draft, document_type);
+  if (existing) return existing;
+  const document = normalizePersonDocumentDraft(
+    {
+      id: `${normalizeText(draft.id) || state.id || "booking"}_${document_type}`,
+      document_type
+    },
+    document_type
+  );
+  draft.documents.push(document);
+  return document;
+}
+
+function pruneEmptyPersonDocuments(draft) {
+  if (!draft) return;
+  draft.documents = (Array.isArray(draft.documents) ? draft.documents : []).filter(documentHasAnyData);
+}
+
+function updatePersonDocumentField(draft, document_type, field, value) {
+  if (!draft) return;
+  const normalized_value = field === "issuing_country"
+    ? normalizeText(value).toUpperCase()
+    : field === "no_expiration_date"
+      ? value === true
+      : String(value || "");
+  const document = ensurePersonDocument(draft, document_type);
+  if (!document) return;
+  document[field] = normalized_value;
+  if (document_type === "national_id" && field === "no_expiration_date" && normalized_value === true) {
+    document.expires_on = "";
+  }
+  document.document_type = document_type;
+  const timestamp = new Date().toISOString();
+  document.created_at = normalizeText(document.created_at) || timestamp;
+  document.updated_at = timestamp;
+  pruneEmptyPersonDocuments(draft);
+}
+
+function buildDocumentPayloadFromDraft(document, person_id, index) {
+  const normalized = normalizePersonDocumentDraft(document, normalizeText(document?.document_type) || "passport");
+  if (!documentHasAnyData(normalized)) return null;
+  const timestamp = new Date().toISOString();
+  return {
+    id: normalized.id || `${normalizeText(person_id) || state.id || "booking"}_document_${index + 1}`,
+    document_type: normalizeText(normalized.document_type) || "passport",
+    holder_name: normalizeText(normalized.holder_name) || undefined,
+    document_number: normalizeText(normalized.document_number) || undefined,
+    document_picture_ref: normalizeText(normalized.document_picture_ref) || undefined,
+    issuing_country: normalizeText(normalized.issuing_country).toUpperCase() || undefined,
+    issued_on: normalizeText(normalized.issued_on) || undefined,
+    no_expiration_date: normalized.no_expiration_date === true ? true : undefined,
+    expires_on: normalized.no_expiration_date === true ? undefined : normalizeText(normalized.expires_on) || undefined,
+    created_at: normalizeText(normalized.created_at) || timestamp,
+    updated_at: timestamp
+  };
+}
+
+function personHasCompleteIdentityDocument(person, document_type) {
+  const document = getPersonDocument(person, document_type);
+  const has_expiration = document_type === "national_id"
+    ? document?.no_expiration_date === true || normalizeText(document?.expires_on)
+    : normalizeText(document?.expires_on);
+  return Boolean(
+    normalizeText(document?.holder_name) &&
+    normalizeText(person?.date_of_birth) &&
+    normalizeText(person?.nationality) &&
+    normalizeText(document?.document_number) &&
+    normalizeText(document?.issuing_country) &&
+    normalizeText(document?.issued_on) &&
+    has_expiration
+  );
+}
+
+function getPersonIdentityStatus(person) {
+  if (personHasCompleteIdentityDocument(person, "passport")) {
+    return { is_complete: true, label: "Passport" };
+  }
+  if (personHasCompleteIdentityDocument(person, "national_id")) {
+    return { is_complete: true, label: "ID card" };
+  }
+  return { is_complete: false, label: "Passport / ID card" };
+}
+
+function getPersonTravelDocumentStatus(person) {
+  if (personHasCompleteIdentityDocument(person, "passport")) {
+    return { is_complete: true, label: "OK Passport" };
+  }
+  if (personHasCompleteIdentityDocument(person, "national_id")) {
+    return { is_complete: true, label: "OK ID card" };
+  }
+  return { is_complete: false, label: "Incomplete" };
+}
+
+function getPreferredPersonDocumentType(person) {
+  const passport = getPersonDocument(person, "passport");
+  const national_id = getPersonDocument(person, "national_id");
+  if (documentHasAnyData(passport)) return "passport";
+  if (documentHasAnyData(national_id)) return "national_id";
+  return "passport";
+}
+
+function getAbbreviatedPersonName(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "Name";
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+}
+
+function getPersonPrimaryRoleLabel(person) {
+  const roles = normalizeStringList(person?.roles);
+  const priority = ["primary_contact", "decision_maker", "payer", "assistant", "traveler"];
+  const selected_role = priority.find((role) => roles.includes(role)) || roles[0] || "traveler";
+  return formatPersonRoleLabel(selected_role);
+}
+
+function getHeroPersonRoleRank(person) {
+  const roles = normalizeStringList(person?.roles);
+  const rank = HERO_PERSON_ROLE_PRIORITY.findIndex((role) => roles.includes(role));
+  return rank >= 0 ? rank : HERO_PERSON_ROLE_PRIORITY.length;
+}
+
+function selectPreferredHeroPerson(persons, predicate) {
+  return [...(Array.isArray(persons) ? persons : [])]
+    .filter((person) => predicate(person))
+    .sort((left, right) => getHeroPersonRoleRank(left) - getHeroPersonRoleRank(right))[0] || null;
+}
+
+function getPersonInitials(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  if (!parts.length) return "P";
+  return parts.map((part) => part.charAt(0).toUpperCase()).join("");
 }
 
 function serializePersonDrafts(drafts = state.personDrafts) {
@@ -776,6 +990,22 @@ function updatePersonsEditorSaveButton() {
   els.personsEditorSaveBtn.disabled = !isDirty;
 }
 
+function clearPersonsAutosaveTimer() {
+  if (state.persons_autosave_timer) {
+    window.clearTimeout(state.persons_autosave_timer);
+    state.persons_autosave_timer = null;
+  }
+}
+
+function schedulePersonsAutosave(delay_ms = 700) {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  clearPersonsAutosaveTimer();
+  state.persons_autosave_timer = window.setTimeout(() => {
+    state.persons_autosave_timer = null;
+    void savePersonDrafts();
+  }, delay_ms);
+}
+
 function buildPersonPayloadFromDraft(draft, index) {
   const address = draft?.address && typeof draft.address === "object" ? {
     line_1: normalizeText(draft.address.line_1),
@@ -789,7 +1019,7 @@ function buildPersonPayloadFromDraft(draft, index) {
 
   return {
     id: normalizeText(draft?.id) || `${state.id || "booking"}_person_${index + 1}`,
-    name: normalizeText(draft?.name) || `Traveler ${index + 1}`,
+    name: normalizeText(draft?.name) || "",
     photo_ref: normalizeText(draft?.photo_ref) || undefined,
     emails: collectCommaSeparatedValues(draft?.emails),
     phone_numbers: collectCommaSeparatedValues(draft?.phone_numbers),
@@ -799,7 +1029,9 @@ function buildPersonPayloadFromDraft(draft, index) {
     address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
     roles: normalizeStringList(draft?.roles),
     consents: Array.isArray(draft?.consents) ? draft.consents.map((consent) => ({ ...consent })) : [],
-    documents: Array.isArray(draft?.documents) ? draft.documents.map((document) => ({ ...document })) : [],
+    documents: (Array.isArray(draft?.documents) ? draft.documents : [])
+      .map((document, document_index) => buildDocumentPayloadFromDraft(document, draft?.id, document_index))
+      .filter(Boolean),
     notes: normalizeText(draft?.notes) || undefined
   };
 }
@@ -809,190 +1041,433 @@ function collectCommaSeparatedValues(values) {
   return Array.from(new Set(items.map((value) => normalizeText(value)).filter(Boolean)));
 }
 
-function renderPersonsEditor() {
+function renderPersonsEditor({ include_modal = true } = {}) {
   if (!els.personsEditorList) return;
   const canEdit = state.permissions.canEditBooking;
-  if (els.personsEditorAddBtn) {
-    els.personsEditorAddBtn.style.display = canEdit ? "" : "none";
-    els.personsEditorAddBtn.disabled = !canEdit;
-  }
-  if (els.personsEditorSaveBtn) {
-    els.personsEditorSaveBtn.style.display = canEdit ? "" : "none";
-  }
 
-  if (!state.personDrafts.length) {
+  const person_cards = state.personDrafts.map((person, index) => {
+      const title = normalizeText(person.name) || "Unnamed person";
+      const identity = getPersonIdentityStatus(person);
+      const role_label = getPersonPrimaryRoleLabel(person);
+      const subtitle = person._is_new ? "Saving..." : person.roles.map(formatPersonRoleLabel).join(", ");
+      const photo_src = resolvePersonPhotoSrc(person.photo_ref);
+      const initials = getPersonInitials(title);
+      const image_markup = normalizeText(person.photo_ref)
+        ? `<img src="${escapeHtml(photo_src)}" alt="${escapeHtml(title)}" />`
+        : `<span class="booking-person-card__initials">${escapeHtml(initials)}</span>`;
+      return `
+        <button class="booking-person-card" type="button" data-person-card="${index}">
+          <span class="booking-person-card__media">${image_markup}</span>
+          <span class="booking-person-card__content">
+            <span class="booking-person-card__title">${escapeHtml(title)}</span>
+            <span class="booking-person-card__identity ${identity.is_complete ? "is-complete" : ""}">
+              <span class="booking-person-card__identity-badge">${identity.is_complete ? "OK" : "..."}</span>
+              <span>${escapeHtml(identity.label)}</span>
+            </span>
+            <span class="booking-person-card__subtitle">${escapeHtml(subtitle || person.id)}</span>
+          </span>
+          <span class="booking-person-card__role-footer">${escapeHtml(role_label)}</span>
+        </button>
+      `;
+    });
+
+  const add_card = canEdit ? `
+    <button class="booking-person-card booking-person-card--add" type="button" data-person-add="true" aria-label="Add person">
+      <span class="booking-person-card__add-layout">
+        <span class="booking-person-card__media booking-person-card__media--add">
+          <img src="assets/img/profile_person.png" alt="" />
+        </span>
+        <span class="booking-person-card__add-badge" aria-hidden="true">+</span>
+      </span>
+    </button>
+  ` : "";
+
+  if (!person_cards.length && !add_card) {
     els.personsEditorList.innerHTML = `<div class="booking-person-card__empty">No persons listed on this booking.</div>`;
+    closePersonModal();
     updatePersonsEditorSaveButton();
     return;
   }
 
-  els.personsEditorList.innerHTML = state.personDrafts
-    .map((person, index) => {
-      const title = normalizeText(person.name) || `Person ${index + 1}`;
-      const subtitleParts = [];
-      if (person.roles.length) subtitleParts.push(person.roles.map(formatPersonRoleLabel).join(", "));
-      if (person._is_new) subtitleParts.push("Save to persist this person");
-      const roleOptions = BOOKING_PERSON_ROLE_OPTIONS.map((role) => `
-        <label class="booking-person-card__role">
-          <input type="checkbox" data-person-index="${index}" data-person-role="${escapeHtml(role)}" ${person.roles.includes(role) ? "checked" : ""} ${canEdit ? "" : "disabled"} />
-          <span>${escapeHtml(formatPersonRoleLabel(role))}</span>
-        </label>
-      `).join("");
-      const languageOptions = [
-        '<option value="">Select language</option>',
-        ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}" ${person.preferred_language === language ? "selected" : ""}>${escapeHtml(language)}</option>`)
-      ].join("");
-      return `
-        <section class="booking-person-card" data-person-index="${index}">
-          <div class="booking-person-card__header">
-            <div class="booking-person-card__photo">
-              <img src="${escapeHtml(resolvePersonPhotoSrc(person.photo_ref))}" alt="${escapeHtml(title)}" />
-            </div>
-            <div class="booking-person-card__meta">
-              <h3 class="booking-person-card__title">${escapeHtml(title)}</h3>
-              <p class="booking-person-card__subtitle">${escapeHtml(subtitleParts.join(" | ") || person.id)}</p>
-            </div>
-            <div class="booking-person-card__actions">
-              <button class="btn btn-ghost" type="button" data-person-delete="${index}" ${canEdit ? "" : "disabled"}>Delete</button>
-            </div>
-          </div>
-          <div class="booking-person-card__grid">
-            <div class="field">
-              <label>Name</label>
-              <input type="text" value="${escapeHtml(person.name)}" data-person-index="${index}" data-person-field="name" ${canEdit ? "" : "disabled"} />
-            </div>
-            <div class="field">
-              <label>Preferred language</label>
-              <select data-person-index="${index}" data-person-field="preferred_language" ${canEdit ? "" : "disabled"}>${languageOptions}</select>
-            </div>
-            <div class="field">
-              <label>Emails</label>
-              <input type="text" value="${escapeHtml(person.emails.join(", "))}" data-person-index="${index}" data-person-field="emails" placeholder="name@example.com, second@example.com" ${canEdit ? "" : "disabled"} />
-            </div>
-            <div class="field">
-              <label>Phone numbers</label>
-              <input type="text" value="${escapeHtml(person.phone_numbers.join(", "))}" data-person-index="${index}" data-person-field="phone_numbers" placeholder="+84..., +49..." ${canEdit ? "" : "disabled"} />
-            </div>
-            <div class="field">
-              <label>Date of birth</label>
-              <input type="date" value="${escapeHtml(person.date_of_birth)}" data-person-index="${index}" data-person-field="date_of_birth" ${canEdit ? "" : "disabled"} />
-            </div>
-            <div class="field">
-              <label>Nationality</label>
-              <input type="text" value="${escapeHtml(person.nationality)}" data-person-index="${index}" data-person-field="nationality" placeholder="ISO code, e.g. DE" maxlength="2" ${canEdit ? "" : "disabled"} />
-            </div>
-            <div class="field field--full">
-              <label>Roles</label>
-              <div class="booking-person-card__role-list">${roleOptions}</div>
-            </div>
-            <div class="field field--full">
-              <label>Notes</label>
-              <textarea rows="3" data-person-index="${index}" data-person-field="notes" ${canEdit ? "" : "disabled"}>${escapeHtml(person.notes)}</textarea>
-            </div>
-            <div class="field field--full">
-              <label>Picture</label>
-              <div class="booking-person-card__upload">
-                <input type="file" id="bookingPersonUpload_${escapeHtml(person.id)}" accept="image/*" ${canEdit ? "" : "disabled"} />
-                <button class="btn btn-ghost" type="button" data-person-upload="${index}" ${canEdit && !person._is_new ? "" : "disabled"}>Upload picture</button>
-              </div>
-            </div>
-          </div>
-        </section>
-      `;
-    })
-    .join("");
+  els.personsEditorList.innerHTML = `${person_cards.join("")}${add_card}`;
 
+  if (include_modal) renderPersonModal();
   updatePersonsEditorSaveButton();
 }
 
-function handlePersonsEditorInput(event) {
-  const target = event.target;
-  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
-  const index = Number(target.dataset.personIndex);
+function handlePersonsEditorListClick(event) {
+  const add_card = event.target.closest("[data-person-add]");
+  if (add_card) {
+    addPersonDraft();
+    return;
+  }
+  const card = event.target.closest("[data-person-card]");
+  if (!card) return;
+  const index = Number(card.getAttribute("data-person-card"));
   if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
-  const draft = state.personDrafts[index];
-  if (!draft) return;
-
-  if (target.dataset.personRole) {
-    const role = normalizeText(target.dataset.personRole);
-    const nextRoles = new Set(draft.roles);
-    if (target.checked) nextRoles.add(role);
-    else nextRoles.delete(role);
-    draft.roles = Array.from(nextRoles);
-    updatePersonsDirtyState();
-    return;
-  }
-
-  const field = target.dataset.personField;
-  if (!field) return;
-  const value = target.value;
-  if (field === "emails" || field === "phone_numbers") {
-    draft[field] = collectCommaSeparatedValues(value);
-  } else {
-    draft[field] = value;
-  }
-  updatePersonsDirtyState();
-}
-
-async function handlePersonsEditorClick(event) {
-  const deleteButton = event.target.closest("[data-person-delete]");
-  if (deleteButton) {
-    const index = Number(deleteButton.getAttribute("data-person-delete"));
-    if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
-    const person = state.personDrafts[index];
-    if (!window.confirm(`Delete ${normalizeText(person?.name) || "this person"} from the booking?`)) return;
-    state.personDrafts.splice(index, 1);
-    renderPersonsEditor();
-    updatePersonsDirtyState();
-    setPersonsEditorStatus("Person removed locally. Save persons to persist the change.");
-    return;
-  }
-
-  const uploadButton = event.target.closest("[data-person-upload]");
-  if (uploadButton) {
-    const index = Number(uploadButton.getAttribute("data-person-upload"));
-    if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
-    await uploadPersonPhoto(index);
-  }
+  openPersonModal(index);
 }
 
 function addPersonDraft() {
   state.personDrafts.push(buildEmptyPersonDraft());
   renderPersonsEditor();
   updatePersonsDirtyState();
-  setPersonsEditorStatus("New person added locally. Save persons to persist it.");
+  setPersonsEditorStatus("Creating person...");
+  schedulePersonsAutosave(0);
+  openPersonModal(state.personDrafts.length - 1);
 }
 
 async function savePersonDrafts() {
-  if (!state.permissions.canEditBooking || !state.booking) return;
+  if (!state.permissions.canEditBooking || !state.booking) return false;
+  if (!state.dirty.persons) return true;
+  if (state.persons_save_in_flight) {
+    state.persons_save_queued = true;
+    return await state.persons_save_in_flight;
+  }
+  clearPersonsAutosaveTimer();
   setPersonsEditorStatus("Saving persons...");
   const request = bookingPersonsRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-  const result = await fetchBookingMutation(request.url, {
-    method: request.method,
-    body: {
-      booking_hash: state.booking.booking_hash,
-      persons: state.personDrafts.map((draft, index) => buildPersonPayloadFromDraft(draft, index)),
-      actor: state.user
-    }
-  });
-  if (!result?.booking) return;
+  const save_operation = (async () => {
+    const result = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: {
+        booking_hash: state.booking.booking_hash,
+        persons: state.personDrafts.map((draft, index) => buildPersonPayloadFromDraft(draft, index)),
+        actor: state.user
+      }
+    });
+    if (!result?.booking) return false;
 
-  applyBookingPayload(result);
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  renderPersonsEditor();
-  setPersonsEditorStatus(result.unchanged ? "Persons unchanged." : "Persons saved.");
+    applyBookingPayload(result);
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor();
+    setPersonsEditorStatus(result.unchanged ? "Persons unchanged." : "Persons saved.");
+    return true;
+  })();
+  state.persons_save_in_flight = save_operation;
+  const saved = await save_operation;
+  state.persons_save_in_flight = null;
+  if (state.persons_save_queued) {
+    state.persons_save_queued = false;
+    if (state.dirty.persons) void savePersonDrafts();
+  }
+  return saved;
 }
 
-async function uploadPersonPhoto(index) {
+function openPersonModal(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
+  state.active_person_index = index;
+  state.active_person_id = state.personDrafts[index]?.id || "";
+  state.active_person_document_type = getPreferredPersonDocumentType(state.personDrafts[index]);
+  renderPersonModal();
+  if (els.personModal) els.personModal.setAttribute("aria-hidden", "false");
+}
+
+function closePersonModal() {
+  if (els.personModal) els.personModal.setAttribute("aria-hidden", "true");
+  state.active_person_index = -1;
+  state.active_person_id = "";
+  state.active_person_document_type = "passport";
+  if (els.personModalPhotoInput) els.personModalPhotoInput.value = "";
+}
+
+function triggerPersonPhotoPicker() {
+  const draft = state.personDrafts[state.active_person_index];
+  if (!state.permissions.canEditBooking || !draft || draft._is_new) {
+    setPersonsEditorStatus(draft?._is_new ? "Person is still being created. Try again in a moment." : "");
+    return;
+  }
+  if (els.personModalPhotoInput) els.personModalPhotoInput.click();
+}
+
+function handlePersonModalKeydown(event) {
+  if (event.key !== "Escape" || els.personModal?.getAttribute("aria-hidden") !== "false") return;
+  closePersonModal();
+}
+
+function renderPersonModal() {
+  if (!els.personModal) return;
+  const draft = state.personDrafts[state.active_person_index];
+  const is_open = els.personModal.getAttribute("aria-hidden") === "false";
+  if (!draft) {
+    if (is_open) closePersonModal();
+    return;
+  }
+
+  const can_edit = state.permissions.canEditBooking;
+  const title = normalizeText(draft.name) || "Unnamed person";
+  const initials = getPersonInitials(title);
+  const photo_src = resolvePersonPhotoSrc(draft.photo_ref);
+
+  if (els.personModalSubtitle) {
+    els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}${draft._is_new ? " | Saving..." : ""}`;
+  }
+  if (els.personModalPhoto) {
+    const has_photo = Boolean(normalizeText(draft.photo_ref));
+    els.personModalPhoto.src = has_photo ? photo_src : "assets/img/profile_person.png";
+    els.personModalPhoto.alt = has_photo ? title : "";
+    els.personModalPhoto.hidden = !has_photo;
+    els.personModalPhoto.style.display = has_photo ? "block" : "none";
+  }
+  if (els.personModalInitials) {
+    els.personModalInitials.textContent = initials;
+    const has_photo = Boolean(normalizeText(draft.photo_ref));
+    els.personModalInitials.hidden = has_photo;
+    els.personModalInitials.style.display = has_photo ? "none" : "block";
+  }
+  if (els.personModalName) {
+    els.personModalName.value = normalizeText(draft.name) || "";
+    els.personModalName.disabled = !can_edit;
+  }
+  if (els.personModalPreferredLanguage) {
+    els.personModalPreferredLanguage.innerHTML = [
+      '<option value="">Select language</option>',
+      ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}">${escapeHtml(language)}</option>`)
+    ].join("");
+    els.personModalPreferredLanguage.value = normalizeText(draft.preferred_language) || "";
+    els.personModalPreferredLanguage.disabled = !can_edit;
+  }
+  if (els.personModalDateOfBirth) {
+    els.personModalDateOfBirth.value = normalizeText(draft.date_of_birth) || "";
+    els.personModalDateOfBirth.disabled = !can_edit;
+  }
+  if (els.personModalNationality) {
+    populateCountryCodeSelect(els.personModalNationality, "Select nationality");
+    els.personModalNationality.value = normalizeText(draft.nationality) || "";
+    els.personModalNationality.disabled = !can_edit;
+  }
+  if (els.personModalEmails) {
+    els.personModalEmails.value = collectCommaSeparatedValues(draft.emails).join(", ");
+    els.personModalEmails.disabled = !can_edit;
+  }
+  if (els.personModalPhoneNumbers) {
+    els.personModalPhoneNumbers.value = collectCommaSeparatedValues(draft.phone_numbers).join(", ");
+    els.personModalPhoneNumbers.disabled = !can_edit;
+  }
+  if (els.personModalRoles) {
+    els.personModalRoles.innerHTML = BOOKING_PERSON_ROLE_OPTIONS.map((role) => `
+      <label class="booking-person-modal__role">
+        <input type="checkbox" data-person-role="${escapeHtml(role)}" ${draft.roles.includes(role) ? "checked" : ""} ${can_edit ? "" : "disabled"} />
+        <span>${escapeHtml(formatPersonRoleLabel(role))}</span>
+      </label>
+    `).join("");
+  }
+
+  const passport = getPersonDocument(draft, "passport") || normalizePersonDocumentDraft({}, "passport");
+  const national_id = getPersonDocument(draft, "national_id") || normalizePersonDocumentDraft({}, "national_id");
+  const active_document_type = state.active_person_document_type || getPreferredPersonDocumentType(draft);
+  const field_bindings = [
+    [els.personModalAddressLine1, normalizeText(draft.address?.line_1) || ""],
+    [els.personModalAddressLine2, normalizeText(draft.address?.line_2) || ""],
+    [els.personModalCity, normalizeText(draft.address?.city) || ""],
+    [els.personModalStateRegion, normalizeText(draft.address?.state_region) || ""],
+    [els.personModalPostalCode, normalizeText(draft.address?.postal_code) || ""],
+    [els.personModalCountryCode, normalizeText(draft.address?.country_code) || ""],
+    [els.personModalNotes, normalizeText(draft.notes) || ""],
+    [document.getElementById("booking_person_modal_passport_holder_name"), normalizeText(passport.holder_name) || ""],
+    [document.getElementById("booking_person_modal_passport_number"), normalizeText(passport.document_number) || ""],
+    [document.getElementById("booking_person_modal_passport_issuing_country"), normalizeText(passport.issuing_country) || ""],
+    [document.getElementById("booking_person_modal_passport_issued_on"), normalizeText(passport.issued_on) || ""],
+    [document.getElementById("booking_person_modal_passport_expires_on"), normalizeText(passport.expires_on) || ""],
+    [document.getElementById("booking_person_modal_national_id_holder_name"), normalizeText(national_id.holder_name) || ""],
+    [document.getElementById("booking_person_modal_national_id_number"), normalizeText(national_id.document_number) || ""],
+    [document.getElementById("booking_person_modal_national_id_issuing_country"), normalizeText(national_id.issuing_country) || ""],
+    [document.getElementById("booking_person_modal_national_id_issued_on"), normalizeText(national_id.issued_on) || ""],
+    [document.getElementById("booking_person_modal_national_id_expires_on"), normalizeText(national_id.expires_on) || ""]
+  ];
+  field_bindings.forEach(([element, value]) => {
+    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) return;
+    element.value = value;
+    element.disabled = !can_edit;
+  });
+  const national_id_no_expiration_input = document.getElementById("booking_person_modal_national_id_no_expiration_date");
+  if (national_id_no_expiration_input instanceof HTMLInputElement) {
+    national_id_no_expiration_input.checked = national_id.no_expiration_date === true;
+    national_id_no_expiration_input.disabled = !can_edit;
+  }
+  updateNationalIdExpirationInputState(can_edit);
+  if (els.personModalPhotoInput) els.personModalPhotoInput.disabled = !can_edit || draft._is_new;
+  if (els.personModalAvatarBtn) els.personModalAvatarBtn.disabled = !can_edit || draft._is_new;
+  if (els.personModalDeleteBtn) {
+    els.personModalDeleteBtn.disabled = !can_edit;
+    els.personModalDeleteBtn.style.display = can_edit ? "" : "none";
+  }
+  updatePersonModalDocumentSwitcher(draft, active_document_type, can_edit);
+  updatePersonModalDocumentStatus();
+}
+
+function updatePersonModalDocumentSwitcher(draft, active_document_type, can_edit) {
+  const passport_switch = document.getElementById("booking_person_modal_switch_passport");
+  const national_id_switch = document.getElementById("booking_person_modal_switch_national_id");
+  const switches = [
+    [passport_switch, "passport"],
+    [national_id_switch, "national_id"]
+  ];
+  switches.forEach(([button, document_type]) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+    const is_active = active_document_type === document_type;
+    button.classList.toggle("is-active", is_active);
+    button.setAttribute("aria-selected", String(is_active));
+    button.disabled = !can_edit;
+  });
+  document.querySelectorAll("[data-document-panel]").forEach((panel) => {
+    const matches = panel.getAttribute("data-document-panel") === active_document_type;
+    panel.hidden = !matches;
+    panel.style.display = matches ? "" : "none";
+  });
+
+  const abbreviated_name = getAbbreviatedPersonName(draft?.name);
+  const nationality_code = normalizeText(draft?.nationality).toUpperCase() || "Code";
+  Object.entries(PERSON_MODAL_AUTOFILL_CONFIG).forEach(([id, config]) => {
+    const button = document.getElementById(id);
+    if (!(button instanceof HTMLButtonElement)) return;
+    const is_active = config.document_type === active_document_type;
+    button.hidden = !is_active;
+    button.disabled = !can_edit;
+    button.textContent = config.source === "name" ? abbreviated_name : nationality_code;
+  });
+}
+
+function updatePersonModalDocumentStatus() {
+  const draft = state.personDrafts[state.active_person_index];
+  if (!draft) return;
+  const travel_document = getPersonTravelDocumentStatus(draft);
+  if (els.personModalTravelDocumentStatus) {
+    els.personModalTravelDocumentStatus.textContent = travel_document.label;
+    els.personModalTravelDocumentStatus.classList.toggle("is-complete", travel_document.is_complete);
+  }
+}
+
+function updateNationalIdExpirationInputState(can_edit = state.permissions.canEditBooking) {
+  const expires_input = document.getElementById("booking_person_modal_national_id_expires_on");
+  const no_expiration_input = document.getElementById("booking_person_modal_national_id_no_expiration_date");
+  if (!(expires_input instanceof HTMLInputElement)) return;
+  const no_expiration = no_expiration_input instanceof HTMLInputElement && no_expiration_input.checked;
+  expires_input.disabled = !can_edit || no_expiration;
+}
+
+function refreshOpenPersonModalHeader() {
+  const draft = state.personDrafts[state.active_person_index];
+  if (!draft) return;
+  if (els.personModalSubtitle) {
+    els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}${draft._is_new ? " | Saving..." : ""}`;
+  }
+  if (els.personModalInitials && !normalizeText(draft.photo_ref)) {
+    els.personModalInitials.textContent = getPersonInitials(draft.name);
+  }
+}
+
+function handlePersonModalInput(event) {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+  const draft = state.personDrafts[state.active_person_index];
+  if (!draft) return;
+
+  if (target.dataset.personRole) {
+    const role = normalizeText(target.dataset.personRole);
+    const next_roles = new Set(draft.roles);
+    if (target.checked) next_roles.add(role);
+    else next_roles.delete(role);
+    draft.roles = Array.from(next_roles);
+  } else if (target.dataset.addressField) {
+    draft.address = draft.address && typeof draft.address === "object" ? draft.address : {};
+    const field = String(target.dataset.addressField || "");
+    draft.address[field] = field === "country_code" ? normalizeText(target.value).toUpperCase() : target.value;
+  } else if (target.dataset.documentField && target.dataset.documentType) {
+    const document_field = target.dataset.documentField;
+    const next_value = target instanceof HTMLInputElement && target.type === "checkbox" ? target.checked : target.value;
+    updatePersonDocumentField(draft, target.dataset.documentType, document_field, next_value);
+    if (document_field === "no_expiration_date") {
+      updateNationalIdExpirationInputState(state.permissions.canEditBooking);
+      if (target instanceof HTMLInputElement && target.checked) {
+        const national_id_expires_input = document.getElementById("booking_person_modal_national_id_expires_on");
+        if (national_id_expires_input instanceof HTMLInputElement) national_id_expires_input.value = "";
+      }
+    }
+  } else if (target.dataset.personField) {
+    const field = String(target.dataset.personField || "");
+    if (field === "emails" || field === "phone_numbers") {
+      draft[field] = collectCommaSeparatedValues(target.value);
+    } else if (field === "nationality") {
+      draft[field] = normalizeText(target.value).toUpperCase();
+      target.value = draft[field];
+    } else {
+      draft[field] = target.value;
+    }
+  } else {
+    return;
+  }
+
+  renderPersonsEditor({ include_modal: false });
+  refreshOpenPersonModalHeader();
+  updatePersonModalDocumentSwitcher(
+    draft,
+    state.active_person_document_type || getPreferredPersonDocumentType(draft),
+    state.permissions.canEditBooking
+  );
+  updatePersonModalDocumentStatus();
+  updatePersonsDirtyState();
+  schedulePersonsAutosave();
+}
+
+async function handlePersonModalClick(event) {
+  if (event.target === els.personModal) {
+    closePersonModal();
+    return;
+  }
+  const draft = state.personDrafts[state.active_person_index];
+  if (!draft) return;
+  const document_switch = event.target.closest("[data-document-switch]");
+  if (document_switch) {
+    state.active_person_document_type = normalizeText(document_switch.getAttribute("data-document-switch")) || "passport";
+    renderPersonModal();
+    return;
+  }
+  const autofill_button = event.target.closest(".booking-person-modal__autofill-btn");
+  if (autofill_button) {
+    const config = PERSON_MODAL_AUTOFILL_CONFIG[autofill_button.id];
+    if (!config) return;
+    const source_value = config.source === "name"
+      ? normalizeText(draft.name)
+      : normalizeText(draft.nationality).toUpperCase();
+    if (!source_value) return;
+    updatePersonDocumentField(draft, config.document_type, config.field, source_value);
+    renderPersonsEditor({ include_modal: false });
+    renderPersonModal();
+    updatePersonsDirtyState();
+    schedulePersonsAutosave();
+    return;
+  }
+  if (event.target.closest("#booking_person_modal_delete_btn")) {
+    if (!window.confirm(`Remove ${normalizeText(draft.name) || "this person"} from the booking?`)) return;
+    state.personDrafts.splice(state.active_person_index, 1);
+    if (draft._is_new) {
+      closePersonModal();
+      renderPersonsEditor();
+      updatePersonsDirtyState();
+      setPersonsEditorStatus("Unsaved person removed.");
+      schedulePersonsAutosave(0);
+      return;
+    }
+    const saved = await savePersonDrafts();
+    if (saved) {
+      closePersonModal();
+      renderPersonsEditor();
+      setPersonsEditorStatus("Person removed.");
+    }
+    return;
+  }
+}
+
+async function uploadPersonPhoto(index, input = els.personModalPhotoInput) {
   if (!state.permissions.canEditBooking || !state.booking) return;
   const person = state.personDrafts[index];
   if (!person || person._is_new) {
-    setPersonsEditorStatus("Save the new person first before uploading a picture.");
+    setPersonsEditorStatus("Person is still being created. Try again in a moment.");
     return;
   }
-  const input = document.getElementById(`bookingPersonUpload_${person.id}`);
   const file = input?.files?.[0] || null;
   if (!file) {
     setPersonsEditorStatus("Select an image file first.");
@@ -1021,6 +1496,7 @@ async function uploadPersonPhoto(index) {
   renderBookingData();
   renderActionControls();
   renderPersonsEditor();
+  if (state.active_person_index >= 0) openPersonModal(state.active_person_index);
   setPersonsEditorStatus("Picture uploaded.");
 }
 
@@ -1103,9 +1579,12 @@ async function deleteBooking() {
   window.location.href = "backend.html?section=bookings";
 }
 
-async function saveBookingName() {
+async function saveBookingName(next_name_override = null) {
   if (!state.permissions.canEditBooking || !state.booking) return;
-  const nextName = normalizeText(els.booking_name_input?.value) || "";
+  const nextName = normalizeText(next_name_override ?? els.titleInput?.value) || "";
+  const previousName = normalizeText(state.booking.name) || "";
+  state.booking.name = nextName;
+  renderBookingHeader();
   const request = bookingNameRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
@@ -1115,14 +1594,67 @@ async function saveBookingName() {
       actor: state.user
     }
   });
-  if (!result?.booking) return;
+  if (!result?.booking) {
+    state.booking.name = previousName;
+    renderBookingHeader();
+    return;
+  }
 
   applyBookingPayload(result);
   renderBookingHeader();
   renderBookingData();
   renderActionControls();
   renderPersonsEditor();
+  stopBookingTitleEdit();
   setStatus(result.unchanged ? "Booking name unchanged." : "Booking name updated.");
+}
+
+function startBookingTitleEdit() {
+  if (!state.permissions.canEditBooking || !els.title || !els.titleInput) return;
+  els.title.hidden = true;
+  els.titleInput.hidden = false;
+  els.titleInput.value = normalizeText(state.booking?.name) || els.title.textContent || "";
+  window.requestAnimationFrame(() => {
+    els.titleInput.focus();
+    const length = els.titleInput.value.length;
+    try {
+      els.titleInput.setSelectionRange(length, length);
+    } catch {
+      // Ignore browsers that do not support explicit caret placement here.
+    }
+  });
+}
+
+function stopBookingTitleEdit() {
+  if (!els.title || !els.titleInput) return;
+  els.title.hidden = false;
+  els.titleInput.hidden = true;
+}
+
+async function commitBookingTitleEdit() {
+  if (!els.titleInput || els.titleInput.hidden) return;
+  const currentName = normalizeText(state.booking?.name) || "";
+  const nextName = normalizeText(els.titleInput.value) || "";
+  if (nextName === currentName) {
+    stopBookingTitleEdit();
+    return;
+  }
+  stopBookingTitleEdit();
+  await saveBookingName(nextName);
+}
+
+function handleBookingTitleInputKeydown(event) {
+  if (!(event.target instanceof HTMLInputElement)) return;
+  if (event.key === "Enter") {
+    event.preventDefault();
+    void commitBookingTitleEdit();
+    return;
+  }
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.target.value = normalizeText(state.booking?.name) || "";
+    stopBookingTitleEdit();
+  }
 }
 
 function renderPricingPanel() {
@@ -2575,6 +3107,18 @@ function populateCurrencySelect(selectEl) {
     .map((code) => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`)
     .join("");
   selectEl.value = selectedValue;
+}
+
+function populateCountryCodeSelect(selectEl, emptyLabel = "Select country") {
+  if (!(selectEl instanceof HTMLSelectElement)) return;
+  const currentValue = normalizeText(selectEl.value).toUpperCase();
+  selectEl.innerHTML = [
+    `<option value="">${escapeHtml(emptyLabel)}</option>`,
+    ...COUNTRY_CODE_OPTIONS.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
+  ].join("");
+  if (currentValue && COUNTRY_CODE_OPTIONS.some((option) => option.value === currentValue)) {
+    selectEl.value = currentValue;
+  }
 }
 
 function populateOfferCategorySelect(selectEl) {

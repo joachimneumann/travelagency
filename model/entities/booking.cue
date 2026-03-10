@@ -5,22 +5,18 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#SourceAttribution: {
-	page_url?:         common.#Url | string
-	ip_address?:       string
-	ip_country_guess?: string
-	referrer?:         common.#Url | string
-	utm_source?:       string
-	utm_medium?:       string
-	utm_campaign?:     string
-	tour_id?:          common.#Identifier | string
-	tour_title?:       string
-}
-
 #BookingWebFormSubmission: {
 	destinations?: [...enums.#CountryCode]
 	travel_style?: [...string]
 	booking_name?:             string
+	tour_id?:                  common.#Identifier | string
+	page_url?:                 common.#Url | string
+	ip_address?:               string
+	ip_country_guess?:         string
+	referrer?:                 common.#Url | string
+	utm_source?:               string
+	utm_medium?:               string
+	utm_campaign?:             string
 	travel_month?:             string
 	number_of_travelers?:      >=0 & <=common.#MaxTravelers & int
 	preferred_currency?:       enums.#CurrencyCode
@@ -103,7 +99,6 @@ import (
 	web_form_submission?:           #BookingWebFormSubmission
 	pricing:                        #BookingPricing
 	offer:                          #BookingOffer
-	source?:                        #SourceAttribution
 	created_at:                     common.#Timestamp
 	updated_at:                     common.#Timestamp
 }

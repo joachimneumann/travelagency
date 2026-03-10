@@ -198,8 +198,7 @@ async function main() {
         utm_medium: "script",
         utm_campaign: "booking_owned_persons",
         referrer: "https://example.com",
-        tour_id: null,
-        tour_title: null
+        tour_id: null
       },
       idempotency_key: null,
       created_at: createdAt,

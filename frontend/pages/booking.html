@@ -25,10 +25,15 @@
           <div class="booking-hero">
             <div class="booking-hero__photo" aria-hidden="true">
               <img class="booking-hero__photo-image" id="booking_hero_image" src="assets/img/profile_person.png" alt="" />
+              <span class="booking-hero__photo-initials" id="booking_hero_initials" hidden>P</span>
             </div>
             <div class="booking-hero__copy">
               <p class="booking-hero__tour" id="detail_tour_title" hidden>Tour</p>
-              <h1 class="booking-hero__name" id="detail_title">Booking</h1>
+              <div class="booking-hero__title-row">
+                <h1 class="booking-hero__name" id="detail_title">Booking</h1>
+                <input class="booking-hero__name-input" id="detail_title_input" type="text" hidden />
+                <button class="booking-hero__title-edit" id="detail_title_edit_btn" type="button" aria-label="Edit booking title">&#9998;</button>
+              </div>
               <div class="booking-hero__id-row">
                 <p class="booking-hero__id" id="detail_sub_title">ID: -</p>
                 <button class="booking-hero__id-copy" id="booking_hero_copy_btn" type="button">copy</button>
@@ -40,16 +45,6 @@
           <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <article id="booking_actions_panel" style="margin-bottom: 1rem;">
-            <div class="backend-controls">
-              <div class="field">
-                <label for="booking_name_input">Booking name</label>
-                <div class="backend-controls" style="align-items: center; gap: 0.55rem;">
-                  <input id="booking_name_input" type="text" placeholder="Booking name" style="flex: 1;" />
-                  <button class="btn btn-primary" id="booking_name_save_btn" type="button">update</button>
-                </div>
-              </div>
-            </div>
-
             <div class="backend-controls">
               <div class="field">
                 <label for="booking_owner_select">ATP staff:</label>
@@ -81,12 +76,190 @@
           <article id="persons_editor_panel" style="margin-bottom: 1rem;">
             <div class="backend-controls" style="align-items: center; margin-bottom: 0.65rem;">
               <h2 class="section-title" style="font-size: 1.05rem; margin: 0; flex: 1;">Persons</h2>
-              <button class="btn btn-ghost" id="booking_person_add_btn" type="button">Add person</button>
-              <button class="btn btn-primary" id="booking_persons_save_btn" type="button">Save persons</button>
             </div>
             <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
             <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
           </article>
+
+          <div
+            class="modal booking-person-modal"
+            id="booking_person_modal"
+            aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking_person_modal_title"
+          >
+            <div class="modal-panel booking-person-modal__panel" role="document">
+              <div class="modal-head booking-person-modal__head">
+                <div>
+                  <h2 id="booking_person_modal_title" style="margin: 0;">Person details</h2>
+                  <p class="micro" id="booking_person_modal_subtitle" style="margin: 0.25rem 0 0;"></p>
+                </div>
+                <button class="btn btn-ghost" id="booking_person_modal_close_btn" type="button" aria-label="Close person details">&times;</button>
+              </div>
+              <div class="modal-body booking-person-modal__body">
+                <div class="booking-person-modal__hero">
+                  <button class="booking-person-modal__avatar" id="booking_person_modal_avatar_btn" type="button" aria-label="Choose person picture">
+                    <img id="booking_person_modal_photo" src="assets/img/profile_person.png" alt="" />
+                    <span id="booking_person_modal_initials">P</span>
+                  </button>
+                  <div class="booking-person-modal__hero-copy">
+                    <div class="field">
+                      <label for="booking_person_modal_name">Name</label>
+                      <input id="booking_person_modal_name" data-person-field="name" type="text" />
+                    </div>
+                    <div class="booking-person-modal__hero-actions">
+                      <input id="booking_person_modal_photo_input" type="file" accept="image/*" hidden />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="booking-person-modal__grid">
+                  <div class="field">
+                    <label for="booking_person_modal_preferred_language">Preferred language</label>
+                    <select id="booking_person_modal_preferred_language" data-person-field="preferred_language"></select>
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_emails">Emails</label>
+                    <input id="booking_person_modal_emails" data-person-field="emails" type="text" placeholder="name@example.com, second@example.com" />
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_phone_numbers">Phone numbers</label>
+                    <input id="booking_person_modal_phone_numbers" data-person-field="phone_numbers" type="text" placeholder="+84..., +49..." />
+                  </div>
+                </div>
+
+                <div class="field" style="margin-top: 0.9rem;">
+                  <label>Roles</label>
+                  <div id="booking_person_modal_roles" class="booking-person-modal__role-list"></div>
+                </div>
+
+                <section class="booking-person-modal__travel-document">
+                  <div class="booking-person-modal__document-head">
+                    <h3 style="margin: 0;">Travel document</h3>
+                    <span class="booking-person-modal__document-status" id="booking_person_modal_travel_document_status">Incomplete</span>
+                  </div>
+                  <div class="booking-person-modal__grid">
+                    <div class="field">
+                      <label for="booking_person_modal_date_of_birth">Date of birth</label>
+                      <input id="booking_person_modal_date_of_birth" data-person-field="date_of_birth" type="date" />
+                    </div>
+                    <div class="field">
+                      <label for="booking_person_modal_nationality">Nationality</label>
+                      <select id="booking_person_modal_nationality" data-person-field="nationality"></select>
+                    </div>
+                  </div>
+
+                  <div class="booking-person-modal__document-switch" role="tablist" aria-label="Travel document type">
+                    <button class="booking-person-modal__document-switch-btn" id="booking_person_modal_switch_passport" type="button" data-document-switch="passport" aria-selected="true">Passport</button>
+                    <button class="booking-person-modal__document-switch-btn" id="booking_person_modal_switch_national_id" type="button" data-document-switch="national_id" aria-selected="false">ID card</button>
+                  </div>
+
+                  <div class="booking-person-modal__grid" data-document-panel="passport">
+                      <div class="field">
+                        <label class="booking-person-modal__field-label" for="booking_person_modal_passport_holder_name">
+                          <span>Holder name</span>
+                          <button class="booking-person-modal__autofill-btn" id="booking_person_modal_passport_holder_name_autofill" type="button">Name</button>
+                        </label>
+                        <input id="booking_person_modal_passport_holder_name" data-document-type="passport" data-document-field="holder_name" type="text" />
+                      </div>
+                      <div class="field">
+                        <label for="booking_person_modal_passport_number">Passport number</label>
+                        <input id="booking_person_modal_passport_number" data-document-type="passport" data-document-field="document_number" type="text" />
+                      </div>
+                      <div class="field">
+                        <label class="booking-person-modal__field-label" for="booking_person_modal_passport_issuing_country">
+                          <span>Issuing country</span>
+                          <button class="booking-person-modal__autofill-btn" id="booking_person_modal_passport_issuing_country_autofill" type="button">Code</button>
+                        </label>
+                        <input id="booking_person_modal_passport_issuing_country" data-document-type="passport" data-document-field="issuing_country" type="text" maxlength="2" placeholder="ISO code" />
+                      </div>
+                      <div class="field">
+                        <label for="booking_person_modal_passport_issued_on">Issued on</label>
+                        <input id="booking_person_modal_passport_issued_on" data-document-type="passport" data-document-field="issued_on" type="date" />
+                      </div>
+                      <div class="field">
+                        <label for="booking_person_modal_passport_expires_on">Expires on</label>
+                        <input id="booking_person_modal_passport_expires_on" data-document-type="passport" data-document-field="expires_on" type="date" />
+                      </div>
+                  </div>
+
+                  <div class="booking-person-modal__grid" data-document-panel="national_id" hidden>
+                      <div class="field">
+                        <label class="booking-person-modal__field-label" for="booking_person_modal_national_id_holder_name">
+                          <span>Holder name</span>
+                          <button class="booking-person-modal__autofill-btn" id="booking_person_modal_national_id_holder_name_autofill" type="button">Name</button>
+                        </label>
+                        <input id="booking_person_modal_national_id_holder_name" data-document-type="national_id" data-document-field="holder_name" type="text" />
+                      </div>
+                      <div class="field">
+                        <label for="booking_person_modal_national_id_number">ID card number</label>
+                        <input id="booking_person_modal_national_id_number" data-document-type="national_id" data-document-field="document_number" type="text" />
+                      </div>
+                      <div class="field">
+                        <label class="booking-person-modal__field-label" for="booking_person_modal_national_id_issuing_country">
+                          <span>Issuing country</span>
+                          <button class="booking-person-modal__autofill-btn" id="booking_person_modal_national_id_issuing_country_autofill" type="button">Code</button>
+                        </label>
+                        <input id="booking_person_modal_national_id_issuing_country" data-document-type="national_id" data-document-field="issuing_country" type="text" maxlength="2" placeholder="ISO code" />
+                      </div>
+                      <div class="field">
+                        <label for="booking_person_modal_national_id_issued_on">Issued on</label>
+                        <input id="booking_person_modal_national_id_issued_on" data-document-type="national_id" data-document-field="issued_on" type="date" />
+                      </div>
+                      <div class="field">
+                        <label for="booking_person_modal_national_id_expires_on">Expires on</label>
+                        <input id="booking_person_modal_national_id_expires_on" data-document-type="national_id" data-document-field="expires_on" type="date" />
+                      </div>
+                      <div class="field booking-person-modal__checkbox-field">
+                        <label class="booking-person-modal__checkbox">
+                          <input id="booking_person_modal_national_id_no_expiration_date" data-document-type="national_id" data-document-field="no_expiration_date" type="checkbox" />
+                          <span>No expiration date</span>
+                        </label>
+                      </div>
+                  </div>
+                </section>
+
+                <div class="booking-person-modal__grid" style="margin-top: 0.9rem;">
+                  <div class="field">
+                    <label for="booking_person_modal_address_line_1">Address line 1</label>
+                    <input id="booking_person_modal_address_line_1" data-address-field="line_1" type="text" />
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_address_line_2">Address line 2</label>
+                    <input id="booking_person_modal_address_line_2" data-address-field="line_2" type="text" />
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_city">City</label>
+                    <input id="booking_person_modal_city" data-address-field="city" type="text" />
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_state_region">State / region</label>
+                    <input id="booking_person_modal_state_region" data-address-field="state_region" type="text" />
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_postal_code">Postal code</label>
+                    <input id="booking_person_modal_postal_code" data-address-field="postal_code" type="text" />
+                  </div>
+                  <div class="field">
+                    <label for="booking_person_modal_country_code">Address country</label>
+                    <input id="booking_person_modal_country_code" data-address-field="country_code" type="text" maxlength="2" placeholder="ISO code" />
+                  </div>
+                </div>
+
+                <div class="field" style="margin-top: 0.9rem;">
+                  <label for="booking_person_modal_notes">Notes</label>
+                  <textarea id="booking_person_modal_notes" data-person-field="notes" rows="4"></textarea>
+                </div>
+
+                <section class="booking-danger-zone">
+                  <h2 class="section-title" style="margin-bottom: 0.45rem;">Danger zone</h2>
+                  <p class="micro" style="margin: 0 0 0.7rem;">Remove this person from the booking.</p>
+                  <button class="btn booking-danger-zone__delete" id="booking_person_modal_delete_btn" type="button">Remove person</button>
+                </section>
+              </div>
+            </div>
+          </div>
 
           <article id="meta_chat_panel" class="wa-chat-panel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">WhatsApp (read only).</h2>
@@ -233,7 +406,6 @@
           </article>
 
           <article class="booking-data-panel" style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
             <div id="booking_data_view"></div>
           </article>
 
@@ -249,6 +421,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/backend-booking.js?v=20260310a"></script>
+    <script type="module" src="frontend/scripts/backend-booking.js?v=20260310e"></script>
   </body>
 </html>

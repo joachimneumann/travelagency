@@ -302,7 +302,20 @@ test("booking name and persons endpoints update the booking", async () => {
     {
       ...original_person,
       roles: ["primary_contact", "decision_maker"],
-      emails: ["planner@example.com"]
+      emails: ["planner@example.com"],
+      date_of_birth: "1988-04-11",
+      nationality: "DE",
+      documents: [
+        {
+          id: `${original_person.id}_passport`,
+          document_type: "passport",
+          holder_name: "Test User",
+          document_number: "C01X9981",
+          issuing_country: "DE",
+          issued_on: "2023-05-01",
+          expires_on: "2033-05-01"
+        }
+      ]
     },
     {
       id: `${booking_id}_traveler_2`,
@@ -327,9 +340,12 @@ test("booking name and persons endpoints update the booking", async () => {
   assert.equal(personsResult.status, 200);
   assert.equal(personsResult.body.booking.persons.length, 2);
   assert.deepEqual(personsResult.body.booking.persons[0].roles, ["primary_contact", "decision_maker"]);
+  assert.equal(personsResult.body.booking.persons[0].documents[0].holder_name, "Test User");
+  assert.equal(personsResult.body.booking.persons[0].documents[0].issued_on, "2023-05-01");
   assert.equal(personsResult.body.booking.persons[1].name, "Traveler Two");
   const detailAfterPersons = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailAfterPersons.status, 200);
+  assert.equal(detailAfterPersons.body.booking.persons[0].documents[0].document_number, "C01X9981");
 });
 
 test("booking person photo endpoint updates the booking when ImageMagick is available", async (t) => {

@@ -141,6 +141,7 @@ const els = {
   bookingPreferredCurrency: document.getElementById("bookingPreferredCurrency"),
   bookingBudget: document.getElementById("bookingBudget"),
   bookingBudgetLabel: document.getElementById("bookingBudgetLabel"),
+  bookingDuration: document.getElementById("bookingDuration"),
   bookingLanguage: document.getElementById("bookingLanguage"),
   bookingDestinationTrigger: document.getElementById("bookingDestinationTrigger"),
   bookingDestinationSummary: document.getElementById("bookingDestinationSummary"),
@@ -151,7 +152,6 @@ const els = {
   bookingStylePanel: document.getElementById("bookingStylePanel"),
   bookingStyleOptions: document.getElementById("bookingStyleOptions"),
   booking_tour_id: document.getElementById("booking_tour_id"),
-  booking_tour_title: document.getElementById("booking_tour_title"),
   stepBack: document.getElementById("stepBack"),
   stepClose: document.getElementById("stepClose"),
   stepNext: document.getElementById("stepNext"),
@@ -1171,9 +1171,6 @@ function setSelectedTourContext(selectedTour) {
   if (els.booking_tour_id) {
     els.booking_tour_id.value = state.selectedTour?.id || "";
   }
-  if (els.booking_tour_title) {
-    els.booking_tour_title.value = state.selectedTour?.title || "";
-  }
 }
 
 function clearSelectedTourContext() {
@@ -1397,9 +1394,8 @@ async function submitBookingForm() {
     phone_number: entries.phone_number || "",
     preferred_language: entries.preferred_language || "",
     notes: entries.notes || "",
-    booking_name: entries.tour_title || state.selectedTour?.title || "",
+    booking_name: state.selectedTour?.title || "",
     tour_id: entries.tour_id || "",
-    tour_title: entries.tour_title || "",
     page_url: window.location.href,
     referrer: document.referrer || "",
     utm_source: getQueryParam("utm_source"),

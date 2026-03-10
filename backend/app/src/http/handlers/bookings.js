@@ -37,7 +37,6 @@ export function createBookingHandlers(deps) {
     STAGE_ORDER,
     ALLOWED_STAGE_TRANSITIONS,
     canChangeBookingStage,
-    assertMatchingBookingHash,
     actorLabel,
     canChangeBookingAssignment,
     syncBookingAtpStaffFields,
@@ -134,16 +133,20 @@ export function createBookingHandlers(deps) {
     return (Array.isArray(documents) ? documents : [])
       .map((document, index) => {
         if (!document || typeof document !== "object" || Array.isArray(document)) return null;
+        const timestamp = nowIso();
         return {
           ...document,
           id: normalizeText(document.id) || `document_${index + 1}`,
           document_type: normalizeText(document.document_type),
+          holder_name: normalizeText(document.holder_name),
           document_number: normalizeText(document.document_number),
           document_picture_ref: normalizeText(document.document_picture_ref),
           issuing_country: normalizeText(document.issuing_country).toUpperCase(),
+          issued_on: normalizeText(document.issued_on),
+          no_expiration_date: document.no_expiration_date === true || document.no_expiration_date === "true",
           expires_on: normalizeText(document.expires_on),
-          created_at: normalizeText(document.created_at) || null,
-          updated_at: normalizeText(document.updated_at) || null
+          created_at: normalizeText(document.created_at) || timestamp,
+          updated_at: timestamp
         };
       })
       .filter(Boolean);
@@ -245,6 +248,13 @@ export function createBookingHandlers(deps) {
     return fallback ? [fallback] : [];
   }
 
+  function buildBookingHashBasis(booking) {
+    return {
+      ...booking,
+      persons: getBookingPersons(booking)
+    };
+  }
+
   function getBookingPrimaryContact(booking) {
     const persons = getBookingPersons(booking);
     const explicit = persons.find((person) => normalizePersonRoles(person).includes("primary_contact"));
@@ -336,14 +346,26 @@ export function createBookingHandlers(deps) {
   }
 
   async function buildBookingPayload(booking) {
-    return buildBookingReadModel({
-      ...booking,
-      persons: getBookingPersons(booking)
-    });
+    return buildBookingReadModel(buildBookingHashBasis(booking));
   }
 
   async function buildBookingDetailResponse(booking) {
     return { booking: await buildBookingPayload(booking) };
+  }
+
+  async function assertMatchingBookingHashForWrite(payload, booking, res) {
+    const requestHash = normalizeText(payload?.booking_hash);
+    const currentHash = computeBookingHash(buildBookingHashBasis(booking));
+    if (!requestHash || requestHash !== currentHash) {
+      sendJson(res, 409, {
+        error: "Booking changed in backend",
+        detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
+        code: "BOOKING_HASH_MISMATCH",
+        booking: await buildBookingPayload(booking)
+      });
+      return false;
+    }
+    return true;
   }
 
   function getBookingConversationMatchValues(booking) {
@@ -443,7 +465,15 @@ export function createBookingHandlers(deps) {
     const submission = {
       destinations: normalizeStringArray(payload.destinations),
       travel_style: normalizeStringArray(payload.travel_style),
-      booking_name: normalizeText(payload.booking_name || payload.tour_title) || null,
+      booking_name: normalizeText(payload.booking_name) || null,
+      tour_id: normalizeText(payload.tour_id) || null,
+      page_url: normalizeText(payload.page_url),
+      ip_address: ipAddress || null,
+      ip_country_guess: ipCountryGuess || null,
+      referrer: normalizeText(payload.referrer),
+      utm_source: normalizeText(payload.utm_source),
+      utm_medium: normalizeText(payload.utm_medium),
+      utm_campaign: normalizeText(payload.utm_campaign),
       travel_month: normalizeText(payload.travel_month) || null,
       number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
       preferred_currency: preferredCurrency,
@@ -459,7 +489,7 @@ export function createBookingHandlers(deps) {
       submitted_at: now
     };
 
-    const initialBookingName = normalizeText(payload.booking_name || payload.tour_title) || null;
+    const initialBookingName = normalizeText(payload.booking_name) || null;
 
     const booking = {
       id: bookingId,
@@ -480,17 +510,6 @@ export function createBookingHandlers(deps) {
       web_form_submission: submission,
       pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
-      source: {
-        page_url: normalizeText(payload.page_url),
-        ip_address: ipAddress || null,
-        ip_country_guess: ipCountryGuess || null,
-        utm_source: normalizeText(payload.utm_source),
-        utm_medium: normalizeText(payload.utm_medium),
-        utm_campaign: normalizeText(payload.utm_campaign),
-        referrer: normalizeText(payload.referrer),
-        tour_id: normalizeText(payload.tour_id) || null,
-        tour_title: normalizeText(payload.tour_title) || null
-      },
       idempotency_key: idempotencyKey || null,
       created_at: now,
       updated_at: now
@@ -569,7 +588,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     await deleteBookingArtifacts(store, bookingId);
     await persistStore(store);
@@ -656,7 +675,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
     if (!allowed.includes(nextStage)) {
@@ -696,7 +715,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const nextName = normalizeText(payload.name) || null;
     const currentName = normalizeText(booking.name) || null;
@@ -740,7 +759,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     if (!atpStaffIdRaw) {
       booking.atp_staff = null;
@@ -797,7 +816,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const nextPersons = normalizeBookingPersonsPayload(booking.id, payload.persons);
     const currentPersonsJson = JSON.stringify(getBookingPersons(booking));
@@ -851,7 +870,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const persons = normalizeBookingPersonsPayload(booking.id, booking.persons);
     const personIndex = persons.findIndex((person) => person.id === personId);
@@ -927,7 +946,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const nextNotes = normalizeText(payload.notes);
     const currentNotes = normalizeText(booking.notes);
@@ -972,7 +991,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const check = validateBookingPricingInput(payload.pricing);
     if (!check.ok) {
@@ -1024,7 +1043,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const check = validateBookingOfferInput(payload.offer, booking);
     if (!check.ok) {
@@ -1184,7 +1203,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), detail);
     booking.updated_at = nowIso();
@@ -1256,7 +1275,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const components = normalizeInvoiceComponents(payload.components);
     if (!components.length) {
@@ -1317,7 +1336,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHash(payload, booking, res))) return;
+    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
 
     const invoice = store.invoices.find((item) => item.id === invoiceId && item.booking_id === bookingId);
     if (!invoice) {

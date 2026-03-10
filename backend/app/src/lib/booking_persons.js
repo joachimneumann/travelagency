@@ -16,6 +16,13 @@ function optionalInt(value) {
   return Number.isInteger(parsed) ? parsed : null;
 }
 
+function optionalBool(value) {
+  if (value === true || value === false) return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
+}
+
 function normalizeStringArray(value) {
   if (Array.isArray(value)) {
     return Array.from(new Set(value.map((entry) => optionalText(entry)).filter(Boolean)));
@@ -87,9 +94,12 @@ function normalizeDocument(document, fallbackId) {
   const normalized = compactObject({
     id: optionalText(document.id) || fallbackId,
     document_type: optionalText(document.document_type),
+    holder_name: optionalText(document.holder_name),
     document_number: optionalText(document.document_number),
     document_picture_ref: optionalText(document.document_picture_ref),
     issuing_country: optionalUppercaseText(document.issuing_country),
+    issued_on: optionalText(document.issued_on),
+    no_expiration_date: optionalBool(document.no_expiration_date),
     expires_on: optionalText(document.expires_on),
     created_at: optionalText(document.created_at || document.updated_at),
     updated_at: optionalText(document.updated_at || document.created_at)
@@ -115,7 +125,7 @@ export function normalizeBookingPerson(person, index = 0, bookingId = "booking")
   if (!person || typeof person !== "object" || Array.isArray(person)) return null;
   const normalized = compactObject({
     id: optionalText(person.id) || `${bookingId}_person_${index + 1}`,
-    name: derivePersonName(person) || `Traveler ${index + 1}`,
+    name: derivePersonName(person) || "",
     photo_ref: optionalText(person.photo_ref),
     emails: normalizeEmails(person),
     phone_numbers: normalizePhoneNumbers(person),
@@ -128,7 +138,7 @@ export function normalizeBookingPerson(person, index = 0, bookingId = "booking")
     documents: normalizeDocuments(person, `${bookingId}_person_${index + 1}_document`),
     notes: optionalText(person.notes)
   });
-  return normalized?.id && normalized?.name ? normalized : null;
+  return normalized?.id ? normalized : null;
 }
 
 function buildFallbackSubmissionPerson(booking) {
@@ -159,27 +169,36 @@ function normalizeBookingPersons(booking) {
 
 function normalizeWebFormSubmission(booking) {
   const submission = booking?.web_form_submission;
+  const source = booking?.source;
   if (!submission || typeof submission !== "object" || Array.isArray(submission)) {
-    return null;
+    if (!source || typeof source !== "object" || Array.isArray(source)) return null;
   }
   return compactObject({
     ...submission,
-    destinations: normalizeStringArray(submission.destinations || booking?.destinations),
-    travel_style: normalizeStringArray(submission.travel_style || booking?.travel_styles),
-    booking_name: optionalText(submission.booking_name || booking?.name || booking?.source?.tour_title),
-    travel_month: optionalText(submission.travel_month),
-    number_of_travelers: optionalInt(submission.number_of_travelers ?? booking?.number_of_travelers),
-    preferred_currency: optionalUppercaseText(submission.preferred_currency || booking?.preferred_currency),
-    travel_duration_days_min: optionalInt(submission.travel_duration_days_min),
-    travel_duration_days_max: optionalInt(submission.travel_duration_days_max),
-    name: optionalText(submission.name),
-    email: optionalText(submission.email),
-    phone_number: optionalText(submission.phone_number),
-    budget_lower_usd: optionalInt(submission.budget_lower_usd ?? booking?.budget_lower_usd),
-    budget_upper_usd: optionalInt(submission.budget_upper_usd ?? booking?.budget_upper_usd),
-    preferred_language: optionalText(submission.preferred_language),
-    notes: optionalText(submission.notes),
-    submitted_at: optionalText(submission.submitted_at || booking?.created_at)
+    destinations: normalizeStringArray(submission?.destinations || booking?.destinations),
+    travel_style: normalizeStringArray(submission?.travel_style || booking?.travel_styles),
+    booking_name: optionalText(submission?.booking_name || booking?.name),
+    tour_id: optionalText(submission?.tour_id || source?.tour_id),
+    page_url: optionalText(submission?.page_url || source?.page_url),
+    ip_address: optionalText(submission?.ip_address || source?.ip_address),
+    ip_country_guess: optionalText(submission?.ip_country_guess || source?.ip_country_guess),
+    referrer: optionalText(submission?.referrer || source?.referrer),
+    utm_source: optionalText(submission?.utm_source || source?.utm_source),
+    utm_medium: optionalText(submission?.utm_medium || source?.utm_medium),
+    utm_campaign: optionalText(submission?.utm_campaign || source?.utm_campaign),
+    travel_month: optionalText(submission?.travel_month),
+    number_of_travelers: optionalInt(submission?.number_of_travelers ?? booking?.number_of_travelers),
+    preferred_currency: optionalUppercaseText(submission?.preferred_currency || booking?.preferred_currency),
+    travel_duration_days_min: optionalInt(submission?.travel_duration_days_min),
+    travel_duration_days_max: optionalInt(submission?.travel_duration_days_max),
+    name: optionalText(submission?.name),
+    email: optionalText(submission?.email),
+    phone_number: optionalText(submission?.phone_number),
+    budget_lower_usd: optionalInt(submission?.budget_lower_usd ?? booking?.budget_lower_usd),
+    budget_upper_usd: optionalInt(submission?.budget_upper_usd ?? booking?.budget_upper_usd),
+    preferred_language: optionalText(submission?.preferred_language),
+    notes: optionalText(submission?.notes),
+    submitted_at: optionalText(submission?.submitted_at || booking?.created_at)
   });
 }
 
@@ -188,7 +207,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedTravelStyles = normalizeStringArray(booking?.travel_styles);
   const normalizedBooking = {
     ...booking,
-    name: optionalText(booking?.name || booking?.source?.tour_title),
+    name: optionalText(booking?.name || booking?.web_form_submission?.booking_name),
     atp_staff: optionalText(booking?.atp_staff),
     atp_staff_name: optionalText(booking?.atp_staff_name),
     service_level_agreement_due_at: optionalText(booking?.service_level_agreement_due_at),
@@ -207,6 +226,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     stage: optionalText(normalizedBooking.stage),
     travel_start_day: optionalText(normalizedBooking.travel_start_day),
     travel_end_day: optionalText(normalizedBooking.travel_end_day),
+    source: undefined,
     created_at: optionalText(normalizedBooking.created_at) || new Date().toISOString(),
     updated_at: optionalText(normalizedBooking.updated_at) || optionalText(normalizedBooking.created_at) || new Date().toISOString()
   }) || normalizedBooking;

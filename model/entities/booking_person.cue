@@ -27,9 +27,12 @@ import (
 #BookingPersonDocument: {
 	id:                    common.#Identifier
 	document_type:         enums.#PersonDocumentType
+	holder_name?:          string
 	document_number?:      string
 	document_picture_ref?: string
 	issuing_country?:      enums.#CountryCode
+	issued_on?:            common.#DateOnly
+	no_expiration_date?:   bool
 	expires_on?:           common.#DateOnly
 	created_at:            common.#Timestamp
 	updated_at:            common.#Timestamp
