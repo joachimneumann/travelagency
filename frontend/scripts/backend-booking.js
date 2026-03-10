@@ -12,14 +12,21 @@ import {
 import {
   atpStaffRequest,
   bookingActivitiesRequest,
-  bookingAssignmentRequest,
+  bookingDeleteRequest,
   bookingChatRequest,
   bookingDetailRequest,
+  bookingInvoiceCreateRequest,
+  bookingInvoiceUpdateRequest,
   bookingInvoicesRequest,
-  bookingNoteRequest,
+  bookingNameRequest,
+  bookingNotesRequest,
   bookingOfferRequest,
+  bookingOwnerRequest,
+  bookingPersonPhotoRequest,
+  bookingPersonsRequest,
   bookingPricingRequest,
   bookingStageRequest,
+  offerExchangeRatesRequest,
 } from "../Generated/API/generated_APIRequestFactory.js";
 import { normalizeLocalDateTimeToIso } from "../../shared/js/datetime.js";
 import {
@@ -118,84 +125,84 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
-  tourTitle: document.getElementById("detailTourTitle"),
-  title: document.getElementById("detailTitle"),
-  subtitle: document.getElementById("detailSubTitle"),
-  heroImage: document.getElementById("bookingHeroImage"),
-  bookingNameInput: document.getElementById("bookingNameInput"),
-  bookingNameSaveBtn: document.getElementById("bookingNameSaveBtn"),
-  heroCopyBtn: document.getElementById("bookingHeroCopyBtn"),
-  heroCopyStatus: document.getElementById("bookingHeroCopyStatus"),
-  deleteBtn: document.getElementById("bookingDeleteBtn"),
-  error: document.getElementById("detailError"),
-  bookingDataView: document.getElementById("bookingDataView"),
-  actionsPanel: document.getElementById("bookingActionsPanel"),
-  personsEditorPanel: document.getElementById("personsEditorPanel"),
-  personsEditorList: document.getElementById("bookingPersonsEditorList"),
-  personsEditorAddBtn: document.getElementById("bookingPersonAddBtn"),
-  personsEditorSaveBtn: document.getElementById("bookingPersonsSaveBtn"),
-  personsEditorStatus: document.getElementById("bookingPersonsEditorStatus"),
-  ownerSelect: document.getElementById("bookingOwnerSelect"),
-  stageSelect: document.getElementById("bookingStageSelect"),
-  personsSummary: document.getElementById("bookingPersonsSummary"),
-  personsStatus: document.getElementById("bookingPersonsStatus"),
-  noteInput: document.getElementById("bookingNoteInput"),
-  noteSaveBtn: document.getElementById("bookingNoteSaveBtn"),
-  actionStatus: document.getElementById("bookingActionStatus"),
-  pricingPanel: document.getElementById("pricingPanel"),
-  pricingSummaryTable: document.getElementById("pricingSummaryTable"),
-  pricingCurrencyInput: document.getElementById("pricingCurrencyInput"),
-  pricingAgreedNetLabel: document.getElementById("pricingAgreedNetLabel"),
-  pricingAgreedNetInput: document.getElementById("pricingAgreedNetInput"),
-  pricingAdjustmentsTable: document.getElementById("pricingAdjustmentsTable"),
-  pricingPaymentsTable: document.getElementById("pricingPaymentsTable"),
-  pricingSaveBtn: document.getElementById("pricingSaveBtn"),
-  pricingStatus: document.getElementById("pricingStatus"),
-  offerPanel: document.getElementById("offerPanel"),
-  offerCurrencyInput: document.getElementById("offerCurrencyInput"),
-  offerComponentCategorySelect: document.getElementById("offerComponentCategorySelect"),
-  offerAddComponentBtn: document.getElementById("offerAddComponentBtn"),
-  offerComponentsTable: document.getElementById("offerComponentsTable"),
-  offerComponentsTotalTable: document.getElementById("offerComponentsTotalTable"),
-  offerSaveBtn: document.getElementById("offerSaveBtn"),
-  offerStatus: document.getElementById("offerStatus"),
-  activitiesTable: document.getElementById("activitiesTable"),
-  metaChatPanel: document.getElementById("metaChatPanel"),
-  metaChatSummary: document.getElementById("metaChatSummary"),
-  metaChatTable: document.getElementById("metaChatTable"),
-  invoicePanel: document.getElementById("invoicePanel"),
-  invoiceSelect: document.getElementById("invoiceSelect"),
-  invoiceNumberInput: document.getElementById("invoiceNumberInput"),
-  invoiceCurrencyInput: document.getElementById("invoiceCurrencyInput"),
-  invoiceIssueDateInput: document.getElementById("invoiceIssueDateInput"),
-  invoiceIssueTodayBtn: document.getElementById("invoiceIssueTodayBtn"),
-  invoiceDueDateInput: document.getElementById("invoiceDueDateInput"),
-  invoiceDueMonthBtn: document.getElementById("invoiceDueMonthBtn"),
-  invoiceTitleInput: document.getElementById("invoiceTitleInput"),
-  invoiceComponentsInput: document.getElementById("invoiceComponentsInput"),
-  invoiceDueAmountInput: document.getElementById("invoiceDueAmountInput"),
-  invoiceDueAmountLabel: document.getElementById("invoiceDueAmountLabel"),
-  invoiceComponentsLabel: document.getElementById("invoiceComponentsLabel"),
-  invoiceVatInput: document.getElementById("invoiceVatInput"),
-  invoiceNotesInput: document.getElementById("invoiceNotesInput"),
-  invoiceCreateBtn: document.getElementById("invoiceCreateBtn"),
-  invoiceStatus: document.getElementById("invoiceStatus"),
-  invoicesTable: document.getElementById("invoicesTable")
+  tourTitle: document.getElementById("detail_tour_title"),
+  title: document.getElementById("detail_title"),
+  subtitle: document.getElementById("detail_sub_title"),
+  heroImage: document.getElementById("booking_hero_image"),
+  booking_name_input: document.getElementById("booking_name_input"),
+  booking_name_save_btn: document.getElementById("booking_name_save_btn"),
+  heroCopyBtn: document.getElementById("booking_hero_copy_btn"),
+  heroCopyStatus: document.getElementById("booking_hero_copy_status"),
+  deleteBtn: document.getElementById("booking_delete_btn"),
+  error: document.getElementById("detail_error"),
+  booking_data_view: document.getElementById("booking_data_view"),
+  actionsPanel: document.getElementById("booking_actions_panel"),
+  persons_editor_panel: document.getElementById("persons_editor_panel"),
+  personsEditorList: document.getElementById("booking_persons_editor_list"),
+  personsEditorAddBtn: document.getElementById("booking_person_add_btn"),
+  personsEditorSaveBtn: document.getElementById("booking_persons_save_btn"),
+  personsEditorStatus: document.getElementById("booking_persons_editor_status"),
+  ownerSelect: document.getElementById("booking_owner_select"),
+  stageSelect: document.getElementById("booking_stage_select"),
+  personsSummary: document.getElementById("booking_persons_summary"),
+  personsStatus: document.getElementById("booking_persons_status"),
+  noteInput: document.getElementById("booking_note_input"),
+  noteSaveBtn: document.getElementById("booking_note_save_btn"),
+  actionStatus: document.getElementById("booking_action_status"),
+  pricing_panel: document.getElementById("pricing_panel"),
+  pricing_summary_table: document.getElementById("pricing_summary_table"),
+  pricing_currency_input: document.getElementById("pricing_currency_input"),
+  pricing_agreed_net_label: document.getElementById("pricing_agreed_net_label"),
+  pricing_agreed_net_input: document.getElementById("pricing_agreed_net_input"),
+  pricing_adjustments_table: document.getElementById("pricing_adjustments_table"),
+  pricing_payments_table: document.getElementById("pricing_payments_table"),
+  pricing_save_btn: document.getElementById("pricing_save_btn"),
+  pricing_status: document.getElementById("pricing_status"),
+  offer_panel: document.getElementById("offer_panel"),
+  offer_currency_input: document.getElementById("offer_currency_input"),
+  offer_component_category_select: document.getElementById("offer_component_category_select"),
+  offer_add_component_btn: document.getElementById("offer_add_component_btn"),
+  offer_components_table: document.getElementById("offer_components_table"),
+  offer_components_total_table: document.getElementById("offer_components_total_table"),
+  offer_save_btn: document.getElementById("offer_save_btn"),
+  offer_status: document.getElementById("offer_status"),
+  activities_table: document.getElementById("activities_table"),
+  meta_chat_panel: document.getElementById("meta_chat_panel"),
+  meta_chat_summary: document.getElementById("meta_chat_summary"),
+  meta_chat_table: document.getElementById("meta_chat_table"),
+  invoice_panel: document.getElementById("invoice_panel"),
+  invoice_select: document.getElementById("invoice_select"),
+  invoice_number_input: document.getElementById("invoice_number_input"),
+  invoice_currency_input: document.getElementById("invoice_currency_input"),
+  invoice_issue_date_input: document.getElementById("invoice_issue_date_input"),
+  invoice_issue_today_btn: document.getElementById("invoice_issue_today_btn"),
+  invoice_due_date_input: document.getElementById("invoice_due_date_input"),
+  invoice_due_month_btn: document.getElementById("invoice_due_month_btn"),
+  invoice_title_input: document.getElementById("invoice_title_input"),
+  invoice_components_input: document.getElementById("invoice_components_input"),
+  invoice_due_amount_input: document.getElementById("invoice_due_amount_input"),
+  invoice_due_amount_label: document.getElementById("invoice_due_amount_label"),
+  invoice_components_label: document.getElementById("invoice_components_label"),
+  invoice_vat_input: document.getElementById("invoice_vat_input"),
+  invoice_notes_input: document.getElementById("invoice_notes_input"),
+  invoice_create_btn: document.getElementById("invoice_create_btn"),
+  invoice_status: document.getElementById("invoice_status"),
+  invoices_table: document.getElementById("invoices_table")
 };
 
 function setOfferSaveEnabled(enabled) {
-  if (!els.offerSaveBtn) return;
-  els.offerSaveBtn.disabled = !enabled || !state.permissions.canEditBooking;
+  if (!els.offer_save_btn) return;
+  els.offer_save_btn.disabled = !enabled || !state.permissions.canEditBooking;
   setBookingSectionDirty("offer", Boolean(enabled) && state.permissions.canEditBooking);
 }
 
 function setBookingSectionDirty(sectionKey, isDirty) {
   const sectionMap = {
     note: els.actionsPanel,
-    persons: els.personsEditorPanel,
-    offer: els.offerPanel,
-    pricing: els.pricingPanel,
-    invoice: els.invoicePanel
+    persons: els.persons_editor_panel,
+    offer: els.offer_panel,
+    pricing: els.pricing_panel,
+    invoice: els.invoice_panel
   };
   state.dirty[sectionKey] = Boolean(isDirty);
   setDirtySurface(sectionMap[sectionKey], state.dirty[sectionKey]);
@@ -220,22 +227,22 @@ function captureControlSnapshot(root) {
 }
 
 function updatePricingDirtyState() {
-  const isDirty = state.permissions.canEditBooking && captureControlSnapshot(els.pricingPanel) !== state.originalPricingSnapshot;
+  const isDirty = state.permissions.canEditBooking && captureControlSnapshot(els.pricing_panel) !== state.originalPricingSnapshot;
   setBookingSectionDirty("pricing", isDirty);
 }
 
 function markPricingSnapshotClean() {
-  state.originalPricingSnapshot = captureControlSnapshot(els.pricingPanel);
+  state.originalPricingSnapshot = captureControlSnapshot(els.pricing_panel);
   setBookingSectionDirty("pricing", false);
 }
 
 function updateInvoiceDirtyState() {
-  const isDirty = state.permissions.canEditBooking && captureControlSnapshot(els.invoicePanel) !== state.originalInvoiceSnapshot;
+  const isDirty = state.permissions.canEditBooking && captureControlSnapshot(els.invoice_panel) !== state.originalInvoiceSnapshot;
   setBookingSectionDirty("invoice", isDirty);
 }
 
 function markInvoiceSnapshotClean() {
-  state.originalInvoiceSnapshot = captureControlSnapshot(els.invoicePanel);
+  state.originalInvoiceSnapshot = captureControlSnapshot(els.invoice_panel);
   setBookingSectionDirty("invoice", false);
 }
 
@@ -257,33 +264,33 @@ async function init() {
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
 
-  populateCurrencySelect(els.pricingCurrencyInput);
-  populateCurrencySelect(els.offerCurrencyInput);
-  populateCurrencySelect(els.invoiceCurrencyInput);
-  populateOfferCategorySelect(els.offerComponentCategorySelect);
+  populateCurrencySelect(els.pricing_currency_input);
+  populateCurrencySelect(els.offer_currency_input);
+  populateCurrencySelect(els.invoice_currency_input);
+  populateOfferCategorySelect(els.offer_component_category_select);
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
-  if (els.bookingNameSaveBtn) els.bookingNameSaveBtn.addEventListener("click", saveBookingName);
+  if (els.booking_name_save_btn) els.booking_name_save_btn.addEventListener("click", saveBookingName);
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
-  if (els.pricingPanel) {
+  if (els.pricing_panel) {
     const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
-    els.pricingPanel.addEventListener("input", schedulePricingDirtyState);
-    els.pricingPanel.addEventListener("change", schedulePricingDirtyState);
-    els.pricingPanel.addEventListener("click", (event) => {
+    els.pricing_panel.addEventListener("input", schedulePricingDirtyState);
+    els.pricing_panel.addEventListener("change", schedulePricingDirtyState);
+    els.pricing_panel.addEventListener("click", (event) => {
       if (event.target.closest("button")) schedulePricingDirtyState();
     });
   }
-  if (els.pricingSaveBtn) els.pricingSaveBtn.addEventListener("click", savePricing);
-  if (els.offerCurrencyInput)
-    els.offerCurrencyInput.addEventListener("change", () => {
+  if (els.pricing_save_btn) els.pricing_save_btn.addEventListener("click", savePricing);
+  if (els.offer_currency_input)
+    els.offer_currency_input.addEventListener("change", () => {
       void handleOfferCurrencyChange();
     });
-  if (els.offerAddComponentBtn) els.offerAddComponentBtn.addEventListener("click", addOfferComponentFromSelector);
-  if (els.offerSaveBtn) els.offerSaveBtn.addEventListener("click", saveOffer);
+  if (els.offer_add_component_btn) els.offer_add_component_btn.addEventListener("click", addOfferComponentFromSelector);
+  if (els.offer_save_btn) els.offer_save_btn.addEventListener("click", saveOffer);
   if (els.personsEditorAddBtn) els.personsEditorAddBtn.addEventListener("click", addPersonDraft);
   if (els.personsEditorSaveBtn) els.personsEditorSaveBtn.addEventListener("click", savePersonDrafts);
   if (els.personsEditorList) {
@@ -291,22 +298,22 @@ async function init() {
     els.personsEditorList.addEventListener("change", handlePersonsEditorInput);
     els.personsEditorList.addEventListener("click", handlePersonsEditorClick);
   }
-  if (els.invoiceSelect) els.invoiceSelect.addEventListener("change", onInvoiceSelectChange);
-  if (els.invoicePanel) {
+  if (els.invoice_select) els.invoice_select.addEventListener("change", onInvoiceSelectChange);
+  if (els.invoice_panel) {
     const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
-    els.invoicePanel.addEventListener("input", scheduleInvoiceDirtyState);
-    els.invoicePanel.addEventListener("change", scheduleInvoiceDirtyState);
+    els.invoice_panel.addEventListener("input", scheduleInvoiceDirtyState);
+    els.invoice_panel.addEventListener("change", scheduleInvoiceDirtyState);
   }
-  if (els.invoiceCurrencyInput) els.invoiceCurrencyInput.addEventListener("change", renderInvoiceMoneyLabels);
-  if (els.invoiceCreateBtn) els.invoiceCreateBtn.addEventListener("click", createInvoice);
-  if (els.invoiceIssueTodayBtn) {
-    els.invoiceIssueTodayBtn.addEventListener("click", () => {
-      if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = formatDateInput(new Date());
+  if (els.invoice_currency_input) els.invoice_currency_input.addEventListener("change", renderInvoiceMoneyLabels);
+  if (els.invoice_create_btn) els.invoice_create_btn.addEventListener("click", createInvoice);
+  if (els.invoice_issue_today_btn) {
+    els.invoice_issue_today_btn.addEventListener("click", () => {
+      if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = formatDateInput(new Date());
     });
   }
-  if (els.invoiceDueMonthBtn) {
-    els.invoiceDueMonthBtn.addEventListener("click", () => {
-      if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = plusOneMonthDateInput(new Date());
+  if (els.invoice_due_month_btn) {
+    els.invoice_due_month_btn.addEventListener("click", () => {
+      if (els.invoice_due_date_input) els.invoice_due_date_input.value = plusOneMonthDateInput(new Date());
     });
   }
 
@@ -339,7 +346,7 @@ function bindSectionNavigation(activeSection) {
 
 async function loadBookingPage() {
   clearStatus();
-  const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { bookingId: state.id } }).url)];
+  const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)];
   if (state.permissions.canChangeAssignment) {
     requests.push(fetchApi(atpStaffRequest({ baseURL: apiOrigin, query: { active: true } }).url));
   }
@@ -470,14 +477,14 @@ function renderBookingData() {
         ["name", booking.name],
         ["stage", booking.stage],
         ["staff", booking.atp_staff_name || "Unassigned"],
-        ["destination", Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination],
-        ["style", Array.isArray(booking.style) ? booking.style.join(", ") : booking.style],
+        ["destinations", Array.isArray(booking.destinations) ? booking.destinations.join(", ") : booking.destinations],
+        ["travel_styles", Array.isArray(booking.travel_styles) ? booking.travel_styles.join(", ") : booking.travel_styles],
         ["web_form_travel_month", booking.web_form_travel_month],
         ["number_of_travelers", booking.number_of_travelers],
         ["persons_listed", persons.length],
         ["travelers_marked", travelerCount],
         ["persons_warning", mismatchWarning],
-        ["budget_range_USD", formatBudgetRange(booking.budget_lower_USD, booking.budget_upper_USD)],
+        ["budget_range_usd", formatBudgetRange(booking.web_form_submission?.budget_lower_usd, booking.web_form_submission?.budget_upper_usd)],
         ["service_level_agreement_due_at", formatDateTime(booking.service_level_agreement_due_at)],
         ["created_at", formatDateTime(booking.created_at)],
         ["updated_at", formatDateTime(booking.updated_at)]
@@ -522,10 +529,10 @@ function renderBookingData() {
         ["number_of_travelers", booking.web_form_submission?.number_of_travelers],
         ["travel_duration_days_min", booking.web_form_submission?.travel_duration_days_min],
         ["travel_duration_days_max", booking.web_form_submission?.travel_duration_days_max],
-        ["budget_lower_USD", booking.web_form_submission?.budget_lower_USD],
-        ["budget_upper_USD", booking.web_form_submission?.budget_upper_USD],
+        ["budget_lower_usd", booking.web_form_submission?.budget_lower_usd],
+        ["budget_upper_usd", booking.web_form_submission?.budget_upper_usd],
         ["notes", booking.web_form_submission?.notes],
-        ["submittedAt", formatDateTime(booking.web_form_submission?.submittedAt)]
+        ["submitted_at", formatDateTime(booking.web_form_submission?.submitted_at)]
       ]
         .filter(([, value]) => value !== undefined && value !== null && value !== "")
         .map(([key, value]) => ({ key, value: String(value ?? "-") }))
@@ -536,7 +543,7 @@ function renderBookingData() {
 }
 
 function renderSections(sections) {
-  if (!els.bookingDataView) return;
+  if (!els.booking_data_view) return;
   const html = sections
     .map((section) => {
       const rows = (section.entries || [])
@@ -556,19 +563,19 @@ function renderSections(sections) {
       `;
     })
     .join("");
-  els.bookingDataView.innerHTML = html;
+  els.booking_data_view.innerHTML = html;
 }
 
 function renderActionControls() {
   if (!state.booking) return;
 
-  if (els.bookingNameInput) {
-    els.bookingNameInput.value = normalizeText(state.booking.name) || "";
-    els.bookingNameInput.disabled = !state.permissions.canEditBooking;
+  if (els.booking_name_input) {
+    els.booking_name_input.value = normalizeText(state.booking.name) || "";
+    els.booking_name_input.disabled = !state.permissions.canEditBooking;
   }
-  if (els.bookingNameSaveBtn) {
-    els.bookingNameSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
-    els.bookingNameSaveBtn.disabled = !state.permissions.canEditBooking;
+  if (els.booking_name_save_btn) {
+    els.booking_name_save_btn.style.display = state.permissions.canEditBooking ? "" : "none";
+    els.booking_name_save_btn.disabled = !state.permissions.canEditBooking;
   }
 
   if (els.stageSelect) {
@@ -597,7 +604,7 @@ function renderActionControls() {
     els.noteSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
     updateNoteSaveButtonState();
   }
-  if (els.invoiceCreateBtn) els.invoiceCreateBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.invoice_create_btn) els.invoice_create_btn.style.display = state.permissions.canEditBooking ? "" : "none";
   if (els.deleteBtn) {
     els.deleteBtn.style.display = state.permissions.canEditBooking ? "" : "none";
     els.deleteBtn.disabled = !state.permissions.canEditBooking;
@@ -959,8 +966,9 @@ function addPersonDraft() {
 async function savePersonDrafts() {
   if (!state.permissions.canEditBooking || !state.booking) return;
   setPersonsEditorStatus("Saving persons...");
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/persons`, {
-    method: "PATCH",
+  const request = bookingPersonsRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       persons: state.personDrafts.map((draft, index) => buildPersonPayloadFromDraft(draft, index)),
@@ -993,8 +1001,12 @@ async function uploadPersonPhoto(index) {
 
   setPersonsEditorStatus(`Uploading picture for ${normalizeText(person.name) || "person"}...`);
   const base64 = await fileToBase64(file);
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/persons/${encodeURIComponent(person.id)}/photo`, {
-    method: "POST",
+  const request = bookingPersonPhotoRequest({
+    baseURL: apiOrigin,
+    params: { booking_id: state.booking.id, person_id: person.id }
+  });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       filename: file.name,
@@ -1078,8 +1090,9 @@ async function deleteBooking() {
 
   if (els.deleteBtn) els.deleteBtn.disabled = true;
   clearStatus();
-  const result = await fetchApi(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}`, {
-    method: "DELETE",
+  const request = bookingDeleteRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchApi(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash
     }
@@ -1092,9 +1105,10 @@ async function deleteBooking() {
 
 async function saveBookingName() {
   if (!state.permissions.canEditBooking || !state.booking) return;
-  const nextName = normalizeText(els.bookingNameInput?.value) || "";
-  const result = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/name`, {
-    method: "PATCH",
+  const nextName = normalizeText(els.booking_name_input?.value) || "";
+  const request = bookingNameRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       name: nextName,
@@ -1112,23 +1126,23 @@ async function saveBookingName() {
 }
 
 function renderPricingPanel() {
-  if (!els.pricingPanel || !state.booking) return;
+  if (!els.pricing_panel || !state.booking) return;
   const pricing = clonePricing(state.booking.pricing || {});
   state.pricingDraft = pricing;
   const currency = normalizeCurrencyCode(pricing.currency);
 
-  if (els.pricingCurrencyInput) {
-    els.pricingCurrencyInput.value = currency;
-    els.pricingCurrencyInput.disabled = !state.permissions.canEditBooking;
+  if (els.pricing_currency_input) {
+    els.pricing_currency_input.value = currency;
+    els.pricing_currency_input.disabled = !state.permissions.canEditBooking;
   }
-  if (els.pricingAgreedNetLabel) {
-    els.pricingAgreedNetLabel.textContent = `Agreed Net Amount (${currency})`;
+  if (els.pricing_agreed_net_label) {
+    els.pricing_agreed_net_label.textContent = `Agreed Net Amount (${currency})`;
   }
-  if (els.pricingAgreedNetInput) {
-    els.pricingAgreedNetInput.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
-    els.pricingAgreedNetInput.disabled = !state.permissions.canEditBooking;
+  if (els.pricing_agreed_net_input) {
+    els.pricing_agreed_net_input.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
+    els.pricing_agreed_net_input.disabled = !state.permissions.canEditBooking;
   }
-  if (els.pricingSaveBtn) els.pricingSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.pricing_save_btn) els.pricing_save_btn.style.display = state.permissions.canEditBooking ? "" : "none";
 
   renderPricingSummaryTable(pricing);
   renderPricingAdjustmentsTable();
@@ -1170,7 +1184,7 @@ function cloneOffer(offer) {
   const sourceComponents = Array.isArray(source.components) ? source.components : [];
 
   return {
-    currency: normalizeCurrencyCode(source.currency || state.booking?.preferredCurrency || "USD"),
+    currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
     category_rules,
     components: sourceComponents.map((component, index) => ({
       id: String(component?.id || ""),
@@ -1182,7 +1196,7 @@ function cloneOffer(offer) {
       tax_rate_basis_points: Number.isFinite(Number(component?.tax_rate_basis_points))
         ? Math.max(0, Math.round(Number(component.tax_rate_basis_points)))
             : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
-      currency: normalizeCurrencyCode(component?.currency || source.currency || state.booking?.preferredCurrency || "USD"),
+      currency: normalizeCurrencyCode(component?.currency || source.currency || state.booking?.preferred_currency || "USD"),
       notes: String(component?.notes || ""),
       sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index
     })),
@@ -1219,7 +1233,7 @@ function getOfferCategoryTaxRateBasisPoints(category) {
 
 function addOfferComponentFromSelector() {
   if (!state.permissions.canEditBooking || !state.offerDraft) return;
-  const selectedCategory = els.offerComponentCategorySelect?.value || "";
+  const selectedCategory = els.offer_component_category_select?.value || "";
   if (!selectedCategory) return;
   const category = normalizeOfferCategory(selectedCategory);
   state.offerDraft.components.push({
@@ -1239,26 +1253,26 @@ function addOfferComponentFromSelector() {
 }
 
 function renderOfferPanel() {
-  if (!els.offerPanel || !state.booking) return;
+  if (!els.offer_panel || !state.booking) return;
   const offer = cloneOffer(state.booking.offer || {});
   state.offerDraft = offer;
-  const currency = normalizeCurrencyCode(offer.currency || state.booking.preferredCurrency || "USD");
+  const currency = normalizeCurrencyCode(offer.currency || state.booking.preferred_currency || "USD");
   state.offerDraft.currency = currency;
 
-  if (els.offerCurrencyInput) {
-    setSelectValue(els.offerCurrencyInput, currency);
-    els.offerCurrencyInput.disabled = !state.permissions.canEditBooking;
+  if (els.offer_currency_input) {
+    setSelectValue(els.offer_currency_input, currency);
+    els.offer_currency_input.disabled = !state.permissions.canEditBooking;
   }
-  if (els.offerComponentCategorySelect) {
-    els.offerComponentCategorySelect.disabled = !state.permissions.canEditBooking;
+  if (els.offer_component_category_select) {
+    els.offer_component_category_select.disabled = !state.permissions.canEditBooking;
     if (state.permissions.canEditBooking) {
-      els.offerComponentCategorySelect.value = "";
+      els.offer_component_category_select.value = "";
     }
   }
-  if (els.offerAddComponentBtn) {
-    els.offerAddComponentBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.offer_add_component_btn) {
+    els.offer_add_component_btn.style.display = state.permissions.canEditBooking ? "" : "none";
   }
-  if (els.offerSaveBtn) els.offerSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
+  if (els.offer_save_btn) els.offer_save_btn.style.display = state.permissions.canEditBooking ? "" : "none";
   setOfferSaveEnabled(false);
 
   renderOfferComponentsTable();
@@ -1266,10 +1280,10 @@ function renderOfferPanel() {
 }
 
 function renderOfferComponentsTable() {
-  if (!els.offerComponentsTable) return;
+  if (!els.offer_components_table) return;
   const readOnly = !state.permissions.canEditBooking;
   const showActionsCol = !readOnly;
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
   const hasMultiQuantityComponent = (offerComponents || []).some(
     (component) => Math.max(1, Number(component?.quantity || 1)) !== 1
@@ -1324,11 +1338,11 @@ function renderOfferComponentsTable() {
     showActionsCol ? '<td class="offer-col-actions"></td>' : ""
   }</tr>`;
   const body = rows || noRows;
-  els.offerComponentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  if (els.offerComponentsTotalTable) {
-    els.offerComponentsTotalTable.innerHTML = `<tbody>${totalRow}</tbody>`;
+  els.offer_components_table.innerHTML = `${header}<tbody>${body}</tbody>`;
+  if (els.offer_components_total_table) {
+    els.offer_components_total_table.innerHTML = `<tbody>${totalRow}</tbody>`;
   } else {
-    els.offerComponentsTable.insertAdjacentHTML("beforeend", `<tbody>${totalRow}</tbody>`);
+    els.offer_components_table.insertAdjacentHTML("beforeend", `<tbody>${totalRow}</tbody>`);
   }
 
   if (!readOnly) {
@@ -1338,7 +1352,7 @@ function renderOfferComponentsTable() {
       setOfferSaveEnabled(true);
       renderOfferComponentsTable();
     };
-    els.offerComponentsTable.querySelectorAll("[data-offer-remove-component]").forEach((button) => {
+    els.offer_components_table.querySelectorAll("[data-offer-remove-component]").forEach((button) => {
       button.addEventListener("click", () => {
         const index = Number(button.getAttribute("data-offer-remove-component"));
         if (!window.confirm("Remove this offer component?")) {
@@ -1349,7 +1363,7 @@ function renderOfferComponentsTable() {
         renderOfferComponentsTable();
       });
     });
-    els.offerComponentsTable.querySelectorAll("[data-offer-component-details], [data-offer-component-quantity], [data-offer-component-unit]").forEach((input) => {
+    els.offer_components_table.querySelectorAll("[data-offer-component-details], [data-offer-component-quantity], [data-offer-component-unit]").forEach((input) => {
       input.addEventListener("change", syncOfferInputTotals);
     });
   }
@@ -1361,7 +1375,7 @@ function readOfferDraftComponentsForRender() {
   if (!rows.length) {
     return fallbackComponents;
   }
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   return rows.map((_, index) => {
     const category = normalizeOfferCategory(state.offerDraft?.components?.[index]?.category || "OTHER");
     const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
@@ -1410,7 +1424,7 @@ function computeOfferDraftTotalsFromComponents(components) {
     net_amount_cents += line.net_amount_cents;
     tax_amount_cents += line.tax_amount_cents;
   }
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   return {
     currency,
     net_amount_cents,
@@ -1435,7 +1449,7 @@ function computeOfferComponentLineTotals(component) {
 }
 
 function renderPricingSummaryTable(pricing) {
-  if (!els.pricingSummaryTable) return;
+  if (!els.pricing_summary_table) return;
   const summary = pricing.summary || {};
   const moneyRows = [
     ["agreed_net_amount", pricing.agreed_net_amount_cents],
@@ -1454,11 +1468,11 @@ function renderPricingSummaryTable(pricing) {
     .concat(moneyRows)
     .concat(summary.is_schedule_balanced === false ? ['<tr><th>schedule_balanced</th><td>no</td></tr>'] : [])
     .join("");
-  els.pricingSummaryTable.innerHTML = `<tbody>${rows || '<tr><td colspan="2">No payment totals yet</td></tr>'}</tbody>`;
+  els.pricing_summary_table.innerHTML = `<tbody>${rows || '<tr><td colspan="2">No payment totals yet</td></tr>'}</tbody>`;
 }
 
 function renderPricingAdjustmentsTable() {
-  if (!els.pricingAdjustmentsTable) return;
+  if (!els.pricing_adjustments_table) return;
   const readOnly = !state.permissions.canEditBooking;
   const items = Array.isArray(state.pricingDraft.adjustments) ? state.pricingDraft.adjustments : [];
   const currency = normalizeCurrencyCode(state.pricingDraft.currency);
@@ -1482,20 +1496,20 @@ function renderPricingAdjustmentsTable() {
     ? ""
     : `<tr><td colspan="5"><button class="btn btn-ghost" type="button" data-pricing-add-adjustment>Add</button></td></tr>`;
   const body = (rows || `<tr><td colspan="${readOnly ? 4 : 5}">No adjustments</td></tr>`) + addRow;
-  els.pricingAdjustmentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.pricing_adjustments_table.innerHTML = `${header}<tbody>${body}</tbody>`;
   if (!readOnly) {
-    els.pricingAdjustmentsTable.querySelectorAll("[data-pricing-remove-adjustment]").forEach((button) => {
+    els.pricing_adjustments_table.querySelectorAll("[data-pricing-remove-adjustment]").forEach((button) => {
       button.addEventListener("click", () => {
         const index = Number(button.getAttribute("data-pricing-remove-adjustment"));
         removePricingAdjustmentRow(index);
       });
     });
-    els.pricingAdjustmentsTable.querySelector("[data-pricing-add-adjustment]")?.addEventListener("click", addPricingAdjustmentRow);
+    els.pricing_adjustments_table.querySelector("[data-pricing-add-adjustment]")?.addEventListener("click", addPricingAdjustmentRow);
   }
 }
 
 function renderPricingPaymentsTable() {
-  if (!els.pricingPaymentsTable) return;
+  if (!els.pricing_payments_table) return;
   const readOnly = !state.permissions.canEditBooking;
   const items = Array.isArray(state.pricingDraft.payments) ? state.pricingDraft.payments : [];
   const currency = normalizeCurrencyCode(state.pricingDraft.currency);
@@ -1520,15 +1534,15 @@ function renderPricingPaymentsTable() {
     ? ""
     : `<tr><td colspan="8"><button class="btn btn-ghost" type="button" data-pricing-add-payment>Add</button></td></tr>`;
   const body = (rows || `<tr><td colspan="${readOnly ? 7 : 8}">No payments scheduled</td></tr>`) + addRow;
-  els.pricingPaymentsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.pricing_payments_table.innerHTML = `${header}<tbody>${body}</tbody>`;
   if (!readOnly) {
-    els.pricingPaymentsTable.querySelectorAll("[data-pricing-remove-payment]").forEach((button) => {
+    els.pricing_payments_table.querySelectorAll("[data-pricing-remove-payment]").forEach((button) => {
       button.addEventListener("click", () => {
         const index = Number(button.getAttribute("data-pricing-remove-payment"));
         removePricingPaymentRow(index);
       });
     });
-    els.pricingPaymentsTable.querySelectorAll("[data-pricing-payment-status]").forEach((select) => {
+    els.pricing_payments_table.querySelectorAll("[data-pricing-payment-status]").forEach((select) => {
       select.addEventListener("change", () => {
         const index = Number(select.getAttribute("data-pricing-payment-status"));
         const paidAtInput = document.querySelector(`[data-pricing-payment-paid-at="${index}"]`);
@@ -1540,7 +1554,7 @@ function renderPricingPaymentsTable() {
         }
       });
     });
-    els.pricingPaymentsTable.querySelector("[data-pricing-add-payment]")?.addEventListener("click", addPricingPaymentRow);
+    els.pricing_payments_table.querySelector("[data-pricing-add-payment]")?.addEventListener("click", addPricingPaymentRow);
   }
 }
 
@@ -1581,8 +1595,9 @@ function removePricingPaymentRow(index) {
 
 async function saveOwner() {
   if (!state.booking || !els.ownerSelect) return;
-  const result = await fetchBookingMutation(bookingAssignmentRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
-    method: "PATCH",
+  const request = bookingOwnerRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       atp_staff: els.ownerSelect.value || null,
@@ -1599,8 +1614,9 @@ async function saveOwner() {
 
 async function saveStage() {
   if (!state.booking || !els.stageSelect) return;
-  const result = await fetchBookingMutation(bookingStageRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
-    method: "PATCH",
+  const request = bookingStageRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       stage: els.stageSelect.value,
@@ -1622,8 +1638,9 @@ async function saveNote() {
     setStatus("No changes to update.");
     return;
   }
-  const result = await fetchBookingMutation(bookingNoteRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
-    method: "PATCH",
+  const request = bookingNotesRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       notes: String(els.noteInput.value || "").trim(),
@@ -1669,8 +1686,9 @@ async function savePricing() {
     return;
   }
 
-  const result = await fetchBookingMutation(bookingPricingRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
-    method: "PATCH",
+  const request = bookingPricingRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       pricing,
@@ -1692,18 +1710,18 @@ async function savePricing() {
 
 async function loadActivities() {
   if (!state.booking) return;
-  const payload = await fetchApi(bookingActivitiesRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url);
+  const payload = await fetchApi(bookingActivitiesRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } }).url);
   if (!payload) return;
   renderActivitiesTable(payload.items || []);
 }
 
 async function loadBookingChat({ fromPoll = false } = {}) {
-  if (!state.booking || !els.metaChatTable) return;
+  if (!state.booking || !els.meta_chat_table) return;
   const previousIds = new Set((Array.isArray(state.chat.items) ? state.chat.items : []).map((item) => String(item?.id || "")));
   const payload = await fetchApi(
     bookingChatRequest({
       baseURL: apiOrigin,
-      params: { bookingId: state.booking.id },
+      params: { booking_id: state.booking.id },
       query: { limit: 100 }
     }).url
   );
@@ -1847,7 +1865,7 @@ function buildDeliveredTicksMarkup(isDelivered) {
 }
 
 function renderMetaChatPanel() {
-  if (!els.metaChatTable) return;
+  if (!els.meta_chat_table) return;
   const items = Array.isArray(state.chat.items) ? state.chat.items : [];
   const orderedItems = [...items].sort((left, right) => {
     const leftTime = String(left?.sent_at || left?.created_at || "");
@@ -1855,14 +1873,14 @@ function renderMetaChatPanel() {
     return leftTime.localeCompare(rightTime);
   });
 
-  if (els.metaChatSummary) {
+  if (els.meta_chat_summary) {
     const phone = resolveChatPhoneNumber(items) || "-";
     const waDigits = normalizePhoneDigits(phone);
     const waUrl = waDigits ? `https://wa.me/${waDigits}` : "";
     const button = waUrl
       ? `<a class="btn btn-ghost" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener">Open WhatsApp</a>`
       : `<span class="btn btn-ghost" aria-disabled="true">Open WhatsApp</span>`;
-    els.metaChatSummary.innerHTML = `<span class="wa-meta-item">Phone: ${escapeHtml(phone)}</span><span class="wa-meta-gap"></span>${button}`;
+    els.meta_chat_summary.innerHTML = `<span class="wa-meta-item">Phone: ${escapeHtml(phone)}</span><span class="wa-meta-gap"></span>${button}`;
   }
 
   let previousDay = "";
@@ -1916,15 +1934,15 @@ function renderMetaChatPanel() {
       </div>`;
     })
     .join("");
-  els.metaChatTable.innerHTML = rows || '<div class="wa-empty">No chat events for this booking yet</div>';
-  const canvas = els.metaChatTable.parentElement;
+  els.meta_chat_table.innerHTML = rows || '<div class="wa-empty">No chat events for this booking yet</div>';
+  const canvas = els.meta_chat_table.parentElement;
   if (canvas) {
     canvas.scrollTop = canvas.scrollHeight;
   }
 }
 
 function renderActivitiesTable(items) {
-  if (!els.activitiesTable) return;
+  if (!els.activities_table) return;
   const header = `<thead><tr><th>Time</th><th>Type</th><th>Actor</th><th>Detail</th></tr></thead>`;
   const rows = items
     .map(
@@ -1938,12 +1956,12 @@ function renderActivitiesTable(items) {
     .join("");
 
   const body = rows || '<tr><td colspan="4">No activities</td></tr>';
-  els.activitiesTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.activities_table.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 async function loadInvoices() {
   if (!state.booking) return;
-  const payload = await fetchApi(bookingInvoicesRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url);
+  const payload = await fetchApi(bookingInvoicesRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } }).url);
   if (!payload) return;
   state.invoices = (Array.isArray(payload.items) ? payload.items : []).sort((a, b) =>
     String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
@@ -1961,7 +1979,7 @@ async function loadInvoices() {
 }
 
 function renderInvoiceSelect() {
-  if (!els.invoiceSelect) return;
+  if (!els.invoice_select) return;
   const options = ['<option value="">New invoice</option>']
     .concat(
       state.invoices.map(
@@ -1972,12 +1990,12 @@ function renderInvoiceSelect() {
       )
     )
     .join("");
-  els.invoiceSelect.innerHTML = options;
-  els.invoiceSelect.value = state.selectedInvoiceId || "";
+  els.invoice_select.innerHTML = options;
+  els.invoice_select.value = state.selectedInvoiceId || "";
 }
 
 function renderInvoicesTable() {
-  if (!els.invoicesTable) return;
+  if (!els.invoices_table) return;
   const header = `<thead><tr><th>PDF</th><th>Invoice</th><th>Version</th><th>Sent to recipient</th><th>Total</th><th>Updated</th><th>Actions</th></tr></thead>`;
   const rows = state.invoices
     .map((invoice) => {
@@ -1995,8 +2013,8 @@ function renderInvoicesTable() {
     })
     .join("");
   const body = rows || '<tr><td colspan="7">No invoices</td></tr>';
-  els.invoicesTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-  els.invoicesTable.querySelectorAll("[data-select-invoice]").forEach((button) => {
+  els.invoices_table.innerHTML = `${header}<tbody>${body}</tbody>`;
+  els.invoices_table.querySelectorAll("[data-select-invoice]").forEach((button) => {
     button.addEventListener("click", () => {
       const id = String(button.getAttribute("data-select-invoice") || "");
       state.selectedInvoiceId = id;
@@ -2005,7 +2023,7 @@ function renderInvoicesTable() {
       if (invoice) fillInvoiceForm(invoice);
     });
   });
-  els.invoicesTable.querySelectorAll("[data-invoice-sent]").forEach((input) => {
+  els.invoices_table.querySelectorAll("[data-invoice-sent]").forEach((input) => {
     input.addEventListener("change", async () => {
       const invoiceId = String(input.getAttribute("data-invoice-sent") || "");
       await toggleInvoiceSent(invoiceId, Boolean(input.checked));
@@ -2014,7 +2032,7 @@ function renderInvoicesTable() {
 }
 
 function onInvoiceSelectChange() {
-  const id = String(els.invoiceSelect?.value || "");
+  const id = String(els.invoice_select?.value || "");
   state.selectedInvoiceId = id;
   clearInvoiceStatus();
   if (!id) {
@@ -2027,37 +2045,37 @@ function onInvoiceSelectChange() {
 
 function fillInvoiceForm(invoice) {
   state.selectedInvoiceId = invoice.id;
-  if (els.invoiceSelect) els.invoiceSelect.value = invoice.id;
-  if (els.invoiceNumberInput) els.invoiceNumberInput.value = invoice.invoice_number || "";
-  if (els.invoiceCurrencyInput) setSelectValue(els.invoiceCurrencyInput, invoice.currency || "USD");
+  if (els.invoice_select) els.invoice_select.value = invoice.id;
+  if (els.invoice_number_input) els.invoice_number_input.value = invoice.invoice_number || "";
+  if (els.invoice_currency_input) setSelectValue(els.invoice_currency_input, invoice.currency || "USD");
   renderInvoiceMoneyLabels();
-  if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = normalizeDateInput(invoice.issue_date);
-  if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = normalizeDateInput(invoice.due_date);
-  if (els.invoiceTitleInput) els.invoiceTitleInput.value = invoice.title || "";
-  if (els.invoiceComponentsInput) els.invoiceComponentsInput.value = invoiceComponentsToText(invoice.components || [], invoice.currency || "USD");
-  if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = invoice.due_amount_cents ? formatMoneyInputValue(invoice.due_amount_cents, invoice.currency || "USD") : "";
-  if (els.invoiceVatInput) {
+  if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = normalizeDateInput(invoice.issue_date);
+  if (els.invoice_due_date_input) els.invoice_due_date_input.value = normalizeDateInput(invoice.due_date);
+  if (els.invoice_title_input) els.invoice_title_input.value = invoice.title || "";
+  if (els.invoice_components_input) els.invoice_components_input.value = invoiceComponentsToText(invoice.components || [], invoice.currency || "USD");
+  if (els.invoice_due_amount_input) els.invoice_due_amount_input.value = invoice.due_amount_cents ? formatMoneyInputValue(invoice.due_amount_cents, invoice.currency || "USD") : "";
+  if (els.invoice_vat_input) {
     const vat = Number(invoice.vat_percentage || 0);
-    els.invoiceVatInput.value = Number.isFinite(vat) ? String(vat) : "0";
+    els.invoice_vat_input.value = Number.isFinite(vat) ? String(vat) : "0";
   }
-  if (els.invoiceNotesInput) els.invoiceNotesInput.value = invoice.notes || "";
+  if (els.invoice_notes_input) els.invoice_notes_input.value = invoice.notes || "";
   applyInvoicePermissions();
   markInvoiceSnapshotClean();
 }
 
 function resetInvoiceForm() {
   state.selectedInvoiceId = "";
-  if (els.invoiceSelect) els.invoiceSelect.value = "";
-  if (els.invoiceNumberInput) els.invoiceNumberInput.value = "";
-  if (els.invoiceCurrencyInput) setSelectValue(els.invoiceCurrencyInput, "USD");
+  if (els.invoice_select) els.invoice_select.value = "";
+  if (els.invoice_number_input) els.invoice_number_input.value = "";
+  if (els.invoice_currency_input) setSelectValue(els.invoice_currency_input, "USD");
   renderInvoiceMoneyLabels();
-  if (els.invoiceIssueDateInput) els.invoiceIssueDateInput.value = "";
-  if (els.invoiceDueDateInput) els.invoiceDueDateInput.value = "";
-  if (els.invoiceTitleInput) els.invoiceTitleInput.value = "";
-  if (els.invoiceComponentsInput) els.invoiceComponentsInput.value = "";
-  if (els.invoiceDueAmountInput) els.invoiceDueAmountInput.value = "";
-  if (els.invoiceVatInput) els.invoiceVatInput.value = "0";
-  if (els.invoiceNotesInput) els.invoiceNotesInput.value = "";
+  if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = "";
+  if (els.invoice_due_date_input) els.invoice_due_date_input.value = "";
+  if (els.invoice_title_input) els.invoice_title_input.value = "";
+  if (els.invoice_components_input) els.invoice_components_input.value = "";
+  if (els.invoice_due_amount_input) els.invoice_due_amount_input.value = "";
+  if (els.invoice_vat_input) els.invoice_vat_input.value = "0";
+  if (els.invoice_notes_input) els.invoice_notes_input.value = "";
   clearInvoiceStatus();
   applyInvoicePermissions();
   markInvoiceSnapshotClean();
@@ -2070,7 +2088,7 @@ function invoiceComponentsToText(components, currency) {
 }
 
 function parseInvoiceComponentsText(text) {
-  const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
+  const currency = normalizeCurrencyCode(els.invoice_currency_input?.value || "USD");
   const lines = String(text || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -2091,25 +2109,25 @@ function parseInvoiceComponentsText(text) {
 }
 
 function collectInvoicePayload() {
-  const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
-  const components = parseInvoiceComponentsText(els.invoiceComponentsInput?.value || "");
-  const dueAmountRaw = String(els.invoiceDueAmountInput?.value || "").trim();
+  const currency = normalizeCurrencyCode(els.invoice_currency_input?.value || "USD");
+  const components = parseInvoiceComponentsText(els.invoice_components_input?.value || "");
+  const dueAmountRaw = String(els.invoice_due_amount_input?.value || "").trim();
   const dueAmount = dueAmountRaw ? parseMoneyInputValue(dueAmountRaw, currency) : null;
   if (dueAmountRaw && (!Number.isFinite(dueAmount) || dueAmount < 1)) {
     throw new Error("Due amount must be a positive number.");
   }
-  const vatRaw = String(els.invoiceVatInput?.value || "").trim();
+  const vatRaw = String(els.invoice_vat_input?.value || "").trim();
   const vat = vatRaw ? Number(vatRaw) : 0;
   if (!Number.isFinite(vat) || vat < 0 || vat > 100) {
     throw new Error("VAT must be between 0 and 100.");
   }
   return {
-    invoice_number: String(els.invoiceNumberInput?.value || "").trim(),
+    invoice_number: String(els.invoice_number_input?.value || "").trim(),
     currency,
-    issue_date: String(els.invoiceIssueDateInput?.value || "").trim(),
-    due_date: String(els.invoiceDueDateInput?.value || "").trim(),
-    title: String(els.invoiceTitleInput?.value || "").trim(),
-    notes: String(els.invoiceNotesInput?.value || "").trim(),
+    issue_date: String(els.invoice_issue_date_input?.value || "").trim(),
+    due_date: String(els.invoice_due_date_input?.value || "").trim(),
+    title: String(els.invoice_title_input?.value || "").trim(),
+    notes: String(els.invoice_notes_input?.value || "").trim(),
     vat_percentage: vat,
     due_amount_cents: dueAmount ? Math.round(dueAmount) : null,
     components
@@ -2128,12 +2146,17 @@ async function createInvoice() {
     return;
   }
   const isUpdate = Boolean(state.selectedInvoiceId);
-  const path = isUpdate
-    ? `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(state.selectedInvoiceId)}`
-    : `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices`;
-  const method = isUpdate ? "PATCH" : "POST";
-  const result = await fetchApi(path, {
-    method,
+  const request = isUpdate
+    ? bookingInvoiceUpdateRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id, invoice_id: state.selectedInvoiceId }
+    })
+    : bookingInvoiceCreateRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id }
+    });
+  const result = await fetchApi(request.url, {
+    method: request.method,
     body: {
       ...payload,
       booking_hash: state.booking.booking_hash
@@ -2156,16 +2179,17 @@ async function toggleInvoiceSent(invoiceId, sent) {
   if (!state.booking || !invoiceId) return;
   if (!state.permissions.canEditBooking) return;
   clearInvoiceStatus();
-  const result = await fetchApi(
-    `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/invoices/${encodeURIComponent(invoiceId)}`,
-    {
-      method: "PATCH",
-      body: {
-        sent_to_recipient: Boolean(sent),
-        booking_hash: state.booking.booking_hash
-      }
+  const request = bookingInvoiceUpdateRequest({
+    baseURL: apiOrigin,
+    params: { booking_id: state.booking.id, invoice_id: invoiceId }
+  });
+  const result = await fetchApi(request.url, {
+    method: request.method,
+    body: {
+      sent_to_recipient: Boolean(sent),
+      booking_hash: state.booking.booking_hash
     }
-  );
+  });
   if (!result?.invoice) return;
   if (result.booking) {
     state.booking = result.booking;
@@ -2179,8 +2203,8 @@ async function toggleInvoiceSent(invoiceId, sent) {
 }
 
 function setInvoiceStatus(message) {
-  if (!els.invoiceStatus) return;
-  els.invoiceStatus.textContent = message;
+  if (!els.invoice_status) return;
+  els.invoice_status.textContent = message;
 }
 
 function clearInvoiceStatus() {
@@ -2188,8 +2212,8 @@ function clearInvoiceStatus() {
 }
 
 function setPricingStatus(message) {
-  if (!els.pricingStatus) return;
-  els.pricingStatus.textContent = message;
+  if (!els.pricing_status) return;
+  els.pricing_status.textContent = message;
 }
 
 function clearPricingStatus() {
@@ -2197,8 +2221,8 @@ function clearPricingStatus() {
 }
 
 function setOfferStatus(message) {
-  if (!els.offerStatus) return;
-  els.offerStatus.textContent = message;
+  if (!els.offer_status) return;
+  els.offer_status.textContent = message;
 }
 
 function clearOfferStatus() {
@@ -2208,26 +2232,26 @@ function clearOfferStatus() {
 function applyInvoicePermissions() {
   const disabled = !state.permissions.canEditBooking;
   [
-    els.invoiceSelect,
-    els.invoiceNumberInput,
-    els.invoiceCurrencyInput,
-    els.invoiceIssueDateInput,
-    els.invoiceIssueTodayBtn,
-    els.invoiceDueDateInput,
-    els.invoiceDueMonthBtn,
-    els.invoiceTitleInput,
-    els.invoiceComponentsInput,
-    els.invoiceDueAmountInput,
-    els.invoiceVatInput,
-    els.invoiceNotesInput
+    els.invoice_select,
+    els.invoice_number_input,
+    els.invoice_currency_input,
+    els.invoice_issue_date_input,
+    els.invoice_issue_today_btn,
+    els.invoice_due_date_input,
+    els.invoice_due_month_btn,
+    els.invoice_title_input,
+    els.invoice_components_input,
+    els.invoice_due_amount_input,
+    els.invoice_vat_input,
+    els.invoice_notes_input
   ].forEach((el) => {
     if (el) el.disabled = disabled;
   });
 }
 
 function collectPricingPayload() {
-  const currency = normalizeCurrencyCode(els.pricingCurrencyInput?.value || "USD");
-  const agreedNet = parseMoneyInputValue(els.pricingAgreedNetInput?.value || "0", currency);
+  const currency = normalizeCurrencyCode(els.pricing_currency_input?.value || "USD");
+  const agreedNet = parseMoneyInputValue(els.pricing_agreed_net_input?.value || "0", currency);
   if (!currency) throw new Error("Currency is required.");
   if (!Number.isFinite(agreedNet) || agreedNet < 0) throw new Error("Agreed net amount must be zero or positive.");
 
@@ -2304,7 +2328,7 @@ function collectOfferCategoryRules() {
 }
 
 function collectOfferComponents({ throwOnError = true } = {}) {
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const rows = Array.from(document.querySelectorAll("[data-offer-component-details]"));
   const components = [];
   for (const input of rows) {
@@ -2340,7 +2364,7 @@ function collectOfferComponents({ throwOnError = true } = {}) {
 }
 
 function collectOfferPayload() {
-  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferredCurrency || "USD");
+  const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
   const category_rules = collectOfferCategoryRules();
   const components = collectOfferComponents();
   return {
@@ -2351,8 +2375,9 @@ function collectOfferPayload() {
 }
 
 async function convertOfferComponentsInBackend(currentCurrency, nextCurrency, components) {
-  const response = await fetchApi(`${apiOrigin}/api/v1/offers/exchange-rates`, {
-    method: "POST",
+  const request = offerExchangeRatesRequest({ baseURL: apiOrigin });
+  const response = await fetchApi(request.url, {
+    method: request.method,
     body: {
       from_currency: currentCurrency,
       to_currency: nextCurrency,
@@ -2387,16 +2412,16 @@ async function convertOfferComponentsInBackend(currentCurrency, nextCurrency, co
 }
 
 async function handleOfferCurrencyChange() {
-  if (!state.booking || !state.offerDraft || !els.offerCurrencyInput) return;
+  if (!state.booking || !state.offerDraft || !els.offer_currency_input) return;
   if (!state.permissions.canEditBooking) {
-    setSelectValue(els.offerCurrencyInput, normalizeCurrencyCode(state.offerDraft.currency || "USD"));
+    setSelectValue(els.offer_currency_input, normalizeCurrencyCode(state.offerDraft.currency || "USD"));
     return;
   }
 
-  const nextCurrency = normalizeCurrencyCode(els.offerCurrencyInput.value);
-  const currentCurrency = normalizeCurrencyCode(state.offerDraft.currency || state.booking.preferredCurrency || "USD");
+  const nextCurrency = normalizeCurrencyCode(els.offer_currency_input.value);
+  const currentCurrency = normalizeCurrencyCode(state.offerDraft.currency || state.booking.preferred_currency || "USD");
   if (!nextCurrency || nextCurrency === currentCurrency) {
-    setSelectValue(els.offerCurrencyInput, currentCurrency);
+    setSelectValue(els.offer_currency_input, currentCurrency);
     return;
   }
 
@@ -2405,17 +2430,17 @@ async function handleOfferCurrencyChange() {
     components = collectOfferComponents({ throwOnError: true });
   } catch (error) {
     setOfferStatus(String(error?.message || error));
-    setSelectValue(els.offerCurrencyInput, currentCurrency);
+    setSelectValue(els.offer_currency_input, currentCurrency);
     return;
   }
 
   const restoreSelectState = () => {
-    if (els.offerCurrencyInput) {
-      els.offerCurrencyInput.disabled = false;
+    if (els.offer_currency_input) {
+      els.offer_currency_input.disabled = false;
     }
   };
-  if (els.offerCurrencyInput) {
-    els.offerCurrencyInput.disabled = true;
+  if (els.offer_currency_input) {
+    els.offer_currency_input.disabled = true;
   }
   setOfferStatus("Converting prices...");
   try {
@@ -2443,7 +2468,7 @@ async function handleOfferCurrencyChange() {
   } catch (error) {
     setOfferStatus(`Exchange rate lookup failed: ${error?.message || error}`);
     restoreSelectState();
-    setSelectValue(els.offerCurrencyInput, currentCurrency);
+    setSelectValue(els.offer_currency_input, currentCurrency);
     return;
   }
   restoreSelectState();
@@ -2462,8 +2487,9 @@ async function saveOffer() {
     return;
   }
 
-  const result = await fetchBookingMutation(bookingOfferRequest({ baseURL: apiOrigin, params: { bookingId: state.booking.id } }).url, {
-    method: "PATCH",
+  const request = bookingOfferRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
     body: {
       booking_hash: state.booking.booking_hash,
       offer,
@@ -2593,15 +2619,15 @@ function parseMoneyInputValue(value, currency) {
 }
 
 function renderInvoiceMoneyLabels() {
-  const currency = normalizeCurrencyCode(els.invoiceCurrencyInput?.value || "USD");
-  if (els.invoiceDueAmountLabel) {
-    els.invoiceDueAmountLabel.textContent = `Due Amount (${currency}, optional)`;
+  const currency = normalizeCurrencyCode(els.invoice_currency_input?.value || "USD");
+  if (els.invoice_due_amount_label) {
+    els.invoice_due_amount_label.textContent = `Due Amount (${currency}, optional)`;
   }
-  if (els.invoiceComponentsLabel) {
-    els.invoiceComponentsLabel.textContent = `Components (one per line: Description | Quantity | Unit amount in ${currency})`;
+  if (els.invoice_components_label) {
+    els.invoice_components_label.textContent = `Components (one per line: Description | Quantity | Unit amount in ${currency})`;
   }
-  if (els.invoiceDueAmountInput) {
-    els.invoiceDueAmountInput.step = isWholeUnitCurrency(currency) ? "1" : "0.01";
+  if (els.invoice_due_amount_input) {
+    els.invoice_due_amount_input.step = isWholeUnitCurrency(currency) ? "1" : "0.01";
   }
 }
 

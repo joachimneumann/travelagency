@@ -678,8 +678,8 @@ export function createPricingHelpers({
       return { ok: false, error: "Request body is required." };
     }
 
-    const fromCurrency = parseCurrencyForExchange(payload.from_currency || payload.fromCurrency);
-    const toCurrency = parseCurrencyForExchange(payload.to_currency || payload.toCurrency);
+    const fromCurrency = parseCurrencyForExchange(payload.from_currency);
+    const toCurrency = parseCurrencyForExchange(payload.to_currency);
     if (!fromCurrency) return { ok: false, error: "from_currency is required and must be a valid currency." };
     if (!toCurrency) return { ok: false, error: "to_currency is required and must be a valid currency." };
 

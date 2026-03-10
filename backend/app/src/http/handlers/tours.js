@@ -39,7 +39,7 @@ function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
 
   if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id);
   if (isCreate || payload.title !== undefined) next.title = normalizeText(payload.title);
-  if (payload.shortDescription !== undefined) next.shortDescription = normalizeText(payload.shortDescription);
+  if (payload.short_description !== undefined) next.short_description = normalizeText(payload.short_description);
   if (isCreate || payload.destinations !== undefined) {
     next.destinations = normalizeStringArray(payload.destinations);
   }
@@ -61,9 +61,9 @@ function buildTourPayload(payload, { existing = null, isCreate = false } = {}) {
     const travel_duration_days = safeInt(payload.travel_duration_days);
     next.travel_duration_days = travel_duration_days === null ? 0 : travel_duration_days;
   }
-  if (payload.budget_lower_USD !== undefined || isCreate) {
-    const budget_lower_USD = safeInt(payload.budget_lower_USD);
-    next.budget_lower_USD = budget_lower_USD === null ? 0 : budget_lower_USD;
+  if (payload.budget_lower_usd !== undefined || isCreate) {
+    const budget_lower_usd = safeInt(payload.budget_lower_usd);
+    next.budget_lower_usd = budget_lower_usd === null ? 0 : budget_lower_usd;
   }
   if (payload.rating !== undefined || isCreate) {
     const rating = safeFloat(payload.rating);
@@ -94,7 +94,7 @@ function filterAndSortTours(tours, query) {
     const haystack = [
       tour.id,
       tour.title,
-      tour.shortDescription,
+      tour.short_description,
       ...tourDestinations(tour),
       ...(Array.isArray(tour.highlights) ? tour.highlights : []),
       ...(Array.isArray(tour.styles) ? tour.styles : [])
@@ -142,14 +142,9 @@ async function handlePublicListTours(req, res) {
     pagination: {
       page: Math.floor(offset / limit) + 1,
       page_size: limit,
-      pageSize: limit,
       total_items: filtered.length,
-      totalItems: filtered.length,
       total_pages: Math.max(1, Math.ceil(filtered.length / limit))
-    },
-    total: filtered.length,
-    offset,
-    limit
+    }
   };
   const payloadText = JSON.stringify(payload);
   const etag = `W/"${createHash("sha1").update(payloadText).digest("hex")}"`;

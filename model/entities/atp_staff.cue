@@ -6,13 +6,13 @@ import (
 )
 
 #ATPStaff: {
-	id:                common.#Identifier
-	preferredUsername: string & !=""
-	displayName?:      string
-	email?:            common.#Email
-	roles: [...enums.#ATPStaffRole]
-	staffId?:   common.#Identifier
-	active?:    bool
-	createdAt?: common.#Timestamp
-	updatedAt?: common.#Timestamp
+	id:                 common.#Identifier
+	preferred_username: string & !=""
+	display_name?:      string
+	email?:             common.#Email
+	roles:              [...enums.#ATPStaffRole]
+	staff_id?:          common.#Identifier
+	active?:            bool
+	created_at?:        common.#Timestamp
+	updated_at?:        common.#Timestamp
 }

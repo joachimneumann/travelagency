@@ -6,13 +6,13 @@ package api
 }
 
 #MobileAppVersionGate: {
-	minSupportedVersion: string & !=""
-	latestVersion:       string & !=""
-	forceUpdate:         bool
+	min_supported_version: string & !=""
+	latest_version:        string & !=""
+	force_update:          bool
 }
 
 #APIContractVersion: {
-	contractVersion: string & !=""
+	contract_version: string & !=""
 }
 
 #MobileBootstrap: {

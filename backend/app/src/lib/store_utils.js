@@ -18,19 +18,6 @@ export function createStoreUtils({
   convertBookingPricingToBaseCurrency,
   convertBookingOfferToBaseCurrency
 }) {
-  function parseLegacyBudgetRange(value) {
-    const text = normalizeText(value);
-    if (!text || /[€₫฿]/.test(text)) return { budget_lower_USD: null, budget_upper_USD: null };
-    const matches = text.match(/\d[\d,]*/g) || [];
-    const numbers = matches
-      .map((item) => Number.parseInt(item.replace(/,/g, ""), 10))
-      .filter((item) => Number.isInteger(item) && item >= 0);
-    if (!numbers.length) return { budget_lower_USD: null, budget_upper_USD: null };
-    if (text.includes("+")) return { budget_lower_USD: numbers[0], budget_upper_USD: null };
-    if (numbers.length >= 2) return { budget_lower_USD: numbers[0], budget_upper_USD: numbers[1] };
-    return { budget_lower_USD: numbers[0], budget_upper_USD: null };
-  }
-
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
@@ -50,12 +37,6 @@ export function createStoreUtils({
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       const normalizedBooking = normalizeStoredBookingRecord(booking, parsed);
       syncBookingAtpStaffFields(normalizedBooking);
-      if (normalizedBooking.budget_lower_USD === undefined && normalizedBooking.budget_upper_USD === undefined) {
-        const budgetRange = parseLegacyBudgetRange(booking.budget);
-        normalizedBooking.budget_lower_USD = budgetRange.budget_lower_USD;
-        normalizedBooking.budget_upper_USD = budgetRange.budget_upper_USD;
-      }
-      delete normalizedBooking.budget;
       normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
       normalizedBooking.offer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
       normalizedBooking.pricing = await convertBookingPricingToBaseCurrency(normalizedBooking.pricing);

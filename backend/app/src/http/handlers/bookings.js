@@ -74,7 +74,7 @@ export function createBookingHandlers(deps) {
 
   function normalizePersonEmails(person) {
     return unique(
-      [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
+      [...(Array.isArray(person?.emails) ? person.emails : [])]
         .map((value) => normalizeEmail(value))
         .filter(Boolean)
     );
@@ -82,7 +82,7 @@ export function createBookingHandlers(deps) {
 
   function normalizePersonPhoneNumbers(person) {
     return unique(
-      [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
+      [...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
         .map((value) => normalizePhone(value))
         .filter(Boolean)
     );
@@ -273,8 +273,8 @@ export function createBookingHandlers(deps) {
       normalizeText(booking?.stage),
       normalizeText(booking?.notes),
       normalizeText(booking?.atp_staff_name),
-      ...normalizeStringArray(booking?.destinations || booking?.destination),
-      ...normalizeStringArray(booking?.travel_styles || booking?.style),
+      ...normalizeStringArray(booking?.destinations),
+      ...normalizeStringArray(booking?.travel_styles),
       normalizeText(contact.name),
       normalizeText(contact.email),
       normalizeText(contact.phone_number),
@@ -336,26 +336,10 @@ export function createBookingHandlers(deps) {
   }
 
   async function buildBookingPayload(booking) {
-    const response = await buildBookingReadModel({
+    return buildBookingReadModel({
       ...booking,
       persons: getBookingPersons(booking)
     });
-    if (!response.serviceLevelAgreementDueAt && response.service_level_agreement_due_at) {
-      response.serviceLevelAgreementDueAt = response.service_level_agreement_due_at;
-    }
-    if (!response.createdAt && response.created_at) {
-      response.createdAt = response.created_at;
-    }
-    if (!response.updatedAt && response.updated_at) {
-      response.updatedAt = response.updated_at;
-    }
-    if (!response.destinations && response.destination) {
-      response.destinations = response.destination;
-    }
-    if (!response.travel_styles && response.style) {
-      response.travel_styles = response.style;
-    }
-    return response;
   }
 
   async function buildBookingDetailResponse(booking) {
@@ -450,8 +434,8 @@ export function createBookingHandlers(deps) {
     const inputPhoneNumber = normalizePhone(payload.phone_number);
     const inputPreferredLanguage = normalizeText(payload.preferred_language) || null;
     const preferredCurrency = safeCurrency(payload.preferred_currency || BASE_CURRENCY);
-    const budgetLowerUSD = normalizeText(payload.budget_lower_USD) ? safeInt(payload.budget_lower_USD) : null;
-    const budgetUpperUSD = normalizeText(payload.budget_upper_USD) ? safeInt(payload.budget_upper_USD) : null;
+    const budgetLowerUsd = normalizeText(payload.budget_lower_usd) ? safeInt(payload.budget_lower_usd) : null;
+    const budgetUpperUsd = normalizeText(payload.budget_upper_usd) ? safeInt(payload.budget_upper_usd) : null;
     const travelDurationMin = normalizeText(payload.travel_duration_days_min) ? safeInt(payload.travel_duration_days_min) : null;
     const travelDurationMax = normalizeText(payload.travel_duration_days_max) ? safeInt(payload.travel_duration_days_max) : null;
     const bookingId = `booking_${randomUUID()}`;
@@ -459,7 +443,7 @@ export function createBookingHandlers(deps) {
     const submission = {
       destinations: normalizeStringArray(payload.destinations),
       travel_style: normalizeStringArray(payload.travel_style),
-      booking_name: normalizeText(payload.booking_name || payload.tourTitle || payload.tour_title) || null,
+      booking_name: normalizeText(payload.booking_name || payload.tour_title) || null,
       travel_month: normalizeText(payload.travel_month) || null,
       number_of_travelers: normalizeText(payload.number_of_travelers) ? safeInt(payload.number_of_travelers) : null,
       preferred_currency: preferredCurrency,
@@ -468,14 +452,14 @@ export function createBookingHandlers(deps) {
       name: normalizeText(payload.name) || null,
       email: normalizeEmail(payload.email) || null,
       phone_number: inputPhoneNumber || null,
-      budget_lower_USD: Number.isInteger(budgetLowerUSD) ? budgetLowerUSD : null,
-      budget_upper_USD: Number.isInteger(budgetUpperUSD) ? budgetUpperUSD : null,
+      budget_lower_usd: Number.isInteger(budgetLowerUsd) ? budgetLowerUsd : null,
+      budget_upper_usd: Number.isInteger(budgetUpperUsd) ? budgetUpperUsd : null,
       preferred_language: inputPreferredLanguage || null,
       notes: normalizeText(payload.notes) || null,
-      submittedAt: now
+      submitted_at: now
     };
 
-    const initialBookingName = normalizeText(payload.booking_name || payload.tourTitle || payload.tour_title) || null;
+    const initialBookingName = normalizeText(payload.booking_name || payload.tour_title) || null;
 
     const booking = {
       id: bookingId,
@@ -485,9 +469,7 @@ export function createBookingHandlers(deps) {
       atp_staff_name: null,
       service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
       destinations: submission.destinations,
-      destination: submission.destinations,
       travel_styles: submission.travel_style,
-      style: submission.travel_style,
       web_form_travel_month: submission.travel_month,
       travel_start_day: null,
       travel_end_day: null,
@@ -499,15 +481,15 @@ export function createBookingHandlers(deps) {
       pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
       source: {
-        page_url: normalizeText(payload.pageUrl),
+        page_url: normalizeText(payload.page_url),
         ip_address: ipAddress || null,
         ip_country_guess: ipCountryGuess || null,
         utm_source: normalizeText(payload.utm_source),
         utm_medium: normalizeText(payload.utm_medium),
         utm_campaign: normalizeText(payload.utm_campaign),
         referrer: normalizeText(payload.referrer),
-        tour_id: normalizeText(payload.tourId || payload.tour_id) || null,
-        tour_title: normalizeText(payload.tourTitle || payload.tour_title) || null
+        tour_id: normalizeText(payload.tour_id) || null,
+        tour_title: normalizeText(payload.tour_title) || null
       },
       idempotency_key: idempotencyKey || null,
       created_at: now,

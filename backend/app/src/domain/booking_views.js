@@ -23,7 +23,7 @@ export function createBookingViewHelpers({
   function normalizePersonEmails(person) {
     return Array.from(
       new Set(
-        [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
+        [...(Array.isArray(person?.emails) ? person.emails : [])]
           .map((value) => normalizeEmail(value))
           .filter(Boolean)
       )
@@ -33,7 +33,7 @@ export function createBookingViewHelpers({
   function normalizePersonPhoneNumbers(person) {
     return Array.from(
       new Set(
-        [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
+        [...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
           .map((value) => normalizeText(value))
           .filter(Boolean)
       )
@@ -248,10 +248,9 @@ export function createBookingViewHelpers({
     delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const bookingHash = computeBookingHash(normalizedBooking);
-    delete normalizedBooking.preferred_currency;
     return {
       ...normalizedBooking,
-      preferredCurrency,
+      preferred_currency: preferredCurrency,
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, preferredCurrency),
       booking_hash: bookingHash
@@ -384,8 +383,8 @@ export function createBookingViewHelpers({
       const persons = getBookingPersons(booking);
       const haystack = [
         booking.id,
-        ...normalizeStringArray(booking.destinations || booking.destination),
-        ...normalizeStringArray(booking.travel_styles || booking.style),
+        ...normalizeStringArray(booking.destinations),
+        ...normalizeStringArray(booking.travel_styles),
         booking.atp_staff_name,
         booking.notes,
         contact.name,

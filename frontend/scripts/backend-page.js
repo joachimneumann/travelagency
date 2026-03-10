@@ -428,8 +428,8 @@ function renderBookings(items) {
         <td>${escapeHtml(booking.stage)}</td>
         <td>${escapeHtml(primaryLabel)}</td>
         <td>${escapeHtml(personsSummary)}</td>
-        <td>${escapeHtml(Array.isArray(booking.destination) ? booking.destination.join(", ") : booking.destination || "-")}</td>
-        <td>${escapeHtml(Array.isArray(booking.style) ? booking.style.join(", ") : booking.style || "-")}</td>
+        <td>${escapeHtml(Array.isArray(booking.destinations) ? booking.destinations.join(", ") : booking.destinations || "-")}</td>
+        <td>${escapeHtml(Array.isArray(booking.travel_styles) ? booking.travel_styles.join(", ") : booking.travel_styles || "-")}</td>
         <td>${escapeHtml(booking.atp_staff_name || "Unassigned")}</td>
         <td>${escapeHtml(formatDateTime(booking.service_level_agreement_due_at))}</td>
       </tr>`;
@@ -457,7 +457,7 @@ function renderTours(items) {
         <td>${escapeHtml(countries || "-")}</td>
         <td>${escapeHtml(styles || "-")}</td>
         <td>${escapeHtml(String(tour.travel_duration_days ?? "-"))}</td>
-        <td>${escapeHtml(formatIntegerWithGrouping(tour.budget_lower_USD ?? "-"))}</td>
+        <td>${escapeHtml(formatIntegerWithGrouping(tour.budget_lower_usd ?? "-"))}</td>
         <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
       </tr>`;
     })

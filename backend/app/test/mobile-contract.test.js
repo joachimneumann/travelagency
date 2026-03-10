@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
 import { readFile, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,6 +21,7 @@ process.env.MOBILE_FORCE_UPDATE = "false";
 const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
 const { createBackendHandler } = await import("../src/server.js");
 const handler = await createBackendHandler({ port: 8787 });
+const HAS_MAGICK = spawnSync("magick", ["-version"], { stdio: "ignore" }).status === 0;
 
 function endpointPath(key) {
   const endpoint = contractMeta.endpoints.find((candidate) => candidate.key === key);
@@ -138,12 +140,12 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.persons[0].id, "string");
   assert.equal(typeof booking.persons[0].name, "string");
   assert.ok(Array.isArray(booking.persons[0].roles));
-  assert.equal(typeof booking.preferredCurrency, "string");
+  assert.equal(typeof booking.preferred_currency, "string");
   assert.ok(Array.isArray(booking.destinations));
   assert.ok(Array.isArray(booking.travel_styles));
-  if (booking.serviceLevelAgreementDueAt) assertISODateLike(booking.serviceLevelAgreementDueAt, "booking.serviceLevelAgreementDueAt");
-  if (booking.createdAt) assertISODateLike(booking.createdAt, "booking.createdAt");
-  if (booking.updatedAt) assertISODateLike(booking.updatedAt, "booking.updatedAt");
+  if (booking.service_level_agreement_due_at) assertISODateLike(booking.service_level_agreement_due_at, "booking.service_level_agreement_due_at");
+  if (booking.created_at) assertISODateLike(booking.created_at, "booking.created_at");
+  if (booking.updated_at) assertISODateLike(booking.updated_at, "booking.updated_at");
 }
 
 function catalogCodes(items) {
@@ -182,13 +184,13 @@ test("booking detail, activities, invoices, and atp_staff responses conform to t
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
-  const detailResult = await requestJson(endpointPath("booking_detail").replace("{bookingId}", bookingId), apiHeaders());
+  const detailResult = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
   assert.equal(detailResult.status, 200);
   assert.deepEqual(Object.keys(detailResult.body).sort(), ["booking"]);
   assertBookingShape(detailResult.body.booking);
   assert.equal(detailResult.body.booking.id, bookingId);
 
-  const activitiesResult = await requestJson(endpointPath("booking_activities").replace("{bookingId}", bookingId), apiHeaders());
+  const activitiesResult = await requestJson(endpointPath("booking_activities").replace("{booking_id}", bookingId), apiHeaders());
   assert.equal(activitiesResult.status, 200);
   assert.ok(Array.isArray(activitiesResult.body.activities));
   for (const activity of activitiesResult.body.activities) {
@@ -200,7 +202,7 @@ test("booking detail, activities, invoices, and atp_staff responses conform to t
     assertISODateLike(activity.created_at, "activity.created_at");
   }
 
-  const invoicesResult = await requestJson(endpointPath("booking_invoices").replace("{bookingId}", bookingId), apiHeaders());
+  const invoicesResult = await requestJson(endpointPath("booking_invoices").replace("{booking_id}", bookingId), apiHeaders());
   assert.equal(invoicesResult.status, 200);
   assert.ok(Array.isArray(invoicesResult.body.items));
   assert.equal(typeof invoicesResult.body.total, "number");
@@ -219,10 +221,10 @@ test("booking offer patch enforces preferred currency", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
-  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{bookingId}", bookingId), apiHeaders());
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
   assert.equal(detailBefore.status, 200);
   const booking = detailBefore.body.booking;
-  const offerCurrency = booking.offer?.currency || booking.preferredCurrency || booking.pricing?.currency || "USD";
+  const offerCurrency = booking.offer?.currency || booking.preferred_currency || booking.pricing?.currency || "USD";
   const bookingHash = booking.booking_hash;
   assert.equal(typeof bookingHash, "string");
 
@@ -230,7 +232,7 @@ test("booking offer patch enforces preferred currency", async () => {
   assert.equal(typeof currentOffer, "object");
 
   const patchResult = await requestJson(
-    endpointPath("booking_offer").replace("{bookingId}", bookingId),
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
     apiHeaders(),
     {
       method: "PATCH",
@@ -248,7 +250,7 @@ test("booking offer patch enforces preferred currency", async () => {
 
   const mismatchCurrency = offerCurrency === "USD" ? "VND" : "USD";
   const conversionResult = await requestJson(
-    endpointPath("booking_offer").replace("{bookingId}", bookingId),
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
     apiHeaders(),
     {
       method: "PATCH",
@@ -265,4 +267,191 @@ test("booking offer patch enforces preferred currency", async () => {
   assert.equal(conversionResult.status, 200);
   assert.equal(conversionResult.body.booking.offer.currency, offerCurrency);
   assert.equal(typeof conversionResult.body.booking.offer.total_price_cents, "number");
+});
+
+test("booking name and persons endpoints update the booking", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const bookingBefore = detailBefore.body.booking;
+  const booking_hash = bookingBefore.booking_hash;
+  const original_person = bookingBefore.persons[0];
+  assert.equal(typeof original_person.id, "string");
+
+  const nameResult = await requestJson(
+    endpointPath("booking_name").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        booking_hash,
+        name: "Vietnam Adventure Journey",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(nameResult.status, 200);
+  assert.equal(nameResult.body.booking.name, "Vietnam Adventure Journey");
+  const detailAfterName = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailAfterName.status, 200);
+  const booking_hash_after_name = detailAfterName.body.booking.booking_hash;
+
+  const personsPayload = [
+    {
+      ...original_person,
+      roles: ["primary_contact", "decision_maker"],
+      emails: ["planner@example.com"]
+    },
+    {
+      id: `${booking_id}_traveler_2`,
+      name: "Traveler Two",
+      roles: ["traveler"],
+      emails: ["traveler2@example.com"],
+      phone_numbers: ["+15557654321"]
+    }
+  ];
+  const personsResult = await requestJson(
+    endpointPath("booking_persons").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        booking_hash: booking_hash_after_name,
+        persons: personsPayload,
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(personsResult.status, 200);
+  assert.equal(personsResult.body.booking.persons.length, 2);
+  assert.deepEqual(personsResult.body.booking.persons[0].roles, ["primary_contact", "decision_maker"]);
+  assert.equal(personsResult.body.booking.persons[1].name, "Traveler Two");
+  const detailAfterPersons = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailAfterPersons.status, 200);
+});
+
+test("booking person photo endpoint updates the booking when ImageMagick is available", async (t) => {
+  if (!HAS_MAGICK) {
+    t.skip("ImageMagick `magick` is not installed in this environment.");
+    return;
+  }
+
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const bookingBefore = detailBefore.body.booking;
+  const booking_hash = bookingBefore.booking_hash;
+  const original_person = bookingBefore.persons[0];
+
+  const photoResult = await requestJson(
+    endpointPath("booking_person_photo")
+      .replace("{booking_id}", booking_id)
+      .replace("{person_id}", original_person.id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        booking_hash,
+        filename: "profile.png",
+        data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(photoResult.status, 200);
+  assert.equal(typeof photoResult.body.booking.persons[0].photo_ref, "string");
+  assert.ok(photoResult.body.booking.persons[0].photo_ref.includes("/public/v1/booking-person-photos/"));
+});
+
+test("booking invoice create/update and offer exchange-rates endpoints work", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking_hash = detailBefore.body.booking.booking_hash;
+
+  const invoiceCreateResult = await requestJson(
+    endpointPath("booking_invoice_create").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        booking_hash,
+        invoice_number: "ATP-TEST-001",
+        currency: "USD",
+        title: "Planning deposit",
+        components: [
+          {
+            description: "Deposit",
+            quantity: 2,
+            unit_amount_cents: 25000
+          }
+        ],
+        due_amount_cents: 50000
+      }
+    }
+  );
+  assert.equal(invoiceCreateResult.status, 201);
+  assert.equal(invoiceCreateResult.body.invoice.invoice_number, "ATP-TEST-001");
+  assert.equal(invoiceCreateResult.body.invoice.total_amount_cents, 50000);
+  const invoice_id = invoiceCreateResult.body.invoice.id;
+  assert.equal(typeof invoice_id, "string");
+  const booking_hash_after_invoice_create = invoiceCreateResult.body.booking.booking_hash;
+
+  const invoiceUpdateResult = await requestJson(
+    endpointPath("booking_invoice_update")
+      .replace("{booking_id}", booking_id)
+      .replace("{invoice_id}", invoice_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        booking_hash: booking_hash_after_invoice_create,
+        title: "Planning deposit updated",
+        sent_to_recipient: true,
+        components: [
+          {
+            description: "Deposit",
+            quantity: 2,
+            unit_amount_cents: 25000
+          }
+        ]
+      }
+    }
+  );
+  assert.equal(invoiceUpdateResult.status, 200);
+  assert.equal(invoiceUpdateResult.body.invoice.title, "Planning deposit updated");
+  assert.equal(invoiceUpdateResult.body.invoice.sent_to_recipient, true);
+
+  const exchangeRatesResult = await requestJson(
+    endpointPath("offer_exchange_rates"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        from_currency: "USD",
+        to_currency: "USD",
+        components: [
+          {
+            id: "component_1",
+            category: "OTHER",
+            quantity: 2,
+            unit_amount_cents: 25000,
+            tax_rate_basis_points: 1000
+          }
+        ]
+      }
+    }
+  );
+  assert.equal(exchangeRatesResult.status, 200);
+  assert.equal(exchangeRatesResult.body.from_currency, "USD");
+  assert.equal(exchangeRatesResult.body.to_currency, "USD");
+  assert.equal(exchangeRatesResult.body.exchange_rate, 1);
+  assert.ok(Array.isArray(exchangeRatesResult.body.converted_components));
+  assert.equal(exchangeRatesResult.body.converted_components.length, 1);
+  assert.equal(typeof exchangeRatesResult.body.total_price_cents, "number");
 });

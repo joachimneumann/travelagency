@@ -1249,10 +1249,7 @@ def build_openapi_paths(endpoints, request_types, response_types)
     path = ep.fetch('path')
     method = ep.fetch('method').downcase
     paths[path] ||= {}
-    tag = if path.start_with?('/public/') then 'Public'
-           elsif path.include?('auth') then 'Auth'
-           else (path.split('/')[2]&.capitalize || 'API')
-           end
+    tag = ep.fetch('tag')
     op = {
       operationId: ep.fetch('key'),
       summary: ep.fetch('key').split('_').map(&:capitalize).join(' '),
@@ -1296,6 +1293,7 @@ def build_openapi_doc(ir, traveler_constraints)
   schemas = build_openapi_schemas(ir, traveler_constraints)
   request_types = endpoints.map { |e| e['requestType'] }.compact.uniq
   response_types = endpoints.map { |e| e['responseType'] }.compact.uniq
+  tags = endpoints.map { |e| e['tag'] }.compact.uniq.map { |name| { name: name } }
 
   {
     'openapi' => '3.1.0',
@@ -1304,13 +1302,7 @@ def build_openapi_doc(ir, traveler_constraints)
       { url: 'https://api-staging.asiatravelplan.com', description: 'Staging API' },
       { url: 'http://localhost:8787', description: 'Local development API' }
     ],
-    'tags' => [
-      { name: 'Auth' },
-      { name: 'Public' },
-      { name: 'Bookings' },
-      { name: 'Staff' },
-      { name: 'Tours' }
-    ],
+    'tags' => tags,
     'components' => {
       'securitySchemes' => {
         'bearerAuth' => { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }

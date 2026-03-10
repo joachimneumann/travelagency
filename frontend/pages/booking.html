@@ -24,118 +24,118 @@
         <div class="container">
           <div class="booking-hero">
             <div class="booking-hero__photo" aria-hidden="true">
-              <img class="booking-hero__photo-image" id="bookingHeroImage" src="assets/img/profile_person.png" alt="" />
+              <img class="booking-hero__photo-image" id="booking_hero_image" src="assets/img/profile_person.png" alt="" />
             </div>
             <div class="booking-hero__copy">
-              <p class="booking-hero__tour" id="detailTourTitle" hidden>Tour</p>
-              <h1 class="booking-hero__name" id="detailTitle">Booking</h1>
+              <p class="booking-hero__tour" id="detail_tour_title" hidden>Tour</p>
+              <h1 class="booking-hero__name" id="detail_title">Booking</h1>
               <div class="booking-hero__id-row">
-                <p class="booking-hero__id" id="detailSubTitle">ID: -</p>
-                <button class="booking-hero__id-copy" id="bookingHeroCopyBtn" type="button">copy</button>
-                <span class="booking-hero__id-copy-status" id="bookingHeroCopyStatus" aria-live="polite"></span>
+                <p class="booking-hero__id" id="detail_sub_title">ID: -</p>
+                <button class="booking-hero__id-copy" id="booking_hero_copy_btn" type="button">copy</button>
+                <span class="booking-hero__id-copy-status" id="booking_hero_copy_status" aria-live="polite"></span>
               </div>
             </div>
           </div>
 
-          <div id="detailError" class="backend-message" role="alert" aria-live="assertive"></div>
+          <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <article id="bookingActionsPanel" style="margin-bottom: 1rem;">
+          <article id="booking_actions_panel" style="margin-bottom: 1rem;">
             <div class="backend-controls">
               <div class="field">
-                <label for="bookingNameInput">Booking name</label>
+                <label for="booking_name_input">Booking name</label>
                 <div class="backend-controls" style="align-items: center; gap: 0.55rem;">
-                  <input id="bookingNameInput" type="text" placeholder="Booking name" style="flex: 1;" />
-                  <button class="btn btn-primary" id="bookingNameSaveBtn" type="button">update</button>
+                  <input id="booking_name_input" type="text" placeholder="Booking name" style="flex: 1;" />
+                  <button class="btn btn-primary" id="booking_name_save_btn" type="button">update</button>
                 </div>
               </div>
             </div>
 
             <div class="backend-controls">
               <div class="field">
-                <label for="bookingOwnerSelect">ATP staff:</label>
-                <select id="bookingOwnerSelect"></select>
+                <label for="booking_owner_select">ATP staff:</label>
+                <select id="booking_owner_select"></select>
               </div>
 
               <div class="field">
-                <label for="bookingStageSelect">Stage</label>
-                <select id="bookingStageSelect"></select>
+                <label for="booking_stage_select">Stage</label>
+                <select id="booking_stage_select"></select>
               </div>
             </div>
 
             <div class="field booking-persons-field" style="margin-top: 0.75rem;">
               <label>Persons</label>
-              <div id="bookingPersonsSummary" class="booking-persons-current">no persons listed</div>
-              <span id="bookingPersonsStatus" class="micro" style="display: block; margin-top: 0.55rem;"></span>
+              <div id="booking_persons_summary" class="booking-persons-current">no persons listed</div>
+              <span id="booking_persons_status" class="micro" style="display: block; margin-top: 0.55rem;"></span>
             </div>
 
             <div class="field">
-              <label for="bookingNoteInput">Booking Notes: Call notes, qualification details, traveler preferences...</label>
+              <label for="booking_note_input">Booking Notes: Call notes, qualification details, traveler preferences...</label>
               <div class="backend-controls" style="align-items: flex-start; margin-top: 0.35rem; gap: 0.6rem;">
-                <textarea id="bookingNoteInput" rows="4" placeholder="Write the current booking note..." style="flex: 1;"></textarea>
-                <button class="btn btn-primary" id="bookingNoteSaveBtn" type="button">update</button>
-                <span id="bookingActionStatus" class="micro"></span>
+                <textarea id="booking_note_input" rows="4" placeholder="Write the current booking note..." style="flex: 1;"></textarea>
+                <button class="btn btn-primary" id="booking_note_save_btn" type="button">update</button>
+                <span id="booking_action_status" class="micro"></span>
               </div>
             </div>
           </article>
 
-          <article id="personsEditorPanel" style="margin-bottom: 1rem;">
+          <article id="persons_editor_panel" style="margin-bottom: 1rem;">
             <div class="backend-controls" style="align-items: center; margin-bottom: 0.65rem;">
               <h2 class="section-title" style="font-size: 1.05rem; margin: 0; flex: 1;">Persons</h2>
-              <button class="btn btn-ghost" id="bookingPersonAddBtn" type="button">Add person</button>
-              <button class="btn btn-primary" id="bookingPersonsSaveBtn" type="button">Save persons</button>
+              <button class="btn btn-ghost" id="booking_person_add_btn" type="button">Add person</button>
+              <button class="btn btn-primary" id="booking_persons_save_btn" type="button">Save persons</button>
             </div>
-            <span id="bookingPersonsEditorStatus" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
-            <div id="bookingPersonsEditorList" class="booking-persons-editor-list"></div>
+            <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
+            <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
           </article>
 
-          <article id="metaChatPanel" class="wa-chat-panel" style="margin-bottom: 1rem;">
+          <article id="meta_chat_panel" class="wa-chat-panel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">WhatsApp (read only).</h2>
-            <p class="micro wa-chat-meta" id="metaChatSummary">Phone: -</p>
+            <p class="micro wa-chat-meta" id="meta_chat_summary">Phone: -</p>
             <div class="wa-chat-canvas">
-              <div id="metaChatTable" class="wa-chat-list" role="log" aria-live="polite"></div>
+              <div id="meta_chat_table" class="wa-chat-list" role="log" aria-live="polite"></div>
             </div>
           </article>
 
-          <article id="offerPanel" style="margin-bottom: 1rem;">
+          <article id="offer_panel" style="margin-bottom: 1rem;">
             <div class="backend-controls" style="align-items: center; margin-bottom: 0.35rem; column-gap: 0.5rem;">
               <h2 class="section-title" style="font-size: 1.05rem; margin: 0;">Offer</h2>
-              <select id="offerCurrencyInput" aria-label="Offer currency" style="max-width: 120px;"></select>
+              <select id="offer_currency_input" aria-label="Offer currency" style="max-width: 120px;"></select>
             </div>
             <div class="backend-controls" style="align-items: center; margin: 0.6rem 0 0.25rem; column-gap: 0.5rem;">
-              <button class="btn btn-ghost" id="offerAddComponentBtn" type="button">New component</button>
-              <select id="offerComponentCategorySelect" aria-label="New component category">
+              <button class="btn btn-ghost" id="offer_add_component_btn" type="button">New component</button>
+              <select id="offer_component_category_select" aria-label="New component category">
                 <option value="" selected disabled>Category</option>
               </select>
             </div>
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="offerComponentsTable"></table>
+              <table class="backend-table" id="offer_components_table"></table>
             </div>
             <div class="backend-offer-footer">
               <div class="backend-table-wrap backend-offer-total-wrap" style="margin-bottom: 0.75rem; margin-top: 0;">
-                <table class="backend-table backend-offer-total-table" id="offerComponentsTotalTable"></table>
+                <table class="backend-table backend-offer-total-table" id="offer_components_total_table"></table>
               </div>
               <div class="backend-controls backend-offer-actions">
-                <button class="btn btn-primary offer-update-btn" id="offerSaveBtn" type="button" disabled>Update</button>
-                <span id="offerStatus" class="micro"></span>
+                <button class="btn btn-primary offer-update-btn" id="offer_save_btn" type="button" disabled>Update</button>
+                <span id="offer_status" class="micro"></span>
               </div>
             </div>
           </article>
 
-          <article id="pricingPanel" style="margin-bottom: 1rem;">
+          <article id="pricing_panel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem; margin-top: 0;">Payments</h2>
 
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="pricingSummaryTable"></table>
+              <table class="backend-table" id="pricing_summary_table"></table>
             </div>
 
             <div class="backend-controls">
               <div class="field">
-                <label for="pricingCurrencyInput">Currency</label>
-                <select id="pricingCurrencyInput"></select>
+                <label for="pricing_currency_input">Currency</label>
+                <select id="pricing_currency_input"></select>
               </div>
               <div class="field">
-                <label for="pricingAgreedNetInput" id="pricingAgreedNetLabel">Agreed Net Amount (USD)</label>
-                <input id="pricingAgreedNetInput" type="number" min="0" step="1" />
+                <label for="pricing_agreed_net_input" id="pricing_agreed_net_label">Agreed Net Amount (USD)</label>
+                <input id="pricing_agreed_net_input" type="number" min="0" step="1" />
               </div>
             </div>
 
@@ -143,28 +143,28 @@
               <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Adjustments</h3>
             </div>
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="pricingAdjustmentsTable"></table>
+              <table class="backend-table" id="pricing_adjustments_table"></table>
             </div>
 
             <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
               <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Payment Schedule</h3>
             </div>
             <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="pricingPaymentsTable"></table>
+              <table class="backend-table" id="pricing_payments_table"></table>
             </div>
 
             <div class="backend-controls">
-              <button class="btn btn-primary" id="pricingSaveBtn" type="button">Save payments</button>
-              <span id="pricingStatus" class="micro"></span>
+              <button class="btn btn-primary" id="pricing_save_btn" type="button">Save payments</button>
+              <span id="pricing_status" class="micro"></span>
             </div>
           </article>
 
-          <article id="invoicePanel" style="margin-bottom: 1rem;">
+          <article id="invoice_panel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
             <div class="backend-controls">
               <div class="field">
-                <label for="invoiceSelect">Invoice</label>
-                <select id="invoiceSelect">
+                <label for="invoice_select">Invoice</label>
+                <select id="invoice_select">
                   <option value="">New invoice</option>
                 </select>
               </div>
@@ -172,74 +172,74 @@
 
             <div class="backend-controls">
               <div class="field">
-                <label for="invoiceNumberInput">Invoice Number</label>
-                <input id="invoiceNumberInput" type="text" placeholder="Auto-generated if empty" />
+                <label for="invoice_number_input">Invoice Number</label>
+                <input id="invoice_number_input" type="text" placeholder="Auto-generated if empty" />
               </div>
               <div class="field">
-                <label for="invoiceCurrencyInput">Currency</label>
-                <select id="invoiceCurrencyInput"></select>
+                <label for="invoice_currency_input">Currency</label>
+                <select id="invoice_currency_input"></select>
               </div>
               <div class="field">
-                <label for="invoiceIssueDateInput">Issue Date</label>
-                <input id="invoiceIssueDateInput" type="date" />
-                <button class="btn btn-ghost" id="invoiceIssueTodayBtn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">today</button>
+                <label for="invoice_issue_date_input">Issue Date</label>
+                <input id="invoice_issue_date_input" type="date" />
+                <button class="btn btn-ghost" id="invoice_issue_today_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">today</button>
               </div>
               <div class="field">
-                <label for="invoiceDueDateInput">Due Date</label>
-                <input id="invoiceDueDateInput" type="date" />
-                <button class="btn btn-ghost" id="invoiceDueMonthBtn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">in one month</button>
+                <label for="invoice_due_date_input">Due Date</label>
+                <input id="invoice_due_date_input" type="date" />
+                <button class="btn btn-ghost" id="invoice_due_month_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">in one month</button>
               </div>
             </div>
 
             <div class="field">
-              <label for="invoiceTitleInput">Title</label>
-              <input id="invoiceTitleInput" type="text" placeholder="Invoice title" />
+              <label for="invoice_title_input">Title</label>
+              <input id="invoice_title_input" type="text" placeholder="Invoice title" />
             </div>
 
               <div class="field">
-                <label for="invoiceComponentsInput" id="invoiceComponentsLabel">Components (one per line: Description | Quantity | Unit amount in USD)</label>
-                <textarea id="invoiceComponentsInput" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
+                <label for="invoice_components_input" id="invoice_components_label">Components (one per line: Description | Quantity | Unit amount in USD)</label>
+                <textarea id="invoice_components_input" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
               </div>
 
             <div class="field">
-              <label for="invoiceDueAmountInput" id="invoiceDueAmountLabel">Due Amount (USD, optional)</label>
-              <input id="invoiceDueAmountInput" type="number" min="1" step="1" />
+              <label for="invoice_due_amount_input" id="invoice_due_amount_label">Due Amount (USD, optional)</label>
+              <input id="invoice_due_amount_input" type="number" min="1" step="1" />
             </div>
             <div class="field">
-              <label for="invoiceVatInput">VAT (%)</label>
-              <input id="invoiceVatInput" type="number" min="0" max="100" step="0.01" value="0" />
+              <label for="invoice_vat_input">VAT (%)</label>
+              <input id="invoice_vat_input" type="number" min="0" max="100" step="0.01" value="0" />
             </div>
 
             <div class="field">
-              <label for="invoiceNotesInput">Invoice Note</label>
-              <textarea id="invoiceNotesInput" rows="3"></textarea>
+              <label for="invoice_notes_input">Invoice Note</label>
+              <textarea id="invoice_notes_input" rows="3"></textarea>
             </div>
 
             <div class="backend-controls">
-              <button class="btn btn-primary" id="invoiceCreateBtn" type="button" style="padding:0.7rem 1.2rem; margin:0.25rem 0.35rem;">Create Invoice</button>
-              <span id="invoiceStatus" class="micro"></span>
+              <button class="btn btn-primary" id="invoice_create_btn" type="button" style="padding:0.7rem 1.2rem; margin:0.25rem 0.35rem;">Create Invoice</button>
+              <span id="invoice_status" class="micro"></span>
             </div>
 
             <div class="backend-table-wrap" style="margin-top:0.7rem;">
-              <table class="backend-table" id="invoicesTable"></table>
+              <table class="backend-table" id="invoices_table"></table>
             </div>
           </article>
 
           <article style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Activities</h2>
             <div class="backend-table-wrap">
-              <table class="backend-table" id="activitiesTable"></table>
+              <table class="backend-table" id="activities_table"></table>
             </div>
           </article>
 
           <article class="booking-data-panel" style="margin-bottom: 1rem;">
             <h2 class="section-title" style="font-size: 1.05rem;">Booking Data</h2>
-            <div id="bookingDataView"></div>
+            <div id="booking_data_view"></div>
           </article>
 
           <section class="booking-danger-zone">
             <h2 class="section-title u-title-compact">DANGER ZONE</h2>
-            <button class="btn booking-danger-zone__delete" id="bookingDeleteBtn" type="button">Delete booking</button>
+            <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button">Delete booking</button>
           </section>
         </div>
       </section>

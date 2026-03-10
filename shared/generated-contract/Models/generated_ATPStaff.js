@@ -17,11 +17,14 @@ export const GENERATED_ATP_STAFF_ROLES = Object.freeze([
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"preferredUsername","required":true,"wireName":"preferredUsername"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"displayName","required":false,"wireName":"displayName"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"preferred_username","required":true,"wireName":"preferred_username"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"display_name","required":false,"wireName":"display_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"email","required":false,"wireName":"email"}, SHARED_FIELD_DEFS.FIELD_2),
     schemaField({"name":"roles","required":false,"wireName":"roles"}, SHARED_FIELD_DEFS.FIELD_3),
-    schemaField({"name":"atpStaffId","required":false,"wireName":"atpStaffId"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"staff_id","required":false,"wireName":"staff_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"active","required":false,"wireName":"active"}, SHARED_FIELD_DEFS.FIELD_4),
+    schemaField({"name":"created_at","required":false,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
+    schemaField({"name":"updated_at","required":false,"wireName":"updated_at"}, SHARED_FIELD_DEFS.FIELD_5)
         ]
       };
 

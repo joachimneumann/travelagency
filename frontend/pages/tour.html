@@ -22,81 +22,81 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <h1 class="section-title" id="tourTitle">Tour</h1>
-          <p class="section-booking" id="tourSubtitle">Loading tour...</p>
+          <h1 class="section-title" id="tour_title">Tour</h1>
+          <p class="section-booking" id="tour_subtitle">Loading tour...</p>
 
-          <div id="tourError" class="backend-message" role="alert" aria-live="assertive"></div>
+          <div id="tour_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <form id="tourForm" class="backend-tour-form">
+          <form id="tour_form" class="backend-tour-form">
             <div class="field full">
               <div class="tour-hero-row">
-                <img id="tourHeroImage" src="" alt="Tour hero" class="tour-hero-image" />
+                <img id="tour_hero_image" src="" alt="Tour hero" class="tour-hero-image" />
                 <div class="tour-hero-actions">
-                  <button class="btn btn-ghost" id="tourChangeImageBtn" type="button">Change image</button>
+                  <button class="btn btn-ghost" id="tour_change_image_btn" type="button">Change image</button>
                   <p class="micro">Image is converted to WebP and resized to max 1000px automatically.</p>
                 </div>
               </div>
-              <input id="tourImageUpload" name="tourImageUpload" type="file" accept="image/*" class="u-file-input-hidden" />
+              <input id="tour_image_upload" name="tour_image_upload" type="file" accept="image/*" class="u-file-input-hidden" />
             </div>
             <div class="field full">
-              <label for="tourShortDescription">Description</label>
-              <textarea id="tourShortDescription" name="shortDescription" rows="3"></textarea>
+              <label for="tour_short_description">Description</label>
+              <textarea id="tour_short_description" name="short_description" rows="3"></textarea>
             </div>
             <div class="field full">
-              <label for="tourHighlights">Highlights (one per line)</label>
-              <textarea id="tourHighlights" name="highlights" rows="4"></textarea>
+              <label for="tour_highlights">Highlights (one per line)</label>
+              <textarea id="tour_highlights" name="highlights" rows="4"></textarea>
             </div>
             <div class="field">
-              <label for="tourSeasonalityStartMonth">Seasonality Start Month</label>
-              <select id="tourSeasonalityStartMonth" name="seasonality_start_month">
+              <label for="tour_seasonality_start_month">Seasonality Start Month</label>
+              <select id="tour_seasonality_start_month" name="seasonality_start_month">
                 <option value=""></option>
               </select>
             </div>
             <div class="field">
-              <label for="tourSeasonalityEndMonth">Seasonality End Month</label>
-              <select id="tourSeasonalityEndMonth" name="seasonality_end_month">
+              <label for="tour_seasonality_end_month">Seasonality End Month</label>
+              <select id="tour_seasonality_end_month" name="seasonality_end_month">
                 <option value=""></option>
               </select>
             </div>
             <div class="field">
-              <label for="tourTitleInput">Title</label>
-              <input id="tourTitleInput" name="title" type="text" required />
-              <div id="tourTitleError" class="form-error" role="alert" aria-live="polite"></div>
+              <label for="tour_titleInput">Title</label>
+              <input id="tour_titleInput" name="title" type="text" required />
+              <div id="tour_titleError" class="form-error" role="alert" aria-live="polite"></div>
             </div>
             <div class="field">
               <span class="field-label">Destinations</span>
-              <input id="tourDestinations" name="destinations" type="hidden" required />
-              <div id="tourDestinationChoices" class="backend-checkbox-grid"></div>
+              <input id="tour_destinations" name="destinations" type="hidden" required />
+              <div id="tour_destination_choices" class="backend-checkbox-grid"></div>
             </div>
             <div class="field">
               <span class="field-label">Tour Styles</span>
-              <input id="tourStyles" name="styles" type="hidden" required />
-              <div id="tourStyleChoices" class="backend-checkbox-grid"></div>
+              <input id="tour_styles" name="styles" type="hidden" required />
+              <div id="tour_style_choices" class="backend-checkbox-grid"></div>
             </div>
             <div class="field">
-              <label for="tourTravelDurationDays">Duration (Days)</label>
-              <input id="tourTravelDurationDays" name="travel_duration_days" type="number" min="1" step="1" />
+              <label for="tour_travel_duration_days">Duration (Days)</label>
+              <input id="tour_travel_duration_days" name="travel_duration_days" type="number" min="1" step="1" />
             </div>
             <div class="field">
-              <label for="tourBudgetLowerUSD">Budget Lower USD</label>
-              <input id="tourBudgetLowerUSD" name="budget_lower_USD" type="number" min="0" step="1" />
+              <label for="tour_budget_lower_usd">Budget Lower USD</label>
+              <input id="tour_budget_lower_usd" name="budget_lower_usd" type="number" min="0" step="1" />
             </div>
             <div class="field">
-              <label for="tourPriority">Web page ranking priority (0-100)</label>
-              <input id="tourPriority" name="priority" type="number" min="0" max="100" step="1" />
+              <label for="tour_priority">Web page ranking priority (0-100)</label>
+              <input id="tour_priority" name="priority" type="number" min="0" max="100" step="1" />
             </div>
             <div class="field">
-              <label for="tourRating">Rating</label>
-              <input id="tourRating" name="rating" type="number" min="0" max="5" step="0.1" />
+              <label for="tour_rating">Rating</label>
+              <input id="tour_rating" name="rating" type="number" min="0" max="5" step="0.1" />
             </div>
             <div class="field full">
-              <label for="tourId">ID (read-only)</label>
-              <input id="tourId" name="id" type="text" readonly />
+              <label for="tour_id">ID (read-only)</label>
+              <input id="tour_id" name="id" type="text" readonly />
             </div>
             <div class="backend-controls">
-              <button class="btn btn-primary" id="tourSaveBtn" type="submit">Save Changes</button>
-              <a class="btn btn-ghost" id="tourCancelBtn" href="backend.html">Cancel</a>
-              <span id="tourFormStatus" class="micro"></span>
+              <button class="btn btn-primary" id="tour_save_btn" type="submit">Save Changes</button>
+              <a class="btn btn-ghost" id="tour_cancel_btn" href="backend.html">Cancel</a>
+              <span id="tour_formStatus" class="micro"></span>
             </div>
           </form>
         </div>

@@ -37,7 +37,7 @@
               <span id="personsCountInfo" class="micro"></span>
             </div>
 
-            <p class="micro" id="personsSearchNote" style="margin-top: 0.75rem;">Persons are read from bookings. The same person can appear more than once across different bookings.</p>
+            <p class="micro" id="personsSearchNote" style="margin-top: 0.75rem;">Persons are read directly from bookings. Each row represents one booking person.</p>
 
             <div class="backend-table-wrap" style="margin-top: 1rem;">
               <table class="backend-table" id="personsTable"></table>
@@ -51,6 +51,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "persons" });
     </script>
-    <script type="module" src="frontend/scripts/backend-persons.js?v=20260309b"></script>
+    <script type="module" src="frontend/scripts/backend-persons.js?v=20260310a"></script>
   </body>
 </html>

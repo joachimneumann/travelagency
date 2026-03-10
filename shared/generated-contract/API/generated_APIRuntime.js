@@ -3,13 +3,25 @@
 
         export const SHARED_API_PARAMETER_DEFS = Object.freeze({
   PARAM_1: {
-  "name": "bookingId",
+  "name": "booking_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_2: {
-  "name": "tourId",
+  "name": "person_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_3: {
+  "name": "invoice_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_4: {
+  "name": "tour_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
@@ -81,7 +93,7 @@
       },
       {
         key: "booking_detail",
-        path: "/api/v1/bookings/{bookingId}",
+        path: "/api/v1/bookings/{booking_id}",
         method: "GET",
         authenticated: true,
         requestType: null,
@@ -91,8 +103,19 @@
         ]
       },
       {
+        key: "booking_delete",
+        path: "/api/v1/bookings/{booking_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: "BookingDeleteRequest",
+        responseType: "BookingDeleteResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_chat",
-        path: "/api/v1/bookings/{bookingId}/chat",
+        path: "/api/v1/bookings/{booking_id}/chat",
         method: "GET",
         authenticated: true,
         requestType: null,
@@ -102,33 +125,67 @@
         ]
       },
       {
+        key: "booking_name",
+        path: "/api/v1/bookings/{booking_id}/name",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingNameUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_stage",
-        path: "/api/v1/bookings/{bookingId}/stage",
+        path: "/api/v1/bookings/{booking_id}/stage",
         method: "PATCH",
         authenticated: true,
-        requestType: null,
+        requestType: "BookingStageUpdateRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
       },
       {
-        key: "booking_assignment",
-        path: "/api/v1/bookings/{bookingId}/owner",
+        key: "booking_owner",
+        path: "/api/v1/bookings/{booking_id}/owner",
         method: "PATCH",
         authenticated: true,
-        requestType: null,
+        requestType: "BookingOwnerUpdateRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
       },
       {
-        key: "booking_note",
-        path: "/api/v1/bookings/{bookingId}/notes",
+        key: "booking_persons",
+        path: "/api/v1/bookings/{booking_id}/persons",
         method: "PATCH",
         authenticated: true,
-        requestType: null,
+        requestType: "BookingPersonsUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_person_photo",
+        path: "/api/v1/bookings/{booking_id}/persons/{person_id}/photo",
+        method: "POST",
+        authenticated: true,
+        requestType: "EvidenceUpload",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+        ]
+      },
+      {
+        key: "booking_notes",
+        path: "/api/v1/bookings/{booking_id}/notes",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingNotesUpdateRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
@@ -136,7 +193,7 @@
       },
       {
         key: "booking_pricing",
-        path: "/api/v1/bookings/{bookingId}/pricing",
+        path: "/api/v1/bookings/{booking_id}/pricing",
         method: "PATCH",
         authenticated: true,
         requestType: "BookingPricingUpdateRequest",
@@ -147,7 +204,7 @@
       },
       {
         key: "booking_offer",
-        path: "/api/v1/bookings/{bookingId}/offer",
+        path: "/api/v1/bookings/{booking_id}/offer",
         method: "PATCH",
         authenticated: true,
         requestType: "BookingOfferUpdateRequest",
@@ -157,8 +214,19 @@
         ]
       },
       {
+        key: "offer_exchange_rates",
+        path: "/api/v1/offers/exchange-rates",
+        method: "POST",
+        authenticated: true,
+        requestType: "OfferExchangeRatesRequest",
+        responseType: "OfferExchangeRatesResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "booking_activities",
-        path: "/api/v1/bookings/{bookingId}/activities",
+        path: "/api/v1/bookings/{booking_id}/activities",
         method: "GET",
         authenticated: true,
         requestType: null,
@@ -168,8 +236,19 @@
         ]
       },
       {
+        key: "booking_activity_create",
+        path: "/api/v1/bookings/{booking_id}/activities",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingActivityCreateRequest",
+        responseType: "BookingActivityResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_invoices",
-        path: "/api/v1/bookings/{bookingId}/invoices",
+        path: "/api/v1/bookings/{booking_id}/invoices",
         method: "GET",
         authenticated: true,
         requestType: null,
@@ -179,12 +258,46 @@
         ]
       },
       {
+        key: "booking_invoice_create",
+        path: "/api/v1/bookings/{booking_id}/invoices",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingInvoiceUpsertRequest",
+        responseType: "BookingInvoiceResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_invoice_update",
+        path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingInvoiceUpsertRequest",
+        responseType: "BookingInvoiceResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
         key: "atp_staff",
         path: "/api/v1/atp_staff",
         method: "GET",
         authenticated: true,
         requestType: null,
         responseType: "AtpStaffListResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "atp_staff_create",
+        path: "/api/v1/atp_staff",
+        method: "POST",
+        authenticated: true,
+        requestType: "AtpStaffCreateRequest",
+        responseType: "AtpStaffResponse",
         parameters: [
 
         ]
@@ -201,25 +314,47 @@
         ]
       },
       {
+        key: "tour_create",
+        path: "/api/v1/tours",
+        method: "POST",
+        authenticated: true,
+        requestType: "TourUpsertRequest",
+        responseType: "TourResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "tour_detail",
-        path: "/api/v1/tours/{tourId}",
+        path: "/api/v1/tours/{tour_id}",
         method: "GET",
         authenticated: true,
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+        ]
+      },
+      {
+        key: "tour_update",
+        path: "/api/v1/tours/{tour_id}",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "TourUpsertRequest",
+        responseType: "TourResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       },
       {
         key: "tour_image",
-        path: "/api/v1/tours/{tourId}/image",
-        method: "GET",
+        path: "/api/v1/tours/{tour_id}/image",
+        method: "POST",
         authenticated: true,
-        requestType: null,
-        responseType: null,
+        requestType: "EvidenceUpload",
+        responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       }
     ];

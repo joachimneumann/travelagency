@@ -30,7 +30,7 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
     return {
       ...tour,
       title: normalizeText(tour?.title),
-      shortDescription: normalizeText(tour?.shortDescription),
+      short_description: normalizeText(tour?.short_description),
       destinations: tourDestinations(tour),
       styles: normalizeStringArray(tour?.styles),
       image: toTourImagePublicUrl(tour?.image),
@@ -39,7 +39,7 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
       highlights: normalizeHighlights(tour?.highlights),
       priority: safeInt(tour?.priority) ?? 50,
       travel_duration_days: safeInt(tour?.travel_duration_days) ?? 0,
-      budget_lower_USD: safeInt(tour?.budget_lower_USD) ?? 0,
+      budget_lower_usd: safeInt(tour?.budget_lower_usd) ?? 0,
       rating: safeFloat(tour?.rating) ?? 0
     };
   }

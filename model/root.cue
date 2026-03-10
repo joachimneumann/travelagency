@@ -50,8 +50,19 @@ import (
 		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
 		AtpStaffListResponse:        apiModel.#AtpStaffListResponse
 		BookingActivitiesResponse:   apiModel.#BookingActivitiesResponse
+		BookingActivityResponse:     apiModel.#BookingActivityResponse
+		BookingDeleteResponse:       apiModel.#BookingDeleteResponse
 		BookingInvoicesResponse:     apiModel.#BookingInvoicesResponse
+		BookingInvoiceResponse:      apiModel.#BookingInvoiceResponse
+		BookingChatEvent:            apiModel.#BookingChatEvent
+		BookingChatConversation:     apiModel.#BookingChatConversation
+		BookingChatResponse:         apiModel.#BookingChatResponse
 		TourOptions:                 apiModel.#TourOptions
+		TourResponse:                apiModel.#TourResponse
+		OfferExchangeRatesResponse:  apiModel.#OfferExchangeRatesResponse
+		BookingListFilters:          apiModel.#BookingListFilters
+		TourListFilters:             apiModel.#TourListFilters
+		AuthenticatedUser:           apiModel.#AuthenticatedUser
 		AuthMeResponse:              apiModel.#AuthMeResponse
 		MobileBootstrap:             apiModel.#MobileBootstrap
 		FeatureFlags:                apiModel.#FeatureFlags
@@ -62,8 +73,22 @@ import (
 		PaginatedRequest:            apiModel.#PaginatedRequest
 		WebsiteBookingForm:          apiModel.#WebsiteBookingForm
 		PublicBookingCreateRequest:  apiModel.#PublicBookingCreateRequest
+		BookingDeleteRequest:        apiModel.#BookingDeleteRequest
+		BookingNameUpdateRequest:    apiModel.#BookingNameUpdateRequest
+		BookingStageUpdateRequest:   apiModel.#BookingStageUpdateRequest
+		BookingOwnerUpdateRequest:   apiModel.#BookingOwnerUpdateRequest
+		BookingPersonsUpdateRequest: apiModel.#BookingPersonsUpdateRequest
+		BookingNotesUpdateRequest:   apiModel.#BookingNotesUpdateRequest
 		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
 		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
+		OfferExchangeRateComponent:  apiModel.#OfferExchangeRateComponent
+		OfferExchangeRatesRequest:   apiModel.#OfferExchangeRatesRequest
+		BookingActivityCreateRequest: apiModel.#BookingActivityCreateRequest
+		BookingInvoiceUpsertRequest: apiModel.#BookingInvoiceUpsertRequest
+		AtpStaffCreateRequest:       apiModel.#AtpStaffCreateRequest
+		AtpStaffResponse:            apiModel.#AtpStaffResponse
+		TourUpsertRequest:           apiModel.#TourUpsertRequest
+		EvidenceUpload:              apiModel.#EvidenceUpload
 		Endpoints:                   apiModel.#Endpoints
 	}
 }

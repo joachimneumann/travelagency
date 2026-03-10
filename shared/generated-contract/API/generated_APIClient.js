@@ -24,28 +24,50 @@ case "bookings":
   return RequestFactory.bookingsRequest(options);
 case "booking_detail":
   return RequestFactory.bookingDetailRequest(options);
+case "booking_delete":
+  return RequestFactory.bookingDeleteRequest(options);
 case "booking_chat":
   return RequestFactory.bookingChatRequest(options);
+case "booking_name":
+  return RequestFactory.bookingNameRequest(options);
 case "booking_stage":
   return RequestFactory.bookingStageRequest(options);
-case "booking_assignment":
-  return RequestFactory.bookingAssignmentRequest(options);
-case "booking_note":
-  return RequestFactory.bookingNoteRequest(options);
+case "booking_owner":
+  return RequestFactory.bookingOwnerRequest(options);
+case "booking_persons":
+  return RequestFactory.bookingPersonsRequest(options);
+case "booking_person_photo":
+  return RequestFactory.bookingPersonPhotoRequest(options);
+case "booking_notes":
+  return RequestFactory.bookingNotesRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
+case "offer_exchange_rates":
+  return RequestFactory.offerExchangeRatesRequest(options);
 case "booking_activities":
   return RequestFactory.bookingActivitiesRequest(options);
+case "booking_activity_create":
+  return RequestFactory.bookingActivityCreateRequest(options);
 case "booking_invoices":
   return RequestFactory.bookingInvoicesRequest(options);
+case "booking_invoice_create":
+  return RequestFactory.bookingInvoiceCreateRequest(options);
+case "booking_invoice_update":
+  return RequestFactory.bookingInvoiceUpdateRequest(options);
 case "atp_staff":
   return RequestFactory.atpStaffRequest(options);
+case "atp_staff_create":
+  return RequestFactory.atpStaffCreateRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
+case "tour_create":
+  return RequestFactory.tourCreateRequest(options);
 case "tour_detail":
   return RequestFactory.tourDetailRequest(options);
+case "tour_update":
+  return RequestFactory.tourUpdateRequest(options);
 case "tour_image":
   return RequestFactory.tourImageRequest(options);
       default:

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-09T17:11:47Z
+# 2026-03-10T05:52:28Z
 
 ---
 openapi: 3.1.0
@@ -21,9 +21,10 @@ servers:
 - url: http://localhost:8787
   description: Local development API
 tags:
-- name: Auth
 - name: Public
+- name: Auth
 - name: Bookings
+- name: Offers
 - name: Staff
 - name: Tours
 components:
@@ -3108,13 +3109,13 @@ components:
       type: object
       required:
       - id
-      - preferredUsername
+      - preferred_username
       properties:
         id:
           type: string
-        preferredUsername:
+        preferred_username:
           type: string
-        displayName:
+        display_name:
           type: string
           nullable: true
         email:
@@ -3125,8 +3126,19 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/ATPStaffRole"
-        atpStaffId:
+        staff_id:
           type: string
+          nullable: true
+        active:
+          type: boolean
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
           nullable: true
     Tour:
       type: object
@@ -3149,7 +3161,7 @@ components:
         travel_duration_days:
           type: integer
           nullable: true
-        budget_lower_USD:
+        budget_lower_usd:
           type: integer
           nullable: true
         priority:
@@ -3164,7 +3176,7 @@ components:
         seasonality_end_month:
           "$ref": "#/components/schemas/MonthCode"
           nullable: true
-        shortDescription:
+        short_description:
           type: string
           nullable: true
         highlights:
@@ -3174,11 +3186,11 @@ components:
         image:
           type: string
           nullable: true
-        createdAt:
+        created_at:
           type: string
           format: date-time
           nullable: true
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           nullable: true
@@ -3186,25 +3198,31 @@ components:
       type: object
       required: []
       properties:
-        pageUrl:
+        page_url:
           type: string
           nullable: true
-        ipAddress:
+        ip_address:
           type: string
           nullable: true
-        ipCountryGuess:
+        ip_country_guess:
           type: string
           nullable: true
         referrer:
           type: string
           nullable: true
-        utmSource:
+        utm_source:
           type: string
           nullable: true
-        utmMedium:
+        utm_medium:
           type: string
           nullable: true
-        utmCampaign:
+        utm_campaign:
+          type: string
+          nullable: true
+        tour_id:
+          type: string
+          nullable: true
+        tour_title:
           type: string
           nullable: true
     BookingPersonAddress:
@@ -3343,7 +3361,7 @@ components:
       - id
       - type
       - label
-      - netAmount
+      - amount_cents
       properties:
         id:
           type: string
@@ -3351,41 +3369,38 @@ components:
           "$ref": "#/components/schemas/PricingAdjustmentType"
         label:
           type: string
-        netAmount:
+        amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        notes:
+        note:
           type: string
           nullable: true
-        createdAt:
+        created_at:
           type: string
           format: date-time
           nullable: true
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           nullable: true
     InvoiceComponent:
       type: object
       required:
-      - label
+      - description
       - quantity
-      - unitNet
-      - taxRate
+      - unit_amount_cents
       properties:
         id:
           type: string
           nullable: true
-        label:
-          type: string
         description:
           type: string
-          nullable: true
         quantity:
           type: integer
-        unitNet:
+        unit_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        taxRate:
-          type: number
+        total_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
     BookingInvoice:
       type: object
       required:
@@ -3394,18 +3409,30 @@ components:
       properties:
         id:
           type: string
-        invoiceNumber:
+        booking_id:
+          type: string
+          nullable: true
+        invoice_number:
+          type: string
+          nullable: true
+        version:
+          type: integer
+          nullable: true
+        status:
           type: string
           nullable: true
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        issueDate:
+        issue_date:
           type: string
           format: date
           nullable: true
-        dueDate:
+        due_date:
           type: string
           format: date
+          nullable: true
+        title:
+          type: string
           nullable: true
         components:
           type: array
@@ -3414,16 +3441,29 @@ components:
         notes:
           type: string
           nullable: true
-        sentToRecipient:
+        sent_to_recipient:
           type: boolean
           nullable: true
-        createdAt:
+        sent_to_recipient_at:
           type: string
           format: date-time
           nullable: true
-        updatedAt:
+        total_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        due_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        created_at:
           type: string
           format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        pdf_url:
+          type: string
           nullable: true
     BookingPayment:
       type: object
@@ -3431,8 +3471,8 @@ components:
       - id
       - label
       - status
-      - netAmount
-      - taxRate
+      - net_amount_cents
+      - tax_rate_basis_points
       properties:
         id:
           type: string
@@ -3440,70 +3480,79 @@ components:
           type: string
         status:
           "$ref": "#/components/schemas/PaymentStatus"
-        netAmount:
+        net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        taxRate:
-          type: number
-        dueDate:
+        tax_rate_basis_points:
+          type: integer
+        due_date:
           type: string
           format: date
           nullable: true
-        paidAt:
+        paid_at:
           type: string
           format: date-time
           nullable: true
         notes:
           type: string
           nullable: true
-        createdAt:
+        tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        gross_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        created_at:
           type: string
           format: date-time
           nullable: true
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           nullable: true
     BookingPricingSummary:
       type: object
       required:
-      - agreedNetAmount
-      - adjustedNetAmount
-      - scheduledNetAmount
-      - unscheduledNetAmount
-      - scheduledTaxAmount
-      - scheduledGrossAmount
-      - paidGrossAmount
-      - outstandingGrossAmount
-      - isScheduleBalanced
+      - agreed_net_amount_cents
+      - adjustments_delta_cents
+      - adjusted_net_amount_cents
+      - scheduled_net_amount_cents
+      - unscheduled_net_amount_cents
+      - scheduled_tax_amount_cents
+      - scheduled_gross_amount_cents
+      - paid_gross_amount_cents
+      - outstanding_gross_amount_cents
+      - is_schedule_balanced
       properties:
-        agreedNetAmount:
+        agreed_net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        adjustedNetAmount:
+        adjustments_delta_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        scheduledNetAmount:
+        adjusted_net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        unscheduledNetAmount:
+        scheduled_net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        scheduledTaxAmount:
+        unscheduled_net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        scheduledGrossAmount:
+        scheduled_tax_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        paidGrossAmount:
+        scheduled_gross_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        outstandingGrossAmount:
+        paid_gross_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        isScheduleBalanced:
+        outstanding_gross_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        is_schedule_balanced:
           type: boolean
     BookingPricing:
       type: object
       required:
       - currency
-      - agreedNetAmount
+      - agreed_net_amount_cents
       - summary
       properties:
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        agreedNetAmount:
+        agreed_net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
         adjustments:
           type: array
@@ -3519,12 +3568,12 @@ components:
       type: object
       required:
       - category
-      - taxRate
+      - tax_rate_basis_points
       properties:
         category:
           "$ref": "#/components/schemas/OfferCategory"
-        taxRate:
-          type: number
+        tax_rate_basis_points:
+          type: integer
     BookingOfferComponent:
       type: object
       required:
@@ -3532,8 +3581,8 @@ components:
       - category
       - label
       - quantity
-      - unitNet
-      - taxRate
+      - unit_amount_cents
+      - tax_rate_basis_points
       - currency
       properties:
         id:
@@ -3547,55 +3596,64 @@ components:
           nullable: true
         quantity:
           type: integer
-        unitNet:
+        unit_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        taxRate:
-          type: number
+        tax_rate_basis_points:
+          type: integer
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        lineTotalAmountCents:
+        line_net_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_total_amount_cents:
           type: integer
           nullable: true
         notes:
           type: string
           nullable: true
-        sortOrder:
+        sort_order:
           type: integer
           nullable: true
-        createdAt:
+        created_at:
           type: string
           format: date-time
           nullable: true
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
           nullable: true
     BookingOfferTotals:
       type: object
       required:
-      - netAmount
-      - taxAmount
-      - grossAmount
-      - componentsCount
+      - net_amount_cents
+      - tax_amount_cents
+      - gross_amount_cents
+      - total_price_cents
+      - items_count
       properties:
-        netAmount:
+        net_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        taxAmount:
+        tax_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        grossAmount:
+        gross_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
-        componentsCount:
+        total_price_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        items_count:
           type: integer
     BookingOffer:
       type: object
       required:
       - currency
       - totals
-      - totalPriceCents
+      - total_price_cents
       properties:
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        categoryRules:
+        category_rules:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferCategoryRule"
@@ -3605,21 +3663,21 @@ components:
             "$ref": "#/components/schemas/BookingOfferComponent"
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
-        totalPriceCents:
+        total_price_cents:
           type: integer
     BookingActivity:
       type: object
       required:
       - id
-      - bookingId
+      - booking_id
       - type
       - actor
       - detail
-      - createdAt
+      - created_at
       properties:
         id:
           type: string
-        bookingId:
+        booking_id:
           type: string
         type:
           "$ref": "#/components/schemas/BookingActivityType"
@@ -3627,7 +3685,7 @@ components:
           type: string
         detail:
           type: string
-        createdAt:
+        created_at:
           type: string
           format: date-time
     BookingWebFormSubmission:
@@ -3670,10 +3728,10 @@ components:
         phone_number:
           type: string
           nullable: true
-        budget_lower_USD:
+        budget_lower_usd:
           type: integer
           nullable: true
-        budget_upper_USD:
+        budget_upper_usd:
           type: integer
           nullable: true
         preferred_language:
@@ -3682,7 +3740,7 @@ components:
         notes:
           type: string
           nullable: true
-        submittedAt:
+        submitted_at:
           type: string
           format: date-time
           nullable: true
@@ -3693,8 +3751,8 @@ components:
       - stage
       - pricing
       - offer
-      - createdAt
-      - updatedAt
+      - created_at
+      - updated_at
       properties:
         id:
           type: string
@@ -3709,7 +3767,7 @@ components:
         atp_staff:
           type: string
           nullable: true
-        serviceLevelAgreementDueAt:
+        service_level_agreement_due_at:
           type: string
           format: date-time
           nullable: true
@@ -3732,7 +3790,7 @@ components:
         number_of_travelers:
           type: integer
           nullable: true
-        preferredCurrency:
+        preferred_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
         notes:
@@ -3752,12 +3810,25 @@ components:
         source:
           "$ref": "#/components/schemas/SourceAttribution"
           nullable: true
-        createdAt:
+        created_at:
           type: string
           format: date-time
-        updatedAt:
+        updated_at:
           type: string
           format: date-time
+    BookingListFilters:
+      type: object
+      required: []
+      properties:
+        stage:
+          type: string
+          nullable: true
+        atp_staff:
+          type: string
+          nullable: true
+        search:
+          type: string
+          nullable: true
     BookingList:
       type: object
       required:
@@ -3769,6 +3840,25 @@ components:
             "$ref": "#/components/schemas/Booking"
         pagination:
           "$ref": "#/components/schemas/Pagination"
+        filters:
+          "$ref": "#/components/schemas/BookingListFilters"
+          nullable: true
+        sort:
+          type: string
+          nullable: true
+    TourListFilters:
+      type: object
+      required: []
+      properties:
+        destination:
+          type: string
+          nullable: true
+        style:
+          type: string
+          nullable: true
+        search:
+          type: string
+          nullable: true
     TourList:
       type: object
       required:
@@ -3780,6 +3870,20 @@ components:
             "$ref": "#/components/schemas/Tour"
         pagination:
           "$ref": "#/components/schemas/Pagination"
+        filters:
+          "$ref": "#/components/schemas/TourListFilters"
+          nullable: true
+        sort:
+          type: string
+          nullable: true
+        available_destinations:
+          type: array
+          items:
+            type: string
+        available_styles:
+          type: array
+          items:
+            type: string
     BookingDetail:
       type: object
       required:
@@ -3845,6 +3949,23 @@ components:
             "$ref": "#/components/schemas/AtpStaffDirectoryEntry"
         total:
           type: integer
+    AtpStaffResponse:
+      type: object
+      required:
+      - atp_staff
+      properties:
+        atp_staff:
+          "$ref": "#/components/schemas/AtpStaffDirectoryEntry"
+    BookingDeleteResponse:
+      type: object
+      required:
+      - deleted
+      - booking_id
+      properties:
+        deleted:
+          type: boolean
+        booking_id:
+          type: string
     BookingActivitiesResponse:
       type: object
       required:
@@ -3860,6 +3981,16 @@ components:
             "$ref": "#/components/schemas/BookingActivity"
         total:
           type: integer
+    BookingActivityResponse:
+      type: object
+      required:
+      - activity
+      - booking
+      properties:
+        activity:
+          "$ref": "#/components/schemas/BookingActivity"
+        booking:
+          "$ref": "#/components/schemas/Booking"
     BookingInvoicesResponse:
       type: object
       required:
@@ -3871,15 +4002,25 @@ components:
             "$ref": "#/components/schemas/BookingInvoice"
         total:
           type: integer
+    BookingInvoiceResponse:
+      type: object
+      required:
+      - invoice
+      - booking
+      properties:
+        invoice:
+          "$ref": "#/components/schemas/BookingInvoice"
+        booking:
+          "$ref": "#/components/schemas/Booking"
     BookingChatEvent:
       type: object
       required:
       - id
       - channel
       - direction
-      - eventType
-      - textPreview
-      - conversationId
+      - event_type
+      - text_preview
+      - conversation_id
       properties:
         id:
           type: string
@@ -3887,30 +4028,30 @@ components:
           type: string
         direction:
           type: string
-        eventType:
+        event_type:
           type: string
-        externalStatus:
-          type: string
-          nullable: true
-        textPreview:
-          type: string
-        senderDisplay:
+        external_status:
           type: string
           nullable: true
-        senderContact:
+        text_preview:
+          type: string
+        sender_display:
           type: string
           nullable: true
-        sentAt:
+        sender_contact:
+          type: string
+          nullable: true
+        sent_at:
           type: string
           format: date-time
           nullable: true
-        receivedAt:
+        received_at:
           type: string
           format: date-time
           nullable: true
-        conversationId:
+        conversation_id:
           type: string
-        openUrl:
+        open_url:
           type: string
           nullable: true
     BookingChatConversation:
@@ -3923,27 +4064,27 @@ components:
           type: string
         channel:
           type: string
-        externalContactId:
+        external_contact_id:
           type: string
           nullable: true
-        bookingId:
+        booking_id:
           type: string
           nullable: true
-        lastEventAt:
+        last_event_at:
           type: string
           format: date-time
           nullable: true
-        latestPreview:
+        latest_preview:
           type: string
           nullable: true
-        openUrl:
+        open_url:
           type: string
           nullable: true
     BookingChatResponse:
       type: object
       required:
       - total
-      - conversationTotal
+      - conversation_total
       properties:
         mode:
           type: string
@@ -3958,8 +4099,38 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingChatConversation"
-        conversationTotal:
+        conversation_total:
           type: integer
+    OfferExchangeRatesResponse:
+      type: object
+      required:
+      - from_currency
+      - to_currency
+      - exchange_rate
+      - total_price_cents
+      properties:
+        from_currency:
+          type: string
+        to_currency:
+          type: string
+        exchange_rate:
+          type: number
+        total_price_cents:
+          type: integer
+        converted_components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferComponent"
+        warning:
+          type: string
+          nullable: true
+    TourResponse:
+      type: object
+      required:
+      - tour
+      properties:
+        tour:
+          "$ref": "#/components/schemas/Tour"
     MobileBootstrap:
       type: object
       required:
@@ -3986,35 +4157,38 @@ components:
     MobileAppVersionGate:
       type: object
       required:
-      - minSupportedVersion
-      - latestVersion
-      - forceUpdate
+      - min_supported_version
+      - latest_version
+      - force_update
       properties:
-        minSupportedVersion:
+        min_supported_version:
           type: string
-        latestVersion:
+        latest_version:
           type: string
-        forceUpdate:
+        force_update:
           type: boolean
     APIContractVersion:
       type: object
       required:
-      - contractVersion
+      - contract_version
       properties:
-        contractVersion:
+        contract_version:
           type: string
     Pagination:
       type: object
       required:
       - page
-      - pageSize
-      - totalItems
+      - page_size
+      - total_items
+      - total_pages
       properties:
         page:
           type: integer
-        pageSize:
+        page_size:
           type: integer
-        totalItems:
+        total_items:
+          type: integer
+        total_pages:
           type: integer
     PaginatedRequest:
       type: object
@@ -4023,7 +4197,7 @@ components:
         page:
           type: integer
           nullable: true
-        pageSize:
+        page_size:
           type: integer
           nullable: true
         sort:
@@ -4032,6 +4206,24 @@ components:
         query:
           type: string
           nullable: true
+    AuthenticatedUser:
+      type: object
+      required: []
+      properties:
+        sub:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        preferred_username:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
     AuthMeResponse:
       type: object
       required:
@@ -4039,8 +4231,8 @@ components:
       properties:
         authenticated:
           type: boolean
-        principal:
-          "$ref": "#/components/schemas/ATPStaff"
+        user:
+          "$ref": "#/components/schemas/AuthenticatedUser"
           nullable: true
     WebsiteBookingForm:
       type: object
@@ -4080,10 +4272,10 @@ components:
         phone_number:
           type: string
           nullable: true
-        budget_lower_USD:
+        budget_lower_usd:
           type: integer
           nullable: true
-        budget_upper_USD:
+        budget_upper_usd:
           type: integer
           nullable: true
         preferred_language:
@@ -4132,10 +4324,10 @@ components:
         phone_number:
           type: string
           nullable: true
-        budget_lower_USD:
+        budget_lower_usd:
           type: integer
           nullable: true
-        budget_upper_USD:
+        budget_upper_usd:
           type: integer
           nullable: true
         preferred_language:
@@ -4146,7 +4338,13 @@ components:
         booking_name:
           type: string
           nullable: true
-        pageUrl:
+        tour_id:
+          type: string
+          nullable: true
+        tour_title:
+          type: string
+          nullable: true
+        page_url:
           type: string
           nullable: true
         referrer:
@@ -4161,18 +4359,85 @@ components:
         utm_campaign:
           type: string
           nullable: true
-        idempotencyKey:
-          type: string
-          nullable: true
-        tourId:
-          type: string
-          nullable: true
-        tourTitle:
+        idempotency_key:
           type: string
           nullable: true
       x-require-one-of:
       - - email
         - phone_number
+    BookingDeleteRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+    BookingNameUpdateRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    BookingStageUpdateRequest:
+      type: object
+      required:
+      - stage
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        stage:
+          "$ref": "#/components/schemas/BookingStage"
+        actor:
+          type: string
+          nullable: true
+    BookingOwnerUpdateRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        atp_staff:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    BookingPersonsUpdateRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        persons:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPerson"
+        actor:
+          type: string
+          nullable: true
+    BookingNotesUpdateRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
     BookingPricingUpdateRequest:
       type: object
       required:
@@ -4183,6 +4448,9 @@ components:
           nullable: true
         pricing:
           "$ref": "#/components/schemas/BookingPricing"
+        actor:
+          type: string
+          nullable: true
     BookingOfferUpdateRequest:
       type: object
       required:
@@ -4193,6 +4461,163 @@ components:
           nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
+        actor:
+          type: string
+          nullable: true
+    OfferExchangeRateComponent:
+      type: object
+      required:
+      - category
+      - quantity
+      - unit_amount_cents
+      properties:
+        id:
+          type: string
+          nullable: true
+        category:
+          "$ref": "#/components/schemas/OfferCategory"
+        quantity:
+          type: integer
+        unit_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        tax_rate_basis_points:
+          type: integer
+          nullable: true
+    OfferExchangeRatesRequest:
+      type: object
+      required:
+      - from_currency
+      - to_currency
+      properties:
+        from_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        to_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/OfferExchangeRateComponent"
+    BookingActivityCreateRequest:
+      type: object
+      required:
+      - type
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        type:
+          "$ref": "#/components/schemas/BookingActivityType"
+        detail:
+          type: string
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    BookingInvoiceUpsertRequest:
+      type: object
+      required: []
+      properties:
+        booking_hash:
+          type: string
+          nullable: true
+        invoice_number:
+          type: string
+          nullable: true
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        issue_date:
+          type: string
+          format: date
+          nullable: true
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/InvoiceComponent"
+        due_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        sent_to_recipient:
+          type: boolean
+          nullable: true
+    AtpStaffCreateRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+        active:
+          type: boolean
+          nullable: true
+        usernames:
+          type: array
+          items:
+            type: string
+        destinations:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+    TourUpsertRequest:
+      type: object
+      required: []
+      properties:
+        id:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        destinations:
+          type: array
+          items:
+            type: string
+        styles:
+          type: array
+          items:
+            type: string
+        travel_duration_days:
+          type: integer
+          nullable: true
+        budget_lower_usd:
+          type: integer
+          nullable: true
+        priority:
+          type: integer
+          nullable: true
+        rating:
+          type: number
+          nullable: true
+        seasonality_start_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        seasonality_end_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        short_description:
+          type: string
+          nullable: true
+        highlights:
+          type: array
+          items:
+            type: string
+        image:
+          type: string
+          nullable: true
     EvidenceUpload:
       type: object
       required:
@@ -4217,6 +4642,9 @@ components:
           type: string
           nullable: true
         code:
+          type: string
+          nullable: true
+        request_id:
           type: string
           nullable: true
 security:
@@ -4312,7 +4740,7 @@ paths:
       operationId: bookings
       summary: Bookings
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters: []
@@ -4335,16 +4763,16 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}":
+  "/api/v1/bookings/{booking_id}":
     get:
       operationId: booking_detail
       summary: Booking Detail
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
@@ -4368,16 +4796,54 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/chat":
+    delete:
+      operationId: booking_delete
+      summary: Booking Delete
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingDeleteRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDeleteResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/chat":
     get:
       operationId: booking_chat
       summary: Booking Chat
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
@@ -4401,20 +4867,65 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/stage":
+  "/api/v1/bookings/{booking_id}/name":
+    patch:
+      operationId: booking_name
+      summary: Booking Name
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingNameUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/stage":
     patch:
       operationId: booking_stage
       summary: Booking Stage
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
           type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingStageUpdateRequest"
       responses:
         '200':
           description: Success
@@ -4434,20 +4945,26 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/owner":
+  "/api/v1/bookings/{booking_id}/owner":
     patch:
-      operationId: booking_assignment
-      summary: Booking Assignment
+      operationId: booking_owner
+      summary: Booking Owner
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
           type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingOwnerUpdateRequest"
       responses:
         '200':
           description: Success
@@ -4467,20 +4984,26 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/notes":
+  "/api/v1/bookings/{booking_id}/persons":
     patch:
-      operationId: booking_note
-      summary: Booking Note
+      operationId: booking_persons
+      summary: Booking Persons
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
           type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingPersonsUpdateRequest"
       responses:
         '200':
           description: Success
@@ -4500,16 +5023,105 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/pricing":
+  "/api/v1/bookings/{booking_id}/persons/{person_id}/photo":
+    post:
+      operationId: booking_person_photo
+      summary: Booking Person Photo
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EvidenceUpload"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/notes":
+    patch:
+      operationId: booking_notes
+      summary: Booking Notes
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingNotesUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/pricing":
     patch:
       operationId: booking_pricing
       summary: Booking Pricing
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
@@ -4539,16 +5151,16 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/offer":
+  "/api/v1/bookings/{booking_id}/offer":
     patch:
       operationId: booking_offer
       summary: Booking Offer
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
@@ -4578,16 +5190,56 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/activities":
+  "/api/v1/offers/exchange-rates":
+    post:
+      operationId: offer_exchange_rates
+      summary: Offer Exchange Rates
+      tags:
+      - Offers
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/OfferExchangeRatesRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OfferExchangeRatesResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OfferExchangeRatesResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/activities":
     get:
       operationId: booking_activities
       summary: Booking Activities
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
@@ -4611,16 +5263,60 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{bookingId}/invoices":
+    post:
+      operationId: booking_activity_create
+      summary: Booking Activity Create
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingActivityCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingActivityResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingActivityResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/invoices":
     get:
       operationId: booking_invoices
       summary: Booking Invoices
       tags:
-      - V1
+      - Bookings
       security:
       - bearerAuth: []
       parameters:
-      - name: bookingId
+      - name: booking_id
         in: path
         required: true
         schema:
@@ -4644,12 +5340,100 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      operationId: booking_invoice_create
+      summary: Booking Invoice Create
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingInvoiceUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingInvoiceResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingInvoiceResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/invoices/{invoice_id}":
+    patch:
+      operationId: booking_invoice_update
+      summary: Booking Invoice Update
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: invoice_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingInvoiceUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingInvoiceResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/atp_staff":
     get:
       operationId: atp_staff
       summary: Atp Staff
       tags:
-      - V1
+      - Staff
       security:
       - bearerAuth: []
       parameters: []
@@ -4672,12 +5456,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      operationId: atp_staff_create
+      summary: Atp Staff Create
+      tags:
+      - Staff
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AtpStaffCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AtpStaffResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AtpStaffResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/tours":
     get:
       operationId: tours
       summary: Tours
       tags:
-      - V1
+      - Tours
       security:
       - bearerAuth: []
       parameters: []
@@ -4700,16 +5523,55 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/tours/{tourId}":
+    post:
+      operationId: tour_create
+      summary: Tour Create
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}":
     get:
       operationId: tour_detail
       summary: Tour Detail
       tags:
-      - V1
+      - Tours
       security:
       - bearerAuth: []
       parameters:
-      - name: tourId
+      - name: tour_id
         in: path
         required: true
         schema:
@@ -4733,27 +5595,77 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/tours/{tourId}/image":
-    get:
-      operationId: tour_image
-      summary: Tour Image
+    patch:
+      operationId: tour_update
+      summary: Tour Update
       tags:
-      - V1
+      - Tours
       security:
       - bearerAuth: []
       parameters:
-      - name: tourId
+      - name: tour_id
         in: path
         required: true
         schema:
           type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourUpsertRequest"
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                type: object
+                "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/{tour_id}/image":
+    post:
+      operationId: tour_image
+      summary: Tour Image
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EvidenceUpload"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourResponse"
         '401':
           description: Unauthorized
           content:

@@ -13,9 +13,7 @@ export function toPaginationPayload(paged) {
   return {
     page,
     page_size: pageSize,
-    pageSize,
     total_items: totalItems,
-    totalItems,
     total_pages: totalPages
   };
 }

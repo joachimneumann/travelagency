@@ -94,7 +94,7 @@ async function loadPersons() {
     return;
   }
   state.bookings = bookings;
-  state.persons = buildPersonsIndex(bookings);
+  state.persons = buildPersonsList(bookings);
   renderPersonsTable();
 }
 
@@ -107,54 +107,28 @@ async function fetchAllBookings() {
     const payload = await fetchApi(`/api/v1/bookings?page=${page}&page_size=100&sort=updated_at_desc`);
     if (!payload) return null;
     items.push(...(Array.isArray(payload.items) ? payload.items : []));
-    totalPages = Math.max(1, Number(payload.total_pages || 1));
+    totalPages = Math.max(1, Number(payload.pagination?.total_pages || 1));
     page += 1;
   }
 
   return items;
 }
 
-function buildPersonsIndex(bookings) {
-  const byKey = new Map();
-
-  for (const booking of Array.isArray(bookings) ? bookings : []) {
-    for (const person of getPersonsFromBooking(booking)) {
-      const key = buildPersonGroupKey(person, booking);
-      const existing = byKey.get(key) || {
-        key,
+function buildPersonsList(bookings) {
+  return (Array.isArray(bookings) ? bookings : [])
+    .flatMap((booking) =>
+      getPersonsFromBooking(booking).map((person) => ({
+        key: `${normalizeText(booking?.id)}:${normalizeText(person.id)}`,
+        booking_id: booking.id,
+        booking_label: buildBookingLabel(booking),
         name: person.name || "Unnamed person",
-        emails: new Set(),
-        phoneNumbers: new Set(),
-        roles: new Set(),
-        bookings: new Map(),
-        updatedAt: booking.updated_at || booking.created_at || ""
-      };
-
-      if (!existing.name && person.name) existing.name = person.name;
-      person.emails.forEach((value) => existing.emails.add(value));
-      person.phone_numbers.forEach((value) => existing.phoneNumbers.add(value));
-      person.roles.forEach((value) => existing.roles.add(value));
-      existing.bookings.set(booking.id, {
-        id: booking.id,
-        label: buildBookingLabel(booking),
+        emails: person.emails,
+        phone_numbers: person.phone_numbers,
+        roles: person.roles,
         updated_at: booking.updated_at || booking.created_at || ""
-      });
-      if (String(booking.updated_at || booking.created_at || "") > String(existing.updatedAt || "")) {
-        existing.updatedAt = booking.updated_at || booking.created_at || "";
-      }
-      byKey.set(key, existing);
-    }
-  }
-
-  return [...byKey.values()]
-    .map((person) => ({
-      ...person,
-      emails: [...person.emails],
-      phoneNumbers: [...person.phoneNumbers],
-      roles: [...person.roles],
-      bookings: [...person.bookings.values()].sort((left, right) => String(right.updated_at || "").localeCompare(String(left.updated_at || "")))
-    }))
-    .sort((left, right) => String(right.updatedAt || "").localeCompare(String(left.updatedAt || "")));
+      }))
+    )
+    .sort((left, right) => String(right.updated_at || "").localeCompare(String(left.updated_at || "")));
 }
 
 function getPersonsFromBooking(booking) {
@@ -184,37 +158,15 @@ function getPersonsFromBooking(booking) {
 }
 
 function collectEmails(person) {
-  return Array.from(
-    new Set(
-      [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
-        .map((value) => normalizeText(value))
-        .filter(Boolean)
-    )
-  );
+  return Array.from(new Set((Array.isArray(person?.emails) ? person.emails : []).map((value) => normalizeText(value)).filter(Boolean)));
 }
 
 function collectPhoneNumbers(person) {
-  return Array.from(
-    new Set(
-      [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
-        .map((value) => normalizeText(value))
-        .filter(Boolean)
-    )
-  );
+  return Array.from(new Set((Array.isArray(person?.phone_numbers) ? person.phone_numbers : []).map((value) => normalizeText(value)).filter(Boolean)));
 }
 
 function normalizeStringList(values) {
   return Array.from(new Set((Array.isArray(values) ? values : []).map((value) => normalizeText(value)).filter(Boolean)));
-}
-
-function buildPersonGroupKey(person, booking) {
-  const emailKey = [...person.emails].sort().join("|");
-  if (emailKey) return `email:${emailKey}`;
-  const phoneKey = [...person.phone_numbers].sort().join("|");
-  if (phoneKey) return `phone:${phoneKey}`;
-  const nameKey = normalizeText(person.name).toLowerCase();
-  if (nameKey) return `name:${nameKey}`;
-  return `booking:${normalizeText(booking?.id)}:person:${normalizeText(person.id)}`;
 }
 
 function buildBookingLabel(booking) {
@@ -228,9 +180,9 @@ function getFilteredPersons() {
     const haystack = [
       person.name,
       ...person.emails,
-      ...person.phoneNumbers,
+      ...person.phone_numbers,
       ...person.roles,
-      ...person.bookings.map((booking) => booking.label)
+      person.booking_label
     ]
       .filter(Boolean)
       .join(" ")
@@ -265,17 +217,14 @@ function renderPersonsTable() {
     .map((person) => {
       const contact = []
         .concat(person.emails.length ? [`Email: ${escapeHtml(person.emails.join(", "))}`] : [])
-        .concat(person.phoneNumbers.length ? [`Phone: ${escapeHtml(person.phoneNumbers.join(", "))}`] : [])
-        .join("<br />");
-      const bookingLinks = person.bookings
-        .map((booking) => `<a href="${escapeHtml(buildBookingHref(booking.id))}">${escapeHtml(booking.label)}</a>`)
+        .concat(person.phone_numbers.length ? [`Phone: ${escapeHtml(person.phone_numbers.join(", "))}`] : [])
         .join("<br />");
       return `<tr>
         <td>${escapeHtml(person.name || "-")}</td>
         <td>${contact || "-"}</td>
         <td>${escapeHtml(person.roles.join(", ") || "-")}</td>
-        <td>${bookingLinks || "-"}</td>
-        <td>${escapeHtml(formatDateTime(person.updatedAt))}</td>
+        <td><a href="${escapeHtml(buildBookingHref(person.booking_id))}">${escapeHtml(person.booking_label)}</a></td>
+        <td>${escapeHtml(formatDateTime(person.updated_at))}</td>
       </tr>`;
     })
     .join("");

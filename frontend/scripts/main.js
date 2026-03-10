@@ -150,8 +150,8 @@ const els = {
   bookingStyleSummary: document.getElementById("bookingStyleSummary"),
   bookingStylePanel: document.getElementById("bookingStylePanel"),
   bookingStyleOptions: document.getElementById("bookingStyleOptions"),
-  bookingTourId: document.getElementById("bookingTourId"),
-  bookingTourTitle: document.getElementById("bookingTourTitle"),
+  booking_tour_id: document.getElementById("booking_tour_id"),
+  booking_tour_title: document.getElementById("booking_tour_title"),
   stepBack: document.getElementById("stepBack"),
   stepClose: document.getElementById("stepClose"),
   stepNext: document.getElementById("stepNext"),
@@ -764,11 +764,11 @@ function renderTrips(trips) {
       const tags = trip.styles.map((style) => `<span class="tag">${escapeHTML(style)}</span>`).join("");
       const countries = tourDestinations(trip);
       const countriesLabel = countries.join(", ");
-      const price = typeof trip.budget_lower_USD === "number"
+      const price = typeof trip.budget_lower_usd === "number"
         ? `From $${new Intl.NumberFormat("en-US", {
           maximumFractionDigits: 0,
           useGrouping: true
-        }).format(trip.budget_lower_USD)}`
+        }).format(trip.budget_lower_usd)}`
         : "Custom quote";
       const rating = typeof trip.rating === "number" ? `★ ${trip.rating.toFixed(1)}` : "";
       const loading = index < 3 ? "eager" : "lazy";
@@ -790,7 +790,7 @@ function renderTrips(trips) {
               <span class="rating">${escapeHTML(rating)}</span>
             </div>
             <h3 class="tour-title">${escapeHTML(trip.title)}</h3>
-            <p class="tour-desc">${escapeHTML(trip.shortDescription)}</p>
+            <p class="tour-desc">${escapeHTML(trip.short_description)}</p>
             <div class="tags">${tags}</div>
             <div class="meta">
               <span>${trip.travel_duration_days} days</span>
@@ -1162,17 +1162,17 @@ function setSelectedTourContext(selectedTour) {
       travel_duration_days: Number.isFinite(Number(selectedTour.travel_duration_days))
         ? Number(selectedTour.travel_duration_days)
         : null,
-      budget_lower_USD: Number.isFinite(Number(selectedTour.budget_lower_USD))
-        ? Number(selectedTour.budget_lower_USD)
+      budget_lower_usd: Number.isFinite(Number(selectedTour.budget_lower_usd))
+        ? Number(selectedTour.budget_lower_usd)
         : null
     }
     : null;
 
-  if (els.bookingTourId) {
-    els.bookingTourId.value = state.selectedTour?.id || "";
+  if (els.booking_tour_id) {
+    els.booking_tour_id.value = state.selectedTour?.id || "";
   }
-  if (els.bookingTourTitle) {
-    els.bookingTourTitle.value = state.selectedTour?.title || "";
+  if (els.booking_tour_title) {
+    els.booking_tour_title.value = state.selectedTour?.title || "";
   }
 }
 
@@ -1390,23 +1390,23 @@ async function submitBookingForm() {
     preferred_currency: normalizeCurrencyCode(entries.preferred_currency || DEFAULT_BOOKING_CURRENCY),
     travel_duration_days_min: selectedDurationRange.min,
     travel_duration_days_max: selectedDurationRange.max,
-    budget_lower_USD: selectedBudgetOption.budgetLowerUSD,
-    budget_upper_USD: selectedBudgetOption.budgetUpperUSD,
+    budget_lower_usd: selectedBudgetOption.budgetLowerUSD,
+    budget_upper_usd: selectedBudgetOption.budgetUpperUSD,
     name: entries.name || "",
     email: entries.email || "",
     phone_number: entries.phone_number || "",
     preferred_language: entries.preferred_language || "",
     notes: entries.notes || "",
-    booking_name: entries.tourTitle || state.selectedTour?.title || "",
-    tourId: entries.tourId || "",
-    tourTitle: entries.tourTitle || "",
-    pageUrl: window.location.href,
+    booking_name: entries.tour_title || state.selectedTour?.title || "",
+    tour_id: entries.tour_id || "",
+    tour_title: entries.tour_title || "",
+    page_url: window.location.href,
     referrer: document.referrer || "",
     utm_source: getQueryParam("utm_source"),
     utm_medium: getQueryParam("utm_medium"),
     utm_campaign: getQueryParam("utm_campaign")
   };
-  const idempotencyKey = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const idempotency_key = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   try {
     validatePublicBookingCreateRequest(payload);
@@ -1416,7 +1416,7 @@ async function submitBookingForm() {
       headers: {
         ...(bookingRequest.headers || {}),
         "Content-Type": "application/json",
-        "Idempotency-Key": idempotencyKey
+        "Idempotency-Key": idempotency_key
       },
       body: JSON.stringify(payload)
     });
@@ -1533,7 +1533,7 @@ function prefillBookingFormWithFilters() {
     if (els.bookingBudget) {
       els.bookingBudget.value = findBudgetOptionValueByLowerUSD(
         preferredCurrency,
-        state.selectedTour.budget_lower_USD,
+        state.selectedTour.budget_lower_usd,
         state.selectedTour.travel_duration_days
       );
     }
