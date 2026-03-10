@@ -1,4 +1,4 @@
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "./text.js";
 
 export function nowIso() {
   return new Date().toISOString();

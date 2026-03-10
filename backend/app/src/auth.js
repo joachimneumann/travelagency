@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { normalizeText } from "../../../shared/js/text.js";
+import { normalizeText } from "./lib/text.js";
 
 export function createAuth({ port }) {
   const cfg = {

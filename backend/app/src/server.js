@@ -31,7 +31,7 @@ import {
   safeOptionalInt
 } from "./lib/request_utils.js";
 import { clamp, normalizeStringArray } from "./lib/collection_utils.js";
-import { normalizeText } from "../../../shared/js/text.js";
+import { normalizeText } from "./lib/text.js";
 import {
   isLikelyPhoneMatch,
   normalizeEmail,

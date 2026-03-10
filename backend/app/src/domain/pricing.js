@@ -1,5 +1,5 @@
 import path from "node:path";
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "../lib/text.js";
 
 export function createPricingHelpers({
   baseCurrency,

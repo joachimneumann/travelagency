@@ -1,6 +1,6 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { URL } from "node:url";
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "../lib/text.js";
 import { firstHeaderValue } from "../lib/request_utils.js";
 import { isLikelyPhoneMatch } from "../domain/phone_matching.js";
 

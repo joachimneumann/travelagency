@@ -1,6 +1,6 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
 
 export function createStoreUtils({

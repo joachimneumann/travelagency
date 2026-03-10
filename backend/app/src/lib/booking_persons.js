@@ -1,4 +1,4 @@
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "./text.js";
 
 function optionalText(value) {
   const normalized = normalizeText(value);

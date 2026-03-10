@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import { escapeHtml, normalizeText } from "../../../../shared/js/text.js";
+import { escapeHtml, normalizeText } from "../lib/text.js";
 
 export function createHttpHelpers({ corsOrigin }) {
   function withCors(req, res) {

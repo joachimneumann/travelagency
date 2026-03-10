@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "./text.js";
 
 function escapePdfText(value) {
   return String(value || "")

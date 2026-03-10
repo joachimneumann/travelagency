@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { URL } from "node:url";
-import { escapeHtml, normalizeText } from "../../../../shared/js/text.js";
+import { escapeHtml, normalizeText } from "../lib/text.js";
 
 export function createStagingAccessHandlers({
   enabled,

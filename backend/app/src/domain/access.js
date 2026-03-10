@@ -1,4 +1,4 @@
-import { normalizeText } from "../../../../shared/js/text.js";
+import { normalizeText } from "../lib/text.js";
 
 function hasRole(principal, role) {
   return Array.isArray(principal?.roles) ? principal.roles.includes(role) : false;
