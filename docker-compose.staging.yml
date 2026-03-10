@@ -19,10 +19,10 @@ services:
   backend:
     image: node:22-alpine
     restart: unless-stopped
-    working_dir: /app
+    working_dir: /srv/backend/app
     command: sh -c "npm ci && npm start"
     volumes:
-      - ./backend/app:/app
+      - ./:/srv
     env_file:
       - .env.staging
     depends_on:
