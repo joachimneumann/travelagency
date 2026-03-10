@@ -133,7 +133,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingDeleteRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"expected_core_revision","required":false,"wireName":"expected_core_revision"}, SHARED_FIELD_DEFS.FIELD_19)
         ]
       };
 
@@ -183,7 +183,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingNameUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_core_revision","required":false,"wireName":"expected_core_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"name","required":false,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -200,7 +200,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingStageUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_core_revision","required":false,"wireName":"expected_core_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"stage","required":true,"wireName":"stage"}, SHARED_FIELD_DEFS.FIELD_33),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -217,7 +217,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingOwnerUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_core_revision","required":false,"wireName":"expected_core_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"atp_staff","required":false,"wireName":"atp_staff"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -227,38 +227,54 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_OWNER_UPDATE_REQUEST_SCHEMA);
       }
 
-      export const BOOKING_PERSONS_UPDATE_REQUEST_SCHEMA = {
-        name: "BookingPersonsUpdateRequest",
+      export const BOOKING_PERSON_CREATE_REQUEST_SCHEMA = {
+        name: "BookingPersonCreateRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingPersonsUpdateRequest",
+        sourceType: "openapi.components.schemas.BookingPersonCreateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"persons","required":false,"wireName":"persons"}, SHARED_FIELD_DEFS.FIELD_52),
+    schemaField({"name":"expected_persons_revision","required":false,"wireName":"expected_persons_revision"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"person","required":true,"wireName":"person"}, SHARED_FIELD_DEFS.FIELD_52),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateBookingPersonsUpdateRequest(value) {
-        return validateShape(value, BOOKING_PERSONS_UPDATE_REQUEST_SCHEMA);
+      export function validateBookingPersonCreateRequest(value) {
+        return validateShape(value, BOOKING_PERSON_CREATE_REQUEST_SCHEMA);
       }
 
-      export const EVIDENCE_UPLOAD_SCHEMA = {
-        name: "EvidenceUpload",
+      export const BOOKING_PERSON_UPDATE_REQUEST_SCHEMA = {
+        name: "BookingPersonUpdateRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.EvidenceUpload",
+        sourceType: "openapi.components.schemas.BookingPersonUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"filename","required":true,"wireName":"filename"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"mime_type","required":false,"wireName":"mime_type"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"data_base64","required":true,"wireName":"data_base64"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"expected_persons_revision","required":false,"wireName":"expected_persons_revision"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"person","required":true,"wireName":"person"}, SHARED_FIELD_DEFS.FIELD_52),
+    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateEvidenceUpload(value) {
-        return validateShape(value, EVIDENCE_UPLOAD_SCHEMA);
+      export function validateBookingPersonUpdateRequest(value) {
+        return validateShape(value, BOOKING_PERSON_UPDATE_REQUEST_SCHEMA);
+      }
+
+      export const BOOKING_PERSON_DELETE_REQUEST_SCHEMA = {
+        name: "BookingPersonDeleteRequest",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.BookingPersonDeleteRequest",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"expected_persons_revision","required":false,"wireName":"expected_persons_revision"}, SHARED_FIELD_DEFS.FIELD_19),
+    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateBookingPersonDeleteRequest(value) {
+        return validateShape(value, BOOKING_PERSON_DELETE_REQUEST_SCHEMA);
       }
 
       export const BOOKING_NOTES_UPDATE_REQUEST_SCHEMA = {
@@ -268,7 +284,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingNotesUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_notes_revision","required":false,"wireName":"expected_notes_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -285,7 +301,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingPricingUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_pricing_revision","required":false,"wireName":"expected_pricing_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_53),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -302,7 +318,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingOfferUpdateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_offer_revision","required":false,"wireName":"expected_offer_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_54),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -373,7 +389,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingActivityCreateRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_core_revision","required":false,"wireName":"expected_core_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"type","required":true,"wireName":"type"}, SHARED_FIELD_DEFS.FIELD_21),
     schemaField({"name":"detail","required":false,"wireName":"detail"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
@@ -423,7 +439,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingInvoiceUpsertRequest",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking_hash","required":false,"wireName":"booking_hash"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"expected_invoices_revision","required":false,"wireName":"expected_invoices_revision"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"invoice_number","required":false,"wireName":"invoice_number"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"currency","required":false,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_20),
     schemaField({"name":"issue_date","required":false,"wireName":"issue_date"}, SHARED_FIELD_DEFS.FIELD_10),
@@ -562,6 +578,23 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateTourDetail(value) {
         return validateShape(value, TOUR_DETAIL_SCHEMA);
+      }
+
+      export const EVIDENCE_UPLOAD_SCHEMA = {
+        name: "EvidenceUpload",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.EvidenceUpload",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"filename","required":true,"wireName":"filename"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"mime_type","required":false,"wireName":"mime_type"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"data_base64","required":true,"wireName":"data_base64"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateEvidenceUpload(value) {
+        return validateShape(value, EVIDENCE_UPLOAD_SCHEMA);
       }
 
       export const MOBILE_APP_VERSION_GATE_SCHEMA = {

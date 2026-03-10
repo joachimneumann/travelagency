@@ -152,15 +152,55 @@ package api
 		}]
 	},
 	{
-		key:           "booking_persons"
+		key:           "booking_person_create"
 		path:          "/api/v1/bookings/{booking_id}/persons"
-		method:        "PATCH"
+		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "BookingPersonsUpdateRequest"
+		requestType:   "BookingPersonCreateRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_person_update"
+		path:          "/api/v1/bookings/{booking_id}/persons/{person_id}"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingPersonUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_person_delete"
+		path:          "/api/v1/bookings/{booking_id}/persons/{person_id}"
+		method:        "DELETE"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingPersonDeleteRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -172,7 +212,7 @@ package api
 		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "EvidenceUpload"
+		requestType:   "BookingPersonPhotoUploadRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"

@@ -3,10 +3,6 @@ import Foundation
 final class APIClient {
     enum APIError: LocalizedError {
         case invalidResponse
-        case unauthorized
-        case forbidden
-        case bookingConflict(String)
-        case customerConflict(String)
         case server(String)
         case bootstrapUnavailable(URL)
 
@@ -14,14 +10,6 @@ final class APIClient {
             switch self {
             case .invalidResponse:
                 return "The server returned an invalid response."
-            case .unauthorized:
-                return "Authentication is required."
-            case .forbidden:
-                return "You do not have permission to perform this action."
-            case .bookingConflict(let message):
-                return message
-            case .customerConflict(let message):
-                return message
             case .server(let message):
                 return message
             case .bootstrapUnavailable(let url):
@@ -30,63 +18,8 @@ final class APIClient {
         }
     }
 
-    func fetchBookings(session: AuthSession, page: Int = 1, pageSize: Int = 20) async throws -> BookingListResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingsURL(
-                baseURL: AppConfig.apiBaseURL,
-                page: page,
-                pageSize: pageSize
-            ),
-            session: session
-        )
-    }
-
-    func fetchCustomers(
-        session: AuthSession,
-        page: Int = 1,
-        pageSize: Int = 20,
-        search: String? = nil
-    ) async throws -> CustomerListResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.customersURL(
-                baseURL: AppConfig.apiBaseURL,
-                page: page,
-                pageSize: pageSize,
-                search: search
-            ),
-            session: session
-        )
-    }
-
-    func fetchTravelGroups(
-        session: AuthSession,
-        page: Int = 1,
-        pageSize: Int = 20,
-        search: String? = nil
-    ) async throws -> TravelGroupListResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.travelGroupsURL(
-                baseURL: AppConfig.apiBaseURL,
-                page: page,
-                pageSize: pageSize,
-                search: search
-            ),
-            session: session
-        )
-    }
-
-    func fetchCustomerDetail(customerClientID: String, session: AuthSession) async throws -> CustomerDetailResponse {
-        try await send(
-            requestURL: GeneratedAPIRequestFactory.customerDetailURL(
-                baseURL: AppConfig.apiBaseURL,
-                customerClientId: customerClientID
-            ),
-            session: session
-        )
-    }
-
     func fetchBootstrap() async throws -> MobileBootstrapResponse {
-        let bootstrapURL = MobileAPIRequestFactory.bootstrapURL(baseURL: AppConfig.apiBaseURL)
+        let bootstrapURL = AppConfig.mobileBootstrapURL()
         var request = URLRequest(url: bootstrapURL)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -98,168 +31,13 @@ final class APIClient {
         } catch {
             throw APIError.bootstrapUnavailable(bootstrapURL)
         }
+
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "Request failed"
             throw APIError.server(message)
         }
         return try JSONDecoder.api.decode(MobileBootstrapResponse.self, from: data)
-    }
-
-    func fetchBookingDetail(id: String, session: AuthSession) async throws -> BookingDetailResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingDetailURL(baseURL: AppConfig.apiBaseURL, bookingID: id),
-            session: session
-        )
-    }
-
-    func fetchActivities(bookingID: String, session: AuthSession) async throws -> BookingActivitiesResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingActivitiesURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
-            session: session
-        )
-    }
-
-    func fetchInvoices(bookingID: String, session: AuthSession) async throws -> BookingInvoicesResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingInvoicesURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
-            session: session
-        )
-    }
-
-    func fetchBookingChat(bookingID: String, session: AuthSession) async throws -> BookingChatResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingChatURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID, limit: 100),
-            session: session
-        )
-    }
-
-    func fetchAtpStaff(session: AuthSession) async throws -> AtpStaffListResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.activeAtpStaffURL(baseURL: AppConfig.apiBaseURL),
-            session: session
-        )
-    }
-
-    func updateStage(bookingID: String, stage: String, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingStageURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
-            method: "PATCH",
-            body: ["stage": stage, "booking_hash": bookingHash],
-            session: session
-        )
-    }
-
-    func updateAtpStaffAssignment(bookingID: String, staffID: String?, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingAssignmentURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
-            method: "PATCH",
-            body: ["atp_staff": staffID ?? NSNull(), "booking_hash": bookingHash],
-            session: session
-        )
-    }
-
-    func updateBookingNote(bookingID: String, note: String, bookingHash: String, session: AuthSession) async throws -> BookingUpdateResponse {
-        try await send(
-            requestURL: MobileAPIRequestFactory.bookingNoteURL(baseURL: AppConfig.apiBaseURL, bookingID: bookingID),
-            method: "PATCH",
-            body: ["notes": note, "booking_hash": bookingHash],
-            session: session
-        )
-    }
-
-    func updateCustomer(customerClientID: String, body: [String: Any], session: AuthSession) async throws -> CustomerUpdateResponse {
-        try await send(
-            requestURL: GeneratedAPIRequestFactory.customerUpdateURL(
-                baseURL: AppConfig.apiBaseURL,
-                customerClientId: customerClientID
-            ),
-            method: "PATCH",
-            body: body,
-            session: session
-        )
-    }
-
-    func uploadCustomerPhoto(customerClientID: String, body: [String: Any], session: AuthSession) async throws -> CustomerPhotoUploadResponse {
-        try await send(
-            requestURL: GeneratedAPIRequestFactory.customerPhotoUploadURL(
-                baseURL: AppConfig.apiBaseURL,
-                customerClientId: customerClientID
-            ),
-            method: "POST",
-            body: body,
-            session: session
-        )
-    }
-
-    func createCustomerConsent(customerClientID: String, body: [String: Any], session: AuthSession) async throws -> CustomerConsentCreateResponse {
-        try await send(
-            requestURL: GeneratedAPIRequestFactory.customerConsentCreateURL(
-                baseURL: AppConfig.apiBaseURL,
-                customerClientId: customerClientID
-            ),
-            method: "POST",
-            body: body,
-            session: session
-        )
-    }
-
-    private func send<T: Decodable>(requestURL: URL, method: String = "GET", body: [String: Any]? = nil, session: AuthSession) async throws -> T {
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = method
-        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let body {
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        }
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
-        switch http.statusCode {
-        case 200...299:
-            return try JSONDecoder.api.decode(T.self, from: data)
-        case 401:
-            throw APIError.unauthorized
-        case 403:
-            throw APIError.forbidden
-        case 409:
-            let errorCode = parseErrorCode(data: data)
-            if errorCode == "BOOKING_HASH_MISMATCH" {
-                throw APIError.bookingConflict(parseErrorMessage(data: data))
-            }
-            if errorCode == "CUSTOMER_HASH_MISMATCH" {
-                throw APIError.customerConflict(parseErrorMessage(data: data))
-            }
-            fallthrough
-        default:
-            let message = parseErrorMessage(data: data)
-            throw APIError.server(message)
-        }
-    }
-
-    private func parseErrorMessage(data: Data) -> String {
-        if let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            let error = String(describing: payload["error"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let detail = String(describing: payload["detail"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            if !error.isEmpty && !detail.isEmpty {
-                return "\(error): \(detail)"
-            }
-            if !detail.isEmpty {
-                return detail
-            }
-            if !error.isEmpty {
-                return error
-            }
-        }
-        return String(data: data, encoding: .utf8) ?? "Request failed"
-    }
-
-    private func parseErrorCode(data: Data) -> String {
-        guard let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return ""
-        }
-        return String(describing: payload["code"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

@@ -13,7 +13,12 @@ This means:
 
 `Booking`
 - `id`
-- `booking_hash`
+- `core_revision`
+- `notes_revision`
+- `persons_revision`
+- `pricing_revision`
+- `offer_revision`
+- `invoices_revision`
 - stage, assignment, notes
 - commercial data such as pricing, offer, invoices
 - `number_of_travelers`
@@ -90,9 +95,25 @@ Multiple roles are allowed on the same person.
 
 - `booking.persons[]` is the editable person source of truth for that booking
 - `web_form_submission` remains the original inbound snapshot
+- optimistic concurrency is section-based, not booking-wide
+- each writable booking subresource carries its own revision counter
+- `updated_at` is for audit/display only and is not used for conflict detection
 - one booking may list fewer or more persons than `number_of_travelers`
 - UI may warn when those counts differ, but the model allows it
 - a booking should usually have one `primary_contact`
+
+## Conflict Detection
+
+The active conflict model uses optimistic locking with integer revision counters.
+
+- core edits use `core_revision`
+- notes use `notes_revision`
+- persons use `persons_revision`
+- pricing uses `pricing_revision`
+- offer uses `offer_revision`
+- invoices use `invoices_revision`
+
+When the backend returns a conflict because another device already wrote a newer revision, the frontend should stop the edit and ask the user to reload the page. It should not silently refresh the booking or retry automatically.
 
 ## Why This Shape
 

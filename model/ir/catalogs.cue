@@ -12,7 +12,10 @@ IR: {
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
-		countries: [for country in enumModel.CountryCatalog {{code: country}}]
+		countries: [for country in enumModel.CountryCatalog {{
+			code:  country
+			label: "\(country) \(enumModel.CountryNameCatalog[country])"
+		}}]
 		timezones: [for timezone in enumModel.TimezoneCatalog {{code: timezone}}]
 		personConsentTypes: [for consentType in enumModel.PersonConsentTypeCatalog {{code: consentType}}]
 		personConsentStatuses: [for consentStatus in enumModel.PersonConsentStatusCatalog {{code: consentStatus}}]

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-10T09:52:05Z
+# 2026-03-10T15:29:35Z
 
 ---
 openapi: 3.1.0
@@ -570,753 +570,1002 @@ components:
       - ZW
       x-enum-catalog:
       - code: AD
+        label: AD Andorra
       - code: AE
+        label: AE United Arab Emirates
       - code: AF
+        label: AF Afghanistan
       - code: AG
+        label: AG Antigua & Barbuda
       - code: AI
+        label: AI Anguilla
       - code: AL
+        label: AL Albania
       - code: AM
+        label: AM Armenia
       - code: AO
+        label: AO Angola
       - code: AQ
+        label: AQ Antarctica
       - code: AR
+        label: AR Argentina
       - code: AS
+        label: AS American Samoa
       - code: AT
+        label: AT Austria
       - code: AU
+        label: AU Australia
       - code: AW
+        label: AW Aruba
       - code: AX
+        label: AX Aland Islands
       - code: AZ
+        label: AZ Azerbaijan
       - code: BA
+        label: BA Bosnia & Herzegovina
       - code: BB
+        label: BB Barbados
       - code: BD
+        label: BD Bangladesh
       - code: BE
+        label: BE Belgium
       - code: BF
+        label: BF Burkina Faso
       - code: BG
+        label: BG Bulgaria
       - code: BH
+        label: BH Bahrain
       - code: BI
+        label: BI Burundi
       - code: BJ
+        label: BJ Benin
       - code: BL
+        label: BL St. Barthelemy
       - code: BM
+        label: BM Bermuda
       - code: BN
+        label: BN Brunei
       - code: BO
+        label: BO Bolivia
       - code: BQ
+        label: BQ Caribbean Netherlands
       - code: BR
+        label: BR Brazil
       - code: BS
+        label: BS Bahamas
       - code: BT
+        label: BT Bhutan
       - code: BV
+        label: BV Bouvet Island
       - code: BW
+        label: BW Botswana
       - code: BY
+        label: BY Belarus
       - code: BZ
+        label: BZ Belize
       - code: CA
+        label: CA Canada
       - code: CC
+        label: CC Cocos (Keeling) Islands
       - code: CD
+        label: CD Congo - Kinshasa
       - code: CF
+        label: CF Central African Republic
       - code: CG
+        label: CG Congo - Brazzaville
       - code: CH
+        label: CH Switzerland
       - code: CI
+        label: CI Cote d'Ivoire
       - code: CK
+        label: CK Cook Islands
       - code: CL
+        label: CL Chile
       - code: CM
+        label: CM Cameroon
       - code: CN
+        label: CN China
       - code: CO
+        label: CO Colombia
       - code: CR
+        label: CR Costa Rica
       - code: CU
+        label: CU Cuba
       - code: CV
+        label: CV Cape Verde
       - code: CW
+        label: CW Curacao
       - code: CX
+        label: CX Christmas Island
       - code: CY
+        label: CY Cyprus
       - code: CZ
+        label: CZ Czechia
       - code: DE
+        label: DE Germany
       - code: DJ
+        label: DJ Djibouti
       - code: DK
+        label: DK Denmark
       - code: DM
+        label: DM Dominica
       - code: DO
+        label: DO Dominican Republic
       - code: DZ
+        label: DZ Algeria
       - code: EC
+        label: EC Ecuador
       - code: EE
+        label: EE Estonia
       - code: EG
+        label: EG Egypt
       - code: EH
+        label: EH Western Sahara
       - code: ER
+        label: ER Eritrea
       - code: ES
+        label: ES Spain
       - code: ET
+        label: ET Ethiopia
       - code: FI
+        label: FI Finland
       - code: FJ
+        label: FJ Fiji
       - code: FK
+        label: FK Falkland Islands
       - code: FM
+        label: FM Micronesia
       - code: FO
+        label: FO Faroe Islands
       - code: FR
+        label: FR France
       - code: GA
+        label: GA Gabon
       - code: GB
+        label: GB United Kingdom
       - code: GD
+        label: GD Grenada
       - code: GE
+        label: GE Georgia
       - code: GF
+        label: GF French Guiana
       - code: GG
+        label: GG Guernsey
       - code: GH
+        label: GH Ghana
       - code: GI
+        label: GI Gibraltar
       - code: GL
+        label: GL Greenland
       - code: GM
+        label: GM Gambia
       - code: GN
+        label: GN Guinea
       - code: GP
+        label: GP Guadeloupe
       - code: GQ
+        label: GQ Equatorial Guinea
       - code: GR
+        label: GR Greece
       - code: GS
+        label: GS South Georgia & South Sandwich Islands
       - code: GT
+        label: GT Guatemala
       - code: GU
+        label: GU Guam
       - code: GW
+        label: GW Guinea-Bissau
       - code: GY
+        label: GY Guyana
       - code: HK
+        label: HK Hong Kong SAR China
       - code: HM
+        label: HM Heard & McDonald Islands
       - code: HN
+        label: HN Honduras
       - code: HR
+        label: HR Croatia
       - code: HT
+        label: HT Haiti
       - code: HU
+        label: HU Hungary
       - code: ID
+        label: ID Indonesia
       - code: IE
+        label: IE Ireland
       - code: IL
+        label: IL Israel
       - code: IM
+        label: IM Isle of Man
       - code: IN
+        label: IN India
       - code: IO
+        label: IO British Indian Ocean Territory
       - code: IQ
+        label: IQ Iraq
       - code: IR
+        label: IR Iran
       - code: IS
+        label: IS Iceland
       - code: IT
+        label: IT Italy
       - code: JE
+        label: JE Jersey
       - code: JM
+        label: JM Jamaica
       - code: JO
+        label: JO Jordan
       - code: JP
+        label: JP Japan
       - code: KE
+        label: KE Kenya
       - code: KG
+        label: KG Kyrgyzstan
       - code: KH
+        label: KH Cambodia
       - code: KI
+        label: KI Kiribati
       - code: KM
+        label: KM Comoros
       - code: KN
+        label: KN St. Kitts & Nevis
       - code: KP
+        label: KP North Korea
       - code: KR
+        label: KR South Korea
       - code: KW
+        label: KW Kuwait
       - code: KY
+        label: KY Cayman Islands
       - code: KZ
+        label: KZ Kazakhstan
       - code: LA
+        label: LA Laos
       - code: LB
+        label: LB Lebanon
       - code: LC
+        label: LC St. Lucia
       - code: LI
+        label: LI Liechtenstein
       - code: LK
+        label: LK Sri Lanka
       - code: LR
+        label: LR Liberia
       - code: LS
+        label: LS Lesotho
       - code: LT
+        label: LT Lithuania
       - code: LU
+        label: LU Luxembourg
       - code: LV
+        label: LV Latvia
       - code: LY
+        label: LY Libya
       - code: MA
+        label: MA Morocco
       - code: MC
+        label: MC Monaco
       - code: MD
+        label: MD Moldova
       - code: ME
+        label: ME Montenegro
       - code: MF
+        label: MF St. Martin
       - code: MG
+        label: MG Madagascar
       - code: MH
+        label: MH Marshall Islands
       - code: MK
+        label: MK North Macedonia
       - code: ML
+        label: ML Mali
       - code: MM
+        label: MM Myanmar (Burma)
       - code: MN
+        label: MN Mongolia
       - code: MO
+        label: MO Macao SAR China
       - code: MP
+        label: MP Northern Mariana Islands
       - code: MQ
+        label: MQ Martinique
       - code: MR
+        label: MR Mauritania
       - code: MS
+        label: MS Montserrat
       - code: MT
+        label: MT Malta
       - code: MU
+        label: MU Mauritius
       - code: MV
+        label: MV Maldives
       - code: MW
+        label: MW Malawi
       - code: MX
+        label: MX Mexico
       - code: MY
+        label: MY Malaysia
       - code: MZ
+        label: MZ Mozambique
       - code: NA
+        label: NA Namibia
       - code: NC
+        label: NC New Caledonia
       - code: NE
+        label: NE Niger
       - code: NF
+        label: NF Norfolk Island
       - code: NG
+        label: NG Nigeria
       - code: NI
+        label: NI Nicaragua
       - code: NL
+        label: NL Netherlands
       - code: 'NO'
+        label: NO Norway
       - code: NP
+        label: NP Nepal
       - code: NR
+        label: NR Nauru
       - code: NU
+        label: NU Niue
       - code: NZ
+        label: NZ New Zealand
       - code: OM
+        label: OM Oman
       - code: PA
+        label: PA Panama
       - code: PE
+        label: PE Peru
       - code: PF
+        label: PF French Polynesia
       - code: PG
+        label: PG Papua New Guinea
       - code: PH
+        label: PH Philippines
       - code: PK
+        label: PK Pakistan
       - code: PL
+        label: PL Poland
       - code: PM
+        label: PM St. Pierre & Miquelon
       - code: PN
+        label: PN Pitcairn Islands
       - code: PR
+        label: PR Puerto Rico
       - code: PS
+        label: PS Palestinian Territories
       - code: PT
+        label: PT Portugal
       - code: PW
+        label: PW Palau
       - code: PY
+        label: PY Paraguay
       - code: QA
+        label: QA Qatar
       - code: RE
+        label: RE Reunion
       - code: RO
+        label: RO Romania
       - code: RS
+        label: RS Serbia
       - code: RU
+        label: RU Russia
       - code: RW
+        label: RW Rwanda
       - code: SA
+        label: SA Saudi Arabia
       - code: SB
+        label: SB Solomon Islands
       - code: SC
+        label: SC Seychelles
       - code: SD
+        label: SD Sudan
       - code: SE
+        label: SE Sweden
       - code: SG
+        label: SG Singapore
       - code: SH
+        label: SH St. Helena
       - code: SI
+        label: SI Slovenia
       - code: SJ
+        label: SJ Svalbard & Jan Mayen
       - code: SK
+        label: SK Slovakia
       - code: SL
+        label: SL Sierra Leone
       - code: SM
+        label: SM San Marino
       - code: SN
+        label: SN Senegal
       - code: SO
+        label: SO Somalia
       - code: SR
+        label: SR Suriname
       - code: SS
+        label: SS South Sudan
       - code: ST
+        label: ST Sao Tome & Principe
       - code: SV
+        label: SV El Salvador
       - code: SX
+        label: SX Sint Maarten
       - code: SY
+        label: SY Syria
       - code: SZ
+        label: SZ Eswatini
       - code: TC
+        label: TC Turks & Caicos Islands
       - code: TD
+        label: TD Chad
       - code: TF
+        label: TF French Southern Territories
       - code: TG
+        label: TG Togo
       - code: TH
+        label: TH Thailand
       - code: TJ
+        label: TJ Tajikistan
       - code: TK
+        label: TK Tokelau
       - code: TL
+        label: TL Timor-Leste
       - code: TM
+        label: TM Turkmenistan
       - code: TN
+        label: TN Tunisia
       - code: TO
+        label: TO Tonga
       - code: TR
+        label: TR Turkiye
       - code: TT
+        label: TT Trinidad & Tobago
       - code: TV
+        label: TV Tuvalu
       - code: TW
+        label: TW Taiwan
       - code: TZ
+        label: TZ Tanzania
       - code: UA
+        label: UA Ukraine
       - code: UG
+        label: UG Uganda
       - code: UM
+        label: UM U.S. Outlying Islands
       - code: US
+        label: US United States
       - code: UY
+        label: UY Uruguay
       - code: UZ
+        label: UZ Uzbekistan
       - code: VA
+        label: VA Vatican City
       - code: VC
+        label: VC St. Vincent & Grenadines
       - code: VE
+        label: VE Venezuela
       - code: VG
+        label: VG British Virgin Islands
       - code: VI
+        label: VI U.S. Virgin Islands
       - code: VN
+        label: VN Vietnam
       - code: VU
+        label: VU Vanuatu
       - code: WF
+        label: WF Wallis & Futuna
       - code: WS
+        label: WS Samoa
       - code: YE
+        label: YE Yemen
       - code: YT
+        label: YT Mayotte
       - code: ZA
+        label: ZA South Africa
       - code: ZM
+        label: ZM Zambia
       - code: ZW
+        label: ZW Zimbabwe
       x-enum-options:
       - value: AD
-        label: AD
+        label: AD Andorra
       - value: AE
-        label: AE
+        label: AE United Arab Emirates
       - value: AF
-        label: AF
+        label: AF Afghanistan
       - value: AG
-        label: AG
+        label: AG Antigua & Barbuda
       - value: AI
-        label: AI
+        label: AI Anguilla
       - value: AL
-        label: AL
+        label: AL Albania
       - value: AM
-        label: AM
+        label: AM Armenia
       - value: AO
-        label: AO
+        label: AO Angola
       - value: AQ
-        label: AQ
+        label: AQ Antarctica
       - value: AR
-        label: AR
+        label: AR Argentina
       - value: AS
-        label: AS
+        label: AS American Samoa
       - value: AT
-        label: AT
+        label: AT Austria
       - value: AU
-        label: AU
+        label: AU Australia
       - value: AW
-        label: AW
+        label: AW Aruba
       - value: AX
-        label: AX
+        label: AX Aland Islands
       - value: AZ
-        label: AZ
+        label: AZ Azerbaijan
       - value: BA
-        label: BA
+        label: BA Bosnia & Herzegovina
       - value: BB
-        label: BB
+        label: BB Barbados
       - value: BD
-        label: BD
+        label: BD Bangladesh
       - value: BE
-        label: BE
+        label: BE Belgium
       - value: BF
-        label: BF
+        label: BF Burkina Faso
       - value: BG
-        label: BG
+        label: BG Bulgaria
       - value: BH
-        label: BH
+        label: BH Bahrain
       - value: BI
-        label: BI
+        label: BI Burundi
       - value: BJ
-        label: BJ
+        label: BJ Benin
       - value: BL
-        label: BL
+        label: BL St. Barthelemy
       - value: BM
-        label: BM
+        label: BM Bermuda
       - value: BN
-        label: BN
+        label: BN Brunei
       - value: BO
-        label: BO
+        label: BO Bolivia
       - value: BQ
-        label: BQ
+        label: BQ Caribbean Netherlands
       - value: BR
-        label: BR
+        label: BR Brazil
       - value: BS
-        label: BS
+        label: BS Bahamas
       - value: BT
-        label: BT
+        label: BT Bhutan
       - value: BV
-        label: BV
+        label: BV Bouvet Island
       - value: BW
-        label: BW
+        label: BW Botswana
       - value: BY
-        label: BY
+        label: BY Belarus
       - value: BZ
-        label: BZ
+        label: BZ Belize
       - value: CA
-        label: CA
+        label: CA Canada
       - value: CC
-        label: CC
+        label: CC Cocos (Keeling) Islands
       - value: CD
-        label: CD
+        label: CD Congo - Kinshasa
       - value: CF
-        label: CF
+        label: CF Central African Republic
       - value: CG
-        label: CG
+        label: CG Congo - Brazzaville
       - value: CH
-        label: CH
+        label: CH Switzerland
       - value: CI
-        label: CI
+        label: CI Cote d'Ivoire
       - value: CK
-        label: CK
+        label: CK Cook Islands
       - value: CL
-        label: CL
+        label: CL Chile
       - value: CM
-        label: CM
+        label: CM Cameroon
       - value: CN
-        label: CN
+        label: CN China
       - value: CO
-        label: CO
+        label: CO Colombia
       - value: CR
-        label: CR
+        label: CR Costa Rica
       - value: CU
-        label: CU
+        label: CU Cuba
       - value: CV
-        label: CV
+        label: CV Cape Verde
       - value: CW
-        label: CW
+        label: CW Curacao
       - value: CX
-        label: CX
+        label: CX Christmas Island
       - value: CY
-        label: CY
+        label: CY Cyprus
       - value: CZ
-        label: CZ
+        label: CZ Czechia
       - value: DE
-        label: DE
+        label: DE Germany
       - value: DJ
-        label: DJ
+        label: DJ Djibouti
       - value: DK
-        label: DK
+        label: DK Denmark
       - value: DM
-        label: DM
+        label: DM Dominica
       - value: DO
-        label: DO
+        label: DO Dominican Republic
       - value: DZ
-        label: DZ
+        label: DZ Algeria
       - value: EC
-        label: EC
+        label: EC Ecuador
       - value: EE
-        label: EE
+        label: EE Estonia
       - value: EG
-        label: EG
+        label: EG Egypt
       - value: EH
-        label: EH
+        label: EH Western Sahara
       - value: ER
-        label: ER
+        label: ER Eritrea
       - value: ES
-        label: ES
+        label: ES Spain
       - value: ET
-        label: ET
+        label: ET Ethiopia
       - value: FI
-        label: FI
+        label: FI Finland
       - value: FJ
-        label: FJ
+        label: FJ Fiji
       - value: FK
-        label: FK
+        label: FK Falkland Islands
       - value: FM
-        label: FM
+        label: FM Micronesia
       - value: FO
-        label: FO
+        label: FO Faroe Islands
       - value: FR
-        label: FR
+        label: FR France
       - value: GA
-        label: GA
+        label: GA Gabon
       - value: GB
-        label: GB
+        label: GB United Kingdom
       - value: GD
-        label: GD
+        label: GD Grenada
       - value: GE
-        label: GE
+        label: GE Georgia
       - value: GF
-        label: GF
+        label: GF French Guiana
       - value: GG
-        label: GG
+        label: GG Guernsey
       - value: GH
-        label: GH
+        label: GH Ghana
       - value: GI
-        label: GI
+        label: GI Gibraltar
       - value: GL
-        label: GL
+        label: GL Greenland
       - value: GM
-        label: GM
+        label: GM Gambia
       - value: GN
-        label: GN
+        label: GN Guinea
       - value: GP
-        label: GP
+        label: GP Guadeloupe
       - value: GQ
-        label: GQ
+        label: GQ Equatorial Guinea
       - value: GR
-        label: GR
+        label: GR Greece
       - value: GS
-        label: GS
+        label: GS South Georgia & South Sandwich Islands
       - value: GT
-        label: GT
+        label: GT Guatemala
       - value: GU
-        label: GU
+        label: GU Guam
       - value: GW
-        label: GW
+        label: GW Guinea-Bissau
       - value: GY
-        label: GY
+        label: GY Guyana
       - value: HK
-        label: HK
+        label: HK Hong Kong SAR China
       - value: HM
-        label: HM
+        label: HM Heard & McDonald Islands
       - value: HN
-        label: HN
+        label: HN Honduras
       - value: HR
-        label: HR
+        label: HR Croatia
       - value: HT
-        label: HT
+        label: HT Haiti
       - value: HU
-        label: HU
+        label: HU Hungary
       - value: ID
-        label: ID
+        label: ID Indonesia
       - value: IE
-        label: IE
+        label: IE Ireland
       - value: IL
-        label: IL
+        label: IL Israel
       - value: IM
-        label: IM
+        label: IM Isle of Man
       - value: IN
-        label: IN
+        label: IN India
       - value: IO
-        label: IO
+        label: IO British Indian Ocean Territory
       - value: IQ
-        label: IQ
+        label: IQ Iraq
       - value: IR
-        label: IR
+        label: IR Iran
       - value: IS
-        label: IS
+        label: IS Iceland
       - value: IT
-        label: IT
+        label: IT Italy
       - value: JE
-        label: JE
+        label: JE Jersey
       - value: JM
-        label: JM
+        label: JM Jamaica
       - value: JO
-        label: JO
+        label: JO Jordan
       - value: JP
-        label: JP
+        label: JP Japan
       - value: KE
-        label: KE
+        label: KE Kenya
       - value: KG
-        label: KG
+        label: KG Kyrgyzstan
       - value: KH
-        label: KH
+        label: KH Cambodia
       - value: KI
-        label: KI
+        label: KI Kiribati
       - value: KM
-        label: KM
+        label: KM Comoros
       - value: KN
-        label: KN
+        label: KN St. Kitts & Nevis
       - value: KP
-        label: KP
+        label: KP North Korea
       - value: KR
-        label: KR
+        label: KR South Korea
       - value: KW
-        label: KW
+        label: KW Kuwait
       - value: KY
-        label: KY
+        label: KY Cayman Islands
       - value: KZ
-        label: KZ
+        label: KZ Kazakhstan
       - value: LA
-        label: LA
+        label: LA Laos
       - value: LB
-        label: LB
+        label: LB Lebanon
       - value: LC
-        label: LC
+        label: LC St. Lucia
       - value: LI
-        label: LI
+        label: LI Liechtenstein
       - value: LK
-        label: LK
+        label: LK Sri Lanka
       - value: LR
-        label: LR
+        label: LR Liberia
       - value: LS
-        label: LS
+        label: LS Lesotho
       - value: LT
-        label: LT
+        label: LT Lithuania
       - value: LU
-        label: LU
+        label: LU Luxembourg
       - value: LV
-        label: LV
+        label: LV Latvia
       - value: LY
-        label: LY
+        label: LY Libya
       - value: MA
-        label: MA
+        label: MA Morocco
       - value: MC
-        label: MC
+        label: MC Monaco
       - value: MD
-        label: MD
+        label: MD Moldova
       - value: ME
-        label: ME
+        label: ME Montenegro
       - value: MF
-        label: MF
+        label: MF St. Martin
       - value: MG
-        label: MG
+        label: MG Madagascar
       - value: MH
-        label: MH
+        label: MH Marshall Islands
       - value: MK
-        label: MK
+        label: MK North Macedonia
       - value: ML
-        label: ML
+        label: ML Mali
       - value: MM
-        label: MM
+        label: MM Myanmar (Burma)
       - value: MN
-        label: MN
+        label: MN Mongolia
       - value: MO
-        label: MO
+        label: MO Macao SAR China
       - value: MP
-        label: MP
+        label: MP Northern Mariana Islands
       - value: MQ
-        label: MQ
+        label: MQ Martinique
       - value: MR
-        label: MR
+        label: MR Mauritania
       - value: MS
-        label: MS
+        label: MS Montserrat
       - value: MT
-        label: MT
+        label: MT Malta
       - value: MU
-        label: MU
+        label: MU Mauritius
       - value: MV
-        label: MV
+        label: MV Maldives
       - value: MW
-        label: MW
+        label: MW Malawi
       - value: MX
-        label: MX
+        label: MX Mexico
       - value: MY
-        label: MY
+        label: MY Malaysia
       - value: MZ
-        label: MZ
+        label: MZ Mozambique
       - value: NA
-        label: NA
+        label: NA Namibia
       - value: NC
-        label: NC
+        label: NC New Caledonia
       - value: NE
-        label: NE
+        label: NE Niger
       - value: NF
-        label: NF
+        label: NF Norfolk Island
       - value: NG
-        label: NG
+        label: NG Nigeria
       - value: NI
-        label: NI
+        label: NI Nicaragua
       - value: NL
-        label: NL
+        label: NL Netherlands
       - value: 'NO'
-        label: 'NO'
+        label: NO Norway
       - value: NP
-        label: NP
+        label: NP Nepal
       - value: NR
-        label: NR
+        label: NR Nauru
       - value: NU
-        label: NU
+        label: NU Niue
       - value: NZ
-        label: NZ
+        label: NZ New Zealand
       - value: OM
-        label: OM
+        label: OM Oman
       - value: PA
-        label: PA
+        label: PA Panama
       - value: PE
-        label: PE
+        label: PE Peru
       - value: PF
-        label: PF
+        label: PF French Polynesia
       - value: PG
-        label: PG
+        label: PG Papua New Guinea
       - value: PH
-        label: PH
+        label: PH Philippines
       - value: PK
-        label: PK
+        label: PK Pakistan
       - value: PL
-        label: PL
+        label: PL Poland
       - value: PM
-        label: PM
+        label: PM St. Pierre & Miquelon
       - value: PN
-        label: PN
+        label: PN Pitcairn Islands
       - value: PR
-        label: PR
+        label: PR Puerto Rico
       - value: PS
-        label: PS
+        label: PS Palestinian Territories
       - value: PT
-        label: PT
+        label: PT Portugal
       - value: PW
-        label: PW
+        label: PW Palau
       - value: PY
-        label: PY
+        label: PY Paraguay
       - value: QA
-        label: QA
+        label: QA Qatar
       - value: RE
-        label: RE
+        label: RE Reunion
       - value: RO
-        label: RO
+        label: RO Romania
       - value: RS
-        label: RS
+        label: RS Serbia
       - value: RU
-        label: RU
+        label: RU Russia
       - value: RW
-        label: RW
+        label: RW Rwanda
       - value: SA
-        label: SA
+        label: SA Saudi Arabia
       - value: SB
-        label: SB
+        label: SB Solomon Islands
       - value: SC
-        label: SC
+        label: SC Seychelles
       - value: SD
-        label: SD
+        label: SD Sudan
       - value: SE
-        label: SE
+        label: SE Sweden
       - value: SG
-        label: SG
+        label: SG Singapore
       - value: SH
-        label: SH
+        label: SH St. Helena
       - value: SI
-        label: SI
+        label: SI Slovenia
       - value: SJ
-        label: SJ
+        label: SJ Svalbard & Jan Mayen
       - value: SK
-        label: SK
+        label: SK Slovakia
       - value: SL
-        label: SL
+        label: SL Sierra Leone
       - value: SM
-        label: SM
+        label: SM San Marino
       - value: SN
-        label: SN
+        label: SN Senegal
       - value: SO
-        label: SO
+        label: SO Somalia
       - value: SR
-        label: SR
+        label: SR Suriname
       - value: SS
-        label: SS
+        label: SS South Sudan
       - value: ST
-        label: ST
+        label: ST Sao Tome & Principe
       - value: SV
-        label: SV
+        label: SV El Salvador
       - value: SX
-        label: SX
+        label: SX Sint Maarten
       - value: SY
-        label: SY
+        label: SY Syria
       - value: SZ
-        label: SZ
+        label: SZ Eswatini
       - value: TC
-        label: TC
+        label: TC Turks & Caicos Islands
       - value: TD
-        label: TD
+        label: TD Chad
       - value: TF
-        label: TF
+        label: TF French Southern Territories
       - value: TG
-        label: TG
+        label: TG Togo
       - value: TH
-        label: TH
+        label: TH Thailand
       - value: TJ
-        label: TJ
+        label: TJ Tajikistan
       - value: TK
-        label: TK
+        label: TK Tokelau
       - value: TL
-        label: TL
+        label: TL Timor-Leste
       - value: TM
-        label: TM
+        label: TM Turkmenistan
       - value: TN
-        label: TN
+        label: TN Tunisia
       - value: TO
-        label: TO
+        label: TO Tonga
       - value: TR
-        label: TR
+        label: TR Turkiye
       - value: TT
-        label: TT
+        label: TT Trinidad & Tobago
       - value: TV
-        label: TV
+        label: TV Tuvalu
       - value: TW
-        label: TW
+        label: TW Taiwan
       - value: TZ
-        label: TZ
+        label: TZ Tanzania
       - value: UA
-        label: UA
+        label: UA Ukraine
       - value: UG
-        label: UG
+        label: UG Uganda
       - value: UM
-        label: UM
+        label: UM U.S. Outlying Islands
       - value: US
-        label: US
+        label: US United States
       - value: UY
-        label: UY
+        label: UY Uruguay
       - value: UZ
-        label: UZ
+        label: UZ Uzbekistan
       - value: VA
-        label: VA
+        label: VA Vatican City
       - value: VC
-        label: VC
+        label: VC St. Vincent & Grenadines
       - value: VE
-        label: VE
+        label: VE Venezuela
       - value: VG
-        label: VG
+        label: VG British Virgin Islands
       - value: VI
-        label: VI
+        label: VI U.S. Virgin Islands
       - value: VN
-        label: VN
+        label: VN Vietnam
       - value: VU
-        label: VU
+        label: VU Vanuatu
       - value: WF
-        label: WF
+        label: WF Wallis & Futuna
       - value: WS
-        label: WS
+        label: WS Samoa
       - value: YE
-        label: YE
+        label: YE Yemen
       - value: YT
-        label: YT
+        label: YT Mayotte
       - value: ZA
-        label: ZA
+        label: ZA South Africa
       - value: ZM
-        label: ZM
+        label: ZM Zambia
       - value: ZW
-        label: ZW
+        label: ZW Zimbabwe
     TimezoneCode:
       type: string
       enum:
@@ -3762,13 +4011,28 @@ components:
         name:
           type: string
           nullable: true
-        booking_hash:
-          type: string
-          nullable: true
         stage:
           "$ref": "#/components/schemas/BookingStage"
         atp_staff:
           type: string
+          nullable: true
+        core_revision:
+          type: integer
+          nullable: true
+        notes_revision:
+          type: integer
+          nullable: true
+        persons_revision:
+          type: integer
+          nullable: true
+        pricing_revision:
+          type: integer
+          nullable: true
+        offer_revision:
+          type: integer
+          nullable: true
+        invoices_revision:
+          type: integer
           nullable: true
         service_level_agreement_due_at:
           type: string
@@ -4366,15 +4630,15 @@ components:
       type: object
       required: []
       properties:
-        booking_hash:
-          type: string
+        expected_core_revision:
+          type: integer
           nullable: true
     BookingNameUpdateRequest:
       type: object
       required: []
       properties:
-        booking_hash:
-          type: string
+        expected_core_revision:
+          type: integer
           nullable: true
         name:
           type: string
@@ -4387,8 +4651,8 @@ components:
       required:
       - stage
       properties:
-        booking_hash:
-          type: string
+        expected_core_revision:
+          type: integer
           nullable: true
         stage:
           "$ref": "#/components/schemas/BookingStage"
@@ -4399,8 +4663,8 @@ components:
       type: object
       required: []
       properties:
-        booking_hash:
-          type: string
+        expected_core_revision:
+          type: integer
           nullable: true
         atp_staff:
           type: string
@@ -4408,17 +4672,39 @@ components:
         actor:
           type: string
           nullable: true
-    BookingPersonsUpdateRequest:
+    BookingPersonCreateRequest:
+      type: object
+      required:
+      - person
+      properties:
+        expected_persons_revision:
+          type: integer
+          nullable: true
+        person:
+          "$ref": "#/components/schemas/BookingPerson"
+        actor:
+          type: string
+          nullable: true
+    BookingPersonUpdateRequest:
+      type: object
+      required:
+      - person
+      properties:
+        expected_persons_revision:
+          type: integer
+          nullable: true
+        person:
+          "$ref": "#/components/schemas/BookingPerson"
+        actor:
+          type: string
+          nullable: true
+    BookingPersonDeleteRequest:
       type: object
       required: []
       properties:
-        booking_hash:
-          type: string
+        expected_persons_revision:
+          type: integer
           nullable: true
-        persons:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingPerson"
         actor:
           type: string
           nullable: true
@@ -4426,8 +4712,8 @@ components:
       type: object
       required: []
       properties:
-        booking_hash:
-          type: string
+        expected_notes_revision:
+          type: integer
           nullable: true
         notes:
           type: string
@@ -4440,8 +4726,8 @@ components:
       required:
       - pricing
       properties:
-        booking_hash:
-          type: string
+        expected_pricing_revision:
+          type: integer
           nullable: true
         pricing:
           "$ref": "#/components/schemas/BookingPricing"
@@ -4453,8 +4739,8 @@ components:
       required:
       - offer
       properties:
-        booking_hash:
-          type: string
+        expected_offer_revision:
+          type: integer
           nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
@@ -4499,8 +4785,8 @@ components:
       required:
       - type
       properties:
-        booking_hash:
-          type: string
+        expected_core_revision:
+          type: integer
           nullable: true
         type:
           "$ref": "#/components/schemas/BookingActivityType"
@@ -4514,8 +4800,8 @@ components:
       type: object
       required: []
       properties:
-        booking_hash:
-          type: string
+        expected_invoices_revision:
+          type: integer
           nullable: true
         invoice_number:
           type: string
@@ -4982,9 +5268,9 @@ paths:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/persons":
-    patch:
-      operationId: booking_persons
-      summary: Booking Persons
+    post:
+      operationId: booking_person_create
+      summary: Booking Person Create
       tags:
       - Bookings
       security:
@@ -5000,7 +5286,100 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/BookingPersonsUpdateRequest"
+              "$ref": "#/components/schemas/BookingPersonCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/persons/{person_id}":
+    patch:
+      operationId: booking_person_update
+      summary: Booking Person Update
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingPersonUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: booking_person_delete
+      summary: Booking Person Delete
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingPersonDeleteRequest"
       responses:
         '200':
           description: Success
@@ -5044,7 +5423,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/EvidenceUpload"
+              "$ref": "#/components/schemas/BookingPersonPhotoUploadRequest"
       responses:
         '200':
           description: Success

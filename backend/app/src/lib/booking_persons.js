@@ -16,6 +16,11 @@ function optionalInt(value) {
   return Number.isInteger(parsed) ? parsed : null;
 }
 
+function nonNegativeInt(value, fallback = 0) {
+  const parsed = optionalInt(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
 function optionalBool(value) {
   if (value === true || value === false) return value;
   if (value === "true") return true;
@@ -208,6 +213,12 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedBooking = {
     ...booking,
     name: optionalText(booking?.name || booking?.web_form_submission?.booking_name),
+    core_revision: nonNegativeInt(booking?.core_revision, 0),
+    notes_revision: nonNegativeInt(booking?.notes_revision, 0),
+    persons_revision: nonNegativeInt(booking?.persons_revision, 0),
+    pricing_revision: nonNegativeInt(booking?.pricing_revision, 0),
+    offer_revision: nonNegativeInt(booking?.offer_revision, 0),
+    invoices_revision: nonNegativeInt(booking?.invoices_revision, 0),
     atp_staff: optionalText(booking?.atp_staff),
     atp_staff_name: optionalText(booking?.atp_staff_name),
     service_level_agreement_due_at: optionalText(booking?.service_level_agreement_due_at),

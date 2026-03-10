@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "206F9DC5AD70F64593CA6ADF"
+               BlueprintIdentifier = "9A7EAEC139D5E74E0280D89C"
                BuildableName = "AsiaTravelPlan.app"
                BlueprintName = "AsiaTravelPlan"
                ReferencedContainer = "container:AsiaTravelPlan.xcodeproj">
@@ -40,6 +40,16 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "9A7EAEC139D5E74E0280D89C"
+            BuildableName = "AsiaTravelPlan.app"
+            BlueprintName = "AsiaTravelPlan"
+            ReferencedContainer = "container:AsiaTravelPlan.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

@@ -1,60 +1,35 @@
 # AsiaTravelPlan iOS App
 
-This folder contains the first implementation pass of the native iPhone app described in:
-- `~/projects/travelagency/documentation/backend/mobileApp.md`
+This iOS target is intentionally reduced to:
+- app bootstrap / version gate
+- Keycloak login and logout
+- local session restoration
+- a minimal authenticated app shell
 
-Current scope:
-- SwiftUI app shell
-- session handling
-- JWT role decoding
-- allow only `atp_admin`, `atp_manager`, `atp_accountant`, `atp_staff`
-- booking list
-- booking detail
-- role-aware booking actions
-- customer directory tab (role-gated)
-- customer search + customer detail
-- customer contact actions in booking detail (`Call`, `WhatsApp`)
-- single editable booking note with conflict detection
-- PKCE-based Keycloak login flow
-- startup bootstrap gate with minimum supported app version enforcement
-- generated contract models/request factory from OpenAPI
+Removed on purpose:
+- generated Swift API and model files
+- booking, customer, travel-group, offer, invoice, and tour UI
+- domain-specific mobile view models and formatting helpers
 
-Included now:
-- Xcode project: `~/projects/travelagency/mobile/iOS/AsiaTravelPlan.xcodeproj`
-- project generator: `~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb`
-- generator: `~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb`
-- generated contract: `~/projects/travelagency/api/generated/openapi.yaml`
-- generated models: `~/projects/travelagency/mobile/iOS/Generated`
-- URL scheme registration in `Resources/Info.plist`
-- PKCE authorization code exchange against Keycloak
-- refresh-token based session restoration
-- Keycloak end-session logout via `ASWebAuthenticationSession`
-- startup call to `/public/v1/mobile/bootstrap`
-- `Please update` screen when backend requires a newer app build
-- booking note save flow:
-  - send current `booking_hash` with the write
-  - if backend reports a conflict, reload booking data and discard local edits
-  - save via `PATCH /api/v1/bookings/:bookingId/notes`
+Kept on purpose:
+- [`/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlanApp.swift`](/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlanApp.swift)
+- [`/Users/internal_admin/projects/travelagency/mobile/iOS/AppConfig.swift`](/Users/internal_admin/projects/travelagency/mobile/iOS/AppConfig.swift)
+- auth/session services under [`/Users/internal_admin/projects/travelagency/mobile/iOS/Services`](/Users/internal_admin/projects/travelagency/mobile/iOS/Services)
+- login/setup views under [`/Users/internal_admin/projects/travelagency/mobile/iOS/Views`](/Users/internal_admin/projects/travelagency/mobile/iOS/Views)
 
-Contract/codegen notes:
-- edit `model/` or `tools/generator/`, then regenerate; do not hand-edit `api/generated/openapi.yaml`
-- `api/generated/mobile-api.meta.json` carries the generated `modelVersion`, endpoint registry, and catalogs
-- JS runtimes consume `shared/generated-contract/` through re-export modules, while iOS gets standalone Swift files in `mobile/iOS/Generated/`
-
-Regenerate the contract artifacts after changing `model/` or `tools/generator/`:
+To regenerate the Xcode project:
 
 ```bash
-ruby ~/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
-ruby ~/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
+ruby /Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
 ```
 
-Current limitation:
-- command-line build verification in this environment stops at asset compilation because the local Xcode installation here does not expose usable simulator runtimes to the sandbox
-- the project should be opened and run from Xcode on the local machine for real device/simulator testing
+The main contract generator no longer emits iOS Swift artifacts by default. If you
+explicitly need them again, run it with:
 
-Suggested next step in Xcode:
-1. open `AsiaTravelPlan.xcodeproj`
-2. set the signing team / bundle settings you want
-3. confirm Keycloak mobile client `asiatravelplan-ios`
-4. add `asiatravelplan://auth/callback` to the mobile client post-logout redirect URIs
-5. run on simulator or device
+```bash
+GENERATE_IOS=1 ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
+```
+
+Open the project in Xcode and configure signing plus the Keycloak mobile client:
+- client id: `asiatravelplan-ios`
+- redirect URI: `asiatravelplan://auth/callback`

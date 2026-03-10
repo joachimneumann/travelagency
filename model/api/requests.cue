@@ -47,49 +47,65 @@ import (
 }
 
 #BookingDeleteRequest: {
-	booking_hash?: string
+	expected_core_revision?: >=0 & int
 }
 
 #BookingNameUpdateRequest: {
-	booking_hash?: string
-	name?:         string
-	actor?:        string
+	expected_core_revision?: >=0 & int
+	name?:                   string
+	actor?:                  string
 }
 
 #BookingStageUpdateRequest: {
-	booking_hash?: string
-	stage:         enums.#BookingStage
-	actor?:        string
+	expected_core_revision?: >=0 & int
+	stage:                   enums.#BookingStage
+	actor?:                  string
 }
 
 #BookingOwnerUpdateRequest: {
-	booking_hash?: string
-	atp_staff?:    common.#Identifier
-	actor?:        string
+	expected_core_revision?: >=0 & int
+	atp_staff?:              common.#Identifier
+	actor?:                  string
 }
 
-#BookingPersonsUpdateRequest: {
-	booking_hash?: string
-	persons:       [...entities.#BookingPerson]
-	actor?:        string
+#BookingPersonCreateRequest: {
+	expected_persons_revision?: >=0 & int
+	person:                     entities.#BookingPerson
+	actor?:                     string
+}
+
+#BookingPersonUpdateRequest: {
+	expected_persons_revision?: >=0 & int
+	person:                     entities.#BookingPerson
+	actor?:                     string
+}
+
+#BookingPersonDeleteRequest: {
+	expected_persons_revision?: >=0 & int
+	actor?:                     string
+}
+
+#BookingPersonPhotoUploadRequest: #EvidenceUpload & {
+	expected_persons_revision?: >=0 & int
+	actor?:                     string
 }
 
 #BookingNotesUpdateRequest: {
-	booking_hash?: string
-	notes?:        string
-	actor?:        string
+	expected_notes_revision?: >=0 & int
+	notes?:                   string
+	actor?:                   string
 }
 
 #BookingPricingUpdateRequest: {
-	booking_hash?: string
-	pricing:       entities.#BookingPricing
-	actor?:        string
+	expected_pricing_revision?: >=0 & int
+	pricing:                    entities.#BookingPricing
+	actor?:                     string
 }
 
 #BookingOfferUpdateRequest: {
-	booking_hash?: string
-	offer:         entities.#BookingOffer
-	actor?:        string
+	expected_offer_revision?: >=0 & int
+	offer:                    entities.#BookingOffer
+	actor?:                   string
 }
 
 #OfferExchangeRateComponent: {
@@ -107,23 +123,23 @@ import (
 }
 
 #BookingActivityCreateRequest: {
-	booking_hash?: string
-	type:          entities.#BookingActivityType
-	detail?:       string
-	actor?:        string
+	expected_core_revision?: >=0 & int
+	type:                    entities.#BookingActivityType
+	detail?:                 string
+	actor?:                  string
 }
 
 #BookingInvoiceUpsertRequest: {
-	booking_hash?:       string
-	invoice_number?:     string
-	currency?:           enums.#CurrencyCode
-	issue_date?:         common.#DateOnly
-	due_date?:           common.#DateOnly
-	title?:              string
-	notes?:              string
-	components?:         [...entities.#InvoiceComponent]
-	due_amount_cents?:   common.#NonNegativeMoneyAmount
-	sent_to_recipient?:  bool
+	expected_invoices_revision?: >=0 & int
+	invoice_number?:            string
+	currency?:                  enums.#CurrencyCode
+	issue_date?:                common.#DateOnly
+	due_date?:                  common.#DateOnly
+	title?:                     string
+	notes?:                     string
+	components?:                [...entities.#InvoiceComponent]
+	due_amount_cents?:          common.#NonNegativeMoneyAmount
+	sent_to_recipient?:         bool
 }
 
 #AtpStaffCreateRequest: {

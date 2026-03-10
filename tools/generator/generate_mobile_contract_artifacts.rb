@@ -22,7 +22,7 @@ FRONTEND_GENERATED_MODELS_DIR = File.join(ROOT, 'frontend', 'Generated', 'Models
 FRONTEND_GENERATED_API_DIR = File.join(ROOT, 'frontend', 'Generated', 'API')
 IOS_GENERATED_MODELS_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated', 'Models')
 IOS_GENERATED_API_DIR = File.join(ROOT, 'mobile', 'iOS', 'Generated', 'API')
-SKIP_IOS_OUTPUTS = ENV['SKIP_IOS'] == '1'
+GENERATE_IOS_OUTPUTS = ENV['GENERATE_IOS'] == '1'
 
 OUTPUT_DIRS = [
   CONTRACT_GENERATED_DIR,
@@ -1332,7 +1332,7 @@ end
 
 FileUtils.mkdir_p(CONTRACT_GENERATED_DIR)
 OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) }
-IOS_OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) } unless SKIP_IOS_OUTPUTS
+IOS_OUTPUT_DIRS.each { |directory| FileUtils.mkdir_p(directory) } if GENERATE_IOS_OUTPUTS
 
 ir = load_ir_json
 traveler_constraints = load_traveler_constraints_json
@@ -1604,7 +1604,7 @@ end
 frontend_api_outputs.each do |filename, content|
   write_file(File.join(FRONTEND_GENERATED_API_DIR, filename), content)
 end
-unless SKIP_IOS_OUTPUTS
+if GENERATE_IOS_OUTPUTS
   ios_model_outputs.each do |filename, content|
     write_file(File.join(IOS_GENERATED_MODELS_DIR, filename), content)
   end

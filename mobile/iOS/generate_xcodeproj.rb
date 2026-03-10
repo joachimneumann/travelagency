@@ -22,7 +22,6 @@ app_target.build_configurations.each do |config|
   config.build_settings['CODE_SIGN_STYLE'] = 'Automatic'
   config.build_settings['GENERATE_INFOPLIST_FILE'] = 'NO'
   config.build_settings['INFOPLIST_FILE'] = 'Resources/Info.plist'
-  config.build_settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon'
   config.build_settings['ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME'] = 'AccentColor'
   config.build_settings['CURRENT_PROJECT_VERSION'] = '1'
   config.build_settings['MARKETING_VERSION'] = '1.0'
@@ -41,9 +40,6 @@ services_group = app_group.new_group('Services', 'Services')
 view_models_group = app_group.new_group('ViewModels', 'ViewModels')
 views_group = app_group.new_group('Views', 'Views')
 resources_group = app_group.new_group('Resources', 'Resources')
-generated_group = app_group.new_group('Generated', 'Generated')
-generated_models_group = generated_group.new_group('Models', 'Models')
-generated_api_group = generated_group.new_group('API', 'API')
 
 [
   'AppConfig.swift',
@@ -60,16 +56,6 @@ end
 
 Dir.glob(File.join(ROOT, 'Services', '*.swift')).sort.each do |file|
   ref = services_group.new_file(File.basename(file))
-  app_target.add_file_references([ref])
-end
-
-Dir.glob(File.join(ROOT, 'Generated', 'Models', '*.swift')).sort.each do |file|
-  ref = generated_models_group.new_file(File.basename(file))
-  app_target.add_file_references([ref])
-end
-
-Dir.glob(File.join(ROOT, 'Generated', 'API', '*.swift')).sort.each do |file|
-  ref = generated_api_group.new_file(File.basename(file))
   app_target.add_file_references([ref])
 end
 

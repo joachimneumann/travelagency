@@ -17,7 +17,6 @@ export function createBookingViewHelpers({
   safeInt,
   buildBookingPricingReadModel,
   buildBookingOfferReadModel,
-  computeBookingHash,
   sendJson
 }) {
   function normalizePersonEmails(person) {
@@ -247,33 +246,12 @@ export function createBookingViewHelpers({
     const normalizedBooking = { ...booking };
     delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
-    const bookingHash = computeBookingHash(normalizedBooking);
     return {
       ...normalizedBooking,
       preferred_currency: preferredCurrency,
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
-      offer: await buildBookingOfferReadModel(normalizedBooking.offer, preferredCurrency),
-      booking_hash: bookingHash
+      offer: await buildBookingOfferReadModel(normalizedBooking.offer, preferredCurrency)
     };
-  }
-
-  async function sendBookingHashConflict(res, booking) {
-    sendJson(res, 409, {
-      error: "Booking changed in backend",
-      detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
-      code: "BOOKING_HASH_MISMATCH",
-      booking: await buildBookingReadModel(booking)
-    });
-  }
-
-  async function assertMatchingBookingHash(payload, booking, res) {
-    const requestHash = normalizeText(payload.booking_hash);
-    const currentHash = computeBookingHash(booking);
-    if (!requestHash || requestHash !== currentHash) {
-      await sendBookingHashConflict(res, booking);
-      return false;
-    }
-    return true;
   }
 
   function normalizeStageFilter(value) {
@@ -485,7 +463,6 @@ export function createBookingViewHelpers({
     canAccessBooking,
     canEditBooking,
     buildBookingReadModel,
-    assertMatchingBookingHash,
     filterAndSortBookings,
     paginate
   };

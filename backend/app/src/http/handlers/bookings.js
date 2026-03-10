@@ -20,7 +20,6 @@ export function createBookingHandlers(deps) {
     defaultBookingOffer,
     addActivity,
     persistStore,
-    computeBookingHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -195,6 +194,13 @@ export function createBookingHandlers(deps) {
       .filter(Boolean);
   }
 
+  function normalizeSingleBookingPersonPayload(bookingId, person, fallbackIndex = 0) {
+    return normalizeBookingPersonsPayload(bookingId, [person]).map((entry, index) => ({
+      ...entry,
+      id: normalizeText(entry.id) || `${normalizeText(bookingId) || "booking"}_person_${fallbackIndex + index + 1}`
+    }))[0] || null;
+  }
+
   function resolveBookingPersonPhotoDiskPath(rawRelativePath) {
     const relativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
     if (!relativePath) return null;
@@ -248,11 +254,13 @@ export function createBookingHandlers(deps) {
     return fallback ? [fallback] : [];
   }
 
-  function buildBookingHashBasis(booking) {
-    return {
-      ...booking,
-      persons: getBookingPersons(booking)
-    };
+  function getBookingRevision(booking, field) {
+    const value = Number(booking?.[field]);
+    return Number.isInteger(value) && value >= 0 ? value : 0;
+  }
+
+  function incrementBookingRevision(booking, field) {
+    booking[field] = getBookingRevision(booking, field) + 1;
   }
 
   function getBookingPrimaryContact(booking) {
@@ -346,21 +354,27 @@ export function createBookingHandlers(deps) {
   }
 
   async function buildBookingPayload(booking) {
-    return buildBookingReadModel(buildBookingHashBasis(booking));
+    return buildBookingReadModel({
+      ...booking,
+      persons: getBookingPersons(booking)
+    });
   }
 
   async function buildBookingDetailResponse(booking) {
     return { booking: await buildBookingPayload(booking) };
   }
 
-  async function assertMatchingBookingHashForWrite(payload, booking, res) {
-    const requestHash = normalizeText(payload?.booking_hash);
-    const currentHash = computeBookingHash(buildBookingHashBasis(booking));
-    if (!requestHash || requestHash !== currentHash) {
+  async function assertExpectedRevision(payload, booking, payloadField, revisionField, res) {
+    const rawExpected = payload?.[payloadField];
+    const expectedRevision = rawExpected === undefined || rawExpected === null || rawExpected === ""
+      ? null
+      : safeInt(rawExpected);
+    const currentRevision = getBookingRevision(booking, revisionField);
+    if (expectedRevision === null || expectedRevision !== currentRevision) {
       sendJson(res, 409, {
         error: "Booking changed in backend",
         detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
-        code: "BOOKING_HASH_MISMATCH",
+        code: "BOOKING_REVISION_MISMATCH",
         booking: await buildBookingPayload(booking)
       });
       return false;
@@ -494,6 +508,12 @@ export function createBookingHandlers(deps) {
     const booking = {
       id: bookingId,
       name: initialBookingName,
+      core_revision: 0,
+      notes_revision: 0,
+      persons_revision: 0,
+      pricing_revision: 0,
+      offer_revision: 0,
+      invoices_revision: 0,
       stage: STAGES.NEW,
       atp_staff: null,
       atp_staff_name: null,
@@ -588,7 +608,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     await deleteBookingArtifacts(store, bookingId);
     await persistStore(store);
@@ -675,7 +695,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
     if (!allowed.includes(nextStage)) {
@@ -685,6 +705,7 @@ export function createBookingHandlers(deps) {
 
     booking.stage = nextStage;
     booking.service_level_agreement_due_at = computeServiceLevelAgreementDueAt(nextStage);
+    incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
 
     addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Stage updated to ${nextStage}`);
@@ -715,7 +736,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const nextName = normalizeText(payload.name) || null;
     const currentName = normalizeText(booking.name) || null;
@@ -725,11 +746,12 @@ export function createBookingHandlers(deps) {
     }
 
     booking.name = nextName;
+    incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
       booking.id,
-      "NOTE_UPDATED",
+      "BOOKING_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
       nextName ? `Booking name set to ${nextName}` : "Booking name cleared"
     );
@@ -759,12 +781,13 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     if (!atpStaffIdRaw) {
       booking.atp_staff = null;
       booking.atp_staff_name = null;
       syncBookingAtpStaffFields(booking);
+      incrementBookingRevision(booking, "core_revision");
       booking.updated_at = nowIso();
       addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), "AtpStaff unassigned");
       await persistStore(store);
@@ -782,6 +805,7 @@ export function createBookingHandlers(deps) {
     booking.atp_staff = assignedStaff.id;
     booking.atp_staff_name = assignedStaff.name;
     syncBookingAtpStaffFields(booking);
+    incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
     addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${assignedStaff.name}`);
     await persistStore(store);
@@ -789,17 +813,12 @@ export function createBookingHandlers(deps) {
     sendJson(res, 200, await buildBookingDetailResponse(booking));
   }
 
-  async function handlePatchBookingPersons(req, res, [bookingId]) {
+  async function handleCreateBookingPerson(req, res, [bookingId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
     } catch {
       sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    if (!Array.isArray(payload.persons)) {
-      sendJson(res, 422, { error: "persons must be an array" });
       return;
     }
 
@@ -816,24 +835,129 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
 
-    const nextPersons = normalizeBookingPersonsPayload(booking.id, payload.persons);
-    const currentPersonsJson = JSON.stringify(getBookingPersons(booking));
-    const nextPersonsJson = JSON.stringify(nextPersons);
-    if (currentPersonsJson === nextPersonsJson) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+    const nextPerson = normalizeSingleBookingPersonPayload(booking.id, payload.person, getBookingPersons(booking).length);
+    if (!nextPerson) {
+      sendJson(res, 422, { error: "person is required" });
       return;
     }
 
-    booking.persons = nextPersons;
+    booking.persons = [...getBookingPersons(booking), nextPerson];
+    incrementBookingRevision(booking, "persons_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
       booking.id,
-      "NOTE_UPDATED",
+      "BOOKING_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
-      "Booking persons updated"
+      `Person created: ${normalizeText(nextPerson.name) || nextPerson.id}`
+    );
+    await persistStore(store);
+    sendJson(res, 201, await buildBookingDetailResponse(booking));
+  }
+
+  async function handlePatchBookingPerson(req, res, [bookingId, personId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    const atpStaff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
+    if (!canEditBooking(principal, booking, staffMember)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
+
+    const persons = getBookingPersons(booking);
+    const personIndex = persons.findIndex((person) => person.id === personId);
+    if (personIndex < 0) {
+      sendJson(res, 404, { error: "Person not found" });
+      return;
+    }
+
+    const mergedPerson = normalizeSingleBookingPersonPayload(booking.id, {
+      ...persons[personIndex],
+      ...(payload.person && typeof payload.person === "object" ? payload.person : {}),
+      id: personId
+    }, personIndex);
+    if (!mergedPerson) {
+      sendJson(res, 422, { error: "person is required" });
+      return;
+    }
+
+    if (JSON.stringify(persons[personIndex]) === JSON.stringify(mergedPerson)) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      return;
+    }
+
+    persons[personIndex] = mergedPerson;
+    booking.persons = persons;
+    incrementBookingRevision(booking, "persons_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      `Person updated: ${normalizeText(mergedPerson.name) || mergedPerson.id}`
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
+  async function handleDeleteBookingPerson(req, res, [bookingId, personId]) {
+    let payload = {};
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      payload = {};
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    const atpStaff = await loadAtpStaff();
+    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
+    if (!canEditBooking(principal, booking, staffMember)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
+
+    const persons = getBookingPersons(booking);
+    const personIndex = persons.findIndex((person) => person.id === personId);
+    if (personIndex < 0) {
+      sendJson(res, 404, { error: "Person not found" });
+      return;
+    }
+
+    const [removedPerson] = persons.splice(personIndex, 1);
+    booking.persons = persons;
+    incrementBookingRevision(booking, "persons_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      `Person removed: ${normalizeText(removedPerson?.name) || personId}`
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking));
@@ -870,7 +994,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
 
     const persons = normalizeBookingPersonsPayload(booking.id, booking.persons);
     const personIndex = persons.findIndex((person) => person.id === personId);
@@ -912,11 +1036,12 @@ export function createBookingHandlers(deps) {
       photo_ref: `/public/v1/booking-person-photos/${outputRelativePath}`
     };
     booking.persons = persons;
+    incrementBookingRevision(booking, "persons_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
       booking.id,
-      "NOTE_UPDATED",
+      "BOOKING_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
       `Photo uploaded for ${normalizeText(persons[personIndex].name) || "person"}`
     );
@@ -946,7 +1071,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_notes_revision", "notes_revision", res))) return;
 
     const nextNotes = normalizeText(payload.notes);
     const currentNotes = normalizeText(booking.notes);
@@ -956,6 +1081,7 @@ export function createBookingHandlers(deps) {
     }
 
     booking.notes = nextNotes;
+    incrementBookingRevision(booking, "notes_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
@@ -991,7 +1117,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_pricing_revision", "pricing_revision", res))) return;
 
     const check = validateBookingPricingInput(payload.pricing);
     if (!check.ok) {
@@ -1008,6 +1134,7 @@ export function createBookingHandlers(deps) {
     }
 
     booking.pricing = nextPricingBase;
+    incrementBookingRevision(booking, "pricing_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
@@ -1043,7 +1170,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
     const check = validateBookingOfferInput(payload.offer, booking);
     if (!check.ok) {
@@ -1062,6 +1189,7 @@ export function createBookingHandlers(deps) {
     }
 
     booking.offer = nextOfferBase;
+    incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(
       store,
@@ -1203,9 +1331,10 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), detail);
+    incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
     await persistStore(store);
 
@@ -1275,7 +1404,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_invoices_revision", "invoices_revision", res))) return;
 
     const components = normalizeInvoiceComponents(payload.components);
     if (!components.length) {
@@ -1309,7 +1438,9 @@ export function createBookingHandlers(deps) {
 
     await writeInvoicePdf(invoice, invoiceParty, booking);
     store.invoices.push(invoice);
+    incrementBookingRevision(booking, "invoices_revision");
     booking.updated_at = now;
+    addActivity(store, booking.id, "INVOICE_UPDATED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Invoice ${invoice.invoice_number} created`);
     await persistStore(store);
     sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingPayload(booking) });
   }
@@ -1336,7 +1467,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertMatchingBookingHashForWrite(payload, booking, res))) return;
+    if (!(await assertExpectedRevision(payload, booking, "expected_invoices_revision", "invoices_revision", res))) return;
 
     const invoice = store.invoices.find((item) => item.id === invoiceId && item.booking_id === bookingId);
     if (!invoice) {
@@ -1402,7 +1533,17 @@ export function createBookingHandlers(deps) {
       await writeInvoicePdf(invoice, invoiceParty, booking);
     }
     invoice.updated_at = nowIso();
+    incrementBookingRevision(booking, "invoices_revision");
     booking.updated_at = invoice.updated_at;
+    addActivity(
+      store,
+      booking.id,
+      "INVOICE_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      payload.sent_to_recipient !== undefined
+        ? (payload.sent_to_recipient ? `Invoice ${invoice.invoice_number} marked as sent` : `Invoice ${invoice.invoice_number} marked as not sent`)
+        : `Invoice ${invoice.invoice_number} updated`
+    );
 
     await persistStore(store);
     sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingPayload(booking) });
@@ -1441,7 +1582,9 @@ export function createBookingHandlers(deps) {
     handlePatchBookingName,
     handlePatchBookingStage,
     handlePatchBookingOwner,
-    handlePatchBookingPersons,
+    handleCreateBookingPerson,
+    handlePatchBookingPerson,
+    handleDeleteBookingPerson,
     handleUploadBookingPersonPhoto,
     handlePatchBookingNotes,
     handlePatchBookingPricing,

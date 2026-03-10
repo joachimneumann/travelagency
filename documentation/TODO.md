@@ -2,7 +2,8 @@
 
 ## Current Focus
 
-- Review conflict detection for booking edits that use `booking_hash`.
+- Keep section-level booking revisions aligned across model, generated contract, backend, frontend, and tests.
+- Add regression coverage for each revision domain, especially booking activities.
 - Expand booking-person editing only where there is a clear operational need.
 - Add confirmation to destructive actions where still missing.
 - Improve WhatsApp workflows for staff replies and media handling.

@@ -158,14 +158,38 @@
         ]
       },
       {
-        key: "booking_persons",
+        key: "booking_person_create",
         path: "/api/v1/bookings/{booking_id}/persons",
-        method: "PATCH",
+        method: "POST",
         authenticated: true,
-        requestType: "BookingPersonsUpdateRequest",
+        requestType: "BookingPersonCreateRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_person_update",
+        path: "/api/v1/bookings/{booking_id}/persons/{person_id}",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingPersonUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+        ]
+      },
+      {
+        key: "booking_person_delete",
+        path: "/api/v1/bookings/{booking_id}/persons/{person_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: "BookingPersonDeleteRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -173,7 +197,7 @@
         path: "/api/v1/bookings/{booking_id}/persons/{person_id}/photo",
         method: "POST",
         authenticated: true,
-        requestType: "EvidenceUpload",
+        requestType: "BookingPersonPhotoUploadRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),

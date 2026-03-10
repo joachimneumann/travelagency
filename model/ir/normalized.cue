@@ -383,9 +383,14 @@ IR: {
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 					{name: "name", kind: "scalar", typeName: "string", required: false},
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
 					{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
 					{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "core_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "persons_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "pricing_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "offer_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "invoices_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
 					{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 					{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
@@ -781,7 +786,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingDeleteRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 				]
 			},
 			{
@@ -790,7 +795,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingNameUpdateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "name", kind: "scalar", typeName: "string", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
@@ -801,7 +806,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingStageUpdateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
@@ -812,19 +817,40 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingOwnerUpdateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
 			},
 			{
-				name:       "BookingPersonsUpdateRequest"
+				name:       "BookingPersonCreateRequest"
 				domain:     "api"
 				module:     "api"
-				sourceType: "api.#BookingPersonsUpdateRequest"
+				sourceType: "api.#BookingPersonCreateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
-					{name: "persons", kind: "entity", typeName: "BookingPerson", required: true, isArray: true},
+					{name: "expected_persons_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "person", kind: "entity", typeName: "BookingPerson", required: true},
+					{name: "actor", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
+				name:       "BookingPersonUpdateRequest"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#BookingPersonUpdateRequest"
+				fields: [
+					{name: "expected_persons_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "person", kind: "entity", typeName: "BookingPerson", required: true},
+					{name: "actor", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
+				name:       "BookingPersonDeleteRequest"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#BookingPersonDeleteRequest"
+				fields: [
+					{name: "expected_persons_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
 			},
@@ -834,7 +860,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingNotesUpdateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_notes_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "notes", kind: "scalar", typeName: "string", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
@@ -845,7 +871,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingPricingUpdateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_pricing_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
@@ -856,7 +882,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingOfferUpdateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
@@ -891,7 +917,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingActivityCreateRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "type", kind: "enum", typeName: "BookingActivityType", required: true},
 					{name: "detail", kind: "scalar", typeName: "string", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
@@ -903,7 +929,7 @@ IR: {
 				module:     "api"
 				sourceType: "api.#BookingInvoiceUpsertRequest"
 				fields: [
-					{name: "booking_hash", kind: "scalar", typeName: "string", required: false},
+					{name: "expected_invoices_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "invoice_number", kind: "scalar", typeName: "string", required: false},
 					{name: "currency", kind: "enum", typeName: "CurrencyCode", required: false},
 					{name: "issue_date", kind: "scalar", typeName: "DateOnly", required: false},

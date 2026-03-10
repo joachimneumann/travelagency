@@ -2,36 +2,47 @@ import SwiftUI
 
 struct AppShellView: View {
     @EnvironmentObject private var sessionStore: SessionStore
-    private let roleService = RoleService()
 
     var body: some View {
         NavigationStack {
-            DashboardView(
-                canReadCustomers: canReadCustomers,
-                canReadTravelGroups: canReadTravelGroups,
-                canReadBookings: canReadBookings,
-                canReadSettings: canReadSettings
-            )
+            VStack(spacing: 20) {
+                Image("BrandLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 180)
+                    .padding(.top, 24)
+
+                Text(sessionStore.session?.client.preferredUsername ?? sessionStore.session?.client.email ?? "Logged in")
+                    .font(.title2.weight(.semibold))
+
+                if let session = sessionStore.session, !session.client.roles.isEmpty {
+                    Text(rolesDisplay(session.client.roles))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                Text("The iOS app currently keeps only the shell and login flow.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 320)
+
+                Button("Log out") {
+                    Task { await sessionStore.logoutEverywhere() }
+                }
+                .buttonStyle(.bordered)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 24)
+            .navigationTitle("AsiaTravelPlan")
         }
     }
 
-    private var canReadCustomers: Bool {
-        guard let session = sessionStore.session else { return false }
-        return roleService.canReadCustomers(session.client)
-    }
-
-    private var canReadBookings: Bool {
-        guard let session = sessionStore.session else { return false }
-        return roleService.canReadAllBookings(session.client)
-            || roleService.canEditAssignedBookings(session.client)
-    }
-
-    private var canReadTravelGroups: Bool {
-        canReadBookings
-    }
-
-    private var canReadSettings: Bool {
-        guard let session = sessionStore.session else { return false }
-        return roleService.canReadSettings(session.client)
+    private func rolesDisplay(_ roles: Set<ATPStaffRole>) -> String {
+        roles
+            .map(\.rawValue)
+            .sorted()
+            .joined(separator: " | ")
     }
 }

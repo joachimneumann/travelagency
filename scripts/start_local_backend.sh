@@ -4,7 +4,7 @@ set -euo pipefail
 import_zsh_env() {
   command -v zsh >/dev/null 2>&1 || return 0
   local exported
-  exported="$(zsh -lc 'typeset -px KEYCLOAK_ENABLED KEYCLOAK_BASE_URL KEYCLOAK_REALM KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET KEYCLOAK_REDIRECT_URI KEYCLOAK_ALLOWED_ROLES KEYCLOAK_POST_LOGOUT_REDIRECT_URI CORS_ORIGIN FRONTEND_PORT BACKEND_PORT 2>/dev/null' 2>/dev/null || true)"
+  exported="$(zsh -ilc 'typeset -px KEYCLOAK_ENABLED KEYCLOAK_BASE_URL KEYCLOAK_REALM KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET KEYCLOAK_REDIRECT_URI KEYCLOAK_ALLOWED_ROLES KEYCLOAK_POST_LOGOUT_REDIRECT_URI CORS_ORIGIN FRONTEND_PORT BACKEND_PORT 2>/dev/null' 2>/dev/null || true)"
   [ -n "$exported" ] || return 0
   eval "$exported"
 }
@@ -45,6 +45,27 @@ wait_for_pid() {
     fi
     exit 1
   fi
+}
+
+wait_for_http() {
+  local url="$1"
+  local label="$2"
+  local attempts="${3:-30}"
+  local i
+
+  for i in $(seq 1 "$attempts"); do
+    if curl -fsS "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.5
+  done
+
+  echo "Error: ${label} failed health check at ${url}." >&2
+  if [ -f "$BACKEND_LOG_FILE" ]; then
+    echo "--- ${label} log (tail) ---" >&2
+    tail -n 120 "$BACKEND_LOG_FILE" >&2 || true
+  fi
+  exit 1
 }
 
 require_cmd() {
@@ -102,8 +123,9 @@ stop_existing_backend() {
 }
 
 main() {
-  require_cmd npm
+  require_cmd node
   require_cmd lsof
+  require_cmd curl
 
   if [ ! -f "$BACKEND_DIR/package.json" ]; then
     echo "Error: backend package.json not found in $BACKEND_DIR" >&2
@@ -115,10 +137,12 @@ main() {
     mkdir -p "$(dirname "$STORE_FILE")"
     cat >"$STORE_FILE" <<'EOF'
 {
-  "customers": [],
   "bookings": [],
   "activities": [],
-  "invoices": []
+  "invoices": [],
+  "chat_channel_accounts": [],
+  "chat_conversations": [],
+  "chat_events": []
 }
 EOF
   fi
@@ -137,6 +161,7 @@ EOF
     BACKEND_DIR="$BACKEND_DIR" \
     BACKEND_LOG_FILE="$BACKEND_LOG_FILE" \
     BACKEND_PID_FILE="$BACKEND_PID_FILE" \
+    NODE_BIN="$(command -v node)" \
     PORT="$BACKEND_PORT" \
     CORS_ORIGIN="$CORS_ORIGIN" \
     KEYCLOAK_ENABLED="$KEYCLOAK_ENABLED" \
@@ -152,7 +177,7 @@ const fs = require("fs");
 const { spawn } = require("child_process");
 
 const logFd = fs.openSync(process.env.BACKEND_LOG_FILE, "a");
-const child = spawn("npm", ["start"], {
+const child = spawn(process.env.NODE_BIN, ["src/server.js"], {
   cwd: process.env.BACKEND_DIR,
   env: process.env,
   detached: true,
@@ -163,6 +188,7 @@ fs.writeFileSync(process.env.BACKEND_PID_FILE, `${child.pid}\n`, "utf8");
 child.unref();
 EOF
   wait_for_pid "$(cat "$BACKEND_PID_FILE")" "backend" "$BACKEND_LOG_FILE"
+  wait_for_http "http://localhost:${BACKEND_PORT}/health" "backend"
 
   echo "Backend API: http://localhost:${BACKEND_PORT}"
   echo "Backend log: ${BACKEND_LOG_FILE}"

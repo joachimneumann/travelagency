@@ -13,7 +13,6 @@ import { createHttpHelpers } from "./http/http_helpers.js";
 import { createStagingAccessHandlers } from "./http/staging_access.js";
 import { createPricingHelpers } from "./domain/pricing.js";
 import { createBookingViewHelpers } from "./domain/booking_views.js";
-import { computeBookingHash } from "./domain/hashes.js";
 import { createAccessHelpers } from "./domain/access.js";
 import { createTourHelpers } from "./domain/tours_support.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
@@ -287,7 +286,6 @@ const {
   canAccessBooking,
   canEditBooking,
   buildBookingReadModel,
-  assertMatchingBookingHash,
   filterAndSortBookings,
   paginate
 } = createBookingViewHelpers({
@@ -307,7 +305,6 @@ const {
   safeInt,
   buildBookingPricingReadModel,
   buildBookingOfferReadModel,
-  computeBookingHash,
   sendJson
 });
 
@@ -410,7 +407,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
     defaultBookingOffer,
     addActivity,
     persistStore,
-    computeBookingHash,
     getPrincipal,
     loadAtpStaff,
     resolvePrincipalAtpStaffMember,
@@ -428,7 +424,6 @@ export async function createBackendHandler({ port = PORT } = {}) {
     STAGE_ORDER,
     ALLOWED_STAGE_TRANSITIONS,
     canChangeBookingStage,
-    assertMatchingBookingHash,
     actorLabel,
     canChangeBookingAssignment,
     syncBookingAtpStaffFields,

@@ -493,6 +493,7 @@
 
 .booking-person-modal__panel {
   width: min(980px, 96vw);
+  background: rgba(249, 249, 249, 0.96);
 }
 
 .booking-person-modal__head {
@@ -585,10 +586,11 @@
 }
 
 .booking-person-modal__travel-document {
-  border: 1px solid rgba(166, 188, 198, 0.55);
+  border: 1px solid rgba(166, 188, 198, 0.24);
   border-radius: 22px;
+  margin: 1rem 0 0.45rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--wa-bg);
 }
 
 .booking-person-modal__document-switch {

@@ -199,16 +199,50 @@ export function bookingOwnerRequest({ baseURL = '', params = {}, query = {}, bod
   };
 }
 
-export function bookingPersonsPath(params = {}) {
+export function bookingPersonCreatePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/persons", params);
 }
 
-export function bookingPersonsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingPersonsPath(params);
+export function bookingPersonCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPersonCreatePath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_persons",
+    key: "booking_person_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingPersonUpdatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/persons/{person_id}", params);
+}
+
+export function bookingPersonUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPersonUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_person_update",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingPersonDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/persons/{person_id}", params);
+}
+
+export function bookingPersonDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPersonDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_person_delete",
+    method: "DELETE",
     authenticated: true,
     url,
     headers,

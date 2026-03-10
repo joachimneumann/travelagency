@@ -34,8 +34,12 @@ case "booking_stage":
   return RequestFactory.bookingStageRequest(options);
 case "booking_owner":
   return RequestFactory.bookingOwnerRequest(options);
-case "booking_persons":
-  return RequestFactory.bookingPersonsRequest(options);
+case "booking_person_create":
+  return RequestFactory.bookingPersonCreateRequest(options);
+case "booking_person_update":
+  return RequestFactory.bookingPersonUpdateRequest(options);
+case "booking_person_delete":
+  return RequestFactory.bookingPersonDeleteRequest(options);
 case "booking_person_photo":
   return RequestFactory.bookingPersonPhotoRequest(options);
 case "booking_notes":

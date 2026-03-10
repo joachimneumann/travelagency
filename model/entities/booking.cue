@@ -84,7 +84,12 @@ import (
 #Booking: {
 	id:                             common.#Identifier
 	name?:                          string
-	booking_hash?:                  string
+	core_revision?:                 >=0 & int
+	notes_revision?:                >=0 & int
+	persons_revision?:              >=0 & int
+	pricing_revision?:              >=0 & int
+	offer_revision?:                >=0 & int
+	invoices_revision?:             >=0 & int
 	stage:                          enums.#BookingStage
 	atp_staff?:                     common.#Identifier
 	service_level_agreement_due_at?: common.#Timestamp

@@ -22,8 +22,10 @@ import {
   bookingNotesRequest,
   bookingOfferRequest,
   bookingOwnerRequest,
+  bookingPersonCreateRequest,
+  bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
-  bookingPersonsRequest,
+  bookingPersonUpdateRequest,
   bookingPricingRequest,
   bookingStageRequest,
   offerExchangeRatesRequest,
@@ -183,8 +185,6 @@ const els = {
   personModalNotes: document.getElementById("booking_person_modal_notes"),
   ownerSelect: document.getElementById("booking_owner_select"),
   stageSelect: document.getElementById("booking_stage_select"),
-  personsSummary: document.getElementById("booking_persons_summary"),
-  personsStatus: document.getElementById("booking_persons_status"),
   noteInput: document.getElementById("booking_note_input"),
   noteSaveBtn: document.getElementById("booking_note_save_btn"),
   actionStatus: document.getElementById("booking_action_status"),
@@ -621,7 +621,6 @@ function renderActionControls() {
   }
 
   if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
-  renderPersonsSummary();
   if (els.noteInput) {
     els.noteInput.disabled = !state.permissions.canEditBooking;
     els.noteInput.value = state.booking.notes || "";
@@ -718,25 +717,6 @@ function buildTravelerMismatchMessage(booking) {
   const listed = getTravelerCount(booking);
   if (declared === listed) return "";
   return `Declared travelers: ${declared}. Listed persons/travelers: ${listed}.`;
-}
-
-function renderPersonsSummary() {
-  const persons = getBookingPersons(state.booking);
-  const primaryContact = getPrimaryContact(state.booking);
-  const submittedContact = getSubmittedContact(state.booking);
-  const travelerCount = getTravelerCount(state.booking);
-  const mismatchWarning = buildTravelerMismatchMessage(state.booking);
-  if (els.personsSummary) {
-    const summaryParts = [];
-    const contactName = primaryContact?.name || submittedContact?.name;
-    if (contactName) summaryParts.push(`Primary contact: ${contactName}`);
-    summaryParts.push(`${persons.length} persons listed`);
-    summaryParts.push(`${travelerCount} traveler${travelerCount === 1 ? "" : "s"} marked`);
-    els.personsSummary.textContent = summaryParts.join(" | ");
-  }
-  if (els.personsStatus) {
-    els.personsStatus.textContent = mismatchWarning || "Persons are stored directly on this booking.";
-  }
 }
 
 function formatPersonRoleLabel(role) {
@@ -997,6 +977,11 @@ function clearPersonsAutosaveTimer() {
   }
 }
 
+function getBookingRevision(field) {
+  const value = Number(state.booking?.[field]);
+  return Number.isFinite(value) && value >= 0 ? Math.trunc(value) : 0;
+}
+
 function schedulePersonsAutosave(delay_ms = 700) {
   if (!state.permissions.canEditBooking || !state.booking) return;
   clearPersonsAutosaveTimer();
@@ -1108,31 +1093,58 @@ function handlePersonsEditorListClick(event) {
   openPersonModal(index);
 }
 
-function addPersonDraft() {
-  state.personDrafts.push(buildEmptyPersonDraft());
-  renderPersonsEditor();
-  updatePersonsDirtyState();
+async function addPersonDraft() {
+  if (!state.permissions.canEditBooking || !state.booking) return;
   setPersonsEditorStatus("Creating person...");
-  schedulePersonsAutosave(0);
-  openPersonModal(state.personDrafts.length - 1);
+  const draft = buildEmptyPersonDraft();
+  const request = bookingPersonCreateRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      expected_persons_revision: getBookingRevision("persons_revision"),
+      person: buildPersonPayloadFromDraft(draft, state.personDrafts.length),
+      actor: state.user
+    }
+  });
+  if (!result?.booking) {
+    setPersonsEditorStatus("Could not create person.");
+    return;
+  }
+
+  applyBookingPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
+  const createdPersonId = result.booking?.persons?.[result.booking.persons.length - 1]?.id || "";
+  const createdIndex = state.personDrafts.findIndex((person) => person.id === createdPersonId);
+  if (createdIndex >= 0) openPersonModal(createdIndex);
+  setPersonsEditorStatus("Person created.");
 }
 
-async function savePersonDrafts() {
+async function savePersonDrafts(person_id = state.active_person_id) {
   if (!state.permissions.canEditBooking || !state.booking) return false;
   if (!state.dirty.persons) return true;
   if (state.persons_save_in_flight) {
     state.persons_save_queued = true;
     return await state.persons_save_in_flight;
   }
+  const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
+  const personIndex = state.personDrafts.findIndex((draft) => draft.id === targetPersonId);
+  const currentDraft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
+  if (!currentDraft || currentDraft._is_new) return false;
   clearPersonsAutosaveTimer();
-  setPersonsEditorStatus("Saving persons...");
-  const request = bookingPersonsRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+  setPersonsEditorStatus(`Saving ${normalizeText(currentDraft.name) || "person"}...`);
+  const request = bookingPersonUpdateRequest({
+    baseURL: apiOrigin,
+    params: { booking_id: state.booking.id, person_id: targetPersonId }
+  });
   const save_operation = (async () => {
     const result = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
-        booking_hash: state.booking.booking_hash,
-        persons: state.personDrafts.map((draft, index) => buildPersonPayloadFromDraft(draft, index)),
+        expected_persons_revision: getBookingRevision("persons_revision"),
+        person: buildPersonPayloadFromDraft(currentDraft, personIndex),
         actor: state.user
       }
     });
@@ -1143,7 +1155,7 @@ async function savePersonDrafts() {
     renderBookingData();
     renderActionControls();
     renderPersonsEditor();
-    setPersonsEditorStatus(result.unchanged ? "Persons unchanged." : "Persons saved.");
+    setPersonsEditorStatus(result.unchanged ? "Person unchanged." : "Person saved.");
     return true;
   })();
   state.persons_save_in_flight = save_operation;
@@ -1442,21 +1454,33 @@ async function handlePersonModalClick(event) {
   }
   if (event.target.closest("#booking_person_modal_delete_btn")) {
     if (!window.confirm(`Remove ${normalizeText(draft.name) || "this person"} from the booking?`)) return;
-    state.personDrafts.splice(state.active_person_index, 1);
     if (draft._is_new) {
+      state.personDrafts.splice(state.active_person_index, 1);
       closePersonModal();
       renderPersonsEditor();
       updatePersonsDirtyState();
       setPersonsEditorStatus("Unsaved person removed.");
-      schedulePersonsAutosave(0);
       return;
     }
-    const saved = await savePersonDrafts();
-    if (saved) {
-      closePersonModal();
-      renderPersonsEditor();
-      setPersonsEditorStatus("Person removed.");
-    }
+    const request = bookingPersonDeleteRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id, person_id: draft.id }
+    });
+    const result = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: {
+        expected_persons_revision: getBookingRevision("persons_revision"),
+        actor: state.user
+      }
+    });
+    if (!result?.booking) return;
+    closePersonModal();
+    applyBookingPayload(result);
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor();
+    setPersonsEditorStatus("Person removed.");
     return;
   }
 }
@@ -1483,7 +1507,7 @@ async function uploadPersonPhoto(index, input = els.personModalPhotoInput) {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_persons_revision: getBookingRevision("persons_revision"),
       filename: file.name,
       data_base64: base64,
       actor: state.user
@@ -1570,7 +1594,7 @@ async function deleteBooking() {
   const result = await fetchApi(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash
+      expected_core_revision: getBookingRevision("core_revision")
     }
   });
   if (els.deleteBtn) els.deleteBtn.disabled = false;
@@ -1589,7 +1613,7 @@ async function saveBookingName(next_name_override = null) {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_core_revision: getBookingRevision("core_revision"),
       name: nextName,
       actor: state.user
     }
@@ -2131,7 +2155,7 @@ async function saveOwner() {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_core_revision: getBookingRevision("core_revision"),
       atp_staff: els.ownerSelect.value || null,
       actor: state.user
     }
@@ -2150,7 +2174,7 @@ async function saveStage() {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_core_revision: getBookingRevision("core_revision"),
       stage: els.stageSelect.value,
       actor: state.user
     }
@@ -2174,7 +2198,7 @@ async function saveNote() {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_notes_revision: getBookingRevision("notes_revision"),
       notes: String(els.noteInput.value || "").trim(),
       actor: state.user,
     }
@@ -2222,7 +2246,7 @@ async function savePricing() {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_pricing_revision: getBookingRevision("pricing_revision"),
       pricing,
       actor: state.user
     }
@@ -2691,7 +2715,7 @@ async function createInvoice() {
     method: request.method,
     body: {
       ...payload,
-      booking_hash: state.booking.booking_hash
+      expected_invoices_revision: getBookingRevision("invoices_revision")
     }
   });
   if (!result?.invoice) return;
@@ -2719,7 +2743,7 @@ async function toggleInvoiceSent(invoiceId, sent) {
     method: request.method,
     body: {
       sent_to_recipient: Boolean(sent),
-      booking_hash: state.booking.booking_hash
+      expected_invoices_revision: getBookingRevision("invoices_revision")
     }
   });
   if (!result?.invoice) return;
@@ -3023,7 +3047,7 @@ async function saveOffer() {
   const result = await fetchBookingMutation(request.url, {
     method: request.method,
     body: {
-      booking_hash: state.booking.booking_hash,
+      expected_offer_revision: getBookingRevision("offer_revision"),
       offer,
       actor: state.user
     }
@@ -3233,6 +3257,28 @@ const fetchApi = createApiFetcher({
   connectionErrorMessage: "Could not connect to backend API."
 });
 
+function getConflictReloadInstruction() {
+  const userAgent = String(window.navigator.userAgent || "");
+  const platform = String(window.navigator.platform || "");
+  const touchPoints = Number(window.navigator.maxTouchPoints || 0);
+  const isIPhone = /iPhone/i.test(userAgent);
+  const isIPad = /iPad/i.test(userAgent) || (/Mac/i.test(platform) && touchPoints > 1);
+  const isIOS = isIPhone || isIPad;
+  if (isIOS) {
+    return "Reload this page in Safari by tapping the reload button in the address bar.";
+  }
+  if (/Android/i.test(userAgent)) {
+    return "Reload this page in your browser by tapping the reload button in the toolbar.";
+  }
+  if (/Mac/i.test(platform)) {
+    return "Reload this page with Command-R.";
+  }
+  if (/Win/i.test(platform)) {
+    return "Reload this page with Ctrl-R or F5.";
+  }
+  return "Reload this page in your browser.";
+}
+
 async function fetchBookingMutation(path, options = {}) {
   const method = options.method || "GET";
   const body = options.body;
@@ -3249,19 +3295,10 @@ async function fetchBookingMutation(path, options = {}) {
 
     const payload = await response.json();
     if (!response.ok) {
-      if (response.status === 409 && payload?.code === "BOOKING_HASH_MISMATCH" && payload?.booking) {
-        applyBookingPayload({ booking: payload.booking });
-        if (els.noteInput) els.noteInput.value = state.booking.notes || "";
-        state.originalNote = String(state.booking.notes || "");
-        renderBookingHeader();
-        renderBookingData();
-        renderActionControls();
-        renderPersonsEditor();
-        renderPricingPanel();
-        renderOfferPanel();
-        loadActivities();
-        setStatus("The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.");
-        clearError();
+      if (response.status === 409 && payload?.code === "BOOKING_REVISION_MISMATCH" && payload?.booking) {
+        const instruction = getConflictReloadInstruction();
+        showError(`This booking was changed on another device. Please reload before editing again. ${instruction}`);
+        setStatus("This booking was changed in the backend. Reload required.");
         return null;
       }
       const message = payload?.detail ? `${payload.error || "Request failed"}: ${payload.detail}` : payload.error || "Request failed";

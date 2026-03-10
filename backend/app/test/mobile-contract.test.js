@@ -225,8 +225,8 @@ test("booking offer patch enforces preferred currency", async () => {
   assert.equal(detailBefore.status, 200);
   const booking = detailBefore.body.booking;
   const offerCurrency = booking.offer?.currency || booking.preferred_currency || booking.pricing?.currency || "USD";
-  const bookingHash = booking.booking_hash;
-  assert.equal(typeof bookingHash, "string");
+  const offerRevision = booking.offer_revision;
+  assert.equal(typeof offerRevision, "number");
 
   const currentOffer = booking.offer;
   assert.equal(typeof currentOffer, "object");
@@ -237,7 +237,7 @@ test("booking offer patch enforces preferred currency", async () => {
     {
       method: "PATCH",
       body: {
-        booking_hash: bookingHash,
+        expected_offer_revision: offerRevision,
         offer: currentOffer
       }
     }
@@ -247,6 +247,7 @@ test("booking offer patch enforces preferred currency", async () => {
   assert.equal(patchResult.body.unchanged, true);
   assert.ok(Array.isArray(patchResult.body.booking.offer.components));
   assert.equal(typeof patchResult.body.booking.offer.totals.gross_amount_cents, "number");
+  const offer_revision_after_patch = patchResult.body.booking.offer_revision;
 
   const mismatchCurrency = offerCurrency === "USD" ? "VND" : "USD";
   const conversionResult = await requestJson(
@@ -255,7 +256,7 @@ test("booking offer patch enforces preferred currency", async () => {
     {
       method: "PATCH",
       body: {
-        booking_hash: bookingHash,
+        expected_offer_revision: offer_revision_after_patch,
         offer: {
           ...currentOffer,
           currency: mismatchCurrency,
@@ -276,7 +277,8 @@ test("booking name and persons endpoints update the booking", async () => {
   const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailBefore.status, 200);
   const bookingBefore = detailBefore.body.booking;
-  const booking_hash = bookingBefore.booking_hash;
+  const core_revision = bookingBefore.core_revision;
+  const persons_revision = bookingBefore.persons_revision;
   const original_person = bookingBefore.persons[0];
   assert.equal(typeof original_person.id, "string");
 
@@ -286,7 +288,7 @@ test("booking name and persons endpoints update the booking", async () => {
     {
       method: "PATCH",
       body: {
-        booking_hash,
+        expected_core_revision: core_revision,
         name: "Vietnam Adventure Journey",
         actor: "joachim"
       }
@@ -296,56 +298,94 @@ test("booking name and persons endpoints update the booking", async () => {
   assert.equal(nameResult.body.booking.name, "Vietnam Adventure Journey");
   const detailAfterName = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailAfterName.status, 200);
-  const booking_hash_after_name = detailAfterName.body.booking.booking_hash;
+  const persons_revision_after_name = detailAfterName.body.booking.persons_revision;
 
-  const personsPayload = [
-    {
-      ...original_person,
-      roles: ["primary_contact", "decision_maker"],
-      emails: ["planner@example.com"],
-      date_of_birth: "1988-04-11",
-      nationality: "DE",
-      documents: [
-        {
-          id: `${original_person.id}_passport`,
-          document_type: "passport",
-          holder_name: "Test User",
-          document_number: "C01X9981",
-          issuing_country: "DE",
-          issued_on: "2023-05-01",
-          expires_on: "2033-05-01"
-        }
-      ]
-    },
-    {
-      id: `${booking_id}_traveler_2`,
-      name: "Traveler Two",
-      roles: ["traveler"],
-      emails: ["traveler2@example.com"],
-      phone_numbers: ["+15557654321"]
-    }
-  ];
-  const personsResult = await requestJson(
-    endpointPath("booking_persons").replace("{booking_id}", booking_id),
+  const personUpdateResult = await requestJson(
+    endpointPath("booking_person_update")
+      .replace("{booking_id}", booking_id)
+      .replace("{person_id}", original_person.id),
     apiHeaders(),
     {
       method: "PATCH",
       body: {
-        booking_hash: booking_hash_after_name,
-        persons: personsPayload,
+        expected_persons_revision: persons_revision_after_name,
+        person: {
+          ...original_person,
+          roles: ["primary_contact", "decision_maker"],
+          emails: ["planner@example.com"],
+          date_of_birth: "1988-04-11",
+          nationality: "DE",
+          documents: [
+            {
+              id: `${original_person.id}_passport`,
+              document_type: "passport",
+              holder_name: "Test User",
+              document_number: "C01X9981",
+              issuing_country: "DE",
+              issued_on: "2023-05-01",
+              expires_on: "2033-05-01"
+            }
+          ]
+        },
         actor: "joachim"
       }
     }
   );
-  assert.equal(personsResult.status, 200);
-  assert.equal(personsResult.body.booking.persons.length, 2);
-  assert.deepEqual(personsResult.body.booking.persons[0].roles, ["primary_contact", "decision_maker"]);
-  assert.equal(personsResult.body.booking.persons[0].documents[0].holder_name, "Test User");
-  assert.equal(personsResult.body.booking.persons[0].documents[0].issued_on, "2023-05-01");
-  assert.equal(personsResult.body.booking.persons[1].name, "Traveler Two");
+  assert.equal(personUpdateResult.status, 200);
+  assert.deepEqual(personUpdateResult.body.booking.persons[0].roles, ["primary_contact", "decision_maker"]);
+  assert.equal(personUpdateResult.body.booking.persons[0].documents[0].holder_name, "Test User");
+  assert.equal(personUpdateResult.body.booking.persons[0].documents[0].issued_on, "2023-05-01");
+
+  const personCreateResult = await requestJson(
+    endpointPath("booking_person_create").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_persons_revision: personUpdateResult.body.booking.persons_revision,
+        person: {
+          id: `${booking_id}_traveler_2`,
+          name: "Traveler Two",
+          roles: ["traveler"],
+          emails: ["traveler2@example.com"],
+          phone_numbers: ["+15557654321"]
+        },
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(personCreateResult.status, 201);
+  assert.equal(personCreateResult.body.booking.persons.length, 2);
+  assert.equal(personCreateResult.body.booking.persons[1].name, "Traveler Two");
   const detailAfterPersons = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailAfterPersons.status, 200);
   assert.equal(detailAfterPersons.body.booking.persons[0].documents[0].document_number, "C01X9981");
+});
+
+test("booking activity create uses the core revision", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const core_revision = detailBefore.body.booking.core_revision;
+
+  const createResult = await requestJson(
+    endpointPath("booking_activity_create").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: core_revision,
+        type: "BOOKING_UPDATED",
+        detail: "Manual activity",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(createResult.status, 201);
+  assert.equal(createResult.body.activity.type, "BOOKING_UPDATED");
+  assert.equal(createResult.body.booking.core_revision, core_revision + 1);
 });
 
 test("booking person photo endpoint updates the booking when ImageMagick is available", async (t) => {
@@ -359,7 +399,7 @@ test("booking person photo endpoint updates the booking when ImageMagick is avai
   const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailBefore.status, 200);
   const bookingBefore = detailBefore.body.booking;
-  const booking_hash = bookingBefore.booking_hash;
+  const persons_revision = bookingBefore.persons_revision;
   const original_person = bookingBefore.persons[0];
 
   const photoResult = await requestJson(
@@ -370,7 +410,7 @@ test("booking person photo endpoint updates the booking when ImageMagick is avai
     {
       method: "POST",
       body: {
-        booking_hash,
+        expected_persons_revision: persons_revision,
         filename: "profile.png",
         data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
         actor: "joachim"
@@ -388,7 +428,7 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
 
   const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailBefore.status, 200);
-  const booking_hash = detailBefore.body.booking.booking_hash;
+  const invoices_revision = detailBefore.body.booking.invoices_revision;
 
   const invoiceCreateResult = await requestJson(
     endpointPath("booking_invoice_create").replace("{booking_id}", booking_id),
@@ -396,7 +436,7 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
     {
       method: "POST",
       body: {
-        booking_hash,
+        expected_invoices_revision: invoices_revision,
         invoice_number: "ATP-TEST-001",
         currency: "USD",
         title: "Planning deposit",
@@ -416,7 +456,7 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
   assert.equal(invoiceCreateResult.body.invoice.total_amount_cents, 50000);
   const invoice_id = invoiceCreateResult.body.invoice.id;
   assert.equal(typeof invoice_id, "string");
-  const booking_hash_after_invoice_create = invoiceCreateResult.body.booking.booking_hash;
+  const invoices_revision_after_create = invoiceCreateResult.body.booking.invoices_revision;
 
   const invoiceUpdateResult = await requestJson(
     endpointPath("booking_invoice_update")
@@ -426,7 +466,7 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
     {
       method: "PATCH",
       body: {
-        booking_hash: booking_hash_after_invoice_create,
+        expected_invoices_revision: invoices_revision_after_create,
         title: "Planning deposit updated",
         sent_to_recipient: true,
         components: [

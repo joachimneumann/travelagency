@@ -238,6 +238,24 @@ Tradeoff:
 
 This tradeoff is intentional.
 
+## Concurrency Model
+
+The active backend no longer uses a single booking-wide hash for optimistic locking.
+
+Instead, each writable booking section has its own integer revision counter:
+- `core_revision`
+- `notes_revision`
+- `persons_revision`
+- `pricing_revision`
+- `offer_revision`
+- `invoices_revision`
+
+Rules:
+- endpoints must validate only the revision for the section they mutate
+- a write increments only that section revision
+- `updated_at` remains an audit/display field and must not be used for conflict detection
+- on a conflict, the frontend should tell the user to reload; it should not silently overwrite with server state
+
 ## Where Handwritten Code Is Still Acceptable
 
 Not everything has to be generated.
