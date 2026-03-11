@@ -1,0 +1,429 @@
+.booking-detail-page {
+  --wa-shell: #f7f4ef;
+  --wa-list-surface: #fcfbf8;
+  --wa-thread-surface: #ece8e0;
+  --wa-divider: #e9e4dd;
+  --wa-text-strong: #111111;
+  --wa-text-muted: #7a7873;
+  --wa-bubble-in: #ffffff;
+  --wa-bubble-out: #d9f2d0;
+  --wa-ticks: #1e7cf2;
+}
+
+.booking-detail-page .wa-chat-panel {
+  max-width: 600px;
+  margin: 0 auto 1rem;
+  border: 1px solid var(--wa-divider);
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 18px 42px rgba(17, 27, 33, 0.10);
+  background: var(--wa-shell);
+}
+
+.wa-chat-shell {
+  display: flex;
+  width: 200%;
+  min-height: 720px;
+  transition: transform 0.28s ease;
+}
+
+.wa-chat-shell[data-chat-view="thread"] {
+  transform: translateX(-50%);
+}
+
+.wa-chat-screen {
+  width: 50%;
+  min-width: 50%;
+  display: flex;
+  flex-direction: column;
+  min-height: 720px;
+}
+
+.wa-chat-screen--list {
+  background: var(--wa-shell);
+}
+
+.wa-chat-screen--thread {
+  background: var(--wa-thread-surface);
+}
+
+.wa-chat-list-head {
+  padding: 1.1rem 1.35rem 1rem;
+}
+
+.wa-chat-list-title {
+  margin: 0;
+  color: var(--wa-text-strong);
+  font-size: 1.45rem;
+  line-height: 1.1;
+  letter-spacing: -0.02rem;
+  font-weight: 700;
+}
+
+.wa-chat-meta {
+  margin: 0.75rem 0 0;
+  color: var(--wa-text-muted);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.wa-chat-contacts {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  background: var(--wa-list-surface);
+  border-top: 1px solid var(--wa-divider);
+}
+
+.wa-chat-contact {
+  appearance: none;
+  border: 0;
+  background: var(--wa-list-surface);
+  width: 100%;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 1rem;
+  text-align: left;
+  padding: 1.1rem 1.35rem;
+  border-bottom: 1px solid var(--wa-divider);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.wa-chat-contact:hover,
+.wa-chat-contact:focus-visible {
+  background: #f3f1ec;
+}
+
+.wa-chat-contact.is-selected {
+  background: #efede8;
+}
+
+.wa-chat-contact__avatar,
+.wa-chat-thread-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e8d7ca;
+  border: 1px solid rgba(214, 200, 193, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(82, 82, 82, 0.7);
+  font-size: 1.85rem;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+.wa-chat-contact__avatar img,
+.wa-chat-thread-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wa-chat-contact__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+}
+
+.wa-chat-contact__top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.wa-chat-contact__name {
+  flex: 1;
+  min-width: 0;
+  color: var(--wa-text-strong);
+  font-size: 1.18rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02rem;
+}
+
+.wa-chat-contact__time {
+  color: var(--wa-text-muted);
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.wa-chat-contact__meta,
+.wa-chat-contact__preview,
+.wa-chat-thread-subtitle {
+  color: var(--wa-text-muted);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.wa-chat-thread-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.7rem;
+}
+
+.wa-chat-thread-subtitle-part {
+  display: inline-block;
+}
+
+.wa-chat-contact__preview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-chat-thread-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1rem 1.15rem 0.9rem;
+  background: var(--wa-shell);
+  color: var(--wa-text-strong);
+  border-bottom: 1px solid var(--wa-divider);
+}
+
+.wa-chat-back-btn,
+.wa-chat-open-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--wa-text-strong);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.wa-chat-back-btn {
+  font-size: 3rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.wa-chat-open-btn {
+  width: 44px;
+  height: 44px;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(37, 211, 102, 0.22);
+}
+
+.wa-chat-back-btn:hover,
+.wa-chat-back-btn:focus-visible,
+.wa-chat-open-btn:hover,
+.wa-chat-open-btn:focus-visible {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.wa-chat-open-btn:hover,
+.wa-chat-open-btn:focus-visible {
+  background: #20c55f;
+  color: #fff;
+}
+
+.wa-chat-open-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+  background: #d8ddd8;
+  color: #fff;
+  box-shadow: none;
+}
+
+.wa-chat-open-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  display: block;
+}
+
+.wa-chat-thread-contact {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.wa-chat-thread-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.wa-chat-thread-title {
+  margin: 0;
+  color: var(--wa-text-strong);
+  font-size: 1.18rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02rem;
+}
+
+.wa-chat-thread-subtitle {
+  font-size: 0.95rem;
+}
+
+.wa-chat-canvas {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.95rem 0.95rem 1.2rem;
+  background-color: var(--wa-thread-surface);
+  background-image:
+    radial-gradient(circle at 18px 18px, rgba(101, 101, 101, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 56px 56px, rgba(101, 101, 101, 0.035) 1px, transparent 1px);
+  background-size: 76px 76px;
+}
+
+.wa-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.wa-msg-row {
+  display: flex;
+}
+
+.wa-msg-row.is-in {
+  justify-content: flex-start;
+}
+
+.wa-msg-row.is-out {
+  justify-content: flex-end;
+}
+
+.wa-msg-row.is-status {
+  justify-content: center;
+}
+
+.wa-msg-bubble {
+  max-width: min(78%, 440px);
+  background: var(--wa-bubble-in);
+  color: var(--wa-text-strong);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 22px;
+  padding: 0.7rem 0.95rem 0.55rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.wa-msg-row.is-out .wa-msg-bubble {
+  background: var(--wa-bubble-out);
+}
+
+.wa-msg-row.is-status .wa-msg-bubble {
+  background: #fff8cf;
+  border-color: #e8dda6;
+}
+
+.wa-msg-text {
+  font-size: 1.1rem;
+  line-height: 1.42;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.wa-msg-bubble.is-emoji .wa-msg-text {
+  font-size: 2.2rem;
+  line-height: 1.1;
+}
+
+.wa-msg-meta {
+  margin-top: 0.25rem;
+  text-align: right;
+  font-size: 0.82rem;
+  color: var(--wa-text-muted);
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.wa-meta-ticks {
+  font-size: 1rem;
+  color: var(--wa-ticks);
+  letter-spacing: -0.08rem;
+}
+
+.wa-msg-status {
+  margin-top: 0.16rem;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--wa-text-muted);
+}
+
+.wa-msg-status em {
+  font-style: italic;
+}
+
+.wa-day-sep {
+  display: flex;
+  justify-content: center;
+  margin: 0.25rem 0 0.45rem;
+}
+
+.wa-day-sep > span {
+  font-size: 0.92rem;
+  color: #444;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 999px;
+  padding: 0.18rem 0.9rem;
+  font-weight: 600;
+}
+
+.wa-empty {
+  text-align: center;
+  color: var(--wa-text-muted);
+  padding: 1.4rem 0.45rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 760px) {
+  .booking-detail-page .wa-chat-panel {
+    max-width: none;
+    border-radius: 28px;
+  }
+
+  .wa-chat-shell,
+  .wa-chat-screen {
+    min-height: 72vh;
+  }
+
+  .wa-chat-list-title {
+    font-size: 1.35rem;
+  }
+
+  .wa-chat-canvas {
+    max-height: 62vh;
+    padding: 0.8rem 0.8rem 1rem;
+  }
+
+  .wa-msg-bubble {
+    max-width: 90%;
+  }
+
+  .wa-chat-contact {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 0.8rem;
+    padding: 1rem 1rem;
+  }
+
+  .wa-chat-contact__avatar,
+  .wa-chat-thread-avatar {
+    width: 54px;
+    height: 54px;
+    font-size: 1.55rem;
+  }
+}

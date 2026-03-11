@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Booking</title>
     <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=5" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -247,13 +247,7 @@
             </div>
           </div>
 
-          <article id="meta_chat_panel" class="wa-chat-panel" style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">WhatsApp (read only).</h2>
-            <p class="micro wa-chat-meta" id="meta_chat_summary">Phone: -</p>
-            <div class="wa-chat-canvas">
-              <div id="meta_chat_table" class="wa-chat-list" role="log" aria-live="polite"></div>
-            </div>
-          </article>
+          <div id="booking_whatsapp_mount"></div>
 
           <article id="offer_panel" style="margin-bottom: 1rem;">
             <div class="backend-controls" style="align-items: center; margin-bottom: 0.35rem; column-gap: 0.5rem;">
@@ -411,6 +405,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/backend-booking.js?v=20260310f"></script>
+    <script type="module" src="frontend/scripts/backend-booking.js?v=20260311c"></script>
   </body>
 </html>

@@ -13,7 +13,6 @@ import {
   atpStaffRequest,
   bookingActivitiesRequest,
   bookingDeleteRequest,
-  bookingChatRequest,
   bookingDetailRequest,
   bookingInvoiceCreateRequest,
   bookingInvoiceUpdateRequest,
@@ -40,6 +39,7 @@ import {
   setDirtySurface
 } from "./shared/backend-common.js";
 import { resolveBackendSectionHref } from "./shared/backend-nav.js";
+import { createBookingWhatsAppController } from "./booking-whatsapp.js";
 import { SHARED_FIELD_DEFS } from "../../shared/generated-contract/Models/generated_SchemaRuntime.js";
 
 const qs = new URLSearchParams(window.location.search);
@@ -118,13 +118,6 @@ const state = {
       components_count: 0
     }
   },
-  chat: {
-    items: [],
-    conversations: [],
-    initialized: false,
-    pollTimer: null,
-    isPolling: false
-  },
   persons_autosave_timer: null,
   persons_autosave_person_id: "",
   persons_save_in_flight: null,
@@ -138,6 +131,7 @@ state.originalInvoiceSnapshot = "";
 
 let heroCopyClipboardPoll = null;
 let heroCopiedValue = "";
+let bookingWhatsApp = null;
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -206,9 +200,7 @@ const els = {
   offer_save_btn: document.getElementById("offer_save_btn"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
-  meta_chat_panel: document.getElementById("meta_chat_panel"),
-  meta_chat_summary: document.getElementById("meta_chat_summary"),
-  meta_chat_table: document.getElementById("meta_chat_table"),
+  meta_chat_mount: document.getElementById("booking_whatsapp_mount"),
   invoice_panel: document.getElementById("invoice_panel"),
   invoice_select: document.getElementById("invoice_select"),
   invoice_number_input: document.getElementById("invoice_number_input"),
@@ -292,12 +284,8 @@ function markInvoiceSnapshotClean() {
   setBookingSectionDirty("invoice", false);
 }
 
-init();
 window.addEventListener("beforeunload", () => {
-  if (state.chat.pollTimer) {
-    window.clearInterval(state.chat.pollTimer);
-    state.chat.pollTimer = null;
-  }
+  bookingWhatsApp?.stopAutoRefresh();
 });
 
 async function init() {
@@ -308,6 +296,19 @@ async function init() {
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/index.html`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
+  }
+
+  if (!bookingWhatsApp && els.meta_chat_mount) {
+    bookingWhatsApp = createBookingWhatsAppController({
+      apiOrigin,
+      fetchApi,
+      getBookingPersons,
+      formatPersonRoleLabel,
+      getPersonInitials,
+      resolvePersonPhotoSrc,
+      onNotice: setStatus
+    });
+    bookingWhatsApp.mount(els.meta_chat_mount);
   }
 
   populateCurrencySelect(els.pricing_currency_input);
@@ -422,9 +423,9 @@ async function loadBookingPage() {
   renderPricingPanel();
   renderOfferPanel();
   await loadActivities();
-  await loadBookingChat();
+  await bookingWhatsApp?.load(state.booking);
   await loadInvoices();
-  startBookingChatAutoRefresh();
+  bookingWhatsApp?.startAutoRefresh(() => state.booking);
 }
 
 function renderBookingHeader() {
@@ -543,6 +544,7 @@ async function copyHeroIdToClipboard() {
 
 function renderBookingData() {
   if (!state.booking) return;
+  bookingWhatsApp?.rerender(state.booking);
   const booking = state.booking;
   const submittedContact = getSubmittedContact(booking);
   const sections = [{
@@ -2346,232 +2348,6 @@ async function loadActivities() {
   renderActivitiesTable(payload.items || []);
 }
 
-async function loadBookingChat({ fromPoll = false } = {}) {
-  if (!state.booking || !els.meta_chat_table) return;
-  const previousIds = new Set((Array.isArray(state.chat.items) ? state.chat.items : []).map((item) => String(item?.id || "")));
-  const payload = await fetchApi(
-    bookingChatRequest({
-      baseURL: apiOrigin,
-      params: { booking_id: state.booking.id },
-      query: { limit: 100 }
-    }).url
-  );
-  if (!payload) return;
-  const nextItems = Array.isArray(payload.items) ? payload.items : [];
-  const newlyArrived = nextItems.filter((item) => {
-    const id = String(item?.id || "");
-    return id && !previousIds.has(id);
-  });
-  const inboundNew = newlyArrived.filter((item) => String(item?.direction || "").toLowerCase() === "inbound");
-  state.chat.items = nextItems;
-  state.chat.conversations = Array.isArray(payload.conversations) ? payload.conversations : [];
-  renderMetaChatPanel();
-  if (fromPoll && state.chat.initialized && inboundNew.length) {
-    notifyNewChatMessages(inboundNew);
-  }
-  state.chat.initialized = true;
-}
-
-function startBookingChatAutoRefresh() {
-  if (!state.booking || state.chat.pollTimer) return;
-  state.chat.pollTimer = window.setInterval(async () => {
-    if (state.chat.isPolling) return;
-    state.chat.isPolling = true;
-    try {
-      await loadBookingChat({ fromPoll: true });
-    } finally {
-      state.chat.isPolling = false;
-    }
-  }, 10000);
-}
-
-function notifyNewChatMessages(items) {
-  const count = Array.isArray(items) ? items.length : 0;
-  if (!count) return;
-  const newest = items[0];
-  const summary = count === 1 ? "New WhatsApp message received." : `${count} new WhatsApp messages received.`;
-  setStatus(summary);
-
-  if (!("Notification" in window)) return;
-  const body = String(newest?.text_preview || "Open booking chat to read.");
-  if (Notification.permission === "granted") {
-    new Notification("WhatsApp message", { body });
-    return;
-  }
-  if (Notification.permission === "default") {
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        new Notification("WhatsApp message", { body });
-      }
-    });
-  }
-}
-
-function normalizePhoneDigits(value) {
-  return String(value || "").replace(/[^\d]/g, "");
-}
-
-function resolveChatPhoneNumber(items) {
-  const primaryPhone = String(getPrimaryContact(state.booking)?.phone_numbers?.[0] || "").trim();
-  if (primaryPhone) return primaryPhone;
-  const submittedPhone = String(getSubmittedContact(state.booking)?.phone_number || "").trim();
-  if (submittedPhone) return submittedPhone;
-  const firstSender = (Array.isArray(items) ? items : []).find((item) => String(item?.sender_contact || "").trim());
-  return String(firstSender?.sender_contact || "").trim();
-}
-
-function parseChatDate(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
-  const parsed = new Date(raw);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed;
-}
-
-function formatChatTime(value) {
-  const date = parseChatDate(value);
-  if (!date) return "-";
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
-}
-
-function chatDayKey(value) {
-  const date = parseChatDate(value);
-  if (!date) return "";
-  const yyyy = String(date.getFullYear());
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function formatChatDayLabel(value) {
-  const date = parseChatDate(value);
-  if (!date) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  }).format(date);
-}
-
-function parseDeliveredStatusPayload(textPreview) {
-  const text = String(textPreview || "").trim();
-  const withMessage = text.match(/^Status:\s*([a-z_ ]+)\s*-\s*(.+)$/i);
-  if (withMessage) {
-    return { status: String(withMessage[1] || "").trim(), message: String(withMessage[2] || "").trim() };
-  }
-  const onlyStatus = text.match(/^Status:\s*(.+)$/i);
-  if (onlyStatus) {
-    return { status: String(onlyStatus[1] || "").trim(), message: "" };
-  }
-  return { status: "", message: "" };
-}
-
-function isSingleEmojiMessage(text) {
-  const raw = String(text || "").trim();
-  if (!raw) return false;
-  const compact = raw.replace(/\s+/g, "");
-  if (!compact) return false;
-  let graphemes = [];
-  if (typeof Intl !== "undefined" && typeof Intl.Segmenter === "function") {
-    const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
-    graphemes = [...segmenter.segment(compact)].map((part) => part.segment);
-  } else {
-    graphemes = Array.from(compact);
-  }
-  if (graphemes.length !== 1) return false;
-  return /\p{Extended_Pictographic}/u.test(graphemes[0]);
-}
-
-function isDeliveredStatusText(text) {
-  const status = String(text || "").trim().toLowerCase();
-  return status === "delivered";
-}
-
-function buildDeliveredTicksMarkup(isDelivered) {
-  if (!isDelivered) return "";
-  return '<span class="wa-meta-ticks" aria-label="delivered">&#10003;</span>';
-}
-
-function renderMetaChatPanel() {
-  if (!els.meta_chat_table) return;
-  const items = Array.isArray(state.chat.items) ? state.chat.items : [];
-  const orderedItems = [...items].sort((left, right) => {
-    const leftTime = String(left?.sent_at || left?.created_at || "");
-    const rightTime = String(right?.sent_at || right?.created_at || "");
-    return leftTime.localeCompare(rightTime);
-  });
-
-  if (els.meta_chat_summary) {
-    const phone = resolveChatPhoneNumber(items) || "-";
-    const waDigits = normalizePhoneDigits(phone);
-    const waUrl = waDigits ? `https://wa.me/${waDigits}` : "";
-    const button = waUrl
-      ? `<a class="btn btn-ghost" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener">Open WhatsApp</a>`
-      : `<span class="btn btn-ghost" aria-disabled="true">Open WhatsApp</span>`;
-    els.meta_chat_summary.innerHTML = `<span class="wa-meta-item">Phone: ${escapeHtml(phone)}</span><span class="wa-meta-gap"></span>${button}`;
-  }
-
-  let previousDay = "";
-  const rows = orderedItems
-    .map((item) => {
-      const direction = String(item?.direction || "").toLowerCase();
-      const eventType = String(item?.event_type || "").toLowerCase();
-      const sentAt = item?.sent_at || item?.created_at || item?.received_at;
-      const day = chatDayKey(sentAt);
-      const daySeparator =
-        day && day !== previousDay
-          ? `<div class="wa-day-sep"><span>${escapeHtml(formatChatDayLabel(sentAt))}</span></div>`
-          : "";
-      if (day) previousDay = day;
-
-      let rowClass = eventType === "status" ? "is-status" : direction === "outbound" ? "is-out" : "is-in";
-      let text = String(item?.text_preview || "-");
-      const parsedStatus = parseDeliveredStatusPayload(text);
-      let deliveredLine = "";
-      let deliveredForMeta = false;
-      if (eventType === "status" && parsedStatus.message) {
-        text = parsedStatus.message;
-        rowClass = "is-out";
-        deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
-        deliveredLine = parsedStatus.status && !isDeliveredStatusText(parsedStatus.status)
-          ? `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`
-          : "";
-      } else if (eventType === "status" && parsedStatus.status) {
-        text = "Status update";
-        deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
-        deliveredLine = isDeliveredStatusText(parsedStatus.status)
-          ? ""
-          : `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`;
-      } else if (item?.external_status) {
-        deliveredForMeta = isDeliveredStatusText(item.external_status);
-        deliveredLine = isDeliveredStatusText(item.external_status)
-          ? ""
-          : `<div class="wa-msg-status"><em>${escapeHtml(String(item.external_status))}</em></div>`;
-      }
-
-      const safeText = escapeHtml(text);
-      const time = escapeHtml(formatChatTime(sentAt));
-      const bubbleClass = isSingleEmojiMessage(text) ? "wa-msg-bubble is-emoji" : "wa-msg-bubble";
-      const metaLine = `${time}${buildDeliveredTicksMarkup(deliveredForMeta)}`;
-      return `${daySeparator}<div class="wa-msg-row ${rowClass}">
-        <div class="${bubbleClass}">
-          <div class="wa-msg-text">${safeText}</div>
-          ${deliveredLine}
-          <div class="wa-msg-meta">${metaLine}</div>
-        </div>
-      </div>`;
-    })
-    .join("");
-  els.meta_chat_table.innerHTML = rows || '<div class="wa-empty">No chat events for this booking yet</div>';
-  const canvas = els.meta_chat_table.parentElement;
-  if (canvas) {
-    canvas.scrollTop = canvas.scrollHeight;
-  }
-}
-
 function renderActivitiesTable(items) {
   if (!els.activities_table) return;
   const header = `<thead><tr><th>Time</th><th>Type</th><th>Actor</th><th>Detail</th></tr></thead>`;
@@ -3331,6 +3107,8 @@ const fetchApi = createApiFetcher({
   onSuccess: () => clearError(),
   connectionErrorMessage: "Could not connect to backend API."
 });
+
+init();
 
 function getConflictReloadInstruction() {
   const userAgent = String(window.navigator.userAgent || "");

@@ -14,4 +14,5 @@
 @import "./tailwind.generated.css";
 @import "./pages/home.css";
 @import "./pages/backend-booking.css";
+@import "./pages/backend-booking-whatsapp.css";
 @import "./pages/not-found.css";
