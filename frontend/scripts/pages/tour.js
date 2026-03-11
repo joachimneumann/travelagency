@@ -3,8 +3,8 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "./shared/backend-common.js";
-import { MONTH_CODE_CATALOG } from "../../shared/generated-contract/Models/generated_Aux.js";
+} from "../shared/api.js";
+import { MONTH_CODE_CATALOG } from "../../../shared/generated-contract/Models/generated_Aux.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

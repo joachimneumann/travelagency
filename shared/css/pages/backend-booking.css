@@ -78,7 +78,8 @@
   flex: 1;
   min-width: 0;
   font: inherit;
-  font-size: clamp(2rem, 4vw, 3.15rem);
+  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  font-weight: inherit;
   line-height: 1.04;
   color: #16313d;
   background: rgba(255, 255, 255, 0.94);

@@ -39,6 +39,8 @@ const state = {
   websiteAuthenticated: false
 };
 
+let lastBookingModalTrigger = null;
+
 const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
@@ -155,11 +157,16 @@ const els = {
   stepBack: document.getElementById("stepBack"),
   stepClose: document.getElementById("stepClose"),
   stepNext: document.getElementById("stepNext"),
+  formNav: document.querySelector(".form-nav"),
   progressSteps: document.querySelectorAll(".progress-step"),
   formSteps: document.querySelectorAll(".step"),
   bookingStepTitle: document.getElementById("bookingStepTitle"),
   error: document.getElementById("bookingError"),
-  success: document.getElementById("bookingSuccess")
+  bookingModalContent: document.getElementById("bookingModalContent"),
+  bookingStepThreeTitle: document.getElementById("bookingStepThreeTitle"),
+  bookingStepThreeContent: document.getElementById("bookingStepThreeContent"),
+  bookingSuccessState: document.getElementById("bookingSuccessState"),
+  bookingSuccessCloseBtn: document.getElementById("bookingSuccessCloseBtn")
 };
 
 init();
@@ -327,9 +334,8 @@ function populateGeneratedWebFormOptions() {
     selectedValue: normalizeCurrencyCode(els.bookingPreferredCurrency?.value || DEFAULT_BOOKING_CURRENCY)
   });
   populateSelectOptions(els.bookingLanguage, GENERATED_LANGUAGE_CODES, {
-    includePlaceholder: true,
-    placeholderLabel: "Select language",
-    selectedValue: normalizeText(els.bookingLanguage?.value)
+    includePlaceholder: false,
+    selectedValue: normalizeText(els.bookingLanguage?.value) || "english"
   });
   applyGeneratedRequiredAttributes();
 }
@@ -1120,18 +1126,22 @@ function setupModal() {
 
   openModalButtons.forEach((button) => {
     button.addEventListener("click", () => {
+      lastBookingModalTrigger = button;
       resolveAndOpenBookingModalFromButton(button);
     });
   });
 
   els.closeBookingModal.addEventListener("click", closeBookingModal);
+  if (els.bookingSuccessCloseBtn) {
+    els.bookingSuccessCloseBtn.addEventListener("click", closeBookingModal);
+  }
 
   els.bookingModal.addEventListener("click", (event) => {
     if (event.target === els.bookingModal) closeBookingModal();
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && els.bookingModal.getAttribute("aria-hidden") === "false") {
+    if (event.key === "Escape" && !els.bookingModal.hidden) {
       closeBookingModal();
     }
   });
@@ -1143,7 +1153,7 @@ function openBookingModal() {
   prefillBookingFormWithFilters();
   clearBookingFeedback();
   renderFormStep();
-  els.bookingModal.setAttribute("aria-hidden", "false");
+  els.bookingModal.hidden = false;
   document.body.style.overflow = "hidden";
   const firstInput = els.bookingForm.querySelector(".step.active input:not([type=\"hidden\"]), .step.active select, .step.active textarea");
   if (firstInput) firstInput.focus();
@@ -1178,8 +1188,15 @@ function clearSelectedTourContext() {
 }
 
 function closeBookingModal() {
-  els.bookingModal.setAttribute("aria-hidden", "true");
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && els.bookingModal.contains(active)) {
+    active.blur();
+  }
+  els.bookingModal.hidden = true;
   document.body.style.overflow = "";
+  if (lastBookingModalTrigger instanceof HTMLElement && document.contains(lastBookingModalTrigger)) {
+    lastBookingModalTrigger.focus();
+  }
 }
 
 function setupFormNavigation() {
@@ -1422,14 +1439,13 @@ async function submitBookingForm() {
       throw new Error(buildBookingSubmissionDebugMessage(response.status, response.statusText, responseText));
     }
     state.bookingSubmitted = true;
-    els.success.classList.add("show");
-    els.stepNext.hidden = true;
-    els.stepNext.disabled = true;
-    els.stepNext.classList.remove("is-submitted");
-    els.stepBack.disabled = true;
-    if (els.stepClose) {
-      els.stepClose.hidden = false;
-      els.stepClose.disabled = false;
+    state.formStep = 3;
+    renderFormStep();
+    if (els.bookingStepThreeTitle) els.bookingStepThreeTitle.hidden = true;
+    if (els.bookingStepThreeContent) els.bookingStepThreeContent.hidden = true;
+    if (els.bookingSuccessState) els.bookingSuccessState.hidden = false;
+    if (els.formNav) {
+      els.formNav.hidden = true;
     }
     return;
   } catch (error) {
@@ -1449,8 +1465,20 @@ function clearBookingFeedback() {
     els.error.replaceChildren();
     els.error.classList.remove("show");
   }
-  if (els.success) {
-    els.success.classList.remove("show");
+  if (els.bookingModalContent) {
+    els.bookingModalContent.hidden = false;
+  }
+  if (els.bookingStepThreeTitle) {
+    els.bookingStepThreeTitle.hidden = false;
+  }
+  if (els.bookingStepThreeContent) {
+    els.bookingStepThreeContent.hidden = false;
+  }
+  if (els.bookingSuccessState) {
+    els.bookingSuccessState.hidden = true;
+  }
+  if (els.formNav) {
+    els.formNav.hidden = false;
   }
   if (els.stepNext) {
     els.stepNext.hidden = state.bookingSubmitted;

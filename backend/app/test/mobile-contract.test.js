@@ -1,15 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const CONTRACT_META_PATH = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
-const STORE_PATH = path.resolve(__dirname, "..", "data", "store.json");
+const TEST_DATA_DIR = await mkdtemp(path.join(os.tmpdir(), "travelagency-contract-test-"));
+const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
@@ -17,6 +19,8 @@ process.env.KEYCLOAK_ALLOWED_ROLES = "atp_admin,atp_manager,atp_accountant,atp_s
 process.env.MOBILE_MIN_SUPPORTED_APP_VERSION = "1.0.0";
 process.env.MOBILE_LATEST_APP_VERSION = "1.0.0";
 process.env.MOBILE_FORCE_UPDATE = "false";
+process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
+process.env.STORE_FILE = STORE_PATH;
 
 const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
 const { createBackendHandler } = await import("../src/server.js");
@@ -95,6 +99,7 @@ function assertISODateLike(value, label) {
 }
 
 async function resetStore() {
+  await mkdir(TEST_DATA_DIR, { recursive: true });
   await writeFile(STORE_PATH, `${JSON.stringify({
     bookings: [],
     activities: [],
@@ -386,6 +391,106 @@ test("booking activity create uses the core revision", async () => {
   assert.equal(createResult.status, 201);
   assert.equal(createResult.body.activity.type, "BOOKING_UPDATED");
   assert.equal(createResult.body.booking.core_revision, core_revision + 1);
+});
+
+test("booking chat stays on one canonical booking and exposes related bookings", async () => {
+  await resetStore();
+
+  const firstBookingResult = await requestJson(endpointPath("public_bookings"), {}, {
+    method: "POST",
+    body: {
+      name: "Joachim",
+      email: "joachim@example.com",
+      phone_number: "+84337942446",
+      preferred_language: "English",
+      preferred_currency: "USD",
+      destinations: ["Vietnam"],
+      travel_style: ["Culture"],
+      number_of_travelers: 1,
+      booking_name: "Vietnam Journey"
+    }
+  });
+  assert.equal(firstBookingResult.status, 201);
+
+  const secondBookingResult = await requestJson(endpointPath("public_bookings"), {}, {
+    method: "POST",
+    body: {
+      name: "Joachim",
+      email: "joachim@example.com",
+      phone_number: "+84337942446",
+      preferred_language: "English",
+      preferred_currency: "USD",
+      destinations: ["Laos"],
+      travel_style: ["Adventure"],
+      number_of_travelers: 1,
+      booking_name: "Laos Journey"
+    }
+  });
+  assert.equal(secondBookingResult.status, 201);
+
+  const firstBookingId = firstBookingResult.body.booking.id;
+  const secondBookingId = secondBookingResult.body.booking.id;
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  store.chat_channel_accounts.push({
+    id: "chatacct_whatsapp",
+    channel: "whatsapp",
+    external_account_id: "wa_phone",
+    name: "WhatsApp",
+    metadata: {},
+    created_at: "2026-03-11T00:00:00.000Z",
+    updated_at: "2026-03-11T00:00:00.000Z"
+  });
+  store.chat_conversations.push({
+    id: "chatconv_primary",
+    channel: "whatsapp",
+    channel_account_id: "chatacct_whatsapp",
+    external_conversation_id: "84337942446",
+    external_contact_id: "84337942446",
+    booking_id: firstBookingId,
+    assigned_atp_staff_id: null,
+    latest_preview: "Hello from WhatsApp",
+    last_event_at: "2026-03-11T10:00:00.000Z",
+    created_at: "2026-03-11T10:00:00.000Z",
+    updated_at: "2026-03-11T10:00:00.000Z"
+  });
+  store.chat_events.push({
+    id: "chatevt_primary",
+    conversation_id: "chatconv_primary",
+    channel: "whatsapp",
+    event_type: "message",
+    direction: "inbound",
+    external_message_id: "wamid.1",
+    external_status: null,
+    sender_display: "Joachim",
+    sender_contact: "84337942446",
+    text_preview: "Hello from WhatsApp",
+    sent_at: "2026-03-11T10:00:00.000Z",
+    received_at: "2026-03-11T10:00:01.000Z",
+    payload_json: {},
+    created_at: "2026-03-11T10:00:01.000Z"
+  });
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const primaryChatResult = await requestJson(
+    endpointPath("booking_chat").replace("{booking_id}", firstBookingId),
+    apiHeaders()
+  );
+  assert.equal(primaryChatResult.status, 200);
+  assert.equal(primaryChatResult.body.conversations.length, 1);
+  assert.equal(primaryChatResult.body.conversations[0].booking_id, firstBookingId);
+  assert.deepEqual(
+    primaryChatResult.body.conversations[0].related_bookings.map((booking) => booking.booking_id),
+    [secondBookingId]
+  );
+
+  const secondaryChatResult = await requestJson(
+    endpointPath("booking_chat").replace("{booking_id}", secondBookingId),
+    apiHeaders()
+  );
+  assert.equal(secondaryChatResult.status, 200);
+  assert.equal(secondaryChatResult.body.conversations.length, 0);
+  assert.equal(secondaryChatResult.body.items.length, 0);
 });
 
 test("booking person photo endpoint updates the booking when ImageMagick is available", async (t) => {

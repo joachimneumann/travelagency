@@ -291,24 +291,11 @@ export function createBookingViewHelpers({
       const conversationId = normalizeText(conversation.id);
       if (!conversationId) continue;
 
-      const matchedBookingIds = new Set();
       const linkedBookingId = normalizeText(conversation.booking_id);
-      if (linkedBookingId) matchedBookingIds.add(linkedBookingId);
-
-      const linkedBookingIdentity = normalizeText(conversation.booking_id);
-      if (linkedBookingIdentity) {
-        const latestBookingId = latestBookingById.get(linkedBookingIdentity);
-        if (latestBookingId) matchedBookingIds.add(latestBookingId);
-      }
-
       const externalContactId = normalizeText(conversation.external_contact_id);
-      if (externalContactId) {
-        const latestBookingId = getLatestBookingForContactMatch(externalContactId);
-        if (latestBookingId) matchedBookingIds.add(latestBookingId);
-      }
-
-      if (matchedBookingIds.size > 0) {
-        conversationBookingIds.set(conversationId, [...matchedBookingIds]);
+      const canonicalBookingId = linkedBookingId || (externalContactId ? getLatestBookingForContactMatch(externalContactId) : null);
+      if (canonicalBookingId) {
+        conversationBookingIds.set(conversationId, [canonicalBookingId]);
       }
       conversationIdToConversation.set(conversationId, conversation);
     }

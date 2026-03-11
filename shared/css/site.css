@@ -1382,7 +1382,7 @@ textarea:focus-visible {
   padding: 1rem;
 }
 
-.modal[aria-hidden="false"] {
+.modal:not([hidden]) {
   display: flex;
 }
 
@@ -1564,17 +1564,50 @@ textarea:focus-visible {
   margin-top: 0.2rem;
 }
 
-.success {
-  display: none;
-  border: 1px solid #bce8cd;
-  background: #edf9f2;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-top: 1rem;
+.booking-success-state {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  text-align: center;
+  padding: 0.4rem 1rem 0.2rem;
 }
 
-.success.show {
-  display: block;
+.booking-success-state[hidden] {
+  display: none !important;
+}
+
+#bookingForm .form-nav[hidden] {
+  display: none !important;
+}
+
+#bookingStepThreeContent[hidden] {
+  display: none !important;
+}
+
+.booking-success-state__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.booking-success-state__body {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.booking-success-state__close {
+  margin-top: 0.35rem;
+}
+
+#bookingStepThreeTitle[hidden] {
+  display: none !important;
 }
 
 .visually-hidden {

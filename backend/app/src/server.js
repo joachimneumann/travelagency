@@ -53,11 +53,12 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
-const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
-const TOURS_DIR = path.join(APP_ROOT, "data", "tours");
-const INVOICES_DIR = path.join(APP_ROOT, "data", "invoices");
-const BOOKING_PERSON_PHOTOS_DIR = path.join(APP_ROOT, "data", "booking_person_photos");
-const TEMP_UPLOAD_DIR = path.join(APP_ROOT, "data", "tmp");
+const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || path.join(APP_ROOT, "data"));
+const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
+const TOURS_DIR = path.join(DATA_ROOT, "tours");
+const INVOICES_DIR = path.join(DATA_ROOT, "invoices");
+const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
+const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
 const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");

@@ -3,14 +3,14 @@ import {
   escapeHtml,
   formatDateTime,
   normalizeText
-} from "./shared/backend-common.js";
-import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
+} from "../shared/api.js";
+import { GENERATED_ATP_STAFF_ROLES } from "../../Generated/Models/generated_ATPStaff.js";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "./shared/backend-links.js";
-import { resolveBackendSectionHref } from "./shared/backend-nav.js";
-import { renderPagination } from "./shared/backend-pagination.js";
+} from "../shared/links.js";
+import { resolveBackendSectionHref } from "../shared/nav.js";
+import { renderPagination } from "../shared/pagination.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

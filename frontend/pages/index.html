@@ -31,7 +31,7 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" as="image" href="/assets/video/rice%20field.webp?v=2" fetchpriority="high" />
 
-    <link rel="stylesheet" href="/assets/css/styles.css?v=3" />
+    <link rel="stylesheet" href="/assets/css/styles.css?v=4" />
   </head>
   <body class="home-page">
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -371,7 +371,7 @@
       <button class="btn btn-primary" type="button" data-open-modal>Book a free discovery call</button>
     </div>
 
-    <div class="modal" id="bookingModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+    <div class="modal" id="bookingModal" hidden role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
       <div class="modal-panel" role="document">
         <div class="modal-head">
           <h2 id="bookingTitle">Plan your trip with AsiaTravelPlan</h2>
@@ -379,14 +379,15 @@
         </div>
 
         <div class="modal-body">
-          <p class="micro">It takes about 2 minutes. Response within 24 hours.</p>
-          <div class="progress" aria-hidden="true">
-            <span class="progress-step active" data-step="1"></span>
-            <span class="progress-step" data-step="2"></span>
-            <span class="progress-step" data-step="3"></span>
-          </div>
+          <div id="bookingModalContent">
+            <p class="micro">It takes about 2 minutes. Response within 24 hours.</p>
+            <div class="progress" aria-hidden="true">
+              <span class="progress-step active" data-step="1"></span>
+              <span class="progress-step" data-step="2"></span>
+              <span class="progress-step" data-step="3"></span>
+            </div>
 
-          <form id="bookingForm" novalidate>
+            <form id="bookingForm" novalidate>
             <input id="booking_tour_id" type="hidden" name="tour_id" />
             <section class="step active" data-step="1">
               <div hidden aria-hidden="true">
@@ -469,8 +470,8 @@
             </section>
 
             <section class="step" data-step="3">
-              <h3>Step 3: Trip details and notes</h3>
-              <div class="field-grid">
+              <h3 id="bookingStepThreeTitle">Step 3: Trip details and notes</h3>
+              <div class="field-grid" id="bookingStepThreeContent">
                 <div class="field">
                   <div class="select-wrap">
                     <label for="bookingDestinationTrigger">Destinations</label>
@@ -512,6 +513,12 @@
                   <textarea id="bookingNotes" name="notes" placeholder="Tell us interests, pace preferences, or special requests."></textarea>
                 </div>
               </div>
+              <div class="booking-success-state" id="bookingSuccessState" hidden role="status" aria-live="polite">
+                <p class="booking-success-state__title">Thank you.</p>
+                <p class="booking-success-state__body">Your request has been submitted to our planning team.</p>
+                <p class="booking-success-state__body">We will contact you on WhatsApp/email.</p>
+                <button class="btn btn-primary booking-success-state__close" id="bookingSuccessCloseBtn" type="button">Close</button>
+              </div>
             </section>
 
             <div class="form-nav">
@@ -522,23 +529,18 @@
 
             <div class="form-error" id="bookingError" role="alert" aria-live="assertive"></div>
 
-            <div class="success" id="bookingSuccess" role="status" aria-live="polite">
-              <strong>Thank you. Your trip request is ready.</strong>
-              <p>
-                Your request has been submitted to our planning team. We will contact you on WhatsApp/email.
-              </p>
-            </div>
-
             <!--
               Form backend integration placeholder (static site):
               - Formspree: set form action="https://formspree.io/f/your-id" method="POST"
               - Netlify Forms: add data-netlify="true" and a hidden form-name field
             -->
-          </form>
+            </form>
+          </div>
+
         </div>
       </div>
     </div>
-    <script type="module" src="/frontend/scripts/main.js?v=20260310b"></script>
+    <script type="module" src="/frontend/scripts/main.js?v=20260311a"></script>
 
     <script type="application/ld+json">
       {

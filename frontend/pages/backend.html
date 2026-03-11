@@ -100,10 +100,10 @@
     </main>
 
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
       const section = new URLSearchParams(window.location.search).get("section") || "bookings";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
     </script>
-    <script type="module" src="frontend/scripts/backend-page.js"></script>
+    <script type="module" src="frontend/scripts/pages/dashboard.js?v=20260311a"></script>
   </body>
 </html>

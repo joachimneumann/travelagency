@@ -401,15 +401,55 @@ export function createBookingHandlers(deps) {
     };
   }
 
-  function conversationMatchesBooking(conversation, bookingId, booking) {
-    if (normalizeText(conversation.booking_id) === bookingId) return true;
+  function resolveCanonicalConversationBookingId(store, conversation, excludedBookingId = "") {
+    const assignedBookingId = normalizeText(conversation?.booking_id);
+    if (assignedBookingId && assignedBookingId !== normalizeText(excludedBookingId)) return assignedBookingId;
     const channel = normalizeText(conversation.channel).toLowerCase();
     const externalContactId = normalizeText(conversation.external_contact_id);
-    const { phones, emails } = getBookingConversationMatchValues(booking);
     if (channel === "whatsapp" && externalContactId) {
-      return phones.some((phone) => isLikelyPhoneMatch(phone, externalContactId));
+      const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
+        .filter((booking) => normalizeText(booking.id) !== normalizeText(excludedBookingId))
+        .filter((booking) => {
+          const { phones } = getBookingConversationMatchValues(booking);
+          return phones.some((phone) => isLikelyPhoneMatch(phone, externalContactId));
+        })
+        .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
+      return normalizeText(matches[0]?.id) || "";
     }
-    return emails.includes(externalContactId.toLowerCase());
+    const normalizedEmail = externalContactId.toLowerCase();
+    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
+      .filter((booking) => normalizeText(booking.id) !== normalizeText(excludedBookingId))
+      .filter((booking) => {
+        const { emails } = getBookingConversationMatchValues(booking);
+        return emails.includes(normalizedEmail);
+      })
+      .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
+    return normalizeText(matches[0]?.id) || "";
+  }
+
+  function conversationMatchesBooking(store, conversation, bookingId) {
+    return resolveCanonicalConversationBookingId(store, conversation) === normalizeText(bookingId);
+  }
+
+  function buildConversationRelatedBookings(store, conversation, bookingId) {
+    const channel = normalizeText(conversation?.channel).toLowerCase();
+    const externalContactId = normalizeText(conversation?.external_contact_id);
+    if (!externalContactId) return [];
+
+    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
+      .filter((candidate) => normalizeText(candidate.id) !== normalizeText(bookingId))
+      .filter((candidate) => {
+        const { phones, emails } = getBookingConversationMatchValues(candidate);
+        if (channel === "whatsapp") return phones.some((phone) => isLikelyPhoneMatch(phone, externalContactId));
+        return emails.includes(externalContactId.toLowerCase());
+      })
+      .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
+
+    return matches.map((candidate) => ({
+      booking_id: candidate.id,
+      name: normalizeText(candidate.name) || null,
+      stage: normalizeText(candidate.stage) || null
+    }));
   }
 
   async function deleteBookingArtifacts(store, bookingId) {
@@ -424,7 +464,8 @@ export function createBookingHandlers(deps) {
     ensureMetaChatCollections(store);
     for (const conversation of store.chat_conversations) {
       if (normalizeText(conversation.booking_id) === bookingId) {
-        conversation.booking_id = null;
+        conversation.booking_id = resolveCanonicalConversationBookingId(store, conversation, bookingId) || null;
+        conversation.updated_at = nowIso();
       }
     }
 
@@ -635,7 +676,7 @@ export function createBookingHandlers(deps) {
     const requestUrl = new URL(req.url, "http://localhost");
     const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 100, 1, 500);
 
-    const conversationItems = store.chat_conversations.filter((conversation) => conversationMatchesBooking(conversation, bookingId, booking));
+    const conversationItems = store.chat_conversations.filter((conversation) => conversationMatchesBooking(store, conversation, bookingId));
     const conversationMap = new Map(conversationItems.map((item) => [item.id, item]));
     const events = store.chat_events
       .filter((event) => conversationMap.has(event.conversation_id))
@@ -651,6 +692,7 @@ export function createBookingHandlers(deps) {
           channel,
           external_contact_id: conversation.external_contact_id || null,
           booking_id: conversation.booking_id || null,
+          related_bookings: buildConversationRelatedBookings(store, conversation, bookingId),
           last_event_at: conversation.last_event_at || null,
           latest_preview: conversation.latest_preview || null,
           open_url: getMetaConversationOpenUrl(channel, conversation.external_contact_id)

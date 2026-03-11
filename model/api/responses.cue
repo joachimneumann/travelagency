@@ -69,6 +69,11 @@ import (
 	channel:             string
 	external_contact_id?: string
 	booking_id?:         common.#Identifier
+	related_bookings?: [...{
+		booking_id: common.#Identifier
+		name?:      string
+		stage?:     string
+	}]
 	last_event_at?:      common.#Timestamp
 	latest_preview?:     string
 	open_url?:           string

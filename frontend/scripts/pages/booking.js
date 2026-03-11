@@ -1,14 +1,14 @@
 import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
-} from "../Generated/Models/generated_Currency.js";
-import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
-import { GENERATED_LANGUAGE_CODES } from "../Generated/Models/generated_Language.js";
+} from "../../Generated/Models/generated_Currency.js";
+import { GENERATED_ATP_STAFF_ROLES } from "../../Generated/Models/generated_ATPStaff.js";
+import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Language.js";
 import {
   BOOKING_PERSON_SCHEMA,
   GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST,
   GENERATED_OFFER_CATEGORIES as GENERATED_OFFER_CATEGORY_LIST
-} from "../Generated/Models/generated_Booking.js";
+} from "../../Generated/Models/generated_Booking.js";
 import {
   atpStaffRequest,
   bookingActivitiesRequest,
@@ -28,8 +28,8 @@ import {
   bookingPricingRequest,
   bookingStageRequest,
   offerExchangeRatesRequest,
-} from "../Generated/API/generated_APIRequestFactory.js";
-import { normalizeLocalDateTimeToIso } from "../../shared/js/datetime.js";
+} from "../../Generated/API/generated_APIRequestFactory.js";
+import { normalizeLocalDateTimeToIso } from "../../../shared/js/datetime.js";
 import {
   createApiFetcher,
   escapeHtml,
@@ -37,10 +37,10 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "./shared/backend-common.js";
-import { resolveBackendSectionHref } from "./shared/backend-nav.js";
-import { createBookingWhatsAppController } from "./booking-whatsapp.js";
-import { SHARED_FIELD_DEFS } from "../../shared/generated-contract/Models/generated_SchemaRuntime.js";
+} from "../shared/api.js";
+import { resolveBackendSectionHref } from "../shared/nav.js";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js";
+import { SHARED_FIELD_DEFS } from "../../../shared/generated-contract/Models/generated_SchemaRuntime.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -63,6 +63,8 @@ const GENERATED_ROLE_LOOKUP = Object.freeze(
     GENERATED_ATP_STAFF_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
   )
 );
+
+let lastPersonModalTrigger = null;
 
 const ROLES = Object.freeze({
   ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
@@ -1106,7 +1108,8 @@ function renderPersonsEditor({ include_modal = true } = {}) {
   const canEdit = state.permissions.canEditBooking;
 
   const person_cards = state.personDrafts.map((person, index) => {
-      const title = normalizeText(person.name) || "Unnamed person";
+      const person_name = normalizeText(person.name);
+      const title = person_name || "Unnamed person";
       const identity = getPersonIdentityStatus(person);
       const hasCompleteContact = personHasCompleteContact(person);
       const hasCompleteAddress = personHasCompleteAddress(person);
@@ -1120,6 +1123,8 @@ function renderPersonsEditor({ include_modal = true } = {}) {
       ].join("");
       const image_markup = normalizeText(person.photo_ref)
         ? `<img src="${escapeHtml(photo_src)}" alt="${escapeHtml(title)}" />`
+        : !person_name
+          ? `<img src="assets/img/profile_person.png" alt="" />`
         : `<span class="booking-person-card__initials">${escapeHtml(initials)}</span>`;
       return `
         <button class="booking-person-card" type="button" data-person-card="${index}">
@@ -1164,6 +1169,7 @@ function renderPersonsEditor({ include_modal = true } = {}) {
 function handlePersonsEditorListClick(event) {
   const add_card = event.target.closest("[data-person-add]");
   if (add_card) {
+    lastPersonModalTrigger = add_card;
     addPersonDraft();
     return;
   }
@@ -1171,6 +1177,7 @@ function handlePersonsEditorListClick(event) {
   if (!card) return;
   const index = Number(card.getAttribute("data-person-card"));
   if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
+  lastPersonModalTrigger = card;
   openPersonModal(index);
 }
 
@@ -1253,15 +1260,22 @@ function openPersonModal(index) {
   state.active_person_id = state.personDrafts[index]?.id || "";
   state.active_person_document_type = getPreferredPersonDocumentType(state.personDrafts[index]);
   renderPersonModal();
-  if (els.personModal) els.personModal.setAttribute("aria-hidden", "false");
+  if (els.personModal) els.personModal.hidden = false;
 }
 
 function finalizeClosePersonModal() {
-  if (els.personModal) els.personModal.setAttribute("aria-hidden", "true");
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLElement && els.personModal?.contains(activeElement)) {
+    activeElement.blur();
+  }
+  if (els.personModal) els.personModal.hidden = true;
   state.active_person_index = -1;
   state.active_person_id = "";
   state.active_person_document_type = "passport";
   if (els.personModalPhotoInput) els.personModalPhotoInput.value = "";
+  if (lastPersonModalTrigger instanceof HTMLElement && document.contains(lastPersonModalTrigger)) {
+    lastPersonModalTrigger.focus();
+  }
 }
 
 async function closePersonModal() {
@@ -1292,21 +1306,22 @@ function triggerPersonPhotoPicker() {
 }
 
 function handlePersonModalKeydown(event) {
-  if (event.key !== "Escape" || els.personModal?.getAttribute("aria-hidden") !== "false") return;
+  if (event.key !== "Escape" || els.personModal?.hidden !== false) return;
   void closePersonModal();
 }
 
 function renderPersonModal() {
   if (!els.personModal) return;
   const draft = state.personDrafts[state.active_person_index];
-  const is_open = els.personModal.getAttribute("aria-hidden") === "false";
+  const is_open = els.personModal.hidden === false;
   if (!draft) {
     if (is_open) finalizeClosePersonModal();
     return;
   }
 
   const can_edit = state.permissions.canEditBooking;
-  const title = normalizeText(draft.name) || "Unnamed person";
+  const person_name = normalizeText(draft.name);
+  const title = person_name || "Unnamed person";
   const initials = getPersonInitials(title);
   const photo_src = resolvePersonPhotoSrc(draft.photo_ref);
 
@@ -1314,17 +1329,17 @@ function renderPersonModal() {
     els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}`;
   }
   if (els.personModalPhoto) {
-    const has_photo = Boolean(normalizeText(draft.photo_ref));
-    els.personModalPhoto.src = has_photo ? photo_src : "assets/img/profile_person.png";
-    els.personModalPhoto.alt = has_photo ? title : "";
-    els.personModalPhoto.hidden = !has_photo;
-    els.personModalPhoto.style.display = has_photo ? "block" : "none";
+    const show_profile_image = Boolean(normalizeText(draft.photo_ref)) || !person_name;
+    els.personModalPhoto.src = normalizeText(draft.photo_ref) ? photo_src : "assets/img/profile_person.png";
+    els.personModalPhoto.alt = normalizeText(draft.photo_ref) ? title : "";
+    els.personModalPhoto.hidden = !show_profile_image;
+    els.personModalPhoto.style.display = show_profile_image ? "block" : "none";
   }
   if (els.personModalInitials) {
     els.personModalInitials.textContent = initials;
-    const has_photo = Boolean(normalizeText(draft.photo_ref));
-    els.personModalInitials.hidden = has_photo;
-    els.personModalInitials.style.display = has_photo ? "none" : "block";
+    const show_initials = !normalizeText(draft.photo_ref) && Boolean(person_name);
+    els.personModalInitials.hidden = !show_initials;
+    els.personModalInitials.style.display = show_initials ? "block" : "none";
   }
   if (els.personModalName) {
     els.personModalName.value = normalizeText(draft.name) || "";

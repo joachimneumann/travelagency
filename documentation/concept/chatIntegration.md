@@ -59,8 +59,12 @@ Do not introduce a separate customer record as the messaging anchor.
 
 - normalize sender phone/email
 - attempt match against booking-person contact data
-- if exactly one booking matches, attach conversation to that booking
-- if ambiguous, mark as unlinked for manual triage
+- attach each conversation to one canonical booking only
+- prefer the already assigned booking if one exists
+- otherwise choose the most relevant current booking by backend matching rules
+- do not duplicate the same conversation into multiple bookings
+- if the same traveler appears in other bookings, expose those as related bookings, not duplicate chat threads
+- if matching stays ambiguous and no canonical booking can be chosen safely, keep the conversation unlinked for manual triage
 
 ## Current Recommendation
 
@@ -104,6 +108,7 @@ Reproduce a simple WhatsApp-like interface inside `booking.html`:
      - person name or `Unknown number`
      - phone number
      - optional role line
+     - optional `Also in ...` links to other bookings with the same traveler/contact
 
 This is preferable to showing all traveler messages in one combined stream by default.
 
@@ -126,6 +131,7 @@ This is preferable to showing all traveler messages in one combined stream by de
 
 - group conversations primarily by phone number, then enrich with person identity if known
 - do not assume that all incoming numbers belong to the primary contact
+- when the same phone number matches more than one booking, keep one canonical booking owner and show the others as related context only
 
 ### Timeline Views
 

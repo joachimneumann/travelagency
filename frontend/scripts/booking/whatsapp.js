@@ -1,5 +1,5 @@
-import { bookingChatRequest } from "../Generated/API/generated_APIRequestFactory.js";
-import { escapeHtml, normalizeText } from "./shared/backend-common.js";
+import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import { escapeHtml, normalizeText } from "../shared/api.js";
 
 function normalizePhoneDigits(value) {
   return String(value || "").replace(/[^\d]/g, "");
@@ -202,6 +202,7 @@ export function createBookingWhatsAppController({
                 <div class="wa-chat-thread-copy">
                   <div class="wa-chat-thread-title" id="wa_chat_thread_title">WhatsApp</div>
                   <div class="wa-chat-thread-subtitle" id="wa_chat_thread_subtitle"></div>
+                  <div class="wa-chat-thread-related" id="wa_chat_thread_related" hidden></div>
                 </div>
               </div>
               <a class="wa-chat-open-btn" id="wa_chat_open_btn" href="#" target="_blank" rel="noopener" aria-label="Open in WhatsApp" title="Open in WhatsApp">
@@ -225,6 +226,7 @@ export function createBookingWhatsAppController({
     els.backBtn = root.querySelector("#wa_chat_back_btn");
     els.threadTitle = root.querySelector("#wa_chat_thread_title");
     els.threadSubtitle = root.querySelector("#wa_chat_thread_subtitle");
+    els.threadRelated = root.querySelector("#wa_chat_thread_related");
     els.threadAvatar = root.querySelector("#wa_chat_thread_avatar");
     els.openBtn = root.querySelector("#wa_chat_open_btn");
     els.table = root.querySelector("#meta_chat_table");
@@ -292,6 +294,22 @@ export function createBookingWhatsAppController({
     return digits ? `https://wa.me/${digits}` : normalizeText(fallbackUrl) || "";
   }
 
+  function mergeRelatedBookings(conversations) {
+    const merged = new Map();
+    for (const conversation of Array.isArray(conversations) ? conversations : []) {
+      for (const relatedBooking of Array.isArray(conversation?.related_bookings) ? conversation.related_bookings : []) {
+        const bookingId = normalizeText(relatedBooking?.booking_id);
+        if (!bookingId || merged.has(bookingId)) continue;
+        merged.set(bookingId, {
+          booking_id: bookingId,
+          name: normalizeText(relatedBooking?.name) || bookingId,
+          stage: normalizeText(relatedBooking?.stage) || ""
+        });
+      }
+    }
+    return [...merged.values()];
+  }
+
   function buildChatEntries(booking) {
     const persons = getBookingPersons(booking);
     const conversations = (Array.isArray(state.conversations) ? state.conversations : [])
@@ -326,6 +344,7 @@ export function createBookingWhatsAppController({
         last_event_at: normalizeText(latestConversation?.last_event_at) || "",
         has_chat: matchedConversations.length > 0,
         conversations: matchedConversations,
+        related_bookings: mergeRelatedBookings(matchedConversations),
         items: matchedConversations.flatMap((conversation) => conversationItemsMap.get(String(conversation.id || "")) || []),
         open_url: getConversationOpenUrl(latestPhone, latestConversation?.open_url),
         sort_order: index
@@ -347,6 +366,7 @@ export function createBookingWhatsAppController({
           last_event_at: normalizeText(conversation.last_event_at) || "",
           has_chat: true,
           conversations: [conversation],
+          related_bookings: mergeRelatedBookings([conversation]),
           items,
           open_url: getConversationOpenUrl(phoneNumber, conversation.open_url),
           sort_order: persons.length + index
@@ -430,6 +450,17 @@ export function createBookingWhatsAppController({
         .map((part) => `<span class="wa-chat-thread-subtitle-part">${escapeHtml(part)}</span>`)
         .join("");
       els.threadSubtitle.hidden = !threadSubtitleParts.length;
+    }
+    if (els.threadRelated) {
+      const relatedBookings = Array.isArray(activeEntry?.related_bookings) ? activeEntry.related_bookings : [];
+      els.threadRelated.innerHTML = relatedBookings.length
+        ? `Also in ${relatedBookings.map((relatedBooking) => {
+            const bookingId = normalizeText(relatedBooking?.booking_id);
+            const bookingName = normalizeText(relatedBooking?.name) || bookingId;
+            return `<a href="booking.html?id=${encodeURIComponent(bookingId)}">${escapeHtml(bookingName)}</a>`;
+          }).join(", ")}`
+        : "";
+      els.threadRelated.hidden = !relatedBookings.length;
     }
     if (els.threadAvatar) {
       els.threadAvatar.innerHTML = activeEntry ? getChatEntryAvatarMarkup(activeEntry) : "P";

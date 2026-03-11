@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Booking</title>
     <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=5" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=6" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -55,7 +55,15 @@
                 <select id="booking_stage_select"></select>
               </div>
             </div>
+          </article>
 
+          <article id="persons_editor_panel" style="margin-bottom: 1rem;">
+            <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
+            <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+            <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
+          </article>
+
+          <article style="margin-bottom: 1rem;">
             <div class="field">
               <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
                 <textarea id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;"></textarea>
@@ -65,16 +73,10 @@
             </div>
           </article>
 
-          <article id="persons_editor_panel" style="margin-bottom: 1rem;">
-            <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
-            <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
-            <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
-          </article>
-
           <div
             class="modal booking-person-modal"
             id="booking_person_modal"
-            aria-hidden="true"
+            hidden
             role="dialog"
             aria-modal="true"
             aria-label="Person details"
@@ -402,9 +404,9 @@
     </main>
 
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/backend-nav.js";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/backend-booking.js?v=20260311c"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=20260311e"></script>
   </body>
 </html>
