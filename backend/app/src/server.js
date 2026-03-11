@@ -16,10 +16,11 @@ import { createBookingViewHelpers } from "./domain/booking_views.js";
 import { createAccessHelpers } from "./domain/access.js";
 import { createTourHelpers } from "./domain/tours_support.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
-import { createAtpStaffHandlers } from "./http/handlers/atp_staff.js";
+import { createKeycloakUserHandlers } from "./http/handlers/keycloak_users.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import { createMetaWebhookHandlers } from "./integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "./lib/invoice_pdf.js";
+import { createKeycloakDirectory } from "./lib/keycloak_directory.js";
 import { createStoreUtils } from "./lib/store_utils.js";
 import {
   formatCountryGuessLabel,
@@ -57,9 +58,9 @@ const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || pa
 const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
 const TOURS_DIR = path.join(DATA_ROOT, "tours");
 const INVOICES_DIR = path.join(DATA_ROOT, "invoices");
+const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
 const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
-const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
 const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
 const BACKEND_GENERATED_REQUEST_FACTORY_PATH = path.join(APP_ROOT, "Generated", "API", "generated_APIRequestFactory.js");
@@ -80,6 +81,9 @@ const META_WEBHOOK_VERIFY_TOKEN = normalizeText(process.env.META_WEBHOOK_VERIFY_
 const WHATSAPP_WEBHOOK_VERIFY_TOKEN = normalizeText(process.env.WHATSAPP_VERIFY_TOKEN || "");
 const META_APP_SECRET = normalizeText(process.env.META_APP_SECRET || "");
 const WHATSAPP_APP_SECRET = normalizeText(process.env.WHATSAPP_APP_SECRET || "");
+const KEYCLOAK_DIRECTORY_USERNAME = normalizeText(process.env.KEYCLOAK_DIRECTORY_USERNAME || process.env.KEYCLOAK_ADMIN || "");
+const KEYCLOAK_DIRECTORY_PASSWORD = normalizeText(process.env.KEYCLOAK_DIRECTORY_PASSWORD || process.env.KEYCLOAK_ADMIN_PASSWORD || "");
+const KEYCLOAK_DIRECTORY_ADMIN_REALM = normalizeText(process.env.KEYCLOAK_DIRECTORY_ADMIN_REALM || "master");
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -283,7 +287,8 @@ const {
   canChangeBookingAssignment,
   canChangeBookingStage,
   actorLabel,
-  syncBookingAtpStaffFields,
+  syncBookingAssignmentFields,
+  getBookingAssignedKeycloakUserId,
   canAccessBooking,
   canEditBooking,
   buildBookingReadModel,
@@ -314,23 +319,32 @@ const {
   readStore,
   persistStore,
   readTours,
-  persistTour,
-  loadAtpStaff,
-  persistAtpStaff
+  persistTour
 } = createStoreUtils({
   dataPath: DATA_PATH,
   toursDir: TOURS_DIR,
   invoicesDir: INVOICES_DIR,
+  bookingImagesDir: BOOKING_IMAGES_DIR,
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
-  atpStaffPath: ATP_STAFF_PATH,
   writeQueueRef,
-  syncBookingAtpStaffFields,
+  syncBookingAssignmentFields,
   normalizeBookingPricing,
   normalizeBookingOffer,
   getBookingPreferredCurrency,
   convertBookingPricingToBaseCurrency,
   convertBookingOfferToBaseCurrency
+});
+
+const keycloakDirectory = createKeycloakDirectory({
+  keycloakEnabled: String(process.env.KEYCLOAK_ENABLED || "").trim().toLowerCase() === "true",
+  keycloakBaseUrl: process.env.KEYCLOAK_BASE_URL,
+  keycloakRealm: process.env.KEYCLOAK_REALM,
+  keycloakClientId: process.env.KEYCLOAK_CLIENT_ID,
+  keycloakAllowedRoles: new Set(Object.values(APP_ROLES).filter(Boolean)),
+  keycloakDirectoryUsername: KEYCLOAK_DIRECTORY_USERNAME,
+  keycloakDirectoryPassword: KEYCLOAK_DIRECTORY_PASSWORD,
+  keycloakDirectoryAdminRealm: KEYCLOAK_DIRECTORY_ADMIN_REALM
 });
 
 const {
@@ -377,10 +391,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const auth = createAuth({ port });
   const {
     getPrincipal,
-    staffUsernames,
-    resolvePrincipalAtpStaffMember,
-    canViewAtpStaffDirectory,
-    canManageAtpStaff,
+    canViewKeycloakUsers,
     canReadTours,
     canEditTours
   } = createAccessHelpers({
@@ -409,8 +420,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     addActivity,
     persistStore,
     getPrincipal,
-    loadAtpStaff,
-    resolvePrincipalAtpStaffMember,
+    listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
+    keycloakDisplayName: keycloakDirectory.toDisplayName,
     canReadAllBookings,
     filterAndSortBookings: (store, query) => filterAndSortBookings(store, query, { ensureMetaChatCollections }),
     canAccessBooking,
@@ -427,7 +438,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     canChangeBookingStage,
     actorLabel,
     canChangeBookingAssignment,
-    syncBookingAtpStaffFields,
+    syncBookingAssignmentFields,
+    getBookingAssignedKeycloakUserId,
     canEditBooking,
     validateBookingPricingInput,
     convertBookingPricingToBaseCurrency,
@@ -449,21 +461,17 @@ export async function createBackendHandler({ port = PORT } = {}) {
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,
     rm,
     sendFileWithCache
   });
-  const atpStaffHandlers = createAtpStaffHandlers({
+  const keycloakUserHandlers = createKeycloakUserHandlers({
     getPrincipal,
-    canViewAtpStaffDirectory,
-    loadAtpStaff,
-    staffUsernames,
-    canManageAtpStaff,
-    readBodyJson,
-    normalizeStringArray,
-    persistAtpStaff,
-    randomUUID,
+    canViewKeycloakUsers,
+    listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
+    keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson
   });
   const tourHandlers = createTourHandlers({
@@ -512,7 +520,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
       handleStagingAccessLogout,
       handleMobileBootstrap,
       ...bookingHandlers,
-      ...atpStaffHandlers,
+      ...keycloakUserHandlers,
       ...tourHandlers
     }
   });

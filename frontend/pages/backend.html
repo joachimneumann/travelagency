@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Backend</title>
     <meta name="description" content="AsiaTravelPlan backend workspace" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=4" />
   </head>
   <body>
     <header class="header" id="top">
@@ -25,10 +25,9 @@
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <section class="backend-section" id="bookingsPanel">
-            <h2 class="section-title u-title-medium">Bookings</h2>
             <div class="backend-controls">
               <div class="field">
-                <input id="bookingsSearch" type="text" placeholder="id, person, destination, atp staff, whatsapp chat..." />
+                <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." />
               </div>
               <button class="btn btn-ghost" id="bookingsSearchBtn" type="button">Search</button>
               <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden>Clear Search</button>
@@ -70,27 +69,8 @@
           </section>
 
           <section class="backend-section" id="settingsPanel">
-            <h2 class="section-title u-title-medium">Reports / Settings</h2>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="staffName">Name</label>
-                <input id="staffName" type="text" placeholder="Full name" />
-              </div>
-              <div class="field">
-                <label for="staffUsernames">Keycloak usernames</label>
-                <input id="staffUsernames" type="text" placeholder="comma,separated,usernames" />
-              </div>
-              <div class="field">
-                <label for="staffDestinations">Destinations</label>
-                <input id="staffDestinations" type="text" placeholder="Vietnam, Thailand" />
-              </div>
-              <div class="field">
-                <label for="staffLanguages">Languages</label>
-                <input id="staffLanguages" type="text" placeholder="English, Vietnamese" />
-              </div>
-              <button class="btn btn-primary" id="staffCreateBtn" type="button">Create atp_staff</button>
-              <span id="staffStatus" class="micro"></span>
-            </div>
+            <h2 class="section-title u-title-medium">Users</h2>
+            <p class="micro" id="staffStatus">Users are managed in Keycloak.</p>
             <div class="backend-table-wrap">
               <table class="backend-table" id="staffTable"></table>
             </div>
@@ -100,10 +80,10 @@
     </main>
 
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=20260311a";
       const section = new URLSearchParams(window.location.search).get("section") || "bookings";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
     </script>
-    <script type="module" src="frontend/scripts/pages/dashboard.js?v=20260311a"></script>
+    <script type="module" src="frontend/scripts/pages/booking_list.js?v=20260311d"></script>
   </body>
 </html>

@@ -84,6 +84,7 @@ import (
 #Booking: {
 	id:                             common.#Identifier
 	name?:                          string
+	image?:                         string
 	core_revision?:                 >=0 & int
 	notes_revision?:                >=0 & int
 	persons_revision?:              >=0 & int
@@ -91,7 +92,7 @@ import (
 	offer_revision?:                >=0 & int
 	invoices_revision?:             >=0 & int
 	stage:                          enums.#BookingStage
-	atp_staff?:                     common.#Identifier
+	assigned_keycloak_user_id?:     common.#Identifier
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?:                  [...enums.#CountryCode]
 	travel_styles?:                 [...string]

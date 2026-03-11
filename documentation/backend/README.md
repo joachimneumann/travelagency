@@ -40,7 +40,6 @@ Runtime JSON persistence:
 - `backend/app/data/store.json`
 - `backend/app/data/tours/<tour_id>/tour.json`
 - `backend/app/data/invoices/`
-- `backend/app/config/atp_staff.json`
 
 Notes:
 - `backend/app/data/store.json` is runtime data and is not tracked in Git
@@ -55,7 +54,7 @@ Implemented now:
 - booking pipeline stages and assignment
 - booking notes, pricing, offer, activities, invoices
 - booking-owned persons
-- ATP staff directory
+- Keycloak-backed ATP user assignment
 - Keycloak-protected backend access
 - Meta webhook ingestion linked to bookings
 
@@ -96,8 +95,7 @@ Admin API:
 - `PATCH /api/v1/bookings/:bookingId/invoices/:invoiceId`
 - `GET /api/v1/invoices/:invoiceId/pdf`
 - `POST /api/v1/offers/exchange-rates`
-- `GET /api/v1/atp_staff`
-- `POST /api/v1/atp_staff`
+- `GET /api/v1/keycloak_users`
 - `GET /api/v1/tours`
 - `GET /api/v1/tours/:tourId`
 - `POST /api/v1/tours`
@@ -129,7 +127,7 @@ Relevant website fields:
 - `page`
 - `page_size`
 - `stage`
-- `atp_staff`
+- `assigned_keycloak_user_id`
 - `search`
 - `sort`
 
@@ -142,11 +140,12 @@ The booking list and detail views use booking-owned people:
 
 Current role behavior:
 - `atp_staff`: read and edit only assigned bookings
-- `atp_manager`: read and edit all bookings, change assignment, create ATP staff
+- `atp_manager`: read and edit all bookings, change assignment
 - `atp_admin`: same as manager plus tour editing
-- `atp_accountant`: read all bookings, change stage, read tours
+- `atp_accountant`: read all bookings, read tours, no booking editing
 
-For `atp_staff`, booking access is resolved by matching Keycloak `preferred_username` to `backend/app/config/atp_staff.json -> usernames[]`.
+Booking assignment is stored as `booking.assigned_keycloak_user_id`, using the durable Keycloak user id directly.
+There is no local ATP user directory anymore.
 
 ## Local Keycloak
 

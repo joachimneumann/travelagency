@@ -9,7 +9,6 @@ import (
 
 #AbstractModel: {
 	entities: {
-		ATPStaff:              entityModel.#ATPStaff
 		Booking:               entityModel.#Booking
 		BookingPerson:         entityModel.#BookingPerson
 		BookingPersonAddress:  entityModel.#BookingPersonAddress
@@ -28,7 +27,7 @@ import (
 		LanguageCode:          enumModel.#LanguageCode
 		CurrencyCode:          enumModel.#CurrencyCode
 		CurrencyMeta:          enumModel.#CurrencyMeta
-		ATPStaffRole:          enumModel.#ATPStaffRole
+		ATPStaffRole:         enumModel.#ATPStaffRole
 		BookingStage:          enumModel.#BookingStage
 		BookingPersonRole:     enumModel.#BookingPersonRole
 		PaymentStatus:         enumModel.#PaymentStatus
@@ -47,8 +46,8 @@ import (
 		TourList:                    apiModel.#TourList
 		BookingDetail:               apiModel.#BookingDetail
 		TourDetail:                  apiModel.#TourDetail
-		AtpStaffDirectoryEntry:      apiModel.#AtpStaffDirectoryEntry
-		AtpStaffListResponse:        apiModel.#AtpStaffListResponse
+		KeycloakUserDirectoryEntry: apiModel.#KeycloakUserDirectoryEntry
+		KeycloakUserListResponse:   apiModel.#KeycloakUserListResponse
 		BookingActivitiesResponse:   apiModel.#BookingActivitiesResponse
 		BookingActivityResponse:     apiModel.#BookingActivityResponse
 		BookingDeleteResponse:       apiModel.#BookingDeleteResponse
@@ -85,8 +84,6 @@ import (
 		OfferExchangeRatesRequest:   apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest: apiModel.#BookingActivityCreateRequest
 		BookingInvoiceUpsertRequest: apiModel.#BookingInvoiceUpsertRequest
-		AtpStaffCreateRequest:       apiModel.#AtpStaffCreateRequest
-		AtpStaffResponse:            apiModel.#AtpStaffResponse
 		TourUpsertRequest:           apiModel.#TourUpsertRequest
 		EvidenceUpload:              apiModel.#EvidenceUpload
 		Endpoints:                   apiModel.#Endpoints

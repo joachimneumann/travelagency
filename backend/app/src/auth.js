@@ -97,6 +97,9 @@ export function createAuth({ port }) {
           principal: {
             type: "bearer",
             sub: String(payload.sub || ""),
+            name: String(payload.name || ""),
+            given_name: String(payload.given_name || ""),
+            family_name: String(payload.family_name || ""),
             preferred_username: String(payload.preferred_username || ""),
             email: String(payload.email || ""),
             roles
@@ -162,9 +165,13 @@ export function createAuth({ port }) {
     return {
       type: "session",
       sub: String(session.sub || ""),
+      name: String(session.name || ""),
+      given_name: String(session.given_name || ""),
+      family_name: String(session.family_name || ""),
       preferred_username: String(session.preferred_username || ""),
       email: String(session.email || ""),
-      roles: Array.isArray(session.roles) ? session.roles : []
+      roles: Array.isArray(session.roles) ? session.roles : [],
+      access_token: String(session.access_token || "")
     };
   }
 
@@ -178,6 +185,9 @@ export function createAuth({ port }) {
     return {
       type: "insecure-test",
       sub: normalizeText(req.headers["x-test-sub"]) || "test-user",
+      name: normalizeText(req.headers["x-test-name"]) || "",
+      given_name: normalizeText(req.headers["x-test-given-name"]) || "",
+      family_name: normalizeText(req.headers["x-test-family-name"]) || "",
       preferred_username: normalizeText(req.headers["x-test-username"]) || "test-user",
       email: normalizeText(req.headers["x-test-email"]) || "test@asiatravelplan.com",
       roles
@@ -396,6 +406,9 @@ export function createAuth({ port }) {
     const sid = `sess_${randomUUID()}`;
     sessions.set(sid, {
       sub: String(verified.sub || ""),
+      name: String(verified.name || ""),
+      given_name: String(verified.given_name || ""),
+      family_name: String(verified.family_name || ""),
       preferred_username: String(verified.preferred_username || ""),
       email: String(verified.email || ""),
       roles,
@@ -462,6 +475,9 @@ export function createAuth({ port }) {
       authenticated: true,
       user: {
         sub: session.sub,
+        name: session.name,
+        given_name: session.given_name,
+        family_name: session.family_name,
         preferred_username: session.preferred_username,
         email: session.email,
         roles: session.roles

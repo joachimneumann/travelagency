@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
-const ATP_STAFF_PATH = path.join(APP_ROOT, "config", "atp_staff.json");
 
 const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "WON", "LOST", "POST_TRIP"];
 const DESTINATIONS = ["Vietnam", "Thailand", "Cambodia", "Laos"];
@@ -85,9 +84,6 @@ function emptyStore(base = {}) {
 async function main() {
   const count = parseCountArg(process.argv);
   const store = emptyStore(await readJson(DATA_PATH));
-  const atpStaff = await readJson(ATP_STAFF_PATH);
-  const activeAtpStaff = atpStaff.filter((member) => member.active);
-
   store.bookings = [];
   store.activities = [];
   store.invoices = [];
@@ -105,7 +101,6 @@ async function main() {
     const stage = pick(STAGES);
     const createdAt = nowMinusHours(randomInt(2, 24 * 40));
     const updatedAt = new Date(new Date(createdAt).getTime() + randomInt(1, 120) * 60 * 1000).toISOString();
-    const owner = activeAtpStaff.length ? activeAtpStaff[i % activeAtpStaff.length] : null;
     const budget = pick(BUDGETS);
     const travelersCount = randomInt(1, 6);
     const bookingId = `booking_${randomUUID()}`;
@@ -134,8 +129,7 @@ async function main() {
     const booking = {
       id: bookingId,
       stage,
-      atp_staff: owner?.id || null,
-      atp_staff_name: owner?.name || null,
+      assigned_keycloak_user_id: null,
       service_level_agreement_due_at: stageServiceLevelAgreement(stage, updatedAt),
       destinations,
       destination: destinations,
@@ -191,14 +185,6 @@ async function main() {
           items_count: 0
         },
         total_price_cents: 0
-      },
-      source: {
-        page_url: "https://asiatravelplan.com/",
-        utm_source: "seed",
-        utm_medium: "script",
-        utm_campaign: "booking_owned_persons",
-        referrer: "https://example.com",
-        tour_id: null
       },
       idempotency_key: null,
       created_at: createdAt,

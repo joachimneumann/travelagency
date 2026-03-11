@@ -185,7 +185,7 @@ test("bookings list response conforms to the mobile contract", async () => {
   assertBookingShape(result.body.items[0]);
 });
 
-test("booking detail, activities, invoices, and atp_staff responses conform to the mobile contract", async () => {
+test("booking detail, activities, and invoices conform to the mobile contract", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -212,14 +212,6 @@ test("booking detail, activities, invoices, and atp_staff responses conform to t
   assert.ok(Array.isArray(invoicesResult.body.items));
   assert.equal(typeof invoicesResult.body.total, "number");
 
-  const staffResult = await requestJson(`${endpointPath("atp_staff")}?active=true`, apiHeaders());
-  assert.equal(staffResult.status, 200);
-  assert.ok(Array.isArray(staffResult.body.items));
-  assert.equal(typeof staffResult.body.total, "number");
-  for (const member of staffResult.body.items) {
-    assert.ok(Array.isArray(member.usernames));
-    assert.ok(member.usernames.every((username) => typeof username === "string"));
-  }
 });
 
 test("booking offer patch enforces preferred currency", async () => {
@@ -448,7 +440,6 @@ test("booking chat stays on one canonical booking and exposes related bookings",
     external_conversation_id: "84337942446",
     external_contact_id: "84337942446",
     booking_id: firstBookingId,
-    assigned_atp_staff_id: null,
     latest_preview: "Hello from WhatsApp",
     last_event_at: "2026-03-11T10:00:00.000Z",
     created_at: "2026-03-11T10:00:00.000Z",

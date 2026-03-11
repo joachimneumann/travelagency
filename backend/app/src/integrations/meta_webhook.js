@@ -137,7 +137,6 @@ export function createMetaWebhookHandlers({
         external_conversation_id: normalizedConversationId || normalizedContactId,
         external_contact_id: normalizedContactId,
         booking_id: bookingId || null,
-        assigned_atp_staff_id: null,
         latest_preview: null,
         last_event_at: null,
         created_at: nowIso(),

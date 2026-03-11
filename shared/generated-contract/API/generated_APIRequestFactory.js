@@ -165,6 +165,23 @@ export function bookingNameRequest({ baseURL = '', params = {}, query = {}, body
   };
 }
 
+export function bookingImagePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/image", params);
+}
+
+export function bookingImageRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingImagePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_image",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingStagePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/stage", params);
 }
@@ -420,33 +437,16 @@ export function bookingInvoiceUpdateRequest({ baseURL = '', params = {}, query =
   };
 }
 
-export function atpStaffPath(params = {}) {
-  return buildPath("/api/v1/atp_staff", params);
+export function keycloakUsersPath(params = {}) {
+  return buildPath("/api/v1/keycloak_users", params);
 }
 
-export function atpStaffRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = atpStaffPath(params);
+export function keycloakUsersRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = keycloakUsersPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "atp_staff",
+    key: "keycloak_users",
     method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function atpStaffCreatePath(params = {}) {
-  return buildPath("/api/v1/atp_staff", params);
-}
-
-export function atpStaffCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = atpStaffCreatePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "atp_staff_create",
-    method: "POST",
     authenticated: true,
     url,
     headers,

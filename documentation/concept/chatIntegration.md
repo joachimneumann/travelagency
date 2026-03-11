@@ -44,7 +44,6 @@ Do not introduce a separate customer record as the messaging anchor.
 - `external_thread_id`
 - `external_contact_id`
 - `booking_id`
-- `assigned_atp_staff_id`
 - `last_event_at`
 
 `message_event`

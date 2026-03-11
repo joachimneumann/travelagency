@@ -5,22 +5,16 @@ import (
 	entities "travelagency.local/model/entities"
 )
 
-#AtpStaffDirectoryEntry: {
+#KeycloakUserDirectoryEntry: {
 	id:           common.#Identifier
 	name:         string
 	active?:      bool
-	usernames?:   [...string]
-	destinations?: [...string]
-	languages?:   [...string]
+	username?:    string
 }
 
-#AtpStaffListResponse: {
-	items: [...#AtpStaffDirectoryEntry]
+#KeycloakUserListResponse: {
+	items: [...#KeycloakUserDirectoryEntry]
 	total: >=0 & int
-}
-
-#AtpStaffResponse: {
-	atp_staff: #AtpStaffDirectoryEntry
 }
 
 #BookingDeleteResponse: {
@@ -93,9 +87,9 @@ import (
 }
 
 #BookingListFilters: {
-	stage?:     string
-	atp_staff?: common.#Identifier
-	search?:    string
+	stage?:                    string
+	assigned_keycloak_user_id?: common.#Identifier
+	search?:                   string
 }
 
 #TourListFilters: {
@@ -119,6 +113,9 @@ import (
 
 #AuthenticatedUser: {
 	sub?:                string
+	name?:               string
+	given_name?:         string
+	family_name?:        string
 	email?:              common.#Email
 	preferred_username?: string
 	roles?:              [...string]

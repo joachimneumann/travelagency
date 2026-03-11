@@ -8,52 +8,6 @@
   "isArray": false
 },
   FIELD_2: {
-  "kind": "scalar",
-  "typeName": "string",
-  "isArray": false,
-  "format": "email"
-},
-  FIELD_3: {
-  "kind": "enum",
-  "typeName": "ATPStaffRole",
-  "isArray": true,
-  "enumValues": [
-    "atp_admin",
-    "atp_manager",
-    "atp_accountant",
-    "atp_staff"
-  ],
-  "options": [
-    {
-      "value": "atp_admin",
-      "label": "atp_admin"
-    },
-    {
-      "value": "atp_manager",
-      "label": "atp_manager"
-    },
-    {
-      "value": "atp_accountant",
-      "label": "atp_accountant"
-    },
-    {
-      "value": "atp_staff",
-      "label": "atp_staff"
-    }
-  ]
-},
-  FIELD_4: {
-  "kind": "scalar",
-  "typeName": "bool",
-  "isArray": false
-},
-  FIELD_5: {
-  "kind": "scalar",
-  "typeName": "string",
-  "isArray": false,
-  "format": "date-time"
-},
-  FIELD_6: {
   "kind": "enum",
   "typeName": "CountryCode",
   "isArray": false,
@@ -1307,7 +1261,7 @@
     }
   ]
 },
-  FIELD_7: {
+  FIELD_3: {
   "kind": "enum",
   "typeName": "PersonConsentType",
   "isArray": false,
@@ -1336,7 +1290,7 @@
     }
   ]
 },
-  FIELD_8: {
+  FIELD_4: {
   "kind": "enum",
   "typeName": "PersonConsentStatus",
   "isArray": false,
@@ -1360,7 +1314,13 @@
     }
   ]
 },
-  FIELD_9: {
+  FIELD_5: {
+  "kind": "scalar",
+  "typeName": "string",
+  "isArray": false,
+  "format": "date-time"
+},
+  FIELD_6: {
   "kind": "enum",
   "typeName": "PersonDocumentType",
   "isArray": false,
@@ -1389,24 +1349,29 @@
     }
   ]
 },
-  FIELD_10: {
+  FIELD_7: {
   "kind": "scalar",
   "typeName": "string",
   "isArray": false,
   "format": "date"
 },
-  FIELD_11: {
+  FIELD_8: {
+  "kind": "scalar",
+  "typeName": "bool",
+  "isArray": false
+},
+  FIELD_9: {
   "kind": "scalar",
   "typeName": "string",
   "isArray": true,
   "format": "email"
 },
-  FIELD_12: {
+  FIELD_10: {
   "kind": "scalar",
   "typeName": "string",
   "isArray": true
 },
-  FIELD_13: {
+  FIELD_11: {
   "kind": "enum",
   "typeName": "LanguageCode",
   "isArray": false,
@@ -1440,12 +1405,12 @@
     }
   ]
 },
-  FIELD_14: {
+  FIELD_12: {
   "kind": "entity",
   "typeName": "BookingPersonAddress",
   "isArray": false
 },
-  FIELD_15: {
+  FIELD_13: {
   "kind": "enum",
   "typeName": "BookingPersonRole",
   "isArray": true,
@@ -1484,17 +1449,17 @@
     }
   ]
 },
-  FIELD_16: {
+  FIELD_14: {
   "kind": "entity",
   "typeName": "BookingPersonConsent",
   "isArray": true
 },
-  FIELD_17: {
+  FIELD_15: {
   "kind": "entity",
   "typeName": "BookingPersonDocument",
   "isArray": true
 },
-  FIELD_18: {
+  FIELD_16: {
   "kind": "enum",
   "typeName": "CountryCode",
   "isArray": true,
@@ -2748,12 +2713,12 @@
     }
   ]
 },
-  FIELD_19: {
+  FIELD_17: {
   "kind": "scalar",
   "typeName": "int",
   "isArray": false
 },
-  FIELD_20: {
+  FIELD_18: {
   "kind": "enum",
   "typeName": "CurrencyCode",
   "isArray": false,
@@ -2782,7 +2747,13 @@
     }
   ]
 },
-  FIELD_21: {
+  FIELD_19: {
+  "kind": "scalar",
+  "typeName": "string",
+  "isArray": false,
+  "format": "email"
+},
+  FIELD_20: {
   "kind": "enum",
   "typeName": "BookingActivityType",
   "isArray": false,
@@ -2836,17 +2807,17 @@
     }
   ]
 },
-  FIELD_22: {
+  FIELD_21: {
   "kind": "entity",
   "typeName": "MoneyAmount",
   "isArray": false
 },
-  FIELD_23: {
+  FIELD_22: {
   "kind": "entity",
   "typeName": "InvoiceComponent",
   "isArray": true
 },
-  FIELD_24: {
+  FIELD_23: {
   "kind": "enum",
   "typeName": "PricingAdjustmentType",
   "isArray": false,
@@ -2870,7 +2841,7 @@
     }
   ]
 },
-  FIELD_25: {
+  FIELD_24: {
   "kind": "enum",
   "typeName": "PaymentStatus",
   "isArray": false,
@@ -2894,22 +2865,22 @@
     }
   ]
 },
-  FIELD_26: {
+  FIELD_25: {
   "kind": "entity",
   "typeName": "PricingAdjustment",
   "isArray": true
 },
-  FIELD_27: {
+  FIELD_26: {
   "kind": "entity",
   "typeName": "BookingPayment",
   "isArray": true
 },
-  FIELD_28: {
+  FIELD_27: {
   "kind": "entity",
   "typeName": "BookingPricingSummary",
   "isArray": false
 },
-  FIELD_29: {
+  FIELD_28: {
   "kind": "enum",
   "typeName": "OfferCategory",
   "isArray": false,
@@ -2958,22 +2929,22 @@
     }
   ]
 },
-  FIELD_30: {
+  FIELD_29: {
   "kind": "entity",
   "typeName": "BookingOfferCategoryRule",
   "isArray": true
 },
-  FIELD_31: {
+  FIELD_30: {
   "kind": "entity",
   "typeName": "BookingOfferComponent",
   "isArray": true
 },
-  FIELD_32: {
+  FIELD_31: {
   "kind": "entity",
   "typeName": "BookingOfferTotals",
   "isArray": false
 },
-  FIELD_33: {
+  FIELD_32: {
   "kind": "enum",
   "typeName": "BookingStage",
   "isArray": false,
@@ -3027,32 +2998,32 @@
     }
   ]
 },
-  FIELD_34: {
+  FIELD_33: {
   "kind": "entity",
   "typeName": "BookingPerson",
   "isArray": true
 },
-  FIELD_35: {
+  FIELD_34: {
   "kind": "entity",
   "typeName": "BookingWebFormSubmission",
   "isArray": false
 },
-  FIELD_36: {
+  FIELD_35: {
   "kind": "entity",
   "typeName": "BookingPricing",
   "isArray": false
 },
-  FIELD_37: {
+  FIELD_36: {
   "kind": "entity",
   "typeName": "BookingOffer",
   "isArray": false
 },
-  FIELD_38: {
+  FIELD_37: {
   "kind": "scalar",
   "typeName": "float",
   "isArray": false
 },
-  FIELD_39: {
+  FIELD_38: {
   "kind": "enum",
   "typeName": "MonthCode",
   "isArray": false,
@@ -3121,137 +3092,132 @@
     }
   ]
 },
-  FIELD_40: {
+  FIELD_39: {
   "kind": "transport",
   "typeName": "MobileAppVersionGate",
   "isArray": false
 },
-  FIELD_41: {
+  FIELD_40: {
   "kind": "transport",
   "typeName": "APIContractVersion",
   "isArray": false
 },
-  FIELD_42: {
+  FIELD_41: {
   "kind": "transport",
   "typeName": "FeatureFlags",
   "isArray": false
 },
-  FIELD_43: {
+  FIELD_42: {
   "kind": "transport",
   "typeName": "AuthenticatedUser",
   "isArray": false
 },
-  FIELD_44: {
+  FIELD_43: {
   "kind": "transport",
   "typeName": "Booking",
   "isArray": false
 },
-  FIELD_45: {
+  FIELD_44: {
   "kind": "transport",
   "typeName": "Tour",
   "isArray": true
 },
-  FIELD_46: {
+  FIELD_45: {
   "kind": "transport",
   "typeName": "Pagination",
   "isArray": false
 },
-  FIELD_47: {
+  FIELD_46: {
   "kind": "transport",
   "typeName": "TourListFilters",
   "isArray": false
 },
-  FIELD_48: {
+  FIELD_47: {
   "kind": "transport",
   "typeName": "Booking",
   "isArray": true
 },
-  FIELD_49: {
+  FIELD_48: {
   "kind": "transport",
   "typeName": "BookingListFilters",
   "isArray": false
 },
-  FIELD_50: {
+  FIELD_49: {
   "kind": "transport",
   "typeName": "BookingChatEvent",
   "isArray": true
 },
-  FIELD_51: {
+  FIELD_50: {
   "kind": "transport",
   "typeName": "BookingChatConversation",
   "isArray": true
 },
-  FIELD_52: {
+  FIELD_51: {
   "kind": "transport",
   "typeName": "BookingPerson",
   "isArray": false
 },
-  FIELD_53: {
+  FIELD_52: {
   "kind": "transport",
   "typeName": "BookingPricing",
   "isArray": false
 },
-  FIELD_54: {
+  FIELD_53: {
   "kind": "transport",
   "typeName": "BookingOffer",
   "isArray": false
 },
-  FIELD_55: {
+  FIELD_54: {
   "kind": "transport",
   "typeName": "OfferExchangeRateComponent",
   "isArray": true
 },
-  FIELD_56: {
+  FIELD_55: {
   "kind": "transport",
   "typeName": "BookingOfferComponent",
+  "isArray": true
+},
+  FIELD_56: {
+  "kind": "transport",
+  "typeName": "BookingActivity",
   "isArray": true
 },
   FIELD_57: {
   "kind": "transport",
   "typeName": "BookingActivity",
-  "isArray": true
-},
-  FIELD_58: {
-  "kind": "transport",
-  "typeName": "BookingActivity",
   "isArray": false
 },
-  FIELD_59: {
+  FIELD_58: {
   "kind": "transport",
   "typeName": "BookingInvoice",
   "isArray": true
 },
-  FIELD_60: {
+  FIELD_59: {
   "kind": "transport",
   "typeName": "InvoiceComponent",
   "isArray": true
 },
-  FIELD_61: {
+  FIELD_60: {
   "kind": "transport",
   "typeName": "MoneyAmount",
   "isArray": false
 },
-  FIELD_62: {
+  FIELD_61: {
   "kind": "transport",
   "typeName": "BookingInvoice",
   "isArray": false
 },
-  FIELD_63: {
+  FIELD_62: {
   "kind": "transport",
-  "typeName": "AtpStaffDirectoryEntry",
+  "typeName": "KeycloakUserDirectoryEntry",
   "isArray": true
 },
-  FIELD_64: {
-  "kind": "transport",
-  "typeName": "AtpStaffDirectoryEntry",
-  "isArray": false
-},
-  FIELD_65: {
+  FIELD_63: {
   "kind": "transport",
   "typeName": "Tour",
   "isArray": false
 },
-  FIELD_66: {
+  FIELD_64: {
   "kind": "transport",
   "typeName": "TourOptions",
   "isArray": false

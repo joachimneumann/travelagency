@@ -56,6 +56,11 @@ import (
 	actor?:                  string
 }
 
+#BookingImageUploadRequest: #EvidenceUpload & {
+	expected_core_revision?: >=0 & int
+	actor?:                  string
+}
+
 #BookingStageUpdateRequest: {
 	expected_core_revision?: >=0 & int
 	stage:                   enums.#BookingStage
@@ -64,7 +69,7 @@ import (
 
 #BookingOwnerUpdateRequest: {
 	expected_core_revision?: >=0 & int
-	atp_staff?:              common.#Identifier
+	assigned_keycloak_user_id?: common.#Identifier
 	actor?:                  string
 }
 
@@ -140,14 +145,6 @@ import (
 	components?:                [...entities.#InvoiceComponent]
 	due_amount_cents?:          common.#NonNegativeMoneyAmount
 	sent_to_recipient?:         bool
-}
-
-#AtpStaffCreateRequest: {
-	name:         string
-	active?:      bool
-	usernames:    [...string] | string
-	destinations?: [...string]
-	languages?:   [...string]
 }
 
 #TourUpsertRequest: {

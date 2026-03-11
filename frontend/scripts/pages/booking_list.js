@@ -2,18 +2,25 @@ import {
   createApiFetcher,
   escapeHtml,
   formatDateTime,
-  normalizeText
+  normalizeText,
+  resolveApiUrl
 } from "../shared/api.js";
 import { GENERATED_ATP_STAFF_ROLES } from "../../Generated/Models/generated_ATPStaff.js";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   buildBookingHref,
   buildTourEditHref
 } from "../shared/links.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { renderPagination } from "../shared/pagination.js";
+import {
+  getPersonInitials,
+  getRepresentativeTraveler
+} from "../shared/booking_persons.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
+const apiOrigin = apiBase || window.location.origin;
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -42,11 +49,6 @@ const els = {
   toursPagination: document.getElementById("toursPagination"),
   toursTable: document.getElementById("toursTable"),
 
-  staffName: document.getElementById("staffName"),
-  staffUsernames: document.getElementById("staffUsernames"),
-  staffDestinations: document.getElementById("staffDestinations"),
-  staffLanguages: document.getElementById("staffLanguages"),
-  staffCreateBtn: document.getElementById("staffCreateBtn"),
   staffStatus: document.getElementById("staffStatus"),
   staffTable: document.getElementById("staffTable")
 };
@@ -71,17 +73,18 @@ const ROLES = Object.freeze({
 });
 
 const state = {
+  authUser: null,
   roles: [],
   permissions: {
     canReadBookings: false,
     canReadSettings: false,
-    canManageStaff: false,
     canReadTours: false,
     canEditTours: false
   },
   bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
   tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" },
-  staff: [],
+  keycloakUsers: [],
+  tourImagesById: new Map(),
   activeSection: "bookings"
 };
 
@@ -111,7 +114,7 @@ async function init() {
   bindControls();
 
   if (state.permissions.canReadBookings) loadBookings();
-  if (state.permissions.canManageStaff) loadStaff();
+  if (state.permissions.canReadSettings) loadKeycloakUsers();
   if (state.permissions.canReadTours) loadTours();
 }
 
@@ -121,22 +124,24 @@ async function loadBackendAuthStatus() {
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
+      state.authUser = null;
       els.userLabel.textContent = "";
       return null;
     }
+    state.authUser = payload.user || null;
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
     const isAdmin = hasAnyRole(ROLES.ADMIN, ROLES.MANAGER);
     state.permissions = {
       canReadBookings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
-      canManageStaff: isAdmin,
-      canReadSettings: isAdmin,
+      canReadSettings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT),
       canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
       canEditTours: hasAnyRole(ROLES.ADMIN)
     };
     els.userLabel.textContent = user || "";
     return payload.user;
   } catch {
+    state.authUser = null;
     els.userLabel.textContent = "";
     return null;
   }
@@ -212,11 +217,6 @@ function bindSearchControls() {
       loadTours();
     });
   }
-
-  if (state.permissions.canManageStaff && els.staffCreateBtn) {
-    els.staffCreateBtn.addEventListener("click", createStaff);
-  }
-
   const requestedSection = resolveRequestedSection();
   showSection(requestedSection, { updateUrl: false });
 }
@@ -306,6 +306,7 @@ function bindSearch(searchBtn, searchInput, model, reloadFn) {
 
 async function loadBookings() {
   clearError();
+  await ensureTourImageCatalog();
 
   const params = new URLSearchParams({
     page: String(state.bookings.page),
@@ -326,6 +327,20 @@ async function loadBookings() {
   state.bookings.page = Number(pagination.page || state.bookings.page);
   updatePaginationUi("bookings");
   renderBookings(payload.items || []);
+}
+
+async function ensureTourImageCatalog() {
+  if (state.tourImagesById.size) return;
+  const payload = await fetchApi(publicToursRequest({ baseURL: apiOrigin }).url, {
+    includeDetailInError: false,
+    connectionErrorMessage: "Could not load public tour images."
+  });
+  const items = Array.isArray(payload?.items) ? payload.items : [];
+  state.tourImagesById = new Map(
+    items
+      .map((tour) => [normalizeText(tour?.id), normalizeText(tour?.image)])
+      .filter(([tourId]) => Boolean(tourId))
+  );
 }
 
 async function loadTours() {
@@ -411,37 +426,84 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>ID</th><th>Stage</th><th>Primary contact</th><th>Persons</th><th>Destination</th><th>Style</th><th>Staff</th><th>Service Level Agreement due</th></tr></thead>`;
+  const header = `<thead><tr><th>ID</th><th>Booking Name</th><th>Stage</th><th>ATP staff</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
-      const persons = getBookingPersons(booking);
-      const primaryContact = getPrimaryContact(booking);
-      const primaryLabel = [
-        primaryContact?.name,
-        primaryContact?.emails?.[0],
-        primaryContact?.phone_numbers?.[0]
-      ].filter(Boolean).join(" | ") || "-";
-      const personsSummary = `${persons.length} listed / ${getTravelerCount(booking)} travelers`;
+      const bookingName = normalizeText(booking.name) || "-";
+      const representativeTraveler = getRepresentativeTraveler(booking);
+      const representativeMarkup = representativeTraveler
+        ? renderRepresentativeTravelerMarkup(representativeTraveler)
+        : "";
+      const bookingImageMarkup = renderBookingImageMarkup(booking);
       return `<tr>
         <td><a href="${escapeHtml(bookingHref)}">${escapeHtml(shortId(booking.id))}</a></td>
-        <td>${escapeHtml(booking.stage)}</td>
-        <td>${escapeHtml(primaryLabel)}</td>
-        <td>${escapeHtml(personsSummary)}</td>
-        <td>${escapeHtml(Array.isArray(booking.destinations) ? booking.destinations.join(", ") : booking.destinations || "-")}</td>
-        <td>${escapeHtml(Array.isArray(booking.travel_styles) ? booking.travel_styles.join(", ") : booking.travel_styles || "-")}</td>
-        <td>${escapeHtml(booking.atp_staff_name || "Unassigned")}</td>
-        <td>${escapeHtml(formatDateTime(booking.service_level_agreement_due_at))}</td>
+        <td>
+          <div class="booking-list__name-cell">
+            <span class="booking-list__booking-thumb">${bookingImageMarkup}</span>
+            <div class="booking-list__name-copy">
+              <div class="booking-list__booking-name">${escapeHtml(bookingName)}</div>
+              ${representativeMarkup}
+            </div>
+          </div>
+        </td>
+        <td>${escapeHtml(booking.stage || "-")}</td>
+        <td>${escapeHtml(resolveAssignedKeycloakUserLabel(booking.assigned_keycloak_user_id))}</td>
       </tr>`;
     })
     .join("");
 
   const body =
     rows ||
-    `<tr><td colspan="8">${escapeHtml(
+    `<tr><td colspan="4">${escapeHtml(
       `No bookings found${state.bookings.search ? ` for "${state.bookings.search}"` : ""}`
     )}</td></tr>`;
   if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+function renderBookingImageMarkup(booking) {
+  const bookingImage = normalizeText(booking?.image);
+  const tourId = normalizeText(booking?.web_form_submission?.tour_id);
+  const tourImage = tourId ? normalizeText(state.tourImagesById.get(tourId)) : "";
+  const representativeTraveler = getRepresentativeTraveler(booking);
+  const imageRef = bookingImage || tourImage;
+  const alt = normalizeText(booking?.name) || "Booking image";
+
+  if (imageRef) {
+    return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveRepresentativePhotoSrc(imageRef))}" alt="${escapeHtml(alt)}" />`;
+  }
+
+  if (representativeTraveler && normalizeText(representativeTraveler.photo_ref)) {
+    return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveRepresentativePhotoSrc(representativeTraveler.photo_ref))}" alt="" />`;
+  }
+
+  if (representativeTraveler && normalizeText(representativeTraveler.name)) {
+    return `<span class="booking-list__booking-thumb-initials">${escapeHtml(getPersonInitials(representativeTraveler.name))}</span>`;
+  }
+
+  return '<img class="booking-list__booking-thumb-image" src="assets/img/profile_person.png" alt="" />';
+}
+
+function renderRepresentativeTravelerMarkup(person) {
+  const personName = normalizeText(person?.name) || "Representative traveler";
+  const photoRef = normalizeText(person?.photo_ref);
+  const avatarMarkup = photoRef
+    ? `<img class="booking-list__representative-avatar-image" src="${escapeHtml(resolveRepresentativePhotoSrc(photoRef))}" alt="" />`
+    : normalizeText(person?.name)
+      ? `<span class="booking-list__representative-avatar-initials">${escapeHtml(getPersonInitials(person.name))}</span>`
+      : `<img class="booking-list__representative-avatar-image" src="assets/img/profile_person.png" alt="" />`;
+
+  return `
+    <div class="booking-list__representative">
+      <span class="booking-list__representative-avatar">${avatarMarkup}</span>
+      <span class="booking-list__representative-name">${escapeHtml(personName)}</span>
+    </div>
+  `;
+}
+
+function resolveRepresentativePhotoSrc(photoRef) {
+  const imagePath = normalizeText(photoRef) || "assets/img/profile_person.png";
+  return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
 }
 
 function renderTours(items) {
@@ -478,59 +540,25 @@ function clearError() {
   els.error.classList.remove("show");
 }
 
-async function loadStaff() {
+async function loadKeycloakUsers() {
   clearError();
-  const payload = await fetchApi(`/api/v1/atp_staff?active=true`);
+  const payload = await fetchApi(`/api/v1/keycloak_users`);
   if (!payload) return;
-  state.staff = Array.isArray(payload.items) ? payload.items : [];
-  renderStaff(state.staff);
+  state.keycloakUsers = Array.isArray(payload.items) ? payload.items : [];
+  renderStaff(state.keycloakUsers);
 }
 
 function renderStaff(items) {
   if (!els.staffTable) return;
-  const header = `<thead><tr><th>Name</th><th>Usernames</th><th>Destinations</th><th>Languages</th><th>Active</th></tr></thead>`;
+  const header = `<thead><tr><th>Name</th><th>Username</th><th>Active</th></tr></thead>`;
   const rows = items
     .map((staff) => `<tr>
       <td>${escapeHtml(staff.name || "-")}</td>
-      <td>${escapeHtml(Array.isArray(staff.usernames) ? staff.usernames.join(", ") : "-")}</td>
-      <td>${escapeHtml(Array.isArray(staff.destinations) ? staff.destinations.join(", ") : "-")}</td>
-      <td>${escapeHtml(Array.isArray(staff.languages) ? staff.languages.join(", ") : "-")}</td>
+      <td>${escapeHtml(staff.username || "-")}</td>
       <td>${staff.active ? "Yes" : "No"}</td>
     </tr>`)
     .join("");
-  els.staffTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="5">No staff found</td></tr>'}</tbody>`;
-}
-
-async function createStaff() {
-  clearError();
-  setStaffStatus("Creating...");
-  const payload = {
-    name: (els.staffName?.value || "").trim(),
-    usernames: (els.staffUsernames?.value || "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
-    destinations: (els.staffDestinations?.value || "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
-    languages: (els.staffLanguages?.value || "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
-    active: true
-  };
-  const result = await fetchApi(`/api/v1/atp_staff`, { method: "POST", body: payload });
-  if (!result?.staff) {
-    setStaffStatus("");
-    return;
-  }
-  if (els.staffName) els.staffName.value = "";
-  if (els.staffUsernames) els.staffUsernames.value = "";
-  if (els.staffDestinations) els.staffDestinations.value = "";
-  if (els.staffLanguages) els.staffLanguages.value = "";
-  setStaffStatus("Staff created.");
-  await loadStaff();
+  els.staffTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="3">No Keycloak users found</td></tr>'}</tbody>`;
 }
 
 function setStaffStatus(message) {
@@ -538,43 +566,28 @@ function setStaffStatus(message) {
   els.staffStatus.textContent = message;
 }
 
-function getBookingPersons(booking) {
-  if (!Array.isArray(booking?.persons)) return [];
-  return booking.persons
-    .filter((person) => person && typeof person === "object" && !Array.isArray(person))
-    .map((person) => ({
-      ...person,
-      name: normalizeText(person.name) || "",
-      roles: Array.from(new Set((Array.isArray(person.roles) ? person.roles : []).map((value) => normalizeText(value)).filter(Boolean))),
-      emails: Array.from(
-        new Set(
-          [person?.email, ...(Array.isArray(person?.emails) ? person.emails : [])]
-            .map((value) => normalizeText(value))
-            .filter(Boolean)
-        )
-      ),
-      phone_numbers: Array.from(
-        new Set(
-          [person?.phone_number, person?.phone, ...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
-            .map((value) => normalizeText(value))
-            .filter(Boolean)
-        )
-      )
-    }));
-}
-
-function getPrimaryContact(booking) {
-  const persons = getBookingPersons(booking);
-  return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
-}
-
-function getTravelerCount(booking) {
-  const persons = getBookingPersons(booking);
-  const travelers = persons.filter((person) => person.roles.includes("traveler"));
-  return travelers.length || persons.length;
-}
-
 function shortId(value) {
   const id = String(value || "");
   return id.length > 6 ? id.slice(-6) : id;
+}
+
+function displayKeycloakUser(user) {
+  if (!user || typeof user !== "object") return "";
+  return normalizeText(user.name) || normalizeText(user.username) || normalizeText(user.id) || "";
+}
+
+function resolveAssignedKeycloakUserLabel(assignedKeycloakUserId) {
+  const normalizedId = normalizeText(assignedKeycloakUserId);
+  if (!normalizedId) return "Unassigned";
+  const users = Array.isArray(state.keycloakUsers) ? state.keycloakUsers : [];
+  const match = users.find((user) => normalizeText(user.id) === normalizedId);
+  if (match) return displayKeycloakUser(match) || normalizedId;
+  if (normalizeText(state.authUser?.sub) === normalizedId) {
+    return displayKeycloakUser({
+      id: state.authUser?.sub,
+      name: state.authUser?.name,
+      username: state.authUser?.preferred_username
+    }) || normalizedId;
+  }
+  return normalizedId;
 }

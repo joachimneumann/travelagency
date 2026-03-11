@@ -75,7 +75,6 @@ Examples:
 - `Booking`
 - `BookingPerson`
 - `Invoice`
-- `ATPStaff`
 - `Tour`
 
 These types describe what the business data means.

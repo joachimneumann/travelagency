@@ -136,6 +136,17 @@
         ]
       },
       {
+        key: "booking_image",
+        path: "/api/v1/bookings/{booking_id}/image",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingImageUploadRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_stage",
         path: "/api/v1/bookings/{booking_id}/stage",
         method: "PATCH",
@@ -305,23 +316,12 @@
         ]
       },
       {
-        key: "atp_staff",
-        path: "/api/v1/atp_staff",
+        key: "keycloak_users",
+        path: "/api/v1/keycloak_users",
         method: "GET",
         authenticated: true,
         requestType: null,
-        responseType: "AtpStaffListResponse",
-        parameters: [
-
-        ]
-      },
-      {
-        key: "atp_staff_create",
-        path: "/api/v1/atp_staff",
-        method: "POST",
-        authenticated: true,
-        requestType: "AtpStaffCreateRequest",
-        responseType: "AtpStaffResponse",
+        responseType: "KeycloakUserListResponse",
         parameters: [
 
         ]

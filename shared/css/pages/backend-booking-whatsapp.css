@@ -230,9 +230,6 @@
 .wa-chat-open-btn {
   width: 44px;
   height: 44px;
-  background: #25d366;
-  color: #fff;
-  box-shadow: 0 6px 14px rgba(37, 211, 102, 0.22);
 }
 
 .wa-chat-back-btn:hover,
@@ -242,24 +239,16 @@
   background: rgba(0, 0, 0, 0.06);
 }
 
-.wa-chat-open-btn:hover,
-.wa-chat-open-btn:focus-visible {
-  background: #20c55f;
-  color: #fff;
-}
-
 .wa-chat-open-btn[aria-disabled="true"] {
-  opacity: 0.45;
+  opacity: 0.4;
   pointer-events: none;
-  background: #d8ddd8;
-  color: #fff;
-  box-shadow: none;
 }
 
-.wa-chat-open-icon {
-  width: 1.7rem;
-  height: 1.7rem;
+.wa-chat-open-logo {
+  width: 1.9rem;
+  height: 1.9rem;
   display: block;
+  object-fit: contain;
 }
 
 .wa-chat-thread-contact {

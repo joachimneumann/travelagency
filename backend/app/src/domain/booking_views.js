@@ -201,15 +201,15 @@ export function createBookingViewHelpers({
   }
 
   function canChangeBookingAssignment(principal) {
-    return canReadAllBookings(principal);
+    return hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER);
   }
 
-  function canChangeBookingStage(principal, booking, staffMember) {
-    if (hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER) || hasRole(principal, appRoles.ACCOUNTANT)) {
+  function canChangeBookingStage(principal, booking) {
+    if (hasRole(principal, appRoles.ADMIN) || hasRole(principal, appRoles.MANAGER)) {
       return true;
     }
-    if (hasRole(principal, appRoles.ATP_STAFF) && staffMember) {
-      return getBookingAtpStaffId(booking) === staffMember.id;
+    if (hasRole(principal, appRoles.ATP_STAFF)) {
+      return getBookingAssignedKeycloakUserId(booking) === normalizeText(principal?.sub);
     }
     return false;
   }
@@ -218,28 +218,30 @@ export function createBookingViewHelpers({
     return normalizeText(principal?.preferred_username || principal?.email || principal?.sub || fallback) || fallback;
   }
 
-  function getBookingAtpStaffId(booking) {
-    return normalizeText(booking?.atp_staff);
+  function getBookingAssignedKeycloakUserId(booking) {
+    return normalizeText(booking?.assigned_keycloak_user_id);
   }
 
-  function syncBookingAtpStaffFields(booking) {
-    const staffId = normalizeText(booking.atp_staff);
-    const staffName = normalizeText(booking.atp_staff_name);
-    booking.atp_staff = staffId || null;
-    booking.atp_staff_name = staffName || null;
+  function syncBookingAssignmentFields(booking) {
+    const assignedUserId = normalizeText(booking.assigned_keycloak_user_id);
+    booking.assigned_keycloak_user_id = assignedUserId || null;
+    delete booking.atp_user;
+    delete booking.atp_user_name;
+    delete booking.assigned_keycloak_user_name;
+    delete booking.assigned_keycloak_username;
     return booking;
   }
 
-  function canAccessBooking(principal, booking, staffMember) {
+  function canAccessBooking(principal, booking) {
     if (canReadAllBookings(principal)) return true;
-    if (hasRole(principal, appRoles.ATP_STAFF) && staffMember) {
-      return getBookingAtpStaffId(booking) === staffMember.id;
+    if (hasRole(principal, appRoles.ATP_STAFF)) {
+      return getBookingAssignedKeycloakUserId(booking) === normalizeText(principal?.sub);
     }
     return false;
   }
 
-  function canEditBooking(principal, booking, staffMember) {
-    return canChangeBookingStage(principal, booking, staffMember);
+  function canEditBooking(principal, booking) {
+    return canChangeBookingStage(principal, booking);
   }
 
   async function buildBookingReadModel(booking) {
@@ -262,7 +264,7 @@ export function createBookingViewHelpers({
   function filterAndSortBookings(store, query, deps = {}) {
     const { ensureMetaChatCollections = () => {} } = deps;
     const stage = normalizeStageFilter(query.get("stage"));
-    const atpStaffId = normalizeText(query.get("atp_staff"));
+    const assignedKeycloakUserId = normalizeText(query.get("assigned_keycloak_user_id"));
     const rawSearch = normalizeText(query.get("search")).toLowerCase();
     const rawSearchNoSpace = rawSearch.replace(/\s+/g, "");
     const search = rawSearch.replace(/[^a-z0-9]+/g, "");
@@ -341,7 +343,7 @@ export function createBookingViewHelpers({
 
     const filtered = store.bookings.filter((booking) => {
       if (stage && booking.stage !== stage) return false;
-      if (atpStaffId && booking.atp_staff !== atpStaffId) return false;
+      if (assignedKeycloakUserId && getBookingAssignedKeycloakUserId(booking) !== assignedKeycloakUserId) return false;
       if (!search) return true;
 
       const contact = getBookingContactProfile(booking);
@@ -350,7 +352,6 @@ export function createBookingViewHelpers({
         booking.id,
         ...normalizeStringArray(booking.destinations),
         ...normalizeStringArray(booking.travel_styles),
-        booking.atp_staff_name,
         booking.notes,
         contact.name,
         contact.email,
@@ -415,7 +416,7 @@ export function createBookingViewHelpers({
 
     return {
       items: sorted,
-      filters: { stage: stage || null, atp_staff: atpStaffId || null, search: search || null },
+      filters: { stage: stage || null, assigned_keycloak_user_id: assignedKeycloakUserId || null, search: search || null },
       sort
     };
   }
@@ -446,7 +447,8 @@ export function createBookingViewHelpers({
     canChangeBookingAssignment,
     canChangeBookingStage,
     actorLabel,
-    syncBookingAtpStaffFields,
+    syncBookingAssignmentFields,
+    getBookingAssignedKeycloakUserId,
     canAccessBooking,
     canEditBooking,
     buildBookingReadModel,

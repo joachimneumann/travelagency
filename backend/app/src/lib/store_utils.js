@@ -7,11 +7,11 @@ export function createStoreUtils({
   dataPath,
   toursDir,
   invoicesDir,
+  bookingImagesDir,
   bookingPersonPhotosDir,
   tempUploadDir,
-  atpStaffPath,
   writeQueueRef,
-  syncBookingAtpStaffFields,
+  syncBookingAssignmentFields,
   normalizeBookingPricing,
   normalizeBookingOffer,
   getBookingPreferredCurrency,
@@ -21,6 +21,7 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
+    await mkdir(bookingImagesDir, { recursive: true });
     await mkdir(bookingPersonPhotosDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
   }
@@ -36,7 +37,7 @@ export function createStoreUtils({
     parsed.chat_events ||= [];
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       const normalizedBooking = normalizeStoredBookingRecord(booking, parsed);
-      syncBookingAtpStaffFields(normalizedBooking);
+      syncBookingAssignmentFields(normalizedBooking);
       normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
       normalizedBooking.offer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
       normalizedBooking.pricing = await convertBookingPricingToBaseCurrency(normalizedBooking.pricing);
@@ -92,31 +93,11 @@ export function createStoreUtils({
     await writeQueueRef.current;
   }
 
-  async function loadAtpStaff() {
-    try {
-      const raw = await readFile(atpStaffPath, "utf8");
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      console.error("[backend] failed to load atp_staff.json:", error?.message || error);
-      return [];
-    }
-  }
-
-  async function persistAtpStaff(atpStaff) {
-    writeQueueRef.current = writeQueueRef.current.then(async () => {
-      await writeFile(atpStaffPath, `${JSON.stringify(atpStaff, null, 2)}\n`, "utf8");
-    });
-    await writeQueueRef.current;
-  }
-
   return {
     ensureStorage,
     readStore,
     persistStore,
     readTours,
-    persistTour,
-    loadAtpStaff,
-    persistAtpStaff
+    persistTour
   };
 }

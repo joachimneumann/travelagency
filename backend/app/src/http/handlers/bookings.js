@@ -21,8 +21,8 @@ export function createBookingHandlers(deps) {
     addActivity,
     persistStore,
     getPrincipal,
-    loadAtpStaff,
-    resolvePrincipalAtpStaffMember,
+    listAssignableKeycloakUsers,
+    keycloakDisplayName,
     canReadAllBookings,
     canAccessBooking,
     buildBookingReadModel,
@@ -38,7 +38,8 @@ export function createBookingHandlers(deps) {
     canChangeBookingStage,
     actorLabel,
     canChangeBookingAssignment,
-    syncBookingAtpStaffFields,
+    syncBookingAssignmentFields,
+    getBookingAssignedKeycloakUserId,
     canEditBooking,
     validateBookingPricingInput,
     convertBookingPricingToBaseCurrency,
@@ -60,6 +61,7 @@ export function createBookingHandlers(deps) {
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,
     rm,
@@ -209,6 +211,50 @@ export function createBookingHandlers(deps) {
     return absolutePath;
   }
 
+  function resolveBookingImageDiskPath(rawRelativePath) {
+    const relativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
+    if (!relativePath) return null;
+    const absolutePath = path.resolve(BOOKING_IMAGES_DIR, relativePath);
+    if (!absolutePath.startsWith(path.resolve(BOOKING_IMAGES_DIR) + path.sep)) return null;
+    return absolutePath;
+  }
+
+  async function processBookingImageToWebp(inputPath, outputPath) {
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await execFile("magick", [
+      inputPath,
+      "-auto-orient",
+      "-resize",
+      "1000x1000>",
+      "-strip",
+      "-quality",
+      "82",
+      outputPath
+    ]);
+  }
+
+  function resolveBookingImageDiskPath(rawRelativePath) {
+    const relativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
+    if (!relativePath) return null;
+    const absolutePath = path.resolve(BOOKING_IMAGES_DIR, relativePath);
+    if (!absolutePath.startsWith(path.resolve(BOOKING_IMAGES_DIR) + path.sep)) return null;
+    return absolutePath;
+  }
+
+  async function processBookingImageToWebp(inputPath, outputPath) {
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await execFile("magick", [
+      inputPath,
+      "-auto-orient",
+      "-resize",
+      "1000x1000>",
+      "-strip",
+      "-quality",
+      "82",
+      outputPath
+    ]);
+  }
+
   async function processBookingPersonImageToWebp(inputPath, outputPath) {
     await mkdir(path.dirname(outputPath), { recursive: true });
     await execFile("magick", [
@@ -290,7 +336,7 @@ export function createBookingHandlers(deps) {
       normalizeText(booking?.name),
       normalizeText(booking?.stage),
       normalizeText(booking?.notes),
-      normalizeText(booking?.atp_staff_name),
+      normalizeText(booking?.assigned_keycloak_user_id),
       ...normalizeStringArray(booking?.destinations),
       ...normalizeStringArray(booking?.travel_styles),
       normalizeText(contact.name),
@@ -328,14 +374,14 @@ export function createBookingHandlers(deps) {
 
   function filterBookings(store, searchParams) {
     const stage = normalizeText(searchParams.get("stage")).toUpperCase();
-    const atpStaffId = normalizeText(searchParams.get("atp_staff"));
+    const assignedKeycloakUserId = normalizeText(searchParams.get("assigned_keycloak_user_id"));
     const rawSearch = normalizeText(searchParams.get("search")).toLowerCase();
     const sort = normalizeText(searchParams.get("sort")) || "created_at_desc";
 
     const items = sortBookings(
       (Array.isArray(store.bookings) ? store.bookings : []).filter((booking) => {
         if (stage && normalizeText(booking.stage).toUpperCase() !== stage) return false;
-        if (atpStaffId && normalizeText(booking.atp_staff) !== atpStaffId) return false;
+        if (assignedKeycloakUserId && getBookingAssignedKeycloakUserId(booking) !== assignedKeycloakUserId) return false;
         if (rawSearch && !getBookingSearchTerms(booking).includes(rawSearch)) return false;
         return true;
       }),
@@ -346,7 +392,7 @@ export function createBookingHandlers(deps) {
       items,
       filters: {
         stage: stage || null,
-        atp_staff: atpStaffId || null,
+        assigned_keycloak_user_id: assignedKeycloakUserId || null,
         search: rawSearch || null
       },
       sort
@@ -556,8 +602,7 @@ export function createBookingHandlers(deps) {
       offer_revision: 0,
       invoices_revision: 0,
       stage: STAGES.NEW,
-      atp_staff: null,
-      atp_staff_name: null,
+      assigned_keycloak_user_id: null,
       service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
       destinations: submission.destinations,
       travel_styles: submission.travel_style,
@@ -589,19 +634,16 @@ export function createBookingHandlers(deps) {
   async function handleListBookings(req, res) {
     const store = await readStore();
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canReadAllBookings(principal) && !staffMember) {
+    if (!canReadAllBookings(principal) && !(Array.isArray(principal?.roles) && principal.roles.includes("atp_staff") && normalizeText(principal?.sub))) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
 
     const requestUrl = new URL(req.url, "http://localhost");
     const { items: filtered, filters, sort } = filterBookings(store, requestUrl.searchParams);
+    const visibleBookings = filtered.filter((booking) => canAccessBooking(principal, booking));
     const visible = await Promise.all(
-      filtered
-        .filter((booking) => canAccessBooking(principal, booking, staffMember))
-        .map((booking) => buildBookingPayload(booking))
+      visibleBookings.map((booking) => buildBookingPayload(booking))
     );
     const paged = paginate(visible, requestUrl.searchParams);
     sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));
@@ -616,9 +658,7 @@ export function createBookingHandlers(deps) {
     }
 
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canAccessBooking(principal, booking, staffMember)) {
+    if (!canAccessBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -643,9 +683,7 @@ export function createBookingHandlers(deps) {
     }
 
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -665,9 +703,7 @@ export function createBookingHandlers(deps) {
     }
 
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canAccessBooking(principal, booking, staffMember)) {
+    if (!canAccessBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -731,9 +767,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canChangeBookingStage(principal, booking, staffMember)) {
+    if (!canChangeBookingStage(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -750,7 +784,7 @@ export function createBookingHandlers(deps) {
     incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
 
-    addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Stage updated to ${nextStage}`);
+    addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Stage updated to ${nextStage}`);
     await persistStore(store);
 
     sendJson(res, 200, await buildBookingDetailResponse(booking));
@@ -772,9 +806,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -794,7 +826,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       nextName ? `Booking name set to ${nextName}` : "Booking name cleared"
     );
     await persistStore(store);
@@ -811,7 +843,7 @@ export function createBookingHandlers(deps) {
       return;
     }
 
-    const atpStaffIdRaw = normalizeText(payload.atp_staff);
+    const assignedKeycloakUserId = normalizeText(payload.assigned_keycloak_user_id);
     const principal = getPrincipal(req);
     const store = await readStore();
     const booking = store.bookings.find((item) => item.id === bookingId);
@@ -825,31 +857,29 @@ export function createBookingHandlers(deps) {
     }
     if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
-    if (!atpStaffIdRaw) {
-      booking.atp_staff = null;
-      booking.atp_staff_name = null;
-      syncBookingAtpStaffFields(booking);
+    if (!assignedKeycloakUserId) {
+      booking.assigned_keycloak_user_id = null;
+      syncBookingAssignmentFields(booking);
       incrementBookingRevision(booking, "core_revision");
       booking.updated_at = nowIso();
-      addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), "AtpStaff unassigned");
+      addActivity(store, booking.id, "ASSIGNMENT_CHANGED", actorLabel(principal, "keycloak_user"), "Keycloak user unassigned");
       await persistStore(store);
       sendJson(res, 200, await buildBookingDetailResponse(booking));
       return;
     }
 
-    const atpStaff = await loadAtpStaff();
-    const assignedStaff = atpStaff.find((member) => member.id === atpStaffIdRaw && member.active);
-    if (!assignedStaff) {
-      sendJson(res, 422, { error: "AtpStaff member not found or inactive" });
+    const assignableUsers = await listAssignableKeycloakUsers().catch(() => []);
+    const assignedUser = assignableUsers.find((user) => user.id === assignedKeycloakUserId && user.active !== false);
+    if (!assignedUser) {
+      sendJson(res, 422, { error: "Keycloak user not found or inactive" });
       return;
     }
 
-    booking.atp_staff = assignedStaff.id;
-    booking.atp_staff_name = assignedStaff.name;
-    syncBookingAtpStaffFields(booking);
+    booking.assigned_keycloak_user_id = assignedUser.id;
+    syncBookingAssignmentFields(booking);
     incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
-    addActivity(store, booking.id, "STAFF_CHANGED", actorLabel(principal, "atp_staff"), `AtpStaff set to ${assignedStaff.name}`);
+    addActivity(store, booking.id, "ASSIGNMENT_CHANGED", actorLabel(principal, "keycloak_user"), `Keycloak user set to ${keycloakDisplayName(assignedUser)}`);
     await persistStore(store);
 
     sendJson(res, 200, await buildBookingDetailResponse(booking));
@@ -871,9 +901,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -892,7 +920,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       `Person created: ${normalizeText(nextPerson.name) || nextPerson.id}`
     );
     await persistStore(store);
@@ -915,9 +943,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -953,7 +979,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       `Person updated: ${normalizeText(mergedPerson.name) || mergedPerson.id}`
     );
     await persistStore(store);
@@ -975,9 +1001,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -998,7 +1022,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       `Person removed: ${normalizeText(removedPerson?.name) || personId}`
     );
     await persistStore(store);
@@ -1012,6 +1036,152 @@ export function createBookingHandlers(deps) {
       return;
     }
     await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+  }
+
+  async function handlePublicBookingImage(req, res, [rawRelativePath]) {
+    const absolutePath = resolveBookingImageDiskPath(rawRelativePath);
+    if (!absolutePath) {
+      sendJson(res, 404, { error: "Not found" });
+      return;
+    }
+    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+  }
+
+  async function handleUploadBookingImage(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+
+    const filename = normalizeText(payload.filename) || `${bookingId}.upload`;
+    const base64 = normalizeText(payload.data_base64);
+    if (!base64) {
+      sendJson(res, 422, { error: "data_base64 is required" });
+      return;
+    }
+
+    const sourceBuffer = Buffer.from(base64, "base64");
+    if (!sourceBuffer.length) {
+      sendJson(res, 422, { error: "Invalid base64 image payload" });
+      return;
+    }
+
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${bookingId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputName = `${bookingId}-${Date.now()}.webp`;
+    const outputRelativePath = `${bookingId}/${outputName}`;
+    const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
+
+    try {
+      await writeFile(tempInputPath, sourceBuffer);
+      await processBookingImageToWebp(tempInputPath, outputPath);
+    } catch (error) {
+      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
+      return;
+    } finally {
+      await rm(tempInputPath, { force: true });
+    }
+
+    booking.image = `/public/v1/booking-images/${outputRelativePath}`;
+    incrementBookingRevision(booking, "core_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
+      "Booking image updated"
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
+  async function handlePublicBookingImage(req, res, [rawRelativePath]) {
+    const absolutePath = resolveBookingImageDiskPath(rawRelativePath);
+    if (!absolutePath) {
+      sendJson(res, 404, { error: "Not found" });
+      return;
+    }
+    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+  }
+
+  async function handleUploadBookingImage(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+
+    const filename = normalizeText(payload.filename) || `${bookingId}.upload`;
+    const base64 = normalizeText(payload.data_base64);
+    if (!base64) {
+      sendJson(res, 422, { error: "data_base64 is required" });
+      return;
+    }
+
+    const sourceBuffer = Buffer.from(base64, "base64");
+    if (!sourceBuffer.length) {
+      sendJson(res, 422, { error: "Invalid base64 image payload" });
+      return;
+    }
+
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${bookingId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputName = `${bookingId}-${Date.now()}.webp`;
+    const outputRelativePath = `${bookingId}/${outputName}`;
+    const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
+
+    try {
+      await writeFile(tempInputPath, sourceBuffer);
+      await processBookingImageToWebp(tempInputPath, outputPath);
+    } catch (error) {
+      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
+      return;
+    } finally {
+      await rm(tempInputPath, { force: true });
+    }
+
+    booking.image = `/public/v1/booking-images/${outputRelativePath}`;
+    incrementBookingRevision(booking, "core_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
+      "Booking image updated"
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
   }
 
   async function handleUploadBookingPersonPhoto(req, res, [bookingId, personId]) {
@@ -1030,9 +1200,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1084,7 +1252,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       `Photo uploaded for ${normalizeText(persons[personIndex].name) || "person"}`
     );
     await persistStore(store);
@@ -1107,9 +1275,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1129,7 +1295,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "NOTE_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       nextNotes ? "Booking note updated" : "Booking note cleared"
     );
     await persistStore(store);
@@ -1153,9 +1319,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1182,7 +1346,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "PRICING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       "Booking commercials updated"
     );
     await persistStore(store);
@@ -1206,9 +1370,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1237,7 +1399,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "OFFER_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       "Booking offer updated"
     );
     await persistStore(store);
@@ -1330,9 +1492,7 @@ export function createBookingHandlers(deps) {
       return;
     }
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canAccessBooking(principal, booking, staffMember)) {
+    if (!canAccessBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1367,15 +1527,13 @@ export function createBookingHandlers(deps) {
       sendJson(res, 404, { error: "Booking not found" });
       return;
     }
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
     if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
 
-    const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), detail);
+    const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), detail);
     incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
     await persistStore(store);
@@ -1410,9 +1568,7 @@ export function createBookingHandlers(deps) {
       return;
     }
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canAccessBooking(principal, booking, staffMember)) {
+    if (!canAccessBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1440,9 +1596,7 @@ export function createBookingHandlers(deps) {
       return;
     }
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1482,7 +1636,7 @@ export function createBookingHandlers(deps) {
     store.invoices.push(invoice);
     incrementBookingRevision(booking, "invoices_revision");
     booking.updated_at = now;
-    addActivity(store, booking.id, "INVOICE_UPDATED", actorLabel(principal, normalizeText(payload.actor) || "atp_staff"), `Invoice ${invoice.invoice_number} created`);
+    addActivity(store, booking.id, "INVOICE_UPDATED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Invoice ${invoice.invoice_number} created`);
     await persistStore(store);
     sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingPayload(booking) });
   }
@@ -1503,9 +1657,7 @@ export function createBookingHandlers(deps) {
       return;
     }
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!canEditBooking(principal, booking, staffMember)) {
+    if (!canEditBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1581,7 +1733,7 @@ export function createBookingHandlers(deps) {
       store,
       booking.id,
       "INVOICE_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "atp_staff"),
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
       payload.sent_to_recipient !== undefined
         ? (payload.sent_to_recipient ? `Invoice ${invoice.invoice_number} marked as sent` : `Invoice ${invoice.invoice_number} marked as not sent`)
         : `Invoice ${invoice.invoice_number} updated`
@@ -1600,9 +1752,7 @@ export function createBookingHandlers(deps) {
     }
     const booking = store.bookings.find((item) => item.id === invoice.booking_id) || null;
     const principal = getPrincipal(req);
-    const atpStaff = await loadAtpStaff();
-    const staffMember = resolvePrincipalAtpStaffMember(principal, atpStaff);
-    if (!booking || !canAccessBooking(principal, booking, staffMember)) {
+    if (!booking || !canAccessBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
@@ -1620,8 +1770,10 @@ export function createBookingHandlers(deps) {
     handleGetBooking,
     handleDeleteBooking,
     handleListBookingChatEvents,
+    handlePublicBookingImage,
     handlePublicBookingPersonPhoto,
     handlePatchBookingName,
+    handleUploadBookingImage,
     handlePatchBookingStage,
     handlePatchBookingOwner,
     handleCreateBookingPerson,

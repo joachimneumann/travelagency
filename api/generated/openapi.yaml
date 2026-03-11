@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-11T00:55:30Z
+# 2026-03-11T11:02:30Z
 
 ---
 openapi: 3.1.0
@@ -25,7 +25,6 @@ tags:
 - name: Auth
 - name: Bookings
 - name: Offers
-- name: Staff
 - name: Tours
 components:
   securitySchemes:
@@ -3354,41 +3353,6 @@ components:
     MoneyAmount:
       type: object
       description: Defined in model (referenced as MoneyAmount).
-    ATPStaff:
-      type: object
-      required:
-      - id
-      - preferred_username
-      properties:
-        id:
-          type: string
-        preferred_username:
-          type: string
-        display_name:
-          type: string
-          nullable: true
-        email:
-          type: string
-          format: email
-          nullable: true
-        roles:
-          type: array
-          items:
-            "$ref": "#/components/schemas/ATPStaffRole"
-        staff_id:
-          type: string
-          nullable: true
-        active:
-          type: boolean
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-          nullable: true
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
     Tour:
       type: object
       required:
@@ -4011,9 +3975,12 @@ components:
         name:
           type: string
           nullable: true
+        image:
+          type: string
+          nullable: true
         stage:
           "$ref": "#/components/schemas/BookingStage"
-        atp_staff:
+        assigned_keycloak_user_id:
           type: string
           nullable: true
         core_revision:
@@ -4087,7 +4054,7 @@ components:
         stage:
           type: string
           nullable: true
-        atp_staff:
+        assigned_keycloak_user_id:
           type: string
           nullable: true
         search:
@@ -4177,7 +4144,7 @@ components:
           "$ref": "#/components/schemas/Tour"
         options:
           "$ref": "#/components/schemas/TourOptions"
-    AtpStaffDirectoryEntry:
+    KeycloakUserDirectoryEntry:
       type: object
       required:
       - id
@@ -4190,19 +4157,10 @@ components:
         active:
           type: boolean
           nullable: true
-        usernames:
-          type: array
-          items:
-            type: string
-        destinations:
-          type: array
-          items:
-            type: string
-        languages:
-          type: array
-          items:
-            type: string
-    AtpStaffListResponse:
+        username:
+          type: string
+          nullable: true
+    KeycloakUserListResponse:
       type: object
       required:
       - total
@@ -4210,16 +4168,9 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/AtpStaffDirectoryEntry"
+            "$ref": "#/components/schemas/KeycloakUserDirectoryEntry"
         total:
           type: integer
-    AtpStaffResponse:
-      type: object
-      required:
-      - atp_staff
-      properties:
-        atp_staff:
-          "$ref": "#/components/schemas/AtpStaffDirectoryEntry"
     BookingDeleteResponse:
       type: object
       required:
@@ -4477,6 +4428,15 @@ components:
         sub:
           type: string
           nullable: true
+        name:
+          type: string
+          nullable: true
+        given_name:
+          type: string
+          nullable: true
+        family_name:
+          type: string
+          nullable: true
         email:
           type: string
           format: email
@@ -4646,6 +4606,25 @@ components:
         actor:
           type: string
           nullable: true
+    BookingImageUploadRequest:
+      type: object
+      required:
+      - filename
+      - data_base64
+      properties:
+        filename:
+          type: string
+        mime_type:
+          type: string
+          nullable: true
+        data_base64:
+          type: string
+        expected_core_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
     BookingStageUpdateRequest:
       type: object
       required:
@@ -4666,7 +4645,7 @@ components:
         expected_core_revision:
           type: integer
           nullable: true
-        atp_staff:
+        assigned_keycloak_user_id:
           type: string
           nullable: true
         actor:
@@ -4833,28 +4812,6 @@ components:
         sent_to_recipient:
           type: boolean
           nullable: true
-    AtpStaffCreateRequest:
-      type: object
-      required:
-      - name
-      properties:
-        name:
-          type: string
-        active:
-          type: boolean
-          nullable: true
-        usernames:
-          type: array
-          items:
-            type: string
-        destinations:
-          type: array
-          items:
-            type: string
-        languages:
-          type: array
-          items:
-            type: string
     TourUpsertRequest:
       type: object
       required: []
@@ -5173,6 +5130,51 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/image":
+    post:
+      operationId: booking_image
+      summary: Booking Image
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingImageUploadRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
           content:
             application/json:
               schema:
@@ -5804,12 +5806,12 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/atp_staff":
+  "/api/v1/keycloak_users":
     get:
-      operationId: atp_staff
-      summary: Atp Staff
+      operationId: keycloak_users
+      summary: Keycloak Users
       tags:
-      - Staff
+      - Auth
       security:
       - bearerAuth: []
       parameters: []
@@ -5819,46 +5821,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/AtpStaffListResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-    post:
-      operationId: atp_staff_create
-      summary: Atp Staff Create
-      tags:
-      - Staff
-      security:
-      - bearerAuth: []
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/AtpStaffCreateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/AtpStaffResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/AtpStaffResponse"
+                "$ref": "#/components/schemas/KeycloakUserListResponse"
         '401':
           description: Unauthorized
           content:

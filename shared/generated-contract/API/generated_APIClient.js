@@ -30,6 +30,8 @@ case "booking_chat":
   return RequestFactory.bookingChatRequest(options);
 case "booking_name":
   return RequestFactory.bookingNameRequest(options);
+case "booking_image":
+  return RequestFactory.bookingImageRequest(options);
 case "booking_stage":
   return RequestFactory.bookingStageRequest(options);
 case "booking_owner":
@@ -60,10 +62,8 @@ case "booking_invoice_create":
   return RequestFactory.bookingInvoiceCreateRequest(options);
 case "booking_invoice_update":
   return RequestFactory.bookingInvoiceUpdateRequest(options);
-case "atp_staff":
-  return RequestFactory.atpStaffRequest(options);
-case "atp_staff_create":
-  return RequestFactory.atpStaffCreateRequest(options);
+case "keycloak_users":
+  return RequestFactory.keycloakUsersRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_create":

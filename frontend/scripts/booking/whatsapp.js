@@ -206,10 +206,7 @@ export function createBookingWhatsAppController({
                 </div>
               </div>
               <a class="wa-chat-open-btn" id="wa_chat_open_btn" href="#" target="_blank" rel="noopener" aria-label="Open in WhatsApp" title="Open in WhatsApp">
-                <svg class="wa-chat-open-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path d="M20 11.46C20 6.77 16.19 3 11.5 3S3 6.77 3 11.46c0 1.88.62 3.61 1.66 5L3.7 20.3l3.97-1.03a8.47 8.47 0 0 0 3.83.92c4.69 0 8.5-3.77 8.5-8.73Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M9.05 8.54c.18-.4.36-.4.53-.4h.45c.14 0 .37.05.57.48.2.43.66 1.47.72 1.57.06.1.1.24.02.39-.08.14-.12.24-.24.37-.12.13-.26.29-.37.39-.12.1-.24.22-.1.43.13.22.6.97 1.29 1.58.88.77 1.62 1.01 1.85 1.12.22.11.35.1.47-.06.13-.15.54-.62.69-.84.15-.21.3-.18.5-.11.2.07 1.29.62 1.51.73.22.11.37.17.42.27.05.1.05.61-.14 1.2-.19.59-1.12 1.13-1.55 1.19-.42.06-.95.09-1.53-.11-.36-.12-.81-.26-1.39-.51-2.43-1.05-4.02-3.63-4.14-3.8-.12-.16-.99-1.31-.99-2.5 0-1.19.62-1.77.84-2.01Z" fill="currentColor"/>
-                </svg>
+                <img class="wa-chat-open-logo" src="assets/img/WhatsApp.png" alt="" />
               </a>
             </div>
             <div class="wa-chat-canvas">
@@ -311,7 +308,9 @@ export function createBookingWhatsAppController({
   }
 
   function buildChatEntries(booking) {
-    const persons = getBookingPersons(booking);
+    const persons = getBookingPersons(booking).filter((person) =>
+      Array.isArray(person?.phone_numbers) && person.phone_numbers.some((phone) => normalizeText(phone))
+    );
     const conversations = (Array.isArray(state.conversations) ? state.conversations : [])
       .filter((conversation) => String(conversation?.channel || "").toLowerCase() === "whatsapp");
     const conversationIds = new Set(conversations.map((conversation) => String(conversation?.id || "")).filter(Boolean));

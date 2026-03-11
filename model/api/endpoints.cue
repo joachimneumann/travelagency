@@ -122,6 +122,21 @@ package api
 		}]
 	},
 	{
+		key:           "booking_image"
+		path:          "/api/v1/bookings/{booking_id}/image"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingImageUploadRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_stage"
 		path:          "/api/v1/bookings/{booking_id}/stage"
 		method:        "PATCH"
@@ -359,21 +374,12 @@ package api
 		}]
 	},
 	{
-		key:           "atp_staff"
-		path:          "/api/v1/atp_staff"
+		key:           "keycloak_users"
+		path:          "/api/v1/keycloak_users"
 		method:        "GET"
-		tag:           "Staff"
+		tag:           "Auth"
 		authenticated: true
-		responseType:  "AtpStaffListResponse"
-	},
-	{
-		key:           "atp_staff_create"
-		path:          "/api/v1/atp_staff"
-		method:        "POST"
-		tag:           "Staff"
-		authenticated: true
-		requestType:   "AtpStaffCreateRequest"
-		responseType:  "AtpStaffResponse"
+		responseType:  "KeycloakUserListResponse"
 	},
 	{
 		key:           "tours"

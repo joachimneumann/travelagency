@@ -19,9 +19,32 @@ export function resolveBackendSectionHref(section) {
   return `backend.html?section=${encodeURIComponent(section || "bookings")}`;
 }
 
+function hasAnyRole(roles, ...expected) {
+  return expected.some((role) => roles.includes(role));
+}
+
+function applyNavPermissions(mount, roles) {
+  const resolvedRoles = Array.isArray(roles) ? roles : [];
+  const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant");
+  const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager");
+  mount
+    .querySelectorAll(".backend-section-nav__item[data-backend-section]")
+    .forEach((button) => {
+      const section = button.getAttribute("data-backend-section");
+      const visible =
+        section === "bookings" ||
+        section === "persons" ||
+        (section === "tours" && canReadTours) ||
+        (section === "settings" && canReadSettings);
+      button.hidden = !visible;
+      button.classList.toggle("is-hidden", !visible);
+    });
+}
+
 export function mountBackendNav(mount, options = {}) {
   if (!mount) return;
   const currentSection = options.currentSection || "";
+  const apiBase = String(window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 
   mount.innerHTML = `
     <nav class="nav backend-main-nav" aria-label="Backend navigation">
@@ -48,6 +71,8 @@ export function mountBackendNav(mount, options = {}) {
     </nav>
   `;
 
+  applyNavPermissions(mount, []);
+
   if (currentSection) {
     const activeButton = mount.querySelector(`.backend-section-nav__item[data-backend-section="${currentSection}"]`);
     if (activeButton) {
@@ -58,9 +83,20 @@ export function mountBackendNav(mount, options = {}) {
 
   mount.querySelectorAll(".backend-section-nav__item[data-backend-section]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (button.hidden) return;
       const section = button.getAttribute("data-backend-section");
       if (!section) return;
       window.location.href = resolveBackendSectionHref(section);
     });
   });
+
+  fetch(`${apiBase}/auth/me`, { credentials: "include" })
+    .then((response) => response.json().catch(() => null))
+    .then((payload) => {
+      const roles = Array.isArray(payload?.user?.roles) ? payload.user.roles : [];
+      applyNavPermissions(mount, roles);
+    })
+    .catch(() => {
+      applyNavPermissions(mount, []);
+    });
 }

@@ -10,10 +10,10 @@ import {
   GENERATED_OFFER_CATEGORIES as GENERATED_OFFER_CATEGORY_LIST
 } from "../../Generated/Models/generated_Booking.js";
 import {
-  atpStaffRequest,
   bookingActivitiesRequest,
   bookingDeleteRequest,
   bookingDetailRequest,
+  bookingImageRequest,
   bookingInvoiceCreateRequest,
   bookingInvoiceUpdateRequest,
   bookingInvoicesRequest,
@@ -27,7 +27,9 @@ import {
   bookingPersonUpdateRequest,
   bookingPricingRequest,
   bookingStageRequest,
+  keycloakUsersRequest,
   offerExchangeRatesRequest,
+  tourDetailRequest,
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { normalizeLocalDateTimeToIso } from "../../../shared/js/datetime.js";
 import {
@@ -40,6 +42,13 @@ import {
 } from "../shared/api.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
+import {
+  getBookingPersons,
+  getPersonInitials,
+  getRepresentativeTraveler,
+  isTravelingPerson,
+  normalizeStringList
+} from "../shared/booking_persons.js";
 import { SHARED_FIELD_DEFS } from "../../../shared/generated-contract/Models/generated_SchemaRuntime.js";
 
 const qs = new URLSearchParams(window.location.search);
@@ -76,32 +85,27 @@ const ROLES = Object.freeze({
 const BOOKING_PERSON_ROLE_OPTIONS = Object.freeze(
   (BOOKING_PERSON_SCHEMA.fields.find((field) => field.name === "roles")?.options || []).map((option) => option.value)
 );
-const HERO_PERSON_ROLE_PRIORITY = Object.freeze([
-  "primary_contact",
-  "decision_maker",
-  "payer",
-  "traveler",
-  "assistant",
-  "other"
-]);
-
 const COUNTRY_CODE_OPTIONS = Object.freeze(SHARED_FIELD_DEFS.FIELD_6?.options || []);
 
 const state = {
   id: qs.get("id") || "",
   user: "",
+  authUser: null,
   roles: [],
   permissions: {
     canChangeAssignment: false,
+    canReadAssignmentDirectory: false,
     canChangeStage: false,
     canEditBooking: false
   },
   booking: null,
+  tour_image: "",
+  tour_image_tour_id: "",
   personDrafts: [],
   active_person_index: -1,
   active_person_id: "",
   active_person_document_type: "passport",
-  staff: [],
+  keycloakUsers: [],
   invoices: [],
   selectedInvoiceId: "",
   originalNote: "",
@@ -145,6 +149,8 @@ const els = {
   titleInput: document.getElementById("detail_title_input"),
   titleEditBtn: document.getElementById("detail_title_edit_btn"),
   subtitle: document.getElementById("detail_sub_title"),
+  heroPhotoBtn: document.getElementById("booking_hero_photo_btn"),
+  heroPhotoInput: document.getElementById("booking_hero_photo_input"),
   heroImage: document.getElementById("booking_hero_image"),
   heroInitials: document.getElementById("booking_hero_initials"),
   heroCopyBtn: document.getElementById("booking_hero_copy_btn"),
@@ -290,11 +296,15 @@ window.addEventListener("beforeunload", () => {
   bookingWhatsApp?.stopAutoRefresh();
 });
 
+function closeBookingDetailScreen() {
+  const fallbackHref = normalizeText(els.back?.href) || "backend.html";
+  window.location.href = fallbackHref;
+}
+
 async function init() {
   const backHref = "backend.html";
 
   if (els.homeLink) els.homeLink.href = backHref;
-  if (els.back) els.back.href = backHref;
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}/index.html`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
@@ -319,6 +329,13 @@ async function init() {
   populateOfferCategorySelect(els.offer_component_category_select);
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
+  if (els.heroPhotoBtn) els.heroPhotoBtn.addEventListener("click", triggerBookingPhotoPicker);
+  if (els.heroPhotoInput) {
+    els.heroPhotoInput.addEventListener("change", async () => {
+      await uploadBookingPhoto();
+    });
+  }
+  if (els.back) els.back.addEventListener("click", closeBookingDetailScreen);
   if (els.titleEditBtn) els.titleEditBtn.addEventListener("click", startBookingTitleEdit);
   if (els.titleInput) {
     els.titleInput.addEventListener("keydown", handleBookingTitleInputKeydown);
@@ -360,6 +377,7 @@ async function init() {
   }
   if (els.personModalCloseBtn) els.personModalCloseBtn.addEventListener("click", closePersonModal);
   window.addEventListener("keydown", handlePersonModalKeydown);
+  document.addEventListener("keydown", handleBookingDetailKeydown, true);
   if (els.invoice_select) els.invoice_select.addEventListener("change", onInvoiceSelectChange);
   if (els.invoice_panel) {
     const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
@@ -408,15 +426,18 @@ function bindSectionNavigation(activeSection) {
 
 async function loadBookingPage() {
   clearStatus();
-  const requests = [fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)];
-  if (state.permissions.canChangeAssignment) {
-    requests.push(fetchApi(atpStaffRequest({ baseURL: apiOrigin, query: { active: true } }).url));
-  }
-  const [bookingPayload, staffPayload] = await Promise.all(requests);
+  const requests = [
+    fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url),
+    state.permissions.canReadAssignmentDirectory
+      ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
+      : Promise.resolve(null)
+  ];
+  const [bookingPayload, usersPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
 
   applyBookingPayload(bookingPayload);
-  state.staff = Array.isArray(staffPayload?.items) ? staffPayload.items : [];
+  state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
+  await ensureTourImageLoaded();
 
   renderBookingHeader();
   renderBookingData();
@@ -442,6 +463,11 @@ function renderBookingHeader() {
     els.titleEditBtn.hidden = !state.permissions.canEditBooking;
     els.titleEditBtn.disabled = !state.permissions.canEditBooking;
   }
+  if (els.heroPhotoBtn) {
+    els.heroPhotoBtn.disabled = !state.permissions.canEditBooking;
+    els.heroPhotoBtn.classList.toggle("is-editable", state.permissions.canEditBooking);
+    els.heroPhotoBtn.setAttribute("aria-label", state.permissions.canEditBooking ? "Change booking picture" : "Booking picture");
+  }
   if (els.subtitle) {
     const bookingId = normalizeText(state.booking.id);
     const shortId = bookingId ? bookingId.slice(-6) : "-";
@@ -456,13 +482,10 @@ function renderBookingHeader() {
 
 function renderBookingHeroImage() {
   if (!els.heroImage) return;
-  const persons = getBookingPersons(state.booking);
-  const preferredPhotoPerson = selectPreferredHeroPerson(persons, (person) => normalizeText(person.photo_ref));
-  const preferredNamedPerson = selectPreferredHeroPerson(persons, (person) => normalizeText(person.name));
-
-  if (preferredPhotoPerson) {
-    els.heroImage.src = resolvePersonPhotoSrc(preferredPhotoPerson.photo_ref);
-    els.heroImage.alt = preferredPhotoPerson.name ? `${preferredPhotoPerson.name}` : "";
+  const bookingImage = normalizeText(state.booking?.image);
+  if (bookingImage) {
+    els.heroImage.src = resolveBookingImageSrc(bookingImage);
+    els.heroImage.alt = normalizeText(state.booking?.name) || "Booking picture";
     els.heroImage.hidden = false;
     els.heroImage.style.display = "block";
     if (els.heroInitials) els.heroInitials.hidden = true;
@@ -470,11 +493,33 @@ function renderBookingHeroImage() {
     return;
   }
 
-  if (preferredNamedPerson) {
+  if (normalizeText(state.tour_image)) {
+    els.heroImage.src = resolveBookingImageSrc(state.tour_image);
+    els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || "Tour picture";
+    els.heroImage.hidden = false;
+    els.heroImage.style.display = "block";
+    if (els.heroInitials) els.heroInitials.hidden = true;
+    if (els.heroInitials) els.heroInitials.style.display = "none";
+    return;
+  }
+
+  const representativeTraveler = getRepresentativeTraveler(state.booking);
+
+  if (representativeTraveler && normalizeText(representativeTraveler.photo_ref)) {
+    els.heroImage.src = resolvePersonPhotoSrc(representativeTraveler.photo_ref);
+    els.heroImage.alt = representativeTraveler.name ? `${representativeTraveler.name}` : "";
+    els.heroImage.hidden = false;
+    els.heroImage.style.display = "block";
+    if (els.heroInitials) els.heroInitials.hidden = true;
+    if (els.heroInitials) els.heroInitials.style.display = "none";
+    return;
+  }
+
+  if (representativeTraveler && normalizeText(representativeTraveler.name)) {
     els.heroImage.hidden = true;
     els.heroImage.style.display = "none";
     if (els.heroInitials) {
-      els.heroInitials.textContent = getPersonInitials(preferredNamedPerson.name);
+      els.heroInitials.textContent = getPersonInitials(representativeTraveler.name);
       els.heroInitials.hidden = false;
       els.heroInitials.style.display = "block";
     }
@@ -491,6 +536,11 @@ function renderBookingHeroImage() {
 
 function resolvePersonPhotoSrc(photoRef) {
   const imagePath = normalizeText(photoRef) || "assets/img/profile_person.png";
+  return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
+}
+
+function resolveBookingImageSrc(imageRef) {
+  const imagePath = normalizeText(imageRef) || "assets/img/profile_person.png";
   return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
 }
 
@@ -617,11 +667,27 @@ function renderActionControls() {
   }
 
   if (els.ownerSelect) {
-    const options = ['<option value="">Unassigned</option>']
-      .concat((state.staff || []).map((staff) => `<option value="${escapeHtml(staff.id)}">${escapeHtml(staff.name)}</option>`))
-      .join("");
+    const currentOwnerId = normalizeText(state.booking.assigned_keycloak_user_id);
+    const knownOwners = new Map((state.keycloakUsers || []).map((user) => [String(user.id || ""), user]));
+    const currentOwner = knownOwners.get(currentOwnerId) || resolveCurrentAuthKeycloakUser(currentOwnerId);
+    const currentOwnerName = displayKeycloakUser(currentOwner) || currentOwnerId;
+    if (currentOwnerId && currentOwnerName && !knownOwners.has(currentOwnerId)) {
+      knownOwners.set(currentOwnerId, {
+        id: currentOwnerId,
+        name: displayKeycloakUser(currentOwner) || currentOwnerId,
+        username: normalizeText(currentOwner?.username) || null
+      });
+    }
+
+    const options = state.permissions.canChangeAssignment
+      ? ['<option value="">Unassigned</option>']
+          .concat([...knownOwners.values()].map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(displayKeycloakUser(user) || user.id)}</option>`))
+          .join("")
+      : currentOwnerId
+        ? `<option value="${escapeHtml(currentOwnerId)}">${escapeHtml(currentOwnerName || "Assigned user")}</option>`
+        : '<option value="">Unassigned</option>';
     els.ownerSelect.innerHTML = options;
-    els.ownerSelect.value = state.booking.atp_staff || "";
+    els.ownerSelect.value = currentOwnerId || "";
     els.ownerSelect.disabled = !state.permissions.canChangeAssignment;
   }
 
@@ -644,7 +710,16 @@ function renderActionControls() {
 
 function applyBookingPayload(payload = {}) {
   const active_person_id = state.active_person_id;
+  const previousTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
   state.booking = payload.booking || state.booking || null;
+  const nextTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
+  if (normalizeText(state.booking?.image)) {
+    state.tour_image = "";
+    state.tour_image_tour_id = "";
+  } else if (nextTourId !== previousTourId) {
+    state.tour_image = "";
+    state.tour_image_tour_id = "";
+  }
   state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
   if (active_person_id) {
     state.active_person_index = state.personDrafts.findIndex((person) => person.id === active_person_id);
@@ -658,22 +733,27 @@ function applyBookingPayload(payload = {}) {
   markPersonsSnapshotClean();
 }
 
-function getBookingPersons(booking) {
-  if (!Array.isArray(booking?.persons)) return [];
-  return booking.persons
-    .filter((person) => person && typeof person === "object" && !Array.isArray(person))
-    .map((person, index) => ({
-      ...person,
-      id: normalizeText(person.id) || `person_${index + 1}`,
-      name: normalizeText(person.name) || "",
-      roles: normalizeStringList(person.roles),
-      emails: collectPersonEmails(person),
-      phone_numbers: collectPersonPhoneNumbers(person)
-    }));
-}
+async function ensureTourImageLoaded() {
+  if (!state.booking) return;
+  if (normalizeText(state.booking.image)) {
+    state.tour_image = "";
+    state.tour_image_tour_id = "";
+    return;
+  }
+  const tourId = normalizeText(state.booking?.web_form_submission?.tour_id);
+  if (!tourId) {
+    state.tour_image = "";
+    state.tour_image_tour_id = "";
+    return;
+  }
+  if (state.tour_image_tour_id === tourId) return;
 
-function normalizeStringList(values) {
-  return Array.from(new Set((Array.isArray(values) ? values : []).map((value) => normalizeText(value)).filter(Boolean)));
+  const request = tourDetailRequest({ baseURL: apiOrigin, params: { tour_id: tourId } });
+  const payload = await fetchApi(request.url);
+  if (!payload?.tour) return;
+  if (normalizeText(state.booking?.web_form_submission?.tour_id) !== tourId) return;
+  state.tour_image_tour_id = tourId;
+  state.tour_image = normalizeText(payload.tour.image) || "";
 }
 
 function collectPersonEmails(person) {
@@ -708,10 +788,6 @@ function getSubmittedContact(booking) {
 function getPrimaryContact(booking) {
   const persons = getBookingPersons(booking);
   return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
-}
-
-function isTravelingPerson(person) {
-  return normalizeStringList(person?.roles).includes("traveler");
 }
 
 function getDisplayedTravelerCount() {
@@ -967,28 +1043,6 @@ function getPersonFooterRoleLabel(person) {
     return ["Not traveling", ...roleLabels].join(", ");
   }
   return roleLabels.join(", ");
-}
-
-function getHeroPersonRoleRank(person) {
-  const roles = normalizeStringList(person?.roles);
-  const rank = HERO_PERSON_ROLE_PRIORITY.findIndex((role) => roles.includes(role));
-  return rank >= 0 ? rank : HERO_PERSON_ROLE_PRIORITY.length;
-}
-
-function selectPreferredHeroPerson(persons, predicate) {
-  return [...(Array.isArray(persons) ? persons : [])]
-    .filter((person) => predicate(person))
-    .sort((left, right) => getHeroPersonRoleRank(left) - getHeroPersonRoleRank(right))[0] || null;
-}
-
-function getPersonInitials(name) {
-  const parts = String(name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-  if (!parts.length) return "P";
-  return parts.map((part) => part.charAt(0).toUpperCase()).join("");
 }
 
 function serializePersonDrafts(drafts = state.personDrafts) {
@@ -1310,6 +1364,15 @@ function handlePersonModalKeydown(event) {
   void closePersonModal();
 }
 
+function handleBookingDetailKeydown(event) {
+  if (event.key !== "Escape" || event.defaultPrevented) return;
+  if (els.personModal?.hidden === false) return;
+  if (!els.titleInput?.hidden) return;
+  if (event.target === els.titleInput) return;
+  event.preventDefault();
+  closeBookingDetailScreen();
+}
+
 function renderPersonModal() {
   if (!els.personModal) return;
   const draft = state.personDrafts[state.active_person_index];
@@ -1619,6 +1682,38 @@ async function uploadPersonPhoto(index, input = els.personModalPhotoInput) {
   renderActionControls();
   renderPersonsEditor();
   if (state.active_person_index >= 0) openPersonModal(state.active_person_index);
+}
+
+function triggerBookingPhotoPicker() {
+  if (!state.permissions.canEditBooking) return;
+  els.heroPhotoInput?.click();
+}
+
+async function uploadBookingPhoto() {
+  if (!state.permissions.canEditBooking || !state.booking) return;
+  const file = els.heroPhotoInput?.files?.[0] || null;
+  if (!file) return;
+  const base64 = await fileToBase64(file);
+  const request = bookingImageRequest({
+    baseURL: apiOrigin,
+    params: { booking_id: state.booking.id }
+  });
+  const result = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: {
+      expected_core_revision: getBookingRevision("core_revision"),
+      filename: file.name,
+      data_base64: base64,
+      actor: state.user
+    }
+  });
+  if (els.heroPhotoInput) els.heroPhotoInput.value = "";
+  if (!result?.booking) return;
+  applyBookingPayload(result);
+  renderBookingHeader();
+  renderBookingData();
+  renderActionControls();
+  renderPersonsEditor();
 }
 
 async function fileToBase64(file) {
@@ -2252,7 +2347,7 @@ async function saveOwner() {
     method: request.method,
     body: {
       expected_core_revision: getBookingRevision("core_revision"),
-      atp_staff: els.ownerSelect.value || null,
+      assigned_keycloak_user_id: els.ownerSelect.value || null,
       actor: state.user
     }
   });
@@ -3197,10 +3292,12 @@ async function loadAuthStatus() {
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
+      state.authUser = null;
       if (els.userLabel) els.userLabel.textContent = "";
       return;
     }
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+    state.authUser = payload.user || null;
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
     state.user = user || "";
     if (els.userLabel) {
@@ -3208,14 +3305,32 @@ async function loadAuthStatus() {
     }
     state.permissions = {
       canChangeAssignment: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
-      canChangeStage: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
+      canReadAssignmentDirectory: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT),
+      canChangeStage: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF),
       canEditBooking: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF)
     };
   } catch {
     state.user = "";
+    state.authUser = null;
     if (els.userLabel) els.userLabel.textContent = "";
     // leave defaults
   }
+}
+
+function displayKeycloakUser(user) {
+  if (!user || typeof user !== "object") return "";
+  return normalizeText(user.name) || normalizeText(user.username) || normalizeText(user.id) || "";
+}
+
+function resolveCurrentAuthKeycloakUser(expectedId = "") {
+  const authUserId = normalizeText(state.authUser?.sub);
+  if (!authUserId) return null;
+  if (expectedId && authUserId !== normalizeText(expectedId)) return null;
+  return {
+    id: authUserId,
+    name: normalizeText(state.authUser?.name) || null,
+    username: normalizeText(state.authUser?.preferred_username) || null
+  };
 }
 
 function hasAnyRole(...roles) {

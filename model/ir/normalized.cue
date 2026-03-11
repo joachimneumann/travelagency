@@ -18,7 +18,7 @@ import (
 
 #TypeDefinition: {
 	name:       string & !=""
-	domain:     "currency" | "atp_staff" | "booking" | "aux" | "api"
+	domain:     "currency" | "booking" | "aux" | "api"
 	module:     "entities" | "api" | "common" | "enums"
 	sourceType: string & !=""
 	fields: [...#FieldDefinition]
@@ -56,23 +56,6 @@ IR: {
 	}
 
 		types: [
-			{
-				name:       "ATPStaff"
-				domain:     "atp_staff"
-				module:     "entities"
-				sourceType: "entities.#ATPStaff"
-				fields: [
-					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-					{name: "preferred_username", kind: "scalar", typeName: "string", required: true},
-					{name: "display_name", kind: "scalar", typeName: "string", required: false},
-					{name: "email", kind: "scalar", typeName: "Email", required: false},
-					{name: "roles", kind: "enum", typeName: "ATPStaffRole", required: true, isArray: true},
-					{name: "staff_id", kind: "scalar", typeName: "Identifier", required: false},
-					{name: "active", kind: "scalar", typeName: "bool", required: false},
-					{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
-					{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
-				]
-			},
 			{
 				name:       "Tour"
 				domain:     "aux"
@@ -383,8 +366,9 @@ IR: {
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 					{name: "name", kind: "scalar", typeName: "string", required: false},
+					{name: "image", kind: "scalar", typeName: "string", required: false},
 					{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
-					{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "core_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "persons_revision", kind: "scalar", typeName: "int", required: false},
@@ -414,7 +398,7 @@ IR: {
 				sourceType: "api.#BookingListFilters"
 				fields: [
 					{name: "stage", kind: "scalar", typeName: "string", required: false},
-					{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "search", kind: "scalar", typeName: "string", required: false},
 				]
 			},
@@ -485,36 +469,25 @@ IR: {
 				]
 			},
 			{
-				name:       "AtpStaffDirectoryEntry"
+				name:       "KeycloakUserDirectoryEntry"
 				domain:     "api"
 				module:     "api"
-				sourceType: "api.#AtpStaffDirectoryEntry"
+				sourceType: "api.#KeycloakUserDirectoryEntry"
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 					{name: "name", kind: "scalar", typeName: "string", required: true},
 					{name: "active", kind: "scalar", typeName: "bool", required: false},
-					{name: "usernames", kind: "scalar", typeName: "string", required: false, isArray: true},
-					{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-					{name: "languages", kind: "scalar", typeName: "string", required: false, isArray: true},
+					{name: "username", kind: "scalar", typeName: "string", required: false},
 				]
 			},
 			{
-				name:       "AtpStaffListResponse"
+				name:       "KeycloakUserListResponse"
 				domain:     "api"
 				module:     "api"
-				sourceType: "api.#AtpStaffListResponse"
+				sourceType: "api.#KeycloakUserListResponse"
 				fields: [
-					{name: "items", kind: "transport", typeName: "AtpStaffDirectoryEntry", required: true, isArray: true},
+					{name: "items", kind: "transport", typeName: "KeycloakUserDirectoryEntry", required: true, isArray: true},
 					{name: "total", kind: "scalar", typeName: "int", required: true},
-				]
-			},
-			{
-				name:       "AtpStaffResponse"
-				domain:     "api"
-				module:     "api"
-				sourceType: "api.#AtpStaffResponse"
-				fields: [
-					{name: "atp_staff", kind: "transport", typeName: "AtpStaffDirectoryEntry", required: true},
 				]
 			},
 			{
@@ -711,6 +684,9 @@ IR: {
 				sourceType: "api.#AuthenticatedUser"
 				fields: [
 					{name: "sub", kind: "scalar", typeName: "string", required: false},
+					{name: "name", kind: "scalar", typeName: "string", required: false},
+					{name: "given_name", kind: "scalar", typeName: "string", required: false},
+					{name: "family_name", kind: "scalar", typeName: "string", required: false},
 					{name: "email", kind: "scalar", typeName: "Email", required: false},
 					{name: "preferred_username", kind: "scalar", typeName: "string", required: false},
 					{name: "roles", kind: "scalar", typeName: "string", required: false, isArray: true},
@@ -801,6 +777,19 @@ IR: {
 				]
 			},
 			{
+				name:       "BookingImageUploadRequest"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#BookingImageUploadRequest"
+				fields: [
+					{name: "filename", kind: "scalar", typeName: "string", required: true},
+					{name: "mime_type", kind: "scalar", typeName: "string", required: false},
+					{name: "data_base64", kind: "scalar", typeName: "string", required: true},
+					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "actor", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
 				name:       "BookingStageUpdateRequest"
 				domain:     "api"
 				module:     "api"
@@ -818,7 +807,7 @@ IR: {
 				sourceType: "api.#BookingOwnerUpdateRequest"
 				fields: [
 					{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-					{name: "atp_staff", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
 			},
@@ -939,19 +928,6 @@ IR: {
 					{name: "components", kind: "entity", typeName: "InvoiceComponent", required: false, isArray: true},
 					{name: "due_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
 					{name: "sent_to_recipient", kind: "scalar", typeName: "bool", required: false},
-				]
-			},
-			{
-				name:       "AtpStaffCreateRequest"
-				domain:     "api"
-				module:     "api"
-				sourceType: "api.#AtpStaffCreateRequest"
-				fields: [
-					{name: "name", kind: "scalar", typeName: "string", required: true},
-					{name: "active", kind: "scalar", typeName: "bool", required: false},
-					{name: "usernames", kind: "scalar", typeName: "string", required: true, isArray: true},
-					{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-					{name: "languages", kind: "scalar", typeName: "string", required: false, isArray: true},
 				]
 			},
 			{
