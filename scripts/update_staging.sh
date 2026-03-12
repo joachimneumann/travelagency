@@ -46,6 +46,25 @@ normalize_services() {
   done | awk '!seen[$0]++'
 }
 
+should_run_tests() {
+  local service
+  for service in "$@"; do
+    case "$service" in
+      backend|caddy)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+run_staging_tests() {
+  echo "Running staging pre-deploy tests..."
+  node --test \
+    backend/app/test/mobile-contract.test.js \
+    backend/app/test/source-integrity.test.js
+}
+
 cd "$ROOT_DIR"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -57,6 +76,10 @@ mapfile -t SERVICES < <(normalize_services "$@")
 
 git fetch origin
 git pull --ff-only
+
+if should_run_tests "${SERVICES[@]}"; then
+  run_staging_tests
+fi
 
 mkdir -p backend/app/data
 if [[ ! -f backend/app/data/store.json ]]; then

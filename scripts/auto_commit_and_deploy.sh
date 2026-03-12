@@ -49,6 +49,25 @@ collect_services() {
   done < <(normalize_target "$1")
 }
 
+should_run_tests() {
+  local service
+  for service in "$@"; do
+    case "$service" in
+      backend|caddy|all)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+run_predeploy_tests() {
+  echo "Running pre-deploy tests..."
+  node --test \
+    backend/app/test/mobile-contract.test.js \
+    backend/app/test/source-integrity.test.js
+}
+
 default_stage_paths_for_target() {
   local target="$1"
   case "$target" in
@@ -122,6 +141,10 @@ if [[ "${#SERVICES[@]}" -eq 0 ]]; then
   echo "No deployment services selected." >&2
   usage >&2
   exit 1
+fi
+
+if should_run_tests "${SERVICES[@]}"; then
+  run_predeploy_tests
 fi
 
 if [[ "$ADD_ALL_FILES" -eq 1 || "$TARGET" == "all" ]]; then
