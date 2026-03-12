@@ -21,6 +21,26 @@ export const GENERATED_CURRENCIES = {
     "code": "THB",
     "symbol": "฿",
     "decimalPlaces": 0
+  },
+  "AUD": {
+    "code": "AUD",
+    "symbol": "A$",
+    "decimalPlaces": 2
+  },
+  "GBP": {
+    "code": "GBP",
+    "symbol": "£",
+    "decimalPlaces": 2
+  },
+  "NZD": {
+    "code": "NZD",
+    "symbol": "NZ$",
+    "decimalPlaces": 2
+  },
+  "ZAR": {
+    "code": "ZAR",
+    "symbol": "R",
+    "decimalPlaces": 2
   }
 };
 export const GENERATED_CURRENCY_CODES = Object.freeze(Object.keys(GENERATED_CURRENCIES));

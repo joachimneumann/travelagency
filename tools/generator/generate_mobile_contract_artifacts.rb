@@ -629,6 +629,12 @@ def render_swift_currency(currency_entries, header = SWIFT_RUNTIME_HEADER)
     code_case = swift_enum_case_identifier(entry.fetch('code'))
     "        .#{code_case}: GeneratedCurrencyDefinition(code: .#{code_case}, symbol: #{entry.fetch('symbol').inspect}, decimalPlaces: #{entry.fetch('decimalPlaces')}, isoCode: #{entry.fetch('code').inspect})"
   end.join(",\n")
+  currency_decode_cases = currency_entries.map do |entry|
+    code = entry.fetch('code')
+    enum_case = swift_enum_case_identifier(code)
+    raw_values = code == "EURO" ? %w[EURO EUR] : [code]
+    raw_values.map { |raw_value| "            case #{raw_value.inspect}:\n                self = .#{enum_case}" }.join("\n")
+  end.join("\n")
 
   <<~SWIFT
     import Foundation
@@ -641,14 +647,7 @@ def render_swift_currency(currency_entries, header = SWIFT_RUNTIME_HEADER)
             let container = try decoder.singleValueContainer()
             let rawValue = try container.decode(String.self).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
             switch rawValue {
-            case "USD":
-                self = .usd
-            case "EURO", "EUR":
-                self = .euro
-            case "VND":
-                self = .vnd
-            case "THB":
-                self = .thb
+#{currency_decode_cases}
             default:
                 self = .usd
             }

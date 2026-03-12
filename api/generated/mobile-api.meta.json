@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-11T11:02:30Z",
+  "generatedAt": "2026-03-12T02:44:34Z",
   "languages": [
     "English",
     "Vietnamese",
@@ -31,6 +31,26 @@
       "code": "THB",
       "symbol": "฿",
       "decimalPlaces": 0
+    },
+    {
+      "code": "AUD",
+      "symbol": "A$",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "GBP",
+      "symbol": "£",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "NZD",
+      "symbol": "NZ$",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "ZAR",
+      "symbol": "R",
+      "decimalPlaces": 2
     }
   ],
   "roles": [

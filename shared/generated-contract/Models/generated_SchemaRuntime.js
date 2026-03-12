@@ -2726,7 +2726,11 @@
     "USD",
     "EURO",
     "VND",
-    "THB"
+    "THB",
+    "AUD",
+    "GBP",
+    "NZD",
+    "ZAR"
   ],
   "options": [
     {
@@ -2744,6 +2748,22 @@
     {
       "value": "THB",
       "label": "THB"
+    },
+    {
+      "value": "AUD",
+      "label": "AUD"
+    },
+    {
+      "value": "GBP",
+      "label": "GBP"
+    },
+    {
+      "value": "NZD",
+      "label": "NZD"
+    },
+    {
+      "value": "ZAR",
+      "label": "ZAR"
     }
   ]
 },

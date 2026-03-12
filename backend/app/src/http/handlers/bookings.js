@@ -4,6 +4,9 @@ import {
   normalizeBookingPersonsPayload,
   normalizeSingleBookingPersonPayload
 } from "../../lib/booking_persons.js";
+import { createBookingChatHandlers } from "./booking_chat.js";
+import { createBookingMediaHandlers } from "./booking_media.js";
+import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 
 export function createBookingHandlers(deps) {
   const {
@@ -383,6 +386,87 @@ export function createBookingHandlers(deps) {
     );
   }
 
+  const { handleListBookingChatEvents } = createBookingChatHandlers({
+    readStore,
+    sendJson,
+    getPrincipal,
+    canAccessBooking,
+    ensureMetaChatCollections,
+    clamp,
+    safeInt,
+    conversationMatchesBooking,
+    buildChatEventReadModel,
+    buildConversationRelatedBookings,
+    normalizeText,
+    getMetaConversationOpenUrl
+  });
+
+  const {
+    handlePublicBookingPersonPhoto,
+    handlePublicBookingImage,
+    handleUploadBookingImage,
+    handleUploadBookingPersonPhoto
+  } = createBookingMediaHandlers({
+    readBodyJson,
+    sendJson,
+    normalizeText,
+    getPrincipal,
+    readStore,
+    canEditBooking,
+    assertExpectedRevision,
+    path,
+    randomUUID,
+    TEMP_UPLOAD_DIR,
+    BOOKING_IMAGES_DIR,
+    BOOKING_PERSON_PHOTOS_DIR,
+    writeFile,
+    rm,
+    processBookingImageToWebp,
+    processBookingPersonImageToWebp,
+    nowIso,
+    addActivity,
+    actorLabel,
+    persistStore,
+    buildBookingDetailResponse,
+    incrementBookingRevision,
+    resolveBookingImageDiskPath,
+    resolveBookingPersonPhotoDiskPath,
+    sendFileWithCache,
+    getBookingPersons
+  });
+
+  const {
+    handleListBookingInvoices,
+    handleCreateBookingInvoice,
+    handlePatchBookingInvoice,
+    handleGetInvoicePdf
+  } = createBookingInvoiceHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    getPrincipal,
+    canAccessBooking,
+    canEditBooking,
+    assertExpectedRevision,
+    normalizeInvoiceComponents,
+    computeInvoiceComponentTotal,
+    safeAmountCents,
+    nextInvoiceNumber,
+    safeCurrency,
+    normalizeText,
+    nowIso,
+    writeInvoicePdf,
+    randomUUID,
+    addActivity,
+    actorLabel,
+    persistStore,
+    buildBookingPayload,
+    incrementBookingRevision,
+    getBookingContactProfile,
+    invoicePdfPath,
+    sendFileWithCache
+  });
+
   async function handleCreateBooking(req, res) {
     let payload;
     try {
@@ -549,57 +633,6 @@ export function createBookingHandlers(deps) {
     await deleteBookingArtifacts(store, bookingId);
     await persistStore(store);
     sendJson(res, 200, { deleted: true, booking_id: bookingId });
-  }
-
-  async function handleListBookingChatEvents(req, res, [bookingId]) {
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    if (!canAccessBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-
-    ensureMetaChatCollections(store);
-    const requestUrl = new URL(req.url, "http://localhost");
-    const limit = clamp(safeInt(requestUrl.searchParams.get("limit")) || 100, 1, 500);
-
-    const conversationItems = store.chat_conversations.filter((conversation) => conversationMatchesBooking(store, conversation, bookingId));
-    const conversationMap = new Map(conversationItems.map((item) => [item.id, item]));
-    const events = store.chat_events
-      .filter((event) => conversationMap.has(event.conversation_id))
-      .sort((a, b) => String(b.sent_at || b.created_at || "").localeCompare(String(a.sent_at || a.created_at || "")))
-      .slice(0, limit);
-
-    const items = events.map((event) => buildChatEventReadModel(event, conversationMap.get(event.conversation_id)));
-    const conversations = conversationItems
-      .map((conversation) => {
-        const channel = normalizeText(conversation.channel).toLowerCase();
-        return {
-          id: conversation.id,
-          channel,
-          external_contact_id: conversation.external_contact_id || null,
-          booking_id: conversation.booking_id || null,
-          related_bookings: buildConversationRelatedBookings(store, conversation, bookingId),
-          last_event_at: conversation.last_event_at || null,
-          latest_preview: conversation.latest_preview || null,
-          open_url: getMetaConversationOpenUrl(channel, conversation.external_contact_id)
-        };
-      })
-      .sort((a, b) => String(b.last_event_at || "").localeCompare(String(a.last_event_at || "")));
-
-    sendJson(res, 200, {
-      mode: "read_only",
-      items,
-      total: items.length,
-      conversations,
-      conversation_total: conversations.length
-    });
   }
 
   async function handlePatchBookingStage(req, res, [bookingId]) {
@@ -886,236 +919,6 @@ export function createBookingHandlers(deps) {
     sendJson(res, 200, await buildBookingDetailResponse(booking));
   }
 
-  async function handlePublicBookingPersonPhoto(req, res, [rawRelativePath]) {
-    const absolutePath = resolveBookingPersonPhotoDiskPath(rawRelativePath);
-    if (!absolutePath) {
-      sendJson(res, 404, { error: "Not found" });
-      return;
-    }
-    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
-  }
-
-  async function handlePublicBookingImage(req, res, [rawRelativePath]) {
-    const absolutePath = resolveBookingImageDiskPath(rawRelativePath);
-    if (!absolutePath) {
-      sendJson(res, 404, { error: "Not found" });
-      return;
-    }
-    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
-  }
-
-  async function handleUploadBookingImage(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
-
-    const filename = normalizeText(payload.filename) || `${bookingId}.upload`;
-    const base64 = normalizeText(payload.data_base64);
-    if (!base64) {
-      sendJson(res, 422, { error: "data_base64 is required" });
-      return;
-    }
-
-    const sourceBuffer = Buffer.from(base64, "base64");
-    if (!sourceBuffer.length) {
-      sendJson(res, 422, { error: "Invalid base64 image payload" });
-      return;
-    }
-
-    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${bookingId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `${bookingId}-${Date.now()}.webp`;
-    const outputRelativePath = `${bookingId}/${outputName}`;
-    const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
-
-    try {
-      await writeFile(tempInputPath, sourceBuffer);
-      await processBookingImageToWebp(tempInputPath, outputPath);
-    } catch (error) {
-      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
-      return;
-    } finally {
-      await rm(tempInputPath, { force: true });
-    }
-
-    booking.image = `/public/v1/booking-images/${outputRelativePath}`;
-    incrementBookingRevision(booking, "core_revision");
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Booking image updated"
-    );
-    await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
-  }
-
-  async function handlePublicBookingImage(req, res, [rawRelativePath]) {
-    const absolutePath = resolveBookingImageDiskPath(rawRelativePath);
-    if (!absolutePath) {
-      sendJson(res, 404, { error: "Not found" });
-      return;
-    }
-    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
-  }
-
-  async function handleUploadBookingImage(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
-
-    const filename = normalizeText(payload.filename) || `${bookingId}.upload`;
-    const base64 = normalizeText(payload.data_base64);
-    if (!base64) {
-      sendJson(res, 422, { error: "data_base64 is required" });
-      return;
-    }
-
-    const sourceBuffer = Buffer.from(base64, "base64");
-    if (!sourceBuffer.length) {
-      sendJson(res, 422, { error: "Invalid base64 image payload" });
-      return;
-    }
-
-    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${bookingId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `${bookingId}-${Date.now()}.webp`;
-    const outputRelativePath = `${bookingId}/${outputName}`;
-    const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
-
-    try {
-      await writeFile(tempInputPath, sourceBuffer);
-      await processBookingImageToWebp(tempInputPath, outputPath);
-    } catch (error) {
-      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
-      return;
-    } finally {
-      await rm(tempInputPath, { force: true });
-    }
-
-    booking.image = `/public/v1/booking-images/${outputRelativePath}`;
-    incrementBookingRevision(booking, "core_revision");
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Booking image updated"
-    );
-    await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
-  }
-
-  async function handleUploadBookingPersonPhoto(req, res, [bookingId, personId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
-
-    const persons = normalizeBookingPersonsPayload(booking.id, booking.persons);
-    const personIndex = persons.findIndex((person) => person.id === personId);
-    if (personIndex < 0) {
-      sendJson(res, 404, { error: "Person not found" });
-      return;
-    }
-
-    const filename = normalizeText(payload.filename) || `${personId}.upload`;
-    const base64 = normalizeText(payload.data_base64);
-    if (!base64) {
-      sendJson(res, 422, { error: "data_base64 is required" });
-      return;
-    }
-
-    const sourceBuffer = Buffer.from(base64, "base64");
-    if (!sourceBuffer.length) {
-      sendJson(res, 422, { error: "Invalid base64 image payload" });
-      return;
-    }
-
-    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${personId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `${personId}-${Date.now()}.webp`;
-    const outputRelativePath = `${bookingId}/${outputName}`;
-    const outputPath = path.join(BOOKING_PERSON_PHOTOS_DIR, outputRelativePath);
-
-    try {
-      await writeFile(tempInputPath, sourceBuffer);
-      await processBookingPersonImageToWebp(tempInputPath, outputPath);
-    } catch (error) {
-      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) });
-      return;
-    } finally {
-      await rm(tempInputPath, { force: true });
-    }
-
-    persons[personIndex] = {
-      ...persons[personIndex],
-      photo_ref: `/public/v1/booking-person-photos/${outputRelativePath}`
-    };
-    booking.persons = persons;
-    incrementBookingRevision(booking, "persons_revision");
-    booking.updated_at = nowIso();
-    addActivity(
-      store,
-      booking.id,
-      "BOOKING_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      `Photo uploaded for ${normalizeText(persons[personIndex].name) || "person"}`
-    );
-    await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
-  }
-
   async function handlePatchBookingNotes(req, res, [bookingId]) {
     let payload;
     try {
@@ -1396,229 +1199,6 @@ export function createBookingHandlers(deps) {
     await persistStore(store);
 
     sendJson(res, 201, { activity, booking: await buildBookingPayload(booking) });
-  }
-
-  function buildInvoiceReadModel(invoice) {
-    return {
-      ...invoice,
-      components: Array.isArray(invoice?.components) ? invoice.components : [],
-      sent_to_recipient: Boolean(invoice.sent_to_recipient),
-      sent_to_recipient_at: invoice.sent_to_recipient_at || null,
-      pdf_url: `/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`
-    };
-  }
-
-  function getInvoicePartyForBooking(booking) {
-    const contact = getBookingContactProfile(booking);
-    return {
-      name: contact.name || "Primary contact",
-      email: contact.email || null,
-      phone_number: contact.phone_number || null
-    };
-  }
-
-  async function handleListBookingInvoices(req, res, [bookingId]) {
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    const principal = getPrincipal(req);
-    if (!canAccessBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-
-    const invoices = [...store.invoices]
-      .filter((invoice) => invoice.booking_id === bookingId)
-      .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")))
-      .map(buildInvoiceReadModel);
-    sendJson(res, 200, { items: invoices, total: invoices.length });
-  }
-
-  async function handleCreateBookingInvoice(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    const principal = getPrincipal(req);
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(payload, booking, "expected_invoices_revision", "invoices_revision", res))) return;
-
-    const components = normalizeInvoiceComponents(payload.components);
-    if (!components.length) {
-      sendJson(res, 422, { error: "At least one invoice component is required" });
-      return;
-    }
-
-    const now = nowIso();
-    const invoiceParty = getInvoicePartyForBooking(booking);
-    const totalAmountCents = computeInvoiceComponentTotal(components);
-    const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
-    const invoice = {
-      id: `inv_${randomUUID()}`,
-      booking_id: bookingId,
-      invoice_number: normalizeText(payload.invoice_number) || nextInvoiceNumber(store),
-      version: 1,
-      status: "DRAFT",
-      currency: safeCurrency(payload.currency),
-      issue_date: normalizeText(payload.issue_date) || now.slice(0, 10),
-      due_date: normalizeText(payload.due_date) || null,
-      title: normalizeText(payload.title) || `Invoice for ${normalizeText(invoiceParty.name) || "recipient"}`,
-      notes: normalizeText(payload.notes),
-      sent_to_recipient: false,
-      sent_to_recipient_at: null,
-      components,
-      total_amount_cents: totalAmountCents,
-      due_amount_cents: dueAmountCents,
-      created_at: now,
-      updated_at: now
-    };
-
-    await writeInvoicePdf(invoice, invoiceParty, booking);
-    store.invoices.push(invoice);
-    incrementBookingRevision(booking, "invoices_revision");
-    booking.updated_at = now;
-    addActivity(store, booking.id, "INVOICE_UPDATED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Invoice ${invoice.invoice_number} created`);
-    await persistStore(store);
-    sendJson(res, 201, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingPayload(booking) });
-  }
-
-  async function handlePatchBookingInvoice(req, res, [bookingId, invoiceId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-    const principal = getPrincipal(req);
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(payload, booking, "expected_invoices_revision", "invoices_revision", res))) return;
-
-    const invoice = store.invoices.find((item) => item.id === invoiceId && item.booking_id === bookingId);
-    if (!invoice) {
-      sendJson(res, 404, { error: "Invoice not found" });
-      return;
-    }
-
-    const components = payload.components
-      ? normalizeInvoiceComponents(payload.components)
-      : Array.isArray(invoice.components)
-        ? invoice.components
-        : [];
-    if (!components.length) {
-      sendJson(res, 422, { error: "At least one invoice component is required" });
-      return;
-    }
-
-    const invoiceParty = getInvoicePartyForBooking(booking);
-    const isContentUpdate =
-      payload.invoice_number !== undefined ||
-      payload.currency !== undefined ||
-      payload.issue_date !== undefined ||
-      payload.due_date !== undefined ||
-      payload.title !== undefined ||
-      payload.notes !== undefined ||
-      payload.components !== undefined ||
-      payload.due_amount_cents !== undefined;
-
-    if (payload.sent_to_recipient !== undefined) {
-      const sent = Boolean(payload.sent_to_recipient);
-      invoice.sent_to_recipient = sent;
-      invoice.sent_to_recipient_at = sent ? invoice.sent_to_recipient_at || nowIso() : null;
-      if (invoice.status !== "PAID") {
-        invoice.status = sent ? "INVOICE_SENT" : "DRAFT";
-      }
-    }
-
-    if (isContentUpdate) {
-      const totalAmountCents = computeInvoiceComponentTotal(components);
-      const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
-      if (payload.invoice_number !== undefined) {
-        invoice.invoice_number = normalizeText(payload.invoice_number) || invoice.invoice_number;
-      }
-      if (payload.currency !== undefined) {
-        invoice.currency = safeCurrency(payload.currency || invoice.currency);
-      }
-      if (payload.issue_date !== undefined) {
-        invoice.issue_date = normalizeText(payload.issue_date) || invoice.issue_date;
-      }
-      if (payload.due_date !== undefined) {
-        invoice.due_date = normalizeText(payload.due_date) || null;
-      }
-      if (payload.title !== undefined) {
-        invoice.title = normalizeText(payload.title) || invoice.title;
-      }
-      if (payload.notes !== undefined) {
-        invoice.notes = normalizeText(payload.notes);
-      }
-      invoice.components = components;
-      invoice.total_amount_cents = totalAmountCents;
-      invoice.due_amount_cents = dueAmountCents;
-      invoice.version = Number(invoice.version || 1) + 1;
-      await writeInvoicePdf(invoice, invoiceParty, booking);
-    }
-    invoice.updated_at = nowIso();
-    incrementBookingRevision(booking, "invoices_revision");
-    booking.updated_at = invoice.updated_at;
-    addActivity(
-      store,
-      booking.id,
-      "INVOICE_UPDATED",
-      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      payload.sent_to_recipient !== undefined
-        ? (payload.sent_to_recipient ? `Invoice ${invoice.invoice_number} marked as sent` : `Invoice ${invoice.invoice_number} marked as not sent`)
-        : `Invoice ${invoice.invoice_number} updated`
-    );
-
-    await persistStore(store);
-    sendJson(res, 200, { invoice: buildInvoiceReadModel(invoice), booking: await buildBookingPayload(booking) });
-  }
-
-  async function handleGetInvoicePdf(req, res, [invoiceId]) {
-    const store = await readStore();
-    const invoice = store.invoices.find((item) => item.id === invoiceId);
-    if (!invoice) {
-      sendJson(res, 404, { error: "Invoice not found" });
-      return;
-    }
-    const booking = store.bookings.find((item) => item.id === invoice.booking_id) || null;
-    const principal = getPrincipal(req);
-    if (!booking || !canAccessBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-
-    const invoiceParty = getInvoicePartyForBooking(booking);
-    const pdfPath = invoicePdfPath(invoice.id, invoice.version);
-    await writeInvoicePdf(invoice, invoiceParty, booking);
-    res.setHeader("Content-Disposition", `inline; filename=\"${invoice.invoice_number || invoice.id}.pdf\"`);
-    await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store");
   }
 
   return {

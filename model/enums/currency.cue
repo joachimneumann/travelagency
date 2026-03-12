@@ -21,6 +21,26 @@ CurrencyCatalog: [
 		displaySymbol: "฿"
 		decimalPlaces: 0
 	},
+	{
+		code:          "AUD"
+		displaySymbol: "A$"
+		decimalPlaces: 2
+	},
+	{
+		code:          "GBP"
+		displaySymbol: "£"
+		decimalPlaces: 2
+	},
+	{
+		code:          "NZD"
+		displaySymbol: "NZ$"
+		decimalPlaces: 2
+	},
+	{
+		code:          "ZAR"
+		displaySymbol: "R"
+		decimalPlaces: 2
+	},
 ]
 
 #CurrencyCode: or([for currency in CurrencyCatalog {currency.code}])

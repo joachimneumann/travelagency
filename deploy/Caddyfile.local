@@ -15,7 +15,7 @@
     file_server
   }
 
-  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html
+  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /privacy.html
   rewrite @html_pages /frontend/pages{path}
 
   @backend path /auth/* /api/* /public/v1/* /integrations/*
