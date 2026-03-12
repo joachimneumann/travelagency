@@ -13,18 +13,23 @@
 .booking-detail-page .wa-chat-panel {
   max-width: 600px;
   margin: 0 auto 1rem;
-  border: 1px solid var(--wa-divider);
-  border-radius: 32px;
-  overflow: hidden;
-  box-shadow: 0 18px 42px rgba(17, 27, 33, 0.10);
+}
+
+.booking-detail-page .wa-chat-panel .booking-collapsible__summary {
+  background: var(--wa-shell);
+}
+
+.booking-detail-page .wa-chat-panel .booking-collapsible__body {
+  padding: 0;
   background: var(--wa-shell);
 }
 
 .wa-chat-shell {
   display: flex;
   width: 200%;
-  min-height: 720px;
+  height: 640px;
   transition: transform 0.28s ease;
+  align-items: stretch;
 }
 
 .wa-chat-shell[data-chat-view="thread"] {
@@ -36,7 +41,8 @@
   min-width: 50%;
   display: flex;
   flex-direction: column;
-  min-height: 720px;
+  min-height: 640px;
+  height: 640px;
 }
 
 .wa-chat-screen--list {
@@ -51,17 +57,8 @@
   padding: 1.1rem 1.35rem 1rem;
 }
 
-.wa-chat-list-title {
-  margin: 0;
-  color: var(--wa-text-strong);
-  font-size: 1.45rem;
-  line-height: 1.1;
-  letter-spacing: -0.02rem;
-  font-weight: 700;
-}
-
 .wa-chat-meta {
-  margin: 0.75rem 0 0;
+  margin: 0;
   color: var(--wa-text-muted);
   font-size: 1rem;
   line-height: 1.35;
@@ -74,6 +71,7 @@
   overflow: auto;
   background: var(--wa-list-surface);
   border-top: 1px solid var(--wa-divider);
+  flex: 1;
 }
 
 .wa-chat-contact {
@@ -404,11 +402,8 @@
 
   .wa-chat-shell,
   .wa-chat-screen {
+    height: 72vh;
     min-height: 72vh;
-  }
-
-  .wa-chat-list-title {
-    font-size: 1.35rem;
   }
 
   .wa-chat-canvas {

@@ -185,40 +185,41 @@ export function createBookingWhatsAppController({
   function mount(root) {
     if (!root) return;
     root.innerHTML = `
-      <article id="meta_chat_panel" class="wa-chat-panel" style="margin-bottom: 1rem;">
-        <div class="wa-chat-shell" id="wa_chat_shell" data-chat-view="list">
-          <section class="wa-chat-screen wa-chat-screen--list" aria-label="WhatsApp conversations">
-            <div class="wa-chat-list-head">
-              <h2 class="wa-chat-list-title">WhatsApp</h2>
-              <p class="micro wa-chat-meta" id="meta_chat_summary">No WhatsApp data yet.</p>
-            </div>
-            <div id="wa_chat_contacts" class="wa-chat-contacts" role="list"></div>
-          </section>
-          <section class="wa-chat-screen wa-chat-screen--thread" aria-label="WhatsApp conversation">
-            <div class="wa-chat-thread-head">
-              <button class="wa-chat-back-btn" id="wa_chat_back_btn" type="button" aria-label="Back to WhatsApp contacts">&#8249;</button>
-              <div class="wa-chat-thread-contact">
-                <span class="wa-chat-thread-avatar" id="wa_chat_thread_avatar">P</span>
-                <div class="wa-chat-thread-copy">
-                  <div class="wa-chat-thread-title" id="wa_chat_thread_title">WhatsApp</div>
-                  <div class="wa-chat-thread-subtitle" id="wa_chat_thread_subtitle"></div>
-                  <div class="wa-chat-thread-related" id="wa_chat_thread_related" hidden></div>
+      <details id="meta_chat_panel" class="booking-collapsible wa-chat-panel" style="margin-bottom: 1rem;">
+        <summary class="booking-collapsible__summary" id="meta_chat_panel_summary">WhatsApp</summary>
+        <div class="booking-collapsible__body">
+          <div class="wa-chat-shell" id="wa_chat_shell" data-chat-view="list">
+            <section class="wa-chat-screen wa-chat-screen--list" aria-label="WhatsApp conversations">
+              <div class="wa-chat-list-head"></div>
+              <div id="wa_chat_contacts" class="wa-chat-contacts" role="list"></div>
+            </section>
+            <section class="wa-chat-screen wa-chat-screen--thread" aria-label="WhatsApp conversation">
+              <div class="wa-chat-thread-head">
+                <button class="wa-chat-back-btn" id="wa_chat_back_btn" type="button" aria-label="Back to WhatsApp contacts">&#8249;</button>
+                <div class="wa-chat-thread-contact">
+                  <span class="wa-chat-thread-avatar" id="wa_chat_thread_avatar">P</span>
+                  <div class="wa-chat-thread-copy">
+                    <div class="wa-chat-thread-title" id="wa_chat_thread_title">WhatsApp</div>
+                    <div class="wa-chat-thread-subtitle" id="wa_chat_thread_subtitle"></div>
+                    <div class="wa-chat-thread-related" id="wa_chat_thread_related" hidden></div>
+                  </div>
                 </div>
+                <a class="wa-chat-open-btn" id="wa_chat_open_btn" href="#" target="_blank" rel="noopener" aria-label="Open in WhatsApp" title="Open in WhatsApp">
+                  <img class="wa-chat-open-logo" src="assets/img/WhatsApp.png" alt="" />
+                </a>
               </div>
-              <a class="wa-chat-open-btn" id="wa_chat_open_btn" href="#" target="_blank" rel="noopener" aria-label="Open in WhatsApp" title="Open in WhatsApp">
-                <img class="wa-chat-open-logo" src="assets/img/WhatsApp.png" alt="" />
-              </a>
-            </div>
-            <div class="wa-chat-canvas">
-              <div id="meta_chat_table" class="wa-chat-list" role="log" aria-live="polite"></div>
-            </div>
-          </section>
+              <div class="wa-chat-canvas">
+                <div id="meta_chat_table" class="wa-chat-list" role="log" aria-live="polite"></div>
+              </div>
+            </section>
+          </div>
         </div>
-      </article>
+      </details>
     `;
 
+    els.panel = root.querySelector("#meta_chat_panel");
+    els.panelSummary = root.querySelector("#meta_chat_panel_summary");
     els.shell = root.querySelector("#wa_chat_shell");
-    els.summary = root.querySelector("#meta_chat_summary");
     els.contacts = root.querySelector("#wa_chat_contacts");
     els.backBtn = root.querySelector("#wa_chat_back_btn");
     els.threadTitle = root.querySelector("#wa_chat_thread_title");
@@ -308,9 +309,11 @@ export function createBookingWhatsAppController({
   }
 
   function buildChatEntries(booking) {
-    const persons = getBookingPersons(booking).filter((person) =>
-      Array.isArray(person?.phone_numbers) && person.phone_numbers.some((phone) => normalizeText(phone))
-    );
+    const persons = getBookingPersons(booking).filter((person) => {
+      const roles = Array.isArray(person?.roles) ? person.roles : [];
+      const hasPhoneNumber = Array.isArray(person?.phone_numbers) && person.phone_numbers.some((phone) => normalizeText(phone));
+      return roles.includes("traveler") && hasPhoneNumber;
+    });
     const conversations = (Array.isArray(state.conversations) ? state.conversations : [])
       .filter((conversation) => String(conversation?.channel || "").toLowerCase() === "whatsapp");
     const conversationIds = new Set(conversations.map((conversation) => String(conversation?.id || "")).filter(Boolean));
@@ -402,16 +405,12 @@ export function createBookingWhatsAppController({
       setActiveView("list");
     }
 
-    if (els.summary) {
+    if (els.panelSummary) {
       const chatCount = entries.filter((entry) => entry.has_chat).length;
-      const personCount = entries.filter((entry) => entry.kind === "person").length;
-      const unknownCount = entries.filter((entry) => entry.kind === "unknown").length;
-      const summaryParts = [
-        `${chatCount} active WhatsApp ${chatCount === 1 ? "chat" : "chats"}`,
-        `${personCount} booking ${personCount === 1 ? "person" : "persons"}`
-      ];
-      if (unknownCount) summaryParts.push(`${unknownCount} unknown ${unknownCount === 1 ? "number" : "numbers"}`);
-      els.summary.textContent = summaryParts.join(" • ");
+      els.panelSummary.textContent = `WhatsApp · ${chatCount} active ${chatCount === 1 ? "chat" : "chats"}`;
+    }
+    if (els.panel) {
+      els.panel.open = entries.some((entry) => entry.has_chat);
     }
 
     els.contacts.innerHTML = entries.length
@@ -437,7 +436,7 @@ export function createBookingWhatsAppController({
             </button>
           `;
         }).join("")
-      : '<div class="wa-empty">No booking persons or WhatsApp conversations yet.</div>';
+      : '<div class="wa-empty">No travelers with phone numbers or WhatsApp conversations yet.</div>';
 
     const threadTitle = activeEntry ? getChatEntryTitle(activeEntry) : "WhatsApp";
     const threadSubtitleParts = activeEntry
@@ -475,7 +474,7 @@ export function createBookingWhatsAppController({
       ? buildThreadRows(activeEntry.items)
       : activeEntry
         ? `<div class="wa-empty">No WhatsApp messages with ${escapeHtml(threadTitle)} yet.</div>`
-        : '<div class="wa-empty">Select a booking person to view WhatsApp messages.</div>';
+        : '<div class="wa-empty">Select a traveler to view WhatsApp messages.</div>';
     els.table.innerHTML = rows;
     const canvas = els.table.parentElement;
     if (canvas && activeEntry?.has_chat) {
