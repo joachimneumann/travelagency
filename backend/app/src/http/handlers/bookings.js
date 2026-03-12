@@ -209,7 +209,12 @@ export function createBookingHandlers(deps) {
 
   function resolveCanonicalConversationBookingId(store, conversation, excludedBookingId = "") {
     const assignedBookingId = normalizeText(conversation?.booking_id);
-    if (assignedBookingId && assignedBookingId !== normalizeText(excludedBookingId)) return assignedBookingId;
+    if (assignedBookingId && assignedBookingId !== normalizeText(excludedBookingId)) {
+      const assignedBookingStillExists = (Array.isArray(store?.bookings) ? store.bookings : []).some(
+        (booking) => normalizeText(booking.id) === assignedBookingId
+      );
+      if (assignedBookingStillExists) return assignedBookingId;
+    }
     const channel = normalizeText(conversation.channel).toLowerCase();
     const externalContactId = normalizeText(conversation.external_contact_id);
     if (channel === "whatsapp" && externalContactId) {
@@ -295,6 +300,7 @@ export function createBookingHandlers(deps) {
     clamp,
     safeInt,
     conversationMatchesBooking,
+    resolveCanonicalConversationBookingId,
     buildChatEventReadModel,
     buildConversationRelatedBookings,
     normalizeText,

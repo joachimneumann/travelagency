@@ -568,6 +568,102 @@ test("booking chat stays on one canonical booking and exposes related bookings",
   assert.equal(secondaryChatResult.body.items.length, 0);
 });
 
+test("booking chat ignores stale deleted booking ids and rematches by phone", async () => {
+  await resetStore();
+
+  const bookingResult = await requestJson(endpointPath("public_bookings"), {}, {
+    method: "POST",
+    body: {
+      name: "Joachim",
+      email: "joachim@example.com",
+      phone_number: "+84337942446",
+      preferred_language: "English",
+      preferred_currency: "USD",
+      destinations: ["Vietnam"],
+      travel_style: ["Adventure"],
+      number_of_travelers: 2,
+      booking_name: "Vietnam Journey"
+    }
+  });
+  assert.equal(bookingResult.status, 201);
+  const bookingId = bookingResult.body.booking.id;
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  const booking = detailResult.body.booking;
+  const personsRevision = booking.persons_revision;
+
+  const createPersonResult = await requestJson(
+    endpointPath("booking_person_create").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_persons_revision: personsRevision,
+        person: {
+          name: "Van Nguyen",
+          phone_numbers: ["+84387451111"],
+          roles: ["traveler"]
+        },
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(createPersonResult.status, 201);
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  store.chat_channel_accounts.push({
+    id: "chatacct_whatsapp",
+    channel: "whatsapp",
+    external_account_id: "wa_phone",
+    name: "WhatsApp",
+    metadata: {},
+    created_at: "2026-03-12T00:00:00.000Z",
+    updated_at: "2026-03-12T00:00:00.000Z"
+  });
+  store.chat_conversations.push({
+    id: "chatconv_stale",
+    channel: "whatsapp",
+    channel_account_id: "chatacct_whatsapp",
+    external_conversation_id: "84387451111",
+    external_contact_id: "84387451111",
+    booking_id: "booking_deleted_old_reference",
+    latest_preview: "Hello from WhatsApp",
+    last_event_at: "2026-03-12T10:00:00.000Z",
+    created_at: "2026-03-12T10:00:00.000Z",
+    updated_at: "2026-03-12T10:00:00.000Z"
+  });
+  store.chat_events.push({
+    id: "chatevt_stale",
+    conversation_id: "chatconv_stale",
+    channel: "whatsapp",
+    event_type: "message",
+    direction: "inbound",
+    external_message_id: "wamid.stale",
+    external_status: null,
+    sender_display: "Van Nguyen",
+    sender_contact: "84387451111",
+    text_preview: "Hello from WhatsApp",
+    sent_at: "2026-03-12T10:00:00.000Z",
+    received_at: "2026-03-12T10:00:01.000Z",
+    payload_json: {},
+    created_at: "2026-03-12T10:00:01.000Z"
+  });
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const chatResult = await requestJson(
+    endpointPath("booking_chat").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(chatResult.status, 200);
+  assert.equal(chatResult.body.conversations.length, 1);
+  assert.equal(chatResult.body.conversations[0].booking_id, bookingId);
+  assert.equal(chatResult.body.items.length, 1);
+});
+
 test("booking person photo endpoint updates the booking when ImageMagick is available", async (t) => {
   if (!HAS_MAGICK) {
     t.skip("ImageMagick `magick` is not installed in this environment.");

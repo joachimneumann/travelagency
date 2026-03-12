@@ -8,6 +8,7 @@ export function createBookingChatHandlers(deps) {
     clamp,
     safeInt,
     conversationMatchesBooking,
+    resolveCanonicalConversationBookingId,
     buildChatEventReadModel,
     buildConversationRelatedBookings,
     normalizeText,
@@ -43,11 +44,12 @@ export function createBookingChatHandlers(deps) {
     const conversations = conversationItems
       .map((conversation) => {
         const channel = normalizeText(conversation.channel).toLowerCase();
+        const canonicalBookingId = resolveCanonicalConversationBookingId(store, conversation) || normalizeText(bookingId) || null;
         return {
           id: conversation.id,
           channel,
           external_contact_id: conversation.external_contact_id || null,
-          booking_id: conversation.booking_id || null,
+          booking_id: canonicalBookingId,
           related_bookings: buildConversationRelatedBookings(store, conversation, bookingId),
           last_event_at: conversation.last_event_at || null,
           latest_preview: conversation.latest_preview || null,
