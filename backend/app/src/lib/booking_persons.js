@@ -96,6 +96,7 @@ function normalizeConsent(consent, fallbackId) {
 
 function normalizeDocument(document, fallbackId) {
   if (!document || typeof document !== "object" || Array.isArray(document)) return null;
+  const timestamp = new Date().toISOString();
   const normalized = compactObject({
     id: optionalText(document.id) || fallbackId,
     document_type: optionalText(document.document_type),
@@ -106,8 +107,8 @@ function normalizeDocument(document, fallbackId) {
     issued_on: optionalText(document.issued_on),
     no_expiration_date: optionalBool(document.no_expiration_date),
     expires_on: optionalText(document.expires_on),
-    created_at: optionalText(document.created_at || document.updated_at),
-    updated_at: optionalText(document.updated_at || document.created_at)
+    created_at: optionalText(document.created_at || document.updated_at) || timestamp,
+    updated_at: optionalText(document.updated_at || document.created_at) || timestamp
   });
   return normalized?.id && normalized?.document_type && normalized?.created_at && normalized?.updated_at ? normalized : null;
 }
@@ -163,13 +164,31 @@ function buildFallbackSubmissionPerson(booking) {
   }, 0, optionalText(booking?.id) || "booking");
 }
 
-function normalizeBookingPersons(booking) {
+export function getBookingPersons(booking) {
   const bookingId = optionalText(booking?.id) || "booking";
   const persons = Array.isArray(booking?.persons) ? booking.persons : [];
   const normalized = persons
     .map((person, index) => normalizeBookingPerson(person, index, bookingId))
     .filter(Boolean);
   return normalized.length ? normalized : [buildFallbackSubmissionPerson(booking)].filter(Boolean);
+}
+
+export function getBookingPrimaryContact(booking) {
+  const persons = getBookingPersons(booking);
+  return persons.find((person) => Array.isArray(person.roles) && person.roles.includes("primary_contact")) || persons[0] || null;
+}
+
+export function normalizeBookingPersonsPayload(bookingId, persons) {
+  return (Array.isArray(persons) ? persons : [])
+    .map((person, index) => normalizeBookingPerson(person, index, optionalText(bookingId) || "booking"))
+    .filter(Boolean);
+}
+
+export function normalizeSingleBookingPersonPayload(bookingId, person, fallbackIndex = 0) {
+  return normalizeBookingPersonsPayload(bookingId, [person]).map((entry, index) => ({
+    ...entry,
+    id: optionalText(entry.id) || `${optionalText(bookingId) || "booking"}_person_${fallbackIndex + index + 1}`
+  }))[0] || null;
 }
 
 function normalizeWebFormSubmission(booking) {
@@ -228,7 +247,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     preferred_currency: optionalUppercaseText(booking?.preferred_currency || booking?.web_form_submission?.preferred_currency),
     notes: optionalText(booking?.notes),
     web_form_submission: normalizeWebFormSubmission(booking),
-    persons: normalizeBookingPersons(booking)
+    persons: getBookingPersons(booking)
   };
 
   return compactObject({

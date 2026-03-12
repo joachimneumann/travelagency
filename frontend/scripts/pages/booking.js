@@ -43,13 +43,31 @@ import {
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import {
+  buildDocumentPayloadFromDraft,
+  collectPersonEmails,
+  collectPersonPhoneNumbers,
+  documentHasAnyData,
+  formatPersonRoleLabel,
+  getAbbreviatedPersonName,
+  getPersonDocument,
+  getPersonFooterRoleLabel,
+  getPersonIdentityStatus,
+  getPersonPrimaryRoleLabel,
+  getPreferredPersonDocumentType,
+  normalizePersonDocumentDraft,
+  personHasCompleteAddress,
+  personHasCompleteContact,
+  personHasCompleteIdentityDocument,
+  renderPersonCardStatusLine
+} from "../booking/person_helpers.js";
+import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
 } from "../shared/booking_persons.js";
-import { SHARED_FIELD_DEFS } from "../../../shared/generated-contract/Models/generated_SchemaRuntime.js";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -85,8 +103,6 @@ const ROLES = Object.freeze({
 const BOOKING_PERSON_ROLE_OPTIONS = Object.freeze(
   (BOOKING_PERSON_SCHEMA.fields.find((field) => field.name === "roles")?.options || []).map((option) => option.value)
 );
-const COUNTRY_CODE_OPTIONS = Object.freeze(SHARED_FIELD_DEFS.FIELD_6?.options || []);
-
 const state = {
   id: qs.get("id") || "",
   user: "",
@@ -817,42 +833,6 @@ function renderTravelerMismatchWarning() {
   els.personsMismatchWarning.hidden = !message;
 }
 
-function formatPersonRoleLabel(role) {
-  return String(role || "")
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function documentHasAnyData(document) {
-  if (!document || typeof document !== "object") return false;
-  return [
-    document.holder_name,
-    document.document_number,
-    document.document_picture_ref,
-    document.issuing_country,
-    document.issued_on,
-    document.expires_on,
-    document.no_expiration_date === true ? "true" : ""
-  ].some((value) => normalizeText(value));
-}
-
-function normalizePersonDocumentDraft(document = {}, document_type = "passport") {
-  return {
-    id: normalizeText(document.id) || "",
-    document_type: normalizeText(document.document_type) || document_type,
-    holder_name: normalizeText(document.holder_name) || "",
-    document_number: normalizeText(document.document_number) || "",
-    document_picture_ref: normalizeText(document.document_picture_ref) || "",
-    issuing_country: normalizeText(document.issuing_country).toUpperCase() || "",
-    issued_on: normalizeText(document.issued_on) || "",
-    no_expiration_date: document.no_expiration_date === true,
-    expires_on: normalizeText(document.expires_on) || "",
-    created_at: normalizeText(document.created_at) || "",
-    updated_at: normalizeText(document.updated_at) || ""
-  };
-}
-
 function clonePersonDraft(person = {}, index = 0) {
   return {
     _is_new: false,
@@ -891,12 +871,6 @@ function buildEmptyPersonDraft() {
     documents: [],
     notes: ""
   };
-}
-
-function getPersonDocument(draft, document_type) {
-  return (Array.isArray(draft?.documents) ? draft.documents : []).find(
-    (document) => normalizeText(document?.document_type) === normalizeText(document_type)
-  ) || null;
 }
 
 function ensurePersonDocument(draft, document_type) {
@@ -940,69 +914,6 @@ function updatePersonDocumentField(draft, document_type, field, value) {
   pruneEmptyPersonDocuments(draft);
 }
 
-function buildDocumentPayloadFromDraft(document, person_id, index) {
-  const normalized = normalizePersonDocumentDraft(document, normalizeText(document?.document_type) || "passport");
-  if (!documentHasAnyData(normalized)) return null;
-  const timestamp = new Date().toISOString();
-  return {
-    id: normalized.id || `${normalizeText(person_id) || state.id || "booking"}_document_${index + 1}`,
-    document_type: normalizeText(normalized.document_type) || "passport",
-    holder_name: normalizeText(normalized.holder_name) || undefined,
-    document_number: normalizeText(normalized.document_number) || undefined,
-    document_picture_ref: normalizeText(normalized.document_picture_ref) || undefined,
-    issuing_country: normalizeText(normalized.issuing_country).toUpperCase() || undefined,
-    issued_on: normalizeText(normalized.issued_on) || undefined,
-    no_expiration_date: normalized.no_expiration_date === true ? true : undefined,
-    expires_on: normalized.no_expiration_date === true ? undefined : normalizeText(normalized.expires_on) || undefined,
-    created_at: normalizeText(normalized.created_at) || timestamp,
-    updated_at: timestamp
-  };
-}
-
-function personHasCompleteIdentityDocument(person, document_type) {
-  const document = getPersonDocument(person, document_type);
-  const has_expiration = document_type === "national_id"
-    ? document?.no_expiration_date === true || normalizeText(document?.expires_on)
-    : normalizeText(document?.expires_on);
-  return Boolean(
-    normalizeText(document?.holder_name) &&
-    normalizeText(person?.date_of_birth) &&
-    normalizeText(person?.nationality) &&
-    normalizeText(document?.document_number) &&
-    normalizeText(document?.issuing_country) &&
-    normalizeText(document?.issued_on) &&
-    has_expiration
-  );
-}
-
-function getPersonIdentityStatus(person) {
-  if (personHasCompleteIdentityDocument(person, "passport")) {
-    return { is_complete: true, label: "Passport" };
-  }
-  if (personHasCompleteIdentityDocument(person, "national_id")) {
-    return { is_complete: true, label: "ID card" };
-  }
-  return { is_complete: false, label: "" };
-}
-
-function personHasCompleteContact(person) {
-  return collectPersonEmails(person).length > 0 && collectPersonPhoneNumbers(person).length > 0;
-}
-
-function personHasCompleteAddress(person) {
-  return Boolean(
-    normalizeText(person?.address?.line_1) &&
-    normalizeText(person?.address?.city) &&
-    normalizeText(person?.address?.postal_code) &&
-    normalizeText(person?.address?.country_code)
-  );
-}
-
-function renderPersonCardStatusLine(label, isComplete) {
-  if (!isComplete) return "";
-  return `<span class="booking-person-card__identity"><span class="booking-person-card__identity-check" aria-hidden="true">&#10003;</span><span>${escapeHtml(label)}</span></span>`;
-}
-
 function getPersonTravelDocumentStatus(person) {
   if (personHasCompleteIdentityDocument(person, "passport")) {
     return { is_complete: true, label: "OK Passport" };
@@ -1013,37 +924,6 @@ function getPersonTravelDocumentStatus(person) {
   return { is_complete: false, label: "Incomplete" };
 }
 
-function getPreferredPersonDocumentType(person) {
-  const passport = getPersonDocument(person, "passport");
-  const national_id = getPersonDocument(person, "national_id");
-  if (documentHasAnyData(passport)) return "passport";
-  if (documentHasAnyData(national_id)) return "national_id";
-  return "passport";
-}
-
-function getAbbreviatedPersonName(name) {
-  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "Name";
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-}
-
-function getPersonPrimaryRoleLabel(person) {
-  const roles = normalizeStringList(person?.roles);
-  const priority = ["primary_contact", "decision_maker", "payer", "assistant", "traveler"];
-  const selected_role = priority.find((role) => roles.includes(role)) || roles[0] || "traveler";
-  return formatPersonRoleLabel(selected_role);
-}
-
-function getPersonFooterRoleLabel(person) {
-  const roleLabels = normalizeStringList(person?.roles)
-    .filter((role) => role !== "traveler")
-    .map(formatPersonRoleLabel);
-  if (!isTravelingPerson(person)) {
-    return ["Not traveling", ...roleLabels].join(", ");
-  }
-  return roleLabels.join(", ");
-}
 
 function serializePersonDrafts(drafts = state.personDrafts) {
   return JSON.stringify(
@@ -1125,7 +1005,7 @@ function buildPersonPayloadFromDraft(draft, index) {
     roles: normalizeStringList(draft?.roles),
     consents: Array.isArray(draft?.consents) ? draft.consents.map((consent) => ({ ...consent })) : [],
     documents: (Array.isArray(draft?.documents) ? draft.documents : [])
-      .map((document, document_index) => buildDocumentPayloadFromDraft(document, draft?.id, document_index))
+      .map((document, document_index) => buildDocumentPayloadFromDraft(document, draft?.id, state.id || "booking", document_index))
       .filter(Boolean),
     notes: normalizeText(draft?.notes) || undefined
   };

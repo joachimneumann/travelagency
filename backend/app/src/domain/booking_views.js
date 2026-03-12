@@ -1,4 +1,5 @@
 import { normalizeText } from "../lib/text.js";
+import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
 
 export function createBookingViewHelpers({
   baseCurrency,
@@ -39,27 +40,6 @@ export function createBookingViewHelpers({
     );
   }
 
-  function normalizePersonRoles(person) {
-    return Array.from(new Set((Array.isArray(person?.roles) ? person.roles : []).map((value) => normalizeText(value)).filter(Boolean)));
-  }
-
-  function getBookingPersons(booking) {
-    const persons = Array.isArray(booking?.persons) ? booking.persons : [];
-    return persons
-      .map((person, index) => {
-        if (!person || typeof person !== "object" || Array.isArray(person)) return null;
-        return {
-          ...person,
-          id: normalizeText(person.id) || `${normalizeText(booking?.id) || "booking"}_person_${index + 1}`,
-          name: normalizeText(person.name) || `Traveler ${index + 1}`,
-          emails: normalizePersonEmails(person),
-          phone_numbers: normalizePersonPhoneNumbers(person),
-          roles: normalizePersonRoles(person)
-        };
-      })
-      .filter(Boolean);
-  }
-
   function getSubmittedContact(booking) {
     const submission = booking?.web_form_submission || {};
     return {
@@ -67,11 +47,6 @@ export function createBookingViewHelpers({
       email: normalizeEmail(submission.email) || null,
       phone_number: normalizeText(submission.phone_number) || null
     };
-  }
-
-  function getBookingPrimaryContact(booking) {
-    const persons = getBookingPersons(booking);
-    return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
   }
 
   function getBookingContactProfile(booking) {

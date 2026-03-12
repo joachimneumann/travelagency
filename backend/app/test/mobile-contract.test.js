@@ -16,11 +16,92 @@ const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
 process.env.KEYCLOAK_ALLOWED_ROLES = "atp_admin,atp_manager,atp_accountant,atp_staff";
+process.env.KEYCLOAK_BASE_URL = "http://keycloak.test";
+process.env.KEYCLOAK_REALM = "asiatravelplan";
+process.env.KEYCLOAK_CLIENT_ID = "asiatravelplan-backend";
+process.env.KEYCLOAK_ADMIN = "admin";
+process.env.KEYCLOAK_ADMIN_PASSWORD = "admin";
 process.env.MOBILE_MIN_SUPPORTED_APP_VERSION = "1.0.0";
 process.env.MOBILE_LATEST_APP_VERSION = "1.0.0";
 process.env.MOBILE_FORCE_UPDATE = "false";
 process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
 process.env.STORE_FILE = STORE_PATH;
+
+const originalFetch = global.fetch;
+const KEYCLOAK_USERS = [
+  { id: "kc-admin", username: "admin", firstName: "Admin", lastName: "User", enabled: true },
+  { id: "kc-joachim", username: "joachim", firstName: "Joachim", lastName: "Neumann", enabled: true },
+  { id: "kc-staff", username: "staff", firstName: "Staff", lastName: "User", enabled: true },
+  { id: "kc-accountant", username: "accountant", firstName: "Accountant", lastName: "User", enabled: true },
+  { id: "kc-disabled", username: "disabled", firstName: "Disabled", lastName: "User", enabled: false }
+];
+const KEYCLOAK_ROLE_MAP = {
+  "kc-admin": { realm: [], client: ["atp_admin"] },
+  "kc-joachim": { realm: [], client: ["atp_manager"] },
+  "kc-staff": { realm: [], client: ["atp_staff"] },
+  "kc-accountant": { realm: [], client: ["atp_accountant"] },
+  "kc-disabled": { realm: [], client: ["atp_staff"] }
+};
+
+global.fetch = async function mockedFetch(input, init = {}) {
+  const url = typeof input === "string" ? input : input?.url || "";
+  if (!String(url).startsWith("http://keycloak.test")) {
+    return originalFetch(input, init);
+  }
+
+  if (url === "http://keycloak.test/realms/master/protocol/openid-connect/token") {
+    return new Response(JSON.stringify({ access_token: "test-admin-token", expires_in: 300 }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  if (url === "http://keycloak.test/admin/realms/asiatravelplan/users?first=0&max=100") {
+    return new Response(JSON.stringify(KEYCLOAK_USERS), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  if (url === "http://keycloak.test/admin/realms/asiatravelplan/clients?clientId=asiatravelplan-backend") {
+    return new Response(JSON.stringify([{ id: "client-uuid", clientId: "asiatravelplan-backend" }]), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  const realmMatch = String(url).match(/^http:\/\/keycloak\.test\/admin\/realms\/asiatravelplan\/users\/([^/]+)\/role-mappings\/realm$/);
+  if (realmMatch) {
+    const userId = decodeURIComponent(realmMatch[1]);
+    const roles = (KEYCLOAK_ROLE_MAP[userId]?.realm || []).map((name) => ({ name }));
+    return new Response(JSON.stringify(roles), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  const clientMatch = String(url).match(/^http:\/\/keycloak\.test\/admin\/realms\/asiatravelplan\/users\/([^/]+)\/role-mappings\/clients\/client-uuid$/);
+  if (clientMatch) {
+    const userId = decodeURIComponent(clientMatch[1]);
+    const roles = (KEYCLOAK_ROLE_MAP[userId]?.client || []).map((name) => ({ name }));
+    return new Response(JSON.stringify(roles), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  const userMatch = String(url).match(/^http:\/\/keycloak\.test\/admin\/realms\/asiatravelplan\/users\/([^/]+)$/);
+  if (userMatch) {
+    const userId = decodeURIComponent(userMatch[1]);
+    const user = KEYCLOAK_USERS.find((entry) => entry.id === userId);
+    return new Response(JSON.stringify(user || null), {
+      status: user ? 200 : 404,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  return new Response("not mocked", { status: 404 });
+};
 
 const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
 const { createBackendHandler } = await import("../src/server.js");
@@ -86,10 +167,11 @@ async function requestJson(pathname, headers = {}, options = {}) {
   };
 }
 
-function apiHeaders(roles = "atp_admin") {
+function apiHeaders(roles = "atp_admin", username = "joachim", sub = "kc-joachim") {
   return {
     "x-test-roles": roles,
-    "x-test-username": "joachim"
+    "x-test-username": username,
+    "x-test-sub": sub
   };
 }
 
@@ -330,8 +412,10 @@ test("booking name and persons endpoints update the booking", async () => {
   );
   assert.equal(personUpdateResult.status, 200);
   assert.deepEqual(personUpdateResult.body.booking.persons[0].roles, ["primary_contact", "decision_maker"]);
-  assert.equal(personUpdateResult.body.booking.persons[0].documents[0].holder_name, "Test User");
-  assert.equal(personUpdateResult.body.booking.persons[0].documents[0].issued_on, "2023-05-01");
+  const updatedPassport = personUpdateResult.body.booking.persons[0].documents.find((document) => document.document_type === "passport");
+  assert.ok(updatedPassport);
+  assert.equal(updatedPassport.holder_name, "Test User");
+  assert.equal(updatedPassport.issued_on, "2023-05-01");
 
   const personCreateResult = await requestJson(
     endpointPath("booking_person_create").replace("{booking_id}", booking_id),
@@ -606,4 +690,132 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
   assert.ok(Array.isArray(exchangeRatesResult.body.converted_components));
   assert.equal(exchangeRatesResult.body.converted_components.length, 1);
   assert.equal(typeof exchangeRatesResult.body.total_price_cents, "number");
+});
+
+test("keycloak users endpoint lists assignable users from keycloak directory", async () => {
+  const result = await requestJson(endpointPath("keycloak_users"), apiHeaders("atp_admin", "admin", "kc-admin"));
+  assert.equal(result.status, 200);
+  assert.ok(Array.isArray(result.body.items));
+  assert.deepEqual(
+    result.body.items.map((item) => item.username),
+    ["accountant", "admin", "joachim", "staff"]
+  );
+  assert.ok(result.body.items.every((item) => item.active === true));
+});
+
+test("assigned staff only sees their own bookings while admin sees all", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const assignResult = await requestJson(
+    endpointPath("booking_owner").replace("{booking_id}", booking_id),
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "PATCH",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        assigned_keycloak_user_id: "kc-staff",
+        actor: "admin"
+      }
+    }
+  );
+  assert.equal(assignResult.status, 200);
+  assert.equal(assignResult.body.booking.assigned_keycloak_user_id, "kc-staff");
+
+  const adminList = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders("atp_admin", "admin", "kc-admin"));
+  assert.equal(adminList.status, 200);
+  assert.equal(adminList.body.items.length, 1);
+
+  const staffList = await requestJson(
+    `${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`,
+    apiHeaders("atp_staff", "staff", "kc-staff")
+  );
+  assert.equal(staffList.status, 200);
+  assert.equal(staffList.body.items.length, 1);
+  assert.equal(staffList.body.items[0].id, booking_id);
+
+  const otherStaffList = await requestJson(
+    `${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`,
+    apiHeaders("atp_staff", "other-staff", "kc-other-staff")
+  );
+  assert.equal(otherStaffList.status, 200);
+  assert.equal(otherStaffList.body.items.length, 0);
+});
+
+test("accountant is read-only everywhere", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const detailAsAccountant = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", booking_id),
+    apiHeaders("atp_accountant", "accountant", "kc-accountant")
+  );
+  assert.equal(detailAsAccountant.status, 200);
+
+  const noteResult = await requestJson(
+    endpointPath("booking_notes").replace("{booking_id}", booking_id),
+    apiHeaders("atp_accountant", "accountant", "kc-accountant"),
+    {
+      method: "PATCH",
+      body: {
+        expected_notes_revision: detailBefore.body.booking.notes_revision,
+        notes: "Accountant note",
+        actor: "accountant"
+      }
+    }
+  );
+  assert.equal(noteResult.status, 403);
+
+  const stageResult = await requestJson(
+    endpointPath("booking_stage").replace("{booking_id}", booking_id),
+    apiHeaders("atp_accountant", "accountant", "kc-accountant"),
+    {
+      method: "PATCH",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        stage: "QUALIFIED",
+        actor: "accountant"
+      }
+    }
+  );
+  assert.equal(stageResult.status, 403);
+});
+
+test("blank-name booking persons roundtrip without synthetic traveler names", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const createResult = await requestJson(
+    endpointPath("booking_person_create").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_persons_revision: detailBefore.body.booking.persons_revision,
+        person: {
+          name: "",
+          roles: ["traveler"],
+          phone_numbers: ["+84999999999"]
+        },
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(createResult.status, 201);
+  const createdPerson = createResult.body.booking.persons.find((person) => person.phone_numbers?.includes("+84999999999"));
+  assert.ok(createdPerson);
+  assert.equal(createdPerson.name, "");
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  const persistedPerson = detailAfter.body.booking.persons.find((person) => person.id === createdPerson.id);
+  assert.ok(persistedPerson);
+  assert.equal(persistedPerson.name, "");
 });

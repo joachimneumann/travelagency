@@ -147,6 +147,14 @@ Current role behavior:
 Booking assignment is stored as `booking.assigned_keycloak_user_id`, using the durable Keycloak user id directly.
 There is no local ATP user directory anymore.
 
+The Keycloak assignment directory is treated as a live integration, not a persisted cache:
+- the backend resolves assignable users directly from Keycloak
+- the UI shows Keycloak `name`, then `username`, then raw id as fallback
+- transient Keycloak directory failures fall back to the last successful in-memory snapshot when available
+
+Booking-person normalization is centralized in `backend/app/src/lib/booking_persons.js`.
+Handlers, read models, and store normalization should reuse that module instead of re-implementing person defaults or fallback names.
+
 ## Local Keycloak
 
 Helper scripts:

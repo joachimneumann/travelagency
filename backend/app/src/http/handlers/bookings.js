@@ -1,3 +1,10 @@
+import {
+  getBookingPersons,
+  getBookingPrimaryContact,
+  normalizeBookingPersonsPayload,
+  normalizeSingleBookingPersonPayload
+} from "../../lib/booking_persons.js";
+
 export function createBookingHandlers(deps) {
   const {
     readBodyJson,
@@ -88,149 +95,12 @@ export function createBookingHandlers(deps) {
     );
   }
 
-  function normalizePersonRoles(person) {
-    return unique((Array.isArray(person?.roles) ? person.roles : []).map((value) => normalizeText(value)).filter(Boolean));
-  }
-
-  function normalizeBookingPersonsForWrite(booking) {
-    const persons = Array.isArray(booking?.persons) ? booking.persons : [];
-    return persons
-      .map((person, index) => {
-        if (!person || typeof person !== "object" || Array.isArray(person)) return null;
-        const roles = normalizePersonRoles(person);
-        const emails = normalizePersonEmails(person);
-        const phoneNumbers = normalizePersonPhoneNumbers(person);
-        const normalized = {
-          ...person,
-          id: normalizeText(person.id) || `${normalizeText(booking?.id) || "booking"}_person_${index + 1}`,
-          name: normalizeText(person.name) || `Traveler ${index + 1}`,
-          roles,
-          emails,
-          phone_numbers: phoneNumbers
-        };
-        delete normalized.email;
-        delete normalized.phone;
-        delete normalized.phone_number;
-        return normalized;
-      })
-      .filter(Boolean);
-  }
-
-  function normalizeBookingPersonAddress(address) {
-    if (!address || typeof address !== "object" || Array.isArray(address)) return undefined;
-    const normalized = {
-      line_1: normalizeText(address.line_1),
-      line_2: normalizeText(address.line_2),
-      city: normalizeText(address.city),
-      state_region: normalizeText(address.state_region),
-      postal_code: normalizeText(address.postal_code),
-      country_code: normalizeText(address.country_code).toUpperCase()
-    };
-    if (Object.values(normalized).some(Boolean)) return normalized;
-    return undefined;
-  }
-
-  function normalizeBookingPersonDocuments(documents) {
-    return (Array.isArray(documents) ? documents : [])
-      .map((document, index) => {
-        if (!document || typeof document !== "object" || Array.isArray(document)) return null;
-        const timestamp = nowIso();
-        return {
-          ...document,
-          id: normalizeText(document.id) || `document_${index + 1}`,
-          document_type: normalizeText(document.document_type),
-          holder_name: normalizeText(document.holder_name),
-          document_number: normalizeText(document.document_number),
-          document_picture_ref: normalizeText(document.document_picture_ref),
-          issuing_country: normalizeText(document.issuing_country).toUpperCase(),
-          issued_on: normalizeText(document.issued_on),
-          no_expiration_date: document.no_expiration_date === true || document.no_expiration_date === "true",
-          expires_on: normalizeText(document.expires_on),
-          created_at: normalizeText(document.created_at) || timestamp,
-          updated_at: timestamp
-        };
-      })
-      .filter(Boolean);
-  }
-
-  function normalizeBookingPersonConsents(consents) {
-    return (Array.isArray(consents) ? consents : [])
-      .map((consent, index) => {
-        if (!consent || typeof consent !== "object" || Array.isArray(consent)) return null;
-        return {
-          ...consent,
-          id: normalizeText(consent.id) || `consent_${index + 1}`,
-          consent_type: normalizeText(consent.consent_type),
-          status: normalizeText(consent.status),
-          captured_via: normalizeText(consent.captured_via),
-          captured_at: normalizeText(consent.captured_at) || null,
-          evidence_ref: normalizeText(consent.evidence_ref),
-          updated_at: normalizeText(consent.updated_at) || null
-        };
-      })
-      .filter(Boolean);
-  }
-
-  function normalizeBookingPersonsPayload(bookingId, persons) {
-    return (Array.isArray(persons) ? persons : [])
-      .map((person, index) => {
-        if (!person || typeof person !== "object" || Array.isArray(person)) return null;
-        const emails = normalizePersonEmails(person);
-        const phoneNumbers = normalizePersonPhoneNumbers(person);
-        return {
-          id: normalizeText(person.id) || `${normalizeText(bookingId) || "booking"}_person_${index + 1}`,
-          name: normalizeText(person.name) || `Traveler ${index + 1}`,
-          photo_ref: normalizeText(person.photo_ref),
-          emails,
-          phone_numbers: phoneNumbers,
-          preferred_language: normalizeText(person.preferred_language) || null,
-          date_of_birth: normalizeText(person.date_of_birth) || null,
-          nationality: normalizeText(person.nationality).toUpperCase() || null,
-          address: normalizeBookingPersonAddress(person.address),
-          roles: normalizePersonRoles(person),
-          consents: normalizeBookingPersonConsents(person.consents),
-          documents: normalizeBookingPersonDocuments(person.documents),
-          notes: normalizeText(person.notes) || null
-        };
-      })
-      .filter(Boolean);
-  }
-
-  function normalizeSingleBookingPersonPayload(bookingId, person, fallbackIndex = 0) {
-    return normalizeBookingPersonsPayload(bookingId, [person]).map((entry, index) => ({
-      ...entry,
-      id: normalizeText(entry.id) || `${normalizeText(bookingId) || "booking"}_person_${fallbackIndex + index + 1}`
-    }))[0] || null;
-  }
-
   function resolveBookingPersonPhotoDiskPath(rawRelativePath) {
     const relativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
     if (!relativePath) return null;
     const absolutePath = path.resolve(BOOKING_PERSON_PHOTOS_DIR, relativePath);
     if (!absolutePath.startsWith(path.resolve(BOOKING_PERSON_PHOTOS_DIR) + path.sep)) return null;
     return absolutePath;
-  }
-
-  function resolveBookingImageDiskPath(rawRelativePath) {
-    const relativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
-    if (!relativePath) return null;
-    const absolutePath = path.resolve(BOOKING_IMAGES_DIR, relativePath);
-    if (!absolutePath.startsWith(path.resolve(BOOKING_IMAGES_DIR) + path.sep)) return null;
-    return absolutePath;
-  }
-
-  async function processBookingImageToWebp(inputPath, outputPath) {
-    await mkdir(path.dirname(outputPath), { recursive: true });
-    await execFile("magick", [
-      inputPath,
-      "-auto-orient",
-      "-resize",
-      "1000x1000>",
-      "-strip",
-      "-quality",
-      "82",
-      outputPath
-    ]);
   }
 
   function resolveBookingImageDiskPath(rawRelativePath) {
@@ -293,13 +163,6 @@ export function createBookingHandlers(deps) {
     };
   }
 
-  function getBookingPersons(booking) {
-    const normalized = normalizeBookingPersonsForWrite(booking);
-    if (normalized.length) return normalized;
-    const fallback = buildPrimaryContactFromSubmission(booking);
-    return fallback ? [fallback] : [];
-  }
-
   function getBookingRevision(booking, field) {
     const value = Number(booking?.[field]);
     return Number.isInteger(value) && value >= 0 ? value : 0;
@@ -307,12 +170,6 @@ export function createBookingHandlers(deps) {
 
   function incrementBookingRevision(booking, field) {
     booking[field] = getBookingRevision(booking, field) + 1;
-  }
-
-  function getBookingPrimaryContact(booking) {
-    const persons = getBookingPersons(booking);
-    const explicit = persons.find((person) => normalizePersonRoles(person).includes("primary_contact"));
-    return explicit || persons[0] || null;
   }
 
   function getBookingContactProfile(booking) {

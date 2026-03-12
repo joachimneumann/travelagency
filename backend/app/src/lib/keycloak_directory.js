@@ -56,6 +56,7 @@ export function createKeycloakDirectory({
   let tokenCache = null;
   let assignableUserCache = null;
   const userByIdCache = new Map();
+  let clientUuidCache = null;
 
   function isConfigured() {
     return Boolean(
@@ -132,6 +133,18 @@ export function createKeycloakDirectory({
     return users;
   }
 
+  async function getClientUuid() {
+    if (!cfg.keycloakClientId) return null;
+    if (clientUuidCache) return clientUuidCache;
+    const accessToken = await getAdminAccessToken();
+    const clients = await fetchJson(`${adminApiBase()}/clients?clientId=${encodeURIComponent(cfg.keycloakClientId)}`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const client = (Array.isArray(clients) ? clients : []).find((item) => normalizeText(item?.clientId) === cfg.keycloakClientId);
+    clientUuidCache = normalizeText(client?.id) || null;
+    return clientUuidCache;
+  }
+
   async function listUserRoles(userId) {
     const normalizedUserId = normalizeText(userId);
     if (!normalizedUserId) return [];
@@ -143,11 +156,7 @@ export function createKeycloakDirectory({
     roleNames.push(...(Array.isArray(realmPayload) ? realmPayload : []).map((role) => role?.name));
 
     if (cfg.keycloakClientId) {
-      const clients = await fetchJson(`${adminApiBase()}/clients?clientId=${encodeURIComponent(cfg.keycloakClientId)}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      const client = (Array.isArray(clients) ? clients : []).find((item) => normalizeText(item?.clientId) === cfg.keycloakClientId);
-      const clientUuid = normalizeText(client?.id);
+      const clientUuid = await getClientUuid();
       if (clientUuid) {
         const clientPayload = await fetchJson(
           `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/clients/${encodeURIComponent(clientUuid)}`,
@@ -164,32 +173,57 @@ export function createKeycloakDirectory({
     return normalizeRoles(roles).some((role) => cfg.keycloakAllowedRoles.has(role));
   }
 
+  async function mapWithConcurrency(items, limit, worker) {
+    const source = Array.isArray(items) ? items : [];
+    const size = Math.max(1, Number(limit) || 1);
+    const results = new Array(source.length);
+    let nextIndex = 0;
+    async function runWorker() {
+      while (true) {
+        const currentIndex = nextIndex;
+        nextIndex += 1;
+        if (currentIndex >= source.length) return;
+        results[currentIndex] = await worker(source[currentIndex], currentIndex);
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(size, source.length) }, () => runWorker()));
+    return results;
+  }
+
   async function listAssignableUsers() {
     if (assignableUserCache && assignableUserCache.expires_at > Date.now()) {
       return assignableUserCache.items;
     }
-    const users = await listUsers();
-    const items = [];
-    for (const user of users) {
-      if (user?.enabled === false) continue;
-      const summary = toDirectoryUser(user);
-      if (!summary.id) continue;
-      const roles = await listUserRoles(summary.id);
-      if (!isAssignableRoleSet(roles)) continue;
-      const normalized = { ...summary, roles };
-      items.push(normalized);
-      userByIdCache.set(normalized.id, normalized);
+    try {
+      const users = await listUsers();
+      await getClientUuid().catch(() => null);
+      const results = await mapWithConcurrency(users, 8, async (user) => {
+        if (user?.enabled === false) return null;
+        const summary = toDirectoryUser(user);
+        if (!summary.id) return null;
+        const roles = await listUserRoles(summary.id);
+        if (!isAssignableRoleSet(roles)) return null;
+        const normalized = { ...summary, roles };
+        userByIdCache.set(normalized.id, normalized);
+        return normalized;
+      });
+      const items = results.filter(Boolean);
+      items.sort((a, b) => {
+        const left = normalizeText(a.name) || normalizeText(a.username) || normalizeText(a.id);
+        const right = normalizeText(b.name) || normalizeText(b.username) || normalizeText(b.id);
+        return left.localeCompare(right);
+      });
+      assignableUserCache = {
+        items,
+        expires_at: Date.now() + cfg.listCacheTtlMs
+      };
+      return items;
+    } catch (error) {
+      if (assignableUserCache?.items?.length) {
+        return assignableUserCache.items;
+      }
+      throw error;
     }
-    items.sort((a, b) => {
-      const left = normalizeText(a.name) || normalizeText(a.username) || normalizeText(a.id);
-      const right = normalizeText(b.name) || normalizeText(b.username) || normalizeText(b.id);
-      return left.localeCompare(right);
-    });
-    assignableUserCache = {
-      items,
-      expires_at: Date.now() + cfg.listCacheTtlMs
-    };
-    return items;
   }
 
   async function getUserById(userId) {
