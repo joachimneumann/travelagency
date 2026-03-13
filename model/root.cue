@@ -15,6 +15,10 @@ import (
 		BookingPersonAddress:  entityModel.#BookingPersonAddress
 		BookingPersonConsent:  entityModel.#BookingPersonConsent
 		BookingPersonDocument: entityModel.#BookingPersonDocument
+		BookingTravelPlan:     entityModel.#BookingTravelPlan
+		BookingTravelPlanDay:  entityModel.#BookingTravelPlanDay
+		BookingTravelPlanSegment: entityModel.#BookingTravelPlanSegment
+		Supplier:              entityModel.#Supplier
 		Tour:                  entityModel.#Tour
 	}
 
@@ -31,6 +35,8 @@ import (
 		ATPStaffRole:         enumModel.#ATPStaffRole
 		BookingStage:          enumModel.#BookingStage
 		BookingPersonRole:     enumModel.#BookingPersonRole
+		TravelPlanSegmentKind: enumModel.#TravelPlanSegmentKind
+		SupplierCategory:      enumModel.#SupplierCategory
 		PaymentStatus:         enumModel.#PaymentStatus
 		PricingAdjustmentType: enumModel.#PricingAdjustmentType
 		OfferCategory:         enumModel.#OfferCategory
@@ -83,6 +89,7 @@ import (
 		BookingPersonDeleteRequest:  apiModel.#BookingPersonDeleteRequest
 		BookingPersonPhotoUploadRequest: apiModel.#BookingPersonPhotoUploadRequest
 		BookingNotesUpdateRequest:   apiModel.#BookingNotesUpdateRequest
+		BookingTravelPlanUpdateRequest: apiModel.#BookingTravelPlanUpdateRequest
 		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
 		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest: apiModel.#BookingGenerateOfferRequest

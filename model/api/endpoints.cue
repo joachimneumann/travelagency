@@ -257,6 +257,21 @@ package api
 		}]
 	},
 	{
+		key:           "booking_travel_plan"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingTravelPlanUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_pricing"
 		path:          "/api/v1/bookings/{booking_id}/pricing"
 		method:        "PATCH"

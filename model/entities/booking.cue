@@ -88,6 +88,7 @@ import (
 	core_revision?:                 >=0 & int
 	notes_revision?:                >=0 & int
 	persons_revision?:              >=0 & int
+	travel_plan_revision?:          >=0 & int
 	pricing_revision?:              >=0 & int
 	offer_revision?:                >=0 & int
 	invoices_revision?:             >=0 & int
@@ -102,6 +103,7 @@ import (
 	preferred_currency?:            enums.#CurrencyCode
 	notes?:                         string
 	persons?:                       [...#BookingPerson]
+	travel_plan?:                   #BookingTravelPlan
 	web_form_submission?:           #BookingWebFormSubmission
 	pricing:                        #BookingPricing
 	offer:                          #BookingOffer

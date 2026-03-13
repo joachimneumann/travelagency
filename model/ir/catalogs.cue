@@ -9,6 +9,8 @@ IR: {
 		roles: [for role in enumModel.ATPStaffRoleCatalog {{code: role}}]
 		stages: [for stage in enumModel.BookingStageCatalog {{code: stage}}]
 		bookingPersonRoles: [for role in enumModel.BookingPersonRoleCatalog {{code: role}}]
+		travelPlanSegmentKinds: [for kind in enumModel.TravelPlanSegmentKindCatalog {{code: kind}}]
+		supplierCategories: [for category in enumModel.SupplierCategoryCatalog {{code: category}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]

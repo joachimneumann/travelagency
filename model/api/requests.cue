@@ -101,6 +101,12 @@ import (
 	actor?:                   string
 }
 
+#BookingTravelPlanUpdateRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	travel_plan:                     entities.#BookingTravelPlan
+	actor?:                          string
+}
+
 #BookingPricingUpdateRequest: {
 	expected_pricing_revision?: >=0 & int
 	pricing:                    entities.#BookingPricing
