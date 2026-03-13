@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-13T05:37:30Z
+# 2026-03-13T15:45:00Z
 
 ---
 openapi: 3.1.0
@@ -3342,6 +3342,7 @@ components:
       - NOTE_UPDATED
       - PRICING_UPDATED
       - OFFER_UPDATED
+      - OFFER_EMAIL_DRAFT_CREATED
       - INVOICE_CREATED
       - INVOICE_UPDATED
       - PAYMENT_UPDATED
@@ -3352,6 +3353,7 @@ components:
       - code: NOTE_UPDATED
       - code: PRICING_UPDATED
       - code: OFFER_UPDATED
+      - code: OFFER_EMAIL_DRAFT_CREATED
       - code: INVOICE_CREATED
       - code: INVOICE_UPDATED
       - code: PAYMENT_UPDATED
@@ -3368,6 +3370,8 @@ components:
         label: PRICING_UPDATED
       - value: OFFER_UPDATED
         label: OFFER_UPDATED
+      - value: OFFER_EMAIL_DRAFT_CREATED
+        label: OFFER_EMAIL_DRAFT_CREATED
       - value: INVOICE_CREATED
         label: INVOICE_CREATED
       - value: INVOICE_UPDATED
@@ -5707,6 +5711,93 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}":
+    patch:
+      operationId: booking_generated_offer_update
+      summary: Booking Generated Offer Update
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingGeneratedOfferUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: booking_generated_offer_delete
+      summary: Booking Generated Offer Delete
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingGeneratedOfferDeleteRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf":
     get:
       operationId: booking_generated_offer_pdf
@@ -5733,6 +5824,56 @@ paths:
             application/json:
               schema:
                 type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft":
+    post:
+      operationId: booking_generated_offer_gmail_draft
+      summary: Booking Generated Offer Gmail Draft
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingGeneratedOfferGmailDraftRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingGeneratedOfferGmailDraftResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingGeneratedOfferGmailDraftResponse"
         '401':
           description: Unauthorized
           content:

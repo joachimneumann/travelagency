@@ -352,6 +352,40 @@ export function bookingGenerateOfferRequest({ baseURL = '', params = {}, query =
   };
 }
 
+export function bookingGeneratedOfferUpdatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}", params);
+}
+
+export function bookingGeneratedOfferUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingGeneratedOfferUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_generated_offer_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingGeneratedOfferDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}", params);
+}
+
+export function bookingGeneratedOfferDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingGeneratedOfferDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_generated_offer_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingGeneratedOfferPdfPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", params);
 }
@@ -362,6 +396,23 @@ export function bookingGeneratedOfferPdfRequest({ baseURL = '', params = {}, que
   return {
     key: "booking_generated_offer_pdf",
     method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingGeneratedOfferGmailDraftPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft", params);
+}
+
+export function bookingGeneratedOfferGmailDraftRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingGeneratedOfferGmailDraftPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_generated_offer_gmail_draft",
+    method: "POST",
     authenticated: true,
     url,
     headers,

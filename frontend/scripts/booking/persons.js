@@ -4,7 +4,7 @@ import {
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=2c526d5d72ed";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,14 +20,14 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js";
+} from "./person_helpers.js?v=2c526d5d72ed";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
+} from "../shared/booking_persons.js?v=2c526d5d72ed";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=2c526d5d72ed";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -262,9 +262,9 @@ export function createBookingPersonsModule(ctx) {
     const current = normalizeText(select.value).toUpperCase();
     select.innerHTML = [
       `<option value="">${escapeHtml(placeholderLabel)}</option>`,
-      ...COUNTRY_CODE_OPTIONS.map((option) => `<option value="${escapeHtml(option.code)}">${escapeHtml(option.label)}</option>`)
+      ...COUNTRY_CODE_OPTIONS.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
     ].join("");
-    if (COUNTRY_CODE_OPTIONS.some((option) => option.code === current)) {
+    if (COUNTRY_CODE_OPTIONS.some((option) => option.value === current)) {
       select.value = current;
     }
   }

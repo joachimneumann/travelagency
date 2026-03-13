@@ -1421,6 +1421,41 @@ textarea:focus-visible {
   padding-inline: 0.25rem;
 }
 
+.backend-table th.generated-offers-col-link,
+.backend-table th.generated-offers-col-email,
+.backend-table th.generated-offers-col-date,
+.backend-table td.generated-offers-col-link,
+.backend-table td.generated-offers-col-email,
+.backend-table td.generated-offers-col-date {
+  text-align: right;
+}
+
+.backend-table td.generated-offers-col-link a,
+.backend-table td.generated-offers-col-email a {
+  display: inline-block;
+}
+
+.backend-table th.generated-offers-col-total,
+.backend-table td.generated-offers-col-total {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.backend-table td.generated-offers-col-comment textarea {
+  width: 100%;
+  min-height: 42px;
+}
+
+.backend-table .generated-offers-col-actions {
+  width: 64px;
+  min-width: 64px;
+  text-align: center;
+}
+
+.backend-table td.generated-offers-col-actions {
+  padding-inline: 0.25rem;
+}
+
 .offer-remove-btn {
   min-width: 34px;
   height: 34px;

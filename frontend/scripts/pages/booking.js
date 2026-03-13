@@ -1,4 +1,4 @@
-import { GENERATED_ATP_STAFF_ROLES } from "../../Generated/Models/generated_ATPStaff.js";
+import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Language.js";
 import {
   BOOKING_PERSON_SCHEMA,
@@ -7,13 +7,12 @@ import {
 import {
   bookingActivitiesRequest,
   bookingDetailRequest,
-  bookingGenerateOfferRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=20260313c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=2c526d5d72ed";
 import {
   createApiFetcher,
   escapeHtml,
@@ -21,32 +20,33 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js";
-import { resolveBackendSectionHref } from "../shared/nav.js";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js";
+} from "../shared/api.js?v=2c526d5d72ed";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=2c526d5d72ed";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=2c526d5d72ed";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=20260313d";
+} from "../booking/pricing.js?v=2c526d5d72ed";
+import { createBookingOfferModule } from "../booking/offers.js?v=2c526d5d72ed";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=20260313d";
-import { createBookingCoreModule } from "../booking/core.js";
+} from "../booking/invoices.js?v=2c526d5d72ed";
+import { createBookingCoreModule } from "../booking/core.js?v=2c526d5d72ed";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js";
-import { createBookingPersonsModule } from "../booking/persons.js?v=20260313d";
+} from "../booking/person_helpers.js?v=2c526d5d72ed";
+import { createBookingPersonsModule } from "../booking/persons.js?v=2c526d5d72ed";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js";
+} from "../shared/booking_persons.js?v=2c526d5d72ed";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -55,7 +55,7 @@ const apiOrigin = apiBase || window.location.origin;
 const STAGES = GENERATED_BOOKING_STAGE_LIST;
 const GENERATED_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
-    GENERATED_ATP_STAFF_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
+    GENERATED_APP_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
   )
 );
 
@@ -558,7 +558,7 @@ function renderPricingPanel() {
 }
 
 function renderOfferPanel() {
-  return pricingModule.renderOfferPanel();
+  return offerModule.renderOfferPanel();
 }
 
 function updateInvoiceDirtyState() {
@@ -586,15 +586,15 @@ function savePricing() {
 }
 
 function addOfferComponent() {
-  return pricingModule.addOfferComponent();
+  return offerModule.addOfferComponent();
 }
 
 function handleOfferCurrencyChange() {
-  return pricingModule.handleOfferCurrencyChange();
+  return offerModule.handleOfferCurrencyChange();
 }
 
 function saveOffer() {
-  return pricingModule.saveOffer();
+  return offerModule.saveOffer();
 }
 
 function updatePricingDirtyState() {
@@ -625,15 +625,26 @@ const pricingModule = createBookingPricingModule({
   state,
   els,
   apiOrigin,
-  fetchApi,
   fetchBookingMutation,
-  bookingGenerateOfferRequest,
-  getBookingRevision,
   renderBookingHeader,
   renderBookingData,
   loadActivities,
   escapeHtml,
   captureControlSnapshot,
+  setBookingSectionDirty
+});
+
+const offerModule = createBookingOfferModule({
+  state,
+  els,
+  apiOrigin,
+  fetchApi,
+  fetchBookingMutation,
+  getBookingRevision,
+  renderBookingHeader,
+  renderBookingData,
+  loadActivities,
+  escapeHtml,
   setBookingSectionDirty
 });
 
@@ -727,7 +738,7 @@ async function fetchBookingMutation(path, options = {}) {
   const body = options.body;
 
   try {
-    const response = await fetch(resolveApiUrl(path), {
+    const response = await fetch(resolveApiUrl(apiOrigin, path), {
       method,
       credentials: "include",
       headers: {

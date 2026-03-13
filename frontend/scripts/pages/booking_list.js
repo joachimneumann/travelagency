@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js";
-import { GENERATED_ATP_STAFF_ROLES } from "../../Generated/Models/generated_ATPStaff.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+} from "../shared/api.js?v=2c526d5d72ed";
+import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=2c526d5d72ed";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js";
-import { resolveBackendSectionHref } from "../shared/nav.js";
-import { renderPagination } from "../shared/pagination.js";
+} from "../shared/links.js?v=2c526d5d72ed";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=2c526d5d72ed";
+import { renderPagination } from "../shared/pagination.js?v=2c526d5d72ed";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js";
+} from "../shared/booking_persons.js?v=2c526d5d72ed";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -61,7 +61,7 @@ const SECTION_CONFIG = [
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
-    GENERATED_ATP_STAFF_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
+    GENERATED_APP_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
   )
 );
 

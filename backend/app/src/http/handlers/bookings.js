@@ -72,6 +72,7 @@ export function createBookingHandlers(deps) {
     randomUUID,
     invoicePdfPath,
     generatedOfferPdfPath,
+    gmailDraftsConfig,
     mkdir,
     path,
     execFile,
@@ -418,7 +419,10 @@ export function createBookingHandlers(deps) {
     handlePatchBookingOffer,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
-    handleGetGeneratedOfferPdf
+    handleGetGeneratedOfferPdf,
+    handleCreateGeneratedOfferGmailDraft,
+    handlePatchGeneratedBookingOffer,
+    handleDeleteGeneratedBookingOffer
   } = createBookingFinanceHandlers({
     readBodyJson,
     sendJson,
@@ -447,6 +451,9 @@ export function createBookingHandlers(deps) {
     randomUUID,
     writeGeneratedOfferPdf,
     generatedOfferPdfPath,
+    gmailDraftsConfig,
+    getBookingContactProfile,
+    rm,
     canAccessBooking,
     sendFileWithCache
   });
@@ -672,7 +679,10 @@ export function createBookingHandlers(deps) {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
     handleGenerateBookingOffer,
+    handlePatchGeneratedBookingOffer,
+    handleDeleteGeneratedBookingOffer,
     handleGetGeneratedOfferPdf,
+    handleCreateGeneratedOfferGmailDraft,
     handlePostOfferExchangeRates,
     handleListActivities,
     handleCreateActivity,

@@ -1,4 +1,4 @@
 // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
-export * from "../../../shared/generated-contract/API/generated_APIRequestFactory.js?v=20260313c";
+export * from "../../../shared/generated-contract/API/generated_APIRequestFactory.js?v=2c526d5d72ed";

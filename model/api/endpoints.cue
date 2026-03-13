@@ -302,11 +302,13 @@ package api
 		}]
 	},
 	{
-		key:           "booking_generated_offer_pdf"
-		path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
-		method:        "GET"
+		key:           "booking_generated_offer_update"
+		path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}"
+		method:        "PATCH"
 		tag:           "Bookings"
 		authenticated: true
+		requestType:   "BookingGeneratedOfferUpdateRequest"
+		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
 			location: "path"
@@ -320,9 +322,67 @@ package api
 		}]
 	},
 	{
-		key:           "offer_exchange_rates"
-		path:          "/api/v1/offers/exchange-rates"
-		method:        "POST"
+		key:           "booking_generated_offer_delete"
+		path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}"
+		method:        "DELETE"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingGeneratedOfferDeleteRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+		{
+			key:           "booking_generated_offer_pdf"
+			path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
+			method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "booking_generated_offer_gmail_draft"
+			path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft"
+			method:        "POST"
+			tag:           "Bookings"
+			authenticated: true
+			requestType:   "BookingGeneratedOfferGmailDraftRequest"
+			responseType:  "BookingGeneratedOfferGmailDraftResponse"
+			parameters: [{
+				name:     "booking_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}, {
+				name:     "generated_offer_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "offer_exchange_rates"
+			path:          "/api/v1/offers/exchange-rates"
+			method:        "POST"
 		tag:           "Offers"
 		authenticated: true
 		requestType:   "OfferExchangeRatesRequest"

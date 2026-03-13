@@ -75,6 +75,7 @@ mapfile -t SERVICES < <(normalize_services "$@")
 
 git fetch origin
 git pull --ff-only
+ruby "$ROOT_DIR/scripts/generate_frontend_asset_version.rb" >/dev/null
 
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
@@ -82,7 +83,7 @@ fi
 
 mkdir -p backend/app/data
 if [[ ! -f backend/app/data/store.json ]]; then
-  printf '{\n  "customers": [],\n  "bookings": [],\n  "activities": [],\n  "invoices": []\n}\n' > backend/app/data/store.json
+  printf '{}\n' > backend/app/data/store.json
 fi
 
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build --force-recreate "${SERVICES[@]}"

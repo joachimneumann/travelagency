@@ -1,4 +1,4 @@
 // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
-export * from "../../../shared/generated-contract/Models/generated_Aux.js";
+export * from "../../../shared/generated-contract/Models/generated_Aux.js?v=2c526d5d72ed";

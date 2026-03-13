@@ -266,12 +266,48 @@
         ]
       },
       {
+        key: "booking_generated_offer_update",
+        path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingGeneratedOfferUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
+        key: "booking_generated_offer_delete",
+        path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: "BookingGeneratedOfferDeleteRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
         key: "booking_generated_offer_pdf",
         path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf",
         method: "GET",
         authenticated: true,
         requestType: null,
         responseType: null,
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
+        key: "booking_generated_offer_gmail_draft",
+        path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingGeneratedOfferGmailDraftRequest",
+        responseType: "BookingGeneratedOfferGmailDraftResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)

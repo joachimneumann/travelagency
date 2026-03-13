@@ -483,15 +483,12 @@ def render_js_api_runtime_module(endpoints, contract_version, shared_parameter_d
   JS
 end
 
-def render_js_atp_staff_module(types, roles, shared_field_names, header = JS_RUNTIME_HEADER)
+def render_js_roles_module(roles, header = JS_RUNTIME_HEADER)
   role_codes = catalog_codes(roles)
 
   <<~JS
     #{header}
-    import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_SchemaRuntime.js';
-    export const GENERATED_ATP_STAFF_ROLES = Object.freeze(#{js_literal(role_codes)});
-
-    #{render_js_type_exports(types, shared_field_names)}
+    export const GENERATED_APP_ROLES = Object.freeze(#{js_literal(role_codes)});
   JS
 end
 
@@ -716,7 +713,7 @@ def render_swift_form_constraints(traveler_constraints, header = SWIFT_RUNTIME_H
   SWIFT
 end
 
-def render_swift_atp_staff(roles, types = [], header = SWIFT_RUNTIME_HEADER)
+def render_swift_roles(roles, header = SWIFT_RUNTIME_HEADER)
   role_codes = catalog_codes(roles)
   role_cases = role_codes.map { |role| "    case #{swift_enum_case_identifier(role)} = \"#{role}\"" }.join("\n")
 
@@ -724,11 +721,9 @@ def render_swift_atp_staff(roles, types = [], header = SWIFT_RUNTIME_HEADER)
     import Foundation
 
     #{header}
-    enum GeneratedATPStaffRole: String, CaseIterable, Codable, Hashable {
+    enum GeneratedAppRole: String, CaseIterable, Codable, Hashable {
 #{role_cases}
     }
-
-    #{render_swift_type_collection(types)}
   SWIFT
 end
 
@@ -1351,9 +1346,8 @@ contract_version = meta.fetch('modelVersion')
 entity_types = types.select { |type| type.fetch('module') == 'entities' }
 api_types = types.select { |type| type.fetch('module') == 'api' }
 
-atp_staff_types = entity_types.select { |type| type.fetch('domain') == 'atp_staff' }
 booking_types = entity_types.select { |type| type.fetch('domain') == 'booking' }
-aux_types = entity_types.reject { |type| %w[atp_staff booking].include?(type.fetch('domain')) }
+aux_types = entity_types.reject { |type| type.fetch('domain') == 'booking' }
 
 write_file(
   File.join(CONTRACT_GENERATED_DIR, 'mobile-api.meta.json'),
@@ -1420,17 +1414,7 @@ frontend_traveler_constraints = {
   'max' => openapi_schemas.fetch('TravelerConstraints').dig('properties', 'max', 'const')
 }
 
-frontend_atp_staff_types = openapi_types_for_schema_names(
-  ['ATPStaff'],
-  openapi_schemas,
-  openapi_enum_names,
-  domain: 'atp_staff',
-  mod: 'entities',
-  transport_kind: 'entity'
-)
-
 frontend_booking_type_names = %w[
-  SourceAttribution
   BookingPersonAddress
   BookingPersonConsent
   BookingPersonDocument
@@ -1458,8 +1442,7 @@ frontend_aux_type_names = %w[
 
 frontend_api_type_names = openapi_transport_names.to_a.reject do |name|
   frontend_booking_type_names.include?(name) ||
-    frontend_aux_type_names.include?(name) ||
-    name == 'ATPStaff'
+    frontend_aux_type_names.include?(name)
 end
 
 frontend_booking_types = openapi_types_for_schema_names(
@@ -1490,8 +1473,7 @@ frontend_api_types = openapi_types_for_schema_names(
 )
 
 frontend_shared_field_definitions, frontend_shared_field_names = build_js_shared_field_definitions(
-  frontend_atp_staff_types +
-    frontend_booking_types +
+  frontend_booking_types +
     frontend_aux_types +
     frontend_api_types
 )
@@ -1501,7 +1483,7 @@ shared_model_outputs = {
   'generated_Language.js' => render_js_language_module(frontend_language_codes, JS_OPENAPI_HEADER),
   'generated_Currency.js' => render_js_currency_module(frontend_currency_catalog, JS_OPENAPI_HEADER),
   'generated_FormConstraints.js' => render_js_form_constraints_module(frontend_traveler_constraints, JS_OPENAPI_HEADER),
-  'generated_ATPStaff.js' => render_js_atp_staff_module(frontend_atp_staff_types, frontend_roles, frontend_shared_field_names, JS_OPENAPI_HEADER),
+  'generated_Roles.js' => render_js_roles_module(frontend_roles, JS_OPENAPI_HEADER),
   'generated_Booking.js' => render_js_booking_module(
     frontend_booking_types,
     frontend_stages,
@@ -1561,7 +1543,7 @@ ios_model_outputs = {
   'generated_Language.swift' => render_swift_language(frontend_language_codes, SWIFT_OPENAPI_HEADER),
   'generated_Currency.swift' => render_swift_currency(frontend_currency_catalog, SWIFT_OPENAPI_HEADER),
   'generated_FormConstraints.swift' => render_swift_form_constraints(frontend_traveler_constraints, SWIFT_OPENAPI_HEADER),
-  'generated_ATPStaff.swift' => render_swift_atp_staff(frontend_roles, frontend_atp_staff_types, SWIFT_OPENAPI_HEADER),
+  'generated_Roles.swift' => render_swift_roles(frontend_roles, SWIFT_OPENAPI_HEADER),
   'generated_Booking.swift' => render_swift_booking(
     frontend_stages,
     frontend_payment_statuses,
@@ -1603,6 +1585,12 @@ end
 frontend_api_outputs.each do |filename, content|
   write_file(File.join(FRONTEND_GENERATED_API_DIR, filename), content)
 end
+[
+  File.join(SHARED_GENERATED_MODELS_DIR, 'generated_ATPStaff.js'),
+  File.join(BACKEND_GENERATED_MODELS_DIR, 'generated_ATPStaff.js'),
+  File.join(FRONTEND_GENERATED_MODELS_DIR, 'generated_ATPStaff.js'),
+  File.join(IOS_GENERATED_MODELS_DIR, 'generated_ATPStaff.swift')
+].each { |obsolete_path| FileUtils.rm_f(obsolete_path) }
 if GENERATE_IOS_OUTPUTS
   ios_model_outputs.each do |filename, content|
     write_file(File.join(IOS_GENERATED_MODELS_DIR, filename), content)
@@ -1611,3 +1599,6 @@ if GENERATE_IOS_OUTPUTS
     write_file(File.join(IOS_GENERATED_API_DIR, filename), content)
   end
 end
+
+frontend_asset_version_script = File.join(ROOT, 'scripts', 'generate_frontend_asset_version.rb')
+system('ruby', frontend_asset_version_script, exception: true)

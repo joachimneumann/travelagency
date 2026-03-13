@@ -52,8 +52,14 @@ case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
 case "booking_generate_offer":
   return RequestFactory.bookingGenerateOfferRequest(options);
+case "booking_generated_offer_update":
+  return RequestFactory.bookingGeneratedOfferUpdateRequest(options);
+case "booking_generated_offer_delete":
+  return RequestFactory.bookingGeneratedOfferDeleteRequest(options);
 case "booking_generated_offer_pdf":
   return RequestFactory.bookingGeneratedOfferPdfRequest(options);
+case "booking_generated_offer_gmail_draft":
+  return RequestFactory.bookingGeneratedOfferGmailDraftRequest(options);
 case "offer_exchange_rates":
   return RequestFactory.offerExchangeRatesRequest(options);
 case "booking_activities":

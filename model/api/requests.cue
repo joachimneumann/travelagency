@@ -119,6 +119,21 @@ import (
 	actor?:                   string
 }
 
+#BookingGeneratedOfferUpdateRequest: {
+	expected_offer_revision?: >=0 & int
+	comment?:                 string
+	actor?:                   string
+}
+
+#BookingGeneratedOfferDeleteRequest: {
+	expected_offer_revision?: >=0 & int
+	actor?:                   string
+}
+
+#BookingGeneratedOfferGmailDraftRequest: {
+	actor?: string
+}
+
 #OfferExchangeRateComponent: {
 	id?:                    common.#Identifier
 	category:               enums.#OfferCategory

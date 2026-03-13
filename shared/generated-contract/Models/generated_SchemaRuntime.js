@@ -2784,6 +2784,7 @@
     "NOTE_UPDATED",
     "PRICING_UPDATED",
     "OFFER_UPDATED",
+    "OFFER_EMAIL_DRAFT_CREATED",
     "INVOICE_CREATED",
     "INVOICE_UPDATED",
     "PAYMENT_UPDATED"
@@ -2812,6 +2813,10 @@
     {
       "value": "OFFER_UPDATED",
       "label": "OFFER_UPDATED"
+    },
+    {
+      "value": "OFFER_EMAIL_DRAFT_CREATED",
+      "label": "OFFER_EMAIL_DRAFT_CREATED"
     },
     {
       "value": "INVOICE_CREATED",

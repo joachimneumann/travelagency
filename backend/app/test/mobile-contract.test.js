@@ -664,6 +664,13 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Updated hotel room");
 });
 
+test("contract metadata exposes the generated offer gmail draft endpoint", async () => {
+  assert.equal(
+    endpointPath("booking_generated_offer_gmail_draft"),
+    "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft"
+  );
+});
+
 test("booking generated offer pdf endpoint returns a pdf file", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -722,6 +729,86 @@ test("booking generated offer pdf endpoint returns a pdf file", async () => {
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   assert.match(pdfResult.body, /%PDF-/);
+});
+
+test("booking generated offers support comment update and delete", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_daytrip_1",
+              category: "ACTIVITY",
+              label: "Activity",
+              details: "Day trip",
+              quantity: 1,
+              unit_amount_cents: 5000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Initial note"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const updateResult = await requestJson(
+    endpointPath("booking_generated_offer_update")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: generateResult.body.booking.offer_revision,
+        comment: "Updated note"
+      }
+    }
+  );
+  assert.equal(updateResult.status, 200);
+  assert.equal(updateResult.body.booking.generated_offers[0].comment, "Updated note");
+
+  const deleteResult = await requestJson(
+    endpointPath("booking_generated_offer_delete")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders(),
+    {
+      method: "DELETE",
+      body: {
+        expected_offer_revision: updateResult.body.booking.offer_revision
+      }
+    }
+  );
+  assert.equal(deleteResult.status, 200);
+  assert.equal(deleteResult.body.booking.generated_offers.length, 0);
 });
 
 test("booking name and persons endpoints update the booking", async () => {

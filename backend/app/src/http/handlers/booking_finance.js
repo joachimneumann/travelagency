@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
+
 export function createBookingFinanceHandlers(deps) {
   const {
     readBodyJson,
@@ -27,9 +30,29 @@ export function createBookingFinanceHandlers(deps) {
     randomUUID,
     writeGeneratedOfferPdf,
     generatedOfferPdfPath,
+    gmailDraftsConfig,
+    getBookingContactProfile,
+    rm,
     canAccessBooking,
     sendFileWithCache
   } = deps;
+
+  let gmailDraftsClient = null;
+
+  function getGmailDraftsClient() {
+    const serviceAccountJsonPath = normalizeText(gmailDraftsConfig?.serviceAccountJsonPath);
+    const impersonatedEmail = normalizeText(gmailDraftsConfig?.impersonatedEmail);
+    if (!serviceAccountJsonPath || !impersonatedEmail) {
+      throw new Error("Gmail draft creation is not configured.");
+    }
+    if (!gmailDraftsClient) {
+      gmailDraftsClient = createGmailDraftsClient({
+        serviceAccountJsonPath,
+        impersonatedEmail
+      });
+    }
+    return gmailDraftsClient;
+  }
 
   function buildGeneratedOfferReadModel(booking, generatedOffer) {
     return {
@@ -187,15 +210,6 @@ export function createBookingFinanceHandlers(deps) {
     }
 
     const { fromCurrency, toCurrency, components } = check;
-    try {
-      console.log("[offer-exchange-debug backend] request", JSON.stringify({
-        from_currency: fromCurrency,
-        to_currency: toCurrency,
-        components
-      }));
-    } catch {
-      // ignore debug serialization issues
-    }
     if (!Array.isArray(components) || components.length === 0) {
       sendJson(res, 200, {
         from_currency: fromCurrency,
@@ -217,11 +231,6 @@ export function createBookingFinanceHandlers(deps) {
         sourceToBaseRate = resolved.rate;
         if (resolved.warning) warnings.add(resolved.warning);
       } catch (error) {
-        console.warn("[offer-exchange-debug backend] source->base failure", {
-          from_currency: fromCurrency,
-          to_currency: BASE_CURRENCY,
-          error: String(error?.message || error)
-        });
         sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
         return;
       }
@@ -232,11 +241,6 @@ export function createBookingFinanceHandlers(deps) {
         baseToTargetRate = resolved.rate;
         if (resolved.warning) warnings.add(resolved.warning);
       } catch (error) {
-        console.warn("[offer-exchange-debug backend] base->target failure", {
-          from_currency: BASE_CURRENCY,
-          to_currency: toCurrency,
-          error: String(error?.message || error)
-        });
         sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
         return;
       }
@@ -259,11 +263,6 @@ export function createBookingFinanceHandlers(deps) {
       converted_components: convertedComponents,
       ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
     };
-    try {
-      console.log("[offer-exchange-debug backend] response", JSON.stringify(responsePayload));
-    } catch {
-      // ignore debug serialization issues
-    }
     sendJson(res, 200, responsePayload);
   }
 
@@ -354,11 +353,209 @@ export function createBookingFinanceHandlers(deps) {
     });
   }
 
+  async function handleCreateGeneratedOfferGmailDraft(req, res, [bookingId, generatedOfferId]) {
+    let payload = {};
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      payload = {};
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const generatedOffer = (Array.isArray(booking.generated_offers) ? booking.generated_offers : []).find(
+      (item) => item.id === generatedOfferId
+    );
+    if (!generatedOffer) {
+      sendJson(res, 404, { error: "Generated offer not found" });
+      return;
+    }
+
+    const contact = getBookingContactProfile(booking);
+    const recipientEmail = normalizeText(contact?.email || booking?.web_form_submission?.email);
+    if (!recipientEmail) {
+      sendJson(res, 422, { error: "Booking has no recipient email address for draft creation." });
+      return;
+    }
+
+    const bookingTitle = normalizeText(booking?.name || booking?.web_form_submission?.booking_name || "your trip");
+    const greeting = normalizeText(contact?.name) ? `Hello ${normalizeText(contact.name)},` : "Hello,";
+    const intro = bookingTitle
+      ? `Please find attached the current Asia Travel Plan offer for ${bookingTitle}.`
+      : "Please find attached your current Asia Travel Plan offer.";
+
+    try {
+      await writeGeneratedOfferPdf(generatedOffer, booking);
+      const pdfPath = generatedOfferPdfPath(generatedOffer.id);
+      const pdfBuffer = await readFile(pdfPath);
+      const draft = await getGmailDraftsClient().createDraft({
+        to: recipientEmail,
+        subject: "Your Asia Travel Plan offer",
+        greeting,
+        intro,
+        footer: "Best regards,\nThe Asia Travel Plan Team",
+        fromName: "Asia Travel Plan",
+        attachments: [{
+          filename: normalizeText(generatedOffer.filename) || `${generatedOffer.id}.pdf`,
+          contentType: "application/pdf",
+          content: pdfBuffer
+        }]
+      });
+
+      let activityLogged = true;
+      let warning = "";
+      try {
+        addActivity(
+          store,
+          booking.id,
+          "OFFER_EMAIL_DRAFT_CREATED",
+          actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+          `Gmail draft created for ${normalizeText(generatedOffer.filename) || generatedOffer.id}`
+        );
+        await persistStore(store);
+      } catch (activityError) {
+        activityLogged = false;
+        warning = "Draft created, but booking activity could not be recorded.";
+        console.error("Failed to persist Gmail draft booking activity", activityError);
+      }
+
+      sendJson(res, 200, {
+        draft_id: draft.draftId,
+        gmail_draft_url: draft.gmailDraftUrl,
+        recipient_email: recipientEmail,
+        generated_offer_id: generatedOffer.id,
+        activity_logged: activityLogged,
+        ...(warning ? { warning } : {})
+      });
+    } catch (error) {
+      const detail = String(error?.message || error);
+      const status = /not configured/i.test(detail) ? 503 : 502;
+      sendJson(res, status, {
+        error: "Could not create Gmail draft",
+        detail
+      });
+    }
+  }
+
+  async function handlePatchGeneratedBookingOffer(req, res, [bookingId, generatedOfferId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+
+    const generatedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
+    const index = generatedOffers.findIndex((item) => item.id === generatedOfferId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Generated offer not found" });
+      return;
+    }
+
+    const nextComment = normalizeText(payload?.comment) || null;
+    if ((generatedOffers[index].comment || null) === nextComment) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      return;
+    }
+
+    generatedOffers[index] = {
+      ...generatedOffers[index],
+      comment: nextComment
+    };
+    booking.generated_offers = generatedOffers;
+    incrementBookingRevision(booking, "offer_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "OFFER_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      "Generated offer comment updated"
+    );
+    await persistStore(store);
+
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
+  async function handleDeleteGeneratedBookingOffer(req, res, [bookingId, generatedOfferId]) {
+    let payload = {};
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      payload = {};
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+
+    const generatedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
+    const index = generatedOffers.findIndex((item) => item.id === generatedOfferId);
+    if (index < 0) {
+      sendJson(res, 404, { error: "Generated offer not found" });
+      return;
+    }
+
+    const [removed] = generatedOffers.splice(index, 1);
+    booking.generated_offers = generatedOffers;
+    incrementBookingRevision(booking, "offer_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "OFFER_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      "Generated offer deleted"
+    );
+    await persistStore(store);
+
+    const pdfPath = generatedOfferPdfPath(removed.id);
+    await rm(pdfPath, { force: true }).catch(() => {});
+
+    sendJson(res, 200, await buildBookingDetailResponse(booking));
+  }
+
   return {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
-    handleGetGeneratedOfferPdf
+    handleGetGeneratedOfferPdf,
+    handleCreateGeneratedOfferGmailDraft,
+    handlePatchGeneratedBookingOffer,
+    handleDeleteGeneratedBookingOffer
   };
 }

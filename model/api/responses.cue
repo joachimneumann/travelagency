@@ -107,6 +107,15 @@ import (
 	warning?:             string
 }
 
+#BookingGeneratedOfferGmailDraftResponse: {
+	draft_id:           common.#Identifier
+	gmail_draft_url:    common.#Url | string
+	recipient_email:    common.#Email
+	generated_offer_id: common.#Identifier
+	activity_logged:    bool
+	warning?:           string
+}
+
 #TourResponse: {
 	tour: entities.#Tour
 }

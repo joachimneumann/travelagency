@@ -8,7 +8,7 @@ This iOS target is intentionally reduced to:
 
 Removed on purpose:
 - generated Swift API and model files
-- booking, customer, travel-group, offer, invoice, and tour UI
+- all booking, offer, invoice, person, chat, and tour UI beyond the minimal authenticated shell
 - domain-specific mobile view models and formatting helpers
 
 Kept on purpose:

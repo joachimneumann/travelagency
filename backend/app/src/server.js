@@ -46,7 +46,7 @@ import {
   GENERATED_PAYMENT_STATUSES,
   GENERATED_PRICING_ADJUSTMENT_TYPES
 } from "../Generated/Models/generated_Booking.js";
-import { GENERATED_ATP_STAFF_ROLES } from "../Generated/Models/generated_ATPStaff.js";
+import { GENERATED_APP_ROLES } from "../Generated/Models/generated_Roles.js";
 import {
   currencyDefinition as generatedCurrencyDefinition,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
@@ -63,7 +63,8 @@ const GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
 const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
 const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
-const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.png");
+const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.large.png");
+const FALLBACK_BOOKING_IMAGE_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "profile_booking.png");
 const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
 const BACKEND_GENERATED_REQUEST_FACTORY_PATH = path.join(APP_ROOT, "Generated", "API", "generated_APIRequestFactory.js");
 const PORT = Number(process.env.PORT || 8787);
@@ -86,6 +87,8 @@ const WHATSAPP_APP_SECRET = normalizeText(process.env.WHATSAPP_APP_SECRET || "")
 const KEYCLOAK_DIRECTORY_USERNAME = normalizeText(process.env.KEYCLOAK_DIRECTORY_USERNAME || process.env.KEYCLOAK_ADMIN || "");
 const KEYCLOAK_DIRECTORY_PASSWORD = normalizeText(process.env.KEYCLOAK_DIRECTORY_PASSWORD || process.env.KEYCLOAK_ADMIN_PASSWORD || "");
 const KEYCLOAK_DIRECTORY_ADMIN_REALM = normalizeText(process.env.KEYCLOAK_DIRECTORY_ADMIN_REALM || "master");
+const GOOGLE_SERVICE_ACCOUNT_JSON_PATH = normalizeText(process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH || "");
+const GOOGLE_IMPERSONATED_EMAIL = normalizeText(process.env.GOOGLE_IMPERSONATED_EMAIL || "");
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -93,13 +96,19 @@ const COMPANY_PROFILE = {
   whatsapp: "+84 337942446",
   email: "info@asiatravelplan.com"
 };
+const GMAIL_DRAFTS_CONFIG = Object.freeze({
+  serviceAccountJsonPath: GOOGLE_SERVICE_ACCOUNT_JSON_PATH
+    ? path.resolve(GOOGLE_SERVICE_ACCOUNT_JSON_PATH)
+    : "",
+  impersonatedEmail: GOOGLE_IMPERSONATED_EMAIL
+});
 
 const STAGES = Object.freeze(Object.fromEntries(GENERATED_BOOKING_STAGES.map((value) => [value, value])));
 const STAGE_ORDER = GENERATED_BOOKING_STAGES;
 
 const GENERATED_APP_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
-    GENERATED_ATP_STAFF_ROLES.map((value) => [String(value).replace(/^atp_/, "").toUpperCase(), value])
+    GENERATED_APP_ROLES.map((value) => [String(value).replace(/^atp_/, "").toUpperCase(), value])
   )
 );
 
@@ -390,7 +399,16 @@ const {
 });
 
 const writeInvoicePdf = createInvoicePdfWriter({ invoicePdfPath });
-const writeGeneratedOfferPdf = createOfferPdfWriter({ generatedOfferPdfPath, formatMoney });
+const writeGeneratedOfferPdf = createOfferPdfWriter({
+  generatedOfferPdfPath,
+  bookingImagesDir: BOOKING_IMAGES_DIR,
+  readTours,
+  resolveTourImageDiskPath,
+  logoPath: LOGO_PNG_PATH,
+  fallbackImagePath: FALLBACK_BOOKING_IMAGE_PATH,
+  companyProfile: COMPANY_PROFILE,
+  formatMoney
+});
 
 export async function createBackendHandler({ port = PORT } = {}) {
   await ensureStorage();
@@ -466,6 +484,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     randomUUID,
     invoicePdfPath,
     generatedOfferPdfPath,
+    gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
     mkdir,
     path,
     execFile,

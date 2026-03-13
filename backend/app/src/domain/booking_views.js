@@ -200,10 +200,6 @@ export function createBookingViewHelpers({
   function syncBookingAssignmentFields(booking) {
     const assignedUserId = normalizeText(booking.assigned_keycloak_user_id);
     booking.assigned_keycloak_user_id = assignedUserId || null;
-    delete booking.atp_user;
-    delete booking.atp_user_name;
-    delete booking.assigned_keycloak_user_name;
-    delete booking.assigned_keycloak_username;
     return booking;
   }
 
