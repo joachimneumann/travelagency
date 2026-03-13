@@ -58,10 +58,10 @@ Generated artifacts:
 
 ## Role Expectations
 
-- `atp_staff`: assigned bookings only
-- `atp_manager`: all bookings, assignment changes
-- `atp_admin`: manager rights plus tours
-- `atp_accountant`: booking read access, stage changes, tours read-only
+- `atp_staff`: assigned bookings only, plus tour read/edit access
+- `atp_manager`: all bookings, assignment changes, Keycloak user directory access, tour read/edit access
+- `atp_admin`: same booking and tour capabilities as manager
+- `atp_accountant`: booking read access, tours read-only, Keycloak user directory access
 
 ## Keycloak
 

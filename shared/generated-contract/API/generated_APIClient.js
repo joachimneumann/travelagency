@@ -50,6 +50,10 @@ case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
+case "booking_generate_offer":
+  return RequestFactory.bookingGenerateOfferRequest(options);
+case "booking_generated_offer_pdf":
+  return RequestFactory.bookingGeneratedOfferPdfRequest(options);
 case "offer_exchange_rates":
   return RequestFactory.offerExchangeRatesRequest(options);
 case "booking_activities":

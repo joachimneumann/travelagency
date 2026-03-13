@@ -10,6 +10,7 @@ import (
 #AbstractModel: {
 	entities: {
 		Booking:               entityModel.#Booking
+		GeneratedBookingOffer: entityModel.#GeneratedBookingOffer
 		BookingPerson:         entityModel.#BookingPerson
 		BookingPersonAddress:  entityModel.#BookingPersonAddress
 		BookingPersonConsent:  entityModel.#BookingPersonConsent
@@ -74,12 +75,17 @@ import (
 		PublicBookingCreateRequest:  apiModel.#PublicBookingCreateRequest
 		BookingDeleteRequest:        apiModel.#BookingDeleteRequest
 		BookingNameUpdateRequest:    apiModel.#BookingNameUpdateRequest
+		BookingImageUploadRequest:   apiModel.#BookingImageUploadRequest
 		BookingStageUpdateRequest:   apiModel.#BookingStageUpdateRequest
 		BookingOwnerUpdateRequest:   apiModel.#BookingOwnerUpdateRequest
-		BookingPersonsUpdateRequest: apiModel.#BookingPersonsUpdateRequest
+		BookingPersonCreateRequest:  apiModel.#BookingPersonCreateRequest
+		BookingPersonUpdateRequest:  apiModel.#BookingPersonUpdateRequest
+		BookingPersonDeleteRequest:  apiModel.#BookingPersonDeleteRequest
+		BookingPersonPhotoUploadRequest: apiModel.#BookingPersonPhotoUploadRequest
 		BookingNotesUpdateRequest:   apiModel.#BookingNotesUpdateRequest
 		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
 		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
+		BookingGenerateOfferRequest: apiModel.#BookingGenerateOfferRequest
 		OfferExchangeRateComponent:  apiModel.#OfferExchangeRateComponent
 		OfferExchangeRatesRequest:   apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest: apiModel.#BookingActivityCreateRequest

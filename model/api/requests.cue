@@ -113,6 +113,12 @@ import (
 	actor?:                   string
 }
 
+#BookingGenerateOfferRequest: {
+	expected_offer_revision?: >=0 & int
+	comment?:                 string
+	actor?:                   string
+}
+
 #OfferExchangeRateComponent: {
 	id?:                    common.#Identifier
 	category:               enums.#OfferCategory

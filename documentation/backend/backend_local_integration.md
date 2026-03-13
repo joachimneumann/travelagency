@@ -11,7 +11,7 @@ Local backend features:
 - booking detail editing
 - booking-owned persons
 - invoices and pricing
-- ATP staff management
+- Keycloak user assignment lookup
 - Keycloak login
 
 Local admin pages:
@@ -84,7 +84,7 @@ The submitted contact becomes the initial booking person and can later be refine
 `backend.html`
 - bookings table
 - tours table
-- ATP staff panel
+- Keycloak-backed assignment controls inside booking detail
 - link to person search
 
 `booking.html`
@@ -107,10 +107,10 @@ There is no customer page and no travel-group page.
 
 ## Role Behavior
 
-- `atp_staff`: only assigned bookings
-- `atp_manager`: all bookings + assignment + ATP staff creation
-- `atp_admin`: manager rights + tour editing
-- `atp_accountant`: all bookings read, stage changes, tours read-only
+- `atp_staff`: only assigned bookings, plus tour read/edit access
+- `atp_manager`: all bookings + assignment + Keycloak user directory access + tour read/edit access
+- `atp_admin`: same booking and tour capabilities as manager
+- `atp_accountant`: all bookings read, tours read-only, Keycloak user directory access
 
 ## Verification Checklist
 

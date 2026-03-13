@@ -16,7 +16,8 @@ export function createPricingHelpers({
   clamp,
   safeInt,
   randomUUID,
-  invoicesDir
+  invoicesDir,
+  generatedOffersDir
 }) {
   function normalizeAmountCents(value, fallback = 0) {
     const number = Number(value);
@@ -743,6 +744,10 @@ export function createPricingHelpers({
     return path.join(invoicesDir, `${invoiceId}-v${version}.pdf`);
   }
 
+  function generatedOfferPdfPath(generatedOfferId) {
+    return path.join(generatedOffersDir, `${generatedOfferId}.pdf`);
+  }
+
   async function buildBookingOfferReadModel(rawOffer, preferredCurrency = baseCurrency) {
     const normalized = normalizeBookingOffer(rawOffer, preferredCurrency);
     const converted = await convertOfferForDisplay(normalized, preferredCurrency);
@@ -848,6 +853,7 @@ export function createPricingHelpers({
     normalizeInvoiceComponents,
     computeInvoiceComponentTotal,
     nextInvoiceNumber,
-    invoicePdfPath
+    invoicePdfPath,
+    generatedOfferPdfPath
   };
 }

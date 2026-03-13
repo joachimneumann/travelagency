@@ -7,6 +7,7 @@ export function createStoreUtils({
   dataPath,
   toursDir,
   invoicesDir,
+  generatedOffersDir,
   bookingImagesDir,
   bookingPersonPhotosDir,
   tempUploadDir,
@@ -21,6 +22,7 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
+    await mkdir(generatedOffersDir, { recursive: true });
     await mkdir(bookingImagesDir, { recursive: true });
     await mkdir(bookingPersonPhotosDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
@@ -40,6 +42,7 @@ export function createStoreUtils({
       syncBookingAssignmentFields(normalizedBooking);
       normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
       normalizedBooking.offer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
+      normalizedBooking.generated_offers = Array.isArray(normalizedBooking.generated_offers) ? normalizedBooking.generated_offers : [];
       normalizedBooking.pricing = await convertBookingPricingToBaseCurrency(normalizedBooking.pricing);
       normalizedBooking.offer = await convertBookingOfferToBaseCurrency(normalizedBooking.offer);
       return normalizedBooking;

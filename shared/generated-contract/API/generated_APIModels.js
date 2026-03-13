@@ -11,9 +11,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.MobileBootstrap",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"app","required":true,"wireName":"app"}, SHARED_FIELD_DEFS.FIELD_39),
-    schemaField({"name":"api","required":true,"wireName":"api"}, SHARED_FIELD_DEFS.FIELD_40),
-    schemaField({"name":"features","required":true,"wireName":"features"}, SHARED_FIELD_DEFS.FIELD_41)
+    schemaField({"name":"app","required":true,"wireName":"app"}, SHARED_FIELD_DEFS.FIELD_40),
+    schemaField({"name":"api","required":true,"wireName":"api"}, SHARED_FIELD_DEFS.FIELD_41),
+    schemaField({"name":"features","required":true,"wireName":"features"}, SHARED_FIELD_DEFS.FIELD_42)
         ]
       };
 
@@ -29,7 +29,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"authenticated","required":true,"wireName":"authenticated"}, SHARED_FIELD_DEFS.FIELD_8),
-    schemaField({"name":"user","required":false,"wireName":"user"}, SHARED_FIELD_DEFS.FIELD_42)
+    schemaField({"name":"user","required":false,"wireName":"user"}, SHARED_FIELD_DEFS.FIELD_43)
         ]
       };
 
@@ -80,7 +80,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingDetail",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"booking","required":true,"wireName":"booking"}, SHARED_FIELD_DEFS.FIELD_43)
+    schemaField({"name":"booking","required":true,"wireName":"booking"}, SHARED_FIELD_DEFS.FIELD_44)
         ]
       };
 
@@ -95,9 +95,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.TourList",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_44),
-    schemaField({"name":"pagination","required":true,"wireName":"pagination"}, SHARED_FIELD_DEFS.FIELD_45),
-    schemaField({"name":"filters","required":false,"wireName":"filters"}, SHARED_FIELD_DEFS.FIELD_46),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_45),
+    schemaField({"name":"pagination","required":true,"wireName":"pagination"}, SHARED_FIELD_DEFS.FIELD_46),
+    schemaField({"name":"filters","required":false,"wireName":"filters"}, SHARED_FIELD_DEFS.FIELD_47),
     schemaField({"name":"sort","required":false,"wireName":"sort"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"available_destinations","required":false,"wireName":"available_destinations"}, SHARED_FIELD_DEFS.FIELD_10),
     schemaField({"name":"available_styles","required":false,"wireName":"available_styles"}, SHARED_FIELD_DEFS.FIELD_10)
@@ -115,9 +115,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingList",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_47),
-    schemaField({"name":"pagination","required":true,"wireName":"pagination"}, SHARED_FIELD_DEFS.FIELD_45),
-    schemaField({"name":"filters","required":false,"wireName":"filters"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_48),
+    schemaField({"name":"pagination","required":true,"wireName":"pagination"}, SHARED_FIELD_DEFS.FIELD_46),
+    schemaField({"name":"filters","required":false,"wireName":"filters"}, SHARED_FIELD_DEFS.FIELD_49),
     schemaField({"name":"sort","required":false,"wireName":"sort"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -165,9 +165,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"mode","required":false,"wireName":"mode"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_49),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_50),
     schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"conversations","required":false,"wireName":"conversations"}, SHARED_FIELD_DEFS.FIELD_50),
+    schemaField({"name":"conversations","required":false,"wireName":"conversations"}, SHARED_FIELD_DEFS.FIELD_51),
     schemaField({"name":"conversation_total","required":true,"wireName":"conversation_total"}, SHARED_FIELD_DEFS.FIELD_17)
         ]
       };
@@ -254,7 +254,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_persons_revision","required":false,"wireName":"expected_persons_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"person","required":true,"wireName":"person"}, SHARED_FIELD_DEFS.FIELD_51),
+    schemaField({"name":"person","required":true,"wireName":"person"}, SHARED_FIELD_DEFS.FIELD_52),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -271,7 +271,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_persons_revision","required":false,"wireName":"expected_persons_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"person","required":true,"wireName":"person"}, SHARED_FIELD_DEFS.FIELD_51),
+    schemaField({"name":"person","required":true,"wireName":"person"}, SHARED_FIELD_DEFS.FIELD_52),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -321,7 +321,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_pricing_revision","required":false,"wireName":"expected_pricing_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_52),
+    schemaField({"name":"pricing","required":true,"wireName":"pricing"}, SHARED_FIELD_DEFS.FIELD_53),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -338,13 +338,30 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_offer_revision","required":false,"wireName":"expected_offer_revision"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_53),
+    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_54),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
       export function validateBookingOfferUpdateRequest(value) {
         return validateShape(value, BOOKING_OFFER_UPDATE_REQUEST_SCHEMA);
+      }
+
+      export const BOOKING_GENERATE_OFFER_REQUEST_SCHEMA = {
+        name: "BookingGenerateOfferRequest",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.BookingGenerateOfferRequest",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"expected_offer_revision","required":false,"wireName":"expected_offer_revision"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"comment","required":false,"wireName":"comment"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateBookingGenerateOfferRequest(value) {
+        return validateShape(value, BOOKING_GENERATE_OFFER_REQUEST_SCHEMA);
       }
 
       export const OFFER_EXCHANGE_RATES_REQUEST_SCHEMA = {
@@ -356,7 +373,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"from_currency","required":true,"wireName":"from_currency"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"to_currency","required":true,"wireName":"to_currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_54)
+    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_55)
         ]
       };
 
@@ -373,9 +390,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"from_currency","required":true,"wireName":"from_currency"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"to_currency","required":true,"wireName":"to_currency"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"exchange_rate","required":true,"wireName":"exchange_rate"}, SHARED_FIELD_DEFS.FIELD_37),
+    schemaField({"name":"exchange_rate","required":true,"wireName":"exchange_rate"}, SHARED_FIELD_DEFS.FIELD_38),
     schemaField({"name":"total_price_cents","required":true,"wireName":"total_price_cents"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"converted_components","required":false,"wireName":"converted_components"}, SHARED_FIELD_DEFS.FIELD_55),
+    schemaField({"name":"converted_components","required":false,"wireName":"converted_components"}, SHARED_FIELD_DEFS.FIELD_56),
     schemaField({"name":"warning","required":false,"wireName":"warning"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -391,8 +408,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingActivitiesResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_56),
-    schemaField({"name":"activities","required":false,"wireName":"activities"}, SHARED_FIELD_DEFS.FIELD_56),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_57),
+    schemaField({"name":"activities","required":false,"wireName":"activities"}, SHARED_FIELD_DEFS.FIELD_57),
     schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_17)
         ]
       };
@@ -426,8 +443,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingActivityResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"activity","required":true,"wireName":"activity"}, SHARED_FIELD_DEFS.FIELD_57),
-    schemaField({"name":"booking","required":true,"wireName":"booking"}, SHARED_FIELD_DEFS.FIELD_43)
+    schemaField({"name":"activity","required":true,"wireName":"activity"}, SHARED_FIELD_DEFS.FIELD_58),
+    schemaField({"name":"booking","required":true,"wireName":"booking"}, SHARED_FIELD_DEFS.FIELD_44)
         ]
       };
 
@@ -442,7 +459,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingInvoicesResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_58),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_59),
     schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_17)
         ]
       };
@@ -465,8 +482,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"due_date","required":false,"wireName":"due_date"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"title","required":false,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_59),
-    schemaField({"name":"due_amount_cents","required":false,"wireName":"due_amount_cents"}, SHARED_FIELD_DEFS.FIELD_60),
+    schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_60),
+    schemaField({"name":"due_amount_cents","required":false,"wireName":"due_amount_cents"}, SHARED_FIELD_DEFS.FIELD_61),
     schemaField({"name":"sent_to_recipient","required":false,"wireName":"sent_to_recipient"}, SHARED_FIELD_DEFS.FIELD_8)
         ]
       };
@@ -482,8 +499,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingInvoiceResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"invoice","required":true,"wireName":"invoice"}, SHARED_FIELD_DEFS.FIELD_61),
-    schemaField({"name":"booking","required":true,"wireName":"booking"}, SHARED_FIELD_DEFS.FIELD_43)
+    schemaField({"name":"invoice","required":true,"wireName":"invoice"}, SHARED_FIELD_DEFS.FIELD_62),
+    schemaField({"name":"booking","required":true,"wireName":"booking"}, SHARED_FIELD_DEFS.FIELD_44)
         ]
       };
 
@@ -498,7 +515,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.KeycloakUserListResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_62),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_63),
     schemaField({"name":"total","required":true,"wireName":"total"}, SHARED_FIELD_DEFS.FIELD_17)
         ]
       };
@@ -521,9 +538,9 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"travel_duration_days","required":false,"wireName":"travel_duration_days"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"budget_lower_usd","required":false,"wireName":"budget_lower_usd"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"priority","required":false,"wireName":"priority"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"rating","required":false,"wireName":"rating"}, SHARED_FIELD_DEFS.FIELD_37),
-    schemaField({"name":"seasonality_start_month","required":false,"wireName":"seasonality_start_month"}, SHARED_FIELD_DEFS.FIELD_38),
-    schemaField({"name":"seasonality_end_month","required":false,"wireName":"seasonality_end_month"}, SHARED_FIELD_DEFS.FIELD_38),
+    schemaField({"name":"rating","required":false,"wireName":"rating"}, SHARED_FIELD_DEFS.FIELD_38),
+    schemaField({"name":"seasonality_start_month","required":false,"wireName":"seasonality_start_month"}, SHARED_FIELD_DEFS.FIELD_39),
+    schemaField({"name":"seasonality_end_month","required":false,"wireName":"seasonality_end_month"}, SHARED_FIELD_DEFS.FIELD_39),
     schemaField({"name":"short_description","required":false,"wireName":"short_description"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"highlights","required":false,"wireName":"highlights"}, SHARED_FIELD_DEFS.FIELD_10),
     schemaField({"name":"image","required":false,"wireName":"image"}, SHARED_FIELD_DEFS.FIELD_1)
@@ -541,7 +558,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.TourResponse",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"tour","required":true,"wireName":"tour"}, SHARED_FIELD_DEFS.FIELD_63)
+    schemaField({"name":"tour","required":true,"wireName":"tour"}, SHARED_FIELD_DEFS.FIELD_64)
         ]
       };
 
@@ -556,8 +573,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.TourDetail",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"tour","required":true,"wireName":"tour"}, SHARED_FIELD_DEFS.FIELD_63),
-    schemaField({"name":"options","required":true,"wireName":"options"}, SHARED_FIELD_DEFS.FIELD_64)
+    schemaField({"name":"tour","required":true,"wireName":"tour"}, SHARED_FIELD_DEFS.FIELD_64),
+    schemaField({"name":"options","required":true,"wireName":"options"}, SHARED_FIELD_DEFS.FIELD_65)
         ]
       };
 
@@ -760,7 +777,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"id","required":false,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"category","required":true,"wireName":"category"}, SHARED_FIELD_DEFS.FIELD_28),
     schemaField({"name":"quantity","required":true,"wireName":"quantity"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"unit_amount_cents","required":true,"wireName":"unit_amount_cents"}, SHARED_FIELD_DEFS.FIELD_60),
+    schemaField({"name":"unit_amount_cents","required":true,"wireName":"unit_amount_cents"}, SHARED_FIELD_DEFS.FIELD_61),
     schemaField({"name":"tax_rate_basis_points","required":false,"wireName":"tax_rate_basis_points"}, SHARED_FIELD_DEFS.FIELD_17)
         ]
       };
@@ -816,5 +833,30 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
 
       export function validateTourOptions(value) {
         return validateShape(value, TOUR_OPTIONS_SCHEMA);
+      }
+
+      export const GENERATED_BOOKING_OFFER_SCHEMA = {
+        name: "GeneratedBookingOffer",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.GeneratedBookingOffer",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"booking_id","required":true,"wireName":"booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"version","required":true,"wireName":"version"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"filename","required":true,"wireName":"filename"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"comment","required":false,"wireName":"comment"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"created_at","required":true,"wireName":"created_at"}, SHARED_FIELD_DEFS.FIELD_5),
+    schemaField({"name":"created_by","required":false,"wireName":"created_by"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
+    schemaField({"name":"total_price_cents","required":true,"wireName":"total_price_cents"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"offer","required":true,"wireName":"offer"}, SHARED_FIELD_DEFS.FIELD_54),
+    schemaField({"name":"pdf_url","required":false,"wireName":"pdf_url"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateGeneratedBookingOffer(value) {
+        return validateShape(value, GENERATED_BOOKING_OFFER_SCHEMA);
       }
 

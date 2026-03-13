@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-13T05:01:54Z
+# 2026-03-13T05:37:30Z
 
 ---
 openapi: 3.1.0
@@ -3896,6 +3896,44 @@ components:
           "$ref": "#/components/schemas/BookingOfferTotals"
         total_price_cents:
           type: integer
+    GeneratedBookingOffer:
+      type: object
+      required:
+      - id
+      - booking_id
+      - version
+      - filename
+      - created_at
+      - currency
+      - total_price_cents
+      - offer
+      properties:
+        id:
+          type: string
+        booking_id:
+          type: string
+        version:
+          type: integer
+        filename:
+          type: string
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          nullable: true
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        total_price_cents:
+          type: integer
+        offer:
+          "$ref": "#/components/schemas/BookingOffer"
+        pdf_url:
+          type: string
+          nullable: true
     BookingActivity:
       type: object
       required:
@@ -4080,6 +4118,10 @@ components:
           "$ref": "#/components/schemas/BookingPricing"
         offer:
           "$ref": "#/components/schemas/BookingOffer"
+        generated_offers:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GeneratedBookingOffer"
         created_at:
           type: string
           format: date-time
@@ -4762,6 +4804,19 @@ components:
           nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
+        actor:
+          type: string
+          nullable: true
+    BookingGenerateOfferRequest:
+      type: object
+      required: []
+      properties:
+        expected_offer_revision:
+          type: integer
+          nullable: true
+        comment:
+          type: string
+          nullable: true
         actor:
           type: string
           nullable: true
@@ -5595,6 +5650,89 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/generated-offers":
+    post:
+      operationId: booking_generate_offer
+      summary: Booking Generate Offer
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingGenerateOfferRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf":
+    get:
+      operationId: booking_generated_offer_pdf
+      summary: Booking Generated Offer Pdf
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
         '401':
           description: Unauthorized
           content:

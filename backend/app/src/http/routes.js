@@ -30,6 +30,8 @@ export function buildApiRoutes({ authRoutes = [], handlers }) {
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlers.handlePatchBookingNotes },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/pricing$/, handler: handlers.handlePatchBookingPricing },
     { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/offer$/, handler: handlers.handlePatchBookingOffer },
+    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers$/, handler: handlers.handleGenerateBookingOffer },
+    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers\/([^/]+)\/pdf$/, handler: handlers.handleGetGeneratedOfferPdf },
     { method: "POST", pattern: /^\/api\/v1\/offers\/exchange-rates$/, handler: handlers.handlePostOfferExchangeRates },
     { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handlers.handleListActivities },
     { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handlers.handleCreateActivity },

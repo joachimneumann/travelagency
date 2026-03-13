@@ -62,17 +62,21 @@ export function createBookingHandlers(deps) {
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
+    formatMoney,
     normalizeInvoiceComponents,
     computeInvoiceComponentTotal,
     safeAmountCents,
     nextInvoiceNumber,
     writeInvoicePdf,
+    writeGeneratedOfferPdf,
     randomUUID,
     invoicePdfPath,
+    generatedOfferPdfPath,
     mkdir,
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    GENERATED_OFFERS_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,
@@ -264,6 +268,9 @@ export function createBookingHandlers(deps) {
   }
 
   async function deleteBookingArtifacts(store, bookingId) {
+    const removedBooking = Array.isArray(store.bookings)
+      ? store.bookings.find((booking) => booking.id === bookingId) || null
+      : null;
     const removedInvoices = Array.isArray(store.invoices)
       ? store.invoices.filter((invoice) => invoice.booking_id === bookingId)
       : [];
@@ -284,6 +291,16 @@ export function createBookingHandlers(deps) {
       removedInvoices.map(async (invoice) => {
         try {
           await rm(invoicePdfPath(invoice.id, invoice.version), { force: true });
+        } catch {
+          // Ignore stale file cleanup failures.
+        }
+      })
+    );
+
+    await Promise.all(
+      (Array.isArray(removedBooking?.generated_offers) ? removedBooking.generated_offers : []).map(async (generatedOffer) => {
+        try {
+          await rm(generatedOfferPdfPath(generatedOffer.id), { force: true });
         } catch {
           // Ignore stale file cleanup failures.
         }
@@ -399,7 +416,9 @@ export function createBookingHandlers(deps) {
   const {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
-    handlePostOfferExchangeRates
+    handlePostOfferExchangeRates,
+    handleGenerateBookingOffer,
+    handleGetGeneratedOfferPdf
   } = createBookingFinanceHandlers({
     readBodyJson,
     sendJson,
@@ -421,9 +440,15 @@ export function createBookingHandlers(deps) {
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
+    formatMoney,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
-    convertOfferLineAmountForCurrency
+    convertOfferLineAmountForCurrency,
+    randomUUID,
+    writeGeneratedOfferPdf,
+    generatedOfferPdfPath,
+    canAccessBooking,
+    sendFileWithCache
   });
 
   const {
@@ -548,6 +573,7 @@ export function createBookingHandlers(deps) {
       web_form_submission: submission,
       pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
+      generated_offers: [],
       idempotency_key: idempotencyKey || null,
       created_at: now,
       updated_at: now
@@ -645,6 +671,8 @@ export function createBookingHandlers(deps) {
     handlePatchBookingNotes,
     handlePatchBookingPricing,
     handlePatchBookingOffer,
+    handleGenerateBookingOffer,
+    handleGetGeneratedOfferPdf,
     handlePostOfferExchangeRates,
     handleListActivities,
     handleCreateActivity,

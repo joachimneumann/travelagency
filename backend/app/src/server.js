@@ -20,6 +20,7 @@ import { createKeycloakUserHandlers } from "./http/handlers/keycloak_users.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import { createMetaWebhookHandlers } from "./integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "./lib/invoice_pdf.js";
+import { createOfferPdfWriter } from "./lib/offer_pdf.js";
 import { createKeycloakDirectory } from "./lib/keycloak_directory.js";
 import { createStoreUtils } from "./lib/store_utils.js";
 import {
@@ -58,6 +59,7 @@ const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || pa
 const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
 const TOURS_DIR = path.join(DATA_ROOT, "tours");
 const INVOICES_DIR = path.join(DATA_ROOT, "invoices");
+const GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
 const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
 const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
@@ -258,7 +260,8 @@ const {
   normalizeInvoiceComponents,
   computeInvoiceComponentTotal,
   nextInvoiceNumber,
-  invoicePdfPath
+  invoicePdfPath,
+  generatedOfferPdfPath
 } = createPricingHelpers({
   baseCurrency: BASE_CURRENCY,
   exchangeRateOverrides: EXCHANGE_RATE_OVERRIDES,
@@ -274,7 +277,8 @@ const {
   clamp,
   safeInt,
   randomUUID,
-  invoicesDir: INVOICES_DIR
+  invoicesDir: INVOICES_DIR,
+  generatedOffersDir: GENERATED_OFFERS_DIR
 });
 
 const {
@@ -324,6 +328,7 @@ const {
   dataPath: DATA_PATH,
   toursDir: TOURS_DIR,
   invoicesDir: INVOICES_DIR,
+  generatedOffersDir: GENERATED_OFFERS_DIR,
   bookingImagesDir: BOOKING_IMAGES_DIR,
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
@@ -385,6 +390,7 @@ const {
 });
 
 const writeInvoicePdf = createInvoicePdfWriter({ invoicePdfPath });
+const writeGeneratedOfferPdf = createOfferPdfWriter({ generatedOfferPdfPath, formatMoney });
 
 export async function createBackendHandler({ port = PORT } = {}) {
   await ensureStorage();
@@ -450,17 +456,21 @@ export async function createBackendHandler({ port = PORT } = {}) {
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
+    formatMoney,
     normalizeInvoiceComponents,
     computeInvoiceComponentTotal,
     safeAmountCents,
     nextInvoiceNumber,
     writeInvoicePdf,
+    writeGeneratedOfferPdf,
     randomUUID,
     invoicePdfPath,
+    generatedOfferPdfPath,
     mkdir,
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    GENERATED_OFFERS_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,

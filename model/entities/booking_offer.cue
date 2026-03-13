@@ -44,3 +44,17 @@ import (
 	totals:            #BookingOfferTotals
 	total_price_cents: int
 }
+
+#GeneratedBookingOffer: {
+	id:               common.#Identifier
+	booking_id:       common.#Identifier
+	version:          >=1 & int
+	filename:         string & !=""
+	comment?:         string
+	created_at:       common.#Timestamp
+	created_by?:      string
+	currency:         enums.#CurrencyCode
+	total_price_cents: int
+	offer:            #BookingOffer
+	pdf_url?:         string
+}

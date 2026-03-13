@@ -20,10 +20,23 @@ export function createBookingFinanceHandlers(deps) {
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
+    formatMoney,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
-    convertOfferLineAmountForCurrency
+    convertOfferLineAmountForCurrency,
+    randomUUID,
+    writeGeneratedOfferPdf,
+    generatedOfferPdfPath,
+    canAccessBooking,
+    sendFileWithCache
   } = deps;
+
+  function buildGeneratedOfferReadModel(booking, generatedOffer) {
+    return {
+      ...generatedOffer,
+      pdf_url: `/api/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
+    };
+  }
 
   async function handlePatchBookingPricing(req, res, [bookingId]) {
     let payload;
@@ -254,9 +267,98 @@ export function createBookingFinanceHandlers(deps) {
     sendJson(res, 200, responsePayload);
   }
 
+  async function handleGenerateBookingOffer(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+
+    const offerSnapshot = normalizeBookingOffer(
+      booking.offer,
+      booking.offer?.currency || booking.preferred_currency || BASE_CURRENCY
+    );
+    const now = nowIso();
+    const existingGeneratedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
+    const version = existingGeneratedOffers.reduce((maxVersion, item) => {
+      const candidate = Number(item?.version || 0);
+      return Number.isInteger(candidate) && candidate > maxVersion ? candidate : maxVersion;
+    }, 0) + 1;
+    const generatedOffer = {
+      id: `generated_offer_${randomUUID()}`,
+      booking_id: booking.id,
+      version,
+      filename: `ATP offer ${now.slice(0, 10)}.pdf`,
+      comment: normalizeText(payload?.comment) || null,
+      created_at: now,
+      created_by: actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      currency: offerSnapshot.currency,
+      total_price_cents: Number(offerSnapshot.total_price_cents || 0),
+      offer: offerSnapshot
+    };
+
+    await writeGeneratedOfferPdf(generatedOffer, booking);
+    booking.generated_offers = [...existingGeneratedOffers, generatedOffer];
+    incrementBookingRevision(booking, "offer_revision");
+    booking.updated_at = now;
+    addActivity(
+      store,
+      booking.id,
+      "OFFER_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      `Offer PDF generated (${formatMoney(generatedOffer.total_price_cents, generatedOffer.currency)})`
+    );
+    await persistStore(store);
+
+    sendJson(res, 201, await buildBookingDetailResponse(booking));
+  }
+
+  async function handleGetGeneratedOfferPdf(req, res, [bookingId, generatedOfferId]) {
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canAccessBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    const generatedOffer = (Array.isArray(booking.generated_offers) ? booking.generated_offers : []).find(
+      (item) => item.id === generatedOfferId
+    );
+    if (!generatedOffer) {
+      sendJson(res, 404, { error: "Generated offer not found" });
+      return;
+    }
+    const pdfPath = generatedOfferPdfPath(generatedOffer.id);
+    await writeGeneratedOfferPdf(generatedOffer, booking);
+    await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store", {
+      "Content-Disposition": `inline; filename="${String(generatedOffer.filename || `${generatedOffer.id}.pdf`).replace(/"/g, "")}"`
+    });
+  }
+
   return {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
-    handlePostOfferExchangeRates
+    handlePostOfferExchangeRates,
+    handleGenerateBookingOffer,
+    handleGetGeneratedOfferPdf
   };
 }

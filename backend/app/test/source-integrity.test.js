@@ -166,3 +166,19 @@ test("offer component editor does not expose discounts_credits as a selectable c
     "Offer component rows should not allow discounts_credits because that creates negative sellable line items"
   );
 });
+
+test("generate offer waits for pending offer autosave before POSTing", async () => {
+  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const pricingSource = await readFile(pricingModulePath, "utf8");
+
+  assert.match(
+    pricingSource,
+    /async function handleGenerateOffer\(\)\s*\{[\s\S]*?await flushOfferAutosave\(\);[\s\S]*?bookingGenerateOfferRequest/,
+    "Generating an offer PDF should flush pending offer autosave so it uses the latest offer_revision"
+  );
+  assert.match(
+    pricingSource,
+    /expected_offer_revision:\s*getBookingRevision\("offer_revision"\)/,
+    "Generating an offer PDF should send the current offer revision field, not pass the whole booking object"
+  );
+});

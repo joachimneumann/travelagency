@@ -40,6 +40,8 @@ Runtime JSON persistence:
 - `backend/app/data/store.json`
 - `backend/app/data/tours/<tour_id>/tour.json`
 - `backend/app/data/invoices/`
+- `backend/app/data/booking_images/`
+- `backend/app/data/booking_person_photos/`
 
 Notes:
 - `backend/app/data/store.json` is runtime data and is not tracked in Git
@@ -68,26 +70,39 @@ Administrative pages:
 
 ## API Endpoints
 
-Public:
+Operational and integration:
+- `GET /health`
 - `GET /integrations/meta/webhook/status`
 - `GET /integrations/meta/webhook`
 - `POST /integrations/meta/webhook`
+- staging access endpoints under `/staging-access/*`
+
+Public:
 - `GET /public/v1/mobile/bootstrap`
 - `GET /public/v1/tours`
 - `GET /public/v1/tour-images/:path`
+- `GET /public/v1/booking-images/:path`
+- `GET /public/v1/booking-person-photos/:path`
 - `POST /public/v1/bookings`
-- staging access endpoints under `/staging-access/*`
 
 Admin API:
 - `GET /api/v1/bookings`
 - `GET /api/v1/bookings/:bookingId`
 - `DELETE /api/v1/bookings/:bookingId`
 - `GET /api/v1/bookings/:bookingId/chat`
+- `PATCH /api/v1/bookings/:bookingId/name`
+- `POST /api/v1/bookings/:bookingId/image`
 - `PATCH /api/v1/bookings/:bookingId/stage`
 - `PATCH /api/v1/bookings/:bookingId/owner`
+- `POST /api/v1/bookings/:bookingId/persons`
+- `PATCH /api/v1/bookings/:bookingId/persons/:personId`
+- `DELETE /api/v1/bookings/:bookingId/persons/:personId`
+- `POST /api/v1/bookings/:bookingId/persons/:personId/photo`
 - `PATCH /api/v1/bookings/:bookingId/notes`
 - `PATCH /api/v1/bookings/:bookingId/pricing`
 - `PATCH /api/v1/bookings/:bookingId/offer`
+- `POST /api/v1/bookings/:bookingId/generated-offers`
+- `GET /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId/pdf`
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/bookings/:bookingId/invoices`
@@ -128,29 +143,49 @@ Relevant website fields:
 - `page_size`
 - `stage`
 - `assigned_keycloak_user_id`
+- `search`
+- `sort`
+
+Common `sort` values:
+- `created_at_desc`
+- `created_at_asc`
+- `updated_at_desc`
+- `updated_at_asc`
+- `stage_asc`
+- `stage_desc`
 
 Commercial document currency rules:
 - booking offer currency is editable only while `offer.status == "DRAFT"`
 - invoice currency is editable only while `invoice.status == "DRAFT"`
 - once an offer is approved/sent or an invoice is sent/paid/void, the backend rejects currency changes even if an old client tries to submit them
-- `search`
-- `sort`
 
 The booking list and detail views use booking-owned people:
 - primary contact comes from `booking.persons`
 - traveler counts come from `booking.number_of_travelers` and person roles
 - chat matching is based on booking contact phone/email data
 
+Mutating booking endpoints use section-specific optimistic concurrency checks.
+
+Current request fields are:
+- `expected_core_revision` for booking core mutations such as `name`, `stage`, and `owner`
+- `expected_persons_revision` for booking person and person-photo mutations
+- `expected_notes_revision` for booking notes
+- `expected_pricing_revision` for pricing updates
+- `expected_offer_revision` for offer updates
+- `expected_invoices_revision` for invoice mutations
+
 ## Roles
 
 Current role behavior:
-- `atp_staff`: read and edit only assigned bookings
-- `atp_manager`: read and edit all bookings, change assignment
-- `atp_admin`: same as manager plus tour editing
-- `atp_accountant`: read all bookings, read tours, no booking editing
+- `atp_staff`: read and edit only assigned bookings, read tours, edit tours
+- `atp_manager`: read and edit all bookings, change assignment, view assignable Keycloak users, read tours, edit tours
+- `atp_admin`: same booking and tour capabilities as manager
+- `atp_accountant`: read all bookings, read tours, view assignable Keycloak users, no booking editing, no tour editing
 
 Booking assignment is stored as `booking.assigned_keycloak_user_id`, using the durable Keycloak user id directly.
 There is no local ATP user directory anymore.
+
+`GET /api/v1/keycloak_users` is the assignment directory endpoint.
 
 The Keycloak assignment directory is treated as a live integration, not a persisted cache:
 - the backend resolves assignable users directly from Keycloak

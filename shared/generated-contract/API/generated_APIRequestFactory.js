@@ -335,6 +335,40 @@ export function bookingOfferRequest({ baseURL = '', params = {}, query = {}, bod
   };
 }
 
+export function bookingGenerateOfferPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/generated-offers", params);
+}
+
+export function bookingGenerateOfferRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingGenerateOfferPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_generate_offer",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingGeneratedOfferPdfPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", params);
+}
+
+export function bookingGeneratedOfferPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingGeneratedOfferPdfPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_generated_offer_pdf",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function offerExchangeRatesPath(params = {}) {
   return buildPath("/api/v1/offers/exchange-rates", params);
 }

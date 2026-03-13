@@ -7,7 +7,7 @@ import {
   bookingOfferRequest,
   bookingPricingRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=20260313c";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 
@@ -110,6 +110,7 @@ export function createBookingPricingModule(ctx) {
     apiOrigin,
     fetchApi,
     fetchBookingMutation,
+    bookingGenerateOfferRequest,
     getBookingRevision,
     renderBookingHeader,
     renderBookingData,
@@ -121,6 +122,7 @@ export function createBookingPricingModule(ctx) {
   let offerAutosaveTimer = null;
   let offerAutosaveInFlight = false;
   let offerAutosavePending = false;
+  let offerAutosavePromise = null;
   let offerPendingRowIndexes = new Set();
   let offerTotalPending = false;
 
@@ -173,6 +175,17 @@ export function createBookingPricingModule(ctx) {
 
   function setOfferSaveEnabled(enabled) {
     setBookingSectionDirty("offer", Boolean(enabled) && state.permissions.canEditBooking);
+  }
+
+  function formatGeneratedOfferDate(value) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat("en-GB", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(date);
   }
 
   function updatePricingDirtyState() {
@@ -584,7 +597,85 @@ export function createBookingPricingModule(ctx) {
     setOfferSaveEnabled(false);
 
     renderOfferComponentsTable();
+    renderGeneratedOffersTable();
     clearOfferStatus();
+  }
+
+  function renderGeneratedOffersTable() {
+    if (!els.generated_offers_table) return;
+    const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
+    const rows = items.length
+      ? items
+        .slice()
+        .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
+        .map((item) => `<tr>
+          <td>${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
+          <td>${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
+          <td>${item.pdf_url ? `<a href="${escapeHtml(item.pdf_url)}" target="_blank" rel="noopener">PDF</a>` : "-"}</td>
+          <td>${escapeHtml(item.comment || "") || "-"}</td>
+        </tr>`)
+        .join("")
+      : `<tr><td colspan="4">No generated offers yet</td></tr>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th>Created</th><th>Total</th><th>PDF</th><th>Comments</th></tr></thead><tbody>${rows}</tbody>`;
+
+    if (els.generate_offer_btn) {
+      els.generate_offer_btn.style.display = state.permissions.canEditBooking ? "" : "none";
+      els.generate_offer_btn.onclick = state.permissions.canEditBooking ? () => {
+        void handleGenerateOffer();
+      } : null;
+    }
+  }
+
+  async function handleGenerateOffer() {
+    if (!state.permissions.canEditBooking || !state.booking?.id) return;
+    await flushOfferAutosave();
+    const request = bookingGenerateOfferRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id }
+    });
+    const commentInput = window.prompt("Comment for this generated offer (optional):", "");
+    if (commentInput === null) return;
+    const normalizedComment = String(commentInput || "").trim();
+    setOfferStatus("Generating offer PDF...");
+    const response = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: {
+        expected_offer_revision: getBookingRevision("offer_revision"),
+        comment: normalizedComment || null
+      }
+    });
+    if (response?.booking) {
+      state.booking = response.booking;
+      state.offerDraft = cloneOffer(response.booking.offer || {});
+      renderBookingHeader();
+      renderBookingData();
+      renderOfferPanel();
+      await loadActivities();
+      clearOfferStatus();
+      return;
+    }
+    if (!response) {
+      setOfferStatus("");
+      return;
+    }
+    setOfferStatus(response?.detail || response?.error || "Could not generate offer PDF.");
+  }
+
+  async function flushOfferAutosave() {
+    if (offerAutosaveTimer) {
+      window.clearTimeout(offerAutosaveTimer);
+      offerAutosaveTimer = null;
+      await saveOffer();
+      return;
+    }
+    if (offerAutosaveInFlight && offerAutosavePromise) {
+      await offerAutosavePromise;
+      return;
+    }
+    if (offerAutosavePending) {
+      offerAutosavePending = false;
+      await saveOffer();
+    }
   }
 
   function renderOfferComponentsTable() {
@@ -1029,7 +1120,7 @@ export function createBookingPricingModule(ctx) {
     if (!state.booking || !state.permissions.canEditBooking) return;
     if (offerAutosaveInFlight) {
       offerAutosavePending = true;
-      return;
+      return offerAutosavePromise;
     }
     clearOfferStatus();
     let offer;
@@ -1047,19 +1138,61 @@ export function createBookingPricingModule(ctx) {
 
     const request = bookingOfferRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
     offerAutosaveInFlight = true;
-    let result;
-    try {
-      result = await fetchBookingMutation(request.url, {
-        method: request.method,
-        body: {
-          expected_offer_revision: getBookingRevision("offer_revision"),
-          offer,
-          actor: state.user
-        }
-      });
-    } finally {
-      offerAutosaveInFlight = false;
-    }
+    const runSave = async () => {
+      let result;
+      try {
+        result = await fetchBookingMutation(request.url, {
+          method: request.method,
+          body: {
+            expected_offer_revision: getBookingRevision("offer_revision"),
+            offer,
+            actor: state.user
+          }
+        });
+      } finally {
+        offerAutosaveInFlight = false;
+      }
+      debugOffer("save:response", result?.booking
+        ? {
+            unchanged: Boolean(result?.unchanged),
+            offer_revision: result.booking.offer_revision,
+            offer: {
+              currency: result.booking.offer?.currency,
+              components: Array.isArray(result.booking.offer?.components)
+                ? result.booking.offer.components.map((component) => ({
+                    id: component.id,
+                    category: component.category,
+                    details: component.details,
+                    quantity: component.quantity,
+                    unit_amount_cents: component.unit_amount_cents
+                  }))
+                : []
+            }
+          }
+        : result);
+
+      if (!result?.booking) {
+        offerPendingRowIndexes = new Set();
+        offerTotalPending = false;
+        updateOfferTotalsInDom();
+        return result;
+      }
+
+      state.booking = result.booking;
+      renderBookingHeader();
+      renderBookingData();
+      renderOfferPanel();
+      setOfferSaveEnabled(false);
+      await loadActivities();
+      if (offerAutosavePending) {
+        offerAutosavePending = false;
+        scheduleOfferAutosave();
+      }
+      return result;
+    };
+    offerAutosavePromise = runSave();
+    const result = await offerAutosavePromise;
+    offerAutosavePromise = null;
     debugOffer("save:response", result?.booking
       ? {
           unchanged: Boolean(result?.unchanged),
@@ -1079,23 +1212,7 @@ export function createBookingPricingModule(ctx) {
         }
       : result);
 
-    if (!result?.booking) {
-      offerPendingRowIndexes = new Set();
-      offerTotalPending = false;
-      updateOfferTotalsInDom();
-      return;
-    }
-
-    state.booking = result.booking;
-    renderBookingHeader();
-    renderBookingData();
-    renderOfferPanel();
-    setOfferSaveEnabled(false);
-    await loadActivities();
-    if (offerAutosavePending) {
-      offerAutosavePending = false;
-      scheduleOfferAutosave();
-    }
+    return result;
   }
 
   return {

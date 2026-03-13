@@ -105,6 +105,7 @@ import (
 	web_form_submission?:           #BookingWebFormSubmission
 	pricing:                        #BookingPricing
 	offer:                          #BookingOffer
+	generated_offers?:              [...#GeneratedBookingOffer]
 	created_at:                     common.#Timestamp
 	updated_at:                     common.#Timestamp
 }

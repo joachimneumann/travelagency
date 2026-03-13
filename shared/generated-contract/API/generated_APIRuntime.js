@@ -15,12 +15,18 @@
   "typeName": "Identifier"
 },
   PARAM_3: {
-  "name": "invoice_id",
+  "name": "generated_offer_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_4: {
+  "name": "invoice_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_5: {
   "name": "tour_id",
   "location": "path",
   "required": true,
@@ -249,6 +255,29 @@
         ]
       },
       {
+        key: "booking_generate_offer",
+        path: "/api/v1/bookings/{booking_id}/generated-offers",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingGenerateOfferRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_generated_offer_pdf",
+        path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: null,
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
         key: "offer_exchange_rates",
         path: "/api/v1/offers/exchange-rates",
         method: "POST",
@@ -312,7 +341,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       },
       {
@@ -356,7 +385,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
         ]
       },
       {
@@ -367,7 +396,7 @@
         requestType: "TourUpsertRequest",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
         ]
       },
       {
@@ -378,7 +407,7 @@
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
         ]
       }
     ];

@@ -224,11 +224,24 @@ export function createBookingViewHelpers({
     delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
+    const generatedOffers = await Promise.all(
+      (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => {
+        const generatedOfferCurrency = safeCurrency(generatedOffer?.currency || generatedOffer?.offer?.currency || offerCurrency);
+        return {
+          ...generatedOffer,
+          currency: generatedOfferCurrency,
+          total_price_cents: safeInt(generatedOffer?.total_price_cents) || 0,
+          offer: await buildBookingOfferReadModel(generatedOffer?.offer, generatedOfferCurrency),
+          pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
+        };
+      })
+    );
     return {
       ...normalizedBooking,
       preferred_currency: preferredCurrency,
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
-      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency)
+      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency),
+      generated_offers: generatedOffers
     };
   }
 

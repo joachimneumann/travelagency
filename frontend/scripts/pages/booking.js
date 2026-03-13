@@ -7,12 +7,13 @@ import {
 import {
   bookingActivitiesRequest,
   bookingDetailRequest,
+  bookingGenerateOfferRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=20260313c";
 import {
   createApiFetcher,
   escapeHtml,
@@ -26,19 +27,19 @@ import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js";
+} from "../booking/pricing.js?v=20260313d";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js";
+} from "../booking/invoices.js?v=20260313d";
 import { createBookingCoreModule } from "../booking/core.js";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
 } from "../booking/person_helpers.js";
-import { createBookingPersonsModule } from "../booking/persons.js";
+import { createBookingPersonsModule } from "../booking/persons.js?v=20260313d";
 import {
   getBookingPersons,
   getPersonInitials,
@@ -183,6 +184,8 @@ const els = {
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
+  generated_offers_table: document.getElementById("generated_offers_table"),
+  generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
   meta_chat_mount: document.getElementById("booking_whatsapp_mount"),
@@ -624,6 +627,7 @@ const pricingModule = createBookingPricingModule({
   apiOrigin,
   fetchApi,
   fetchBookingMutation,
+  bookingGenerateOfferRequest,
   getBookingRevision,
   renderBookingHeader,
   renderBookingData,

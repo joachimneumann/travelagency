@@ -314,6 +314,25 @@ IR: {
 				]
 			},
 			{
+				name:       "GeneratedBookingOffer"
+				domain:     "booking"
+				module:     "entities"
+				sourceType: "entities.#GeneratedBookingOffer"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "version", kind: "scalar", typeName: "int", required: true},
+					{name: "filename", kind: "scalar", typeName: "string", required: true},
+					{name: "comment", kind: "scalar", typeName: "string", required: false},
+					{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
+					{name: "created_by", kind: "scalar", typeName: "string", required: false},
+					{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+					{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
+					{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+					{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
 				name:       "BookingActivity"
 				domain:     "booking"
 				module:     "entities"
@@ -388,6 +407,7 @@ IR: {
 					{name: "web_form_submission", kind: "entity", typeName: "BookingWebFormSubmission", required: false},
 					{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
 					{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+					{name: "generated_offers", kind: "entity", typeName: "GeneratedBookingOffer", required: false, isArray: true},
 					{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 					{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
 				]
@@ -874,6 +894,17 @@ IR: {
 				fields: [
 					{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 					{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+					{name: "actor", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
+				name:       "BookingGenerateOfferRequest"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#BookingGenerateOfferRequest"
+				fields: [
+					{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
+					{name: "comment", kind: "scalar", typeName: "string", required: false},
 					{name: "actor", kind: "scalar", typeName: "string", required: false},
 				]
 			},

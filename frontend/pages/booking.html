@@ -270,6 +270,12 @@
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="offer_components_table"></table>
               </div>
+              <div class="backend-table-wrap" style="margin-bottom: 0.8rem;">
+                <table class="backend-table" id="generated_offers_table"></table>
+              </div>
+              <div class="booking-generated-offers-actions">
+                <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button">generate offer pdf</button>
+              </div>
               <span id="offer_status" class="micro"></span>
             </div>
           </details>
@@ -406,6 +412,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=20260311a";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=20260313a"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=20260313d"></script>
   </body>
 </html>

@@ -287,6 +287,39 @@ package api
 		}]
 	},
 	{
+		key:           "booking_generate_offer"
+		path:          "/api/v1/bookings/{booking_id}/generated-offers"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingGenerateOfferRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_generated_offer_pdf"
+		path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "offer_exchange_rates"
 		path:          "/api/v1/offers/exchange-rates"
 		method:        "POST"

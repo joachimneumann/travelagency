@@ -147,7 +147,7 @@ export function createHttpHelpers({ corsOrigin }) {
     return "application/octet-stream";
   }
 
-  async function sendFileWithCache(req, res, filePath, cacheControl) {
+  async function sendFileWithCache(req, res, filePath, cacheControl, extraHeaders = {}) {
     let fileStats;
     try {
       fileStats = await stat(filePath);
@@ -166,7 +166,8 @@ export function createHttpHelpers({ corsOrigin }) {
     if (ifNoneMatch === etag) {
       res.writeHead(304, {
         "Cache-Control": cacheControl,
-        ETag: etag
+        ETag: etag,
+        ...extraHeaders
       });
       res.end();
       return;
@@ -176,7 +177,8 @@ export function createHttpHelpers({ corsOrigin }) {
       "Content-Type": getMimeTypeFromExt(filePath),
       "Cache-Control": cacheControl,
       ETag: etag,
-      "Content-Length": String(fileStats.size)
+      "Content-Length": String(fileStats.size),
+      ...extraHeaders
     });
 
     const stream = createReadStream(filePath);

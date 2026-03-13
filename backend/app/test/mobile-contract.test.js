@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Readable } from "node:stream";
+import { Readable, Writable } from "node:stream";
 import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { once } from "node:events";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -123,30 +124,39 @@ function createMockRequest({ method = "GET", url = "/", headers = {}, body = "" 
 }
 
 function createMockResponse() {
+  const sink = new Writable({
+    write(chunk, _encoding, callback) {
+      sink.body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk || "");
+      callback();
+    }
+  });
   const headerStore = new Map();
-  return {
-    statusCode: 200,
-    body: "",
-    headersSent: false,
-    headerStore,
-    setHeader(name, value) {
-      headerStore.set(String(name).toLowerCase(), value);
-    },
-    getHeader(name) {
-      return headerStore.get(String(name).toLowerCase());
-    },
-    writeHead(status, headerValues = {}) {
-      this.statusCode = status;
-      this.headersSent = true;
-      for (const [name, value] of Object.entries(headerValues)) {
-        this.setHeader(name, value);
-      }
-    },
-    end(chunk = "") {
-      this.body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk || "");
-      this.finished = true;
+  sink.statusCode = 200;
+  sink.body = "";
+  sink.headersSent = false;
+  sink.headerStore = headerStore;
+  sink.setHeader = function setHeader(name, value) {
+    headerStore.set(String(name).toLowerCase(), value);
+  };
+  sink.getHeader = function getHeader(name) {
+    return headerStore.get(String(name).toLowerCase());
+  };
+  sink.writeHead = function writeHead(status, headerValues = {}) {
+    sink.statusCode = status;
+    sink.headersSent = true;
+    for (const [name, value] of Object.entries(headerValues)) {
+      sink.setHeader(name, value);
     }
   };
+  const originalEnd = sink.end.bind(sink);
+  sink.end = function end(chunk = "", encoding, callback) {
+    if (chunk) {
+      sink.body += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk);
+    }
+    sink.finished = true;
+    return originalEnd("", encoding, callback);
+  };
+  return sink;
 }
 
 async function requestJson(pathname, headers = {}, options = {}) {
@@ -164,6 +174,31 @@ async function requestJson(pathname, headers = {}, options = {}) {
     status: res.statusCode,
     headers: Object.fromEntries(res.headerStore.entries()),
     body: res.body ? JSON.parse(res.body) : null
+  };
+}
+
+async function requestRaw(pathname, headers = {}, options = {}) {
+  const method = options.method || "GET";
+  const body = options.body === undefined
+    ? ""
+    : typeof options.body === "string"
+      ? options.body
+      : JSON.stringify(options.body);
+  const req = createMockRequest({
+    method,
+    url: pathname,
+    headers: body ? { "content-type": "application/json", ...headers } : headers,
+    body
+  });
+  const res = createMockResponse();
+  await handler(req, res);
+  if (!res.writableFinished) {
+    await once(res, "finish");
+  }
+  return {
+    status: res.statusCode,
+    headers: Object.fromEntries(res.headerStore.entries()),
+    body: res.body
   };
 }
 
@@ -532,6 +567,161 @@ test("booking offer patch rejects discounts_credits components", async () => {
 
   assert.equal(patchResult.status, 422);
   assert.match(String(patchResult.body.error || ""), /discounts_credits/i);
+});
+
+test("booking generated offers store immutable snapshots", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Hotel room",
+              quantity: 2,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "First customer offer"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  assert.ok(Array.isArray(generateResult.body.booking.generated_offers));
+  assert.equal(generateResult.body.booking.generated_offers.length, 1);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  assert.equal(generatedOffer.comment, "First customer offer");
+  assert.equal(generatedOffer.version, 1);
+  assert.equal(generatedOffer.offer.components.length, 1);
+  assert.equal(generatedOffer.offer.components[0].details, "Hotel room");
+  assert.match(generatedOffer.filename, /^ATP offer \d{4}-\d{2}-\d{2}\.pdf$/);
+  assert.equal(typeof generatedOffer.pdf_url, "string");
+
+  const secondOfferPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: generateResult.body.booking.offer_revision,
+        offer: {
+          ...generateResult.body.booking.offer,
+          components: [
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Updated hotel room",
+              quantity: 3,
+              unit_amount_cents: 18000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(secondOfferPatchResult.status, 200);
+
+  const detailAfter = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.generated_offers.length, 1);
+  assert.equal(detailAfter.body.booking.generated_offers[0].offer.components[0].details, "Hotel room");
+  assert.equal(detailAfter.body.booking.offer.components[0].details, "Updated hotel room");
+});
+
+test("booking generated offer pdf endpoint returns a pdf file", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_transfer_1",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Airport transfer",
+              quantity: 1,
+              unit_amount_cents: 2500,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "PDF generation check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const pdfResult = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  assert.equal(pdfResult.headers["content-type"], "application/pdf");
+  assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
+  assert.match(pdfResult.body, /%PDF-/);
 });
 
 test("booking name and persons endpoints update the booking", async () => {
