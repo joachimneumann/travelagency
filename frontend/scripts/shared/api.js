@@ -1,6 +1,6 @@
-import { escapeHtml, normalizeText } from "../../../shared/js/text.js?v=d317cf8bded3";
+import { escapeHtml, normalizeText } from "../../../shared/js/text.js?v=741a535307b3";
 
-export { escapeHtml, normalizeText } from "../../../shared/js/text.js?v=d317cf8bded3";
+export { escapeHtml, normalizeText } from "../../../shared/js/text.js?v=741a535307b3";
 
 export function resolveApiUrl(apiBase, pathOrUrl) {
   const base = String(apiBase || "").replace(/\/$/, "");

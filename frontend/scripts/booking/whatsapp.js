@@ -1,5 +1,5 @@
-import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
-import { escapeHtml, normalizeText } from "../shared/api.js?v=d317cf8bded3";
+import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
+import { escapeHtml, normalizeText } from "../shared/api.js?v=741a535307b3";
 
 function normalizePhoneDigits(value) {
   return String(value || "").replace(/[^\d]/g, "");

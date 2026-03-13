@@ -12,7 +12,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
 import {
   createApiFetcher,
   escapeHtml,
@@ -20,33 +20,33 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=d317cf8bded3";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=d317cf8bded3";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=d317cf8bded3";
+} from "../shared/api.js?v=741a535307b3";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=741a535307b3";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=741a535307b3";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=d317cf8bded3";
-import { createBookingOfferModule } from "../booking/offers.js?v=d317cf8bded3";
+} from "../booking/pricing.js?v=741a535307b3";
+import { createBookingOfferModule } from "../booking/offers.js?v=741a535307b3";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=d317cf8bded3";
-import { createBookingCoreModule } from "../booking/core.js?v=d317cf8bded3";
+} from "../booking/invoices.js?v=741a535307b3";
+import { createBookingCoreModule } from "../booking/core.js?v=741a535307b3";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=d317cf8bded3";
-import { createBookingPersonsModule } from "../booking/persons.js?v=d317cf8bded3";
+} from "../booking/person_helpers.js?v=741a535307b3";
+import { createBookingPersonsModule } from "../booking/persons.js?v=741a535307b3";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=d317cf8bded3";
+} from "../shared/booking_persons.js?v=741a535307b3";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

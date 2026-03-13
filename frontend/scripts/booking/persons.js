@@ -4,7 +4,7 @@ import {
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,14 +20,14 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=d317cf8bded3";
+} from "./person_helpers.js?v=741a535307b3";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=d317cf8bded3";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=d317cf8bded3";
+} from "../shared/booking_persons.js?v=741a535307b3";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=741a535307b3";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -101,10 +101,10 @@ export function createBookingPersonsModule(ctx) {
     const traveling = persons.filter((person) => isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
     const notTraveling = persons.filter((person) => !isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
     const lines = [
-      `traveling (${traveling.length}): ${traveling.length ? traveling.join(" · ") : "none"}`
+      `${traveling.length} traveling: ${traveling.length ? traveling.join(" · ") : "none"}`
     ];
     if (notTraveling.length) {
-      lines.push(`not traveling (${notTraveling.length}): ${notTraveling.join(" · ")}`);
+      lines.push(`not traveling: ${notTraveling.join(" · ")}`);
     }
     els.personsSummaryText.textContent = lines.join("\n");
   }

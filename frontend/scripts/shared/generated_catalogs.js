@@ -1,4 +1,4 @@
-import { SHARED_FIELD_DEFS } from "../../../shared/generated-contract/Models/generated_SchemaRuntime.js?v=d317cf8bded3";
+import { SHARED_FIELD_DEFS } from "../../../shared/generated-contract/Models/generated_SchemaRuntime.js?v=741a535307b3";
 
 function findEnumOptions(typeName) {
   return Object.freeze(

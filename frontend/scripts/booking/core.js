@@ -6,7 +6,7 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
 
 export function createBookingCoreModule(ctx) {
   const {
