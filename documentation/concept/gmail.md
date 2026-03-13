@@ -4,7 +4,7 @@
 
 Create a Gmail draft from the ATP backend so ATP staff can:
 - click `email` in the booking offer history
-- open a real draft in Gmail web
+- open Gmail in a separate tab
 - review and edit the message
 - send it manually from `info@asiatravelplan.com`
 
@@ -36,8 +36,8 @@ Why this approach:
    - subject
    - HTML body
    - PDF attachment
-6. Frontend opens the Gmail draft in the browser.
-7. ATP staff edits the draft and clicks `Send`.
+6. Frontend opens Gmail Drafts in a separate browser tab.
+7. ATP staff opens the new draft from Gmail Drafts, edits it, and clicks `Send`.
 
 ## Google Cloud Setup
 
@@ -156,7 +156,7 @@ For local development, if values are stored in `~/.zshrc`, backend startup shoul
 ## Draft Content
 
 The Gmail draft should contain:
-- recipient from the booking web form email
+- recipient from the resolved booking contact email
 - clear subject line
 - branded HTML body
 - attached generated offer PDF
@@ -189,13 +189,28 @@ When ATP staff clicks `email` for a generated offer:
 1. backend ensures the generated PDF exists
 2. backend authenticates with Gmail API
 3. backend creates a Gmail draft in `info@asiatravelplan.com`
-4. backend returns a Gmail web URL to open that draft
+4. backend returns the created `draft_id` and a Gmail web URL for Gmail Drafts
 5. frontend opens that URL
 
 ATP staff then:
+- opens the newly created draft from Gmail Drafts
 - edits the draft in Gmail
 - optionally changes the text
 - sends it manually
+
+## Browser Behavior
+
+The current implementation intentionally opens:
+- `https://mail.google.com/mail/u/0/#drafts`
+
+It does not deep-link directly into the compose editor for a specific existing draft.
+
+Reason:
+- Gmail API exposes `draft.id`
+- Google does not document a stable Gmail web URL format for opening an existing draft directly in the compose editor
+- earlier attempts at undocumented deep links were not reliable in practice
+
+This keeps the integration stable even though it adds one click inside Gmail.
 
 ## Why This Is Better Than `mailto:`
 
@@ -203,7 +218,7 @@ ATP staff then:
 - HTML body
 - PDF attachment
 - sender control through Google Workspace
-- a Gmail web draft owned by the shared mailbox
+- a Gmail draft owned by the shared mailbox
 
 The Gmail API draft approach solves all of those.
 
@@ -221,6 +236,7 @@ The Gmail API draft approach solves all of those.
 - Draft creation should be logged as a booking activity.
 - Draft creation should not mark an offer as sent.
 - Sending remains a manual ATP staff action in Gmail.
+- If draft creation succeeds but activity logging fails afterward, the API should still return success with a warning.
 - If Gmail draft creation fails, the booking UI should show a clear error and not silently fall back to `mailto:`.
 
 ## References

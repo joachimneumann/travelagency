@@ -236,7 +236,9 @@ export function createGmailDraftsClient({
 
     return {
       draftId,
-      gmailDraftUrl: `https://mail.google.com/mail/u/0/#drafts?compose=${encodeURIComponent(draftId)}`
+      // Gmail API exposes draft IDs, but Google does not document a stable web URL
+      // for opening an existing draft directly in the compose editor.
+      gmailDraftUrl: "https://mail.google.com/mail/u/0/#drafts"
     };
   }
 

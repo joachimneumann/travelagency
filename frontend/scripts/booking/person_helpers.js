@@ -1,5 +1,5 @@
-import { normalizeText, escapeHtml } from "../shared/api.js?v=2c526d5d72ed";
-import { isTravelingPerson, normalizeStringList } from "../shared/booking_persons.js?v=2c526d5d72ed";
+import { normalizeText, escapeHtml } from "../shared/api.js?v=d317cf8bded3";
+import { isTravelingPerson, normalizeStringList } from "../shared/booking_persons.js?v=d317cf8bded3";
 
 export function collectPersonEmails(person) {
   return Array.from(

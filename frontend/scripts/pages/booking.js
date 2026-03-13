@@ -12,7 +12,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=2c526d5d72ed";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
 import {
   createApiFetcher,
   escapeHtml,
@@ -20,33 +20,33 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=2c526d5d72ed";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=2c526d5d72ed";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=2c526d5d72ed";
+} from "../shared/api.js?v=d317cf8bded3";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=d317cf8bded3";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=d317cf8bded3";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=2c526d5d72ed";
-import { createBookingOfferModule } from "../booking/offers.js?v=2c526d5d72ed";
+} from "../booking/pricing.js?v=d317cf8bded3";
+import { createBookingOfferModule } from "../booking/offers.js?v=d317cf8bded3";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=2c526d5d72ed";
-import { createBookingCoreModule } from "../booking/core.js?v=2c526d5d72ed";
+} from "../booking/invoices.js?v=d317cf8bded3";
+import { createBookingCoreModule } from "../booking/core.js?v=d317cf8bded3";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=2c526d5d72ed";
-import { createBookingPersonsModule } from "../booking/persons.js?v=2c526d5d72ed";
+} from "../booking/person_helpers.js?v=d317cf8bded3";
+import { createBookingPersonsModule } from "../booking/persons.js?v=d317cf8bded3";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=2c526d5d72ed";
+} from "../shared/booking_persons.js?v=d317cf8bded3";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -142,6 +142,7 @@ const els = {
   persons_editor_panel: document.getElementById("persons_editor_panel"),
   personsEditorList: document.getElementById("booking_persons_editor_list"),
   personsEditorStatus: document.getElementById("booking_persons_editor_status"),
+  personsSummaryText: document.getElementById("booking_persons_summary_text"),
   personsMismatchWarning: document.getElementById("booking_persons_mismatch_warning"),
   personModal: document.getElementById("booking_person_modal"),
   personModalSubtitle: document.getElementById("booking_person_modal_subtitle"),

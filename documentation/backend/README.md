@@ -20,6 +20,8 @@ Default URL: `http://localhost:8787`
 Important environment variables:
 - `PORT`
 - `CORS_ORIGIN`
+- `BACKEND_DATA_DIR`
+- `STORE_FILE`
 - `KEYCLOAK_ENABLED`
 - `KEYCLOAK_BASE_URL`
 - `KEYCLOAK_REALM`
@@ -28,11 +30,22 @@ Important environment variables:
 - `KEYCLOAK_REDIRECT_URI`
 - `KEYCLOAK_POST_LOGOUT_REDIRECT_URI`
 - `KEYCLOAK_ALLOWED_ROLES`
+- `RETURN_TO_ALLOWED_ORIGINS`
 - `META_WEBHOOK_ENABLED`
 - `META_WEBHOOK_VERIFY_TOKEN`
 - `META_APP_SECRET`
+- `WHATSAPP_WEBHOOK_ENABLED`
+- `WHATSAPP_VERIFY_TOKEN`
+- `WHATSAPP_APP_SECRET`
+- `GOOGLE_SERVICE_ACCOUNT_JSON_PATH`
+- `GOOGLE_IMPERSONATED_EMAIL`
 - `BASE_CURRENCY`
 - `EXCHANGE_RATE_<FROM>_<TO>`
+- `EXCHANGE_RATE_OVERRIDES`
+
+Gmail draft creation for generated offers requires:
+- `GOOGLE_SERVICE_ACCOUNT_JSON_PATH`
+- `GOOGLE_IMPERSONATED_EMAIL`
 
 ## Storage
 
@@ -102,7 +115,10 @@ Admin API:
 - `PATCH /api/v1/bookings/:bookingId/pricing`
 - `PATCH /api/v1/bookings/:bookingId/offer`
 - `POST /api/v1/bookings/:bookingId/generated-offers`
+- `PATCH /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId`
+- `DELETE /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId`
 - `GET /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId/pdf`
+- `POST /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId/gmail-draft`
 - `GET /api/v1/bookings/:bookingId/activities`
 - `POST /api/v1/bookings/:bookingId/activities`
 - `GET /api/v1/bookings/:bookingId/invoices`
@@ -173,6 +189,12 @@ Current request fields are:
 - `expected_pricing_revision` for pricing updates
 - `expected_offer_revision` for offer updates
 - `expected_invoices_revision` for invoice mutations
+
+Generated-offer email drafts:
+- `POST /api/v1/bookings/:bookingId/generated-offers/:generatedOfferId/gmail-draft` creates a Gmail draft for the frozen generated-offer PDF
+- the response returns `draft_id`, `gmail_draft_url`, `recipient_email`, `generated_offer_id`, and `activity_logged`
+- `gmail_draft_url` currently points to Gmail Drafts, not to a deep link into the compose editor
+- if the draft is created but the booking activity cannot be persisted, the route still returns success with `activity_logged: false` and a `warning`
 
 ## Roles
 

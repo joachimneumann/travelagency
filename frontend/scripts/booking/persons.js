@@ -4,7 +4,7 @@ import {
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=2c526d5d72ed";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,14 +20,14 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=2c526d5d72ed";
+} from "./person_helpers.js?v=d317cf8bded3";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=2c526d5d72ed";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=2c526d5d72ed";
+} from "../shared/booking_persons.js?v=d317cf8bded3";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=d317cf8bded3";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -75,6 +75,38 @@ export function createBookingPersonsModule(ctx) {
     const message = buildTravelerMismatchMessage(state.booking);
     els.personsMismatchWarning.textContent = message;
     els.personsMismatchWarning.hidden = !message;
+  }
+
+  function buildCollapsedPersonSummary(person) {
+    const personName = normalizeText(person?.name) || "Unnamed person";
+    const commentParts = [];
+    const nationality = normalizeText(person?.nationality).toUpperCase();
+    if (nationality) commentParts.push(nationality);
+    commentParts.push(
+      ...normalizeStringList(person?.roles)
+        .filter((role) => role !== "traveler")
+        .map((role) => formatPersonRoleLabel(role))
+    );
+    if (!commentParts.length) return personName;
+    return `${personName} (${commentParts.join(", ")})`;
+  }
+
+  function renderPersonsSummaryText() {
+    if (!els.personsSummaryText) return;
+    const persons = Array.isArray(state.personDrafts) ? state.personDrafts : [];
+    if (!persons.length) {
+      els.personsSummaryText.textContent = "No persons listed.";
+      return;
+    }
+    const traveling = persons.filter((person) => isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
+    const notTraveling = persons.filter((person) => !isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
+    const lines = [
+      `traveling (${traveling.length}): ${traveling.length ? traveling.join(" · ") : "none"}`
+    ];
+    if (notTraveling.length) {
+      lines.push(`not traveling (${notTraveling.length}): ${notTraveling.join(" · ")}`);
+    }
+    els.personsSummaryText.textContent = lines.join("\n");
   }
 
   function clonePersonDraft(person = {}, index = 0) {
@@ -272,6 +304,7 @@ export function createBookingPersonsModule(ctx) {
   function renderPersonsEditor({ include_modal = true } = {}) {
     if (!els.personsEditorList) return;
     const canEdit = state.permissions.canEditBooking;
+    renderPersonsSummaryText();
 
     const personCards = state.personDrafts.map((person, index) => {
       const personName = normalizeText(person.name);

@@ -3,8 +3,8 @@ import {
   escapeHtml,
   formatDateTime,
   normalizeText
-} from "../shared/api.js?v=2c526d5d72ed";
-import { buildBookingHref } from "../shared/links.js?v=2c526d5d72ed";
+} from "../shared/api.js?v=d317cf8bded3";
+import { buildBookingHref } from "../shared/links.js?v=d317cf8bded3";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

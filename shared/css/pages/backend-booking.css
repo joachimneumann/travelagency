@@ -251,6 +251,21 @@
   justify-items: start;
 }
 
+.booking-persons-summary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-right: 1.6rem;
+}
+
+.booking-persons-summary__text {
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(22, 49, 61, 0.72);
+  white-space: pre-line;
+}
+
 .booking-person-card {
   appearance: none;
   width: 100%;

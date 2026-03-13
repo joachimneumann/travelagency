@@ -90,7 +90,7 @@ test("gmail drafts client exchanges token and creates draft with pdf attachment"
     assert.equal(fetchCalls[0].url, "https://oauth2.googleapis.com/token");
     assert.equal(fetchCalls[1].url, "https://gmail.googleapis.com/gmail/v1/users/me/drafts");
     assert.equal(result.draftId, "draft-abc123");
-    assert.match(result.gmailDraftUrl, /draft-abc123/);
+    assert.equal(result.gmailDraftUrl, "https://mail.google.com/mail/u/0/#drafts");
 
     const tokenBody = String(fetchCalls[0].init.body);
     assert.match(tokenBody, /grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer/);

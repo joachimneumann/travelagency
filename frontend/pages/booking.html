@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Booking</title>
     <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=2c526d5d72ed" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=d317cf8bded3" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -61,11 +61,18 @@
             </div>
           </article>
 
-          <article id="persons_editor_panel" style="margin-bottom: 1rem;">
-            <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
-            <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
-            <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
-          </article>
+          <details id="persons_editor_panel" class="booking-collapsible" style="margin-bottom: 1rem;" open>
+            <summary class="booking-collapsible__summary">
+              <span class="booking-persons-summary">
+                <span id="booking_persons_summary_text" class="booking-persons-summary__text">No persons listed.</span>
+              </span>
+            </summary>
+            <div class="booking-collapsible__body">
+              <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
+              <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+              <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
+            </div>
+          </details>
 
           <article style="margin-bottom: 1rem;">
             <div class="field">
@@ -409,9 +416,9 @@
     </main>
 
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=2c526d5d72ed";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=d317cf8bded3";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=2c526d5d72ed"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=d317cf8bded3"></script>
   </body>
 </html>

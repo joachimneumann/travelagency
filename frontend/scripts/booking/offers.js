@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=2c526d5d72ed";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=d317cf8bded3";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,9 +15,28 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=2c526d5d72ed";
+} from "./pricing.js?v=d317cf8bded3";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
+const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
+let gmailWindowHandle = null;
+
+function acquireGmailWindow() {
+  if (gmailWindowHandle && !gmailWindowHandle.closed) {
+    return { windowRef: gmailWindowHandle, openedNewWindow: false };
+  }
+  const windowRef = window.open("about:blank", GMAIL_TAB_NAME);
+  if (!windowRef) {
+    return { windowRef: null, openedNewWindow: false };
+  }
+  gmailWindowHandle = windowRef;
+  try {
+    windowRef.opener = null;
+  } catch {
+    // Ignore browsers that disallow modifying opener on a fresh tab.
+  }
+  return { windowRef, openedNewWindow: true };
+}
 
 const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({
   code,
@@ -444,14 +463,7 @@ export function createBookingOfferModule(ctx) {
 
   async function createGeneratedOfferGmailDraft(generatedOfferId) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
-    const draftWindow = window.open("about:blank", "_blank");
-    if (draftWindow) {
-      try {
-        draftWindow.opener = null;
-      } catch {
-        // Ignore browsers that disallow modifying opener on a fresh tab.
-      }
-    }
+    const { windowRef: draftWindow, openedNewWindow } = acquireGmailWindow();
     setOfferStatus("Creating Gmail draft...");
     const request = bookingGeneratedOfferGmailDraftRequest({
       baseURL: apiOrigin,
@@ -472,8 +484,9 @@ export function createBookingOfferModule(ctx) {
         setOfferStatus(response.warning || "");
         return;
       }
-      const fallbackTab = window.open(response.gmail_draft_url, "_blank");
+      const fallbackTab = window.open(response.gmail_draft_url, GMAIL_TAB_NAME);
       if (fallbackTab) {
+        gmailWindowHandle = fallbackTab;
         try {
           fallbackTab.opener = null;
         } catch {
@@ -485,8 +498,9 @@ export function createBookingOfferModule(ctx) {
       setOfferStatus("Gmail draft created, but your browser blocked opening a new tab. Allow pop-ups and try again.");
       return;
     }
-    if (draftWindow) {
+    if (draftWindow && openedNewWindow) {
       draftWindow.close();
+      gmailWindowHandle = null;
     }
     if (!response) {
       setOfferStatus("");

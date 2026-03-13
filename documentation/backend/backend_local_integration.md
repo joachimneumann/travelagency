@@ -54,6 +54,18 @@ Set:
 export CORS_ORIGIN='http://localhost:8080'
 ```
 
+If you want the generated-offer `email` action to create Gmail drafts locally, also set:
+
+```bash
+export GOOGLE_SERVICE_ACCOUNT_JSON_PATH="$HOME/.config/asiatravelplan/gmail-service-account.json"
+export GOOGLE_IMPERSONATED_EMAIL='info@asiatravelplan.com'
+```
+
+Notes:
+- keep the service-account JSON file outside the repository
+- if these Gmail variables are missing, the Gmail draft endpoint returns `503`
+- the booking UI still loads normally without Gmail draft support
+
 ## Seed Data
 
 ```bash
@@ -121,3 +133,4 @@ There is no customer page and no travel-group page.
 5. Confirm stages and ATP staff assignment work according to role.
 6. Open `persons.html` and verify person search links back to bookings.
 7. Open `tour.html` and confirm tours still load.
+8. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.
