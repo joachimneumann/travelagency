@@ -107,6 +107,7 @@ export function createPricingHelpers({
 
   function defaultBookingOffer(preferredCurrency = baseCurrency) {
     return {
+      status: "DRAFT",
       currency: safeCurrency(preferredCurrency),
       category_rules: offerCategoryOrder.map((category) => ({
         category,
@@ -121,6 +122,7 @@ export function createPricingHelpers({
   function normalizeBookingOffer(rawOffer, preferredCurrency = baseCurrency) {
     const source = rawOffer && typeof rawOffer === "object" ? rawOffer : {};
     const currency = safeCurrency(source.currency || preferredCurrency);
+    const status = normalizeOfferStatus(source.status);
     const components = (Array.isArray(source.components) ? source.components : []).map((component, index) => {
       const quantity = Math.max(1, safeInt(component?.quantity) || 1);
       const unitAmountCents = Math.max(0, normalizeAmountCents(component?.unit_amount_cents, 0));
@@ -149,6 +151,7 @@ export function createPricingHelpers({
 
     const totals = computeBookingOfferTotals({ components });
     return {
+      status,
       currency,
       category_rules: Array.isArray(source.category_rules) && source.category_rules.length
         ? source.category_rules.map((rule) => ({
@@ -163,6 +166,11 @@ export function createPricingHelpers({
       totals,
       total_price_cents: totals.total_price_cents
     };
+  }
+
+  function normalizeOfferStatus(value) {
+    const normalized = normalizeText(value).toUpperCase();
+    return ["DRAFT", "APPROVED", "OFFER_SENT"].includes(normalized) ? normalized : "DRAFT";
   }
 
   function normalizeBookingPricing(rawPricing) {
@@ -573,37 +581,12 @@ export function createPricingHelpers({
 
   async function convertBookingOfferToBaseCurrency(offer) {
     const normalized = normalizeBookingOffer(offer, getOfferCurrencyForStorage(offer));
-    const sourceCurrency = getOfferCurrencyForStorage(normalized);
-    if (sourceCurrency === baseCurrency) {
-      return {
-        ...normalized,
-        currency: baseCurrency,
-        totals: {
-          ...normalized.totals
-        },
-        total_price_cents: normalized.total_price_cents
-      };
-    }
-
-    const convertedComponentAmounts = await Promise.all(
-      normalized.components.map((component) => convertMinorUnits(component.unit_amount_cents, sourceCurrency, baseCurrency))
-    );
-
-    const converted = {
-      ...normalized,
-      currency: baseCurrency,
-      components: normalized.components.map((component, index) => ({
-        ...component,
-        currency: baseCurrency,
-        unit_amount_cents: convertedComponentAmounts[index]
-      }))
-    };
-    const totals = computeBookingOfferTotals(converted);
-
     return {
-      ...converted,
-      totals,
-      total_price_cents: totals.total_price_cents
+      ...normalized,
+      totals: {
+        ...normalized.totals
+      },
+      total_price_cents: normalized.total_price_cents
     };
   }
 
@@ -775,9 +758,39 @@ export function createPricingHelpers({
     if (!rawOffer || typeof rawOffer !== "object") {
       return { ok: false, error: "Offer is required." };
     }
+    const inputComponents = Array.isArray(rawOffer.components) ? rawOffer.components : [];
+    for (let index = 0; index < inputComponents.length; index++) {
+      const category = normalizeOfferCategory(inputComponents[index]?.category);
+      if (category === offerCategories.DISCOUNTS_CREDITS) {
+        return {
+          ok: false,
+          error: `Component ${index + 1} uses discounts_credits, which is not allowed in offer components. Use pricing adjustments instead.`
+        };
+      }
+    }
     try {
-      normalizeBookingOffer(rawOffer, booking?.preferred_currency || booking?.pricing?.currency || baseCurrency);
-      return { ok: true };
+      const currentStatus = normalizeOfferStatus(booking?.offer?.status);
+      const requestedCurrency = safeCurrency(
+        rawOffer?.currency || booking?.offer?.currency || booking?.preferred_currency || booking?.pricing?.currency || baseCurrency
+      );
+      const currentCurrency = safeCurrency(
+        booking?.offer?.currency || booking?.preferred_currency || booking?.pricing?.currency || baseCurrency
+      );
+      if (currentStatus !== "DRAFT" && requestedCurrency !== currentCurrency) {
+        return {
+          ok: false,
+          conflict: true,
+          error: `Offer currency is locked because the offer status is ${currentStatus}.`
+        };
+      }
+      const offer = normalizeBookingOffer(
+        rawOffer,
+        rawOffer?.currency || booking?.offer?.currency || booking?.preferred_currency || booking?.pricing?.currency || baseCurrency
+      );
+      if (currentStatus !== "DRAFT") {
+        offer.status = currentStatus;
+      }
+      return { ok: true, offer };
     } catch (error) {
       return { ok: false, error: String(error?.message || error) };
     }
@@ -796,8 +809,8 @@ export function createPricingHelpers({
       return { ok: false, error: "Pricing is required." };
     }
     try {
-      normalizeBookingPricing(rawPricing);
-      return { ok: true };
+      const pricing = normalizeBookingPricing(rawPricing);
+      return { ok: true, pricing };
     } catch (error) {
       return { ok: false, error: String(error?.message || error) };
     }
@@ -818,6 +831,7 @@ export function createPricingHelpers({
     defaultBookingPricing,
     defaultBookingOffer,
     normalizeBookingOffer,
+    normalizeOfferStatus,
     buildBookingOfferReadModel,
     validateBookingOfferInput,
     normalizeBookingPricing,

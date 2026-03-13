@@ -223,11 +223,12 @@ export function createBookingViewHelpers({
     const normalizedBooking = { ...booking };
     delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
+    const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
     return {
       ...normalizedBooking,
       preferred_currency: preferredCurrency,
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
-      offer: await buildBookingOfferReadModel(normalizedBooking.offer, preferredCurrency)
+      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency)
     };
   }
 

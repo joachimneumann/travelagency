@@ -25,8 +25,7 @@ import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import {
   createBookingPricingModule,
-  populateCurrencySelect as populateCurrencySelectFromModule,
-  populateOfferCategorySelect as populateOfferCategorySelectFromModule
+  populateCurrencySelect as populateCurrencySelectFromModule
 } from "../booking/pricing.js";
 import {
   createBookingInvoicesModule,
@@ -180,12 +179,10 @@ const els = {
   pricing_save_btn: document.getElementById("pricing_save_btn"),
   pricing_status: document.getElementById("pricing_status"),
   offer_panel: document.getElementById("offer_panel"),
+  offer_panel_summary_text: document.getElementById("offer_panel_summary_text"),
   offer_currency_input: document.getElementById("offer_currency_input"),
-  offer_component_category_select: document.getElementById("offer_component_category_select"),
-  offer_add_component_btn: document.getElementById("offer_add_component_btn"),
+  offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
-  offer_components_total_table: document.getElementById("offer_components_total_table"),
-  offer_save_btn: document.getElementById("offer_save_btn"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
   meta_chat_mount: document.getElementById("booking_whatsapp_mount"),
@@ -280,7 +277,6 @@ async function init() {
   populateCurrencySelectFromModule(els.pricing_currency_input);
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
-  populateOfferCategorySelectFromModule(els.offer_component_category_select, escapeHtml);
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
   if (els.heroPhotoBtn) els.heroPhotoBtn.addEventListener("click", triggerBookingPhotoPicker);
@@ -315,8 +311,6 @@ async function init() {
     els.offer_currency_input.addEventListener("change", () => {
       void handleOfferCurrencyChange();
     });
-  if (els.offer_add_component_btn) els.offer_add_component_btn.addEventListener("click", addOfferComponentFromSelector);
-  if (els.offer_save_btn) els.offer_save_btn.addEventListener("click", saveOffer);
   personsModule.bindEvents();
   document.addEventListener("keydown", handleBookingDetailKeydown, true);
   if (els.invoice_select) els.invoice_select.addEventListener("change", onInvoiceSelectChange);
@@ -588,8 +582,8 @@ function savePricing() {
   return pricingModule.savePricing();
 }
 
-function addOfferComponentFromSelector() {
-  return pricingModule.addOfferComponentFromSelector();
+function addOfferComponent() {
+  return pricingModule.addOfferComponent();
 }
 
 function handleOfferCurrencyChange() {

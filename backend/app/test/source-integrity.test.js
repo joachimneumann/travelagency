@@ -95,7 +95,7 @@ test("booking page keeps critical init handlers wired to real local functions", 
     "updateNoteSaveButtonState",
     "savePricing",
     "handleOfferCurrencyChange",
-    "addOfferComponentFromSelector",
+    "addOfferComponent",
     "saveOffer",
     "updatePricingDirtyState",
     "loadInvoices",
@@ -120,5 +120,49 @@ test("booking page does not declare duplicate imported bindings", async () => {
     duplicates,
     [],
     "Duplicate imported bindings in booking.js cause browser SyntaxError before the page can run"
+  );
+});
+
+test("offer row removal triggers an immediate save in the pricing module", async () => {
+  const filePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const source = await readFile(filePath, "utf8");
+  assert.match(
+    source,
+    /data-offer-remove-component[\s\S]*?renderOfferComponentsTable\(\);[\s\S]*?await saveOffer\(\);/,
+    "Removing an offer row should persist immediately instead of staying only in the local draft"
+  );
+});
+
+test("offer editor uses autosave instead of an explicit update button", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const bookingSource = await readFile(bookingPagePath, "utf8");
+  const pricingSource = await readFile(pricingModulePath, "utf8");
+
+  assert.doesNotMatch(
+    bookingSource,
+    /id="offer_save_btn"/,
+    "Offer UI should not expose a manual update button"
+  );
+  assert.match(
+    pricingSource,
+    /data-offer-component-quantity[\s\S]*?addEventListener\("input",[\s\S]*?syncOfferInputTotals\(\)/,
+    "Offer quantity changes should update totals live"
+  );
+  assert.match(
+    pricingSource,
+    /function scheduleOfferAutosave\(/,
+    "Offer editor should persist through autosave"
+  );
+});
+
+test("offer component editor does not expose discounts_credits as a selectable category", async () => {
+  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const pricingSource = await readFile(pricingModulePath, "utf8");
+
+  assert.match(
+    pricingSource,
+    /const OFFER_COMPONENT_CATEGORIES = OFFER_CATEGORIES\.filter\(\(category\) => category\.code !== "DISCOUNTS_CREDITS"\);/,
+    "Offer component rows should not allow discounts_credits because that creates negative sellable line items"
   );
 });

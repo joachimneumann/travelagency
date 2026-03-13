@@ -296,7 +296,7 @@ test("booking detail, activities, and invoices conform to the mobile contract", 
 
 });
 
-test("booking offer patch enforces preferred currency", async () => {
+test("booking offer patch preserves selected currency", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -345,8 +345,193 @@ test("booking offer patch enforces preferred currency", async () => {
     }
   );
   assert.equal(conversionResult.status, 200);
-  assert.equal(conversionResult.body.booking.offer.currency, offerCurrency);
+  assert.equal(conversionResult.body.booking.offer.currency, mismatchCurrency);
   assert.equal(typeof conversionResult.body.booking.offer.total_price_cents, "number");
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.currency, mismatchCurrency);
+});
+
+test("booking offer patch rejects currency change once offer is sent", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  bookingRecord.offer = {
+    ...(bookingRecord.offer || {}),
+    status: "OFFER_SENT",
+    currency: "USD"
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  assert.equal(detailBefore.body.booking.offer.status, "OFFER_SENT");
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: detailBefore.body.booking.offer_revision,
+        offer: {
+          ...detailBefore.body.booking.offer,
+          currency: "VND"
+        }
+      }
+    }
+  );
+  assert.equal(patchResult.status, 409);
+  assert.match(String(patchResult.body.error || ""), /currency/i);
+});
+
+test("booking offer patch persists added offer components", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Hotel room",
+              quantity: 2,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.components.length, 1);
+  assert.equal(patchResult.body.booking.offer.components[0].details, "Hotel room");
+  assert.equal(patchResult.body.booking.offer.components[0].quantity, 2);
+  assert.equal(patchResult.body.booking.offer.total_price_cents > 0, true);
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.components.length, 1);
+  assert.equal(detailAfter.body.booking.offer.components[0].details, "Hotel room");
+});
+
+test("booking offer patch persists component removal", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const addResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Hotel room",
+              quantity: 2,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(addResult.status, 200);
+  assert.equal(addResult.body.booking.offer.components.length, 1);
+
+  const removeResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: addResult.body.booking.offer_revision,
+        offer: {
+          ...addResult.body.booking.offer,
+          components: []
+        }
+      }
+    }
+  );
+
+  assert.equal(removeResult.status, 200);
+  assert.equal(removeResult.body.booking.offer.components.length, 0);
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.components.length, 0);
+});
+
+test("booking offer patch rejects discounts_credits components", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_discount_1",
+              category: "DISCOUNTS_CREDITS",
+              label: "Discount / credit",
+              details: "Promo discount",
+              quantity: 2,
+              unit_amount_cents: 100,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 422);
+  assert.match(String(patchResult.body.error || ""), /discounts_credits/i);
 });
 
 test("booking name and persons endpoints update the booking", async () => {
@@ -786,6 +971,69 @@ test("booking invoice create/update and offer exchange-rates endpoints work", as
   assert.ok(Array.isArray(exchangeRatesResult.body.converted_components));
   assert.equal(exchangeRatesResult.body.converted_components.length, 1);
   assert.equal(typeof exchangeRatesResult.body.total_price_cents, "number");
+});
+
+test("booking invoice patch rejects currency change once invoice is sent", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const invoiceCreateResult = await requestJson(
+    endpointPath("booking_invoice_create").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_invoices_revision: detailBefore.body.booking.invoices_revision,
+        invoice_number: "ATP-LOCK-001",
+        currency: "USD",
+        title: "Lock test",
+        components: [
+          {
+            description: "Planning fee",
+            quantity: 1,
+            unit_amount_cents: 10000
+          }
+        ]
+      }
+    }
+  );
+  assert.equal(invoiceCreateResult.status, 201);
+  const invoice_id = invoiceCreateResult.body.invoice.id;
+
+  const sentResult = await requestJson(
+    endpointPath("booking_invoice_update")
+      .replace("{booking_id}", booking_id)
+      .replace("{invoice_id}", invoice_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_invoices_revision: invoiceCreateResult.body.booking.invoices_revision,
+        sent_to_recipient: true
+      }
+    }
+  );
+  assert.equal(sentResult.status, 200);
+  assert.equal(sentResult.body.invoice.status, "INVOICE_SENT");
+
+  const lockedResult = await requestJson(
+    endpointPath("booking_invoice_update")
+      .replace("{booking_id}", booking_id)
+      .replace("{invoice_id}", invoice_id),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_invoices_revision: sentResult.body.booking.invoices_revision,
+        currency: "VND"
+      }
+    }
+  );
+  assert.equal(lockedResult.status, 409);
+  assert.match(String(lockedResult.body.error || ""), /currency/i);
 });
 
 test("keycloak users endpoint lists assignable users from keycloak directory", async () => {

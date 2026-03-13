@@ -1186,35 +1186,14 @@ textarea:focus-visible {
   --offer-col-min-width: 120px;
 }
 
-.backend-offer-total-table {
-  margin-top: 0.35rem;
-}
-
-.backend-offer-total-table td {
-  border-bottom: 0;
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
-}
-
-.backend-offer-footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.backend-offer-total-wrap {
-  flex: 1;
-}
-
-.backend-offer-actions {
-  margin: 0;
+#offer_components_table {
+  table-layout: fixed;
 }
 
 .backend-table th,
 .backend-table td {
   border-bottom: 1px solid var(--line);
-  padding: 0.6rem;
+  padding: 0.6rem 0.5em;
   text-align: left;
   font-size: 0.9rem;
 }
@@ -1225,6 +1204,16 @@ textarea:focus-visible {
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: #4d616d;
+  text-align: center;
+}
+
+.backend-table th.offer-col-category,
+.backend-table th.offer-col-details,
+.backend-table th.offer-col-qty,
+.backend-table th.offer-col-price-single,
+.backend-table th.offer-col-price-total,
+.backend-table th.offer-col-actions {
+  white-space: nowrap;
 }
 
 .backend-table .offer-col-category,
@@ -1237,38 +1226,67 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-col-details {
-  width: 42%;
-  min-width: 260px;
+  width: auto;
+  min-width: 300px;
+  padding-inline-start: 0.5rem;
+  padding-inline-end: 0.5rem;
+}
+
+.backend-table .offer-col-category {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  padding-inline-end: 0.5rem;
+}
+
+.backend-table .offer-col-category > div {
+  padding-right: 0.08rem;
+}
+
+.backend-table .offer-col-category select {
+  width: calc(100% - 0.08rem);
+  margin-right: 0.08rem;
 }
 
 .backend-table .offer-col-qty {
-  width: 80px;
-  max-width: 80px;
-  min-width: 80px;
+  width: 100px;
+  max-width: 100px;
+  min-width: 100px;
+  text-align: right;
+  padding-inline-end: 0.5em;
+  box-sizing: border-box;
+}
+
+.backend-table th.offer-col-qty {
+  text-align: center;
 }
 
 .backend-table .offer-col-qty input {
   width: 100%;
+  text-align: right;
+  box-sizing: border-box;
 }
 
 .backend-table .offer-col-price-single,
 .backend-table .offer-col-price-total {
-  width: 80px;
-  min-width: 90px;
+  width: 100px;
+  max-width: 100px;
+  min-width: 100px;
   text-align: right;
-  padding-inline-end: 1rem;
+  padding-inline-end: 0.5em;
   box-sizing: border-box;
 }
 
 .backend-table .offer-col-price-total {
-  width: 80px;
-  min-width: 90px;
+  width: 100px;
+  max-width: 100px;
+  min-width: 100px;
 }
 
 .backend-table th.offer-col-price-single,
 .backend-table th.offer-col-price-total {
-  text-align: right;
-  padding-inline-end: 1rem;
+  text-align: center;
+  padding-inline-end: 0.5em;
 }
 
 .backend-table .offer-col-price-single input,
@@ -1283,21 +1301,63 @@ textarea:focus-visible {
   box-sizing: border-box;
 }
 
+.backend-table .offer-col-price-single input {
+  -moz-appearance: textfield;
+}
+
+.backend-table .offer-col-price-single input::-webkit-outer-spin-button,
+.backend-table .offer-col-price-single input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .offer-price-value {
   display: block;
   width: 100%;
   text-align: right;
   white-space: nowrap;
-  padding-inline-end: var(--offer-price-right-pad);
+  padding-inline-end: 0;
+  font-weight: 400;
 }
 
 .backend-table textarea[data-offer-component-details] {
-  width: 100%;
-  min-height: 52px;
+  width: calc(100% - 0.08rem);
+  margin-left: 0.08rem;
+  min-height: 42px;
   resize: vertical;
   line-height: 1.35;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+.backend-table .offer-col-category select,
+.backend-table .offer-col-qty input,
+.backend-table .offer-col-price-single input,
+.backend-table .offer-col-price-total input,
+.backend-table textarea[data-offer-component-details] {
+  border: 1px solid #c5d8e1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.62rem 0.72rem;
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.backend-table .offer-col-category select:focus-visible,
+.backend-table .offer-col-qty input:focus-visible,
+.backend-table .offer-col-price-single input:focus-visible,
+.backend-table .offer-col-price-total input:focus-visible,
+.backend-table textarea[data-offer-component-details]:focus-visible {
+  outline: 3px solid rgba(26, 156, 161, 0.12);
+  outline-offset: 0;
+  border-color: #1a9ca1;
+}
+
+.backend-table .offer-col-qty input,
+.backend-table .offer-col-price-single input,
+.backend-table .offer-col-price-total input {
+  min-height: 42px;
 }
 
 .offer-total-cell {
@@ -1309,34 +1369,65 @@ textarea:focus-visible {
 .offer-total-sum {
   display: flex;
   justify-content: flex-end;
+  align-items: baseline;
   width: 100%;
 }
 
-.offer-total-sum .offer-total-value {
+.offer-total-sum .offer-total-label {
+  white-space: nowrap;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.offer-total-value {
   display: block;
   width: 100%;
   text-align: right;
   white-space: nowrap;
-  padding-inline-end: var(--offer-price-right-pad);
+  padding-inline-end: 0;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.backend-table tr.offer-total-row td {
+  border-bottom: 0;
+  padding-top: 0.45rem;
+  padding-bottom: 0.2rem;
+}
+
+.backend-table td.offer-add-cell {
+  text-align: center;
+  padding-inline-start: 0.5rem;
+  padding-inline-end: 0.5rem;
+}
+
+.backend-table td.offer-total-merged {
+  text-align: right;
+  padding-right: 0.15rem;
+}
+
+.backend-table td.offer-total-final {
+  padding-left: 0.15rem;
 }
 
 .backend-table .offer-col-actions {
-  width: 86px;
-  min-width: 86px;
+  width: 64px;
+  min-width: 64px;
   text-align: center;
 }
 
 .backend-table td.offer-col-actions {
-  padding-inline: 0.45rem;
+  padding-inline: 0.25rem;
 }
 
 .offer-remove-btn {
-  min-width: var(--offer-remove-size);
-  height: var(--offer-remove-size);
-  border-radius: 10px;
+  min-width: 34px;
+  height: 34px;
+  border-radius: 8px;
   color: var(--accent);
   border-color: var(--accent);
-  font-size: 1.8rem;
+  font-size: 1.45rem;
   font-weight: 700;
   line-height: 1;
   padding: 0;

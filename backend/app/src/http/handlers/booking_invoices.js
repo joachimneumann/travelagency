@@ -36,6 +36,11 @@ export function createBookingInvoiceHandlers(deps) {
     };
   }
 
+  function isInvoiceCurrencyEditable(invoice) {
+    const status = normalizeText(invoice?.status).toUpperCase();
+    return !status || status === "DRAFT";
+  }
+
   function getInvoicePartyForBooking(booking) {
     const contact = getBookingContactProfile(booking);
     return {
@@ -185,6 +190,14 @@ export function createBookingInvoiceHandlers(deps) {
     }
 
     if (isContentUpdate) {
+      if (
+        payload.currency !== undefined &&
+        !isInvoiceCurrencyEditable(invoice) &&
+        safeCurrency(payload.currency || invoice.currency) !== safeCurrency(invoice.currency)
+      ) {
+        sendJson(res, 409, { error: `Invoice currency is locked because the invoice status is ${invoice.status || "DRAFT"}.` });
+        return;
+      }
       const totalAmountCents = computeInvoiceComponentTotal(components);
       const dueAmountCents = safeAmountCents(payload.due_amount_cents) ?? totalAmountCents;
       if (payload.invoice_number !== undefined) {

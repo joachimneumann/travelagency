@@ -128,6 +128,11 @@ Relevant website fields:
 - `page_size`
 - `stage`
 - `assigned_keycloak_user_id`
+
+Commercial document currency rules:
+- booking offer currency is editable only while `offer.status == "DRAFT"`
+- invoice currency is editable only while `invoice.status == "DRAFT"`
+- once an offer is approved/sent or an invoice is sent/paid/void, the backend rejects currency changes even if an old client tries to submit them
 - `search`
 - `sort`
 

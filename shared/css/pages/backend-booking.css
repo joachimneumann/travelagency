@@ -36,6 +36,53 @@
   padding: 0.35rem 0.75rem;
 }
 
+.booking-detail-page .booking-offer-controls {
+  margin: 0.6rem 0 0.8rem;
+  column-gap: 0.5rem;
+}
+
+.booking-detail-page .booking-offer-controls .field {
+  min-width: 180px;
+}
+
+.booking-detail-page .booking-offer-controls #offer_currency_input {
+  max-width: 140px;
+}
+
+.booking-detail-page .booking-offer-currency-hint {
+  color: #b42318;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-left: 0.32rem;
+}
+
+.booking-detail-page .booking-offer-add-btn {
+  min-height: 40px;
+  min-width: 240px;
+  padding: 0.58rem 1rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #a6d9a8 0%, #7fbe86 100%);
+  border-color: #7fbe86;
+  color: #fff;
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(127, 190, 134, 0.14);
+}
+
+.booking-detail-page .booking-offer-add-btn:hover,
+.booking-detail-page .booking-offer-add-btn:focus-visible {
+  color: #fff;
+  border-color: #6faa76;
+  box-shadow: 0 8px 16px rgba(111, 170, 118, 0.18);
+}
+
+@media (max-width: 760px) {
+}
+
 .booking-detail-page .booking-hero {
   display: flex;
   align-items: center;
@@ -353,12 +400,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #37be52 0%, #1f9d3b 100%);
+  background: linear-gradient(180deg, #a6d9a8 0%, #7fbe86 100%);
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 8px 18px rgba(31, 157, 59, 0.3);
+  box-shadow: 0 8px 18px rgba(127, 190, 134, 0.16);
   flex: 0 0 auto;
   white-space: nowrap;
 }

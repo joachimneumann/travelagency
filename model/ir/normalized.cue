@@ -305,6 +305,7 @@ IR: {
 				module:     "entities"
 				sourceType: "entities.#BookingOffer"
 				fields: [
+					{name: "status", kind: "scalar", typeName: "string", required: false},
 					{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 					{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 					{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},

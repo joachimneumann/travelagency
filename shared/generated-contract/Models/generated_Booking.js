@@ -397,6 +397,7 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         sourceType: "openapi.components.schemas.BookingOffer",
         requireOneOf: [],
         fields: [
+    schemaField({"name":"status","required":false,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
     schemaField({"name":"category_rules","required":false,"wireName":"category_rules"}, SHARED_FIELD_DEFS.FIELD_29),
     schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_30),

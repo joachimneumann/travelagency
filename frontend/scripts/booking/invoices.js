@@ -70,6 +70,16 @@ export function createBookingInvoicesModule(ctx) {
     els.invoice_status.textContent = message;
   }
 
+  function normalizeInvoiceStatus(value) {
+    return String(value || "").trim().toUpperCase() || "DRAFT";
+  }
+
+  function isInvoiceCurrencyEditable(invoice = null) {
+    if (!state.permissions.canEditBooking) return false;
+    const targetInvoice = invoice || state.invoices.find((item) => item.id === state.selectedInvoiceId) || null;
+    return normalizeInvoiceStatus(targetInvoice?.status) === "DRAFT";
+  }
+
   function clearInvoiceStatus() {
     setInvoiceStatus("");
   }
@@ -104,7 +114,6 @@ export function createBookingInvoicesModule(ctx) {
     [
       els.invoice_select,
       els.invoice_number_input,
-      els.invoice_currency_input,
       els.invoice_issue_date_input,
       els.invoice_issue_today_btn,
       els.invoice_due_date_input,
@@ -117,6 +126,9 @@ export function createBookingInvoicesModule(ctx) {
     ].forEach((el) => {
       if (el) el.disabled = disabled;
     });
+    if (els.invoice_currency_input) {
+      els.invoice_currency_input.disabled = !isInvoiceCurrencyEditable();
+    }
   }
 
   function invoiceComponentsToText(components, currency) {
@@ -365,4 +377,3 @@ function shortId(value) {
   const text = String(value || "");
   return text.length > 8 ? text.slice(0, 8) : text || "-";
 }
-

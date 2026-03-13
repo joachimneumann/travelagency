@@ -38,6 +38,7 @@ import (
 
 #BookingOffer: {
 	currency:          enums.#CurrencyCode
+	status?:           "DRAFT" | "APPROVED" | "OFFER_SENT"
 	category_rules:    [...#BookingOfferCategoryRule]
 	components:        [...#BookingOfferComponent]
 	totals:            #BookingOfferTotals

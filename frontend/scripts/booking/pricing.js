@@ -20,6 +20,8 @@ const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({
     .join(" ")
 }));
 
+const OFFER_COMPONENT_CATEGORIES = OFFER_CATEGORIES.filter((category) => category.code !== "DISCOUNTS_CREDITS");
+
 export function getCurrencyDefinitions() {
   return GENERATED_CURRENCIES;
 }
@@ -57,18 +59,6 @@ export function populateCurrencySelect(selectEl) {
     .map((code) => `<option value="${code}">${code}</option>`)
     .join("");
   selectEl.value = selectedValue;
-}
-
-export function populateOfferCategorySelect(selectEl, escapeHtml) {
-  if (!(selectEl instanceof HTMLSelectElement)) return;
-  const currentValue = String(selectEl.value || "").trim().toUpperCase();
-  selectEl.innerHTML = [
-    '<option value="" selected disabled>Category</option>',
-    ...OFFER_CATEGORIES.map((category) => `<option value="${escapeHtml(category.code)}">${escapeHtml(category.label)}</option>`)
-  ].join("");
-  if (currentValue && OFFER_CATEGORIES.some((category) => category.code === currentValue)) {
-    selectEl.value = currentValue;
-  }
 }
 
 export function formatMoneyDisplay(value, currency) {
@@ -128,6 +118,35 @@ export function createBookingPricingModule(ctx) {
     captureControlSnapshot,
     setBookingSectionDirty
   } = ctx;
+  let offerAutosaveTimer = null;
+  let offerAutosaveInFlight = false;
+  let offerAutosavePending = false;
+  let offerPendingRowIndexes = new Set();
+  let offerTotalPending = false;
+
+  function normalizeOfferStatus(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    return ["DRAFT", "APPROVED", "OFFER_SENT"].includes(normalized) ? normalized : "DRAFT";
+  }
+
+  function isOfferCurrencyEditable() {
+    return state.permissions.canEditBooking && normalizeOfferStatus(state.offerDraft?.status || state.booking?.offer?.status) === "DRAFT";
+  }
+
+  function debugOffer(step, payload = undefined) {
+    void step;
+    void payload;
+    // Temporary offer debug logging kept commented for quick re-enable during pricing investigations.
+    // try {
+    //   if (payload === undefined) {
+    //     console.log(`[offer-debug] ${step}`);
+    //   } else {
+    //     console.log(`[offer-debug] ${step}`, payload);
+    //   }
+    // } catch {
+    //   // ignore debug serialization failures
+    // }
+  }
 
   function setPricingStatus(message) {
     if (!els.pricing_status) return;
@@ -147,9 +166,12 @@ export function createBookingPricingModule(ctx) {
     setOfferStatus("");
   }
 
+  function updateOfferPanelSummary(totalCents, currency) {
+    if (!els.offer_panel_summary_text) return;
+    els.offer_panel_summary_text.textContent = `Offer ${formatMoneyDisplay(totalCents, currency)}`;
+  }
+
   function setOfferSaveEnabled(enabled) {
-    if (!els.offer_save_btn) return;
-    els.offer_save_btn.disabled = !enabled || !state.permissions.canEditBooking;
     setBookingSectionDirty("offer", Boolean(enabled) && state.permissions.canEditBooking);
   }
 
@@ -210,6 +232,7 @@ export function createBookingPricingModule(ctx) {
     const sourceComponents = Array.isArray(source.components) ? source.components : [];
 
     return {
+      status: normalizeOfferStatus(source.status),
       currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
       category_rules,
       components: sourceComponents.map((component, index) => ({
@@ -401,14 +424,14 @@ export function createBookingPricingModule(ctx) {
     const header = `<thead><tr><th>Label</th><th>Type</th><th>Amount (${escapeHtml(currency)})</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
     const rows = items
       .map((item, index) => `<tr>
-      <td><input data-pricing-adjustment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_adjustment_label_${index}" name="pricing_adjustment_label_${index}" data-pricing-adjustment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
       <td>
-        <select data-pricing-adjustment-type="${index}" ${readOnly ? "disabled" : ""}>
+        <select id="pricing_adjustment_type_${index}" name="pricing_adjustment_type_${index}" data-pricing-adjustment-type="${index}" ${readOnly ? "disabled" : ""}>
           ${["DISCOUNT", "CREDIT", "SURCHARGE"].map((type) => `<option value="${type}" ${item.type === type ? "selected" : ""}>${type}</option>`).join("")}
         </select>
       </td>
-      <td><input data-pricing-adjustment-amount="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-pricing-adjustment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_adjustment_amount_${index}" name="pricing_adjustment_amount_${index}" data-pricing-adjustment-amount="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_adjustment_notes_${index}" name="pricing_adjustment_notes_${index}" data-pricing-adjustment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
       ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">Remove</button></td>`}
     </tr>`)
       .join("");
@@ -434,17 +457,17 @@ export function createBookingPricingModule(ctx) {
     const header = `<thead><tr><th>Label</th><th>Due Date</th><th>Net (${escapeHtml(currency)})</th><th>Tax %</th><th>Status</th><th>Paid At</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
     const rows = items
       .map((item, index) => `<tr>
-      <td><input data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-pricing-payment-due-date="${index}" type="date" value="${escapeHtml(item.due_date || "")}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-pricing-payment-net="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.net_amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_label_${index}" name="pricing_payment_label_${index}" data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_due_date_${index}" name="pricing_payment_due_date_${index}" data-pricing-payment-due-date="${index}" type="date" value="${escapeHtml(item.due_date || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_net_${index}" name="pricing_payment_net_${index}" data-pricing-payment-net="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.net_amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_tax_${index}" name="pricing_payment_tax_${index}" data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
       <td>
-        <select data-pricing-payment-status="${index}" ${readOnly ? "disabled" : ""}>
+        <select id="pricing_payment_status_${index}" name="pricing_payment_status_${index}" data-pricing-payment-status="${index}" ${readOnly ? "disabled" : ""}>
           ${["PENDING", "PAID"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}
         </select>
       </td>
-      <td><input data-pricing-payment-paid-at="${index}" type="datetime-local" value="${escapeHtml(normalizeDateTimeLocal(item.paid_at))}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input data-pricing-payment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_paid_at_${index}" name="pricing_payment_paid_at_${index}" data-pricing-payment-paid-at="${index}" type="datetime-local" value="${escapeHtml(normalizeDateTimeLocal(item.paid_at))}" ${readOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_notes_${index}" name="pricing_payment_notes_${index}" data-pricing-payment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
       ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">Remove</button></td>`}
     </tr>`)
       .join("");
@@ -497,11 +520,14 @@ export function createBookingPricingModule(ctx) {
     markPricingSnapshotClean();
   }
 
-  function addOfferComponentFromSelector() {
+  function addOfferComponent() {
     if (!state.permissions.canEditBooking || !state.offerDraft) return;
-    const selectedCategory = els.offer_component_category_select?.value || "";
-    if (!selectedCategory) return;
-    const category = normalizeOfferCategory(selectedCategory);
+    const category = normalizeOfferCategory("OTHER");
+    debugOffer("add component:start", {
+      booking_id: state.booking?.id || "",
+      normalized_category: category,
+      components_before: Array.isArray(state.offerDraft?.components) ? state.offerDraft.components.length : 0
+    });
     state.offerDraft.components.push({
       id: "",
       category,
@@ -514,6 +540,15 @@ export function createBookingPricingModule(ctx) {
       notes: "",
       sort_order: state.offerDraft.components.length
     });
+    debugOffer("add component:after push", {
+      components: state.offerDraft.components.map((component) => ({
+        id: component.id,
+        category: component.category,
+        details: component.details,
+        quantity: component.quantity,
+        unit_amount_cents: component.unit_amount_cents
+      }))
+    });
     setOfferSaveEnabled(true);
     renderOfferComponentsTable();
   }
@@ -522,23 +557,30 @@ export function createBookingPricingModule(ctx) {
     if (!els.offer_panel || !state.booking) return;
     const offer = cloneOffer(state.booking.offer || {});
     state.offerDraft = offer;
+    offerPendingRowIndexes = new Set();
+    offerTotalPending = false;
+    debugOffer("render panel", {
+      booking_id: state.booking.id,
+      offer: {
+        currency: offer.currency,
+        components: offer.components.map((component) => ({
+          id: component.id,
+          category: component.category,
+          details: component.details,
+          quantity: component.quantity,
+          unit_amount_cents: component.unit_amount_cents
+        }))
+      }
+    });
     const currency = normalizeCurrencyCode(offer.currency || state.booking.preferred_currency || "USD");
     state.offerDraft.currency = currency;
 
     if (els.offer_currency_input) {
       setSelectValue(els.offer_currency_input, currency);
-      els.offer_currency_input.disabled = !state.permissions.canEditBooking;
+      els.offer_currency_input.disabled = !isOfferCurrencyEditable();
     }
-    if (els.offer_component_category_select) {
-      els.offer_component_category_select.disabled = !state.permissions.canEditBooking;
-      if (state.permissions.canEditBooking) {
-        els.offer_component_category_select.value = "";
-      }
-    }
-    if (els.offer_add_component_btn) {
-      els.offer_add_component_btn.style.display = state.permissions.canEditBooking ? "" : "none";
-    }
-    if (els.offer_save_btn) els.offer_save_btn.style.display = state.permissions.canEditBooking ? "" : "none";
+    updateOfferCurrencyHint(currency);
+    updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     setOfferSaveEnabled(false);
 
     renderOfferComponentsTable();
@@ -551,65 +593,63 @@ export function createBookingPricingModule(ctx) {
     const showActionsCol = !readOnly;
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    const hasMultiQuantityComponent = offerComponents.some((component) => Math.max(1, Number(component?.quantity || 1)) !== 1);
-    const showDualPrice = hasMultiQuantityComponent;
+    const showDualPrice = true;
     const priceHeaders = showDualPrice
-      ? `<th class="offer-col-price-single">PRICE (SINGLE, ${escapeHtml(currency)})</th><th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`
-      : `<th class="offer-col-price-total">PRICE (with TAX, ${escapeHtml(currency)})</th>`;
+      ? `<th class="offer-col-price-single">Single</th><th class="offer-col-price-total">Total (incl. tax)</th>`
+      : `<th class="offer-col-price-total">Total (${escapeHtml(currency)})</th>`;
     const actionHeader = showActionsCol ? '<th class="offer-col-actions"></th>' : "";
-    const header = `<thead><tr><th class="offer-col-category">Category</th><th class="offer-col-details">Details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}${actionHeader}</tr></thead>`;
+    const header = `<thead><tr><th class="offer-col-category">Offer category</th><th class="offer-col-details">Offer details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}${actionHeader}</tr></thead>`;
     const rows = offerComponents
       .map((component, index) => {
+        const category = normalizeOfferCategory(component.category || "OTHER");
         const quantity = Math.max(1, Number(component.quantity || 1));
         const unitAmount = Math.max(0, Number(component.unit_amount_cents || 0));
         const rawLineTotal = computeOfferComponentLineTotals(component).gross_amount_cents;
         const componentTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
-        const taxRateBasisPoints = Number(component?.tax_rate_basis_points || 0);
-        const taxLabel = `Tax: ${formatTaxRatePercent(taxRateBasisPoints)}%`;
         const removeButton = showActionsCol
           ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-component="${index}" title="Remove offer component" aria-label="Remove offer component">×</button>`
           : "";
-        const singleInput = `<input data-offer-component-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(unitAmount, currency))}" ${readOnly ? "disabled" : ""} />`;
+        const singleInput = `<input id="offer_component_unit_${index}" name="offer_component_unit_${index}" data-offer-component-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(unitAmount, currency))}" ${readOnly ? "disabled" : ""} />`;
+        const categorySelect = `<select id="offer_component_category_${index}" name="offer_component_category_${index}" data-offer-component-category="${index}" ${readOnly ? "disabled" : ""}>${OFFER_COMPONENT_CATEGORIES.map((option) => `<option value="${escapeHtml(option.code)}" ${option.code === category ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select>`;
         const totalPriceCell = showDualPrice
-          ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${escapeHtml(componentTotalText)}</span></div></td>`
-          : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value">${singleInput}</span></div></td>`;
+          ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span></div></td>`
+          : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span></div></td>`;
         const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
         const actionCell = showActionsCol ? `<td class="offer-col-actions">${removeButton}</td>` : "";
         const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
         return `<tr>
       <td class="offer-col-category">
-        <div>${escapeHtml(offerCategoryLabel(component.category))}</div>
-        <div class="offer-category-tax">${escapeHtml(taxLabel)}</div>
+        <div>${categorySelect}</div>
       </td>
-      <td class="offer-col-details"><textarea data-offer-component-details="${index}" rows="2" ${readOnly ? "disabled" : ""}>${escapeHtml(component.details || component.description || "")}</textarea></td>
-      <td class="offer-col-qty"><input data-offer-component-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${readOnly ? "disabled" : ""} /></td>
+      <td class="offer-col-details"><textarea id="offer_component_details_${index}" name="offer_component_details_${index}" data-offer-component-details="${index}" rows="1" ${readOnly ? "disabled" : ""}>${escapeHtml(component.details || component.description || "")}</textarea></td>
+      <td class="offer-col-qty"><input id="offer_component_quantity_${index}" name="offer_component_quantity_${index}" data-offer-component-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${readOnly ? "disabled" : ""} /></td>
       ${priceCells}${actionCell}
     </tr>`;
       })
       .join("");
     const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
-    const columns = 3 + (showDualPrice ? 2 : 1) + (showActionsCol ? 1 : 0);
-    const noRows = `<tr><td colspan="${columns}" style="padding-top:50px;padding-bottom:50px;">no components yet</td></tr>`;
-    const totalAlignCols = 3 + (showDualPrice ? 1 : 0);
-    const totalCellOffset = `<td colspan="${totalAlignCols}"></td>`;
-    const totalRow = `<tr>${totalCellOffset}<td class="offer-col-price-total"><div class="offer-total-sum"><strong class="offer-total-value">Total with Tax: ${escapeHtml(offerTotalValue)}</strong></div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
-    const body = rows || noRows;
-    els.offer_components_table.innerHTML = `${header}<tbody>${body}</tbody>`;
-    if (els.offer_components_total_table) {
-      els.offer_components_total_table.innerHTML = `<tbody>${totalRow}</tbody>`;
-    } else {
-      els.offer_components_table.insertAdjacentHTML("beforeend", `<tbody>${totalRow}</tbody>`);
-    }
+    updateOfferPanelSummary(resolveOfferTotalCents(), currency);
+    const addButtonCell = !readOnly
+      ? `<td class="offer-col-category"></td><td class="offer-add-cell"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-component>new</button></td>`
+      : `<td class="offer-col-category"></td><td class="offer-col-details"></td>`;
+    const totalLabelCols = `<td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">Total:</strong></div></td>`;
+    const totalValueCol = `<td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>`;
+    const totalRow = `<tr class="offer-total-row">${addButtonCell}${totalLabelCols}${totalValueCol}${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
+    els.offer_components_table.innerHTML = `${header}<tbody>${rows}${totalRow}</tbody>`;
 
     if (!readOnly) {
       const syncOfferInputTotals = () => {
         state.offerDraft.components = readOfferDraftComponentsForRender();
         state.offerDraft.total_price_cents = null;
         setOfferSaveEnabled(true);
-        renderOfferComponentsTable();
+        updateOfferTotalsInDom();
+      };
+      const syncOfferAndAutosave = () => {
+        syncOfferInputTotals();
+        scheduleOfferAutosave();
       };
       els.offer_components_table.querySelectorAll("[data-offer-remove-component]").forEach((button) => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
           const index = Number(button.getAttribute("data-offer-remove-component"));
           if (!window.confirm("Remove this offer component?")) {
             return;
@@ -617,12 +657,66 @@ export function createBookingPricingModule(ctx) {
           state.offerDraft.components.splice(index, 1);
           setOfferSaveEnabled(true);
           renderOfferComponentsTable();
+          await saveOffer();
         });
       });
-      els.offer_components_table.querySelectorAll("[data-offer-component-details], [data-offer-component-quantity], [data-offer-component-unit]").forEach((input) => {
-        input.addEventListener("change", syncOfferInputTotals);
+      els.offer_components_table.querySelectorAll("[data-offer-component-category]").forEach((input) => {
+        input.addEventListener("change", syncOfferAndAutosave);
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-component-details]").forEach((input) => {
+        input.addEventListener("change", syncOfferAndAutosave);
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-component-quantity], [data-offer-component-unit]").forEach((input) => {
+        input.addEventListener("input", () => {
+          const index = Number(
+            input.getAttribute("data-offer-component-quantity")
+            || input.getAttribute("data-offer-component-unit")
+            || "-1"
+          );
+          if (index >= 0) {
+            offerPendingRowIndexes.add(index);
+            offerTotalPending = true;
+          }
+          syncOfferInputTotals();
+        });
+        input.addEventListener("change", syncOfferAndAutosave);
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-add-component]").forEach((button) => {
+        button.addEventListener("click", addOfferComponent);
       });
     }
+  }
+
+  function updateOfferTotalsInDom() {
+    const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+    components.forEach((component, index) => {
+      const totalNode = document.querySelector(`[data-offer-component-total="${index}"]`);
+      if (!totalNode) return;
+      if (offerPendingRowIndexes.has(index)) {
+        totalNode.textContent = formatPendingMoneyDisplay(currency);
+        return;
+      }
+      const total = computeOfferComponentLineTotals(component).gross_amount_cents;
+      totalNode.textContent = formatMoneyDisplay(Math.round(total), currency);
+    });
+    const totalValueNode = document.querySelector(".offer-total-value");
+    if (totalValueNode) {
+      totalValueNode.textContent = `${offerTotalPending ? formatPendingMoneyDisplay(currency) : formatMoneyDisplay(resolveOfferTotalCents(), currency)}`;
+    }
+  }
+
+  function scheduleOfferAutosave() {
+    if (!state.permissions.canEditBooking) return;
+    if (offerAutosaveInFlight) {
+      offerAutosavePending = true;
+      return;
+    }
+    if (offerAutosaveTimer) window.clearTimeout(offerAutosaveTimer);
+    offerAutosaveTimer = window.setTimeout(() => {
+      offerAutosaveTimer = null;
+      void saveOffer();
+    }, 350);
   }
 
   function collectPricingPayload() {
@@ -713,12 +807,16 @@ export function createBookingPricingModule(ctx) {
     const components = [];
     for (const input of rows) {
       const index = Number(input.getAttribute("data-offer-component-details"));
-      const category = normalizeOfferCategory(state.offerDraft?.components[index]?.category || "OTHER");
+      const category = normalizeOfferCategory(document.querySelector(`[data-offer-component-category="${index}"]`)?.value || "OTHER");
       const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
       const quantity = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
       const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0", currency);
       const label = String(offerCategoryLabel(category)).trim();
       const notes = String(state.offerDraft?.components[index]?.notes || "").trim();
+      if (!category) {
+        if (throwOnError) throw new Error(`Offer component ${index + 1} requires a category.`);
+        continue;
+      }
       if (!Number.isFinite(quantity) || quantity < 1) {
         if (throwOnError) throw new Error(`Offer component ${index + 1} quantity must be at least 1.`);
         continue;
@@ -740,6 +838,18 @@ export function createBookingPricingModule(ctx) {
         sort_order: index
       });
     }
+    debugOffer("collect components", {
+      booking_id: state.booking?.id || "",
+      currency,
+      components: components.map((component) => ({
+        id: component.id,
+        category: component.category,
+        details: component.details,
+        quantity: component.quantity,
+        unit_amount_cents: component.unit_amount_cents,
+        tax_rate_basis_points: component.tax_rate_basis_points
+      }))
+    });
     return components;
   }
 
@@ -747,29 +857,47 @@ export function createBookingPricingModule(ctx) {
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     const category_rules = collectOfferCategoryRules();
     const components = collectOfferComponents();
-    return {
+    const payload = {
+      status: normalizeOfferStatus(state.offerDraft.status || state.booking?.offer?.status),
       currency,
       category_rules,
       components
     };
+    debugOffer("collect payload", payload);
+    return payload;
   }
 
   async function convertOfferComponentsInBackend(currentCurrency, nextCurrency, components) {
     const request = offerExchangeRatesRequest({ baseURL: apiOrigin });
+    const requestBody = {
+      from_currency: currentCurrency,
+      to_currency: nextCurrency,
+      components: components.map((component, index) => ({
+        id: component.id || `component_${index}`,
+        unit_amount_cents: Number(component.unit_amount_cents || 0),
+        category: component.category || "OTHER",
+        quantity: Number(component.quantity || 1),
+        tax_rate_basis_points: Number(component.tax_rate_basis_points || 1000)
+      }))
+    };
+    try {
+      console.log("[offer-exchange-debug] request", {
+        url: request.url,
+        method: request.method,
+        body: requestBody
+      });
+    } catch {
+      // ignore console serialization issues
+    }
     const response = await fetchApi(request.url, {
       method: request.method,
-      body: {
-        from_currency: currentCurrency,
-        to_currency: nextCurrency,
-        components: components.map((component, index) => ({
-          id: component.id || `component_${index}`,
-          unit_amount_cents: Number(component.unit_amount_cents || 0),
-          category: component.category || "OTHER",
-          quantity: Number(component.quantity || 1),
-          tax_rate_basis_points: Number(component.tax_rate_basis_points || 1000)
-        }))
-      }
+      body: requestBody
     });
+    try {
+      console.log("[offer-exchange-debug] response", response);
+    } catch {
+      // ignore console serialization issues
+    }
 
     const convertedComponentsRaw = Array.isArray(response?.converted_components) ? response.converted_components : null;
     if (!response || !Array.isArray(convertedComponentsRaw)) {
@@ -791,7 +919,7 @@ export function createBookingPricingModule(ctx) {
 
   async function handleOfferCurrencyChange() {
     if (!state.booking || !state.offerDraft || !els.offer_currency_input) return;
-    if (!state.permissions.canEditBooking) {
+    if (!isOfferCurrencyEditable()) {
       setSelectValue(els.offer_currency_input, normalizeCurrencyCode(state.offerDraft.currency || "USD"));
       return;
     }
@@ -851,7 +979,22 @@ export function createBookingPricingModule(ctx) {
     }
     restoreSelectState();
     setOfferStatus("");
+    updateOfferCurrencyHint(nextCurrency);
     renderOfferComponentsTable();
+    scheduleOfferAutosave();
+  }
+
+  function updateOfferCurrencyHint(selectedCurrency) {
+    if (!els.offer_currency_hint) return;
+    const preferredCurrency = normalizeCurrencyCode(state.booking?.web_form_submission?.preferred_currency || "");
+    const currentCurrency = normalizeCurrencyCode(selectedCurrency || state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    if (!preferredCurrency || preferredCurrency === currentCurrency) {
+      els.offer_currency_hint.textContent = "";
+      els.offer_currency_hint.hidden = true;
+      return;
+    }
+    els.offer_currency_hint.textContent = `(${preferredCurrency} was preferred in web submission)`;
+    els.offer_currency_hint.hidden = false;
   }
 
   async function savePricing() {
@@ -884,6 +1027,10 @@ export function createBookingPricingModule(ctx) {
 
   async function saveOffer() {
     if (!state.booking || !state.permissions.canEditBooking) return;
+    if (offerAutosaveInFlight) {
+      offerAutosavePending = true;
+      return;
+    }
     clearOfferStatus();
     let offer;
     try {
@@ -892,18 +1039,50 @@ export function createBookingPricingModule(ctx) {
       setOfferStatus(String(error?.message || error));
       return;
     }
-
-    const request = bookingOfferRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_offer_revision: getBookingRevision("offer_revision"),
-        offer,
-        actor: state.user
-      }
+    debugOffer("save:start", {
+      booking_id: state.booking.id,
+      expected_offer_revision: getBookingRevision("offer_revision"),
+      offer
     });
 
+    const request = bookingOfferRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
+    offerAutosaveInFlight = true;
+    let result;
+    try {
+      result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_offer_revision: getBookingRevision("offer_revision"),
+          offer,
+          actor: state.user
+        }
+      });
+    } finally {
+      offerAutosaveInFlight = false;
+    }
+    debugOffer("save:response", result?.booking
+      ? {
+          unchanged: Boolean(result?.unchanged),
+          offer_revision: result.booking.offer_revision,
+          offer: {
+            currency: result.booking.offer?.currency,
+            components: Array.isArray(result.booking.offer?.components)
+              ? result.booking.offer.components.map((component) => ({
+                  id: component.id,
+                  category: component.category,
+                  details: component.details,
+                  quantity: component.quantity,
+                  unit_amount_cents: component.unit_amount_cents
+                }))
+              : []
+          }
+        }
+      : result);
+
     if (!result?.booking) {
+      offerPendingRowIndexes = new Set();
+      offerTotalPending = false;
+      updateOfferTotalsInDom();
       return;
     }
 
@@ -913,6 +1092,10 @@ export function createBookingPricingModule(ctx) {
     renderOfferPanel();
     setOfferSaveEnabled(false);
     await loadActivities();
+    if (offerAutosavePending) {
+      offerAutosavePending = false;
+      scheduleOfferAutosave();
+    }
   }
 
   return {
@@ -920,11 +1103,16 @@ export function createBookingPricingModule(ctx) {
     markPricingSnapshotClean,
     renderPricingPanel,
     renderOfferPanel,
-    addOfferComponentFromSelector,
+    addOfferComponent,
     handleOfferCurrencyChange,
     savePricing,
     saveOffer
   };
+}
+
+function formatPendingMoneyDisplay(currency) {
+  const { symbol } = currencyDefinition(currency);
+  return `${symbol} -.--`;
 }
 
 function normalizeDateTimeLocal(value) {

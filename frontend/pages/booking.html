@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Booking</title>
     <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=8" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=9" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -123,7 +123,7 @@
                 </div>
 
                 <div class="field" style="margin-top: 0.9rem;">
-                  <label>Roles</label>
+                  <div class="field-label">Roles</div>
                   <div id="booking_person_modal_roles" class="booking-person-modal__role-list"></div>
                 </div>
 
@@ -255,134 +255,129 @@
 
           <div id="booking_whatsapp_mount"></div>
 
-          <article id="offer_panel" style="margin-bottom: 1rem;">
-            <div class="backend-controls" style="align-items: center; margin-bottom: 0.35rem; column-gap: 0.5rem;">
-              <h2 class="section-title" style="font-size: 1.05rem; margin: 0;">Offer</h2>
-              <select id="offer_currency_input" aria-label="Offer currency" style="max-width: 120px;"></select>
-            </div>
-            <div class="backend-controls" style="align-items: center; margin: 0.6rem 0 0.25rem; column-gap: 0.5rem;">
-              <button class="btn btn-ghost" id="offer_add_component_btn" type="button">New component</button>
-              <select id="offer_component_category_select" aria-label="New component category">
-                <option value="" selected disabled>Category</option>
-              </select>
-            </div>
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="offer_components_table"></table>
-            </div>
-            <div class="backend-offer-footer">
-              <div class="backend-table-wrap backend-offer-total-wrap" style="margin-bottom: 0.75rem; margin-top: 0;">
-                <table class="backend-table backend-offer-total-table" id="offer_components_total_table"></table>
+          <details id="offer_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
+            <summary class="booking-collapsible__summary"><span id="offer_panel_summary_text">Offer</span></summary>
+            <div class="booking-collapsible__body">
+              <div class="backend-controls booking-offer-controls">
+                <div class="field">
+                  <label for="offer_currency_input">
+                    <span>Currency</span>
+                    <span id="offer_currency_hint" class="booking-offer-currency-hint" hidden></span>
+                  </label>
+                  <select id="offer_currency_input"></select>
+                </div>
               </div>
-              <div class="backend-controls backend-offer-actions">
-                <button class="btn btn-primary offer-update-btn" id="offer_save_btn" type="button" disabled>Update</button>
-                <span id="offer_status" class="micro"></span>
+              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+                <table class="backend-table" id="offer_components_table"></table>
               </div>
+              <span id="offer_status" class="micro"></span>
             </div>
-          </article>
+          </details>
 
-          <article id="pricing_panel" style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem; margin-top: 0;">Payments</h2>
-
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="pricing_summary_table"></table>
-            </div>
-
-            <div class="backend-controls">
-              <div class="field">
-                <label for="pricing_currency_input">Currency</label>
-                <select id="pricing_currency_input"></select>
-              </div>
-              <div class="field">
-                <label for="pricing_agreed_net_input" id="pricing_agreed_net_label">Agreed Net Amount (USD)</label>
-                <input id="pricing_agreed_net_input" type="number" min="0" step="1" />
-              </div>
-            </div>
-
-            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Adjustments</h3>
-            </div>
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="pricing_adjustments_table"></table>
-            </div>
-
-            <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
-              <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Payment Schedule</h3>
-            </div>
-            <div class="backend-table-wrap" style="margin-bottom: 1rem;">
-              <table class="backend-table" id="pricing_payments_table"></table>
-            </div>
-
-            <div class="backend-controls">
-              <button class="btn btn-primary" id="pricing_save_btn" type="button">Save payments</button>
-              <span id="pricing_status" class="micro"></span>
-            </div>
-          </article>
-
-          <article id="invoice_panel" style="margin-bottom: 1rem;">
-            <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="invoice_select">Invoice</label>
-                <select id="invoice_select">
-                  <option value="">New invoice</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="backend-controls">
-              <div class="field">
-                <label for="invoice_number_input">Invoice Number</label>
-                <input id="invoice_number_input" type="text" placeholder="Auto-generated if empty" />
-              </div>
-              <div class="field">
-                <label for="invoice_currency_input">Currency</label>
-                <select id="invoice_currency_input"></select>
-              </div>
-              <div class="field">
-                <label for="invoice_issue_date_input">Issue Date</label>
-                <input id="invoice_issue_date_input" type="date" />
-                <button class="btn btn-ghost" id="invoice_issue_today_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">today</button>
-              </div>
-              <div class="field">
-                <label for="invoice_due_date_input">Due Date</label>
-                <input id="invoice_due_date_input" type="date" />
-                <button class="btn btn-ghost" id="invoice_due_month_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">in one month</button>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="invoice_title_input">Title</label>
-              <input id="invoice_title_input" type="text" placeholder="Invoice title" />
-            </div>
-
-              <div class="field">
-                <label for="invoice_components_input" id="invoice_components_label">Components (one per line: Description | Quantity | Unit amount in USD)</label>
-                <textarea id="invoice_components_input" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
+          <details id="pricing_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
+            <summary class="booking-collapsible__summary">Payments</summary>
+            <div class="booking-collapsible__body">
+              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+                <table class="backend-table" id="pricing_summary_table"></table>
               </div>
 
-            <div class="field">
-              <label for="invoice_due_amount_input" id="invoice_due_amount_label">Due Amount (USD, optional)</label>
-              <input id="invoice_due_amount_input" type="number" min="1" step="1" />
-            </div>
-            <div class="field">
-              <label for="invoice_vat_input">VAT (%)</label>
-              <input id="invoice_vat_input" type="number" min="0" max="100" step="0.01" value="0" />
-            </div>
+              <div class="backend-controls">
+                <div class="field">
+                  <label for="pricing_currency_input">Currency</label>
+                  <select id="pricing_currency_input"></select>
+                </div>
+                <div class="field">
+                  <label for="pricing_agreed_net_input" id="pricing_agreed_net_label">Agreed Net Amount (USD)</label>
+                  <input id="pricing_agreed_net_input" type="number" min="0" step="1" />
+                </div>
+              </div>
 
-            <div class="field">
-              <label for="invoice_notes_input">Invoice Note</label>
-              <textarea id="invoice_notes_input" rows="3"></textarea>
-            </div>
+              <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+                <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Adjustments</h3>
+              </div>
+              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+                <table class="backend-table" id="pricing_adjustments_table"></table>
+              </div>
 
-            <div class="backend-controls">
-              <button class="btn btn-primary" id="invoice_create_btn" type="button" style="padding:0.7rem 1.2rem; margin:0.25rem 0.35rem;">Create Invoice</button>
-              <span id="invoice_status" class="micro"></span>
-            </div>
+              <div class="backend-controls" style="align-items: center; margin-top: 0.6rem;">
+                <h3 style="margin: 0; font-size: 0.98rem; flex: 1;">Payment Schedule</h3>
+              </div>
+              <div class="backend-table-wrap" style="margin-bottom: 1rem;">
+                <table class="backend-table" id="pricing_payments_table"></table>
+              </div>
 
-            <div class="backend-table-wrap" style="margin-top:0.7rem;">
-              <table class="backend-table" id="invoices_table"></table>
+              <div class="backend-controls">
+                <button class="btn btn-primary" id="pricing_save_btn" type="button">Save payments</button>
+                <span id="pricing_status" class="micro"></span>
+              </div>
+
+              <article id="invoice_panel" style="margin-top: 1rem;">
+                <h2 class="section-title" style="font-size: 1.05rem;">Invoices</h2>
+                <div class="backend-controls">
+                  <div class="field">
+                    <label for="invoice_select">Invoice</label>
+                    <select id="invoice_select">
+                      <option value="">New invoice</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="backend-controls">
+                  <div class="field">
+                    <label for="invoice_number_input">Invoice Number</label>
+                    <input id="invoice_number_input" type="text" placeholder="Auto-generated if empty" />
+                  </div>
+                  <div class="field">
+                    <label for="invoice_currency_input">Currency</label>
+                    <select id="invoice_currency_input"></select>
+                  </div>
+                  <div class="field">
+                    <label for="invoice_issue_date_input">Issue Date</label>
+                    <input id="invoice_issue_date_input" type="date" />
+                    <button class="btn btn-ghost" id="invoice_issue_today_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">today</button>
+                  </div>
+                  <div class="field">
+                    <label for="invoice_due_date_input">Due Date</label>
+                    <input id="invoice_due_date_input" type="date" />
+                    <button class="btn btn-ghost" id="invoice_due_month_btn" type="button" style="width: fit-content; padding: 0.35rem 0.6rem;">in one month</button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="invoice_title_input">Title</label>
+                  <input id="invoice_title_input" type="text" placeholder="Invoice title" />
+                </div>
+
+                <div class="field">
+                  <label for="invoice_components_input" id="invoice_components_label">Components (one per line: Description | Quantity | Unit amount in USD)</label>
+                  <textarea id="invoice_components_input" rows="5" placeholder="Example: Custom Vietnam route | 2 | 245000"></textarea>
+                </div>
+
+                <div class="field">
+                  <label for="invoice_due_amount_input" id="invoice_due_amount_label">Due Amount (USD, optional)</label>
+                  <input id="invoice_due_amount_input" type="number" min="1" step="1" />
+                </div>
+                <div class="field">
+                  <label for="invoice_vat_input">VAT (%)</label>
+                  <input id="invoice_vat_input" type="number" min="0" max="100" step="0.01" value="0" />
+                </div>
+
+                <div class="field">
+                  <label for="invoice_notes_input">Invoice Note</label>
+                  <textarea id="invoice_notes_input" rows="3"></textarea>
+                </div>
+
+                <div class="backend-controls">
+                  <button class="btn btn-primary" id="invoice_create_btn" type="button" style="padding:0.7rem 1.2rem; margin:0.25rem 0.35rem;">Create Invoice</button>
+                  <span id="invoice_status" class="micro"></span>
+                </div>
+
+                <div class="backend-table-wrap" style="margin-top:0.7rem;">
+                  <table class="backend-table" id="invoices_table"></table>
+                </div>
+              </article>
             </div>
-          </article>
+          </details>
 
           <article style="margin-bottom: 1rem;">
             <details class="booking-collapsible">
@@ -411,6 +406,6 @@
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=20260311a";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=20260311h"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=20260313a"></script>
   </body>
 </html>

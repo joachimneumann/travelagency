@@ -100,9 +100,21 @@ export function createBookingFinanceHandlers(deps) {
 
     const check = validateBookingOfferInput(payload.offer, booking);
     if (!check.ok) {
-      sendJson(res, 422, { error: check.error });
+      sendJson(res, check.conflict ? 409 : 422, { error: check.error });
       return;
     }
+
+    // Temporary offer debug logging kept commented for quick re-enable during pricing investigations.
+    // try {
+    //   console.log("[offer-debug backend] request", JSON.stringify({
+    //     booking_id: bookingId,
+    //     expected_offer_revision: payload?.expected_offer_revision,
+    //     incoming_offer: payload?.offer,
+    //     normalized_offer: check.offer
+    //   }));
+    // } catch {
+    //   // ignore debug serialization issues
+    // }
 
     const nextOfferBase = await convertBookingOfferToBaseCurrency(check.offer);
     const nextOfferJson = JSON.stringify(nextOfferBase);
@@ -125,6 +137,17 @@ export function createBookingFinanceHandlers(deps) {
       "Booking offer updated"
     );
     await persistStore(store);
+
+    // Temporary offer debug logging kept commented for quick re-enable during pricing investigations.
+    // try {
+    //   console.log("[offer-debug backend] response", JSON.stringify({
+    //     booking_id: bookingId,
+    //     stored_offer: booking.offer,
+    //     offer_revision: booking.offer_revision
+    //   }));
+    // } catch {
+    //   // ignore debug serialization issues
+    // }
 
     sendJson(res, 200, await buildBookingDetailResponse(booking));
   }
@@ -151,6 +174,15 @@ export function createBookingFinanceHandlers(deps) {
     }
 
     const { fromCurrency, toCurrency, components } = check;
+    try {
+      console.log("[offer-exchange-debug backend] request", JSON.stringify({
+        from_currency: fromCurrency,
+        to_currency: toCurrency,
+        components
+      }));
+    } catch {
+      // ignore debug serialization issues
+    }
     if (!Array.isArray(components) || components.length === 0) {
       sendJson(res, 200, {
         from_currency: fromCurrency,
@@ -172,6 +204,11 @@ export function createBookingFinanceHandlers(deps) {
         sourceToBaseRate = resolved.rate;
         if (resolved.warning) warnings.add(resolved.warning);
       } catch (error) {
+        console.warn("[offer-exchange-debug backend] source->base failure", {
+          from_currency: fromCurrency,
+          to_currency: BASE_CURRENCY,
+          error: String(error?.message || error)
+        });
         sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
         return;
       }
@@ -182,6 +219,11 @@ export function createBookingFinanceHandlers(deps) {
         baseToTargetRate = resolved.rate;
         if (resolved.warning) warnings.add(resolved.warning);
       } catch (error) {
+        console.warn("[offer-exchange-debug backend] base->target failure", {
+          from_currency: BASE_CURRENCY,
+          to_currency: toCurrency,
+          error: String(error?.message || error)
+        });
         sendJson(res, 502, { error: "Unable to fetch exchange rate", detail: String(error?.message || error) });
         return;
       }
@@ -192,7 +234,7 @@ export function createBookingFinanceHandlers(deps) {
     );
     const combinedRate = sourceToBaseRate * baseToTargetRate;
 
-    sendJson(res, 200, {
+    const responsePayload = {
       from_currency: fromCurrency,
       to_currency: toCurrency,
       exchange_rate: combinedRate,
@@ -203,7 +245,13 @@ export function createBookingFinanceHandlers(deps) {
       ),
       converted_components: convertedComponents,
       ...(warnings.size > 0 ? { warning: [...warnings].join(" ") } : {})
-    });
+    };
+    try {
+      console.log("[offer-exchange-debug backend] response", JSON.stringify(responsePayload));
+    } catch {
+      // ignore debug serialization issues
+    }
+    sendJson(res, 200, responsePayload);
   }
 
   return {
