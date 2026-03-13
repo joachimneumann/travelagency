@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,7 +15,8 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=741a535307b3";
+} from "./pricing.js?v=39d62af7c93f";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=39d62af7c93f";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
@@ -105,8 +106,9 @@ export function createBookingOfferModule(ctx) {
   }
 
   function updateOfferPanelSummary(totalCents, currency) {
-    if (!els.offer_panel_summary_text) return;
-    els.offer_panel_summary_text.textContent = `Offer ${formatMoneyDisplay(totalCents, currency)}`;
+    renderBookingSegmentHeader(els.offerPanelSummary, {
+      primary: `Offer ${formatMoneyDisplay(totalCents, currency)}`
+    });
   }
 
   function setOfferSaveEnabled(enabled) {

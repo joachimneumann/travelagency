@@ -1,5 +1,10 @@
-import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
-import { escapeHtml, normalizeText } from "../shared/api.js?v=741a535307b3";
+import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
+import { escapeHtml, normalizeText } from "../shared/api.js?v=39d62af7c93f";
+import {
+  buildBookingSegmentHeaderMarkup,
+  initializeBookingCollapsible,
+  renderBookingSegmentHeader
+} from "./segment_headers.js?v=39d62af7c93f";
 
 function normalizePhoneDigits(value) {
   return String(value || "").replace(/[^\d]/g, "");
@@ -185,8 +190,8 @@ export function createBookingWhatsAppController({
   function mount(root) {
     if (!root) return;
     root.innerHTML = `
-      <details id="meta_chat_panel" class="booking-collapsible wa-chat-panel" style="margin-bottom: 1rem;">
-        <summary class="booking-collapsible__summary" id="meta_chat_panel_summary">WhatsApp</summary>
+      <article id="meta_chat_panel" class="booking-collapsible wa-chat-panel" style="margin-bottom: 1rem;">
+        <button class="booking-collapsible__summary" id="meta_chat_panel_summary" type="button">${buildBookingSegmentHeaderMarkup({ primary: "WhatsApp" })}</button>
         <div class="booking-collapsible__body">
           <div class="wa-chat-shell" id="wa_chat_shell" data-chat-view="list">
             <section class="wa-chat-screen wa-chat-screen--list" aria-label="WhatsApp conversations">
@@ -214,7 +219,7 @@ export function createBookingWhatsAppController({
             </section>
           </div>
         </div>
-      </details>
+      </article>
     `;
 
     els.panel = root.querySelector("#meta_chat_panel");
@@ -228,6 +233,8 @@ export function createBookingWhatsAppController({
     els.threadAvatar = root.querySelector("#wa_chat_thread_avatar");
     els.openBtn = root.querySelector("#wa_chat_open_btn");
     els.table = root.querySelector("#meta_chat_table");
+
+    initializeBookingCollapsible(els.panel);
 
     els.contacts?.addEventListener("click", handleContactsClick);
     els.backBtn?.addEventListener("click", () => {
@@ -309,11 +316,9 @@ export function createBookingWhatsAppController({
   }
 
   function buildChatEntries(booking) {
-    const persons = getBookingPersons(booking).filter((person) => {
-      const roles = Array.isArray(person?.roles) ? person.roles : [];
-      const hasPhoneNumber = Array.isArray(person?.phone_numbers) && person.phone_numbers.some((phone) => normalizeText(phone));
-      return roles.includes("traveler") && hasPhoneNumber;
-    });
+    const persons = getBookingPersons(booking).filter((person) =>
+      Array.isArray(person?.phone_numbers) && person.phone_numbers.some((phone) => normalizeText(phone))
+    );
     const conversations = (Array.isArray(state.conversations) ? state.conversations : [])
       .filter((conversation) => String(conversation?.channel || "").toLowerCase() === "whatsapp");
     const conversationIds = new Set(conversations.map((conversation) => String(conversation?.id || "")).filter(Boolean));
@@ -407,7 +412,9 @@ export function createBookingWhatsAppController({
 
     if (els.panelSummary) {
       const chatCount = entries.filter((entry) => entry.has_chat).length;
-      els.panelSummary.textContent = `WhatsApp · ${chatCount} active ${chatCount === 1 ? "chat" : "chats"}`;
+      renderBookingSegmentHeader(els.panelSummary, {
+        primary: `WhatsApp · ${chatCount} active ${chatCount === 1 ? "chat" : "chats"}`
+      });
     }
     if (els.panel) {
       els.panel.open = entries.some((entry) => entry.has_chat);
@@ -436,7 +443,7 @@ export function createBookingWhatsAppController({
             </button>
           `;
         }).join("")
-      : '<div class="wa-empty">No travelers with phone numbers or WhatsApp conversations yet.</div>';
+      : '<div class="wa-empty">No booking persons with phone numbers or WhatsApp conversations yet.</div>';
 
     const threadTitle = activeEntry ? getChatEntryTitle(activeEntry) : "WhatsApp";
     const threadSubtitleParts = activeEntry

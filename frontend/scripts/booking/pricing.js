@@ -2,7 +2,7 @@ import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
-import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
+import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
 
 export function getCurrencyDefinitions() {
   return GENERATED_CURRENCIES;

@@ -4,7 +4,7 @@ import {
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,14 +20,15 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=741a535307b3";
+} from "./person_helpers.js?v=39d62af7c93f";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=741a535307b3";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=741a535307b3";
+} from "../shared/booking_persons.js?v=39d62af7c93f";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=39d62af7c93f";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=39d62af7c93f";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -92,10 +93,9 @@ export function createBookingPersonsModule(ctx) {
   }
 
   function renderPersonsSummaryText() {
-    if (!els.personsSummaryText) return;
     const persons = Array.isArray(state.personDrafts) ? state.personDrafts : [];
     if (!persons.length) {
-      els.personsSummaryText.textContent = "No persons listed.";
+      renderBookingSegmentHeader(els.personsPanelSummary, { primary: "No persons listed." });
       return;
     }
     const traveling = persons.filter((person) => isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
@@ -106,7 +106,7 @@ export function createBookingPersonsModule(ctx) {
     if (notTraveling.length) {
       lines.push(`not traveling: ${notTraveling.join(" · ")}`);
     }
-    els.personsSummaryText.textContent = lines.join("\n");
+    renderBookingSegmentHeader(els.personsPanelSummary, { primary: lines.join("\n") });
   }
 
   function clonePersonDraft(person = {}, index = 0) {

@@ -12,16 +12,18 @@
 
 .booking-detail-page .wa-chat-panel {
   max-width: 600px;
-  margin: 0 auto 1rem;
+  margin: 0 0 1rem;
 }
 
 .booking-detail-page .wa-chat-panel .booking-collapsible__summary {
   background: var(--wa-shell);
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .booking-detail-page .wa-chat-panel .booking-collapsible__body {
   padding: 0;
-  background: var(--wa-shell);
+  background: #fff;
 }
 
 .wa-chat-shell {

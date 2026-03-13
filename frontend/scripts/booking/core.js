@@ -6,7 +6,8 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
+import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=39d62af7c93f";
 
 export function createBookingCoreModule(ctx) {
   const {
@@ -180,6 +181,7 @@ export function createBookingCoreModule(ctx) {
     const submittedContact = getSubmittedContact(booking);
     const sections = [{
       title: "Web form submission",
+      summaryClassName: "booking-collapsible__summary--inline-pad-16",
       entries: [
         ["name", booking.web_form_submission?.name || submittedContact?.name],
         ["email", booking.web_form_submission?.email || submittedContact?.email],
@@ -215,22 +217,25 @@ export function createBookingCoreModule(ctx) {
     if (!els.booking_data_view) return;
     const html = sections
       .map((section) => {
+        const summaryClassName = String(section.summaryClassName || "").trim();
+        const summaryClassAttribute = summaryClassName ? ` booking-collapsible__summary ${summaryClassName}` : "booking-collapsible__summary";
         const rows = (section.entries || [])
           .map((entry) => `<tr><th>${escapeHtml(entry.key)}</th><td>${escapeHtml(String(entry.value || "-"))}</td></tr>`)
           .join("");
         return `
-        <details class="booking-collapsible">
-          <summary class="booking-collapsible__summary">${escapeHtml(section.title)}</summary>
+        <article class="booking-collapsible">
+          <button class="${summaryClassAttribute.trim()}" type="button">${buildBookingSegmentHeaderMarkup({ primary: section.title })}</button>
           <div class="booking-collapsible__body">
             <div class="backend-table-wrap">
               <table class="backend-table"><tbody>${rows || '<tr><td colspan="2">-</td></tr>'}</tbody></table>
             </div>
           </div>
-        </details>
+        </article>
       `;
       })
       .join("");
     els.booking_data_view.innerHTML = html;
+    initializeBookingCollapsibles(els.booking_data_view);
   }
 
   function renderActionControls() {

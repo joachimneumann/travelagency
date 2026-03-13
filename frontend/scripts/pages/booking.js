@@ -12,7 +12,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=741a535307b3";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
 import {
   createApiFetcher,
   escapeHtml,
@@ -20,33 +20,34 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=741a535307b3";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=741a535307b3";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=741a535307b3";
+} from "../shared/api.js?v=39d62af7c93f";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=39d62af7c93f";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=39d62af7c93f";
+import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=39d62af7c93f";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=741a535307b3";
-import { createBookingOfferModule } from "../booking/offers.js?v=741a535307b3";
+} from "../booking/pricing.js?v=39d62af7c93f";
+import { createBookingOfferModule } from "../booking/offers.js?v=39d62af7c93f";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=741a535307b3";
-import { createBookingCoreModule } from "../booking/core.js?v=741a535307b3";
+} from "../booking/invoices.js?v=39d62af7c93f";
+import { createBookingCoreModule } from "../booking/core.js?v=39d62af7c93f";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=741a535307b3";
-import { createBookingPersonsModule } from "../booking/persons.js?v=741a535307b3";
+} from "../booking/person_helpers.js?v=39d62af7c93f";
+import { createBookingPersonsModule } from "../booking/persons.js?v=39d62af7c93f";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=741a535307b3";
+} from "../shared/booking_persons.js?v=39d62af7c93f";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -140,9 +141,9 @@ const els = {
   booking_data_view: document.getElementById("booking_data_view"),
   actionsPanel: document.getElementById("booking_actions_panel"),
   persons_editor_panel: document.getElementById("persons_editor_panel"),
+  personsPanelSummary: document.getElementById("persons_editor_panel_summary"),
   personsEditorList: document.getElementById("booking_persons_editor_list"),
   personsEditorStatus: document.getElementById("booking_persons_editor_status"),
-  personsSummaryText: document.getElementById("booking_persons_summary_text"),
   personsMismatchWarning: document.getElementById("booking_persons_mismatch_warning"),
   personModal: document.getElementById("booking_person_modal"),
   personModalSubtitle: document.getElementById("booking_person_modal_subtitle"),
@@ -172,6 +173,7 @@ const els = {
   noteSaveBtn: document.getElementById("booking_note_save_btn"),
   actionStatus: document.getElementById("booking_action_status"),
   pricing_panel: document.getElementById("pricing_panel"),
+  pricingPanelSummary: document.getElementById("pricing_panel_summary"),
   pricing_summary_table: document.getElementById("pricing_summary_table"),
   pricing_currency_input: document.getElementById("pricing_currency_input"),
   pricing_agreed_net_label: document.getElementById("pricing_agreed_net_label"),
@@ -181,7 +183,7 @@ const els = {
   pricing_save_btn: document.getElementById("pricing_save_btn"),
   pricing_status: document.getElementById("pricing_status"),
   offer_panel: document.getElementById("offer_panel"),
-  offer_panel_summary_text: document.getElementById("offer_panel_summary_text"),
+  offerPanelSummary: document.getElementById("offer_panel_summary"),
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
@@ -189,6 +191,7 @@ const els = {
   generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
+  activitiesPanelSummary: document.getElementById("activities_panel_summary"),
   meta_chat_mount: document.getElementById("booking_whatsapp_mount"),
   invoice_panel: document.getElementById("invoice_panel"),
   invoice_select: document.getElementById("invoice_select"),
@@ -278,6 +281,8 @@ async function init() {
     bookingWhatsApp.mount(els.meta_chat_mount);
   }
 
+  initializeBookingCollapsibles(document);
+  renderStaticSegmentHeaders();
   populateCurrencySelectFromModule(els.pricing_currency_input);
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
@@ -542,6 +547,13 @@ function renderActivitiesTable(items = []) {
   const header = "<thead><tr><th>Time</th><th>Type</th><th>Actor</th><th>Detail</th></tr></thead>";
   const body = rows || '<tr><td colspan="4">No activities yet.</td></tr>';
   els.activities_table.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+function renderStaticSegmentHeaders() {
+  renderBookingSegmentHeader(els.personsPanelSummary, { primary: "No persons listed." });
+  renderBookingSegmentHeader(els.offerPanelSummary, { primary: "Offer" });
+  renderBookingSegmentHeader(els.pricingPanelSummary, { primary: "Payments" });
+  renderBookingSegmentHeader(els.activitiesPanelSummary, { primary: "Activities" });
 }
 
 async function loadActivities() {

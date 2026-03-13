@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Booking</title>
     <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=741a535307b3" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=39d62af7c93f" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -61,23 +61,19 @@
             </div>
           </article>
 
-          <details id="persons_editor_panel" class="booking-collapsible" style="margin-bottom: 1rem;" open>
-            <summary class="booking-collapsible__summary">
-              <span class="booking-persons-summary">
-                <span id="booking_persons_summary_text" class="booking-persons-summary__text">No persons listed.</span>
-              </span>
-            </summary>
+          <article id="persons_editor_panel" class="booking-collapsible is-open" style="margin-bottom: 1rem;">
+            <button class="booking-collapsible__summary booking-collapsible__summary--inline-pad-16" id="persons_editor_panel_summary" type="button"></button>
             <div class="booking-collapsible__body">
-              <span id="booking_persons_editor_status" class="micro" style="display: block; margin-bottom: 0.7rem;"></span>
-              <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+              <span id="booking_persons_editor_status" class="micro booking-persons-editor-status"></span>
               <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
+              <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
             </div>
-          </details>
+          </article>
 
           <article style="margin-bottom: 1rem;">
             <div class="field">
               <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
-                <textarea id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;"></textarea>
+                <textarea class="booking-note-input" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;"></textarea>
                 <button class="btn btn-primary" id="booking_note_save_btn" type="button">update</button>
                 <span id="booking_action_status" class="micro"></span>
               </div>
@@ -262,8 +258,8 @@
 
           <div id="booking_whatsapp_mount"></div>
 
-          <details id="offer_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
-            <summary class="booking-collapsible__summary"><span id="offer_panel_summary_text">Offer</span></summary>
+          <article id="offer_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
+            <button class="booking-collapsible__summary booking-collapsible__summary--inline-pad-16" id="offer_panel_summary" type="button"></button>
             <div class="booking-collapsible__body">
               <div class="backend-controls booking-offer-controls">
                 <div class="field">
@@ -285,10 +281,10 @@
               </div>
               <span id="offer_status" class="micro"></span>
             </div>
-          </details>
+          </article>
 
-          <details id="pricing_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
-            <summary class="booking-collapsible__summary">Payments</summary>
+          <article id="pricing_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
+            <button class="booking-collapsible__summary booking-collapsible__summary--inline-pad-16" id="pricing_panel_summary" type="button"></button>
             <div class="booking-collapsible__body">
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="pricing_summary_table"></table>
@@ -390,17 +386,15 @@
                 </div>
               </article>
             </div>
-          </details>
+          </article>
 
-          <article style="margin-bottom: 1rem;">
-            <details class="booking-collapsible">
-              <summary class="booking-collapsible__summary">Activities</summary>
-              <div class="booking-collapsible__body">
-                <div class="backend-table-wrap">
-                  <table class="backend-table" id="activities_table"></table>
-                </div>
+          <article id="activities_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
+            <button class="booking-collapsible__summary booking-collapsible__summary--inline-pad-16" id="activities_panel_summary" type="button"></button>
+            <div class="booking-collapsible__body">
+              <div class="backend-table-wrap">
+                <table class="backend-table" id="activities_table"></table>
               </div>
-            </details>
+            </div>
           </article>
 
           <article class="booking-data-panel" style="margin-bottom: 1rem;">
@@ -416,9 +410,9 @@
     </main>
 
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=741a535307b3";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=39d62af7c93f";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=741a535307b3"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=39d62af7c93f"></script>
   </body>
 </html>
