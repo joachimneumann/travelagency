@@ -6,8 +6,8 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=471ae22ad091";
-import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=471ae22ad091";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=6c388c7e525c";
 
 export function createBookingCoreModule(ctx) {
   const {

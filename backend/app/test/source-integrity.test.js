@@ -420,22 +420,29 @@ test("tour page reads month options from the generated catalogs layer", async ()
 
 test("settings page staff table shows separate realm and client Keycloak roles", async () => {
   const backendPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
+  const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
   const source = await readFile(backendPageModulePath, "utf8");
+  const css = await readFile(siteCssPath, "utf8");
 
   assert.match(
     source,
-    /<th>Name<\/th><th>Username<\/th><th>Roles<\/th><th>Active<\/th>/,
+    /<th>Name<\/th><th>Username<\/th><th class="keycloak-roles-col">Roles<\/th><th>Active<\/th>/,
     "Settings user table should include a Roles column"
   );
   assert.match(
     source,
-    /<strong>Realm:<\/strong>/,
-    "Settings user table should label realm roles explicitly"
+    /formatKeycloakRoleList\(user\?\.client_roles\)/,
+    "Settings user table should display client roles in the Roles column"
+  );
+  assert.doesNotMatch(
+    source,
+    /<strong>Client:<\/strong>|<strong>Realm:<\/strong>/,
+    "Settings user table should not render realm/client labels in the Roles column"
   );
   assert.match(
-    source,
-    /<strong>Client:<\/strong>/,
-    "Settings user table should label client roles explicitly"
+    css,
+    /\.backend-table th\.keycloak-roles-col,\s*\.backend-table td\.keycloak-roles-col\s*\{\s*text-align:\s*right;/,
+    "Settings roles column should right-align the header and cell content"
   );
 });
 

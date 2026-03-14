@@ -1,4 +1,4 @@
-import { escapeHtml } from "./api.js?v=471ae22ad091";
+import { escapeHtml } from "./api.js?v=6c388c7e525c";
 
 export function renderPagination(container, pager, onPageChange) {
   if (!container) return;

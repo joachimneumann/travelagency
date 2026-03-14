@@ -1,4 +1,4 @@
-import { normalizeText } from "./api.js?v=471ae22ad091";
+import { normalizeText } from "./api.js?v=6c388c7e525c";
 
 export function normalizeStringList(values) {
   return Array.from(

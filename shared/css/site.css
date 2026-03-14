@@ -1495,6 +1495,11 @@ textarea:focus-visible {
   color: #0d47a1;
 }
 
+.backend-table th.keycloak-roles-col,
+.backend-table td.keycloak-roles-col {
+  text-align: right;
+}
+
 .backend-tour-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));

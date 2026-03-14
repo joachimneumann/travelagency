@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=471ae22ad091";
+} from "../shared/api.js?v=6c388c7e525c";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=471ae22ad091";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=471ae22ad091";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=471ae22ad091";
-import { renderPagination } from "../shared/pagination.js?v=471ae22ad091";
+} from "../shared/links.js?v=6c388c7e525c";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=6c388c7e525c";
+import { renderPagination } from "../shared/pagination.js?v=6c388c7e525c";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=471ae22ad091";
+} from "../shared/booking_persons.js?v=6c388c7e525c";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -550,12 +550,12 @@ async function loadKeycloakUsers() {
 
 function renderStaff(items) {
   if (!els.staffTable) return;
-  const header = `<thead><tr><th>Name</th><th>Username</th><th>Roles</th><th>Active</th></tr></thead>`;
+  const header = `<thead><tr><th>Name</th><th>Username</th><th class="keycloak-roles-col">Roles</th><th>Active</th></tr></thead>`;
   const rows = items
     .map((staff) => `<tr>
       <td>${escapeHtml(staff.name || "-")}</td>
       <td>${escapeHtml(staff.username || "-")}</td>
-      <td>${formatKeycloakRolesCell(staff)}</td>
+      <td class="keycloak-roles-col">${formatKeycloakRolesCell(staff)}</td>
       <td>${staff.active ? "Yes" : "No"}</td>
     </tr>`)
     .join("");
@@ -570,12 +570,8 @@ function formatKeycloakRoleList(roles) {
 }
 
 function formatKeycloakRolesCell(user) {
-  const realmRoles = formatKeycloakRoleList(user?.realm_roles);
   const clientRoles = formatKeycloakRoleList(user?.client_roles);
-  return [
-    `<strong>Realm:</strong> ${escapeHtml(realmRoles)}`,
-    `<strong>Client:</strong> ${escapeHtml(clientRoles)}`
-  ].join("<br />");
+  return escapeHtml(clientRoles);
 }
 
 function setStaffStatus(message) {
