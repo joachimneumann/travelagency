@@ -37,17 +37,18 @@ IR: {
 		defaultCurrency:  "USD"
 	}
 
-	enumTypes: {
-		LanguageCode: {catalog: "languages"}
-		MonthCode: {catalog: "months"}
-		CurrencyCode: {catalog: "currencies"}
-		ATPStaffRole: {catalog: "roles"}
-		BookingStage: {catalog: "stages"}
-		BookingPersonRole: {catalog: "bookingPersonRoles"}
-		TravelPlanSegmentKind: {catalog: "travelPlanSegmentKinds"}
-		TravelPlanFinancialCoverageStatus: {catalog: "travelPlanFinancialCoverageStatuses"}
-		TravelPlanOfferCoverageType: {catalog: "travelPlanOfferCoverageTypes"}
-		SupplierCategory: {catalog: "supplierCategories"}
+		enumTypes: {
+			LanguageCode: {catalog: "languages"}
+			MonthCode: {catalog: "months"}
+			CurrencyCode: {catalog: "currencies"}
+			ATPStaffRole: {catalog: "roles"}
+			BookingStage: {catalog: "stages"}
+			BookingPersonRole: {catalog: "bookingPersonRoles"}
+			TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
+			TravelPlanSegmentKind: {catalog: "travelPlanSegmentKinds"}
+			TravelPlanFinancialCoverageStatus: {catalog: "travelPlanFinancialCoverageStatuses"}
+			TravelPlanOfferCoverageType: {catalog: "travelPlanOfferCoverageTypes"}
+			SupplierCategory: {catalog: "supplierCategories"}
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
@@ -174,7 +175,9 @@ IR: {
 				sourceType: "entities.#BookingTravelPlanSegment"
 				fields: [
 					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
 					{name: "time_label", kind: "scalar", typeName: "string", required: false},
+					{name: "time_point", kind: "scalar", typeName: "string", required: false},
 					{name: "kind", kind: "enum", typeName: "TravelPlanSegmentKind", required: true},
 					{name: "title", kind: "scalar", typeName: "string", required: true},
 					{name: "details", kind: "scalar", typeName: "string", required: false},
@@ -219,8 +222,6 @@ IR: {
 				module:     "entities"
 				sourceType: "entities.#BookingTravelPlan"
 				fields: [
-					{name: "title", kind: "scalar", typeName: "string", required: false},
-					{name: "summary", kind: "scalar", typeName: "string", required: false},
 					{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
 					{name: "offer_component_links", kind: "entity", typeName: "BookingTravelPlanOfferComponentLink", required: false, isArray: true},
 				]

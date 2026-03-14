@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-13T15:45:00Z
+# 2026-03-14T07:12:52Z
 
 ---
 openapi: 3.1.0
@@ -25,6 +25,7 @@ tags:
 - name: Auth
 - name: Bookings
 - name: Offers
+- name: Suppliers
 - name: Tours
 components:
   securitySchemes:
@@ -278,6 +279,123 @@ components:
         label: payer
       - value: assistant
         label: assistant
+      - value: other
+        label: other
+    TravelPlanTimingKind:
+      type: string
+      enum:
+      - label
+      - point
+      - range
+      x-enum-catalog:
+      - code: label
+      - code: point
+      - code: range
+      x-enum-options:
+      - value: label
+        label: label
+      - value: point
+        label: point
+      - value: range
+        label: range
+    TravelPlanSegmentKind:
+      type: string
+      enum:
+      - transport
+      - accommodation
+      - activity
+      - meal
+      - guide
+      - free_time
+      - border_crossing
+      - other
+      x-enum-catalog:
+      - code: transport
+      - code: accommodation
+      - code: activity
+      - code: meal
+      - code: guide
+      - code: free_time
+      - code: border_crossing
+      - code: other
+      x-enum-options:
+      - value: transport
+        label: transport
+      - value: accommodation
+        label: accommodation
+      - value: activity
+        label: activity
+      - value: meal
+        label: meal
+      - value: guide
+        label: guide
+      - value: free_time
+        label: free_time
+      - value: border_crossing
+        label: border_crossing
+      - value: other
+        label: other
+    TravelPlanFinancialCoverageStatus:
+      type: string
+      enum:
+      - not_applicable
+      - not_covered
+      - partially_covered
+      - covered
+      x-enum-catalog:
+      - code: not_applicable
+      - code: not_covered
+      - code: partially_covered
+      - code: covered
+      x-enum-options:
+      - value: not_applicable
+        label: not_applicable
+      - value: not_covered
+        label: not_covered
+      - value: partially_covered
+        label: partially_covered
+      - value: covered
+        label: covered
+    TravelPlanOfferCoverageType:
+      type: string
+      enum:
+      - full
+      - partial
+      x-enum-catalog:
+      - code: full
+      - code: partial
+      x-enum-options:
+      - value: full
+        label: full
+      - value: partial
+        label: partial
+    SupplierCategory:
+      type: string
+      enum:
+      - hotel
+      - transport_operator
+      - guide
+      - activity_operator
+      - restaurant
+      - other
+      x-enum-catalog:
+      - code: hotel
+      - code: transport_operator
+      - code: guide
+      - code: activity_operator
+      - code: restaurant
+      - code: other
+      x-enum-options:
+      - value: hotel
+        label: hotel
+      - value: transport_operator
+        label: transport_operator
+      - value: guide
+        label: guide
+      - value: activity_operator
+        label: activity_operator
+      - value: restaurant
+        label: restaurant
       - value: other
         label: other
     PaymentStatus:
@@ -3340,6 +3458,7 @@ components:
       - STAGE_CHANGED
       - ASSIGNMENT_CHANGED
       - NOTE_UPDATED
+      - TRAVEL_PLAN_UPDATED
       - PRICING_UPDATED
       - OFFER_UPDATED
       - OFFER_EMAIL_DRAFT_CREATED
@@ -3351,6 +3470,7 @@ components:
       - code: STAGE_CHANGED
       - code: ASSIGNMENT_CHANGED
       - code: NOTE_UPDATED
+      - code: TRAVEL_PLAN_UPDATED
       - code: PRICING_UPDATED
       - code: OFFER_UPDATED
       - code: OFFER_EMAIL_DRAFT_CREATED
@@ -3366,6 +3486,8 @@ components:
         label: ASSIGNMENT_CHANGED
       - value: NOTE_UPDATED
         label: NOTE_UPDATED
+      - value: TRAVEL_PLAN_UPDATED
+        label: TRAVEL_PLAN_UPDATED
       - value: PRICING_UPDATED
         label: PRICING_UPDATED
       - value: OFFER_UPDATED
@@ -3447,6 +3569,32 @@ components:
           type: string
           format: date-time
           nullable: true
+    Supplier:
+      type: object
+      required:
+      - id
+      - name
+      - category
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        contact:
+          type: string
+          nullable: true
+        emergency_phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        country:
+          "$ref": "#/components/schemas/CountryCode"
+          nullable: true
+        category:
+          "$ref": "#/components/schemas/SupplierCategory"
     BookingPersonAddress:
       type: object
       required: []
@@ -3587,6 +3735,104 @@ components:
         notes:
           type: string
           nullable: true
+    BookingTravelPlanSegment:
+      type: object
+      required:
+      - id
+      - timing_kind
+      - kind
+      - title
+      - financial_coverage_status
+      properties:
+        id:
+          type: string
+        timing_kind:
+          "$ref": "#/components/schemas/TravelPlanTimingKind"
+        time_label:
+          type: string
+          nullable: true
+        time_point:
+          type: string
+          nullable: true
+        kind:
+          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+        title:
+          type: string
+        details:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        supplier_id:
+          type: string
+          nullable: true
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        financial_coverage_status:
+          "$ref": "#/components/schemas/TravelPlanFinancialCoverageStatus"
+        financial_note:
+          type: string
+          nullable: true
+    BookingTravelPlanOfferComponentLink:
+      type: object
+      required:
+      - id
+      - travel_plan_segment_id
+      - offer_component_id
+      - coverage_type
+      properties:
+        id:
+          type: string
+        travel_plan_segment_id:
+          type: string
+        offer_component_id:
+          type: string
+        coverage_type:
+          "$ref": "#/components/schemas/TravelPlanOfferCoverageType"
+    BookingTravelPlanDay:
+      type: object
+      required:
+      - id
+      - day_number
+      - title
+      properties:
+        id:
+          type: string
+        day_number:
+          type: integer
+        date:
+          type: string
+          format: date
+          nullable: true
+        title:
+          type: string
+        overnight_location:
+          type: string
+          nullable: true
+        segments:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingTravelPlanSegment"
+        notes:
+          type: string
+          nullable: true
+    BookingTravelPlan:
+      type: object
+      required: []
+      properties:
+        days:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingTravelPlanDay"
+        offer_component_links:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingTravelPlanOfferComponentLink"
     PricingAdjustment:
       type: object
       required:
@@ -4073,6 +4319,9 @@ components:
         persons_revision:
           type: integer
           nullable: true
+        travel_plan_revision:
+          type: integer
+          nullable: true
         pricing_revision:
           type: integer
           nullable: true
@@ -4115,6 +4364,9 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingPerson"
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
         web_form_submission:
           "$ref": "#/components/schemas/BookingWebFormSubmission"
           nullable: true
@@ -4795,6 +5047,19 @@ components:
           nullable: true
         pricing:
           "$ref": "#/components/schemas/BookingPricing"
+        actor:
+          type: string
+          nullable: true
+    BookingTravelPlanUpdateRequest:
+      type: object
+      required:
+      - travel_plan
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
         actor:
           type: string
           nullable: true
@@ -5588,6 +5853,45 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan":
+    patch:
+      operationId: booking_travel_plan
+      summary: Booking Travel Plan
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingTravelPlanUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/pricing":
     patch:
       operationId: booking_pricing
@@ -5914,6 +6218,144 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/OfferExchangeRatesResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/suppliers":
+    get:
+      operationId: suppliers
+      summary: Suppliers
+      tags:
+      - Suppliers
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SupplierListResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      operationId: supplier_create
+      summary: Supplier Create
+      tags:
+      - Suppliers
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SupplierCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SupplierResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SupplierResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/suppliers/{supplier_id}":
+    get:
+      operationId: supplier_detail
+      summary: Supplier Detail
+      tags:
+      - Suppliers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: supplier_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SupplierResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: supplier_update
+      summary: Supplier Update
+      tags:
+      - Suppliers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: supplier_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SupplierUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SupplierResponse"
         '401':
           description: Unauthorized
           content:

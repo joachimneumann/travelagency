@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-13T15:45:00Z",
+  "generatedAt": "2026-03-14T07:12:52Z",
   "languages": [
     "English",
     "Vietnamese",
@@ -411,6 +411,23 @@
       ]
     },
     {
+      "key": "booking_travel_plan",
+      "path": "/api/v1/bookings/{booking_id}/travel-plan",
+      "method": "PATCH",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "BookingTravelPlanUpdateRequest",
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
       "key": "booking_pricing",
       "path": "/api/v1/bookings/{booking_id}/pricing",
       "method": "PATCH",
@@ -559,6 +576,56 @@
       "authenticated": true,
       "requestType": "OfferExchangeRatesRequest",
       "responseType": "OfferExchangeRatesResponse"
+    },
+    {
+      "key": "suppliers",
+      "path": "/api/v1/suppliers",
+      "method": "GET",
+      "tag": "Suppliers",
+      "authenticated": true,
+      "responseType": "SupplierListResponse"
+    },
+    {
+      "key": "supplier_detail",
+      "path": "/api/v1/suppliers/{supplier_id}",
+      "method": "GET",
+      "tag": "Suppliers",
+      "authenticated": true,
+      "responseType": "SupplierResponse",
+      "parameters": [
+        {
+          "name": "supplier_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "supplier_create",
+      "path": "/api/v1/suppliers",
+      "method": "POST",
+      "tag": "Suppliers",
+      "authenticated": true,
+      "requestType": "SupplierCreateRequest",
+      "responseType": "SupplierResponse"
+    },
+    {
+      "key": "supplier_update",
+      "path": "/api/v1/suppliers/{supplier_id}",
+      "method": "PATCH",
+      "tag": "Suppliers",
+      "authenticated": true,
+      "requestType": "SupplierUpdateRequest",
+      "responseType": "SupplierResponse",
+      "parameters": [
+        {
+          "name": "supplier_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
     },
     {
       "key": "booking_activities",

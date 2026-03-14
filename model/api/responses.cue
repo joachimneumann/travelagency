@@ -107,18 +107,27 @@ import (
 	warning?:             string
 }
 
-#BookingGeneratedOfferGmailDraftResponse: {
-	draft_id:           common.#Identifier
-	gmail_draft_url:    common.#Url | string
-	recipient_email:    common.#Email
-	generated_offer_id: common.#Identifier
-	activity_logged:    bool
-	warning?:           string
-}
+	#BookingGeneratedOfferGmailDraftResponse: {
+		draft_id:           common.#Identifier
+		gmail_draft_url:    common.#Url | string
+		recipient_email:    common.#Email
+		generated_offer_id: common.#Identifier
+		activity_logged:    bool
+		warning?:           string
+	}
 
-#TourResponse: {
-	tour: entities.#Tour
-}
+	#SupplierListResponse: {
+		items: [...entities.#Supplier]
+		total: >=0 & int
+	}
+
+	#SupplierResponse: {
+		supplier: entities.#Supplier
+	}
+
+	#TourResponse: {
+		tour: entities.#Tour
+	}
 
 #AuthenticatedUser: {
 	sub?:                string

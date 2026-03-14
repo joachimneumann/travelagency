@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=39d62af7c93f";
+} from "../shared/api.js?v=ce37aa7dfc76";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=39d62af7c93f";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=39d62af7c93f";
-import { renderPagination } from "../shared/pagination.js?v=39d62af7c93f";
+} from "../shared/links.js?v=ce37aa7dfc76";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=ce37aa7dfc76";
+import { renderPagination } from "../shared/pagination.js?v=ce37aa7dfc76";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=39d62af7c93f";
+} from "../shared/booking_persons.js?v=ce37aa7dfc76";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

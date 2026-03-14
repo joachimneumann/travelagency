@@ -56,5 +56,6 @@ import (
 	currency:         enums.#CurrencyCode
 	total_price_cents: int
 	offer:            #BookingOffer
+	travel_plan?:     #BookingTravelPlan
 	pdf_url?:         string
 }

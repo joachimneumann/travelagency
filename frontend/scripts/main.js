@@ -15,13 +15,13 @@ import {
 } from "../Generated/Models/generated_FormConstraints.js";
 import {
   publicToursRequest
-} from "../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
-import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
+} from "../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
+import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
 import {
   PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA,
   validatePublicBookingCreateRequest
 } from "../Generated/API/generated_APIModels.js";
-import { normalizeText } from "../../shared/js/text.js?v=39d62af7c93f";
+import { normalizeText } from "../../shared/js/text.js?v=ce37aa7dfc76";
 
 const state = {
   trips: [],

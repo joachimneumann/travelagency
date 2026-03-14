@@ -1,4 +1,4 @@
 // Generated from api/generated/openapi.yaml.
 // Do not edit by hand.
 
-export * from "../../../shared/generated-contract/Models/generated_Currency.js?v=39d62af7c93f";
+export * from "../../../shared/generated-contract/Models/generated_Currency.js?v=ce37aa7dfc76";

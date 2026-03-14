@@ -9,6 +9,7 @@ import { createBookingFinanceHandlers } from "./booking_finance.js";
 import { createBookingMediaHandlers } from "./booking_media.js";
 import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
+import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
 
 export function createBookingHandlers(deps) {
   const {
@@ -30,6 +31,7 @@ export function createBookingHandlers(deps) {
     safeInt,
     defaultBookingPricing,
     defaultBookingOffer,
+    defaultBookingTravelPlan,
     addActivity,
     persistStore,
     getPrincipal,
@@ -59,6 +61,8 @@ export function createBookingHandlers(deps) {
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
+    normalizeBookingTravelPlan,
+    validateBookingTravelPlanInput,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
@@ -415,6 +419,25 @@ export function createBookingHandlers(deps) {
   });
 
   const {
+    handlePatchBookingTravelPlan
+  } = createBookingTravelPlanHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    getPrincipal,
+    canEditBooking,
+    normalizeText,
+    nowIso,
+    addActivity,
+    actorLabel,
+    persistStore,
+    assertExpectedRevision,
+    buildBookingDetailResponse,
+    incrementBookingRevision,
+    validateBookingTravelPlanInput
+  });
+
+  const {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
     handlePostOfferExchangeRates,
@@ -444,6 +467,7 @@ export function createBookingHandlers(deps) {
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
+    normalizeBookingTravelPlan,
     formatMoney,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
@@ -562,6 +586,7 @@ export function createBookingHandlers(deps) {
       core_revision: 0,
       notes_revision: 0,
       persons_revision: 0,
+      travel_plan_revision: 0,
       pricing_revision: 0,
       offer_revision: 0,
       invoices_revision: 0,
@@ -577,6 +602,7 @@ export function createBookingHandlers(deps) {
       preferred_currency: preferredCurrency,
       notes: submission.notes,
       persons: [],
+      travel_plan: defaultBookingTravelPlan(),
       web_form_submission: submission,
       pricing: defaultBookingPricing(),
       offer: defaultBookingOffer(preferredCurrency),
@@ -674,6 +700,7 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
+    handlePatchBookingTravelPlan,
     handleUploadBookingPersonPhoto,
     handlePatchBookingNotes,
     handlePatchBookingPricing,

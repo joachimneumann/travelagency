@@ -3,11 +3,15 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=39d62af7c93f";
-import { MONTH_CODE_CATALOG } from "../../../shared/generated-contract/Models/generated_Aux.js?v=39d62af7c93f";
+} from "../shared/api.js?v=ce37aa7dfc76";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=ce37aa7dfc76";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
 
 const state = {
   id: qs.get("id") || "",
@@ -33,6 +37,8 @@ const els = {
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: null,
   title: document.getElementById("tour_title"),
+  titleInput: document.getElementById("tour_title_input"),
+  titleEditBtn: document.getElementById("tour_title_edit_btn"),
   subtitle: document.getElementById("tour_subtitle"),
   error: document.getElementById("tour_error"),
   titleError: document.getElementById("tour_titleError"),
@@ -58,6 +64,9 @@ function refreshBackendNavElements() {
 function captureTourFormSnapshot() {
   if (!els.form) return "";
   const controls = Array.from(els.form.querySelectorAll("input, select, textarea"));
+  if (els.titleInput && !els.form.contains(els.titleInput)) {
+    controls.unshift(els.titleInput);
+  }
   const snapshot = controls.map((control, index) => {
     const key = control.id || control.name || `${control.tagName.toLowerCase()}-${index}`;
     let value = "";
@@ -112,9 +121,17 @@ async function init() {
     els.form.addEventListener("input", scheduleTourDirtyState);
     els.form.addEventListener("change", scheduleTourDirtyState);
   }
-  const titleInput = document.getElementById("tour_titleInput");
-  if (titleInput) {
-    titleInput.addEventListener("input", clearTitleError);
+  if (els.titleEditBtn) {
+    els.titleEditBtn.addEventListener("click", startTourTitleEdit);
+  }
+  if (els.titleInput) {
+    const scheduleTourDirtyState = () => window.setTimeout(updateTourDirtyState, 0);
+    els.titleInput.addEventListener("input", () => {
+      clearTitleError();
+      scheduleTourDirtyState();
+    });
+    els.titleInput.addEventListener("keydown", handleTourTitleInputKeydown);
+    els.titleInput.addEventListener("blur", commitTourTitleEdit);
   }
   if (els.changeImageBtn && els.imageUpload) {
     els.changeImageBtn.addEventListener("click", () => {
@@ -167,7 +184,6 @@ async function loadTour() {
   updateHeader(tour, destinations, styles);
 
   setInput("tour_id", tour.id || "");
-  setInput("tour_titleInput", tour.title || "");
   setInput("tour_travel_duration_days", toInputNumber(tour.travel_duration_days));
   setInput("tour_budget_lower_usd", toInputNumber(tour.budget_lower_usd));
   setInput("tour_priority", toInputNumber(tour.priority));
@@ -207,7 +223,6 @@ async function initializeNewTourForm() {
   updateHeader({ title: "New tour" }, [], []);
   if (els.subtitle) els.subtitle.textContent = "Create a new tour";
   setInput("tour_id", "(new)");
-  setInput("tour_titleInput", "");
   setInput("tour_travel_duration_days", "");
   setInput("tour_budget_lower_usd", "");
   setInput("tour_priority", "50");
@@ -320,7 +335,7 @@ async function submitForm(event) {
   const selectedStyles = getCheckedValues("styleChoice");
 
   const payload = {
-    title: getInput("tour_titleInput"),
+    title: getTourTitleInputValue(),
     destinations: selectedDestinationCountries,
     styles: selectedStyles,
     travel_duration_days: toNumberOrNull(getInput("tour_travel_duration_days")),
@@ -347,8 +362,10 @@ async function submitForm(event) {
       `A tour titled "${duplicate.title || payload.title}" already exists (ID: ${duplicate.id}). Please use a different title.`
     );
     setStatus("Save blocked due to duplicate title.");
-    const titleInput = document.getElementById("tour_titleInput");
-    if (titleInput) titleInput.focus();
+    if (els.titleInput) {
+      startTourTitleEdit();
+      els.titleInput.focus();
+    }
     return;
   }
 
@@ -443,6 +460,13 @@ function redirectToBackendLogin() {
 }
 
 function applyTourPermissions() {
+  if (els.titleEditBtn) {
+    els.titleEditBtn.hidden = !state.permissions.canEditTours;
+    els.titleEditBtn.disabled = !state.permissions.canEditTours;
+  }
+  if (els.titleInput) {
+    els.titleInput.disabled = !state.permissions.canEditTours;
+  }
   if (state.permissions.canEditTours) return;
   if (els.changeImageBtn) els.changeImageBtn.style.display = "none";
   if (els.imageUpload) els.imageUpload.disabled = true;
@@ -533,11 +557,58 @@ function updateHeroImage(src) {
 }
 
 function updateHeader(tour, destinations, styles) {
-  if (els.title) els.title.textContent = tour?.title || "Tour";
+  const rawTitle = normalizeText(tour?.title);
+  if (els.title) {
+    els.title.textContent = rawTitle || (state.is_create_mode ? "New tour" : "Tour");
+    els.title.hidden = false;
+  }
+  if (els.titleInput && document.activeElement !== els.titleInput) {
+    els.titleInput.value = rawTitle;
+    els.titleInput.hidden = true;
+  }
+  if (els.titleEditBtn) {
+    els.titleEditBtn.hidden = !state.permissions.canEditTours;
+    els.titleEditBtn.disabled = !state.permissions.canEditTours;
+  }
   if (!els.subtitle) return;
   const destText = destinations.length ? destinations.join(", ") : "-";
   const styleText = styles.length ? styles.join(", ") : "-";
   els.subtitle.textContent = `Destinations: ${destText} | Styles: ${styleText}`;
+}
+
+function getTourTitleInputValue() {
+  return normalizeText(els.titleInput?.value);
+}
+
+function startTourTitleEdit() {
+  if (!state.permissions.canEditTours || !els.title || !els.titleInput) return;
+  els.titleInput.value = normalizeText(els.titleInput.value || els.title.textContent);
+  els.title.hidden = true;
+  els.titleInput.hidden = false;
+  els.titleInput.focus();
+  els.titleInput.select();
+}
+
+function commitTourTitleEdit() {
+  if (!els.title || !els.titleInput) return;
+  const value = getTourTitleInputValue();
+  els.title.textContent = value || (state.is_create_mode ? "New tour" : "Tour");
+  els.title.hidden = false;
+  els.titleInput.hidden = true;
+  updateTourDirtyState();
+}
+
+function handleTourTitleInputKeydown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    commitTourTitleEdit();
+  } else if (event.key === "Escape") {
+    event.preventDefault();
+    if (els.titleInput) {
+      els.titleInput.value = normalizeText(state.tour?.title);
+    }
+    commitTourTitleEdit();
+  }
 }
 
 function tour_destinations(tour) {

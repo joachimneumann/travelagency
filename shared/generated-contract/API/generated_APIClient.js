@@ -46,6 +46,8 @@ case "booking_person_photo":
   return RequestFactory.bookingPersonPhotoRequest(options);
 case "booking_notes":
   return RequestFactory.bookingNotesRequest(options);
+case "booking_travel_plan":
+  return RequestFactory.bookingTravelPlanRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
@@ -62,6 +64,14 @@ case "booking_generated_offer_gmail_draft":
   return RequestFactory.bookingGeneratedOfferGmailDraftRequest(options);
 case "offer_exchange_rates":
   return RequestFactory.offerExchangeRatesRequest(options);
+case "suppliers":
+  return RequestFactory.suppliersRequest(options);
+case "supplier_create":
+  return RequestFactory.supplierCreateRequest(options);
+case "supplier_detail":
+  return RequestFactory.supplierDetailRequest(options);
+case "supplier_update":
+  return RequestFactory.supplierUpdateRequest(options);
 case "booking_activities":
   return RequestFactory.bookingActivitiesRequest(options);
 case "booking_activity_create":

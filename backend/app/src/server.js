@@ -12,11 +12,13 @@ import { buildPaginatedListResponse } from "./http/pagination.js";
 import { createHttpHelpers } from "./http/http_helpers.js";
 import { createStagingAccessHandlers } from "./http/staging_access.js";
 import { createPricingHelpers } from "./domain/pricing.js";
+import { createTravelPlanHelpers } from "./domain/travel_plan.js";
 import { createBookingViewHelpers } from "./domain/booking_views.js";
 import { createAccessHelpers } from "./domain/access.js";
 import { createTourHelpers } from "./domain/tours_support.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
 import { createKeycloakUserHandlers } from "./http/handlers/keycloak_users.js";
+import { createSupplierHandlers } from "./http/handlers/suppliers.js";
 import { createTourHandlers } from "./http/handlers/tours.js";
 import { createMetaWebhookHandlers } from "./integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "./lib/invoice_pdf.js";
@@ -291,6 +293,13 @@ const {
 });
 
 const {
+  defaultBookingTravelPlan,
+  normalizeBookingTravelPlan,
+  validateBookingTravelPlanInput,
+  buildBookingTravelPlanReadModel
+} = createTravelPlanHelpers();
+
+const {
   resolveBookingContactByExternalContact,
   resolveBookingById,
   getMetaConversationOpenUrl,
@@ -323,6 +332,7 @@ const {
   randomUUID,
   clamp,
   safeInt,
+  buildBookingTravelPlanReadModel,
   buildBookingPricingReadModel,
   buildBookingOfferReadModel,
   sendJson
@@ -344,6 +354,7 @@ const {
   tempUploadDir: TEMP_UPLOAD_DIR,
   writeQueueRef,
   syncBookingAssignmentFields,
+  normalizeBookingTravelPlan,
   normalizeBookingPricing,
   normalizeBookingOffer,
   getBookingPreferredCurrency,
@@ -418,7 +429,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
     getPrincipal,
     canViewKeycloakUsers,
     canReadTours,
-    canEditTours
+    canEditTours,
+    canReadSuppliers,
+    canEditSuppliers
   } = createAccessHelpers({
     auth,
     appRoles: APP_ROLES
@@ -442,6 +455,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     safeInt,
     defaultBookingPricing,
     defaultBookingOffer,
+    defaultBookingTravelPlan,
     addActivity,
     persistStore,
     getPrincipal,
@@ -472,6 +486,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
+    normalizeBookingTravelPlan,
+    validateBookingTravelPlanInput,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
     convertOfferLineAmountForCurrency,
@@ -503,6 +519,18 @@ export async function createBackendHandler({ port = PORT } = {}) {
     listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson
+  });
+  const supplierHandlers = createSupplierHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    persistStore,
+    normalizeText,
+    normalizeEmail,
+    getPrincipal,
+    canReadSuppliers,
+    canEditSuppliers,
+    randomUUID
   });
   const tourHandlers = createTourHandlers({
     normalizeText,
@@ -551,6 +579,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
       handleMobileBootstrap,
       ...bookingHandlers,
       ...keycloakUserHandlers,
+      ...supplierHandlers,
       ...tourHandlers
     }
   });

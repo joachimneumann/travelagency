@@ -301,6 +301,23 @@ export function bookingNotesRequest({ baseURL = '', params = {}, query = {}, bod
   };
 }
 
+export function bookingTravelPlanPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan", params);
+}
+
+export function bookingTravelPlanRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingPricingPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/pricing", params);
 }
@@ -430,6 +447,74 @@ export function offerExchangeRatesRequest({ baseURL = '', params = {}, query = {
   return {
     key: "offer_exchange_rates",
     method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function suppliersPath(params = {}) {
+  return buildPath("/api/v1/suppliers", params);
+}
+
+export function suppliersRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = suppliersPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "suppliers",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function supplierCreatePath(params = {}) {
+  return buildPath("/api/v1/suppliers", params);
+}
+
+export function supplierCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = supplierCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "supplier_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function supplierDetailPath(params = {}) {
+  return buildPath("/api/v1/suppliers/{supplier_id}", params);
+}
+
+export function supplierDetailRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = supplierDetailPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "supplier_detail",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function supplierUpdatePath(params = {}) {
+  return buildPath("/api/v1/suppliers/{supplier_id}", params);
+}
+
+export function supplierUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = supplierUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "supplier_update",
+    method: "PATCH",
     authenticated: true,
     url,
     headers,

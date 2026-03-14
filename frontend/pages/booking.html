@@ -6,7 +6,7 @@
     <title>AsiaTravelPlan Booking</title>
     <meta name="description" content="AsiaTravelPlan booking detail" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=39d62af7c93f" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=ce37aa7dfc76" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -258,6 +258,17 @@
 
           <div id="booking_whatsapp_mount"></div>
 
+          <article id="travel_plan_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
+            <button class="booking-collapsible__summary booking-collapsible__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
+            <div class="booking-collapsible__body">
+              <div class="backend-controls travel-plan-actions">
+                <button class="btn btn-primary" id="travel_plan_save_btn" type="button">Save travel plan</button>
+                <span id="travel_plan_status" class="micro"></span>
+              </div>
+              <div id="travel_plan_editor"></div>
+            </div>
+          </article>
+
           <article id="offer_panel" class="booking-collapsible" style="margin-bottom: 1rem;">
             <button class="booking-collapsible__summary booking-collapsible__summary--inline-pad-16" id="offer_panel_summary" type="button"></button>
             <div class="booking-collapsible__body">
@@ -410,9 +421,9 @@
     </main>
 
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=39d62af7c93f";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=ce37aa7dfc76";
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=39d62af7c93f"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=ce37aa7dfc76"></script>
   </body>
 </html>

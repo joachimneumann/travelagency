@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,7 +102,8 @@ test("booking page keeps critical init handlers wired to real local functions", 
     "onInvoiceSelectChange",
     "renderInvoiceMoneyLabels",
     "createInvoice",
-    "updateInvoiceDirtyState"
+    "updateInvoiceDirtyState",
+    "renderTravelPlanPanel"
   ];
   for (const name of required) {
     assert.ok(
@@ -223,6 +224,141 @@ test("booking init awaits page load and handles async init failures", async () =
     source,
     /void init\(\)\.catch\(\(error\) => \{/,
     "Booking module should own async init failures with a catch handler"
+  );
+});
+
+test("booking page wires the dedicated travel-plan module and section", async () => {
+  const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const moduleSource = await readFile(bookingPageModulePath, "utf8");
+  const pageSource = await readFile(bookingPagePath, "utf8");
+  const travelPlanSource = await readFile(travelPlanModulePath, "utf8");
+
+  assert.match(
+    moduleSource,
+    /import \{ createBookingTravelPlanModule \} from "\.\.\/booking\/travel_plan\.js\?v=/,
+    "booking.js should import the dedicated travel-plan module"
+  );
+  assert.match(
+    moduleSource,
+    /const travelPlanModule = createBookingTravelPlanModule\(/,
+    "booking.js should instantiate the dedicated travel-plan module"
+  );
+  assert.match(
+    moduleSource,
+    /travelPlanModule\.bindEvents\(\);/,
+    "booking.js should bind travel-plan events during init"
+  );
+  assert.match(
+    moduleSource,
+    /travelPlanModule\.applyBookingPayload\(\);/,
+    "booking.js should apply booking payload into the travel-plan module"
+  );
+  assert.match(
+    moduleSource,
+    /renderTravelPlanPanel\(\);[\s\S]*?renderOfferPanel\(\);/,
+    "booking.js should render Travel plan before the Offer section"
+  );
+  assert.match(
+    pageSource,
+    /id="travel_plan_panel"[\s\S]*id="offer_panel"/,
+    "booking.html should place the Travel plan section before the Offer section"
+  );
+  assert.match(
+    travelPlanSource,
+    /bookingTravelPlanRequest/,
+    "travel_plan.js should use the generated bookingTravelPlanRequest factory"
+  );
+  assert.match(
+    travelPlanSource,
+    /expected_travel_plan_revision:\s*getBookingRevision\("travel_plan_revision"\)/,
+    "travel-plan saves should use the travel_plan_revision optimistic-lock field"
+  );
+  assert.match(
+    travelPlanSource,
+    /fetchBookingMutation\(request\.url,/,
+    "travel-plan saves should call fetchBookingMutation with the generated request.url"
+  );
+});
+
+test("travel-plan module preserves add/remove/reorder and offer-link editing helpers", async () => {
+  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
+  const source = await readFile(travelPlanModulePath, "utf8");
+  const helperSource = await readFile(travelPlanHelpersPath, "utf8");
+  const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
+
+  for (const helperName of ["addDay", "removeDay", "addSegment", "removeSegment", "moveSegment", "addLink", "removeLink"]) {
+    assert.match(
+      source,
+      new RegExp(`function ${helperName}\\(`),
+      `travel_plan.js should define ${helperName} for travel-plan editing`
+    );
+  }
+  assert.match(
+    source,
+    /TRAVEL_PLAN_TIMING_KIND_OPTIONS/,
+    "travel_plan.js should render timing kinds from the shared helper constant"
+  );
+  assert.match(
+    source,
+    /data-travel-plan-segment-field="timing_kind"/,
+    "travel_plan.js should render a timing mode selector for each segment"
+  );
+  assert.match(
+    source,
+    /type="datetime-local"/,
+    "travel_plan.js should use date-time picker inputs for point and range timing modes"
+  );
+  assert.match(
+    helperSource,
+    /GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS\.map/,
+    "travel_plan_helpers.js should derive timing kinds from generated catalogs instead of maintaining a hardcoded fallback list"
+  );
+  assert.equal(
+    generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.length,
+    3,
+    "Generated Travel plan timing options should stay populated from the schema runtime"
+  );
+  assert.deepEqual(
+    generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value),
+    ["label", "point", "range"]
+  );
+});
+
+test("tour page reads month options from the generated catalogs layer", async () => {
+  const tourPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
+  const tourPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour.html");
+  const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
+  const tourSource = await readFile(tourPageModulePath, "utf8");
+  const tourHtml = await readFile(tourPageHtmlPath, "utf8");
+  const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
+
+  assert.match(
+    tourSource,
+    /import\s+\{\s*MONTH_CODE_CATALOG\s*\}\s+from\s+"..\/shared\/generated_catalogs\.js\?v=/,
+    "Tour page should source month options from generated_catalogs.js, not the generated Aux model file"
+  );
+  assert.deepEqual(
+    generatedCatalogs.MONTH_CODE_CATALOG,
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+  );
+  assert.match(
+    tourSource,
+    /function normalizeText\(value\)\s*\{\s*return String\(value \?\? ""\)\.trim\(\);\s*\}/,
+    "Tour page should define its local normalizeText helper because create-mode state uses it at module initialization time"
+  );
+  assert.match(
+    tourHtml,
+    /id="tour_title_edit_btn"/,
+    "Tour page should expose the header pen button for inline title editing"
+  );
+  assert.doesNotMatch(
+    tourHtml,
+    /id="tour_titleInput"/,
+    "Tour page should no longer render the old form title text field"
   );
 });
 

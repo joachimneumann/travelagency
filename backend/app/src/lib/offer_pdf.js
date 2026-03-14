@@ -118,6 +118,59 @@ function formatFriendlyDate(isoValue) {
   }).format(date);
 }
 
+function formatFriendlyDateOnly(dateValue) {
+  const candidate = normalizeText(dateValue);
+  if (!candidate) return "";
+  const match = candidate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return candidate;
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  if (Number.isNaN(date.getTime())) return candidate;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC"
+  }).format(date);
+}
+
+function humanizeTravelPlanSegmentKind(kind) {
+  return normalizeText(kind)
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatTravelPlanDateTime(rawValue, fallbackDayDate = "") {
+  const raw = normalizeText(rawValue);
+  if (!raw) return "";
+  const dateTimeMatch = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+  if (dateTimeMatch) {
+    const [, datePart, timePart] = dateTimeMatch;
+    if (fallbackDayDate && datePart === fallbackDayDate) return timePart;
+    return `${formatFriendlyDateOnly(datePart)} ${timePart}`;
+  }
+  const timeOnlyMatch = raw.match(/^(\d{2}:\d{2})$/);
+  if (timeOnlyMatch) return timeOnlyMatch[1];
+  return raw;
+}
+
+function formatTravelPlanTiming(segment, dayDate = "") {
+  const timingKind = normalizeText(segment?.timing_kind) || "label";
+  if (timingKind === "point") {
+    return formatTravelPlanDateTime(segment?.time_point, dayDate);
+  }
+  if (timingKind === "range") {
+    const start = formatTravelPlanDateTime(segment?.start_time, dayDate);
+    const end = formatTravelPlanDateTime(segment?.end_time, dayDate);
+    if (start && end) return `${start} - ${end}`;
+    return start || end || "";
+  }
+  return normalizeText(segment?.time_label);
+}
+
 function peopleTraveling(booking) {
   return safeArray(booking?.persons).filter((person) => safeArray(person?.roles).includes("traveler"));
 }
@@ -361,6 +414,169 @@ function drawTravelers(doc, booking, startY, fonts) {
   return boxY + boxHeight + 20;
 }
 
+function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts) {
+  const travelPlan = generatedOffer?.travel_plan || booking?.travel_plan;
+  const days = safeArray(travelPlan?.days);
+  if (!days.length) return startY;
+
+  const sectionTitle = "Travel plan overview";
+  const dayBlockWidth = doc.page.width - PAGE_MARGIN * 2;
+  const timingColumnWidth = 110;
+  const segmentTextWidth = dayBlockWidth - timingColumnWidth - 34;
+
+  let y = startY;
+  const redrawSectionHeader = (pdfDoc, nextY) => {
+    pdfDoc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(13)
+      .fillColor("#23363D")
+      .text(sectionTitle, PAGE_MARGIN, nextY);
+    return nextY + 18;
+  };
+
+  y = redrawSectionHeader(doc, y);
+
+  for (const day of days) {
+    const dayTitle = `Day ${Number(day?.day_number || 0) || 1}${textOrNull(day?.title) ? ` - ${textOrNull(day.title)}` : ""}`;
+    const dayMetaParts = [];
+    if (textOrNull(day?.date)) dayMetaParts.push(formatFriendlyDateOnly(day.date));
+    if (textOrNull(day?.overnight_location)) dayMetaParts.push(`Overnight: ${textOrNull(day.overnight_location)}`);
+    const dayMeta = dayMetaParts.join(" · ");
+
+    const dayTitleWidth = dayBlockWidth * 0.58;
+    const dayMetaWidth = dayBlockWidth - dayTitleWidth - 24;
+    doc.font(pdfFontName("bold", fonts)).fontSize(11);
+    const dayTitleHeight = doc.heightOfString(dayTitle, { width: dayTitleWidth });
+    doc.font(pdfFontName("regular", fonts)).fontSize(9.5);
+    const dayMetaHeight = dayMeta ? doc.heightOfString(dayMeta, { width: dayMetaWidth, align: "right" }) : 0;
+    const dayHeaderHeight = Math.max(30, Math.max(dayTitleHeight, dayMetaHeight) + 14);
+
+    y = ensureSpace(doc, y, dayHeaderHeight + 14, redrawSectionHeader);
+    doc
+      .save()
+      .roundedRect(PAGE_MARGIN, y, dayBlockWidth, dayHeaderHeight, 10)
+      .fill("#EEF3F0")
+      .restore();
+
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(11)
+      .fillColor("#23363D")
+      .text(dayTitle, PAGE_MARGIN + 12, y + 7, {
+        width: dayTitleWidth
+      });
+
+    if (dayMeta) {
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(9.5)
+        .fillColor("#5E6D73")
+        .text(dayMeta, PAGE_MARGIN + 12 + dayTitleWidth + 12, y + 8, {
+          width: dayMetaWidth,
+          align: "right"
+        });
+    }
+
+    y += dayHeaderHeight + 8;
+
+    if (textOrNull(day?.notes)) {
+      y = ensureSpace(doc, y, 34, redrawSectionHeader);
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(10)
+        .fillColor("#5E6D73")
+        .text(day.notes, PAGE_MARGIN + 4, y, {
+          width: dayBlockWidth - 8,
+          lineGap: 1
+        });
+      y = doc.y + 8;
+    }
+
+    const segments = safeArray(day?.segments);
+    for (const segment of segments) {
+      const timingText = formatTravelPlanTiming(segment, textOrNull(day?.date));
+      const segmentTitle = textOrNull(segment?.title) || humanizeTravelPlanSegmentKind(segment?.kind) || "Planned segment";
+      const segmentMetaParts = [];
+      const kindLabel = humanizeTravelPlanSegmentKind(segment?.kind);
+      const location = textOrNull(segment?.location);
+      if (kindLabel) segmentMetaParts.push(kindLabel);
+      if (location) segmentMetaParts.push(location);
+      const segmentMeta = segmentMetaParts.join(" · ");
+      const segmentDetails = textOrNull(segment?.details);
+
+      doc.font(pdfFontName("bold", fonts)).fontSize(10.5);
+      const segmentTitleHeight = doc.heightOfString(segmentTitle, { width: segmentTextWidth });
+      doc.font(pdfFontName("regular", fonts)).fontSize(9.2);
+      const segmentMetaHeight = segmentMeta ? doc.heightOfString(segmentMeta, { width: segmentTextWidth }) : 0;
+      doc.font(pdfFontName("regular", fonts)).fontSize(9.8);
+      const segmentDetailsHeight = segmentDetails ? doc.heightOfString(segmentDetails, { width: segmentTextWidth, lineGap: 1 }) : 0;
+      const segmentTimingHeight = timingText
+        ? doc.heightOfString(timingText, { width: timingColumnWidth - 8 })
+        : 0;
+      const segmentContentHeight = segmentTitleHeight
+        + (segmentMeta ? segmentMetaHeight + 3 : 0)
+        + (segmentDetails ? segmentDetailsHeight + 4 : 0);
+      const rowHeight = Math.max(34, Math.max(segmentTimingHeight, segmentContentHeight) + 18);
+
+      y = ensureSpace(doc, y, rowHeight + 8, redrawSectionHeader);
+      doc
+        .save()
+        .roundedRect(PAGE_MARGIN, y, dayBlockWidth, rowHeight, 10)
+        .fill("#FFFFFF")
+        .restore();
+
+      if (timingText) {
+        doc
+          .font(pdfFontName("bold", fonts))
+          .fontSize(9.8)
+          .fillColor("#43606B")
+          .text(timingText, PAGE_MARGIN + 12, y + 10, {
+            width: timingColumnWidth - 10
+          });
+      }
+
+      let textY = y + 9;
+      const textX = PAGE_MARGIN + 18 + timingColumnWidth;
+      doc
+        .font(pdfFontName("bold", fonts))
+        .fontSize(10.5)
+        .fillColor("#253942")
+        .text(segmentTitle, textX, textY, {
+          width: segmentTextWidth
+        });
+      textY = doc.y;
+
+      if (segmentMeta) {
+        doc
+          .font(pdfFontName("regular", fonts))
+          .fontSize(9.2)
+          .fillColor("#5E6D73")
+          .text(segmentMeta, textX, textY + 2, {
+            width: segmentTextWidth
+          });
+        textY = doc.y;
+      }
+
+      if (segmentDetails) {
+        doc
+          .font(pdfFontName("regular", fonts))
+          .fontSize(9.8)
+          .fillColor("#33454C")
+          .text(segmentDetails, textX, textY + 3, {
+            width: segmentTextWidth,
+            lineGap: 1
+          });
+      }
+
+      y += rowHeight + 6;
+    }
+
+    y += 10;
+  }
+
+  return y;
+}
+
 function drawTableHeader(doc, startY, columns, fonts) {
   let x = PAGE_MARGIN;
   doc
@@ -583,6 +799,7 @@ export function createOfferPdfWriter({
       y = drawHero(doc, booking, generatedOffer, heroImage, y, fonts);
       y = drawIntro(doc, y, fonts);
       y = drawTravelers(doc, booking, y, fonts);
+      y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts);
       y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts);
       y = ensureSpace(doc, y, 90);
       y = drawClosing(doc, y + 18, fonts);

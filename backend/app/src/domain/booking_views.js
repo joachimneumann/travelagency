@@ -17,6 +17,7 @@ export function createBookingViewHelpers({
   randomUUID,
   clamp,
   safeInt,
+  buildBookingTravelPlanReadModel,
   buildBookingPricingReadModel,
   buildBookingOfferReadModel,
   sendJson
@@ -223,26 +224,35 @@ export function createBookingViewHelpers({
     );
   }
 
+  async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency) {
+    const generatedOfferCurrency = safeCurrency(
+      generatedOffer?.currency || generatedOffer?.offer?.currency || defaultCurrency
+    );
+    const generatedOfferReadModel = await buildBookingOfferReadModel(generatedOffer?.offer, generatedOfferCurrency);
+    return {
+      ...generatedOffer,
+      currency: generatedOfferReadModel.currency || generatedOfferCurrency,
+      total_price_cents: safeInt(generatedOffer?.total_price_cents) || safeInt(generatedOfferReadModel?.total_price_cents) || 0,
+      offer: generatedOfferReadModel,
+      travel_plan: buildBookingTravelPlanReadModel(generatedOffer?.travel_plan, generatedOfferReadModel)
+    };
+  }
+
   async function buildBookingReadModel(booking) {
     const normalizedBooking = { ...booking };
     delete normalizedBooking.budget;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
     const generatedOffers = await Promise.all(
-      (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => {
-        const generatedOfferCurrency = safeCurrency(generatedOffer?.currency || generatedOffer?.offer?.currency || offerCurrency);
-        return {
-          ...generatedOffer,
-          currency: generatedOfferCurrency,
-          total_price_cents: safeInt(generatedOffer?.total_price_cents) || 0,
-          offer: await buildBookingOfferReadModel(generatedOffer?.offer, generatedOfferCurrency),
-          pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
-        };
-      })
+      (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
+        ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency)),
+        pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
+      }))
     );
     return {
       ...normalizedBooking,
       preferred_currency: preferredCurrency,
+      travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer),
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency),
       generated_offers: generatedOffers,

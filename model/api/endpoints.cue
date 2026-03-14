@@ -398,15 +398,61 @@ package api
 			key:           "offer_exchange_rates"
 			path:          "/api/v1/offers/exchange-rates"
 			method:        "POST"
-		tag:           "Offers"
+			tag:           "Offers"
 		authenticated: true
-		requestType:   "OfferExchangeRatesRequest"
-		responseType:  "OfferExchangeRatesResponse"
-	},
-	{
-		key:           "booking_activities"
-		path:          "/api/v1/bookings/{booking_id}/activities"
-		method:        "GET"
+			requestType:   "OfferExchangeRatesRequest"
+			responseType:  "OfferExchangeRatesResponse"
+		},
+		{
+			key:           "suppliers"
+			path:          "/api/v1/suppliers"
+			method:        "GET"
+			tag:           "Suppliers"
+			authenticated: true
+			responseType:  "SupplierListResponse"
+		},
+		{
+			key:           "supplier_detail"
+			path:          "/api/v1/suppliers/{supplier_id}"
+			method:        "GET"
+			tag:           "Suppliers"
+			authenticated: true
+			responseType:  "SupplierResponse"
+			parameters: [{
+				name:     "supplier_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "supplier_create"
+			path:          "/api/v1/suppliers"
+			method:        "POST"
+			tag:           "Suppliers"
+			authenticated: true
+			requestType:   "SupplierCreateRequest"
+			responseType:  "SupplierResponse"
+		},
+		{
+			key:           "supplier_update"
+			path:          "/api/v1/suppliers/{supplier_id}"
+			method:        "PATCH"
+			tag:           "Suppliers"
+			authenticated: true
+			requestType:   "SupplierUpdateRequest"
+			responseType:  "SupplierResponse"
+			parameters: [{
+				name:     "supplier_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "booking_activities"
+			path:          "/api/v1/bookings/{booking_id}/activities"
+			method:        "GET"
 		tag:           "Bookings"
 		authenticated: true
 		responseType:  "BookingActivitiesResponse"

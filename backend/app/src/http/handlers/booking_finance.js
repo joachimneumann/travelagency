@@ -23,6 +23,7 @@ export function createBookingFinanceHandlers(deps) {
     validateBookingOfferInput,
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
+    normalizeBookingTravelPlan,
     formatMoney,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
@@ -55,9 +56,30 @@ export function createBookingFinanceHandlers(deps) {
   }
 
   function buildGeneratedOfferReadModel(booking, generatedOffer) {
+    const normalizedGeneratedOffer = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
+    return {
+      ...normalizedGeneratedOffer,
+      pdf_url: `/api/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
+    };
+  }
+
+  function normalizeGeneratedOfferSnapshot(generatedOffer, booking) {
+    const snapshotCurrency = normalizeText(
+      generatedOffer?.currency
+      || generatedOffer?.offer?.currency
+      || booking?.offer?.currency
+      || booking?.preferred_currency
+      || BASE_CURRENCY
+    ) || BASE_CURRENCY;
+    const offerSnapshot = normalizeBookingOffer(generatedOffer?.offer, snapshotCurrency);
     return {
       ...generatedOffer,
-      pdf_url: `/api/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
+      currency: offerSnapshot.currency || snapshotCurrency,
+      total_price_cents: Number(generatedOffer?.total_price_cents || offerSnapshot.total_price_cents || 0),
+      offer: offerSnapshot,
+      travel_plan: normalizeBookingTravelPlan(generatedOffer?.travel_plan, offerSnapshot, {
+        strictReferences: false
+      })
     };
   }
 
@@ -292,6 +314,9 @@ export function createBookingFinanceHandlers(deps) {
       booking.offer,
       booking.offer?.currency || booking.preferred_currency || BASE_CURRENCY
     );
+    const travelPlanSnapshot = normalizeBookingTravelPlan(booking.travel_plan, offerSnapshot, {
+      strictReferences: false
+    });
     const now = nowIso();
     const existingGeneratedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
     const version = existingGeneratedOffers.reduce((maxVersion, item) => {
@@ -308,10 +333,11 @@ export function createBookingFinanceHandlers(deps) {
       created_by: actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
       currency: offerSnapshot.currency,
       total_price_cents: Number(offerSnapshot.total_price_cents || 0),
-      offer: offerSnapshot
+      offer: offerSnapshot,
+      travel_plan: travelPlanSnapshot
     };
 
-    await writeGeneratedOfferPdf(generatedOffer, booking);
+    await writeGeneratedOfferPdf(normalizeGeneratedOfferSnapshot(generatedOffer, booking), booking);
     booking.generated_offers = [...existingGeneratedOffers, generatedOffer];
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = now;
@@ -347,7 +373,7 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
     const pdfPath = generatedOfferPdfPath(generatedOffer.id);
-    await writeGeneratedOfferPdf(generatedOffer, booking);
+    await writeGeneratedOfferPdf(normalizeGeneratedOfferSnapshot(generatedOffer, booking), booking);
     await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store", {
       "Content-Disposition": `inline; filename="${String(generatedOffer.filename || `${generatedOffer.id}.pdf`).replace(/"/g, "")}"`
     });
@@ -395,7 +421,7 @@ export function createBookingFinanceHandlers(deps) {
       : "Please find attached your current Asia Travel Plan offer.";
 
     try {
-      await writeGeneratedOfferPdf(generatedOffer, booking);
+      await writeGeneratedOfferPdf(normalizeGeneratedOfferSnapshot(generatedOffer, booking), booking);
       const pdfPath = generatedOfferPdfPath(generatedOffer.id);
       const pdfBuffer = await readFile(pdfPath);
       const draft = await getGmailDraftsClient().createDraft({

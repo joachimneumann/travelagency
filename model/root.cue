@@ -36,6 +36,7 @@ import (
 		ATPStaffRole:         enumModel.#ATPStaffRole
 		BookingStage:          enumModel.#BookingStage
 		BookingPersonRole:     enumModel.#BookingPersonRole
+		TravelPlanTimingKind:  enumModel.#TravelPlanTimingKind
 		TravelPlanSegmentKind: enumModel.#TravelPlanSegmentKind
 		TravelPlanFinancialCoverageStatus: enumModel.#TravelPlanFinancialCoverageStatus
 		TravelPlanOfferCoverageType: enumModel.#TravelPlanOfferCoverageType

@@ -3,7 +3,8 @@
   "title": "Vietnam Adventure - Ha Giang Loop",
   "shortDescription": "A Vietnam adventure itinerary focused on a mountain-loop focus through Ha Giang, with active days, scenic routes, and practical local support.",
   "styles": [
-    "Adventure"
+    "Adventure",
+    "Budget"
   ],
   "priority": 50,
   "travel_duration_days": 11,
@@ -20,5 +21,8 @@
   "destinations": [
     "Vietnam"
   ],
-  "budget_lower_USD": 1070
+  "budget_lower_USD": 1070,
+  "short_description": "",
+  "budget_lower_usd": 0,
+  "updated_at": "2026-03-14T07:58:10.956Z"
 }

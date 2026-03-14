@@ -136,13 +136,31 @@ import (
 	actor?:                   string
 }
 
-#BookingGeneratedOfferGmailDraftRequest: {
-	actor?: string
-}
+	#BookingGeneratedOfferGmailDraftRequest: {
+		actor?: string
+	}
 
-#OfferExchangeRateComponent: {
-	id?:                    common.#Identifier
-	category:               enums.#OfferCategory
+	#SupplierCreateRequest: {
+		name:             string
+		contact?:         string
+		emergency_phone?: string
+		email?:           common.#Email
+		country?:         enums.#CountryCode
+		category:         enums.#SupplierCategory
+	}
+
+	#SupplierUpdateRequest: {
+		name?:             string
+		contact?:          string
+		emergency_phone?:  string
+		email?:            common.#Email
+		country?:          enums.#CountryCode
+		category?:         enums.#SupplierCategory
+	}
+
+	#OfferExchangeRateComponent: {
+		id?:                    common.#Identifier
+		category:               enums.#OfferCategory
 	quantity:               >0 & int
 	unit_amount_cents:      common.#NonNegativeMoneyAmount
 	tax_rate_basis_points?: >=0 & <=100000 & int

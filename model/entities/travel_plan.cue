@@ -7,7 +7,9 @@ import (
 
 #BookingTravelPlanSegment: {
 	id:                        common.#Identifier
+	timing_kind:               *"label" | enums.#TravelPlanTimingKind
 	time_label?:               string
+	time_point?:               string
 	kind:                      enums.#TravelPlanSegmentKind
 	title:                     string
 	details?:                  string
@@ -37,8 +39,6 @@ import (
 }
 
 #BookingTravelPlan: {
-	title?:                 string
-	summary?:               string
 	days?:                  [...#BookingTravelPlanDay]
 	offer_component_links?: [...#BookingTravelPlanOfferComponentLink]
 }

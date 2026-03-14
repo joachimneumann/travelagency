@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=39d62af7c93f";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,8 +15,8 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=39d62af7c93f";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=39d62af7c93f";
+} from "./pricing.js?v=ce37aa7dfc76";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=ce37aa7dfc76";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
@@ -60,6 +60,7 @@ export function createBookingOfferModule(ctx) {
     getBookingRevision,
     renderBookingHeader,
     renderBookingData,
+    renderTravelPlanPanel,
     loadActivities,
     escapeHtml,
     setBookingSectionDirty
@@ -290,6 +291,7 @@ export function createBookingOfferModule(ctx) {
     state.booking = response.booking;
     renderBookingHeader();
     renderBookingData();
+    renderTravelPlanPanel?.();
     renderOfferPanel();
     if (reloadActivities) {
       await loadActivities();

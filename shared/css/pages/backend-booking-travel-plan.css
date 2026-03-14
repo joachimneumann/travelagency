@@ -1,0 +1,247 @@
+.booking-detail-page .travel-plan-actions {
+  align-items: center;
+  margin: 0 0 0.9rem;
+}
+
+#travel_plan_editor {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0;
+}
+
+.travel-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+
+.travel-plan-grid--segment {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+}
+
+.travel-plan-grid--segment-timing {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+}
+
+.travel-plan-segment .field label,
+.travel-plan-segment .field .field-label {
+  padding-top: 0.7rem;
+}
+
+.travel-plan-day {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.travel-plan-day__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.travel-plan-day__head h3 {
+  margin: 0;
+  color: #16313d;
+  font-size: 1.05rem;
+}
+
+.travel-plan-day__head p {
+  margin: 0.2rem 0 0;
+  color: rgba(22, 49, 61, 0.72);
+  font-size: 0.92rem;
+}
+
+.travel-plan-day__footer,
+.travel-plan-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.travel-plan-add-day-btn {
+  min-width: 220px;
+}
+
+.travel-plan-segment {
+  margin: 0;
+  margin-left: 5rem;
+  padding: 3rem 0 0;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.travel-plan-segment--not-covered {
+  border-color: transparent;
+}
+
+.travel-plan-segment--partially-covered {
+  border-color: transparent;
+}
+
+.travel-plan-segment--covered {
+  border-color: transparent;
+}
+
+.travel-plan-segment__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.travel-plan-segment__title {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.travel-plan-segment__index {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(22, 49, 61, 0.72);
+}
+
+.travel-plan-segment__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.travel-plan-move-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.travel-plan-coverage-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.58rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.travel-plan-coverage-badge--not-covered {
+  background: rgba(180, 64, 64, 0.12);
+  color: #a33b3b;
+}
+
+.travel-plan-coverage-badge--partially-covered {
+  background: rgba(197, 144, 34, 0.15);
+  color: #8e6913;
+}
+
+.travel-plan-coverage-badge--covered {
+  background: rgba(71, 137, 82, 0.14);
+  color: #357042;
+}
+
+.travel-plan-coverage-badge--not-applicable {
+  background: rgba(75, 102, 117, 0.12);
+  color: #516978;
+}
+
+.travel-plan-links {
+  margin-top: 0.8rem;
+  padding-top: 0.75rem;
+}
+
+.travel-plan-links__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.travel-plan-links__head h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #16313d;
+}
+
+.travel-plan-link-add-btn,
+.travel-plan-day-add-btn {
+  min-height: 36px;
+  padding: 0.45rem 0.8rem;
+}
+
+.travel-plan-link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 34px;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 0.45rem;
+}
+
+.travel-plan-link-row select,
+.travel-plan-grid input,
+.travel-plan-grid select,
+.travel-plan-grid textarea,
+#travel_plan_editor > .field input,
+#travel_plan_editor > .field textarea {
+  border: 1px solid #c5d8e1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.62rem 0.72rem;
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.travel-plan-link-row select:focus-visible,
+.travel-plan-grid input:focus-visible,
+.travel-plan-grid select:focus-visible,
+.travel-plan-grid textarea:focus-visible,
+#travel_plan_editor > .field input:focus-visible,
+#travel_plan_editor > .field textarea:focus-visible {
+  outline: 3px solid rgba(26, 156, 161, 0.12);
+  outline-offset: 0;
+  border-color: #1a9ca1;
+}
+
+.travel-plan-link-empty,
+.travel-plan-empty {
+  margin: 0;
+  color: rgba(22, 49, 61, 0.72);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 760px) {
+  .travel-plan-grid,
+  .travel-plan-grid--segment {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-plan-segment {
+    margin-left: 0;
+  }
+
+  .travel-plan-link-row {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-plan-day__head,
+  .travel-plan-segment__head,
+  .travel-plan-links__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

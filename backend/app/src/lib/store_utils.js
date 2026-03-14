@@ -13,6 +13,7 @@ export function createStoreUtils({
   tempUploadDir,
   writeQueueRef,
   syncBookingAssignmentFields,
+  normalizeBookingTravelPlan,
   normalizeBookingPricing,
   normalizeBookingOffer,
   getBookingPreferredCurrency,
@@ -32,6 +33,7 @@ export function createStoreUtils({
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
     parsed.bookings ||= [];
+    parsed.suppliers ||= [];
     parsed.activities ||= [];
     parsed.invoices ||= [];
     parsed.chat_channel_accounts ||= [];
@@ -42,6 +44,9 @@ export function createStoreUtils({
       syncBookingAssignmentFields(normalizedBooking);
       normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
       normalizedBooking.offer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
+      normalizedBooking.travel_plan = normalizeBookingTravelPlan(normalizedBooking.travel_plan, normalizedBooking.offer, {
+        strictReferences: false
+      });
       normalizedBooking.generated_offers = Array.isArray(normalizedBooking.generated_offers) ? normalizedBooking.generated_offers : [];
       normalizedBooking.pricing = await convertBookingPricingToBaseCurrency(normalizedBooking.pricing);
       normalizedBooking.offer = await convertBookingOfferToBaseCurrency(normalizedBooking.offer);

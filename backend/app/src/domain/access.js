@@ -30,11 +30,23 @@ export function createAccessHelpers({ auth, appRoles }) {
       hasRole(principal, appRoles.ATP_STAFF);
   }
 
+  function canReadSuppliers(principal) {
+    return canReadBackend(principal);
+  }
+
+  function canEditSuppliers(principal) {
+    return hasRole(principal, appRoles.ADMIN) ||
+      hasRole(principal, appRoles.MANAGER) ||
+      hasRole(principal, appRoles.ATP_STAFF);
+  }
+
   return {
     getPrincipal,
     canReadBackend,
     canViewKeycloakUsers,
     canReadTours,
-    canEditTours
+    canEditTours,
+    canReadSuppliers,
+    canEditSuppliers
   };
 }

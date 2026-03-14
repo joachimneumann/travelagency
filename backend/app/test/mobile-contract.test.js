@@ -265,6 +265,10 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.preferred_currency, "string");
   assert.ok(Array.isArray(booking.destinations));
   assert.ok(Array.isArray(booking.travel_styles));
+  assert.equal(typeof booking.travel_plan_revision, "number");
+  assert.equal(typeof booking.travel_plan, "object");
+  assert.ok(Array.isArray(booking.travel_plan.days));
+  assert.ok(Array.isArray(booking.travel_plan.offer_component_links));
   if (booking.service_level_agreement_due_at) assertISODateLike(booking.service_level_agreement_due_at, "booking.service_level_agreement_due_at");
   if (booking.created_at) assertISODateLike(booking.created_at, "booking.created_at");
   if (booking.updated_at) assertISODateLike(booking.updated_at, "booking.updated_at");
@@ -570,6 +574,428 @@ test("booking offer patch rejects discounts_credits components", async () => {
   assert.match(String(patchResult.body.error || ""), /discounts_credits/i);
 });
 
+test("booking travel plan patch persists days, links, and derived financial coverage", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_transfer_1",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Airport transfer",
+              quantity: 1,
+              unit_amount_cents: 2500,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            },
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "First hotel night",
+              quantity: 1,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 1
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const travelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              overnight_location: "Hoi An",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  timing_kind: "point",
+                  time_point: "19:00",
+                  kind: "transport",
+                  title: "Airport transfer",
+                  financial_coverage_status: "not_covered"
+                },
+                {
+                  id: "travel_plan_segment_2",
+                  timing_kind: "range",
+                  start_time: "14:00",
+                  end_time: "15:00",
+                  kind: "accommodation",
+                  title: "Hotel check-in",
+                  financial_coverage_status: "not_covered"
+                },
+                {
+                  id: "travel_plan_segment_3",
+                  timing_kind: "label",
+                  time_label: "Evening",
+                  kind: "free_time",
+                  title: "Explore the old town"
+                }
+              ]
+            }
+          ],
+          offer_component_links: [
+            {
+              id: "travel_plan_offer_link_1",
+              travel_plan_segment_id: "travel_plan_segment_1",
+              offer_component_id: "offer_component_transfer_1",
+              coverage_type: "partial"
+            },
+            {
+              id: "travel_plan_offer_link_2",
+              travel_plan_segment_id: "travel_plan_segment_2",
+              offer_component_id: "offer_component_room_1",
+              coverage_type: "full"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(travelPlanPatchResult.status, 200);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan_revision, 1);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days.length, 1);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.offer_component_links.length, 2);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].timing_kind, "point");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].time_point, "19:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].time_label, null);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].timing_kind, "range");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].start_time, "14:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].end_time, "15:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[2].timing_kind, "label");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[2].time_label, "Evening");
+  assert.equal(
+    travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].financial_coverage_status,
+    "partially_covered"
+  );
+  assert.equal(
+    travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].financial_coverage_status,
+    "covered"
+  );
+  assert.equal(
+    travelPlanPatchResult.body.booking.travel_plan.days[0].segments[2].financial_coverage_status,
+    "not_applicable"
+  );
+
+  const detailAfter = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Arrival");
+  assert.equal(
+    detailAfter.body.booking.travel_plan.days[0].segments[0].financial_coverage_status,
+    "partially_covered"
+  );
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].segments[0].time_point, "19:00");
+
+  const activitiesAfter = await requestJson(
+    endpointPath("booking_activities").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(activitiesAfter.status, 200);
+  assert.ok(
+    activitiesAfter.body.activities.some((activity) => activity.type === "TRAVEL_PLAN_UPDATED"),
+    "Expected TRAVEL_PLAN_UPDATED activity after saving a travel plan"
+  );
+});
+
+test("booking travel plan patch rejects stale revisions", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const firstPatch = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: []
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(firstPatch.status, 200);
+
+  const stalePatch = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: []
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(stalePatch.status, 409);
+  assert.equal(stalePatch.body.code, "BOOKING_REVISION_MISMATCH");
+});
+
+test("booking travel plan patch rejects invalid segments and unknown offer links", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const missingTitleResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  kind: "transport",
+                  title: ""
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(missingTitleResult.status, 422);
+  assert.match(String(missingTitleResult.body.error || ""), /title is required/i);
+
+  const missingPointTimeResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  timing_kind: "point",
+                  kind: "transport",
+                  title: "Airport transfer"
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(missingPointTimeResult.status, 422);
+  assert.match(String(missingPointTimeResult.body.error || ""), /time point/i);
+
+  const invalidLinkResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  kind: "transport",
+                  title: "Airport transfer"
+                }
+              ]
+            }
+          ],
+          offer_component_links: [
+            {
+              id: "travel_plan_offer_link_1",
+              travel_plan_segment_id: "travel_plan_segment_1",
+              offer_component_id: "offer_component_missing",
+              coverage_type: "full"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(invalidLinkResult.status, 422);
+  assert.match(String(invalidLinkResult.body.error || ""), /unknown offer component/i);
+});
+
+test("suppliers can be created and updated, and travel plan supplier references are validated", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const createSupplierResult = await requestJson(
+    endpointPath("supplier_create"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        name: "Hoi An Riverside Hotel",
+        contact: "Lan Nguyen",
+        emergency_phone: "+84 123456789",
+        email: "ops@riverside.example",
+        country: "Vietnam",
+        category: "hotel"
+      }
+    }
+  );
+  assert.equal(createSupplierResult.status, 201);
+  const supplierId = createSupplierResult.body.supplier.id;
+  assert.equal(createSupplierResult.body.supplier.name, "Hoi An Riverside Hotel");
+  assert.equal(createSupplierResult.body.supplier.category, "hotel");
+
+  const listSuppliersResult = await requestJson(
+    endpointPath("suppliers"),
+    apiHeaders()
+  );
+  assert.equal(listSuppliersResult.status, 200);
+  assert.equal(listSuppliersResult.body.total, 1);
+  assert.equal(listSuppliersResult.body.items[0].id, supplierId);
+
+  const patchSupplierResult = await requestJson(
+    endpointPath("supplier_update").replace("{supplier_id}", supplierId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        email: "operations@riverside.example",
+        emergency_phone: "+84 987654321"
+      }
+    }
+  );
+  assert.equal(patchSupplierResult.status, 200);
+  assert.equal(patchSupplierResult.body.supplier.email, "operations@riverside.example");
+  assert.equal(patchSupplierResult.body.supplier.emergency_phone, "+84 987654321");
+
+  const validTravelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  kind: "accommodation",
+                  title: "Hotel check-in",
+                  supplier_id: supplierId
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(validTravelPlanPatchResult.status, 200);
+  assert.equal(
+    validTravelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].supplier_id,
+    supplierId
+  );
+
+  const invalidTravelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: validTravelPlanPatchResult.body.booking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  kind: "accommodation",
+                  title: "Hotel check-in",
+                  supplier_id: "supplier_missing"
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(invalidTravelPlanPatchResult.status, 422);
+  assert.match(String(invalidTravelPlanPatchResult.body.error || ""), /unknown supplier/i);
+});
+
 test("booking generated offers store immutable snapshots", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -604,6 +1030,55 @@ test("booking generated offers store immutable snapshots", async () => {
   );
   assert.equal(offerPatchResult.status, 200);
 
+  const travelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              date: "2026-04-10",
+              title: "Arrival in Hoi An",
+              overnight_location: "Hoi An",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  timing_kind: "point",
+                  time_point: "2026-04-10T19:00",
+                  kind: "transport",
+                  title: "Airport transfer",
+                  details: "Private transfer from Da Nang airport to the hotel in Hoi An."
+                },
+                {
+                  id: "travel_plan_segment_2",
+                  timing_kind: "label",
+                  time_label: "Evening",
+                  kind: "accommodation",
+                  title: "Hotel check-in",
+                  location: "Hoi An"
+                }
+              ]
+            }
+          ],
+          offer_component_links: [
+            {
+              id: "travel_plan_offer_link_1",
+              travel_plan_segment_id: "travel_plan_segment_2",
+              offer_component_id: "offer_component_room_1",
+              coverage_type: "full"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(travelPlanPatchResult.status, 200);
+
   const generateResult = await requestJson(
     endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
     apiHeaders(),
@@ -623,6 +1098,9 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(generatedOffer.version, 1);
   assert.equal(generatedOffer.offer.components.length, 1);
   assert.equal(generatedOffer.offer.components[0].details, "Hotel room");
+  assert.equal(generatedOffer.travel_plan.days.length, 1);
+  assert.equal(generatedOffer.travel_plan.days[0].title, "Arrival in Hoi An");
+  assert.equal(generatedOffer.travel_plan.days[0].segments[0].title, "Airport transfer");
   assert.match(generatedOffer.filename, /^ATP offer \d{4}-\d{2}-\d{2}\.pdf$/);
   assert.equal(typeof generatedOffer.pdf_url, "string");
 
@@ -655,6 +1133,39 @@ test("booking generated offers store immutable snapshots", async () => {
   );
   assert.equal(secondOfferPatchResult.status, 200);
 
+  const secondTravelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              date: "2026-04-10",
+              title: "Updated arrival plan",
+              overnight_location: "Hoi An",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  timing_kind: "point",
+                  time_point: "2026-04-10T20:00",
+                  kind: "transport",
+                  title: "Updated airport transfer"
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(secondTravelPlanPatchResult.status, 200);
+
   const detailAfter = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
@@ -662,7 +1173,114 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.generated_offers.length, 1);
   assert.equal(detailAfter.body.booking.generated_offers[0].offer.components[0].details, "Hotel room");
+  assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].title, "Arrival in Hoi An");
+  assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].segments[0].title, "Airport transfer");
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Updated hotel room");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Updated arrival plan");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].segments[0].title, "Updated airport transfer");
+});
+
+test("booking detail normalizes generated-offer travel plan snapshots against the frozen offer snapshot", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Hotel room",
+              quantity: 1,
+              unit_amount_cents: 12000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const travelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival",
+              segments: [
+                {
+                  id: "travel_plan_segment_1",
+                  kind: "accommodation",
+                  title: "Hotel check-in"
+                }
+              ]
+            }
+          ],
+          offer_component_links: [
+            {
+              id: "travel_plan_offer_link_1",
+              travel_plan_segment_id: "travel_plan_segment_1",
+              offer_component_id: "offer_component_room_1",
+              coverage_type: "full"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(travelPlanPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Snapshot coverage check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  const generatedOfferRecord = bookingRecord.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.ok(generatedOfferRecord);
+  delete generatedOfferRecord.travel_plan.days[0].segments[0].financial_coverage_status;
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  assert.equal(
+    detailResult.body.booking.generated_offers[0].travel_plan.days[0].segments[0].financial_coverage_status,
+    "covered"
+  );
 });
 
 test("contract metadata exposes the generated offer gmail draft endpoint", async () => {
