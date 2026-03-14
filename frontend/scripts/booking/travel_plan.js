@@ -1,10 +1,10 @@
-import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=ef1819cabff2";
-import { formatMoneyDisplay } from "./pricing.js?v=ef1819cabff2";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=ef1819cabff2";
+import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=471ae22ad091";
+import { formatMoneyDisplay } from "./pricing.js?v=471ae22ad091";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=471ae22ad091";
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=ef1819cabff2";
+} from "../shared/generated_catalogs.js?v=471ae22ad091";
 import {
   countTravelPlanSegments,
   countUncoveredTravelPlanSegments,
@@ -16,7 +16,7 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
   getTravelPlanSegmentCoverageStatus,
   normalizeTravelPlanDraft
-} from "./travel_plan_helpers.js?v=ef1819cabff2";
+} from "./travel_plan_helpers.js?v=471ae22ad091";
 
 export function createBookingTravelPlanModule(ctx) {
   const {

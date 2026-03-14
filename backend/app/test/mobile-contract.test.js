@@ -1943,6 +1943,12 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
     ["accountant", "admin", "joachim", "staff"]
   );
   assert.ok(result.body.items.every((item) => item.active === true));
+  const admin = result.body.items.find((item) => item.username === "admin");
+  assert.deepEqual(admin.realm_roles, []);
+  assert.deepEqual(admin.client_roles, ["atp_admin"]);
+  const accountant = result.body.items.find((item) => item.username === "accountant");
+  assert.deepEqual(accountant.realm_roles, []);
+  assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {

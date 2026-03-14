@@ -12,7 +12,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=ef1819cabff2";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=471ae22ad091";
 import {
   createApiFetcher,
   escapeHtml,
@@ -20,35 +20,35 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=ef1819cabff2";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=ef1819cabff2";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=ef1819cabff2";
-import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=ef1819cabff2";
+} from "../shared/api.js?v=471ae22ad091";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=471ae22ad091";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=471ae22ad091";
+import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=471ae22ad091";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=ef1819cabff2";
-import { createBookingOfferModule } from "../booking/offers.js?v=ef1819cabff2";
-import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=ef1819cabff2";
+} from "../booking/pricing.js?v=471ae22ad091";
+import { createBookingOfferModule } from "../booking/offers.js?v=471ae22ad091";
+import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=471ae22ad091";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=ef1819cabff2";
-import { createBookingCoreModule } from "../booking/core.js?v=ef1819cabff2";
+} from "../booking/invoices.js?v=471ae22ad091";
+import { createBookingCoreModule } from "../booking/core.js?v=471ae22ad091";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=ef1819cabff2";
-import { createBookingPersonsModule } from "../booking/persons.js?v=ef1819cabff2";
+} from "../booking/person_helpers.js?v=471ae22ad091";
+import { createBookingPersonsModule } from "../booking/persons.js?v=471ae22ad091";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=ef1819cabff2";
+} from "../shared/booking_persons.js?v=471ae22ad091";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

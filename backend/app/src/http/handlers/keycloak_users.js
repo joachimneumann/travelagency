@@ -20,7 +20,9 @@ export function createKeycloakUserHandlers(deps) {
           id: user.id,
           name: keycloakDisplayName(user) || null,
           username: user.username || null,
-          active: user.active !== false
+          active: user.active !== false,
+          realm_roles: Array.isArray(user.realm_roles) ? user.realm_roles : [],
+          client_roles: Array.isArray(user.client_roles) ? user.client_roles : []
         })),
         total: items.length
       });

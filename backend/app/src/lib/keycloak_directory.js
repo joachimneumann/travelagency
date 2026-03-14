@@ -10,19 +10,30 @@ function normalizeRoles(items) {
   );
 }
 
-function toDirectoryUser(user, roles = []) {
+function normalizeRoleSets(roleSets = {}) {
+  const realmRoles = normalizeRoles(roleSets?.realm_roles);
+  const clientRoles = normalizeRoles(roleSets?.client_roles);
+  return {
+    realm_roles: realmRoles,
+    client_roles: clientRoles,
+    roles: normalizeRoles([...realmRoles, ...clientRoles])
+  };
+}
+
+function toDirectoryUser(user, roleSets = {}) {
   const id = normalizeText(user?.id) || null;
   const username = normalizeText(user?.username) || null;
   const firstName = normalizeText(user?.firstName);
   const lastName = normalizeText(user?.lastName);
   const combinedName = `${firstName} ${lastName}`.trim();
   const name = combinedName || normalizeText(user?.name) || null;
+  const normalizedRoleSets = normalizeRoleSets(roleSets);
   return {
     id,
     username,
     name,
     active: user?.enabled !== false,
-    roles: normalizeRoles(roles)
+    ...normalizedRoleSets
   };
 }
 
@@ -147,13 +158,20 @@ export function createKeycloakDirectory({
 
   async function listUserRoles(userId) {
     const normalizedUserId = normalizeText(userId);
-    if (!normalizedUserId) return [];
+    if (!normalizedUserId) {
+      return {
+        realm_roles: [],
+        client_roles: [],
+        roles: []
+      };
+    }
     const accessToken = await getAdminAccessToken();
-    const roleNames = [];
+    const realmRoleNames = [];
+    const clientRoleNames = [];
     const realmPayload = await fetchJson(`${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/realm`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
-    roleNames.push(...(Array.isArray(realmPayload) ? realmPayload : []).map((role) => role?.name));
+    realmRoleNames.push(...(Array.isArray(realmPayload) ? realmPayload : []).map((role) => role?.name));
 
     if (cfg.keycloakClientId) {
       const clientUuid = await getClientUuid();
@@ -162,15 +180,18 @@ export function createKeycloakDirectory({
           `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/clients/${encodeURIComponent(clientUuid)}`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        roleNames.push(...(Array.isArray(clientPayload) ? clientPayload : []).map((role) => role?.name));
+        clientRoleNames.push(...(Array.isArray(clientPayload) ? clientPayload : []).map((role) => role?.name));
       }
     }
 
-    return normalizeRoles(roleNames);
+    return normalizeRoleSets({
+      realm_roles: realmRoleNames,
+      client_roles: clientRoleNames
+    });
   }
 
   function isAssignableRoleSet(roles) {
-    return normalizeRoles(roles).some((role) => cfg.keycloakAllowedRoles.has(role));
+    return normalizeRoles(Array.isArray(roles) ? roles : roles?.roles).some((role) => cfg.keycloakAllowedRoles.has(role));
   }
 
   async function mapWithConcurrency(items, limit, worker) {
@@ -201,9 +222,9 @@ export function createKeycloakDirectory({
         if (user?.enabled === false) return null;
         const summary = toDirectoryUser(user);
         if (!summary.id) return null;
-        const roles = await listUserRoles(summary.id);
-        if (!isAssignableRoleSet(roles)) return null;
-        const normalized = { ...summary, roles };
+        const roleSets = await listUserRoles(summary.id);
+        if (!isAssignableRoleSet(roleSets)) return null;
+        const normalized = { ...summary, ...roleSets };
         userByIdCache.set(normalized.id, normalized);
         return normalized;
       });
@@ -236,8 +257,12 @@ export function createKeycloakDirectory({
     const payload = await fetchJson(`${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
-    const roles = await listUserRoles(normalizedUserId).catch(() => []);
-    const summary = toDirectoryUser(payload, roles);
+    const roleSets = await listUserRoles(normalizedUserId).catch(() => ({
+      realm_roles: [],
+      client_roles: [],
+      roles: []
+    }));
+    const summary = toDirectoryUser(payload, roleSets);
     if (summary?.id) userByIdCache.set(summary.id, summary);
     return summary;
   }

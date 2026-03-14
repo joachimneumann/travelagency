@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=ef1819cabff2";
+} from "../shared/api.js?v=471ae22ad091";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=ef1819cabff2";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=471ae22ad091";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=ef1819cabff2";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=ef1819cabff2";
-import { renderPagination } from "../shared/pagination.js?v=ef1819cabff2";
+} from "../shared/links.js?v=471ae22ad091";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=471ae22ad091";
+import { renderPagination } from "../shared/pagination.js?v=471ae22ad091";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=ef1819cabff2";
+} from "../shared/booking_persons.js?v=471ae22ad091";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -550,15 +550,32 @@ async function loadKeycloakUsers() {
 
 function renderStaff(items) {
   if (!els.staffTable) return;
-  const header = `<thead><tr><th>Name</th><th>Username</th><th>Active</th></tr></thead>`;
+  const header = `<thead><tr><th>Name</th><th>Username</th><th>Roles</th><th>Active</th></tr></thead>`;
   const rows = items
     .map((staff) => `<tr>
       <td>${escapeHtml(staff.name || "-")}</td>
       <td>${escapeHtml(staff.username || "-")}</td>
+      <td>${formatKeycloakRolesCell(staff)}</td>
       <td>${staff.active ? "Yes" : "No"}</td>
     </tr>`)
     .join("");
-  els.staffTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="3">No Keycloak users found</td></tr>'}</tbody>`;
+  els.staffTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="4">No Keycloak users found</td></tr>'}</tbody>`;
+}
+
+function formatKeycloakRoleList(roles) {
+  const items = (Array.isArray(roles) ? roles : [])
+    .map((role) => normalizeText(role))
+    .filter(Boolean);
+  return items.length ? items.join(", ") : "-";
+}
+
+function formatKeycloakRolesCell(user) {
+  const realmRoles = formatKeycloakRoleList(user?.realm_roles);
+  const clientRoles = formatKeycloakRoleList(user?.client_roles);
+  return [
+    `<strong>Realm:</strong> ${escapeHtml(realmRoles)}`,
+    `<strong>Client:</strong> ${escapeHtml(clientRoles)}`
+  ].join("<br />");
 }
 
 function setStaffStatus(message) {

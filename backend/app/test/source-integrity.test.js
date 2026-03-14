@@ -418,6 +418,27 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
 });
 
+test("settings page staff table shows separate realm and client Keycloak roles", async () => {
+  const backendPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
+  const source = await readFile(backendPageModulePath, "utf8");
+
+  assert.match(
+    source,
+    /<th>Name<\/th><th>Username<\/th><th>Roles<\/th><th>Active<\/th>/,
+    "Settings user table should include a Roles column"
+  );
+  assert.match(
+    source,
+    /<strong>Realm:<\/strong>/,
+    "Settings user table should label realm roles explicitly"
+  );
+  assert.match(
+    source,
+    /<strong>Client:<\/strong>/,
+    "Settings user table should label client roles explicitly"
+  );
+});
+
 test("contract tests use an isolated temp store instead of the runtime store.json", async () => {
   const contractTestPath = path.resolve(__dirname, "mobile-contract.test.js");
   const source = await readFile(contractTestPath, "utf8");
