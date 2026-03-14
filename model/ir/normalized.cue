@@ -45,6 +45,8 @@ IR: {
 		BookingStage: {catalog: "stages"}
 		BookingPersonRole: {catalog: "bookingPersonRoles"}
 		TravelPlanSegmentKind: {catalog: "travelPlanSegmentKinds"}
+		TravelPlanFinancialCoverageStatus: {catalog: "travelPlanFinancialCoverageStatuses"}
+		TravelPlanOfferCoverageType: {catalog: "travelPlanOfferCoverageTypes"}
 		SupplierCategory: {catalog: "supplierCategories"}
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
@@ -180,6 +182,20 @@ IR: {
 					{name: "supplier_id", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "start_time", kind: "scalar", typeName: "string", required: false},
 					{name: "end_time", kind: "scalar", typeName: "string", required: false},
+					{name: "financial_coverage_status", kind: "enum", typeName: "TravelPlanFinancialCoverageStatus", required: true},
+					{name: "financial_note", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
+				name:       "BookingTravelPlanOfferComponentLink"
+				domain:     "booking"
+				module:     "entities"
+				sourceType: "entities.#BookingTravelPlanOfferComponentLink"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "travel_plan_segment_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "offer_component_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "coverage_type", kind: "enum", typeName: "TravelPlanOfferCoverageType", required: true},
 				]
 			},
 			{
@@ -206,6 +222,7 @@ IR: {
 					{name: "title", kind: "scalar", typeName: "string", required: false},
 					{name: "summary", kind: "scalar", typeName: "string", required: false},
 					{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
+					{name: "offer_component_links", kind: "entity", typeName: "BookingTravelPlanOfferComponentLink", required: false, isArray: true},
 				]
 			},
 			{

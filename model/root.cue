@@ -18,6 +18,7 @@ import (
 		BookingTravelPlan:     entityModel.#BookingTravelPlan
 		BookingTravelPlanDay:  entityModel.#BookingTravelPlanDay
 		BookingTravelPlanSegment: entityModel.#BookingTravelPlanSegment
+		BookingTravelPlanOfferComponentLink: entityModel.#BookingTravelPlanOfferComponentLink
 		Supplier:              entityModel.#Supplier
 		Tour:                  entityModel.#Tour
 	}
@@ -36,6 +37,8 @@ import (
 		BookingStage:          enumModel.#BookingStage
 		BookingPersonRole:     enumModel.#BookingPersonRole
 		TravelPlanSegmentKind: enumModel.#TravelPlanSegmentKind
+		TravelPlanFinancialCoverageStatus: enumModel.#TravelPlanFinancialCoverageStatus
+		TravelPlanOfferCoverageType: enumModel.#TravelPlanOfferCoverageType
 		SupplierCategory:      enumModel.#SupplierCategory
 		PaymentStatus:         enumModel.#PaymentStatus
 		PricingAdjustmentType: enumModel.#PricingAdjustmentType
