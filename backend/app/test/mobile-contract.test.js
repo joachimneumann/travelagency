@@ -27,6 +27,8 @@ process.env.MOBILE_LATEST_APP_VERSION = "1.0.0";
 process.env.MOBILE_FORCE_UPDATE = "false";
 process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
 process.env.STORE_FILE = STORE_PATH;
+process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH = "";
+process.env.GOOGLE_IMPERSONATED_EMAIL = "";
 
 const originalFetch = global.fetch;
 const KEYCLOAK_USERS = [

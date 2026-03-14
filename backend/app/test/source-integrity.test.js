@@ -309,13 +309,43 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   );
   assert.match(
     source,
-    /type="datetime-local"/,
-    "travel_plan.js should use date-time picker inputs for point and range timing modes"
+    /data-travel-plan-segment-field="time_point_date"/,
+    "travel_plan.js should render a date input for point timing mode"
   );
   assert.match(
-    helperSource,
-    /GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS\.map/,
-    "travel_plan_helpers.js should derive timing kinds from generated catalogs instead of maintaining a hardcoded fallback list"
+    source,
+    /data-travel-plan-segment-field="time_point_time"/,
+    "travel_plan.js should render a 5-minute time selector for point timing mode"
+  );
+  assert.match(
+    source,
+    /data-travel-plan-segment-field="start_time_date"/,
+    "travel_plan.js should render a start-date input for range timing mode"
+  );
+  assert.match(
+    source,
+    /data-travel-plan-segment-field="start_time_time"/,
+    "travel_plan.js should render a start-time selector for range timing mode"
+  );
+  assert.match(
+    source,
+    /data-travel-plan-segment-field="end_time_date"/,
+    "travel_plan.js should render an end-date input for range timing mode"
+  );
+  assert.match(
+    source,
+    /data-travel-plan-segment-field="end_time_time"/,
+    "travel_plan.js should render an end-time selector for range timing mode"
+  );
+  assert.match(
+    source,
+    /for \(let minute = 0; minute < 60; minute \+= 5\)/,
+    "travel_plan.js should offer 5-minute time increments instead of free one-minute entry"
+  );
+  assert.doesNotMatch(
+    source,
+    /type="datetime-local"/,
+    "travel_plan.js should no longer rely on datetime-local inputs for timing mode selection"
   );
   assert.equal(
     generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.length,

@@ -163,8 +163,8 @@ fi
 
 if ! git diff --cached --quiet; then
   echo "Staged files:"
-  git diff --cached --name-only
-  git commit -m "$COMMIT_MESSAGE"
+  git --no-pager diff --cached --name-only
+  GIT_EDITOR=true VISUAL=true EDITOR=true git commit -m "$COMMIT_MESSAGE"
   created_commit=1
 fi
 
@@ -177,7 +177,7 @@ git push
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Local git status is not clean after push. Aborting remote deployment." >&2
-  git status --short
+  git --no-pager status --short
   exit 1
 fi
 
