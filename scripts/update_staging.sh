@@ -75,7 +75,11 @@ mapfile -t SERVICES < <(normalize_services "$@")
 
 git fetch origin
 git pull --ff-only
-ruby "$ROOT_DIR/scripts/generate_frontend_asset_version.rb" >/dev/null
+if command -v ruby >/dev/null 2>&1; then
+  ruby "$ROOT_DIR/scripts/generate_frontend_asset_version.rb" >/dev/null
+else
+  echo "Ruby not found; skipping frontend asset version generation. Ensure updated asset versions are committed before deploy." >&2
+fi
 
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
