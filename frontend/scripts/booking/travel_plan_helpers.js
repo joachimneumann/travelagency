@@ -2,7 +2,7 @@ import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=ce37aa7dfc76";
+} from "../shared/generated_catalogs.js?v=ef1819cabff2";
 
 export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
   GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({

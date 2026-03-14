@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=ef1819cabff2";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,8 +15,8 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=ce37aa7dfc76";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=ce37aa7dfc76";
+} from "./pricing.js?v=ef1819cabff2";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=ef1819cabff2";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";

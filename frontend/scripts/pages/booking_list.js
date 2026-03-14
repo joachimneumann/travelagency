@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=ce37aa7dfc76";
+} from "../shared/api.js?v=ef1819cabff2";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=ef1819cabff2";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=ce37aa7dfc76";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=ce37aa7dfc76";
-import { renderPagination } from "../shared/pagination.js?v=ce37aa7dfc76";
+} from "../shared/links.js?v=ef1819cabff2";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=ef1819cabff2";
+import { renderPagination } from "../shared/pagination.js?v=ef1819cabff2";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=ce37aa7dfc76";
+} from "../shared/booking_persons.js?v=ef1819cabff2";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

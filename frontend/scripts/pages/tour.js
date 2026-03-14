@@ -3,8 +3,8 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=ce37aa7dfc76";
-import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=ce37aa7dfc76";
+} from "../shared/api.js?v=ef1819cabff2";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=ef1819cabff2";
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");

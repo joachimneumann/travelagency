@@ -3,6 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$HOME/projects/travelagency"
 REMOTE_SCRIPT="./scripts/update_staging.sh"
+readonly ALLOWED_ROOT_LEVEL_FILES=(
+  ".env.staging.example"
+  ".gitignore"
+  "docker-compose.local-caddy.yml"
+  "docker-compose.local-keycloak.yml"
+  "docker-compose.staging.yml"
+  "robots-staging.txt"
+  "site.webmanifest"
+)
 
 usage() {
   cat <<'EOF'
@@ -66,6 +75,44 @@ run_predeploy_tests() {
   node --test \
     backend/app/test/mobile-contract.test.js \
     backend/app/test/source-integrity.test.js
+}
+
+is_allowed_root_level_file() {
+  local candidate="$1"
+  local allowed
+  for allowed in "${ALLOWED_ROOT_LEVEL_FILES[@]}"; do
+    if [[ "$candidate" == "$allowed" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+assert_no_unexpected_staged_root_level_files() {
+  local line status path root_name
+  local unexpected=()
+  while IFS=$'\t' read -r status path; do
+    [[ -n "${status:-}" ]] || continue
+    [[ -n "${path:-}" ]] || continue
+    [[ "$path" == */* ]] && continue
+    root_name="$path"
+    case "$status" in
+      D|R*D)
+        continue
+        ;;
+    esac
+    if ! is_allowed_root_level_file "$root_name"; then
+      unexpected+=("$status $root_name")
+    fi
+  done < <(git diff --cached --name-status)
+
+  if [[ "${#unexpected[@]}" -gt 0 ]]; then
+    echo "Refusing to commit unexpected root-level staged files:" >&2
+    printf '  %s\n' "${unexpected[@]}" >&2
+    echo "Only known root-level deployment files may be committed through this script." >&2
+    echo "Move the file under an expected directory, delete it, or commit it manually after review." >&2
+    exit 1
+  fi
 }
 
 default_stage_paths_for_target() {
@@ -160,6 +207,8 @@ else
     git add -- "${STAGE_PATHS[@]}"
   fi
 fi
+
+assert_no_unexpected_staged_root_level_files
 
 if ! git diff --cached --quiet; then
   echo "Staged files:"

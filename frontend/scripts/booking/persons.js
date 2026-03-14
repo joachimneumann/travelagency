@@ -4,7 +4,7 @@ import {
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=ce37aa7dfc76";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=ef1819cabff2";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,15 +20,15 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=ce37aa7dfc76";
+} from "./person_helpers.js?v=ef1819cabff2";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=ce37aa7dfc76";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=ce37aa7dfc76";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=ce37aa7dfc76";
+} from "../shared/booking_persons.js?v=ef1819cabff2";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=ef1819cabff2";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=ef1819cabff2";
 
 export function createBookingPersonsModule(ctx) {
   const {
