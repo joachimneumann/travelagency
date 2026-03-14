@@ -312,6 +312,7 @@ const {
   stages: STAGES,
   stageOrder: STAGE_ORDER,
   appRoles: APP_ROLES,
+  gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
   normalizeStringArray,
   normalizeEmail,
   isLikelyPhoneMatch,

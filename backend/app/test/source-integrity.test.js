@@ -173,13 +173,56 @@ test("generate offer waits for pending offer autosave before POSTing", async () 
 
   assert.match(
     offersSource,
-    /async function handleGenerateOffer\(\)\s*\{[\s\S]*?await flushOfferAutosave\(\);[\s\S]*?bookingGenerateOfferRequest/,
+    /async function handleGenerateOffer\(\)\s*\{[\s\S]*?await flushOfferAutosave\(\)[\s\S]*?bookingGenerateOfferRequest/,
     "Generating an offer PDF should flush pending offer autosave so it uses the latest offer_revision"
   );
   assert.match(
     offersSource,
     /expected_offer_revision:\s*getBookingRevision\("offer_revision"\)/,
     "Generating an offer PDF should send the current offer revision field, not pass the whole booking object"
+  );
+});
+
+test("generated offer comment and delete actions flush pending offer autosave", async () => {
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offersSource = await readFile(offersModulePath, "utf8");
+
+  assert.match(
+    offersSource,
+    /async function saveGeneratedOfferComment\([\s\S]*?await flushOfferAutosave\(\)/,
+    "Generated-offer comment updates should wait for pending offer autosave before using offer_revision"
+  );
+  assert.match(
+    offersSource,
+    /async function deleteGeneratedOffer\([\s\S]*?await flushOfferAutosave\(\)/,
+    "Generated-offer deletion should wait for pending offer autosave before using offer_revision"
+  );
+});
+
+test("generated offer email action is gated by the booking capability flag", async () => {
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offersSource = await readFile(offersModulePath, "utf8");
+
+  assert.match(
+    offersSource,
+    /const emailActionEnabled = canEdit && Boolean\(state\.booking\?\.generated_offer_email_enabled\);/,
+    "Generated-offer email action should only render when the backend exposes Gmail-draft capability"
+  );
+});
+
+test("booking init awaits page load and handles async init failures", async () => {
+  const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const source = await readFile(bookingPageModulePath, "utf8");
+
+  assert.match(
+    source,
+    /async function init\(\)\s*\{[\s\S]*?await loadBookingPage\(\);[\s\S]*?\n\}/,
+    "Booking init should await the async page load instead of dropping the promise"
+  );
+  assert.match(
+    source,
+    /void init\(\)\.catch\(\(error\) => \{/,
+    "Booking module should own async init failures with a catch handler"
   );
 });
 

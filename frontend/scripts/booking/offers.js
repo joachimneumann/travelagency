@@ -369,7 +369,10 @@ export function createBookingOfferModule(ctx) {
     if (!els.generated_offers_table) return;
     const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
     const canEdit = state.permissions.canEditBooking;
+    const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
+    const emailHeader = emailActionEnabled ? '<th class="generated-offers-col-email">Email</th>' : "";
     const actionHeader = canEdit ? '<th class="generated-offers-col-actions"></th>' : "";
+    const emptyColspan = 4 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
     const rows = items.length
       ? items
         .slice()
@@ -378,9 +381,9 @@ export function createBookingOfferModule(ctx) {
           const pdfUrl = String(item.pdf_url || "").trim();
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">PDF</a>` : "-"}</td>
-          <td class="generated-offers-col-email">${canEdit
-            ? `<button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">email</button>`
-            : "-"}</td>
+          ${emailActionEnabled
+            ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">email</button></td>`
+            : ""}
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
@@ -392,8 +395,8 @@ export function createBookingOfferModule(ctx) {
         </tr>`;
         })
         .join("")
-      : `<tr><td colspan="${canEdit ? 6 : 5}">No generated offers yet</td></tr>`;
-    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">PDF</th><th class="generated-offers-col-email">Email</th><th class="generated-offers-col-total">Total</th><th class="generated-offers-col-date">Date</th><th>Comments</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
+      : `<tr><td colspan="${emptyColspan}">No generated offers yet</td></tr>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">PDF</th>${emailHeader}<th class="generated-offers-col-total">Total</th><th class="generated-offers-col-date">Date</th><th>Comments</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-comment]").forEach((input) => {
@@ -423,6 +426,7 @@ export function createBookingOfferModule(ctx) {
 
   async function saveGeneratedOfferComment(generatedOfferId, value) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
+    if (!(await flushOfferAutosave())) return;
     const request = bookingGeneratedOfferUpdateRequest({
       baseURL: apiOrigin,
       params: {
@@ -445,6 +449,7 @@ export function createBookingOfferModule(ctx) {
   async function deleteGeneratedOffer(generatedOfferId) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
     if (!window.confirm("Delete this generated offer?")) return;
+    if (!(await flushOfferAutosave())) return;
     const request = bookingGeneratedOfferDeleteRequest({
       baseURL: apiOrigin,
       params: {
@@ -465,6 +470,10 @@ export function createBookingOfferModule(ctx) {
 
   async function createGeneratedOfferGmailDraft(generatedOfferId) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
+    if (!state.booking?.generated_offer_email_enabled) {
+      setOfferStatus("Gmail draft creation is not configured for this environment.");
+      return;
+    }
     const { windowRef: draftWindow, openedNewWindow } = acquireGmailWindow();
     setOfferStatus("Creating Gmail draft...");
     const request = bookingGeneratedOfferGmailDraftRequest({
@@ -513,7 +522,7 @@ export function createBookingOfferModule(ctx) {
 
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
-    await flushOfferAutosave();
+    if (!(await flushOfferAutosave())) return;
     const request = bookingGenerateOfferRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id }
@@ -544,17 +553,19 @@ export function createBookingOfferModule(ctx) {
     if (offerAutosaveTimer) {
       window.clearTimeout(offerAutosaveTimer);
       offerAutosaveTimer = null;
-      await saveOffer();
-      return;
+      const result = await saveOffer();
+      return Boolean(result?.booking);
     }
     if (offerAutosaveInFlight && offerAutosavePromise) {
-      await offerAutosavePromise;
-      return;
+      const result = await offerAutosavePromise;
+      return Boolean(result?.booking);
     }
     if (offerAutosavePending) {
       offerAutosavePending = false;
-      await saveOffer();
+      const result = await saveOffer();
+      return Boolean(result?.booking);
     }
+    return true;
   }
 
   function renderOfferComponentsTable() {

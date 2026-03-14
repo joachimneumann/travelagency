@@ -349,7 +349,7 @@ async function init() {
 
   await loadAuthStatus();
 
-  loadBookingPage();
+  await loadBookingPage();
 }
 
 function bindSectionNavigation(activeSection) {
@@ -722,7 +722,11 @@ const coreModule = createBookingCoreModule({
   renderPersonsEditor: (...args) => personsModule.renderPersonsEditor(...args)
 });
 
-init();
+void init().catch((error) => {
+  console.error(error);
+  showError("Could not load booking data.");
+  setStatus("Could not load booking.");
+});
 
 function getConflictReloadInstruction() {
   const userAgent = String(window.navigator.userAgent || "");

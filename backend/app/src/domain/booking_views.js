@@ -6,6 +6,7 @@ export function createBookingViewHelpers({
   stages,
   stageOrder,
   appRoles,
+  gmailDraftsConfig,
   normalizeStringArray,
   normalizeEmail,
   isLikelyPhoneMatch,
@@ -215,6 +216,13 @@ export function createBookingViewHelpers({
     return canChangeBookingStage(principal, booking);
   }
 
+  function isGeneratedOfferEmailEnabled() {
+    return Boolean(
+      normalizeText(gmailDraftsConfig?.serviceAccountJsonPath)
+      && normalizeText(gmailDraftsConfig?.impersonatedEmail)
+    );
+  }
+
   async function buildBookingReadModel(booking) {
     const normalizedBooking = { ...booking };
     delete normalizedBooking.budget;
@@ -237,7 +245,8 @@ export function createBookingViewHelpers({
       preferred_currency: preferredCurrency,
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency),
-      generated_offers: generatedOffers
+      generated_offers: generatedOffers,
+      generated_offer_email_enabled: isGeneratedOfferEmailEnabled()
     };
   }
 

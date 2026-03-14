@@ -311,6 +311,7 @@ test("booking detail, activities, and invoices conform to the mobile contract", 
   assert.deepEqual(Object.keys(detailResult.body).sort(), ["booking"]);
   assertBookingShape(detailResult.body.booking);
   assert.equal(detailResult.body.booking.id, bookingId);
+  assert.equal(detailResult.body.booking.generated_offer_email_enabled, false);
 
   const activitiesResult = await requestJson(endpointPath("booking_activities").replace("{booking_id}", bookingId), apiHeaders());
   assert.equal(activitiesResult.status, 200);
