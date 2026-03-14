@@ -211,6 +211,32 @@ test("generated offer email action is gated by the booking capability flag", asy
   );
 });
 
+test("server resolves relative Gmail service-account paths from the repo root", async () => {
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const source = await readFile(serverPath, "utf8");
+
+  assert.match(
+    source,
+    /const REPO_ROOT = path\.resolve\(APP_ROOT, "\.\.", "\.\."\);/,
+    "server.js should derive the repository root for config-path resolution"
+  );
+  assert.match(
+    source,
+    /function resolveConfigPathFromRepoRoot\(rawPath\)/,
+    "server.js should normalize relative config paths through a dedicated helper"
+  );
+  assert.match(
+    source,
+    /return path\.resolve\(REPO_ROOT, normalized\);/,
+    "Relative Gmail config paths should resolve from the repository root instead of the backend app cwd"
+  );
+  assert.match(
+    source,
+    /serviceAccountJsonPath: resolveConfigPathFromRepoRoot\(GOOGLE_SERVICE_ACCOUNT_JSON_PATH\)/,
+    "Gmail draft config should use repo-root-relative path resolution"
+  );
+});
+
 test("booking init awaits page load and handles async init failures", async () => {
   const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const source = await readFile(bookingPageModulePath, "utf8");

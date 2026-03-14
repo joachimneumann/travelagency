@@ -174,6 +174,7 @@ test("gmail draft handler returns success when activity persistence fails after 
       validateBookingOfferInput: () => ({ ok: true }),
       convertBookingOfferToBaseCurrency: async () => ({}),
       normalizeBookingOffer: () => ({}),
+      normalizeBookingTravelPlan: (travelPlan) => travelPlan || { days: [], offer_component_links: [] },
       formatMoney: () => "",
       validateOfferExchangeRequest: () => ({ ok: true }),
       resolveExchangeRateWithFallback: async () => ({ rate: 1 }),

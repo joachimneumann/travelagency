@@ -57,6 +57,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
+const REPO_ROOT = path.resolve(APP_ROOT, "..", "..");
 const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || path.join(APP_ROOT, "data"));
 const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
 const TOURS_DIR = path.join(DATA_ROOT, "tours");
@@ -98,10 +99,18 @@ const COMPANY_PROFILE = {
   whatsapp: "+84 337942446",
   email: "info@asiatravelplan.com"
 };
+
+function resolveConfigPathFromRepoRoot(rawPath) {
+  const normalized = normalizeText(rawPath || "");
+  if (!normalized) return "";
+  if (path.isAbsolute(normalized)) {
+    return path.resolve(normalized);
+  }
+  return path.resolve(REPO_ROOT, normalized);
+}
+
 const GMAIL_DRAFTS_CONFIG = Object.freeze({
-  serviceAccountJsonPath: GOOGLE_SERVICE_ACCOUNT_JSON_PATH
-    ? path.resolve(GOOGLE_SERVICE_ACCOUNT_JSON_PATH)
-    : "",
+  serviceAccountJsonPath: resolveConfigPathFromRepoRoot(GOOGLE_SERVICE_ACCOUNT_JSON_PATH),
   impersonatedEmail: GOOGLE_IMPERSONATED_EMAIL
 });
 
