@@ -6,8 +6,32 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
-import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=6c388c7e525c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=b7baca7c60a0";
+import { bookingT } from "./i18n.js?v=b7baca7c60a0";
+
+function labelizeKey(key) {
+  return String(key || "")
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function webFormFieldLabel(key) {
+  return bookingT(`booking.web_form.${key}`, labelizeKey(key));
+}
+
+function bookingStageLabel(stage) {
+  const normalized = String(stage || "").trim().toLowerCase();
+  return bookingT(
+    `booking.stage.${normalized}`,
+    String(stage || "")
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ")
+  );
+}
 
 export function createBookingCoreModule(ctx) {
   const {
@@ -36,15 +60,29 @@ export function createBookingCoreModule(ctx) {
   let heroCopyClipboardPoll = null;
   let heroCopiedValue = "";
 
+  function withBackendLang(pathname, params = {}) {
+    const url = new URL(pathname, window.location.origin);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, String(value));
+      }
+    });
+    const lang = typeof window.backendI18n?.getLang === "function"
+      ? window.backendI18n.getLang()
+      : String(new URLSearchParams(window.location.search).get("lang") || "").trim();
+    if (lang) url.searchParams.set("lang", lang);
+    return `${url.pathname}${url.search}`;
+  }
+
   function closeBookingDetailScreen() {
-    const fallbackHref = normalizeText(els.back?.href) || "backend.html";
+    const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/backend.html", { section: "bookings" });
     window.location.href = fallbackHref;
   }
 
   function renderBookingHeader() {
     if (!state.booking) return;
     const primaryContact = getPrimaryContact(state.booking);
-    const title = normalizeText(state.booking.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || "Booking";
+    const title = normalizeText(state.booking.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || bookingT("booking.title", "Booking");
     if (els.title) els.title.textContent = title;
     if (els.titleInput && document.activeElement !== els.titleInput) {
       els.titleInput.value = title;
@@ -56,12 +94,17 @@ export function createBookingCoreModule(ctx) {
     if (els.heroPhotoBtn) {
       els.heroPhotoBtn.disabled = !state.permissions.canEditBooking;
       els.heroPhotoBtn.classList.toggle("is-editable", state.permissions.canEditBooking);
-      els.heroPhotoBtn.setAttribute("aria-label", state.permissions.canEditBooking ? "Change booking picture" : "Booking picture");
+      els.heroPhotoBtn.setAttribute(
+        "aria-label",
+        state.permissions.canEditBooking
+          ? bookingT("booking.change_picture", "Change booking picture")
+          : bookingT("booking.picture", "Booking picture")
+      );
     }
     if (els.subtitle) {
       const bookingId = normalizeText(state.booking.id);
       const shortId = bookingId ? bookingId.slice(-6) : "-";
-      els.subtitle.textContent = `ID: ${shortId}`;
+      els.subtitle.textContent = `${bookingT("booking.id_short", "ID")}: ${shortId}`;
       els.subtitle.hidden = false;
     }
     if (heroCopiedValue && heroCopiedValue !== getCurrentBookingIdentifier()) {
@@ -75,7 +118,7 @@ export function createBookingCoreModule(ctx) {
     const bookingImage = normalizeText(state.booking?.image);
     if (bookingImage) {
       els.heroImage.src = resolveBookingImageSrc(bookingImage);
-      els.heroImage.alt = normalizeText(state.booking?.name) || "Booking picture";
+      els.heroImage.alt = normalizeText(state.booking?.name) || bookingT("booking.picture", "Booking picture");
       els.heroImage.hidden = false;
       els.heroImage.style.display = "block";
       if (els.heroInitials) els.heroInitials.hidden = true;
@@ -85,7 +128,7 @@ export function createBookingCoreModule(ctx) {
 
     if (normalizeText(state.tour_image)) {
       els.heroImage.src = resolveBookingImageSrc(state.tour_image);
-      els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || "Tour picture";
+      els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || bookingT("booking.tour_picture", "Tour picture");
       els.heroImage.hidden = false;
       els.heroImage.style.display = "block";
       if (els.heroInitials) els.heroInitials.hidden = true;
@@ -168,9 +211,9 @@ export function createBookingCoreModule(ctx) {
     if (!id || !navigator.clipboard?.writeText) return;
     try {
       await navigator.clipboard.writeText(id);
-      setHeroCopyStatus("copied", id);
+      setHeroCopyStatus(bookingT("booking.copied", "Copied"), id);
     } catch {
-      setHeroCopyStatus("copy failed");
+      setHeroCopyStatus(bookingT("booking.copy_failed", "Copy failed"));
     }
   }
 
@@ -180,7 +223,7 @@ export function createBookingCoreModule(ctx) {
     const booking = state.booking;
     const submittedContact = getSubmittedContact(booking);
     const sections = [{
-      title: "Web form submission",
+      title: bookingT("booking.web_form.title", "Web form submission"),
       summaryClassName: "booking-collapsible__summary--inline-pad-16",
       entries: [
         ["name", booking.web_form_submission?.name || submittedContact?.name],
@@ -207,7 +250,7 @@ export function createBookingCoreModule(ctx) {
         ["utm_campaign", booking.web_form_submission?.utm_campaign],
         ["notes", booking.web_form_submission?.notes],
         ["submitted_at", formatDateTime(booking.web_form_submission?.submitted_at)]
-      ].map(([key, value]) => ({ key, value: String(value ?? "-") }))
+      ].map(([key, value]) => ({ key: webFormFieldLabel(key), value: String(value ?? "-") }))
     }];
 
     renderSections(sections);
@@ -242,7 +285,7 @@ export function createBookingCoreModule(ctx) {
     if (!state.booking) return;
 
     if (els.stageSelect) {
-      const options = ctx.stages.map((stage) => `<option value="${escapeHtml(stage)}">${escapeHtml(stage)}</option>`).join("");
+      const options = ctx.stages.map((stage) => `<option value="${escapeHtml(stage)}">${escapeHtml(bookingStageLabel(stage))}</option>`).join("");
       els.stageSelect.innerHTML = options;
       els.stageSelect.value = state.booking.stage || ctx.stages[0];
     }
@@ -261,12 +304,12 @@ export function createBookingCoreModule(ctx) {
       }
 
       const options = state.permissions.canChangeAssignment
-        ? ['<option value="">Unassigned</option>']
+        ? [`<option value="">${escapeHtml(bookingT("common.unassigned", "Unassigned"))}</option>`]
             .concat([...knownOwners.values()].map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(displayKeycloakUser(user) || user.id)}</option>`))
             .join("")
         : currentOwnerId
-          ? `<option value="${escapeHtml(currentOwnerId)}">${escapeHtml(currentOwnerName || "Assigned user")}</option>`
-          : '<option value="">Unassigned</option>';
+          ? `<option value="${escapeHtml(currentOwnerId)}">${escapeHtml(currentOwnerName || bookingT("booking.assigned_user", "Assigned user"))}</option>`
+          : `<option value="">${escapeHtml(bookingT("common.unassigned", "Unassigned"))}</option>`;
       els.ownerSelect.innerHTML = options;
       els.ownerSelect.value = currentOwnerId || "";
       els.ownerSelect.disabled = !state.permissions.canChangeAssignment;
@@ -361,7 +404,7 @@ export function createBookingCoreModule(ctx) {
         const comma = value.indexOf(",");
         resolve(comma >= 0 ? value.slice(comma + 1) : value);
       };
-      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.onerror = () => reject(new Error(bookingT("booking.error.read_file", "Failed to read file")));
       reader.readAsDataURL(file);
     });
   }
@@ -369,7 +412,7 @@ export function createBookingCoreModule(ctx) {
   async function deleteBooking() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
     const label = normalizeText(getPrimaryContact(state.booking)?.name) || state.booking.id;
-    if (!window.confirm(`Delete booking for ${label}? This cannot be undone.`)) return;
+    if (!window.confirm(bookingT("booking.delete_confirm", "Delete booking for {name}? This cannot be undone.", { name: label }))) return;
 
     if (els.deleteBtn) els.deleteBtn.disabled = true;
     const request = bookingDeleteRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
@@ -382,7 +425,7 @@ export function createBookingCoreModule(ctx) {
     if (els.deleteBtn) els.deleteBtn.disabled = false;
     if (!result?.deleted) return;
 
-    window.location.href = "backend.html?section=bookings";
+    window.location.href = withBackendLang("/backend.html", { section: "bookings" });
   }
 
   function updateNoteSaveButtonState() {

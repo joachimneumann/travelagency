@@ -27,6 +27,16 @@ export function createKeycloakUserHandlers(deps) {
         total: items.length
       });
     } catch (error) {
+      const detail = String(error?.message || error || "");
+      if (/not configured/i.test(detail)) {
+        sendJson(res, 200, {
+          items: [],
+          total: 0,
+          unavailable: true,
+          warning: `Keycloak user directory unavailable: ${detail}`
+        });
+        return;
+      }
       sendJson(res, 503, { error: `Keycloak user directory unavailable: ${String(error?.message || error)}` });
     }
   }

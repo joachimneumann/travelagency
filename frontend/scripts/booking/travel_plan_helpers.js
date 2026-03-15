@@ -2,18 +2,28 @@ import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=6c388c7e525c";
+} from "../shared/generated_catalogs.js?v=b7baca7c60a0";
+import { bookingT } from "./i18n.js?v=b7baca7c60a0";
+import {
+  buildDualLocalizedPayload,
+  normalizeLocalizedEditorMap,
+  resolveLocalizedEditorBranchText,
+  resolveLocalizedEditorText
+} from "./localized_editor.js?v=b7baca7c60a0";
 
 export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
   GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({
     ...option,
-    label: option.value === "label"
-      ? "human readable"
-      : option.value === "point"
-        ? "Point of time"
-        : option.value === "range"
-          ? "time range"
-          : option.label
+    label: bookingT(
+      `booking.travel_plan.timing_kind.${option.value}`,
+      option.value === "label"
+        ? "Human readable"
+        : option.value === "point"
+          ? "Point of time"
+          : option.value === "range"
+            ? "Time range"
+            : option.label
+    )
   }))
 );
 
@@ -89,16 +99,21 @@ export function createEmptyTravelPlanSegment() {
     id: travelPlanId("travel_plan_segment"),
     timing_kind: "label",
     time_label: "",
+    time_label_i18n: {},
     time_point: "",
     kind: "other",
     title: "",
+    title_i18n: {},
     details: "",
+    details_i18n: {},
     location: "",
+    location_i18n: {},
     supplier_id: "",
     start_time: "",
     end_time: "",
     financial_coverage_status: "not_covered",
-    financial_note: ""
+    financial_note: "",
+    financial_note_i18n: {}
   };
 }
 
@@ -108,9 +123,12 @@ export function createEmptyTravelPlanDay(index = 0) {
     day_number: Math.max(1, Number(index) + 1),
     date: "",
     title: "",
+    title_i18n: {},
     overnight_location: "",
+    overnight_location_i18n: {},
     segments: [],
-    notes: ""
+    notes: "",
+    notes_i18n: {}
   };
 }
 
@@ -131,11 +149,13 @@ export function createEmptyTravelPlan() {
 }
 
 export function getTravelPlanSegmentKindLabel(kind) {
-  return TRAVEL_PLAN_SEGMENT_KIND_OPTIONS.find((option) => option.value === kind)?.label || "Other";
+  const option = TRAVEL_PLAN_SEGMENT_KIND_OPTIONS.find((entry) => entry.value === kind);
+  return bookingT(`booking.travel_plan.kind.${kind}`, option?.label || "Other");
 }
 
 export function getTravelPlanCoverageTypeLabel(coverageType) {
-  return TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.find((option) => option.value === coverageType)?.label || "Full";
+  const option = TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.find((entry) => entry.value === coverageType);
+  return bookingT(`booking.travel_plan.coverage_type.${coverageType}`, option?.label || "Full");
 }
 
 export function getTravelPlanSegmentCoverageStatus(kind, links = []) {
@@ -153,6 +173,7 @@ export function getTravelPlanSegmentCoverageStatus(kind, links = []) {
 
 export function normalizeTravelPlanDraft(plan, offerComponents = []) {
   const source = plan && typeof plan === "object" ? plan : {};
+  const targetLang = String(window.__BOOKING_CONTENT_LANG || "en").trim() || "en";
   const linkableOfferComponentIds = new Set(
     (Array.isArray(offerComponents) ? offerComponents : [])
       .map((component) => String(component?.id || "").trim())
@@ -166,28 +187,69 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
         id: String(rawDay.id || travelPlanId("travel_plan_day")),
         day_number: dayIndex + 1,
         date: normalizeOptionalText(rawDay.date),
-        title: normalizeOptionalText(rawDay.title),
-        overnight_location: normalizeOptionalText(rawDay.overnight_location),
+        title: resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, "en", ""),
+        title_i18n: buildDualLocalizedPayload(
+          resolveLocalizedEditorText(rawDay.title_i18n ?? rawDay.title, "en", ""),
+          resolveLocalizedEditorBranchText(rawDay.title_i18n ?? rawDay.title, targetLang, ""),
+          targetLang
+        ).map,
+        overnight_location: resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, "en", ""),
+        overnight_location_i18n: buildDualLocalizedPayload(
+          resolveLocalizedEditorText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, "en", ""),
+          resolveLocalizedEditorBranchText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, targetLang, ""),
+          targetLang
+        ).map,
         segments: (Array.isArray(rawDay.segments) ? rawDay.segments : []).map((segment) => {
           const rawSegment = segment && typeof segment === "object" ? segment : {};
           const timing = normalizeSegmentTiming(rawSegment);
+          const timeLabelMap = buildDualLocalizedPayload(
+            resolveLocalizedEditorText(rawSegment.time_label_i18n ?? timing.time_label, "en", ""),
+            resolveLocalizedEditorBranchText(rawSegment.time_label_i18n ?? timing.time_label, targetLang, ""),
+            targetLang
+          ).map;
+          const titleMap = buildDualLocalizedPayload(
+            resolveLocalizedEditorText(rawSegment.title_i18n ?? rawSegment.title, "en", ""),
+            resolveLocalizedEditorBranchText(rawSegment.title_i18n ?? rawSegment.title, targetLang, ""),
+            targetLang
+          ).map;
+          const detailsMap = buildDualLocalizedPayload(
+            resolveLocalizedEditorText(rawSegment.details_i18n ?? rawSegment.details, "en", ""),
+            resolveLocalizedEditorBranchText(rawSegment.details_i18n ?? rawSegment.details, targetLang, ""),
+            targetLang
+          ).map;
+          const locationMap = buildDualLocalizedPayload(
+            resolveLocalizedEditorText(rawSegment.location_i18n ?? rawSegment.location, "en", ""),
+            resolveLocalizedEditorBranchText(rawSegment.location_i18n ?? rawSegment.location, targetLang, ""),
+            targetLang
+          ).map;
+          const financialNoteMap = normalizeLocalizedEditorMap(rawSegment.financial_note_i18n ?? rawSegment.financial_note, "en");
           return {
             id: String(rawSegment.id || travelPlanId("travel_plan_segment")),
             timing_kind: timing.timing_kind,
-            time_label: timing.time_label,
+            time_label: resolveLocalizedEditorText(timeLabelMap, "en", ""),
+            time_label_i18n: timeLabelMap,
             time_point: timing.time_point,
             kind: normalizeSegmentKind(rawSegment.kind),
-            title: normalizeOptionalText(rawSegment.title),
-            details: normalizeOptionalText(rawSegment.details),
-            location: normalizeOptionalText(rawSegment.location),
+            title: resolveLocalizedEditorText(titleMap, "en", ""),
+            title_i18n: titleMap,
+            details: resolveLocalizedEditorText(detailsMap, "en", ""),
+            details_i18n: detailsMap,
+            location: resolveLocalizedEditorText(locationMap, "en", ""),
+            location_i18n: locationMap,
             supplier_id: normalizeOptionalText(rawSegment.supplier_id),
             start_time: timing.start_time,
             end_time: timing.end_time,
-            financial_note: normalizeOptionalText(rawSegment.financial_note),
+            financial_note: resolveLocalizedEditorText(financialNoteMap, targetLang, ""),
+            financial_note_i18n: financialNoteMap,
             financial_coverage_status: "not_covered"
           };
         }),
-        notes: normalizeOptionalText(rawDay.notes)
+        notes: resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, "en", ""),
+        notes_i18n: buildDualLocalizedPayload(
+          resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, "en", ""),
+          resolveLocalizedEditorBranchText(rawDay.notes_i18n ?? rawDay.notes, targetLang, ""),
+          targetLang
+        ).map
       };
     });
 

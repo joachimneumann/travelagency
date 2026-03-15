@@ -4,19 +4,58 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=6c388c7e525c";
+} from "../shared/api.js?v=b7baca7c60a0";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=6c388c7e525c";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=6c388c7e525c";
-import { renderPagination } from "../shared/pagination.js?v=6c388c7e525c";
+} from "../shared/links.js?v=b7baca7c60a0";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=b7baca7c60a0";
+import { renderPagination } from "../shared/pagination.js?v=b7baca7c60a0";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=6c388c7e525c";
+} from "../shared/booking_persons.js?v=b7baca7c60a0";
+
+function backendT(id, fallback, vars) {
+  if (typeof window.backendT === "function") {
+    return window.backendT(id, fallback, vars);
+  }
+  const template = String(fallback ?? id);
+  if (!vars || typeof vars !== "object") return template;
+  return template.replace(/\{([^{}]+)\}/g, (match, key) => {
+    const normalizedKey = String(key || "").trim();
+    return normalizedKey in vars ? String(vars[normalizedKey]) : match;
+  });
+}
+
+async function waitForBackendI18n() {
+  await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+}
+
+function currentBackendLang() {
+  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+}
+
+function withBackendLang(pathname) {
+  const url = new URL(pathname, window.location.origin);
+  const lang = currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
+
+function withApiLang(pathname, params = {}) {
+  const url = new URL(pathname, window.location.origin);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  const lang = currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -96,15 +135,28 @@ function formatIntegerWithGrouping(value) {
   }).format(Number(value));
 }
 
+function bookingStageLabel(stage) {
+  const normalized = String(stage || "").trim().toLowerCase();
+  return backendT(
+    `booking.stage.${normalized}`,
+    String(stage || "")
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ")
+  );
+}
+
 init();
 
 async function init() {
+  await waitForBackendI18n();
   if (els.homeLink) {
-    els.homeLink.href = "backend.html";
+    els.homeLink.href = resolveBackendSectionHref("bookings");
   }
 
   if (els.logoutLink) {
-    const returnTo = `${window.location.origin}/index.html`;
+    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
 
@@ -333,7 +385,7 @@ async function ensureTourImageCatalog() {
   if (state.tourImagesById.size) return;
   const payload = await fetchApi(publicToursRequest({ baseURL: apiOrigin }).url, {
     includeDetailInError: false,
-    connectionErrorMessage: "Could not load public tour images."
+    connectionErrorMessage: backendT("tour.error.load_public_images", "Could not load public tour images.")
   });
   const items = Array.isArray(payload?.items) ? payload.items : [];
   state.tourImagesById = new Map(
@@ -355,7 +407,7 @@ async function loadTours() {
   if (state.tours.destination && state.tours.destination !== "all") params.set("destination", state.tours.destination);
   if (state.tours.style && state.tours.style !== "all") params.set("style", state.tours.style);
 
-  const payload = await fetchApi(`/api/v1/tours?${params.toString()}`);
+  const payload = await fetchApi(withApiLang("/api/v1/tours", Object.fromEntries(params.entries())));
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -376,21 +428,21 @@ function populateTourFilterOptions(payload) {
 
   if (els.toursDestination) {
     const current = state.tours.destination || "all";
-    const options = ['<option value="all">All destinations</option>']
-      .concat(destinations.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+    const options = [`<option value="all">${escapeHtml(backendT("backend.tours.all_destinations", "All destinations"))}</option>`]
+      .concat(destinations.map((value) => `<option value="${escapeHtml(value.code || value)}">${escapeHtml(value.label || value.code || value)}</option>`))
       .join("");
     els.toursDestination.innerHTML = options;
-    els.toursDestination.value = destinations.includes(current) ? current : "all";
+    els.toursDestination.value = destinations.some((value) => String(value?.code || value) === current) ? current : "all";
     state.tours.destination = els.toursDestination.value;
   }
 
   if (els.toursStyle) {
     const current = state.tours.style || "all";
-    const options = ['<option value="all">All styles</option>']
-      .concat(styles.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+    const options = [`<option value="all">${escapeHtml(backendT("backend.tours.all_styles", "All styles"))}</option>`]
+      .concat(styles.map((value) => `<option value="${escapeHtml(value.code || value)}">${escapeHtml(value.label || value.code || value)}</option>`))
       .join("");
     els.toursStyle.innerHTML = options;
-    els.toursStyle.value = styles.includes(current) ? current : "all";
+    els.toursStyle.value = styles.some((value) => String(value?.code || value) === current) ? current : "all";
     state.tours.style = els.toursStyle.value;
   }
 }
@@ -401,7 +453,11 @@ function updatePaginationUi(section) {
   const pagination = els[`${section}Pagination`];
 
   if (countInfo) {
-    countInfo.textContent = `${model.total} total · page ${model.page} of ${model.totalPages}`;
+    countInfo.textContent = backendT("common.page_status", "{total} total · page {page} of {totalPages}", {
+      total: model.total,
+      page: model.page,
+      totalPages: model.totalPages
+    });
   }
 
   if (pagination) {
@@ -418,7 +474,7 @@ const fetchApi = createApiFetcher({
   onError: (message) => showError(message),
   suppressNotFound: false,
   includeDetailInError: false,
-  connectionErrorMessage: "Could not connect to backend API. Ensure backend is running on localhost:8787."
+  connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
 });
 
 function renderBookings(items) {
@@ -426,7 +482,7 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>ID</th><th>Booking Name</th><th>Stage</th><th>ATP staff</th></tr></thead>`;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.booking_name", "Booking Name"))}</th><th>${escapeHtml(backendT("backend.table.stage", "Stage"))}</th><th>${escapeHtml(backendT("backend.table.staff", "ATP staff"))}</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);
@@ -447,7 +503,7 @@ function renderBookings(items) {
             </div>
           </div>
         </td>
-        <td>${escapeHtml(booking.stage || "-")}</td>
+        <td>${escapeHtml(bookingStageLabel(booking.stage || "-"))}</td>
         <td>${escapeHtml(resolveAssignedKeycloakUserLabel(booking.assigned_keycloak_user_id))}</td>
       </tr>`;
     })
@@ -456,7 +512,11 @@ function renderBookings(items) {
   const body =
     rows ||
     `<tr><td colspan="4">${escapeHtml(
-      `No bookings found${state.bookings.search ? ` for "${state.bookings.search}"` : ""}`
+      backendT("backend.bookings.no_results", "No bookings found{suffix}", {
+        suffix: state.bookings.search
+          ? backendT("backend.bookings.search_suffix", ' for "{query}"', { query: state.bookings.search })
+          : ""
+      })
     )}</td></tr>`;
   if (els.bookingsTable) els.bookingsTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
@@ -467,7 +527,7 @@ function renderBookingImageMarkup(booking) {
   const tourImage = tourId ? normalizeText(state.tourImagesById.get(tourId)) : "";
   const representativeTraveler = getRepresentativeTraveler(booking);
   const imageRef = bookingImage || tourImage;
-  const alt = normalizeText(booking?.name) || "Booking image";
+  const alt = normalizeText(booking?.name) || backendT("booking.picture", "Booking picture");
 
   if (imageRef) {
     return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveRepresentativePhotoSrc(imageRef))}" alt="${escapeHtml(alt)}" />`;
@@ -485,7 +545,7 @@ function renderBookingImageMarkup(booking) {
 }
 
 function renderRepresentativeTravelerMarkup(person) {
-  const personName = normalizeText(person?.name) || "Representative traveler";
+  const personName = normalizeText(person?.name) || backendT("booking.representative_traveler", "Representative traveler");
   const photoRef = normalizeText(person?.photo_ref);
   const avatarMarkup = photoRef
     ? `<img class="booking-list__representative-avatar-image" src="${escapeHtml(resolveRepresentativePhotoSrc(photoRef))}" alt="" />`
@@ -507,7 +567,7 @@ function resolveRepresentativePhotoSrc(photoRef) {
 }
 
 function renderTours(items) {
-  const header = `<thead><tr><th>ID</th><th>Title</th><th>Country</th><th>Styles</th><th>Days</th><th>Price</th><th>Updated</th></tr></thead>`;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.days", "Days"))}</th><th>${escapeHtml(backendT("backend.table.price", "Price"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th></tr></thead>`;
   const rows = items
     .map((tour) => {
       const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
@@ -525,7 +585,7 @@ function renderTours(items) {
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="7">No tours found</td></tr>`;
+  const body = rows || `<tr><td colspan="7">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
   if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 function showError(message) {
@@ -550,16 +610,16 @@ async function loadKeycloakUsers() {
 
 function renderStaff(items) {
   if (!els.staffTable) return;
-  const header = `<thead><tr><th>Name</th><th>Username</th><th class="keycloak-roles-col">Roles</th><th>Active</th></tr></thead>`;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.name", "Name"))}</th><th>${escapeHtml(backendT("backend.table.username", "Username"))}</th><th class="keycloak-roles-col">${escapeHtml(backendT("backend.table.roles", "Roles"))}</th><th class="backend-table-align-right">${escapeHtml(backendT("backend.table.active", "Active"))}</th></tr></thead>`;
   const rows = items
     .map((staff) => `<tr>
       <td>${escapeHtml(staff.name || "-")}</td>
       <td>${escapeHtml(staff.username || "-")}</td>
       <td class="keycloak-roles-col">${formatKeycloakRolesCell(staff)}</td>
-      <td>${staff.active ? "Yes" : "No"}</td>
-    </tr>`)
+      <td class="backend-table-align-right">${staff.active ? escapeHtml(backendT("common.yes", "Yes")) : escapeHtml(backendT("common.no", "No"))}</td>
+      </tr>`)
     .join("");
-  els.staffTable.innerHTML = `${header}<tbody>${rows || '<tr><td colspan="4">No Keycloak users found</td></tr>'}</tbody>`;
+  els.staffTable.innerHTML = `${header}<tbody>${rows || `<tr><td colspan="4">${escapeHtml(backendT("backend.users.no_results", "No Keycloak users found"))}</td></tr>`}</tbody>`;
 }
 
 function formatKeycloakRoleList(roles) {
@@ -591,7 +651,7 @@ function displayKeycloakUser(user) {
 
 function resolveAssignedKeycloakUserLabel(assignedKeycloakUserId) {
   const normalizedId = normalizeText(assignedKeycloakUserId);
-  if (!normalizedId) return "Unassigned";
+  if (!normalizedId) return backendT("common.unassigned", "Unassigned");
   const users = Array.isArray(state.keycloakUsers) ? state.keycloakUsers : [];
   const match = users.find((user) => normalizeText(user.id) === normalizedId);
   if (match) return displayKeycloakUser(match) || normalizedId;

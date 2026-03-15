@@ -22,6 +22,46 @@ export const GENERATED_CURRENCIES = {
     "symbol": "฿",
     "decimalPlaces": 0
   },
+  "CNY": {
+    "code": "CNY",
+    "symbol": "CN¥",
+    "decimalPlaces": 2
+  },
+  "JPY": {
+    "code": "JPY",
+    "symbol": "¥",
+    "decimalPlaces": 0
+  },
+  "KRW": {
+    "code": "KRW",
+    "symbol": "₩",
+    "decimalPlaces": 0
+  },
+  "RUB": {
+    "code": "RUB",
+    "symbol": "₽",
+    "decimalPlaces": 2
+  },
+  "PLN": {
+    "code": "PLN",
+    "symbol": "zł",
+    "decimalPlaces": 2
+  },
+  "DKK": {
+    "code": "DKK",
+    "symbol": "kr",
+    "decimalPlaces": 2
+  },
+  "SEK": {
+    "code": "SEK",
+    "symbol": "kr",
+    "decimalPlaces": 2
+  },
+  "NOK": {
+    "code": "NOK",
+    "symbol": "kr",
+    "decimalPlaces": 2
+  },
   "AUD": {
     "code": "AUD",
     "symbol": "A$",

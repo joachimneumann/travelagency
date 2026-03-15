@@ -1,24 +1,128 @@
 {
   "id": "tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2",
-  "title": "Cambodia Culture Journey",
-  "shortDescription": "A Cambodia culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+  "title": {
+    "en": "Cambodia Culture Journey",
+    "fr": "Voyage culture au Cambodge",
+    "zh": "柬埔寨文化之旅",
+    "ja": "カンボジア 文化の旅",
+    "ko": "캄보디아 문화 여행",
+    "vi": "Hành trình Văn hóa Campuchia",
+    "de": "Kambodscha-Kulturreise",
+    "es": "Viaje cultural a Camboya",
+    "it": "Viaggio culturale in Cambogia",
+    "ru": "Культурное путешествие в Камбоджу",
+    "nl": "Cultuurreis Cambodja",
+    "pl": "Podróż po kulturze Kambodży",
+    "da": "Cambodjas kulturrejse",
+    "sv": "Kambodjas kulturresa",
+    "no": "Kambodsja kulturreise"
+  },
   "styles": [
-    "Culture"
+    "culture"
   ],
   "priority": 50,
   "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2/tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2.webp",
-  "highlights": [
-    "Signature stop in Siem Reap",
-    "Route highlight around Phnom Penh",
-    "Smooth transfer planning via Tonle Sap"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Siem Reap",
+      "Route highlight around Phnom Penh",
+      "Smooth transfer planning via Tonle Sap"
+    ],
+    "fr": [
+      "Étape signature à Siem Reap",
+      "Temps fort de l'itinéraire autour de Phnom Penh",
+      "Transferts fluides via Tonlé Sap"
+    ],
+    "zh": [
+      "暹粒标志性停留",
+      "金边周边路线亮点",
+      "经洞里萨湖衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "シェムリアップでの象徴的な立ち寄り",
+      "プノンペン周辺のルート見どころ",
+      "トンレサップ湖経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "씨엠립의 대표적인 방문지",
+      "프놈펜 일대의 주요 동선 하이라이트",
+      "톤레삽 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Siem Reap",
+      "Điểm nhấn hành trình quanh Phnom Penh",
+      "Kế hoạch di chuyển mượt mà qua hồ Tonlé Sap"
+    ],
+    "de": [
+      "Signature-Stopp in Siem Reap",
+      "Routenhighlight rund um Phnom Penh",
+      "Reibungslose Transferplanung über Tonle Sap"
+    ],
+    "es": [
+      "Parada exclusiva en Siem Reap",
+      "Ruta destacada alrededor de Phnom Penh",
+      "Planificación de transferencia fluida a través de Tonle Sap"
+    ],
+    "it": [
+      "Fermata esclusiva a Siem Reap",
+      "Punti salienti del percorso intorno a Phnom Penh",
+      "Pianificazione fluida del trasferimento tramite Tonle Sap"
+    ],
+    "ru": [
+      "Фирменная остановка в Сием Рипе",
+      "Обзор маршрута по Пномпеню",
+      "Плавное планирование трансфера через Тонлесап"
+    ],
+    "nl": [
+      "Kenmerkende stop in Siem Reap",
+      "Route hoogtepunt rond Phnom Penh",
+      "Vlotte overdrachtsplanning via Tonle Sap"
+    ],
+    "pl": [
+      "Przystanek podpisu w Siem Reap",
+      "Najważniejszy punkt trasy wokół Phnom Penh",
+      "Płynne planowanie transferów za pośrednictwem Tonle Sap"
+    ],
+    "da": [
+      "Signaturstop i Siem Reap",
+      "Rutehøjdepunkt omkring Phnom Penh",
+      "Jævn overførselsplanlægning via Tonle Sap"
+    ],
+    "sv": [
+      "Signaturstopp i Siem Reap",
+      "Ruttens höjdpunkt runt Phnom Penh",
+      "Smidig överföringsplanering via Tonle Sap"
+    ],
+    "no": [
+      "Signaturstopp i Siem Reap",
+      "Rutehøydepunkt rundt Phnom Penh",
+      "Jevn overføringsplanlegging via Tonle Sap"
+    ]
+  },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
   "rating": 4.8,
   "legacy_id": "trip-cambodia-culture-classic",
   "destinations": [
-    "Cambodia"
+    "cambodia"
   ],
-  "budget_lower_USD": 780
+  "short_description": {
+    "en": "A Cambodia culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+    "fr": "Un itinéraire culturel au Cambodge pensé pour un premier voyage équilibré, avec une vraie profondeur patrimoniale, de la vie locale et des visites guidées de qualité.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的柬埔寨文化行程，包含丰富的文化遗产体验、在地生活感受以及有意义的导览参访。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたカンボジアの文化旅程で、奥行きのある文化体験、現地の暮らし、価値あるガイド付き見学。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 캄보디아 문화 일정으로, 깊이 있는 문화유산 체험, 현지 생활, 의미 있는 가이드 방문.",
+    "vi": "Đây là lịch trình văn hóa tại Campuchia tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với chiều sâu di sản, đời sống địa phương và những chuyến tham quan có hướng dẫn giàu giá trị.",
+    "de": "Eine Kulturreise durch Kambodscha, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit viel Kulturgeschichte, lokalem Leben und sinnvollen Führungen.",
+    "es": "Un itinerario cultural de Camboya centrado en una ruta equilibrada de primer viaje, con profundidad patrimonial, vida local y visitas guiadas significativas.",
+    "it": "Un itinerario culturale in Cambogia incentrato su un percorso equilibrato del primo viaggio, con profondità del patrimonio, vita locale e visite guidate significative.",
+    "ru": "Маршрут по культуре Камбоджи ориентирован на сбалансированный маршрут первой поездки, с глубиной наследия, местной жизнью и содержательными экскурсиями.",
+    "nl": "Een Cambodjaanse cultuurroute gericht op een uitgebalanceerde eerste reisroute, met erfgoeddiepte, het lokale leven en zinvolle rondleidingen.",
+    "pl": "Program zwiedzania Kambodży skupiający się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
+    "da": "En Cambodja-kulturrute fokuserede på en afbalanceret første-tursrute med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
+    "sv": "En kulturresplan för Kambodja fokuserade på en balanserad första resa med djup, lokalt liv och meningsfulla guidade besök.",
+    "no": "En kulturreise i Kambodsja fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk."
+  },
+  "budget_lower_usd": 780
 }

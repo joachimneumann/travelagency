@@ -2,7 +2,36 @@ import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
-import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+import { bookingLang, bookingT } from "./i18n.js?v=b7baca7c60a0";
+
+const PRICING_SUMMARY_LABELS = Object.freeze({
+  agreed_net_amount: ["booking.pricing.agreed_net_amount", "Agreed net amount"],
+  adjustments_delta: ["booking.pricing.adjustments_delta", "Adjustments delta"],
+  adjusted_net_amount: ["booking.pricing.adjusted_net_amount", "Adjusted net amount"],
+  scheduled_net_amount: ["booking.pricing.scheduled_net_amount", "Scheduled net amount"],
+  unscheduled_net_amount: ["booking.pricing.unscheduled_net_amount", "Unscheduled net amount"],
+  scheduled_tax_amount: ["booking.pricing.scheduled_tax_amount", "Scheduled tax amount"],
+  scheduled_gross_amount: ["booking.pricing.scheduled_gross_amount", "Scheduled gross amount"],
+  paid_gross_amount: ["booking.pricing.paid_gross_amount", "Paid gross amount"],
+  outstanding_gross_amount: ["booking.pricing.outstanding_gross_amount", "Outstanding gross amount"],
+  schedule_balanced: ["booking.pricing.schedule_balanced", "Schedule balanced"]
+});
+
+function pricingSummaryLabel(key) {
+  const entry = PRICING_SUMMARY_LABELS[key];
+  return entry ? bookingT(entry[0], entry[1]) : key;
+}
+
+function pricingAdjustmentTypeLabel(type) {
+  const normalized = String(type || "").trim().toUpperCase();
+  return bookingT(`booking.pricing.adjustment_type.${normalized.toLowerCase()}`, normalized);
+}
+
+function pricingPaymentStatusLabel(status) {
+  const normalized = String(status || "").trim().toUpperCase();
+  return bookingT(`booking.pricing.payment_status.${normalized.toLowerCase()}`, normalized);
+}
 
 export function getCurrencyDefinitions() {
   return GENERATED_CURRENCIES;
@@ -48,7 +77,7 @@ export function formatMoneyDisplay(value, currency) {
   const definition = currencyDefinition(currency);
   if (!Number.isFinite(amount)) return "-";
   const major = amount / 10 ** definition.decimalPlaces;
-  return `${definition.symbol} ${new Intl.NumberFormat("en-US", {
+  return `${definition.symbol} ${new Intl.NumberFormat(bookingLang(), {
     minimumFractionDigits: definition.decimalPlaces,
     maximumFractionDigits: definition.decimalPlaces,
     useGrouping: true
@@ -148,12 +177,16 @@ export function createBookingPricingModule(ctx) {
       ["outstanding_gross_amount", summary.outstanding_gross_amount_cents]
     ]
       .filter(([, value]) => Number(value || 0) !== 0)
-      .map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(formatMoneyDisplay(value, pricing.currency))}</td></tr>`);
+      .map(([key, value]) => `<tr><th>${escapeHtml(pricingSummaryLabel(key))}</th><td>${escapeHtml(formatMoneyDisplay(value, pricing.currency))}</td></tr>`);
     const rows = []
       .concat(moneyRows)
-      .concat(summary.is_schedule_balanced === false ? ['<tr><th>schedule_balanced</th><td>no</td></tr>'] : [])
+      .concat(
+        summary.is_schedule_balanced === false
+          ? [`<tr><th>${escapeHtml(pricingSummaryLabel("schedule_balanced"))}</th><td>${escapeHtml(bookingT("common.no", "No"))}</td></tr>`]
+          : []
+      )
       .join("");
-    els.pricing_summary_table.innerHTML = `<tbody>${rows || '<tr><td colspan="2">No payment totals yet</td></tr>'}</tbody>`;
+    els.pricing_summary_table.innerHTML = `<tbody>${rows || `<tr><td colspan="2">${escapeHtml(bookingT("booking.pricing.no_totals", "No payment totals yet"))}</td></tr>`}</tbody>`;
   }
 
   function addPricingAdjustmentRow() {
@@ -196,22 +229,22 @@ export function createBookingPricingModule(ctx) {
     const readOnly = !state.permissions.canEditBooking;
     const items = Array.isArray(state.pricingDraft.adjustments) ? state.pricingDraft.adjustments : [];
     const currency = normalizeCurrencyCode(state.pricingDraft.currency);
-    const header = `<thead><tr><th>Label</th><th>Type</th><th>Amount (${escapeHtml(currency)})</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+    const header = `<thead><tr><th>${escapeHtml(bookingT("booking.pricing.label", "Label"))}</th><th>${escapeHtml(bookingT("booking.pricing.type", "Type"))}</th><th>${escapeHtml(bookingT("booking.pricing.amount_currency", "Amount ({currency})", { currency }))}</th><th>${escapeHtml(bookingT("booking.notes", "Notes"))}</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
     const rows = items
       .map((item, index) => `<tr>
       <td><input id="pricing_adjustment_label_${index}" name="pricing_adjustment_label_${index}" data-pricing-adjustment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
       <td>
         <select id="pricing_adjustment_type_${index}" name="pricing_adjustment_type_${index}" data-pricing-adjustment-type="${index}" ${readOnly ? "disabled" : ""}>
-          ${["DISCOUNT", "CREDIT", "SURCHARGE"].map((type) => `<option value="${type}" ${item.type === type ? "selected" : ""}>${type}</option>`).join("")}
+          ${["DISCOUNT", "CREDIT", "SURCHARGE"].map((type) => `<option value="${type}" ${item.type === type ? "selected" : ""}>${escapeHtml(pricingAdjustmentTypeLabel(type))}</option>`).join("")}
         </select>
       </td>
       <td><input id="pricing_adjustment_amount_${index}" name="pricing_adjustment_amount_${index}" data-pricing-adjustment-amount="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
       <td><input id="pricing_adjustment_notes_${index}" name="pricing_adjustment_notes_${index}" data-pricing-adjustment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
-      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">Remove</button></td>`}
+      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-adjustment="${index}">${escapeHtml(bookingT("common.remove", "Remove"))}</button></td>`}
     </tr>`)
       .join("");
-    const addRow = readOnly ? "" : '<tr><td colspan="5"><button class="btn btn-ghost" type="button" data-pricing-add-adjustment>Add</button></td></tr>';
-    const body = (rows || `<tr><td colspan="${readOnly ? 4 : 5}">No adjustments</td></tr>`) + addRow;
+    const addRow = readOnly ? "" : `<tr><td colspan="5"><button class="btn btn-ghost" type="button" data-pricing-add-adjustment>${escapeHtml(bookingT("common.add", "Add"))}</button></td></tr>`;
+    const body = (rows || `<tr><td colspan="${readOnly ? 4 : 5}">${escapeHtml(bookingT("booking.pricing.no_adjustments", "No adjustments"))}</td></tr>`) + addRow;
     els.pricing_adjustments_table.innerHTML = `${header}<tbody>${body}</tbody>`;
     if (!readOnly) {
       els.pricing_adjustments_table.querySelectorAll("[data-pricing-remove-adjustment]").forEach((button) => {
@@ -229,7 +262,7 @@ export function createBookingPricingModule(ctx) {
     const readOnly = !state.permissions.canEditBooking;
     const items = Array.isArray(state.pricingDraft.payments) ? state.pricingDraft.payments : [];
     const currency = normalizeCurrencyCode(state.pricingDraft.currency);
-    const header = `<thead><tr><th>Label</th><th>Due Date</th><th>Net (${escapeHtml(currency)})</th><th>Tax %</th><th>Status</th><th>Paid At</th><th>Notes</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
+    const header = `<thead><tr><th>${escapeHtml(bookingT("booking.pricing.label", "Label"))}</th><th>${escapeHtml(bookingT("booking.due_date", "Due date"))}</th><th>${escapeHtml(bookingT("booking.pricing.net_currency", "Net ({currency})", { currency }))}</th><th>${escapeHtml(bookingT("booking.pricing.tax_percent", "Tax %"))}</th><th>${escapeHtml(bookingT("booking.pricing.status", "Status"))}</th><th>${escapeHtml(bookingT("booking.pricing.paid_at", "Paid at"))}</th><th>${escapeHtml(bookingT("booking.notes", "Notes"))}</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
     const rows = items
       .map((item, index) => `<tr>
       <td><input id="pricing_payment_label_${index}" name="pricing_payment_label_${index}" data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
@@ -238,16 +271,16 @@ export function createBookingPricingModule(ctx) {
       <td><input id="pricing_payment_tax_${index}" name="pricing_payment_tax_${index}" data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
       <td>
         <select id="pricing_payment_status_${index}" name="pricing_payment_status_${index}" data-pricing-payment-status="${index}" ${readOnly ? "disabled" : ""}>
-          ${["PENDING", "PAID"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}
+          ${["PENDING", "PAID"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${escapeHtml(pricingPaymentStatusLabel(status))}</option>`).join("")}
         </select>
       </td>
       <td><input id="pricing_payment_paid_at_${index}" name="pricing_payment_paid_at_${index}" data-pricing-payment-paid-at="${index}" type="datetime-local" value="${escapeHtml(normalizeDateTimeLocal(item.paid_at))}" ${readOnly ? "disabled" : ""} /></td>
       <td><input id="pricing_payment_notes_${index}" name="pricing_payment_notes_${index}" data-pricing-payment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
-      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">Remove</button></td>`}
+      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">${escapeHtml(bookingT("common.remove", "Remove"))}</button></td>`}
     </tr>`)
       .join("");
-    const addRow = readOnly ? "" : '<tr><td colspan="8"><button class="btn btn-ghost" type="button" data-pricing-add-payment>Add</button></td></tr>';
-    const body = (rows || `<tr><td colspan="${readOnly ? 7 : 8}">No payments scheduled</td></tr>`) + addRow;
+    const addRow = readOnly ? "" : `<tr><td colspan="8"><button class="btn btn-ghost" type="button" data-pricing-add-payment>${escapeHtml(bookingT("common.add", "Add"))}</button></td></tr>`;
+    const body = (rows || `<tr><td colspan="${readOnly ? 7 : 8}">${escapeHtml(bookingT("booking.pricing.no_payments", "No payments scheduled"))}</td></tr>`) + addRow;
     els.pricing_payments_table.innerHTML = `${header}<tbody>${body}</tbody>`;
     if (!readOnly) {
       els.pricing_payments_table.querySelectorAll("[data-pricing-remove-payment]").forEach((button) => {
@@ -280,7 +313,7 @@ export function createBookingPricingModule(ctx) {
       els.pricing_currency_input.disabled = !state.permissions.canEditBooking;
     }
     if (els.pricing_agreed_net_label) {
-      els.pricing_agreed_net_label.textContent = `Agreed Net Amount (${currency})`;
+      els.pricing_agreed_net_label.textContent = bookingT("booking.pricing.agreed_net_amount_currency", "Agreed net amount ({currency})", { currency });
     }
     if (els.pricing_agreed_net_input) {
       els.pricing_agreed_net_input.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
@@ -298,8 +331,8 @@ export function createBookingPricingModule(ctx) {
   function collectPricingPayload() {
     const currency = normalizeCurrencyCode(els.pricing_currency_input?.value || "USD");
     const agreedNet = parseMoneyInputValue(els.pricing_agreed_net_input?.value || "0", currency);
-    if (!currency) throw new Error("Currency is required.");
-    if (!Number.isFinite(agreedNet) || agreedNet < 0) throw new Error("Agreed net amount must be zero or positive.");
+    if (!currency) throw new Error(bookingT("booking.pricing.error.currency_required", "Currency is required."));
+    if (!Number.isFinite(agreedNet) || agreedNet < 0) throw new Error(bookingT("booking.pricing.error.agreed_net_non_negative", "Agreed net amount must be zero or positive."));
 
     const adjustments = Array.from(document.querySelectorAll("[data-pricing-adjustment-label]")).map((input) => {
       const index = Number(input.getAttribute("data-pricing-adjustment-label"));
@@ -307,9 +340,9 @@ export function createBookingPricingModule(ctx) {
       const label = String(document.querySelector(`[data-pricing-adjustment-label="${index}"]`)?.value || "").trim();
       const amount = parseMoneyInputValue(document.querySelector(`[data-pricing-adjustment-amount="${index}"]`)?.value || "0", currency);
       const notes = String(document.querySelector(`[data-pricing-adjustment-notes="${index}"]`)?.value || "").trim();
-      if (!label) throw new Error(`Adjustment ${index + 1} requires a label.`);
-      if (!["DISCOUNT", "CREDIT", "SURCHARGE"].includes(type)) throw new Error(`Adjustment ${index + 1} has an invalid type.`);
-      if (!Number.isFinite(amount) || amount < 0) throw new Error(`Adjustment ${index + 1} requires a valid non-negative amount.`);
+      if (!label) throw new Error(bookingT("booking.pricing.error.adjustment_label", "Adjustment {index} requires a label.", { index: index + 1 }));
+      if (!["DISCOUNT", "CREDIT", "SURCHARGE"].includes(type)) throw new Error(bookingT("booking.pricing.error.adjustment_type", "Adjustment {index} has an invalid type.", { index: index + 1 }));
+      if (!Number.isFinite(amount) || amount < 0) throw new Error(bookingT("booking.pricing.error.adjustment_amount", "Adjustment {index} requires a valid non-negative amount.", { index: index + 1 }));
       return {
         id: state.pricingDraft.adjustments[index]?.id || "",
         type,
@@ -331,11 +364,11 @@ export function createBookingPricingModule(ctx) {
         paidAtInputValue || (status === "PAID" ? normalizeDateTimeLocal(new Date().toISOString()) : "")
       );
       const notes = String(document.querySelector(`[data-pricing-payment-notes="${index}"]`)?.value || "").trim();
-      if (!label) throw new Error(`Payment ${index + 1} requires a label.`);
-      if (!Number.isFinite(netAmount) || netAmount < 0) throw new Error(`Payment ${index + 1} requires a valid non-negative net amount.`);
-      if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) throw new Error(`Payment ${index + 1} requires a tax rate between 0 and 100.`);
-      if (!["PENDING", "PAID"].includes(status)) throw new Error(`Payment ${index + 1} has an invalid status.`);
-      if (status === "PAID" && !paidAt) throw new Error(`Payment ${index + 1} needs a paid time when marked paid.`);
+      if (!label) throw new Error(bookingT("booking.pricing.error.payment_label", "Payment {index} requires a label.", { index: index + 1 }));
+      if (!Number.isFinite(netAmount) || netAmount < 0) throw new Error(bookingT("booking.pricing.error.payment_amount", "Payment {index} requires a valid non-negative net amount.", { index: index + 1 }));
+      if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) throw new Error(bookingT("booking.pricing.error.payment_tax", "Payment {index} requires a tax rate between 0 and 100.", { index: index + 1 }));
+      if (!["PENDING", "PAID"].includes(status)) throw new Error(bookingT("booking.pricing.error.payment_status", "Payment {index} has an invalid status.", { index: index + 1 }));
+      if (status === "PAID" && !paidAt) throw new Error(bookingT("booking.pricing.error.payment_paid_at", "Payment {index} needs a paid time when marked paid.", { index: index + 1 }));
       return {
         id: state.pricingDraft.payments[index]?.id || "",
         label,

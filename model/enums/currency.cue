@@ -22,6 +22,46 @@ CurrencyCatalog: [
 		decimalPlaces: 0
 	},
 	{
+		code:          "CNY"
+		displaySymbol: "CN¥"
+		decimalPlaces: 2
+	},
+	{
+		code:          "JPY"
+		displaySymbol: "¥"
+		decimalPlaces: 0
+	},
+	{
+		code:          "KRW"
+		displaySymbol: "₩"
+		decimalPlaces: 0
+	},
+	{
+		code:          "RUB"
+		displaySymbol: "₽"
+		decimalPlaces: 2
+	},
+	{
+		code:          "PLN"
+		displaySymbol: "zł"
+		decimalPlaces: 2
+	},
+	{
+		code:          "DKK"
+		displaySymbol: "kr"
+		decimalPlaces: 2
+	},
+	{
+		code:          "SEK"
+		displaySymbol: "kr"
+		decimalPlaces: 2
+	},
+	{
+		code:          "NOK"
+		displaySymbol: "kr"
+		decimalPlaces: 2
+	},
+	{
 		code:          "AUD"
 		displaySymbol: "A$"
 		decimalPlaces: 2

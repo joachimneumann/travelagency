@@ -14,9 +14,33 @@ function buildSectionButton(section, title, icon) {
   `;
 }
 
+function backendT(id, fallback, vars) {
+  if (typeof window.backendT === "function") {
+    return window.backendT(id, fallback, vars);
+  }
+  if (!vars || typeof vars !== "object") return String(fallback ?? id);
+  return String(fallback ?? id).replace(/\{(\w+)\}/g, (match, key) => (key in vars ? String(vars[key]) : match));
+}
+
+function currentLang() {
+  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+}
+
+function withLang(urlValue) {
+  const lang = currentLang();
+  if (!lang) return urlValue;
+  const url = new URL(urlValue, window.location.origin);
+  url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 export function resolveBackendSectionHref(section) {
-  if (section === "persons") return "persons.html";
-  return `backend.html?section=${encodeURIComponent(section || "bookings")}`;
+  if (section === "persons") return withLang("persons.html");
+  const url = new URL("backend.html", window.location.origin);
+  url.searchParams.set("section", section || "bookings");
+  const lang = currentLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
 }
 
 function hasAnyRole(roles, ...expected) {
@@ -45,31 +69,35 @@ export function mountBackendNav(mount, options = {}) {
   if (!mount) return;
   const currentSection = options.currentSection || "";
   const apiBase = String(window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
+  const websiteHref = withLang("index.html");
 
   mount.innerHTML = `
     <nav class="nav backend-main-nav" aria-label="Backend navigation">
       <div class="backend-section-nav-wrap">
-        <div class="backend-section-nav" role="tablist" aria-label="Backend sections">
-          ${buildSectionButton("bookings", "Bookings", { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
-          ${buildSectionButton("persons", "Persons", { type: "image", src: "assets/img/profile_person.png" })}
-          ${buildSectionButton("settings", "Reports and Settings", "📊")}
-          ${buildSectionButton("tours", "Tours", "🗺️")}
+        <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
+          ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
+          ${buildSectionButton("persons", backendT("nav.persons", "Persons"), { type: "image", src: "assets/img/profile_person.png" })}
+          ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), "📊")}
+          ${buildSectionButton("tours", backendT("nav.tours", "Tours"), "🗺️")}
         </div>
       </div>
 
       <div class="backend-nav__meta">
         <ul class="nav-list">
-          <li class="backend-nav__website"><a href="index.html">Website</a></li>
+          <li class="backend-nav__website"><a href="${websiteHref}">${backendT("nav.website", "Website")}</a></li>
           <li class="backend-nav__logout">
             <a class="backend-nav__logout-link" id="backendLogoutLink" href="#">
-              <span class="backend-nav__logout-title">Logout</span>
+              <span class="backend-nav__logout-title">${backendT("nav.logout", "Logout")}</span>
               <span class="backend-nav__user" id="backendUserLabel"></span>
             </a>
           </li>
+          <li id="backendLangMenuMount"></li>
         </ul>
       </div>
     </nav>
   `;
+
+  window.dispatchEvent(new CustomEvent("backend-nav-mounted"));
 
   applyNavPermissions(mount, []);
 

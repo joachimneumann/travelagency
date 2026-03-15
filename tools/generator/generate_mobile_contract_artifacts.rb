@@ -59,6 +59,17 @@ SWIFT_OPENAPI_HEADER = <<~SWIFT.freeze
   // Do not edit by hand.
 SWIFT
 
+def sync_generated_language_catalog!
+  stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'scripts', 'generate_language_catalog.mjs'))
+  unless status.success?
+    warn stdout unless stdout.to_s.empty?
+    warn stderr unless stderr.to_s.empty?
+    abort 'Failed to generate shared language catalog artifacts'
+  end
+end
+
+sync_generated_language_catalog!
+
 def load_ir_json
   stdout, stderr, status = Open3.capture3('cue', 'export', './ir', '-e', 'IR', chdir: MODEL_DIR)
   unless status.success?

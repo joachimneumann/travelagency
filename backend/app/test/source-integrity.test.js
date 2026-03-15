@@ -426,7 +426,7 @@ test("settings page staff table shows separate realm and client Keycloak roles",
 
   assert.match(
     source,
-    /<th>Name<\/th><th>Username<\/th><th class="keycloak-roles-col">Roles<\/th><th>Active<\/th>/,
+    /keycloak-roles-col">.*backendT\("backend\.table\.roles", "Roles"\).*backend-table-align-right">.*backendT\("backend\.table\.active", "Active"\)/,
     "Settings user table should include a Roles column"
   );
   assert.match(

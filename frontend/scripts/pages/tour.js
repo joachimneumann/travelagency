@@ -3,8 +3,52 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=6c388c7e525c";
-import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=6c388c7e525c";
+} from "../shared/api.js?v=b7baca7c60a0";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=b7baca7c60a0";
+
+function backendT(id, fallback, vars) {
+  if (typeof window.backendT === "function") {
+    return window.backendT(id, fallback, vars);
+  }
+  const template = String(fallback ?? id);
+  if (!vars || typeof vars !== "object") return template;
+  return template.replace(/\{([^{}]+)\}/g, (match, key) => {
+    const normalizedKey = String(key || "").trim();
+    return normalizedKey in vars ? String(vars[normalizedKey]) : match;
+  });
+}
+
+async function waitForBackendI18n() {
+  await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+}
+
+function currentBackendLang() {
+  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+}
+
+function withBackendLang(pathname, params = {}) {
+  const url = new URL(pathname, window.location.origin);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  const lang = currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
+
+function withApiLang(pathname, params = {}) {
+  const url = new URL(pathname, window.location.origin);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  const lang = currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -95,14 +139,15 @@ function markTourSnapshotClean() {
 init();
 
 async function init() {
+  await waitForBackendI18n();
   refreshBackendNavElements();
-  const backHref = "backend.html?section=tours";
+  const backHref = withBackendLang("/backend.html", { section: "tours" });
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.back) els.back.href = backHref;
   if (els.cancel) els.cancel.href = backHref;
   if (els.logoutLink) {
-    const returnTo = `${window.location.origin}/index.html`;
+    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
 
@@ -141,7 +186,7 @@ async function init() {
   if (els.imageUpload) {
     els.imageUpload.addEventListener("change", () => {
       const file = els.imageUpload.files?.[0];
-      if (file) setStatus(`Selected image: ${file.name}`);
+      if (file) setStatus(backendT("tour.status.selected_image", "Selected image: {file}", { file: file.name }));
       updateTourDirtyState();
     });
   }
@@ -165,13 +210,13 @@ function bindSectionNavigation(activeSection) {
       button.removeAttribute("aria-current");
     }
     button.addEventListener("click", () => {
-      window.location.href = `backend.html?section=${encodeURIComponent(section)}`;
+      window.location.href = withBackendLang("/backend.html", { section });
     });
   });
 }
 
 async function loadTour() {
-  const payload = await fetchApi(`/api/v1/tours/${encodeURIComponent(state.id)}`);
+  const payload = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}`));
   if (!payload?.tour) return;
 
   state.tour = payload.tour;
@@ -194,21 +239,23 @@ async function loadTour() {
   setInput("tour_highlights", Array.isArray(tour.highlights) ? tour.highlights.join("\n") : "");
   updateHeroImage(tour.image || "");
 
-  renderDestinationChoices(destinations);
-  renderStyleChoices(styles);
+  renderDestinationChoices(tour_destination_codes(tour));
+  renderStyleChoices(tour_style_codes(tour));
   applyTourPermissions();
   markTourSnapshotClean();
 }
 
 async function initializeNewTourForm() {
-  const payload = await fetchApi("/api/v1/tours?page=1&page_size=1");
+  const payload = await fetchApi(withApiLang("/api/v1/tours", { page: 1, page_size: 1 }));
   state.options.destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
   state.options.styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
   state.tour = {
     id: "",
     title: "",
     destinations: [],
+    destination_codes: [],
     styles: [],
+    style_codes: [],
     travel_duration_days: null,
     budget_lower_usd: null,
     priority: 50,
@@ -220,8 +267,8 @@ async function initializeNewTourForm() {
     image: ""
   };
 
-  updateHeader({ title: "New tour" }, [], []);
-  if (els.subtitle) els.subtitle.textContent = "Create a new tour";
+  updateHeader({ title: backendT("tour.new_title", "New tour") }, [], []);
+  if (els.subtitle) els.subtitle.textContent = backendT("tour.create_subtitle", "Create a new tour");
   setInput("tour_id", "(new)");
   setInput("tour_travel_duration_days", "");
   setInput("tour_budget_lower_usd", "");
@@ -236,12 +283,12 @@ async function initializeNewTourForm() {
   renderStyleChoices([]);
   applyTourPermissions();
   clearError();
-  setStatus("New tour");
+  setStatus(backendT("tour.status.new", "New tour"));
   markTourSnapshotClean();
 }
 
 function renderDestinationChoices(selectedValues) {
-  const values = dedupeValues([...(state.options.destinations || []), ...(selectedValues || [])]);
+  const values = dedupeOptions([...(state.options.destinations || []), ...(selectedValues || []).map((value) => ({ code: value, label: value }))]);
   renderCheckboxes({
     container: els.destinationChoices,
     inputName: "destinationCountryChoice",
@@ -260,7 +307,7 @@ function renderDestinationChoices(selectedValues) {
 }
 
 function renderStyleChoices(selectedValues) {
-  const values = dedupeValues([...(state.options.styles || []), ...(selectedValues || [])]);
+  const values = dedupeOptions([...(state.options.styles || []), ...(selectedValues || []).map((value) => ({ code: value, label: value }))]);
   renderCheckboxes({
     container: els.styleChoices,
     inputName: "styleChoice",
@@ -293,16 +340,18 @@ function renderSelectOptions(select, values) {
 
 function renderCheckboxes({ container, inputName, values, selectedValues = [], singleSelect = false, onChange }) {
   if (!container) return;
-  const selectedSet = new Set(selectedValues.filter(Boolean).map(choiceKey));
+  const selectedSet = new Set((selectedValues || []).filter(Boolean).map(choiceKey));
 
   const html = values
     .filter(Boolean)
     .map((value) => {
-      const id = `${inputName}_${slugify(value)}`;
-      const checked = selectedSet.has(choiceKey(value)) ? "checked" : "";
+      const optionValue = choiceValue(value);
+      const optionLabel = choiceLabel(value);
+      const id = `${inputName}_${slugify(optionValue)}`;
+      const checked = selectedSet.has(choiceKey(optionValue)) ? "checked" : "";
       return `<label class="backend-checkbox-item" for="${escapeHtml(id)}"><input type="checkbox" id="${escapeHtml(
         id
-      )}" name="${escapeHtml(inputName)}" value="${escapeHtml(value)}" ${checked} />${escapeHtml(value)}</label>`;
+      )}" name="${escapeHtml(inputName)}" value="${escapeHtml(optionValue)}" ${checked} />${escapeHtml(optionLabel)}</label>`;
     })
     .join("");
 
@@ -352,16 +401,18 @@ async function submitForm(event) {
   };
 
   if (!payload.title || !payload.destinations.length || !payload.styles.length) {
-    setStatus("Title, at least one Destination Country, and at least one Style are required.");
+    setStatus(backendT("tour.status.required", "Title, at least one Destination Country, and at least one Style are required."));
     return;
   }
 
   const duplicate = await findDuplicateTourTitle(payload.title, state.id);
   if (duplicate) {
-    setTitleError(
-      `A tour titled "${duplicate.title || payload.title}" already exists (ID: ${duplicate.id}). Please use a different title.`
-    );
-    setStatus("Save blocked due to duplicate title.");
+    setTitleError(backendT(
+      "tour.error.duplicate_title",
+      "A tour titled \"{title}\" already exists (ID: {id}). Please use a different title.",
+      { title: duplicate.title || payload.title, id: duplicate.id }
+    ));
+    setStatus(backendT("tour.status.duplicate", "Save blocked due to duplicate title."));
     if (els.titleInput) {
       startTourTitleEdit();
       els.titleInput.focus();
@@ -369,9 +420,9 @@ async function submitForm(event) {
     return;
   }
 
-  setStatus("Saving...");
+  setStatus(backendT("tour.status.saving", "Saving..."));
   const is_create = state.is_create_mode;
-  const result = await fetchApi(is_create ? "/api/v1/tours" : `/api/v1/tours/${encodeURIComponent(state.id)}`, {
+  const result = await fetchApi(is_create ? withApiLang("/api/v1/tours") : withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}`), {
     method: is_create ? "POST" : "PATCH",
     body: payload
   });
@@ -384,9 +435,9 @@ async function submitForm(event) {
 
   const file = els.imageUpload?.files?.[0] || null;
   if (file) {
-    setStatus("Uploading image...");
+    setStatus(backendT("tour.status.uploading_image", "Uploading image..."));
     const base64 = await fileToBase64(file);
-    const imageResult = await fetchApi(`/api/v1/tours/${encodeURIComponent(state.id)}/image`, {
+    const imageResult = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/image`), {
       method: "POST",
       body: {
         filename: file.name,
@@ -396,10 +447,12 @@ async function submitForm(event) {
     if (!imageResult) return;
   }
 
-  setStatus(is_create ? "Tour created." : "Tour updated.");
+  setStatus(is_create
+    ? backendT("tour.status.created", "Tour created.")
+    : backendT("tour.status.updated", "Tour updated."));
   if (els.imageUpload) els.imageUpload.value = "";
   if (is_create) {
-    window.location.href = `tour.html?id=${encodeURIComponent(state.id)}`;
+    window.location.href = withBackendLang("/tour.html", { id: state.id });
     return;
   }
   await loadTour();
@@ -451,7 +504,7 @@ async function loadAuthStatus() {
 }
 
 function redirectToBackendLogin() {
-  const returnTo = `${window.location.origin}/tour.html?id=${encodeURIComponent(state.id)}`;
+  const returnTo = `${window.location.origin}${withBackendLang("/tour.html", { id: state.id })}`;
   const loginParams = new URLSearchParams({
     return_to: returnTo,
     prompt: "login"
@@ -476,7 +529,7 @@ function applyTourPermissions() {
       el.disabled = true;
     });
   }
-  setStatus("Read-only access.");
+  setStatus(backendT("tour.status.read_only", "Read-only access."));
 }
 
 async function findDuplicateTourTitle(title, currentTourId) {
@@ -494,7 +547,7 @@ async function findDuplicateTourTitle(title, currentTourId) {
       page_size: String(pageSize)
     });
 
-    const payload = await fetchApi(`/api/v1/tours?${query.toString()}`);
+    const payload = await fetchApi(withApiLang("/api/v1/tours", Object.fromEntries(query.entries())));
     if (!payload) return null;
 
     const items = Array.isArray(payload.items) ? payload.items : [];
@@ -559,7 +612,7 @@ function updateHeroImage(src) {
 function updateHeader(tour, destinations, styles) {
   const rawTitle = normalizeText(tour?.title);
   if (els.title) {
-    els.title.textContent = rawTitle || (state.is_create_mode ? "New tour" : "Tour");
+    els.title.textContent = rawTitle || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
     els.title.hidden = false;
   }
   if (els.titleInput && document.activeElement !== els.titleInput) {
@@ -573,7 +626,10 @@ function updateHeader(tour, destinations, styles) {
   if (!els.subtitle) return;
   const destText = destinations.length ? destinations.join(", ") : "-";
   const styleText = styles.length ? styles.join(", ") : "-";
-  els.subtitle.textContent = `Destinations: ${destText} | Styles: ${styleText}`;
+  els.subtitle.textContent = backendT("tour.status.destinations_styles", "Destinations: {destinations} | Styles: {styles}", {
+    destinations: destText,
+    styles: styleText
+  });
 }
 
 function getTourTitleInputValue() {
@@ -592,7 +648,7 @@ function startTourTitleEdit() {
 function commitTourTitleEdit() {
   if (!els.title || !els.titleInput) return;
   const value = getTourTitleInputValue();
-  els.title.textContent = value || (state.is_create_mode ? "New tour" : "Tour");
+  els.title.textContent = value || (state.is_create_mode ? backendT("tour.new_title", "New tour") : backendT("nav.tours", "Tour"));
   els.title.hidden = false;
   els.titleInput.hidden = true;
   updateTourDirtyState();
@@ -618,8 +674,22 @@ function tour_destinations(tour) {
   return [];
 }
 
+function tour_destination_codes(tour) {
+  if (Array.isArray(tour?.destination_codes) && tour.destination_codes.length) {
+    return tour.destination_codes.map((value) => String(value || "").trim()).filter(Boolean);
+  }
+  return [];
+}
+
 function tour_styles(tour) {
   return Array.isArray(tour?.styles) ? tour.styles.map((value) => String(value || "").trim()).filter(Boolean) : [];
+}
+
+function tour_style_codes(tour) {
+  if (Array.isArray(tour?.style_codes) && tour.style_codes.length) {
+    return tour.style_codes.map((value) => String(value || "").trim()).filter(Boolean);
+  }
+  return [];
 }
 
 function absolutizeApiUrl(urlValue) {
@@ -645,22 +715,41 @@ function toInputNumber(value) {
   return value === null || value === undefined ? "" : String(value);
 }
 
-function dedupeValues(values) {
+function normalizeOption(option) {
+  if (option && typeof option === "object") {
+    const code = String(option.code || "").trim();
+    const label = String(option.label || option.code || "").trim();
+    if (!code) return null;
+    return { code, label: label || code };
+  }
+  const value = String(option || "").trim();
+  return value ? { code: value, label: value } : null;
+}
+
+function dedupeOptions(values) {
   const seen = new Set();
   const out = [];
   for (const raw of values || []) {
-    const value = String(raw || "").trim();
-    if (!value) continue;
-    const key = choiceKey(value);
+    const option = normalizeOption(raw);
+    if (!option) continue;
+    const key = choiceKey(option.code);
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push(value);
+    out.push(option);
   }
   return out;
 }
 
 function choiceKey(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function choiceValue(value) {
+  return normalizeOption(value)?.code || "";
+}
+
+function choiceLabel(value) {
+  return normalizeOption(value)?.label || "";
 }
 
 function slugify(value) {

@@ -1,24 +1,128 @@
 {
   "id": "tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1",
-  "title": "Vietnam Beach Journey",
-  "shortDescription": "A Vietnam beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+  "title": {
+    "en": "Vietnam Beach Journey",
+    "fr": "Voyage plage au Vietnam",
+    "zh": "越南海滩之旅",
+    "ja": "ベトナム ビーチの旅",
+    "ko": "베트남 해변 여행",
+    "vi": "Hành trình Biển Việt Nam",
+    "de": "Vietnam-Strandreise",
+    "es": "Viaje a la playa de Vietnam",
+    "it": "Viaggio sulla spiaggia del Vietnam",
+    "ru": "Вьетнамское пляжное путешествие",
+    "nl": "Strandreis door Vietnam",
+    "pl": "Podróż po plaży w Wietnamie",
+    "da": "Vietnam strandrejse",
+    "sv": "Vietnam strandresa",
+    "no": "Vietnam strandreise"
+  },
   "styles": [
-    "Beach"
+    "beach"
   ],
   "priority": 50,
   "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1/tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1.webp",
-  "highlights": [
-    "Signature stop in Hanoi",
-    "Route highlight around Hoi An",
-    "Smooth transfer planning via Ha Long Bay"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ]
+  },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.8,
   "legacy_id": "trip-vietnam-beach-classic",
   "destinations": [
-    "Vietnam"
+    "vietnam"
   ],
-  "budget_lower_USD": 1040
+  "short_description": {
+    "en": "A Vietnam beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+    "fr": "Un itinéraire balnéaire au Vietnam pensé pour un premier voyage équilibré, avec du temps au bord de la mer, équilibré par des découvertes locales faciles.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的越南海滩行程，包含轻松的海岸时光，并搭配轻松的本地探索。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムのビーチ旅程で、ゆったりした海辺の時間と無理のないローカル体験。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 베트남 해변 일정으로, 여유로운 해변 시간과 부담 없는 현지 탐방.",
+    "vi": "Đây là lịch trình biển tại Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với thời gian thư giãn bên biển kết hợp khám phá địa phương nhẹ nhàng.",
+    "de": "Eine Strandroute in Vietnam, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit entspannter Zeit an der Küste und einfacher lokaler Entdeckung.",
+    "es": "Un itinerario de playa en Vietnam centrado en una ruta equilibrada de primer viaje, con un tiempo relajado en la costa y un fácil descubrimiento local.",
+    "it": "Un itinerario sulla spiaggia del Vietnam incentrato su un itinerario equilibrato del primo viaggio, con un tempo rilassato sulla costa bilanciato con una facile scoperta locale.",
+    "ru": "Пляжный маршрут Вьетнама ориентирован на сбалансированный маршрут первой поездки, где спокойное времяпровождение на побережье сочетается с легкими открытиями местных достопримечательностей.",
+    "nl": "Een strandroute in Vietnam gericht op een uitgebalanceerde eerste reisroute, met een ontspannen kusttijd in evenwicht met gemakkelijke lokale ontdekkingen.",
+    "pl": "Plan podróży na plażę w Wietnamie skupia się na zrównoważonej trasie pierwszej podróży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
+    "da": "En rejseplan for Vietnam-stranden fokuserede på en afbalanceret rute for første tur med afslappet kysttid afbalanceret med let lokal opdagelse.",
+    "sv": "En resplan för stranden i Vietnam fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
+    "no": "En reiserute på Vietnam-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse."
+  },
+  "budget_lower_usd": 1040
 }

@@ -4,10 +4,20 @@
 
 export const GENERATED_LANGUAGE_CODES = Object.freeze([
   "English",
-  "Vietnamese",
   "French",
+  "Mandarin",
+  "Japanese",
+  "Korean",
+  "Vietnamese",
   "German",
-  "Spanish"
+  "Spanish",
+  "Italian",
+  "Russian",
+  "Dutch",
+  "Polish",
+  "Danish",
+  "Swedish",
+  "Norwegian"
 ]);
 
 export function normalizeLanguageCode(value) {

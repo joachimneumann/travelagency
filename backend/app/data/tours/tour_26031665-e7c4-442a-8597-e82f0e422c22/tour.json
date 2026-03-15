@@ -1,24 +1,128 @@
 {
   "id": "tour_26031665-e7c4-442a-8597-e82f0e422c22",
-  "title": "Vietnam Food Journey",
-  "shortDescription": "A Vietnam food itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+  "title": {
+    "en": "Vietnam Food Journey",
+    "fr": "Voyage gastronomie au Vietnam",
+    "zh": "越南美食之旅",
+    "ja": "ベトナム グルメの旅",
+    "ko": "베트남 미식 여행",
+    "vi": "Hành trình Ẩm thực Việt Nam",
+    "de": "Vietnam-Food-Reise",
+    "es": "Viaje gastronómico de Vietnam",
+    "it": "Viaggio gastronomico in Vietnam",
+    "ru": "Вьетнамское гастрономическое путешествие",
+    "nl": "Voedselreis door Vietnam",
+    "pl": "Podróż kulinarna po Wietnamie",
+    "da": "Vietnam madrejse",
+    "sv": "Vietnam matresa",
+    "no": "Vietnam matreise"
+  },
   "styles": [
-    "Food"
+    "food"
   ],
   "priority": 50,
   "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_26031665-e7c4-442a-8597-e82f0e422c22/tour_26031665-e7c4-442a-8597-e82f0e422c22.webp",
-  "highlights": [
-    "Signature stop in Hanoi",
-    "Route highlight around Hoi An",
-    "Smooth transfer planning via Ha Long Bay"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ]
+  },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.8,
   "legacy_id": "trip-vietnam-food-classic",
   "destinations": [
-    "Vietnam"
+    "vietnam"
   ],
-  "budget_lower_USD": 790
+  "short_description": {
+    "en": "A Vietnam food itinerary focused on a balanced first-trip route, with market visits, tastings, and regional culinary experiences.",
+    "fr": "Un itinéraire gastronomique au Vietnam pensé pour un premier voyage équilibré, avec des visites de marchés, des dégustations et des expériences culinaires régionales.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的越南美食行程，包含市场探访、品鉴体验和区域美食体验。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムのグルメ旅程で、市場訪問、試食、地域ごとの食体験。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 베트남 미식 일정으로, 시장 방문, 시식, 지역 미식 체험.",
+    "vi": "Đây là lịch trình ẩm thực tại Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với các buổi ghé chợ, nếm thử và trải nghiệm ẩm thực vùng miền.",
+    "de": "Eine kulinarische Reiseroute durch Vietnam, die sich auf eine ausgewogene Erstreiseroute mit Marktbesuchen, Verkostungen und regionalen kulinarischen Erlebnissen konzentriert.",
+    "es": "Un itinerario gastronómico de Vietnam centrado en una ruta equilibrada de primer viaje, con visitas a mercados, degustaciones y experiencias culinarias regionales.",
+    "it": "Un itinerario gastronomico in Vietnam incentrato su un percorso equilibrato di primo viaggio, con visite al mercato, degustazioni ed esperienze culinarie regionali.",
+    "ru": "Гастрономический маршрут по Вьетнаму ориентирован на сбалансированный маршрут первой поездки с посещением рынков, дегустациями и региональными кулинарными впечатлениями.",
+    "nl": "Een voedselroute door Vietnam gericht op een uitgebalanceerde eerste reisroute, met marktbezoeken, proeverijen en regionale culinaire ervaringen.",
+    "pl": "Trasa kulinarna po Wietnamie skupiająca się na zrównoważonej trasie pierwszej podróży, obejmującej wizyty na rynku, degustacje i regionalne doświadczenia kulinarne.",
+    "da": "En Vietnam madrejseplan fokuserede på en afbalanceret første tur-rute med markedsbesøg, smagsprøver og regionale kulinariske oplevelser.",
+    "sv": "En matresplan för Vietnam fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
+    "no": "En matreise fra Vietnam fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser."
+  },
+  "budget_lower_usd": 790
 }

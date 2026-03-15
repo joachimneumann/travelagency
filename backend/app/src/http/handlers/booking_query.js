@@ -2,6 +2,7 @@ import {
   getBookingPersons,
   getBookingPrimaryContact
 } from "../../lib/booking_persons.js";
+import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 
 export function createBookingQueryModule(deps) {
   const {
@@ -41,7 +42,7 @@ export function createBookingQueryModule(deps) {
       name: normalizeText(submission.name) || null,
       email: normalizeEmail(submission.email) || null,
       phone_number: normalizePhone(submission.phone_number) || null,
-      preferred_language: normalizeText(submission.preferred_language) || null,
+      preferred_language: normalizeText(booking?.customer_language || submission.preferred_language) || null,
       preferred_currency: safeCurrency(submission.preferred_currency || booking?.preferred_currency || BASE_CURRENCY)
     };
   }
@@ -55,7 +56,7 @@ export function createBookingQueryModule(deps) {
       name: normalizeText(primary?.name) || submitted.name || "Primary contact",
       email: emails[0] || submitted.email || null,
       phone_number: phoneNumbers[0] || submitted.phone_number || null,
-      preferred_language: normalizeText(primary?.preferred_language) || submitted.preferred_language || null
+      preferred_language: normalizeText(booking?.customer_language) || normalizeText(primary?.preferred_language) || submitted.preferred_language || null
     };
   }
 
@@ -130,15 +131,33 @@ export function createBookingQueryModule(deps) {
     };
   }
 
-  async function buildBookingPayload(booking) {
+  function resolveRequestedLang(source) {
+    if (!source) return "en";
+    if (typeof source === "string") return normalizeBookingContentLang(source);
+    if (typeof source?.lang === "string") return normalizeBookingContentLang(source.lang);
+    if (source?.req) return resolveRequestedLang(source.req);
+    if (typeof source?.url === "string") {
+      try {
+        const requestUrl = new URL(source.url, "http://localhost");
+        return normalizeBookingContentLang(requestUrl.searchParams.get("lang") || "en");
+      } catch {
+        return "en";
+      }
+    }
+    return "en";
+  }
+
+  async function buildBookingPayload(booking, options = {}) {
     return buildBookingReadModel({
       ...booking,
       persons: getBookingPersons(booking)
+    }, {
+      lang: resolveRequestedLang(options)
     });
   }
 
-  async function buildBookingDetailResponse(booking) {
-    return { booking: await buildBookingPayload(booking) };
+  async function buildBookingDetailResponse(booking, options = {}) {
+    return { booking: await buildBookingPayload(booking, options) };
   }
 
   return {

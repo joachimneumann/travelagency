@@ -66,7 +66,7 @@ export function createBookingMediaHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const filename = normalizeText(payload.filename) || `${bookingId}.upload`;
     const base64 = normalizeText(payload.data_base64);
@@ -107,7 +107,7 @@ export function createBookingMediaHandlers(deps) {
       "Booking image updated"
     );
     await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleUploadBookingPersonPhoto(req, res, [bookingId, personId]) {
@@ -130,7 +130,7 @@ export function createBookingMediaHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_persons_revision", "persons_revision", res))) return;
 
     const persons = getBookingPersons(booking);
     const personIndex = persons.findIndex((person) => person.id === personId);
@@ -182,7 +182,7 @@ export function createBookingMediaHandlers(deps) {
       `Photo uploaded for ${normalizeText(persons[personIndex].name) || "person"}`
     );
     await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   return {

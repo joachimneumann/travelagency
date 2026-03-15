@@ -1,5 +1,10 @@
 import { normalizeText } from "../lib/text.js";
 import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
+import { normalizeBookingContentLang } from "./booking_content_i18n.js";
+import {
+  buildOfferTranslationStatus,
+  buildTravelPlanTranslationStatus
+} from "./booking_translation.js";
 
 export function createBookingViewHelpers({
   baseCurrency,
@@ -7,6 +12,7 @@ export function createBookingViewHelpers({
   stageOrder,
   appRoles,
   gmailDraftsConfig,
+  translationEnabled,
   normalizeStringArray,
   normalizeEmail,
   isLikelyPhoneMatch,
@@ -224,39 +230,48 @@ export function createBookingViewHelpers({
     );
   }
 
-  async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency) {
+  async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency, options = {}) {
     const generatedOfferCurrency = safeCurrency(
       generatedOffer?.currency || generatedOffer?.offer?.currency || defaultCurrency
     );
-    const generatedOfferReadModel = await buildBookingOfferReadModel(generatedOffer?.offer, generatedOfferCurrency);
+    const generatedLang = normalizeBookingContentLang(generatedOffer?.lang || options?.lang || "en");
+    const generatedOfferReadModel = await buildBookingOfferReadModel(
+      generatedOffer?.offer,
+      generatedOfferCurrency,
+      { lang: generatedLang }
+    );
     return {
       ...generatedOffer,
       currency: generatedOfferReadModel.currency || generatedOfferCurrency,
       total_price_cents: safeInt(generatedOffer?.total_price_cents) || safeInt(generatedOfferReadModel?.total_price_cents) || 0,
       offer: generatedOfferReadModel,
-      travel_plan: buildBookingTravelPlanReadModel(generatedOffer?.travel_plan, generatedOfferReadModel)
+      travel_plan: buildBookingTravelPlanReadModel(generatedOffer?.travel_plan, generatedOfferReadModel, { lang: generatedLang })
     };
   }
 
-  async function buildBookingReadModel(booking) {
+  async function buildBookingReadModel(booking, options = {}) {
     const normalizedBooking = { ...booking };
     delete normalizedBooking.budget;
+    const lang = normalizeBookingContentLang(options?.lang || "en");
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
     const generatedOffers = await Promise.all(
       (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
-        ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency)),
+        ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, { lang })),
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
       }))
     );
     return {
       ...normalizedBooking,
       preferred_currency: preferredCurrency,
-      travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer),
+      travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, { lang }),
+      travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang),
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
-      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency),
+      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency, { lang }),
+      offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang),
       generated_offers: generatedOffers,
-      generated_offer_email_enabled: isGeneratedOfferEmailEnabled()
+      generated_offer_email_enabled: isGeneratedOfferEmailEnabled(),
+      translation_enabled: Boolean(translationEnabled)
     };
   }
 

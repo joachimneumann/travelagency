@@ -231,6 +231,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedTravelStyles = normalizeStringArray(booking?.travel_styles);
   const normalizedBooking = {
     ...booking,
+    customer_language: optionalText(booking?.customer_language || booking?.web_form_submission?.preferred_language),
     name: optionalText(booking?.name || booking?.web_form_submission?.booking_name),
     image: optionalText(booking?.image),
     core_revision: nonNegativeInt(booking?.core_revision, 0),

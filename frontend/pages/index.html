@@ -1,48 +1,57 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AsiaTravelPlan | Custom Southeast Asia Holidays</title>
+    <title data-i18n-id="meta.home_title">AsiaTravelPlan | Custom Southeast Asia Holidays</title>
     <meta
       name="description"
       content="Private Vietnam, Thailand, Cambodia and Laos holidays with clear pricing and local support. Book a free discovery call."
+      data-i18n-content-id="meta.home_description"
     />
     <link rel="canonical" href="https://asiatravelplan.com/" />
 
-    <meta property="og:title" content="AsiaTravelPlan | Custom Southeast Asia Holidays" />
+    <meta property="og:title" content="AsiaTravelPlan | Custom Southeast Asia Holidays" data-i18n-content-id="meta.home_title" />
     <meta
       property="og:description"
       content="Private Vietnam, Thailand, Cambodia and Laos holidays with clear pricing and local support."
+      data-i18n-content-id="meta.home_description"
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://asiatravelplan.com/" />
-    <meta property="og:image" content="https://asiatravelplan.com/assets/video/rice%20field.webp?v=6c388c7e525c" />
+    <meta property="og:image" content="https://asiatravelplan.com/assets/video/rice%20field.webp?v=b7baca7c60a0" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="AsiaTravelPlan | Custom Southeast Asia Holidays" />
+    <meta name="twitter:title" content="AsiaTravelPlan | Custom Southeast Asia Holidays" data-i18n-content-id="meta.home_title" />
     <meta
       name="twitter:description"
       content="Private Vietnam, Thailand, Cambodia and Laos holidays with clear pricing and local support."
+      data-i18n-content-id="meta.home_description"
     />
-    <meta name="twitter:image" content="https://asiatravelplan.com/assets/video/rice%20field.webp?v=6c388c7e525c" />
+    <meta name="twitter:image" content="https://asiatravelplan.com/assets/video/rice%20field.webp?v=b7baca7c60a0" />
 
     <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
+      }
+    </script>
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="preload" as="image" href="/assets/video/rice%20field.webp?v=6c388c7e525c" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/video/rice%20field.webp?v=b7baca7c60a0" fetchpriority="high" />
 
-    <link rel="stylesheet" href="/assets/css/styles.css?v=6c388c7e525c" />
+    <link rel="stylesheet" href="/assets/css/styles.css?v=b7baca7c60a0" />
   </head>
   <body class="home-page">
-    <a class="skip-link" href="#main-content">Skip to content</a>
+    <a class="skip-link" href="#main-content" data-i18n-id="skip.content">Skip to content</a>
 
     <header class="header" id="top">
       <div class="container header-wrap">
-        <a class="brand" id="brandLogoLink" href="#top" aria-label="AsiaTravelPlan home">
+        <a class="brand" id="brandLogoLink" href="#top" aria-label="AsiaTravelPlan home" data-i18n-aria-label-id="a11y.home">
           <img
             class="brand-logo"
             src="/assets/img/logo-asiatravelplan.svg"
             alt="AsiaTravelPlan"
+            data-i18n-alt-id="brand.logo_alt"
             width="320"
             height="76"
           />
@@ -55,42 +64,44 @@
           aria-expanded="false"
           aria-controls="siteNav"
           aria-label="Open navigation"
+          data-i18n-aria-label-id="a11y.open_nav"
         >
           ☰
         </button>
 
-        <nav class="nav" id="siteNav" aria-label="Main navigation">
+        <nav class="nav" id="siteNav" aria-label="Main navigation" data-i18n-aria-label-id="a11y.main_nav">
           <ul class="nav-list">
-            <li><a href="#why">Why us</a></li>
-            <li><a href="#trust">Trust</a></li>
-            <li><a href="#faq">FAQ</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="#why" data-i18n-id="nav.why">Why us</a></li>
+            <li><a href="#trust" data-i18n-id="nav.trust">Trust</a></li>
+            <li><a href="#faq" data-i18n-id="nav.faq">FAQ</a></li>
+            <li><a href="#contact" data-i18n-id="nav.contact">Contact</a></li>
           </ul>
           <div id="headerBackendLoginMount">
-            <div class="backend-login backend-login--deferred" id="backendLoginContainer" aria-label="Backend login">
+            <div class="backend-login backend-login--deferred" id="backendLoginContainer" aria-label="Backend login" data-i18n-aria-label-id="a11y.backend_login">
               <button id="backendLoginBtn" class="btn btn-ghost backend-login__button" type="button">
                 <span id="backendLoginBtnTitle" class="backend-login__title">Backend</span>
                 <span id="backendLoginBtnSubtitle" class="backend-login__subtitle"></span>
               </button>
             </div>
           </div>
+          <div id="frontendLangMenuMount"></div>
         </nav>
       </div>
     </header>
 
     <main id="main-content">
       <section class="hero hero-video" id="hero">
-        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="/assets/video/rice field.webp?v=6c388c7e525c">
+        <video class="hero-bg-video" autoplay muted loop playsinline preload="metadata" poster="/assets/video/rice field.webp?v=b7baca7c60a0">
           <source src="/assets/video/rice field.mp4" type="video/mp4" />
           <source src="/assets/video/rice field.webm" type="video/webm" />
-          Your browser does not support HTML5 video.
+          <span data-i18n-id="hero.video_fallback">Your browser does not support HTML5 video.</span>
         </video>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="container hero-content">
-          <h1 class="hero-title-only">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
-          <div class="filter-menu filter-menu--hero" aria-label="Primary browse menu">
+          <h1 class="hero-title-only" data-i18n-id="hero.title">Private holidays in Vietnam, Thailand, Cambodia and Laos</h1>
+          <div class="filter-menu filter-menu--hero" aria-label="Primary browse menu" data-i18n-aria-label-id="a11y.browse_menu">
               <div class="select-wrap">
-              <span class="field-label">Destination</span>
+              <span class="field-label" data-i18n-id="filters.destination_label">Destination</span>
               <button
                 id="navDestinationTrigger"
                 class="filter-select-trigger"
@@ -98,11 +109,11 @@
                 aria-expanded="false"
                 aria-controls="navDestinationPanel"
               >
-                <span id="navDestinationSummary">All destinations</span>
+                <span id="navDestinationSummary" data-i18n-id="filters.all_destinations">All destinations</span>
                 <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
               </button>
               <div id="navDestinationPanel" class="filter-select-panel" hidden>
-                <div id="navDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Destination filters"></div>
+                <div id="navDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Destination filters" data-i18n-aria-label-id="a11y.destination_filters"></div>
               </div>
             </div>
               <div class="select-wrap">
@@ -113,17 +124,17 @@
                 aria-expanded="false"
                 aria-controls="navStylePanel"
               >
-                <span id="navStyleSummary">All travel styles</span>
+                <span id="navStyleSummary" data-i18n-id="filters.all_styles">All travel styles</span>
                 <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
               </button>
               <div id="navStylePanel" class="filter-select-panel" hidden>
-                <div id="navStyleOptions" class="filter-checkbox-list" role="group" aria-label="Travel style filters"></div>
+                <div id="navStyleOptions" class="filter-checkbox-list" role="group" aria-label="Travel style filters" data-i18n-aria-label-id="a11y.style_filters"></div>
               </div>
             </div>
-            <button id="clearFilters" class="btn btn-ghost" type="button">Show all tours</button>
+            <button id="clearFilters" class="btn btn-ghost" type="button" data-i18n-id="filters.clear">Show all tours</button>
           </div>
-          <a id="heroScrollLink" class="hero-subtitle-only hero-subtitle-link" href="#tours" aria-label="Scroll to tours">
-            <span id="heroDynamicSubtitle">Featured tours you can tailor</span>
+          <a id="heroScrollLink" class="hero-subtitle-only hero-subtitle-link" href="#tours" aria-label="Scroll to tours" data-i18n-aria-label-id="a11y.scroll_to_tours">
+            <span id="heroDynamicSubtitle" data-i18n-id="tours.heading.default">Featured tours you can tailor</span>
             <span class="hero-subtitle-arrow" aria-hidden="true">↓</span>
           </a>
         </div>
@@ -131,8 +142,8 @@
 
       <section class="section" id="tours">
         <div class="container">
-          <h2 class="section-title" id="toursTitle" hidden>Featured tours you can tailor</h2>
-          <p class="section-booking" id="toursBooking" hidden>
+          <h2 class="section-title" id="toursTitle" hidden data-i18n-id="tours.heading.default">Featured tours you can tailor</h2>
+          <p class="section-booking" id="toursBooking" hidden data-i18n-id="tours.booking.default">
             Browse by destination and style. Filters update instantly and can be shared by URL.
           </p>
 
@@ -140,43 +151,43 @@
 
           <div class="tour-grid" id="tourGrid" aria-live="polite"></div>
           <div class="tour-actions" id="tourActions" hidden>
-            <button class="btn btn-secondary" id="showMoreTours" type="button">Show more</button>
-            <button class="btn btn-secondary" id="showAllTours" type="button">Show all</button>
+            <button class="btn btn-secondary" id="showMoreTours" type="button" data-i18n-id="tours.show_more.default">Show more</button>
+            <button class="btn btn-secondary" id="showAllTours" type="button" data-i18n-id="filters.clear">Show all</button>
           </div>
-          <p id="noResultsMessage" class="section-booking" hidden>
+          <p id="noResultsMessage" class="section-booking" hidden data-i18n-id="tours.no_results">
             No tours match these filters yet. Try "All destinations" or "All styles".
           </p>
         </div>
       </section>
 
-      <section class="container" aria-label="Trust highlights">
+      <section class="container" aria-label="Trust highlights" data-i18n-aria-label-id="a11y.trust_highlights">
         <div class="trust-strip">
-          <div class="trust-tile"><strong>4.9/5 traveler rating</strong><br />Based on recent custom itineraries.</div>
-          <div class="trust-tile"><strong>13+ years</strong><br />Designing Southeast Asia routes for Western travelers.</div>
-          <div class="trust-tile"><strong>24/7 support</strong><br />Local help during your journey.</div>
-          <div class="trust-tile"><strong>$500+/week fit</strong><br />Comfort-focused planning and transparent tradeoffs.</div>
+          <div class="trust-tile"><strong data-i18n-id="trust.strip.rating_title">4.9/5 traveler rating</strong><br /><span data-i18n-id="trust.strip.rating_body">Based on recent custom itineraries.</span></div>
+          <div class="trust-tile"><strong data-i18n-id="trust.strip.years_title">13+ years</strong><br /><span data-i18n-id="trust.strip.years_body">Designing Southeast Asia routes for Western travelers.</span></div>
+          <div class="trust-tile"><strong data-i18n-id="trust.strip.support_title">24/7 support</strong><br /><span data-i18n-id="trust.strip.support_body">Local help during your journey.</span></div>
+          <div class="trust-tile"><strong data-i18n-id="trust.strip.fit_title">$500+/week fit</strong><br /><span data-i18n-id="trust.strip.fit_body">Comfort-focused planning and transparent tradeoffs.</span></div>
         </div>
       </section>
 
       <section class="section" id="how-it-works">
         <div class="container">
-          <h2 class="section-title">How planning with AsiaTravelPlan works</h2>
+          <h2 class="section-title" data-i18n-id="how.heading">How planning with AsiaTravelPlan works</h2>
           <div class="info-grid">
             <article class="panel">
-              <h3>1. Free discovery call</h3>
-              <p class="section-booking">We align on destination mix, travel pace, comfort level, and budget.</p>
+              <h3 data-i18n-id="how.card1.title">1. Free discovery call</h3>
+              <p class="section-booking" data-i18n-id="how.card1.body">We align on destination mix, travel pace, comfort level, and budget.</p>
             </article>
             <article class="panel">
-              <h3>2. Route options in 48-72h</h3>
-              <p class="section-booking">You receive two practical concepts with transparent inclusions.</p>
+              <h3 data-i18n-id="how.card2.title">2. Route options in 48-72h</h3>
+              <p class="section-booking" data-i18n-id="how.card2.body">You receive two practical concepts with transparent inclusions.</p>
             </article>
             <article class="panel">
-              <h3>3. Refine and confirm</h3>
-              <p class="section-booking">We tune hotels, activities, and transport until the plan fits you.</p>
+              <h3 data-i18n-id="how.card3.title">3. Refine and confirm</h3>
+              <p class="section-booking" data-i18n-id="how.card3.body">We tune hotels, activities, and transport until the plan fits you.</p>
             </article>
             <article class="panel">
-              <h3>4. Travel with support</h3>
-              <p class="section-booking">Our local team helps before and during your trip, including rerouting if needed.</p>
+              <h3 data-i18n-id="how.card4.title">4. Travel with support</h3>
+              <p class="section-booking" data-i18n-id="how.card4.body">Our local team helps before and during your trip, including rerouting if needed.</p>
             </article>
           </div>
         </div>
@@ -185,45 +196,45 @@
       <section class="section" id="why">
         <div class="container split">
           <article class="panel">
-            <h2 class="section-title">Why travelers choose AsiaTravelPlan</h2>
+            <h2 class="section-title" data-i18n-id="why.heading">Why travelers choose AsiaTravelPlan</h2>
             <ul>
-              <li>Structured customization: hotels, transport, guiding, and pace can be tuned clearly.</li>
-              <li>Honest pricing logic: what changes your quote is explained before payment.</li>
-              <li>Local execution: practical rerouting support if weather or operations shift.</li>
-              <li>Comfort-first routing for travelers who value quality over bargain stress.</li>
+              <li data-i18n-id="why.item1">Structured customization: hotels, transport, guiding, and pace can be tuned clearly.</li>
+              <li data-i18n-id="why.item2">Honest pricing logic: what changes your quote is explained before payment.</li>
+              <li data-i18n-id="why.item3">Local execution: practical rerouting support if weather or operations shift.</li>
+              <li data-i18n-id="why.item4">Comfort-first routing for travelers who value quality over bargain stress.</li>
             </ul>
           </article>
 
           <figure class="panel">
-            <img class="why-local-team-image" src="/assets/img/tourist_guides.webp" alt="Local travel planning team" width="6000" height="4000" />
-            <figcaption class="micro">Local experts in Vietnam, Thailand, Cambodia, and Laos.</figcaption>
+            <img class="why-local-team-image" src="/assets/img/tourist_guides.webp" alt="Local travel planning team" data-i18n-alt-id="why.image_alt" width="6000" height="4000" />
+            <figcaption class="micro" data-i18n-id="why.caption">Local experts in Vietnam, Thailand, Cambodia, and Laos.</figcaption>
           </figure>
         </div>
       </section>
 
       <section class="section" id="trust">
         <div class="container">
-          <h2 class="section-title">Trust, proof, and local expertise</h2>
-          <p class="section-booking">We combine local execution with clear planning standards.</p>
+          <h2 class="section-title" data-i18n-id="trust.heading">Trust, proof, and local expertise</h2>
+          <p class="section-booking" data-i18n-id="trust.body">We combine local execution with clear planning standards.</p>
 
           <div class="metrics">
-            <div class="metric"><strong>96%</strong><span>proposal-to-booking satisfaction</span></div>
-            <div class="metric"><strong>48-72h</strong><span>initial route proposal time</span></div>
-            <div class="metric"><strong>4 countries</strong><span>single-team support coverage</span></div>
+            <div class="metric"><strong data-i18n-id="trust.metric1.value">96%</strong><span data-i18n-id="trust.metric1.label">proposal-to-booking satisfaction</span></div>
+            <div class="metric"><strong data-i18n-id="trust.metric2.value">48-72h</strong><span data-i18n-id="trust.metric2.label">initial route proposal time</span></div>
+            <div class="metric"><strong data-i18n-id="trust.metric3.value">4 countries</strong><span data-i18n-id="trust.metric3.label">single-team support coverage</span></div>
           </div>
 
           <div class="review-grid">
             <article class="review-card">
-              <p>"Every transfer and hotel handoff was smooth. We felt looked after the whole way."</p>
-              <span>Anna & James, UK</span>
+              <p data-i18n-id="trust.review1.quote">"Every transfer and hotel handoff was smooth. We felt looked after the whole way."</p>
+              <span data-i18n-id="trust.review1.author">Anna & James, UK</span>
             </article>
             <article class="review-card">
-              <p>"The quote was the clearest we got from any agency. No hidden surprises later."</p>
-              <span>Claire, Australia</span>
+              <p data-i18n-id="trust.review2.quote">"The quote was the clearest we got from any agency. No hidden surprises later."</p>
+              <span data-i18n-id="trust.review2.author">Claire, Australia</span>
             </article>
             <article class="review-card">
-              <p>"When weather changed in central Vietnam, they rerouted our days quickly and calmly."</p>
-              <span>Ben, Canada</span>
+              <p data-i18n-id="trust.review3.quote">"When weather changed in central Vietnam, they rerouted our days quickly and calmly."</p>
+              <span data-i18n-id="trust.review3.author">Ben, Canada</span>
             </article>
           </div>
         </div>
@@ -231,53 +242,53 @@
 
       <section class="section" id="faq">
         <div class="container">
-          <h2 class="section-title">Frequently asked questions</h2>
+          <h2 class="section-title" data-i18n-id="faq.heading">Frequently asked questions</h2>
           <div class="faq-list" id="faqList">
             <article class="faq-item">
               <button class="faq-question" type="button" aria-expanded="false">
-                Is $500 per week enough for a comfortable trip?
+                <span data-i18n-id="faq.q1">Is $500 per week enough for a comfortable trip?</span>
                 <span aria-hidden="true">+</span>
               </button>
-              <p class="faq-answer">
+              <p class="faq-answer" data-i18n-id="faq.a1">
                 Usually yes for smart-comfort planning, depending on season, route complexity, and hotel tier.
               </p>
             </article>
             <article class="faq-item">
               <button class="faq-question" type="button" aria-expanded="false">
-                Private or group travel: what is better?
+                <span data-i18n-id="faq.q2">Private or group travel: what is better?</span>
                 <span aria-hidden="true">+</span>
               </button>
-              <p class="faq-answer">
+              <p class="faq-answer" data-i18n-id="faq.a2">
                 Private travel works best for flexibility and comfort. Group tours can reduce cost but with less control.
               </p>
             </article>
             <article class="faq-item">
               <button class="faq-question" type="button" aria-expanded="false">
-                How quickly do you send itinerary options?
+                <span data-i18n-id="faq.q3">How quickly do you send itinerary options?</span>
                 <span aria-hidden="true">+</span>
               </button>
-              <p class="faq-answer">Our standard is 48 to 72 hours after your discovery call.</p>
+              <p class="faq-answer" data-i18n-id="faq.a3">Our standard is 48 to 72 hours after your discovery call.</p>
             </article>
             <article class="faq-item">
               <button class="faq-question" type="button" aria-expanded="false">
-                Can we combine all four countries in one route?
+                <span data-i18n-id="faq.q4">Can we combine all four countries in one route?</span>
                 <span aria-hidden="true">+</span>
               </button>
-              <p class="faq-answer">Yes. We can design multi-country routes with realistic pacing and clear transfer planning.</p>
+              <p class="faq-answer" data-i18n-id="faq.a4">Yes. We can design multi-country routes with realistic pacing and clear transfer planning.</p>
             </article>
             <article class="faq-item">
               <button class="faq-question" type="button" aria-expanded="false">
-                What if weather disrupts our plan?
+                <span data-i18n-id="faq.q5">What if weather disrupts our plan?</span>
                 <span aria-hidden="true">+</span>
               </button>
-              <p class="faq-answer">We provide practical alternatives and rerouting support using our local partner network.</p>
+              <p class="faq-answer" data-i18n-id="faq.a5">We provide practical alternatives and rerouting support using our local partner network.</p>
             </article>
             <article class="faq-item">
               <button class="faq-question" type="button" aria-expanded="false">
-                Do you support visa and entry guidance?
+                <span data-i18n-id="faq.q6">Do you support visa and entry guidance?</span>
                 <span aria-hidden="true">+</span>
               </button>
-              <p class="faq-answer">Yes. We provide up-to-date guidance for entry requirements and practical prep checklists.</p>
+              <p class="faq-answer" data-i18n-id="faq.a6">Yes. We provide up-to-date guidance for entry requirements and practical prep checklists.</p>
             </article>
           </div>
         </div>
@@ -286,33 +297,33 @@
       <section class="section" id="contact">
         <div class="container split">
           <div class="contact-card">
-            <h2 class="section-title">Book your free discovery call</h2>
-            <p class="section-booking">
+            <h2 class="section-title" data-i18n-id="contact.heading">Book your free discovery call</h2>
+            <p class="section-booking" data-i18n-id="contact.body">
               Tell us your destination ideas and budget. We will reply with clear options and next steps.
             </p>
             <ul>
-              <li>Local experts across Vietnam, Thailand, Cambodia, and Laos.</li>
-              <li>Clear inclusions and exclusions before booking.</li>
-              <li>Fast first proposal in 48 to 72 hours.</li>
-              <li>On-trip support if plans need to change.</li>
+              <li data-i18n-id="contact.item1">Local experts across Vietnam, Thailand, Cambodia, and Laos.</li>
+              <li data-i18n-id="contact.item2">Clear inclusions and exclusions before booking.</li>
+              <li data-i18n-id="contact.item3">Fast first proposal in 48 to 72 hours.</li>
+              <li data-i18n-id="contact.item4">On-trip support if plans need to change.</li>
             </ul>
             <div class="contact-row">
-              <button class="btn btn-primary" type="button" data-open-modal>Start planning now</button>
-              <a class="btn btn-secondary" href="mailto:info@asiatravelplan.com">Email us directly</a>
+              <button class="btn btn-primary" type="button" data-open-modal data-i18n-id="contact.cta_primary">Start planning now</button>
+              <a class="btn btn-secondary" href="mailto:info@asiatravelplan.com" data-i18n-id="contact.cta_secondary">Email us directly</a>
             </div>
-            <p class="micro">Response within 24 hours on email or WhatsApp.</p>
+            <p class="micro" data-i18n-id="contact.response_time">Response within 24 hours on email or WhatsApp.</p>
             <div class="review-grid">
               <article class="review-card">
-                <p>"We got a tailored route fast, and the quote was easy to understand."</p>
-                <span>Emily, USA</span>
+                <p data-i18n-id="contact.review1.quote">"We got a tailored route fast, and the quote was easy to understand."</p>
+                <span data-i18n-id="contact.review1.author">Emily, USA</span>
               </article>
               <article class="review-card">
-                <p>"Great local support and thoughtful pacing for our family."</p>
-                <span>Oliver, UK</span>
+                <p data-i18n-id="contact.review2.quote">"Great local support and thoughtful pacing for our family."</p>
+                <span data-i18n-id="contact.review2.author">Oliver, UK</span>
               </article>
               <article class="review-card">
-                <p>"They helped us combine Vietnam and Laos without travel-day stress."</p>
-                <span>Sophie, France</span>
+                <p data-i18n-id="contact.review3.quote">"They helped us combine Vietnam and Laos without travel-day stress."</p>
+                <span data-i18n-id="contact.review3.author">Sophie, France</span>
               </article>
             </div>
           </div>
@@ -322,10 +333,11 @@
               class="contact-happy-tourists-image"
               src="/assets/img/happy_tourists.webp"
               alt="Happy travelers during a Southeast Asia holiday"
+              data-i18n-alt-id="contact.image_alt"
               width="6081"
               height="4054"
             />
-            <figcaption class="micro">Real itinerary support from before departure to your return flight.</figcaption>
+            <figcaption class="micro" data-i18n-id="contact.caption">Real itinerary support from before departure to your return flight.</figcaption>
           </figure>
         </div>
       </section>
@@ -334,59 +346,59 @@
     <footer class="footer">
       <div class="container footer-grid">
         <section>
-          <h3>AsiaTravelPlan</h3>
-          <p>Custom Southeast Asia travel planning from Vietnam with transparent scope and local support.</p>
-          <p>Website: asiatravelplan.com</p>
+          <h3 data-i18n-id="footer.brand_title">AsiaTravelPlan</h3>
+          <p data-i18n-id="footer.brand_body">Custom Southeast Asia travel planning from Vietnam with transparent scope and local support.</p>
+          <p data-i18n-id="footer.website">Website: asiatravelplan.com</p>
           <div id="footerBackendLoginMount"></div>
         </section>
         <section>
-          <h3>Contact</h3>
+          <h3 data-i18n-id="footer.contact_title">Contact</h3>
           <ul>
-            <li>Address: alley 378 Cua Dai, 550000 Hoi An, Vietnam</li>
-            <li>WhatsApp: +84 337942446</li>
-            <li>Email: info@asiatravelplan.com</li>
-            <li>License: VN-TRAVEL-PLACEHOLDER</li>
+            <li data-i18n-id="footer.address">Address: alley 378 Cua Dai, 550000 Hoi An, Vietnam</li>
+            <li data-i18n-id="footer.whatsapp">WhatsApp: +84 337942446</li>
+            <li data-i18n-id="footer.email">Email: info@asiatravelplan.com</li>
+            <li data-i18n-id="footer.license">License: VN-TRAVEL-PLACEHOLDER</li>
           </ul>
         </section>
         <section>
-          <h3>Social</h3>
+          <h3 data-i18n-id="footer.social_title">Social</h3>
           <ul>
-            <li><a href="#" aria-label="Instagram placeholder">Instagram</a></li>
-            <li><a href="#" aria-label="Facebook placeholder">Facebook</a></li>
-            <li><a href="#" aria-label="YouTube placeholder">YouTube</a></li>
-            <li><a href="#" aria-label="LinkedIn placeholder">LinkedIn</a></li>
+            <li><a href="#" aria-label="Instagram placeholder" data-i18n-id="footer.instagram" data-i18n-aria-label-id="footer.instagram">Instagram</a></li>
+            <li><a href="#" aria-label="Facebook placeholder" data-i18n-id="footer.facebook" data-i18n-aria-label-id="footer.facebook">Facebook</a></li>
+            <li><a href="#" aria-label="YouTube placeholder" data-i18n-id="footer.youtube" data-i18n-aria-label-id="footer.youtube">YouTube</a></li>
+            <li><a href="#" aria-label="LinkedIn placeholder" data-i18n-id="footer.linkedin" data-i18n-aria-label-id="footer.linkedin">LinkedIn</a></li>
           </ul>
         </section>
         <section>
-          <h3>Legal</h3>
+          <h3 data-i18n-id="footer.legal_title">Legal</h3>
           <ul>
-            <li><a href="/privacy.html">Privacy Policy</a></li>
+            <li><a href="/privacy.html" data-i18n-id="footer.privacy">Privacy Policy</a></li>
           </ul>
         </section>
       </div>
     </footer>
 
-    <section class="debug-priority-wrap" aria-label="Debug tools">
+    <section class="debug-priority-wrap" aria-label="Debug tools" data-i18n-aria-label-id="a11y.debug_tools">
       <div class="container">
-        <button class="btn btn-ghost" id="debugPriorityBtn" type="button">Debug priority</button>
+        <button class="btn btn-ghost" id="debugPriorityBtn" type="button" data-i18n-id="debug.button">Debug priority</button>
         <pre class="debug-priority-output" id="debugPriorityOutput" hidden></pre>
       </div>
     </section>
 
     <div class="mobile-cta">
-      <button class="btn btn-primary" type="button" data-open-modal>Book a free discovery call</button>
+      <button class="btn btn-primary" type="button" data-open-modal data-i18n-id="mobile.cta">Book a free discovery call</button>
     </div>
 
     <div class="modal" id="bookingModal" hidden role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
       <div class="modal-panel" role="document">
         <div class="modal-head">
-          <h2 id="bookingTitle">Plan your trip with AsiaTravelPlan</h2>
-          <button class="icon-btn" type="button" id="closeBookingModal" aria-label="Close form">✕</button>
+          <h2 id="bookingTitle" data-i18n-id="modal.title.default">Plan your trip with AsiaTravelPlan</h2>
+          <button class="icon-btn" type="button" id="closeBookingModal" aria-label="Close form" data-i18n-aria-label-id="a11y.close_form">✕</button>
         </div>
 
         <div class="modal-body">
           <div id="bookingModalContent">
-            <p class="micro">It takes about 2 minutes. Response within 24 hours.</p>
+            <p class="micro" data-i18n-id="modal.intro">It takes about 2 minutes. Response within 24 hours.</p>
             <div class="progress" aria-hidden="true">
               <span class="progress-step active" data-step="1"></span>
               <span class="progress-step" data-step="2"></span>
@@ -403,6 +415,7 @@
                   data-booking-input-name="destinations"
                   data-empty-label="All destinations"
                   aria-label="Destination countries"
+                  data-i18n-aria-label-id="a11y.booking_destinations"
                 ></div>
                 <div
                   id="bookingStyle"
@@ -410,77 +423,82 @@
                   data-booking-input-name="travel_style"
                   data-empty-label="All travel styles"
                   aria-label="Travel styles"
+                  data-i18n-aria-label-id="a11y.booking_styles"
                 ></div>
               </div>
               <div class="field-grid">
                 <div class="field">
-                  <label for="bookingMonth">Travel month (optional)</label>
-                  <input id="bookingMonth" name="travel_month" type="month" />
+                  <label for="bookingMonthMonth" data-i18n-id="modal.step1.month">Travel month (optional)</label>
+                  <div class="month-select-grid">
+                    <select id="bookingMonthMonth" aria-label="Travel month"></select>
+                    <select id="bookingMonthYear" aria-label="Travel year"></select>
+                  </div>
+                  <input id="bookingMonth" name="travel_month" type="hidden" />
                 </div>
                 <div class="field">
-                  <label for="bookingTravelers">Number of travelers (optional)</label>
+                  <label for="bookingTravelers" data-i18n-id="modal.step1.travelers">Number of travelers (optional)</label>
                   <input id="bookingTravelers" name="number_of_travelers" type="number" min="1" max="30" placeholder="" />
-                  <span class="error">Travelers must be within the allowed range.</span>
+                  <span class="error" data-i18n-id="modal.error.travelers_range">Travelers must be within the allowed range.</span>
                 </div>
                 <div class="field">
-                  <label for="bookingPreferredCurrency">Preferred currency</label>
+                  <label for="bookingPreferredCurrency" data-i18n-id="modal.step1.currency">Preferred currency</label>
                   <select id="bookingPreferredCurrency" name="preferred_currency"></select>
-                  <span class="error">Please choose a currency.</span>
+                  <span class="error" data-i18n-id="modal.error.currency">Please choose a currency.</span>
                 </div>
                 <div class="field">
-                  <label for="bookingDuration">Travel duration</label>
+                  <label for="bookingDuration" data-i18n-id="modal.step1.duration">Travel duration</label>
                   <select id="bookingDuration">
-                    <option value="not decided yet" selected>Not decided yet</option>
-                    <option>3-5 days</option>
-                    <option>6-8 days</option>
-                    <option>9-12 days</option>
-                    <option>13-16 days</option>
-                    <option>17+ days</option>
+                    <option value="not decided yet" selected data-i18n-id="modal.duration.not_decided">Not decided yet</option>
+                    <option value="3-5 days" data-i18n-id="modal.duration.3_5">3-5 days</option>
+                    <option value="6-8 days" data-i18n-id="modal.duration.6_8">6-8 days</option>
+                    <option value="9-12 days" data-i18n-id="modal.duration.9_12">9-12 days</option>
+                    <option value="13-16 days" data-i18n-id="modal.duration.13_16">13-16 days</option>
+                    <option value="17+ days" data-i18n-id="modal.duration.17_plus">17+ days</option>
                   </select>
-                  <span class="error">Please choose a duration.</span>
+                  <span class="error" data-i18n-id="modal.error.duration">Please choose a duration.</span>
                 </div>
               </div>
             </section>
 
             <section class="step" data-step="2">
-              <h3>Step 2: Contact details</h3>
+              <h3 data-i18n-id="modal.step2.title">Step 2: Contact details</h3>
                 <div class="field-grid">
                 <div class="field">
-                  <label for="bookingName">Full name</label>
+                  <label for="bookingName" data-i18n-id="modal.step2.name">Full name</label>
                   <input id="bookingName" name="name" type="text" autocomplete="name" required />
-                  <span class="error">Please enter your name.</span>
+                  <span class="error" data-i18n-id="modal.error.name">Please enter your name.</span>
                 </div>
                 <div class="field">
-                  <label for="bookingEmail">Email</label>
+                  <label for="bookingEmail" data-i18n-id="modal.step2.email">Email</label>
                   <input id="bookingEmail" name="email" type="email" autocomplete="email" />
-                  <span class="error">Please enter a valid email or phone number.</span>
+                  <span class="error" data-i18n-id="modal.error.email">Please enter a valid email or phone number.</span>
                 </div>
                 <div class="field">
-                  <label for="bookingPhone">WhatsApp or phone</label>
+                  <label for="bookingPhone" data-i18n-id="modal.step2.phone">WhatsApp or phone</label>
                   <input id="bookingPhone" name="phone_number" type="tel" autocomplete="tel" />
-                  <span class="error">Please enter an email or phone number.</span>
+                  <span class="error" data-i18n-id="modal.error.email_or_phone">Please enter an email or phone number.</span>
                 </div>
                 <div class="field">
                   <label for="bookingBudget" id="bookingBudgetLabel">Budget range (USD)</label>
                   <select id="bookingBudget">
-                    <option value="not decided yet" selected>Not decided yet</option>
+                    <option value="not decided yet" selected data-i18n-id="modal.duration.not_decided">Not decided yet</option>
                   </select>
-                  <span class="error">Please choose a budget range.</span>
+                  <span class="error" data-i18n-id="modal.error.budget">Please choose a budget range.</span>
                 </div>
                 <div class="field">
-                  <label for="bookingLanguage">Preferred language</label>
+                  <label for="bookingLanguage" data-i18n-id="modal.step2.language">Preferred language</label>
                   <select id="bookingLanguage" name="preferred_language"></select>
-                  <span class="error">Please choose a language.</span>
+                  <span class="error" data-i18n-id="modal.error.language">Please choose a language.</span>
                 </div>
               </div>
             </section>
 
             <section class="step" data-step="3">
-              <h3 id="bookingStepThreeTitle">Step 3: Trip details and notes</h3>
+              <h3 id="bookingStepThreeTitle" data-i18n-id="modal.step3.title">Step 3: Trip details and notes</h3>
               <div class="field-grid" id="bookingStepThreeContent">
                 <div class="field">
                   <div class="select-wrap">
-                    <label for="bookingDestinationTrigger">Destinations</label>
+                    <label for="bookingDestinationTrigger" data-i18n-id="modal.step3.destinations">Destinations</label>
                     <button
                       id="bookingDestinationTrigger"
                       class="filter-select-trigger"
@@ -488,17 +506,17 @@
                       aria-expanded="false"
                       aria-controls="bookingDestinationPanel"
                     >
-                      <span id="bookingDestinationSummary">All destinations</span>
+                      <span id="bookingDestinationSummary" data-i18n-id="filters.all_destinations">All destinations</span>
                       <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
                     </button>
                     <div id="bookingDestinationPanel" class="filter-select-panel" hidden>
-                      <div id="bookingDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Booking destinations"></div>
+                      <div id="bookingDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Booking destinations" data-i18n-aria-label-id="a11y.booking_destinations"></div>
                     </div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="select-wrap">
-                    <label for="bookingStyleTrigger">Travel styles</label>
+                    <label for="bookingStyleTrigger" data-i18n-id="modal.step3.styles">Travel styles</label>
                     <button
                       id="bookingStyleTrigger"
                       class="filter-select-trigger"
@@ -506,31 +524,31 @@
                       aria-expanded="false"
                       aria-controls="bookingStylePanel"
                     >
-                      <span id="bookingStyleSummary">All travel styles</span>
+                      <span id="bookingStyleSummary" data-i18n-id="filters.all_styles">All travel styles</span>
                       <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
                     </button>
                     <div id="bookingStylePanel" class="filter-select-panel" hidden>
-                      <div id="bookingStyleOptions" class="filter-checkbox-list" role="group" aria-label="Booking travel styles"></div>
+                      <div id="bookingStyleOptions" class="filter-checkbox-list" role="group" aria-label="Booking travel styles" data-i18n-aria-label-id="a11y.booking_styles"></div>
                     </div>
                   </div>
                 </div>
                 <div class="field full">
-                  <label for="bookingNotes">Trip notes (optional)</label>
-                  <textarea id="bookingNotes" name="notes" placeholder="E.g., honeymoon trip, looking for adventure, preferred activities, vegan diet, allergies, special wishes, accommodation preferences, or budget considerations."></textarea>
+                  <label for="bookingNotes" data-i18n-id="modal.step3.notes">Trip notes (optional)</label>
+                  <textarea id="bookingNotes" name="notes" placeholder="E.g., honeymoon trip, looking for adventure, preferred activities, vegan diet, allergies, special wishes, accommodation preferences, or budget considerations." data-i18n-placeholder-id="modal.step3.notes_placeholder"></textarea>
                 </div>
               </div>
               <div class="booking-success-state" id="bookingSuccessState" hidden role="status" aria-live="polite">
-                <p class="booking-success-state__title">Thank you.</p>
-                <p class="booking-success-state__body">Your request has been submitted to our planning team.</p>
-                <p class="booking-success-state__body">We will contact you on WhatsApp/email.</p>
-                <button class="btn btn-primary booking-success-state__close" id="bookingSuccessCloseBtn" type="button">Close</button>
+                <p class="booking-success-state__title" data-i18n-id="modal.success.title">Thank you.</p>
+                <p class="booking-success-state__body" data-i18n-id="modal.success.body1">Your request has been submitted to our planning team.</p>
+                <p class="booking-success-state__body" data-i18n-id="modal.success.body2">We will contact you on WhatsApp/email.</p>
+                <button class="btn btn-primary booking-success-state__close" id="bookingSuccessCloseBtn" type="button" data-i18n-id="modal.nav.close">Close</button>
               </div>
             </section>
 
             <div class="form-nav">
-              <button class="btn btn-secondary" id="stepBack" type="button">Back</button>
-              <button class="btn btn-secondary" id="stepClose" type="button" hidden>Close</button>
-              <button class="btn btn-primary" id="stepNext" type="button">Next</button>
+              <button class="btn btn-secondary" id="stepBack" type="button" data-i18n-id="modal.nav.back">Back</button>
+              <button class="btn btn-secondary" id="stepClose" type="button" hidden data-i18n-id="modal.nav.close">Close</button>
+              <button class="btn btn-primary" id="stepNext" type="button" data-i18n-id="modal.nav.next">Next</button>
             </div>
 
             <div class="form-error" id="bookingError" role="alert" aria-live="assertive"></div>
@@ -546,7 +564,9 @@
         </div>
       </div>
     </div>
-    <script type="module" src="/frontend/scripts/main.js?v=6c388c7e525c"></script>
+    <script src="/shared/generated/language_catalog.global.js?v=b7baca7c60a0"></script>
+    <script src="/frontend/scripts/shared/frontend_i18n.js?v=b7baca7c60a0"></script>
+    <script type="module" src="/frontend/scripts/main.js?v=b7baca7c60a0"></script>
 
     <script type="application/ld+json">
       {

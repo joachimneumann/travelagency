@@ -1,5 +1,4 @@
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Language.js";
 import {
   BOOKING_PERSON_SCHEMA,
   GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST
@@ -12,7 +11,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
 import {
   createApiFetcher,
   escapeHtml,
@@ -20,35 +19,87 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=6c388c7e525c";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=6c388c7e525c";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=6c388c7e525c";
-import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=6c388c7e525c";
+} from "../shared/api.js?v=b7baca7c60a0";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=b7baca7c60a0";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=b7baca7c60a0";
+import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=b7baca7c60a0";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=6c388c7e525c";
-import { createBookingOfferModule } from "../booking/offers.js?v=6c388c7e525c";
-import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=6c388c7e525c";
+} from "../booking/pricing.js?v=b7baca7c60a0";
+import { createBookingOfferModule } from "../booking/offers.js?v=b7baca7c60a0";
+import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=b7baca7c60a0";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=6c388c7e525c";
-import { createBookingCoreModule } from "../booking/core.js?v=6c388c7e525c";
+} from "../booking/invoices.js?v=b7baca7c60a0";
+import { createBookingCoreModule } from "../booking/core.js?v=b7baca7c60a0";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=6c388c7e525c";
-import { createBookingPersonsModule } from "../booking/persons.js?v=6c388c7e525c";
+} from "../booking/person_helpers.js?v=b7baca7c60a0";
+import { createBookingPersonsModule } from "../booking/persons.js?v=b7baca7c60a0";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=6c388c7e525c";
+} from "../shared/booking_persons.js?v=b7baca7c60a0";
+import {
+  BOOKING_CONTENT_LANGUAGE_OPTIONS,
+  bookingContentLang,
+  bookingContentLanguageLabel,
+  bookingContentLanguageOption,
+  normalizeBookingContentLang,
+  setBookingContentLang
+} from "../booking/i18n.js?v=b7baca7c60a0";
+
+function backendT(id, fallback, vars) {
+  if (typeof window.backendT === "function") {
+    return window.backendT(id, fallback, vars);
+  }
+  const template = String(fallback ?? id);
+  if (!vars || typeof vars !== "object") return template;
+  return template.replace(/\{([^{}]+)\}/g, (match, key) => {
+    const normalizedKey = String(key || "").trim();
+    return normalizedKey in vars ? String(vars[normalizedKey]) : match;
+  });
+}
+
+async function waitForBackendI18n() {
+  await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+}
+
+function currentBackendLang() {
+  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+}
+
+function withBackendLang(pathname, params = {}) {
+  const url = new URL(pathname, window.location.origin);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  const lang = currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
+
+function withBookingContentLang(pathname, params = {}) {
+  const url = new URL(pathname, window.location.origin);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  const lang = state.contentLang || bookingContentLang("en");
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -73,6 +124,8 @@ const BOOKING_PERSON_ROLE_OPTIONS = Object.freeze(
 );
 const state = {
   id: qs.get("id") || "",
+  contentLang: qs.has("content_lang") ? normalizeBookingContentLang(qs.get("content_lang") || "") : "",
+  contentLangInitialized: qs.has("content_lang"),
   user: "",
   authUser: null,
   roles: [],
@@ -176,6 +229,14 @@ const els = {
   personModalCountryCode: document.getElementById("booking_person_modal_country_code"),
   personModalNotes: document.getElementById("booking_person_modal_notes"),
   ownerSelect: document.getElementById("booking_owner_select"),
+  contentLanguageField: document.getElementById("booking_content_language_field"),
+  contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
+  contentLanguageSelect: document.getElementById("booking_content_language_select"),
+  contentLanguageNotice: document.getElementById("booking_content_language_notice"),
+  contentLanguageNoticeFlag: document.getElementById("booking_content_language_notice_flag"),
+  contentLanguageNoticeTitle: document.getElementById("booking_content_language_notice_title"),
+  contentLanguageNoticeText: document.getElementById("booking_content_language_notice_text"),
+  contentLanguageHint: document.getElementById("booking_content_language_hint"),
   stageSelect: document.getElementById("booking_stage_select"),
   noteInput: document.getElementById("booking_note_input"),
   noteSaveBtn: document.getElementById("booking_note_save_btn"),
@@ -214,12 +275,15 @@ const els = {
   invoice_issue_today_btn: document.getElementById("invoice_issue_today_btn"),
   invoice_due_date_input: document.getElementById("invoice_due_date_input"),
   invoice_due_month_btn: document.getElementById("invoice_due_month_btn"),
+  invoice_title_field: document.getElementById("invoice_title_field"),
   invoice_title_input: document.getElementById("invoice_title_input"),
+  invoice_components_field: document.getElementById("invoice_components_field"),
   invoice_components_input: document.getElementById("invoice_components_input"),
   invoice_due_amount_input: document.getElementById("invoice_due_amount_input"),
   invoice_due_amount_label: document.getElementById("invoice_due_amount_label"),
   invoice_components_label: document.getElementById("invoice_components_label"),
   invoice_vat_input: document.getElementById("invoice_vat_input"),
+  invoice_notes_field: document.getElementById("invoice_notes_field"),
   invoice_notes_input: document.getElementById("invoice_notes_input"),
   invoice_create_btn: document.getElementById("invoice_create_btn"),
   invoice_status: document.getElementById("invoice_status"),
@@ -246,6 +310,237 @@ function setBookingSectionDirty(sectionKey, isDirty) {
   setDirtySurface(sectionMap[sectionKey], state.dirty[sectionKey]);
 }
 
+function hasUnsavedBookingChanges() {
+  return Object.values(state.dirty).some(Boolean);
+}
+
+function updateContentLangInUrl(lang) {
+  const nextUrl = new URL(window.location.href);
+  const normalized = normalizeBookingContentLang(lang || state.contentLang || "en");
+  nextUrl.searchParams.set("content_lang", normalized);
+  window.history.replaceState({}, "", nextUrl);
+}
+
+function resolveSubmissionCustomerLanguage(booking) {
+  return normalizeBookingContentLang(booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
+}
+
+function contentLanguageLabel(lang) {
+  return bookingContentLanguageLabel(lang || "en");
+}
+
+function contentLanguageOption(lang) {
+  return bookingContentLanguageOption(lang || "en");
+}
+
+function closeContentLanguageMenu() {
+  const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
+  const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
+  const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
+  if (!menu || !trigger || !panel) return;
+  menu.classList.remove("is-open");
+  panel.hidden = true;
+  trigger.setAttribute("aria-expanded", "false");
+}
+
+let contentLanguageDismissHandlersBound = false;
+
+function ensureContentLanguageMenuDismissHandlers() {
+  if (contentLanguageDismissHandlersBound) return;
+  contentLanguageDismissHandlersBound = true;
+  document.addEventListener("click", (event) => {
+    const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
+    if (!menu || menu.contains(event.target)) return;
+    closeContentLanguageMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeContentLanguageMenu();
+  });
+}
+
+function renderContentLanguageMenu() {
+  if (!els.contentLanguageMenuMount) return;
+  ensureContentLanguageMenuDismissHandlers();
+  const active = contentLanguageOption(state.contentLang || bookingContentLang("en"));
+  const otherOptions = BOOKING_CONTENT_LANGUAGE_OPTIONS
+    .filter((option) => option.code !== active.code)
+    .map((option) => {
+      const renderedOption = contentLanguageOption(option.code);
+      return `
+        <button
+          type="button"
+          class="lang-menu-item"
+          data-booking-content-lang-option="${escapeHtml(renderedOption.code)}"
+          role="menuitem"
+        >
+          <span class="lang-flag ${escapeHtml(renderedOption.flagClass)}" aria-hidden="true"></span>
+          <span class="lang-menu-code">${escapeHtml(renderedOption.shortLabel)}</span>
+          <span class="lang-menu-label">${escapeHtml(renderedOption.label)}</span>
+        </button>
+      `;
+    })
+    .join("");
+
+  els.contentLanguageMenuMount.innerHTML = `
+    <div class="lang-menu booking-content-language-menu" data-booking-content-lang-menu="true">
+      <button
+        type="button"
+        class="lang-menu-trigger"
+        data-booking-content-lang-trigger="true"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-label="${escapeHtml(backendT("booking.content_language", "Customer language"))}"
+      >
+        <span class="lang-flag ${escapeHtml(active.flagClass)}" aria-hidden="true"></span>
+        <span class="lang-menu-code">${escapeHtml(active.shortLabel)}</span>
+        <span class="lang-menu-caret" aria-hidden="true"></span>
+      </button>
+      <div
+        class="lang-menu-panel"
+        data-booking-content-lang-panel="true"
+        role="menu"
+        hidden
+      >${otherOptions}</div>
+    </div>
+  `;
+
+  const menu = els.contentLanguageMenuMount.querySelector('[data-booking-content-lang-menu="true"]');
+  const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
+  const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
+  if (!menu || !trigger || !panel) return;
+
+  const openMenu = () => {
+    menu.classList.add("is-open");
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+  };
+
+  trigger.addEventListener("click", () => {
+    if (menu.classList.contains("is-open")) closeContentLanguageMenu();
+    else openMenu();
+  });
+
+  panel.querySelectorAll("[data-booking-content-lang-option]").forEach((item) => {
+    item.addEventListener("click", () => {
+      const next = normalizeBookingContentLang(item.getAttribute("data-booking-content-lang-option") || active.code);
+      closeContentLanguageMenu();
+      if (!els.contentLanguageSelect) return;
+      els.contentLanguageSelect.value = next;
+      els.contentLanguageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+}
+
+function renderContentLanguageProminence() {
+  const normalized = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
+  const isProminent = normalized !== "en";
+  if (els.contentLanguageField) {
+    els.contentLanguageField.classList.toggle("is-prominent", isProminent);
+  }
+  if (els.contentLanguageNotice) {
+    els.contentLanguageNotice.hidden = !isProminent;
+  }
+  if (els.contentLanguageNoticeFlag) {
+    els.contentLanguageNoticeFlag.className = `booking-content-language-notice__flag lang-flag ${isProminent ? contentLanguageOption(normalized).flagClass : "flag-en"}`;
+  }
+  if (els.contentLanguageNoticeTitle) {
+    els.contentLanguageNoticeTitle.textContent = backendT("booking.content_language", "Customer language");
+  }
+  if (els.contentLanguageNoticeText) {
+    els.contentLanguageNoticeText.textContent = isProminent
+      ? backendT(
+          "booking.content_language_notice",
+          "Important: this booking is currently handled in {language}.",
+          { language: contentLanguageLabel(normalized) }
+        )
+      : "";
+  }
+}
+
+function syncContentLanguageSelector() {
+  if (!els.contentLanguageSelect) return;
+  const normalized = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
+  state.contentLang = normalized;
+  els.contentLanguageSelect.value = normalized;
+  renderContentLanguageMenu();
+  renderContentLanguageProminence();
+}
+
+function populateContentLanguageSelect() {
+  if (!els.contentLanguageSelect) return;
+  els.contentLanguageSelect.innerHTML = BOOKING_CONTENT_LANGUAGE_OPTIONS
+    .map((option) => `<option value="${escapeHtml(option.code)}">${escapeHtml(option.label)}</option>`)
+    .join("");
+  syncContentLanguageSelector();
+}
+
+async function handleContentLanguageChange() {
+  if (!els.contentLanguageSelect) return;
+  const previousLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
+  const nextLang = normalizeBookingContentLang(els.contentLanguageSelect.value || previousLang);
+  if (nextLang === previousLang) {
+    syncContentLanguageSelector();
+    return;
+  }
+  if (hasUnsavedBookingChanges() && !window.confirm(backendT(
+    "booking.content_language_discard_confirm",
+    "You have unsaved changes. Switch content language and discard them?"
+  ))) {
+    els.contentLanguageSelect.value = previousLang;
+    syncContentLanguageSelector();
+    return;
+  }
+  state.contentLang = setBookingContentLang(nextLang);
+  state.contentLangInitialized = true;
+  updateContentLangInUrl(state.contentLang);
+  syncContentLanguageSelector();
+  clearStatus();
+  if (state.booking?.id && state.permissions.canEditBooking) {
+    try {
+      const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/customer-language`)), {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expected_core_revision: getBookingRevision("core_revision"),
+          customer_language: nextLang
+        })
+      });
+      if (response.status === 404) {
+        clearError();
+        setStatus(backendT(
+          "booking.content_language_persist_pending",
+          "Customer language updated for this page. Restart the backend to persist it across reloads."
+        ));
+        await loadBookingPage();
+        return;
+      }
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const requestFailed = backendT("booking.error.request_failed", "Request failed");
+        const message = payload?.detail ? `${payload.error || requestFailed}: ${payload.detail}` : payload?.error || requestFailed;
+        showError(message);
+        state.contentLang = setBookingContentLang(previousLang);
+        updateContentLangInUrl(state.contentLang);
+        els.contentLanguageSelect.value = previousLang;
+        syncContentLanguageSelector();
+        return;
+      }
+      clearError();
+    } catch (error) {
+      console.error(error);
+      clearError();
+      setStatus(backendT(
+        "booking.content_language_persist_pending",
+        "Customer language updated for this page. Restart the backend to persist it across reloads."
+      ));
+      await loadBookingPage();
+      return;
+    }
+  }
+  await loadBookingPage();
+}
+
 function captureControlSnapshot(root) {
   if (!root) return "";
   const controls = Array.from(root.querySelectorAll("input, select, textarea"));
@@ -269,16 +564,36 @@ window.addEventListener("beforeunload", () => {
 });
 
 function closeBookingDetailScreen() {
-  const fallbackHref = normalizeText(els.back?.href) || "backend.html";
+  const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/backend.html", { section: "bookings" });
   window.location.href = fallbackHref;
 }
 
+function redirectToBackendLogin() {
+  const returnTo = `${window.location.origin}${withBackendLang("/booking.html", {
+    id: state.id,
+    ...(state.contentLang ? { content_lang: state.contentLang } : {})
+  })}`;
+  const loginParams = new URLSearchParams({
+    return_to: returnTo,
+    prompt: "login"
+  });
+  window.location.href = `${apiBase}/auth/login?${loginParams.toString()}`;
+}
+
 async function init() {
-  const backHref = "backend.html";
+  await waitForBackendI18n();
+  if (state.contentLangInitialized && state.contentLang) {
+    state.contentLang = setBookingContentLang(state.contentLang);
+    updateContentLangInUrl(state.contentLang);
+  } else {
+    delete window.__BOOKING_CONTENT_LANG;
+    delete document.documentElement.dataset.bookingContentLang;
+  }
+  const backHref = withBackendLang("/backend.html", { section: "bookings" });
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.logoutLink) {
-    const returnTo = `${window.location.origin}/index.html`;
+    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
 
@@ -300,6 +615,7 @@ async function init() {
   populateCurrencySelectFromModule(els.pricing_currency_input);
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
+  populateContentLanguageSelect();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
   if (els.heroPhotoBtn) els.heroPhotoBtn.addEventListener("click", triggerBookingPhotoPicker);
@@ -317,6 +633,9 @@ async function init() {
     });
   }
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
+  if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
+    void handleContentLanguageChange();
+  });
   if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
@@ -358,7 +677,7 @@ async function init() {
 
   bindSectionNavigation("bookings");
   if (!state.id) {
-    showError("Missing record id.");
+    showError(backendT("booking.error.missing_record_id", "Missing record id."));
     return;
   }
 
@@ -385,14 +704,28 @@ function bindSectionNavigation(activeSection) {
 
 async function loadBookingPage() {
   clearStatus();
+  const requestedContentLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
   const requests = [
-    fetchApi(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url),
+    fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)),
     state.permissions.canReadAssignmentDirectory
       ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
       : Promise.resolve(null)
   ];
   const [bookingPayload, usersPayload] = await Promise.all(requests);
   if (!bookingPayload) return;
+
+  const incomingBooking = bookingPayload?.booking || null;
+  if (!state.contentLangInitialized) {
+    const submissionLang = resolveSubmissionCustomerLanguage(incomingBooking);
+    state.contentLang = setBookingContentLang(submissionLang);
+    state.contentLangInitialized = true;
+    updateContentLangInUrl(state.contentLang);
+    syncContentLanguageSelector();
+    if (submissionLang !== requestedContentLang) {
+      await loadBookingPage();
+      return;
+    }
+  }
 
   applyBookingPayload(bookingPayload);
   state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
@@ -466,10 +799,10 @@ async function uploadBookingPhoto() {
 function buildContactEntries(contact) {
   if (!contact) return [];
   return [
-    ["name", contact.name],
-    ["email", contact.emails?.[0] || contact.email],
-    ["phone_number", contact.phone_numbers?.[0] || contact.phone_number],
-    ["roles", Array.isArray(contact.roles) && contact.roles.length ? contact.roles.join(", ") : null]
+    [backendT("booking.name", "Name"), contact.name],
+    [backendT("booking.email", "Email"), contact.emails?.[0] || contact.email],
+    [backendT("booking.phone", "Phone"), contact.phone_numbers?.[0] || contact.phone_number],
+    [backendT("booking.roles", "Roles"), Array.isArray(contact.roles) && contact.roles.length ? contact.roles.join(", ") : null]
   ]
     .filter(([, value]) => value !== undefined && value !== null && value !== "")
     .map(([key, value]) => ({ key, value: String(value) }));
@@ -478,20 +811,20 @@ function buildContactEntries(contact) {
 function buildPersonEntries(persons) {
   return (Array.isArray(persons) ? persons : []).map((person, index) => {
     const summaryParts = [];
-    if (person.roles.length) summaryParts.push(`roles: ${person.roles.join(", ")}`);
-    if (person.emails.length) summaryParts.push(`email: ${person.emails.join(", ")}`);
-    if (person.phone_numbers.length) summaryParts.push(`phone: ${person.phone_numbers.join(", ")}`);
-    if (person.date_of_birth) summaryParts.push(`born: ${person.date_of_birth}`);
-    if (person.nationality) summaryParts.push(`nationality: ${person.nationality}`);
+    if (person.roles.length) summaryParts.push(backendT("booking.person_summary.roles", "Roles: {value}", { value: person.roles.join(", ") }));
+    if (person.emails.length) summaryParts.push(backendT("booking.person_summary.email", "Email: {value}", { value: person.emails.join(", ") }));
+    if (person.phone_numbers.length) summaryParts.push(backendT("booking.person_summary.phone", "Phone: {value}", { value: person.phone_numbers.join(", ") }));
+    if (person.date_of_birth) summaryParts.push(backendT("booking.person_summary.born", "Born: {value}", { value: person.date_of_birth }));
+    if (person.nationality) summaryParts.push(backendT("booking.person_summary.nationality", "Nationality: {value}", { value: person.nationality }));
     if (person.address?.country_code || person.address?.city || person.address?.street_address) {
-      summaryParts.push(`address: ${formatPersonAddress(person.address)}`);
+      summaryParts.push(backendT("booking.person_summary.address", "Address: {value}", { value: formatPersonAddress(person.address) }));
     }
-    if (Array.isArray(person.documents) && person.documents.length) summaryParts.push(`documents: ${person.documents.length}`);
-    if (Array.isArray(person.consents) && person.consents.length) summaryParts.push(`consents: ${person.consents.length}`);
-    if (person.photo_ref) summaryParts.push("photo attached");
+    if (Array.isArray(person.documents) && person.documents.length) summaryParts.push(backendT("booking.person_summary.documents", "Documents: {count}", { count: person.documents.length }));
+    if (Array.isArray(person.consents) && person.consents.length) summaryParts.push(backendT("booking.person_summary.consents", "Consents: {count}", { count: person.consents.length }));
+    if (person.photo_ref) summaryParts.push(backendT("booking.person_summary.photo_attached", "Photo attached"));
     return {
       key: `${index + 1}. ${person.name}`,
-      value: summaryParts.join(" | ") || "No details"
+      value: summaryParts.join(" | ") || backendT("booking.no_details", "No details")
     };
   });
 }
@@ -561,17 +894,20 @@ function renderActivitiesTable(items = []) {
       </tr>
     `)
     .join("");
-  const header = "<thead><tr><th>Time</th><th>Type</th><th>Actor</th><th>Detail</th></tr></thead>";
-  const body = rows || '<tr><td colspan="4">No activities yet.</td></tr>';
+  const header = `<thead><tr><th>${escapeHtml(backendT("booking.activity_time", "Time"))}</th><th>${escapeHtml(backendT("booking.activity_type", "Type"))}</th><th>${escapeHtml(backendT("booking.activity_actor", "Actor"))}</th><th>${escapeHtml(backendT("booking.activity_detail", "Detail"))}</th></tr></thead>`;
+  const body = rows || `<tr><td colspan="4">${escapeHtml(backendT("booking.no_activities", "No activities yet."))}</td></tr>`;
   els.activities_table.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
 function renderStaticSegmentHeaders() {
-  renderBookingSegmentHeader(els.personsPanelSummary, { primary: "No persons listed." });
-  renderBookingSegmentHeader(els.travel_plan_panel_summary, { primary: "Travel plan", secondary: "No travel plan yet." });
-  renderBookingSegmentHeader(els.offerPanelSummary, { primary: "Offer" });
-  renderBookingSegmentHeader(els.pricingPanelSummary, { primary: "Payments" });
-  renderBookingSegmentHeader(els.activitiesPanelSummary, { primary: "Activities" });
+  renderBookingSegmentHeader(els.personsPanelSummary, { primary: backendT("booking.no_persons", "No persons listed.") });
+  renderBookingSegmentHeader(els.travel_plan_panel_summary, {
+    primary: backendT("booking.travel_plan", "Travel plan"),
+    secondary: backendT("booking.no_travel_plan", "No travel plan yet.")
+  });
+  renderBookingSegmentHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
+  renderBookingSegmentHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
+  renderBookingSegmentHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });
 }
 
 async function loadActivities() {
@@ -651,9 +987,15 @@ function toEntries(obj) {
 
 const fetchApi = createApiFetcher({
   apiBase,
-  onError: (message) => showError(message),
+  onError: (message, _payload, response) => {
+    if (response?.status === 401) {
+      redirectToBackendLogin();
+      return;
+    }
+    showError(message);
+  },
   onSuccess: () => clearError(),
-  connectionErrorMessage: "Could not connect to backend API."
+  connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
 });
 
 const pricingModule = createBookingPricingModule({
@@ -760,8 +1102,8 @@ const coreModule = createBookingCoreModule({
 
 void init().catch((error) => {
   console.error(error);
-  showError("Could not load booking data.");
-  setStatus("Could not load booking.");
+  showError(backendT("booking.error.load", "Could not load booking."));
+  setStatus(backendT("booking.error.load", "Could not load booking."));
 });
 
 function getConflictReloadInstruction() {
@@ -772,18 +1114,18 @@ function getConflictReloadInstruction() {
   const isIPad = /iPad/i.test(userAgent) || (/Mac/i.test(platform) && touchPoints > 1);
   const isIOS = isIPhone || isIPad;
   if (isIOS) {
-    return "Reload this page in Safari by tapping the reload button in the address bar.";
+    return backendT("booking.reload.ios", "Reload this page in Safari by tapping the reload button in the address bar.");
   }
   if (/Android/i.test(userAgent)) {
-    return "Reload this page in your browser by tapping the reload button in the toolbar.";
+    return backendT("booking.reload.android", "Reload this page in your browser by tapping the reload button in the toolbar.");
   }
   if (/Mac/i.test(platform)) {
-    return "Reload this page with Command-R.";
+    return backendT("booking.reload.mac", "Reload this page with Command-R.");
   }
   if (/Win/i.test(platform)) {
-    return "Reload this page with Ctrl-R or F5.";
+    return backendT("booking.reload.windows", "Reload this page with Ctrl-R or F5.");
   }
-  return "Reload this page in your browser.";
+  return backendT("booking.reload.default", "Reload this page in your browser.");
 }
 
 async function fetchBookingMutation(path, options = {}) {
@@ -791,7 +1133,7 @@ async function fetchBookingMutation(path, options = {}) {
   const body = options.body;
 
   try {
-    const response = await fetch(resolveApiUrl(apiOrigin, path), {
+    const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(path)), {
       method,
       credentials: "include",
       headers: {
@@ -800,23 +1142,32 @@ async function fetchBookingMutation(path, options = {}) {
       ...(body ? { body: JSON.stringify(body) } : {})
     });
 
-    const payload = await response.json();
-    if (!response.ok) {
-      if (response.status === 409 && payload?.code === "BOOKING_REVISION_MISMATCH" && payload?.booking) {
-        const instruction = getConflictReloadInstruction();
-        showError(`This booking was changed on another device. Please reload before editing again. ${instruction}`);
-        setStatus("This booking was changed in the backend. Reload required.");
+      const payload = await response.json();
+      if (!response.ok) {
+        if (response.status === 401) {
+          redirectToBackendLogin();
+          return null;
+        }
+        if (response.status === 409 && payload?.code === "BOOKING_REVISION_MISMATCH" && payload?.booking) {
+          const instruction = getConflictReloadInstruction();
+          showError(backendT(
+            "booking.error.changed_detail",
+            "This booking was changed on another device. Please reload before editing again. {instruction}",
+            { instruction }
+          ));
+          setStatus(backendT("booking.error.changed", "This booking was changed in the backend. Reload required."));
+          return null;
+        }
+        const requestFailed = backendT("booking.error.request_failed", "Request failed");
+        const message = payload?.detail ? `${payload.error || requestFailed}: ${payload.detail}` : payload.error || requestFailed;
+        showError(message);
         return null;
       }
-      const message = payload?.detail ? `${payload.error || "Request failed"}: ${payload.detail}` : payload.error || "Request failed";
-      showError(message);
-      return null;
-    }
 
     clearError();
     return payload;
   } catch (error) {
-    showError("Could not connect to backend API.");
+    showError(backendT("booking.error.connect", "Could not connect to backend API."));
     console.error(error);
     return null;
   }
@@ -835,7 +1186,13 @@ async function loadAuthStatus() {
   try {
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
-    if (!response.ok || !payload?.authenticated) {
+    if (response.status === 401 || (response.ok && !payload?.authenticated)) {
+      state.authUser = null;
+      if (els.userLabel) els.userLabel.textContent = "";
+      redirectToBackendLogin();
+      return;
+    }
+    if (!response.ok) {
       state.authUser = null;
       if (els.userLabel) els.userLabel.textContent = "";
       return;

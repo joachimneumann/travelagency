@@ -1,21 +1,127 @@
 import path from "node:path";
 import { normalizeText } from "../lib/text.js";
 import { normalizeStringArray } from "../lib/collection_utils.js";
+import {
+  buildTourDestinationOption,
+  buildTourStyleOption,
+  getTourDestinationLabel,
+  getTourStyleLabel,
+  normalizeTourDestinationCode,
+  normalizeTourLang,
+  normalizeTourStyleCode,
+  sortTourDestinationCodes,
+  sortTourStyleCodes
+} from "./tour_catalog_i18n.js";
+
+function firstDefined(...values) {
+  return values.find((value) => value !== undefined);
+}
+
+function hasLocalizedContent(value) {
+  if (typeof value === "string") return Boolean(normalizeText(value));
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.values(value).some((entry) => {
+    if (Array.isArray(entry)) return entry.some((item) => Boolean(normalizeText(item)));
+    return Boolean(normalizeText(entry));
+  });
+}
 
 export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
-  function tourDestinations(tour) {
-    return normalizeStringArray(tour?.destinations);
-  }
-
   function normalizeHighlights(value) {
     if (Array.isArray(value)) return value.map((entry) => normalizeText(entry)).filter(Boolean);
     const normalized = normalizeText(value);
     return normalized
       ? normalized
-          .split(/\r?\n|,/)
+          .split(/\r?\n|,/) 
           .map((entry) => normalizeText(entry))
           .filter(Boolean)
       : [];
+  }
+
+  function normalizeLocalizedTextMap(value) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const entries = Object.entries(value)
+        .map(([lang, text]) => [normalizeTourLang(lang), normalizeText(text)])
+        .filter(([, text]) => Boolean(text));
+      return Object.fromEntries(entries);
+    }
+    const normalized = normalizeText(value);
+    return normalized ? { en: normalized } : {};
+  }
+
+  function normalizeLocalizedStringArrayMap(value) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const next = {};
+      for (const [lang, items] of Object.entries(value)) {
+        const normalizedItems = normalizeHighlights(items);
+        if (normalizedItems.length) next[normalizeTourLang(lang)] = normalizedItems;
+      }
+      return next;
+    }
+    const normalizedItems = normalizeHighlights(value);
+    return normalizedItems.length ? { en: normalizedItems } : {};
+  }
+
+  function resolveLocalizedText(value, lang = "en") {
+    if (typeof value === "string") return normalizeText(value);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+    const normalizedLang = normalizeTourLang(lang);
+    const candidates = [normalizedLang, "en", ...Object.keys(value)];
+    for (const candidate of candidates) {
+      const text = normalizeText(value[candidate]);
+      if (text) return text;
+    }
+    return "";
+  }
+
+  function resolveLocalizedStringArray(value, lang = "en") {
+    if (Array.isArray(value)) return normalizeHighlights(value);
+    if (!value || typeof value !== "object") return [];
+    const normalizedLang = normalizeTourLang(lang);
+    const candidates = [normalizedLang, "en", ...Object.keys(value)];
+    for (const candidate of candidates) {
+      const items = normalizeHighlights(value[candidate]);
+      if (items.length) return items;
+    }
+    return [];
+  }
+
+  function setLocalizedTextForLang(existingValue, inputValue, lang = "en") {
+    const next = normalizeLocalizedTextMap(existingValue);
+    const normalizedLang = normalizeTourLang(lang);
+    const normalizedText = normalizeText(inputValue);
+    if (normalizedText) next[normalizedLang] = normalizedText;
+    else delete next[normalizedLang];
+    return next;
+  }
+
+  function setLocalizedStringArrayForLang(existingValue, inputValue, lang = "en") {
+    const next = normalizeLocalizedStringArrayMap(existingValue);
+    const normalizedLang = normalizeTourLang(lang);
+    const normalizedItems = normalizeHighlights(inputValue);
+    if (normalizedItems.length) next[normalizedLang] = normalizedItems;
+    else delete next[normalizedLang];
+    return next;
+  }
+
+  function tourDestinationCodes(tour) {
+    return sortTourDestinationCodes(
+      normalizeStringArray(tour?.destinations).map((value) => normalizeTourDestinationCode(value)).filter(Boolean)
+    );
+  }
+
+  function tourStyleCodes(tour) {
+    return sortTourStyleCodes(
+      normalizeStringArray(tour?.styles).map((value) => normalizeTourStyleCode(value)).filter(Boolean)
+    );
+  }
+
+  function tourDestinations(tour, lang = "en") {
+    return tourDestinationCodes(tour).map((code) => getTourDestinationLabel(code, lang));
+  }
+
+  function tourStyles(tour, lang = "en") {
+    return tourStyleCodes(tour).map((code) => getTourStyleLabel(code, lang));
   }
 
   function toTourImagePublicUrl(value) {
@@ -26,29 +132,69 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
     return `/public/v1/tour-images/${normalized.replace(/^\/+/, "")}`;
   }
 
-  function normalizeTourForRead(tour) {
+  function normalizeTourForStorage(tour) {
+    const next = {
+      ...(tour && typeof tour === "object" ? tour : {})
+    };
+    const legacyShortDescription = next.shortDescription;
+    const legacyBudgetLowerUsd = next.budget_lower_USD;
+    delete next.shortDescription;
+    delete next.budget_lower_USD;
+
+    next.title = normalizeLocalizedTextMap(next.title);
+    next.short_description = normalizeLocalizedTextMap(
+      hasLocalizedContent(next.short_description) ? next.short_description : legacyShortDescription
+    );
+    next.destinations = tourDestinationCodes(next);
+    next.styles = tourStyleCodes(next);
+    next.image = toTourImagePublicUrl(next.image);
+    next.seasonality_start_month = normalizeText(next.seasonality_start_month);
+    next.seasonality_end_month = normalizeText(next.seasonality_end_month);
+    next.highlights = normalizeLocalizedStringArrayMap(next.highlights);
+    next.priority = safeInt(next.priority) ?? 50;
+    next.travel_duration_days = safeInt(next.travel_duration_days) ?? 0;
+    const normalizedBudgetLowerUsd = safeInt(next.budget_lower_usd);
+    const normalizedLegacyBudgetLowerUsd = safeInt(legacyBudgetLowerUsd);
+    next.budget_lower_usd = normalizedBudgetLowerUsd && normalizedBudgetLowerUsd > 0
+      ? normalizedBudgetLowerUsd
+      : normalizedLegacyBudgetLowerUsd && normalizedLegacyBudgetLowerUsd > 0
+        ? normalizedLegacyBudgetLowerUsd
+        : normalizedBudgetLowerUsd ?? 0;
+    next.rating = safeFloat(next.rating) ?? 0;
+
+    return next;
+  }
+
+  function normalizeTourForRead(tour, { lang = "en" } = {}) {
+    const stored = normalizeTourForStorage(tour);
+    const normalizedLang = normalizeTourLang(lang);
+    const destinationCodes = tourDestinationCodes(stored);
+    const styleCodes = tourStyleCodes(stored);
     return {
-      ...tour,
-      title: normalizeText(tour?.title),
-      short_description: normalizeText(tour?.short_description),
-      destinations: tourDestinations(tour),
-      styles: normalizeStringArray(tour?.styles),
-      image: toTourImagePublicUrl(tour?.image),
-      seasonality_start_month: normalizeText(tour?.seasonality_start_month),
-      seasonality_end_month: normalizeText(tour?.seasonality_end_month),
-      highlights: normalizeHighlights(tour?.highlights),
-      priority: safeInt(tour?.priority) ?? 50,
-      travel_duration_days: safeInt(tour?.travel_duration_days) ?? 0,
-      budget_lower_usd: safeInt(tour?.budget_lower_usd) ?? 0,
-      rating: safeFloat(tour?.rating) ?? 0
+      ...stored,
+      title: resolveLocalizedText(stored.title, normalizedLang),
+      short_description: resolveLocalizedText(stored.short_description, normalizedLang),
+      destinations: destinationCodes.map((code) => getTourDestinationLabel(code, normalizedLang)),
+      destination_codes: destinationCodes,
+      styles: styleCodes.map((code) => getTourStyleLabel(code, normalizedLang)),
+      style_codes: styleCodes,
+      image: toTourImagePublicUrl(stored.image),
+      highlights: resolveLocalizedStringArray(stored.highlights, normalizedLang),
+      budget_lower_usd: safeInt(stored.budget_lower_usd) ?? 0,
+      priority: safeInt(stored.priority) ?? 50,
+      travel_duration_days: safeInt(stored.travel_duration_days) ?? 0,
+      rating: safeFloat(stored.rating) ?? 0
     };
   }
 
-  function collectTourOptions(tours) {
-    const items = Array.isArray(tours) ? tours : [];
+  function collectTourOptions(tours, { lang = "en" } = {}) {
+    const items = Array.isArray(tours) ? tours.map((tour) => normalizeTourForStorage(tour)) : [];
+    const destinationCodes = sortTourDestinationCodes(items.flatMap((tour) => tourDestinationCodes(tour)));
+    const styleCodes = sortTourStyleCodes(items.flatMap((tour) => tourStyleCodes(tour)));
+    const normalizedLang = normalizeTourLang(lang);
     return {
-      destinations: Array.from(new Set(items.flatMap((tour) => tourDestinations(tour)))).sort(),
-      styles: Array.from(new Set(items.flatMap((tour) => normalizeStringArray(tour?.styles)))).sort()
+      destinations: destinationCodes.map((code) => buildTourDestinationOption(code, normalizedLang)),
+      styles: styleCodes.map((code) => buildTourStyleOption(code, normalizedLang))
     };
   }
 
@@ -63,9 +209,19 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
   }
 
   return {
-    tourDestinations,
     normalizeHighlights,
+    normalizeLocalizedTextMap,
+    normalizeLocalizedStringArrayMap,
+    resolveLocalizedText,
+    resolveLocalizedStringArray,
+    setLocalizedTextForLang,
+    setLocalizedStringArrayForLang,
+    tourDestinations,
+    tourDestinationCodes,
+    tourStyles,
+    tourStyleCodes,
     toTourImagePublicUrl,
+    normalizeTourForStorage,
     normalizeTourForRead,
     collectTourOptions,
     resolveTourImageDiskPath

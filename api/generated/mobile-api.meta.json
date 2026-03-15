@@ -3,13 +3,23 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-14T07:12:52Z",
+  "generatedAt": "2026-03-15T05:28:19Z",
   "languages": [
     "English",
-    "Vietnamese",
     "French",
+    "Mandarin",
+    "Japanese",
+    "Korean",
+    "Vietnamese",
     "German",
-    "Spanish"
+    "Spanish",
+    "Italian",
+    "Russian",
+    "Dutch",
+    "Polish",
+    "Danish",
+    "Swedish",
+    "Norwegian"
   ],
   "currencies": [
     {
@@ -31,6 +41,46 @@
       "code": "THB",
       "symbol": "฿",
       "decimalPlaces": 0
+    },
+    {
+      "code": "CNY",
+      "symbol": "CN¥",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "JPY",
+      "symbol": "¥",
+      "decimalPlaces": 0
+    },
+    {
+      "code": "KRW",
+      "symbol": "₩",
+      "decimalPlaces": 0
+    },
+    {
+      "code": "RUB",
+      "symbol": "₽",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "PLN",
+      "symbol": "zł",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "DKK",
+      "symbol": "kr",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "SEK",
+      "symbol": "kr",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "NOK",
+      "symbol": "kr",
+      "decimalPlaces": 2
     },
     {
       "code": "AUD",

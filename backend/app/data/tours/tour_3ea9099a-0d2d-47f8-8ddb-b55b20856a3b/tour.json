@@ -1,24 +1,128 @@
 {
   "id": "tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b",
-  "title": "Vietnam Luxury Journey",
-  "shortDescription": "A Vietnam luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
+  "title": {
+    "en": "Vietnam Luxury Journey",
+    "fr": "Voyage de luxe au Vietnam",
+    "zh": "越南奢华之旅",
+    "ja": "ベトナム ラグジュアリーの旅",
+    "ko": "베트남 럭셔리 여행",
+    "vi": "Hành trình Cao cấp Việt Nam",
+    "de": "Vietnam-Luxusreise",
+    "es": "Viaje de lujo a Vietnam",
+    "it": "Viaggio di lusso in Vietnam",
+    "ru": "Роскошное путешествие во Вьетнам",
+    "nl": "Luxe reis door Vietnam",
+    "pl": "Luksusowa podróż po Wietnamie",
+    "da": "Vietnam luksusrejse",
+    "sv": "Vietnam lyxresa",
+    "no": "Vietnam luksusreise"
+  },
   "styles": [
-    "Luxury"
+    "luxury"
   ],
   "priority": 50,
   "travel_duration_days": 12,
   "image": "/public/v1/tour-images/tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b/tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b.webp",
-  "highlights": [
-    "Signature stop in Hanoi",
-    "Route highlight around Hoi An",
-    "Smooth transfer planning via Ha Long Bay"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ]
+  },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 5,
   "legacy_id": "trip-vietnam-luxury-classic",
   "destinations": [
-    "Vietnam"
+    "vietnam"
   ],
-  "budget_lower_USD": 1980
+  "short_description": {
+    "en": "A Vietnam luxury itinerary focused on a balanced first-trip route, with premium stays, private service, and signature moments.",
+    "fr": "Un itinéraire de luxe au Vietnam pensé pour un premier voyage équilibré, avec des hébergements haut de gamme, un service privé et des moments marquants.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的越南奢华行程，包含高品质住宿、私人服务和标志性时刻。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムのラグジュアリー旅程で、上質な滞在、プライベートサービス、印象的な体験。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 베트남 럭셔리 일정으로, 수준 높은 숙박, 프라이빗 서비스, 인상적인 순간.",
+    "vi": "Đây là lịch trình cao cấp tại Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nơi lưu trú cao cấp, dịch vụ riêng tư và những khoảnh khắc nổi bật.",
+    "de": "Eine Luxusreise durch Vietnam, die sich auf eine ausgewogene Erstreiseroute mit erstklassigen Aufenthalten, privatem Service und einzigartigen Momenten konzentriert.",
+    "es": "Un itinerario de lujo en Vietnam centrado en una ruta equilibrada de primer viaje, con estancias premium, servicio privado y momentos exclusivos.",
+    "it": "Un itinerario di lusso in Vietnam incentrato su un primo viaggio equilibrato, con soggiorni premium, servizio privato e momenti esclusivi.",
+    "ru": "Роскошный маршрут по Вьетнаму, ориентированный на сбалансированный маршрут первой поездки, с пребыванием премиум-класса, частным обслуживанием и фирменными моментами.",
+    "nl": "Een luxe reisroute door Vietnam gericht op een uitgebalanceerde eerste reisroute, met premium verblijven, privéservice en kenmerkende momenten.",
+    "pl": "Luksusowy plan podróży po Wietnamie skupiający się na zrównoważonej trasie pierwszej podróży, z pobytami premium, prywatną obsługą i wyjątkowymi chwilami.",
+    "da": "En luksusrejseplan i Vietnam fokuserede på en afbalanceret rute for første tur med premium-ophold, privat service og signaturøjeblikke.",
+    "sv": "En lyxresplan i Vietnam fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
+    "no": "En luksusreise fra Vietnam fokusert på en balansert rute for første tur, med førsteklasses opphold, privat service og signaturøyeblikk."
+  },
+  "budget_lower_usd": 1980
 }

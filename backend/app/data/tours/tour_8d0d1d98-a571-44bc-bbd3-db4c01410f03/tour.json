@@ -1,24 +1,128 @@
 {
   "id": "tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03",
-  "title": "Cambodia Family Journey",
-  "shortDescription": "A Cambodia family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+  "title": {
+    "en": "Cambodia Family Journey",
+    "fr": "Voyage famille au Cambodge",
+    "zh": "柬埔寨家庭之旅",
+    "ja": "カンボジア 家族の旅",
+    "ko": "캄보디아 가족 여행",
+    "vi": "Hành trình Gia đình Campuchia",
+    "de": "Familienreise nach Kambodscha",
+    "es": "Viaje familiar a Camboya",
+    "it": "Viaggio in famiglia in Cambogia",
+    "ru": "Семейное путешествие в Камбоджу",
+    "nl": "Familiereis Cambodja",
+    "pl": "Rodzinna podróż do Kambodży",
+    "da": "Familierejse til Cambodja",
+    "sv": "Familjeresa i Kambodja",
+    "no": "Familiereise i Kambodsja"
+  },
   "styles": [
-    "Family"
+    "family"
   ],
   "priority": 50,
   "travel_duration_days": 11,
   "image": "/public/v1/tour-images/tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03/tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03.webp",
-  "highlights": [
-    "Signature stop in Siem Reap",
-    "Route highlight around Phnom Penh",
-    "Smooth transfer planning via Tonle Sap"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Siem Reap",
+      "Route highlight around Phnom Penh",
+      "Smooth transfer planning via Tonle Sap"
+    ],
+    "fr": [
+      "Étape signature à Siem Reap",
+      "Temps fort de l'itinéraire autour de Phnom Penh",
+      "Transferts fluides via Tonlé Sap"
+    ],
+    "zh": [
+      "暹粒标志性停留",
+      "金边周边路线亮点",
+      "经洞里萨湖衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "シェムリアップでの象徴的な立ち寄り",
+      "プノンペン周辺のルート見どころ",
+      "トンレサップ湖経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "씨엠립의 대표적인 방문지",
+      "프놈펜 일대의 주요 동선 하이라이트",
+      "톤레삽 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Siem Reap",
+      "Điểm nhấn hành trình quanh Phnom Penh",
+      "Kế hoạch di chuyển mượt mà qua hồ Tonlé Sap"
+    ],
+    "de": [
+      "Signature-Stopp in Siem Reap",
+      "Routenhighlight rund um Phnom Penh",
+      "Reibungslose Transferplanung über Tonle Sap"
+    ],
+    "es": [
+      "Parada exclusiva en Siem Reap",
+      "Ruta destacada alrededor de Phnom Penh",
+      "Planificación de transferencia fluida a través de Tonle Sap"
+    ],
+    "it": [
+      "Fermata esclusiva a Siem Reap",
+      "Punti salienti del percorso intorno a Phnom Penh",
+      "Pianificazione fluida del trasferimento tramite Tonle Sap"
+    ],
+    "ru": [
+      "Фирменная остановка в Сием Рипе",
+      "Обзор маршрута по Пномпеню",
+      "Плавное планирование трансфера через Тонлесап"
+    ],
+    "nl": [
+      "Kenmerkende stop in Siem Reap",
+      "Route hoogtepunt rond Phnom Penh",
+      "Vlotte overdrachtsplanning via Tonle Sap"
+    ],
+    "pl": [
+      "Przystanek podpisu w Siem Reap",
+      "Najważniejszy punkt trasy wokół Phnom Penh",
+      "Płynne planowanie transferów za pośrednictwem Tonle Sap"
+    ],
+    "da": [
+      "Signaturstop i Siem Reap",
+      "Rutehøjdepunkt omkring Phnom Penh",
+      "Jævn overførselsplanlægning via Tonle Sap"
+    ],
+    "sv": [
+      "Signaturstopp i Siem Reap",
+      "Ruttens höjdpunkt runt Phnom Penh",
+      "Smidig överföringsplanering via Tonle Sap"
+    ],
+    "no": [
+      "Signaturstopp i Siem Reap",
+      "Rutehøydepunkt rundt Phnom Penh",
+      "Jevn overføringsplanlegging via Tonle Sap"
+    ]
+  },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
   "rating": 4.9,
   "legacy_id": "trip-cambodia-family-classic",
   "destinations": [
-    "Cambodia"
+    "cambodia"
   ],
-  "budget_lower_USD": 1100
+  "short_description": {
+    "en": "A Cambodia family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
+    "fr": "Un itinéraire familial au Cambodge pensé pour un premier voyage équilibré, avec un rythme adapté aux familles et une logistique fiable sur place.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的柬埔寨家庭行程，包含适合家庭的节奏和可靠的在途后勤安排。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたカンボジアの家族旅程で、家族にやさしいペースと信頼できる現地手配。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 캄보디아 가족 일정으로, 가족 친화적인 속도와 믿을 수 있는 현지 운영.",
+    "vi": "Đây là lịch trình gia đình tại Campuchia tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nhịp độ phù hợp cho gia đình và khâu vận hành đáng tin cậy trong suốt chuyến đi.",
+    "de": "Eine Familienreise durch Kambodscha konzentrierte sich auf eine ausgewogene Erstreiseroute mit familienfreundlichem Tempo und zuverlässiger Logistik während der Reise.",
+    "es": "Un itinerario familiar por Camboya centrado en una ruta de primer viaje equilibrada, con un ritmo familiar y una logística confiable durante el viaje.",
+    "it": "Un itinerario per famiglie in Cambogia incentrato su un primo viaggio equilibrato, con ritmi adatti alle famiglie e una logistica di viaggio affidabile.",
+    "ru": "Семейный маршрут по Камбодже ориентирован на сбалансированный маршрут первой поездки, с удобным для всей семьи темпом и надежной логистикой во время поездки.",
+    "nl": "Een familiereisroute door Cambodja gericht op een uitgebalanceerde eerste reisroute, met gezinsvriendelijk tempo en betrouwbare logistiek tijdens de reis.",
+    "pl": "Rodzinny plan podróży do Kambodży skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
+    "da": "En Cambodia familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på turen.",
+    "sv": "En familjeväg i Kambodja fokuserade på en balanserad första resa med familjevänligt tempo och pålitlig logistik på resan.",
+    "no": "En Kambodsja familie reiserute fokusert på en balansert første tur rute, med familievennlig tempo og pålitelig logistikk på tur."
+  },
+  "budget_lower_usd": 1100
 }

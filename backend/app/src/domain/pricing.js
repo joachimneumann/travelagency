@@ -1,5 +1,11 @@
 import path from "node:path";
 import { normalizeText } from "../lib/text.js";
+import { normalizeOfferTranslationMeta } from "./booking_translation.js";
+import {
+  normalizeBookingContentLang,
+  normalizeLocalizedTextMap,
+  resolveLocalizedText
+} from "./booking_content_i18n.js";
 
 export function createPricingHelpers({
   baseCurrency,
@@ -120,10 +126,12 @@ export function createPricingHelpers({
     };
   }
 
-  function normalizeBookingOffer(rawOffer, preferredCurrency = baseCurrency) {
+  function normalizeBookingOffer(rawOffer, preferredCurrency = baseCurrency, options = {}) {
     const source = rawOffer && typeof rawOffer === "object" ? rawOffer : {};
     const currency = safeCurrency(source.currency || preferredCurrency);
     const status = normalizeOfferStatus(source.status);
+    const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
+    const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
     const components = (Array.isArray(source.components) ? source.components : []).map((component, index) => {
       const quantity = Math.max(1, safeInt(component?.quantity) || 1);
       const unitAmountCents = Math.max(0, normalizeAmountCents(component?.unit_amount_cents, 0));
@@ -131,16 +139,25 @@ export function createPricingHelpers({
       const sign = offerCategorySign(component?.category);
       const lineNetAmountCents = sign * unitAmountCents * quantity;
       const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxRateBasisPoints) / 10000);
+      const label_i18n = normalizeLocalizedTextMap(component?.label_i18n ?? component?.label, contentLang);
+      const details_i18n = normalizeLocalizedTextMap(
+        component?.details_i18n ?? component?.details ?? component?.description,
+        contentLang
+      );
+      const notes_i18n = normalizeLocalizedTextMap(component?.notes_i18n ?? component?.notes, contentLang);
       return {
         id: normalizeText(component?.id) || `offer_component_${index + 1}`,
         category: normalizeOfferCategory(component?.category),
-        label: normalizeText(component?.label),
-        details: normalizeText(component?.details),
+        label: resolveLocalizedText(label_i18n, flatLang),
+        label_i18n,
+        details: resolveLocalizedText(details_i18n, flatLang),
+        details_i18n,
         quantity,
         unit_amount_cents: unitAmountCents,
         tax_rate_basis_points: taxRateBasisPoints,
         currency,
-        notes: normalizeText(component?.notes),
+        notes: resolveLocalizedText(notes_i18n, flatLang),
+        notes_i18n,
         sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index,
         created_at: component?.created_at || null,
         updated_at: component?.updated_at || null,
@@ -151,7 +168,7 @@ export function createPricingHelpers({
     });
 
     const totals = computeBookingOfferTotals({ components });
-    return {
+    const normalized = {
       status,
       currency,
       category_rules: Array.isArray(source.category_rules) && source.category_rules.length
@@ -167,6 +184,7 @@ export function createPricingHelpers({
       totals,
       total_price_cents: totals.total_price_cents
     };
+    return normalizeOfferTranslationMeta(normalized);
   }
 
   function normalizeOfferStatus(value) {
@@ -631,8 +649,8 @@ export function createPricingHelpers({
     };
   }
 
-  async function convertOfferForDisplay(rawOffer, targetCurrency) {
-    const normalized = normalizeBookingOffer(rawOffer, getOfferCurrencyForStorage(rawOffer));
+  async function convertOfferForDisplay(rawOffer, targetCurrency, options = {}) {
+    const normalized = normalizeBookingOffer(rawOffer, getOfferCurrencyForStorage(rawOffer), options);
     const sourceCurrency = getOfferCurrencyForStorage(normalized);
     const displayCurrency = safeCurrency(targetCurrency || sourceCurrency);
     if (sourceCurrency === displayCurrency) {
@@ -704,17 +722,24 @@ export function createPricingHelpers({
     }).format(amount)}`;
   }
 
-  function normalizeInvoiceComponents(value) {
+  function normalizeInvoiceComponents(value, options = {}) {
     const input = Array.isArray(value) ? value : [];
+    const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
+    const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
     return input
       .map((component) => {
-        const description = normalizeText(component?.description);
+        const description_i18n = normalizeLocalizedTextMap(
+          component?.description_i18n ?? component?.description,
+          contentLang
+        );
+        const description = resolveLocalizedText(description_i18n, flatLang);
         const quantity = Math.max(1, safeInt(component?.quantity) || 1);
         const unitAmountCents = safeAmountCents(component?.unit_amount_cents);
         if (!description || !unitAmountCents) return null;
         return {
           id: normalizeText(component?.id) || `inv_component_${randomUUID()}`,
           description,
+          description_i18n,
           quantity,
           unit_amount_cents: unitAmountCents,
           total_amount_cents: unitAmountCents * quantity
@@ -748,9 +773,8 @@ export function createPricingHelpers({
     return path.join(generatedOffersDir, `${generatedOfferId}.pdf`);
   }
 
-  async function buildBookingOfferReadModel(rawOffer, preferredCurrency = baseCurrency) {
-    const normalized = normalizeBookingOffer(rawOffer, preferredCurrency);
-    const converted = await convertOfferForDisplay(normalized, preferredCurrency);
+  async function buildBookingOfferReadModel(rawOffer, preferredCurrency = baseCurrency, options = {}) {
+    const converted = await convertOfferForDisplay(rawOffer, preferredCurrency, options);
     const totals = computeBookingOfferTotals(converted);
     return {
       ...converted,

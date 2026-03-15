@@ -1,5 +1,15 @@
 import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
+import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
+import {
+  mergeEditableLocalizedTextField,
+  mergeLocalizedTextField,
+  normalizeBookingContentLang
+} from "../../domain/booking_content_i18n.js";
+import {
+  markOfferTranslationManual,
+  translateOfferFromEnglish
+} from "../../domain/booking_translation.js";
 
 export function createBookingFinanceHandlers(deps) {
   const {
@@ -24,6 +34,8 @@ export function createBookingFinanceHandlers(deps) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
+    buildBookingOfferReadModel,
+    buildBookingTravelPlanReadModel,
     formatMoney,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
@@ -35,7 +47,8 @@ export function createBookingFinanceHandlers(deps) {
     getBookingContactProfile,
     rm,
     canAccessBooking,
-    sendFileWithCache
+    sendFileWithCache,
+    translateEntries
   } = deps;
 
   let gmailDraftsClient = null;
@@ -63,7 +76,33 @@ export function createBookingFinanceHandlers(deps) {
     };
   }
 
+  function buildGeneratedOfferEmailDraftCopy(booking, generatedOfferSnapshot, contact) {
+    const lang = normalizePdfLang(generatedOfferSnapshot?.lang || booking?.customer_language || "en");
+    const contactName = normalizeText(contact?.name);
+    const bookingTitle = normalizeText(booking?.name || booking?.web_form_submission?.booking_name);
+    return {
+      lang,
+      subject: pdfT(lang, "email.offer_subject", "Your Asia Travel Plan offer"),
+      greeting: contactName
+        ? pdfT(lang, "email.greeting_named", "Hello {name},", { name: contactName })
+        : pdfT(lang, "email.greeting_generic", "Hello,"),
+      intro: bookingTitle
+        ? pdfT(lang, "email.offer_intro_named", "Please find attached the current Asia Travel Plan offer for {trip}.", { trip: bookingTitle })
+        : pdfT(lang, "email.offer_intro_generic", "Please find attached your current Asia Travel Plan offer."),
+      footer: `${pdfT(lang, "offer.closing_regards", "Warm regards,")}\n${pdfT(lang, "offer.closing_team", "The Asia Travel Plan Team")}`
+    };
+  }
+
   function normalizeGeneratedOfferSnapshot(generatedOffer, booking) {
+    const snapshotLang = normalizePdfLang(
+      generatedOffer?.lang
+      || booking?.customer_language
+      || (Array.isArray(booking?.persons)
+        ? booking.persons.find((person) => Array.isArray(person?.roles) && person.roles.includes("primary_contact"))?.preferred_language
+        : null)
+      || booking?.web_form_submission?.preferred_language
+      || "en"
+    );
     const snapshotCurrency = normalizeText(
       generatedOffer?.currency
       || generatedOffer?.offer?.currency
@@ -71,16 +110,97 @@ export function createBookingFinanceHandlers(deps) {
       || booking?.preferred_currency
       || BASE_CURRENCY
     ) || BASE_CURRENCY;
-    const offerSnapshot = normalizeBookingOffer(generatedOffer?.offer, snapshotCurrency);
+    const offerSnapshot = normalizeBookingOffer(generatedOffer?.offer, snapshotCurrency, {
+      contentLang: snapshotLang,
+      flatLang: snapshotLang
+    });
     return {
       ...generatedOffer,
+      lang: snapshotLang,
       currency: offerSnapshot.currency || snapshotCurrency,
       total_price_cents: Number(generatedOffer?.total_price_cents || offerSnapshot.total_price_cents || 0),
       offer: offerSnapshot,
       travel_plan: normalizeBookingTravelPlan(generatedOffer?.travel_plan, offerSnapshot, {
+        lang: snapshotLang,
         strictReferences: false
       })
     };
+  }
+
+  function requestContentLang(req, payload = null) {
+    try {
+      const requestUrl = new URL(req.url, "http://localhost");
+      return normalizeBookingContentLang(payload?.lang || requestUrl.searchParams.get("lang") || "en");
+    } catch {
+      return normalizeBookingContentLang(payload?.lang || "en");
+    }
+  }
+
+  function mergeOfferForLang(existingOffer, nextOffer, lang, preferredCurrency) {
+    const normalizedLang = normalizeBookingContentLang(lang);
+    const editableLangs = normalizedLang === "en" ? ["en"] : ["en", normalizedLang];
+    const existingNormalized = normalizeBookingOffer(existingOffer, preferredCurrency, {
+      contentLang: normalizedLang,
+      flatLang: normalizedLang
+    });
+    const nextNormalized = normalizeBookingOffer(nextOffer, preferredCurrency, {
+      contentLang: normalizedLang,
+      flatLang: normalizedLang
+    });
+    const existingById = new Map(
+      (Array.isArray(existingNormalized?.components) ? existingNormalized.components : []).map((component) => [component.id, component])
+    );
+
+    return {
+      ...nextNormalized,
+      components: (Array.isArray(nextNormalized.components) ? nextNormalized.components : []).map((component) => {
+        const existingComponent = existingById.get(component.id);
+        const labelField = mergeLocalizedTextField(
+          existingComponent?.label_i18n ?? existingComponent?.label,
+          component.label,
+          normalizedLang,
+          { fallbackLang: normalizedLang }
+        );
+        const detailsField = mergeEditableLocalizedTextField(
+          existingComponent?.details_i18n ?? existingComponent?.details,
+          component.details,
+          component.details_i18n,
+          normalizedLang,
+          { allowedLangs: editableLangs }
+        );
+        const notesField = mergeLocalizedTextField(
+          existingComponent?.notes_i18n ?? existingComponent?.notes,
+          component.notes,
+          normalizedLang,
+          { fallbackLang: normalizedLang }
+        );
+        return {
+          ...component,
+          label: labelField.text,
+          label_i18n: labelField.map,
+          details: detailsField.text,
+          details_i18n: detailsField.map,
+          notes: notesField.text,
+          notes_i18n: notesField.map
+        };
+      })
+    };
+  }
+
+  function sendTranslationError(res, error) {
+    if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
+      sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });
+      return;
+    }
+    if (error?.code === "TRANSLATION_SOURCE_LANGUAGE") {
+      sendJson(res, 422, { error: String(error.message || "English cannot be auto-translated.") });
+      return;
+    }
+    if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
+      sendJson(res, 502, { error: String(error.message || "Translation request failed.") });
+      return;
+    }
+    sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
 
   async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -103,7 +223,7 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_pricing_revision", "pricing_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_pricing_revision", "pricing_revision", res))) return;
 
     const check = validateBookingPricingInput(payload.pricing);
     if (!check.ok) {
@@ -115,7 +235,7 @@ export function createBookingFinanceHandlers(deps) {
     const nextPricingJson = JSON.stringify(nextPricingBase);
     const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
     if (nextPricingJson === currentPricingJson) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
@@ -131,7 +251,7 @@ export function createBookingFinanceHandlers(deps) {
     );
     await persistStore(store);
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingOffer(req, res, [bookingId]) {
@@ -154,7 +274,7 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
     const check = validateBookingOfferInput(payload.offer, booking);
     if (!check.ok) {
@@ -174,13 +294,23 @@ export function createBookingFinanceHandlers(deps) {
     //   // ignore debug serialization issues
     // }
 
-    const nextOfferBase = await convertBookingOfferToBaseCurrency(check.offer);
+    const contentLang = requestContentLang(req, payload);
+    const mergedOffer = mergeOfferForLang(
+      booking.offer,
+      check.offer,
+      contentLang,
+      booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY
+    );
+    if (contentLang !== "en") {
+      markOfferTranslationManual(mergedOffer, contentLang, nowIso());
+    }
+    const nextOfferBase = await convertBookingOfferToBaseCurrency(mergedOffer);
     const nextOfferJson = JSON.stringify(nextOfferBase);
     const currentOfferJson = JSON.stringify(
       normalizeBookingOffer(booking.offer, booking.preferred_currency || booking.pricing?.currency || BASE_CURRENCY)
     );
     if (nextOfferJson === currentOfferJson) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
@@ -207,7 +337,60 @@ export function createBookingFinanceHandlers(deps) {
     //   // ignore debug serialization issues
     // }
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
+
+  async function handleTranslateBookingOfferFromEnglish(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+
+    const contentLang = requestContentLang(req, payload);
+    try {
+      const translatedOffer = await translateOfferFromEnglish(
+        booking.offer,
+        contentLang,
+        translateEntries,
+        nowIso()
+      );
+      const nextOfferBase = await convertBookingOfferToBaseCurrency(translatedOffer);
+      if (JSON.stringify(nextOfferBase) === JSON.stringify(booking.offer || null)) {
+        sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
+        return;
+      }
+
+      booking.offer = nextOfferBase;
+      incrementBookingRevision(booking, "offer_revision");
+      booking.updated_at = nowIso();
+      addActivity(
+        store,
+        booking.id,
+        "OFFER_TRANSLATED",
+        actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+        `Offer translated from English to ${contentLang}`
+      );
+      await persistStore(store);
+      sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+    } catch (error) {
+      sendTranslationError(res, error);
+    }
   }
 
   async function handlePostOfferExchangeRates(req, res) {
@@ -308,15 +491,23 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
-    const offerSnapshot = normalizeBookingOffer(
-      booking.offer,
-      booking.offer?.currency || booking.preferred_currency || BASE_CURRENCY
+    const documentLang = normalizePdfLang(
+      payload?.lang
+      || booking?.customer_language
+      || booking?.web_form_submission?.preferred_language
+      || (Array.isArray(booking?.persons)
+        ? booking.persons.find((person) => Array.isArray(person?.roles) && person.roles.includes("primary_contact"))?.preferred_language
+        : null)
+      || "en"
     );
-    const travelPlanSnapshot = normalizeBookingTravelPlan(booking.travel_plan, offerSnapshot, {
-      strictReferences: false
-    });
+    const offerSnapshot = await buildBookingOfferReadModel(
+      booking.offer,
+      booking.offer?.currency || booking.preferred_currency || BASE_CURRENCY,
+      { lang: documentLang }
+    );
+    const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, offerSnapshot, { lang: documentLang });
     const now = nowIso();
     const existingGeneratedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
     const version = existingGeneratedOffers.reduce((maxVersion, item) => {
@@ -328,6 +519,7 @@ export function createBookingFinanceHandlers(deps) {
       booking_id: booking.id,
       version,
       filename: `ATP offer ${now.slice(0, 10)}.pdf`,
+      lang: documentLang,
       comment: normalizeText(payload?.comment) || null,
       created_at: now,
       created_by: actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
@@ -350,7 +542,7 @@ export function createBookingFinanceHandlers(deps) {
     );
     await persistStore(store);
 
-    sendJson(res, 201, await buildBookingDetailResponse(booking));
+    sendJson(res, 201, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleGetGeneratedOfferPdf(req, res, [bookingId, generatedOfferId]) {
@@ -414,22 +606,19 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
-    const bookingTitle = normalizeText(booking?.name || booking?.web_form_submission?.booking_name || "your trip");
-    const greeting = normalizeText(contact?.name) ? `Hello ${normalizeText(contact.name)},` : "Hello,";
-    const intro = bookingTitle
-      ? `Please find attached the current Asia Travel Plan offer for ${bookingTitle}.`
-      : "Please find attached your current Asia Travel Plan offer.";
+    const generatedOfferSnapshot = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
+    const draftCopy = buildGeneratedOfferEmailDraftCopy(booking, generatedOfferSnapshot, contact);
 
     try {
-      await writeGeneratedOfferPdf(normalizeGeneratedOfferSnapshot(generatedOffer, booking), booking);
+      await writeGeneratedOfferPdf(generatedOfferSnapshot, booking);
       const pdfPath = generatedOfferPdfPath(generatedOffer.id);
       const pdfBuffer = await readFile(pdfPath);
       const draft = await getGmailDraftsClient().createDraft({
         to: recipientEmail,
-        subject: "Your Asia Travel Plan offer",
-        greeting,
-        intro,
-        footer: "Best regards,\nThe Asia Travel Plan Team",
+        subject: draftCopy.subject,
+        greeting: draftCopy.greeting,
+        intro: draftCopy.intro,
+        footer: draftCopy.footer,
         fromName: "Asia Travel Plan",
         attachments: [{
           filename: normalizeText(generatedOffer.filename) || `${generatedOffer.id}.pdf`,
@@ -493,7 +682,7 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
     const generatedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
     const index = generatedOffers.findIndex((item) => item.id === generatedOfferId);
@@ -504,7 +693,7 @@ export function createBookingFinanceHandlers(deps) {
 
     const nextComment = normalizeText(payload?.comment) || null;
     if ((generatedOffers[index].comment || null) === nextComment) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
@@ -524,7 +713,7 @@ export function createBookingFinanceHandlers(deps) {
     );
     await persistStore(store);
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleDeleteGeneratedBookingOffer(req, res, [bookingId, generatedOfferId]) {
@@ -546,7 +735,7 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_offer_revision", "offer_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_offer_revision", "offer_revision", res))) return;
 
     const generatedOffers = Array.isArray(booking.generated_offers) ? booking.generated_offers : [];
     const index = generatedOffers.findIndex((item) => item.id === generatedOfferId);
@@ -571,12 +760,13 @@ export function createBookingFinanceHandlers(deps) {
     const pdfPath = generatedOfferPdfPath(removed.id);
     await rm(pdfPath, { force: true }).catch(() => {});
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   return {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
+    handleTranslateBookingOfferFromEnglish,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
     handleGetGeneratedOfferPdf,

@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,8 +15,17 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=6c388c7e525c";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=6c388c7e525c";
+} from "./pricing.js?v=b7baca7c60a0";
+import { BOOKING_CONTENT_LANGUAGE_OPTIONS, bookingContentLang, bookingContentLanguageOption, bookingLang, bookingT } from "./i18n.js?v=b7baca7c60a0";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=b7baca7c60a0";
+import {
+  buildDualLocalizedPayload,
+  normalizeLocalizedEditorMap,
+  renderLocalizedStackedField,
+  requestQuickGoogleFieldTranslation,
+  resolveLocalizedEditorBranchText,
+  resolveLocalizedEditorText
+} from "./localized_editor.js?v=b7baca7c60a0";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
@@ -39,14 +48,7 @@ function acquireGmailWindow() {
   return { windowRef, openedNewWindow: true };
 }
 
-const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({
-  code,
-  label: code
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
-}));
+const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({ code }));
 
 const OFFER_COMPONENT_CATEGORIES = OFFER_CATEGORIES.filter((category) => category.code !== "DISCOUNTS_CREDITS");
 
@@ -106,9 +108,78 @@ export function createBookingOfferModule(ctx) {
     setOfferStatus("");
   }
 
+  function bookingContentLanguageLabel(code) {
+    const normalized = String(code || "").trim().toLowerCase();
+    return BOOKING_CONTENT_LANGUAGE_OPTIONS.find((option) => option.code === normalized)?.label || normalized || "en";
+  }
+
+  function localizedFieldHasAnyText(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    return Object.values(value).some((candidate) => String(candidate || "").trim());
+  }
+
+  function localizedFieldHasTargetLang(value, lang) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    return Boolean(String(value[lang] || "").trim());
+  }
+
+  function countMissingOfferPdfTranslations(booking, lang) {
+    if (!booking || lang === "en") return 0;
+    const normalizedLang = String(lang || "").trim().toLowerCase();
+    const offerSummary = booking?.offer_translation_status;
+    const travelPlanSummary = booking?.travel_plan_translation_status;
+    if (offerSummary?.lang === normalizedLang || travelPlanSummary?.lang === normalizedLang) {
+      return Number(offerSummary?.missing_fields || 0) + Number(travelPlanSummary?.missing_fields || 0);
+    }
+    let missing = 0;
+    const considerField = (value) => {
+      if (!localizedFieldHasAnyText(value)) return;
+      if (!localizedFieldHasTargetLang(value, lang)) missing += 1;
+    };
+    const offerComponents = Array.isArray(booking?.offer?.components) ? booking.offer.components : [];
+    offerComponents.forEach((component) => {
+      considerField(component?.details_i18n);
+    });
+    const travelDays = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days : [];
+    travelDays.forEach((day) => {
+      considerField(day?.title_i18n);
+      considerField(day?.overnight_location_i18n);
+      considerField(day?.notes_i18n);
+      const segments = Array.isArray(day?.segments) ? day.segments : [];
+      segments.forEach((segment) => {
+        considerField(segment?.time_label_i18n);
+        considerField(segment?.title_i18n);
+        considerField(segment?.details_i18n);
+        considerField(segment?.location_i18n);
+      });
+    });
+    return missing;
+  }
+
+  function renderOfferLocalizedDetailsField(component, index) {
+    return renderLocalizedStackedField({
+      escapeHtml,
+      idBase: `offer_component_details_${index}`,
+      label: bookingT("booking.offer.details", "Offer details"),
+      type: "textarea",
+      rows: 2,
+      targetLang: bookingContentLang(),
+      disabled: !state.permissions.canEditBooking,
+      translateEnabled: true,
+      englishValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, "en", ""),
+      localizedValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, bookingContentLang(), ""),
+      commonData: {
+        "offer-component-details": index
+      },
+      translatePayload: {
+        "offer-component-details-translate": index
+      }
+    });
+  }
+
   function updateOfferPanelSummary(totalCents, currency) {
     renderBookingSegmentHeader(els.offerPanelSummary, {
-      primary: `Offer ${formatMoneyDisplay(totalCents, currency)}`
+      primary: bookingT("booking.offer_total", "Offer {total}", { total: formatMoneyDisplay(totalCents, currency) })
     });
   }
 
@@ -120,7 +191,7 @@ export function createBookingOfferModule(ctx) {
     if (!value) return "-";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
-    return new Intl.DateTimeFormat("en-GB", {
+    return new Intl.DateTimeFormat(bookingLang(), {
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
@@ -167,7 +238,8 @@ export function createBookingOfferModule(ctx) {
         id: String(component?.id || ""),
         category: normalizeOfferCategory(component?.category),
         label: String(component?.label || ""),
-        details: String(component?.details || component?.description || ""),
+        details: resolveLocalizedEditorText(component?.details_i18n ?? component?.details ?? component?.description, "en", ""),
+        details_i18n: normalizeLocalizedEditorMap(component?.details_i18n ?? component?.details ?? component?.description, "en"),
         quantity: Math.max(1, Number(component?.quantity || 1)),
         unit_amount_cents: Math.max(0, Number(component?.unit_amount_cents || 0)),
         tax_rate_basis_points: Number.isFinite(Number(component?.tax_rate_basis_points))
@@ -192,7 +264,13 @@ export function createBookingOfferModule(ctx) {
   }
 
   function offerCategoryLabel(code) {
-    return OFFER_CATEGORIES.find((entry) => entry.code === normalizeOfferCategory(code))?.label || "Other";
+    const normalized = normalizeOfferCategory(code);
+    const fallback = normalized
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+    return bookingT(`booking.offer_category.${normalized.toLowerCase()}`, fallback || bookingT("booking.offer_category.other", "Other"));
   }
 
   function offerCategorySign(code) {
@@ -252,7 +330,7 @@ export function createBookingOfferModule(ctx) {
   }
 
   function readOfferDraftComponentsForRender() {
-    const rows = Array.from(document.querySelectorAll("[data-offer-component-details]"));
+    const rows = Array.from(document.querySelectorAll('[data-offer-component-details][data-localized-lang="en"][data-localized-role="source"]'));
     const fallbackComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
     if (!rows.length) {
       return fallbackComponents;
@@ -260,17 +338,23 @@ export function createBookingOfferModule(ctx) {
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     return rows.map((_, index) => {
       const category = normalizeOfferCategory(state.offerDraft?.components?.[index]?.category || "OTHER");
-      const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
+      const englishDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`)?.value || "").trim();
+      const targetLang = bookingContentLang();
+      const localizedDetails = targetLang === "en"
+        ? ""
+        : String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`)?.value || "").trim();
       const quantityRaw = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
       const unitAmountRaw = document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0";
       const quantity = Number.isFinite(quantityRaw) && quantityRaw >= 1 ? Math.round(quantityRaw) : 1;
       const unitAmount = parseMoneyInputValue(unitAmountRaw, currency);
       const fallbackComponent = fallbackComponents[index] || {};
+      const detailsPayload = buildDualLocalizedPayload(englishDetails, localizedDetails, targetLang);
       return {
         id: String(fallbackComponent.id || ""),
         category,
         label: String(fallbackComponent.label || ""),
-        details: details || null,
+        details: detailsPayload.text || null,
+        details_i18n: detailsPayload.map,
         quantity,
         unit_amount_cents:
           Number.isFinite(unitAmount) && unitAmount >= 0
@@ -312,6 +396,7 @@ export function createBookingOfferModule(ctx) {
       category,
       label: "",
       details: "",
+      details_i18n: {},
       quantity: 1,
       unit_amount_cents: 0,
       tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
@@ -372,9 +457,9 @@ export function createBookingOfferModule(ctx) {
     const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
     const canEdit = state.permissions.canEditBooking;
     const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
-    const emailHeader = emailActionEnabled ? '<th class="generated-offers-col-email">Email</th>' : "";
+    const emailHeader = emailActionEnabled ? `<th class="generated-offers-col-email">${escapeHtml(bookingT("booking.email", "Email"))}</th>` : "";
     const actionHeader = canEdit ? '<th class="generated-offers-col-actions"></th>' : "";
-    const emptyColspan = 4 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
+    const emptyColspan = 5 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
     const rows = items.length
       ? items
         .slice()
@@ -382,23 +467,24 @@ export function createBookingOfferModule(ctx) {
         .map((item) => {
           const pdfUrl = String(item.pdf_url || "").trim();
           return `<tr>
-          <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">PDF</a>` : "-"}</td>
+          <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a>` : "-"}</td>
           ${emailActionEnabled
-            ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">email</button></td>`
+            ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
             : ""}
+          <td class="generated-offers-col-language">${escapeHtml(bookingContentLanguageLabel(item.lang || "en"))}</td>
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
             ? `<textarea id="generated_offer_comment_${escapeHtml(item.id)}" name="generated_offer_comment_${escapeHtml(item.id)}" data-generated-offer-comment="${escapeHtml(item.id)}" rows="1">${escapeHtml(item.comment || "")}</textarea>`
             : (escapeHtml(item.comment || "") || "-")}</td>
           ${canEdit
-            ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" title="Delete generated offer" aria-label="Delete generated offer">×</button></td>`
+            ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button></td>`
             : ""}
         </tr>`;
         })
         .join("")
-      : `<tr><td colspan="${emptyColspan}">No generated offers yet</td></tr>`;
-    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">PDF</th>${emailHeader}<th class="generated-offers-col-total">Total</th><th class="generated-offers-col-date">Date</th><th>Comments</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
+      : `<tr><td colspan="${emptyColspan}">${escapeHtml(bookingT("booking.offer.no_generated", "No generated offers yet"))}</td></tr>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>${emailHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-comment]").forEach((input) => {
@@ -445,12 +531,12 @@ export function createBookingOfferModule(ctx) {
     });
     if (await applyOfferBookingResponse(response)) return;
     if (!response) return;
-    setOfferStatus(response?.detail || response?.error || "Could not update generated offer comment.");
+    setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.update_comment", "Could not update generated offer comment."));
   }
 
   async function deleteGeneratedOffer(generatedOfferId) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
-    if (!window.confirm("Delete this generated offer?")) return;
+    if (!window.confirm(bookingT("booking.offer.delete_generated_confirm", "Delete this generated offer?"))) return;
     if (!(await flushOfferAutosave())) return;
     const request = bookingGeneratedOfferDeleteRequest({
       baseURL: apiOrigin,
@@ -467,17 +553,17 @@ export function createBookingOfferModule(ctx) {
     });
     if (await applyOfferBookingResponse(response)) return;
     if (!response) return;
-    setOfferStatus(response?.detail || response?.error || "Could not delete generated offer.");
+    setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.delete_generated", "Could not delete generated offer."));
   }
 
   async function createGeneratedOfferGmailDraft(generatedOfferId) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
     if (!state.booking?.generated_offer_email_enabled) {
-      setOfferStatus("Gmail draft creation is not configured for this environment.");
+      setOfferStatus(bookingT("booking.offer.gmail_not_configured", "Gmail draft creation is not configured for this environment."));
       return;
     }
     const { windowRef: draftWindow, openedNewWindow } = acquireGmailWindow();
-    setOfferStatus("Creating Gmail draft...");
+    setOfferStatus(bookingT("booking.offer.creating_gmail_draft", "Creating Gmail draft..."));
     const request = bookingGeneratedOfferGmailDraftRequest({
       baseURL: apiOrigin,
       params: {
@@ -508,7 +594,7 @@ export function createBookingOfferModule(ctx) {
         setOfferStatus(response.warning || "");
         return;
       }
-      setOfferStatus("Gmail draft created, but your browser blocked opening a new tab. Allow pop-ups and try again.");
+      setOfferStatus(bookingT("booking.offer.gmail_popup_blocked", "Gmail draft created, but your browser blocked opening a new tab. Allow pop-ups and try again."));
       return;
     }
     if (draftWindow && openedNewWindow) {
@@ -519,25 +605,38 @@ export function createBookingOfferModule(ctx) {
       setOfferStatus("");
       return;
     }
-    setOfferStatus(response?.detail || response?.error || "Could not create Gmail draft.");
+    setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.create_gmail_draft", "Could not create Gmail draft."));
   }
 
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
     if (!(await flushOfferAutosave())) return;
+    const selectedLang = bookingContentLang();
+    const missingTranslationCount = countMissingOfferPdfTranslations(state.booking, selectedLang);
+    if (missingTranslationCount > 0 && !window.confirm(bookingT(
+      "booking.offer.generate_missing_translation_confirm",
+      "Customer language is {language}, but {count} offer or travel-plan fields are not translated yet. The PDF shell will use {language}, and those fields will fall back to English. Generate anyway?",
+      {
+        language: bookingContentLanguageLabel(selectedLang),
+        count: missingTranslationCount
+      }
+    ))) {
+      return;
+    }
     const request = bookingGenerateOfferRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id }
     });
-    const commentInput = window.prompt("Comment for this generated offer (optional):", "");
+    const commentInput = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), "");
     if (commentInput === null) return;
     const normalizedComment = String(commentInput || "").trim();
-    setOfferStatus("Generating offer PDF...");
+    setOfferStatus(bookingT("booking.offer.generating_pdf", "Generating offer PDF..."));
     const response = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
         expected_offer_revision: getBookingRevision("offer_revision"),
-        comment: normalizedComment || null
+        comment: normalizedComment || null,
+        lang: selectedLang
       }
     });
     if (await applyOfferBookingResponse(response, { reloadActivities: true })) {
@@ -548,7 +647,7 @@ export function createBookingOfferModule(ctx) {
       setOfferStatus("");
       return;
     }
-    setOfferStatus(response?.detail || response?.error || "Could not generate offer PDF.");
+    setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.generate_pdf", "Could not generate offer PDF."));
   }
 
   async function flushOfferAutosave() {
@@ -578,10 +677,10 @@ export function createBookingOfferModule(ctx) {
     const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
     const showDualPrice = true;
     const priceHeaders = showDualPrice
-      ? `<th class="offer-col-price-single">Single</th><th class="offer-col-price-total">Total (incl. tax)</th>`
-      : `<th class="offer-col-price-total">Total (${escapeHtml(currency)})</th>`;
+      ? `<th class="offer-col-price-single">${escapeHtml(bookingT("booking.offer.single", "Single"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total_incl_tax", "Total (incl. tax)"))}</th>`
+      : `<th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total_currency", "Total ({currency})", { currency }))}</th>`;
     const actionHeader = showActionsCol ? '<th class="offer-col-actions"></th>' : "";
-    const header = `<thead><tr><th class="offer-col-category">Offer category</th><th class="offer-col-details">Offer details</th><th class="offer-col-qty">Quantity</th>${priceHeaders}${actionHeader}</tr></thead>`;
+    const header = `<thead><tr><th class="offer-col-category">${escapeHtml(bookingT("booking.offer.category", "Offer category"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.details", "Offer details"))}</th><th class="offer-col-qty">${escapeHtml(bookingT("booking.offer.quantity", "Quantity"))}</th>${priceHeaders}${actionHeader}</tr></thead>`;
     const rows = offerComponents
       .map((component, index) => {
         const category = normalizeOfferCategory(component.category || "OTHER");
@@ -590,10 +689,10 @@ export function createBookingOfferModule(ctx) {
         const rawLineTotal = computeOfferComponentLineTotals(component).gross_amount_cents;
         const componentTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
         const removeButton = showActionsCol
-          ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-component="${index}" title="Remove offer component" aria-label="Remove offer component">×</button>`
+          ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-component="${index}" title="${escapeHtml(bookingT("booking.offer.remove_component", "Remove offer component"))}" aria-label="${escapeHtml(bookingT("booking.offer.remove_component", "Remove offer component"))}">×</button>`
           : "";
         const singleInput = `<input id="offer_component_unit_${index}" name="offer_component_unit_${index}" data-offer-component-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(unitAmount, currency))}" ${readOnly ? "disabled" : ""} />`;
-        const categorySelect = `<select id="offer_component_category_${index}" name="offer_component_category_${index}" data-offer-component-category="${index}" ${readOnly ? "disabled" : ""}>${OFFER_COMPONENT_CATEGORIES.map((option) => `<option value="${escapeHtml(option.code)}" ${option.code === category ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}</select>`;
+        const categorySelect = `<select id="offer_component_category_${index}" name="offer_component_category_${index}" data-offer-component-category="${index}" ${readOnly ? "disabled" : ""}>${OFFER_COMPONENT_CATEGORIES.map((option) => `<option value="${escapeHtml(option.code)}" ${option.code === category ? "selected" : ""}>${escapeHtml(offerCategoryLabel(option.code))}</option>`).join("")}</select>`;
         const totalPriceCell = showDualPrice
           ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span></div></td>`
           : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span></div></td>`;
@@ -604,7 +703,7 @@ export function createBookingOfferModule(ctx) {
       <td class="offer-col-category">
         <div>${categorySelect}</div>
       </td>
-      <td class="offer-col-details"><textarea id="offer_component_details_${index}" name="offer_component_details_${index}" data-offer-component-details="${index}" rows="1" ${readOnly ? "disabled" : ""}>${escapeHtml(component.details || component.description || "")}</textarea></td>
+      <td class="offer-col-details">${renderOfferLocalizedDetailsField(component, index)}</td>
       <td class="offer-col-qty"><input id="offer_component_quantity_${index}" name="offer_component_quantity_${index}" data-offer-component-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${readOnly ? "disabled" : ""} /></td>
       ${priceCells}${actionCell}
     </tr>`;
@@ -613,9 +712,9 @@ export function createBookingOfferModule(ctx) {
     const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     const addButtonCell = !readOnly
-      ? `<td class="offer-col-category"></td><td class="offer-add-cell"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-component>new</button></td>`
+      ? `<td class="offer-col-category"></td><td class="offer-add-cell"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-component>${escapeHtml(bookingT("common.new", "New"))}</button></td>`
       : `<td class="offer-col-category"></td><td class="offer-col-details"></td>`;
-    const totalLabelCols = `<td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">Total:</strong></div></td>`;
+    const totalLabelCols = `<td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.total", "Total"))}:</strong></div></td>`;
     const totalValueCol = `<td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>`;
     const totalRow = `<tr class="offer-total-row">${addButtonCell}${totalLabelCols}${totalValueCol}${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
     els.offer_components_table.innerHTML = `${header}<tbody>${rows}${totalRow}</tbody>`;
@@ -636,17 +735,17 @@ export function createBookingOfferModule(ctx) {
           const index = Number(button.getAttribute("data-offer-remove-component"));
           const component = state.offerDraft.components[index];
           const categoryLabel = offerCategoryLabel(component?.category);
-          const detailsLabel = String(component?.details || component?.description || "").trim() || "No details";
+          const detailsLabel = String(component?.details || component?.description || "").trim() || bookingT("booking.no_details", "No details");
           const totalLabel = formatMoneyDisplay(
             computeOfferComponentLineTotals(component).gross_amount_cents,
             currency
           );
           const confirmationMessage = [
-            "Remove this offer component?",
+            bookingT("booking.offer.remove_component_confirm", "Remove this offer component?"),
             "",
-            `Category: ${categoryLabel}`,
-            `Details: ${detailsLabel}`,
-            `Total: ${totalLabel}`
+            bookingT("booking.offer.confirm_category", "Category: {value}", { value: categoryLabel }),
+            bookingT("booking.offer.confirm_details", "Details: {value}", { value: detailsLabel }),
+            bookingT("booking.offer.confirm_total", "Total: {value}", { value: totalLabel })
           ].join("\n");
           if (!window.confirm(confirmationMessage)) {
             return;
@@ -680,6 +779,49 @@ export function createBookingOfferModule(ctx) {
       });
       els.offer_components_table.querySelectorAll("[data-offer-add-component]").forEach((button) => {
         button.addEventListener("click", addOfferComponent);
+      });
+      els.offer_components_table.querySelectorAll("[data-localized-translate]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const index = Number(button.getAttribute("data-offer-component-details-translate"));
+          const targetLang = bookingContentLang();
+          const direction = String(button.getAttribute("data-localized-translate-direction") || "source-to-target").trim();
+          const englishInput = document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`);
+          const localizedInput = document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`);
+          if (!englishInput || !localizedInput || !state.booking?.id || targetLang === "en") return;
+          const sourceInput = direction === "target-to-source" ? localizedInput : englishInput;
+          const destinationInput = direction === "target-to-source" ? englishInput : localizedInput;
+          const sourceLang = direction === "target-to-source" ? targetLang : "en";
+          const destinationLang = direction === "target-to-source" ? "en" : targetLang;
+          const sourceText = String(sourceInput?.value || "").trim();
+          if (!sourceText) return;
+          const targetOption = bookingContentLanguageOption(targetLang);
+          setOfferStatus(
+            direction === "target-to-source"
+              ? bookingT("booking.translation.translating_field_to_english", "Translating field to English...")
+              : bookingT("booking.translation.translating_field_from_english", "Translating field from English...")
+          );
+          let translated = "";
+          try {
+            translated = await requestQuickGoogleFieldTranslation({
+              text: sourceText,
+              sourceLang,
+              targetLang: destinationLang
+            });
+          } catch (error) {
+            setOfferStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."));
+            return;
+          }
+          destinationInput.value = translated;
+          state.offerDraft.components = readOfferDraftComponentsForRender();
+          state.offerDraft.total_price_cents = null;
+          setOfferSaveEnabled(true);
+          setOfferStatus(
+            direction === "target-to-source"
+              ? bookingT("booking.translation.field_translated_to_english", "Field translated to English.")
+              : bookingT("booking.translation.field_translated_to_customer_language", "Field translated to {lang}.", { lang: targetOption.shortLabel })
+          );
+          scheduleOfferAutosave();
+        });
       });
     }
   }
@@ -739,33 +881,39 @@ export function createBookingOfferModule(ctx) {
 
   function collectOfferComponents({ throwOnError = true } = {}) {
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-    const rows = Array.from(document.querySelectorAll("[data-offer-component-details]"));
+    const rows = Array.from(document.querySelectorAll('[data-offer-component-details][data-localized-lang="en"][data-localized-role="source"]'));
     const components = [];
     for (const input of rows) {
       const index = Number(input.getAttribute("data-offer-component-details"));
       const category = normalizeOfferCategory(document.querySelector(`[data-offer-component-category="${index}"]`)?.value || "OTHER");
-      const details = String(document.querySelector(`[data-offer-component-details="${index}"]`)?.value || "").trim();
+      const englishDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`)?.value || "").trim();
+      const targetLang = bookingContentLang();
+      const localizedDetails = targetLang === "en"
+        ? ""
+        : String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`)?.value || "").trim();
       const quantity = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
       const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0", currency);
       const label = String(offerCategoryLabel(category)).trim();
       const notes = String(state.offerDraft?.components[index]?.notes || "").trim();
+      const detailsPayload = buildDualLocalizedPayload(englishDetails, localizedDetails, targetLang);
       if (!category) {
-        if (throwOnError) throw new Error(`Offer component ${index + 1} requires a category.`);
+        if (throwOnError) throw new Error(bookingT("booking.offer.error.component_category", "Offer component {index} requires a category.", { index: index + 1 }));
         continue;
       }
       if (!Number.isFinite(quantity) || quantity < 1) {
-        if (throwOnError) throw new Error(`Offer component ${index + 1} quantity must be at least 1.`);
+        if (throwOnError) throw new Error(bookingT("booking.offer.error.component_quantity", "Offer component {index} quantity must be at least 1.", { index: index + 1 }));
         continue;
       }
       if (!Number.isFinite(unitAmount) || unitAmount < 0) {
-        if (throwOnError) throw new Error(`Offer component ${index + 1} requires a valid non-negative unit amount.`);
+        if (throwOnError) throw new Error(bookingT("booking.offer.error.component_amount", "Offer component {index} requires a valid non-negative unit amount.", { index: index + 1 }));
         continue;
       }
       components.push({
         id: state.offerDraft.components[index]?.id || "",
         category,
         label,
-        details: details || null,
+        details: detailsPayload.text || null,
+        details_i18n: detailsPayload.map,
         quantity: Math.round(quantity),
         unit_amount_cents: Math.round(unitAmount),
         tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
@@ -823,7 +971,7 @@ export function createBookingOfferModule(ctx) {
 
     const convertedComponentsRaw = Array.isArray(response?.converted_components) ? response.converted_components : null;
     if (!response || !Array.isArray(convertedComponentsRaw)) {
-      throw new Error(response?.detail || response?.error || "Offer exchange failed.");
+      throw new Error(response?.detail || response?.error || bookingT("booking.offer.error.exchange_failed", "Offer exchange failed."));
     }
     return {
       convertedComponents: convertedComponentsRaw.map((component, index) => ({
@@ -870,7 +1018,7 @@ export function createBookingOfferModule(ctx) {
     if (els.offer_currency_input) {
       els.offer_currency_input.disabled = true;
     }
-    setOfferStatus("Converting prices...");
+    setOfferStatus(bookingT("booking.offer.converting_prices", "Converting prices..."));
     try {
       const converted = await convertOfferComponentsInBackend(currentCurrency, nextCurrency, components);
       const convertedComponents = converted.convertedComponents;
@@ -894,7 +1042,7 @@ export function createBookingOfferModule(ctx) {
       }
       setOfferSaveEnabled(true);
     } catch (error) {
-      setOfferStatus(`Exchange rate lookup failed: ${error?.message || error}`);
+      setOfferStatus(bookingT("booking.offer.error.exchange_lookup", "Exchange rate lookup failed: {message}", { message: error?.message || error }));
       restoreSelectState();
       setSelectValue(els.offer_currency_input, currentCurrency);
       return;
@@ -915,7 +1063,7 @@ export function createBookingOfferModule(ctx) {
       els.offer_currency_hint.hidden = true;
       return;
     }
-    els.offer_currency_hint.textContent = `(${preferredCurrency} was preferred in web submission)`;
+    els.offer_currency_hint.textContent = bookingT("booking.offer.preferred_currency_hint", "({currency} was preferred in web submission)", { currency: preferredCurrency });
     els.offer_currency_hint.hidden = false;
   }
 
@@ -949,7 +1097,8 @@ export function createBookingOfferModule(ctx) {
           body: {
             expected_offer_revision: getBookingRevision("offer_revision"),
             offer,
-            actor: state.user
+            actor: state.user,
+            lang: bookingContentLang()
           }
         });
       } finally {

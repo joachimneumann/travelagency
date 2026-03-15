@@ -1,12 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AsiaTravelPlan Backend</title>
+    <title data-i18n-id="backend.page_title">AsiaTravelPlan Backend</title>
     <meta name="description" content="AsiaTravelPlan backend workspace" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=6c388c7e525c" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=b7baca7c60a0" />
   </head>
   <body>
     <header class="header" id="top">
@@ -27,10 +32,10 @@
           <section class="backend-section" id="bookingsPanel">
             <div class="backend-controls">
               <div class="field">
-                <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." />
+                <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." data-i18n-placeholder-id="backend.bookings.search_placeholder" />
               </div>
-              <button class="btn btn-ghost" id="bookingsSearchBtn" type="button">Search</button>
-              <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden>Clear Search</button>
+              <button class="btn btn-ghost" id="bookingsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+              <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden data-i18n-id="backend.bookings.clear_search">Clear Search</button>
               <span id="bookingsCountInfo" class="micro"></span>
             </div>
             <div class="backend-table-wrap">
@@ -40,26 +45,26 @@
           </section>
 
           <section class="backend-section" id="toursPanel">
-            <h2 class="section-title u-title-medium">Tours</h2>
+            <h2 class="section-title u-title-medium" data-i18n-id="backend.tours.heading">Tours</h2>
             <div class="backend-controls">
               <div class="field">
-                <label for="toursDestination">Destination</label>
+                <label for="toursDestination" data-i18n-id="backend.tours.destination_label">Destination</label>
                 <select id="toursDestination">
-                  <option value="all">All destinations</option>
+                  <option value="all" data-i18n-id="backend.tours.all_destinations">All destinations</option>
                 </select>
               </div>
               <div class="field">
-                <label for="toursStyle">Style</label>
+                <label for="toursStyle" data-i18n-id="backend.tours.style_label">Style</label>
                 <select id="toursStyle">
-                  <option value="all">All styles</option>
+                  <option value="all" data-i18n-id="backend.tours.all_styles">All styles</option>
                 </select>
               </div>
-              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button">Clear filters</button>
+              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button" data-i18n-id="backend.tours.clear_filters">Clear filters</button>
               <div class="field">
-                <label for="toursSearch">Search tours</label>
-                <input id="toursSearch" type="text" placeholder="id, title, country, style..." />
+                <label for="toursSearch" data-i18n-id="backend.tours.search_label">Search tours</label>
+                <input id="toursSearch" type="text" placeholder="id, title, country, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
               </div>
-              <button class="btn btn-ghost" id="toursSearchBtn" type="button">Search</button>
+              <button class="btn btn-ghost" id="toursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
               <span id="toursCountInfo" class="micro"></span>
             </div>
             <div class="backend-table-wrap">
@@ -69,8 +74,8 @@
           </section>
 
           <section class="backend-section" id="settingsPanel">
-            <h2 class="section-title u-title-medium">Users</h2>
-            <p class="micro" id="staffStatus">Users are managed in Keycloak.</p>
+            <h2 class="section-title u-title-medium" data-i18n-id="backend.users.heading">Users</h2>
+            <p class="micro" id="staffStatus" data-i18n-id="backend.users.status">Users are managed in Keycloak.</p>
             <div class="backend-table-wrap">
               <table class="backend-table" id="staffTable"></table>
             </div>
@@ -79,11 +84,14 @@
       </section>
     </main>
 
+    <script src="shared/generated/language_catalog.global.js?v=b7baca7c60a0"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js?v=b7baca7c60a0"></script>
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=6c388c7e525c";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=b7baca7c60a0";
       const section = new URLSearchParams(window.location.search).get("section") || "bookings";
+      await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking_list.js?v=6c388c7e525c"></script>
+    <script type="module" src="frontend/scripts/pages/booking_list.js?v=b7baca7c60a0"></script>
   </body>
 </html>

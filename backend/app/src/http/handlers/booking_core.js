@@ -1,3 +1,5 @@
+import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
+
 export function createBookingCoreHandlers(deps) {
   const {
     readBodyJson,
@@ -24,7 +26,8 @@ export function createBookingCoreHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     buildBookingPayload,
-    incrementBookingRevision
+    incrementBookingRevision,
+    translateEntries
   } = deps;
 
   async function handlePatchBookingStage(req, res, [bookingId]) {
@@ -53,7 +56,7 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
     if (!allowed.includes(nextStage)) {
@@ -69,7 +72,7 @@ export function createBookingCoreHandlers(deps) {
     addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Stage updated to ${nextStage}`);
     await persistStore(store);
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingName(req, res, [bookingId]) {
@@ -92,12 +95,12 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const nextName = normalizeText(payload.name) || null;
     const currentName = normalizeText(booking.name) || null;
     if (nextName === currentName) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
@@ -113,7 +116,62 @@ export function createBookingCoreHandlers(deps) {
     );
     await persistStore(store);
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
+
+  async function handlePatchBookingCustomerLanguage(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
+
+    const nextCustomerLanguage = normalizeBookingContentLang(
+      payload?.customer_language
+      || payload?.preferred_language
+      || payload?.lang
+      || booking?.customer_language
+      || booking?.web_form_submission?.preferred_language
+      || "en"
+    );
+    const currentCustomerLanguage = normalizeBookingContentLang(
+      booking?.customer_language
+      || booking?.web_form_submission?.preferred_language
+      || "en"
+    );
+    if (nextCustomerLanguage === currentCustomerLanguage && normalizeText(booking?.customer_language) === nextCustomerLanguage) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
+      return;
+    }
+
+    booking.customer_language = nextCustomerLanguage;
+    incrementBookingRevision(booking, "core_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      `Customer language set to ${nextCustomerLanguage}`
+    );
+    await persistStore(store);
+
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingOwner(req, res, [bookingId]) {
@@ -137,7 +195,7 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     if (!assignedKeycloakUserId) {
       booking.assigned_keycloak_user_id = null;
@@ -146,7 +204,7 @@ export function createBookingCoreHandlers(deps) {
       booking.updated_at = nowIso();
       addActivity(store, booking.id, "ASSIGNMENT_CHANGED", actorLabel(principal, "keycloak_user"), "Keycloak user unassigned");
       await persistStore(store);
-      sendJson(res, 200, await buildBookingDetailResponse(booking));
+      sendJson(res, 200, await buildBookingDetailResponse(booking, req));
       return;
     }
 
@@ -164,7 +222,7 @@ export function createBookingCoreHandlers(deps) {
     addActivity(store, booking.id, "ASSIGNMENT_CHANGED", actorLabel(principal, "keycloak_user"), `Keycloak user set to ${keycloakDisplayName(assignedUser)}`);
     await persistStore(store);
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingNotes(req, res, [bookingId]) {
@@ -187,12 +245,12 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_notes_revision", "notes_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_notes_revision", "notes_revision", res))) return;
 
     const nextNotes = normalizeText(payload.notes);
     const currentNotes = normalizeText(booking.notes);
     if (nextNotes === currentNotes) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
@@ -208,7 +266,7 @@ export function createBookingCoreHandlers(deps) {
     );
     await persistStore(store);
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleListActivities(req, res, [bookingId]) {
@@ -258,22 +316,92 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     const activity = addActivity(store, booking.id, type, actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), detail);
     incrementBookingRevision(booking, "core_revision");
     booking.updated_at = nowIso();
     await persistStore(store);
 
-    sendJson(res, 201, { activity, booking: await buildBookingPayload(booking) });
+    sendJson(res, 201, { activity, booking: await buildBookingPayload(booking, req) });
+  }
+
+  async function handleTranslateBookingFields(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const sourceLang = normalizeBookingContentLang(payload?.source_lang || "en");
+    const targetLang = normalizeBookingContentLang(payload?.target_lang || payload?.lang || booking?.customer_language || "en");
+
+    const entries = payload?.entries && typeof payload.entries === "object" && !Array.isArray(payload.entries)
+      ? Object.fromEntries(
+          Object.entries(payload.entries)
+            .map(([key, value]) => [normalizeText(key), normalizeText(value)])
+            .filter(([key, value]) => Boolean(key && value))
+        )
+      : {};
+    if (!Object.keys(entries).length) {
+      sendJson(res, 422, { error: "At least one source field is required." });
+      return;
+    }
+
+    if (sourceLang === targetLang) {
+      sendJson(res, 200, {
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        entries
+      });
+      return;
+    }
+
+    try {
+      const translatedEntries = await translateEntries(entries, targetLang, {
+        sourceLangCode: sourceLang,
+        domain: "travel planning"
+      });
+      sendJson(res, 200, {
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        entries: translatedEntries
+      });
+    } catch (error) {
+      if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
+        sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });
+        return;
+      }
+      if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
+        sendJson(res, 502, { error: String(error.message || "Translation request failed.") });
+        return;
+      }
+      sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
+    }
   }
 
   return {
     handlePatchBookingStage,
     handlePatchBookingName,
+    handlePatchBookingCustomerLanguage,
     handlePatchBookingOwner,
     handlePatchBookingNotes,
     handleListActivities,
-    handleCreateActivity
+    handleCreateActivity,
+    handleTranslateBookingFields
   };
 }

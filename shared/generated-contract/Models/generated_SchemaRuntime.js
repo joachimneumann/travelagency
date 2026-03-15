@@ -1377,10 +1377,20 @@
   "isArray": false,
   "enumValues": [
     "English",
-    "Vietnamese",
     "French",
+    "Mandarin",
+    "Japanese",
+    "Korean",
+    "Vietnamese",
     "German",
-    "Spanish"
+    "Spanish",
+    "Italian",
+    "Russian",
+    "Dutch",
+    "Polish",
+    "Danish",
+    "Swedish",
+    "Norwegian"
   ],
   "options": [
     {
@@ -1388,12 +1398,24 @@
       "label": "English"
     },
     {
-      "value": "Vietnamese",
-      "label": "Vietnamese"
-    },
-    {
       "value": "French",
       "label": "French"
+    },
+    {
+      "value": "Mandarin",
+      "label": "Mandarin"
+    },
+    {
+      "value": "Japanese",
+      "label": "Japanese"
+    },
+    {
+      "value": "Korean",
+      "label": "Korean"
+    },
+    {
+      "value": "Vietnamese",
+      "label": "Vietnamese"
     },
     {
       "value": "German",
@@ -1402,6 +1424,34 @@
     {
       "value": "Spanish",
       "label": "Spanish"
+    },
+    {
+      "value": "Italian",
+      "label": "Italian"
+    },
+    {
+      "value": "Russian",
+      "label": "Russian"
+    },
+    {
+      "value": "Dutch",
+      "label": "Dutch"
+    },
+    {
+      "value": "Polish",
+      "label": "Polish"
+    },
+    {
+      "value": "Danish",
+      "label": "Danish"
+    },
+    {
+      "value": "Swedish",
+      "label": "Swedish"
+    },
+    {
+      "value": "Norwegian",
+      "label": "Norwegian"
     }
   ]
 },
@@ -2727,6 +2777,14 @@
     "EURO",
     "VND",
     "THB",
+    "CNY",
+    "JPY",
+    "KRW",
+    "RUB",
+    "PLN",
+    "DKK",
+    "SEK",
+    "NOK",
     "AUD",
     "GBP",
     "NZD",
@@ -2748,6 +2806,38 @@
     {
       "value": "THB",
       "label": "THB"
+    },
+    {
+      "value": "CNY",
+      "label": "CNY"
+    },
+    {
+      "value": "JPY",
+      "label": "JPY"
+    },
+    {
+      "value": "KRW",
+      "label": "KRW"
+    },
+    {
+      "value": "RUB",
+      "label": "RUB"
+    },
+    {
+      "value": "PLN",
+      "label": "PLN"
+    },
+    {
+      "value": "DKK",
+      "label": "DKK"
+    },
+    {
+      "value": "SEK",
+      "label": "SEK"
+    },
+    {
+      "value": "NOK",
+      "label": "NOK"
     },
     {
       "value": "AUD",

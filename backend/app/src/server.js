@@ -16,6 +16,11 @@ import { createTravelPlanHelpers } from "./domain/travel_plan.js";
 import { createBookingViewHelpers } from "./domain/booking_views.js";
 import { createAccessHelpers } from "./domain/access.js";
 import { createTourHelpers } from "./domain/tours_support.js";
+import {
+  normalizeTourDestinationCode,
+  normalizeTourLang,
+  normalizeTourStyleCode
+} from "./domain/tour_catalog_i18n.js";
 import { createBookingHandlers } from "./http/handlers/bookings.js";
 import { createKeycloakUserHandlers } from "./http/handlers/keycloak_users.js";
 import { createSupplierHandlers } from "./http/handlers/suppliers.js";
@@ -25,6 +30,7 @@ import { createInvoicePdfWriter } from "./lib/invoice_pdf.js";
 import { createOfferPdfWriter } from "./lib/offer_pdf.js";
 import { createKeycloakDirectory } from "./lib/keycloak_directory.js";
 import { createStoreUtils } from "./lib/store_utils.js";
+import { createTranslationClient } from "./lib/translation_client.js";
 import {
   formatCountryGuessLabel,
   getRequestIpAddress,
@@ -92,6 +98,9 @@ const KEYCLOAK_DIRECTORY_PASSWORD = normalizeText(process.env.KEYCLOAK_DIRECTORY
 const KEYCLOAK_DIRECTORY_ADMIN_REALM = normalizeText(process.env.KEYCLOAK_DIRECTORY_ADMIN_REALM || "master");
 const GOOGLE_SERVICE_ACCOUNT_JSON_PATH = normalizeText(process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH || "");
 const GOOGLE_IMPERSONATED_EMAIL = normalizeText(process.env.GOOGLE_IMPERSONATED_EMAIL || "");
+const OPENAI_API_KEY = normalizeText(process.env.OPENAI_API_KEY || "");
+const OPENAI_TRANSLATION_MODEL = normalizeText(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL || "gpt-4.1") || "gpt-4.1";
+const TRANSLATION_ENABLED = Boolean(OPENAI_API_KEY);
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -112,6 +121,11 @@ function resolveConfigPathFromRepoRoot(rawPath) {
 const GMAIL_DRAFTS_CONFIG = Object.freeze({
   serviceAccountJsonPath: resolveConfigPathFromRepoRoot(GOOGLE_SERVICE_ACCOUNT_JSON_PATH),
   impersonatedEmail: GOOGLE_IMPERSONATED_EMAIL
+});
+
+const TRANSLATION_CLIENT = createTranslationClient({
+  apiKey: OPENAI_API_KEY,
+  model: OPENAI_TRANSLATION_MODEL
 });
 
 const STAGES = Object.freeze(Object.fromEntries(GENERATED_BOOKING_STAGES.map((value) => [value, value])));
@@ -331,6 +345,7 @@ const {
   stageOrder: STAGE_ORDER,
   appRoles: APP_ROLES,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
+  translationEnabled: TRANSLATION_ENABLED,
   normalizeStringArray,
   normalizeEmail,
   isLikelyPhoneMatch,
@@ -407,10 +422,14 @@ const {
 });
 
 const {
-  tourDestinations,
-  normalizeHighlights,
   toTourImagePublicUrl,
+  tourDestinationCodes,
+  tourStyleCodes,
   normalizeTourForRead,
+  normalizeTourForStorage,
+  resolveLocalizedText,
+  setLocalizedTextForLang,
+  setLocalizedStringArrayForLang,
   collectTourOptions,
   resolveTourImageDiskPath
 } = createTourHelpers({
@@ -419,7 +438,7 @@ const {
   safeFloat
 });
 
-const writeInvoicePdf = createInvoicePdfWriter({ invoicePdfPath });
+const writeInvoicePdf = createInvoicePdfWriter({ invoicePdfPath, companyProfile: COMPANY_PROFILE });
 const writeGeneratedOfferPdf = createOfferPdfWriter({
   generatedOfferPdfPath,
   bookingImagesDir: BOOKING_IMAGES_DIR,
@@ -496,6 +515,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
+    buildBookingOfferReadModel,
+    buildBookingTravelPlanReadModel,
     validateBookingTravelPlanInput,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
@@ -520,7 +541,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,
     rm,
-    sendFileWithCache
+    sendFileWithCache,
+    translateEntries: TRANSLATION_CLIENT.translateEntries
   });
   const keycloakUserHandlers = createKeycloakUserHandlers({
     getPrincipal,
@@ -546,13 +568,20 @@ export async function createBackendHandler({ port = PORT } = {}) {
     normalizeStringArray,
     safeInt,
     safeFloat,
-    normalizeHighlights,
     toTourImagePublicUrl,
-    tourDestinations,
+    tourDestinationCodes,
+    tourStyleCodes,
     readTours,
     sendJson,
     clamp,
     normalizeTourForRead,
+    normalizeTourForStorage,
+    resolveLocalizedText,
+    setLocalizedTextForLang,
+    setLocalizedStringArrayForLang,
+    normalizeTourLang,
+    normalizeTourDestinationCode,
+    normalizeTourStyleCode,
     createHash,
     getPrincipal,
     canReadTours,

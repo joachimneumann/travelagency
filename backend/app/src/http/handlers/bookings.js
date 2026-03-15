@@ -62,6 +62,8 @@ export function createBookingHandlers(deps) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
+    buildBookingOfferReadModel,
+    buildBookingTravelPlanReadModel,
     validateBookingTravelPlanInput,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
@@ -86,7 +88,8 @@ export function createBookingHandlers(deps) {
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,
     rm,
-    sendFileWithCache
+    sendFileWithCache,
+    translateEntries
   } = deps;
 
   function unique(values) {
@@ -179,7 +182,7 @@ export function createBookingHandlers(deps) {
     normalizePersonPhoneNumbers
   } = queryModule;
 
-  async function assertExpectedRevision(payload, booking, payloadField, revisionField, res) {
+  async function assertExpectedRevision(req, payload, booking, payloadField, revisionField, res) {
     const rawExpected = payload?.[payloadField];
     const expectedRevision = rawExpected === undefined || rawExpected === null || rawExpected === ""
       ? null
@@ -190,7 +193,7 @@ export function createBookingHandlers(deps) {
         error: "Booking changed in backend",
         detail: "The booking has changed in the backend. The data has been refreshed. Your changes are lost. Please do them again.",
         code: "BOOKING_REVISION_MISMATCH",
-        booking: await buildBookingPayload(booking)
+        booking: await buildBookingPayload(booking, req)
       });
       return false;
     }
@@ -366,6 +369,7 @@ export function createBookingHandlers(deps) {
   const {
     handlePatchBookingStage,
     handlePatchBookingName,
+    handlePatchBookingCustomerLanguage,
     handlePatchBookingOwner,
     handlePatchBookingNotes,
     handleListActivities,
@@ -419,7 +423,8 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handlePatchBookingTravelPlan
+    handlePatchBookingTravelPlan,
+    handleTranslateBookingTravelPlanFromEnglish
   } = createBookingTravelPlanHandlers({
     readBodyJson,
     sendJson,
@@ -434,12 +439,15 @@ export function createBookingHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     incrementBookingRevision,
-    validateBookingTravelPlanInput
+    validateBookingTravelPlanInput,
+    normalizeBookingTravelPlan,
+    translateEntries
   });
 
   const {
     handlePatchBookingPricing,
     handlePatchBookingOffer,
+    handleTranslateBookingOfferFromEnglish,
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
     handleGetGeneratedOfferPdf,
@@ -468,6 +476,8 @@ export function createBookingHandlers(deps) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
+    buildBookingOfferReadModel,
+    buildBookingTravelPlanReadModel,
     formatMoney,
     validateOfferExchangeRequest,
     resolveExchangeRateWithFallback,
@@ -479,13 +489,15 @@ export function createBookingHandlers(deps) {
     getBookingContactProfile,
     rm,
     canAccessBooking,
-    sendFileWithCache
+    sendFileWithCache,
+    translateEntries
   });
 
   const {
     handleListBookingInvoices,
     handleCreateBookingInvoice,
     handlePatchBookingInvoice,
+    handleTranslateBookingInvoiceFromEnglish,
     handleGetInvoicePdf
   } = createBookingInvoiceHandlers({
     readBodyJson,
@@ -511,7 +523,8 @@ export function createBookingHandlers(deps) {
     incrementBookingRevision,
     getBookingContactProfile,
     invoicePdfPath,
-    sendFileWithCache
+    sendFileWithCache,
+    translateEntries
   });
 
   async function handleCreateBooking(req, res) {
@@ -582,6 +595,7 @@ export function createBookingHandlers(deps) {
 
     const booking = {
       id: bookingId,
+      customer_language: inputPreferredLanguage || "en",
       name: initialBookingName,
       core_revision: 0,
       notes_revision: 0,
@@ -619,7 +633,7 @@ export function createBookingHandlers(deps) {
     addActivity(store, booking.id, "BOOKING_CREATED", "public_api", "Booking created from website form");
     await persistStore(store);
 
-    sendJson(res, 201, await buildBookingDetailResponse(booking));
+    sendJson(res, 201, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleListBookings(req, res) {
@@ -634,7 +648,7 @@ export function createBookingHandlers(deps) {
     const { items: filtered, filters, sort } = filterBookings(store, requestUrl.searchParams);
     const visibleBookings = filtered.filter((booking) => canAccessBooking(principal, booking));
     const visible = await Promise.all(
-      visibleBookings.map((booking) => buildBookingPayload(booking))
+      visibleBookings.map((booking) => buildBookingPayload(booking, req))
     );
     const paged = paginate(visible, requestUrl.searchParams);
     sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));
@@ -654,7 +668,7 @@ export function createBookingHandlers(deps) {
       return;
     }
 
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleDeleteBooking(req, res, [bookingId]) {
@@ -678,7 +692,7 @@ export function createBookingHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_core_revision", "core_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
     await deleteBookingArtifacts(store, bookingId);
     await persistStore(store);
@@ -694,6 +708,7 @@ export function createBookingHandlers(deps) {
     handlePublicBookingImage,
     handlePublicBookingPersonPhoto,
     handlePatchBookingName,
+    handlePatchBookingCustomerLanguage,
     handleUploadBookingImage,
     handlePatchBookingStage,
     handlePatchBookingOwner,
@@ -701,10 +716,12 @@ export function createBookingHandlers(deps) {
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
     handlePatchBookingTravelPlan,
+    handleTranslateBookingTravelPlanFromEnglish,
     handleUploadBookingPersonPhoto,
     handlePatchBookingNotes,
     handlePatchBookingPricing,
     handlePatchBookingOffer,
+    handleTranslateBookingOfferFromEnglish,
     handleGenerateBookingOffer,
     handlePatchGeneratedBookingOffer,
     handleDeleteGeneratedBookingOffer,
@@ -716,6 +733,7 @@ export function createBookingHandlers(deps) {
     handleListBookingInvoices,
     handleCreateBookingInvoice,
     handlePatchBookingInvoice,
+    handleTranslateBookingInvoiceFromEnglish,
     handleGetInvoicePdf
   };
 }

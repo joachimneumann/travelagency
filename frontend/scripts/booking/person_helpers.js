@@ -1,5 +1,6 @@
-import { normalizeText, escapeHtml } from "../shared/api.js?v=6c388c7e525c";
-import { isTravelingPerson, normalizeStringList } from "../shared/booking_persons.js?v=6c388c7e525c";
+import { normalizeText, escapeHtml } from "../shared/api.js?v=b7baca7c60a0";
+import { isTravelingPerson, normalizeStringList } from "../shared/booking_persons.js?v=b7baca7c60a0";
+import { bookingT } from "./i18n.js?v=b7baca7c60a0";
 
 export function collectPersonEmails(person) {
   return Array.from(
@@ -22,10 +23,12 @@ export function collectPersonPhoneNumbers(person) {
 }
 
 export function formatPersonRoleLabel(role) {
-  return String(role || "")
+  const normalized = String(role || "").trim().toLowerCase();
+  const fallback = normalized
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+  return bookingT(`booking.role.${normalized}`, fallback);
 }
 
 export function documentHasAnyData(document) {
@@ -100,10 +103,10 @@ export function personHasCompleteIdentityDocument(person, document_type) {
 
 export function getPersonIdentityStatus(person) {
   if (personHasCompleteIdentityDocument(person, "passport")) {
-    return { is_complete: true, label: "Passport" };
+    return { is_complete: true, label: bookingT("booking.passport", "Passport") };
   }
   if (personHasCompleteIdentityDocument(person, "national_id")) {
-    return { is_complete: true, label: "ID card" };
+    return { is_complete: true, label: bookingT("booking.id_card", "ID card") };
   }
   return { is_complete: false, label: "" };
 }
@@ -136,7 +139,7 @@ export function getPreferredPersonDocumentType(person) {
 
 export function getAbbreviatedPersonName(name) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "Name";
+  if (!parts.length) return bookingT("booking.name", "Name");
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
 }
@@ -153,7 +156,7 @@ export function getPersonFooterRoleLabel(person) {
     .filter((role) => role !== "traveler")
     .map(formatPersonRoleLabel);
   if (!isTravelingPerson(person)) {
-    return ["Not traveling", ...roleLabels].join(", ");
+    return [bookingT("booking.not_traveling", "Not traveling"), ...roleLabels].join(", ");
   }
   return roleLabels.join(", ");
 }

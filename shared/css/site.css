@@ -122,6 +122,167 @@
   background: var(--accent-soft);
 }
 
+#frontendLangMenuMount,
+#backendLangMenuMount {
+  display: flex;
+  align-items: center;
+}
+
+.lang-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lang-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.42rem 0.66rem;
+  cursor: pointer;
+}
+
+.lang-menu-trigger:hover,
+.lang-menu-trigger:focus-visible {
+  background: var(--accent-soft);
+}
+
+.lang-menu-code {
+  letter-spacing: 0.03em;
+}
+
+.lang-flag {
+  display: inline-block;
+  width: 1.55rem;
+  height: 1.12rem;
+  border-radius: 0.16rem;
+  background: #fff;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  flex: 0 0 auto;
+}
+
+.lang-menu-caret {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 0.18s ease;
+}
+
+.lang-menu.is-open .lang-menu-caret {
+  transform: rotate(-135deg) translate(-1px, -1px);
+}
+
+.lang-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  min-width: 210px;
+  padding: 0.4rem 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(17, 24, 39, 0.18);
+  z-index: 90;
+}
+
+.lang-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lang-menu-item:hover,
+.lang-menu-item:focus-visible {
+  background: var(--accent-soft);
+}
+
+.lang-menu-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.flag-en {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23012169'/%3E%3Cpath d='M0 0l60 40M60 0L0 40' stroke='%23fff' stroke-width='8'/%3E%3Cpath d='M0 0l60 40M60 0L0 40' stroke='%23C8102E' stroke-width='4'/%3E%3Cpath d='M30 0v40M0 20h60' stroke='%23fff' stroke-width='14'/%3E%3Cpath d='M30 0v40M0 20h60' stroke='%23C8102E' stroke-width='8'/%3E%3C/svg%3E");
+}
+
+.flag-fr {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='20' height='40' fill='%230055A4'/%3E%3Crect x='20' width='20' height='40' fill='%23fff'/%3E%3Crect x='40' width='20' height='40' fill='%23EF4135'/%3E%3C/svg%3E");
+}
+
+.flag-zh {
+  background-image: url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 60 40\"%3E%3Crect width=\"60\" height=\"40\" fill=\"%23DE2910\"/%3E%3Cpolygon points=\"10,6 11.8,11.3 17.4,11.3 12.8,14.6 14.6,20 10,16.7 5.4,20 7.2,14.6 2.6,11.3 8.2,11.3\" fill=\"%23FFDE00\"/%3E%3Cpolygon points=\"22,5.2 22.9,7.8 25.6,7.8 23.4,9.4 24.3,12 22,10.4 19.7,12 20.6,9.4 18.4,7.8 21.1,7.8\" fill=\"%23FFDE00\"/%3E%3Cpolygon points=\"27,10.2 27.9,12.8 30.6,12.8 28.4,14.4 29.3,17 27,15.4 24.7,17 25.6,14.4 23.4,12.8 26.1,12.8\" fill=\"%23FFDE00\"/%3E%3Cpolygon points=\"27,18.2 27.9,20.8 30.6,20.8 28.4,22.4 29.3,25 27,23.4 24.7,25 25.6,22.4 23.4,20.8 26.1,20.8\" fill=\"%23FFDE00\"/%3E%3Cpolygon points=\"22,23.2 22.9,25.8 25.6,25.8 23.4,27.4 24.3,30 22,28.4 19.7,30 20.6,27.4 18.4,25.8 21.1,25.8\" fill=\"%23FFDE00\"/%3E%3C/svg%3E');
+}
+
+.flag-ja {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23fff'/%3E%3Ccircle cx='30' cy='20' r='11' fill='%23BC002D'/%3E%3C/svg%3E");
+}
+
+.flag-ko {
+  background-image: url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 60 40\"%3E%3Crect width=\"60\" height=\"40\" fill=\"%23fff\"/%3E%3Cg transform=\"translate(30 20)\"%3E%3Cpath d=\"M0-10A10 10 0 0 1 8.66 5H-8.66A10 10 0 0 1 0-10Z\" fill=\"%23CD2E3A\"/%3E%3Cpath d=\"M0 10A10 10 0 0 1-8.66-5H8.66A10 10 0 0 1 0 10Z\" fill=\"%230047A0\"/%3E%3Ccircle cx=\"0\" cy=\"-5\" r=\"5\" fill=\"%230047A0\"/%3E%3Ccircle cx=\"0\" cy=\"5\" r=\"5\" fill=\"%23CD2E3A\"/%3E%3C/g%3E%3Cg fill=\"none\" stroke=\"%23000\" stroke-width=\"1.8\"%3E%3Cpath d=\"M7 8h8M7 11h8M7 14h8\"/%3E%3Cpath d=\"M45 26h8M45 29h8M45 32h8\"/%3E%3Cpath d=\"M45 8h8M47 11h4M45 14h8\"/%3E%3Cpath d=\"M7 26h3M12 26h3M7 29h8M7 32h3M12 32h3\"/%3E%3C/g%3E%3C/svg%3E');
+}
+
+.flag-vi {
+  background-image: url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 60 40\"%3E%3Crect width=\"60\" height=\"40\" fill=\"%23DA251D\"/%3E%3Cpolygon points=\"30,9 32.8,17.2 41.5,17.2 34.5,22.1 37.2,30.2 30,25.2 22.8,30.2 25.5,22.1 18.5,17.2 27.2,17.2\" fill=\"%23FFDD00\"/%3E%3C/svg%3E');
+}
+
+.flag-de {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='13.34' fill='%23000'/%3E%3Crect y='13.33' width='60' height='13.34' fill='%23DD0000'/%3E%3Crect y='26.66' width='60' height='13.34' fill='%23FFCE00'/%3E%3C/svg%3E");
+}
+
+.flag-es {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23AA151B'/%3E%3Crect y='10' width='60' height='20' fill='%23F1BF00'/%3E%3C/svg%3E");
+}
+
+.flag-it {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='20' height='40' fill='%23009246'/%3E%3Crect x='20' width='20' height='40' fill='%23fff'/%3E%3Crect x='40' width='20' height='40' fill='%23CE2B37'/%3E%3C/svg%3E");
+}
+
+.flag-ru {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='13.34' fill='%23fff'/%3E%3Crect y='13.33' width='60' height='13.34' fill='%230039A6'/%3E%3Crect y='26.66' width='60' height='13.34' fill='%23D52B1E'/%3E%3C/svg%3E");
+}
+
+.flag-nl {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='13.34' fill='%23AE1C28'/%3E%3Crect y='13.33' width='60' height='13.34' fill='%23fff'/%3E%3Crect y='26.66' width='60' height='13.34' fill='%2321468B'/%3E%3C/svg%3E");
+}
+
+.flag-pl {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='20' fill='%23fff'/%3E%3Crect y='20' width='60' height='20' fill='%23DC143C'/%3E%3C/svg%3E");
+}
+
+.flag-da {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23C60C30'/%3E%3Crect x='18' width='6' height='40' fill='%23fff'/%3E%3Crect y='17' width='60' height='6' fill='%23fff'/%3E%3C/svg%3E");
+}
+
+.flag-sv {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23006AA7'/%3E%3Crect x='18' width='8' height='40' fill='%23FECC00'/%3E%3Crect y='16' width='60' height='8' fill='%23FECC00'/%3E%3C/svg%3E");
+}
+
+.flag-no {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23BA0C2F'/%3E%3Crect x='16' width='10' height='40' fill='%23fff'/%3E%3Crect y='15' width='60' height='10' fill='%23fff'/%3E%3Crect x='18' width='6' height='40' fill='%23002664'/%3E%3Crect y='17' width='60' height='6' fill='%23002664'/%3E%3C/svg%3E");
+}
+
 .filter-menu {
   display: flex;
   gap: 0.55rem;
@@ -1039,6 +1200,354 @@ textarea:focus-visible {
   margin-bottom: 0;
 }
 
+.booking-content-language-field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: min(100%, 320px);
+}
+
+.booking-content-language-menu-mount {
+  display: flex;
+  align-items: center;
+}
+
+.booking-content-language-menu .lang-menu-panel {
+  min-width: 240px;
+  max-height: min(380px, 60vh);
+  overflow: auto;
+}
+
+.booking-content-language-menu .lang-menu-item {
+  gap: 0.65rem;
+}
+
+.booking-content-language-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #d8e1d6;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 242, 230, 0.98), rgba(247, 250, 243, 0.98));
+}
+
+.booking-content-language-notice__flag {
+  width: 2.15rem;
+  height: 1.5rem;
+  border-radius: 0.22rem;
+  box-shadow: 0 10px 24px rgba(29, 46, 54, 0.08);
+}
+
+.booking-content-language-notice__copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.booking-content-language-notice__copy strong {
+  color: #1d2e36;
+  font-size: 0.92rem;
+}
+
+.booking-content-language-notice__copy .micro {
+  margin: 0;
+  color: #415761;
+}
+
+.booking-content-language-field.is-prominent {
+  padding: 0.95rem 1rem 1rem;
+  border: 1px solid rgba(255, 109, 58, 0.34);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 109, 58, 0.08), transparent 45%),
+    #fffdf9;
+  box-shadow: 0 14px 34px rgba(255, 109, 58, 0.08);
+}
+
+.booking-content-language-field.is-prominent label {
+  color: #9a4d16;
+}
+
+.booking-content-language-field.is-prominent .lang-menu-trigger {
+  border-color: rgba(255, 109, 58, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 109, 58, 0.08);
+}
+
+.booking-content-language-hint {
+  margin: 0;
+  max-width: 420px;
+}
+
+.localized-pair {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.localized-pair__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.localized-pair__label {
+  margin: 0;
+}
+
+.localized-pair__row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 3px;
+  align-items: start;
+}
+
+.localized-pair__code {
+  display: inline-block;
+  padding-top: 0.92rem;
+  color: #415761;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.localized-pair__field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.localized-pair__field input,
+.localized-pair__field textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.localized-pair__field textarea {
+  min-height: 7.25rem;
+  resize: vertical;
+}
+
+.localized-pair__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.localized-pair__translate-btn {
+  padding: 0.45rem 0.72rem;
+  white-space: nowrap;
+}
+
+.localized-pair__hint {
+  margin: 0;
+  color: #6b7d85;
+}
+
+.localized-pair--single-language .localized-pair__field--single {
+  min-width: 0;
+}
+
+.localized-editor {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.localized-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.localized-editor__label {
+  margin: 0;
+}
+
+.localized-editor__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+}
+
+.localized-editor__pane {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.localized-editor__pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-height: 2rem;
+}
+
+.localized-editor__lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.localized-editor__lang-code {
+  color: #415761;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.localized-editor__translate-btn {
+  padding: 0.45rem 0.72rem;
+  white-space: nowrap;
+}
+
+.localized-editor__pane input,
+.localized-editor__pane textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.localized-editor__pane textarea {
+  min-height: 7.25rem;
+  resize: vertical;
+}
+
+.localized-editor__pane--target {
+  padding: 0.85rem;
+  border: 1px solid rgba(213, 225, 233, 0.94);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.96));
+}
+
+.localized-editor__pane--target.is-disabled {
+  background: linear-gradient(180deg, rgba(244, 246, 248, 0.98), rgba(236, 240, 243, 0.98));
+  border-color: rgba(206, 214, 220, 0.95);
+}
+
+.localized-editor__pane--target.is-disabled input,
+.localized-editor__pane--target.is-disabled textarea {
+  background: rgba(239, 242, 245, 0.98);
+  color: #82919a;
+  cursor: not-allowed;
+}
+
+.localized-editor__hint {
+  margin: 0;
+  color: #66767f;
+}
+
+.localized-editor--single-language .localized-editor__translate-btn {
+  display: none;
+}
+
+.booking-translation-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 0.9rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #dbe4e8;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.booking-translation-toolbar:empty {
+  display: none;
+}
+
+.booking-translation-toolbar__summary {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.booking-translation-toolbar__summary .micro {
+  margin: 0;
+  max-width: 760px;
+  color: #415761;
+}
+
+.booking-translation-toolbar__badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 0.28rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.booking-translation-toolbar__badge--source,
+.booking-translation-toolbar__badge--reviewed {
+  background: #e8f4ea;
+  color: #206241;
+}
+
+.booking-translation-toolbar__badge--machine-translated {
+  background: #eef3ff;
+  color: #2f4ea4;
+}
+
+.booking-translation-toolbar__badge--partial {
+  background: #fff3df;
+  color: #9c5d00;
+}
+
+.booking-translation-toolbar__badge--missing,
+.booking-translation-toolbar__badge--empty {
+  background: #f3f5f6;
+  color: #556a74;
+}
+
+.booking-translation-toolbar__badge--stale {
+  background: #fff0ec;
+  color: #b14a1b;
+}
+
+.booking-translation-toolbar__action {
+  white-space: nowrap;
+}
+
+.booking-translation-toolbar__controls {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.booking-translation-toolbar__disabled-reason {
+  margin: 0;
+  max-width: 320px;
+  text-align: right;
+  color: #6b7d85;
+}
+
+@media (max-width: 860px) {
+  .localized-pair__row {
+    grid-template-columns: 1fr;
+  }
+
+  .localized-pair__code {
+    width: fit-content;
+    padding-top: 0;
+  }
+}
+
+.backend-table th.generated-offers-col-language,
+.backend-table td.generated-offers-col-language {
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+.backend-table th.backend-table-align-right,
+.backend-table td.backend-table-align-right {
+  text-align: right;
+}
+
 .booking-detail-page .backend-table-wrap {
   border: 0;
   border-radius: 0;
@@ -1729,6 +2238,12 @@ textarea:focus-visible {
   font: inherit;
 }
 
+.month-select-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: minmax(0, 1.35fr) minmax(120px, 0.95fr);
+}
+
 .field textarea {
   min-height: 100px;
   resize: vertical;
@@ -1981,6 +2496,10 @@ textarea:focus-visible {
   .metrics,
   .info-grid,
   .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .month-select-grid {
     grid-template-columns: 1fr;
   }
 

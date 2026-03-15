@@ -11,6 +11,7 @@ VERSION_SOURCE_GLOBS = [
   'frontend/scripts/**/*.js',
   'frontend/Generated/**/*.js',
   'shared/css/**/*.css',
+  'shared/generated/**/*.js',
   'shared/generated-contract/**/*.js'
 ].freeze
 
@@ -22,7 +23,7 @@ TARGET_GLOBS = [
 
 CSS_PATH_PATTERN = /((?:\/)?assets\/css\/styles\.css)(?:\?v=[A-Za-z0-9._-]+)?/
 STATIC_ASSET_VERSION_PATTERN = /((?:\/)?assets\/[^"']+\.(?:webp|png|svg|jpg|jpeg|mp4|webm))\?v=[A-Za-z0-9._-]+/
-MODULE_PATH_PATTERN = /((?:\/frontend\/scripts\/[^"'?\s>]+\.js|frontend\/scripts\/[^"'?\s>]+\.js|(?:\.\.?\/)+(?:Generated\/API\/generated_API(?:RequestFactory|Runtime)\.js|booking\/[^"'?\s>]+\.js|shared\/[^"'?\s>]+\.js|pages\/[^"'?\s>]+\.js|[^"'?\s>\/]+\.js)|\.\.?\/\.\.?\/\.\.?\/shared\/generated-contract\/API\/generated_API(?:RequestFactory|Runtime)\.js))(?:\?v=[A-Za-z0-9._-]+)?/
+MODULE_PATH_PATTERN = /((?:\/frontend\/scripts\/[^"'?\s>]+\.js|frontend\/scripts\/[^"'?\s>]+\.js|(?:\/)?shared\/generated\/[^"'?\s>]+\.js|(?:\.\.?\/)+(?:Generated\/API\/generated_API(?:RequestFactory|Runtime)\.js|booking\/[^"'?\s>]+\.js|shared\/[^"'?\s>]+\.js|pages\/[^"'?\s>]+\.js|[^"'?\s>\/]+\.js)|\.\.?\/\.\.?\/\.\.?\/shared\/generated-contract\/API\/generated_API(?:RequestFactory|Runtime)\.js))(?:\?v=[A-Za-z0-9._-]+)?/
 
 def normalize_for_digest(content)
   content.gsub(/\?v=[A-Za-z0-9._-]+/, '')

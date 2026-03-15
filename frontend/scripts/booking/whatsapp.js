@@ -1,10 +1,11 @@
-import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
-import { escapeHtml, normalizeText } from "../shared/api.js?v=6c388c7e525c";
+import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+import { escapeHtml, normalizeText } from "../shared/api.js?v=b7baca7c60a0";
+import { bookingLang, bookingT } from "./i18n.js?v=b7baca7c60a0";
 import {
   buildBookingSegmentHeaderMarkup,
   initializeBookingCollapsible,
   renderBookingSegmentHeader
-} from "./segment_headers.js?v=6c388c7e525c";
+} from "./segment_headers.js?v=b7baca7c60a0";
 
 function normalizePhoneDigits(value) {
   return String(value || "").replace(/[^\d]/g, "");
@@ -47,7 +48,7 @@ function chatDayKey(value) {
 function formatChatDayLabel(value) {
   const date = parseChatDate(value);
   if (!date) return "";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(bookingLang(), {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -91,7 +92,7 @@ function isDeliveredStatusText(text) {
 
 function buildDeliveredTicksMarkup(isDelivered) {
   if (!isDelivered) return "";
-  return '<span class="wa-meta-ticks" aria-label="delivered">&#10003;</span>';
+  return `<span class="wa-meta-ticks" aria-label="${escapeHtml(bookingT("booking.whatsapp.delivered", "Delivered"))}">&#10003;</span>`;
 }
 
 function buildThreadRows(items) {
@@ -127,7 +128,7 @@ function buildThreadRows(items) {
           ? `<div class="wa-msg-status"><em>${escapeHtml(parsedStatus.status)}</em></div>`
           : "";
       } else if (eventType === "status" && parsedStatus.status) {
-        text = "Status update";
+        text = bookingT("booking.whatsapp.status_update", "Status update");
         deliveredForMeta = isDeliveredStatusText(parsedStatus.status);
         deliveredLine = isDeliveredStatusText(parsedStatus.status)
           ? ""
@@ -191,25 +192,25 @@ export function createBookingWhatsAppController({
     if (!root) return;
     root.innerHTML = `
       <article id="meta_chat_panel" class="booking-collapsible wa-chat-panel" style="margin-bottom: 1rem;">
-        <button class="booking-collapsible__summary" id="meta_chat_panel_summary" type="button">${buildBookingSegmentHeaderMarkup({ primary: "WhatsApp" })}</button>
+        <button class="booking-collapsible__summary" id="meta_chat_panel_summary" type="button">${buildBookingSegmentHeaderMarkup({ primary: bookingT("booking.whatsapp.title", "WhatsApp") })}</button>
         <div class="booking-collapsible__body">
           <div class="wa-chat-shell" id="wa_chat_shell" data-chat-view="list">
-            <section class="wa-chat-screen wa-chat-screen--list" aria-label="WhatsApp conversations">
+            <section class="wa-chat-screen wa-chat-screen--list" aria-label="${escapeHtml(bookingT("booking.whatsapp.conversations", "WhatsApp conversations"))}">
               <div class="wa-chat-list-head"></div>
               <div id="wa_chat_contacts" class="wa-chat-contacts" role="list"></div>
             </section>
-            <section class="wa-chat-screen wa-chat-screen--thread" aria-label="WhatsApp conversation">
+            <section class="wa-chat-screen wa-chat-screen--thread" aria-label="${escapeHtml(bookingT("booking.whatsapp.conversation", "WhatsApp conversation"))}">
               <div class="wa-chat-thread-head">
-                <button class="wa-chat-back-btn" id="wa_chat_back_btn" type="button" aria-label="Back to WhatsApp contacts">&#8249;</button>
+                <button class="wa-chat-back-btn" id="wa_chat_back_btn" type="button" aria-label="${escapeHtml(bookingT("booking.whatsapp.back_to_contacts", "Back to WhatsApp contacts"))}">&#8249;</button>
                 <div class="wa-chat-thread-contact">
                   <span class="wa-chat-thread-avatar" id="wa_chat_thread_avatar">P</span>
                   <div class="wa-chat-thread-copy">
-                    <div class="wa-chat-thread-title" id="wa_chat_thread_title">WhatsApp</div>
+                    <div class="wa-chat-thread-title" id="wa_chat_thread_title">${escapeHtml(bookingT("booking.whatsapp.title", "WhatsApp"))}</div>
                     <div class="wa-chat-thread-subtitle" id="wa_chat_thread_subtitle"></div>
                     <div class="wa-chat-thread-related" id="wa_chat_thread_related" hidden></div>
                   </div>
                 </div>
-                <a class="wa-chat-open-btn" id="wa_chat_open_btn" href="#" target="_blank" rel="noopener" aria-label="Open in WhatsApp" title="Open in WhatsApp">
+                <a class="wa-chat-open-btn" id="wa_chat_open_btn" href="#" target="_blank" rel="noopener" aria-label="${escapeHtml(bookingT("booking.whatsapp.open_in_whatsapp", "Open in WhatsApp"))}" title="${escapeHtml(bookingT("booking.whatsapp.open_in_whatsapp", "Open in WhatsApp"))}">
                   <img class="wa-chat-open-logo" src="assets/img/WhatsApp.png" alt="" />
                 </a>
               </div>
@@ -251,27 +252,29 @@ export function createBookingWhatsAppController({
     const count = Array.isArray(items) ? items.length : 0;
     if (!count) return;
     const newest = items[0];
-    const summary = count === 1 ? "New WhatsApp message received." : `${count} new WhatsApp messages received.`;
+    const summary = count === 1
+      ? bookingT("booking.whatsapp.new_message_one", "New WhatsApp message received.")
+      : bookingT("booking.whatsapp.new_message_many", "{count} new WhatsApp messages received.", { count });
     if (typeof onNotice === "function") onNotice(summary);
 
     if (!("Notification" in window)) return;
-    const body = String(newest?.text_preview || "Open booking chat to read.");
+    const body = String(newest?.text_preview || bookingT("booking.whatsapp.open_chat_to_read", "Open booking chat to read."));
     if (Notification.permission === "granted") {
-      new Notification("WhatsApp message", { body });
+      new Notification(bookingT("booking.whatsapp.notification_title", "WhatsApp message"), { body });
       return;
     }
     if (Notification.permission === "default") {
       Notification.requestPermission().then((permission) => {
         if (permission === "granted") {
-          new Notification("WhatsApp message", { body });
+          new Notification(bookingT("booking.whatsapp.notification_title", "WhatsApp message"), { body });
         }
       });
     }
   }
 
   function getChatEntryTitle(entry) {
-    if (entry?.kind === "unknown") return "Unknown number";
-    return normalizeText(entry?.person?.name) || "Unnamed person";
+    if (entry?.kind === "unknown") return bookingT("booking.whatsapp.unknown_number", "Unknown number");
+    return normalizeText(entry?.person?.name) || bookingT("booking.unnamed_person", "Unnamed person");
   }
 
   function getChatEntryAvatarMarkup(entry) {
@@ -289,7 +292,7 @@ export function createBookingWhatsAppController({
     const roles = Array.isArray(entry.person?.roles) ? entry.person.roles : [];
     if (!roles.length) return "";
     const labels = [];
-    if (roles.includes("traveler")) labels.push("Traveler");
+    if (roles.includes("traveler")) labels.push(bookingT("booking.role.traveler", "Traveler"));
     labels.push(...roles.filter((role) => role !== "traveler").map(formatPersonRoleLabel));
     return labels.join(", ");
   }
@@ -413,7 +416,11 @@ export function createBookingWhatsAppController({
     if (els.panelSummary) {
       const chatCount = entries.filter((entry) => entry.has_chat).length;
       renderBookingSegmentHeader(els.panelSummary, {
-        primary: `WhatsApp · ${chatCount} active ${chatCount === 1 ? "chat" : "chats"}`
+        primary: bookingT(
+          chatCount === 1 ? "booking.whatsapp.summary_one" : "booking.whatsapp.summary_many",
+          chatCount === 1 ? "WhatsApp · {count} active chat" : "WhatsApp · {count} active chats",
+          { count: chatCount }
+        )
       });
     }
     if (els.panel) {
@@ -443,9 +450,9 @@ export function createBookingWhatsAppController({
             </button>
           `;
         }).join("")
-      : '<div class="wa-empty">No booking persons with phone numbers or WhatsApp conversations yet.</div>';
+      : `<div class="wa-empty">${escapeHtml(bookingT("booking.whatsapp.no_contacts", "No booking persons with phone numbers or WhatsApp conversations yet."))}</div>`;
 
-    const threadTitle = activeEntry ? getChatEntryTitle(activeEntry) : "WhatsApp";
+    const threadTitle = activeEntry ? getChatEntryTitle(activeEntry) : bookingT("booking.whatsapp.title", "WhatsApp");
     const threadSubtitleParts = activeEntry
       ? [getChatEntryRoleSummary(activeEntry), normalizeText(activeEntry.phone_number)].filter(Boolean)
       : [];
@@ -459,10 +466,15 @@ export function createBookingWhatsAppController({
     if (els.threadRelated) {
       const relatedBookings = Array.isArray(activeEntry?.related_bookings) ? activeEntry.related_bookings : [];
       els.threadRelated.innerHTML = relatedBookings.length
-        ? `Also in ${relatedBookings.map((relatedBooking) => {
+        ? `${escapeHtml(bookingT("booking.whatsapp.also_in", "Also in"))} ${relatedBookings.map((relatedBooking) => {
             const bookingId = normalizeText(relatedBooking?.booking_id);
             const bookingName = normalizeText(relatedBooking?.name) || bookingId;
-            return `<a href="booking.html?id=${encodeURIComponent(bookingId)}">${escapeHtml(bookingName)}</a>`;
+            const params = new URLSearchParams({ id: bookingId });
+            const lang = typeof window.backendI18n?.getLang === "function"
+              ? window.backendI18n.getLang()
+              : String(new URLSearchParams(window.location.search).get("lang") || "").trim();
+            if (lang) params.set("lang", lang);
+            return `<a href="booking.html?${params.toString()}">${escapeHtml(bookingName)}</a>`;
           }).join(", ")}`
         : "";
       els.threadRelated.hidden = !relatedBookings.length;
@@ -480,8 +492,8 @@ export function createBookingWhatsAppController({
     const rows = activeEntry?.has_chat
       ? buildThreadRows(activeEntry.items)
       : activeEntry
-        ? `<div class="wa-empty">No WhatsApp messages with ${escapeHtml(threadTitle)} yet.</div>`
-        : '<div class="wa-empty">Select a traveler to view WhatsApp messages.</div>';
+        ? `<div class="wa-empty">${escapeHtml(bookingT("booking.whatsapp.no_messages_with", "No WhatsApp messages with {name} yet.", { name: threadTitle }))}</div>`
+        : `<div class="wa-empty">${escapeHtml(bookingT("booking.whatsapp.select_traveler", "Select a traveler to view WhatsApp messages."))}</div>`;
     els.table.innerHTML = rows;
     const canvas = els.table.parentElement;
     if (canvas && activeEntry?.has_chat) {

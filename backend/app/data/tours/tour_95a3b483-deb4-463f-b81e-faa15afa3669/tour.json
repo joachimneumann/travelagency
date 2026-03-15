@@ -1,24 +1,128 @@
 {
   "id": "tour_95a3b483-deb4-463f-b81e-faa15afa3669",
-  "title": "Cambodia Beach Journey",
-  "shortDescription": "A Cambodia beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+  "title": {
+    "en": "Cambodia Beach Journey",
+    "fr": "Voyage plage au Cambodge",
+    "zh": "柬埔寨海滩之旅",
+    "ja": "カンボジア ビーチの旅",
+    "ko": "캄보디아 해변 여행",
+    "vi": "Hành trình Biển Campuchia",
+    "de": "Kambodscha Strandreise",
+    "es": "Viaje a la playa en Camboya",
+    "it": "Viaggio in spiaggia in Cambogia",
+    "ru": "Пляжное путешествие в Камбоджу",
+    "nl": "Strandreis Cambodja",
+    "pl": "Wycieczka na plażę Kambodży",
+    "da": "Cambodia strandrejse",
+    "sv": "Kambodja strandresa",
+    "no": "Kambodsja strandreise"
+  },
   "styles": [
-    "Beach"
+    "beach"
   ],
   "priority": 50,
   "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_95a3b483-deb4-463f-b81e-faa15afa3669/tour_95a3b483-deb4-463f-b81e-faa15afa3669.webp",
-  "highlights": [
-    "Signature stop in Siem Reap",
-    "Route highlight around Phnom Penh",
-    "Smooth transfer planning via Tonle Sap"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Siem Reap",
+      "Route highlight around Phnom Penh",
+      "Smooth transfer planning via Tonle Sap"
+    ],
+    "fr": [
+      "Étape signature à Siem Reap",
+      "Temps fort de l'itinéraire autour de Phnom Penh",
+      "Transferts fluides via Tonlé Sap"
+    ],
+    "zh": [
+      "暹粒标志性停留",
+      "金边周边路线亮点",
+      "经洞里萨湖衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "シェムリアップでの象徴的な立ち寄り",
+      "プノンペン周辺のルート見どころ",
+      "トンレサップ湖経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "씨엠립의 대표적인 방문지",
+      "프놈펜 일대의 주요 동선 하이라이트",
+      "톤레삽 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Siem Reap",
+      "Điểm nhấn hành trình quanh Phnom Penh",
+      "Kế hoạch di chuyển mượt mà qua hồ Tonlé Sap"
+    ],
+    "de": [
+      "Signature-Stopp in Siem Reap",
+      "Routenhighlight rund um Phnom Penh",
+      "Reibungslose Transferplanung über Tonle Sap"
+    ],
+    "es": [
+      "Parada exclusiva en Siem Reap",
+      "Ruta destacada alrededor de Phnom Penh",
+      "Planificación de transferencia fluida a través de Tonle Sap"
+    ],
+    "it": [
+      "Fermata esclusiva a Siem Reap",
+      "Punti salienti del percorso intorno a Phnom Penh",
+      "Pianificazione fluida del trasferimento tramite Tonle Sap"
+    ],
+    "ru": [
+      "Фирменная остановка в Сием Рипе",
+      "Обзор маршрута по Пномпеню",
+      "Плавное планирование трансфера через Тонлесап"
+    ],
+    "nl": [
+      "Kenmerkende stop in Siem Reap",
+      "Route hoogtepunt rond Phnom Penh",
+      "Vlotte overdrachtsplanning via Tonle Sap"
+    ],
+    "pl": [
+      "Przystanek podpisu w Siem Reap",
+      "Najważniejszy punkt trasy wokół Phnom Penh",
+      "Płynne planowanie transferów za pośrednictwem Tonle Sap"
+    ],
+    "da": [
+      "Signaturstop i Siem Reap",
+      "Rutehøjdepunkt omkring Phnom Penh",
+      "Jævn overførselsplanlægning via Tonle Sap"
+    ],
+    "sv": [
+      "Signaturstopp i Siem Reap",
+      "Ruttens höjdpunkt runt Phnom Penh",
+      "Smidig överföringsplanering via Tonle Sap"
+    ],
+    "no": [
+      "Signaturstopp i Siem Reap",
+      "Rutehøydepunkt rundt Phnom Penh",
+      "Jevn overføringsplanlegging via Tonle Sap"
+    ]
+  },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
   "rating": 4.8,
   "legacy_id": "trip-cambodia-beach-classic",
   "destinations": [
-    "Cambodia"
+    "cambodia"
   ],
-  "budget_lower_USD": 960
+  "short_description": {
+    "en": "A Cambodia beach itinerary focused on a balanced first-trip route, with relaxed coast time balanced with easy local discovery.",
+    "fr": "Un itinéraire balnéaire au Cambodge pensé pour un premier voyage équilibré, avec du temps au bord de la mer, équilibré par des découvertes locales faciles.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的柬埔寨海滩行程，包含轻松的海岸时光，并搭配轻松的本地探索。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたカンボジアのビーチ旅程で、ゆったりした海辺の時間と無理のないローカル体験。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 캄보디아 해변 일정으로, 여유로운 해변 시간과 부담 없는 현지 탐방.",
+    "vi": "Đây là lịch trình biển tại Campuchia tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với thời gian thư giãn bên biển kết hợp khám phá địa phương nhẹ nhàng.",
+    "de": "Eine Strandroute in Kambodscha konzentrierte sich auf eine ausgewogene Route für die erste Reise, mit entspannter Zeit an der Küste und einfacher Erkundung der Gegend.",
+    "es": "Un itinerario de playa en Camboya centrado en una ruta equilibrada de primer viaje, con un tiempo relajado en la costa y un fácil descubrimiento local.",
+    "it": "Un itinerario sulla spiaggia della Cambogia incentrato su un itinerario equilibrato del primo viaggio, con un tempo rilassato sulla costa bilanciato con una facile scoperta locale.",
+    "ru": "Пляжный маршрут Камбоджи ориентирован на сбалансированный маршрут первой поездки, где расслабленное времяпровождение на побережье сочетается с легкими открытиями местных достопримечательностей.",
+    "nl": "Een strandroute in Cambodja gericht op een uitgebalanceerde eerste reisroute, met een ontspannen kusttijd in balans met gemakkelijke lokale ontdekkingen.",
+    "pl": "Plan podróży na plażę w Kambodży skupia się na zrównoważonej trasie pierwszej podróży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
+    "da": "En rejseplan for Cambodia-stranden fokuserede på en afbalanceret rute for første tur med afslappet kysttid afbalanceret med let lokal opdagelse.",
+    "sv": "En resplan för Kambodjas strand fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
+    "no": "En reiserute på Kambodsja-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse."
+  },
+  "budget_lower_usd": 960
 }

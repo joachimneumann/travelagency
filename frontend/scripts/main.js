@@ -10,22 +10,62 @@ import {
 } from "../Generated/Models/generated_Currency.js";
 import { GENERATED_LANGUAGE_CODES } from "../Generated/Models/generated_Language.js";
 import {
+  apiValueFromLanguageCode,
+  languageByApiValue
+} from "../../shared/generated/language_catalog.js?v=b7baca7c60a0";
+import {
   MAX_TRAVELERS as GENERATED_MAX_TRAVELERS,
   MIN_TRAVELERS as GENERATED_MIN_TRAVELERS
 } from "../Generated/Models/generated_FormConstraints.js";
 import {
   publicToursRequest
-} from "../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
-import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+} from "../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
 import {
   PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA,
   validatePublicBookingCreateRequest
 } from "../Generated/API/generated_APIModels.js";
-import { normalizeText } from "../../shared/js/text.js?v=6c388c7e525c";
+import { normalizeText } from "../../shared/js/text.js?v=b7baca7c60a0";
+
+function frontendT(id, fallback, vars) {
+  if (typeof window.frontendT === "function") {
+    return window.frontendT(id, fallback, vars);
+  }
+  const template = String(fallback ?? id);
+  if (!vars || typeof vars !== "object") return template;
+  return template.replace(/\{([^{}]+)\}/g, (match, key) => {
+    const normalizedKey = String(key || "").trim();
+    return normalizedKey in vars ? String(vars[normalizedKey]) : match;
+  });
+}
+
+async function waitForFrontendI18n() {
+  await (window.__FRONTEND_I18N_PROMISE || Promise.resolve());
+}
+
+function currentFrontendLang() {
+  return typeof window.frontendI18n?.getLang === "function" ? window.frontendI18n.getLang() : "en";
+}
+
+function toursCacheKey(lang = currentFrontendLang()) {
+  return `asiatravelplan_tours_cache_v7:${normalizeFrontendTourLang(lang)}`;
+}
+
+function withLangUrl(pathname) {
+  const url = new URL(pathname, window.location.origin);
+  const lang = currentFrontendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return url.toString();
+}
 
 const state = {
+  lang: currentFrontendLang(),
   trips: [],
   filteredTrips: [],
+  filterOptions: {
+    destinations: [],
+    styles: []
+  },
   filters: {
     dest: [],
     style: []
@@ -44,11 +84,69 @@ let lastBookingModalTrigger = null;
 const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
-const TOURS_CACHE_KEY = "asiatravelplan_tours_cache_v2";
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
 const DEFAULT_BOOKING_CURRENCY = "USD";
+const FRONTEND_LANG_DEFAULT_CURRENCY = Object.freeze({
+  en: "USD",
+  fr: "EURO",
+  zh: "CNY",
+  ja: "JPY",
+  ko: "KRW",
+  vi: "VND",
+  de: "EURO",
+  es: "EURO",
+  it: "EURO",
+  ru: "RUB",
+  nl: "EURO",
+  pl: "PLN",
+  da: "DKK",
+  sv: "SEK",
+  no: "NOK"
+});
+const FRONTEND_DISPLAY_EXCHANGE_RATES = Object.freeze({
+  USD: 1,
+  EURO: 0.873162,
+  VND: 26186.298828,
+  THB: 32.279637,
+  CNY: 6.909294,
+  JPY: 159.498237,
+  KRW: 1495.240466,
+  RUB: 79.8045,
+  PLN: 3.729088,
+  DKK: 6.513818,
+  SEK: 9.429805,
+  NOK: 9.750171,
+  AUD: 1.425064,
+  GBP: 0.754418,
+  NZD: 1.72632,
+  ZAR: 16.867203
+});
+const BOOKING_BUDGET_BANDS = Object.freeze([
+  { value: "usd_500_900", lowerUSD: 500, upperUSD: 900 },
+  { value: "usd_900_1400", lowerUSD: 900, upperUSD: 1400 },
+  { value: "usd_1400_2200", lowerUSD: 1400, upperUSD: 2200 },
+  { value: "usd_2200_plus", lowerUSD: 2200, upperUSD: null }
+]);
+const BUDGET_ROUNDING_STEPS = Object.freeze({
+  USD: 100,
+  EURO: 50,
+  VND: 1000000,
+  THB: 1000,
+  CNY: 100,
+  JPY: 1000,
+  KRW: 10000,
+  RUB: 1000,
+  PLN: 50,
+  DKK: 50,
+  SEK: 50,
+  NOK: 50,
+  AUD: 50,
+  GBP: 50,
+  NZD: 50,
+  ZAR: 100
+});
 const MIN_TRAVELERS = Number.isFinite(Number(GENERATED_MIN_TRAVELERS))
   ? Number(GENERATED_MIN_TRAVELERS)
   : 1;
@@ -56,36 +154,6 @@ const MAX_TRAVELERS = Number.isFinite(Number(GENERATED_MAX_TRAVELERS)) &&
   Number(GENERATED_MAX_TRAVELERS) >= MIN_TRAVELERS
   ? Number(GENERATED_MAX_TRAVELERS)
   : 30;
-const BOOKING_BUDGET_OPTIONS = {
-  USD: [
-    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
-    { value: "usd_500_900", label: "$500-$900 / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
-    { value: "usd_900_1400", label: "$900-$1,400 / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
-    { value: "usd_1400_2200", label: "$1,400-$2,200 / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
-    { value: "usd_2200_plus", label: "$2,200+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
-  ],
-  EURO: [
-    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
-    { value: "usd_500_900", label: "€450-€800 / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
-    { value: "usd_900_1400", label: "€800-€1,250 / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
-    { value: "usd_1400_2200", label: "€1,250-€2,000 / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
-    { value: "usd_2200_plus", label: "€2,000+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
-  ],
-  VND: [
-    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
-    { value: "usd_500_900", label: "12,000,000₫-22,000,000₫ / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
-    { value: "usd_900_1400", label: "22,000,000₫-35,000,000₫ / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
-    { value: "usd_1400_2200", label: "35,000,000₫-55,000,000₫ / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
-    { value: "usd_2200_plus", label: "55,000,000₫+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
-  ],
-  THB: [
-    { value: "not_decided_yet", label: "Not decided yet", budgetLowerUSD: null, budgetUpperUSD: null },
-    { value: "usd_500_900", label: "17,000฿-30,000฿ / week", budgetLowerUSD: 500, budgetUpperUSD: 900 },
-    { value: "usd_900_1400", label: "30,000฿-47,000฿ / week", budgetLowerUSD: 900, budgetUpperUSD: 1400 },
-    { value: "usd_1400_2200", label: "47,000฿-74,000฿ / week", budgetLowerUSD: 1400, budgetUpperUSD: 2200 },
-    { value: "usd_2200_plus", label: "74,000฿+ / week", budgetLowerUSD: 2200, budgetUpperUSD: null }
-  ]
-};
 const MONTH_ABBREVIATION_TO_NUMBER = {
   jan: 1,
   feb: 2,
@@ -100,7 +168,20 @@ const MONTH_ABBREVIATION_TO_NUMBER = {
   nov: 11,
   dec: 12
 };
-
+const BOOKING_MONTH_OPTIONS = Object.freeze([
+  { value: "01", labelId: "calendar.month.01", fallback: "January" },
+  { value: "02", labelId: "calendar.month.02", fallback: "February" },
+  { value: "03", labelId: "calendar.month.03", fallback: "March" },
+  { value: "04", labelId: "calendar.month.04", fallback: "April" },
+  { value: "05", labelId: "calendar.month.05", fallback: "May" },
+  { value: "06", labelId: "calendar.month.06", fallback: "June" },
+  { value: "07", labelId: "calendar.month.07", fallback: "July" },
+  { value: "08", labelId: "calendar.month.08", fallback: "August" },
+  { value: "09", labelId: "calendar.month.09", fallback: "September" },
+  { value: "10", labelId: "calendar.month.10", fallback: "October" },
+  { value: "11", labelId: "calendar.month.11", fallback: "November" },
+  { value: "12", labelId: "calendar.month.12", fallback: "December" }
+]);
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
@@ -145,6 +226,9 @@ const els = {
   bookingBudgetLabel: document.getElementById("bookingBudgetLabel"),
   bookingDuration: document.getElementById("bookingDuration"),
   bookingLanguage: document.getElementById("bookingLanguage"),
+  bookingMonth: document.getElementById("bookingMonth"),
+  bookingMonthMonth: document.getElementById("bookingMonthMonth"),
+  bookingMonthYear: document.getElementById("bookingMonthYear"),
   bookingDestinationTrigger: document.getElementById("bookingDestinationTrigger"),
   bookingDestinationSummary: document.getElementById("bookingDestinationSummary"),
   bookingDestinationPanel: document.getElementById("bookingDestinationPanel"),
@@ -172,6 +256,10 @@ const els = {
 init();
 
 async function init() {
+  await waitForFrontendI18n();
+  state.lang = currentFrontendLang();
+  syncI18nManagedLabels();
+  setupTravelMonthControls();
   setupMobileNav();
   setupFAQ();
   setupHeroScroll();
@@ -180,6 +268,7 @@ async function init() {
   loadWebsiteAuthStatus();
   setupModal();
   setupFormNavigation();
+  setupLiveValidationReset();
   applyTravelerBoundsFromModel();
   setupBookingBudgetOptions();
 
@@ -189,19 +278,66 @@ async function init() {
   state.filters.style = normalizeFilterSelection(urlFilters.style.length ? urlFilters.style : savedFilters?.style);
 
   try {
-    state.trips = await loadTrips();
+    const toursPayload = await loadTrips();
+    state.trips = Array.isArray(toursPayload?.items) ? toursPayload.items : [];
+    state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
+      ? toursPayload.available_destinations
+      : [];
+    state.filterOptions.styles = Array.isArray(toursPayload?.available_styles)
+      ? toursPayload.available_styles
+      : [];
   } catch (error) {
     console.error("Failed to load tours from backend API.", error);
     state.trips = [];
+    state.filterOptions.destinations = [];
+    state.filterOptions.styles = [];
   }
+  normalizeActiveFiltersFromOptions();
   prewarmTourImages(state.trips);
 
-  populateFilterOptions(state.trips);
+  populateFilterOptions();
   setupFilterSelectPanels();
   syncFilterInputs();
   applyFilters();
   setupFilterEvents();
   prefillBookingFormWithFilters();
+}
+
+function syncI18nManagedLabels() {
+  const bookingDestinationField = document.getElementById("bookingDestination");
+  const bookingStyleField = document.getElementById("bookingStyle");
+  const privacyLink = document.querySelector('a[href="/privacy.html"]');
+  if (bookingDestinationField) {
+    bookingDestinationField.setAttribute("data-empty-label", frontendT("filters.all_destinations", "All destinations"));
+  }
+  if (bookingStyleField) {
+    bookingStyleField.setAttribute("data-empty-label", frontendT("filters.all_styles", "All travel styles"));
+  }
+  if (privacyLink) {
+    privacyLink.setAttribute("href", withLangUrl("/privacy.html"));
+  }
+  syncLocalizedControlLanguage();
+  updateBackendButtonLabel({ authenticated: state.websiteAuthenticated, user: "" });
+}
+
+function syncLocalizedControlLanguage() {
+  document.documentElement.lang = state.lang || currentFrontendLang() || "en";
+  [
+    els.bookingPreferredCurrency,
+    els.bookingBudget,
+    els.bookingDuration,
+    els.bookingLanguage,
+    els.bookingMonthMonth,
+    els.bookingMonthYear
+  ].filter(Boolean).forEach((control) => {
+    control.setAttribute("lang", state.lang || "en");
+  });
+  if (els.bookingMonthMonth) {
+    els.bookingMonthMonth.setAttribute("aria-label", frontendT("modal.month.select_month", "Select month"));
+  }
+  if (els.bookingMonthYear) {
+    els.bookingMonthYear.setAttribute("aria-label", frontendT("modal.month.select_year", "Select year"));
+  }
 }
 
 function applyTravelerBoundsFromModel() {
@@ -228,19 +364,22 @@ function setupMobileNav() {
 }
 
 function setupFAQ() {
-  if (!els.faqList) return;
-  const items = els.faqList.querySelectorAll(".faq-item");
-  items.forEach((item) => {
-    const button = item.querySelector(".faq-question");
-    if (!button) return;
+  if (!els.faqList || els.faqList.dataset.faqBound === "1") return;
+  els.faqList.dataset.faqBound = "1";
 
-    button.addEventListener("click", () => {
-      const open = item.classList.contains("open");
-      item.classList.toggle("open", !open);
-      button.setAttribute("aria-expanded", String(!open));
-      const icon = button.querySelector("span");
-      if (icon) icon.textContent = open ? "+" : "−";
-    });
+  els.faqList.addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest(".faq-question") : null;
+    if (!button || !els.faqList.contains(button)) return;
+
+    const item = button.closest(".faq-item");
+    if (!item) return;
+
+    const open = item.classList.contains("open");
+    item.classList.toggle("open", !open);
+    button.setAttribute("aria-expanded", String(!open));
+
+    const icon = button.querySelector('[aria-hidden="true"]');
+    if (icon) icon.textContent = open ? "+" : "−";
   });
 }
 
@@ -267,7 +406,7 @@ function setupBackendLogin() {
   if (!els.backendLoginBtn) return;
 
   els.backendLoginBtn.addEventListener("click", () => {
-    const backendUrl = `${window.location.origin}/backend.html`;
+    const backendUrl = withLangUrl("/backend.html");
     if (state.websiteAuthenticated) {
       window.location.href = backendUrl;
       return;
@@ -301,7 +440,7 @@ function setupHiddenBackendQuickLogin() {
     event.preventDefault();
     event.stopPropagation();
 
-    const backendUrl = `${window.location.origin}/backend.html`;
+    const backendUrl = withLangUrl("/backend.html");
     const loginParams = new URLSearchParams({
       return_to: backendUrl,
       quick_login: "1"
@@ -318,37 +457,160 @@ function normalizeCurrencyCode(value) {
   return normalizeGeneratedCurrencyCode(value) || DEFAULT_BOOKING_CURRENCY;
 }
 
+function preferredCurrencyForFrontendLang(lang = state.lang || currentFrontendLang()) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  return normalizeCurrencyCode(FRONTEND_LANG_DEFAULT_CURRENCY[normalizedLang] || DEFAULT_BOOKING_CURRENCY);
+}
+
+function preferredBookingLanguageForFrontendLang(lang = state.lang || currentFrontendLang()) {
+  return apiValueFromLanguageCode(normalizeText(lang).toLowerCase(), "English");
+}
+
+function preferredCurrencyForLanguageApiValue(value) {
+  const languageCode = languageByApiValue(normalizeText(value))?.code || state.lang || currentFrontendLang();
+  return preferredCurrencyForFrontendLang(languageCode);
+}
+
+function approximateDisplayAmountFromUSD(amountUSD, currencyCode) {
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode);
+  const rate = Number(FRONTEND_DISPLAY_EXCHANGE_RATES[normalizedCurrency]);
+  if (!Number.isFinite(rate) || !Number.isFinite(Number(amountUSD))) return null;
+  return Math.round(Number(amountUSD) * rate);
+}
+
+function formatDisplayMoney(amount, currencyCode, locale = state.lang || currentFrontendLang()) {
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode);
+  const definition = GENERATED_CURRENCIES[normalizedCurrency] || GENERATED_CURRENCIES[DEFAULT_BOOKING_CURRENCY];
+  const normalizedAmount = Number(amount);
+  if (!Number.isFinite(normalizedAmount) || !definition) return "";
+  const formatted = new Intl.NumberFormat(locale || "en", {
+    maximumFractionDigits: Number(definition.decimalPlaces || 0),
+    minimumFractionDigits: 0,
+    useGrouping: true
+  }).format(normalizedAmount);
+  return `${definition.symbol}${formatted}`;
+}
+
+function budgetRoundingStep(currencyCode) {
+  return Number(BUDGET_ROUNDING_STEPS[normalizeCurrencyCode(currencyCode)]) || 50;
+}
+
+function roundBudgetDisplayAmount(amount, currencyCode, { upperBound = false } = {}) {
+  const normalizedAmount = Number(amount);
+  const step = budgetRoundingStep(currencyCode);
+  if (!Number.isFinite(normalizedAmount) || !Number.isFinite(step) || step <= 0) return null;
+  const rounded = upperBound
+    ? Math.ceil(normalizedAmount / step) * step
+    : Math.floor(normalizedAmount / step) * step;
+  return Math.max(step, rounded);
+}
+
+function buildBudgetLabel(currencyCode, lowerUSD, upperUSD) {
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode);
+  if (normalizedCurrency === "USD") {
+    const lowerLabel = formatDisplayMoney(lowerUSD, normalizedCurrency, state.lang || currentFrontendLang());
+    if (!Number.isFinite(Number(upperUSD))) return `${lowerLabel}+`;
+    const upperLabel = formatDisplayMoney(upperUSD, normalizedCurrency, state.lang || currentFrontendLang());
+    return `${lowerLabel}-${upperLabel}`;
+  }
+
+  const lowerConverted = approximateDisplayAmountFromUSD(lowerUSD, normalizedCurrency);
+  const upperConverted = Number.isFinite(Number(upperUSD))
+    ? approximateDisplayAmountFromUSD(upperUSD, normalizedCurrency)
+    : null;
+  if (!Number.isFinite(lowerConverted)) {
+    const lowerLabel = formatDisplayMoney(lowerUSD, DEFAULT_BOOKING_CURRENCY, state.lang || currentFrontendLang());
+    if (!Number.isFinite(Number(upperUSD))) return `${lowerLabel}+`;
+    const upperLabel = formatDisplayMoney(upperUSD, DEFAULT_BOOKING_CURRENCY, state.lang || currentFrontendLang());
+    return `${lowerLabel}-${upperLabel}`;
+  }
+  const lowerLabel = formatDisplayMoney(
+    roundBudgetDisplayAmount(lowerConverted, normalizedCurrency, { upperBound: false }),
+    normalizedCurrency,
+    state.lang || currentFrontendLang()
+  );
+  if (!Number.isFinite(Number(upperUSD))) return `${lowerLabel}+`;
+  const upperLabel = formatDisplayMoney(
+    roundBudgetDisplayAmount(upperConverted, normalizedCurrency, { upperBound: true }),
+    normalizedCurrency,
+    state.lang || currentFrontendLang()
+  );
+  return `${lowerLabel}-${upperLabel}`;
+}
+
+function budgetOptionsForCurrency(currencyCode) {
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode);
+  return [
+    {
+      value: "not_decided_yet",
+      label: frontendT("modal.duration.not_decided", "Not decided yet"),
+      budgetLowerUSD: null,
+      budgetUpperUSD: null
+    },
+    ...BOOKING_BUDGET_BANDS.map((band) => ({
+      value: band.value,
+      label: buildBudgetLabel(normalizedCurrency, band.lowerUSD, band.upperUSD),
+      budgetLowerUSD: band.lowerUSD,
+      budgetUpperUSD: band.upperUSD
+    }))
+  ];
+}
+
 function setupBookingBudgetOptions() {
   if (!els.bookingPreferredCurrency || !els.bookingBudget) return;
   populateGeneratedWebFormOptions();
-  els.bookingPreferredCurrency.value = normalizeCurrencyCode(els.bookingPreferredCurrency.value || DEFAULT_BOOKING_CURRENCY);
+  els.bookingPreferredCurrency.value = normalizeCurrencyCode(
+    els.bookingPreferredCurrency.value || preferredCurrencyForLanguageApiValue(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang())
+  );
   renderBudgetOptions(els.bookingPreferredCurrency.value);
   els.bookingPreferredCurrency.addEventListener("change", () => {
     renderBudgetOptions(els.bookingPreferredCurrency.value);
   });
+  els.bookingLanguage?.addEventListener("change", () => {
+    const nextCurrency = preferredCurrencyForLanguageApiValue(els.bookingLanguage.value || preferredBookingLanguageForFrontendLang());
+    els.bookingPreferredCurrency.value = nextCurrency;
+    renderBudgetOptions(nextCurrency);
+  });
 }
 
 function populateGeneratedWebFormOptions() {
+  const preferredLanguage = normalizeText(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang()) || "English";
+  const preferredCurrency = normalizeCurrencyCode(
+    els.bookingPreferredCurrency?.value || preferredCurrencyForLanguageApiValue(preferredLanguage)
+  );
   populateSelectOptions(els.bookingPreferredCurrency, GENERATED_CURRENCY_CODES, {
     includePlaceholder: false,
-    selectedValue: normalizeCurrencyCode(els.bookingPreferredCurrency?.value || DEFAULT_BOOKING_CURRENCY)
+    selectedValue: preferredCurrency
   });
   populateSelectOptions(els.bookingLanguage, GENERATED_LANGUAGE_CODES, {
     includePlaceholder: false,
-    selectedValue: normalizeText(els.bookingLanguage?.value) || "english"
+    selectedValue: preferredLanguage,
+    formatLabel: formatGeneratedLanguageLabel
   });
   applyGeneratedRequiredAttributes();
 }
 
-function populateSelectOptions(select, values, { includePlaceholder = false, placeholderLabel = "Select", selectedValue = "" } = {}) {
+function populateSelectOptions(
+  select,
+  values,
+  { includePlaceholder = false, placeholderLabel = "Select", selectedValue = "", formatLabel = (value) => value } = {}
+) {
   if (!select) return;
   const options = [];
   if (includePlaceholder) {
     options.push(`<option value="">${escapeHTML(placeholderLabel)}</option>`);
   }
-  options.push(...values.map((value) => `<option value="${escapeAttr(value)}">${escapeHTML(value)}</option>`));
+  options.push(
+    ...values.map((value) => `<option value="${escapeAttr(value)}">${escapeHTML(formatLabel(value))}</option>`)
+  );
   select.innerHTML = options.join("");
   select.value = values.includes(selectedValue) ? selectedValue : includePlaceholder ? "" : values[0] || "";
+}
+
+function formatGeneratedLanguageLabel(value) {
+  const entry = languageByApiValue(normalizeText(value));
+  if (!entry?.frontendNameKey) return String(value || "");
+  return frontendT(entry.frontendNameKey, entry.apiValue || String(value || ""));
 }
 
 function applyGeneratedRequiredAttributes() {
@@ -371,22 +633,98 @@ function applyGeneratedRequiredAttributes() {
 function renderBudgetOptions(currencyCode) {
   if (!els.bookingBudget || !els.bookingBudgetLabel) return;
   const currency = normalizeCurrencyCode(currencyCode);
-  const options = BOOKING_BUDGET_OPTIONS[currency] || BOOKING_BUDGET_OPTIONS[DEFAULT_BOOKING_CURRENCY];
+  const options = budgetOptionsForCurrency(currency);
   const previousValue = els.bookingBudget.value;
   els.bookingBudget.innerHTML = "";
   options.forEach((optionConfig) => {
     const option = document.createElement("option");
     option.value = optionConfig.value;
-    option.textContent = optionConfig.label;
+    option.textContent = optionConfig.value === "not_decided_yet"
+      ? frontendT("modal.duration.not_decided", optionConfig.label)
+      : `${optionConfig.label.replace(/\s*\/\s*week$/i, "")}${frontendT("modal.budget.per_week", " / week")}`;
     els.bookingBudget.appendChild(option);
   });
   els.bookingBudget.value = options.some((optionConfig) => optionConfig.value === previousValue) ? previousValue : "not_decided_yet";
-  els.bookingBudgetLabel.textContent = `Budget range (${currency})`;
+  els.bookingBudgetLabel.textContent = frontendT("modal.step2.budget", "Budget range ({currency})", { currency });
+}
+
+function setupTravelMonthControls() {
+  if (!els.bookingMonth || !els.bookingMonthMonth || !els.bookingMonthYear) return;
+  populateTravelMonthSelects();
+  if (els.bookingMonthMonth.dataset.bound !== "1") {
+    els.bookingMonthMonth.addEventListener("change", syncTravelMonthHiddenField);
+    els.bookingMonthYear.addEventListener("change", syncTravelMonthHiddenField);
+    els.bookingMonthMonth.dataset.bound = "1";
+    els.bookingMonthYear.dataset.bound = "1";
+  }
+  setTravelMonthValue(els.bookingMonth.value);
+}
+
+function populateTravelMonthSelects() {
+  if (!els.bookingMonthMonth || !els.bookingMonthYear) return;
+  const selected = parseTravelMonthValue(els.bookingMonth?.value);
+  const yearOptions = travelMonthYearOptions(selected?.year);
+
+  els.bookingMonthMonth.innerHTML = [
+    `<option value="">${escapeHTML(frontendT("modal.month.select_month", "Select month"))}</option>`,
+    ...BOOKING_MONTH_OPTIONS.map(
+      (option) => `<option value="${escapeAttr(option.value)}">${escapeHTML(frontendT(option.labelId, option.fallback))}</option>`
+    )
+  ].join("");
+  els.bookingMonthYear.innerHTML = [
+    `<option value="">${escapeHTML(frontendT("modal.month.select_year", "Select year"))}</option>`,
+    ...yearOptions.map((year) => `<option value="${escapeAttr(year)}">${escapeHTML(year)}</option>`)
+  ].join("");
+
+  els.bookingMonthMonth.value = selected?.month || "";
+  els.bookingMonthYear.value = selected?.year || "";
+  syncLocalizedControlLanguage();
+}
+
+function travelMonthYearOptions(requiredYear = "") {
+  const nowYear = new Date().getFullYear();
+  const years = Array.from({ length: 6 }, (_, index) => String(nowYear + index));
+  const normalizedRequiredYear = normalizeText(requiredYear);
+  if (normalizedRequiredYear && !years.includes(normalizedRequiredYear)) {
+    years.push(normalizedRequiredYear);
+    years.sort((left, right) => Number(left) - Number(right));
+  }
+  return years;
+}
+
+function parseTravelMonthValue(value) {
+  const match = normalizeText(value).match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+  return { year: match[1], month: match[2] };
+}
+
+function setTravelMonthValue(value) {
+  if (!els.bookingMonth || !els.bookingMonthMonth || !els.bookingMonthYear) return;
+  const parsed = parseTravelMonthValue(value);
+  if (parsed?.year && !Array.from(els.bookingMonthYear.options).some((option) => option.value === parsed.year)) {
+    populateTravelMonthSelects();
+  }
+  els.bookingMonthMonth.value = parsed?.month || "";
+  if (parsed?.year && !Array.from(els.bookingMonthYear.options).some((option) => option.value === parsed.year)) {
+    const option = document.createElement("option");
+    option.value = parsed.year;
+    option.textContent = parsed.year;
+    els.bookingMonthYear.appendChild(option);
+  }
+  els.bookingMonthYear.value = parsed?.year || "";
+  syncTravelMonthHiddenField();
+}
+
+function syncTravelMonthHiddenField() {
+  if (!els.bookingMonth || !els.bookingMonthMonth || !els.bookingMonthYear) return;
+  const month = normalizeText(els.bookingMonthMonth.value);
+  const year = normalizeText(els.bookingMonthYear.value);
+  els.bookingMonth.value = month && year ? `${year}-${month}` : "";
 }
 
 function getSelectedBudgetOption(currencyCode, value) {
   const currency = normalizeCurrencyCode(currencyCode);
-  const options = BOOKING_BUDGET_OPTIONS[currency] || BOOKING_BUDGET_OPTIONS[DEFAULT_BOOKING_CURRENCY];
+  const options = budgetOptionsForCurrency(currency);
   return options.find((option) => option.value === value) || options[0];
 }
 
@@ -398,7 +736,7 @@ function findBudgetOptionValueByLowerUSD(currencyCode, budgetLowerUSD, travelDur
     ? normalizedLower / (normalizedDurationDays / 7)
     : normalizedLower;
   const currency = normalizeCurrencyCode(currencyCode);
-  const options = BOOKING_BUDGET_OPTIONS[currency] || BOOKING_BUDGET_OPTIONS[DEFAULT_BOOKING_CURRENCY];
+  const options = budgetOptionsForCurrency(currency);
   const matched = options.find((option) => {
     const lower = Number(option.budgetLowerUSD);
     const upper = Number(option.budgetUpperUSD);
@@ -501,7 +839,7 @@ function updateBackendButtonLabel({ authenticated, user }) {
   const statusEl = els.websiteAuthStatus;
 
   if (authenticated) {
-    els.backendLoginBtnTitle.textContent = "Backend";
+    els.backendLoginBtnTitle.textContent = frontendT("backend.button_short", "Backend");
     if (subtitleEl) {
       subtitleEl.textContent = user || "";
       subtitleEl.hidden = !Boolean(user);
@@ -513,7 +851,7 @@ function updateBackendButtonLabel({ authenticated, user }) {
     return;
   }
 
-  els.backendLoginBtnTitle.textContent = "AsiaTravelPlan Backend";
+  els.backendLoginBtnTitle.textContent = frontendT("backend.button_full", "AsiaTravelPlan Backend");
   if (subtitleEl) {
     subtitleEl.textContent = "";
     subtitleEl.hidden = true;
@@ -565,9 +903,10 @@ function saveFilters() {
 
 function applyFilters() {
   const matchingTrips = state.trips.filter((trip) => {
-    const destinations = tourDestinations(trip);
+    const destinations = tourDestinationCodes(trip);
+    const styles = tourStyleCodes(trip);
     const matchDest = !state.filters.dest.length || state.filters.dest.some((destination) => destinations.includes(destination));
-    const matchStyle = !state.filters.style.length || state.filters.style.some((style) => trip.styles.includes(style));
+    const matchStyle = !state.filters.style.length || state.filters.style.some((style) => styles.includes(style));
     return matchDest && matchStyle;
   });
   const rankedEntries = rankTripsByPriorityAndRandom(matchingTrips);
@@ -603,8 +942,8 @@ function renderPriorityDebug() {
   });
   const destLabel = formatFilterValue(state.filters.dest, "destination");
   const styleLabel = formatFilterValue(state.filters.style, "style");
-  const header = `Filter: ${destLabel}, ${styleLabel}`;
-  els.debugPriorityOutput.textContent = `${header}\n${lines.join("\n") || "No tours in current filter."}`;
+  const header = frontendT("tours.debug_header", "Filter: {dest}, {style}", { dest: destLabel, style: styleLabel });
+  els.debugPriorityOutput.textContent = `${header}\n${lines.join("\n") || frontendT("tours.debug_empty", "No tours in current filter.")}`;
 }
 
 function renderVisibleTrips() {
@@ -636,7 +975,7 @@ function updateTourActions() {
   if (showMoreAvailable) {
     els.showMoreTours.hidden = false;
     if (noFilterSelected) {
-      els.showMoreTours.textContent = "show more tours";
+      els.showMoreTours.textContent = frontendT("tours.show_more.default", "Show more tours");
     } else {
       els.showMoreTours.textContent = buildShowMoreToursLabel(moreCount);
     }
@@ -646,31 +985,43 @@ function updateTourActions() {
 
   if (showAllAvailable) {
     els.showAllTours.hidden = false;
-    els.showAllTours.textContent = remaining === 1 ? "There is one more tour" : `show the remaining ${remaining} tours`;
+    els.showAllTours.textContent = remaining === 1
+      ? frontendT("tours.show_remaining.one", "There is 1 more tour")
+      : frontendT("tours.show_remaining.many", "Show the remaining {count} tours", { count: remaining });
   } else {
     els.showAllTours.hidden = true;
   }
 }
 
 function buildShowMoreToursLabel(moreCount) {
-  const style = state.filters.style;
-  const destination = state.filters.dest;
-  const countText = `${moreCount}`;
+  const style = filterLabels(state.filters.style, "style");
+  const destination = filterLabels(state.filters.dest, "destination");
+  const countText = String(moreCount);
 
   if (style.length === 1) {
-    return `show ${countText} more ${style[0].toLowerCase()} tours`;
+    return frontendT("tours.show_more.style", "Show {count} more {styleLower} tours", {
+      count: countText,
+      styleLower: String(style[0] || "").toLowerCase()
+    });
   }
 
   if (destination.length === 1) {
-    return `show ${countText} more tours in ${destination[0]}`;
+    return frontendT("tours.show_more.destination", "Show {count} more tours in {destination}", {
+      count: countText,
+      destination: destination[0]
+    });
   }
 
-  return moreCount === 1 ? "show more 1 tour" : `show more ${countText} tours`;
+  return moreCount === 1
+    ? frontendT("tours.show_more.generic_one", "Show 1 more tour")
+    : frontendT("tours.show_more.generic_many", "Show {count} more tours", { count: countText });
 }
 
 function formatFilterValue(value, kind) {
-  if (Array.isArray(value) && value.length) return value.join(", ");
-  return kind === "destination" ? "All destinations" : "All travel styles";
+  if (Array.isArray(value) && value.length) return filterLabels(value, kind).join(", ");
+  return kind === "destination"
+    ? frontendT("filters.all_destinations", "All destinations")
+    : frontendT("filters.all_styles", "All travel styles");
 }
 
 function updateFilterTriggerLabels() {
@@ -678,22 +1029,24 @@ function updateFilterTriggerLabels() {
     els.navDestinationSummary.textContent = formatFilterValue(state.filters.dest, "destination");
   }
   if (els.navStyleSummary) {
-    els.navStyleSummary.textContent = state.filters.style.length
-      ? state.filters.style.join(", ")
-      : "All travel styles";
+    els.navStyleSummary.textContent = formatFilterValue(state.filters.style, "style");
   }
 }
 
 function renderFilterSummary() {
   const chips = [];
-  chips.push(renderChip("Destination", state.filters.dest));
-  chips.push(renderChip("Style", state.filters.style));
+  chips.push(renderChip(frontendT("filters.destination_label", "Destination"), state.filters.dest, "destination"));
+  chips.push(renderChip(frontendT("filters.style_label", "Style"), state.filters.style, "style"));
   els.activeFilters.innerHTML = chips.join("");
 }
 
-function renderChip(label, value) {
+function renderChip(label, value, kind) {
   const active = Array.isArray(value) && value.length > 0;
-  const text = active ? value.join(", ") : `All ${label.toLowerCase()}s`;
+  const text = active
+    ? filterLabels(value, kind).join(", ")
+    : kind === "destination"
+      ? frontendT("filters.all_destinations", "All destinations")
+      : frontendT("filters.all_styles", "All travel styles");
   return `<span class="filter-pill ${active ? "active" : ""}">${label}: ${text}</span>`;
 }
 
@@ -702,23 +1055,47 @@ function updateTitlesForFilters() {
   const style = state.filters.style;
   const destLabel = formatFilterValue(dest, "destination");
   const styleLabel = formatFilterValue(style, "style");
+  const styleLower = String(styleLabel || "").toLowerCase();
 
-  let heading = "Featured tours you can tailor";
-  let booking = "Browse by destination and style. Filters update instantly and can be shared by URL.";
-  let pageTitle = "AsiaTravelPlan | Custom Southeast Asia Holidays";
+  let heading = frontendT("tours.heading.default", "Featured tours you can tailor");
+  let booking = frontendT(
+    "tours.booking.default",
+    "Browse by destination and style. Filters update instantly and can be shared by URL."
+  );
+  let pageTitle = frontendT("tours.page_title.default", "AsiaTravelPlan | Custom Southeast Asia Holidays");
 
   if (dest.length && style.length) {
-    heading = `${styleLabel} tours in ${destLabel}`;
-    booking = `Showing ${styleLabel.toLowerCase()} journeys in ${destLabel}. Clear filters to see all options.`;
-    pageTitle = `AsiaTravelPlan | ${styleLabel} Tours in ${destLabel}`;
+    heading = frontendT("tours.heading.destination_style", "{style} tours in {destination}", {
+      style: styleLabel,
+      destination: destLabel
+    });
+    booking = frontendT(
+      "tours.booking.destination_style",
+      "Showing {styleLower} journeys in {destination}. Clear filters to see all options.",
+      { styleLower, destination: destLabel }
+    );
+    pageTitle = frontendT("tours.page_title.destination_style", "AsiaTravelPlan | {style} Tours in {destination}", {
+      style: styleLabel,
+      destination: destLabel
+    });
   } else if (dest.length) {
-    heading = `Featured tours in ${destLabel}`;
-    booking = `Showing all travel styles available in ${destLabel}.`;
-    pageTitle = `AsiaTravelPlan | Tours in ${destLabel}`;
+    heading = frontendT("tours.heading.destination", "Featured tours in {destination}", { destination: destLabel });
+    booking = frontendT("tours.booking.destination", "Showing all travel styles available in {destination}.", {
+      destination: destLabel
+    });
+    pageTitle = frontendT("tours.page_title.destination", "AsiaTravelPlan | Tours in {destination}", {
+      destination: destLabel
+    });
   } else if (style.length) {
-    heading = `${styleLabel} travel styles across Southeast Asia`;
-    booking = `Showing ${styleLabel.toLowerCase()} journeys across Vietnam, Thailand, Cambodia, and Laos.`;
-    pageTitle = `AsiaTravelPlan | ${styleLabel} Southeast Asia Tours`;
+    heading = frontendT("tours.heading.style", "{style} travel styles across Southeast Asia", { style: styleLabel });
+    booking = frontendT(
+      "tours.booking.style",
+      "Showing {styleLower} journeys across Vietnam, Thailand, Cambodia, and Laos.",
+      { styleLower }
+    );
+    pageTitle = frontendT("tours.page_title.style", "AsiaTravelPlan | {style} Southeast Asia Tours", {
+      style: styleLabel
+    });
   }
 
   if (els.toursTitle) els.toursTitle.textContent = heading;
@@ -741,14 +1118,18 @@ function updateBookingModalTitle() {
   const style = state.filters.style;
   const destLabel = formatFilterValue(dest, "destination");
   const styleLabel = formatFilterValue(style, "style");
+  const styleLower = String(styleLabel || "").toLowerCase();
 
-  let title = "Plan your tour with AsiaTravelPlan";
+  let title = frontendT("modal.title.default", "Plan your trip with AsiaTravelPlan");
   if (dest.length && style.length) {
-    title = `Plan your ${styleLabel.toLowerCase()} tour in ${destLabel}`;
+    title = frontendT("modal.title.destination_style", "Plan your {styleLower} tour in {destination}", {
+      styleLower,
+      destination: destLabel
+    });
   } else if (dest.length) {
-    title = `Plan your tour in ${destLabel}`;
+    title = frontendT("modal.title.destination", "Plan your tour in {destination}", { destination: destLabel });
   } else if (style.length) {
-    title = `Plan your ${styleLabel.toLowerCase()} tour`;
+    title = frontendT("modal.title.style", "Plan your {styleLower} tour", { styleLower });
   }
 
   els.bookingTitle.textContent = title;
@@ -767,16 +1148,24 @@ function renderTrips(trips) {
 
   const cards = trips
     .map((trip, index) => {
+      const tripTitle = resolveLocalizedFrontendText(trip?.title, state.lang);
+      const tripShortDescription = resolveLocalizedFrontendText(trip?.short_description, state.lang);
       const tags = trip.styles.map((style) => `<span class="tag">${escapeHTML(style)}</span>`).join("");
       const countries = tourDestinations(trip);
       const countriesLabel = countries.join(", ");
+      const displayCurrency = preferredCurrencyForFrontendLang(state.lang);
+      const displayAmount = approximateDisplayAmountFromUSD(trip?.budget_lower_usd, displayCurrency);
+      const priceLabel = Number.isFinite(displayAmount)
+        ? formatDisplayMoney(displayAmount, displayCurrency, state.lang || currentFrontendLang())
+        : formatDisplayMoney(trip?.budget_lower_usd, DEFAULT_BOOKING_CURRENCY, state.lang || currentFrontendLang());
       const price = typeof trip.budget_lower_usd === "number"
-        ? `From $${new Intl.NumberFormat("en-US", {
-          maximumFractionDigits: 0,
-          useGrouping: true
-        }).format(trip.budget_lower_usd)}`
-        : "Custom quote";
+        ? frontendT("tour.card.from_price", "From ${price}", {
+          price: priceLabel
+        })
+        : frontendT("tour.card.custom_quote", "Custom quote");
       const rating = typeof trip.rating === "number" ? `★ ${trip.rating.toFixed(1)}` : "";
+      const daysLabel = frontendT("tour.card.days", "{days} days", { days: trip.travel_duration_days });
+      const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
       const loading = index < 3 ? "eager" : "lazy";
       const fetchpriority = index < 3 ? "high" : "auto";
 
@@ -784,7 +1173,10 @@ function renderTrips(trips) {
         <article class="tour-card">
           <img
             src="${escapeAttr(trip.image)}"
-            alt="${escapeAttr(trip.title)} in ${escapeAttr(countriesLabel)}"
+            alt="${escapeAttr(frontendT("tour.card.image_alt", "{title} in {destinations}", {
+              title: tripTitle,
+              destinations: countriesLabel
+            }))}"
             loading="${loading}"
             fetchpriority="${fetchpriority}"
             width="1200"
@@ -795,14 +1187,14 @@ function renderTrips(trips) {
               <span class="tour-country">${escapeHTML(countriesLabel)}</span>
               <span class="rating">${escapeHTML(rating)}</span>
             </div>
-            <h3 class="tour-title">${escapeHTML(trip.title)}</h3>
-            <p class="tour-desc">${escapeHTML(trip.short_description)}</p>
+            <h3 class="tour-title">${escapeHTML(tripTitle)}</h3>
+            <p class="tour-desc">${escapeHTML(tripShortDescription)}</p>
             <div class="tags">${tags}</div>
             <div class="meta">
-              <span>${trip.travel_duration_days} days</span>
+              <span>${escapeHTML(daysLabel)}</span>
               <span>${escapeHTML(price)}</span>
             </div>
-            <button class="btn btn-primary" type="button" data-open-modal data-trip-id="${escapeAttr(trip.id)}">Plan this trip</button>
+            <button class="btn btn-primary" type="button" data-open-modal data-trip-id="${escapeAttr(trip.id)}">${escapeHTML(ctaLabel)}</button>
           </div>
         </article>
       `;
@@ -837,42 +1229,45 @@ function bindTourCardOpenHandlers() {
   });
 }
 
-function populateFilterOptions(trips) {
-  const destinations = Array.from(new Set(trips.flatMap((trip) => tourDestinations(trip)))).sort();
-  const styles = Array.from(new Set(trips.flatMap((trip) => trip.styles))).sort();
+function populateFilterOptions() {
+  const destinations = filterOptionList("destination");
+  const styles = filterOptionList("style");
+  const bookingDestinations = destinations.map((option) => option.label);
+  const bookingStyles = styles.map((option) => option.label);
 
   if (els.navDestinationOptions) {
     els.navDestinationOptions.innerHTML = destinations
-      .map((destination) => renderFilterCheckbox("destination", destination))
+      .map((destination) => renderFilterCheckbox("destination", destination.code, destination.label))
       .join("");
   }
 
   if (els.navStyleOptions) {
     els.navStyleOptions.innerHTML = styles
-      .map((style) => renderFilterCheckbox("style", style))
+      .map((style) => renderFilterCheckbox("style", style.code, style.label))
       .join("");
   }
 
   if (els.bookingDestinationOptions) {
-    els.bookingDestinationOptions.innerHTML = destinations
-      .map((destination) => renderFilterCheckbox("bookingDestination", destination))
+    els.bookingDestinationOptions.innerHTML = bookingDestinations
+      .map((destination) => renderFilterCheckbox("bookingDestination", destination, destination))
       .join("");
   }
 
   if (els.bookingStyleOptions) {
-    els.bookingStyleOptions.innerHTML = styles
-      .map((style) => renderFilterCheckbox("bookingStyle", style))
+    els.bookingStyleOptions.innerHTML = bookingStyles
+      .map((style) => renderFilterCheckbox("bookingStyle", style, style))
       .join("");
   }
 }
 
-function renderFilterCheckbox(kind, value) {
+function renderFilterCheckbox(kind, value, label = value) {
   const safeValue = escapeHTML(value);
+  const safeLabel = escapeHTML(label);
   const inputId = `${kind}Filter_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
   return `
     <label class="filter-checkbox-option" for="${escapeHTML(inputId)}">
       <input id="${escapeHTML(inputId)}" type="checkbox" value="${safeValue}" />
-      <span>${safeValue}</span>
+      <span>${safeLabel}</span>
     </label>
   `;
 }
@@ -882,6 +1277,74 @@ function tourDestinations(trip) {
     return trip.destinations.map((value) => String(value || "").trim()).filter(Boolean);
   }
   return [];
+}
+
+function tourDestinationCodes(trip) {
+  if (Array.isArray(trip?.destination_codes) && trip.destination_codes.length) {
+    return trip.destination_codes.map((value) => normalizeText(value)).filter(Boolean);
+  }
+  return normalizeSelectionToCodes(tourDestinations(trip), "destination");
+}
+
+function tourStyleCodes(trip) {
+  if (Array.isArray(trip?.style_codes) && trip.style_codes.length) {
+    return trip.style_codes.map((value) => normalizeText(value)).filter(Boolean);
+  }
+  return normalizeSelectionToCodes(Array.isArray(trip?.styles) ? trip.styles : [], "style");
+}
+
+function normalizeFilterOptionList(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => {
+      if (item && typeof item === "object") {
+        return {
+          code: normalizeText(item.code),
+          label: normalizeText(item.label) || normalizeText(item.code)
+        };
+      }
+      const value = normalizeText(item);
+      return value ? { code: value, label: value } : null;
+    })
+    .filter((item) => item?.code && item?.label);
+}
+
+function filterOptionList(kind) {
+  const raw = kind === "destination" ? state.filterOptions.destinations : state.filterOptions.styles;
+  return normalizeFilterOptionList(raw);
+}
+
+function filterLabel(kind, value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  const options = filterOptionList(kind);
+  const match = options.find((option) => normalizeText(option.code).toLowerCase() === normalized.toLowerCase());
+  return match?.label || normalized;
+}
+
+function filterLabels(values, kind) {
+  return (Array.isArray(values) ? values : []).map((value) => filterLabel(kind, value)).filter(Boolean);
+}
+
+function normalizeSelectionToCodes(values, kind) {
+  const options = filterOptionList(kind);
+  return Array.from(new Set((Array.isArray(values) ? values : [values])
+    .map((value) => normalizeText(value))
+    .filter(Boolean)
+    .map((value) => {
+      const lower = value.toLowerCase();
+      const match = options.find((option) => {
+        const code = normalizeText(option.code).toLowerCase();
+        const label = normalizeText(option.label).toLowerCase();
+        return lower === code || lower === label;
+      });
+      return normalizeText(match?.code || lower).toLowerCase();
+    })
+    .filter(Boolean)));
+}
+
+function normalizeActiveFiltersFromOptions() {
+  state.filters.dest = normalizeSelectionToCodes(state.filters.dest, "destination");
+  state.filters.style = normalizeSelectionToCodes(state.filters.style, "style");
 }
 
 function syncFilterInputs() {
@@ -1000,29 +1463,94 @@ async function loadTrips() {
   try {
     const toursRequest = publicToursRequest({
       baseURL: API_BASE_ORIGIN,
-      query: { v: TRIPS_REQUEST_VERSION }
+      query: { v: TRIPS_REQUEST_VERSION, lang: currentFrontendLang() }
     });
     const response = await fetch(toursRequest.url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Backend tours request failed with status ${response.status}.`);
     }
     const payload = await response.json();
-    const items = normalizeToursForFrontend(Array.isArray(payload) ? payload : payload.items || []);
-    setCachedTours(items);
-    return items;
+    const normalizedPayload = normalizeToursPayloadForFrontend(payload);
+    setCachedTours(normalizedPayload);
+    return normalizedPayload;
   } catch (error) {
     throw error;
   }
 }
 
+function normalizeToursPayloadForFrontend(payload) {
+  const source = Array.isArray(payload) ? { items: payload } : (payload || {});
+  return {
+    items: normalizeToursForFrontend(Array.isArray(source.items) ? source.items : []),
+    available_destinations: normalizeFilterOptionList(source.available_destinations),
+    available_styles: normalizeFilterOptionList(source.available_styles)
+  };
+}
+
 function normalizeToursForFrontend(items) {
+  const lang = currentFrontendLang();
   return (Array.isArray(items) ? items : []).map((item) => {
     const image = resolveTourImage(item);
+    const normalizedTitle = resolveLocalizedFrontendText(item?.title, lang);
+    const normalizedShortDescription = resolveLocalizedFrontendText(item?.short_description, lang);
+    const normalizedHighlights = resolveLocalizedFrontendStringArray(item?.highlights, lang);
     return {
       ...item,
+      title: normalizedTitle,
+      short_description: normalizedShortDescription,
+      highlights: normalizedHighlights,
       image
     };
   });
+}
+
+function normalizeFrontendTourLang(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  if (!normalized) return "en";
+  if (normalized === "en" || normalized.startsWith("en-")) return "en";
+  if (normalized === "fr" || normalized.startsWith("fr-")) return "fr";
+  if (normalized === "zh" || normalized.startsWith("zh-") || normalized.includes("chinese") || normalized.includes("mandarin")) return "zh";
+  if (normalized === "ja" || normalized.startsWith("ja-") || normalized.includes("japanese")) return "ja";
+  if (normalized === "ko" || normalized.startsWith("ko-") || normalized.includes("korean")) return "ko";
+  if (normalized === "vi" || normalized.startsWith("vi-") || normalized.includes("vietnam")) return "vi";
+  if (normalized === "de" || normalized.startsWith("de-") || normalized.includes("german") || normalized.includes("deutsch")) return "de";
+  if (normalized === "es" || normalized.startsWith("es-") || normalized.includes("spanish") || normalized.includes("español") || normalized.includes("espanol")) return "es";
+  if (normalized === "it" || normalized.startsWith("it-") || normalized.includes("italian") || normalized.includes("italiano")) return "it";
+  if (normalized === "ru" || normalized.startsWith("ru-") || normalized.includes("russian") || normalized.includes("рус")) return "ru";
+  if (normalized === "nl" || normalized.startsWith("nl-") || normalized.includes("dutch") || normalized.includes("nederlands")) return "nl";
+  if (normalized === "pl" || normalized.startsWith("pl-") || normalized.includes("polish") || normalized.includes("polski")) return "pl";
+  if (normalized === "da" || normalized.startsWith("da-") || normalized.includes("danish") || normalized.includes("dansk")) return "da";
+  if (normalized === "sv" || normalized.startsWith("sv-") || normalized.includes("swedish") || normalized.includes("svenska")) return "sv";
+  if (normalized === "no" || normalized.startsWith("no-") || normalized.startsWith("nb-") || normalized.startsWith("nn-") || normalized.includes("norwegian") || normalized.includes("norsk")) return "no";
+  return "en";
+}
+
+function resolveLocalizedFrontendText(value, lang = currentFrontendLang()) {
+  if (typeof value === "string") return normalizeText(value);
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+
+  const normalizedLang = normalizeFrontendTourLang(lang);
+  const candidates = [normalizedLang, "en", ...Object.keys(value)];
+  for (const candidate of candidates) {
+    const text = normalizeText(value[candidate]);
+    if (text) return text;
+  }
+  return "";
+}
+
+function resolveLocalizedFrontendStringArray(value, lang = currentFrontendLang()) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeText(entry)).filter(Boolean);
+  }
+  if (!value || typeof value !== "object") return [];
+
+  const normalizedLang = normalizeFrontendTourLang(lang);
+  const candidates = [normalizedLang, "en", ...Object.keys(value)];
+  for (const candidate of candidates) {
+    const items = Array.isArray(value[candidate]) ? value[candidate].map((entry) => normalizeText(entry)).filter(Boolean) : [];
+    if (items.length) return items;
+  }
+  return [];
 }
 
 function resolveTourImage(item) {
@@ -1050,26 +1578,28 @@ function absolutizeBackendUrl(urlValue) {
 
 function getCachedTours() {
   try {
-    const raw = localStorage.getItem(TOURS_CACHE_KEY);
+    const raw = localStorage.getItem(toursCacheKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const ts = Number(parsed?.ts || 0);
-    const items = parsed?.items;
-    if (!Array.isArray(items)) return null;
+    if (!parsed || typeof parsed !== "object") return null;
     if (Date.now() - ts > TOURS_CACHE_TTL_MS) return null;
-    return normalizeToursForFrontend(items);
+    if (!Array.isArray(parsed.items)) return null;
+    return normalizeToursPayloadForFrontend(parsed);
   } catch {
     return null;
   }
 }
 
-function setCachedTours(items) {
+function setCachedTours(payload) {
   try {
     localStorage.setItem(
-      TOURS_CACHE_KEY,
+      toursCacheKey(),
       JSON.stringify({
         ts: Date.now(),
-        items: Array.isArray(items) ? items : []
+        items: Array.isArray(payload?.items) ? payload.items : [],
+        available_destinations: Array.isArray(payload?.available_destinations) ? payload.available_destinations : [],
+        available_styles: Array.isArray(payload?.available_styles) ? payload.available_styles : []
       })
     );
   } catch {
@@ -1163,7 +1693,7 @@ function setSelectedTourContext(selectedTour) {
   state.selectedTour = selectedTour
     ? {
       id: normalizeText(selectedTour.id || ""),
-      title: normalizeText(selectedTour.title || ""),
+      title: resolveLocalizedFrontendText(selectedTour.title, state.lang),
       destinations: tourDestinations(selectedTour),
       styles: Array.isArray(selectedTour.styles)
         ? selectedTour.styles.map((item) => normalizeText(item)).filter(Boolean)
@@ -1231,6 +1761,43 @@ function setupFormNavigation() {
   renderFormStep();
 }
 
+function setupLiveValidationReset() {
+  if (!els.bookingForm || els.bookingForm.dataset.liveValidationResetBound === "1") return;
+
+  const clearRequireOneOfFieldState = (stepRoot) => {
+    const contactNames = new Set(["email", "phone_number"]);
+    const contactInputs = Array.from(stepRoot.querySelectorAll("input[name], select[name], textarea[name]"))
+      .filter((input) => contactNames.has(input.name));
+    const hasContactValue = contactInputs.some((input) => normalizeText(input.value) !== "");
+    if (!hasContactValue) return;
+    contactInputs.forEach((input) => {
+      input.closest(".field")?.classList.remove("invalid");
+    });
+  };
+
+  const handleEdit = (event) => {
+    if (state.bookingSubmitted) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const field = target.closest(".field");
+    if (field) {
+      field.classList.remove("invalid");
+    }
+
+    const activeStep = els.bookingForm.querySelector(`.step[data-step="${state.formStep}"]`);
+    if (activeStep) {
+      clearRequireOneOfFieldState(activeStep);
+    }
+
+    clearBookingFeedback();
+  };
+
+  els.bookingForm.addEventListener("input", handleEdit);
+  els.bookingForm.addEventListener("change", handleEdit);
+  els.bookingForm.dataset.liveValidationResetBound = "1";
+}
+
 function goToFormStep(step) {
   const nextStep = Math.max(1, Math.min(3, Number(step) || 1));
   if (nextStep === state.formStep) return;
@@ -1280,7 +1847,9 @@ function renderFormStep() {
   els.stepBack.disabled = state.bookingSubmitted || state.formStep === 1;
   els.stepNext.hidden = state.bookingSubmitted;
   els.stepNext.disabled = state.bookingSubmitted;
-  els.stepNext.textContent = state.formStep === 3 ? "Submit request" : "Next";
+  els.stepNext.textContent = state.formStep === 3
+    ? frontendT("modal.nav.submit", "Submit request")
+    : frontendT("modal.nav.next", "Next");
   if (els.stepClose) {
     els.stepClose.hidden = !state.bookingSubmitted;
     els.stepClose.disabled = false;
@@ -1334,7 +1903,11 @@ function validateCurrentStep() {
         if (!travelersRangeError && (input.id === "bookingTravelers" || input.name === "number_of_travelers")) {
           const minDisplay = min !== null ? min : MIN_TRAVELERS;
           const maxDisplay = max !== null ? max : MAX_TRAVELERS;
-          travelersRangeError = `Travelers must be between ${minDisplay} and ${maxDisplay}.`;
+          travelersRangeError = frontendT(
+            "modal.error.travelers_between",
+            "Travelers must be between {min} and {max}.",
+            { min: minDisplay, max: maxDisplay }
+          );
         }
       }
     }
@@ -1357,7 +1930,7 @@ function validateCurrentStep() {
       const field = input?.closest(".field");
       if (field) field.classList.add("invalid");
     });
-    renderBookingError("Please enter an email or phone number.");
+    renderBookingError(frontendT("modal.error.email_or_phone", "Please enter an email or phone number."));
     isValid = false;
   });
 
@@ -1386,7 +1959,12 @@ async function submitBookingForm() {
   const selectedDurationRange = parseTravelDurationRange(els.bookingDuration?.value || "");
 
   if (rawTravelersValue && (!Number.isInteger(travelersValue) || travelersValue < MIN_TRAVELERS || travelersValue > MAX_TRAVELERS)) {
-    renderBookingError(`Travelers must be between ${MIN_TRAVELERS} and ${MAX_TRAVELERS}.`);
+    renderBookingError(
+      frontendT("modal.error.travelers_between", "Travelers must be between {min} and {max}.", {
+        min: MIN_TRAVELERS,
+        max: MAX_TRAVELERS
+      })
+    );
     els.stepNext.disabled = false;
     els.stepBack.disabled = false;
     const travelersField = document.getElementById("bookingTravelers")?.closest(".field");
@@ -1411,7 +1989,7 @@ async function submitBookingForm() {
     phone_number: entries.phone_number || "",
     preferred_language: entries.preferred_language || "",
     notes: entries.notes || "",
-    booking_name: state.selectedTour?.title || "",
+    booking_name: resolveLocalizedFrontendText(state.selectedTour?.title, state.lang) || "",
     tour_id: entries.tour_id || "",
     page_url: window.location.href,
     referrer: document.referrer || "",
@@ -1450,7 +2028,7 @@ async function submitBookingForm() {
     return;
   } catch (error) {
     renderBookingError(
-      "We could not submit your request right now.",
+      frontendT("modal.error.submit", "We could not submit your request right now."),
       error?.message || "Unknown booking submission error."
     );
     els.stepNext.disabled = false;
@@ -1506,7 +2084,7 @@ function renderBookingError(message, debugMessage) {
     details.className = "booking-error-details";
 
     const detailsSummary = document.createElement("summary");
-    detailsSummary.textContent = "More";
+    detailsSummary.textContent = frontendT("modal.error.more", "More");
     details.appendChild(detailsSummary);
 
     const debug = document.createElement("pre");
@@ -1522,7 +2100,11 @@ function renderBookingError(message, debugMessage) {
 
 function buildBookingSubmissionDebugMessage(status, statusText, responseText) {
   const suffix = normalizeBookingDebugText(responseText);
-  const header = `Booking API request failed with HTTP ${status}${statusText ? ` ${statusText}` : ""}.`;
+  const statusSuffix = statusText ? ` ${statusText}` : "";
+  const header = frontendT("modal.error.http", "Booking API request failed with HTTP {status}{statusText}.", {
+    status,
+    statusText: statusSuffix
+  });
   return suffix ? `${header}\n\n${suffix}` : header;
 }
 
@@ -1538,15 +2120,15 @@ function getQueryParam(name) {
 }
 
 function prefillBookingFormWithFilters() {
-  const bookingDestinations = state.selectedTour?.destinations || state.filters.dest;
-  const bookingStyles = state.selectedTour?.styles || state.filters.style;
+  const bookingDestinations = state.selectedTour?.destinations || filterLabels(state.filters.dest, "destination");
+  const bookingStyles = state.selectedTour?.styles || filterLabels(state.filters.style, "style");
   setBookingField("bookingDestination", bookingDestinations);
   setBookingField("bookingStyle", bookingStyles);
   if (state.selectedTour) {
     const firstTravelMonth = buildFirstTravelMonthValue(state.selectedTour.seasonality_start_month);
     const bookingMonth = document.getElementById("bookingMonth");
     if (bookingMonth && firstTravelMonth) {
-      bookingMonth.value = firstTravelMonth;
+      setTravelMonthValue(firstTravelMonth);
     }
     const bookingDuration = document.getElementById("bookingDuration");
     if (bookingDuration) {
@@ -1563,7 +2145,7 @@ function prefillBookingFormWithFilters() {
     }
   }
   if (els.bookingStepTitle) {
-    els.bookingStepTitle.textContent = els.toursTitle?.textContent || "Featured tours you can tailor";
+    els.bookingStepTitle.textContent = els.toursTitle?.textContent || frontendT("modal.booking_step_title_fallback", "Featured tours you can tailor");
   }
   updateBookingModalTitle();
 }
@@ -1595,7 +2177,7 @@ function setBookingField(id, value) {
 
 function renderBookingStaticField(field, values) {
   const inputName = normalizeText(field.getAttribute("data-booking-input-name"));
-  const emptyLabel = normalizeText(field.getAttribute("data-empty-label")) || "Not selected";
+  const emptyLabel = normalizeText(field.getAttribute("data-empty-label")) || frontendT("filters.all_destinations", "All destinations");
   const items = Array.isArray(values) ? values.filter(Boolean) : [];
   const summary = items.length ? items.join(", ") : emptyLabel;
   const hiddenInputs = inputName

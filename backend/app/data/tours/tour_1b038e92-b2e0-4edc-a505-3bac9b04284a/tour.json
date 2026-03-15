@@ -1,24 +1,128 @@
 {
   "id": "tour_1b038e92-b2e0-4edc-a505-3bac9b04284a",
-  "title": "Vietnam Culture Journey",
-  "shortDescription": "A Vietnam culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+  "title": {
+    "en": "Vietnam Culture Journey",
+    "fr": "Voyage culture au Vietnam",
+    "zh": "越南文化之旅",
+    "ja": "ベトナム 文化の旅",
+    "ko": "베트남 문화 여행",
+    "vi": "Hành trình Văn hóa Việt Nam",
+    "de": "Vietnam-Kulturreise",
+    "es": "Viaje cultural de Vietnam",
+    "it": "Viaggio nella cultura del Vietnam",
+    "ru": "Путешествие по культуре Вьетнама",
+    "nl": "Cultuurreis door Vietnam",
+    "pl": "Podróż kulturowa Wietnamu",
+    "da": "Vietnam kulturrejse",
+    "sv": "Vietnam kulturresa",
+    "no": "Vietnam kulturreise"
+  },
   "styles": [
-    "Culture"
+    "culture"
   ],
   "priority": 50,
   "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_1b038e92-b2e0-4edc-a505-3bac9b04284a/tour_1b038e92-b2e0-4edc-a505-3bac9b04284a.webp",
-  "highlights": [
-    "Signature stop in Hanoi",
-    "Route highlight around Hoi An",
-    "Smooth transfer planning via Ha Long Bay"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ]
+  },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.8,
   "legacy_id": "trip-vietnam-culture-classic",
   "destinations": [
-    "Vietnam"
+    "vietnam"
   ],
-  "budget_lower_USD": 860
+  "short_description": {
+    "en": "A Vietnam culture itinerary focused on a balanced first-trip route, with heritage depth, local life, and meaningful guided visits.",
+    "fr": "Un itinéraire culturel au Vietnam pensé pour un premier voyage équilibré, avec une vraie profondeur patrimoniale, de la vie locale et des visites guidées de qualité.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的越南文化行程，包含丰富的文化遗产体验、在地生活感受以及有意义的导览参访。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムの文化旅程で、奥行きのある文化体験、現地の暮らし、価値あるガイド付き見学。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 베트남 문화 일정으로, 깊이 있는 문화유산 체험, 현지 생활, 의미 있는 가이드 방문.",
+    "vi": "Đây là lịch trình văn hóa tại Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với chiều sâu di sản, đời sống địa phương và những chuyến tham quan có hướng dẫn giàu giá trị.",
+    "de": "Eine Vietnam-Kulturroute, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit viel Kulturgeschichte, lokalem Leben und sinnvollen Führungen.",
+    "es": "Un itinerario cultural de Vietnam centrado en una ruta equilibrada de primer viaje, con profundidad patrimonial, vida local y visitas guiadas significativas.",
+    "it": "Un itinerario culturale del Vietnam incentrato su un percorso equilibrato del primo viaggio, con profondità del patrimonio, vita locale e visite guidate significative.",
+    "ru": "Маршрут по культуре Вьетнама ориентирован на сбалансированный маршрут первой поездки, с глубиной наследия, местной жизнью и содержательными экскурсиями.",
+    "nl": "Een cultuurroute door Vietnam gericht op een uitgebalanceerde eerste reisroute, met erfgoeddiepte, het lokale leven en zinvolle rondleidingen.",
+    "pl": "Plan podróży po Wietnamie skupiający się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
+    "da": "En Vietnam-kulturrute fokuserede på en afbalanceret første-tursrute med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
+    "sv": "En Vietnam-kulturresplan fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
+    "no": "En Vietnam-kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk."
+  },
+  "budget_lower_usd": 860
 }

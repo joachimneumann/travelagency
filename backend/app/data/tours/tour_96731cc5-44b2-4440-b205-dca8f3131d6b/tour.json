@@ -1,24 +1,128 @@
 {
   "id": "tour_96731cc5-44b2-4440-b205-dca8f3131d6b",
-  "title": "Laos Budget Journey",
-  "shortDescription": "A Laos budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+  "title": {
+    "en": "Laos Budget Journey",
+    "fr": "Voyage petit budget au Laos",
+    "zh": "老挝经济型之旅",
+    "ja": "ラオス 低予算の旅",
+    "ko": "라오스 실속형 여행",
+    "vi": "Hành trình Tiết kiệm Lào",
+    "de": "Budgetreise nach Laos",
+    "es": "Viaje económico a Laos",
+    "it": "Viaggio nel bilancio del Laos",
+    "ru": "Бюджетное путешествие по Лаосу",
+    "nl": "Budgetreis naar Laos",
+    "pl": "Podróż budżetowa Laosu",
+    "da": "Laos budgetrejse",
+    "sv": "Laos budgetresa",
+    "no": "Laos Budsjettreise"
+  },
   "styles": [
-    "Budget"
+    "budget"
   ],
   "priority": 50,
   "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_96731cc5-44b2-4440-b205-dca8f3131d6b/tour_96731cc5-44b2-4440-b205-dca8f3131d6b.webp",
-  "highlights": [
-    "Signature stop in Luang Prabang",
-    "Route highlight around Vang Vieng",
-    "Smooth transfer planning via Mekong River"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Luang Prabang",
+      "Route highlight around Vang Vieng",
+      "Smooth transfer planning via Mekong River"
+    ],
+    "fr": [
+      "Étape signature à Luang Prabang",
+      "Temps fort de l'itinéraire autour de Vang Vieng",
+      "Transferts fluides via le Mékong"
+    ],
+    "zh": [
+      "琅勃拉邦标志性停留",
+      "万荣周边路线亮点",
+      "经湄公河衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ルアンパバーンでの象徴的な立ち寄り",
+      "バンビエン周辺のルート見どころ",
+      "メコン川経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "루앙프라방의 대표적인 방문지",
+      "방비엥 일대의 주요 동선 하이라이트",
+      "메콩강 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Luang Prabang",
+      "Điểm nhấn hành trình quanh Vang Vieng",
+      "Kế hoạch di chuyển mượt mà qua sông Mê Kông"
+    ],
+    "de": [
+      "Signature-Stopp in Luang Prabang",
+      "Routenhighlight rund um Vang Vieng",
+      "Reibungslose Transferplanung über den Mekong"
+    ],
+    "es": [
+      "Parada exclusiva en Luang Prabang",
+      "Ruta destacada alrededor de Vang Vieng",
+      "Planificación fluida del traslado a través del río Mekong"
+    ],
+    "it": [
+      "Fermata esclusiva a Luang Prabang",
+      "Evidenziazione del percorso intorno a Vang Vieng",
+      "Pianificazione agevole del trasferimento attraverso il fiume Mekong"
+    ],
+    "ru": [
+      "Фирменная остановка в Луанг Прабанге",
+      "Обзор маршрута по Ванг-Вьенгу",
+      "Плавное планирование трансфера через реку Меконг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Luang Prabang",
+      "Route hoogtepunt rond Vang Vieng",
+      "Soepele transferplanning via de Mekong rivier"
+    ],
+    "pl": [
+      "Przystanek podpisu w Luang Prabang",
+      "Najważniejszy punkt trasy wokół Vang Vieng",
+      "Płynne planowanie transferu przez rzekę Mekong"
+    ],
+    "da": [
+      "Signaturstop i Luang Prabang",
+      "Rutehøjdepunkt omkring Vang Vieng",
+      "Glat overførselsplanlægning via Mekong-floden"
+    ],
+    "sv": [
+      "Signaturstopp i Luang Prabang",
+      "Ruttens höjdpunkt runt Vang Vieng",
+      "Smidig överföringsplanering via Mekongfloden"
+    ],
+    "no": [
+      "Signaturstopp i Luang Prabang",
+      "Rutehøydepunkt rundt Vang Vieng",
+      "Jevn overføringsplanlegging via Mekong-elven"
+    ]
+  },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
   "rating": 4.6,
   "legacy_id": "trip-laos-budget-classic",
   "destinations": [
-    "Laos"
+    "laos"
   ],
-  "budget_lower_USD": 550
+  "short_description": {
+    "en": "A Laos budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+    "fr": "Un itinéraire petit budget au Laos pensé pour un premier voyage équilibré, avec une planification attentive au budget, des trajets bien pensés et des inclusions claires.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的老挝经济型行程，包含注重性价比的规划、聪明的路线安排和清晰的包含内容。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたラオスの低予算旅程で、価格を意識した計画、無駄のない移動設計、分かりやすい含有内容。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 라오스 실속형 일정으로, 가성비 중심의 설계, 효율적인 동선, 명확한 포함 내역.",
+    "vi": "Đây là lịch trình tiết kiệm tại Lào tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với kế hoạch tối ưu chi phí, lộ trình thông minh và các hạng mục bao gồm rõ ràng.",
+    "de": "Eine preisgünstige Reiseroute für Laos, die sich auf eine ausgewogene Route für die erste Reise konzentriert, mit wertorientierter Planung mit intelligenter Routenführung und klaren Inklusivleistungen.",
+    "es": "Un itinerario económico de Laos centrado en una ruta equilibrada de primer viaje, con una planificación centrada en el valor con rutas inteligentes e inclusiones claras.",
+    "it": "Un itinerario economico in Laos incentrato su un percorso di primo viaggio equilibrato, con una pianificazione incentrata sul valore con percorsi intelligenti e inclusioni chiare.",
+    "ru": "Бюджетный маршрут по Лаосу ориентирован на сбалансированный маршрут первой поездки, с планированием, ориентированным на ценность, с продуманным маршрутом и четкими включениями.",
+    "nl": "Een budgetreisroute voor Laos gericht op een evenwichtige eerste reisroute, met een op waarde gerichte planning met slimme routes en duidelijke insluitsels.",
+    "pl": "Budżetowy plan podróży do Laosu skupiał się na zrównoważonej trasie pierwszej podróży, z planowaniem skoncentrowanym na wartości, z inteligentnymi trasami i jasnymi dodatkami.",
+    "da": "En Laos-budgetrute fokuserede på en afbalanceret rute for første tur med værdifokuseret planlægning med smart rute og klare inklusion.",
+    "sv": "En budgetresplan i Laos fokuserade på en balanserad första-tursrutt, med värdefokuserad planering med smart rutt och tydliga inklusioner.",
+    "no": "En Laos budsjettreise fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger."
+  },
+  "budget_lower_usd": 550
 }

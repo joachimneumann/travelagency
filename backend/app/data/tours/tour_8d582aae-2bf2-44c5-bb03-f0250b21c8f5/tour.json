@@ -1,24 +1,128 @@
 {
   "id": "tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5",
-  "title": "Vietnam Budget Journey",
-  "shortDescription": "A Vietnam budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+  "title": {
+    "en": "Vietnam Budget Journey",
+    "fr": "Voyage petit budget au Vietnam",
+    "zh": "越南经济型之旅",
+    "ja": "ベトナム 低予算の旅",
+    "ko": "베트남 실속형 여행",
+    "vi": "Hành trình Tiết kiệm Việt Nam",
+    "de": "Vietnam-Budget-Reise",
+    "es": "Viaje económico a Vietnam",
+    "it": "Viaggio economico in Vietnam",
+    "ru": "Бюджетное путешествие во Вьетнам",
+    "nl": "Budgetreis door Vietnam",
+    "pl": "Podróż budżetowa Wietnamu",
+    "da": "Vietnam budgetrejse",
+    "sv": "Vietnam budgetresa",
+    "no": "Vietnam Budsjettreise"
+  },
   "styles": [
-    "Budget"
+    "budget"
   ],
   "priority": 50,
   "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5/tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5.webp",
-  "highlights": [
-    "Signature stop in Hanoi",
-    "Route highlight around Hoi An",
-    "Smooth transfer planning via Ha Long Bay"
-  ],
+  "highlights": {
+    "en": [
+      "Signature stop in Hanoi",
+      "Route highlight around Hoi An",
+      "Smooth transfer planning via Ha Long Bay"
+    ],
+    "fr": [
+      "Étape signature à Hanoï",
+      "Temps fort de l'itinéraire autour de Hoi An",
+      "Transferts fluides via la baie d'Ha Long"
+    ],
+    "zh": [
+      "河内标志性停留",
+      "会安周边路线亮点",
+      "经下龙湾衔接的顺畅交通安排"
+    ],
+    "ja": [
+      "ハノイでの象徴的な立ち寄り",
+      "ホイアン周辺のルート見どころ",
+      "ハロン湾経由のスムーズな移動計画"
+    ],
+    "ko": [
+      "하노이의 대표적인 방문지",
+      "호이안 일대의 주요 동선 하이라이트",
+      "하롱베이 경유의 매끄러운 이동 계획"
+    ],
+    "vi": [
+      "Điểm dừng nổi bật tại Hà Nội",
+      "Điểm nhấn hành trình quanh Hội An",
+      "Kế hoạch di chuyển mượt mà qua Vịnh Hạ Long"
+    ],
+    "de": [
+      "Signature-Stopp in Hanoi",
+      "Routenhighlight rund um Hoi An",
+      "Reibungslose Transferplanung über die Halong-Bucht"
+    ],
+    "es": [
+      "Parada exclusiva en Hanoi",
+      "Ruta destacada alrededor de Hoi An",
+      "Planificación fluida del traslado a través de la bahía de Ha Long"
+    ],
+    "it": [
+      "Fermata esclusiva ad Hanoi",
+      "Evidenziazione del percorso intorno a Hoi An",
+      "Pianificazione fluida del trasferimento attraverso la baia di Ha Long"
+    ],
+    "ru": [
+      "Фирменная остановка в Ханое",
+      "Обзор маршрута вокруг Хойана",
+      "Плавное планирование трансфера через залив Халонг"
+    ],
+    "nl": [
+      "Kenmerkende stop in Hanoi",
+      "Route hoogtepunt rond Hoi An",
+      "Soepele transferplanning via Ha Long Bay"
+    ],
+    "pl": [
+      "Przystanek podpisowy w Hanoi",
+      "Najważniejszy punkt trasy wokół Hoi An",
+      "Płynne planowanie transferu przez zatokę Ha Long"
+    ],
+    "da": [
+      "Signaturstop i Hanoi",
+      "Rutehøjdepunkt omkring Hoi An",
+      "Glat overførselsplanlægning via Ha Long Bay"
+    ],
+    "sv": [
+      "Signaturstopp i Hanoi",
+      "Ruttens höjdpunkt runt Hoi An",
+      "Smidig överföringsplanering via Ha Long Bay"
+    ],
+    "no": [
+      "Signaturstopp i Hanoi",
+      "Rutehøydepunkt rundt Hoi An",
+      "Jevn overføringsplanlegging via Ha Long Bay"
+    ]
+  },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.6,
   "legacy_id": "trip-vietnam-budget-classic",
   "destinations": [
-    "Vietnam"
+    "vietnam"
   ],
-  "budget_lower_USD": 690
+  "short_description": {
+    "en": "A Vietnam budget itinerary focused on a balanced first-trip route, with value-focused planning with smart routing and clear inclusions.",
+    "fr": "Un itinéraire petit budget au Vietnam pensé pour un premier voyage équilibré, avec une planification attentive au budget, des trajets bien pensés et des inclusions claires.",
+    "zh": "这是一条以均衡的首次旅行路线为核心的越南经济型行程，包含注重性价比的规划、聪明的路线安排和清晰的包含内容。",
+    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムの低予算旅程で、価格を意識した計画、無駄のない移動設計、分かりやすい含有内容。",
+    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 베트남 실속형 일정으로, 가성비 중심의 설계, 효율적인 동선, 명확한 포함 내역.",
+    "vi": "Đây là lịch trình tiết kiệm tại Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với kế hoạch tối ưu chi phí, lộ trình thông minh và các hạng mục bao gồm rõ ràng.",
+    "de": "Eine preisgünstige Vietnam-Reiseroute mit Schwerpunkt auf einer ausgewogenen Erstreiseroute mit wertorientierter Planung mit intelligenter Routenplanung und klaren Inklusivleistungen.",
+    "es": "Un itinerario económico de Vietnam centrado en una ruta de primer viaje equilibrada, con una planificación centrada en el valor con rutas inteligentes e inclusiones claras.",
+    "it": "Un itinerario economico per il Vietnam incentrato su un primo viaggio equilibrato, con una pianificazione incentrata sul valore con percorsi intelligenti e inclusioni chiare.",
+    "ru": "Бюджетный маршрут по Вьетнаму ориентирован на сбалансированный маршрут первой поездки, с планированием, ориентированным на ценность, с умным маршрутом и четкими включениями.",
+    "nl": "Een budgetreisroute voor Vietnam gericht op een evenwichtige eerste reisroute, met op waarde gerichte planning met slimme routes en duidelijke insluitsels.",
+    "pl": "Plan budżetu Wietnamu skupiał się na zrównoważonej trasie pierwszej podróży, z planowaniem skoncentrowanym na wartościach, z inteligentnymi trasami i jasnymi dodatkami.",
+    "da": "En Vietnam-budgetrute fokuserede på en afbalanceret rute for første tur med værdifokuseret planlægning med smart rute og klare inklusion.",
+    "sv": "En budgetresplan för Vietnam fokuserade på en balanserad förstaresasrutt, med värdefokuserad planering med smart rutt och tydliga inklusioner.",
+    "no": "En Vietnam-budsjettreise fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger."
+  },
+  "budget_lower_usd": 690
 }

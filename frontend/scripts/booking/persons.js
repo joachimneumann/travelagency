@@ -4,7 +4,7 @@ import {
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=6c388c7e525c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,15 +20,16 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=6c388c7e525c";
+} from "./person_helpers.js?v=b7baca7c60a0";
+import { bookingT } from "./i18n.js?v=b7baca7c60a0";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=6c388c7e525c";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=6c388c7e525c";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=6c388c7e525c";
+} from "../shared/booking_persons.js?v=b7baca7c60a0";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=b7baca7c60a0";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=b7baca7c60a0";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -60,15 +61,33 @@ export function createBookingPersonsModule(ctx) {
     if (!declared) return "";
     const listed = getDisplayedTravelerCount();
     if (declared === listed) return "";
-    const declaredLabel = `${declared} traveler${declared === 1 ? "" : "s"}`;
+    const declaredLabel = bookingT(
+      declared === 1 ? "booking.persons.traveler_one" : "booking.persons.traveler_many",
+      declared === 1 ? "{count} traveler" : "{count} travelers",
+      { count: declared }
+    );
     if (listed < declared) {
-      const listedLabel = listed === 1 ? "one traveler only" : `${listed} travelers only`;
-      return `The web form indicates ${declaredLabel}, but this booking currently has ${listedLabel}.`;
+      const listedLabel = listed === 1
+        ? bookingT("booking.persons.one_traveler_only", "one traveler only")
+        : bookingT("booking.persons.traveler_many_only", "{count} travelers only", { count: listed });
+      return bookingT(
+        "booking.persons.mismatch_less",
+        "The web form indicates {declared}, but this booking currently has {listed}.",
+        { declared: declaredLabel, listed: listedLabel }
+      );
     }
     if (listed === 1) {
-      return `The web form indicates ${declaredLabel}, but this booking currently has one traveler.`;
+      return bookingT(
+        "booking.persons.mismatch_one",
+        "The web form indicates {declared}, but this booking currently has one traveler.",
+        { declared: declaredLabel }
+      );
     }
-    return `The web form indicates ${declaredLabel}, but this booking currently has ${listed} travelers.`;
+    return bookingT(
+      "booking.persons.mismatch_more",
+      "The web form indicates {declared}, but this booking currently has {listed} travelers.",
+      { declared: declaredLabel, listed }
+    );
   }
 
   function renderTravelerMismatchWarning() {
@@ -79,7 +98,7 @@ export function createBookingPersonsModule(ctx) {
   }
 
   function buildCollapsedPersonSummary(person) {
-    const personName = normalizeText(person?.name) || "Unnamed person";
+    const personName = normalizeText(person?.name) || bookingT("booking.unnamed_person", "Unnamed person");
     const commentParts = [];
     const nationality = normalizeText(person?.nationality).toUpperCase();
     if (nationality) commentParts.push(nationality);
@@ -95,16 +114,19 @@ export function createBookingPersonsModule(ctx) {
   function renderPersonsSummaryText() {
     const persons = Array.isArray(state.personDrafts) ? state.personDrafts : [];
     if (!persons.length) {
-      renderBookingSegmentHeader(els.personsPanelSummary, { primary: "No persons listed." });
+      renderBookingSegmentHeader(els.personsPanelSummary, { primary: bookingT("booking.no_persons", "No persons listed.") });
       return;
     }
     const traveling = persons.filter((person) => isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
     const notTraveling = persons.filter((person) => !isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
     const lines = [
-      `${traveling.length} traveling: ${traveling.length ? traveling.join(" · ") : "none"}`
+      bookingT("booking.persons.traveling_summary", "{count} traveling: {people}", {
+        count: traveling.length,
+        people: traveling.length ? traveling.join(" · ") : bookingT("common.none", "none")
+      })
     ];
     if (notTraveling.length) {
-      lines.push(`not traveling: ${notTraveling.join(" · ")}`);
+      lines.push(bookingT("booking.persons.not_traveling_summary", "Not traveling: {people}", { people: notTraveling.join(" · ") }));
     }
     renderBookingSegmentHeader(els.personsPanelSummary, { primary: lines.join("\n") });
   }
@@ -289,7 +311,7 @@ export function createBookingPersonsModule(ctx) {
     );
   }
 
-  function populateCountryCodeSelect(select, placeholderLabel = "Select nationality") {
+  function populateCountryCodeSelect(select, placeholderLabel = bookingT("booking.persons.select_nationality", "Select nationality")) {
     if (!(select instanceof HTMLSelectElement)) return;
     const current = normalizeText(select.value).toUpperCase();
     select.innerHTML = [
@@ -308,7 +330,7 @@ export function createBookingPersonsModule(ctx) {
 
     const personCards = state.personDrafts.map((person, index) => {
       const personName = normalizeText(person.name);
-      const title = personName || "Unnamed person";
+      const title = personName || bookingT("booking.unnamed_person", "Unnamed person");
       const identity = getPersonIdentityStatus(person);
       const hasCompleteContact = personHasCompleteContact(person);
       const hasCompleteAddress = personHasCompleteAddress(person);
@@ -317,8 +339,8 @@ export function createBookingPersonsModule(ctx) {
       const initials = getPersonInitials(title);
       const statusMarkup = [
         renderPersonCardStatusLine(identity.label, identity.is_complete),
-        renderPersonCardStatusLine("Contact", hasCompleteContact),
-        renderPersonCardStatusLine("Address", hasCompleteAddress)
+        renderPersonCardStatusLine(bookingT("booking.persons.contact", "Contact"), hasCompleteContact),
+        renderPersonCardStatusLine(bookingT("booking.persons.address", "Address"), hasCompleteAddress)
       ].join("");
       const imageMarkup = normalizeText(person.photo_ref)
         ? `<img src="${escapeHtml(photoSrc)}" alt="${escapeHtml(title)}" />`
@@ -339,20 +361,20 @@ export function createBookingPersonsModule(ctx) {
     });
 
     const addCard = canEdit ? `
-      <button class="booking-person-card booking-person-card--add" type="button" data-person-add="true" aria-label="Add person">
+      <button class="booking-person-card booking-person-card--add" type="button" data-person-add="true" aria-label="${escapeHtml(bookingT("booking.persons.add_person", "Add person"))}">
         <span class="booking-person-card__add-layout">
           <span class="booking-person-card__media booking-person-card__media--add">
             <img src="assets/img/profile_person.png" alt="" />
           </span>
           <span class="booking-person-card__add-cta">
-            <span class="booking-person-card__add-button">new</span>
+            <span class="booking-person-card__add-button">${escapeHtml(bookingT("common.new", "New"))}</span>
           </span>
         </span>
       </button>
     ` : "";
 
     if (!personCards.length && !addCard) {
-      els.personsEditorList.innerHTML = `<div class="booking-person-card__empty">No persons listed on this booking.</div>`;
+      els.personsEditorList.innerHTML = `<div class="booking-person-card__empty">${escapeHtml(bookingT("booking.persons.no_persons_on_booking", "No persons listed on this booking."))}</div>`;
       finalizeClosePersonModal();
       return;
     }
@@ -516,7 +538,7 @@ export function createBookingPersonsModule(ctx) {
 
     const canEdit = state.permissions.canEditBooking;
     const personName = normalizeText(draft.name);
-    const title = personName || "Unnamed person";
+    const title = personName || bookingT("booking.unnamed_person", "Unnamed person");
     const initials = getPersonInitials(title);
     const photoSrc = resolvePersonPhotoSrc(draft.photo_ref);
 
@@ -542,7 +564,7 @@ export function createBookingPersonsModule(ctx) {
     }
     if (els.personModalPreferredLanguage) {
       els.personModalPreferredLanguage.innerHTML = [
-        '<option value="">Select language</option>',
+        `<option value="">${escapeHtml(bookingT("booking.persons.select_language", "Select language"))}</option>`,
         ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}">${escapeHtml(language)}</option>`)
       ].join("");
       els.personModalPreferredLanguage.value = normalizeText(draft.preferred_language) || "";
@@ -553,7 +575,7 @@ export function createBookingPersonsModule(ctx) {
       els.personModalDateOfBirth.disabled = !canEdit;
     }
     if (els.personModalNationality) {
-      populateCountryCodeSelect(els.personModalNationality, "Select nationality");
+      populateCountryCodeSelect(els.personModalNationality, bookingT("booking.persons.select_nationality", "Select nationality"));
       els.personModalNationality.value = normalizeText(draft.nationality) || "";
       els.personModalNationality.disabled = !canEdit;
     }
@@ -620,8 +642,8 @@ export function createBookingPersonsModule(ctx) {
     const passportSwitch = document.getElementById("booking_person_modal_switch_passport");
     const nationalIdSwitch = document.getElementById("booking_person_modal_switch_national_id");
     const switches = [
-      [passportSwitch, "passport", "Passport"],
-      [nationalIdSwitch, "national_id", "ID card"]
+      [passportSwitch, "passport", bookingT("booking.passport", "Passport")],
+      [nationalIdSwitch, "national_id", bookingT("booking.id_card", "ID card")]
     ];
     switches.forEach(([button, documentType, label]) => {
       if (!(button instanceof HTMLButtonElement)) return;
@@ -641,7 +663,7 @@ export function createBookingPersonsModule(ctx) {
     });
 
     const abbreviatedName = getAbbreviatedPersonName(draft?.name);
-    const nationalityCode = normalizeText(draft?.nationality).toUpperCase() || "Code";
+    const nationalityCode = normalizeText(draft?.nationality).toUpperCase() || bookingT("booking.code", "Code");
     Object.entries(personModalAutofillConfig).forEach(([id, config]) => {
       const button = document.getElementById(id);
       if (!(button instanceof HTMLButtonElement)) return;
@@ -752,7 +774,9 @@ export function createBookingPersonsModule(ctx) {
       return;
     }
     if (event.target.closest("#booking_person_modal_delete_btn")) {
-      if (!window.confirm(`Remove ${normalizeText(draft.name) || "this person"} from the booking?`)) return;
+      if (!window.confirm(bookingT("booking.persons.remove_confirm", "Remove {name} from the booking?", {
+        name: normalizeText(draft.name) || bookingT("booking.persons.this_person", "this person")
+      }))) return;
       if (draft._is_new) {
         state.personDrafts.splice(state.active_person_index, 1);
         finalizeClosePersonModal();

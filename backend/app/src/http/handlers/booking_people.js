@@ -40,7 +40,7 @@ export function createBookingPeopleHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_persons_revision", "persons_revision", res))) return;
 
     const nextPerson = normalizeSingleBookingPersonPayload(booking.id, payload.person, getBookingPersons(booking).length);
     if (!nextPerson) {
@@ -59,7 +59,7 @@ export function createBookingPeopleHandlers(deps) {
       `Person created: ${normalizeText(nextPerson.name) || nextPerson.id}`
     );
     await persistStore(store);
-    sendJson(res, 201, await buildBookingDetailResponse(booking));
+    sendJson(res, 201, await buildBookingDetailResponse(booking, req));
   }
 
   async function handlePatchBookingPerson(req, res, [bookingId, personId]) {
@@ -82,7 +82,7 @@ export function createBookingPeopleHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_persons_revision", "persons_revision", res))) return;
 
     const persons = getBookingPersons(booking);
     const personIndex = persons.findIndex((person) => person.id === personId);
@@ -102,7 +102,7 @@ export function createBookingPeopleHandlers(deps) {
     }
 
     if (JSON.stringify(persons[personIndex]) === JSON.stringify(mergedPerson)) {
-      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking)), unchanged: true });
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
@@ -118,7 +118,7 @@ export function createBookingPeopleHandlers(deps) {
       `Person updated: ${normalizeText(mergedPerson.name) || mergedPerson.id}`
     );
     await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   async function handleDeleteBookingPerson(req, res, [bookingId, personId]) {
@@ -140,7 +140,7 @@ export function createBookingPeopleHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
-    if (!(await assertExpectedRevision(payload, booking, "expected_persons_revision", "persons_revision", res))) return;
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_persons_revision", "persons_revision", res))) return;
 
     const persons = getBookingPersons(booking);
     const personIndex = persons.findIndex((person) => person.id === personId);
@@ -161,7 +161,7 @@ export function createBookingPeopleHandlers(deps) {
       `Person removed: ${normalizeText(removedPerson?.name) || personId}`
     );
     await persistStore(store);
-    sendJson(res, 200, await buildBookingDetailResponse(booking));
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   return {

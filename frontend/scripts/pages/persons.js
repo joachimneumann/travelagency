@@ -3,8 +3,35 @@ import {
   escapeHtml,
   formatDateTime,
   normalizeText
-} from "../shared/api.js?v=6c388c7e525c";
-import { buildBookingHref } from "../shared/links.js?v=6c388c7e525c";
+} from "../shared/api.js?v=b7baca7c60a0";
+import { buildBookingHref } from "../shared/links.js?v=b7baca7c60a0";
+
+function backendT(id, fallback, vars) {
+  if (typeof window.backendT === "function") {
+    return window.backendT(id, fallback, vars);
+  }
+  const template = String(fallback ?? id);
+  if (!vars || typeof vars !== "object") return template;
+  return template.replace(/\{([^{}]+)\}/g, (match, key) => {
+    const normalizedKey = String(key || "").trim();
+    return normalizedKey in vars ? String(vars[normalizedKey]) : match;
+  });
+}
+
+async function waitForBackendI18n() {
+  await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+}
+
+function currentBackendLang() {
+  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+}
+
+function withBackendLang(pathname) {
+  const url = new URL(pathname, window.location.origin);
+  const lang = currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return `${url.pathname}${url.search}`;
+}
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -35,9 +62,10 @@ const fetchApi = createApiFetcher({
 init();
 
 async function init() {
-  if (els.homeLink) els.homeLink.href = "backend.html";
+  await waitForBackendI18n();
+  if (els.homeLink) els.homeLink.href = withBackendLang("/backend.html");
   if (els.logoutLink) {
-    const returnTo = `${window.location.origin}/index.html`;
+    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
   if (els.search) els.search.value = state.search;
@@ -87,7 +115,7 @@ async function loadAuthStatus() {
 
 async function loadPersons() {
   clearError();
-  if (els.countInfo) els.countInfo.textContent = "Loading...";
+  if (els.countInfo) els.countInfo.textContent = backendT("common.loading", "Loading...");
   const bookings = await fetchAllBookings();
   if (!bookings) {
     if (els.countInfo) els.countInfo.textContent = "";
@@ -208,16 +236,20 @@ function renderPersonsTable() {
   window.history.replaceState({}, "", nextUrl);
 
   if (els.countInfo) {
-    els.countInfo.textContent = `${filtered.length} of ${totalPersons} persons across ${totalBookings} bookings`;
+    els.countInfo.textContent = backendT(
+      "persons.count",
+      "{filtered} of {totalPersons} persons across {totalBookings} bookings",
+      { filtered: filtered.length, totalPersons, totalBookings }
+    );
   }
 
   if (!els.table) return;
-  const header = "<thead><tr><th>Name</th><th>Contact</th><th>Roles</th><th>Related bookings</th><th>Updated</th></tr></thead>";
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.name", "Name"))}</th><th>${escapeHtml(backendT("persons.table.contact", "Contact"))}</th><th>${escapeHtml(backendT("backend.table.roles", "Roles"))}</th><th>${escapeHtml(backendT("persons.table.related_bookings", "Related bookings"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th></tr></thead>`;
   const rows = filtered
     .map((person) => {
       const contact = []
-        .concat(person.emails.length ? [`Email: ${escapeHtml(person.emails.join(", "))}`] : [])
-        .concat(person.phone_numbers.length ? [`Phone: ${escapeHtml(person.phone_numbers.join(", "))}`] : [])
+        .concat(person.emails.length ? [backendT("persons.table.email", "Email: {value}", { value: escapeHtml(person.emails.join(", ")) })] : [])
+        .concat(person.phone_numbers.length ? [backendT("persons.table.phone", "Phone: {value}", { value: escapeHtml(person.phone_numbers.join(", ")) })] : [])
         .join("<br />");
       return `<tr>
         <td>${escapeHtml(person.name || "-")}</td>
@@ -228,7 +260,7 @@ function renderPersonsTable() {
       </tr>`;
     })
     .join("");
-  const body = rows || '<tr><td colspan="5">No matching persons</td></tr>';
+  const body = rows || `<tr><td colspan="5">${escapeHtml(backendT("persons.no_results", "No matching persons"))}</td></tr>`;
   els.table.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 

@@ -1,4 +1,10 @@
 import { normalizeText } from "../lib/text.js";
+import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
+import {
+  normalizeBookingContentLang,
+  normalizeLocalizedTextMap,
+  resolveLocalizedText
+} from "./booking_content_i18n.js";
 
 const TRAVEL_PLAN_SEGMENT_KINDS = Object.freeze(new Set([
   "transport",
@@ -113,8 +119,10 @@ function normalizeSegmentTiming(rawSegment) {
   };
 }
 
-function normalizeTravelPlanDays(days) {
+function normalizeTravelPlanDays(days, options = {}) {
   const sourceDays = Array.isArray(days) ? days : [];
+  const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
+  const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
   return [...sourceDays]
     .map((day, index) => ({
       raw: day && typeof day === "object" && !Array.isArray(day) ? day : {},
@@ -130,31 +138,54 @@ function normalizeTravelPlanDays(days) {
       const segments = (Array.isArray(day?.segments) ? day.segments : []).map((segment, segmentIndex) => {
         const rawSegment = segment && typeof segment === "object" && !Array.isArray(segment) ? segment : {};
         const timing = normalizeSegmentTiming(rawSegment);
+        const time_label_i18n = normalizeLocalizedTextMap(rawSegment?.time_label_i18n ?? timing.time_label, contentLang);
+        const title_i18n = normalizeLocalizedTextMap(rawSegment?.title_i18n ?? rawSegment?.title, contentLang);
+        const details_i18n = normalizeLocalizedTextMap(rawSegment?.details_i18n ?? rawSegment?.details, contentLang);
+        const location_i18n = normalizeLocalizedTextMap(rawSegment?.location_i18n ?? rawSegment?.location, contentLang);
+        const financial_note_i18n = normalizeLocalizedTextMap(
+          rawSegment?.financial_note_i18n ?? rawSegment?.financial_note,
+          contentLang
+        );
         return {
           id: normalizeText(rawSegment.id) || `travel_plan_segment_${dayIndex + 1}_${segmentIndex + 1}`,
           timing_kind: timing.timing_kind,
-          time_label: timing.time_label,
+          time_label: timing.timing_kind === "label" ? (resolveLocalizedText(time_label_i18n, flatLang) || null) : null,
+          time_label_i18n,
           time_point: timing.time_point,
           kind: normalizeSegmentKind(rawSegment.kind),
-          title: normalizeText(rawSegment.title),
-          details: normalizeOptionalText(rawSegment.details),
-          location: normalizeOptionalText(rawSegment.location),
+          title: resolveLocalizedText(title_i18n, flatLang),
+          title_i18n,
+          details: resolveLocalizedText(details_i18n, flatLang) || null,
+          details_i18n,
+          location: resolveLocalizedText(location_i18n, flatLang) || null,
+          location_i18n,
           supplier_id: normalizeOptionalText(rawSegment.supplier_id),
           start_time: timing.start_time,
           end_time: timing.end_time,
           financial_coverage_status: normalizeFinancialCoverageStatus(rawSegment.financial_coverage_status),
-          financial_note: normalizeOptionalText(rawSegment.financial_note)
+          financial_note: resolveLocalizedText(financial_note_i18n, flatLang) || null,
+          financial_note_i18n
         };
       });
+
+      const title_i18n = normalizeLocalizedTextMap(day?.title_i18n ?? day?.title, contentLang);
+      const overnight_location_i18n = normalizeLocalizedTextMap(
+        day?.overnight_location_i18n ?? day?.overnight_location,
+        contentLang
+      );
+      const notes_i18n = normalizeLocalizedTextMap(day?.notes_i18n ?? day?.notes, contentLang);
 
       return {
         id: normalizeText(day.id) || `travel_plan_day_${dayIndex + 1}`,
         day_number: dayIndex + 1,
         date: normalizeOptionalText(day.date),
-        title: normalizeText(day.title),
-        overnight_location: normalizeOptionalText(day.overnight_location),
+        title: resolveLocalizedText(title_i18n, flatLang),
+        title_i18n,
+        overnight_location: resolveLocalizedText(overnight_location_i18n, flatLang) || null,
+        overnight_location_i18n,
         segments,
-        notes: normalizeOptionalText(day.notes)
+        notes: resolveLocalizedText(notes_i18n, flatLang) || null,
+        notes_i18n
       };
     });
 }
@@ -182,7 +213,7 @@ export function createTravelPlanHelpers() {
     const source = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
       ? rawTravelPlan
       : {};
-    const days = normalizeTravelPlanDays(source.days);
+    const days = normalizeTravelPlanDays(source.days, options);
     const links = normalizeTravelPlanLinks(source.offer_component_links);
     const segmentIdSet = new Set(days.flatMap((day) => day.segments.map((segment) => segment.id)));
     const offerComponentIdSet = new Set(
@@ -216,10 +247,10 @@ export function createTravelPlanHelpers() {
       })
     }));
 
-    return {
+    return normalizeTravelPlanTranslationMeta({
       days: normalizedDays,
       offer_component_links: returnedLinks
-    };
+    });
   }
 
   function validateBookingTravelPlanInput(rawTravelPlan, offer = null, options = {}) {
@@ -307,8 +338,8 @@ export function createTravelPlanHelpers() {
     return { ok: true, travel_plan: normalized };
   }
 
-  function buildBookingTravelPlanReadModel(rawTravelPlan, offer = null) {
-    return normalizeBookingTravelPlan(rawTravelPlan, offer, { strictReferences: false });
+  function buildBookingTravelPlanReadModel(rawTravelPlan, offer = null, options = {}) {
+    return normalizeBookingTravelPlan(rawTravelPlan, offer, { ...options, strictReferences: false });
   }
 
   return {
