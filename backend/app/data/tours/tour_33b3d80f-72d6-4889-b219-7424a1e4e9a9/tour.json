@@ -108,21 +108,22 @@
     "vietnam"
   ],
   "short_description": {
-    "en": "A Vietnam family itinerary focused on a balanced first-trip route, with family-friendly pacing and dependable on-trip logistics.",
-    "fr": "Un itinéraire familial au Vietnam pensé pour un premier voyage équilibré, avec un rythme adapté aux familles et une logistique fiable sur place.",
-    "zh": "这是一条以均衡的首次旅行路线为核心的越南家庭行程，包含适合家庭的节奏和可靠的在途后勤安排。",
-    "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムの家族旅程で、家族にやさしいペースと信頼できる現地手配。",
-    "ko": "균형 잡힌 첫 여행 동선에 초점을 맞춘 베트남 가족 일정으로, 가족 친화적인 속도와 믿을 수 있는 현지 운영.",
-    "vi": "Đây là lịch trình gia đình tại Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nhịp độ phù hợp cho gia đình và khâu vận hành đáng tin cậy trong suốt chuyến đi.",
-    "de": "Eine Vietnam-Familienreise, die sich auf eine ausgewogene Route für die erste Reise mit familienfreundlichem Tempo und zuverlässiger Logistik während der Reise konzentriert.",
-    "es": "Un itinerario familiar por Vietnam centrado en una ruta de primer viaje equilibrada, con un ritmo familiar y una logística confiable durante el viaje.",
-    "it": "Un itinerario per famiglie in Vietnam incentrato su un primo viaggio equilibrato, con ritmi adatti alle famiglie e una logistica di viaggio affidabile.",
-    "ru": "Семейный маршрут по Вьетнаму ориентирован на сбалансированный маршрут первой поездки, с удобным для всей семьи темпом и надежной логистикой во время поездки.",
-    "nl": "Een gezinsreisroute door Vietnam gericht op een uitgebalanceerde route voor de eerste reis, met gezinsvriendelijk tempo en betrouwbare logistiek tijdens de reis.",
-    "pl": "Rodzinny plan podróży po Wietnamie skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
-    "da": "En Vietnam-familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på tur.",
-    "sv": "En familjeväg i Vietnam fokuserade på en balanserad första resa med familjevänligt tempo och pålitlig logistik på resan.",
-    "no": "En Vietnam-familiereise fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur."
+    "en": "A Vietnam family itinerary focused on a balanced first-trip route, with family-friendly pacing and on-trip logistics.",
+    "fr": "Un itinéraire familial au Vietnam axé sur un itinéraire de premier voyage équilibré, avec un rythme et une logistique de voyage adaptés aux familles.",
+    "zh": "越南家庭行程的重点是平衡的首程路线、适合家庭的节奏和旅途物流。",
+    "ja": "ベトナムの家族向けの旅程は、家族向けのペース配分と旅行中の手配を考慮した、バランスの取れた最初の旅行ルートに重点を置いています。",
+    "ko": "가족 친화적인 속도와 여행 중 물류를 통해 균형 잡힌 첫 여행 경로에 중점을 둔 베트남 가족 여행 일정입니다.",
+    "vi": "Hành trình của gia đình Việt Nam tập trung vào lộ trình cân bằng cho chuyến đi đầu tiên, với nhịp độ phù hợp với gia đình và dịch vụ hậu cần trong chuyến đi.",
+    "de": "Eine Vietnam-Familienreise, die sich auf eine ausgewogene Route für die erste Reise mit familienfreundlichem Tempo und Logistik während der Reise konzentriert.",
+    "es": "Un itinerario familiar por Vietnam centrado en una ruta de primer viaje equilibrada, con un ritmo familiar y una logística durante el viaje.",
+    "it": "Un itinerario per famiglie in Vietnam incentrato su un primo viaggio equilibrato, con ritmi adatti alle famiglie e logistica di viaggio.",
+    "ru": "Семейный маршрут во Вьетнаме ориентирован на сбалансированный маршрут первой поездки, с удобным для всей семьи темпом и логистикой во время поездки.",
+    "nl": "Een gezinsreisroute door Vietnam, gericht op een uitgebalanceerde route voor de eerste reis, met gezinsvriendelijk tempo en logistiek tijdens de reis.",
+    "pl": "Rodzinny plan podróży po Wietnamie skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem podróży i logistyką podczas podróży.",
+    "da": "En familierejseplan i Vietnam fokuserede på en afbalanceret rute for første tur med familievenligt tempo og logistik på tur.",
+    "sv": "En familjeväg i Vietnam fokuserade på en balanserad första resa med familjevänligt tempo och logistik på resan.",
+    "no": "En Vietnam-familiereise fokuserte på en balansert førstetursrute, med familievennlig tempo og logistikk på tur."
   },
-  "budget_lower_usd": 1180
+  "budget_lower_usd": 1180,
+  "updated_at": "2026-03-15T14:23:58.363Z"
 }
