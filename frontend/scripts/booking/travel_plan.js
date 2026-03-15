@@ -43,9 +43,17 @@ export function createBookingTravelPlanModule(ctx) {
     setBookingSectionDirty
   } = ctx;
 
-  function travelPlanStatus(message) {
+  function travelPlanStatus(message, type = "info") {
     if (!els.travel_plan_status) return;
     els.travel_plan_status.textContent = message;
+    els.travel_plan_status.classList.remove(
+      "booking-inline-status--error",
+      "booking-inline-status--success",
+      "booking-inline-status--info"
+    );
+    if (!message) return;
+    const normalizedType = type === "error" || type === "success" ? type : "info";
+    els.travel_plan_status.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
   function validateTravelPlanDraft(plan) {
@@ -88,15 +96,16 @@ export function createBookingTravelPlanModule(ctx) {
         };
       }
 
-      for (const segment of Array.isArray(day?.segments) ? day.segments : []) {
+      for (const [segmentIndex, segment] of (Array.isArray(day?.segments) ? day.segments : []).entries()) {
+        const segmentNumber = segmentIndex + 1;
         const segmentId = String(segment?.id || "").trim();
         if (!segmentId) {
           return {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_id_missing",
-              "Day {day} contains a segment without an id.",
-              { day: dayNumber }
+              "Day {day}, Segment {segment}: Segment id is missing.",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -105,8 +114,8 @@ export function createBookingTravelPlanModule(ctx) {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_id_duplicate",
-              "Travel-plan segment id {id} is duplicated.",
-              { id: segmentId }
+              "Day {day}, Segment {segment}: Segment id is duplicated.",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -118,8 +127,8 @@ export function createBookingTravelPlanModule(ctx) {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_timing_invalid",
-              "Segment {id} has an invalid timing kind.",
-              { id: segmentId }
+              "Day {day}, Segment {segment}: Time information is invalid.",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -130,8 +139,8 @@ export function createBookingTravelPlanModule(ctx) {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_kind_invalid",
-              "Segment {id} has an invalid kind.",
-              { id: segmentId }
+              "Day {day}, Segment {segment}: Kind is invalid.",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -142,7 +151,8 @@ export function createBookingTravelPlanModule(ctx) {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_title_required",
-              "Segment Title is required"
+              "Day {day}, Segment {segment}: Segment Title is required",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -152,8 +162,8 @@ export function createBookingTravelPlanModule(ctx) {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_time_point_required",
-              "Segment {id} requires a time point.",
-              { id: segmentId }
+              "Day {day}, Segment {segment}: Time point is required.",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -163,8 +173,8 @@ export function createBookingTravelPlanModule(ctx) {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.segment_time_range_required",
-              "Segment {id} requires both start and end time.",
-              { id: segmentId }
+              "Day {day}, Segment {segment}: Start and end time are required.",
+              { day: dayNumber, segment: segmentNumber }
             )
           };
         }
@@ -908,12 +918,12 @@ export function createBookingTravelPlanModule(ctx) {
     }, getOfferComponentsForLinks());
     const validation = validateTravelPlanDraft(travelPlanPayload);
     if (!validation.ok) {
-      travelPlanStatus(validation.error);
+      travelPlanStatus(validation.error, "error");
       return false;
     }
     state.travelPlanSaving = true;
     updateTravelPlanSaveButtonState();
-    travelPlanStatus(bookingT("booking.travel_plan.saving", "Saving travel plan..."));
+    travelPlanStatus(bookingT("booking.travel_plan.saving", "Saving travel plan..."), "info");
     try {
       const request = bookingTravelPlanRequest({
         baseURL: apiOrigin,
@@ -940,7 +950,7 @@ export function createBookingTravelPlanModule(ctx) {
       await loadActivities();
       travelPlanStatus(response.unchanged
         ? bookingT("booking.travel_plan.no_changes", "No travel-plan changes.")
-        : bookingT("booking.travel_plan.saved", "Travel plan saved."));
+        : bookingT("booking.travel_plan.saved", "Travel plan saved."), response.unchanged ? "info" : "success");
       return true;
     } finally {
       state.travelPlanSaving = false;

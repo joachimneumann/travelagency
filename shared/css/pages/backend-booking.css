@@ -463,6 +463,42 @@
   margin-bottom: 0;
 }
 
+.booking-inline-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.booking-inline-status:empty {
+  display: none;
+}
+
+.booking-inline-status--info {
+  color: rgba(22, 49, 61, 0.86);
+  background: rgba(255, 255, 255, 0.76);
+  border-color: rgba(160, 181, 190, 0.38);
+}
+
+.booking-inline-status--success {
+  color: #1f6a3d;
+  background: rgba(127, 190, 134, 0.18);
+  border-color: rgba(127, 190, 134, 0.44);
+}
+
+.booking-inline-status--error {
+  color: #8f261f;
+  background: rgba(255, 98, 74, 0.2);
+  border-color: rgba(255, 98, 74, 0.4);
+  box-shadow: 0 8px 20px rgba(255, 98, 74, 0.12);
+}
+
 .booking-person-modal__panel {
   width: min(980px, 96vw);
   background: rgba(249, 249, 249, 0.96);

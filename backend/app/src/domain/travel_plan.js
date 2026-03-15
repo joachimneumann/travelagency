@@ -281,31 +281,32 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Day ${day.day_number} title is required.` };
       }
 
-      for (const segment of day.segments) {
+      for (const [segmentIndex, segment] of day.segments.entries()) {
+        const segmentNumber = segmentIndex + 1;
         if (!normalizeText(segment.id)) {
-          return { ok: false, error: `Day ${day.day_number} contains a segment without an id.` };
+          return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Segment id is missing.` };
         }
       if (segmentIds.has(segment.id)) {
-        return { ok: false, error: `Travel-plan segment id ${segment.id} is duplicated.` };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Segment id is duplicated.` };
       }
       segmentIds.add(segment.id);
       if (!TRAVEL_PLAN_TIMING_KINDS.has(segment.timing_kind)) {
-        return { ok: false, error: `Segment ${segment.id} has an invalid timing kind.` };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Time information is invalid.` };
       }
       if (!TRAVEL_PLAN_SEGMENT_KINDS.has(segment.kind)) {
-        return { ok: false, error: `Segment ${segment.id} has an invalid kind.` };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Kind is invalid.` };
       }
       if (!normalizeText(segment.title)) {
-        return { ok: false, error: "Segment Title is required" };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Segment Title is required` };
       }
       if (normalizeText(segment.supplier_id) && !supplierIds.has(segment.supplier_id)) {
-        return { ok: false, error: `Segment ${segment.id} references unknown supplier ${segment.supplier_id}.` };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Unknown supplier ${segment.supplier_id}.` };
       }
       if (segment.timing_kind === "point" && !normalizeText(segment.time_point)) {
-        return { ok: false, error: `Segment ${segment.id} requires a time point.` };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Time point is required.` };
       }
       if (segment.timing_kind === "range" && (!normalizeText(segment.start_time) || !normalizeText(segment.end_time))) {
-        return { ok: false, error: `Segment ${segment.id} requires both start and end time.` };
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Start and end time are required.` };
       }
     }
   }
