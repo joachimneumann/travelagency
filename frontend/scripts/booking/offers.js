@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,17 +15,17 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=b7baca7c60a0";
-import { BOOKING_CONTENT_LANGUAGE_OPTIONS, bookingContentLang, bookingContentLanguageOption, bookingLang, bookingT } from "./i18n.js?v=b7baca7c60a0";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=b7baca7c60a0";
+} from "./pricing.js?v=693624dd6d2c";
+import { BOOKING_CONTENT_LANGUAGE_OPTIONS, bookingContentLang, bookingContentLanguageOption, bookingLang, bookingT } from "./i18n.js?v=693624dd6d2c";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=693624dd6d2c";
 import {
   buildDualLocalizedPayload,
   normalizeLocalizedEditorMap,
   renderLocalizedStackedField,
-  requestQuickGoogleFieldTranslation,
+  requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
-} from "./localized_editor.js?v=b7baca7c60a0";
+} from "./localized_editor.js?v=693624dd6d2c";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
@@ -165,7 +165,7 @@ export function createBookingOfferModule(ctx) {
       rows: 2,
       targetLang: bookingContentLang(),
       disabled: !state.permissions.canEditBooking,
-      translateEnabled: true,
+      translateEnabled: Boolean(state.booking?.translation_enabled),
       englishValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, "en", ""),
       localizedValue: resolveLocalizedEditorBranchText(component?.details_i18n ?? component?.details, bookingContentLang(), ""),
       commonData: {
@@ -802,11 +802,15 @@ export function createBookingOfferModule(ctx) {
           );
           let translated = "";
           try {
-            translated = await requestQuickGoogleFieldTranslation({
-              text: sourceText,
+            const translatedEntries = await requestBookingFieldTranslation({
+              bookingId: state.booking?.id,
+              entries: { value: sourceText },
+              fetchBookingMutation,
               sourceLang,
               targetLang: destinationLang
             });
+            translated = String(translatedEntries?.value || "").trim();
+            if (!translated) throw new Error(bookingT("booking.translation.error", "Could not translate this section."));
           } catch (error) {
             setOfferStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."));
             return;

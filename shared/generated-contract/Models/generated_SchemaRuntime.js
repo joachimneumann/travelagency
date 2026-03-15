@@ -1376,82 +1376,82 @@
   "typeName": "LanguageCode",
   "isArray": false,
   "enumValues": [
-    "English",
-    "French",
-    "Mandarin",
-    "Japanese",
-    "Korean",
-    "Vietnamese",
-    "German",
-    "Spanish",
-    "Italian",
-    "Russian",
-    "Dutch",
-    "Polish",
-    "Danish",
-    "Swedish",
-    "Norwegian"
+    "en",
+    "fr",
+    "zh",
+    "ja",
+    "ko",
+    "vi",
+    "de",
+    "es",
+    "it",
+    "ru",
+    "nl",
+    "pl",
+    "da",
+    "sv",
+    "no"
   ],
   "options": [
     {
-      "value": "English",
-      "label": "English"
+      "value": "en",
+      "label": "en"
     },
     {
-      "value": "French",
-      "label": "French"
+      "value": "fr",
+      "label": "fr"
     },
     {
-      "value": "Mandarin",
-      "label": "Mandarin"
+      "value": "zh",
+      "label": "zh"
     },
     {
-      "value": "Japanese",
-      "label": "Japanese"
+      "value": "ja",
+      "label": "ja"
     },
     {
-      "value": "Korean",
-      "label": "Korean"
+      "value": "ko",
+      "label": "ko"
     },
     {
-      "value": "Vietnamese",
-      "label": "Vietnamese"
+      "value": "vi",
+      "label": "vi"
     },
     {
-      "value": "German",
-      "label": "German"
+      "value": "de",
+      "label": "de"
     },
     {
-      "value": "Spanish",
-      "label": "Spanish"
+      "value": "es",
+      "label": "es"
     },
     {
-      "value": "Italian",
-      "label": "Italian"
+      "value": "it",
+      "label": "it"
     },
     {
-      "value": "Russian",
-      "label": "Russian"
+      "value": "ru",
+      "label": "ru"
     },
     {
-      "value": "Dutch",
-      "label": "Dutch"
+      "value": "nl",
+      "label": "nl"
     },
     {
-      "value": "Polish",
-      "label": "Polish"
+      "value": "pl",
+      "label": "pl"
     },
     {
-      "value": "Danish",
-      "label": "Danish"
+      "value": "da",
+      "label": "da"
     },
     {
-      "value": "Swedish",
-      "label": "Swedish"
+      "value": "sv",
+      "label": "sv"
     },
     {
-      "value": "Norwegian",
-      "label": "Norwegian"
+      "value": "no",
+      "label": "no"
     }
   ]
 },

@@ -138,7 +138,6 @@ export function createBookingFinanceHandlers(deps) {
 
   function mergeOfferForLang(existingOffer, nextOffer, lang, preferredCurrency) {
     const normalizedLang = normalizeBookingContentLang(lang);
-    const editableLangs = normalizedLang === "en" ? ["en"] : ["en", normalizedLang];
     const existingNormalized = normalizeBookingOffer(existingOffer, preferredCurrency, {
       contentLang: normalizedLang,
       flatLang: normalizedLang
@@ -165,8 +164,7 @@ export function createBookingFinanceHandlers(deps) {
           existingComponent?.details_i18n ?? existingComponent?.details,
           component.details,
           component.details_i18n,
-          normalizedLang,
-          { allowedLangs: editableLangs }
+          normalizedLang
         );
         const notesField = mergeLocalizedTextField(
           existingComponent?.notes_i18n ?? existingComponent?.notes,

@@ -40,7 +40,6 @@ export function createBookingTravelPlanHandlers(deps) {
 
   function mergeTravelPlanForLang(existingTravelPlan, nextTravelPlan, offer, lang) {
     const normalizedLang = normalizeBookingContentLang(lang);
-    const editableLangs = normalizedLang === "en" ? ["en"] : ["en", normalizedLang];
     const existingNormalized = normalizeBookingTravelPlan(existingTravelPlan, offer, {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
@@ -62,27 +61,24 @@ export function createBookingTravelPlanHandlers(deps) {
         const existingSegmentsById = new Map(
           (Array.isArray(existingDay?.segments) ? existingDay.segments : []).map((segment) => [segment.id, segment])
         );
-        const nextTitleField = mergeEditableLocalizedTextField(
-          existingDay?.title_i18n ?? existingDay?.title,
-          day.title,
-          day.title_i18n,
-          normalizedLang,
-          { allowedLangs: editableLangs }
-        );
-        const nextOvernightField = mergeEditableLocalizedTextField(
-          existingDay?.overnight_location_i18n ?? existingDay?.overnight_location,
-          day.overnight_location,
-          day.overnight_location_i18n,
-          normalizedLang,
-          { allowedLangs: editableLangs }
-        );
-        const nextNotesField = mergeEditableLocalizedTextField(
-          existingDay?.notes_i18n ?? existingDay?.notes,
-          day.notes,
-          day.notes_i18n,
-          normalizedLang,
-          { allowedLangs: editableLangs }
-        );
+            const nextTitleField = mergeEditableLocalizedTextField(
+              existingDay?.title_i18n ?? existingDay?.title,
+              day.title,
+              day.title_i18n,
+              normalizedLang
+            );
+            const nextOvernightField = mergeEditableLocalizedTextField(
+              existingDay?.overnight_location_i18n ?? existingDay?.overnight_location,
+              day.overnight_location,
+              day.overnight_location_i18n,
+              normalizedLang
+            );
+            const nextNotesField = mergeEditableLocalizedTextField(
+              existingDay?.notes_i18n ?? existingDay?.notes,
+              day.notes,
+              day.notes_i18n,
+              normalizedLang
+            );
 
         return {
           ...day,
@@ -98,29 +94,25 @@ export function createBookingTravelPlanHandlers(deps) {
               existingSegment?.time_label_i18n ?? existingSegment?.time_label,
               segment.time_label,
               segment.time_label_i18n,
-              normalizedLang,
-              { allowedLangs: editableLangs }
+              normalizedLang
             );
             const titleSegmentField = mergeEditableLocalizedTextField(
               existingSegment?.title_i18n ?? existingSegment?.title,
               segment.title,
               segment.title_i18n,
-              normalizedLang,
-              { allowedLangs: editableLangs }
+              normalizedLang
             );
             const detailsField = mergeEditableLocalizedTextField(
               existingSegment?.details_i18n ?? existingSegment?.details,
               segment.details,
               segment.details_i18n,
-              normalizedLang,
-              { allowedLangs: editableLangs }
+              normalizedLang
             );
             const locationField = mergeEditableLocalizedTextField(
               existingSegment?.location_i18n ?? existingSegment?.location,
               segment.location,
               segment.location_i18n,
-              normalizedLang,
-              { allowedLangs: editableLangs }
+              normalizedLang
             );
             const financialNoteField = mergeLocalizedTextField(
               existingSegment?.financial_note_i18n ?? existingSegment?.financial_note,

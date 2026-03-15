@@ -374,7 +374,8 @@ export function createBookingCoreHandlers(deps) {
     try {
       const translatedEntries = await translateEntries(entries, targetLang, {
         sourceLangCode: sourceLang,
-        domain: "travel planning"
+        domain: "travel planning",
+        allowGoogleFallback: true
       });
       sendJson(res, 200, {
         source_lang: sourceLang,

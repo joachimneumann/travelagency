@@ -1279,6 +1279,7 @@ textarea:focus-visible {
 }
 
 .localized-pair {
+  --localized-code-column-width: 2.45rem;
   display: grid;
   gap: 0.55rem;
 }
@@ -1296,7 +1297,7 @@ textarea:focus-visible {
 
 .localized-pair__row {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: var(--localized-code-column-width) minmax(0, 1fr);
   gap: 3px;
   align-items: start;
 }
@@ -1309,6 +1310,7 @@ textarea:focus-visible {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .localized-pair__field {
@@ -1342,6 +1344,11 @@ textarea:focus-visible {
 .localized-pair__hint {
   margin: 0;
   color: #6b7d85;
+}
+
+.localized-pair--date-field .localized-pair__code {
+  padding-top: 0;
+  visibility: hidden;
 }
 
 .localized-pair--single-language .localized-pair__field--single {

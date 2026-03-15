@@ -3,8 +3,8 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=b7baca7c60a0";
-import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=b7baca7c60a0";
+} from "../shared/api.js?v=693624dd6d2c";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=693624dd6d2c";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {

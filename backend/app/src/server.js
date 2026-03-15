@@ -100,7 +100,8 @@ const GOOGLE_SERVICE_ACCOUNT_JSON_PATH = normalizeText(process.env.GOOGLE_SERVIC
 const GOOGLE_IMPERSONATED_EMAIL = normalizeText(process.env.GOOGLE_IMPERSONATED_EMAIL || "");
 const OPENAI_API_KEY = normalizeText(process.env.OPENAI_API_KEY || "");
 const OPENAI_TRANSLATION_MODEL = normalizeText(process.env.OPENAI_TRANSLATION_MODEL || process.env.OPENAI_MODEL || "gpt-4.1") || "gpt-4.1";
-const TRANSLATION_ENABLED = Boolean(OPENAI_API_KEY);
+const GOOGLE_TRANSLATE_FALLBACK_ENABLED = String(process.env.GOOGLE_TRANSLATE_FALLBACK_ENABLED || "true").trim().toLowerCase() !== "false";
+const TRANSLATION_ENABLED = Boolean(OPENAI_API_KEY) || GOOGLE_TRANSLATE_FALLBACK_ENABLED;
 const COMPANY_PROFILE = {
   name: "AsiaTravelPlan",
   website: "asiatravelplan.com",
@@ -125,7 +126,8 @@ const GMAIL_DRAFTS_CONFIG = Object.freeze({
 
 const TRANSLATION_CLIENT = createTranslationClient({
   apiKey: OPENAI_API_KEY,
-  model: OPENAI_TRANSLATION_MODEL
+  model: OPENAI_TRANSLATION_MODEL,
+  googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED
 });
 
 const STAGES = Object.freeze(Object.fromEntries(GENERATED_BOOKING_STAGES.map((value) => [value, value])));

@@ -2,6 +2,7 @@ import {
   getBookingPersons,
   normalizeBookingPersonsPayload
 } from "../../lib/booking_persons.js";
+import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -373,7 +374,8 @@ export function createBookingHandlers(deps) {
     handlePatchBookingOwner,
     handlePatchBookingNotes,
     handleListActivities,
-    handleCreateActivity
+    handleCreateActivity,
+    handleTranslateBookingFields
   } = createBookingCoreHandlers({
     readBodyJson,
     sendJson,
@@ -399,7 +401,8 @@ export function createBookingHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     buildBookingPayload,
-    incrementBookingRevision
+    incrementBookingRevision,
+    translateEntries
   });
 
   const {
@@ -556,7 +559,9 @@ export function createBookingHandlers(deps) {
     const ipAddress = getRequestIpAddress(req);
     const ipCountryGuess = guessCountryFromRequest(req, ipAddress);
     const inputPhoneNumber = normalizePhone(payload.phone_number);
-    const inputPreferredLanguage = normalizeText(payload.preferred_language) || null;
+    const inputPreferredLanguage = normalizeText(payload.preferred_language)
+      ? normalizeBookingContentLang(payload.preferred_language)
+      : null;
     const preferredCurrency = safeCurrency(payload.preferred_currency || BASE_CURRENCY);
     const budgetLowerUsd = normalizeText(payload.budget_lower_usd) ? safeInt(payload.budget_lower_usd) : null;
     const budgetUpperUsd = normalizeText(payload.budget_upper_usd) ? safeInt(payload.budget_upper_usd) : null;
@@ -712,6 +717,7 @@ export function createBookingHandlers(deps) {
     handleUploadBookingImage,
     handlePatchBookingStage,
     handlePatchBookingOwner,
+    handleTranslateBookingFields,
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,

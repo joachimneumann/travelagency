@@ -6,9 +6,13 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
-import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=b7baca7c60a0";
-import { bookingT } from "./i18n.js?v=b7baca7c60a0";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=693624dd6d2c";
+import {
+  bookingContentLanguageLabel,
+  bookingT,
+  normalizeBookingContentLang
+} from "./i18n.js?v=693624dd6d2c";
 
 function labelizeKey(key) {
   return String(key || "")
@@ -222,6 +226,9 @@ export function createBookingCoreModule(ctx) {
     rerenderWhatsApp?.(state.booking);
     const booking = state.booking;
     const submittedContact = getSubmittedContact(booking);
+    const submissionPreferredLanguage = normalizeText(booking.web_form_submission?.preferred_language)
+      ? bookingContentLanguageLabel(normalizeBookingContentLang(booking.web_form_submission.preferred_language))
+      : "";
     const sections = [{
       title: bookingT("booking.web_form.title", "Web form submission"),
       summaryClassName: "booking-collapsible__summary--inline-pad-16",
@@ -230,7 +237,7 @@ export function createBookingCoreModule(ctx) {
         ["email", booking.web_form_submission?.email || submittedContact?.email],
         ["phone_number", booking.web_form_submission?.phone_number || submittedContact?.phone_number],
         ["booking_name", booking.web_form_submission?.booking_name],
-        ["preferred_language", booking.web_form_submission?.preferred_language],
+        ["preferred_language", submissionPreferredLanguage],
         ["preferred_currency", booking.web_form_submission?.preferred_currency],
         ["destinations", Array.isArray(booking.web_form_submission?.destinations) ? booking.web_form_submission.destinations.join(", ") : booking.web_form_submission?.destinations],
         ["travel_style", Array.isArray(booking.web_form_submission?.travel_style) ? booking.web_form_submission.travel_style.join(", ") : booking.web_form_submission?.travel_style],

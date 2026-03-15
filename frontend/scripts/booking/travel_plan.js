@@ -1,21 +1,21 @@
-import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
   bookingT
-} from "./i18n.js?v=b7baca7c60a0";
-import { formatMoneyDisplay } from "./pricing.js?v=b7baca7c60a0";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=b7baca7c60a0";
+} from "./i18n.js?v=693624dd6d2c";
+import { formatMoneyDisplay } from "./pricing.js?v=693624dd6d2c";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=693624dd6d2c";
 import {
   buildDualLocalizedPayload,
   renderLocalizedStackedField,
-  requestQuickGoogleFieldTranslation,
+  requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText
-} from "./localized_editor.js?v=b7baca7c60a0";
+} from "./localized_editor.js?v=693624dd6d2c";
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=b7baca7c60a0";
+} from "../shared/generated_catalogs.js?v=693624dd6d2c";
 import {
   countTravelPlanSegments,
   countUncoveredTravelPlanSegments,
@@ -27,7 +27,7 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
   getTravelPlanSegmentCoverageStatus,
   normalizeTravelPlanDraft
-} from "./travel_plan_helpers.js?v=b7baca7c60a0";
+} from "./travel_plan_helpers.js?v=693624dd6d2c";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -85,7 +85,7 @@ export function createBookingTravelPlanModule(ctx) {
       rows,
       targetLang: bookingContentLang(),
       disabled: !state.permissions.canEditBooking,
-      translateEnabled: true,
+      translateEnabled: Boolean(state.booking?.translation_enabled),
       englishValue,
       localizedValue,
       commonData: {
@@ -99,6 +99,22 @@ export function createBookingTravelPlanModule(ctx) {
         ...(segmentId ? { "travel-plan-segment-id": segmentId } : {})
       }
     });
+  }
+
+  function renderTravelPlanDayDateField(day) {
+    return `
+      <div class="localized-pair localized-pair--date-field">
+        <div class="localized-pair__header">
+          <label class="localized-pair__label" for="travel_plan_day_date_${escapeHtml(day.id)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
+        </div>
+        <div class="localized-pair__row">
+          <span class="localized-pair__code" aria-hidden="true">&nbsp;</span>
+          <div class="localized-pair__field localized-pair__field--single">
+            <input id="travel_plan_day_date_${escapeHtml(day.id)}" data-travel-plan-day-field="date" type="date" value="${escapeHtml(day.date || "")}" />
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function travelPlanSummary() {
@@ -459,10 +475,7 @@ export function createBookingTravelPlanModule(ctx) {
               localizedValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingContentLang(), "")
             })}
           </div>
-          <div class="field">
-            <label for="travel_plan_day_date_${escapeHtml(day.id)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
-            <input id="travel_plan_day_date_${escapeHtml(day.id)}" data-travel-plan-day-field="date" type="date" value="${escapeHtml(day.date || "")}" />
-          </div>
+          ${renderTravelPlanDayDateField(day)}
           <div class="field">
             ${renderTravelPlanLocalizedField({
               label: bookingT("booking.travel_plan.overnight_location", "Overnight location"),
@@ -732,11 +745,15 @@ export function createBookingTravelPlanModule(ctx) {
     travelPlanStatus(statusMessage);
     let translated = "";
     try {
-      translated = await requestQuickGoogleFieldTranslation({
-        text: sourceText,
+      const translatedEntries = await requestBookingFieldTranslation({
+        bookingId: state.booking?.id,
+        entries: { value: sourceText },
+        fetchBookingMutation,
         sourceLang,
         targetLang: destinationLang
       });
+      translated = String(translatedEntries?.value || "").trim();
+      if (!translated) throw new Error(bookingT("booking.translation.error", "Could not translate this section."));
     } catch (error) {
       travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."));
       return;

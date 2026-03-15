@@ -1,4 +1,9 @@
 import { normalizeText } from "./text.js";
+import {
+  CUSTOMER_CONTENT_LANGUAGE_CODES,
+  languageByApiValue,
+  languageByCode
+} from "../../../../shared/generated/language_catalog.js";
 
 function optionalText(value) {
   const normalized = normalizeText(value);
@@ -8,6 +13,16 @@ function optionalText(value) {
 function optionalUppercaseText(value) {
   const normalized = optionalText(value);
   return normalized ? normalized.toUpperCase() : null;
+}
+
+function optionalLanguageCode(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return null;
+  const byCode = languageByCode(normalized);
+  if (byCode && CUSTOMER_CONTENT_LANGUAGE_CODES.includes(byCode.code)) return byCode.code;
+  const byApiValue = languageByApiValue(normalized);
+  if (byApiValue && CUSTOMER_CONTENT_LANGUAGE_CODES.includes(byApiValue.code)) return byApiValue.code;
+  return null;
 }
 
 function optionalInt(value) {
@@ -135,7 +150,7 @@ export function normalizeBookingPerson(person, index = 0, bookingId = "booking")
     photo_ref: optionalText(person.photo_ref),
     emails: normalizeEmails(person),
     phone_numbers: normalizePhoneNumbers(person),
-    preferred_language: optionalText(person.preferred_language),
+    preferred_language: optionalLanguageCode(person.preferred_language),
     date_of_birth: optionalText(person.date_of_birth),
     nationality: optionalUppercaseText(person.nationality),
     address: normalizeAddress(person),
@@ -159,7 +174,7 @@ function buildFallbackSubmissionPerson(booking) {
     name: name || "Primary contact",
     emails: email ? [email] : [],
     phone_numbers: phone ? [phone] : [],
-    preferred_language: optionalText(submission.preferred_language),
+    preferred_language: optionalLanguageCode(submission.preferred_language),
     roles: ["primary_contact", "traveler"]
   }, 0, optionalText(booking?.id) || "booking");
 }
@@ -220,7 +235,7 @@ function normalizeWebFormSubmission(booking) {
     phone_number: optionalText(submission?.phone_number),
     budget_lower_usd: optionalInt(submission?.budget_lower_usd ?? booking?.budget_lower_usd),
     budget_upper_usd: optionalInt(submission?.budget_upper_usd ?? booking?.budget_upper_usd),
-    preferred_language: optionalText(submission?.preferred_language),
+    preferred_language: optionalLanguageCode(submission?.preferred_language),
     notes: optionalText(submission?.notes),
     submitted_at: optionalText(submission?.submitted_at || booking?.created_at)
   });
@@ -231,7 +246,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedTravelStyles = normalizeStringArray(booking?.travel_styles);
   const normalizedBooking = {
     ...booking,
-    customer_language: optionalText(booking?.customer_language || booking?.web_form_submission?.preferred_language),
+    customer_language: optionalLanguageCode(booking?.customer_language || booking?.web_form_submission?.preferred_language),
     name: optionalText(booking?.name || booking?.web_form_submission?.booking_name),
     image: optionalText(booking?.image),
     core_revision: nonNegativeInt(booking?.core_revision, 0),

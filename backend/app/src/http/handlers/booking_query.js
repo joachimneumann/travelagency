@@ -38,11 +38,14 @@ export function createBookingQueryModule(deps) {
 
   function getSubmittedContact(booking) {
     const submission = booking?.web_form_submission || {};
+    const preferredLanguage = normalizeText(booking?.customer_language || submission.preferred_language)
+      ? normalizeBookingContentLang(booking?.customer_language || submission.preferred_language)
+      : null;
     return {
       name: normalizeText(submission.name) || null,
       email: normalizeEmail(submission.email) || null,
       phone_number: normalizePhone(submission.phone_number) || null,
-      preferred_language: normalizeText(booking?.customer_language || submission.preferred_language) || null,
+      preferred_language: preferredLanguage,
       preferred_currency: safeCurrency(submission.preferred_currency || booking?.preferred_currency || BASE_CURRENCY)
     };
   }
@@ -56,7 +59,9 @@ export function createBookingQueryModule(deps) {
       name: normalizeText(primary?.name) || submitted.name || "Primary contact",
       email: emails[0] || submitted.email || null,
       phone_number: phoneNumbers[0] || submitted.phone_number || null,
-      preferred_language: normalizeText(booking?.customer_language) || normalizeText(primary?.preferred_language) || submitted.preferred_language || null
+      preferred_language: normalizeText(booking?.customer_language || primary?.preferred_language || submitted.preferred_language)
+        ? normalizeBookingContentLang(booking?.customer_language || primary?.preferred_language || submitted.preferred_language)
+        : null
     };
   }
 

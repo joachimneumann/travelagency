@@ -13,6 +13,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(180px, 1fr));
   gap: 0.8rem;
+  align-items: start;
 }
 
 .travel-plan-grid--segment {

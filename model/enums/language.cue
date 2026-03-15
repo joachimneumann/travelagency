@@ -1,21 +1,21 @@
 package enums
 
 LanguageCatalog: [
-	"English",
-	"French",
-	"Mandarin",
-	"Japanese",
-	"Korean",
-	"Vietnamese",
-	"German",
-	"Spanish",
-	"Italian",
-	"Russian",
-	"Dutch",
-	"Polish",
-	"Danish",
-	"Swedish",
-	"Norwegian",
+	"en",
+	"fr",
+	"zh",
+	"ja",
+	"ko",
+	"vi",
+	"de",
+	"es",
+	"it",
+	"ru",
+	"nl",
+	"pl",
+	"da",
+	"sv",
+	"no",
 ]
 
 #LanguageCode: or(LanguageCatalog)

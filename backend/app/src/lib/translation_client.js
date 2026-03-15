@@ -1,5 +1,5 @@
 import { normalizeText } from "./text.js";
-import { promptLanguageName } from "../../../../shared/generated/language_catalog.js";
+import { normalizeLanguageCode, promptLanguageName } from "../../../../shared/generated/language_catalog.js";
 
 function parseJsonObject(text) {
   const normalized = normalizeText(text);
@@ -38,12 +38,62 @@ function chunkEntries(entries, { maxEntries = 40, maxChars = 7000 } = {}) {
   return chunks;
 }
 
+function googleTranslateLangCode(value, fallback = "en") {
+  const normalized = normalizeLanguageCode(value, { fallback });
+  if (normalized === "zh") return "zh-CN";
+  return normalized;
+}
+
+function extractGoogleTranslatedText(payload) {
+  if (!Array.isArray(payload) || !Array.isArray(payload[0])) return "";
+  return payload[0]
+    .map((segment) => normalizeText(Array.isArray(segment) ? segment[0] : ""))
+    .filter(Boolean)
+    .join("");
+}
+
 export function createTranslationClient({
   apiKey,
-  model = "gpt-4o-mini"
+  model = "gpt-4o-mini",
+  googleFallbackEnabled = true
 } = {}) {
   const normalizedApiKey = normalizeText(apiKey);
   const normalizedModel = normalizeText(model) || "gpt-4o-mini";
+  const allowGoogleFallbackByDefault = googleFallbackEnabled !== false;
+
+  async function translateEntriesWithGoogle(entries, targetLang, options = {}) {
+    const sourceLangCode = googleTranslateLangCode(options?.sourceLangCode || "en", "en");
+    const targetLangCode = googleTranslateLangCode(targetLang, "en");
+    const translated = {};
+
+    for (const [key, value] of Object.entries(entries || {})) {
+      const sourceText = normalizeText(value);
+      if (!sourceText) continue;
+      const params = new URLSearchParams({
+        client: "gtx",
+        sl: sourceLangCode,
+        tl: targetLangCode,
+        dt: "t",
+        q: sourceText
+      });
+      const response = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+      if (!response.ok) {
+        const error = new Error(`Google translation request failed with HTTP ${response.status}.`);
+        error.code = "TRANSLATION_REQUEST_FAILED";
+        throw error;
+      }
+      const payload = await response.json();
+      const translatedText = extractGoogleTranslatedText(payload);
+      if (!translatedText) {
+        const error = new Error("Google translation provider returned an invalid response.");
+        error.code = "TRANSLATION_INVALID_RESPONSE";
+        throw error;
+      }
+      translated[key] = translatedText;
+    }
+
+    return translated;
+  }
 
   async function translateEntries(entries, targetLang, options = {}) {
     const normalizedEntries = Object.entries(entries || {})
@@ -52,7 +102,12 @@ export function createTranslationClient({
 
     if (!normalizedEntries.length) return {};
 
+    const allowGoogleFallback = Boolean(options?.allowGoogleFallback) && allowGoogleFallbackByDefault;
+
     if (!normalizedApiKey) {
+      if (allowGoogleFallback) {
+        return translateEntriesWithGoogle(Object.fromEntries(normalizedEntries), targetLang, options);
+      }
       const error = new Error("Translation provider is not configured. Set OPENAI_API_KEY.");
       error.code = "TRANSLATION_NOT_CONFIGURED";
       throw error;
@@ -113,6 +168,9 @@ export function createTranslationClient({
         } catch {
           // Ignore unreadable error bodies.
         }
+        if (allowGoogleFallback) {
+          return translateEntriesWithGoogle(Object.fromEntries(normalizedEntries), targetLang, options);
+        }
         const error = new Error(detail || `Translation request failed with HTTP ${response.status}.`);
         error.code = "TRANSLATION_REQUEST_FAILED";
         throw error;
@@ -121,6 +179,9 @@ export function createTranslationClient({
       const payload = await response.json();
       const parsed = parseJsonObject(payload?.output_text);
       if (!parsed) {
+        if (allowGoogleFallback) {
+          return translateEntriesWithGoogle(Object.fromEntries(normalizedEntries), targetLang, options);
+        }
         const error = new Error("Translation provider returned an invalid JSON response.");
         error.code = "TRANSLATION_INVALID_RESPONSE";
         throw error;

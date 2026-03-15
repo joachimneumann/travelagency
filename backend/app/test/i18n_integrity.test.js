@@ -110,7 +110,7 @@ test("generated language catalog stays in sync with config and language.cue", as
     expectedCatalog.filter((entry) => entry.customerContentSupported).map((entry) => entry.code)
   );
 
-  const expectedCue = `package enums\n\nLanguageCatalog: [\n${expectedCatalog.map((entry) => `\t"${entry.apiValue}",`).join("\n")}\n]\n\n#LanguageCode: or(LanguageCatalog)\n`;
+  const expectedCue = `package enums\n\nLanguageCatalog: [\n${expectedCatalog.map((entry) => `\t"${entry.code}",`).join("\n")}\n]\n\n#LanguageCode: or(LanguageCatalog)\n`;
   const actualCue = await readFile(path.join(repoRoot, "model", "enums", "language.cue"), "utf8");
   assert.equal(actualCue, expectedCue);
 });

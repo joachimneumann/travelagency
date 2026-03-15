@@ -11,10 +11,6 @@ function unique(values) {
   return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
 }
 
-function normalizeAllowedLangs(values = []) {
-  return unique(values.map((value) => normalizeBookingContentLang(value || DEFAULT_BOOKING_CONTENT_LANG)));
-}
-
 export function normalizeBookingContentLang(value) {
   return normalizeLanguageCode(normalizeText(value), { fallback: DEFAULT_BOOKING_CONTENT_LANG });
 }
@@ -75,12 +71,8 @@ export function mergeLocalizedTextField(existingValue, nextValue, lang = DEFAULT
 export function mergeEditableLocalizedTextField(existingValue, payloadValue, payloadMap, targetLang = DEFAULT_BOOKING_CONTENT_LANG, options = {}) {
   const normalizedTargetLang = normalizeBookingContentLang(targetLang || DEFAULT_BOOKING_CONTENT_LANG);
   const defaultLang = normalizeBookingContentLang(options?.defaultLang || DEFAULT_BOOKING_CONTENT_LANG);
-  const allowedLangs = normalizeAllowedLangs(options?.allowedLangs || []);
   const existingMap = normalizeLocalizedTextMap(existingValue, defaultLang);
-  const nextAllowedLangs = allowedLangs.length ? allowedLangs : null;
-  let nextMap = nextAllowedLangs
-    ? Object.fromEntries(Object.entries(existingMap).filter(([lang]) => nextAllowedLangs.includes(lang)))
-    : existingMap;
+  let nextMap = existingMap;
   const rawPayloadMap = payloadMap && typeof payloadMap === "object" && !Array.isArray(payloadMap) ? payloadMap : null;
 
   if (!rawPayloadMap) {

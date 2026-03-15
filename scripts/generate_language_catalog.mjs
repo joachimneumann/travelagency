@@ -94,7 +94,7 @@ const sharedEsm = `// Generated from config/language_catalog.json.\n// Do not ed
 
 const sharedGlobal = `// Generated from config/language_catalog.json.\n// Do not edit by hand.\n(function mountLanguageCatalog(globalScope) {\n  const catalog = ${sharedCatalogLiteral};\n  globalScope.ASIATRAVELPLAN_LANGUAGE_CATALOG = Object.freeze({\n    ...catalog,\n    frontendLanguageCodes: Object.freeze(catalog.frontendLanguages.map((entry) => entry.code)),\n    backendUiLanguageCodes: Object.freeze(catalog.backendUiLanguages.map((entry) => entry.code)),\n    customerContentLanguageCodes: Object.freeze(catalog.customerContentLanguages.map((entry) => entry.code))\n  });\n})(typeof window !== \"undefined\" ? window : globalThis);\n`;
 
-const modelCue = `package enums\n\nLanguageCatalog: [\n${normalized.map((entry) => `\t\"${entry.apiValue}\",`).join("\n")}\n]\n\n#LanguageCode: or(LanguageCatalog)\n`;
+const modelCue = `package enums\n\nLanguageCatalog: [\n${normalized.map((entry) => `\t\"${entry.code}\",`).join("\n")}\n]\n\n#LanguageCode: or(LanguageCatalog)\n`;
 
 mkdirSync(SHARED_GENERATED_DIR, { recursive: true });
 writeFileSync(SHARED_ESM_PATH, sharedEsm, "utf8");

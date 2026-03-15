@@ -10,22 +10,22 @@ import {
 } from "../Generated/Models/generated_Currency.js";
 import { GENERATED_LANGUAGE_CODES } from "../Generated/Models/generated_Language.js";
 import {
-  apiValueFromLanguageCode,
-  languageByApiValue
-} from "../../shared/generated/language_catalog.js?v=b7baca7c60a0";
+  languageByApiValue,
+  languageByCode
+} from "../../shared/generated/language_catalog.js?v=693624dd6d2c";
 import {
   MAX_TRAVELERS as GENERATED_MAX_TRAVELERS,
   MIN_TRAVELERS as GENERATED_MIN_TRAVELERS
 } from "../Generated/Models/generated_FormConstraints.js";
 import {
   publicToursRequest
-} from "../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
-import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+} from "../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
 import {
   PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA,
   validatePublicBookingCreateRequest
 } from "../Generated/API/generated_APIModels.js";
-import { normalizeText } from "../../shared/js/text.js?v=b7baca7c60a0";
+import { normalizeText } from "../../shared/js/text.js?v=693624dd6d2c";
 
 function frontendT(id, fallback, vars) {
   if (typeof window.frontendT === "function") {
@@ -462,12 +462,22 @@ function preferredCurrencyForFrontendLang(lang = state.lang || currentFrontendLa
   return normalizeCurrencyCode(FRONTEND_LANG_DEFAULT_CURRENCY[normalizedLang] || DEFAULT_BOOKING_CURRENCY);
 }
 
-function preferredBookingLanguageForFrontendLang(lang = state.lang || currentFrontendLang()) {
-  return apiValueFromLanguageCode(normalizeText(lang).toLowerCase(), "English");
+function languageCodeFromValue(value) {
+  const raw = normalizeText(value);
+  if (!raw) return "";
+  const byCode = languageByCode(raw);
+  if (byCode && GENERATED_LANGUAGE_CODES.includes(byCode.code)) return byCode.code;
+  const byApiValue = languageByApiValue(raw);
+  if (byApiValue && GENERATED_LANGUAGE_CODES.includes(byApiValue.code)) return byApiValue.code;
+  return "";
 }
 
-function preferredCurrencyForLanguageApiValue(value) {
-  const languageCode = languageByApiValue(normalizeText(value))?.code || state.lang || currentFrontendLang();
+function preferredBookingLanguageForFrontendLang(lang = state.lang || currentFrontendLang()) {
+  return languageCodeFromValue(lang) || "en";
+}
+
+function preferredCurrencyForLanguageValue(value) {
+  const languageCode = languageCodeFromValue(value) || state.lang || currentFrontendLang();
   return preferredCurrencyForFrontendLang(languageCode);
 }
 
@@ -560,23 +570,23 @@ function setupBookingBudgetOptions() {
   if (!els.bookingPreferredCurrency || !els.bookingBudget) return;
   populateGeneratedWebFormOptions();
   els.bookingPreferredCurrency.value = normalizeCurrencyCode(
-    els.bookingPreferredCurrency.value || preferredCurrencyForLanguageApiValue(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang())
+    els.bookingPreferredCurrency.value || preferredCurrencyForLanguageValue(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang())
   );
   renderBudgetOptions(els.bookingPreferredCurrency.value);
   els.bookingPreferredCurrency.addEventListener("change", () => {
     renderBudgetOptions(els.bookingPreferredCurrency.value);
   });
   els.bookingLanguage?.addEventListener("change", () => {
-    const nextCurrency = preferredCurrencyForLanguageApiValue(els.bookingLanguage.value || preferredBookingLanguageForFrontendLang());
+    const nextCurrency = preferredCurrencyForLanguageValue(els.bookingLanguage.value || preferredBookingLanguageForFrontendLang());
     els.bookingPreferredCurrency.value = nextCurrency;
     renderBudgetOptions(nextCurrency);
   });
 }
 
 function populateGeneratedWebFormOptions() {
-  const preferredLanguage = normalizeText(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang()) || "English";
+  const preferredLanguage = languageCodeFromValue(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang()) || "en";
   const preferredCurrency = normalizeCurrencyCode(
-    els.bookingPreferredCurrency?.value || preferredCurrencyForLanguageApiValue(preferredLanguage)
+    els.bookingPreferredCurrency?.value || preferredCurrencyForLanguageValue(preferredLanguage)
   );
   populateSelectOptions(els.bookingPreferredCurrency, GENERATED_CURRENCY_CODES, {
     includePlaceholder: false,
@@ -608,9 +618,10 @@ function populateSelectOptions(
 }
 
 function formatGeneratedLanguageLabel(value) {
-  const entry = languageByApiValue(normalizeText(value));
-  if (!entry?.frontendNameKey) return String(value || "");
-  return frontendT(entry.frontendNameKey, entry.apiValue || String(value || ""));
+  const entry = languageByCode(normalizeText(value));
+  if (!entry) return String(value || "");
+  if (!entry.frontendNameKey) return entry.nativeLabel || entry.apiValue || entry.code.toUpperCase();
+  return frontendT(entry.frontendNameKey, entry.nativeLabel || entry.apiValue || entry.code.toUpperCase());
 }
 
 function applyGeneratedRequiredAttributes() {

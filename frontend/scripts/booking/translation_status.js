@@ -1,7 +1,7 @@
 import {
   bookingContentLanguageLabel,
   bookingT
-} from "./i18n.js?v=b7baca7c60a0";
+} from "./i18n.js?v=693624dd6d2c";
 
 function normalizedLangCode(lang) {
   return String(lang || "").trim().toLowerCase() || "en";

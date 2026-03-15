@@ -3,8 +3,8 @@ import {
   escapeHtml,
   formatDateTime,
   normalizeText
-} from "../shared/api.js?v=b7baca7c60a0";
-import { buildBookingHref } from "../shared/links.js?v=b7baca7c60a0";
+} from "../shared/api.js?v=693624dd6d2c";
+import { buildBookingHref } from "../shared/links.js?v=693624dd6d2c";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {

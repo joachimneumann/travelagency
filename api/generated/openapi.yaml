@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-15T05:28:19Z
+# 2026-03-15T06:00:28Z
 
 ---
 openapi: 3.1.0
@@ -37,68 +37,68 @@ components:
     LanguageCode:
       type: string
       enum:
-      - English
-      - French
-      - Mandarin
-      - Japanese
-      - Korean
-      - Vietnamese
-      - German
-      - Spanish
-      - Italian
-      - Russian
-      - Dutch
-      - Polish
-      - Danish
-      - Swedish
-      - Norwegian
+      - en
+      - fr
+      - zh
+      - ja
+      - ko
+      - vi
+      - de
+      - es
+      - it
+      - ru
+      - nl
+      - pl
+      - da
+      - sv
+      - 'no'
       x-enum-catalog:
-      - code: English
-      - code: French
-      - code: Mandarin
-      - code: Japanese
-      - code: Korean
-      - code: Vietnamese
-      - code: German
-      - code: Spanish
-      - code: Italian
-      - code: Russian
-      - code: Dutch
-      - code: Polish
-      - code: Danish
-      - code: Swedish
-      - code: Norwegian
+      - code: en
+      - code: fr
+      - code: zh
+      - code: ja
+      - code: ko
+      - code: vi
+      - code: de
+      - code: es
+      - code: it
+      - code: ru
+      - code: nl
+      - code: pl
+      - code: da
+      - code: sv
+      - code: 'no'
       x-enum-options:
-      - value: English
-        label: English
-      - value: French
-        label: French
-      - value: Mandarin
-        label: Mandarin
-      - value: Japanese
-        label: Japanese
-      - value: Korean
-        label: Korean
-      - value: Vietnamese
-        label: Vietnamese
-      - value: German
-        label: German
-      - value: Spanish
-        label: Spanish
-      - value: Italian
-        label: Italian
-      - value: Russian
-        label: Russian
-      - value: Dutch
-        label: Dutch
-      - value: Polish
-        label: Polish
-      - value: Danish
-        label: Danish
-      - value: Swedish
-        label: Swedish
-      - value: Norwegian
-        label: Norwegian
+      - value: en
+        label: en
+      - value: fr
+        label: fr
+      - value: zh
+        label: zh
+      - value: ja
+        label: ja
+      - value: ko
+        label: ko
+      - value: vi
+        label: vi
+      - value: de
+        label: de
+      - value: es
+        label: es
+      - value: it
+        label: it
+      - value: ru
+        label: ru
+      - value: nl
+        label: nl
+      - value: pl
+        label: pl
+      - value: da
+        label: da
+      - value: sv
+        label: sv
+      - value: 'no'
+        label: 'no'
     MonthCode:
       type: string
       enum:

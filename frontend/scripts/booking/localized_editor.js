@@ -3,7 +3,7 @@ import {
   bookingContentLanguageOption,
   bookingT,
   normalizeBookingContentLang
-} from "./i18n.js?v=b7baca7c60a0";
+} from "./i18n.js?v=693624dd6d2c";
 
 const DEFAULT_CONTENT_LANG = "en";
 
@@ -39,12 +39,6 @@ export function resolveLocalizedEditorBranchText(value, lang = DEFAULT_CONTENT_L
   const normalizedLang = normalizeBookingContentLang(lang || DEFAULT_CONTENT_LANG);
   const normalized = normalizeLocalizedEditorMap(value, normalizedLang);
   return normalized[normalizedLang] || fallback;
-}
-
-function googleTranslateLangCode(value) {
-  const normalized = normalizeBookingContentLang(value || DEFAULT_CONTENT_LANG);
-  if (normalized === "zh") return "zh-CN";
-  return normalized;
 }
 
 export function setLocalizedEditorText(value, lang, text) {
@@ -316,38 +310,4 @@ export async function requestBookingFieldTranslation({
     }
   });
   return response?.entries && typeof response.entries === "object" ? response.entries : null;
-}
-
-export async function requestQuickGoogleFieldTranslation({
-  text,
-  sourceLang = "en",
-  targetLang = bookingContentLang()
-}) {
-  const normalizedSourceLang = googleTranslateLangCode(sourceLang);
-  const normalizedTargetLang = googleTranslateLangCode(targetLang);
-  const normalizedText = String(text || "").trim();
-  if (!normalizedText) return "";
-  if (normalizedSourceLang === normalizedTargetLang) return normalizedText;
-  const params = new URLSearchParams({
-    client: "gtx",
-    sl: normalizedSourceLang,
-    tl: normalizedTargetLang,
-    dt: "t",
-    q: normalizedText
-  });
-  const response = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`Google Translate request failed with HTTP ${response.status}.`);
-  }
-  const payload = await response.json();
-  const translated = Array.isArray(payload?.[0])
-    ? payload[0]
-        .map((chunk) => (Array.isArray(chunk) ? String(chunk[0] || "") : ""))
-        .join("")
-        .trim()
-    : "";
-  if (!translated) {
-    throw new Error("Google Translate returned an empty response.");
-  }
-  return translated;
 }

@@ -1,10 +1,14 @@
 import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Language.js";
 import {
+  languageByApiValue,
+  languageByCode
+} from "../../../shared/generated/language_catalog.js?v=693624dd6d2c";
+import {
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=b7baca7c60a0";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -20,16 +24,16 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=b7baca7c60a0";
-import { bookingT } from "./i18n.js?v=b7baca7c60a0";
+} from "./person_helpers.js?v=693624dd6d2c";
+import { bookingT } from "./i18n.js?v=693624dd6d2c";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=b7baca7c60a0";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=b7baca7c60a0";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=b7baca7c60a0";
+} from "../shared/booking_persons.js?v=693624dd6d2c";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=693624dd6d2c";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=693624dd6d2c";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -51,6 +55,21 @@ export function createBookingPersonsModule(ctx) {
   } = ctx;
 
   let lastPersonModalTrigger = null;
+
+  function normalizePersonLanguageCode(value) {
+    const raw = normalizeText(value);
+    if (!raw) return "";
+    const byCode = languageByCode(raw);
+    if (byCode && GENERATED_LANGUAGE_CODES.includes(byCode.code)) return byCode.code;
+    const byApiValue = languageByApiValue(raw);
+    if (byApiValue && GENERATED_LANGUAGE_CODES.includes(byApiValue.code)) return byApiValue.code;
+    return "";
+  }
+
+  function formatPersonLanguageLabel(value) {
+    const entry = languageByCode(normalizePersonLanguageCode(value));
+    return entry?.nativeLabel || entry?.apiValue || String(value || "");
+  }
 
   function getDisplayedTravelerCount() {
     return state.personDrafts.filter((person) => !person?._is_new && isTravelingPerson(person)).length;
@@ -139,7 +158,7 @@ export function createBookingPersonsModule(ctx) {
       photo_ref: normalizeText(person.photo_ref) || "",
       emails: Array.isArray(person.emails) ? [...person.emails] : [],
       phone_numbers: Array.isArray(person.phone_numbers) ? [...person.phone_numbers] : [],
-      preferred_language: normalizeText(person.preferred_language) || "",
+      preferred_language: normalizePersonLanguageCode(person.preferred_language),
       date_of_birth: normalizeText(person.date_of_birth) || "",
       nationality: normalizeText(person.nationality) || "",
       address: person.address && typeof person.address === "object" ? { ...person.address } : {},
@@ -277,7 +296,7 @@ export function createBookingPersonsModule(ctx) {
       photo_ref: normalizeText(draft?.photo_ref) || undefined,
       emails: collectCommaSeparatedValues(draft?.emails),
       phone_numbers: collectCommaSeparatedValues(draft?.phone_numbers),
-      preferred_language: normalizeText(draft?.preferred_language) || undefined,
+      preferred_language: normalizePersonLanguageCode(draft?.preferred_language) || undefined,
       date_of_birth: normalizeText(draft?.date_of_birth) || undefined,
       nationality: normalizeText(draft?.nationality).toUpperCase() || undefined,
       address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
@@ -300,7 +319,7 @@ export function createBookingPersonsModule(ctx) {
       normalizeText(draft.photo_ref) ||
       collectCommaSeparatedValues(draft.emails).length ||
       collectCommaSeparatedValues(draft.phone_numbers).length ||
-      normalizeText(draft.preferred_language) ||
+      normalizePersonLanguageCode(draft.preferred_language) ||
       normalizeText(draft.date_of_birth) ||
       normalizeText(draft.nationality) ||
       addressValues.some((value) => normalizeText(value)) ||
@@ -565,9 +584,9 @@ export function createBookingPersonsModule(ctx) {
     if (els.personModalPreferredLanguage) {
       els.personModalPreferredLanguage.innerHTML = [
         `<option value="">${escapeHtml(bookingT("booking.persons.select_language", "Select language"))}</option>`,
-        ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}">${escapeHtml(language)}</option>`)
+        ...GENERATED_LANGUAGE_CODES.map((language) => `<option value="${escapeHtml(language)}">${escapeHtml(formatPersonLanguageLabel(language))}</option>`)
       ].join("");
-      els.personModalPreferredLanguage.value = normalizeText(draft.preferred_language) || "";
+      els.personModalPreferredLanguage.value = normalizePersonLanguageCode(draft.preferred_language) || "";
       els.personModalPreferredLanguage.disabled = !canEdit;
     }
     if (els.personModalDateOfBirth) {
