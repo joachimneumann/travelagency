@@ -35,7 +35,6 @@ function withLang(urlValue) {
 }
 
 export function resolveBackendSectionHref(section) {
-  if (section === "persons") return withLang("persons.html");
   const url = new URL("backend.html", window.location.origin);
   url.searchParams.set("section", section || "bookings");
   const lang = currentLang();
@@ -57,7 +56,6 @@ function applyNavPermissions(mount, roles) {
       const section = button.getAttribute("data-backend-section");
       const visible =
         section === "bookings" ||
-        section === "persons" ||
         (section === "tours" && canReadTours) ||
         (section === "settings" && canReadSettings);
       button.hidden = !visible;
@@ -76,7 +74,6 @@ export function mountBackendNav(mount, options = {}) {
       <div class="backend-section-nav-wrap">
         <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
-          ${buildSectionButton("persons", backendT("nav.persons", "Persons"), { type: "image", src: "assets/img/profile_person.png" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), "📊")}
           ${buildSectionButton("tours", backendT("nav.tours", "Tours"), "🗺️")}
         </div>

@@ -194,6 +194,58 @@ function categoryLabel(component) {
     .join(" ");
 }
 
+function formatTaxRateLabel(basisPoints, lang) {
+  const numeric = Math.max(0, Number(basisPoints || 0)) / 100;
+  const value = Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2).replace(/\.?0+$/, "");
+  return pdfT(lang, "offer.tax_rate", "Tax {rate}%", { rate: value });
+}
+
+function deriveOfferQuotationSummary(offer) {
+  const source = offer && typeof offer === "object" ? offer : {};
+  const provided = source.quotation_summary && typeof source.quotation_summary === "object"
+    ? source.quotation_summary
+    : null;
+  if (provided) return provided;
+
+  const components = safeArray(source.components);
+  const buckets = new Map();
+  let subtotal = 0;
+  let totalTax = 0;
+  let totalGross = 0;
+  for (const component of components) {
+    const basisPoints = Math.max(0, Number(component?.tax_rate_basis_points || 0));
+    const net = Number(component?.line_net_amount_cents || 0);
+    const tax = Number(component?.line_tax_amount_cents || 0);
+    const gross = Number(
+      component?.line_gross_amount_cents
+      ?? component?.line_total_amount_cents
+      ?? (net + tax)
+    ) || 0;
+    subtotal += net;
+    totalTax += tax;
+    totalGross += gross;
+    const bucket = buckets.get(basisPoints) || {
+      tax_rate_basis_points: basisPoints,
+      net_amount_cents: 0,
+      tax_amount_cents: 0,
+      gross_amount_cents: 0,
+      items_count: 0
+    };
+    bucket.net_amount_cents += net;
+    bucket.tax_amount_cents += tax;
+    bucket.gross_amount_cents += gross;
+    bucket.items_count += 1;
+    buckets.set(basisPoints, bucket);
+  }
+  return {
+    tax_included: true,
+    subtotal_net_amount_cents: subtotal,
+    total_tax_amount_cents: totalTax,
+    grand_total_amount_cents: totalGross,
+    tax_breakdown: Array.from(buckets.values()).sort((left, right) => left.tax_rate_basis_points - right.tax_rate_basis_points)
+  };
+}
+
 async function resolveBookingHeroTitle(booking, lang, readTours) {
   const explicitTitle = textOrNull(booking?.name);
   const submittedTitle = textOrNull(booking?.web_form_submission?.booking_name);
@@ -628,13 +680,90 @@ function drawTableHeader(doc, startY, columns, fonts) {
   return startY + TABLE_HEADER_HEIGHT + 10;
 }
 
+function drawQuotationSummaryCard(doc, startY, rows, fonts, lang) {
+  const title = pdfT(lang, "offer.quotation_tax_summary", "QUOTATION TAX SUMMARY");
+  const cardWidth = Math.min(420, doc.page.width - PAGE_MARGIN * 2);
+  const cardX = doc.page.width - PAGE_MARGIN - cardWidth;
+  const contentX = cardX + 18;
+  const contentWidth = cardWidth - 36;
+  const valueColumnWidth = 126;
+  const labelColumnWidth = contentWidth - valueColumnWidth - 14;
+  const titleHeight = 18;
+  const rowGap = 8;
+  const normalRowHeight = 22;
+  const totalRowHeight = 26;
+  const dividerGapTop = 6;
+  const dividerGapBottom = 8;
+  const bodyHeight = rows.reduce((sum, row) => sum + (row.isTotal ? totalRowHeight : normalRowHeight), 0);
+  const dividerHeight = rows.some((row) => row.isTotal) ? dividerGapTop + dividerGapBottom + 1 : 0;
+  const cardHeight = 18 + titleHeight + 14 + bodyHeight + dividerHeight;
+
+  doc
+    .save()
+    .roundedRect(cardX, startY, cardWidth, cardHeight, 16)
+    .lineWidth(1)
+    .strokeColor("#D7E0E7")
+    .fillAndStroke("#FFFFFF", "#D7E0E7")
+    .restore();
+
+  let y = startY + 18;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(11.5)
+    .fillColor("#4D616D")
+    .text(title, contentX, y, {
+      width: contentWidth,
+      align: "left"
+    });
+  y += titleHeight + 14;
+
+  rows.forEach((row) => {
+    if (row.isTotal) {
+      doc
+        .save()
+        .moveTo(contentX, y - dividerGapTop)
+        .lineTo(contentX + contentWidth, y - dividerGapTop)
+        .lineWidth(1)
+        .strokeColor("#E1E6EA")
+        .stroke()
+        .restore();
+      y += dividerGapBottom;
+    }
+
+    const labelFont = row.isTotal ? "bold" : "regular";
+    const labelSize = row.isTotal ? 11.5 : 10.9;
+    const valueSize = row.isTotal ? 11.5 : 10.9;
+    const rowHeight = row.isTotal ? totalRowHeight : normalRowHeight;
+
+    doc
+      .font(pdfFontName(labelFont, fonts))
+      .fontSize(labelSize)
+      .fillColor(row.isTotal ? "#22383F" : "#47606D")
+      .text(row.label, contentX, y, {
+        width: labelColumnWidth,
+        align: "left"
+      });
+    doc
+      .font(pdfFontName(labelFont, fonts))
+      .fontSize(valueSize)
+      .fillColor(row.isTotal ? "#22383F" : "#22383F")
+      .text(row.value, contentX + labelColumnWidth + 14, y, {
+        width: valueColumnWidth,
+        align: "right"
+      });
+    y += rowHeight;
+  });
+
+  return startY + cardHeight;
+}
+
 function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
   const columns = [
     { key: "category", label: pdfT(lang, "offer.table.category", "Category"), width: 86 },
-    { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 155 },
-    { key: "quantity", label: pdfT(lang, "offer.table.quantity", "Quantity"), width: 68, align: "right" },
-    { key: "single", label: pdfT(lang, "offer.table.single", "Single"), width: 78, align: "right" },
-    { key: "total", label: pdfT(lang, "offer.table.total_incl_tax", "Total (incl. tax)"), width: 120, align: "right" }
+    { key: "details", label: pdfT(lang, "offer.table.details", "Details"), width: 141 },
+    { key: "quantity", label: pdfT(lang, "offer.table.quantity", "Quantity"), width: 62, align: "right" },
+    { key: "single", label: pdfT(lang, "offer.table.single", "Unit"), width: 98, align: "right" },
+    { key: "total", label: pdfT(lang, "offer.table.total", "Total"), width: 120, align: "right" }
   ];
   let y = startY;
   doc
@@ -661,13 +790,31 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
 
   for (const component of components) {
     const category = categoryLabel(component);
+    const categoryTax = formatTaxRateLabel(component?.tax_rate_basis_points, lang);
     const details = textOrNull(component?.details) || "—";
     const quantity = String(Number(component?.quantity || 1));
-    const unitText = formatMoneyValue(component?.unit_amount_cents, generatedOffer?.currency);
-    const totalText = formatMoneyValue(component?.line_total_amount_cents, generatedOffer?.currency);
+    const unitText = formatMoneyValue(
+      component?.unit_total_amount_cents ?? component?.unit_amount_cents,
+      generatedOffer?.currency
+    );
+    const totalText = formatMoneyValue(
+      component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
+      generatedOffer?.currency
+    );
+    doc.font(pdfFontName("regular", fonts)).fontSize(10.5);
+    const categoryTextHeight = doc.heightOfString(category, {
+      width: columns[0].width - TABLE_CELL_PADDING_X * 2,
+      align: "left"
+    });
+    doc.font(pdfFontName("regular", fonts)).fontSize(8.8);
+    const categoryTaxHeight = doc.heightOfString(categoryTax, {
+      width: columns[0].width - TABLE_CELL_PADDING_X * 2,
+      align: "left"
+    });
+    doc.font(pdfFontName("regular", fonts)).fontSize(10.5);
     const rowHeight = Math.max(
       24,
-      doc.heightOfString(category, { width: columns[0].width - TABLE_CELL_PADDING_X * 2, align: "left" }),
+      categoryTextHeight + categoryTaxHeight + 2,
       doc.heightOfString(details, { width: columns[1].width - TABLE_CELL_PADDING_X * 2, align: "left" }),
       doc.heightOfString(quantity, { width: columns[2].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
       doc.heightOfString(unitText, { width: columns[3].width - TABLE_CELL_PADDING_X * 2, align: "right" }),
@@ -683,10 +830,31 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       .restore();
 
     let x = PAGE_MARGIN;
-    const values = [category, details, quantity, unitText, totalText];
-    for (let index = 0; index < columns.length; index += 1) {
+
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10.5)
+      .fillColor("#253942")
+      .text(category, x + TABLE_CELL_PADDING_X, y + TABLE_CELL_PADDING_Y, {
+        width: columns[0].width - TABLE_CELL_PADDING_X * 2,
+        align: "left"
+      });
+
+    const categoryTaxY = y + TABLE_CELL_PADDING_Y + categoryTextHeight + 2;
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(8.8)
+      .fillColor("#5E6D73")
+      .text(categoryTax, x + TABLE_CELL_PADDING_X, categoryTaxY, {
+        width: columns[0].width - TABLE_CELL_PADDING_X * 2,
+        align: "left"
+      });
+
+    x += columns[0].width;
+    const values = [details, quantity, unitText, totalText];
+    for (let index = 1; index < columns.length; index += 1) {
       const column = columns[index];
-      const value = values[index];
+      const value = values[index - 1];
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(10.5)
@@ -710,11 +878,13 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     y += rowHeight + TABLE_ROW_GAP;
   }
 
+  const quotationSummary = deriveOfferQuotationSummary(generatedOffer?.offer);
+
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(12)
     .fillColor("#22383F")
-    .text(pdfT(lang, "offer.total", "Offer total"), PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
+    .text(pdfT(lang, "offer.total", "Total (including tax)"), PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
       width: columns[2].width + columns[3].width - 12,
       align: "right"
     });
@@ -722,12 +892,43 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     .font(pdfFontName("bold", fonts))
     .fontSize(12)
     .fillColor("#22383F")
-    .text(formatMoneyValue(generatedOffer?.total_price_cents, generatedOffer?.currency), PAGE_MARGIN + columns[0].width + columns[1].width + columns[2].width + columns[3].width, y + 6, {
+    .text(formatMoneyValue(
+      quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
+      generatedOffer?.currency
+    ), PAGE_MARGIN + columns[0].width + columns[1].width + columns[2].width + columns[3].width, y + 6, {
       width: columns[4].width - 8,
       align: "right"
     });
+  y += 32;
 
-  return y + 28;
+  const summaryRows = [
+    {
+      label: pdfT(lang, "offer.subtotal_before_tax", "Subtotal before tax"),
+      value: formatMoneyValue(quotationSummary?.subtotal_net_amount_cents, generatedOffer?.currency)
+    },
+    ...safeArray(quotationSummary?.tax_breakdown)
+      .filter((bucket) => Number(bucket?.tax_amount_cents || 0) !== 0)
+      .map((bucket) => ({
+        label: formatTaxRateLabel(bucket.tax_rate_basis_points, lang),
+        value: formatMoneyValue(bucket.tax_amount_cents, generatedOffer?.currency)
+      })),
+    {
+      label: pdfT(lang, "offer.total_with_tax", "Total with tax"),
+      value: formatMoneyValue(
+        quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
+        generatedOffer?.currency
+      ),
+      isTotal: true
+    }
+  ];
+  const summaryCardHeight = 18 + 18 + 14
+    + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
+    + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
+  const redrawNothing = (_pdfDoc, nextY) => nextY;
+  y = ensureSpace(doc, y, summaryCardHeight + 8, redrawNothing);
+  y = drawQuotationSummaryCard(doc, y, summaryRows, fonts, lang);
+
+  return y + 10;
 }
 
 function drawClosing(doc, startY, fonts, lang) {

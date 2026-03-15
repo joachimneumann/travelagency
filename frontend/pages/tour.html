@@ -11,7 +11,7 @@
         window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
       }
     </script>
-    <link rel="stylesheet" href="assets/css/styles.css?v=693624dd6d2c" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=f09b901159f7" />
   </head>
   <body class="tour-detail-page">
     <header class="header" id="top">
@@ -54,12 +54,10 @@
               <input id="tour_image_upload" name="tour_image_upload" type="file" accept="image/*" class="u-file-input-hidden" />
             </div>
             <div class="field full">
-              <label for="tour_short_description" data-i18n-id="tour.description_label">Description</label>
-              <textarea id="tour_short_description" name="short_description" rows="3"></textarea>
+              <div id="tour_short_description_editor"></div>
             </div>
             <div class="field full">
-              <label for="tour_highlights" data-i18n-id="tour.highlights_label">Highlights (one per line)</label>
-              <textarea id="tour_highlights" name="highlights" rows="4"></textarea>
+              <div id="tour_highlights_editor"></div>
             </div>
             <div class="field">
               <label for="tour_seasonality_start_month" data-i18n-id="tour.seasonality_start">Seasonality Start Month</label>
@@ -108,13 +106,13 @@
       </section>
     </main>
 
-    <script src="shared/generated/language_catalog.global.js?v=693624dd6d2c"></script>
-    <script src="frontend/scripts/shared/backend_i18n.js?v=693624dd6d2c"></script>
+    <script src="shared/generated/language_catalog.global.js?v=f09b901159f7"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js?v=f09b901159f7"></script>
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=693624dd6d2c";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=f09b901159f7";
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "tours" });
     </script>
-    <script type="module" src="frontend/scripts/pages/tour.js?v=693624dd6d2c"></script>
+    <script type="module" src="frontend/scripts/pages/tour.js?v=f09b901159f7"></script>
   </body>
 </html>

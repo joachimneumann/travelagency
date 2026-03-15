@@ -2,8 +2,8 @@ import {
   GENERATED_CURRENCIES,
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
-import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
-import { bookingLang, bookingT } from "./i18n.js?v=693624dd6d2c";
+import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
+import { bookingLang, bookingT } from "./i18n.js?v=f09b901159f7";
 
 const PRICING_SUMMARY_LABELS = Object.freeze({
   agreed_net_amount: ["booking.pricing.agreed_net_amount", "Agreed net amount"],

@@ -11,7 +11,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
 import {
   createApiFetcher,
   escapeHtml,
@@ -19,35 +19,35 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=693624dd6d2c";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=693624dd6d2c";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=693624dd6d2c";
-import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=693624dd6d2c";
+} from "../shared/api.js?v=f09b901159f7";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=f09b901159f7";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=f09b901159f7";
+import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=f09b901159f7";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=693624dd6d2c";
-import { createBookingOfferModule } from "../booking/offers.js?v=693624dd6d2c";
-import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=693624dd6d2c";
+} from "../booking/pricing.js?v=f09b901159f7";
+import { createBookingOfferModule } from "../booking/offers.js?v=f09b901159f7";
+import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=f09b901159f7";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=693624dd6d2c";
-import { createBookingCoreModule } from "../booking/core.js?v=693624dd6d2c";
+} from "../booking/invoices.js?v=f09b901159f7";
+import { createBookingCoreModule } from "../booking/core.js?v=f09b901159f7";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=693624dd6d2c";
-import { createBookingPersonsModule } from "../booking/persons.js?v=693624dd6d2c";
+} from "../booking/person_helpers.js?v=f09b901159f7";
+import { createBookingPersonsModule } from "../booking/persons.js?v=f09b901159f7";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=693624dd6d2c";
+} from "../shared/booking_persons.js?v=f09b901159f7";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
@@ -55,7 +55,7 @@ import {
   bookingContentLanguageOption,
   normalizeBookingContentLang,
   setBookingContentLang
-} from "../booking/i18n.js?v=693624dd6d2c";
+} from "../booking/i18n.js?v=f09b901159f7";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -232,11 +232,6 @@ const els = {
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
-  contentLanguageNotice: document.getElementById("booking_content_language_notice"),
-  contentLanguageNoticeFlag: document.getElementById("booking_content_language_notice_flag"),
-  contentLanguageNoticeTitle: document.getElementById("booking_content_language_notice_title"),
-  contentLanguageNoticeText: document.getElementById("booking_content_language_notice_text"),
-  contentLanguageHint: document.getElementById("booking_content_language_hint"),
   stageSelect: document.getElementById("booking_stage_select"),
   noteInput: document.getElementById("booking_note_input"),
   noteSaveBtn: document.getElementById("booking_note_save_btn"),
@@ -261,6 +256,7 @@ const els = {
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
+  offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),
   generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),
@@ -340,10 +336,58 @@ function closeContentLanguageMenu() {
   if (!menu || !trigger || !panel) return;
   menu.classList.remove("is-open");
   panel.hidden = true;
+  panel.style.position = "";
+  panel.style.left = "";
+  panel.style.top = "";
+  panel.style.right = "";
+  panel.style.width = "";
+  panel.style.maxHeight = "";
+  panel.style.visibility = "";
   trigger.setAttribute("aria-expanded", "false");
 }
 
 let contentLanguageDismissHandlersBound = false;
+
+function positionContentLanguageMenu(trigger, panel) {
+  if (!trigger || !panel) return;
+  const viewportPadding = 12;
+  const menuGap = 8;
+
+  panel.style.position = "fixed";
+  panel.style.left = "0px";
+  panel.style.top = "0px";
+  panel.style.right = "auto";
+  panel.style.width = "";
+  panel.style.maxHeight = "";
+  panel.style.visibility = "hidden";
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const measuredRect = panel.getBoundingClientRect();
+  const maxPanelWidth = Math.max(180, window.innerWidth - viewportPadding * 2);
+  const panelWidth = Math.min(Math.max(measuredRect.width || 240, 180), maxPanelWidth);
+  const preferredLeft = triggerRect.left;
+  const left = Math.min(
+    Math.max(preferredLeft, viewportPadding),
+    Math.max(viewportPadding, window.innerWidth - panelWidth - viewportPadding)
+  );
+
+  panel.style.width = `${Math.round(panelWidth)}px`;
+  panel.style.maxHeight = `${Math.max(180, Math.min(380, window.innerHeight - viewportPadding * 2))}px`;
+
+  const panelHeight = Math.min(panel.scrollHeight || measuredRect.height || 0, parseFloat(panel.style.maxHeight) || 380);
+  const belowTop = triggerRect.bottom + menuGap;
+  const aboveTop = triggerRect.top - menuGap - panelHeight;
+  let top = belowTop;
+  if (belowTop + panelHeight > window.innerHeight - viewportPadding && aboveTop >= viewportPadding) {
+    top = aboveTop;
+  } else if (belowTop + panelHeight > window.innerHeight - viewportPadding) {
+    top = Math.max(viewportPadding, window.innerHeight - viewportPadding - panelHeight);
+  }
+
+  panel.style.left = `${Math.round(left)}px`;
+  panel.style.top = `${Math.round(top)}px`;
+  panel.style.visibility = "";
+}
 
 function ensureContentLanguageMenuDismissHandlers() {
   if (contentLanguageDismissHandlersBound) return;
@@ -356,6 +400,20 @@ function ensureContentLanguageMenuDismissHandlers() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeContentLanguageMenu();
   });
+  window.addEventListener("resize", () => {
+    const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
+    const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
+    const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
+    if (!menu?.classList.contains("is-open") || !trigger || !panel) return;
+    positionContentLanguageMenu(trigger, panel);
+  });
+  window.addEventListener("scroll", () => {
+    const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
+    const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
+    const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
+    if (!menu?.classList.contains("is-open") || !trigger || !panel) return;
+    positionContentLanguageMenu(trigger, panel);
+  }, { passive: true });
 }
 
 function renderContentLanguageMenu() {
@@ -412,6 +470,7 @@ function renderContentLanguageMenu() {
   const openMenu = () => {
     menu.classList.add("is-open");
     panel.hidden = false;
+    positionContentLanguageMenu(trigger, panel);
     trigger.setAttribute("aria-expanded", "true");
   };
 
@@ -431,39 +490,12 @@ function renderContentLanguageMenu() {
   });
 }
 
-function renderContentLanguageProminence() {
-  const normalized = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
-  const isProminent = normalized !== "en";
-  if (els.contentLanguageField) {
-    els.contentLanguageField.classList.toggle("is-prominent", isProminent);
-  }
-  if (els.contentLanguageNotice) {
-    els.contentLanguageNotice.hidden = !isProminent;
-  }
-  if (els.contentLanguageNoticeFlag) {
-    els.contentLanguageNoticeFlag.className = `booking-content-language-notice__flag lang-flag ${isProminent ? contentLanguageOption(normalized).flagClass : "flag-en"}`;
-  }
-  if (els.contentLanguageNoticeTitle) {
-    els.contentLanguageNoticeTitle.textContent = backendT("booking.content_language", "Customer language");
-  }
-  if (els.contentLanguageNoticeText) {
-    els.contentLanguageNoticeText.textContent = isProminent
-      ? backendT(
-          "booking.content_language_notice",
-          "Important: this booking is currently handled in {language}.",
-          { language: contentLanguageLabel(normalized) }
-        )
-      : "";
-  }
-}
-
 function syncContentLanguageSelector() {
   if (!els.contentLanguageSelect) return;
   const normalized = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
   state.contentLang = normalized;
   els.contentLanguageSelect.value = normalized;
   renderContentLanguageMenu();
-  renderContentLanguageProminence();
 }
 
 function populateContentLanguageSelect() {

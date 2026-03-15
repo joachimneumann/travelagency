@@ -83,7 +83,6 @@ Frontend:
 - public website interactions
 - backend booking workspace
 - booking detail page
-- person search page
 - tour editing page
 
 ## Current Exceptions

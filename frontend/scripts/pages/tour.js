@@ -3,8 +3,12 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=693624dd6d2c";
-import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=693624dd6d2c";
+} from "../shared/api.js?v=f09b901159f7";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=f09b901159f7";
+import {
+  CUSTOMER_CONTENT_LANGUAGES,
+  normalizeLanguageCode
+} from "../../../shared/generated/language_catalog.js?v=f09b901159f7";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -69,6 +73,10 @@ const state = {
   options: {
     destinations: [],
     styles: []
+  },
+  localizedContent: {
+    short_description_i18n: {},
+    highlights_i18n: {}
   }
 };
 
@@ -95,6 +103,8 @@ const els = {
   styleChoices: document.getElementById("tour_style_choices"),
   seasonalityStartMonth: document.getElementById("tour_seasonality_start_month"),
   seasonalityEndMonth: document.getElementById("tour_seasonality_end_month"),
+  shortDescriptionEditor: document.getElementById("tour_short_description_editor"),
+  highlightsEditor: document.getElementById("tour_highlights_editor"),
   changeImageBtn: document.getElementById("tour_change_image_btn"),
   imageUpload: document.getElementById("tour_image_upload"),
   heroImage: document.getElementById("tour_hero_image")
@@ -136,6 +146,217 @@ function markTourSnapshotClean() {
   setDirtySurface(els.form, false);
 }
 
+function tourTextLanguages() {
+  return Array.isArray(CUSTOMER_CONTENT_LANGUAGES) ? CUSTOMER_CONTENT_LANGUAGES : [];
+}
+
+function normalizeTourTextLang(value) {
+  return normalizeLanguageCode(value, { fallback: "en" });
+}
+
+function normalizeLocalizedTextMap(value, { multiline = false } = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([lang, entry]) => {
+        const normalizedLang = normalizeTourTextLang(lang);
+        const normalizedEntry = multiline
+          ? String(entry ?? "")
+          : String(entry ?? "").trim();
+        return [normalizedLang, normalizedEntry];
+      })
+      .filter(([, entry]) => multiline ? String(entry).trim().length > 0 : Boolean(entry))
+  );
+}
+
+function localizedFieldValue(field, lang) {
+  const normalizedLang = normalizeTourTextLang(lang);
+  const map = state.localizedContent?.[field];
+  if (map && typeof map === "object" && !Array.isArray(map)) {
+    return String(map[normalizedLang] ?? "");
+  }
+  return "";
+}
+
+function localizedTextareaId(field, lang) {
+  return `tour_${field}_${normalizeTourTextLang(lang)}`;
+}
+
+function getLocalizedTextarea(field, lang) {
+  return document.getElementById(localizedTextareaId(field, lang));
+}
+
+function buildTourTranslationEntries(field, sourceText) {
+  if (field === "highlights_i18n") {
+    const lines = String(sourceText || "")
+      .split(/\r?\n/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    return Object.fromEntries(lines.map((line, index) => [`line_${index}`, line]));
+  }
+
+  const value = String(sourceText || "").trim();
+  return value ? { value } : {};
+}
+
+async function requestTourTranslation(field, targetLang, sourceText) {
+  const entries = buildTourTranslationEntries(field, sourceText);
+  if (!Object.keys(entries).length) return null;
+
+  const result = await fetchApi(withApiLang("/api/v1/tours/translate-fields"), {
+    method: "POST",
+    body: {
+      source_lang: "en",
+      target_lang: targetLang,
+      entries
+    }
+  });
+  return result?.entries || null;
+}
+
+function applyTranslatedTourField(field, targetLang, translatedEntries) {
+  const targetInput = getLocalizedTextarea(field, targetLang);
+  if (!targetInput || !translatedEntries) return;
+
+  if (field === "highlights_i18n") {
+    const translatedLines = Object.entries(translatedEntries)
+      .sort((left, right) => {
+        const leftIndex = Number(String(left[0]).replace(/^line_/, ""));
+        const rightIndex = Number(String(right[0]).replace(/^line_/, ""));
+        return leftIndex - rightIndex;
+      })
+      .map(([, value]) => String(value || "").trim())
+      .filter(Boolean);
+    targetInput.value = translatedLines.join("\n");
+    return;
+  }
+
+  targetInput.value = String(translatedEntries.value || "").trim();
+}
+
+function renderLocalizedTourEditor(field, { label, rows = 3, multiline = false } = {}) {
+  const mount = field === "short_description_i18n" ? els.shortDescriptionEditor : els.highlightsEditor;
+  if (!mount) return;
+  const rowsHtml = tourTextLanguages().map((language) => {
+    const lang = normalizeTourTextLang(language?.code);
+    const textareaId = localizedTextareaId(field, lang);
+    const value = localizedFieldValue(field, lang);
+    const codeHtml = lang === "en"
+      ? `
+        <span class="tour-localized-group__code" aria-hidden="true">EN</span>
+        <button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-tour-translate-all="${escapeHtml(field)}">
+          ${escapeHtml(backendT("tour.translation.translate_all", "Translate all"))}
+        </button>
+      `
+      : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-tour-translate-field="${escapeHtml(field)}" data-target-lang="${escapeHtml(lang)}">EN -&gt; ${escapeHtml(language?.shortLabel || lang.toUpperCase())}</button>`;
+    return `
+      <div class="tour-localized-group__row">
+        <div class="tour-localized-group__code-cell">${codeHtml}</div>
+        <div class="tour-localized-group__field">
+          <textarea
+            id="${escapeHtml(textareaId)}"
+            data-tour-i18n-field="${escapeHtml(field)}"
+            data-tour-i18n-lang="${escapeHtml(lang)}"
+            rows="${escapeHtml(String(rows))}"
+            spellcheck="true"
+          >${escapeHtml(value)}</textarea>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  mount.innerHTML = `
+    <div class="tour-localized-group${multiline ? " tour-localized-group--multiline" : ""}">
+      <div class="tour-localized-group__header">
+        <label class="tour-localized-group__label" for="${escapeHtml(localizedTextareaId(field, "en"))}">${escapeHtml(label)}</label>
+      </div>
+      ${rowsHtml}
+    </div>
+  `;
+}
+
+function renderLocalizedTourEditors() {
+  renderLocalizedTourEditor("short_description_i18n", {
+    label: backendT("tour.description_label", "Description"),
+    rows: 3
+  });
+  renderLocalizedTourEditor("highlights_i18n", {
+    label: backendT("tour.highlights_label", "Highlights (one per line)"),
+    rows: 4,
+    multiline: true
+  });
+}
+
+function readLocalizedTextareas(field, { multiline = false } = {}) {
+  const next = {};
+  for (const language of tourTextLanguages()) {
+    const lang = normalizeTourTextLang(language?.code);
+    const value = String(getLocalizedTextarea(field, lang)?.value ?? "");
+    const normalizedValue = multiline ? value : value.trim();
+    if (multiline ? normalizedValue.trim() : normalizedValue) {
+      next[lang] = normalizedValue;
+    }
+  }
+  return next;
+}
+
+async function translateTourField(button) {
+  const field = normalizeText(button?.getAttribute("data-tour-translate-field"));
+  const targetLang = normalizeTourTextLang(button?.getAttribute("data-target-lang"));
+  const englishInput = getLocalizedTextarea(field, "en");
+  const targetInput = getLocalizedTextarea(field, targetLang);
+  if (!field || !englishInput || !targetInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildTourTranslationEntries(field, englishSource)).length) {
+    setStatus(backendT("tour.translation.missing_source", "Add English text first."));
+    return;
+  }
+
+  targetInput.value = "";
+  updateTourDirtyState();
+  setStatus(backendT("tour.translation.translating", "Translating..."));
+  const translatedEntries = await requestTourTranslation(field, targetLang, englishSource);
+  if (!translatedEntries) return;
+  applyTranslatedTourField(field, targetLang, translatedEntries);
+
+  updateTourDirtyState();
+  setStatus(backendT("tour.translation.done", "Translation updated."));
+}
+
+async function translateAllTourField(button) {
+  const field = normalizeText(button?.getAttribute("data-tour-translate-all"));
+  const englishInput = getLocalizedTextarea(field, "en");
+  if (!field || !englishInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildTourTranslationEntries(field, englishSource)).length) {
+    setStatus(backendT("tour.translation.missing_source", "Add English text first."));
+    return;
+  }
+
+  const targets = tourTextLanguages()
+    .map((language) => normalizeTourTextLang(language?.code))
+    .filter((lang) => lang && lang !== "en");
+  if (!targets.length) return;
+
+  for (const targetLang of targets) {
+    const targetInput = getLocalizedTextarea(field, targetLang);
+    if (targetInput) targetInput.value = "";
+  }
+  updateTourDirtyState();
+  setStatus(backendT("tour.translation.translating_all", "Translating all languages..."));
+  for (const targetLang of targets) {
+    const translatedEntries = await requestTourTranslation(field, targetLang, englishSource);
+    if (!translatedEntries) return;
+    applyTranslatedTourField(field, targetLang, translatedEntries);
+    updateTourDirtyState();
+  }
+
+  updateTourDirtyState();
+  setStatus(backendT("tour.translation.all_done", "All translations updated."));
+}
+
 init();
 
 async function init() {
@@ -165,6 +386,18 @@ async function init() {
     const scheduleTourDirtyState = () => window.setTimeout(updateTourDirtyState, 0);
     els.form.addEventListener("input", scheduleTourDirtyState);
     els.form.addEventListener("change", scheduleTourDirtyState);
+    els.form.addEventListener("click", (event) => {
+      const translateAllButton = event.target.closest("[data-tour-translate-all]");
+      if (translateAllButton) {
+        event.preventDefault();
+        void translateAllTourField(translateAllButton);
+        return;
+      }
+      const button = event.target.closest("[data-tour-translate-field]");
+      if (!button) return;
+      event.preventDefault();
+      void translateTourField(button);
+    });
   }
   if (els.titleEditBtn) {
     els.titleEditBtn.addEventListener("click", startTourTitleEdit);
@@ -235,8 +468,14 @@ async function loadTour() {
   setInput("tour_rating", toInputNumber(tour.rating));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
-  setInput("tour_short_description", tour.short_description || "");
-  setInput("tour_highlights", Array.isArray(tour.highlights) ? tour.highlights.join("\n") : "");
+  state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
+    tour.short_description_i18n || { en: tour.short_description || "" }
+  );
+  state.localizedContent.highlights_i18n = normalizeLocalizedTextMap(
+    tour.highlights_i18n || { en: Array.isArray(tour.highlights) ? tour.highlights.join("\n") : "" },
+    { multiline: true }
+  );
+  renderLocalizedTourEditors();
   updateHeroImage(tour.image || "");
 
   renderDestinationChoices(tour_destination_codes(tour));
@@ -264,6 +503,8 @@ async function initializeNewTourForm() {
     seasonality_end_month: "",
     short_description: "",
     highlights: [],
+    short_description_i18n: {},
+    highlights_i18n: {},
     image: ""
   };
 
@@ -276,8 +517,9 @@ async function initializeNewTourForm() {
   setInput("tour_rating", "0");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
-  setInput("tour_short_description", "");
-  setInput("tour_highlights", "");
+  state.localizedContent.short_description_i18n = {};
+  state.localizedContent.highlights_i18n = {};
+  renderLocalizedTourEditors();
   updateHeroImage("");
   renderDestinationChoices([]);
   renderStyleChoices([]);
@@ -393,11 +635,8 @@ async function submitForm(event) {
     rating: toNumberOrNull(getInput("tour_rating")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
-    short_description: getInput("tour_short_description"),
-    highlights: String(getInput("tour_highlights") || "")
-      .split(/\r?\n/)
-      .map((value) => value.trim())
-      .filter(Boolean)
+    short_description_i18n: readLocalizedTextareas("short_description_i18n"),
+    highlights_i18n: readLocalizedTextareas("highlights_i18n", { multiline: true })
   };
 
   if (!payload.title || !payload.destinations.length || !payload.styles.length) {

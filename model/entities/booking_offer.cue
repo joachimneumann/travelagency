@@ -6,26 +6,37 @@ import (
 )
 
 #BookingOfferCategoryRule: {
-	category:               enums.#OfferCategory
-	tax_rate_basis_points:  >=0 & <=100000 & int
+	category:              enums.#OfferCategory
+	tax_rate_basis_points: >=0 & <=100000 & int
 }
 
 #BookingOfferComponent: {
-	id:                      common.#Identifier
-	category:                enums.#OfferCategory
-	label:                   string & !=""
-	details?:                string
-	quantity:                >0 & int
-	unit_amount_cents:       common.#NonNegativeMoneyAmount
-	tax_rate_basis_points:   >=0 & <=100000 & int
-	currency:                enums.#CurrencyCode
-	line_net_amount_cents?:  common.#MoneyAmount
-	line_tax_amount_cents?:  common.#MoneyAmount
+	id:                       common.#Identifier
+	category:                 enums.#OfferCategory
+	label:                    string & !=""
+	details?:                 string
+	quantity:                 >0 & int
+	unit_amount_cents:        common.#NonNegativeMoneyAmount
+	unit_tax_amount_cents?:   common.#MoneyAmount
+	unit_total_amount_cents?: common.#MoneyAmount
+	tax_rate_basis_points:    >=0 & <=100000 & int
+	currency:                 enums.#CurrencyCode
+	line_net_amount_cents?:   common.#MoneyAmount
+	line_tax_amount_cents?:   common.#MoneyAmount
+	line_gross_amount_cents?: common.#MoneyAmount
 	line_total_amount_cents?: int
-	notes?:                  string
-	sort_order?:             int
-	created_at?:             common.#Timestamp
-	updated_at?:             common.#Timestamp
+	notes?:                   string
+	sort_order?:              int
+	created_at?:              common.#Timestamp
+	updated_at?:              common.#Timestamp
+}
+
+#BookingOfferTaxBucket: {
+	tax_rate_basis_points: >=0 & <=100000 & int
+	net_amount_cents:      common.#MoneyAmount
+	tax_amount_cents:      common.#MoneyAmount
+	gross_amount_cents:    common.#MoneyAmount
+	items_count:           >=0 & int
 }
 
 #BookingOfferTotals: {
@@ -36,26 +47,35 @@ import (
 	items_count:        >=0 & int
 }
 
+#BookingOfferQuotationSummary: {
+	tax_included:              bool
+	subtotal_net_amount_cents: common.#MoneyAmount
+	total_tax_amount_cents:    common.#MoneyAmount
+	grand_total_amount_cents:  common.#MoneyAmount
+	tax_breakdown: [...#BookingOfferTaxBucket]
+}
+
 #BookingOffer: {
-	currency:          enums.#CurrencyCode
-	status?:           "DRAFT" | "APPROVED" | "OFFER_SENT"
-	category_rules:    [...#BookingOfferCategoryRule]
-	components:        [...#BookingOfferComponent]
-	totals:            #BookingOfferTotals
-	total_price_cents: int
+	currency: enums.#CurrencyCode
+	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
+	category_rules: [...#BookingOfferCategoryRule]
+	components: [...#BookingOfferComponent]
+	totals:             #BookingOfferTotals
+	quotation_summary?: #BookingOfferQuotationSummary
+	total_price_cents:  int
 }
 
 #GeneratedBookingOffer: {
-	id:               common.#Identifier
-	booking_id:       common.#Identifier
-	version:          >=1 & int
-	filename:         string & !=""
-	comment?:         string
-	created_at:       common.#Timestamp
-	created_by?:      string
-	currency:         enums.#CurrencyCode
+	id:                common.#Identifier
+	booking_id:        common.#Identifier
+	version:           >=1 & int
+	filename:          string & !=""
+	comment?:          string
+	created_at:        common.#Timestamp
+	created_by?:       string
+	currency:          enums.#CurrencyCode
 	total_price_cents: int
-	offer:            #BookingOffer
-	travel_plan?:     #BookingTravelPlan
-	pdf_url?:         string
+	offer:             #BookingOffer
+	travel_plan?:      #BookingTravelPlan
+	pdf_url?:          string
 }

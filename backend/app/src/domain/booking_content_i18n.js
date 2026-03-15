@@ -74,6 +74,7 @@ export function mergeEditableLocalizedTextField(existingValue, payloadValue, pay
   const existingMap = normalizeLocalizedTextMap(existingValue, defaultLang);
   let nextMap = existingMap;
   const rawPayloadMap = payloadMap && typeof payloadMap === "object" && !Array.isArray(payloadMap) ? payloadMap : null;
+  const pruneExtraTranslationsOnEnglishChange = options?.pruneExtraTranslationsOnEnglishChange === true;
 
   if (!rawPayloadMap) {
     return mergeLocalizedTextField(nextMap, payloadValue, normalizedTargetLang, {
@@ -87,13 +88,28 @@ export function mergeEditableLocalizedTextField(existingValue, payloadValue, pay
     nextMap = setLocalizedTextForLang(nextMap, rawPayloadMap[lang], lang, { fallbackLang: defaultLang });
   };
 
+  const englishPayloadProvided = Object.prototype.hasOwnProperty.call(rawPayloadMap, "en");
+  const englishChanged = pruneExtraTranslationsOnEnglishChange
+    && englishPayloadProvided
+    && normalizeText(rawPayloadMap.en) !== normalizeText(existingMap.en);
+
+  if (englishChanged) {
+    nextMap = {};
+    if (normalizedTargetLang !== "en") {
+      const preservedTargetText = normalizeText(existingMap[normalizedTargetLang]);
+      if (preservedTargetText) {
+        nextMap[normalizedTargetLang] = preservedTargetText;
+      }
+    }
+  }
+
   applyPayloadForLang("en");
   if (normalizedTargetLang !== "en") {
     applyPayloadForLang(normalizedTargetLang);
-    if (!Object.prototype.hasOwnProperty.call(rawPayloadMap, normalizedTargetLang) && payloadValue !== undefined) {
+    if (!englishChanged && !Object.prototype.hasOwnProperty.call(rawPayloadMap, normalizedTargetLang) && payloadValue !== undefined) {
       nextMap = setLocalizedTextForLang(nextMap, payloadValue, normalizedTargetLang, { fallbackLang: defaultLang });
     }
-  } else if (!Object.prototype.hasOwnProperty.call(rawPayloadMap, "en") && payloadValue !== undefined) {
+  } else if (!englishChanged && !Object.prototype.hasOwnProperty.call(rawPayloadMap, "en") && payloadValue !== undefined) {
     nextMap = setLocalizedTextForLang(nextMap, payloadValue, "en", { fallbackLang: defaultLang });
   }
 

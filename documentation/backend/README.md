@@ -76,10 +76,7 @@ Implemented now:
 Administrative pages:
 - `/backend.html`
 - `/booking.html`
-- `/persons.html`
 - `/tour.html`
-
-`/persons.html` is a booking-derived person search page. It is not a standalone person CRUD domain.
 
 ## API Endpoints
 
@@ -223,6 +220,10 @@ Helper scripts:
 - `scripts/start_local_keycloak.sh`
 - `scripts/stop_local_keycloak.sh`
 - `scripts/restart_local_keycloak.sh`
+- `node backend/app/scripts/prune_stale_content_translations.js`
+  - dry-run by default
+  - add `--write` to persist
+  - keeps only `en` plus the booking's current customer language in booking offer and travel-plan localized fields
 
 Recommended local setup:
 - Keycloak on `http://localhost:8081`

@@ -1,21 +1,21 @@
-import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
   bookingT
-} from "./i18n.js?v=693624dd6d2c";
-import { formatMoneyDisplay } from "./pricing.js?v=693624dd6d2c";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=693624dd6d2c";
+} from "./i18n.js?v=f09b901159f7";
+import { formatMoneyDisplay } from "./pricing.js?v=f09b901159f7";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=f09b901159f7";
 import {
   buildDualLocalizedPayload,
   renderLocalizedStackedField,
   requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText
-} from "./localized_editor.js?v=693624dd6d2c";
+} from "./localized_editor.js?v=f09b901159f7";
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=693624dd6d2c";
+} from "../shared/generated_catalogs.js?v=f09b901159f7";
 import {
   countTravelPlanSegments,
   countUncoveredTravelPlanSegments,
@@ -27,7 +27,7 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
   getTravelPlanSegmentCoverageStatus,
   normalizeTravelPlanDraft
-} from "./travel_plan_helpers.js?v=693624dd6d2c";
+} from "./travel_plan_helpers.js?v=f09b901159f7";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -53,7 +53,13 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function setTravelPlanDirty(isDirty) {
-    setBookingSectionDirty("travel_plan", Boolean(isDirty) && state.permissions.canEditBooking);
+    state.travelPlanDirty = Boolean(isDirty) && state.permissions.canEditBooking;
+    setBookingSectionDirty("travel_plan", state.travelPlanDirty);
+  }
+
+  function updateTravelPlanSaveButtonState() {
+    if (!els.travel_plan_save_btn) return;
+    els.travel_plan_save_btn.disabled = !state.permissions.canEditBooking || !state.travelPlanDirty || Boolean(state.travelPlanSaving);
   }
 
   function getTravelPlanSnapshot(plan = state.travelPlanDraft) {
@@ -63,12 +69,14 @@ export function createBookingTravelPlanModule(ctx) {
   function updateTravelPlanDirtyState() {
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft, getOfferComponentsForLinks());
     setTravelPlanDirty(getTravelPlanSnapshot() !== state.originalTravelPlanSnapshot);
+    updateTravelPlanSaveButtonState();
   }
 
   function applyBookingPayload() {
     state.travelPlanDraft = normalizeTravelPlanDraft(state.booking?.travel_plan || createEmptyTravelPlan(), getOfferComponentsForLinks());
     state.originalTravelPlanSnapshot = getTravelPlanSnapshot(state.travelPlanDraft);
     setTravelPlanDirty(false);
+    updateTravelPlanSaveButtonState();
     travelPlanStatus("");
   }
 
@@ -101,20 +109,37 @@ export function createBookingTravelPlanModule(ctx) {
     });
   }
 
-  function renderTravelPlanDayDateField(day) {
-    return `
-      <div class="localized-pair localized-pair--date-field">
-        <div class="localized-pair__header">
-          <label class="localized-pair__label" for="travel_plan_day_date_${escapeHtml(day.id)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
-        </div>
-        <div class="localized-pair__row">
-          <span class="localized-pair__code" aria-hidden="true">&nbsp;</span>
-          <div class="localized-pair__field localized-pair__field--single">
-            <input id="travel_plan_day_date_${escapeHtml(day.id)}" data-travel-plan-day-field="date" type="date" value="${escapeHtml(day.date || "")}" />
-          </div>
-        </div>
-      </div>
-    `;
+  function formatTravelPlanDayHeading(dayIndex) {
+    return bookingT("booking.travel_plan.day_heading", "Day {day}", { day: dayIndex + 1 });
+  }
+
+  function isIsoDateString(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || "").trim());
+  }
+
+  function formatIsoLocalDate(date) {
+    const year = String(date.getFullYear());
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function nextIsoDate(value) {
+    const raw = String(value || "").trim();
+    if (!isIsoDateString(raw)) return "";
+    const date = new Date(`${raw}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return "";
+    date.setDate(date.getDate() + 1);
+    return formatIsoLocalDate(date);
+  }
+
+  function deriveNextTravelPlanDayDate(days) {
+    const items = Array.isArray(days) ? days : [];
+    for (let index = items.length - 1; index >= 0; index -= 1) {
+      const candidate = nextIsoDate(items[index]?.date);
+      if (candidate) return candidate;
+    }
+    return "";
   }
 
   function travelPlanSummary() {
@@ -457,8 +482,17 @@ export function createBookingTravelPlanModule(ctx) {
     return `
       <section class="travel-plan-day" data-travel-plan-day="${escapeHtml(day.id)}">
         <div class="travel-plan-day__head">
-          <div>
-            <h3>${escapeHtml(bookingT("booking.travel_plan.day_heading", "Day {day}", { day: dayIndex + 1 }))}</h3>
+          <div class="travel-plan-day__title-row">
+            <h3>${escapeHtml(formatTravelPlanDayHeading(dayIndex))}:</h3>
+            <input
+              class="travel-plan-day__date-input"
+              id="travel_plan_day_date_${escapeHtml(day.id)}"
+              data-travel-plan-day-field="date"
+              type="date"
+              value="${escapeHtml(day.date || "")}"
+              ${state.permissions.canEditBooking ? "" : "disabled"}
+              aria-label="${escapeHtml(`${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`)}"
+            />
           </div>
           <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-day="${escapeHtml(day.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_day", "Remove day"))}">&times;</button>
         </div>
@@ -475,7 +509,6 @@ export function createBookingTravelPlanModule(ctx) {
               localizedValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingContentLang(), "")
             })}
           </div>
-          ${renderTravelPlanDayDateField(day)}
           <div class="field">
             ${renderTravelPlanLocalizedField({
               label: bookingT("booking.travel_plan.overnight_location", "Overnight location"),
@@ -502,7 +535,7 @@ export function createBookingTravelPlanModule(ctx) {
             localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
           })}
         </div>
-        ${segments.map((segment, segmentIndex) => renderTravelPlanSegment(day, segment, segmentIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_segments", "No segments yet."))}</p>`}
+        ${segments.map((segment, segmentIndex) => renderTravelPlanSegment(day, segment, segmentIndex)).join("")}
         <div class="travel-plan-day__footer">
           <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-add-segment="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_segment", "New segment"))}</button>
         </div>
@@ -520,9 +553,6 @@ export function createBookingTravelPlanModule(ctx) {
         <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
       </div>
     `;
-    if (els.travel_plan_save_btn) {
-      els.travel_plan_save_btn.disabled = !state.permissions.canEditBooking;
-    }
     updateTravelPlanDirtyState();
   }
 
@@ -613,7 +643,9 @@ export function createBookingTravelPlanModule(ctx) {
   function addDay() {
     syncTravelPlanDraftFromDom();
     const days = Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : [];
-    days.push(createEmptyTravelPlanDay(days.length));
+    const nextDay = createEmptyTravelPlanDay(days.length);
+    nextDay.date = deriveNextTravelPlanDayDate(days);
+    days.push(nextDay);
     state.travelPlanDraft.days = days;
     renderTravelPlanPanel();
   }
@@ -684,41 +716,48 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   async function saveTravelPlan() {
-    if (!state.permissions.canEditBooking || !state.booking) return false;
+    if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty || state.travelPlanSaving) return false;
     syncTravelPlanDraftFromDom();
     const travelPlanPayload = normalizeTravelPlanDraft({
       ...state.travelPlanDraft,
       offer_component_links: (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
         .filter((link) => String(link?.offer_component_id || "").trim())
     }, getOfferComponentsForLinks());
+    state.travelPlanSaving = true;
+    updateTravelPlanSaveButtonState();
     travelPlanStatus(bookingT("booking.travel_plan.saving", "Saving travel plan..."));
-    const request = bookingTravelPlanRequest({
-      baseURL: apiOrigin,
-      params: { booking_id: state.booking.id },
-      body: {
-        expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
-        travel_plan: travelPlanPayload,
-        lang: bookingContentLang()
+    try {
+      const request = bookingTravelPlanRequest({
+        baseURL: apiOrigin,
+        params: { booking_id: state.booking.id },
+        body: {
+          expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+          travel_plan: travelPlanPayload,
+          lang: bookingContentLang()
+        }
+      });
+      const response = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: request.body
+      });
+      if (!response?.booking) {
+        travelPlanStatus("");
+        return false;
       }
-    });
-    const response = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: request.body
-    });
-    if (!response?.booking) {
-      travelPlanStatus("");
-      return false;
+      state.booking = response.booking;
+      renderBookingHeader();
+      renderBookingData();
+      applyBookingPayload();
+      renderTravelPlanPanel();
+      await loadActivities();
+      travelPlanStatus(response.unchanged
+        ? bookingT("booking.travel_plan.no_changes", "No travel-plan changes.")
+        : bookingT("booking.travel_plan.saved", "Travel plan saved."));
+      return true;
+    } finally {
+      state.travelPlanSaving = false;
+      updateTravelPlanSaveButtonState();
     }
-    state.booking = response.booking;
-    renderBookingHeader();
-    renderBookingData();
-    applyBookingPayload();
-    renderTravelPlanPanel();
-    await loadActivities();
-    travelPlanStatus(response.unchanged
-      ? bookingT("booking.travel_plan.no_changes", "No travel-plan changes.")
-      : bookingT("booking.travel_plan.saved", "Travel plan saved."));
-    return true;
   }
 
   async function translateTravelPlanField(button) {

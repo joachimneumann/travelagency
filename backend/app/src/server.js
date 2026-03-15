@@ -581,6 +581,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
     resolveLocalizedText,
     setLocalizedTextForLang,
     setLocalizedStringArrayForLang,
+    translateEntries: TRANSLATION_CLIENT.translateEntries,
     normalizeTourLang,
     normalizeTourDestinationCode,
     normalizeTourStyleCode,

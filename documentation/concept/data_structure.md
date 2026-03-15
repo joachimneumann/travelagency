@@ -91,6 +91,61 @@ Multiple roles are allowed on the same person.
 - `created_at`
 - `updated_at`
 
+## BookingOffer
+
+`BookingOffer`
+- `currency`
+- `status`
+- `category_rules[]`
+- `components[]`
+- `totals`
+- `quotation_summary`
+
+The offer model now separates:
+- internal arithmetic totals
+- customer-facing quotation totals
+
+`components[]`
+- `category`
+- `label`
+- `details`
+- `quantity`
+- `unit_amount_cents`
+  this is the unit price before tax
+- `unit_tax_amount_cents`
+- `unit_total_amount_cents`
+  this is the unit price including tax
+- `tax_rate_basis_points`
+- `line_net_amount_cents`
+- `line_tax_amount_cents`
+- `line_gross_amount_cents`
+
+Notes:
+- discounts and credits are modeled by category semantics, not by negative unit prices
+- unit amounts stay non-negative
+- line totals carry the sign
+
+`totals`
+- `net_amount_cents`
+- `tax_amount_cents`
+- `gross_amount_cents`
+
+`quotation_summary`
+- `tax_included`
+- `subtotal_net_amount_cents`
+- `total_tax_amount_cents`
+- `grand_total_amount_cents`
+- `tax_breakdown[]`
+
+`tax_breakdown[]`
+- one entry per tax-rate bucket used in the offer
+- contains net, tax, and gross totals for that rate
+
+ATP quotation semantics:
+- customer-facing line prices are tax-inclusive
+- the quotation still exposes tax transparently in the summary
+- mixed tax rates are supported through `tax_breakdown[]`
+
 ## Invariants
 
 - `booking.persons[]` is the editable person source of truth for that booking

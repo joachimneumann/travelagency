@@ -11,7 +11,7 @@
         window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
       }
     </script>
-    <link rel="stylesheet" href="assets/css/styles.css?v=693624dd6d2c" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=f09b901159f7" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -269,16 +269,6 @@
               <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
               <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
               <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-              <div class="booking-content-language-notice" id="booking_content_language_notice" hidden>
-                <span class="booking-content-language-notice__flag lang-flag" id="booking_content_language_notice_flag" aria-hidden="true"></span>
-                <div class="booking-content-language-notice__copy">
-                  <strong id="booking_content_language_notice_title">Customer language</strong>
-                  <p class="micro" id="booking_content_language_notice_text"></p>
-                </div>
-              </div>
-              <p class="micro booking-content-language-hint" id="booking_content_language_hint" data-i18n-id="booking.content_language_hint">
-                Offer, travel plan, invoices, and PDFs use this customer's language.
-              </p>
             </div>
           </article>
 
@@ -308,6 +298,7 @@
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="offer_components_table"></table>
               </div>
+              <div id="offer_quotation_summary" class="offer-quotation-summary" hidden></div>
               <div class="backend-table-wrap" style="margin-bottom: 0.8rem;">
                 <table class="backend-table" id="generated_offers_table"></table>
               </div>
@@ -435,13 +426,13 @@
       </section>
     </main>
 
-    <script src="shared/generated/language_catalog.global.js?v=693624dd6d2c"></script>
-    <script src="frontend/scripts/shared/backend_i18n.js?v=693624dd6d2c"></script>
+    <script src="shared/generated/language_catalog.global.js?v=f09b901159f7"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js?v=f09b901159f7"></script>
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=693624dd6d2c";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=f09b901159f7";
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=693624dd6d2c"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=f09b901159f7"></script>
   </body>
 </html>

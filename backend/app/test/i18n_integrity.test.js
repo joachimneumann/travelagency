@@ -197,7 +197,6 @@ test("browser pages load the generated language catalog before the i18n bootstra
     ["frontend/pages/index.html", /language_catalog\.global\.js/, /frontend_i18n\.js/],
     ["frontend/pages/backend.html", /language_catalog\.global\.js/, /backend_i18n\.js/],
     ["frontend/pages/booking.html", /language_catalog\.global\.js/, /backend_i18n\.js/],
-    ["frontend/pages/persons.html", /language_catalog\.global\.js/, /backend_i18n\.js/],
     ["frontend/pages/tour.html", /language_catalog\.global\.js/, /backend_i18n\.js/]
   ];
 

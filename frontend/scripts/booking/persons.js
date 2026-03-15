@@ -2,13 +2,13 @@ import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Langu
 import {
   languageByApiValue,
   languageByCode
-} from "../../../shared/generated/language_catalog.js?v=693624dd6d2c";
+} from "../../../shared/generated/language_catalog.js?v=f09b901159f7";
 import {
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -24,16 +24,16 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=693624dd6d2c";
-import { bookingT } from "./i18n.js?v=693624dd6d2c";
+} from "./person_helpers.js?v=f09b901159f7";
+import { bookingT } from "./i18n.js?v=f09b901159f7";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=693624dd6d2c";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=693624dd6d2c";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=693624dd6d2c";
+} from "../shared/booking_persons.js?v=f09b901159f7";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=f09b901159f7";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=f09b901159f7";
 
 export function createBookingPersonsModule(ctx) {
   const {

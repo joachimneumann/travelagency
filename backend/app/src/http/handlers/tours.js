@@ -15,6 +15,7 @@ export function createTourHandlers(deps) {
     resolveLocalizedText,
     setLocalizedTextForLang,
     setLocalizedStringArrayForLang,
+    translateEntries,
     normalizeTourLang,
     normalizeTourDestinationCode,
     normalizeTourStyleCode,
@@ -52,13 +53,39 @@ export function createTourHandlers(deps) {
     return tourStyleCodes({ styles: normalizeStringArray(values) });
   }
 
+  function localizedTextareaMap(value, { multiline = false } = {}) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([lang, entry]) => {
+          const normalizedLang = normalizeTourLang(lang);
+          const normalizedValue = multiline
+            ? (Array.isArray(entry) ? entry.map((item) => normalizeText(item)).filter(Boolean).join("\n") : normalizeText(entry))
+            : normalizeText(entry);
+          return [normalizedLang, normalizedValue];
+        })
+        .filter(([, entry]) => Boolean(entry))
+    );
+  }
+
+  function buildTourEditorResponse(tour, lang) {
+    const stored = normalizeTourForStorage(tour);
+    return {
+      ...normalizeTourForRead(stored, { lang }),
+      short_description_i18n: localizedTextareaMap(stored.short_description),
+      highlights_i18n: localizedTextareaMap(stored.highlights, { multiline: true })
+    };
+  }
+
   function buildTourPayload(payload, { existing = null, isCreate = false, lang = "en" } = {}) {
     const current = existing ? normalizeTourForStorage(existing) : {};
     const next = { ...current };
 
     if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id) || next.id;
     if (isCreate || payload.title !== undefined) next.title = setLocalizedTextForLang(current.title, payload.title, lang);
-    if (payload.short_description !== undefined) {
+    if (payload.short_description_i18n !== undefined) {
+      next.short_description = payload.short_description_i18n;
+    } else if (payload.short_description !== undefined) {
       next.short_description = setLocalizedTextForLang(current.short_description, payload.short_description, lang);
     }
     if (isCreate || payload.destinations !== undefined) {
@@ -72,7 +99,9 @@ export function createTourHandlers(deps) {
     if (payload.seasonality_end_month !== undefined) {
       next.seasonality_end_month = normalizeText(payload.seasonality_end_month);
     }
-    if (payload.highlights !== undefined || isCreate) {
+    if (payload.highlights_i18n !== undefined) {
+      next.highlights = payload.highlights_i18n;
+    } else if (payload.highlights !== undefined || isCreate) {
       next.highlights = setLocalizedStringArrayForLang(current.highlights, payload.highlights, lang);
     }
 
@@ -244,12 +273,71 @@ export function createTourHandlers(deps) {
     }
     const options = collectTourOptions(tours, { lang });
     sendJson(res, 200, {
-      tour: normalizeTourForRead(tour, { lang }),
+      tour: buildTourEditorResponse(tour, lang),
       options: {
         destinations: options.destinations,
         styles: options.styles
       }
     });
+  }
+
+  async function handleTranslateTourFields(req, res) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch {
+      sendJson(res, 400, { error: "Invalid JSON payload" });
+      return;
+    }
+
+    const sourceLang = normalizeTourLang(payload?.source_lang || "en");
+    const targetLang = normalizeTourLang(payload?.target_lang || "en");
+    const entries = payload?.entries && typeof payload.entries === "object" && !Array.isArray(payload.entries)
+      ? Object.fromEntries(
+          Object.entries(payload.entries)
+            .map(([key, value]) => [normalizeText(key), normalizeText(value)])
+            .filter(([key, value]) => Boolean(key && value))
+        )
+      : {};
+
+    if (!Object.keys(entries).length) {
+      sendJson(res, 422, { error: "At least one source field is required." });
+      return;
+    }
+
+    if (sourceLang === targetLang) {
+      sendJson(res, 200, { source_lang: sourceLang, target_lang: targetLang, entries });
+      return;
+    }
+
+    try {
+      const translatedEntries = await translateEntries(entries, targetLang, {
+        sourceLangCode: sourceLang,
+        domain: "tour marketing copy",
+        allowGoogleFallback: true
+      });
+      sendJson(res, 200, {
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        entries: translatedEntries
+      });
+    } catch (error) {
+      if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
+        sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });
+        return;
+      }
+      if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
+        sendJson(res, 502, { error: String(error.message || "Translation request failed.") });
+        return;
+      }
+      sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
+    }
   }
 
   async function handleCreateTour(req, res) {
@@ -281,7 +369,7 @@ export function createTourHandlers(deps) {
     }
 
     await persistTour(tour);
-    sendJson(res, 201, { tour: normalizeTourForRead(tour, { lang }) });
+    sendJson(res, 201, { tour: buildTourEditorResponse(tour, lang) });
   }
 
   async function handlePatchTour(req, res, [tourId]) {
@@ -324,7 +412,7 @@ export function createTourHandlers(deps) {
 
     tours[index] = updated;
     await persistTour(updated);
-    sendJson(res, 200, { tour: normalizeTourForRead(updated, { lang }) });
+    sendJson(res, 200, { tour: buildTourEditorResponse(updated, lang) });
   }
 
   async function handlePublicTourImage(req, res, [rawRelativePath]) {
@@ -417,6 +505,7 @@ export function createTourHandlers(deps) {
     handlePublicListTours,
     handleListTours,
     handleGetTour,
+    handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,
     handlePublicTourImage,

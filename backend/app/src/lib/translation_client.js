@@ -46,10 +46,21 @@ function googleTranslateLangCode(value, fallback = "en") {
 
 function extractGoogleTranslatedText(payload) {
   if (!Array.isArray(payload) || !Array.isArray(payload[0])) return "";
-  return payload[0]
-    .map((segment) => normalizeText(Array.isArray(segment) ? segment[0] : ""))
-    .filter(Boolean)
-    .join("");
+  const parts = payload[0]
+    .map((segment) => String(Array.isArray(segment) ? (segment[0] ?? "") : ""))
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  let combined = "";
+  for (const part of parts) {
+    if (!combined) {
+      combined = part;
+      continue;
+    }
+    const needsSpace = !/\s$/.test(combined) && !/^\s/.test(part) && /[.!?;:)\]»”’]$/.test(combined);
+    combined += needsSpace ? ` ${part}` : part;
+  }
+  return combined;
 }
 
 export function createTranslationClient({

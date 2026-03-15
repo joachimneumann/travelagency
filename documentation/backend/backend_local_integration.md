@@ -17,7 +17,6 @@ Local backend features:
 Local admin pages:
 - `http://localhost:8080/backend.html`
 - `http://localhost:8080/booking.html?id=<booking_id>`
-- `http://localhost:8080/persons.html`
 - `http://localhost:8080/tour.html?id=<tour_id>`
 
 ## Start Locally
@@ -97,7 +96,6 @@ The submitted contact becomes the initial booking person and can later be refine
 - bookings table
 - tours table
 - Keycloak-backed assignment controls inside booking detail
-- link to person search
 
 `booking.html`
 - booking header
@@ -110,10 +108,6 @@ The submitted contact becomes the initial booking person and can later be refine
 - invoices
 - activities
 - read-only Meta chat timeline
-
-`persons.html`
-- booking-derived person search
-- links back to related bookings
 
 There is no customer page and no travel-group page.
 
@@ -131,6 +125,5 @@ There is no customer page and no travel-group page.
 3. Open a booking.
 4. Confirm persons summary renders from `booking.persons`.
 5. Confirm stages and ATP staff assignment work according to role.
-6. Open `persons.html` and verify person search links back to bookings.
-7. Open `tour.html` and confirm tours still load.
-8. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.
+6. Open `tour.html` and confirm tours still load.
+7. If Gmail draft config is set, use the generated-offer `email` action and confirm Gmail opens the Drafts view with the new draft available.

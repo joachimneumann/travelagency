@@ -55,6 +55,7 @@ export function buildApiRoutes({ authRoutes = [], handlers }) {
     { method: "PATCH", pattern: /^\/api\/v1\/suppliers\/([^/]+)$/, handler: handlers.handlePatchSupplier },
     { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handlers.handleListTours },
     { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlers.handleGetTour },
+    { method: "POST", pattern: /^\/api\/v1\/tours\/translate-fields$/, handler: handlers.handleTranslateTourFields },
     { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handlers.handleCreateTour },
     { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlers.handlePatchTour },
     { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handlers.handleUploadTourImage },

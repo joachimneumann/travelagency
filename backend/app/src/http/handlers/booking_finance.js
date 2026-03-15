@@ -164,7 +164,8 @@ export function createBookingFinanceHandlers(deps) {
           existingComponent?.details_i18n ?? existingComponent?.details,
           component.details,
           component.details_i18n,
-          normalizedLang
+          normalizedLang,
+          { pruneExtraTranslationsOnEnglishChange: true }
         );
         const notesField = mergeLocalizedTextField(
           existingComponent?.notes_i18n ?? existingComponent?.notes,

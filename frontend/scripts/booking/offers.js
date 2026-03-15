@@ -6,7 +6,7 @@ import {
   bookingGeneratedOfferUpdateRequest,
   bookingOfferRequest,
   offerExchangeRatesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -15,9 +15,9 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=693624dd6d2c";
-import { BOOKING_CONTENT_LANGUAGE_OPTIONS, bookingContentLang, bookingContentLanguageOption, bookingLang, bookingT } from "./i18n.js?v=693624dd6d2c";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=693624dd6d2c";
+} from "./pricing.js?v=f09b901159f7";
+import { BOOKING_CONTENT_LANGUAGE_OPTIONS, bookingContentLang, bookingContentLanguageOption, bookingLang, bookingT } from "./i18n.js?v=f09b901159f7";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=f09b901159f7";
 import {
   buildDualLocalizedPayload,
   normalizeLocalizedEditorMap,
@@ -25,7 +25,7 @@ import {
   requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
-} from "./localized_editor.js?v=693624dd6d2c";
+} from "./localized_editor.js?v=f09b901159f7";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
@@ -74,6 +74,9 @@ export function createBookingOfferModule(ctx) {
   let offerAutosavePromise = null;
   let offerPendingRowIndexes = new Set();
   let offerTotalPending = false;
+  let offerCategoryEditorIndexes = new Set();
+  let offerQuantityEditorIndexes = new Set();
+  let offerTaxEditorIndexes = new Set();
 
   function normalizeOfferStatus(value) {
     const normalized = String(value || "").trim().toUpperCase();
@@ -291,13 +294,94 @@ export function createBookingOfferModule(ctx) {
     const quantity = Math.max(1, Number(component?.quantity || 1));
     const unitAmount = Math.max(0, Number(component?.unit_amount_cents || 0));
     const taxBasisPoints = Math.max(0, Number(component?.tax_rate_basis_points || 0));
+    const unitTaxAmount = Math.round((unitAmount * taxBasisPoints) / 10000);
     const net_amount_cents = sign * quantity * unitAmount;
-    const tax_amount_cents = sign * Math.round((quantity * unitAmount * taxBasisPoints) / 10000);
+    const tax_amount_cents = sign * quantity * unitTaxAmount;
     return {
       net_amount_cents,
       tax_amount_cents,
-      gross_amount_cents: net_amount_cents + tax_amount_cents
+      gross_amount_cents: net_amount_cents + tax_amount_cents,
+      line_gross_amount_cents: net_amount_cents + tax_amount_cents
     };
+  }
+
+  function computeOfferComponentUnitGrossAmount(componentOrValues) {
+    const unitAmount = Math.max(0, Number(componentOrValues?.unit_amount_cents || 0));
+    const taxBasisPoints = Math.max(0, Number(componentOrValues?.tax_rate_basis_points || 0));
+    return unitAmount + Math.round((unitAmount * taxBasisPoints) / 10000);
+  }
+
+  function deriveUnitNetAmountFromGross(grossAmountCents, taxRateBasisPoints) {
+    const gross = Math.max(0, Math.round(Number(grossAmountCents || 0)));
+    const basisPoints = Math.max(0, Math.round(Number(taxRateBasisPoints || 0)));
+    if (basisPoints <= 0) return gross;
+    const estimated = Math.max(0, Math.round((gross * 10000) / (10000 + basisPoints)));
+    let bestNet = estimated;
+    let bestDelta = Number.POSITIVE_INFINITY;
+    for (let candidate = Math.max(0, estimated - 4); candidate <= estimated + 4; candidate += 1) {
+      const candidateGross = candidate + Math.round((candidate * basisPoints) / 10000);
+      const delta = Math.abs(candidateGross - gross);
+      if (delta < bestDelta || (delta === bestDelta && Math.abs(candidate - estimated) < Math.abs(bestNet - estimated))) {
+        bestDelta = delta;
+        bestNet = candidate;
+      }
+    }
+    return bestNet;
+  }
+
+  function isOfferCategoryEditorOpen(index) {
+    return offerCategoryEditorIndexes.has(Number(index));
+  }
+
+  function isOfferQuantityEditorOpen(index) {
+    return offerQuantityEditorIndexes.has(Number(index));
+  }
+
+  function isOfferTaxEditorOpen(index) {
+    return offerTaxEditorIndexes.has(Number(index));
+  }
+
+  function isOfferMultiQuantityMode(component, index) {
+    return isOfferQuantityEditorOpen(index) || Math.max(1, Number(component?.quantity || 1)) > 1;
+  }
+
+  function formatTaxRateLabel(basisPoints) {
+    const numeric = Math.max(0, Number(basisPoints || 0)) / 100;
+    const text = Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2).replace(/\.?0+$/, "");
+    return bookingT("booking.offer.tax_rate_label", "Tax {rate}%", { rate: text });
+  }
+
+  function formatTaxRateInputValue(basisPoints) {
+    const numeric = Math.max(0, Number(basisPoints || 0)) / 100;
+    return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2).replace(/\.?0+$/, "");
+  }
+
+  function applyOfferCategoryTaxRate(category, percentValue) {
+    const normalizedCategory = normalizeOfferCategory(category);
+    const numericPercent = Number(percentValue);
+    const basisPoints = Number.isFinite(numericPercent)
+      ? Math.max(0, Math.round(numericPercent * 100))
+      : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS;
+    const nextRules = Array.isArray(state.offerDraft?.category_rules)
+      ? state.offerDraft.category_rules.map((rule) => ({
+          ...rule,
+          tax_rate_basis_points:
+            normalizeOfferCategory(rule?.category) === normalizedCategory
+              ? basisPoints
+              : Math.max(0, Math.round(Number(rule?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS)))
+        }))
+      : defaultOfferCategoryRules().map((rule) => ({
+          ...rule,
+          tax_rate_basis_points: normalizeOfferCategory(rule.category) === normalizedCategory ? basisPoints : rule.tax_rate_basis_points
+        }));
+    state.offerDraft.category_rules = nextRules;
+    state.offerDraft.components = (Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : []).map((component) => ({
+      ...component,
+      tax_rate_basis_points:
+        normalizeOfferCategory(component?.category) === normalizedCategory
+          ? basisPoints
+          : Math.max(0, Math.round(Number(component?.tax_rate_basis_points ?? DEFAULT_OFFER_TAX_RATE_BASIS_POINTS)))
+    }));
   }
 
   function computeOfferDraftTotalsFromComponents(components) {
@@ -319,6 +403,79 @@ export function createBookingOfferModule(ctx) {
     };
   }
 
+  function computeOfferDraftQuotationSummary(components) {
+    const normalizedComponents = Array.isArray(components) ? components : [];
+    const totals = computeOfferDraftTotalsFromComponents(normalizedComponents);
+    const buckets = new Map();
+    normalizedComponents.forEach((component) => {
+      const line = computeOfferComponentLineTotals(component);
+      if (!line.net_amount_cents && !line.tax_amount_cents && !line.gross_amount_cents) return;
+      const basisPoints = Math.max(0, Number(component?.tax_rate_basis_points || 0));
+      const bucket = buckets.get(basisPoints) || {
+        tax_rate_basis_points: basisPoints,
+        net_amount_cents: 0,
+        tax_amount_cents: 0,
+        gross_amount_cents: 0,
+        items_count: 0
+      };
+      bucket.net_amount_cents += line.net_amount_cents;
+      bucket.tax_amount_cents += line.tax_amount_cents;
+      bucket.gross_amount_cents += line.gross_amount_cents;
+      bucket.items_count += 1;
+      buckets.set(basisPoints, bucket);
+    });
+    return {
+      tax_included: true,
+      subtotal_net_amount_cents: totals.net_amount_cents,
+      total_tax_amount_cents: totals.tax_amount_cents,
+      grand_total_amount_cents: totals.gross_amount_cents,
+      tax_breakdown: Array.from(buckets.values()).sort((left, right) => left.tax_rate_basis_points - right.tax_rate_basis_points)
+    };
+  }
+
+  function renderOfferQuotationSummary() {
+    if (!els.offer_quotation_summary) return;
+    const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+    if (!components.length) {
+      els.offer_quotation_summary.hidden = true;
+      els.offer_quotation_summary.innerHTML = "";
+      return;
+    }
+    const summary = computeOfferDraftQuotationSummary(components);
+    const rows = [
+      {
+        label: bookingT("booking.offer.subtotal_before_tax", "Subtotal before tax"),
+        value: formatMoneyDisplay(summary.subtotal_net_amount_cents || 0, currency)
+      },
+      ...summary.tax_breakdown
+        .filter((bucket) => Number(bucket?.tax_amount_cents || 0) !== 0)
+        .map((bucket) => ({
+          label: formatTaxRateLabel(bucket.tax_rate_basis_points),
+          value: formatMoneyDisplay(bucket.tax_amount_cents || 0, currency)
+        })),
+      {
+        label: bookingT("booking.offer.total_with_tax", "Total with tax"),
+        value: formatMoneyDisplay(summary.grand_total_amount_cents || 0, currency),
+        isTotal: true
+      }
+    ];
+    els.offer_quotation_summary.innerHTML = `
+      <div class="offer-quotation-summary__card">
+        <div class="offer-quotation-summary__title">${escapeHtml(bookingT("booking.offer.quotation_tax_summary", "Quotation tax summary"))}</div>
+        <div class="offer-quotation-summary__rows">
+          ${rows.map((row) => `
+            <div class="offer-quotation-summary__row${row.isTotal ? " is-total" : ""}">
+              <span class="offer-quotation-summary__label">${escapeHtml(row.label)}</span>
+              <span class="offer-quotation-summary__value">${escapeHtml(row.value)}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+    els.offer_quotation_summary.hidden = false;
+  }
+
   function resolveOfferTotalCents() {
     const explicitTotal = Number(state.offerDraft?.total_price_cents);
     if (Number.isFinite(explicitTotal)) {
@@ -337,17 +494,25 @@ export function createBookingOfferModule(ctx) {
     }
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     return rows.map((_, index) => {
-      const category = normalizeOfferCategory(state.offerDraft?.components?.[index]?.category || "OTHER");
+      const fallbackComponent = fallbackComponents[index] || {};
+      const category = normalizeOfferCategory(
+        document.querySelector(`[data-offer-component-category="${index}"]`)?.value
+          || fallbackComponent?.category
+          || "OTHER"
+      );
       const englishDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`)?.value || "").trim();
       const targetLang = bookingContentLang();
       const localizedDetails = targetLang === "en"
         ? ""
         : String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`)?.value || "").trim();
-      const quantityRaw = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
-      const unitAmountRaw = document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0";
+      const quantityInput = document.querySelector(`[data-offer-component-quantity="${index}"]`);
+      const totalInput = document.querySelector(`[data-offer-component-total-input="${index}"]`);
+      const unitInput = document.querySelector(`[data-offer-component-unit="${index}"]`);
+      const quantityRaw = Number(quantityInput?.value || fallbackComponent?.quantity || "1");
       const quantity = Number.isFinite(quantityRaw) && quantityRaw >= 1 ? Math.round(quantityRaw) : 1;
-      const unitAmount = parseMoneyInputValue(unitAmountRaw, currency);
-      const fallbackComponent = fallbackComponents[index] || {};
+      const taxRateBasisPoints = getOfferCategoryTaxRateBasisPoints(category);
+      const displayAmountRaw = totalInput?.value ?? unitInput?.value ?? "0";
+      const displayedAmount = parseMoneyInputValue(displayAmountRaw, currency);
       const detailsPayload = buildDualLocalizedPayload(englishDetails, localizedDetails, targetLang);
       return {
         id: String(fallbackComponent.id || ""),
@@ -357,12 +522,10 @@ export function createBookingOfferModule(ctx) {
         details_i18n: detailsPayload.map,
         quantity,
         unit_amount_cents:
-          Number.isFinite(unitAmount) && unitAmount >= 0
-            ? Math.round(unitAmount)
+          Number.isFinite(displayedAmount) && displayedAmount >= 0
+            ? deriveUnitNetAmountFromGross(displayedAmount, taxRateBasisPoints)
             : Math.max(0, Number(fallbackComponent.unit_amount_cents || 0)),
-        tax_rate_basis_points: Number.isFinite(Number(fallbackComponent.tax_rate_basis_points))
-          ? Math.max(0, Math.round(Number(fallbackComponent.tax_rate_basis_points)))
-          : getOfferCategoryTaxRateBasisPoints(category),
+        tax_rate_basis_points: taxRateBasisPoints,
         currency,
         notes: String(fallbackComponent.notes || ""),
         sort_order: fallbackComponent.sort_order ?? index
@@ -386,6 +549,7 @@ export function createBookingOfferModule(ctx) {
   function addOfferComponent() {
     if (!state.permissions.canEditBooking || !state.offerDraft) return;
     const category = normalizeOfferCategory("OTHER");
+    const nextIndex = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components.length : 0;
     debugOffer("add component:start", {
       booking_id: state.booking?.id || "",
       normalized_category: category,
@@ -404,6 +568,7 @@ export function createBookingOfferModule(ctx) {
       notes: "",
       sort_order: state.offerDraft.components.length
     });
+    offerCategoryEditorIndexes.add(nextIndex);
     debugOffer("add component:after push", {
       components: state.offerDraft.components.map((component) => ({
         id: component.id,
@@ -423,6 +588,9 @@ export function createBookingOfferModule(ctx) {
     state.offerDraft = offer;
     offerPendingRowIndexes = new Set();
     offerTotalPending = false;
+    offerCategoryEditorIndexes = new Set();
+    offerQuantityEditorIndexes = new Set();
+    offerTaxEditorIndexes = new Set();
     debugOffer("render panel", {
       booking_id: state.booking.id,
       offer: {
@@ -677,7 +845,7 @@ export function createBookingOfferModule(ctx) {
     const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
     const showDualPrice = true;
     const priceHeaders = showDualPrice
-      ? `<th class="offer-col-price-single">${escapeHtml(bookingT("booking.offer.single", "Single"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total_incl_tax", "Total (incl. tax)"))}</th>`
+      ? `<th class="offer-col-price-single">${escapeHtml(bookingT("booking.offer.unit", "Unit"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total", "Total"))}</th>`
       : `<th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total_currency", "Total ({currency})", { currency }))}</th>`;
     const actionHeader = showActionsCol ? '<th class="offer-col-actions"></th>' : "";
     const header = `<thead><tr><th class="offer-col-category">${escapeHtml(bookingT("booking.offer.category", "Offer category"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.details", "Offer details"))}</th><th class="offer-col-qty">${escapeHtml(bookingT("booking.offer.quantity", "Quantity"))}</th>${priceHeaders}${actionHeader}</tr></thead>`;
@@ -685,26 +853,78 @@ export function createBookingOfferModule(ctx) {
       .map((component, index) => {
         const category = normalizeOfferCategory(component.category || "OTHER");
         const quantity = Math.max(1, Number(component.quantity || 1));
-        const unitAmount = Math.max(0, Number(component.unit_amount_cents || 0));
-        const rawLineTotal = computeOfferComponentLineTotals(component).gross_amount_cents;
+        const multiQuantityMode = isOfferMultiQuantityMode(component, index);
+        const categoryEditorOpen = isOfferCategoryEditorOpen(index);
+        const effectiveTaxRateBasisPoints = getOfferCategoryTaxRateBasisPoints(category);
+        const unitGrossAmount = computeOfferComponentUnitGrossAmount({
+          ...component,
+          tax_rate_basis_points: effectiveTaxRateBasisPoints
+        });
+        const rawLineTotal = computeOfferComponentLineTotals({
+          ...component,
+          tax_rate_basis_points: effectiveTaxRateBasisPoints
+        }).gross_amount_cents;
         const componentTotalText = formatMoneyDisplay(Math.round(rawLineTotal), currency);
+        const quantityDisplayText = escapeHtml(String(quantity));
+        const categoryText = escapeHtml(offerCategoryLabel(category));
+        const taxRateText = escapeHtml(formatTaxRateLabel(effectiveTaxRateBasisPoints));
         const removeButton = showActionsCol
           ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-component="${index}" title="${escapeHtml(bookingT("booking.offer.remove_component", "Remove offer component"))}" aria-label="${escapeHtml(bookingT("booking.offer.remove_component", "Remove offer component"))}">×</button>`
           : "";
-        const singleInput = `<input id="offer_component_unit_${index}" name="offer_component_unit_${index}" data-offer-component-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(unitAmount, currency))}" ${readOnly ? "disabled" : ""} />`;
-        const categorySelect = `<select id="offer_component_category_${index}" name="offer_component_category_${index}" data-offer-component-category="${index}" ${readOnly ? "disabled" : ""}>${OFFER_COMPONENT_CATEGORIES.map((option) => `<option value="${escapeHtml(option.code)}" ${option.code === category ? "selected" : ""}>${escapeHtml(offerCategoryLabel(option.code))}</option>`).join("")}</select>`;
+        const changeLabel = escapeHtml(bookingT("common.change", "Change"));
+        const categoryCellContent = categoryEditorOpen
+          ? `<select id="offer_component_category_${index}" name="offer_component_category_${index}" data-offer-component-category="${index}" ${readOnly ? "disabled" : ""}>${OFFER_COMPONENT_CATEGORIES.map((option) => `<option value="${escapeHtml(option.code)}" ${option.code === category ? "selected" : ""}>${escapeHtml(offerCategoryLabel(option.code))}</option>`).join("")}</select>`
+          : `<div class="offer-inline-display">
+              <div class="offer-inline-display__primary">${categoryText}</div>
+              <div class="offer-inline-display__secondary">
+                ${isOfferTaxEditorOpen(index)
+                  ? `<label class="offer-tax-rate-editor">
+                      <span class="offer-tax-rate-editor__label">${escapeHtml(bookingT("booking.offer.tax", "Tax"))}</span>
+                      <input
+                        id="offer_component_tax_rate_${index}"
+                        name="offer_component_tax_rate_${index}"
+                        data-offer-component-tax-rate="${index}"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value="${escapeHtml(formatTaxRateInputValue(effectiveTaxRateBasisPoints))}"
+                        ${readOnly ? "disabled" : ""}
+                      />
+                      <span class="offer-tax-rate-editor__suffix">%</span>
+                    </label>`
+                  : readOnly
+                    ? `<span class="offer-tax-rate-text">${taxRateText}</span>`
+                    : `<button class="offer-tax-rate-trigger" type="button" data-offer-edit-tax-rate="${index}">${taxRateText}</button>`}
+              </div>
+            </div>`;
+        const quantityCellContent = multiQuantityMode
+          ? `<input id="offer_component_quantity_${index}" name="offer_component_quantity_${index}" data-offer-component-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${readOnly ? "disabled" : ""} />`
+          : `<div class="offer-inline-display offer-inline-display--qty-row">
+              <div class="offer-inline-display__secondary offer-inline-display__secondary--qty">
+                <span class="offer-inline-display__primary">${quantityDisplayText}</span>
+                ${readOnly ? "" : `<button class="offer-inline-change-btn" type="button" data-offer-edit-quantity="${index}">${changeLabel}</button>`}
+              </div>
+            </div>`;
         const totalPriceCell = showDualPrice
-          ? `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span></div></td>`
+          ? `<td class="offer-col-price-total"><div class="offer-total-cell">${multiQuantityMode
+              ? `<span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span>`
+              : `<input id="offer_component_total_${index}" name="offer_component_total_${index}" data-offer-component-total-input="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(Math.round(rawLineTotal), currency))}" ${readOnly ? "disabled" : ""} />`
+            }</div></td>`
           : `<td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span></div></td>`;
-        const unitInputCell = showDualPrice ? `<td class="offer-col-price-single">${singleInput}</td>` : "";
+        const unitInputCell = showDualPrice
+          ? `<td class="offer-col-price-single">${multiQuantityMode
+              ? `<input id="offer_component_unit_${index}" name="offer_component_unit_${index}" data-offer-component-unit="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(unitGrossAmount, currency))}" ${readOnly ? "disabled" : ""} />`
+              : ``
+            }</td>`
+          : "";
         const actionCell = showActionsCol ? `<td class="offer-col-actions">${removeButton}</td>` : "";
         const priceCells = showDualPrice ? `${unitInputCell}${totalPriceCell}` : totalPriceCell;
         return `<tr>
       <td class="offer-col-category">
-        <div>${categorySelect}</div>
+        <div>${categoryCellContent}</div>
       </td>
       <td class="offer-col-details">${renderOfferLocalizedDetailsField(component, index)}</td>
-      <td class="offer-col-qty"><input id="offer_component_quantity_${index}" name="offer_component_quantity_${index}" data-offer-component-quantity="${index}" type="number" min="1" step="1" value="${escapeHtml(String(quantity))}" ${readOnly ? "disabled" : ""} /></td>
+      <td class="offer-col-qty">${quantityCellContent}</td>
       ${priceCells}${actionCell}
     </tr>`;
       })
@@ -714,10 +934,11 @@ export function createBookingOfferModule(ctx) {
     const addButtonCell = !readOnly
       ? `<td class="offer-col-category"></td><td class="offer-add-cell"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-component>${escapeHtml(bookingT("common.new", "New"))}</button></td>`
       : `<td class="offer-col-category"></td><td class="offer-col-details"></td>`;
-    const totalLabelCols = `<td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.total", "Total"))}:</strong></div></td>`;
+    const totalLabelCols = `<td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.offer.total_including_tax", "Total (including tax)"))}:</strong></div></td>`;
     const totalValueCol = `<td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>`;
     const totalRow = `<tr class="offer-total-row">${addButtonCell}${totalLabelCols}${totalValueCol}${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
     els.offer_components_table.innerHTML = `${header}<tbody>${rows}${totalRow}</tbody>`;
+    renderOfferQuotationSummary();
 
     if (!readOnly) {
       const syncOfferInputTotals = () => {
@@ -751,22 +972,58 @@ export function createBookingOfferModule(ctx) {
             return;
           }
           state.offerDraft.components.splice(index, 1);
+          offerCategoryEditorIndexes = new Set();
+          offerQuantityEditorIndexes = new Set();
+          offerTaxEditorIndexes = new Set();
           setOfferSaveEnabled(true);
           renderOfferComponentsTable();
           await saveOffer();
         });
       });
+      els.offer_components_table.querySelectorAll("[data-offer-edit-tax-rate]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.getAttribute("data-offer-edit-tax-rate"));
+          offerTaxEditorIndexes.add(index);
+          renderOfferComponentsTable();
+        });
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-edit-quantity]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.getAttribute("data-offer-edit-quantity"));
+          offerQuantityEditorIndexes.add(index);
+          renderOfferComponentsTable();
+        });
+      });
       els.offer_components_table.querySelectorAll("[data-offer-component-category]").forEach((input) => {
-        input.addEventListener("change", syncOfferAndAutosave);
+        input.addEventListener("change", () => {
+          const index = Number(input.getAttribute("data-offer-component-category"));
+          offerCategoryEditorIndexes.delete(index);
+          syncOfferInputTotals();
+          renderOfferComponentsTable();
+          scheduleOfferAutosave();
+        });
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-component-tax-rate]").forEach((input) => {
+        input.addEventListener("change", () => {
+          const index = Number(input.getAttribute("data-offer-component-tax-rate"));
+          const component = state.offerDraft?.components?.[index];
+          applyOfferCategoryTaxRate(component?.category, input.value);
+          offerTaxEditorIndexes.delete(index);
+          setOfferSaveEnabled(true);
+          state.offerDraft.total_price_cents = null;
+          renderOfferComponentsTable();
+          scheduleOfferAutosave();
+        });
       });
       els.offer_components_table.querySelectorAll("[data-offer-component-details]").forEach((input) => {
         input.addEventListener("change", syncOfferAndAutosave);
       });
-      els.offer_components_table.querySelectorAll("[data-offer-component-quantity], [data-offer-component-unit]").forEach((input) => {
+      els.offer_components_table.querySelectorAll("[data-offer-component-quantity], [data-offer-component-unit], [data-offer-component-total-input]").forEach((input) => {
         input.addEventListener("input", () => {
           const index = Number(
             input.getAttribute("data-offer-component-quantity")
             || input.getAttribute("data-offer-component-unit")
+            || input.getAttribute("data-offer-component-total-input")
             || "-1"
           );
           if (index >= 0) {
@@ -847,6 +1104,7 @@ export function createBookingOfferModule(ctx) {
     if (totalValueNode) {
       totalValueNode.textContent = `${offerTotalPending ? formatPendingMoneyDisplay(currency) : formatMoneyDisplay(resolveOfferTotalCents(), currency)}`;
     }
+    renderOfferQuotationSummary();
   }
 
   function scheduleOfferAutosave() {
@@ -889,16 +1147,26 @@ export function createBookingOfferModule(ctx) {
     const components = [];
     for (const input of rows) {
       const index = Number(input.getAttribute("data-offer-component-details"));
-      const category = normalizeOfferCategory(document.querySelector(`[data-offer-component-category="${index}"]`)?.value || "OTHER");
+      const fallbackComponent = state.offerDraft.components[index] || {};
+      const category = normalizeOfferCategory(
+        document.querySelector(`[data-offer-component-category="${index}"]`)?.value
+          || fallbackComponent?.category
+          || "OTHER"
+      );
       const englishDetails = String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="en"][data-localized-role="source"]`)?.value || "").trim();
       const targetLang = bookingContentLang();
       const localizedDetails = targetLang === "en"
         ? ""
         : String(document.querySelector(`[data-offer-component-details="${index}"][data-localized-lang="${targetLang}"][data-localized-role="target"]`)?.value || "").trim();
-      const quantity = Number(document.querySelector(`[data-offer-component-quantity="${index}"]`)?.value || "1");
-      const unitAmount = parseMoneyInputValue(document.querySelector(`[data-offer-component-unit="${index}"]`)?.value || "0", currency);
+      const quantityInput = document.querySelector(`[data-offer-component-quantity="${index}"]`);
+      const totalInput = document.querySelector(`[data-offer-component-total-input="${index}"]`);
+      const unitInput = document.querySelector(`[data-offer-component-unit="${index}"]`);
+      const quantity = Number(quantityInput?.value || fallbackComponent?.quantity || "1");
+      const displayedGrossAmount = parseMoneyInputValue(totalInput?.value ?? unitInput?.value ?? "0", currency);
+      const taxRateBasisPoints = getOfferCategoryTaxRateBasisPoints(category);
+      const unitAmount = deriveUnitNetAmountFromGross(displayedGrossAmount, taxRateBasisPoints);
       const label = String(offerCategoryLabel(category)).trim();
-      const notes = String(state.offerDraft?.components[index]?.notes || "").trim();
+      const notes = String(fallbackComponent?.notes || "").trim();
       const detailsPayload = buildDualLocalizedPayload(englishDetails, localizedDetails, targetLang);
       if (!category) {
         if (throwOnError) throw new Error(bookingT("booking.offer.error.component_category", "Offer component {index} requires a category.", { index: index + 1 }));
@@ -913,14 +1181,14 @@ export function createBookingOfferModule(ctx) {
         continue;
       }
       components.push({
-        id: state.offerDraft.components[index]?.id || "",
+        id: fallbackComponent?.id || "",
         category,
         label,
         details: detailsPayload.text || null,
         details_i18n: detailsPayload.map,
         quantity: Math.round(quantity),
         unit_amount_cents: Math.round(unitAmount),
-        tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
+        tax_rate_basis_points: taxRateBasisPoints,
         currency,
         notes: notes || null,
         sort_order: index

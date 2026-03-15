@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=693624dd6d2c";
+} from "../shared/api.js?v=f09b901159f7";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=693624dd6d2c";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=693624dd6d2c";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=693624dd6d2c";
-import { renderPagination } from "../shared/pagination.js?v=693624dd6d2c";
+} from "../shared/links.js?v=f09b901159f7";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=f09b901159f7";
+import { renderPagination } from "../shared/pagination.js?v=f09b901159f7";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=693624dd6d2c";
+} from "../shared/booking_persons.js?v=f09b901159f7";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -203,13 +203,6 @@ function bindSectionNavigation() {
   const buttons = Array.from(els.sectionNavButtons || []);
   buttons.forEach((button) => {
     const section = button.dataset.backendSection;
-    if (section === "persons") {
-      button.classList.remove("is-hidden");
-      button.addEventListener("click", () => {
-        window.location.href = resolveBackendSectionHref(section);
-      });
-      return;
-    }
     const allowed = isSectionAllowed(section);
     button.classList.toggle("is-hidden", !allowed);
 

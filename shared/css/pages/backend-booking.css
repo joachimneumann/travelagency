@@ -753,15 +753,15 @@
 
 .booking-collapsible.backend-dirty-surface {
   border-color: rgba(255, 111, 77, 0.42);
-  box-shadow: 0 10px 22px rgba(255, 111, 77, 0.14);
+  box-shadow: 0 10px 22px rgba(255, 111, 77, 0.2);
 }
 
 .booking-collapsible.backend-dirty-surface .booking-collapsible__summary {
-  background: rgba(255, 111, 77, 0.14);
+  background: rgba(255, 111, 77, 0.24);
 }
 
 .booking-collapsible.backend-dirty-surface .booking-collapsible__body {
-  background: rgba(255, 111, 77, 0.11);
+  background: rgba(255, 111, 77, 0.2);
 }
 
 @media (prefers-reduced-motion: reduce) {

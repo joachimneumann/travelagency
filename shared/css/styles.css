@@ -8,7 +8,7 @@
 @import "./tokens.css";
 @import "./base.css";
 @import "./utilities.css";
-@import "./site.css";
+@import "./site.css?v=20260315-tour-i18n";
 @import "./components/backend-nav.css";
 @import "./components/backend-login.css";
 @import "./tailwind.generated.css";

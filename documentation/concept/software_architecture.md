@@ -204,7 +204,6 @@ The frontend is responsible for:
 - public tours catalog
 - backend workspace pages
 - booking detail page
-- person search page
 - tour edit page
 
 The frontend should use generated request builders, generated enums, and generated transport models whenever possible.

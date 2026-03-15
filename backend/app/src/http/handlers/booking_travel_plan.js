@@ -65,19 +65,22 @@ export function createBookingTravelPlanHandlers(deps) {
               existingDay?.title_i18n ?? existingDay?.title,
               day.title,
               day.title_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
             const nextOvernightField = mergeEditableLocalizedTextField(
               existingDay?.overnight_location_i18n ?? existingDay?.overnight_location,
               day.overnight_location,
               day.overnight_location_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
             const nextNotesField = mergeEditableLocalizedTextField(
               existingDay?.notes_i18n ?? existingDay?.notes,
               day.notes,
               day.notes_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
 
         return {
@@ -94,25 +97,29 @@ export function createBookingTravelPlanHandlers(deps) {
               existingSegment?.time_label_i18n ?? existingSegment?.time_label,
               segment.time_label,
               segment.time_label_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
             const titleSegmentField = mergeEditableLocalizedTextField(
               existingSegment?.title_i18n ?? existingSegment?.title,
               segment.title,
               segment.title_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
             const detailsField = mergeEditableLocalizedTextField(
               existingSegment?.details_i18n ?? existingSegment?.details,
               segment.details,
               segment.details_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
             const locationField = mergeEditableLocalizedTextField(
               existingSegment?.location_i18n ?? existingSegment?.location,
               segment.location,
               segment.location_i18n,
-              normalizedLang
+              normalizedLang,
+              { pruneExtraTranslationsOnEnglishChange: true }
             );
             const financialNoteField = mergeLocalizedTextField(
               existingSegment?.financial_note_i18n ?? existingSegment?.financial_note,

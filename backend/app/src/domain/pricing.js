@@ -46,12 +46,74 @@ export function createPricingHelpers({
     return clamp(number, 0, 100000);
   }
 
+  function computeOfferComponentAmounts(component, overrides = {}) {
+    const category = normalizeOfferCategory(overrides.category ?? component?.category);
+    const quantity = Math.max(1, safeInt(overrides.quantity ?? component?.quantity) || 1);
+    const unitNetAmountCents = Math.max(0, normalizeAmountCents(
+      overrides.unit_amount_cents ?? overrides.unitAmountCents ?? component?.unit_amount_cents,
+      0
+    ));
+    const taxRateBasisPoints = clampOfferTaxRateBasisPoints(
+      overrides.tax_rate_basis_points ?? overrides.taxRateBasisPoints ?? component?.tax_rate_basis_points,
+      defaultOfferTaxRateBasisPoints
+    );
+    const sign = offerCategorySign(category);
+    const unitTaxAmountCents = Math.round((unitNetAmountCents * taxRateBasisPoints) / 10000);
+    const unitTotalAmountCents = unitNetAmountCents + unitTaxAmountCents;
+    const lineNetAmountCents = sign * unitNetAmountCents * quantity;
+    const lineTaxAmountCents = sign * unitTaxAmountCents * quantity;
+    const lineGrossAmountCents = sign * unitTotalAmountCents * quantity;
+    return {
+      category,
+      quantity,
+      tax_rate_basis_points: taxRateBasisPoints,
+      unit_amount_cents: unitNetAmountCents,
+      unit_net_amount_cents: unitNetAmountCents,
+      unit_tax_amount_cents: unitTaxAmountCents,
+      unit_total_amount_cents: unitTotalAmountCents,
+      line_net_amount_cents: lineNetAmountCents,
+      line_tax_amount_cents: lineTaxAmountCents,
+      line_gross_amount_cents: lineGrossAmountCents,
+      line_total_amount_cents: lineGrossAmountCents
+    };
+  }
+
+  function computeBookingOfferTaxBreakdown(components) {
+    const buckets = new Map();
+    for (const component of Array.isArray(components) ? components : []) {
+      const taxRateBasisPoints = clampOfferTaxRateBasisPoints(component?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints);
+      const netAmountCents = normalizeAmountCents(component?.line_net_amount_cents, 0);
+      const taxAmountCents = normalizeAmountCents(component?.line_tax_amount_cents, 0);
+      const grossAmountCents = normalizeAmountCents(
+        component?.line_gross_amount_cents,
+        normalizeAmountCents(component?.line_total_amount_cents, netAmountCents + taxAmountCents)
+      );
+      if (!netAmountCents && !taxAmountCents && !grossAmountCents) continue;
+      const bucket = buckets.get(taxRateBasisPoints) || {
+        tax_rate_basis_points: taxRateBasisPoints,
+        net_amount_cents: 0,
+        tax_amount_cents: 0,
+        gross_amount_cents: 0,
+        items_count: 0
+      };
+      bucket.net_amount_cents += netAmountCents;
+      bucket.tax_amount_cents += taxAmountCents;
+      bucket.gross_amount_cents += grossAmountCents;
+      bucket.items_count += 1;
+      buckets.set(taxRateBasisPoints, bucket);
+    }
+    return Array.from(buckets.values()).sort((left, right) => left.tax_rate_basis_points - right.tax_rate_basis_points);
+  }
+
   function computeBookingOfferTotals(offer) {
     const components = Array.isArray(offer?.components) ? offer.components : [];
     const totals = components.reduce((acc, component) => {
       acc.net_amount_cents += normalizeAmountCents(component?.line_net_amount_cents, 0);
       acc.tax_amount_cents += normalizeAmountCents(component?.line_tax_amount_cents, 0);
-      acc.gross_amount_cents += normalizeAmountCents(component?.line_total_amount_cents, 0);
+      acc.gross_amount_cents += normalizeAmountCents(
+        component?.line_gross_amount_cents,
+        normalizeAmountCents(component?.line_total_amount_cents, 0)
+      );
       return acc;
     }, {
       net_amount_cents: 0,
@@ -62,6 +124,17 @@ export function createPricingHelpers({
       ...totals,
       total_price_cents: totals.gross_amount_cents,
       items_count: components.length
+    };
+  }
+
+  function computeBookingOfferQuotationSummary(offer) {
+    const totals = computeBookingOfferTotals(offer);
+    return {
+      tax_included: true,
+      subtotal_net_amount_cents: totals.net_amount_cents,
+      total_tax_amount_cents: totals.tax_amount_cents,
+      grand_total_amount_cents: totals.gross_amount_cents,
+      tax_breakdown: computeBookingOfferTaxBreakdown(offer?.components)
     };
   }
 
@@ -122,6 +195,7 @@ export function createPricingHelpers({
       })),
       components: [],
       totals: computeBookingOfferTotals(null),
+      quotation_summary: computeBookingOfferQuotationSummary(null),
       total_price_cents: 0
     };
   }
@@ -133,12 +207,7 @@ export function createPricingHelpers({
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
     const components = (Array.isArray(source.components) ? source.components : []).map((component, index) => {
-      const quantity = Math.max(1, safeInt(component?.quantity) || 1);
-      const unitAmountCents = Math.max(0, normalizeAmountCents(component?.unit_amount_cents, 0));
-      const taxRateBasisPoints = clampOfferTaxRateBasisPoints(component?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints);
-      const sign = offerCategorySign(component?.category);
-      const lineNetAmountCents = sign * unitAmountCents * quantity;
-      const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxRateBasisPoints) / 10000);
+      const computedAmounts = computeOfferComponentAmounts(component);
       const label_i18n = normalizeLocalizedTextMap(component?.label_i18n ?? component?.label, contentLang);
       const details_i18n = normalizeLocalizedTextMap(
         component?.details_i18n ?? component?.details ?? component?.description,
@@ -147,41 +216,49 @@ export function createPricingHelpers({
       const notes_i18n = normalizeLocalizedTextMap(component?.notes_i18n ?? component?.notes, contentLang);
       return {
         id: normalizeText(component?.id) || `offer_component_${index + 1}`,
-        category: normalizeOfferCategory(component?.category),
+        category: computedAmounts.category,
         label: resolveLocalizedText(label_i18n, flatLang),
         label_i18n,
         details: resolveLocalizedText(details_i18n, flatLang),
         details_i18n,
-        quantity,
-        unit_amount_cents: unitAmountCents,
-        tax_rate_basis_points: taxRateBasisPoints,
+        quantity: computedAmounts.quantity,
+        unit_amount_cents: computedAmounts.unit_amount_cents,
+        unit_net_amount_cents: computedAmounts.unit_net_amount_cents,
+        unit_tax_amount_cents: computedAmounts.unit_tax_amount_cents,
+        unit_total_amount_cents: computedAmounts.unit_total_amount_cents,
+        tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
         currency,
         notes: resolveLocalizedText(notes_i18n, flatLang),
         notes_i18n,
         sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index,
         created_at: component?.created_at || null,
         updated_at: component?.updated_at || null,
-        line_net_amount_cents: lineNetAmountCents,
-        line_tax_amount_cents: lineTaxAmountCents,
-        line_total_amount_cents: lineNetAmountCents + lineTaxAmountCents
+        line_net_amount_cents: computedAmounts.line_net_amount_cents,
+        line_tax_amount_cents: computedAmounts.line_tax_amount_cents,
+        line_gross_amount_cents: computedAmounts.line_gross_amount_cents,
+        line_total_amount_cents: computedAmounts.line_total_amount_cents
       };
     });
 
     const totals = computeBookingOfferTotals({ components });
+    const categoryRulesByCode = new Map(
+      (Array.isArray(source.category_rules) ? source.category_rules : []).map((rule) => [
+        normalizeOfferCategory(rule?.category),
+        clampOfferTaxRateBasisPoints(rule?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints)
+      ])
+    );
     const normalized = {
       status,
       currency,
-      category_rules: Array.isArray(source.category_rules) && source.category_rules.length
-        ? source.category_rules.map((rule) => ({
-            category: normalizeOfferCategory(rule?.category),
-            tax_rate_basis_points: clampOfferTaxRateBasisPoints(rule?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints)
-          }))
-        : offerCategoryOrder.map((category) => ({
-            category,
-            tax_rate_basis_points: defaultOfferTaxRateBasisPoints
-          })),
+      category_rules: offerCategoryOrder.map((category) => ({
+        category,
+        tax_rate_basis_points: categoryRulesByCode.has(category)
+          ? categoryRulesByCode.get(category)
+          : defaultOfferTaxRateBasisPoints
+      })),
       components,
       totals,
+      quotation_summary: computeBookingOfferQuotationSummary({ components }),
       total_price_cents: totals.total_price_cents
     };
     return normalizeOfferTranslationMeta(normalized);
@@ -466,21 +543,20 @@ export function createPricingHelpers({
     })();
 
     if (sourceCurrency === targetCurrency) {
-      const unitAmountCents = Math.max(0, Number(component?.unit_amount_cents || 0));
-      const safeQuantity = Math.max(1, safeInt(component?.quantity) || 1);
-      const sign = offerCategorySign(component?.category);
-      const taxBasisPoints = clampOfferTaxRateBasisPoints(component?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints);
-      const lineNetAmountCents = sign * unitAmountCents * safeQuantity;
-      const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxBasisPoints) / 10000);
+      const computedAmounts = computeOfferComponentAmounts(component);
       return {
         id: String(component?.id || ""),
-        category: normalizeOfferCategory(component?.category),
-        quantity: safeQuantity,
-        tax_rate_basis_points: taxBasisPoints,
-        unit_amount_cents: unitAmountCents,
-        line_net_amount_cents: lineNetAmountCents,
-        line_tax_amount_cents: lineTaxAmountCents,
-        line_total_amount_cents: lineNetAmountCents + lineTaxAmountCents,
+        category: computedAmounts.category,
+        quantity: computedAmounts.quantity,
+        tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
+        unit_amount_cents: computedAmounts.unit_amount_cents,
+        unit_net_amount_cents: computedAmounts.unit_net_amount_cents,
+        unit_tax_amount_cents: computedAmounts.unit_tax_amount_cents,
+        unit_total_amount_cents: computedAmounts.unit_total_amount_cents,
+        line_net_amount_cents: computedAmounts.line_net_amount_cents,
+        line_tax_amount_cents: computedAmounts.line_tax_amount_cents,
+        line_gross_amount_cents: computedAmounts.line_gross_amount_cents,
+        line_total_amount_cents: computedAmounts.line_total_amount_cents,
         currency: targetCurrency
       };
     }
@@ -492,8 +568,6 @@ export function createPricingHelpers({
     const toScale = 10 ** toDefinition.decimal_places;
     const safeQuantity = Math.max(1, safeInt(component?.quantity) || 1);
     const unitAmountCents = Math.max(0, Number(component?.unit_amount_cents || 0));
-    const sign = offerCategorySign(component?.category);
-    const taxBasisPoints = clampOfferTaxRateBasisPoints(component?.tax_rate_basis_points, defaultOfferTaxRateBasisPoints);
     const sourceToBaseRate = sourceCurrency === baseCurrency ? 1 : normalizedRates.sourceToBaseRate;
     const baseToTargetRate = targetCurrency === baseCurrency ? 1 : normalizedRates.baseToTargetRate;
 
@@ -504,20 +578,24 @@ export function createPricingHelpers({
     const roundedUnitBaseMajor = roundedUnitBaseMinor / baseScale;
     const convertedUnitMajor = roundedUnitBaseMajor * baseToTargetRate;
     const convertedUnitMinor = Math.max(0, Math.round(convertedUnitMajor * toScale));
-
-    const lineNetAmountCents = sign * convertedUnitMinor * safeQuantity;
-    const lineTaxAmountCents = sign * Math.round((Math.abs(lineNetAmountCents) * taxBasisPoints) / 10000);
-    const line_total_amount_cents = lineNetAmountCents + lineTaxAmountCents;
+    const computedAmounts = computeOfferComponentAmounts(component, {
+      quantity: safeQuantity,
+      unitAmountCents: convertedUnitMinor
+    });
 
     return {
       id: String(component?.id || ""),
-      category: normalizeOfferCategory(component?.category),
-      quantity: safeQuantity,
-      tax_rate_basis_points: taxBasisPoints,
-      unit_amount_cents: convertedUnitMinor,
-      line_net_amount_cents: lineNetAmountCents,
-      line_tax_amount_cents: lineTaxAmountCents,
-      line_total_amount_cents,
+      category: computedAmounts.category,
+      quantity: computedAmounts.quantity,
+      tax_rate_basis_points: computedAmounts.tax_rate_basis_points,
+      unit_amount_cents: computedAmounts.unit_amount_cents,
+      unit_net_amount_cents: computedAmounts.unit_net_amount_cents,
+      unit_tax_amount_cents: computedAmounts.unit_tax_amount_cents,
+      unit_total_amount_cents: computedAmounts.unit_total_amount_cents,
+      line_net_amount_cents: computedAmounts.line_net_amount_cents,
+      line_tax_amount_cents: computedAmounts.line_tax_amount_cents,
+      line_gross_amount_cents: computedAmounts.line_gross_amount_cents,
+      line_total_amount_cents: computedAmounts.line_total_amount_cents,
       currency: targetCurrency
     };
   }
@@ -669,8 +747,11 @@ export function createPricingHelpers({
       currency: displayCurrency,
       components: normalized.components.map((component, index) => ({
         ...component,
+        ...computeOfferComponentAmounts(component, {
+          quantity: component?.quantity,
+          unitAmountCents: convertedAmounts[index]
+        }),
         currency: displayCurrency,
-        unit_amount_cents: convertedAmounts[index]
       }))
     };
   }
@@ -779,6 +860,7 @@ export function createPricingHelpers({
     return {
       ...converted,
       totals,
+      quotation_summary: computeBookingOfferQuotationSummary(converted),
       total_price_cents: totals.total_price_cents
     };
   }
@@ -855,6 +937,7 @@ export function createPricingHelpers({
     normalizeOfferCategory,
     offerCategorySign,
     clampOfferTaxRateBasisPoints,
+    computeOfferComponentAmounts,
     computeBookingOfferTotals,
     computeBookingPricingSummary,
     defaultBookingPricing,

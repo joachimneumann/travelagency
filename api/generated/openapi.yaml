@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-15T06:00:28Z
+# 2026-03-15T10:29:31Z
 
 ---
 openapi: 3.1.0
@@ -4188,6 +4188,12 @@ components:
           type: integer
         unit_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
+        unit_tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        unit_total_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
         tax_rate_basis_points:
           type: integer
         currency:
@@ -4196,6 +4202,9 @@ components:
           "$ref": "#/components/schemas/MoneyAmount"
           nullable: true
         line_tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_gross_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
           nullable: true
         line_total_amount_cents:
@@ -4215,6 +4224,25 @@ components:
           type: string
           format: date-time
           nullable: true
+    BookingOfferTaxBucket:
+      type: object
+      required:
+      - tax_rate_basis_points
+      - net_amount_cents
+      - tax_amount_cents
+      - gross_amount_cents
+      - items_count
+      properties:
+        tax_rate_basis_points:
+          type: integer
+        net_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        gross_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        items_count:
+          type: integer
     BookingOfferTotals:
       type: object
       required:
@@ -4234,6 +4262,26 @@ components:
           "$ref": "#/components/schemas/MoneyAmount"
         items_count:
           type: integer
+    BookingOfferQuotationSummary:
+      type: object
+      required:
+      - tax_included
+      - subtotal_net_amount_cents
+      - total_tax_amount_cents
+      - grand_total_amount_cents
+      properties:
+        tax_included:
+          type: boolean
+        subtotal_net_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        total_tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        grand_total_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        tax_breakdown:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferTaxBucket"
     BookingOffer:
       type: object
       required:
@@ -4256,6 +4304,9 @@ components:
             "$ref": "#/components/schemas/BookingOfferComponent"
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
+        quotation_summary:
+          "$ref": "#/components/schemas/BookingOfferQuotationSummary"
+          nullable: true
         total_price_cents:
           type: integer
     GeneratedBookingOffer:

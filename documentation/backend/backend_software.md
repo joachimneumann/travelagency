@@ -22,7 +22,6 @@ Implemented now:
 - invoice generation
 - booking activities
 - Meta chat ingestion linked to bookings
-- person search derived from bookings
 
 Generated contract flow:
 - source model in `model/`
@@ -47,7 +46,6 @@ Key data rule:
 Backend pages:
 - `backend.html`
 - `booking.html`
-- `persons.html`
 - `tour.html`
 
 Removed from active scope:
