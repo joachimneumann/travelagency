@@ -48,7 +48,7 @@ function hasAnyRole(roles, ...expected) {
 
 function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
-  const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant");
+  const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager");
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")

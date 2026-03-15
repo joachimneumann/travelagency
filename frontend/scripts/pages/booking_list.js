@@ -127,6 +127,11 @@ const state = {
   activeSection: "bookings"
 };
 
+function refreshBackendNavElements() {
+  els.logoutLink = document.getElementById("backendLogoutLink");
+  els.userLabel = document.getElementById("backendUserLabel");
+}
+
 function formatIntegerWithGrouping(value) {
   if (!Number.isFinite(Number(value))) return "-";
   return new Intl.NumberFormat("en-US", {
@@ -151,6 +156,7 @@ init();
 
 async function init() {
   await waitForBackendI18n();
+  refreshBackendNavElements();
   if (els.homeLink) {
     els.homeLink.href = resolveBackendSectionHref("bookings");
   }
@@ -171,13 +177,13 @@ async function init() {
 }
 
 async function loadBackendAuthStatus() {
-  if (!els.userLabel) return null;
+  refreshBackendNavElements();
   try {
     const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
     const payload = await response.json();
     if (!response.ok || !payload?.authenticated) {
       state.authUser = null;
-      els.userLabel.textContent = "";
+      if (els.userLabel) els.userLabel.textContent = "";
       return null;
     }
     state.authUser = payload.user || null;
@@ -190,11 +196,11 @@ async function loadBackendAuthStatus() {
       canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
       canEditTours: hasAnyRole(ROLES.ADMIN)
     };
-    els.userLabel.textContent = user || "";
+    if (els.userLabel) els.userLabel.textContent = user || "";
     return payload.user;
   } catch {
     state.authUser = null;
-    els.userLabel.textContent = "";
+    if (els.userLabel) els.userLabel.textContent = "";
     return null;
   }
 }
