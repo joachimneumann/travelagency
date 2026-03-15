@@ -243,12 +243,11 @@ function renderLocalizedTourEditor(field, { label, rows = 3, multiline = false }
     const value = localizedFieldValue(field, lang);
     const codeHtml = lang === "en"
       ? `
-        <span class="tour-localized-group__code" aria-hidden="true">EN</span>
         <button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-tour-translate-all="${escapeHtml(field)}">
-          ${escapeHtml(backendT("tour.translation.translate_all", "Translate all"))}
+          ${escapeHtml(backendT("tour.translation.translate_all", "EN → ALL"))}
         </button>
       `
-      : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-tour-translate-field="${escapeHtml(field)}" data-target-lang="${escapeHtml(lang)}">EN -&gt; ${escapeHtml(language?.shortLabel || lang.toUpperCase())}</button>`;
+      : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-tour-translate-field="${escapeHtml(field)}" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(language?.shortLabel || lang.toUpperCase())}</button>`;
     return `
       <div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${codeHtml}</div>

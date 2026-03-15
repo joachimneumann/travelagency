@@ -48,6 +48,189 @@ export function createBookingTravelPlanModule(ctx) {
     els.travel_plan_status.textContent = message;
   }
 
+  function validateTravelPlanDraft(plan) {
+    const normalizedPlan = plan && typeof plan === "object" ? plan : {};
+    const dayIds = new Set();
+    const segmentIds = new Set();
+    const linkIds = new Set();
+    const validTimingKinds = new Set(TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value));
+    const validSegmentKinds = new Set(TRAVEL_PLAN_SEGMENT_KIND_OPTIONS.map((option) => option.value));
+    const validCoverageTypes = new Set(TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.map((option) => option.value));
+    const offerComponentIds = new Set(getOfferComponentsForLinks().map((component) => String(component?.id || "").trim()).filter(Boolean));
+
+    for (const day of Array.isArray(normalizedPlan.days) ? normalizedPlan.days : []) {
+      const dayId = String(day?.id || "").trim();
+      if (!dayId) {
+        return { ok: false, error: bookingT("booking.travel_plan.validation.day_id", "Every travel-plan day needs an id.") };
+      }
+      if (dayIds.has(dayId)) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.day_id_duplicate",
+            "Travel-plan day id {id} is duplicated.",
+            { id: dayId }
+          )
+        };
+      }
+      dayIds.add(dayId);
+
+      const dayNumber = Number(day?.day_number) || Array.from(dayIds).length;
+      const dayTitle = String(day?.title || "").trim();
+      if (!dayTitle) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.day_title_required",
+            "Day {day} title is required.",
+            { day: dayNumber }
+          )
+        };
+      }
+
+      for (const segment of Array.isArray(day?.segments) ? day.segments : []) {
+        const segmentId = String(segment?.id || "").trim();
+        if (!segmentId) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_id_missing",
+              "Day {day} contains a segment without an id.",
+              { day: dayNumber }
+            )
+          };
+        }
+        if (segmentIds.has(segmentId)) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_id_duplicate",
+              "Travel-plan segment id {id} is duplicated.",
+              { id: segmentId }
+            )
+          };
+        }
+        segmentIds.add(segmentId);
+
+        const timingKind = String(segment?.timing_kind || "").trim();
+        if (!validTimingKinds.has(timingKind)) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_timing_invalid",
+              "Segment {id} has an invalid timing kind.",
+              { id: segmentId }
+            )
+          };
+        }
+
+        const segmentKind = String(segment?.kind || "").trim();
+        if (!validSegmentKinds.has(segmentKind)) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_kind_invalid",
+              "Segment {id} has an invalid kind.",
+              { id: segmentId }
+            )
+          };
+        }
+
+        const segmentTitle = String(segment?.title || "").trim();
+        if (!segmentTitle) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_title_required",
+              "Segment Title is required"
+            )
+          };
+        }
+
+        if (timingKind === "point" && !String(segment?.time_point || "").trim()) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_time_point_required",
+              "Segment {id} requires a time point.",
+              { id: segmentId }
+            )
+          };
+        }
+
+        if (timingKind === "range" && (!String(segment?.start_time || "").trim() || !String(segment?.end_time || "").trim())) {
+          return {
+            ok: false,
+            error: bookingT(
+              "booking.travel_plan.validation.segment_time_range_required",
+              "Segment {id} requires both start and end time.",
+              { id: segmentId }
+            )
+          };
+        }
+      }
+    }
+
+    for (const link of Array.isArray(normalizedPlan.offer_component_links) ? normalizedPlan.offer_component_links : []) {
+      const linkId = String(link?.id || "").trim();
+      if (!linkId) {
+        return {
+          ok: false,
+          error: bookingT("booking.travel_plan.validation.link_id_missing", "Every travel-plan offer link needs an id.")
+        };
+      }
+      if (linkIds.has(linkId)) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.link_id_duplicate",
+            "Travel-plan offer link id {id} is duplicated.",
+            { id: linkId }
+          )
+        };
+      }
+      linkIds.add(linkId);
+
+      const segmentId = String(link?.travel_plan_segment_id || "").trim();
+      if (!segmentIds.has(segmentId)) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.link_segment_unknown",
+            "Travel-plan offer link {id} references unknown segment {segment}.",
+            { id: linkId, segment: segmentId }
+          )
+        };
+      }
+
+      const componentId = String(link?.offer_component_id || "").trim();
+      if (!offerComponentIds.has(componentId)) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.link_offer_unknown",
+            "Travel-plan offer link {id} references unknown offer component {component}.",
+            { id: linkId, component: componentId }
+          )
+        };
+      }
+
+      const coverageType = String(link?.coverage_type || "").trim();
+      if (!validCoverageTypes.has(coverageType)) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.link_coverage_invalid",
+            "Travel-plan offer link {id} has an invalid coverage type.",
+            { id: linkId }
+          )
+        };
+      }
+    }
+
+    return { ok: true };
+  }
+
   function getOfferComponentsForLinks() {
     return getLinkableOfferComponents(state.booking?.offer?.components || []);
   }
@@ -412,7 +595,7 @@ export function createBookingTravelPlanModule(ctx) {
         <div class="travel-plan-grid">
           <div class="field">
             ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.title", "Title"),
+              label: bookingT("booking.travel_plan.segment_title", "Segment title"),
               idBase: `travel_plan_title_${segment.id}`,
               dataScope: "travel-plan-segment-field",
               dayId: day.id,
@@ -723,6 +906,11 @@ export function createBookingTravelPlanModule(ctx) {
       offer_component_links: (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
         .filter((link) => String(link?.offer_component_id || "").trim())
     }, getOfferComponentsForLinks());
+    const validation = validateTravelPlanDraft(travelPlanPayload);
+    if (!validation.ok) {
+      travelPlanStatus(validation.error);
+      return false;
+    }
     state.travelPlanSaving = true;
     updateTravelPlanSaveButtonState();
     travelPlanStatus(bookingT("booking.travel_plan.saving", "Saving travel plan..."));

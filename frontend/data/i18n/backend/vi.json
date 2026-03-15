@@ -349,6 +349,7 @@
   "booking.travel_plan.saved": "Da luu lich trinh.",
   "booking.travel_plan.saving": "Dang luu lich trinh...",
   "booking.travel_plan.segment_heading": "Phan doan {segment}",
+  "booking.travel_plan.segment_title": "Segment title",
   "booking.travel_plan.select_offer_component": "Chon thanh phan bao gia",
   "booking.travel_plan.start_date": "Ngay bat dau",
   "booking.travel_plan.start_time": "Gio bat dau",

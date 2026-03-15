@@ -349,6 +349,7 @@
   "booking.travel_plan.saved": "Travel plan saved.",
   "booking.travel_plan.saving": "Saving travel plan...",
   "booking.travel_plan.segment_heading": "Segment {segment}",
+  "booking.travel_plan.segment_title": "Segment title",
   "booking.travel_plan.select_offer_component": "Select offer component",
   "booking.travel_plan.start_date": "Start date",
   "booking.travel_plan.start_time": "Start time",

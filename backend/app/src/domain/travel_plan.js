@@ -296,7 +296,7 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Segment ${segment.id} has an invalid kind.` };
       }
       if (!normalizeText(segment.title)) {
-        return { ok: false, error: `Segment ${segment.id} title is required.` };
+        return { ok: false, error: "Segment Title is required" };
       }
       if (normalizeText(segment.supplier_id) && !supplierIds.has(segment.supplier_id)) {
         return { ok: false, error: `Segment ${segment.id} references unknown supplier ${segment.supplier_id}.` };
