@@ -1,21 +1,21 @@
-import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
+import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
   bookingT
-} from "./i18n.js?v=f09b901159f7";
-import { formatMoneyDisplay } from "./pricing.js?v=f09b901159f7";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=f09b901159f7";
+} from "./i18n.js?v=e34543ef2e35";
+import { formatMoneyDisplay } from "./pricing.js?v=e34543ef2e35";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=e34543ef2e35";
 import {
   buildDualLocalizedPayload,
   renderLocalizedStackedField,
   requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText
-} from "./localized_editor.js?v=f09b901159f7";
+} from "./localized_editor.js?v=e34543ef2e35";
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=f09b901159f7";
+} from "../shared/generated_catalogs.js?v=e34543ef2e35";
 import {
   countTravelPlanSegments,
   countUncoveredTravelPlanSegments,
@@ -27,7 +27,7 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
   getTravelPlanSegmentCoverageStatus,
   normalizeTravelPlanDraft
-} from "./travel_plan_helpers.js?v=f09b901159f7";
+} from "./travel_plan_helpers.js?v=e34543ef2e35";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -91,6 +91,17 @@ export function createBookingTravelPlanModule(ctx) {
           error: bookingT(
             "booking.travel_plan.validation.day_title_required",
             "Day {day} title is required.",
+            { day: dayNumber }
+          )
+        };
+      }
+
+      if (String(day?.date || "").trim() && !isValidIsoCalendarDate(day.date)) {
+        return {
+          ok: false,
+          error: bookingT(
+            "booking.travel_plan.validation.day_date_invalid",
+            "Day {day}: Date must use YYYY-MM-DD.",
             { day: dayNumber }
           )
         };
@@ -168,6 +179,20 @@ export function createBookingTravelPlanModule(ctx) {
           };
         }
 
+        if (timingKind === "point" && String(segment?.time_point || "").trim()) {
+          const pointParts = splitDateTimeValue(day?.date, segment.time_point);
+          if (!isValidIsoCalendarDate(pointParts.date)) {
+            return {
+              ok: false,
+              error: bookingT(
+                "booking.travel_plan.validation.segment_time_point_date_invalid",
+                "Day {day}, Segment {segment}: Date must use YYYY-MM-DD.",
+                { day: dayNumber, segment: segmentNumber }
+              )
+            };
+          }
+        }
+
         if (timingKind === "range" && (!String(segment?.start_time || "").trim() || !String(segment?.end_time || "").trim())) {
           return {
             ok: false,
@@ -177,6 +202,21 @@ export function createBookingTravelPlanModule(ctx) {
               { day: dayNumber, segment: segmentNumber }
             )
           };
+        }
+
+        if (timingKind === "range") {
+          const startParts = splitDateTimeValue(day?.date, segment.start_time);
+          const endParts = splitDateTimeValue(day?.date, segment.end_time);
+          if (!isValidIsoCalendarDate(startParts.date) || !isValidIsoCalendarDate(endParts.date)) {
+            return {
+              ok: false,
+              error: bookingT(
+                "booking.travel_plan.validation.segment_time_range_date_invalid",
+                "Day {day}, Segment {segment}: Dates must use YYYY-MM-DD.",
+                { day: dayNumber, segment: segmentNumber }
+              )
+            };
+          }
         }
       }
     }
@@ -467,6 +507,147 @@ export function createBookingTravelPlanModule(ctx) {
     return alignDateTimeLocalValue(`${date}T${time}`);
   }
 
+  function isValidIsoCalendarDate(value) {
+    const normalized = String(value || "").trim();
+    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return false;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const candidate = new Date(Date.UTC(year, month - 1, day));
+    return (
+      candidate.getUTCFullYear() === year &&
+      candidate.getUTCMonth() === month - 1 &&
+      candidate.getUTCDate() === day
+    );
+  }
+
+  function getTravelPlanDateValidationMessage(value, { allowPartial = false } = {}) {
+    const normalized = String(value || "").trim();
+    if (!normalized) return "";
+    if (allowPartial && normalized.length < 10) return "";
+    if (!isValidIsoCalendarDate(normalized)) {
+      return bookingT("booking.travel_plan.date_invalid", "Use YYYY-MM-DD, for example 1963-08-20.");
+    }
+    return "";
+  }
+
+  function renderTravelPlanDateInput({ id, dataAttribute, value = "", disabled = false, ariaLabel = "" }) {
+    return `
+      <div class="booking-person-modal__date-input travel-plan-date-input">
+        <input
+          id="${escapeHtml(id)}"
+          class="travel-plan-date-input__text"
+          data-travel-plan-date-text="true"
+          ${dataAttribute}
+          type="text"
+          inputmode="numeric"
+          spellcheck="false"
+          placeholder="YYYY-MM-DD"
+          pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+          maxlength="10"
+          value="${escapeHtml(value || "")}"
+          ${disabled ? "disabled" : ""}
+          ${ariaLabel ? `aria-label="${escapeHtml(ariaLabel)}"` : ""}
+        />
+        <button
+          class="booking-person-modal__date-picker-btn travel-plan-date-input__picker-btn"
+          data-travel-plan-date-picker-btn="${escapeHtml(id)}"
+          type="button"
+          aria-label="${escapeHtml(bookingT("booking.open_date_picker", "Open date picker"))}"
+          ${disabled ? "disabled" : ""}
+        >📅</button>
+        <input
+          id="${escapeHtml(`${id}_picker`)}"
+          type="date"
+          tabindex="-1"
+          aria-hidden="true"
+          class="booking-person-modal__date-picker-proxy"
+          data-travel-plan-date-picker-for="${escapeHtml(id)}"
+          ${disabled ? "disabled" : ""}
+        />
+      </div>
+      <div class="error" data-travel-plan-date-error="${escapeHtml(id)}"></div>
+    `;
+  }
+
+  function setTravelPlanDateFieldValidation(textInput, message) {
+    const field = textInput?.closest(".field");
+    if (field instanceof HTMLElement) field.classList.toggle("invalid", Boolean(message));
+    const errorNode = field?.querySelector(`[data-travel-plan-date-error="${textInput?.id || ""}"]`);
+    if (errorNode instanceof HTMLElement) {
+      errorNode.textContent = message || "";
+    }
+  }
+
+  function syncTravelPlanDatePickerValue(textInput, pickerInput) {
+    if (!(textInput instanceof HTMLInputElement) || !(pickerInput instanceof HTMLInputElement)) return;
+    const normalized = String(textInput.value || "").trim();
+    pickerInput.value = isValidIsoCalendarDate(normalized) ? normalized : "";
+  }
+
+  function validateTravelPlanDateTextInput(textInput, { allowPartial = false } = {}) {
+    if (!(textInput instanceof HTMLInputElement)) return true;
+    const message = getTravelPlanDateValidationMessage(textInput.value, { allowPartial });
+    setTravelPlanDateFieldValidation(textInput, message);
+    const pickerInput = document.getElementById(`${textInput.id}_picker`);
+    if (pickerInput instanceof HTMLInputElement) {
+      syncTravelPlanDatePickerValue(textInput, pickerInput);
+    }
+    return !message;
+  }
+
+  function applyTravelPlanDatePickerValue(pickerInput) {
+    if (!(pickerInput instanceof HTMLInputElement)) return null;
+    const targetId = String(pickerInput.getAttribute("data-travel-plan-date-picker-for") || "").trim();
+    const textInput = targetId ? document.getElementById(targetId) : null;
+    if (!(textInput instanceof HTMLInputElement)) return null;
+    textInput.value = String(pickerInput.value || "").trim();
+    validateTravelPlanDateTextInput(textInput, { allowPartial: false });
+    return textInput;
+  }
+
+  function openTravelPlanDatePicker(button) {
+    const targetId = String(button?.getAttribute("data-travel-plan-date-picker-btn") || "").trim();
+    const pickerInput = targetId ? document.getElementById(`${targetId}_picker`) : null;
+    const textInput = targetId ? document.getElementById(targetId) : null;
+    if (!(pickerInput instanceof HTMLInputElement) || pickerInput.disabled) return;
+    if (textInput instanceof HTMLInputElement) {
+      syncTravelPlanDatePickerValue(textInput, pickerInput);
+    }
+    if (typeof pickerInput.showPicker === "function") {
+      try {
+        pickerInput.showPicker();
+        return;
+      } catch (_) {
+        // Fall through.
+      }
+    }
+    pickerInput.focus();
+    pickerInput.click();
+  }
+
+  function validateTravelPlanDateFieldsInDom({ allowPartial = false, focusFirstInvalid = false } = {}) {
+    if (!els.travel_plan_editor) return { ok: true, message: "" };
+    const dateInputs = Array.from(els.travel_plan_editor.querySelectorAll('[data-travel-plan-date-text="true"]'));
+    let firstInvalid = null;
+    for (const textInput of dateInputs) {
+      const isValid = validateTravelPlanDateTextInput(textInput, { allowPartial });
+      if (!isValid && !firstInvalid) {
+        firstInvalid = textInput;
+      }
+    }
+    if (focusFirstInvalid && firstInvalid instanceof HTMLInputElement) {
+      firstInvalid.focus();
+    }
+    return {
+      ok: !firstInvalid,
+      message: firstInvalid
+        ? getTravelPlanDateValidationMessage(firstInvalid.value, { allowPartial: false })
+        : ""
+    };
+  }
+
   function timeSelectOptions(selectedValue = "") {
     const selected = String(selectedValue || "").trim();
     const options = ['<option value=""></option>'];
@@ -492,7 +673,13 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           <label for="travel_plan_time_point_date_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
-          <input id="travel_plan_time_point_date_${escapeHtml(segment.id)}" data-travel-plan-segment-field="time_point_date" type="date" value="${escapeHtml(pointParts.date)}" />
+          ${renderTravelPlanDateInput({
+            id: `travel_plan_time_point_date_${segment.id}`,
+            dataAttribute: 'data-travel-plan-segment-field="time_point_date"',
+            value: pointParts.date,
+            disabled: !state.permissions.canEditBooking,
+            ariaLabel: bookingT("booking.date", "Date")
+          })}
         </div>
         <div class="field">
           <label for="travel_plan_time_point_time_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.time", "Time"))}</label>
@@ -514,7 +701,13 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           <label for="travel_plan_start_time_date_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.travel_plan.start_date", "Start date"))}</label>
-          <input id="travel_plan_start_time_date_${escapeHtml(segment.id)}" data-travel-plan-segment-field="start_time_date" type="date" value="${escapeHtml(startParts.date)}" />
+          ${renderTravelPlanDateInput({
+            id: `travel_plan_start_time_date_${segment.id}`,
+            dataAttribute: 'data-travel-plan-segment-field="start_time_date"',
+            value: startParts.date,
+            disabled: !state.permissions.canEditBooking,
+            ariaLabel: bookingT("booking.travel_plan.start_date", "Start date")
+          })}
         </div>
         <div class="field">
           <label for="travel_plan_start_time_time_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.travel_plan.start_time", "Start time"))}</label>
@@ -524,7 +717,13 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           <label for="travel_plan_end_time_date_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.travel_plan.end_date", "End date"))}</label>
-          <input id="travel_plan_end_time_date_${escapeHtml(segment.id)}" data-travel-plan-segment-field="end_time_date" type="date" value="${escapeHtml(endParts.date)}" />
+          ${renderTravelPlanDateInput({
+            id: `travel_plan_end_time_date_${segment.id}`,
+            dataAttribute: 'data-travel-plan-segment-field="end_time_date"',
+            value: endParts.date,
+            disabled: !state.permissions.canEditBooking,
+            ariaLabel: bookingT("booking.travel_plan.end_date", "End date")
+          })}
         </div>
         <div class="field">
           <label for="travel_plan_end_time_time_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.travel_plan.end_time", "End time"))}</label>
@@ -675,18 +874,18 @@ export function createBookingTravelPlanModule(ctx) {
     return `
       <section class="travel-plan-day" data-travel-plan-day="${escapeHtml(day.id)}">
         <div class="travel-plan-day__head">
-          <div class="travel-plan-day__title-row">
-            <h3>${escapeHtml(formatTravelPlanDayHeading(dayIndex))}:</h3>
-            <input
-              class="travel-plan-day__date-input"
-              id="travel_plan_day_date_${escapeHtml(day.id)}"
-              data-travel-plan-day-field="date"
-              type="date"
-              value="${escapeHtml(day.date || "")}"
-              ${state.permissions.canEditBooking ? "" : "disabled"}
-              aria-label="${escapeHtml(`${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`)}"
-            />
+        <div class="travel-plan-day__title-row">
+          <h3>${escapeHtml(formatTravelPlanDayHeading(dayIndex))}:</h3>
+          <div class="field travel-plan-day__date-field">
+            ${renderTravelPlanDateInput({
+              id: `travel_plan_day_date_${day.id}`,
+              dataAttribute: 'data-travel-plan-day-field="date"',
+              value: day.date,
+              disabled: !state.permissions.canEditBooking,
+              ariaLabel: `${formatTravelPlanDayHeading(dayIndex)} ${bookingT("booking.date", "Date")}`
+            })}
           </div>
+        </div>
           <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-day="${escapeHtml(day.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_day", "Remove day"))}">&times;</button>
         </div>
         <div class="travel-plan-grid">
@@ -910,6 +1109,11 @@ export function createBookingTravelPlanModule(ctx) {
 
   async function saveTravelPlan() {
     if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty || state.travelPlanSaving) return false;
+    const dateFieldValidation = validateTravelPlanDateFieldsInDom({ allowPartial: false, focusFirstInvalid: true });
+    if (!dateFieldValidation.ok) {
+      travelPlanStatus(dateFieldValidation.message, "error");
+      return false;
+    }
     syncTravelPlanDraftFromDom();
     const travelPlanPayload = normalizeTravelPlanDraft({
       ...state.travelPlanDraft,
@@ -1008,13 +1212,23 @@ export function createBookingTravelPlanModule(ctx) {
 
   function bindEvents() {
     if (els.travel_plan_editor && els.travel_plan_editor.dataset.travelPlanBound !== "true") {
-      els.travel_plan_editor.addEventListener("input", () => {
+      els.travel_plan_editor.addEventListener("input", (event) => {
+        const target = event.target;
+        if (target?.matches?.('[data-travel-plan-date-text="true"]')) {
+          validateTravelPlanDateTextInput(target, { allowPartial: true });
+        }
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
         renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
+        if (target?.matches?.("[data-travel-plan-date-picker-for]")) {
+          applyTravelPlanDatePickerValue(target);
+        }
+        if (target?.matches?.('[data-travel-plan-date-text="true"]')) {
+          validateTravelPlanDateTextInput(target, { allowPartial: false });
+        }
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
         renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
@@ -1062,8 +1276,18 @@ export function createBookingTravelPlanModule(ctx) {
           void translateTravelPlanField(button);
           return;
         }
+        if (button.hasAttribute("data-travel-plan-date-picker-btn")) {
+          openTravelPlanDatePicker(button);
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-remove-link")) {
           removeLink(button.getAttribute("data-travel-plan-remove-link"));
+        }
+      });
+      els.travel_plan_editor.addEventListener("focusout", (event) => {
+        const target = event.target;
+        if (target?.matches?.('[data-travel-plan-date-text="true"]')) {
+          validateTravelPlanDateTextInput(target, { allowPartial: false });
         }
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";

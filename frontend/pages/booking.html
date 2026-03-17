@@ -11,7 +11,7 @@
         window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
       }
     </script>
-    <link rel="stylesheet" href="assets/css/styles.css?v=f09b901159f7" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=b3f5fbe66766" />
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -143,7 +143,33 @@
                   <div class="booking-person-modal__grid">
                     <div class="field">
                       <label for="booking_person_modal_date_of_birth" data-i18n-id="booking.date_of_birth">Date of birth</label>
-                      <input id="booking_person_modal_date_of_birth" data-person-field="date_of_birth" type="date" />
+                      <div class="booking-person-modal__date-input">
+                        <input
+                          id="booking_person_modal_date_of_birth"
+                          data-person-field="date_of_birth"
+                          type="text"
+                          inputmode="numeric"
+                          autocomplete="bday"
+                          spellcheck="false"
+                          placeholder="YYYY-MM-DD"
+                          pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                          maxlength="10"
+                        />
+                        <button
+                          id="booking_person_modal_date_of_birth_picker_btn"
+                          class="booking-person-modal__date-picker-btn"
+                          type="button"
+                          aria-label="Open date picker"
+                        >📅</button>
+                        <input
+                          id="booking_person_modal_date_of_birth_picker"
+                          type="date"
+                          tabindex="-1"
+                          aria-hidden="true"
+                          class="booking-person-modal__date-picker-proxy"
+                        />
+                      </div>
+                      <div id="booking_person_modal_date_of_birth_error" class="error"></div>
                     </div>
                     <div class="field">
                       <label for="booking_person_modal_nationality" data-i18n-id="booking.nationality">Nationality</label>
@@ -177,11 +203,63 @@
                       </div>
                       <div class="field">
                         <label for="booking_person_modal_passport_issued_on" data-i18n-id="booking.issued_on">Issued on</label>
-                        <input id="booking_person_modal_passport_issued_on" data-document-type="passport" data-document-field="issued_on" type="date" />
+                        <div class="booking-person-modal__date-input">
+                          <input
+                            id="booking_person_modal_passport_issued_on"
+                            data-document-type="passport"
+                            data-document-field="issued_on"
+                            type="text"
+                            inputmode="numeric"
+                            spellcheck="false"
+                            placeholder="YYYY-MM-DD"
+                            pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                            maxlength="10"
+                          />
+                          <button
+                            id="booking_person_modal_passport_issued_on_picker_btn"
+                            class="booking-person-modal__date-picker-btn"
+                            type="button"
+                            aria-label="Open date picker"
+                          >📅</button>
+                          <input
+                            id="booking_person_modal_passport_issued_on_picker"
+                            type="date"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            class="booking-person-modal__date-picker-proxy"
+                          />
+                        </div>
+                        <div id="booking_person_modal_passport_issued_on_error" class="error"></div>
                       </div>
                       <div class="field">
                         <label for="booking_person_modal_passport_expires_on" data-i18n-id="booking.expires_on">Expires on</label>
-                        <input id="booking_person_modal_passport_expires_on" data-document-type="passport" data-document-field="expires_on" type="date" />
+                        <div class="booking-person-modal__date-input">
+                          <input
+                            id="booking_person_modal_passport_expires_on"
+                            data-document-type="passport"
+                            data-document-field="expires_on"
+                            type="text"
+                            inputmode="numeric"
+                            spellcheck="false"
+                            placeholder="YYYY-MM-DD"
+                            pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                            maxlength="10"
+                          />
+                          <button
+                            id="booking_person_modal_passport_expires_on_picker_btn"
+                            class="booking-person-modal__date-picker-btn"
+                            type="button"
+                            aria-label="Open date picker"
+                          >📅</button>
+                          <input
+                            id="booking_person_modal_passport_expires_on_picker"
+                            type="date"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            class="booking-person-modal__date-picker-proxy"
+                          />
+                        </div>
+                        <div id="booking_person_modal_passport_expires_on_error" class="error"></div>
                       </div>
                   </div>
 
@@ -206,11 +284,63 @@
                       </div>
                       <div class="field">
                         <label for="booking_person_modal_national_id_issued_on" data-i18n-id="booking.issued_on">Issued on</label>
-                        <input id="booking_person_modal_national_id_issued_on" data-document-type="national_id" data-document-field="issued_on" type="date" />
+                        <div class="booking-person-modal__date-input">
+                          <input
+                            id="booking_person_modal_national_id_issued_on"
+                            data-document-type="national_id"
+                            data-document-field="issued_on"
+                            type="text"
+                            inputmode="numeric"
+                            spellcheck="false"
+                            placeholder="YYYY-MM-DD"
+                            pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                            maxlength="10"
+                          />
+                          <button
+                            id="booking_person_modal_national_id_issued_on_picker_btn"
+                            class="booking-person-modal__date-picker-btn"
+                            type="button"
+                            aria-label="Open date picker"
+                          >📅</button>
+                          <input
+                            id="booking_person_modal_national_id_issued_on_picker"
+                            type="date"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            class="booking-person-modal__date-picker-proxy"
+                          />
+                        </div>
+                        <div id="booking_person_modal_national_id_issued_on_error" class="error"></div>
                       </div>
                       <div class="field">
                         <label for="booking_person_modal_national_id_expires_on" data-i18n-id="booking.expires_on">Expires on</label>
-                        <input id="booking_person_modal_national_id_expires_on" data-document-type="national_id" data-document-field="expires_on" type="date" />
+                        <div class="booking-person-modal__date-input">
+                          <input
+                            id="booking_person_modal_national_id_expires_on"
+                            data-document-type="national_id"
+                            data-document-field="expires_on"
+                            type="text"
+                            inputmode="numeric"
+                            spellcheck="false"
+                            placeholder="YYYY-MM-DD"
+                            pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                            maxlength="10"
+                          />
+                          <button
+                            id="booking_person_modal_national_id_expires_on_picker_btn"
+                            class="booking-person-modal__date-picker-btn"
+                            type="button"
+                            aria-label="Open date picker"
+                          >📅</button>
+                          <input
+                            id="booking_person_modal_national_id_expires_on_picker"
+                            type="date"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            class="booking-person-modal__date-picker-proxy"
+                          />
+                        </div>
+                        <div id="booking_person_modal_national_id_expires_on_error" class="error"></div>
                       </div>
                       <div class="field booking-person-modal__checkbox-field">
                         <label class="booking-person-modal__checkbox">
@@ -426,13 +556,13 @@
       </section>
     </main>
 
-    <script src="shared/generated/language_catalog.global.js?v=f09b901159f7"></script>
-    <script src="frontend/scripts/shared/backend_i18n.js?v=f09b901159f7"></script>
+    <script src="shared/generated/language_catalog.global.js?v=e34543ef2e35"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js?v=e34543ef2e35"></script>
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=f09b901159f7";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=e34543ef2e35";
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking.js?v=f09b901159f7"></script>
+    <script type="module" src="frontend/scripts/pages/booking.js?v=b3f5fbe66766"></script>
   </body>
 </html>

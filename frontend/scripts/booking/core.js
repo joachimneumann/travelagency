@@ -6,13 +6,13 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
-import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=f09b901159f7";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=e34543ef2e35";
 import {
   bookingContentLanguageLabel,
   bookingT,
   normalizeBookingContentLang
-} from "./i18n.js?v=f09b901159f7";
+} from "./i18n.js?v=e34543ef2e35";
 
 function labelizeKey(key) {
   return String(key || "")

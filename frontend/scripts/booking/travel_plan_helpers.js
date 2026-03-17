@@ -2,14 +2,14 @@ import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=f09b901159f7";
-import { bookingT } from "./i18n.js?v=f09b901159f7";
+} from "../shared/generated_catalogs.js?v=e34543ef2e35";
+import { bookingT } from "./i18n.js?v=e34543ef2e35";
 import {
   buildDualLocalizedPayload,
   normalizeLocalizedEditorMap,
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
-} from "./localized_editor.js?v=f09b901159f7";
+} from "./localized_editor.js?v=e34543ef2e35";
 
 export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
   GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({

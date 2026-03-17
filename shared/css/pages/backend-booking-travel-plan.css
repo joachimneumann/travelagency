@@ -59,28 +59,25 @@
   flex-wrap: wrap;
 }
 
+.travel-plan-day__date-field {
+  margin: 0;
+}
+
 .travel-plan-day__head h3 {
   margin: 0;
   color: #16313d;
   font-size: 1.05rem;
 }
 
-.travel-plan-day__date-input {
+.travel-plan-day__date-field .booking-person-modal__date-input > input[type="text"] {
   width: 180px;
   min-width: 180px;
   max-width: 180px;
-  border: 1px solid #c5d8e1;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
-  padding: 0.45rem 0.72rem;
-  font: inherit;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
-.travel-plan-day__date-input:focus-visible {
-  outline: 3px solid rgba(26, 156, 161, 0.12);
-  outline-offset: 0;
-  border-color: #1a9ca1;
+.travel-plan-grid .booking-person-modal__date-input > input[type="text"] {
+  width: min(13rem, 100%);
+  max-width: 100%;
 }
 
 .travel-plan-day__head p {
@@ -260,7 +257,7 @@
     grid-template-columns: 1fr;
   }
 
-  .travel-plan-day__date-input {
+  .travel-plan-day__date-field .booking-person-modal__date-input > input[type="text"] {
     width: 100%;
     min-width: 0;
     max-width: 100%;

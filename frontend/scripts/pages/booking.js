@@ -11,7 +11,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
 import {
   createApiFetcher,
   escapeHtml,
@@ -19,35 +19,35 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=f09b901159f7";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=f09b901159f7";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=f09b901159f7";
-import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=f09b901159f7";
+} from "../shared/api.js?v=e34543ef2e35";
+import { resolveBackendSectionHref } from "../shared/nav.js?v=e34543ef2e35";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=e34543ef2e35";
+import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=e34543ef2e35";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=f09b901159f7";
-import { createBookingOfferModule } from "../booking/offers.js?v=f09b901159f7";
-import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=f09b901159f7";
+} from "../booking/pricing.js?v=e34543ef2e35";
+import { createBookingOfferModule } from "../booking/offers.js?v=e34543ef2e35";
+import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=b3f5fbe66766";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=f09b901159f7";
-import { createBookingCoreModule } from "../booking/core.js?v=f09b901159f7";
+} from "../booking/invoices.js?v=e34543ef2e35";
+import { createBookingCoreModule } from "../booking/core.js?v=e34543ef2e35";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=f09b901159f7";
-import { createBookingPersonsModule } from "../booking/persons.js?v=f09b901159f7";
+} from "../booking/person_helpers.js?v=e34543ef2e35";
+import { createBookingPersonsModule } from "../booking/persons.js?v=b3f5fbe66766";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=f09b901159f7";
+} from "../shared/booking_persons.js?v=e34543ef2e35";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
@@ -55,7 +55,7 @@ import {
   bookingContentLanguageOption,
   normalizeBookingContentLang,
   setBookingContentLang
-} from "../booking/i18n.js?v=f09b901159f7";
+} from "../booking/i18n.js?v=e34543ef2e35";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -217,6 +217,9 @@ const els = {
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
   personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
   personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
+  personModalDateOfBirthPickerBtn: document.getElementById("booking_person_modal_date_of_birth_picker_btn"),
+  personModalDateOfBirthPicker: document.getElementById("booking_person_modal_date_of_birth_picker"),
+  personModalDateOfBirthError: document.getElementById("booking_person_modal_date_of_birth_error"),
   personModalNationality: document.getElementById("booking_person_modal_nationality"),
   personModalEmails: document.getElementById("booking_person_modal_emails"),
   personModalPhoneNumbers: document.getElementById("booking_person_modal_phone_numbers"),

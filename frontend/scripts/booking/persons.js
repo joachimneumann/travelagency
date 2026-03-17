@@ -2,13 +2,13 @@ import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Langu
 import {
   languageByApiValue,
   languageByCode
-} from "../../../shared/generated/language_catalog.js?v=f09b901159f7";
+} from "../../../shared/generated/language_catalog.js?v=e34543ef2e35";
 import {
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=f09b901159f7";
+} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -24,16 +24,16 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=f09b901159f7";
-import { bookingT } from "./i18n.js?v=f09b901159f7";
+} from "./person_helpers.js?v=e34543ef2e35";
+import { bookingT } from "./i18n.js?v=e34543ef2e35";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=f09b901159f7";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=f09b901159f7";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=f09b901159f7";
+} from "../shared/booking_persons.js?v=e34543ef2e35";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=e34543ef2e35";
+import { renderBookingSegmentHeader } from "./segment_headers.js?v=e34543ef2e35";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -279,6 +279,139 @@ export function createBookingPersonsModule(ctx) {
     return Array.from(new Set(items.map((value) => normalizeText(value)).filter(Boolean)));
   }
 
+  function isValidIsoCalendarDate(value) {
+    const normalized = normalizeText(value);
+    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return false;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const candidate = new Date(Date.UTC(year, month - 1, day));
+    return (
+      candidate.getUTCFullYear() === year &&
+      candidate.getUTCMonth() === month - 1 &&
+      candidate.getUTCDate() === day
+    );
+  }
+
+  function getDateOfBirthValidationMessage(value, { allowPartial = false } = {}) {
+    const normalized = normalizeText(value);
+    if (!normalized) return "";
+    if (allowPartial && normalized.length < 10) return "";
+    if (!isValidIsoCalendarDate(normalized)) {
+      return bookingT("booking.persons.date_of_birth_invalid", "Use YYYY-MM-DD, for example 1963-08-20.");
+    }
+    return "";
+  }
+
+  function getPersonDateFieldDescriptors() {
+    return [
+      {
+        key: "date_of_birth",
+        textInput: els.personModalDateOfBirth,
+        pickerInput: els.personModalDateOfBirthPicker,
+        pickerButton: els.personModalDateOfBirthPickerBtn,
+        errorNode: els.personModalDateOfBirthError,
+        getValue: (draft) => normalizeText(draft?.date_of_birth),
+        setValue: (draft, value) => {
+          if (!draft) return;
+          draft.date_of_birth = normalizeText(value);
+        }
+      },
+      {
+        key: "passport_issued_on",
+        textInput: document.getElementById("booking_person_modal_passport_issued_on"),
+        pickerInput: document.getElementById("booking_person_modal_passport_issued_on_picker"),
+        pickerButton: document.getElementById("booking_person_modal_passport_issued_on_picker_btn"),
+        errorNode: document.getElementById("booking_person_modal_passport_issued_on_error"),
+        getValue: (draft) => normalizeText(getPersonDocument(draft, "passport")?.issued_on),
+        setValue: (draft, value) => updatePersonDocumentField(draft, "passport", "issued_on", normalizeText(value))
+      },
+      {
+        key: "passport_expires_on",
+        textInput: document.getElementById("booking_person_modal_passport_expires_on"),
+        pickerInput: document.getElementById("booking_person_modal_passport_expires_on_picker"),
+        pickerButton: document.getElementById("booking_person_modal_passport_expires_on_picker_btn"),
+        errorNode: document.getElementById("booking_person_modal_passport_expires_on_error"),
+        getValue: (draft) => normalizeText(getPersonDocument(draft, "passport")?.expires_on),
+        setValue: (draft, value) => updatePersonDocumentField(draft, "passport", "expires_on", normalizeText(value))
+      },
+      {
+        key: "national_id_issued_on",
+        textInput: document.getElementById("booking_person_modal_national_id_issued_on"),
+        pickerInput: document.getElementById("booking_person_modal_national_id_issued_on_picker"),
+        pickerButton: document.getElementById("booking_person_modal_national_id_issued_on_picker_btn"),
+        errorNode: document.getElementById("booking_person_modal_national_id_issued_on_error"),
+        getValue: (draft) => normalizeText(getPersonDocument(draft, "national_id")?.issued_on),
+        setValue: (draft, value) => updatePersonDocumentField(draft, "national_id", "issued_on", normalizeText(value))
+      },
+      {
+        key: "national_id_expires_on",
+        textInput: document.getElementById("booking_person_modal_national_id_expires_on"),
+        pickerInput: document.getElementById("booking_person_modal_national_id_expires_on_picker"),
+        pickerButton: document.getElementById("booking_person_modal_national_id_expires_on_picker_btn"),
+        errorNode: document.getElementById("booking_person_modal_national_id_expires_on_error"),
+        getValue: (draft) => normalizeText(getPersonDocument(draft, "national_id")?.expires_on),
+        setValue: (draft, value) => updatePersonDocumentField(draft, "national_id", "expires_on", normalizeText(value))
+      }
+    ];
+  }
+
+  function findPersonDateFieldDescriptorByTextInput(target) {
+    return getPersonDateFieldDescriptors().find((descriptor) => descriptor.textInput === target) || null;
+  }
+
+  function findPersonDateFieldDescriptorByPickerInput(target) {
+    return getPersonDateFieldDescriptors().find((descriptor) => descriptor.pickerInput === target) || null;
+  }
+
+  function findPersonDateFieldDescriptorByPickerButton(target) {
+    return getPersonDateFieldDescriptors().find((descriptor) => descriptor.pickerButton === target) || null;
+  }
+
+  function syncPersonDatePickerValue(descriptor, value) {
+    if (!(descriptor?.pickerInput instanceof HTMLInputElement)) return;
+    const normalized = normalizeText(value);
+    descriptor.pickerInput.value = isValidIsoCalendarDate(normalized) ? normalized : "";
+  }
+
+  function setPersonDateFieldValidation(descriptor, message) {
+    const field = descriptor?.textInput?.closest(".field");
+    if (field instanceof HTMLElement) field.classList.toggle("invalid", Boolean(message));
+    if (descriptor?.errorNode instanceof HTMLElement) {
+      descriptor.errorNode.textContent = message || "";
+    }
+  }
+
+  function validatePersonDateField(descriptor, value, { allowPartial = false } = {}) {
+    const message = getDateOfBirthValidationMessage(value, { allowPartial });
+    setPersonDateFieldValidation(descriptor, message);
+    syncPersonDatePickerValue(descriptor, value);
+    return !message;
+  }
+
+  function validatePersonDraft(draft, { allowPartialDateOfBirth = false, focusFirstInvalid = false } = {}) {
+    if (!draft || typeof draft !== "object") return true;
+    let firstInvalidDescriptor = null;
+    for (const descriptor of getPersonDateFieldDescriptors()) {
+      if (descriptor.key === "national_id_expires_on" && getPersonDocument(draft, "national_id")?.no_expiration_date === true) {
+        setPersonDateFieldValidation(descriptor, "");
+        syncPersonDatePickerValue(descriptor, "");
+        continue;
+      }
+      const allowPartial = descriptor.key === "date_of_birth" ? allowPartialDateOfBirth : false;
+      const value = descriptor.getValue(draft);
+      const isValid = validatePersonDateField(descriptor, value, { allowPartial });
+      if (!isValid && !firstInvalidDescriptor) {
+        firstInvalidDescriptor = descriptor;
+      }
+    }
+    if (focusFirstInvalid && firstInvalidDescriptor?.textInput instanceof HTMLElement) {
+      firstInvalidDescriptor.textInput.focus();
+    }
+    return !firstInvalidDescriptor;
+  }
+
   function buildPersonPayloadFromDraft(draft, index) {
     const address = draft?.address && typeof draft.address === "object" ? {
       line_1: normalizeText(draft.address.line_1),
@@ -443,6 +576,9 @@ export function createBookingPersonsModule(ctx) {
     clearPersonsAutosaveTimer();
     const isNewDraft = currentDraft._is_new === true;
     if (isNewDraft && !personDraftHasMeaningfulInput(currentDraft)) return true;
+    if (!validatePersonDraft(currentDraft, { allowPartialDateOfBirth: false, focusFirstInvalid: targetPersonId === state.active_person_id })) {
+      return false;
+    }
     const request = isNewDraft
       ? bookingPersonCreateRequest({
           baseURL: apiOrigin,
@@ -642,6 +778,20 @@ export function createBookingPersonsModule(ctx) {
       element.value = value;
       element.disabled = !canEdit;
     });
+    getPersonDateFieldDescriptors().forEach((descriptor) => {
+      if (descriptor.textInput instanceof HTMLInputElement) {
+        descriptor.textInput.value = descriptor.getValue(draft) || "";
+        descriptor.textInput.disabled = !canEdit;
+      }
+      if (descriptor.pickerInput instanceof HTMLInputElement) {
+        descriptor.pickerInput.disabled = !canEdit;
+        syncPersonDatePickerValue(descriptor, descriptor.getValue(draft));
+      }
+      if (descriptor.pickerButton instanceof HTMLButtonElement) {
+        descriptor.pickerButton.disabled = !canEdit;
+      }
+      validatePersonDateField(descriptor, descriptor.getValue(draft), { allowPartial: false });
+    });
     const nationalIdNoExpirationInput = document.getElementById("booking_person_modal_national_id_no_expiration_date");
     if (nationalIdNoExpirationInput instanceof HTMLInputElement) {
       nationalIdNoExpirationInput.checked = nationalId.no_expiration_date === true;
@@ -694,11 +844,18 @@ export function createBookingPersonsModule(ctx) {
   }
 
   function updateNationalIdExpirationInputState(canEdit = state.permissions.canEditBooking) {
-    const expiresInput = document.getElementById("booking_person_modal_national_id_expires_on");
+    const descriptor = getPersonDateFieldDescriptors().find((entry) => entry.key === "national_id_expires_on");
+    const expiresInput = descriptor?.textInput;
     const noExpirationInput = document.getElementById("booking_person_modal_national_id_no_expiration_date");
     if (!(expiresInput instanceof HTMLInputElement)) return;
     const noExpiration = noExpirationInput instanceof HTMLInputElement && noExpirationInput.checked;
     expiresInput.disabled = !canEdit || noExpiration;
+    if (descriptor?.pickerInput instanceof HTMLInputElement) {
+      descriptor.pickerInput.disabled = !canEdit || noExpiration;
+    }
+    if (descriptor?.pickerButton instanceof HTMLButtonElement) {
+      descriptor.pickerButton.disabled = !canEdit || noExpiration;
+    }
   }
 
   function refreshOpenPersonModalHeader() {
@@ -717,8 +874,28 @@ export function createBookingPersonsModule(ctx) {
     if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
     const draft = state.personDrafts[state.active_person_index];
     if (!draft) return;
+    let allowAutosave = true;
 
-    if (target.dataset.personRole) {
+    const dateTextDescriptor = findPersonDateFieldDescriptorByTextInput(target);
+    const datePickerDescriptor = findPersonDateFieldDescriptorByPickerInput(target);
+
+    if (datePickerDescriptor) {
+      const normalizedDate = normalizeText(target.value);
+      if (datePickerDescriptor.textInput instanceof HTMLInputElement) {
+        datePickerDescriptor.textInput.value = normalizedDate;
+      }
+      datePickerDescriptor.setValue(draft, normalizedDate);
+      validatePersonDateField(datePickerDescriptor, normalizedDate, { allowPartial: false });
+    } else if (dateTextDescriptor) {
+      const normalizedDate = normalizeText(target.value);
+      dateTextDescriptor.setValue(draft, normalizedDate);
+      const allowPartial = event.type === "input";
+      validatePersonDateField(dateTextDescriptor, normalizedDate, { allowPartial });
+      allowAutosave = !normalizedDate || (normalizedDate.length === 10 && validatePersonDraft(draft));
+      if (allowPartial && normalizedDate && normalizedDate.length < 10) {
+        allowAutosave = false;
+      }
+    } else if (target.dataset.personRole) {
       const role = normalizeText(target.dataset.personRole);
       const nextRoles = new Set(draft.roles);
       if (target.checked) nextRoles.add(role);
@@ -737,6 +914,12 @@ export function createBookingPersonsModule(ctx) {
         if (target instanceof HTMLInputElement && target.checked) {
           const nationalIdExpiresInput = document.getElementById("booking_person_modal_national_id_expires_on");
           if (nationalIdExpiresInput instanceof HTMLInputElement) nationalIdExpiresInput.value = "";
+          updatePersonDocumentField(draft, "national_id", "expires_on", "");
+          const nationalIdExpiresDescriptor = getPersonDateFieldDescriptors().find((entry) => entry.key === "national_id_expires_on");
+          if (nationalIdExpiresDescriptor) {
+            setPersonDateFieldValidation(nationalIdExpiresDescriptor, "");
+            syncPersonDatePickerValue(nationalIdExpiresDescriptor, "");
+          }
         }
       }
     } else if (target.dataset.personField) {
@@ -761,7 +944,28 @@ export function createBookingPersonsModule(ctx) {
       state.permissions.canEditBooking
     );
     updatePersonsDirtyState();
-    schedulePersonsAutosave(draft.id);
+    if (allowAutosave && validatePersonDraft(draft)) {
+      schedulePersonsAutosave(draft.id);
+    } else {
+      clearPersonsAutosaveTimer();
+    }
+  }
+
+  function openPersonDatePicker(button) {
+    const descriptor = findPersonDateFieldDescriptorByPickerButton(button);
+    if (!(descriptor?.pickerInput instanceof HTMLInputElement) || descriptor.pickerInput.disabled) return;
+    const currentValue = normalizeText(descriptor.textInput?.value);
+    syncPersonDatePickerValue(descriptor, currentValue);
+    if (typeof descriptor.pickerInput.showPicker === "function") {
+      try {
+        descriptor.pickerInput.showPicker();
+        return;
+      } catch (_) {
+        // Fall through to click/focus.
+      }
+    }
+    descriptor.pickerInput.focus();
+    descriptor.pickerInput.click();
   }
 
   async function handlePersonModalClick(event) {
@@ -790,6 +994,11 @@ export function createBookingPersonsModule(ctx) {
       renderPersonModal();
       updatePersonsDirtyState();
       schedulePersonsAutosave(draft.id);
+      return;
+    }
+    const datePickerButton = event.target.closest(".booking-person-modal__date-picker-btn");
+    if (datePickerButton) {
+      openPersonDatePicker(datePickerButton);
       return;
     }
     if (event.target.closest("#booking_person_modal_delete_btn")) {
@@ -892,6 +1101,13 @@ export function createBookingPersonsModule(ctx) {
       els.personModal.addEventListener("input", handlePersonModalInput);
       els.personModal.addEventListener("change", handlePersonModalInput);
     }
+    getPersonDateFieldDescriptors().forEach((descriptor) => {
+      if (descriptor.textInput instanceof HTMLInputElement) {
+        descriptor.textInput.addEventListener("blur", () => {
+          validatePersonDateField(descriptor, descriptor.textInput?.value, { allowPartial: false });
+        });
+      }
+    });
     if (els.personModalAvatarBtn) els.personModalAvatarBtn.addEventListener("click", triggerPersonPhotoPicker);
     if (els.personModalPhotoInput) {
       els.personModalPhotoInput.addEventListener("change", async () => {

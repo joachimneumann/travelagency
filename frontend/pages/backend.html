@@ -11,7 +11,7 @@
         window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
       }
     </script>
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260315-backend-fix" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=e34543ef2e35" />
   </head>
   <body>
     <header class="header" id="top">
@@ -84,14 +84,14 @@
       </section>
     </main>
 
-    <script src="shared/generated/language_catalog.global.js?v=20260315-backend-fix"></script>
-    <script src="frontend/scripts/shared/backend_i18n.js?v=20260315-backend-fix"></script>
+    <script src="shared/generated/language_catalog.global.js?v=e34543ef2e35"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js?v=e34543ef2e35"></script>
     <script type="module">
-      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=20260315-backend-fix";
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js?v=e34543ef2e35";
       const section = new URLSearchParams(window.location.search).get("section") || "bookings";
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
       mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
     </script>
-    <script type="module" src="frontend/scripts/pages/booking_list.js?v=20260315-backend-fix"></script>
+    <script type="module" src="frontend/scripts/pages/booking_list.js?v=e34543ef2e35"></script>
   </body>
 </html>

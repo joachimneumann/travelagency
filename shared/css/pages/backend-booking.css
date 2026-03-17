@@ -695,6 +695,53 @@
   align-items: center;
 }
 
+.booking-person-modal__date-input {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.booking-person-modal__date-input > input[type="text"] {
+  width: min(20rem, 100%);
+  max-width: 100%;
+}
+
+.booking-person-modal__date-picker-btn {
+  position: static;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(166, 188, 198, 0.72);
+  border-radius: 10px;
+  background: #fff;
+  color: #41535c;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.booking-person-modal__date-picker-btn:hover,
+.booking-person-modal__date-picker-btn:focus-visible {
+  border-color: rgba(104, 133, 145, 0.95);
+  color: #16313d;
+}
+
+.booking-person-modal__date-picker-proxy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .booking-person-modal__checkbox {
   display: inline-flex;
   align-items: center;
