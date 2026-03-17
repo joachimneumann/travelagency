@@ -1,21 +1,21 @@
-import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
   bookingT
-} from "./i18n.js?v=e34543ef2e35";
-import { formatMoneyDisplay } from "./pricing.js?v=e34543ef2e35";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=e34543ef2e35";
+} from "./i18n.js";
+import { formatMoneyDisplay } from "./pricing.js";
+import { renderBookingSegmentHeader } from "./segment_headers.js";
 import {
   buildDualLocalizedPayload,
   renderLocalizedStackedField,
   requestBookingFieldTranslation,
   resolveLocalizedEditorBranchText
-} from "./localized_editor.js?v=e34543ef2e35";
+} from "./localized_editor.js";
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
   TRAVEL_PLAN_SEGMENT_KIND_OPTIONS
-} from "../shared/generated_catalogs.js?v=e34543ef2e35";
+} from "../shared/generated_catalogs.js";
 import {
   countTravelPlanSegments,
   countUncoveredTravelPlanSegments,
@@ -27,7 +27,7 @@ import {
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
   getTravelPlanSegmentCoverageStatus,
   normalizeTravelPlanDraft
-} from "./travel_plan_helpers.js?v=e34543ef2e35";
+} from "./travel_plan_helpers.js";
 
 export function createBookingTravelPlanModule(ctx) {
   const {

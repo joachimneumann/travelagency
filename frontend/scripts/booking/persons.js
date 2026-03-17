@@ -2,13 +2,13 @@ import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Langu
 import {
   languageByApiValue,
   languageByCode
-} from "../../../shared/generated/language_catalog.js?v=e34543ef2e35";
+} from "../../../shared/generated/language_catalog.js";
 import {
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+} from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   buildDocumentPayloadFromDraft,
   documentHasAnyData,
@@ -24,16 +24,16 @@ import {
   personHasCompleteContact,
   personHasCompleteIdentityDocument,
   renderPersonCardStatusLine
-} from "./person_helpers.js?v=e34543ef2e35";
-import { bookingT } from "./i18n.js?v=e34543ef2e35";
+} from "./person_helpers.js";
+import { bookingT } from "./i18n.js";
 import {
   getBookingPersons,
   getPersonInitials,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=e34543ef2e35";
-import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js?v=e34543ef2e35";
-import { renderBookingSegmentHeader } from "./segment_headers.js?v=e34543ef2e35";
+} from "../shared/booking_persons.js";
+import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
+import { renderBookingSegmentHeader } from "./segment_headers.js";
 
 export function createBookingPersonsModule(ctx) {
   const {

@@ -14,8 +14,8 @@
 - Canonical URL: `https://asiatravelplan.com/`
 - Open Graph + Twitter metadata present
 - Favicon + web manifest linked
-- Main stylesheet: `shared/css/styles.css` loaded directly as a normal stylesheet (`?v=3`)
-- LCP hero poster preloaded from `assets/video/rice field.webp?v=2`
+- Main stylesheet: `shared/css/styles.css` loaded directly as a normal stylesheet
+- LCP hero poster preloaded from `assets/video/rice field.webp`
 
 ## 2) Global layout
 

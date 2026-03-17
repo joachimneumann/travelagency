@@ -6,13 +6,13 @@ import {
   bookingOwnerRequest,
   bookingStageRequest,
   tourDetailRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
-import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js?v=e34543ef2e35";
+} from "../../Generated/API/generated_APIRequestFactory.js";
+import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js";
 import {
   bookingContentLanguageLabel,
   bookingT,
   normalizeBookingContentLang
-} from "./i18n.js?v=e34543ef2e35";
+} from "./i18n.js";
 
 function labelizeKey(key) {
   return String(key || "")

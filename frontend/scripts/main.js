@@ -12,20 +12,20 @@ import { GENERATED_LANGUAGE_CODES } from "../Generated/Models/generated_Language
 import {
   languageByApiValue,
   languageByCode
-} from "../../shared/generated/language_catalog.js?v=e34543ef2e35";
+} from "../../shared/generated/language_catalog.js";
 import {
   MAX_TRAVELERS as GENERATED_MAX_TRAVELERS,
   MIN_TRAVELERS as GENERATED_MIN_TRAVELERS
 } from "../Generated/Models/generated_FormConstraints.js";
 import {
   publicToursRequest
-} from "../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
-import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+} from "../Generated/API/generated_APIRequestFactory.js";
+import { publicBookingsRequest } from "../Generated/API/generated_APIRequestFactory.js";
 import {
   PUBLIC_BOOKING_CREATE_REQUEST_SCHEMA,
   validatePublicBookingCreateRequest
 } from "../Generated/API/generated_APIModels.js";
-import { normalizeText } from "../../shared/js/text.js?v=e34543ef2e35";
+import { normalizeText } from "../../shared/js/text.js";
 
 function frontendT(id, fallback, vars) {
   if (typeof window.frontendT === "function") {

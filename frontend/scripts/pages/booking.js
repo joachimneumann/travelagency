@@ -11,7 +11,7 @@ import {
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
-} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+} from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   createApiFetcher,
   escapeHtml,
@@ -19,35 +19,35 @@ import {
   normalizeText,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=e34543ef2e35";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=e34543ef2e35";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js?v=e34543ef2e35";
-import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js?v=e34543ef2e35";
+} from "../shared/api.js";
+import { resolveBackendSectionHref } from "../shared/nav.js";
+import { createBookingWhatsAppController } from "../booking/whatsapp.js";
+import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
-} from "../booking/pricing.js?v=e34543ef2e35";
-import { createBookingOfferModule } from "../booking/offers.js?v=e34543ef2e35";
-import { createBookingTravelPlanModule } from "../booking/travel_plan.js?v=b3f5fbe66766";
+} from "../booking/pricing.js";
+import { createBookingOfferModule } from "../booking/offers.js";
+import { createBookingTravelPlanModule } from "../booking/travel_plan.js";
 import {
   createBookingInvoicesModule,
   formatDateInput as formatInvoiceDateInput,
   plusOneMonthDateInput as plusOneMonthInvoiceDateInput
-} from "../booking/invoices.js?v=e34543ef2e35";
-import { createBookingCoreModule } from "../booking/core.js?v=e34543ef2e35";
+} from "../booking/invoices.js";
+import { createBookingCoreModule } from "../booking/core.js";
 import {
   formatPersonRoleLabel,
   getPersonFooterRoleLabel,
   getPersonPrimaryRoleLabel,
-} from "../booking/person_helpers.js?v=e34543ef2e35";
-import { createBookingPersonsModule } from "../booking/persons.js?v=b3f5fbe66766";
+} from "../booking/person_helpers.js";
+import { createBookingPersonsModule } from "../booking/persons.js";
 import {
   getBookingPersons,
   getPersonInitials,
   getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
-} from "../shared/booking_persons.js?v=e34543ef2e35";
+} from "../shared/booking_persons.js";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
@@ -55,7 +55,7 @@ import {
   bookingContentLanguageOption,
   normalizeBookingContentLang,
   setBookingContentLang
-} from "../booking/i18n.js?v=e34543ef2e35";
+} from "../booking/i18n.js";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {

@@ -2,7 +2,7 @@ import {
   bookingInvoiceCreateRequest,
   bookingInvoiceUpdateRequest,
   bookingInvoicesRequest
-} from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+} from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   formatMoneyDisplay,
   formatMoneyInputValue,
@@ -10,14 +10,14 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue,
   setSelectValue
-} from "./pricing.js?v=e34543ef2e35";
-import { bookingContentLang, bookingT } from "./i18n.js?v=e34543ef2e35";
+} from "./pricing.js";
+import { bookingContentLang, bookingT } from "./i18n.js";
 import {
   buildDualLocalizedPayload,
   renderLocalizedSplitField,
   requestBookingFieldTranslation,
   resolveLocalizedEditorText
-} from "./localized_editor.js?v=e34543ef2e35";
+} from "./localized_editor.js";
 
 export function formatDateInput(date) {
   const d = new Date(date);

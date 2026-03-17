@@ -263,7 +263,7 @@ test("booking page wires the dedicated travel-plan module and section", async ()
 
   assert.match(
     moduleSource,
-    /import \{ createBookingTravelPlanModule \} from "\.\.\/booking\/travel_plan\.js\?v=/,
+    /import \{ createBookingTravelPlanModule \} from "\.\.\/booking\/travel_plan\.js"/,
     "booking.js should import the dedicated travel-plan module"
   );
   assert.match(
@@ -394,7 +394,7 @@ test("tour page reads month options from the generated catalogs layer", async ()
 
   assert.match(
     tourSource,
-    /import\s+\{\s*MONTH_CODE_CATALOG\s*\}\s+from\s+"..\/shared\/generated_catalogs\.js\?v=/,
+    /import\s+\{\s*MONTH_CODE_CATALOG\s*\}\s+from\s+"..\/shared\/generated_catalogs\.js"/,
     "Tour page should source month options from generated_catalogs.js, not the generated Aux model file"
   );
   assert.deepEqual(

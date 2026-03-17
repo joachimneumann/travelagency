@@ -3,12 +3,12 @@ import {
   escapeHtml,
   resolveApiUrl,
   setDirtySurface
-} from "../shared/api.js?v=e34543ef2e35";
-import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js?v=e34543ef2e35";
+} from "../shared/api.js";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import {
   CUSTOMER_CONTENT_LANGUAGES,
   normalizeLanguageCode
-} from "../../../shared/generated/language_catalog.js?v=e34543ef2e35";
+} from "../../../shared/generated/language_catalog.js";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {

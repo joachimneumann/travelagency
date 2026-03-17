@@ -3,7 +3,7 @@ import {
   bookingContentLanguageOption,
   bookingT,
   normalizeBookingContentLang
-} from "./i18n.js?v=e34543ef2e35";
+} from "./i18n.js";
 
 const DEFAULT_CONTENT_LANG = "en";
 

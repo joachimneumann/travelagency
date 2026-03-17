@@ -2,7 +2,7 @@ import {
   CUSTOMER_CONTENT_LANGUAGES,
   apiValueFromLanguageCode,
   normalizeLanguageCode
-} from "../../../shared/generated/language_catalog.js?v=e34543ef2e35";
+} from "../../../shared/generated/language_catalog.js";
 
 export const BOOKING_CONTENT_LANGUAGE_OPTIONS = Object.freeze(
   CUSTOMER_CONTENT_LANGUAGES.map((entry) => ({

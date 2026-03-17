@@ -4,19 +4,19 @@ import {
   formatDateTime,
   normalizeText,
   resolveApiUrl
-} from "../shared/api.js?v=e34543ef2e35";
+} from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
+import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   buildBookingHref,
   buildTourEditHref
-} from "../shared/links.js?v=e34543ef2e35";
-import { resolveBackendSectionHref } from "../shared/nav.js?v=e34543ef2e35";
-import { renderPagination } from "../shared/pagination.js?v=e34543ef2e35";
+} from "../shared/links.js";
+import { resolveBackendSectionHref } from "../shared/nav.js";
+import { renderPagination } from "../shared/pagination.js";
 import {
   getPersonInitials,
   getRepresentativeTraveler
-} from "../shared/booking_persons.js?v=e34543ef2e35";
+} from "../shared/booking_persons.js";
 
 function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {

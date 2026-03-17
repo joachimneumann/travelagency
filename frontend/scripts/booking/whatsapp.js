@@ -1,11 +1,11 @@
-import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js?v=e34543ef2e35";
-import { escapeHtml, normalizeText } from "../shared/api.js?v=e34543ef2e35";
-import { bookingLang, bookingT } from "./i18n.js?v=e34543ef2e35";
+import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import { escapeHtml, normalizeText } from "../shared/api.js";
+import { bookingLang, bookingT } from "./i18n.js";
 import {
   buildBookingSegmentHeaderMarkup,
   initializeBookingCollapsible,
   renderBookingSegmentHeader
-} from "./segment_headers.js?v=e34543ef2e35";
+} from "./segment_headers.js";
 
 function normalizePhoneDigits(value) {
   return String(value || "").replace(/[^\d]/g, "");
