@@ -17,6 +17,14 @@
   }
 }
 
+(staging_cache_headers) {
+  header {
+    Cache-Control "no-store, no-cache, must-revalidate"
+    Pragma "no-cache"
+    Expires "0"
+  }
+}
+
 asiatravelplan.com {
   import security_headers
   encode zstd gzip
@@ -36,6 +44,7 @@ www.asiatravelplan.com {
 staging.asiatravelplan.com {
   import security_headers
   import noindex_headers
+  import staging_cache_headers
   encode zstd gzip
   root * /srv
 

@@ -72,7 +72,6 @@ stop_existing_frontend() {
 }
 
 main() {
-  ruby "$ROOT_DIR/scripts/generate_frontend_asset_version.rb" >/dev/null
   ensure_local_docker_runtime
   require_cmd lsof
   require_cmd curl

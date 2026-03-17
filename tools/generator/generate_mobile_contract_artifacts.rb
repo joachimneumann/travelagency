@@ -1610,6 +1610,3 @@ if GENERATE_IOS_OUTPUTS
     write_file(File.join(IOS_GENERATED_API_DIR, filename), content)
   end
 end
-
-frontend_asset_version_script = File.join(ROOT, 'scripts', 'generate_frontend_asset_version.rb')
-system('ruby', frontend_asset_version_script, exception: true)

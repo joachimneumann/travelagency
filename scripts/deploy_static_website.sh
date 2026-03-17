@@ -40,7 +40,6 @@ if [[ "$CURRENT_HOSTNAME" != "$EXPECTED_HOSTNAME" ]]; then
 fi
 
 cd "$ROOT_DIR"
-ruby "$ROOT_DIR/scripts/generate_frontend_asset_version.rb" >/dev/null
 
 for required in \
   "$SOURCE_ROOT/index.html" \
