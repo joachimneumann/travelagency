@@ -230,6 +230,16 @@ export function createBookingViewHelpers({
     );
   }
 
+  function publicGeneratedOfferFields(generatedOffer) {
+    if (!generatedOffer || typeof generatedOffer !== "object") return {};
+    const {
+      pdf_frozen_at: _pdfFrozenAt,
+      pdf_sha256: _pdfSha256,
+      ...publicFields
+    } = generatedOffer;
+    return publicFields;
+  }
+
   async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency, options = {}) {
     const generatedOfferCurrency = safeCurrency(
       generatedOffer?.currency || generatedOffer?.offer?.currency || defaultCurrency
@@ -241,7 +251,7 @@ export function createBookingViewHelpers({
       { lang: generatedLang }
     );
     return {
-      ...generatedOffer,
+      ...publicGeneratedOfferFields(generatedOffer),
       currency: generatedOfferReadModel.currency || generatedOfferCurrency,
       total_price_cents: safeInt(generatedOffer?.total_price_cents) || safeInt(generatedOfferReadModel?.total_price_cents) || 0,
       offer: generatedOfferReadModel,

@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { createWriteStream } from "node:fs";
-import { access, mkdir } from "node:fs/promises";
+import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
@@ -1031,5 +1032,11 @@ export function createOfferPdfWriter({
 
       doc.end();
     });
+
+    const pdfBuffer = await readFile(outputPath);
+    return {
+      outputPath,
+      sha256: createHash("sha256").update(pdfBuffer).digest("hex")
+    };
   };
 }

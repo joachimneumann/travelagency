@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable, Writable } from "node:stream";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -1105,6 +1105,8 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(generatedOffer.travel_plan.days[0].segments[0].title, "Airport transfer");
   assert.match(generatedOffer.filename, /^ATP offer \d{4}-\d{2}-\d{2}\.pdf$/);
   assert.equal(typeof generatedOffer.pdf_url, "string");
+  assert.equal("pdf_frozen_at" in generatedOffer, false);
+  assert.equal("pdf_sha256" in generatedOffer, false);
 
   const secondOfferPatchResult = await requestJson(
     endpointPath("booking_offer").replace("{booking_id}", bookingId),
@@ -1350,6 +1352,101 @@ test("booking generated offer pdf endpoint returns a pdf file", async () => {
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   assert.match(pdfResult.body, /%PDF-/);
+});
+
+test("booking generated offer pdf endpoint serves the frozen artifact without re-rendering", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_transfer_1",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Airport transfer",
+              quantity: 1,
+              unit_amount_cents: 2500,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Frozen PDF check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  const pdfPath = path.join(TEST_DATA_DIR, "generated_offers", `${generatedOffer.id}.pdf`);
+  const initialStats = await stat(pdfPath);
+
+  await new Promise((resolve) => setTimeout(resolve, 25));
+
+  const secondOfferPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: generateResult.body.booking.offer_revision,
+        offer: {
+          ...generateResult.body.booking.offer,
+          components: [
+            {
+              id: "offer_component_transfer_1",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Updated airport transfer",
+              quantity: 2,
+              unit_amount_cents: 4200,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(secondOfferPatchResult.status, 200);
+
+  const pdfResult = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  assert.equal(pdfResult.headers["content-type"], "application/pdf");
+
+  const finalStats = await stat(pdfPath);
+  assert.equal(finalStats.mtimeMs, initialStats.mtimeMs);
+  assert.equal(finalStats.size, initialStats.size);
 });
 
 test("booking generated offers support comment update and delete", async () => {

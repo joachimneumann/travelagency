@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { validateBookingOfferTranslateRequest } from "../../../Generated/API/generated_APIModels.js";
 import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
@@ -72,9 +73,19 @@ export function createBookingFinanceHandlers(deps) {
   function buildGeneratedOfferReadModel(booking, generatedOffer) {
     const normalizedGeneratedOffer = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
     return {
-      ...normalizedGeneratedOffer,
+      ...publicGeneratedOfferFields(normalizedGeneratedOffer),
       pdf_url: `/api/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
     };
+  }
+
+  function publicGeneratedOfferFields(generatedOffer) {
+    if (!generatedOffer || typeof generatedOffer !== "object") return {};
+    const {
+      pdf_frozen_at: _pdfFrozenAt,
+      pdf_sha256: _pdfSha256,
+      ...publicFields
+    } = generatedOffer;
+    return publicFields;
   }
 
   function buildGeneratedOfferEmailDraftCopy(booking, generatedOfferSnapshot, contact) {
@@ -125,6 +136,51 @@ export function createBookingFinanceHandlers(deps) {
         lang: snapshotLang,
         strictReferences: false
       })
+    };
+  }
+
+  function sha256Hex(buffer) {
+    return createHash("sha256").update(buffer).digest("hex");
+  }
+
+  async function ensureFrozenGeneratedOfferPdf(generatedOffer, booking, options = {}) {
+    const { store = null, persistMetadata = true } = options;
+    const pdfPath = generatedOfferPdfPath(generatedOffer.id);
+    const storedFrozenAt = normalizeText(generatedOffer?.pdf_frozen_at);
+
+    try {
+      const pdfBuffer = await readFile(pdfPath);
+      const sha256 = sha256Hex(pdfBuffer);
+      let metadataChanged = false;
+      if (!storedFrozenAt) {
+        generatedOffer.pdf_frozen_at = normalizeText(generatedOffer?.created_at) || nowIso();
+        metadataChanged = true;
+      }
+      if (normalizeText(generatedOffer?.pdf_sha256) !== sha256) {
+        generatedOffer.pdf_sha256 = sha256;
+        metadataChanged = true;
+      }
+      if (metadataChanged && store && persistMetadata) {
+        await persistStore(store);
+      }
+      return { pdfPath, sha256, existed: true };
+    } catch (error) {
+      if (storedFrozenAt) {
+        throw new Error("Frozen generated offer PDF artifact is missing.");
+      }
+    }
+
+    const snapshot = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
+    const artifact = await writeGeneratedOfferPdf(snapshot, booking);
+    generatedOffer.pdf_frozen_at = nowIso();
+    generatedOffer.pdf_sha256 = artifact?.sha256 || null;
+    if (store && persistMetadata) {
+      await persistStore(store);
+    }
+    return {
+      pdfPath: artifact?.outputPath || pdfPath,
+      sha256: artifact?.sha256 || null,
+      existed: false
     };
   }
 
@@ -530,8 +586,8 @@ export function createBookingFinanceHandlers(deps) {
       travel_plan: travelPlanSnapshot
     };
 
-    await writeGeneratedOfferPdf(normalizeGeneratedOfferSnapshot(generatedOffer, booking), booking);
     booking.generated_offers = [...existingGeneratedOffers, generatedOffer];
+    await ensureFrozenGeneratedOfferPdf(generatedOffer, booking);
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = now;
     addActivity(
@@ -565,8 +621,13 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
-    const pdfPath = generatedOfferPdfPath(generatedOffer.id);
-    await writeGeneratedOfferPdf(normalizeGeneratedOfferSnapshot(generatedOffer, booking), booking);
+    let pdfPath;
+    try {
+      ({ pdfPath } = await ensureFrozenGeneratedOfferPdf(generatedOffer, booking, { store }));
+    } catch (error) {
+      sendJson(res, 500, { error: "Generated offer PDF artifact is missing", detail: String(error?.message || error) });
+      return;
+    }
     await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store", {
       "Content-Disposition": `inline; filename="${String(generatedOffer.filename || `${generatedOffer.id}.pdf`).replace(/"/g, "")}"`
     });
@@ -611,8 +672,10 @@ export function createBookingFinanceHandlers(deps) {
     const draftCopy = buildGeneratedOfferEmailDraftCopy(booking, generatedOfferSnapshot, contact);
 
     try {
-      await writeGeneratedOfferPdf(generatedOfferSnapshot, booking);
-      const pdfPath = generatedOfferPdfPath(generatedOffer.id);
+      const { pdfPath } = await ensureFrozenGeneratedOfferPdf(generatedOffer, booking, {
+        store,
+        persistMetadata: false
+      });
       const pdfBuffer = await readFile(pdfPath);
       const draft = await getGmailDraftsClient().createDraft({
         to: recipientEmail,

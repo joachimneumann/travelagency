@@ -942,6 +942,8 @@ export function formatPdfMoney(amountCents, currency, lang) {
     minimumFractionDigits: decimalPlaces,
     maximumFractionDigits: decimalPlaces,
     useGrouping: true
-  }).format(amount);
+  })
+    .format(amount)
+    .replace(/[\u00A0\u202F]/g, " ");
   return `${symbolMap[code] || `${code} `}${number}`;
 }
