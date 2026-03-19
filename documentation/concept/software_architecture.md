@@ -122,7 +122,11 @@ Generated outputs include:
 - `shared/generated-contract/`
 - `backend/app/Generated/`
 - `frontend/Generated/`
-- `mobile/iOS/Generated/`
+- `mobile/iOS/Generated/` when explicitly generated for iOS consumption
+
+Current repository note:
+- the active iOS app does not currently keep generated Swift artifacts checked in
+- current mobile status is documented in `documentation/backend/mobileApp.md`
 
 The generator should own:
 - transport schemas
@@ -214,6 +218,10 @@ Mobile is currently secondary, but the architectural rule is already defined:
 - mobile should consume the same generated contract
 - mobile should use the same booking-owned person vocabulary
 - mobile must not reintroduce removed master-data concepts
+
+Current implementation note:
+- the active iOS target is intentionally reduced to bootstrap, auth, and a minimal shell
+- use `documentation/backend/mobileApp.md` as the current-state mobile reference
 
 ## Current Domain Shape
 

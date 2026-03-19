@@ -1,15 +1,109 @@
 # AsiaTravelPlan Mobile App Guide
 
-This document should follow the same booking-owned person model as the web backend.
+This is the authoritative mobile status document.
 
-Current status:
-- iOS is not the active focus right now
-- when mobile work resumes, it should consume the existing generated contract
-- mobile must not reintroduce removed master-data concepts that are no longer part of the booking model
+Use this file instead of `mobile/iOS/README.md` when you want to understand what the iOS app currently is and is not.
 
-## Required Domain Shape
+## Current Status
 
-Mobile should treat these as the active domains:
+The iOS app is intentionally reduced.
+
+Implemented now:
+- app bootstrap and version gate
+- Keycloak login and logout
+- local session restoration
+- role-aware authenticated shell
+
+Not implemented now:
+- booking list
+- booking detail
+- offer, invoice, activity, person, and chat UI
+- tour editing
+- generated Swift contract files in the active tree
+
+The current app should be treated as a minimal authenticated shell, not as a full mobile client.
+
+## Current Entry Points
+
+App entry:
+- `mobile/iOS/AsiaTravelPlanApp.swift`
+
+Configuration:
+- `mobile/iOS/AppConfig.swift`
+
+Core services:
+- `mobile/iOS/Services/APIClient.swift`
+- `mobile/iOS/Services/AppBootstrapStore.swift`
+- `mobile/iOS/Services/AuthService.swift`
+- `mobile/iOS/Services/SessionStore.swift`
+- `mobile/iOS/Services/TokenStore.swift`
+
+Current views:
+- `mobile/iOS/Views/RootView.swift`
+- `mobile/iOS/Views/LoginView.swift`
+- `mobile/iOS/Views/AppShellView.swift`
+- `mobile/iOS/Views/StartupFailureView.swift`
+- `mobile/iOS/Views/UnauthorizedView.swift`
+- `mobile/iOS/Views/UpdateRequiredView.swift`
+
+## Current Runtime Behavior
+
+Bootstrap flow:
+- app calls `GET /public/v1/mobile/bootstrap`
+- app checks minimum supported version and force-update flag
+
+Authentication flow:
+- separate mobile Keycloak client
+- OpenID Connect with PKCE
+- redirect URI: `asiatravelplan://auth/callback`
+
+Session behavior:
+- restore stored session on app activation
+- refresh tokens where possible
+- logout through Keycloak end-session flow
+
+## Current Configuration Reality
+
+The current iOS app is wired directly to staging values in code:
+- `apiBaseURL = https://api-staging.asiatravelplan.com`
+- `keycloakBaseURL = https://auth-staging.asiatravelplan.com`
+- realm `master`
+- client id `asiatravelplan-ios`
+
+These values currently live in:
+- `mobile/iOS/AppConfig.swift`
+
+This means the mobile target is not yet a flexible environment-driven app.
+
+## Contract and Model Alignment
+
+The source of truth remains:
+- `model/entities/`
+- `model/api/`
+- `model/enums/`
+- `model/common/`
+- `model/ir/`
+
+The generator emits:
+- `api/generated/openapi.yaml`
+- `api/generated/mobile-api.meta.json`
+- `shared/generated-contract/`
+- `backend/app/Generated/`
+- `frontend/Generated/`
+
+Important current exception:
+- `mobile/iOS/Generated/` is not currently present in the repository
+- the iOS app is using handwritten Swift types and services for the reduced shell
+
+If Swift contract artifacts are explicitly needed again, generate them with:
+
+```bash
+GENERATE_IOS=1 ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
+```
+
+## Domain Rules Mobile Must Follow
+
+When mobile work resumes, it must follow the active web/backend vocabulary:
 - booking
 - booking persons
 - ATP staff
@@ -18,63 +112,43 @@ Mobile should treat these as the active domains:
 - activities
 
 Important rules:
-- `booking.persons[]` contains the contact and traveler data
+- `booking.persons[]` is the editable booking-owned person data
 - `booking.web_form_submission` is the immutable inbound snapshot
-- there is no standalone shared person directory in the active architecture
+- there is no standalone shared person directory in the current architecture
 
-## Recommended First Mobile Scope
+## Recommended Next Mobile Expansion
 
-- login with Keycloak
+If mobile work resumes, the next useful scope is:
 - booking list
 - booking detail
 - booking stage changes where allowed
-- booking note editing where allowed
+- booking notes
 - booking activity visibility
 - booking invoice visibility
 - booking person summary visibility
 
-Out of scope for the first mobile phase:
+Still out of scope unless there is a strong reason:
 - standalone person CRUD
 - separate shared master-data workflows
 - tour editing
 - staff administration UI
 
-## Contract Source of Truth
+## Roles
 
-Source model:
-- `model/entities/`
-- `model/api/`
-- `model/enums/`
-- `model/common/`
-- `model/ir/`
-
-Generated artifacts:
-- `api/generated/openapi.yaml`
-- `api/generated/mobile-api.meta.json`
-- `shared/generated-contract/`
-- `backend/app/Generated/`
-- `frontend/Generated/`
-- `mobile/iOS/Generated/`
-
-## Role Expectations
-
-- `atp_staff`: assigned bookings only, plus tour read/edit access
+Current expected role behavior:
+- `atp_staff`: assigned bookings only, plus tour read/edit access in the main system
 - `atp_manager`: all bookings, assignment changes, Keycloak user directory access, tour read/edit access
 - `atp_admin`: same booking and tour capabilities as manager
 - `atp_accountant`: booking read access, tours read-only, Keycloak user directory access
 
-## Keycloak
+## Maintenance Notes
 
-Do not use the confidential web backend client inside the app.
+To regenerate the Xcode project:
 
-Use a separate mobile client, for example:
-- `asiatravelplan-ios`
+```bash
+ruby /Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
+```
 
-Recommended:
-- OpenID Connect
-- PKCE
-- redirect URI like `asiatravelplan://auth/callback`
-
-## Important Constraint
-
-When mobile work resumes, generated contract artifacts and booking/person vocabulary must stay aligned with the current web/backend implementation. Mobile should follow the model, not preserve older naming.
+For overall repository orientation, start with:
+- `/Users/internal_admin/projects/travelagency/README.md`
+- `/Users/internal_admin/projects/travelagency/documentation/current_system_map.md`

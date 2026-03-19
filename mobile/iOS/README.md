@@ -1,35 +1,13 @@
 # AsiaTravelPlan iOS App
 
-This iOS target is intentionally reduced to:
-- app bootstrap / version gate
-- Keycloak login and logout
-- local session restoration
-- a minimal authenticated app shell
+The authoritative mobile status document is:
 
-Removed on purpose:
-- generated Swift API and model files
-- all booking, offer, invoice, person, chat, and tour UI beyond the minimal authenticated shell
-- domain-specific mobile view models and formatting helpers
+- [documentation/backend/mobileApp.md](/Users/internal_admin/projects/travelagency/documentation/backend/mobileApp.md)
 
-Kept on purpose:
-- [`/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlanApp.swift`](/Users/internal_admin/projects/travelagency/mobile/iOS/AsiaTravelPlanApp.swift)
-- [`/Users/internal_admin/projects/travelagency/mobile/iOS/AppConfig.swift`](/Users/internal_admin/projects/travelagency/mobile/iOS/AppConfig.swift)
-- auth/session services under [`/Users/internal_admin/projects/travelagency/mobile/iOS/Services`](/Users/internal_admin/projects/travelagency/mobile/iOS/Services)
-- login/setup views under [`/Users/internal_admin/projects/travelagency/mobile/iOS/Views`](/Users/internal_admin/projects/travelagency/mobile/iOS/Views)
+Use that file for:
+- current mobile scope
+- current runtime behavior
+- contract/generator status
+- next recommended mobile expansion
 
-To regenerate the Xcode project:
-
-```bash
-ruby /Users/internal_admin/projects/travelagency/mobile/iOS/generate_xcodeproj.rb
-```
-
-The main contract generator no longer emits iOS Swift artifacts by default. If you
-explicitly need them again, run it with:
-
-```bash
-GENERATE_IOS=1 ruby /Users/internal_admin/projects/travelagency/tools/generator/generate_mobile_contract_artifacts.rb
-```
-
-Open the project in Xcode and configure signing plus the Keycloak mobile client:
-- client id: `asiatravelplan-ios`
-- redirect URI: `asiatravelplan://auth/callback`
+This local README stays intentionally minimal to avoid drift.

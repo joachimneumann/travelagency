@@ -30,12 +30,16 @@ case "booking_chat":
   return RequestFactory.bookingChatRequest(options);
 case "booking_name":
   return RequestFactory.bookingNameRequest(options);
+case "booking_customer_language":
+  return RequestFactory.bookingCustomerLanguageRequest(options);
 case "booking_image":
   return RequestFactory.bookingImageRequest(options);
 case "booking_stage":
   return RequestFactory.bookingStageRequest(options);
 case "booking_owner":
   return RequestFactory.bookingOwnerRequest(options);
+case "booking_translate_fields":
+  return RequestFactory.bookingTranslateFieldsRequest(options);
 case "booking_person_create":
   return RequestFactory.bookingPersonCreateRequest(options);
 case "booking_person_update":
@@ -48,10 +52,14 @@ case "booking_notes":
   return RequestFactory.bookingNotesRequest(options);
 case "booking_travel_plan":
   return RequestFactory.bookingTravelPlanRequest(options);
+case "booking_travel_plan_translate":
+  return RequestFactory.bookingTravelPlanTranslateRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
   return RequestFactory.bookingOfferRequest(options);
+case "booking_offer_translate":
+  return RequestFactory.bookingOfferTranslateRequest(options);
 case "booking_generate_offer":
   return RequestFactory.bookingGenerateOfferRequest(options);
 case "booking_generated_offer_update":
@@ -82,6 +90,10 @@ case "booking_invoice_create":
   return RequestFactory.bookingInvoiceCreateRequest(options);
 case "booking_invoice_update":
   return RequestFactory.bookingInvoiceUpdateRequest(options);
+case "booking_invoice_translate":
+  return RequestFactory.bookingInvoiceTranslateRequest(options);
+case "invoice_pdf":
+  return RequestFactory.invoicePdfRequest(options);
 case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
 case "tours":
@@ -92,6 +104,8 @@ case "tour_detail":
   return RequestFactory.tourDetailRequest(options);
 case "tour_update":
   return RequestFactory.tourUpdateRequest(options);
+case "tour_translate_fields":
+  return RequestFactory.tourTranslateFieldsRequest(options);
 case "tour_image":
   return RequestFactory.tourImageRequest(options);
       default:

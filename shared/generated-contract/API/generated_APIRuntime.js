@@ -148,6 +148,17 @@
         ]
       },
       {
+        key: "booking_customer_language",
+        path: "/api/v1/bookings/{booking_id}/customer-language",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingCustomerLanguageUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_image",
         path: "/api/v1/bookings/{booking_id}/image",
         method: "POST",
@@ -176,6 +187,17 @@
         authenticated: true,
         requestType: "BookingOwnerUpdateRequest",
         responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_translate_fields",
+        path: "/api/v1/bookings/{booking_id}/translate-fields",
+        method: "POST",
+        authenticated: true,
+        requestType: "TranslationEntriesRequest",
+        responseType: "TranslationEntriesResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
@@ -250,6 +272,17 @@
         ]
       },
       {
+        key: "booking_travel_plan_translate",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/translate",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingTravelPlanTranslateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_pricing",
         path: "/api/v1/bookings/{booking_id}/pricing",
         method: "PATCH",
@@ -266,6 +299,17 @@
         method: "PATCH",
         authenticated: true,
         requestType: "BookingOfferUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_offer_translate",
+        path: "/api/v1/bookings/{booking_id}/offer/translate",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingOfferTranslateRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
@@ -442,6 +486,29 @@
         ]
       },
       {
+        key: "booking_invoice_translate",
+        path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate",
+        method: "POST",
+        authenticated: true,
+        requestType: "BookingInvoiceTranslateRequest",
+        responseType: "BookingInvoiceResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+        ]
+      },
+      {
+        key: "invoice_pdf",
+        path: "/api/v1/invoices/{invoice_id}/pdf",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: null,
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+        ]
+      },
+      {
         key: "keycloak_users",
         path: "/api/v1/keycloak_users",
         method: "GET",
@@ -494,6 +561,17 @@
         responseType: "TourResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
+        ]
+      },
+      {
+        key: "tour_translate_fields",
+        path: "/api/v1/tours/translate-fields",
+        method: "POST",
+        authenticated: true,
+        requestType: "TourTranslateFieldsRequest",
+        responseType: "TranslationEntriesResponse",
+        parameters: [
+
         ]
       },
       {

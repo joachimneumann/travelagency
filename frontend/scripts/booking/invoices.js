@@ -1,5 +1,6 @@
 import {
   bookingInvoiceCreateRequest,
+  invoicePdfRequest,
   bookingInvoiceUpdateRequest,
   bookingInvoicesRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -257,8 +258,9 @@ export function createBookingInvoicesModule(ctx) {
       .map((invoice) => {
         const checked = invoice.sent_to_recipient ? "checked" : "";
         const disabled = !state.permissions.canEditBooking ? "disabled" : "";
+        const pdfHref = invoicePdfRequest({ baseURL: apiBase, params: { invoice_id: invoice.id } }).url;
         return `<tr>
-        <td><a class="btn btn-ghost" href="${escapeHtml(`${apiBase}/api/v1/invoices/${encodeURIComponent(invoice.id)}/pdf`)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a></td>
+        <td><a class="btn btn-ghost" href="${escapeHtml(pdfHref)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a></td>
         <td>${escapeHtml(invoice.invoice_number || shortId(invoice.id))}</td>
         <td>${escapeHtml(String(invoice.version || 1))}</td>
         <td><input type="checkbox" data-invoice-sent="${escapeHtml(invoice.id)}" ${checked} ${disabled} /></td>

@@ -26,6 +26,7 @@ import {
   validatePublicBookingCreateRequest
 } from "../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../shared/js/text.js";
+import { fetchAuthMe } from "./shared/auth.js";
 
 function frontendT(id, fallback, vars) {
   if (typeof window.frontendT === "function") {
@@ -812,10 +813,7 @@ async function loadWebsiteAuthStatus() {
   if (!els.backendLoginContainer) return;
 
   try {
-    const response = await fetch(`${BACKEND_BASE_URL}/auth/me`, {
-      credentials: "include"
-    });
-    const payload = await response.json();
+    const { response, payload } = await fetchAuthMe(BACKEND_BASE_URL);
     if (!response.ok || !payload?.authenticated) {
       state.websiteAuthenticated = false;
       placeBackendLogin(false);

@@ -77,6 +77,38 @@ async function importedBindings(filePath) {
   return bindings;
 }
 
+async function openApiPathOperations(filePath) {
+  const source = await readFile(filePath, "utf8");
+  const lines = source.split("\n");
+  const operations = [];
+  let inPaths = false;
+  let currentPath = null;
+
+  for (const line of lines) {
+    if (!inPaths) {
+      if (line.trim() === "paths:") {
+        inPaths = true;
+      }
+      continue;
+    }
+
+    if (/^\S/.test(line) && !line.startsWith("paths:")) break;
+
+    const pathMatch = line.match(/^  "?(\/[^"]+)"?:\s*$/);
+    if (pathMatch) {
+      currentPath = pathMatch[1];
+      continue;
+    }
+
+    const methodMatch = currentPath ? line.match(/^    (get|post|patch|put|delete):\s*$/) : null;
+    if (methodMatch) {
+      operations.push(`${methodMatch[1].toUpperCase()} ${currentPath}`);
+    }
+  }
+
+  return operations.sort();
+}
+
 test("booking handlers do not contain duplicate top-level helper declarations", async () => {
   const filePath = path.resolve(__dirname, "..", "src", "http", "handlers", "bookings.js");
   const names = await topLevelFunctionDeclarations(filePath);
@@ -234,6 +266,23 @@ test("server resolves relative Gmail service-account paths from the repo root", 
     source,
     /serviceAccountJsonPath: resolveConfigPathFromRepoRoot\(GOOGLE_SERVICE_ACCOUNT_JSON_PATH\)/,
     "Gmail draft config should use repo-root-relative path resolution"
+  );
+});
+
+test("contract route definitions stay in sync with generated OpenAPI", async () => {
+  const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const routesModule = await import(`${pathToFileURL(routesPath).href}?test=${Date.now()}`);
+
+  const expected = routesModule.CONTRACT_ROUTE_DEFINITIONS
+    .map((route) => `${route.method} ${route.path}`)
+    .sort();
+  const actual = await openApiPathOperations(openApiPath);
+
+  assert.deepEqual(
+    actual,
+    expected,
+    "Modeled/generated API routes must match the runtime contract route definitions exactly"
   );
 });
 

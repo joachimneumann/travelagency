@@ -1,4 +1,15 @@
 import {
+  authMeRequest,
+  tourCreateRequest,
+  tourDetailRequest,
+  tourImageRequest,
+  toursRequest,
+  tourTranslateFieldsRequest
+  ,
+  tourUpdateRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
+import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
+import {
   createApiFetcher,
   escapeHtml,
   resolveApiUrl,
@@ -203,15 +214,24 @@ async function requestTourTranslation(field, targetLang, sourceText) {
   const entries = buildTourTranslationEntries(field, sourceText);
   if (!Object.keys(entries).length) return null;
 
-  const result = await fetchApi(withApiLang("/api/v1/tours/translate-fields"), {
-    method: "POST",
+  const request = tourTranslateFieldsRequest({
     body: {
       source_lang: "en",
       target_lang: targetLang,
-      entries
+      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
     }
   });
-  return result?.entries || null;
+  const result = await fetchApi(withApiLang(request.url), {
+    method: request.method,
+    body: request.body
+  });
+  return Array.isArray(result?.entries)
+    ? Object.fromEntries(
+        result.entries
+          .map((entry) => [String(entry?.key || "").trim(), String(entry?.value || "").trim()])
+          .filter(([key, value]) => Boolean(key && value))
+      )
+    : null;
 }
 
 function applyTranslatedTourField(field, targetLang, translatedEntries) {
@@ -448,7 +468,8 @@ function bindSectionNavigation(activeSection) {
 }
 
 async function loadTour() {
-  const payload = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}`));
+  const request = tourDetailRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
+  const payload = await fetchApi(withApiLang(request.url));
   if (!payload?.tour) return;
 
   state.tour = payload.tour;
@@ -484,7 +505,8 @@ async function loadTour() {
 }
 
 async function initializeNewTourForm() {
-  const payload = await fetchApi(withApiLang("/api/v1/tours", { page: 1, page_size: 1 }));
+  const request = toursRequest({ baseURL: apiOrigin, query: { page: 1, page_size: 1 } });
+  const payload = await fetchApi(withApiLang(request.url));
   state.options.destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
   state.options.styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
   state.tour = {
@@ -660,8 +682,11 @@ async function submitForm(event) {
 
   setStatus(backendT("tour.status.saving", "Saving..."));
   const is_create = state.is_create_mode;
-  const result = await fetchApi(is_create ? withApiLang("/api/v1/tours") : withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}`), {
-    method: is_create ? "POST" : "PATCH",
+  const request = is_create
+    ? tourCreateRequest({ baseURL: apiOrigin })
+    : tourUpdateRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
+  const result = await fetchApi(withApiLang(request.url), {
+    method: request.method,
     body: payload
   });
   if (!result) return;
@@ -675,8 +700,9 @@ async function submitForm(event) {
   if (file) {
     setStatus(backendT("tour.status.uploading_image", "Uploading image..."));
     const base64 = await fileToBase64(file);
-    const imageResult = await fetchApi(withApiLang(`/api/v1/tours/${encodeURIComponent(state.id)}/image`), {
-      method: "POST",
+    const imageRequest = tourImageRequest({ baseURL: apiOrigin, params: { tour_id: state.id } });
+    const imageResult = await fetchApi(withApiLang(imageRequest.url), {
+      method: imageRequest.method,
       body: {
         filename: file.name,
         data_base64: base64
@@ -719,8 +745,14 @@ const fetchApi = createApiFetcher({
 async function loadAuthStatus() {
   try {
     refreshBackendNavElements();
-    const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
-    const payload = await response.json();
+    const request = authMeRequest({ baseURL: apiBase });
+    const response = await fetch(request.url, {
+      method: request.method,
+      credentials: "include",
+      headers: request.headers
+    });
+    const payload = await response.json().catch(() => null);
+    if (payload) validateAuthMeResponse(payload);
     if (!response.ok || !payload?.authenticated) {
       state.authenticated = false;
       if (els.userLabel) els.userLabel.textContent = "";
@@ -785,7 +817,8 @@ async function findDuplicateTourTitle(title, currentTourId) {
       page_size: String(pageSize)
     });
 
-    const payload = await fetchApi(withApiLang("/api/v1/tours", Object.fromEntries(query.entries())));
+    const request = toursRequest({ baseURL: apiOrigin, query: Object.fromEntries(query.entries()) });
+    const payload = await fetchApi(withApiLang(request.url));
     if (!payload) return null;
 
     const items = Array.isArray(payload.items) ? payload.items : [];

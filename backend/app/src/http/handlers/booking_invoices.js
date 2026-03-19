@@ -1,3 +1,4 @@
+import { validateBookingInvoiceTranslateRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
   mergeEditableLocalizedTextField,
@@ -410,8 +411,9 @@ export function createBookingInvoiceHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      validateBookingInvoiceTranslateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 

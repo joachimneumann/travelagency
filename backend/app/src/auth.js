@@ -39,8 +39,7 @@ export function createAuth({ port }) {
   const routes = [
     { method: "GET", pattern: /^\/auth\/login$/, handler: handleAuthLogin },
     { method: "GET", pattern: /^\/auth\/callback$/, handler: handleAuthCallback },
-    { method: "GET", pattern: /^\/auth\/logout$/, handler: handleAuthLogout },
-    { method: "GET", pattern: /^\/auth\/me$/, handler: handleAuthMe }
+    { method: "GET", pattern: /^\/auth\/logout$/, handler: handleAuthLogout }
   ];
 
   function isKeycloakEnabled() {
@@ -487,6 +486,7 @@ export function createAuth({ port }) {
 
   return {
     routes,
+    handleAuthMe,
     pruneState,
     isKeycloakEnabled,
     hasSession,

@@ -1,3 +1,5 @@
+import { validateTourTranslateFieldsRequest } from "../../../Generated/API/generated_APIModels.js";
+
 export function createTourHandlers(deps) {
   const {
     normalizeText,
@@ -40,6 +42,20 @@ export function createTourHandlers(deps) {
     writeFile,
     rm
   } = deps;
+
+  function translationEntriesToObject(entries) {
+    return Object.fromEntries(
+      (Array.isArray(entries) ? entries : [])
+        .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+        .filter(([key, value]) => Boolean(key && value))
+    );
+  }
+
+  function translationEntriesFromObject(entries) {
+    return Object.entries(entries || {})
+      .map(([key, value]) => ({ key: normalizeText(key), value: normalizeText(value) }))
+      .filter((entry) => Boolean(entry.key && entry.value));
+  }
 
   function requestLang(reqUrl) {
     return normalizeTourLang(new URL(reqUrl, "http://localhost").searchParams.get("lang"));
@@ -291,20 +307,15 @@ export function createTourHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      validateTourTranslateFieldsRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 
-    const sourceLang = normalizeTourLang(payload?.source_lang || "en");
-    const targetLang = normalizeTourLang(payload?.target_lang || "en");
-    const entries = payload?.entries && typeof payload.entries === "object" && !Array.isArray(payload.entries)
-      ? Object.fromEntries(
-          Object.entries(payload.entries)
-            .map(([key, value]) => [normalizeText(key), normalizeText(value)])
-            .filter(([key, value]) => Boolean(key && value))
-        )
-      : {};
+    const sourceLang = normalizeTourLang(payload.source_lang);
+    const targetLang = normalizeTourLang(payload.target_lang);
+    const entries = translationEntriesToObject(payload.entries);
 
     if (!Object.keys(entries).length) {
       sendJson(res, 422, { error: "At least one source field is required." });
@@ -312,7 +323,11 @@ export function createTourHandlers(deps) {
     }
 
     if (sourceLang === targetLang) {
-      sendJson(res, 200, { source_lang: sourceLang, target_lang: targetLang, entries });
+      sendJson(res, 200, {
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        entries: translationEntriesFromObject(entries)
+      });
       return;
     }
 
@@ -325,7 +340,7 @@ export function createTourHandlers(deps) {
       sendJson(res, 200, {
         source_lang: sourceLang,
         target_lang: targetLang,
-        entries: translatedEntries
+        entries: translationEntriesFromObject(translatedEntries)
       });
     } catch (error) {
       if (error?.code === "TRANSLATION_NOT_CONFIGURED") {

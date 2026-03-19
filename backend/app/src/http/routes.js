@@ -1,63 +1,98 @@
+export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
+  { method: "GET", path: "/public/v1/mobile/bootstrap", handlerKey: "handleMobileBootstrap" },
+  { method: "GET", path: "/public/v1/tours", handlerKey: "handlePublicListTours" },
+  { method: "POST", path: "/public/v1/bookings", handlerKey: "handleCreateBooking" },
+  { method: "GET", path: "/api/v1/bookings", handlerKey: "handleListBookings" },
+  { method: "GET", path: "/api/v1/bookings/{booking_id}", handlerKey: "handleGetBooking" },
+  { method: "DELETE", path: "/api/v1/bookings/{booking_id}", handlerKey: "handleDeleteBooking" },
+  { method: "GET", path: "/api/v1/bookings/{booking_id}/chat", handlerKey: "handleListBookingChatEvents" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/name", handlerKey: "handlePatchBookingName" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/customer-language", handlerKey: "handlePatchBookingCustomerLanguage" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/translate-fields", handlerKey: "handleTranslateBookingFields" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/image", handlerKey: "handleUploadBookingImage" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/stage", handlerKey: "handlePatchBookingStage" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/owner", handlerKey: "handlePatchBookingOwner" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/persons", handlerKey: "handleCreateBookingPerson" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/persons/{person_id}", handlerKey: "handlePatchBookingPerson" },
+  { method: "DELETE", path: "/api/v1/bookings/{booking_id}/persons/{person_id}", handlerKey: "handleDeleteBookingPerson" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/persons/{person_id}/photo", handlerKey: "handleUploadBookingPersonPhoto" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/notes", handlerKey: "handlePatchBookingNotes" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/travel-plan", handlerKey: "handlePatchBookingTravelPlan" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/translate", handlerKey: "handleTranslateBookingTravelPlanFromEnglish" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/pricing", handlerKey: "handlePatchBookingPricing" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/offer", handlerKey: "handlePatchBookingOffer" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/offer/translate", handlerKey: "handleTranslateBookingOfferFromEnglish" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/generated-offers", handlerKey: "handleGenerateBookingOffer" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}", handlerKey: "handlePatchGeneratedBookingOffer" },
+  { method: "DELETE", path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}", handlerKey: "handleDeleteGeneratedBookingOffer" },
+  { method: "GET", path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", handlerKey: "handleGetGeneratedOfferPdf" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft", handlerKey: "handleCreateGeneratedOfferGmailDraft" },
+  { method: "POST", path: "/api/v1/offers/exchange-rates", handlerKey: "handlePostOfferExchangeRates" },
+  { method: "GET", path: "/api/v1/bookings/{booking_id}/activities", handlerKey: "handleListActivities" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/activities", handlerKey: "handleCreateActivity" },
+  { method: "GET", path: "/api/v1/bookings/{booking_id}/invoices", handlerKey: "handleListBookingInvoices" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/invoices", handlerKey: "handleCreateBookingInvoice" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}", handlerKey: "handlePatchBookingInvoice" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate", handlerKey: "handleTranslateBookingInvoiceFromEnglish" },
+  { method: "GET", path: "/api/v1/invoices/{invoice_id}/pdf", handlerKey: "handleGetInvoicePdf" },
+  { method: "GET", path: "/api/v1/keycloak_users", handlerKey: "handleListKeycloakUsers" },
+  { method: "GET", path: "/api/v1/suppliers", handlerKey: "handleListSuppliers" },
+  { method: "GET", path: "/api/v1/suppliers/{supplier_id}", handlerKey: "handleGetSupplier" },
+  { method: "POST", path: "/api/v1/suppliers", handlerKey: "handleCreateSupplier" },
+  { method: "PATCH", path: "/api/v1/suppliers/{supplier_id}", handlerKey: "handlePatchSupplier" },
+  { method: "GET", path: "/api/v1/tours", handlerKey: "handleListTours" },
+  { method: "GET", path: "/api/v1/tours/{tour_id}", handlerKey: "handleGetTour" },
+  { method: "POST", path: "/api/v1/tours/translate-fields", handlerKey: "handleTranslateTourFields" },
+  { method: "POST", path: "/api/v1/tours", handlerKey: "handleCreateTour" },
+  { method: "PATCH", path: "/api/v1/tours/{tour_id}", handlerKey: "handlePatchTour" },
+  { method: "POST", path: "/api/v1/tours/{tour_id}/image", handlerKey: "handleUploadTourImage" },
+  { method: "GET", path: "/auth/me", handlerKey: "handleAuthMe" }
+]);
+
+const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
+  { method: "GET", pattern: /^\/health$/, handlerKey: "handleHealth" },
+  { method: "GET", pattern: /^\/integrations\/meta\/webhook\/status$/, handlerKey: "handleMetaWebhookStatus" },
+  { method: "GET", pattern: /^\/integrations\/meta\/webhook$/, handlerKey: "handleMetaWebhookVerify" },
+  { method: "POST", pattern: /^\/integrations\/meta\/webhook$/, handlerKey: "handleMetaWebhookIngest" },
+  { method: "GET", pattern: /^\/staging-access\/login$/, handlerKey: "handleStagingAccessLoginPage" },
+  { method: "POST", pattern: /^\/staging-access\/login$/, handlerKey: "handleStagingAccessLoginSubmit" },
+  { method: "GET", pattern: /^\/staging-access\/check$/, handlerKey: "handleStagingAccessCheck" },
+  { method: "GET", pattern: /^\/staging-access\/logout$/, handlerKey: "handleStagingAccessLogout" },
+  { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handlerKey: "handlePublicTourImage" },
+  { method: "GET", pattern: /^\/public\/v1\/booking-images\/(.+)$/, handlerKey: "handlePublicBookingImage" },
+  { method: "GET", pattern: /^\/public\/v1\/booking-person-photos\/(.+)$/, handlerKey: "handlePublicBookingPersonPhoto" }
+]);
+
+function escapeRouteLiteral(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function pathTemplateToPattern(pathTemplate) {
+  const parts = String(pathTemplate).split(/(\{[^}]+\})/).filter(Boolean);
+  const source = parts.map((part) => (part.startsWith("{") ? "([^/]+)" : escapeRouteLiteral(part))).join("");
+  return new RegExp(`^${source}$`);
+}
+
+function materializeContractRoutes(handlers) {
+  return CONTRACT_ROUTE_DEFINITIONS.map((route) => ({
+    method: route.method,
+    pattern: pathTemplateToPattern(route.path),
+    handler: handlers[route.handlerKey]
+  }));
+}
+
+function materializeOperationalRoutes(handlers) {
+  return OPERATIONAL_ROUTE_DEFINITIONS.map((route) => ({
+    method: route.method,
+    pattern: route.pattern,
+    handler: handlers[route.handlerKey]
+  }));
+}
+
 export function buildApiRoutes({ authRoutes = [], handlers }) {
   return [
     ...authRoutes,
-    { method: "GET", pattern: /^\/health$/, handler: handlers.handleHealth },
-    { method: "GET", pattern: /^\/integrations\/meta\/webhook\/status$/, handler: handlers.handleMetaWebhookStatus },
-    { method: "GET", pattern: /^\/integrations\/meta\/webhook$/, handler: handlers.handleMetaWebhookVerify },
-    { method: "POST", pattern: /^\/integrations\/meta\/webhook$/, handler: handlers.handleMetaWebhookIngest },
-    { method: "GET", pattern: /^\/staging-access\/login$/, handler: handlers.handleStagingAccessLoginPage },
-    { method: "POST", pattern: /^\/staging-access\/login$/, handler: handlers.handleStagingAccessLoginSubmit },
-    { method: "GET", pattern: /^\/staging-access\/check$/, handler: handlers.handleStagingAccessCheck },
-    { method: "GET", pattern: /^\/staging-access\/logout$/, handler: handlers.handleStagingAccessLogout },
-    { method: "GET", pattern: /^\/public\/v1\/mobile\/bootstrap$/, handler: handlers.handleMobileBootstrap },
-    { method: "GET", pattern: /^\/public\/v1\/tours$/, handler: handlers.handlePublicListTours },
-    { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handler: handlers.handlePublicTourImage },
-    { method: "GET", pattern: /^\/public\/v1\/booking-images\/(.+)$/, handler: handlers.handlePublicBookingImage },
-    { method: "GET", pattern: /^\/public\/v1\/booking-person-photos\/(.+)$/, handler: handlers.handlePublicBookingPersonPhoto },
-    { method: "POST", pattern: /^\/public\/v1\/bookings$/, handler: handlers.handleCreateBooking },
-    { method: "GET", pattern: /^\/api\/v1\/bookings$/, handler: handlers.handleListBookings },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handlers.handleGetBooking },
-    { method: "DELETE", pattern: /^\/api\/v1\/bookings\/([^/]+)$/, handler: handlers.handleDeleteBooking },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/chat$/, handler: handlers.handleListBookingChatEvents },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/name$/, handler: handlers.handlePatchBookingName },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/customer-language$/, handler: handlers.handlePatchBookingCustomerLanguage },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/image$/, handler: handlers.handleUploadBookingImage },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/stage$/, handler: handlers.handlePatchBookingStage },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/owner$/, handler: handlers.handlePatchBookingOwner },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/translate-fields$/, handler: handlers.handleTranslateBookingFields },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/persons$/, handler: handlers.handleCreateBookingPerson },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/persons\/([^/]+)$/, handler: handlers.handlePatchBookingPerson },
-    { method: "DELETE", pattern: /^\/api\/v1\/bookings\/([^/]+)\/persons\/([^/]+)$/, handler: handlers.handleDeleteBookingPerson },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/persons\/([^/]+)\/photo$/, handler: handlers.handleUploadBookingPersonPhoto },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/notes$/, handler: handlers.handlePatchBookingNotes },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/travel-plan$/, handler: handlers.handlePatchBookingTravelPlan },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/travel-plan\/translate$/, handler: handlers.handleTranslateBookingTravelPlanFromEnglish },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/pricing$/, handler: handlers.handlePatchBookingPricing },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/offer$/, handler: handlers.handlePatchBookingOffer },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/offer\/translate$/, handler: handlers.handleTranslateBookingOfferFromEnglish },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers$/, handler: handlers.handleGenerateBookingOffer },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers\/([^/]+)$/, handler: handlers.handlePatchGeneratedBookingOffer },
-    { method: "DELETE", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers\/([^/]+)$/, handler: handlers.handleDeleteGeneratedBookingOffer },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers\/([^/]+)\/pdf$/, handler: handlers.handleGetGeneratedOfferPdf },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/generated-offers\/([^/]+)\/gmail-draft$/, handler: handlers.handleCreateGeneratedOfferGmailDraft },
-    { method: "POST", pattern: /^\/api\/v1\/offers\/exchange-rates$/, handler: handlers.handlePostOfferExchangeRates },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handlers.handleListActivities },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/activities$/, handler: handlers.handleCreateActivity },
-    { method: "GET", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handlers.handleListBookingInvoices },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices$/, handler: handlers.handleCreateBookingInvoice },
-    { method: "PATCH", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices\/([^/]+)$/, handler: handlers.handlePatchBookingInvoice },
-    { method: "POST", pattern: /^\/api\/v1\/bookings\/([^/]+)\/invoices\/([^/]+)\/translate$/, handler: handlers.handleTranslateBookingInvoiceFromEnglish },
-    { method: "GET", pattern: /^\/api\/v1\/invoices\/([^/]+)\/pdf$/, handler: handlers.handleGetInvoicePdf },
-    { method: "GET", pattern: /^\/api\/v1\/keycloak_users$/, handler: handlers.handleListKeycloakUsers },
-    { method: "GET", pattern: /^\/api\/v1\/suppliers$/, handler: handlers.handleListSuppliers },
-    { method: "GET", pattern: /^\/api\/v1\/suppliers\/([^/]+)$/, handler: handlers.handleGetSupplier },
-    { method: "POST", pattern: /^\/api\/v1\/suppliers$/, handler: handlers.handleCreateSupplier },
-    { method: "PATCH", pattern: /^\/api\/v1\/suppliers\/([^/]+)$/, handler: handlers.handlePatchSupplier },
-    { method: "GET", pattern: /^\/api\/v1\/tours$/, handler: handlers.handleListTours },
-    { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlers.handleGetTour },
-    { method: "POST", pattern: /^\/api\/v1\/tours\/translate-fields$/, handler: handlers.handleTranslateTourFields },
-    { method: "POST", pattern: /^\/api\/v1\/tours$/, handler: handlers.handleCreateTour },
-    { method: "PATCH", pattern: /^\/api\/v1\/tours\/([^/]+)$/, handler: handlers.handlePatchTour },
-    { method: "POST", pattern: /^\/api\/v1\/tours\/([^/]+)\/image$/, handler: handlers.handleUploadTourImage },
+    ...materializeOperationalRoutes(handlers),
+    ...materializeContractRoutes(handlers)
   ];
 }

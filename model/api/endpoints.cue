@@ -18,7 +18,7 @@ package api
 	authenticated: bool
 	requestType?:  string
 	responseType?: string
-	parameters?:   [...#EndpointParameter]
+	parameters?: [...#EndpointParameter]
 }
 
 #Endpoints: [
@@ -122,6 +122,21 @@ package api
 		}]
 	},
 	{
+		key:           "booking_customer_language"
+		path:          "/api/v1/bookings/{booking_id}/customer-language"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingCustomerLanguageUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_image"
 		path:          "/api/v1/bookings/{booking_id}/image"
 		method:        "POST"
@@ -159,6 +174,21 @@ package api
 		authenticated: true
 		requestType:   "BookingOwnerUpdateRequest"
 		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_translate_fields"
+		path:          "/api/v1/bookings/{booking_id}/translate-fields"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TranslationEntriesRequest"
+		responseType:  "TranslationEntriesResponse"
 		parameters: [{
 			name:     "booking_id"
 			location: "path"
@@ -272,6 +302,21 @@ package api
 		}]
 	},
 	{
+		key:           "booking_travel_plan_translate"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/translate"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingTravelPlanTranslateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_pricing"
 		path:          "/api/v1/bookings/{booking_id}/pricing"
 		method:        "PATCH"
@@ -293,6 +338,21 @@ package api
 		tag:           "Bookings"
 		authenticated: true
 		requestType:   "BookingOfferUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_offer_translate"
+		path:          "/api/v1/bookings/{booking_id}/offer/translate"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingOfferTranslateRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
@@ -356,10 +416,10 @@ package api
 			typeName: "Identifier"
 		}]
 	},
-		{
-			key:           "booking_generated_offer_pdf"
-			path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
-			method:        "GET"
+	{
+		key:           "booking_generated_offer_pdf"
+		path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
+		method:        "GET"
 		tag:           "Bookings"
 		authenticated: true
 		parameters: [{
@@ -370,89 +430,89 @@ package api
 		}, {
 			name:     "generated_offer_id"
 			location: "path"
-				required: true
-				typeName: "Identifier"
-			}]
-		},
-		{
-			key:           "booking_generated_offer_gmail_draft"
-			path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft"
-			method:        "POST"
-			tag:           "Bookings"
-			authenticated: true
-			requestType:   "BookingGeneratedOfferGmailDraftRequest"
-			responseType:  "BookingGeneratedOfferGmailDraftResponse"
-			parameters: [{
-				name:     "booking_id"
-				location: "path"
-				required: true
-				typeName: "Identifier"
-			}, {
-				name:     "generated_offer_id"
-				location: "path"
-				required: true
-				typeName: "Identifier"
-			}]
-		},
-		{
-			key:           "offer_exchange_rates"
-			path:          "/api/v1/offers/exchange-rates"
-			method:        "POST"
-			tag:           "Offers"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_generated_offer_gmail_draft"
+		path:          "/api/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/gmail-draft"
+		method:        "POST"
+		tag:           "Bookings"
 		authenticated: true
-			requestType:   "OfferExchangeRatesRequest"
-			responseType:  "OfferExchangeRatesResponse"
-		},
-		{
-			key:           "suppliers"
-			path:          "/api/v1/suppliers"
-			method:        "GET"
-			tag:           "Suppliers"
-			authenticated: true
-			responseType:  "SupplierListResponse"
-		},
-		{
-			key:           "supplier_detail"
-			path:          "/api/v1/suppliers/{supplier_id}"
-			method:        "GET"
-			tag:           "Suppliers"
-			authenticated: true
-			responseType:  "SupplierResponse"
-			parameters: [{
-				name:     "supplier_id"
-				location: "path"
-				required: true
-				typeName: "Identifier"
-			}]
-		},
-		{
-			key:           "supplier_create"
-			path:          "/api/v1/suppliers"
-			method:        "POST"
-			tag:           "Suppliers"
-			authenticated: true
-			requestType:   "SupplierCreateRequest"
-			responseType:  "SupplierResponse"
-		},
-		{
-			key:           "supplier_update"
-			path:          "/api/v1/suppliers/{supplier_id}"
-			method:        "PATCH"
-			tag:           "Suppliers"
-			authenticated: true
-			requestType:   "SupplierUpdateRequest"
-			responseType:  "SupplierResponse"
-			parameters: [{
-				name:     "supplier_id"
-				location: "path"
-				required: true
-				typeName: "Identifier"
-			}]
-		},
-		{
-			key:           "booking_activities"
-			path:          "/api/v1/bookings/{booking_id}/activities"
-			method:        "GET"
+		requestType:   "BookingGeneratedOfferGmailDraftRequest"
+		responseType:  "BookingGeneratedOfferGmailDraftResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "offer_exchange_rates"
+		path:          "/api/v1/offers/exchange-rates"
+		method:        "POST"
+		tag:           "Offers"
+		authenticated: true
+		requestType:   "OfferExchangeRatesRequest"
+		responseType:  "OfferExchangeRatesResponse"
+	},
+	{
+		key:           "suppliers"
+		path:          "/api/v1/suppliers"
+		method:        "GET"
+		tag:           "Suppliers"
+		authenticated: true
+		responseType:  "SupplierListResponse"
+	},
+	{
+		key:           "supplier_detail"
+		path:          "/api/v1/suppliers/{supplier_id}"
+		method:        "GET"
+		tag:           "Suppliers"
+		authenticated: true
+		responseType:  "SupplierResponse"
+		parameters: [{
+			name:     "supplier_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "supplier_create"
+		path:          "/api/v1/suppliers"
+		method:        "POST"
+		tag:           "Suppliers"
+		authenticated: true
+		requestType:   "SupplierCreateRequest"
+		responseType:  "SupplierResponse"
+	},
+	{
+		key:           "supplier_update"
+		path:          "/api/v1/suppliers/{supplier_id}"
+		method:        "PATCH"
+		tag:           "Suppliers"
+		authenticated: true
+		requestType:   "SupplierUpdateRequest"
+		responseType:  "SupplierResponse"
+		parameters: [{
+			name:     "supplier_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_activities"
+		path:          "/api/v1/bookings/{booking_id}/activities"
+		method:        "GET"
 		tag:           "Bookings"
 		authenticated: true
 		responseType:  "BookingActivitiesResponse"
@@ -528,6 +588,39 @@ package api
 		}]
 	},
 	{
+		key:           "booking_invoice_translate"
+		path:          "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingInvoiceTranslateRequest"
+		responseType:  "BookingInvoiceResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "invoice_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "invoice_pdf"
+		path:          "/api/v1/invoices/{invoice_id}/pdf"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "invoice_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "keycloak_users"
 		path:          "/api/v1/keycloak_users"
 		method:        "GET"
@@ -556,6 +649,15 @@ package api
 			required: true
 			typeName: "Identifier"
 		}]
+	},
+	{
+		key:           "tour_translate_fields"
+		path:          "/api/v1/tours/translate-fields"
+		method:        "POST"
+		tag:           "Tours"
+		authenticated: true
+		requestType:   "TourTranslateFieldsRequest"
+		responseType:  "TranslationEntriesResponse"
 	},
 	{
 		key:           "tour_create"

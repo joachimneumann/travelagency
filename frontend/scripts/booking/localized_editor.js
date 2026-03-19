@@ -1,3 +1,4 @@
+import { bookingTranslateFieldsRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
@@ -300,14 +301,24 @@ export async function requestBookingFieldTranslation({
       .filter(([key, value]) => Boolean(key && value))
   );
   if (!bookingId || !Object.keys(payloadEntries).length) return null;
-  const response = await fetchBookingMutation(`/api/v1/bookings/${encodeURIComponent(bookingId)}/translate-fields`, {
-    method: "POST",
+  const request = bookingTranslateFieldsRequest({
+    params: { booking_id: bookingId },
     body: {
       source_lang: normalizedSourceLang,
       target_lang: normalizedTargetLang,
       actor,
-      entries: payloadEntries
+      entries: Object.entries(payloadEntries).map(([key, value]) => ({ key, value }))
     }
   });
-  return response?.entries && typeof response.entries === "object" ? response.entries : null;
+  const response = await fetchBookingMutation(request.url, {
+    method: request.method,
+    body: request.body
+  });
+  return Array.isArray(response?.entries)
+    ? Object.fromEntries(
+        response.entries
+          .map((entry) => [String(entry?.key || "").trim(), String(entry?.value || "").trim()])
+          .filter(([key, value]) => Boolean(key && value))
+      )
+    : null;
 }

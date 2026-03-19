@@ -45,7 +45,11 @@ Generated from the model:
 - `shared/generated-contract/`
 - `backend/app/Generated/`
 - `frontend/Generated/`
-- `mobile/iOS/Generated/`
+- `mobile/iOS/Generated/` when explicitly generated for iOS consumption
+
+Current repository note:
+- the active iOS target does not currently keep generated Swift artifacts checked in
+- the current mobile status is documented in `documentation/backend/mobileApp.md`
 
 ### Layer 3: Runtime application code
 

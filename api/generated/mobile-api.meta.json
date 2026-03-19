@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-15T10:29:31Z",
+  "generatedAt": "2026-03-19T02:43:30Z",
   "languages": [
     "en",
     "fr",
@@ -307,6 +307,23 @@
       ]
     },
     {
+      "key": "booking_customer_language",
+      "path": "/api/v1/bookings/{booking_id}/customer-language",
+      "method": "PATCH",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "BookingCustomerLanguageUpdateRequest",
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
       "key": "booking_image",
       "path": "/api/v1/bookings/{booking_id}/image",
       "method": "POST",
@@ -348,6 +365,23 @@
       "authenticated": true,
       "requestType": "BookingOwnerUpdateRequest",
       "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "booking_translate_fields",
+      "path": "/api/v1/bookings/{booking_id}/translate-fields",
+      "method": "POST",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "TranslationEntriesRequest",
+      "responseType": "TranslationEntriesResponse",
       "parameters": [
         {
           "name": "booking_id",
@@ -478,6 +512,23 @@
       ]
     },
     {
+      "key": "booking_travel_plan_translate",
+      "path": "/api/v1/bookings/{booking_id}/travel-plan/translate",
+      "method": "POST",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "BookingTravelPlanTranslateRequest",
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
       "key": "booking_pricing",
       "path": "/api/v1/bookings/{booking_id}/pricing",
       "method": "PATCH",
@@ -501,6 +552,23 @@
       "tag": "Bookings",
       "authenticated": true,
       "requestType": "BookingOfferUpdateRequest",
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "booking_offer_translate",
+      "path": "/api/v1/bookings/{booking_id}/offer/translate",
+      "method": "POST",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "BookingOfferTranslateRequest",
       "responseType": "BookingDetail",
       "parameters": [
         {
@@ -767,6 +835,44 @@
       ]
     },
     {
+      "key": "booking_invoice_translate",
+      "path": "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate",
+      "method": "POST",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "BookingInvoiceTranslateRequest",
+      "responseType": "BookingInvoiceResponse",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "invoice_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "invoice_pdf",
+      "path": "/api/v1/invoices/{invoice_id}/pdf",
+      "method": "GET",
+      "tag": "Bookings",
+      "authenticated": true,
+      "parameters": [
+        {
+          "name": "invoice_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        }
+      ]
+    },
+    {
       "key": "keycloak_users",
       "path": "/api/v1/keycloak_users",
       "method": "GET",
@@ -797,6 +903,15 @@
           "typeName": "Identifier"
         }
       ]
+    },
+    {
+      "key": "tour_translate_fields",
+      "path": "/api/v1/tours/translate-fields",
+      "method": "POST",
+      "tag": "Tours",
+      "authenticated": true,
+      "requestType": "TourTranslateFieldsRequest",
+      "responseType": "TranslationEntriesResponse"
     },
     {
       "key": "tour_create",

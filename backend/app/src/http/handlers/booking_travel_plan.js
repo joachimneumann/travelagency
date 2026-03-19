@@ -1,4 +1,7 @@
-import { validateBookingTravelPlanUpdateRequest } from "../../../Generated/API/generated_APIModels.js";
+import {
+  validateBookingTravelPlanTranslateRequest,
+  validateBookingTravelPlanUpdateRequest
+} from "../../../Generated/API/generated_APIModels.js";
 import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
@@ -229,8 +232,9 @@ export function createBookingTravelPlanHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      validateBookingTravelPlanTranslateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 

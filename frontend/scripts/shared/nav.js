@@ -1,3 +1,5 @@
+import { fetchAuthMe } from "./auth.js";
+
 function buildIconMarkup(icon) {
   if (icon?.type === "image") {
     const sizeClass = icon.size === "large" ? " backend-section-nav__icon-image--large" : "";
@@ -115,9 +117,8 @@ export function mountBackendNav(mount, options = {}) {
     });
   });
 
-  fetch(`${apiBase}/auth/me`, { credentials: "include" })
-    .then((response) => response.json().catch(() => null))
-    .then((payload) => {
+  fetchAuthMe(apiBase)
+    .then(({ payload }) => {
       const roles = Array.isArray(payload?.user?.roles) ? payload.user.roles : [];
       applyNavPermissions(mount, roles);
     })

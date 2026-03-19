@@ -577,6 +577,7 @@ IR: {
 			sourceType: "api.#BookingDetail"
 			fields: [
 				{name: "booking", kind: "entity", typeName: "Booking", required: true},
+				{name: "unchanged", kind: "scalar", typeName: "bool", required: false},
 			]
 		},
 		{
@@ -670,6 +671,28 @@ IR: {
 			fields: [
 				{name: "invoice", kind: "entity", typeName: "BookingInvoice", required: true},
 				{name: "booking", kind: "entity", typeName: "Booking", required: true},
+				{name: "unchanged", kind: "scalar", typeName: "bool", required: false},
+			]
+		},
+		{
+			name:       "TranslationEntry"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationEntry"
+			fields: [
+				{name: "key", kind: "scalar", typeName: "string", required: true},
+				{name: "value", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
+			name:       "TranslationEntriesResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationEntriesResponse"
+			fields: [
+				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "entries", kind: "transport", typeName: "TranslationEntry", required: true, isArray: true},
 			]
 		},
 		{
@@ -908,6 +931,17 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingCustomerLanguageUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingCustomerLanguageUpdateRequest"
+			fields: [
+				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "BookingImageUploadRequest"
 			domain:     "api"
 			module:     "api"
@@ -997,6 +1031,18 @@ IR: {
 			]
 		},
 		{
+			name:       "TranslationEntriesRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationEntriesRequest"
+			fields: [
+				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+				{name: "entries", kind: "transport", typeName: "TranslationEntry", required: true, isArray: true},
+			]
+		},
+		{
 			name:       "BookingTravelPlanUpdateRequest"
 			domain:     "api"
 			module:     "api"
@@ -1008,6 +1054,17 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingTravelPlanTranslateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingTravelPlanTranslateRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "BookingOfferUpdateRequest"
 			domain:     "api"
 			module:     "api"
@@ -1015,6 +1072,17 @@ IR: {
 			fields: [
 				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferTranslateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingOfferTranslateRequest"
+			fields: [
+				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1084,6 +1152,17 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingInvoiceTranslateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingInvoiceTranslateRequest"
+			fields: [
+				{name: "expected_invoices_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "TourUpsertRequest"
 			domain:     "api"
 			module:     "api"
@@ -1102,6 +1181,18 @@ IR: {
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "highlights", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TourTranslateFieldsRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TourTranslateFieldsRequest"
+			fields: [
+				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+				{name: "entries", kind: "transport", typeName: "TranslationEntry", required: true, isArray: true},
 			]
 		},
 		{

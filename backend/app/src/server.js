@@ -609,6 +609,7 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const routes = buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
+      handleAuthMe: auth.handleAuthMe,
       handleHealth,
       handleMetaWebhookStatus,
       handleMetaWebhookVerify,

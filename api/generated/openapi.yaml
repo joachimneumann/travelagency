@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-15T10:29:31Z
+# 2026-03-19T02:43:30Z
 
 ---
 openapi: 3.1.0
@@ -4622,6 +4622,9 @@ components:
       properties:
         booking:
           "$ref": "#/components/schemas/Booking"
+        unchanged:
+          type: boolean
+          nullable: true
     TourOptions:
       type: object
       required: []
@@ -4727,6 +4730,33 @@ components:
           "$ref": "#/components/schemas/BookingInvoice"
         booking:
           "$ref": "#/components/schemas/Booking"
+        unchanged:
+          type: boolean
+          nullable: true
+    TranslationEntry:
+      type: object
+      required:
+      - key
+      - value
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    TranslationEntriesResponse:
+      type: object
+      required:
+      - source_lang
+      - target_lang
+      properties:
+        source_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        target_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        entries:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TranslationEntry"
     BookingChatEvent:
       type: object
       required:
@@ -5106,6 +5136,19 @@ components:
         actor:
           type: string
           nullable: true
+    BookingCustomerLanguageUpdateRequest:
+      type: object
+      required:
+      - customer_language
+      properties:
+        expected_core_revision:
+          type: integer
+          nullable: true
+        customer_language:
+          "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
     BookingImageUploadRequest:
       type: object
       required:
@@ -5213,6 +5256,23 @@ components:
         actor:
           type: string
           nullable: true
+    TranslationEntriesRequest:
+      type: object
+      required:
+      - source_lang
+      - target_lang
+      properties:
+        source_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        target_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
+        entries:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TranslationEntry"
     BookingTravelPlanUpdateRequest:
       type: object
       required:
@@ -5226,6 +5286,19 @@ components:
         actor:
           type: string
           nullable: true
+    BookingTravelPlanTranslateRequest:
+      type: object
+      required:
+      - lang
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
     BookingOfferUpdateRequest:
       type: object
       required:
@@ -5236,6 +5309,19 @@ components:
           nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
+        actor:
+          type: string
+          nullable: true
+    BookingOfferTranslateRequest:
+      type: object
+      required:
+      - lang
+      properties:
+        expected_offer_revision:
+          type: integer
+          nullable: true
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
         actor:
           type: string
           nullable: true
@@ -5338,6 +5424,19 @@ components:
         sent_to_recipient:
           type: boolean
           nullable: true
+    BookingInvoiceTranslateRequest:
+      type: object
+      required:
+      - lang
+      properties:
+        expected_invoices_revision:
+          type: integer
+          nullable: true
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
     TourUpsertRequest:
       type: object
       required: []
@@ -5384,6 +5483,23 @@ components:
         image:
           type: string
           nullable: true
+    TourTranslateFieldsRequest:
+      type: object
+      required:
+      - source_lang
+      - target_lang
+      properties:
+        source_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        target_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
+        entries:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TranslationEntry"
     EvidenceUpload:
       type: object
       required:
@@ -5672,6 +5788,45 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/customer-language":
+    patch:
+      operationId: booking_customer_language
+      summary: Booking Customer Language
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingCustomerLanguageUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/image":
     post:
       operationId: booking_image
@@ -5783,6 +5938,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/translate-fields":
+    post:
+      operationId: booking_translate_fields
+      summary: Booking Translate Fields
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TranslationEntriesRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TranslationEntriesResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TranslationEntriesResponse"
         '401':
           description: Unauthorized
           content:
@@ -6055,6 +6255,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/translate":
+    post:
+      operationId: booking_travel_plan_translate
+      summary: Booking Travel Plan Translate
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingTravelPlanTranslateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/pricing":
     patch:
       operationId: booking_pricing
@@ -6117,6 +6362,51 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/offer/translate":
+    post:
+      operationId: booking_offer_translate
+      summary: Booking Offer Translate
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingOfferTranslateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
           content:
             application/json:
               schema:
@@ -6729,6 +7019,89 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate":
+    post:
+      operationId: booking_invoice_translate
+      summary: Booking Invoice Translate
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: invoice_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingInvoiceTranslateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingInvoiceResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingInvoiceResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/invoices/{invoice_id}/pdf":
+    get:
+      operationId: invoice_pdf
+      summary: Invoice Pdf
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: invoice_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/keycloak_users":
     get:
       operationId: keycloak_users
@@ -6883,6 +7256,46 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tours/translate-fields":
+    post:
+      operationId: tour_translate_fields
+      summary: Tour Translate Fields
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourTranslateFieldsRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TranslationEntriesResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TranslationEntriesResponse"
         '401':
           description: Unauthorized
           content:

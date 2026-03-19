@@ -17,8 +17,13 @@ import common "travelagency.local/model/common"
 }
 
 #ErrorResponse: {
-	error:      string & !=""
-	detail?:    string
-	code?:      string
+	error:       string & !=""
+	detail?:     string
+	code?:       string
 	request_id?: common.#Identifier
+}
+
+#TranslationEntry: {
+	key:   string & !=""
+	value: string & !=""
 }

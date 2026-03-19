@@ -6,7 +6,15 @@ import {
   resolveApiUrl
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { publicToursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import {
+  authMeRequest,
+  bookingsRequest,
+  keycloakUsersRequest,
+  publicToursRequest
+  ,
+  toursRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
+import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import {
   buildBookingHref,
   buildTourEditHref
@@ -179,8 +187,14 @@ async function init() {
 async function loadBackendAuthStatus() {
   refreshBackendNavElements();
   try {
-    const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
-    const payload = await response.json();
+    const request = authMeRequest({ baseURL: apiBase });
+    const response = await fetch(request.url, {
+      method: request.method,
+      credentials: "include",
+      headers: request.headers
+    });
+    const payload = await response.json().catch(() => null);
+    if (payload) validateAuthMeResponse(payload);
     if (!response.ok || !payload?.authenticated) {
       state.authUser = null;
       if (els.userLabel) els.userLabel.textContent = "";
@@ -366,7 +380,8 @@ async function loadBookings() {
   });
   if (state.bookings.search) params.set("search", state.bookings.search);
 
-  const payload = await fetchApi(`/api/v1/bookings?${params.toString()}`);
+  const request = bookingsRequest({ baseURL: apiOrigin, query: Object.fromEntries(params.entries()) });
+  const payload = await fetchApi(request.url);
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -406,7 +421,8 @@ async function loadTours() {
   if (state.tours.destination && state.tours.destination !== "all") params.set("destination", state.tours.destination);
   if (state.tours.style && state.tours.style !== "all") params.set("style", state.tours.style);
 
-  const payload = await fetchApi(withApiLang("/api/v1/tours", Object.fromEntries(params.entries())));
+  const request = toursRequest({ baseURL: apiOrigin, query: Object.fromEntries(params.entries()) });
+  const payload = await fetchApi(withApiLang(request.url));
   if (!payload) return;
   const pagination = payload.pagination || {};
 
@@ -601,7 +617,7 @@ function clearError() {
 
 async function loadKeycloakUsers() {
   clearError();
-  const payload = await fetchApi(`/api/v1/keycloak_users`);
+  const payload = await fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url);
   if (!payload) return;
   state.keycloakUsers = Array.isArray(payload.items) ? payload.items : [];
   renderStaff(state.keycloakUsers);

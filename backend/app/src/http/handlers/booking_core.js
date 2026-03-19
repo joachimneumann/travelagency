@@ -1,3 +1,7 @@
+import {
+  validateBookingCustomerLanguageUpdateRequest,
+  validateTranslationEntriesRequest
+} from "../../../Generated/API/generated_APIModels.js";
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 
 export function createBookingCoreHandlers(deps) {
@@ -29,6 +33,20 @@ export function createBookingCoreHandlers(deps) {
     incrementBookingRevision,
     translateEntries
   } = deps;
+
+  function translationEntriesToObject(entries) {
+    return Object.fromEntries(
+      (Array.isArray(entries) ? entries : [])
+        .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+        .filter(([key, value]) => Boolean(key && value))
+    );
+  }
+
+  function translationEntriesFromObject(entries) {
+    return Object.entries(entries || {})
+      .map(([key, value]) => ({ key: normalizeText(key), value: normalizeText(value) }))
+      .filter((entry) => Boolean(entry.key && entry.value));
+  }
 
   async function handlePatchBookingStage(req, res, [bookingId]) {
     let payload;
@@ -123,8 +141,9 @@ export function createBookingCoreHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      validateBookingCustomerLanguageUpdateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 
@@ -141,14 +160,7 @@ export function createBookingCoreHandlers(deps) {
     }
     if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
-    const nextCustomerLanguage = normalizeBookingContentLang(
-      payload?.customer_language
-      || payload?.preferred_language
-      || payload?.lang
-      || booking?.customer_language
-      || booking?.web_form_submission?.preferred_language
-      || "en"
-    );
+    const nextCustomerLanguage = normalizeBookingContentLang(payload.customer_language);
     const currentCustomerLanguage = normalizeBookingContentLang(
       booking?.customer_language
       || booking?.web_form_submission?.preferred_language
@@ -330,8 +342,9 @@ export function createBookingCoreHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+      validateTranslationEntriesRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 
@@ -347,16 +360,9 @@ export function createBookingCoreHandlers(deps) {
       return;
     }
 
-    const sourceLang = normalizeBookingContentLang(payload?.source_lang || "en");
-    const targetLang = normalizeBookingContentLang(payload?.target_lang || payload?.lang || booking?.customer_language || "en");
-
-    const entries = payload?.entries && typeof payload.entries === "object" && !Array.isArray(payload.entries)
-      ? Object.fromEntries(
-          Object.entries(payload.entries)
-            .map(([key, value]) => [normalizeText(key), normalizeText(value)])
-            .filter(([key, value]) => Boolean(key && value))
-        )
-      : {};
+    const sourceLang = normalizeBookingContentLang(payload.source_lang);
+    const targetLang = normalizeBookingContentLang(payload.target_lang);
+    const entries = translationEntriesToObject(payload.entries);
     if (!Object.keys(entries).length) {
       sendJson(res, 422, { error: "At least one source field is required." });
       return;
@@ -366,7 +372,7 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 200, {
         source_lang: sourceLang,
         target_lang: targetLang,
-        entries
+        entries: translationEntriesFromObject(entries)
       });
       return;
     }
@@ -380,7 +386,7 @@ export function createBookingCoreHandlers(deps) {
       sendJson(res, 200, {
         source_lang: sourceLang,
         target_lang: targetLang,
-        entries: translatedEntries
+        entries: translationEntriesFromObject(translatedEntries)
       });
     } catch (error) {
       if (error?.code === "TRANSLATION_NOT_CONFIGURED") {

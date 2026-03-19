@@ -165,6 +165,23 @@ export function bookingNameRequest({ baseURL = '', params = {}, query = {}, body
   };
 }
 
+export function bookingCustomerLanguagePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/customer-language", params);
+}
+
+export function bookingCustomerLanguageRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingCustomerLanguagePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_customer_language",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingImagePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/image", params);
 }
@@ -209,6 +226,23 @@ export function bookingOwnerRequest({ baseURL = '', params = {}, query = {}, bod
   return {
     key: "booking_owner",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTranslateFieldsPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/translate-fields", params);
+}
+
+export function bookingTranslateFieldsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTranslateFieldsPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_translate_fields",
+    method: "POST",
     authenticated: true,
     url,
     headers,
@@ -318,6 +352,23 @@ export function bookingTravelPlanRequest({ baseURL = '', params = {}, query = {}
   };
 }
 
+export function bookingTravelPlanTranslatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/translate", params);
+}
+
+export function bookingTravelPlanTranslateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanTranslatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_translate",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingPricingPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/pricing", params);
 }
@@ -345,6 +396,23 @@ export function bookingOfferRequest({ baseURL = '', params = {}, query = {}, bod
   return {
     key: "booking_offer",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingOfferTranslatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/offer/translate", params);
+}
+
+export function bookingOfferTranslateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingOfferTranslatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_offer_translate",
+    method: "POST",
     authenticated: true,
     url,
     headers,
@@ -607,6 +675,40 @@ export function bookingInvoiceUpdateRequest({ baseURL = '', params = {}, query =
   };
 }
 
+export function bookingInvoiceTranslatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate", params);
+}
+
+export function bookingInvoiceTranslateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingInvoiceTranslatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_invoice_translate",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function invoicePdfPath(params = {}) {
+  return buildPath("/api/v1/invoices/{invoice_id}/pdf", params);
+}
+
+export function invoicePdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = invoicePdfPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "invoice_pdf",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function keycloakUsersPath(params = {}) {
   return buildPath("/api/v1/keycloak_users", params);
 }
@@ -685,6 +787,23 @@ export function tourUpdateRequest({ baseURL = '', params = {}, query = {}, body,
   return {
     key: "tour_update",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourTranslateFieldsPath(params = {}) {
+  return buildPath("/api/v1/tours/translate-fields", params);
+}
+
+export function tourTranslateFieldsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourTranslateFieldsPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_translate_fields",
+    method: "POST",
     authenticated: true,
     url,
     headers,

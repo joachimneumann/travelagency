@@ -4,7 +4,9 @@ import {
   GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST
 } from "../../Generated/Models/generated_Booking.js";
 import {
+  authMeRequest,
   bookingActivitiesRequest,
+  bookingCustomerLanguageRequest,
   bookingDetailRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
@@ -12,6 +14,7 @@ import {
   bookingPersonUpdateRequest,
   keycloakUsersRequest,
 } from "../../Generated/API/generated_APIRequestFactory.js";
+import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import {
   createApiFetcher,
   escapeHtml,
@@ -532,14 +535,19 @@ async function handleContentLanguageChange() {
   clearStatus();
   if (state.booking?.id && state.permissions.canEditBooking) {
     try {
-      const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(`/api/v1/bookings/${encodeURIComponent(state.booking.id)}/customer-language`)), {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const request = bookingCustomerLanguageRequest({
+        baseURL: apiOrigin,
+        params: { booking_id: state.booking.id },
+        body: {
           expected_core_revision: getBookingRevision("core_revision"),
           customer_language: nextLang
-        })
+        }
+      });
+      const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(request.url)), {
+        method: request.method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request.body)
       });
       if (response.status === 404) {
         clearError();
@@ -1219,8 +1227,14 @@ function clearStatus() {
 
 async function loadAuthStatus() {
   try {
-    const response = await fetch(`${apiBase}/auth/me`, { credentials: "include" });
-    const payload = await response.json();
+    const request = authMeRequest({ baseURL: apiBase });
+    const response = await fetch(request.url, {
+      method: request.method,
+      credentials: "include",
+      headers: request.headers
+    });
+    const payload = await response.json().catch(() => null);
+    if (payload) validateAuthMeResponse(payload);
     if (response.status === 401 || (response.ok && !payload?.authenticated)) {
       state.authUser = null;
       if (els.userLabel) els.userLabel.textContent = "";
