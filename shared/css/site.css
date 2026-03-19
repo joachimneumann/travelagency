@@ -2178,6 +2178,11 @@ textarea:focus-visible {
   min-width: 176px;
 }
 
+.backend-table th.generated-offers-col-status,
+.backend-table td.generated-offers-col-status {
+  min-width: 136px;
+}
+
 .generated-offers-link-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2188,6 +2193,44 @@ textarea:focus-visible {
 .generated-offers-link-actions .btn {
   padding: 0.35rem 0.65rem;
   min-height: 34px;
+}
+
+.generated-offers-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.generated-offers-status-badge.is-accepted {
+  background: rgba(36, 85, 59, 0.12);
+  color: #24553b;
+}
+
+.generated-offers-status-badge.is-open {
+  background: rgba(12, 99, 180, 0.1);
+  color: #0c63b4;
+}
+
+.generated-offers-status-badge.is-expired {
+  background: rgba(168, 65, 53, 0.12);
+  color: #a84135;
+}
+
+.generated-offers-status-badge.is-unavailable {
+  background: rgba(77, 97, 109, 0.12);
+  color: #4d616d;
+}
+
+.generated-offers-status-meta {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: #4d616d;
 }
 
 .backend-table th.generated-offers-col-total,

@@ -202,6 +202,44 @@ export function createBookingOfferModule(ctx) {
     }).format(date);
   }
 
+  function resolveGeneratedOfferStatus(generatedOffer) {
+    const acceptance = generatedOffer?.acceptance;
+    if (acceptance && typeof acceptance === "object") {
+      return {
+        tone: "accepted",
+        label: bookingT("booking.offer.status.accepted", "Accepted"),
+        detail: acceptance.accepted_at
+          ? bookingT("booking.offer.status.accepted_on", "Accepted on {date}", {
+              date: formatGeneratedOfferDate(acceptance.accepted_at)
+            })
+          : ""
+      };
+    }
+
+    const expiresAtMs = Date.parse(String(generatedOffer?.public_acceptance_expires_at || ""));
+    if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) {
+      return {
+        tone: "expired",
+        label: bookingT("booking.offer.status.expired", "Expired"),
+        detail: ""
+      };
+    }
+
+    if (String(generatedOffer?.public_acceptance_token || "").trim()) {
+      return {
+        tone: "open",
+        label: bookingT("booking.offer.status.open", "Open"),
+        detail: ""
+      };
+    }
+
+    return {
+      tone: "unavailable",
+      label: bookingT("booking.offer.status.unavailable", "Unavailable"),
+      detail: ""
+    };
+  }
+
   function getBookingAcceptanceRecipientEmail() {
     const persons = getBookingPersons(state.booking);
     const primaryContact = persons.find((person) => Array.isArray(person?.roles) && person.roles.includes("primary_contact") && person.emails?.length)
@@ -706,12 +744,13 @@ export function createBookingOfferModule(ctx) {
     const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
     const canEdit = state.permissions.canEditBooking;
     const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
+    const statusHeader = `<th class="generated-offers-col-status">${escapeHtml(bookingT("booking.status", "Status"))}</th>`;
     const acceptanceLinkHeader = canEdit
       ? `<th class="generated-offers-col-acceptance">${escapeHtml(bookingT("booking.offer.acceptance_link", "Accept link"))}</th>`
       : "";
     const emailHeader = emailActionEnabled ? `<th class="generated-offers-col-email">${escapeHtml(bookingT("booking.email", "Email"))}</th>` : "";
     const actionHeader = canEdit ? '<th class="generated-offers-col-actions"></th>' : "";
-    const emptyColspan = 5 + (emailActionEnabled ? 1 : 0) + (canEdit ? 2 : 0);
+    const emptyColspan = 6 + (emailActionEnabled ? 1 : 0) + (canEdit ? 2 : 0);
     const rows = items.length
       ? items
         .slice()
@@ -720,6 +759,7 @@ export function createBookingOfferModule(ctx) {
           const pdfUrl = String(item.pdf_url || "").trim();
           const acceptanceLink = buildGeneratedOfferAcceptanceLink(item);
           const recipientEmail = getBookingAcceptanceRecipientEmail();
+          const offerStatus = resolveGeneratedOfferStatus(item);
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a>` : "-"}</td>
           ${emailActionEnabled
@@ -733,6 +773,10 @@ export function createBookingOfferModule(ctx) {
                 </div>`
               : "-"}</td>`
             : ""}
+          <td class="generated-offers-col-status">
+            <span class="generated-offers-status-badge is-${escapeHtml(offerStatus.tone)}">${escapeHtml(offerStatus.label)}</span>
+            ${offerStatus.detail ? `<div class="generated-offers-status-meta">${escapeHtml(offerStatus.detail)}</div>` : ""}
+          </td>
           <td class="generated-offers-col-language">${escapeHtml(bookingContentLanguageLabel(item.lang || "en"))}</td>
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
@@ -746,7 +790,7 @@ export function createBookingOfferModule(ctx) {
         })
         .join("")
       : `<tr><td colspan="${emptyColspan}">${escapeHtml(bookingT("booking.offer.no_generated", "No generated offers yet"))}</td></tr>`;
-    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>${emailHeader}${acceptanceLinkHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>${emailHeader}${acceptanceLinkHeader}${statusHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-comment]").forEach((input) => {
