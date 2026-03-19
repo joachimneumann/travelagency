@@ -16,14 +16,18 @@ This means:
 - `core_revision`
 - `notes_revision`
 - `persons_revision`
+- `travel_plan_revision`
 - `pricing_revision`
 - `offer_revision`
 - `invoices_revision`
 - stage, assignment, notes
 - commercial data such as pricing, offer, invoices
+- `customer_language`
+- `accepted_generated_offer_id`
 - `number_of_travelers`
 - `web_form_submission`
 - `persons[]`
+- `generated_offers[]`
 
 `web_form_submission`
 - immutable snapshot of the original website submission
@@ -146,6 +150,91 @@ ATP quotation semantics:
 - the quotation still exposes tax transparently in the summary
 - mixed tax rates are supported through `tax_breakdown[]`
 
+## GeneratedBookingOffer
+
+`GeneratedBookingOffer`
+- `id`
+- `booking_id`
+- `version`
+- `filename`
+- `lang`
+- `comment`
+- `created_at`
+- `created_by`
+- `currency`
+- `total_price_cents`
+- `offer`
+- `travel_plan`
+- `pdf_frozen_at`
+- `pdf_sha256`
+- `acceptance_token_nonce`
+- `acceptance_token_created_at`
+- `acceptance_token_expires_at`
+- `acceptance_token_revoked_at`
+- `acceptance`
+
+Meaning:
+- this is the frozen customer-facing commercial snapshot
+- it stores the exact offer and travel plan as generated at that moment
+- the PDF artifact is frozen from this snapshot at generation time
+
+Important boundary:
+- transport fields such as `pdf_url` and `public_acceptance_token` are not part of this entity
+- those belong to the API read model only
+
+## GeneratedOfferAcceptance
+
+`GeneratedOfferAcceptance`
+- `id`
+- `accepted_at`
+- `accepted_by_name`
+- `accepted_by_email?`
+- `accepted_by_phone?`
+- `accepted_by_person_id?`
+- `language`
+- `method`
+- `statement_snapshot`
+- `terms_version`
+- `terms_snapshot`
+- `offer_currency`
+- `offer_total_price_cents`
+- `offer_pdf_sha256`
+- `offer_snapshot_sha256`
+- `ip_address?`
+- `user_agent?`
+- `otp_channel?`
+- `otp_verified_at?`
+- `deposit_payment_id?`
+
+Meaning:
+- this is the immutable evidence record for accepting one frozen generated offer
+- it stores what was accepted, how it was accepted, and what exact PDF/snapshot hashes were involved
+- it is written only after acceptance-token verification and, when required, successful OTP verification
+
+Current implementation note:
+- OTP is optional at the model level
+- the current public acceptance flow uses email OTP when second-factor verification is requested
+- resend throttling and rolling send caps are runtime challenge-state concerns and are not stored inside `GeneratedOfferAcceptance`
+
+## API Read Models
+
+`GeneratedBookingOfferReadModel`
+- customer/admin-facing generated-offer response shape
+- `pdf_url`
+- `public_acceptance_token`
+- `public_acceptance_expires_at`
+- acceptance data projected for UI/API consumption
+
+`BookingReadModel`
+- booking response shape used for list, detail, activity, and invoice responses
+- translation status summaries
+- generated-offer email capability flags
+- generated offers projected as `GeneratedBookingOfferReadModel[]`
+
+Important boundary:
+- these are transport models, not persisted entities
+- they may contain derived links, capability tokens, and UI-facing summaries that must not be written back into `Booking` or `GeneratedBookingOffer`
+
 ## Invariants
 
 - `booking.persons[]` is the editable person source of truth for that booking
@@ -156,6 +245,11 @@ ATP quotation semantics:
 - one booking may list fewer or more persons than `number_of_travelers`
 - UI may warn when those counts differ, but the model allows it
 - a booking should usually have one `primary_contact`
+- a generated offer is an immutable snapshot once created
+- the generated-offer PDF is frozen at generation time
+- `accepted_generated_offer_id` may point to at most one accepted generated offer per booking
+- public offer acceptance is authorized by a dedicated acceptance token, not by `booking_id` and `generated_offer_id` alone
+- public generated-offer links and PDF URLs belong to API read models, not persisted entities
 
 ## Conflict Detection
 
@@ -164,6 +258,7 @@ The active conflict model uses optimistic locking with integer revision counters
 - core edits use `core_revision`
 - notes use `notes_revision`
 - persons use `persons_revision`
+- travel plan uses `travel_plan_revision`
 - pricing uses `pricing_revision`
 - offer uses `offer_revision`
 - invoices use `invoices_revision`

@@ -21,12 +21,31 @@ export function createStoreUtils({
   convertBookingOfferToBaseCurrency
 }) {
   async function ensureStorage() {
+    await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
     await mkdir(generatedOffersDir, { recursive: true });
     await mkdir(bookingImagesDir, { recursive: true });
     await mkdir(bookingPersonPhotosDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
+    try {
+      await readFile(dataPath, "utf8");
+    } catch {
+      await writeFile(
+        dataPath,
+        `${JSON.stringify({
+          bookings: [],
+          suppliers: [],
+          activities: [],
+          invoices: [],
+          chat_channel_accounts: [],
+          chat_conversations: [],
+          chat_events: [],
+          offer_acceptance_challenges: []
+        }, null, 2)}\n`,
+        "utf8"
+      );
+    }
   }
 
   async function readStore() {

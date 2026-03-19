@@ -17,18 +17,20 @@ The API is not obviously vulnerable to classic SQL injection, because the curren
 There are also some good security choices already in place:
 - JWT verification uses `jose`
 - role-based authorization is enforced on `/api/v1/*`
-- invoice and generated-offer PDFs are served through authenticated endpoints
+- invoice PDFs are served through authenticated endpoints
+- public generated-offer access and public generated-offer PDFs are gated by a dedicated acceptance token
+- offer acceptance can require a separate email OTP with resend throttling and a rolling send cap
 - booking image path resolution uses path-bound checks
 - image conversion uses `execFile(...)` instead of spawning a shell command string
 
 However, I would not call the API fully safe for internet-facing sensitive traveler data in its current state.
 
-There are several meaningful gaps:
+There are still several meaningful gaps:
 - session cookie hardening is incomplete
 - CORS is too permissive by default
 - there is no CSRF protection for cookie-authenticated writes
 - request body size is unbounded
-- there is no visible rate limiting
+- broader route-level rate limiting is still largely absent
 - webhook signature verification is effectively optional if the app secret is missing
 - booking and traveler images are publicly accessible with long cache lifetimes
 - internal error details are returned to clients
@@ -65,8 +67,7 @@ This does not eliminate image-processing risk entirely, because ImageMagick itse
 Booking image path resolution checks that the resolved file stays inside the configured storage directory.
 
 Relevant code:
-- `backend/app/src/http/handlers/bookings.js:91`
-- `backend/app/src/http/handlers/bookings.js:99`
+- `backend/app/src/http/handlers/bookings.js`
 
 This is the right pattern for filesystem-backed asset serving.
 
@@ -76,6 +77,19 @@ The booking, invoice, offer, and chat handlers generally check `canAccessBooking
 
 That is an important baseline control and is better than trusting IDs in the URL alone.
 
+### 5. Public offer acceptance is no longer authorized by identifiers alone
+
+Relevant code:
+- `backend/app/src/http/handlers/booking_offer_acceptance.js`
+- `backend/app/src/domain/offer_acceptance.js`
+
+Current behavior:
+- public acceptance requires a dedicated acceptance token
+- optional email OTP can be required before final acceptance
+- OTP issue flow has resend throttling and a rolling send cap
+
+This is materially better than a public flow that trusts only `booking_id` and `generated_offer_id`.
+
 ## Main Findings
 
 ## High Risk
@@ -83,7 +97,7 @@ That is an important baseline control and is better than trusting IDs in the URL
 ### 1. Session cookie is not marked `Secure`
 
 Current session cookie code:
-- `backend/app/src/auth.js:138`
+- `backend/app/src/auth.js`
 
 The cookie is set with:
 - `HttpOnly`
@@ -104,7 +118,7 @@ Recommendation:
 ### 2. CORS is too permissive by default, and it allows credentials
 
 Current CORS code:
-- `backend/app/src/http/http_helpers.js:7`
+- `backend/app/src/http/http_helpers.js`
 
 Behavior today:
 - if `CORS_ORIGIN` contains `*`, the server reflects the request origin
@@ -127,7 +141,7 @@ The backend relies on a session cookie for `/api/v1/*`.
 I did not find CSRF token checks on mutating routes.
 
 Relevant code:
-- `/api/v1/*` auth gate in `backend/app/src/server.js:552`
+- `/api/v1/*` auth gate in `backend/app/src/server.js`
 - session cookie auth in `backend/app/src/auth.js`
 
 Why this matters:
@@ -145,7 +159,7 @@ Recommendation:
 ### 4. Request bodies are unbounded
 
 Body reading code:
-- `backend/app/src/http/http_helpers.js:195`
+- `backend/app/src/http/http_helpers.js`
 
 The server reads the full request body into memory with no visible limit.
 This affects:
@@ -171,8 +185,7 @@ Suggested starting limits:
 ### 5. Webhook signature verification is optional if the secret is not configured
 
 Relevant code:
-- `backend/app/src/integrations/meta_webhook.js:592`
-- `backend/app/src/integrations/meta_webhook.js:602`
+- `backend/app/src/integrations/meta_webhook.js`
 
 Current behavior:
 - if no app secret is configured, `verifyMetaWebhookSignature(...)` returns `true`
@@ -190,8 +203,7 @@ Recommendation:
 ### 6. Booking and traveler images are publicly accessible and long-cacheable
 
 Relevant code:
-- `backend/app/src/http/handlers/booking_media.js:31`
-- `backend/app/src/http/handlers/booking_media.js:40`
+- `backend/app/src/http/handlers/booking_media.js`
 
 Current behavior:
 - booking images and traveler photos are served from public endpoints
@@ -212,10 +224,10 @@ Recommendation:
 ### 7. Internal error details are exposed to clients
 
 Relevant code:
-- `backend/app/src/server.js:576`
-- `backend/app/src/http/handlers/booking_media.js:92`
-- `backend/app/src/http/handlers/tours.js:358`
-- `backend/app/src/auth.js:378`
+- `backend/app/src/server.js`
+- `backend/app/src/http/handlers/booking_media.js`
+- `backend/app/src/http/handlers/tours.js`
+- `backend/app/src/auth.js`
 
 Current behavior:
 - the backend returns raw error detail strings to clients in several places
@@ -230,7 +242,7 @@ Recommendation:
 - log detailed diagnostics server-side only
 - gate verbose error detail behind a local-development-only flag
 
-### 8. No visible rate limiting or brute-force controls
+### 8. No broad rate limiting or brute-force controls
 
 I did not find route-level or global rate limiting for:
 - auth endpoints
@@ -240,6 +252,9 @@ I did not find route-level or global rate limiting for:
 - upload endpoints
 - authenticated API mutations
 
+Important exception:
+- the public generated-offer acceptance OTP flow does implement resend throttling and a rolling send cap in `backend/app/src/domain/offer_acceptance.js`
+
 Impact:
 - easier brute force and abuse
 - easier denial of service
@@ -248,13 +263,13 @@ Impact:
 Recommendation:
 - add IP-based and route-based throttling
 - add stricter limits for login and upload routes
+- keep the current offer-acceptance OTP throttling, but do not treat it as a substitute for system-wide rate limiting
 - log and alert on repeated failures
 
 ### 9. `INSECURE_TEST_AUTH` is a dangerous production footgun
 
 Relevant code:
-- `backend/app/src/auth.js:21`
-- `backend/app/src/auth.js:178`
+- `backend/app/src/auth.js`
 
 If `INSECURE_TEST_AUTH=true`, the backend accepts identity and roles from request headers like:
 - `x-test-roles`
@@ -272,7 +287,7 @@ Recommendation:
 ### 10. `quick_login` support increases auth attack surface
 
 Relevant code:
-- `backend/app/src/auth.js:303`
+- `backend/app/src/auth.js`
 
 The login flow has a special `quick_login` path for `staging.asiatravelplan.com`, `localhost`, and `127.0.0.1`.
 
@@ -286,7 +301,7 @@ Recommendation:
 ### 11. Public webhook status endpoint leaks operational details
 
 Relevant code:
-- `backend/app/src/integrations/meta_webhook.js:687`
+- `backend/app/src/integrations/meta_webhook.js`
 
 Current behavior:
 - `/integrations/meta/webhook/status` exposes whether secrets are configured and shows counters such as signature failures and ingest activity
@@ -304,15 +319,14 @@ Recommendation:
 ### 12. Classic path traversal is reasonably handled on booking image paths
 
 Relevant code:
-- `backend/app/src/http/handlers/bookings.js:91`
-- `backend/app/src/http/handlers/bookings.js:99`
+- `backend/app/src/http/handlers/bookings.js`
 
 This area looks acceptable.
 
 ### 13. Classic shell injection is not the primary issue here
 
 Relevant code:
-- `backend/app/src/http/handlers/bookings.js:108`
+- `backend/app/src/http/handlers/bookings.js`
 
 Because `execFile(...)` is used instead of shell command concatenation, classic command injection risk is lower.
 

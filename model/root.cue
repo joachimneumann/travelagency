@@ -86,6 +86,9 @@ import (
 		PaginatedRequest:                   apiModel.#PaginatedRequest
 		WebsiteBookingForm:                 apiModel.#WebsiteBookingForm
 		PublicBookingCreateRequest:         apiModel.#PublicBookingCreateRequest
+		TranslationStatusSummary:           apiModel.#TranslationStatusSummary
+		GeneratedBookingOfferReadModel:     apiModel.#GeneratedBookingOfferReadModel
+		BookingReadModel:                   apiModel.#BookingReadModel
 		PublicGeneratedOfferAccessResponse: apiModel.#PublicGeneratedOfferAccessResponse
 		PublicGeneratedOfferAcceptRequest:  apiModel.#PublicGeneratedOfferAcceptRequest
 		PublicGeneratedOfferAcceptResponse: apiModel.#PublicGeneratedOfferAcceptResponse

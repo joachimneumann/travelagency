@@ -9,6 +9,8 @@ It is not a generic template. It describes the actual structure used in this rep
 - generated transport artifacts
 - handwritten runtime workflow code
 - booking-owned person data
+- modeled read models for API responses
+- frozen generated-offer artifacts and acceptance workflow
 
 ## Architecture Summary
 
@@ -87,9 +89,16 @@ Examples:
 - list responses
 - bootstrap payloads
 - endpoint request and response envelopes
+- read models such as `BookingReadModel`
+- read models such as `GeneratedBookingOfferReadModel`
 - error shapes
 
 These types describe how data moves across HTTP.
+
+Important rule:
+- transport-only fields such as `pdf_url`, `public_acceptance_token`, or translation summaries belong in `model/api/`
+- persisted entity state such as `acceptance_token_nonce` belongs in `model/entities/`
+- transport-only data must not leak back into entity types
 
 ### `model/enums/` and `model/common/`
 
@@ -136,6 +145,32 @@ The generator should own:
 
 Runtime code should not maintain parallel copies of those definitions.
 
+## Entity vs Read Model
+
+The runtime distinguishes between:
+- persisted entity shapes
+- generated API read models
+
+Examples:
+- `entities.#GeneratedBookingOffer`
+  - persisted commercial snapshot
+  - internal artifact metadata
+  - internal acceptance-token lifecycle metadata
+- `api.#GeneratedBookingOfferReadModel`
+  - customer/admin-facing response shape
+  - `pdf_url`
+  - `public_acceptance_token`
+  - `public_acceptance_expires_at`
+
+- `entities.#Booking`
+  - persisted operational booking record
+- `api.#BookingReadModel`
+  - booking response shape used by list/detail/activity/invoice responses
+  - translation summaries
+  - capability flags such as `generated_offer_email_enabled`
+
+This split exists to stop response-only fields from becoming accidental persisted domain fields.
+
 ## Four Layers
 
 ### Layer 1: Domain model
@@ -174,6 +209,22 @@ Responsibilities:
 
 This layer may add behavior, but it should not redefine the shared data contract.
 
+Current important runtime split:
+- `booking_finance.js`
+  - offer editing, generation, PDF mail drafts, finance mutations
+- `booking_offer_acceptance.js`
+  - public generated-offer access
+  - public PDF access
+  - offer acceptance
+  - email OTP issue and verification
+  - resend throttling responses including `retry_after_seconds`
+- `generated_offer_artifacts.js`
+  - frozen PDF artifact creation and lookup
+- `offer_acceptance.js`
+  - acceptance-token state
+  - acceptance-token verification
+  - OTP challenge primitives
+
 ### Layer 4: Persistence
 
 Owned by storage adapters.
@@ -196,16 +247,24 @@ The backend is responsible for:
 - ATP staff assignment rules
 - pricing normalization and calculations
 - invoice creation and PDF generation
+- generated-offer artifact freezing and serving
+- public generated-offer access and acceptance
+- acceptance-token verification and OTP throttling
 - chat/webhook ingestion
 - persistence
 
 The backend should use generated enums and transport shapes instead of maintaining handwritten parallel catalogs.
+
+Additional backend rule:
+- read endpoints must not perform hidden persistence migrations
+- backfills and token-state normalization belong in startup/bootstrap or explicit migrations
 
 ### Frontend
 
 The frontend is responsible for:
 - public booking form
 - public tours catalog
+- public offer-acceptance page
 - backend workspace pages
 - booking detail page
 - tour edit page
@@ -252,6 +311,7 @@ Instead, each writable booking section has its own integer revision counter:
 - `core_revision`
 - `notes_revision`
 - `persons_revision`
+- `travel_plan_revision`
 - `pricing_revision`
 - `offer_revision`
 - `invoices_revision`
@@ -292,6 +352,12 @@ Examples:
 - some tour upload behavior
 
 These are acceptable only if they remain explicitly documented and do not drift into shadow schemas.
+
+Current explicitly acceptable handwritten runtime concerns:
+- auth/session handling
+- webhook signature handling
+- PDF rendering implementation
+- startup backfills for internal persisted metadata
 
 ## Naming Rules
 

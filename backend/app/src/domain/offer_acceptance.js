@@ -9,6 +9,60 @@ export const OFFER_ACCEPTANCE_OTP_SEND_WINDOW_MS = 60 * 60 * 1000;
 export const OFFER_ACCEPTANCE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const OFFER_ACCEPTANCE_TOKEN_SCOPE = "generated_offer_acceptance";
 
+function normalizeAcceptanceText(value) {
+  return typeof value === "string" ? value.trim() : String(value ?? "").trim();
+}
+
+function parseIsoTimestamp(value) {
+  const parsed = Date.parse(String(value || ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function readGeneratedOfferAcceptanceTokenState(generatedOffer) {
+  return {
+    nonce: normalizeAcceptanceText(
+      generatedOffer?.acceptance_token_nonce
+      || generatedOffer?.public_acceptance_token_nonce
+    ),
+    createdAt: normalizeAcceptanceText(
+      generatedOffer?.acceptance_token_created_at
+      || generatedOffer?.public_acceptance_token_created_at
+    ),
+    expiresAt: normalizeAcceptanceText(
+      generatedOffer?.acceptance_token_expires_at
+      || generatedOffer?.public_acceptance_token_expires_at
+    ),
+    revokedAt: normalizeAcceptanceText(
+      generatedOffer?.acceptance_token_revoked_at
+      || generatedOffer?.public_acceptance_token_revoked_at
+    )
+  };
+}
+
+function migrateLegacyGeneratedOfferAcceptanceTokenState(generatedOffer) {
+  if (!generatedOffer || typeof generatedOffer !== "object") return false;
+  let changed = false;
+  const legacyFieldMap = [
+    ["public_acceptance_token_nonce", "acceptance_token_nonce"],
+    ["public_acceptance_token_created_at", "acceptance_token_created_at"],
+    ["public_acceptance_token_expires_at", "acceptance_token_expires_at"],
+    ["public_acceptance_token_revoked_at", "acceptance_token_revoked_at"]
+  ];
+
+  for (const [legacyField, currentField] of legacyFieldMap) {
+    const legacyValue = normalizeAcceptanceText(generatedOffer?.[legacyField]);
+    if (legacyValue && !normalizeAcceptanceText(generatedOffer?.[currentField])) {
+      generatedOffer[currentField] = legacyValue;
+      changed = true;
+    }
+    if (legacyField in generatedOffer) {
+      delete generatedOffer[legacyField];
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 function stableSerialize(value) {
   if (Array.isArray(value)) {
     return `[${value.map((item) => stableSerialize(item)).join(",")}]`;
@@ -52,7 +106,7 @@ function signOfferAcceptanceTokenPayload(payloadBase64, secret) {
 }
 
 export function buildOfferAcceptanceToken({ bookingId, generatedOfferId, nonce, expiresAt, secret }) {
-  const normalizedSecret = String(secret || "").trim();
+  const normalizedSecret = normalizeAcceptanceText(secret);
   if (!normalizedSecret) {
     throw new Error("Offer acceptance token secret is not configured.");
   }
@@ -65,12 +119,12 @@ export function buildOfferAcceptanceToken({ bookingId, generatedOfferId, nonce, 
 }
 
 export function verifyOfferAcceptanceToken(token, { bookingId, generatedOfferId, nonce, expiresAt, secret, now = null } = {}) {
-  const normalizedSecret = String(secret || "").trim();
+  const normalizedSecret = normalizeAcceptanceText(secret);
   if (!normalizedSecret) {
     return { ok: false, code: "TOKEN_NOT_CONFIGURED", error: "Offer acceptance token verification is not configured." };
   }
 
-  const rawToken = String(token || "").trim();
+  const rawToken = normalizeAcceptanceText(token);
   const separatorIndex = rawToken.indexOf(".");
   if (!rawToken || separatorIndex <= 0 || separatorIndex === rawToken.length - 1) {
     return { ok: false, code: "TOKEN_INVALID", error: "The offer acceptance token is invalid." };
@@ -120,6 +174,101 @@ export function verifyOfferAcceptanceToken(token, { bookingId, generatedOfferId,
   return { ok: true, payload };
 }
 
+export function ensureGeneratedOfferAcceptanceTokenState(generatedOffer, { now = null, ttlMs = OFFER_ACCEPTANCE_TOKEN_TTL_MS } = {}) {
+  if (!generatedOffer || typeof generatedOffer !== "object") return false;
+  let changed = migrateLegacyGeneratedOfferAcceptanceTokenState(generatedOffer);
+  const timestamp = normalizeAcceptanceText(now) || new Date().toISOString();
+  const existingTokenState = readGeneratedOfferAcceptanceTokenState(generatedOffer);
+  const createdAt = normalizeAcceptanceText(
+    existingTokenState.createdAt
+    || generatedOffer?.created_at
+    || timestamp
+  ) || timestamp;
+  const createdAtMs = parseIsoTimestamp(createdAt) ?? Date.now();
+  const normalizedTtlMs = Math.max(60 * 1000, Number(ttlMs || 0) || OFFER_ACCEPTANCE_TOKEN_TTL_MS);
+  const expiresAt = new Date(createdAtMs + normalizedTtlMs).toISOString();
+
+  if (!normalizeAcceptanceText(generatedOffer.acceptance_token_nonce)) {
+    generatedOffer.acceptance_token_nonce = createOfferAcceptanceTokenNonce();
+    changed = true;
+  }
+  if (!normalizeAcceptanceText(generatedOffer.acceptance_token_created_at)) {
+    generatedOffer.acceptance_token_created_at = createdAt;
+    changed = true;
+  }
+  if (!normalizeAcceptanceText(generatedOffer.acceptance_token_expires_at)) {
+    generatedOffer.acceptance_token_expires_at = expiresAt;
+    changed = true;
+  }
+  return changed;
+}
+
+export function backfillGeneratedOfferAcceptanceTokenState(store, { now = null, ttlMs = OFFER_ACCEPTANCE_TOKEN_TTL_MS } = {}) {
+  const bookings = Array.isArray(store?.bookings) ? store.bookings : [];
+  let changed = false;
+  for (const booking of bookings) {
+    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
+    for (const generatedOffer of generatedOffers) {
+      if (ensureGeneratedOfferAcceptanceTokenState(generatedOffer, { now, ttlMs })) {
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
+export function buildGeneratedOfferTransportFields(generatedOffer, { secret = "", includeAcceptanceToken = false } = {}) {
+  if (!generatedOffer || typeof generatedOffer !== "object") return {};
+  const {
+    pdf_frozen_at: _pdfFrozenAt,
+    pdf_sha256: _pdfSha256,
+    acceptance_token_nonce: _acceptanceTokenNonce,
+    acceptance_token_created_at: _acceptanceTokenCreatedAt,
+    acceptance_token_expires_at: _acceptanceTokenExpiresAt,
+    acceptance_token_revoked_at: _acceptanceTokenRevokedAt,
+    public_acceptance_token_nonce: _legacyAcceptanceTokenNonce,
+    public_acceptance_token_created_at: _legacyAcceptanceTokenCreatedAt,
+    public_acceptance_token_expires_at: _legacyAcceptanceTokenExpiresAt,
+    public_acceptance_token_revoked_at: _legacyAcceptanceTokenRevokedAt,
+    ...publicFields
+  } = generatedOffer;
+  const normalizedComment = normalizeAcceptanceText(publicFields.comment);
+  if (normalizedComment) {
+    publicFields.comment = normalizedComment;
+  } else {
+    delete publicFields.comment;
+  }
+
+  if (!includeAcceptanceToken) return publicFields;
+
+  const normalizedSecret = normalizeAcceptanceText(secret);
+  const acceptanceTokenState = readGeneratedOfferAcceptanceTokenState(generatedOffer);
+  if (
+    !normalizedSecret
+    || !acceptanceTokenState.nonce
+    || !acceptanceTokenState.expiresAt
+    || acceptanceTokenState.revokedAt
+  ) {
+    return publicFields;
+  }
+
+  try {
+    return {
+      ...publicFields,
+      public_acceptance_token: buildOfferAcceptanceToken({
+        bookingId: generatedOffer?.booking_id,
+        generatedOfferId: generatedOffer?.id,
+        nonce: acceptanceTokenState.nonce,
+        expiresAt: acceptanceTokenState.expiresAt,
+        secret: normalizedSecret
+      }),
+      public_acceptance_expires_at: acceptanceTokenState.expiresAt
+    };
+  } catch {
+    return publicFields;
+  }
+}
+
 export function buildOfferAcceptanceTermsSnapshot() {
   return "By accepting this offer, the client confirms acceptance of the quoted services, pricing, currency, and included taxes exactly as shown in the frozen offer PDF and generated offer snapshot.";
 }
@@ -161,8 +310,8 @@ export function buildGeneratedOfferSnapshotHash(generatedOffer) {
 }
 
 export function maskOtpRecipient(channel, recipient) {
-  const normalizedChannel = String(channel || "").trim().toUpperCase();
-  const normalizedRecipient = String(recipient || "").trim();
+  const normalizedChannel = normalizeAcceptanceText(channel).toUpperCase();
+  const normalizedRecipient = normalizeAcceptanceText(recipient);
   if (!normalizedRecipient) return "";
   if (normalizedChannel === "EMAIL") {
     const [localPart, domainPart] = normalizedRecipient.split("@");
@@ -175,4 +324,88 @@ export function maskOtpRecipient(channel, recipient) {
     return `${"*".repeat(Math.max(2, digits.length - 4))}${digits.slice(-4)}`;
   }
   return normalizedRecipient;
+}
+
+export function getOfferAcceptanceChallenges(store) {
+  if (!Array.isArray(store.offer_acceptance_challenges)) {
+    store.offer_acceptance_challenges = [];
+  }
+  return store.offer_acceptance_challenges;
+}
+
+export function findOfferAcceptanceChallenge(store, bookingId, generatedOfferId, channel) {
+  return getOfferAcceptanceChallenges(store).find((challenge) =>
+    normalizeAcceptanceText(challenge?.booking_id) === normalizeAcceptanceText(bookingId)
+    && normalizeAcceptanceText(challenge?.generated_offer_id) === normalizeAcceptanceText(generatedOfferId)
+    && normalizeAcceptanceText(challenge?.channel).toUpperCase() === normalizeAcceptanceText(channel).toUpperCase()
+  ) || null;
+}
+
+export function upsertOfferAcceptanceChallenge(store, nextChallenge) {
+  const remaining = getOfferAcceptanceChallenges(store).filter((challenge) =>
+    !(
+      normalizeAcceptanceText(challenge?.booking_id) === normalizeAcceptanceText(nextChallenge?.booking_id)
+      && normalizeAcceptanceText(challenge?.generated_offer_id) === normalizeAcceptanceText(nextChallenge?.generated_offer_id)
+      && normalizeAcceptanceText(challenge?.channel).toUpperCase() === normalizeAcceptanceText(nextChallenge?.channel).toUpperCase()
+    )
+  );
+  remaining.push(nextChallenge);
+  store.offer_acceptance_challenges = remaining;
+  return nextChallenge;
+}
+
+export function removeOfferAcceptanceChallenges(store, bookingId, generatedOfferId, channel = null) {
+  const normalizedChannel = normalizeAcceptanceText(channel).toUpperCase();
+  store.offer_acceptance_challenges = getOfferAcceptanceChallenges(store).filter((challenge) => {
+    if (normalizeAcceptanceText(challenge?.booking_id) !== normalizeAcceptanceText(bookingId)) return true;
+    if (normalizeAcceptanceText(challenge?.generated_offer_id) !== normalizeAcceptanceText(generatedOfferId)) return true;
+    if (normalizedChannel && normalizeAcceptanceText(challenge?.channel).toUpperCase() !== normalizedChannel) return true;
+    return false;
+  });
+}
+
+export function buildOfferAcceptanceOtpThrottle(existingChallenge, issuedAt) {
+  const nowMs = parseIsoTimestamp(issuedAt) ?? Date.now();
+  const lastSentAtMs = parseIsoTimestamp(existingChallenge?.last_sent_at || existingChallenge?.issued_at);
+  const resendAvailableAtMs = parseIsoTimestamp(existingChallenge?.resend_available_at);
+  const storedWindowStartedAtMs = parseIsoTimestamp(existingChallenge?.send_window_started_at);
+  const sendWindowStartedAtMs = storedWindowStartedAtMs ?? lastSentAtMs ?? nowMs;
+  const sendCount = Number(existingChallenge?.send_count || 0);
+
+  const isWindowExpired = (nowMs - sendWindowStartedAtMs) >= OFFER_ACCEPTANCE_OTP_SEND_WINDOW_MS;
+  const normalizedWindowStartedAtMs = isWindowExpired ? nowMs : sendWindowStartedAtMs;
+  const normalizedSendCount = isWindowExpired ? 0 : sendCount;
+
+  if (
+    resendAvailableAtMs
+    && resendAvailableAtMs > nowMs
+    && lastSentAtMs
+  ) {
+    return {
+      allowed: false,
+      status: 429,
+      error: "Wait before requesting another acceptance verification code.",
+      retryAfterSeconds: Math.max(1, Math.ceil((resendAvailableAtMs - nowMs) / 1000))
+    };
+  }
+
+  if (normalizedSendCount >= OFFER_ACCEPTANCE_OTP_MAX_SENDS_PER_WINDOW) {
+    return {
+      allowed: false,
+      status: 429,
+      error: "Too many acceptance verification code requests. Try again later.",
+      retryAfterSeconds: Math.max(
+        1,
+        Math.ceil(((normalizedWindowStartedAtMs + OFFER_ACCEPTANCE_OTP_SEND_WINDOW_MS) - nowMs) / 1000)
+      )
+    };
+  }
+
+  return {
+    allowed: true,
+    sendCount: normalizedSendCount + 1,
+    sendWindowStartedAt: new Date(normalizedWindowStartedAtMs).toISOString(),
+    lastSentAt: new Date(nowMs).toISOString(),
+    resendAvailableAt: new Date(nowMs + OFFER_ACCEPTANCE_OTP_RESEND_COOLDOWN_MS).toISOString()
+  };
 }

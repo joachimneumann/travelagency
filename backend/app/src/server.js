@@ -7,6 +7,7 @@ import {
   normalizeEmail,
   normalizePhone
 } from "./domain/phone_matching.js";
+import { backfillGeneratedOfferAcceptanceTokenState } from "./domain/offer_acceptance.js";
 import { createBackendServices } from "./bootstrap/services.js";
 import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
 import {
@@ -163,6 +164,13 @@ const applicationSupport = Object.freeze({
 
 export async function createBackendHandler({ port = PORT } = {}) {
   await services.storeUtils.ensureStorage();
+  const startupStore = await services.storeUtils.readStore();
+  if (backfillGeneratedOfferAcceptanceTokenState(startupStore, {
+    now: nowIso(),
+    ttlMs: OFFER_ACCEPTANCE_TOKEN_CONFIG.ttlMs
+  })) {
+    await services.storeUtils.persistStore(startupStore);
+  }
   const auth = createAuth({ port });
   const routes = createApplicationRoutes({
     auth,

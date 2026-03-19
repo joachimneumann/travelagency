@@ -23,6 +23,8 @@ The current active domain vocabulary includes:
 - invoice
 - activity
 - currencies and languages
+- generated offers
+- generated-offer acceptance
 
 It does not include separate shared person-master-data entities outside the booking.
 
@@ -46,6 +48,12 @@ Generated from the model:
 - `backend/app/Generated/`
 - `frontend/Generated/`
 - `mobile/iOS/Generated/` when explicitly generated for iOS consumption
+
+Important generated transport types:
+- `BookingReadModel`
+- `GeneratedBookingOfferReadModel`
+- `TranslationStatusSummary`
+- public generated-offer access/accept request and response payloads
 
 Current repository note:
 - the active iOS target does not currently keep generated Swift artifacts checked in
@@ -82,9 +90,12 @@ Backend:
 - pricing and invoice logic
 - persistence orchestration
 - chat/webhook integration
+- generated-offer freezing and serving
+- generated-offer acceptance and OTP verification
 
 Frontend:
 - public website interactions
+- public offer-acceptance page
 - backend booking workspace
 - booking detail page
 - tour editing page
@@ -96,6 +107,55 @@ Some endpoints and behaviors are still handwritten and should remain explicitly 
 - offer exchange-rate preview endpoint
 - some ATP staff write behaviors
 - some tour upload behaviors
+
+The important current handler split is:
+- `backend/app/src/http/handlers/booking_finance.js`
+  - finance and offer mutation flow
+  - generated-offer creation
+  - generated-offer Gmail draft flow
+- `backend/app/src/http/handlers/booking_offer_acceptance.js`
+  - public generated-offer access
+  - public generated-offer PDF
+  - public acceptance
+  - email OTP issue/verify flow
+  - resend throttling responses including `retry_after_seconds`
+- `backend/app/src/domain/generated_offer_artifacts.js`
+  - frozen generated-offer PDF artifact logic
+- `backend/app/src/domain/offer_acceptance.js`
+  - acceptance-token lifecycle
+  - acceptance-token verification
+  - OTP challenge helpers
+- `frontend/pages/offer-accept.html`
+  - public acceptance page
+- `frontend/scripts/pages/offer_accept.js`
+  - token-gated public generated-offer read flow
+  - email OTP issue/verify UX
+  - resend countdown using `retry_after_seconds`
+
+The backend startup path in `backend/app/src/server.js` performs explicit acceptance-token-state backfill for legacy stored generated offers.
+This backfill is done at startup, not during booking GET requests.
+
+## Generated Offer and Acceptance Boundary
+
+The persisted entity and the transport read model are intentionally different.
+
+Persisted generated offer entity:
+- language
+- frozen PDF metadata
+- internal acceptance-token state
+- acceptance record
+
+Generated read model:
+- `pdf_url`
+- `public_acceptance_token`
+- `public_acceptance_expires_at`
+- booking translation summaries and generated-offer capability flags exposed through `BookingReadModel`
+
+These read models are consumed by:
+- authenticated backend booking screens
+- the public offer-acceptance page
+
+This prevents public transport fields from becoming stored source-of-truth fields.
 
 ## Naming Rule
 

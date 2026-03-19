@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-19T10:11:28Z
+# 2026-03-19T11:08:02Z
 
 ---
 openapi: 3.1.0
@@ -4429,6 +4429,7 @@ components:
       - booking_id
       - version
       - filename
+      - lang
       - created_at
       - currency
       - total_price_cents
@@ -4442,6 +4443,8 @@ components:
           type: integer
         filename:
           type: string
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
         comment:
           type: string
           nullable: true
@@ -4467,13 +4470,18 @@ components:
         pdf_sha256:
           type: string
           nullable: true
-        pdf_url:
+        acceptance_token_nonce:
           type: string
           nullable: true
-        public_acceptance_token:
+        acceptance_token_created_at:
           type: string
+          format: date-time
           nullable: true
-        public_acceptance_expires_at:
+        acceptance_token_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        acceptance_token_revoked_at:
           type: string
           format: date-time
           nullable: true
@@ -4653,6 +4661,9 @@ components:
         preferred_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
+        customer_language:
+          "$ref": "#/components/schemas/LanguageCode"
+          nullable: true
         accepted_generated_offer_id:
           type: string
           nullable: true
@@ -4683,6 +4694,216 @@ components:
         updated_at:
           type: string
           format: date-time
+    TranslationStatusSummary:
+      type: object
+      required:
+      - lang
+      - source_lang
+      - status
+      - stale
+      - total_fields
+      - translated_fields
+      - missing_fields
+      - has_source_content
+      - has_target_content
+      properties:
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        source_lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        status:
+          type: string
+        origin:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        stale:
+          type: boolean
+        total_fields:
+          type: integer
+        translated_fields:
+          type: integer
+        missing_fields:
+          type: integer
+        has_source_content:
+          type: boolean
+        has_target_content:
+          type: boolean
+        source_hash:
+          type: string
+          nullable: true
+    GeneratedBookingOfferReadModel:
+      type: object
+      required:
+      - id
+      - booking_id
+      - version
+      - filename
+      - lang
+      - created_at
+      - currency
+      - total_price_cents
+      - offer
+      - pdf_url
+      properties:
+        id:
+          type: string
+        booking_id:
+          type: string
+        version:
+          type: integer
+        filename:
+          type: string
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          nullable: true
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        total_price_cents:
+          type: integer
+        offer:
+          "$ref": "#/components/schemas/BookingOffer"
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+        pdf_url:
+          type: string
+        public_acceptance_token:
+          type: string
+          nullable: true
+        public_acceptance_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        acceptance:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+          nullable: true
+    BookingReadModel:
+      type: object
+      required:
+      - id
+      - stage
+      - pricing
+      - offer
+      - travel_plan_translation_status
+      - offer_translation_status
+      - generated_offer_email_enabled
+      - translation_enabled
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        image:
+          type: string
+          nullable: true
+        stage:
+          "$ref": "#/components/schemas/BookingStage"
+        assigned_keycloak_user_id:
+          type: string
+          nullable: true
+        core_revision:
+          type: integer
+          nullable: true
+        notes_revision:
+          type: integer
+          nullable: true
+        persons_revision:
+          type: integer
+          nullable: true
+        travel_plan_revision:
+          type: integer
+          nullable: true
+        pricing_revision:
+          type: integer
+          nullable: true
+        offer_revision:
+          type: integer
+          nullable: true
+        invoices_revision:
+          type: integer
+          nullable: true
+        service_level_agreement_due_at:
+          type: string
+          format: date-time
+          nullable: true
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_styles:
+          type: array
+          items:
+            type: string
+        travel_start_day:
+          type: string
+          format: date
+          nullable: true
+        travel_end_day:
+          type: string
+          format: date
+          nullable: true
+        number_of_travelers:
+          type: integer
+          nullable: true
+        preferred_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        customer_language:
+          "$ref": "#/components/schemas/LanguageCode"
+          nullable: true
+        accepted_generated_offer_id:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        persons:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingPerson"
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+        web_form_submission:
+          "$ref": "#/components/schemas/BookingWebFormSubmission"
+          nullable: true
+        pricing:
+          "$ref": "#/components/schemas/BookingPricing"
+        offer:
+          "$ref": "#/components/schemas/BookingOffer"
+        generated_offers:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GeneratedBookingOfferReadModel"
+        travel_plan_translation_status:
+          "$ref": "#/components/schemas/TranslationStatusSummary"
+        offer_translation_status:
+          "$ref": "#/components/schemas/TranslationStatusSummary"
+        generated_offer_email_enabled:
+          type: boolean
+        translation_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     BookingListFilters:
       type: object
       required: []
@@ -4704,7 +4925,7 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/Booking"
+            "$ref": "#/components/schemas/BookingReadModel"
         pagination:
           "$ref": "#/components/schemas/Pagination"
         filters:
@@ -4757,7 +4978,7 @@ components:
       - booking
       properties:
         booking:
-          "$ref": "#/components/schemas/Booking"
+          "$ref": "#/components/schemas/BookingReadModel"
         unchanged:
           type: boolean
           nullable: true
@@ -4844,7 +5065,7 @@ components:
         activity:
           "$ref": "#/components/schemas/BookingActivity"
         booking:
-          "$ref": "#/components/schemas/Booking"
+          "$ref": "#/components/schemas/BookingReadModel"
     BookingInvoicesResponse:
       type: object
       required:
@@ -4865,7 +5086,7 @@ components:
         invoice:
           "$ref": "#/components/schemas/BookingInvoice"
         booking:
-          "$ref": "#/components/schemas/Booking"
+          "$ref": "#/components/schemas/BookingReadModel"
         unchanged:
           type: boolean
           nullable: true

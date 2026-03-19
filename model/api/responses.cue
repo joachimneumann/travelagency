@@ -31,7 +31,7 @@ import (
 
 #BookingActivityResponse: {
 	activity: entities.#BookingActivity
-	booking:  entities.#Booking
+	booking:  #BookingReadModel
 }
 
 #BookingInvoicesResponse: {
@@ -41,7 +41,7 @@ import (
 
 #BookingInvoiceResponse: {
 	invoice:    entities.#BookingInvoice
-	booking:    entities.#Booking
+	booking:    #BookingReadModel
 	unchanged?: bool
 }
 
@@ -124,6 +124,77 @@ import (
 	warning?:           string
 }
 
+#TranslationStatusSummary: {
+	lang:               enums.#LanguageCode
+	source_lang:        enums.#LanguageCode
+	status:             "source" | "empty" | "missing" | "stale" | "partial" | "machine_translated" | "reviewed"
+	origin?:            "manual" | "machine"
+	updated_at?:        common.#Timestamp
+	stale:              bool
+	total_fields:       >=0 & int
+	translated_fields:  >=0 & int
+	missing_fields:     >=0 & int
+	has_source_content: bool
+	has_target_content: bool
+	source_hash?:       string & !=""
+}
+
+#GeneratedBookingOfferReadModel: {
+	id:                            common.#Identifier
+	booking_id:                    common.#Identifier
+	version:                       >=1 & int
+	filename:                      string & !=""
+	lang:                          enums.#LanguageCode
+	comment?:                      string
+	created_at:                    common.#Timestamp
+	created_by?:                   string
+	currency:                      enums.#CurrencyCode
+	total_price_cents:             int
+	offer:                         entities.#BookingOffer
+	travel_plan?:                  entities.#BookingTravelPlan
+	pdf_url:                       string & !=""
+	public_acceptance_token?:      string & !=""
+	public_acceptance_expires_at?: common.#Timestamp
+	acceptance?:                   entities.#GeneratedOfferAcceptance
+}
+
+#BookingReadModel: {
+	id:                              common.#Identifier
+	name?:                           string
+	image?:                          string
+	core_revision?:                  >=0 & int
+	notes_revision?:                 >=0 & int
+	persons_revision?:               >=0 & int
+	travel_plan_revision?:           >=0 & int
+	pricing_revision?:               >=0 & int
+	offer_revision?:                 >=0 & int
+	invoices_revision?:              >=0 & int
+	stage:                           enums.#BookingStage
+	assigned_keycloak_user_id?:      common.#Identifier
+	service_level_agreement_due_at?: common.#Timestamp
+	destinations?: [...enums.#CountryCode]
+	travel_styles?: [...string]
+	travel_start_day?:            common.#DateOnly
+	travel_end_day?:              common.#DateOnly
+	number_of_travelers?:         >=0 & int
+	preferred_currency?:          enums.#CurrencyCode
+	customer_language?:           enums.#LanguageCode
+	accepted_generated_offer_id?: common.#Identifier
+	notes?:                       string
+	persons?: [...entities.#BookingPerson]
+	travel_plan?:         entities.#BookingTravelPlan
+	web_form_submission?: entities.#BookingWebFormSubmission
+	pricing:              entities.#BookingPricing
+	offer:                entities.#BookingOffer
+	generated_offers?: [...#GeneratedBookingOfferReadModel]
+	travel_plan_translation_status: #TranslationStatusSummary
+	offer_translation_status:       #TranslationStatusSummary
+	generated_offer_email_enabled:  bool
+	translation_enabled:            bool
+	created_at:                     common.#Timestamp
+	updated_at:                     common.#Timestamp
+}
+
 #PublicGeneratedOfferAccessResponse: {
 	booking_id:                    common.#Identifier
 	generated_offer_id:            common.#Identifier
@@ -133,7 +204,7 @@ import (
 	total_price_cents:             int
 	comment?:                      string
 	created_at:                    common.#Timestamp
-	pdf_url?:                      common.#Url | string
+	pdf_url?:                      string & !=""
 	public_acceptance_expires_at?: common.#Timestamp
 	accepted:                      bool
 	acceptance?:                   entities.#GeneratedOfferAcceptance

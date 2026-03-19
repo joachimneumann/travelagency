@@ -89,21 +89,23 @@ import (
 }
 
 #GeneratedBookingOffer: {
-	id:                            common.#Identifier
-	booking_id:                    common.#Identifier
-	version:                       >=1 & int
-	filename:                      string & !=""
-	comment?:                      string
-	created_at:                    common.#Timestamp
-	created_by?:                   string
-	currency:                      enums.#CurrencyCode
-	total_price_cents:             int
-	offer:                         #BookingOffer
-	travel_plan?:                  #BookingTravelPlan
-	pdf_frozen_at?:                common.#Timestamp
-	pdf_sha256?:                   string & =~"^[a-f0-9]{64}$"
-	pdf_url?:                      string
-	public_acceptance_token?:      string & !=""
-	public_acceptance_expires_at?: common.#Timestamp
-	acceptance?:                   #GeneratedOfferAcceptance
+	id:                           common.#Identifier
+	booking_id:                   common.#Identifier
+	version:                      >=1 & int
+	filename:                     string & !=""
+	lang:                         enums.#LanguageCode
+	comment?:                     string
+	created_at:                   common.#Timestamp
+	created_by?:                  string
+	currency:                     enums.#CurrencyCode
+	total_price_cents:            int
+	offer:                        #BookingOffer
+	travel_plan?:                 #BookingTravelPlan
+	pdf_frozen_at?:               common.#Timestamp
+	pdf_sha256?:                  string & =~"^[a-f0-9]{64}$"
+	acceptance_token_nonce?:      string & !=""
+	acceptance_token_created_at?: common.#Timestamp
+	acceptance_token_expires_at?: common.#Timestamp
+	acceptance_token_revoked_at?: common.#Timestamp
+	acceptance?:                  #GeneratedOfferAcceptance
 }

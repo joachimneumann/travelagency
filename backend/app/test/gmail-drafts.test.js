@@ -6,6 +6,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { generateKeyPairSync } from "node:crypto";
 import { createGmailDraftsClient } from "../src/lib/gmail_drafts.js";
 import { createBookingFinanceHandlers } from "../src/http/handlers/booking_finance.js";
+import { createBookingOfferAcceptanceHandlers } from "../src/http/handlers/booking_offer_acceptance.js";
 import { buildOfferAcceptanceToken } from "../src/domain/offer_acceptance.js";
 
 function decodeBase64Url(value) {
@@ -248,6 +249,11 @@ test("gmail draft handler returns success when activity persistence fails after 
         email: "traveler@example.com",
         name: "Alex Traveler"
       }),
+      normalizeGeneratedOfferSnapshot: (generatedOffer) => generatedOffer,
+      ensureFrozenGeneratedOfferPdf: async () => {
+        await writeFile(pdfPath, "%PDF-1.4 draft pdf content", "utf8");
+        return { pdfPath, sha256: "a".repeat(64) };
+      },
       rm: async () => {},
       canAccessBooking: () => true,
       sendFileWithCache: async () => {}
@@ -378,18 +384,15 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
       language: "en"
     };
 
-    const handlers = createBookingFinanceHandlers({
+    const handlers = createBookingOfferAcceptanceHandlers({
       readBodyJson: async () => nextPayload,
       sendJson: (_res, status, payload) => {
         responses.push({ status, payload });
       },
       readStore: async () => store,
-      getPrincipal: () => null,
-      canEditBooking: () => false,
       normalizeText: (value) => (typeof value === "string" ? value.trim() : ""),
       getRequestIpAddress: () => "203.0.113.10",
       nowIso: () => "2026-03-19T12:00:00.000Z",
-      BASE_CURRENCY: "USD",
       addActivity: (targetStore, bookingId, type, actor, detail) => {
         targetStore.activities.push({
           id: `activity_${targetStore.activities.length + 1}`,
@@ -400,32 +403,9 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
           created_at: "2026-03-19T12:00:00.000Z"
         });
       },
-      actorLabel: (_principal, actor) => actor,
       persistStore: async () => {},
-      assertExpectedRevision: async () => true,
-      buildBookingDetailResponse: async () => ({ booking: store.bookings[0] }),
-      incrementBookingRevision: (booking, field) => {
-        booking[field] = Number(booking[field] || 0) + 1;
-      },
-      validateBookingPricingInput: () => ({ ok: true }),
-      convertBookingPricingToBaseCurrency: async () => ({}),
-      normalizeBookingPricing: () => ({}),
-      validateBookingOfferInput: () => ({ ok: true }),
-      convertBookingOfferToBaseCurrency: async (offer) => offer,
-      normalizeBookingOffer: (offer) => offer,
-      normalizeBookingTravelPlan: (travelPlan) => travelPlan || { days: [], offer_component_links: [] },
-      buildBookingOfferReadModel: async (offer) => offer,
-      buildBookingTravelPlanReadModel: (travelPlan) => travelPlan || { days: [], offer_component_links: [] },
       formatMoney: (amountCents, currency) => `${currency} ${Number(amountCents || 0) / 100}`,
-      validateOfferExchangeRequest: () => ({ ok: true }),
-      resolveExchangeRateWithFallback: async () => ({ rate: 1 }),
-      convertOfferLineAmountForCurrency: (component) => component,
       randomUUID: () => "uuid_1",
-      writeGeneratedOfferPdf: async () => {
-        await writeFile(pdfPath, "%PDF-1.4 otp pdf content", "utf8");
-        return { outputPath: pdfPath, sha256: "a".repeat(64) };
-      },
-      generatedOfferPdfPath: () => pdfPath,
       gmailDraftsConfig: {
         serviceAccountJsonPath: serviceAccountPath,
         impersonatedEmail: "info@asiatravelplan.com"
@@ -439,10 +419,12 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
         name: "Alex Traveler",
         phone_number: "+15551234567"
       }),
-      rm: async () => {},
-      canAccessBooking: () => true,
+      normalizeGeneratedOfferSnapshot: (generatedOffer) => generatedOffer,
+      ensureFrozenGeneratedOfferPdf: async () => {
+        await writeFile(pdfPath, "%PDF-1.4 otp pdf content", "utf8");
+        return { pdfPath, sha256: "a".repeat(64) };
+      },
       sendFileWithCache: async () => {},
-      translateEntries: async () => []
     });
 
     await handlers.handlePublicAcceptGeneratedOffer(
@@ -586,18 +568,15 @@ test("public generated offer acceptance handler throttles OTP resends and allows
       language: "en"
     };
 
-    const handlers = createBookingFinanceHandlers({
+    const handlers = createBookingOfferAcceptanceHandlers({
       readBodyJson: async () => payload,
       sendJson: (_res, status, responsePayload) => {
         responses.push({ status, payload: responsePayload });
       },
       readStore: async () => store,
-      getPrincipal: () => null,
-      canEditBooking: () => false,
       normalizeText: (value) => (typeof value === "string" ? value.trim() : ""),
       getRequestIpAddress: () => "203.0.113.10",
       nowIso: () => currentTime,
-      BASE_CURRENCY: "USD",
       addActivity: (targetStore, bookingId, type, actor, detail) => {
         targetStore.activities.push({
           id: `activity_${targetStore.activities.length + 1}`,
@@ -608,32 +587,9 @@ test("public generated offer acceptance handler throttles OTP resends and allows
           created_at: currentTime
         });
       },
-      actorLabel: (_principal, actor) => actor,
       persistStore: async () => {},
-      assertExpectedRevision: async () => true,
-      buildBookingDetailResponse: async () => ({ booking: store.bookings[0] }),
-      incrementBookingRevision: (booking, field) => {
-        booking[field] = Number(booking[field] || 0) + 1;
-      },
-      validateBookingPricingInput: () => ({ ok: true }),
-      convertBookingPricingToBaseCurrency: async () => ({}),
-      normalizeBookingPricing: () => ({}),
-      validateBookingOfferInput: () => ({ ok: true }),
-      convertBookingOfferToBaseCurrency: async (offer) => offer,
-      normalizeBookingOffer: (offer) => offer,
-      normalizeBookingTravelPlan: (travelPlan) => travelPlan || { days: [], offer_component_links: [] },
-      buildBookingOfferReadModel: async (offer) => offer,
-      buildBookingTravelPlanReadModel: (travelPlan) => travelPlan || { days: [], offer_component_links: [] },
       formatMoney: (amountCents, currency) => `${currency} ${Number(amountCents || 0) / 100}`,
-      validateOfferExchangeRequest: () => ({ ok: true }),
-      resolveExchangeRateWithFallback: async () => ({ rate: 1 }),
-      convertOfferLineAmountForCurrency: (component) => component,
       randomUUID: () => "uuid_1",
-      writeGeneratedOfferPdf: async () => {
-        await writeFile(pdfPath, "%PDF-1.4 otp pdf content", "utf8");
-        return { outputPath: pdfPath, sha256: "a".repeat(64) };
-      },
-      generatedOfferPdfPath: () => pdfPath,
       gmailDraftsConfig: {
         serviceAccountJsonPath: serviceAccountPath,
         impersonatedEmail: "info@asiatravelplan.com"
@@ -647,10 +603,12 @@ test("public generated offer acceptance handler throttles OTP resends and allows
         name: "Alex Traveler",
         phone_number: "+15551234567"
       }),
-      rm: async () => {},
-      canAccessBooking: () => true,
+      normalizeGeneratedOfferSnapshot: (generatedOffer) => generatedOffer,
+      ensureFrozenGeneratedOfferPdf: async () => {
+        await writeFile(pdfPath, "%PDF-1.4 otp pdf content", "utf8");
+        return { pdfPath, sha256: "a".repeat(64) };
+      },
       sendFileWithCache: async () => {},
-      translateEntries: async () => []
     });
 
     await handlers.handlePublicAcceptGeneratedOffer(

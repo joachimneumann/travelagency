@@ -3264,7 +3264,7 @@
 },
   FIELD_46: {
   "kind": "transport",
-  "typeName": "Booking",
+  "typeName": "BookingReadModel",
   "isArray": false
 },
   FIELD_47: {
@@ -3313,7 +3313,7 @@
 },
   FIELD_52: {
   "kind": "transport",
-  "typeName": "Booking",
+  "typeName": "BookingReadModel",
   "isArray": true
 },
   FIELD_53: {
@@ -3412,6 +3412,26 @@
   "isArray": false
 },
   FIELD_72: {
+  "kind": "transport",
+  "typeName": "BookingPerson",
+  "isArray": true
+},
+  FIELD_73: {
+  "kind": "transport",
+  "typeName": "BookingWebFormSubmission",
+  "isArray": false
+},
+  FIELD_74: {
+  "kind": "transport",
+  "typeName": "GeneratedBookingOfferReadModel",
+  "isArray": true
+},
+  FIELD_75: {
+  "kind": "transport",
+  "typeName": "TranslationStatusSummary",
+  "isArray": false
+},
+  FIELD_76: {
   "kind": "enum",
   "typeName": "OfferAcceptanceMethod",
   "isArray": false,
@@ -3435,22 +3455,22 @@
     }
   ]
 },
-  FIELD_73: {
+  FIELD_77: {
   "kind": "transport",
   "typeName": "BookingTravelPlanDay",
   "isArray": true
 },
-  FIELD_74: {
+  FIELD_78: {
   "kind": "transport",
   "typeName": "BookingTravelPlanOfferComponentLink",
   "isArray": true
 },
-  FIELD_75: {
+  FIELD_79: {
   "kind": "transport",
   "typeName": "BookingTravelPlanSegment",
   "isArray": true
 },
-  FIELD_76: {
+  FIELD_80: {
   "kind": "enum",
   "typeName": "TravelPlanOfferCoverageType",
   "isArray": false,
@@ -3469,12 +3489,12 @@
     }
   ]
 },
-  FIELD_77: {
+  FIELD_81: {
   "kind": "transport",
   "typeName": "BookingOfferTaxBucket",
   "isArray": true
 },
-  FIELD_78: {
+  FIELD_82: {
   "kind": "enum",
   "typeName": "TravelPlanTimingKind",
   "isArray": false,
@@ -3498,7 +3518,7 @@
     }
   ]
 },
-  FIELD_79: {
+  FIELD_83: {
   "kind": "enum",
   "typeName": "TravelPlanSegmentKind",
   "isArray": false,
@@ -3547,7 +3567,7 @@
     }
   ]
 },
-  FIELD_80: {
+  FIELD_84: {
   "kind": "enum",
   "typeName": "TravelPlanFinancialCoverageStatus",
   "isArray": false,

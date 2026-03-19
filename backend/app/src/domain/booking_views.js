@@ -5,7 +5,7 @@ import {
   buildOfferTranslationStatus,
   buildTravelPlanTranslationStatus
 } from "./booking_translation.js";
-import { buildOfferAcceptanceToken } from "./offer_acceptance.js";
+import { buildGeneratedOfferTransportFields } from "./offer_acceptance.js";
 
 export function createBookingViewHelpers({
   baseCurrency,
@@ -235,36 +235,10 @@ export function createBookingViewHelpers({
   }
 
   function publicGeneratedOfferFields(generatedOffer, options = {}) {
-    if (!generatedOffer || typeof generatedOffer !== "object") return {};
-    const {
-      pdf_frozen_at: _pdfFrozenAt,
-      pdf_sha256: _pdfSha256,
-      public_acceptance_token_nonce: _acceptanceTokenNonce,
-      public_acceptance_token_created_at: _acceptanceTokenCreatedAt,
-      public_acceptance_token_expires_at: _acceptanceTokenExpiresAt,
-      public_acceptance_token_revoked_at: _acceptanceTokenRevokedAt,
-      ...publicFields
-    } = generatedOffer;
-    const acceptanceNonce = normalizeText(generatedOffer?.public_acceptance_token_nonce);
-    const acceptanceExpiresAt = normalizeText(generatedOffer?.public_acceptance_token_expires_at);
-    if (!options?.includeAcceptanceToken || !offerAcceptanceTokenSecret || !acceptanceNonce || !acceptanceExpiresAt) {
-      return publicFields;
-    }
-    try {
-      return {
-        ...publicFields,
-        public_acceptance_token: buildOfferAcceptanceToken({
-          bookingId: generatedOffer?.booking_id,
-          generatedOfferId: generatedOffer?.id,
-          nonce: acceptanceNonce,
-          expiresAt: acceptanceExpiresAt,
-          secret: offerAcceptanceTokenSecret
-        }),
-        public_acceptance_expires_at: acceptanceExpiresAt
-      };
-    } catch {
-      return publicFields;
-    }
+    return buildGeneratedOfferTransportFields(generatedOffer, {
+      secret: offerAcceptanceTokenSecret,
+      includeAcceptanceToken: Boolean(options?.includeAcceptanceToken)
+    });
   }
 
   async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency, options = {}) {
@@ -287,7 +261,11 @@ export function createBookingViewHelpers({
   }
 
   async function buildBookingReadModel(booking, options = {}) {
-    const normalizedBooking = { ...booking };
+    const {
+      idempotency_key: _idempotencyKey,
+      web_form_travel_month: _webFormTravelMonth,
+      ...normalizedBooking
+    } = { ...booking };
     delete normalizedBooking.budget;
     const lang = normalizeBookingContentLang(options?.lang || "en");
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
@@ -303,6 +281,11 @@ export function createBookingViewHelpers({
     );
     return {
       ...normalizedBooking,
+      customer_language: normalizeBookingContentLang(
+        normalizedBooking?.customer_language
+        || normalizedBooking?.web_form_submission?.preferred_language
+        || "en"
+      ),
       preferred_currency: preferredCurrency,
       travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, { lang }),
       travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang),

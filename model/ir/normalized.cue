@@ -461,6 +461,7 @@ IR: {
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "version", kind: "scalar", typeName: "int", required: true},
 				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "created_by", kind: "scalar", typeName: "string", required: false},
@@ -470,9 +471,10 @@ IR: {
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_frozen_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "pdf_sha256", kind: "scalar", typeName: "string", required: false},
-				{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
-				{name: "public_acceptance_token", kind: "scalar", typeName: "string", required: false},
-				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "acceptance_token_nonce", kind: "scalar", typeName: "string", required: false},
+				{name: "acceptance_token_created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "acceptance_token_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "acceptance_token_revoked_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
 			]
 		},
@@ -547,6 +549,7 @@ IR: {
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: false},
 				{name: "accepted_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
@@ -555,6 +558,92 @@ IR: {
 				{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
 				{name: "generated_offers", kind: "entity", typeName: "GeneratedBookingOffer", required: false, isArray: true},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
+			]
+		},
+		{
+			name:       "TranslationStatusSummary"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TranslationStatusSummary"
+			fields: [
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "status", kind: "scalar", typeName: "string", required: true},
+				{name: "origin", kind: "scalar", typeName: "string", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "stale", kind: "scalar", typeName: "bool", required: true},
+				{name: "total_fields", kind: "scalar", typeName: "int", required: true},
+				{name: "translated_fields", kind: "scalar", typeName: "int", required: true},
+				{name: "missing_fields", kind: "scalar", typeName: "int", required: true},
+				{name: "has_source_content", kind: "scalar", typeName: "bool", required: true},
+				{name: "has_target_content", kind: "scalar", typeName: "bool", required: true},
+				{name: "source_hash", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "GeneratedBookingOfferReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#GeneratedBookingOfferReadModel"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "version", kind: "scalar", typeName: "int", required: true},
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "comment", kind: "scalar", typeName: "string", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "created_by", kind: "scalar", typeName: "string", required: false},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
+				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},
+				{name: "public_acceptance_token", kind: "scalar", typeName: "string", required: false},
+				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+			]
+		},
+		{
+			name:       "BookingReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingReadModel"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "image", kind: "scalar", typeName: "string", required: false},
+				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
+				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "core_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "persons_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "pricing_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "offer_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "invoices_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "service_level_agreement_due_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "travel_start_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
+				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "accepted_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
+				{name: "web_form_submission", kind: "entity", typeName: "BookingWebFormSubmission", required: false},
+				{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
+				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+				{name: "generated_offers", kind: "transport", typeName: "GeneratedBookingOfferReadModel", required: false, isArray: true},
+				{name: "travel_plan_translation_status", kind: "transport", typeName: "TranslationStatusSummary", required: true},
+				{name: "offer_translation_status", kind: "transport", typeName: "TranslationStatusSummary", required: true},
+				{name: "generated_offer_email_enabled", kind: "scalar", typeName: "bool", required: true},
+				{name: "translation_enabled", kind: "scalar", typeName: "bool", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: true},
 			]
@@ -576,7 +665,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingList"
 			fields: [
-				{name: "items", kind: "entity", typeName: "Booking", required: true, isArray: true},
+				{name: "items", kind: "transport", typeName: "BookingReadModel", required: true, isArray: true},
 				{name: "pagination", kind: "transport", typeName: "Pagination", required: true},
 				{name: "filters", kind: "transport", typeName: "BookingListFilters", required: false},
 				{name: "sort", kind: "scalar", typeName: "string", required: false},
@@ -613,7 +702,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingDetail"
 			fields: [
-				{name: "booking", kind: "entity", typeName: "Booking", required: true},
+				{name: "booking", kind: "transport", typeName: "BookingReadModel", required: true},
 				{name: "unchanged", kind: "scalar", typeName: "bool", required: false},
 			]
 		},
@@ -687,7 +776,7 @@ IR: {
 			sourceType: "api.#BookingActivityResponse"
 			fields: [
 				{name: "activity", kind: "entity", typeName: "BookingActivity", required: true},
-				{name: "booking", kind: "entity", typeName: "Booking", required: true},
+				{name: "booking", kind: "transport", typeName: "BookingReadModel", required: true},
 			]
 		},
 		{
@@ -707,7 +796,7 @@ IR: {
 			sourceType: "api.#BookingInvoiceResponse"
 			fields: [
 				{name: "invoice", kind: "entity", typeName: "BookingInvoice", required: true},
-				{name: "booking", kind: "entity", typeName: "Booking", required: true},
+				{name: "booking", kind: "transport", typeName: "BookingReadModel", required: true},
 				{name: "unchanged", kind: "scalar", typeName: "bool", required: false},
 			]
 		},

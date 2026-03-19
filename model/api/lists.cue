@@ -3,7 +3,7 @@ package api
 import entities "travelagency.local/model/entities"
 
 #BookingList: {
-	items: [...entities.#Booking]
+	items: [...#BookingReadModel]
 	pagination: #Pagination
 	filters?:   #BookingListFilters
 	sort?:      string
@@ -19,7 +19,7 @@ import entities "travelagency.local/model/entities"
 }
 
 #BookingDetail: {
-	booking:    entities.#Booking
+	booking:    #BookingReadModel
 	unchanged?: bool
 }
 

@@ -256,15 +256,15 @@ function buildTranslationSummary(section, targetLang, collectDescriptors) {
     lang: normalizedTargetLang,
     source_lang: DEFAULT_BOOKING_CONTENT_LANG,
     status,
-    origin: meta?.origin || null,
-    updated_at: meta?.updated_at || null,
+    ...(meta?.origin ? { origin: meta.origin } : {}),
+    ...(meta?.updated_at ? { updated_at: meta.updated_at } : {}),
     stale,
     total_fields: totalFields,
     translated_fields: translatedFields,
     missing_fields: missingFields,
     has_source_content: totalFields > 0,
     has_target_content: translatedFields > 0,
-    source_hash: sourceHash
+    ...(sourceHash ? { source_hash: sourceHash } : {})
   };
 }
 
