@@ -117,6 +117,7 @@ export function createApplicationRoutes({
     invoicePdfPath: pricingHelpers.invoicePdfPath,
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
+    offerAcceptanceTokenConfig: runtime.offerAcceptanceTokenConfig,
     mkdir,
     path,
     execFile: runtime.execFile,

@@ -124,6 +124,33 @@ import (
 	warning?:           string
 }
 
+#PublicGeneratedOfferAccessResponse: {
+	booking_id:                    common.#Identifier
+	generated_offer_id:            common.#Identifier
+	booking_name?:                 string
+	lang:                          enums.#LanguageCode
+	currency:                      enums.#CurrencyCode
+	total_price_cents:             int
+	comment?:                      string
+	created_at:                    common.#Timestamp
+	pdf_url?:                      common.#Url | string
+	public_acceptance_expires_at?: common.#Timestamp
+	accepted:                      bool
+	acceptance?:                   entities.#GeneratedOfferAcceptance
+}
+
+#PublicGeneratedOfferAcceptResponse: {
+	booking_id:           common.#Identifier
+	generated_offer_id:   common.#Identifier
+	accepted:             bool
+	status:               "ACCEPTED" | "OTP_REQUIRED"
+	acceptance?:          entities.#GeneratedOfferAcceptance
+	otp_channel?:         enums.#OfferAcceptanceOtpChannel
+	otp_sent_to?:         string
+	otp_expires_at?:      common.#Timestamp
+	retry_after_seconds?: >=0 & int
+}
+
 #SupplierListResponse: {
 	items: [...entities.#Supplier]
 	total: >=0 & int

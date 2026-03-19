@@ -165,6 +165,17 @@ import (
 	actor?: string
 }
 
+#PublicGeneratedOfferAcceptRequest: {
+	acceptance_token:       string & !=""
+	accepted_by_name?:      string
+	accepted_by_email?:     common.#Email
+	accepted_by_phone?:     string
+	accepted_by_person_id?: common.#Identifier
+	language?:              enums.#LanguageCode
+	otp_channel?:           enums.#OfferAcceptanceOtpChannel
+	otp_code?:              string & !=""
+}
+
 #SupplierCreateRequest: {
 	name:             string
 	contact?:         string

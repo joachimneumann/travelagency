@@ -3,6 +3,7 @@ import {
   normalizeBookingPersonsPayload
 } from "../../lib/booking_persons.js";
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
+import { createOfferAcceptanceTokenNonce } from "../../domain/offer_acceptance.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -80,6 +81,7 @@ export function createBookingHandlers(deps) {
     invoicePdfPath,
     generatedOfferPdfPath,
     gmailDraftsConfig,
+    offerAcceptanceTokenConfig,
     mkdir,
     path,
     execFile,
@@ -92,6 +94,7 @@ export function createBookingHandlers(deps) {
     sendFileWithCache,
     translateEntries
   } = deps;
+  const offerAcceptanceTokenTtlMs = Math.max(60 * 1000, Number(offerAcceptanceTokenConfig?.ttlMs || 0) || (7 * 24 * 60 * 60 * 1000));
 
   function unique(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
@@ -161,6 +164,26 @@ export function createBookingHandlers(deps) {
 
   function incrementBookingRevision(booking, field) {
     booking[field] = getBookingRevision(booking, field) + 1;
+  }
+
+  function ensureGeneratedOfferAcceptanceTokenState(generatedOffer) {
+    if (!generatedOffer || typeof generatedOffer !== "object") return false;
+    let changed = false;
+    const createdAt = normalizeText(generatedOffer?.public_acceptance_token_created_at || generatedOffer?.created_at || nowIso()) || nowIso();
+    const createdAtMs = Number.isFinite(Date.parse(createdAt)) ? Date.parse(createdAt) : Date.now();
+    if (!normalizeText(generatedOffer.public_acceptance_token_nonce)) {
+      generatedOffer.public_acceptance_token_nonce = createOfferAcceptanceTokenNonce();
+      changed = true;
+    }
+    if (!normalizeText(generatedOffer.public_acceptance_token_created_at)) {
+      generatedOffer.public_acceptance_token_created_at = createdAt;
+      changed = true;
+    }
+    if (!normalizeText(generatedOffer.public_acceptance_token_expires_at)) {
+      generatedOffer.public_acceptance_token_expires_at = new Date(createdAtMs + offerAcceptanceTokenTtlMs).toISOString();
+      changed = true;
+    }
+    return changed;
   }
 
   const queryModule = createBookingQueryModule({
@@ -287,6 +310,9 @@ export function createBookingHandlers(deps) {
     store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
     store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
     store.invoices = Array.isArray(store.invoices) ? store.invoices.filter((invoice) => invoice.booking_id !== bookingId) : [];
+    store.offer_acceptance_challenges = Array.isArray(store.offer_acceptance_challenges)
+      ? store.offer_acceptance_challenges.filter((challenge) => normalizeText(challenge.booking_id) !== bookingId)
+      : [];
 
     ensureMetaChatCollections(store);
     for (const conversation of store.chat_conversations) {
@@ -454,7 +480,10 @@ export function createBookingHandlers(deps) {
     handlePostOfferExchangeRates,
     handleGenerateBookingOffer,
     handleGetGeneratedOfferPdf,
+    handleGetPublicGeneratedOfferAccess,
+    handleGetPublicGeneratedOfferPdf,
     handleCreateGeneratedOfferGmailDraft,
+    handlePublicAcceptGeneratedOffer,
     handlePatchGeneratedBookingOffer,
     handleDeleteGeneratedBookingOffer
   } = createBookingFinanceHandlers({
@@ -464,6 +493,7 @@ export function createBookingHandlers(deps) {
     getPrincipal,
     canEditBooking,
     normalizeText,
+    getRequestIpAddress,
     nowIso,
     BASE_CURRENCY,
     addActivity,
@@ -489,6 +519,7 @@ export function createBookingHandlers(deps) {
     writeGeneratedOfferPdf,
     generatedOfferPdfPath,
     gmailDraftsConfig,
+    offerAcceptanceTokenConfig,
     getBookingContactProfile,
     rm,
     canAccessBooking,
@@ -673,6 +704,16 @@ export function createBookingHandlers(deps) {
       return;
     }
 
+    let tokenBackfillChanged = false;
+    for (const generatedOffer of Array.isArray(booking.generated_offers) ? booking.generated_offers : []) {
+      if (ensureGeneratedOfferAcceptanceTokenState(generatedOffer)) {
+        tokenBackfillChanged = true;
+      }
+    }
+    if (tokenBackfillChanged) {
+      await persistStore(store);
+    }
+
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
@@ -729,6 +770,9 @@ export function createBookingHandlers(deps) {
     handlePatchBookingOffer,
     handleTranslateBookingOfferFromEnglish,
     handleGenerateBookingOffer,
+    handleGetPublicGeneratedOfferAccess,
+    handleGetPublicGeneratedOfferPdf,
+    handlePublicAcceptGeneratedOffer,
     handlePatchGeneratedBookingOffer,
     handleDeleteGeneratedBookingOffer,
     handleGetGeneratedOfferPdf,

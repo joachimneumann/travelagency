@@ -48,24 +48,24 @@ import (
 }
 
 #BookingPricingSummary: {
-	agreed_net_amount_cents:      common.#NonNegativeMoneyAmount
-	adjustments_delta_cents:      common.#MoneyAmount
-	adjusted_net_amount_cents:    common.#MoneyAmount
-	scheduled_net_amount_cents:   common.#NonNegativeMoneyAmount
-	unscheduled_net_amount_cents: common.#MoneyAmount
-	scheduled_tax_amount_cents:   common.#MoneyAmount
-	scheduled_gross_amount_cents: common.#MoneyAmount
-	paid_gross_amount_cents:      common.#MoneyAmount
+	agreed_net_amount_cents:        common.#NonNegativeMoneyAmount
+	adjustments_delta_cents:        common.#MoneyAmount
+	adjusted_net_amount_cents:      common.#MoneyAmount
+	scheduled_net_amount_cents:     common.#NonNegativeMoneyAmount
+	unscheduled_net_amount_cents:   common.#MoneyAmount
+	scheduled_tax_amount_cents:     common.#MoneyAmount
+	scheduled_gross_amount_cents:   common.#MoneyAmount
+	paid_gross_amount_cents:        common.#MoneyAmount
 	outstanding_gross_amount_cents: common.#MoneyAmount
-	is_schedule_balanced:         bool
+	is_schedule_balanced:           bool
 }
 
 #BookingPricing: {
 	currency:                enums.#CurrencyCode
 	agreed_net_amount_cents: common.#NonNegativeMoneyAmount
-	adjustments:             [...#PricingAdjustment]
-	payments:                [...#BookingPayment]
-	summary:                 #BookingPricingSummary
+	adjustments: [...#PricingAdjustment]
+	payments: [...#BookingPayment]
+	summary: #BookingPricingSummary
 }
 
 #BookingActivityType: enums.#BookingActivityType
@@ -82,32 +82,33 @@ import (
 #BookingInvoice: #Invoice
 
 #Booking: {
-	id:                             common.#Identifier
-	name?:                          string
-	image?:                         string
-	core_revision?:                 >=0 & int
-	notes_revision?:                >=0 & int
-	persons_revision?:              >=0 & int
-	travel_plan_revision?:          >=0 & int
-	pricing_revision?:              >=0 & int
-	offer_revision?:                >=0 & int
-	invoices_revision?:             >=0 & int
-	stage:                          enums.#BookingStage
-	assigned_keycloak_user_id?:     common.#Identifier
+	id:                              common.#Identifier
+	name?:                           string
+	image?:                          string
+	core_revision?:                  >=0 & int
+	notes_revision?:                 >=0 & int
+	persons_revision?:               >=0 & int
+	travel_plan_revision?:           >=0 & int
+	pricing_revision?:               >=0 & int
+	offer_revision?:                 >=0 & int
+	invoices_revision?:              >=0 & int
+	stage:                           enums.#BookingStage
+	assigned_keycloak_user_id?:      common.#Identifier
 	service_level_agreement_due_at?: common.#Timestamp
-	destinations?:                  [...enums.#CountryCode]
-	travel_styles?:                 [...string]
-	travel_start_day?:              common.#DateOnly
-	travel_end_day?:                common.#DateOnly
-	number_of_travelers?:           >=0 & <=common.#MaxTravelers & int
-	preferred_currency?:            enums.#CurrencyCode
-	notes?:                         string
-	persons?:                       [...#BookingPerson]
-	travel_plan?:                   #BookingTravelPlan
-	web_form_submission?:           #BookingWebFormSubmission
-	pricing:                        #BookingPricing
-	offer:                          #BookingOffer
-	generated_offers?:              [...#GeneratedBookingOffer]
-	created_at:                     common.#Timestamp
-	updated_at:                     common.#Timestamp
+	destinations?: [...enums.#CountryCode]
+	travel_styles?: [...string]
+	travel_start_day?:            common.#DateOnly
+	travel_end_day?:              common.#DateOnly
+	number_of_travelers?:         >=0 & <=common.#MaxTravelers & int
+	preferred_currency?:          enums.#CurrencyCode
+	accepted_generated_offer_id?: common.#Identifier
+	notes?:                       string
+	persons?: [...#BookingPerson]
+	travel_plan?:         #BookingTravelPlan
+	web_form_submission?: #BookingWebFormSubmission
+	pricing:              #BookingPricing
+	offer:                #BookingOffer
+	generated_offers?: [...#GeneratedBookingOffer]
+	created_at: common.#Timestamp
+	updated_at: common.#Timestamp
 }

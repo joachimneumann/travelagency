@@ -9,30 +9,36 @@
   "typeName": "Identifier"
 },
   PARAM_2: {
-  "name": "person_id",
-  "location": "path",
-  "required": true,
-  "typeName": "Identifier"
-},
-  PARAM_3: {
   "name": "generated_offer_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
+  PARAM_3: {
+  "name": "token",
+  "location": "query",
+  "required": true,
+  "typeName": "Identifier"
+},
   PARAM_4: {
-  "name": "supplier_id",
+  "name": "person_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_5: {
-  "name": "invoice_id",
+  "name": "supplier_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_6: {
+  "name": "invoice_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_7: {
   "name": "tour_id",
   "location": "path",
   "required": true,
@@ -79,6 +85,44 @@
         responseType: "BookingDetail",
         parameters: [
 
+        ]
+      },
+      {
+        key: "public_generated_offer_access",
+        path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access",
+        method: "GET",
+        authenticated: false,
+        requestType: null,
+        responseType: "PublicGeneratedOfferAccessResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
+        key: "public_generated_offer_accept",
+        path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept",
+        method: "POST",
+        authenticated: false,
+        requestType: "PublicGeneratedOfferAcceptRequest",
+        responseType: "PublicGeneratedOfferAcceptResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+        ]
+      },
+      {
+        key: "public_generated_offer_pdf",
+        path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf",
+        method: "GET",
+        authenticated: false,
+        requestType: null,
+        responseType: null,
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
         ]
       },
       {
@@ -222,7 +266,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       },
       {
@@ -234,7 +278,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       },
       {
@@ -246,7 +290,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
         ]
       },
       {
@@ -335,7 +379,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -347,7 +391,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -359,7 +403,7 @@
         responseType: null,
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -371,7 +415,7 @@
         responseType: "BookingGeneratedOfferGmailDraftResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_2)
         ]
       },
       {
@@ -415,7 +459,7 @@
         requestType: null,
         responseType: "SupplierResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
         ]
       },
       {
@@ -426,7 +470,7 @@
         requestType: "SupplierUpdateRequest",
         responseType: "SupplierResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
         ]
       },
       {
@@ -482,7 +526,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
         ]
       },
       {
@@ -494,7 +538,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
         ]
       },
       {
@@ -505,7 +549,7 @@
         requestType: null,
         responseType: null,
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
         ]
       },
       {
@@ -549,7 +593,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7)
         ]
       },
       {
@@ -560,7 +604,7 @@
         requestType: "TourUpsertRequest",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7)
         ]
       },
       {
@@ -582,7 +626,7 @@
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7)
         ]
       }
     ];

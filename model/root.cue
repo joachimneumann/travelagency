@@ -9,18 +9,19 @@ import (
 
 #AbstractModel: {
 	entities: {
-		Booking:               entityModel.#Booking
-		GeneratedBookingOffer: entityModel.#GeneratedBookingOffer
-		BookingPerson:         entityModel.#BookingPerson
-		BookingPersonAddress:  entityModel.#BookingPersonAddress
-		BookingPersonConsent:  entityModel.#BookingPersonConsent
-		BookingPersonDocument: entityModel.#BookingPersonDocument
-		BookingTravelPlan:     entityModel.#BookingTravelPlan
-		BookingTravelPlanDay:  entityModel.#BookingTravelPlanDay
-		BookingTravelPlanSegment: entityModel.#BookingTravelPlanSegment
+		Booking:                             entityModel.#Booking
+		GeneratedBookingOffer:               entityModel.#GeneratedBookingOffer
+		GeneratedOfferAcceptance:            entityModel.#GeneratedOfferAcceptance
+		BookingPerson:                       entityModel.#BookingPerson
+		BookingPersonAddress:                entityModel.#BookingPersonAddress
+		BookingPersonConsent:                entityModel.#BookingPersonConsent
+		BookingPersonDocument:               entityModel.#BookingPersonDocument
+		BookingTravelPlan:                   entityModel.#BookingTravelPlan
+		BookingTravelPlanDay:                entityModel.#BookingTravelPlanDay
+		BookingTravelPlanSegment:            entityModel.#BookingTravelPlanSegment
 		BookingTravelPlanOfferComponentLink: entityModel.#BookingTravelPlanOfferComponentLink
-		Supplier:              entityModel.#Supplier
-		Tour:                  entityModel.#Tour
+		Supplier:                            entityModel.#Supplier
+		Tour:                                entityModel.#Tour
 	}
 
 	common: {
@@ -30,80 +31,85 @@ import (
 	}
 
 	enums: {
-		LanguageCode:          enumModel.#LanguageCode
-		CurrencyCode:          enumModel.#CurrencyCode
-		CurrencyMeta:          enumModel.#CurrencyMeta
-		ATPStaffRole:         enumModel.#ATPStaffRole
-		BookingStage:          enumModel.#BookingStage
-		BookingPersonRole:     enumModel.#BookingPersonRole
-		TravelPlanTimingKind:  enumModel.#TravelPlanTimingKind
-		TravelPlanSegmentKind: enumModel.#TravelPlanSegmentKind
+		LanguageCode:                      enumModel.#LanguageCode
+		CurrencyCode:                      enumModel.#CurrencyCode
+		CurrencyMeta:                      enumModel.#CurrencyMeta
+		ATPStaffRole:                      enumModel.#ATPStaffRole
+		BookingStage:                      enumModel.#BookingStage
+		BookingPersonRole:                 enumModel.#BookingPersonRole
+		TravelPlanTimingKind:              enumModel.#TravelPlanTimingKind
+		TravelPlanSegmentKind:             enumModel.#TravelPlanSegmentKind
 		TravelPlanFinancialCoverageStatus: enumModel.#TravelPlanFinancialCoverageStatus
-		TravelPlanOfferCoverageType: enumModel.#TravelPlanOfferCoverageType
-		SupplierCategory:      enumModel.#SupplierCategory
-		PaymentStatus:         enumModel.#PaymentStatus
-		PricingAdjustmentType: enumModel.#PricingAdjustmentType
-		OfferCategory:         enumModel.#OfferCategory
-		CountryCode:           enumModel.#CountryCode
-		TimezoneCode:          enumModel.#TimezoneCode
-		PersonConsentType:     enumModel.#PersonConsentType
-		PersonConsentStatus:   enumModel.#PersonConsentStatus
-		PersonDocumentType:    enumModel.#PersonDocumentType
-		BookingActivityType:   enumModel.#BookingActivityType
+		TravelPlanOfferCoverageType:       enumModel.#TravelPlanOfferCoverageType
+		SupplierCategory:                  enumModel.#SupplierCategory
+		PaymentStatus:                     enumModel.#PaymentStatus
+		PricingAdjustmentType:             enumModel.#PricingAdjustmentType
+		OfferCategory:                     enumModel.#OfferCategory
+		OfferAcceptanceMethod:             enumModel.#OfferAcceptanceMethod
+		OfferAcceptanceOtpChannel:         enumModel.#OfferAcceptanceOtpChannel
+		CountryCode:                       enumModel.#CountryCode
+		TimezoneCode:                      enumModel.#TimezoneCode
+		PersonConsentType:                 enumModel.#PersonConsentType
+		PersonConsentStatus:               enumModel.#PersonConsentStatus
+		PersonDocumentType:                enumModel.#PersonDocumentType
+		BookingActivityType:               enumModel.#BookingActivityType
 	}
 
 	api: {
-		BookingList:                 apiModel.#BookingList
-		TourList:                    apiModel.#TourList
-		BookingDetail:               apiModel.#BookingDetail
-		TourDetail:                  apiModel.#TourDetail
-		KeycloakUserDirectoryEntry: apiModel.#KeycloakUserDirectoryEntry
-		KeycloakUserListResponse:   apiModel.#KeycloakUserListResponse
-		BookingActivitiesResponse:   apiModel.#BookingActivitiesResponse
-		BookingActivityResponse:     apiModel.#BookingActivityResponse
-		BookingDeleteResponse:       apiModel.#BookingDeleteResponse
-		BookingInvoicesResponse:     apiModel.#BookingInvoicesResponse
-		BookingInvoiceResponse:      apiModel.#BookingInvoiceResponse
-		BookingChatEvent:            apiModel.#BookingChatEvent
-		BookingChatConversation:     apiModel.#BookingChatConversation
-		BookingChatResponse:         apiModel.#BookingChatResponse
-		TourOptions:                 apiModel.#TourOptions
-		TourResponse:                apiModel.#TourResponse
-		OfferExchangeRatesResponse:  apiModel.#OfferExchangeRatesResponse
-		BookingListFilters:          apiModel.#BookingListFilters
-		TourListFilters:             apiModel.#TourListFilters
-		AuthenticatedUser:           apiModel.#AuthenticatedUser
-		AuthMeResponse:              apiModel.#AuthMeResponse
-		MobileBootstrap:             apiModel.#MobileBootstrap
-		FeatureFlags:                apiModel.#FeatureFlags
-		MobileAppVersionGate:        apiModel.#MobileAppVersionGate
-		APIContractVersion:          apiModel.#APIContractVersion
-		Pagination:                  apiModel.#Pagination
-		ErrorResponse:               apiModel.#ErrorResponse
-		PaginatedRequest:            apiModel.#PaginatedRequest
-		WebsiteBookingForm:          apiModel.#WebsiteBookingForm
-		PublicBookingCreateRequest:  apiModel.#PublicBookingCreateRequest
-		BookingDeleteRequest:        apiModel.#BookingDeleteRequest
-		BookingNameUpdateRequest:    apiModel.#BookingNameUpdateRequest
-		BookingImageUploadRequest:   apiModel.#BookingImageUploadRequest
-		BookingStageUpdateRequest:   apiModel.#BookingStageUpdateRequest
-		BookingOwnerUpdateRequest:   apiModel.#BookingOwnerUpdateRequest
-		BookingPersonCreateRequest:  apiModel.#BookingPersonCreateRequest
-		BookingPersonUpdateRequest:  apiModel.#BookingPersonUpdateRequest
-		BookingPersonDeleteRequest:  apiModel.#BookingPersonDeleteRequest
-		BookingPersonPhotoUploadRequest: apiModel.#BookingPersonPhotoUploadRequest
-		BookingNotesUpdateRequest:   apiModel.#BookingNotesUpdateRequest
-		BookingTravelPlanUpdateRequest: apiModel.#BookingTravelPlanUpdateRequest
-		BookingPricingUpdateRequest: apiModel.#BookingPricingUpdateRequest
-		BookingOfferUpdateRequest:   apiModel.#BookingOfferUpdateRequest
-		BookingGenerateOfferRequest: apiModel.#BookingGenerateOfferRequest
-		OfferExchangeRateComponent:  apiModel.#OfferExchangeRateComponent
-		OfferExchangeRatesRequest:   apiModel.#OfferExchangeRatesRequest
-		BookingActivityCreateRequest: apiModel.#BookingActivityCreateRequest
-		BookingInvoiceUpsertRequest: apiModel.#BookingInvoiceUpsertRequest
-		TourUpsertRequest:           apiModel.#TourUpsertRequest
-		EvidenceUpload:              apiModel.#EvidenceUpload
-		Endpoints:                   apiModel.#Endpoints
+		BookingList:                        apiModel.#BookingList
+		TourList:                           apiModel.#TourList
+		BookingDetail:                      apiModel.#BookingDetail
+		TourDetail:                         apiModel.#TourDetail
+		KeycloakUserDirectoryEntry:         apiModel.#KeycloakUserDirectoryEntry
+		KeycloakUserListResponse:           apiModel.#KeycloakUserListResponse
+		BookingActivitiesResponse:          apiModel.#BookingActivitiesResponse
+		BookingActivityResponse:            apiModel.#BookingActivityResponse
+		BookingDeleteResponse:              apiModel.#BookingDeleteResponse
+		BookingInvoicesResponse:            apiModel.#BookingInvoicesResponse
+		BookingInvoiceResponse:             apiModel.#BookingInvoiceResponse
+		BookingChatEvent:                   apiModel.#BookingChatEvent
+		BookingChatConversation:            apiModel.#BookingChatConversation
+		BookingChatResponse:                apiModel.#BookingChatResponse
+		TourOptions:                        apiModel.#TourOptions
+		TourResponse:                       apiModel.#TourResponse
+		OfferExchangeRatesResponse:         apiModel.#OfferExchangeRatesResponse
+		BookingListFilters:                 apiModel.#BookingListFilters
+		TourListFilters:                    apiModel.#TourListFilters
+		AuthenticatedUser:                  apiModel.#AuthenticatedUser
+		AuthMeResponse:                     apiModel.#AuthMeResponse
+		MobileBootstrap:                    apiModel.#MobileBootstrap
+		FeatureFlags:                       apiModel.#FeatureFlags
+		MobileAppVersionGate:               apiModel.#MobileAppVersionGate
+		APIContractVersion:                 apiModel.#APIContractVersion
+		Pagination:                         apiModel.#Pagination
+		ErrorResponse:                      apiModel.#ErrorResponse
+		PaginatedRequest:                   apiModel.#PaginatedRequest
+		WebsiteBookingForm:                 apiModel.#WebsiteBookingForm
+		PublicBookingCreateRequest:         apiModel.#PublicBookingCreateRequest
+		PublicGeneratedOfferAccessResponse: apiModel.#PublicGeneratedOfferAccessResponse
+		PublicGeneratedOfferAcceptRequest:  apiModel.#PublicGeneratedOfferAcceptRequest
+		PublicGeneratedOfferAcceptResponse: apiModel.#PublicGeneratedOfferAcceptResponse
+		BookingDeleteRequest:               apiModel.#BookingDeleteRequest
+		BookingNameUpdateRequest:           apiModel.#BookingNameUpdateRequest
+		BookingImageUploadRequest:          apiModel.#BookingImageUploadRequest
+		BookingStageUpdateRequest:          apiModel.#BookingStageUpdateRequest
+		BookingOwnerUpdateRequest:          apiModel.#BookingOwnerUpdateRequest
+		BookingPersonCreateRequest:         apiModel.#BookingPersonCreateRequest
+		BookingPersonUpdateRequest:         apiModel.#BookingPersonUpdateRequest
+		BookingPersonDeleteRequest:         apiModel.#BookingPersonDeleteRequest
+		BookingPersonPhotoUploadRequest:    apiModel.#BookingPersonPhotoUploadRequest
+		BookingNotesUpdateRequest:          apiModel.#BookingNotesUpdateRequest
+		BookingTravelPlanUpdateRequest:     apiModel.#BookingTravelPlanUpdateRequest
+		BookingPricingUpdateRequest:        apiModel.#BookingPricingUpdateRequest
+		BookingOfferUpdateRequest:          apiModel.#BookingOfferUpdateRequest
+		BookingGenerateOfferRequest:        apiModel.#BookingGenerateOfferRequest
+		OfferExchangeRateComponent:         apiModel.#OfferExchangeRateComponent
+		OfferExchangeRatesRequest:          apiModel.#OfferExchangeRatesRequest
+		BookingActivityCreateRequest:       apiModel.#BookingActivityCreateRequest
+		BookingInvoiceUpsertRequest:        apiModel.#BookingInvoiceUpsertRequest
+		TourUpsertRequest:                  apiModel.#TourUpsertRequest
+		EvidenceUpload:                     apiModel.#EvidenceUpload
+		Endpoints:                          apiModel.#Endpoints
 	}
 }
 

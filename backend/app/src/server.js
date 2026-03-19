@@ -26,6 +26,7 @@ import {
   META_WEBHOOK_CONFIG,
   MOBILE_APP_CONFIG,
   nowIso,
+  OFFER_ACCEPTANCE_TOKEN_CONFIG,
   OFFER_CATEGORIES,
   OFFER_CATEGORY_ORDER,
   PAYMENT_STATUSES,
@@ -80,6 +81,7 @@ const services = createBackendServices({
     generatedCurrencyDefinition: GENERATED_CURRENCY_HELPERS.generatedCurrencyDefinition,
     normalizeGeneratedCurrencyCode: GENERATED_CURRENCY_HELPERS.normalizeGeneratedCurrencyCode,
     gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
+    offerAcceptanceTokenConfig: OFFER_ACCEPTANCE_TOKEN_CONFIG,
     keycloakDirectoryConfig: KEYCLOAK_DIRECTORY_CONFIG,
     metaWebhookConfig: META_WEBHOOK_CONFIG,
     offerCategories: OFFER_CATEGORIES,
@@ -139,6 +141,7 @@ const applicationRuntime = Object.freeze({
   allowedStageTransitions: ALLOWED_STAGE_TRANSITIONS,
   computeServiceLevelAgreementDueAt,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
+  offerAcceptanceTokenConfig: OFFER_ACCEPTANCE_TOKEN_CONFIG,
   execFile,
   paths: RUNTIME_PATHS,
   translationClient: TRANSLATION_CLIENT

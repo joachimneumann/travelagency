@@ -52,6 +52,8 @@ IR: {
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
+		OfferAcceptanceMethod: {catalog: "offerAcceptanceMethods"}
+		OfferAcceptanceOtpChannel: {catalog: "offerAcceptanceOtpChannels"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
 		PersonConsentType: {catalog: "personConsentTypes"}
@@ -422,6 +424,34 @@ IR: {
 			]
 		},
 		{
+			name:       "GeneratedOfferAcceptance"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#GeneratedOfferAcceptance"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "accepted_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "accepted_by_name", kind: "scalar", typeName: "string", required: true},
+				{name: "accepted_by_email", kind: "scalar", typeName: "Email", required: false},
+				{name: "accepted_by_phone", kind: "scalar", typeName: "string", required: false},
+				{name: "accepted_by_person_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "language", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "method", kind: "enum", typeName: "OfferAcceptanceMethod", required: true},
+				{name: "statement_snapshot", kind: "scalar", typeName: "string", required: true},
+				{name: "terms_version", kind: "scalar", typeName: "string", required: false},
+				{name: "terms_snapshot", kind: "scalar", typeName: "string", required: true},
+				{name: "offer_currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "offer_total_price_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "offer_pdf_sha256", kind: "scalar", typeName: "string", required: true},
+				{name: "offer_snapshot_sha256", kind: "scalar", typeName: "string", required: true},
+				{name: "ip_address", kind: "scalar", typeName: "string", required: false},
+				{name: "user_agent", kind: "scalar", typeName: "string", required: false},
+				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
+				{name: "otp_verified_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "deposit_payment_id", kind: "scalar", typeName: "Identifier", required: false},
+			]
+		},
+		{
 			name:       "GeneratedBookingOffer"
 			domain:     "booking"
 			module:     "entities"
@@ -437,7 +467,13 @@ IR: {
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
+				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
+				{name: "pdf_frozen_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "pdf_sha256", kind: "scalar", typeName: "string", required: false},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
+				{name: "public_acceptance_token", kind: "scalar", typeName: "string", required: false},
+				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
 			]
 		},
 		{
@@ -511,6 +547,7 @@ IR: {
 				{name: "travel_end_day", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+				{name: "accepted_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
@@ -693,6 +730,43 @@ IR: {
 				{name: "source_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "target_lang", kind: "enum", typeName: "LanguageCode", required: true},
 				{name: "entries", kind: "transport", typeName: "TranslationEntry", required: true, isArray: true},
+			]
+		},
+		{
+			name:       "PublicGeneratedOfferAccessResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#PublicGeneratedOfferAccessResponse"
+			fields: [
+				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "generated_offer_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "booking_name", kind: "scalar", typeName: "string", required: false},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "comment", kind: "scalar", typeName: "string", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
+				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "accepted", kind: "scalar", typeName: "bool", required: true},
+				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+			]
+		},
+		{
+			name:       "PublicGeneratedOfferAcceptResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#PublicGeneratedOfferAcceptResponse"
+			fields: [
+				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "generated_offer_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "accepted", kind: "scalar", typeName: "bool", required: true},
+				{name: "status", kind: "scalar", typeName: "string", required: true},
+				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
+				{name: "otp_sent_to", kind: "scalar", typeName: "string", required: false},
+				{name: "otp_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "retry_after_seconds", kind: "scalar", typeName: "int", required: false},
 			]
 		},
 		{
@@ -908,6 +982,22 @@ IR: {
 				{name: "utm_medium", kind: "scalar", typeName: "string", required: false},
 				{name: "utm_campaign", kind: "scalar", typeName: "string", required: false},
 				{name: "idempotency_key", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "PublicGeneratedOfferAcceptRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#PublicGeneratedOfferAcceptRequest"
+			fields: [
+				{name: "acceptance_token", kind: "scalar", typeName: "string", required: true},
+				{name: "accepted_by_name", kind: "scalar", typeName: "string", required: false},
+				{name: "accepted_by_email", kind: "scalar", typeName: "Email", required: false},
+				{name: "accepted_by_phone", kind: "scalar", typeName: "string", required: false},
+				{name: "accepted_by_person_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "language", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
+				{name: "otp_code", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

@@ -30,6 +30,9 @@ asiatravelplan.com {
   encode zstd gzip
   root * /srv/production
 
+  @offer_accept_page path /offer-accept.html
+  rewrite @offer_accept_page /frontend/pages/offer-accept.html
+
   @manifest path /site.webmanifest
   header @manifest Content-Type "application/manifest+json"
 
@@ -63,7 +66,7 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /privacy.html
+  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /privacy.html /offer-accept.html
   rewrite @html_pages /frontend/pages{path}
 
   @staging_access path /staging-access/*

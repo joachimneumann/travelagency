@@ -48,6 +48,73 @@ package api
 		responseType:  "BookingDetail"
 	},
 	{
+		key:           "public_generated_offer_access"
+		path:          "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access"
+		method:        "GET"
+		tag:           "Public"
+		authenticated: false
+		responseType:  "PublicGeneratedOfferAccessResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "token"
+			location: "query"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "public_generated_offer_accept"
+		path:          "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept"
+		method:        "POST"
+		tag:           "Public"
+		authenticated: false
+		requestType:   "PublicGeneratedOfferAcceptRequest"
+		responseType:  "PublicGeneratedOfferAcceptResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "public_generated_offer_pdf"
+		path:          "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
+		method:        "GET"
+		tag:           "Public"
+		authenticated: false
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "generated_offer_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "token"
+			location: "query"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
 		key:           "public_tours"
 		path:          "/public/v1/tours"
 		method:        "GET"

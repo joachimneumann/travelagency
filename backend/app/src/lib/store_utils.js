@@ -39,6 +39,7 @@ export function createStoreUtils({
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
+    parsed.offer_acceptance_challenges ||= [];
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
       const normalizedBooking = normalizeStoredBookingRecord(booking, parsed);
       syncBookingAssignmentFields(normalizedBooking);

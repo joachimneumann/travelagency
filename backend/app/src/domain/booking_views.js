@@ -5,6 +5,7 @@ import {
   buildOfferTranslationStatus,
   buildTravelPlanTranslationStatus
 } from "./booking_translation.js";
+import { buildOfferAcceptanceToken } from "./offer_acceptance.js";
 
 export function createBookingViewHelpers({
   baseCurrency,
@@ -12,6 +13,7 @@ export function createBookingViewHelpers({
   stageOrder,
   appRoles,
   gmailDraftsConfig,
+  offerAcceptanceTokenConfig,
   translationEnabled,
   normalizeStringArray,
   normalizeEmail,
@@ -28,6 +30,8 @@ export function createBookingViewHelpers({
   buildBookingOfferReadModel,
   sendJson
 }) {
+  const offerAcceptanceTokenSecret = normalizeText(offerAcceptanceTokenConfig?.secret);
+
   function normalizePersonEmails(person) {
     return Array.from(
       new Set(
@@ -230,14 +234,37 @@ export function createBookingViewHelpers({
     );
   }
 
-  function publicGeneratedOfferFields(generatedOffer) {
+  function publicGeneratedOfferFields(generatedOffer, options = {}) {
     if (!generatedOffer || typeof generatedOffer !== "object") return {};
     const {
       pdf_frozen_at: _pdfFrozenAt,
       pdf_sha256: _pdfSha256,
+      public_acceptance_token_nonce: _acceptanceTokenNonce,
+      public_acceptance_token_created_at: _acceptanceTokenCreatedAt,
+      public_acceptance_token_expires_at: _acceptanceTokenExpiresAt,
+      public_acceptance_token_revoked_at: _acceptanceTokenRevokedAt,
       ...publicFields
     } = generatedOffer;
-    return publicFields;
+    const acceptanceNonce = normalizeText(generatedOffer?.public_acceptance_token_nonce);
+    const acceptanceExpiresAt = normalizeText(generatedOffer?.public_acceptance_token_expires_at);
+    if (!options?.includeAcceptanceToken || !offerAcceptanceTokenSecret || !acceptanceNonce || !acceptanceExpiresAt) {
+      return publicFields;
+    }
+    try {
+      return {
+        ...publicFields,
+        public_acceptance_token: buildOfferAcceptanceToken({
+          bookingId: generatedOffer?.booking_id,
+          generatedOfferId: generatedOffer?.id,
+          nonce: acceptanceNonce,
+          expiresAt: acceptanceExpiresAt,
+          secret: offerAcceptanceTokenSecret
+        }),
+        public_acceptance_expires_at: acceptanceExpiresAt
+      };
+    } catch {
+      return publicFields;
+    }
   }
 
   async function buildGeneratedOfferSnapshotReadModel(generatedOffer, defaultCurrency, options = {}) {
@@ -251,7 +278,7 @@ export function createBookingViewHelpers({
       { lang: generatedLang }
     );
     return {
-      ...publicGeneratedOfferFields(generatedOffer),
+      ...publicGeneratedOfferFields(generatedOffer, options),
       currency: generatedOfferReadModel.currency || generatedOfferCurrency,
       total_price_cents: safeInt(generatedOffer?.total_price_cents) || safeInt(generatedOfferReadModel?.total_price_cents) || 0,
       offer: generatedOfferReadModel,
@@ -267,7 +294,10 @@ export function createBookingViewHelpers({
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
     const generatedOffers = await Promise.all(
       (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
-        ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, { lang })),
+        ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, {
+          lang,
+          includeAcceptanceToken: Boolean(options?.includeAcceptanceToken)
+        })),
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
       }))
     );

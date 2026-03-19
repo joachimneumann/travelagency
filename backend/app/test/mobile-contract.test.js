@@ -29,6 +29,7 @@ process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
 process.env.STORE_FILE = STORE_PATH;
 process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH = "";
 process.env.GOOGLE_IMPERSONATED_EMAIL = "";
+process.env.OFFER_ACCEPTANCE_TOKEN_SECRET = "offer-acceptance-contract-test-secret";
 
 const originalFetch = global.fetch;
 const KEYCLOAK_USERS = [
@@ -1294,6 +1295,24 @@ test("contract metadata exposes the generated offer gmail draft endpoint", async
   );
 });
 
+test("contract metadata exposes the public generated offer acceptance endpoint", async () => {
+  assert.equal(
+    endpointPath("public_generated_offer_accept"),
+    "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept"
+  );
+});
+
+test("contract metadata exposes the public generated offer access endpoints", async () => {
+  assert.equal(
+    endpointPath("public_generated_offer_access"),
+    "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access"
+  );
+  assert.equal(
+    endpointPath("public_generated_offer_pdf"),
+    "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
+  );
+});
+
 test("booking generated offer pdf endpoint returns a pdf file", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -1527,6 +1546,306 @@ test("booking generated offers support comment update and delete", async () => {
   );
   assert.equal(deleteResult.status, 200);
   assert.equal(deleteResult.body.booking.generated_offers.length, 0);
+});
+
+test("public generated offer acceptance finalizes the frozen offer and stores the booking pointer", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_acceptance_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Accepted hotel room",
+              quantity: 1,
+              unit_amount_cents: 12000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Acceptance flow offer"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  const generatedOfferId = generatedOffer.id;
+  assert.equal(typeof generatedOffer.public_acceptance_token, "string");
+  assert.ok(generatedOffer.public_acceptance_token.length > 20);
+
+  const acceptResult = await requestJson(
+    endpointPath("public_generated_offer_accept")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOfferId),
+    {},
+    {
+      method: "POST",
+      body: {
+        acceptance_token: generatedOffer.public_acceptance_token,
+        accepted_by_name: "Test User",
+        accepted_by_email: "test@example.com",
+        language: "en"
+      }
+    }
+  );
+  assert.equal(acceptResult.status, 200);
+  assert.equal(acceptResult.body.accepted, true);
+  assert.equal(acceptResult.body.status, "ACCEPTED");
+  assert.equal(acceptResult.body.acceptance.method, "PORTAL_CLICK");
+  assert.equal(acceptResult.body.acceptance.accepted_by_name, "Test User");
+  assert.equal(acceptResult.body.acceptance.accepted_by_email, "test@example.com");
+  assert.equal(acceptResult.body.acceptance.offer_pdf_sha256.length, 64);
+  assert.equal(acceptResult.body.acceptance.offer_snapshot_sha256.length, 64);
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  assert.equal(detailResult.body.booking.accepted_generated_offer_id, generatedOfferId);
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.method, "PORTAL_CLICK");
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  assert.equal(bookingRecord.accepted_generated_offer_id, generatedOfferId);
+  assert.equal(bookingRecord.generated_offers[0].acceptance.accepted_by_name, "Test User");
+});
+
+test("public generated offer acceptance enforces uniqueness per booking", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const firstOfferPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_acceptance_first",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "First offer room",
+              quantity: 1,
+              unit_amount_cents: 10000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(firstOfferPatchResult.status, 200);
+
+  const firstGenerateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: firstOfferPatchResult.body.booking.offer_revision,
+        comment: "First offer"
+      }
+    }
+  );
+  assert.equal(firstGenerateResult.status, 201);
+  const firstGeneratedOffer = firstGenerateResult.body.booking.generated_offers[0];
+  const firstGeneratedOfferId = firstGeneratedOffer.id;
+  assert.equal(typeof firstGeneratedOffer.public_acceptance_token, "string");
+
+  const secondOfferPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: firstGenerateResult.body.booking.offer_revision,
+        offer: {
+          ...firstGenerateResult.body.booking.offer,
+          components: [
+            {
+              id: "offer_component_acceptance_second",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Second offer transfer",
+              quantity: 1,
+              unit_amount_cents: 18000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(secondOfferPatchResult.status, 200);
+
+  const secondGenerateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: secondOfferPatchResult.body.booking.offer_revision,
+        comment: "Second offer"
+      }
+    }
+  );
+  assert.equal(secondGenerateResult.status, 201);
+  assert.equal(secondGenerateResult.body.booking.generated_offers.length, 2);
+  const secondGeneratedOffer = secondGenerateResult.body.booking.generated_offers[1];
+  const secondGeneratedOfferId = secondGeneratedOffer.id;
+  assert.equal(typeof secondGeneratedOffer.public_acceptance_token, "string");
+
+  const firstAcceptResult = await requestJson(
+    endpointPath("public_generated_offer_accept")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", firstGeneratedOfferId),
+    {},
+    {
+      method: "POST",
+      body: {
+        acceptance_token: firstGeneratedOffer.public_acceptance_token,
+        accepted_by_name: "Test User",
+        accepted_by_email: "test@example.com"
+      }
+    }
+  );
+  assert.equal(firstAcceptResult.status, 200);
+  assert.equal(firstAcceptResult.body.accepted, true);
+
+  const secondAcceptResult = await requestJson(
+    endpointPath("public_generated_offer_accept")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", secondGeneratedOfferId),
+    {},
+    {
+      method: "POST",
+      body: {
+        acceptance_token: secondGeneratedOffer.public_acceptance_token,
+        accepted_by_name: "Test User",
+        accepted_by_email: "test@example.com"
+      }
+    }
+  );
+  assert.equal(secondAcceptResult.status, 409);
+  assert.match(String(secondAcceptResult.body.error || ""), /already been accepted/i);
+});
+
+test("public generated offer access and public pdf require a valid acceptance token", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_public_access",
+              category: "OTHER",
+              label: "Other",
+              details: "Public acceptance access",
+              quantity: 1,
+              unit_amount_cents: 9900,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Public acceptance access"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const accessResult = await requestJson(
+    `${endpointPath("public_generated_offer_access")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_acceptance_token)}`,
+    {}
+  );
+  assert.equal(accessResult.status, 200);
+  assert.equal(accessResult.body.booking_id, bookingId);
+  assert.equal(accessResult.body.generated_offer_id, generatedOffer.id);
+  assert.equal(accessResult.body.accepted, false);
+  assert.match(String(accessResult.body.pdf_url || ""), /\/public\/v1\/bookings\//);
+
+  const invalidAccessResult = await requestJson(
+    `${endpointPath("public_generated_offer_access")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=invalid-token`,
+    {}
+  );
+  assert.equal(invalidAccessResult.status, 403);
+
+  const publicPdfResult = await requestRaw(
+    `${endpointPath("public_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_acceptance_token)}`,
+    {}
+  );
+  assert.equal(publicPdfResult.status, 200);
+  assert.equal(publicPdfResult.headers["content-type"], "application/pdf");
+  assert.match(publicPdfResult.body, /%PDF-/);
 });
 
 test("booking name and persons endpoints update the booking", async () => {

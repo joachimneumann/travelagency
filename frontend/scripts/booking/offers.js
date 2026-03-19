@@ -17,6 +17,7 @@ import {
   setSelectValue
 } from "./pricing.js";
 import { BOOKING_CONTENT_LANGUAGE_OPTIONS, bookingContentLang, bookingContentLanguageOption, bookingLang, bookingT } from "./i18n.js";
+import { getBookingPersons } from "../shared/booking_persons.js";
 import { renderBookingSegmentHeader } from "./segment_headers.js";
 import {
   buildDualLocalizedPayload,
@@ -199,6 +200,86 @@ export function createBookingOfferModule(ctx) {
       month: "2-digit",
       day: "2-digit"
     }).format(date);
+  }
+
+  function getBookingAcceptanceRecipientEmail() {
+    const persons = getBookingPersons(state.booking);
+    const primaryContact = persons.find((person) => Array.isArray(person?.roles) && person.roles.includes("primary_contact") && person.emails?.length)
+      || persons.find((person) => person.emails?.length)
+      || null;
+    return String(primaryContact?.emails?.[0] || state.booking?.web_form_submission?.email || "").trim();
+  }
+
+  function findGeneratedOfferById(generatedOfferId) {
+    return (Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : []).find((item) => item?.id === generatedOfferId) || null;
+  }
+
+  function buildGeneratedOfferAcceptanceLink(generatedOffer) {
+    const bookingId = String(state.booking?.id || "").trim();
+    const generatedOfferId = String(generatedOffer?.id || "").trim();
+    const token = String(generatedOffer?.public_acceptance_token || "").trim();
+    if (!bookingId || !generatedOfferId || !token) return "";
+    const url = new URL("/offer-accept.html", window.location.origin);
+    url.searchParams.set("booking_id", bookingId);
+    url.searchParams.set("generated_offer_id", generatedOfferId);
+    url.searchParams.set("token", token);
+    const lang = String(generatedOffer?.lang || state.booking?.customer_language || "").trim().toLowerCase();
+    if (lang) {
+      url.searchParams.set("lang", lang);
+    }
+    return url.toString();
+  }
+
+  async function copyGeneratedOfferAcceptanceLink(generatedOfferId) {
+    const generatedOffer = findGeneratedOfferById(generatedOfferId);
+    const acceptanceLink = buildGeneratedOfferAcceptanceLink(generatedOffer);
+    if (!acceptanceLink) {
+      setOfferStatus(bookingT("booking.offer.error.acceptance_link_unavailable", "Acceptance link is not available."));
+      return;
+    }
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(acceptanceLink);
+        setOfferStatus(bookingT("booking.offer.acceptance_link_copied", "Acceptance link copied."));
+        return;
+      }
+      window.prompt(bookingT("booking.offer.copy_link_prompt", "Copy this acceptance link:"), acceptanceLink);
+      setOfferStatus(bookingT("booking.offer.acceptance_link_copied", "Acceptance link copied."));
+    } catch {
+      setOfferStatus(bookingT("booking.offer.error.acceptance_link_copy", "Could not copy acceptance link."));
+    }
+  }
+
+  function emailGeneratedOfferAcceptanceLink(generatedOfferId) {
+    const generatedOffer = findGeneratedOfferById(generatedOfferId);
+    const acceptanceLink = buildGeneratedOfferAcceptanceLink(generatedOffer);
+    if (!acceptanceLink) {
+      setOfferStatus(bookingT("booking.offer.error.acceptance_link_unavailable", "Acceptance link is not available."));
+      return;
+    }
+    const recipientEmail = getBookingAcceptanceRecipientEmail();
+    if (!recipientEmail) {
+      setOfferStatus(bookingT("booking.offer.error.acceptance_link_email_missing", "Booking has no recipient email for the acceptance link."));
+      return;
+    }
+    const bookingName = String(state.booking?.name || state.booking?.web_form_submission?.booking_name || state.booking?.id || "").trim();
+    const totalLabel = formatMoneyDisplay(
+      Number(generatedOffer?.total_price_cents || 0),
+      generatedOffer?.currency || state.offerDraft?.currency || "USD"
+    );
+    const subject = bookingT("booking.offer.acceptance_email_subject", "Offer acceptance link for {booking}", {
+      booking: bookingName || bookingT("booking.title", "Booking")
+    });
+    const body = bookingT(
+      "booking.offer.acceptance_email_body",
+      "Hello,\n\nplease review and accept your offer here:\n{link}\n\nOffer total: {total}\n\nBest regards,\nAsia Travel Plan",
+      {
+        link: acceptanceLink,
+        total: totalLabel
+      }
+    );
+    window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setOfferStatus(bookingT("booking.offer.acceptance_email_opening", "Opening your mail client..."));
   }
 
   function defaultOfferCategoryRules() {
@@ -625,19 +706,32 @@ export function createBookingOfferModule(ctx) {
     const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
     const canEdit = state.permissions.canEditBooking;
     const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
+    const acceptanceLinkHeader = canEdit
+      ? `<th class="generated-offers-col-acceptance">${escapeHtml(bookingT("booking.offer.acceptance_link", "Accept link"))}</th>`
+      : "";
     const emailHeader = emailActionEnabled ? `<th class="generated-offers-col-email">${escapeHtml(bookingT("booking.email", "Email"))}</th>` : "";
     const actionHeader = canEdit ? '<th class="generated-offers-col-actions"></th>' : "";
-    const emptyColspan = 5 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
+    const emptyColspan = 5 + (emailActionEnabled ? 1 : 0) + (canEdit ? 2 : 0);
     const rows = items.length
       ? items
         .slice()
         .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
         .map((item) => {
           const pdfUrl = String(item.pdf_url || "").trim();
+          const acceptanceLink = buildGeneratedOfferAcceptanceLink(item);
+          const recipientEmail = getBookingAcceptanceRecipientEmail();
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a>` : "-"}</td>
           ${emailActionEnabled
             ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
+            : ""}
+          ${canEdit
+            ? `<td class="generated-offers-col-acceptance">${acceptanceLink
+              ? `<div class="generated-offers-link-actions">
+                  <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.offer.copy_link", "Copy link"))}</button>
+                  <button class="btn btn-ghost" type="button" data-generated-offer-email-link="${escapeHtml(item.id)}"${recipientEmail ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.email_link", "Email link"))}</button>
+                </div>`
+              : "-"}</td>`
             : ""}
           <td class="generated-offers-col-language">${escapeHtml(bookingContentLanguageLabel(item.lang || "en"))}</td>
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
@@ -652,7 +746,7 @@ export function createBookingOfferModule(ctx) {
         })
         .join("")
       : `<tr><td colspan="${emptyColspan}">${escapeHtml(bookingT("booking.offer.no_generated", "No generated offers yet"))}</td></tr>`;
-    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>${emailHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>${emailHeader}${acceptanceLinkHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-comment]").forEach((input) => {
@@ -668,6 +762,16 @@ export function createBookingOfferModule(ctx) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-email]").forEach((button) => {
         button.addEventListener("click", () => {
           void createGeneratedOfferGmailDraft(button.getAttribute("data-generated-offer-email"));
+        });
+      });
+      els.generated_offers_table.querySelectorAll("[data-generated-offer-copy-link]").forEach((button) => {
+        button.addEventListener("click", () => {
+          void copyGeneratedOfferAcceptanceLink(button.getAttribute("data-generated-offer-copy-link"));
+        });
+      });
+      els.generated_offers_table.querySelectorAll("[data-generated-offer-email-link]").forEach((button) => {
+        button.addEventListener("click", () => {
+          emailGeneratedOfferAcceptanceLink(button.getAttribute("data-generated-offer-email-link"));
         });
       });
     }

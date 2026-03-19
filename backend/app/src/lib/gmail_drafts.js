@@ -4,6 +4,7 @@ import { importPKCS8, SignJWT } from "jose";
 const GMAIL_COMPOSE_SCOPE = "https://www.googleapis.com/auth/gmail.compose";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GMAIL_DRAFTS_URL = "https://gmail.googleapis.com/gmail/v1/users/me/drafts";
+const GMAIL_MESSAGES_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -242,7 +243,54 @@ export function createGmailDraftsClient({
     };
   }
 
+  async function sendMessage({
+    to,
+    subject,
+    htmlBody = "",
+    greeting = "",
+    intro = "",
+    footer = "",
+    attachments = [],
+    fromName = "",
+    fromEmail = safeImpersonatedEmail
+  }) {
+    const serviceAccount = await getServiceAccount();
+    const accessToken = await exchangeAccessToken({
+      serviceAccount,
+      impersonatedEmail: safeImpersonatedEmail,
+      fetchImpl
+    });
+
+    const rawMime = buildMimeMessage({
+      fromEmail,
+      fromName,
+      to,
+      subject,
+      htmlBody: htmlBody || buildHtmlBody({ greeting, intro, footer }),
+      attachments
+    });
+
+    const response = await fetchImpl(GMAIL_MESSAGES_SEND_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        raw: toBase64Url(rawMime)
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+    const messageId = normalizeText(payload?.id);
+    if (!response.ok || !messageId) {
+      const detail = normalizeText(payload?.error?.message || payload?.error || "");
+      throw new Error(detail || "Gmail message send failed.");
+    }
+    return { messageId };
+  }
+
   return Object.freeze({
-    createDraft
+    createDraft,
+    sendMessage
   });
 }

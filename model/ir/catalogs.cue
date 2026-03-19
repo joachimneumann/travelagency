@@ -17,6 +17,8 @@ IR: {
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
+		offerAcceptanceMethods: [for method in enumModel.OfferAcceptanceMethodCatalog {{code: method}}]
+		offerAcceptanceOtpChannels: [for channel in enumModel.OfferAcceptanceOtpChannelCatalog {{code: channel}}]
 		countries: [for country in enumModel.CountryCatalog {{
 			code:  country
 			label: "\(country) \(enumModel.CountryNameCatalog[country])"

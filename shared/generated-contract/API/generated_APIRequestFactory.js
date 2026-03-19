@@ -63,6 +63,57 @@ export function publicBookingsRequest({ baseURL = '', params = {}, query = {}, b
   };
 }
 
+export function publicGeneratedOfferAccessPath(params = {}) {
+  return buildPath("/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access", params);
+}
+
+export function publicGeneratedOfferAccessRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicGeneratedOfferAccessPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_generated_offer_access",
+    method: "GET",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
+export function publicGeneratedOfferAcceptPath(params = {}) {
+  return buildPath("/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept", params);
+}
+
+export function publicGeneratedOfferAcceptRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicGeneratedOfferAcceptPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_generated_offer_accept",
+    method: "POST",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
+export function publicGeneratedOfferPdfPath(params = {}) {
+  return buildPath("/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", params);
+}
+
+export function publicGeneratedOfferPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicGeneratedOfferPdfPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_generated_offer_pdf",
+    method: "GET",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
 export function publicToursPath(params = {}) {
   return buildPath("/public/v1/tours", params);
 }

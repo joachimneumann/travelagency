@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-19T02:43:30Z
+# 2026-03-19T10:11:28Z
 
 ---
 openapi: 3.1.0
@@ -581,6 +581,40 @@ components:
         label: DISCOUNTS_CREDITS
       - value: OTHER
         label: OTHER
+    OfferAcceptanceMethod:
+      type: string
+      enum:
+      - PORTAL_CLICK
+      - PORTAL_CLICK_OTP
+      - ESIGN
+      x-enum-catalog:
+      - code: PORTAL_CLICK
+      - code: PORTAL_CLICK_OTP
+      - code: ESIGN
+      x-enum-options:
+      - value: PORTAL_CLICK
+        label: PORTAL_CLICK
+      - value: PORTAL_CLICK_OTP
+        label: PORTAL_CLICK_OTP
+      - value: ESIGN
+        label: ESIGN
+    OfferAcceptanceOtpChannel:
+      type: string
+      enum:
+      - EMAIL
+      - SMS
+      - WHATSAPP
+      x-enum-catalog:
+      - code: EMAIL
+      - code: SMS
+      - code: WHATSAPP
+      x-enum-options:
+      - value: EMAIL
+        label: EMAIL
+      - value: SMS
+        label: SMS
+      - value: WHATSAPP
+        label: WHATSAPP
     CountryCode:
       type: string
       enum:
@@ -3573,7 +3607,10 @@ components:
       - TRAVEL_PLAN_UPDATED
       - PRICING_UPDATED
       - OFFER_UPDATED
+      - OFFER_TRANSLATED
       - OFFER_EMAIL_DRAFT_CREATED
+      - OFFER_ACCEPTANCE_OTP_SENT
+      - OFFER_ACCEPTED
       - INVOICE_CREATED
       - INVOICE_UPDATED
       - PAYMENT_UPDATED
@@ -3585,7 +3622,10 @@ components:
       - code: TRAVEL_PLAN_UPDATED
       - code: PRICING_UPDATED
       - code: OFFER_UPDATED
+      - code: OFFER_TRANSLATED
       - code: OFFER_EMAIL_DRAFT_CREATED
+      - code: OFFER_ACCEPTANCE_OTP_SENT
+      - code: OFFER_ACCEPTED
       - code: INVOICE_CREATED
       - code: INVOICE_UPDATED
       - code: PAYMENT_UPDATED
@@ -3604,8 +3644,14 @@ components:
         label: PRICING_UPDATED
       - value: OFFER_UPDATED
         label: OFFER_UPDATED
+      - value: OFFER_TRANSLATED
+        label: OFFER_TRANSLATED
       - value: OFFER_EMAIL_DRAFT_CREATED
         label: OFFER_EMAIL_DRAFT_CREATED
+      - value: OFFER_ACCEPTANCE_OTP_SENT
+        label: OFFER_ACCEPTANCE_OTP_SENT
+      - value: OFFER_ACCEPTED
+        label: OFFER_ACCEPTED
       - value: INVOICE_CREATED
         label: INVOICE_CREATED
       - value: INVOICE_UPDATED
@@ -4309,6 +4355,73 @@ components:
           nullable: true
         total_price_cents:
           type: integer
+    GeneratedOfferAcceptance:
+      type: object
+      required:
+      - id
+      - accepted_at
+      - accepted_by_name
+      - language
+      - method
+      - statement_snapshot
+      - terms_snapshot
+      - offer_currency
+      - offer_total_price_cents
+      - offer_pdf_sha256
+      - offer_snapshot_sha256
+      properties:
+        id:
+          type: string
+        accepted_at:
+          type: string
+          format: date-time
+        accepted_by_name:
+          type: string
+        accepted_by_email:
+          type: string
+          format: email
+          nullable: true
+        accepted_by_phone:
+          type: string
+          nullable: true
+        accepted_by_person_id:
+          type: string
+          nullable: true
+        language:
+          "$ref": "#/components/schemas/LanguageCode"
+        method:
+          "$ref": "#/components/schemas/OfferAcceptanceMethod"
+        statement_snapshot:
+          type: string
+        terms_version:
+          type: string
+          nullable: true
+        terms_snapshot:
+          type: string
+        offer_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        offer_total_price_cents:
+          type: integer
+        offer_pdf_sha256:
+          type: string
+        offer_snapshot_sha256:
+          type: string
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        otp_channel:
+          "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
+          nullable: true
+        otp_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        deposit_payment_id:
+          type: string
+          nullable: true
     GeneratedBookingOffer:
       type: object
       required:
@@ -4344,8 +4457,28 @@ components:
           type: integer
         offer:
           "$ref": "#/components/schemas/BookingOffer"
+        travel_plan:
+          "$ref": "#/components/schemas/BookingTravelPlan"
+          nullable: true
+        pdf_frozen_at:
+          type: string
+          format: date-time
+          nullable: true
+        pdf_sha256:
+          type: string
+          nullable: true
         pdf_url:
           type: string
+          nullable: true
+        public_acceptance_token:
+          type: string
+          nullable: true
+        public_acceptance_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        acceptance:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
           nullable: true
     BookingActivity:
       type: object
@@ -4519,6 +4652,9 @@ components:
           nullable: true
         preferred_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+        accepted_generated_offer_id:
+          type: string
           nullable: true
         notes:
           type: string
@@ -4757,6 +4893,80 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TranslationEntry"
+    PublicGeneratedOfferAccessResponse:
+      type: object
+      required:
+      - booking_id
+      - generated_offer_id
+      - lang
+      - currency
+      - total_price_cents
+      - created_at
+      - accepted
+      properties:
+        booking_id:
+          type: string
+        generated_offer_id:
+          type: string
+        booking_name:
+          type: string
+          nullable: true
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        total_price_cents:
+          type: integer
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        pdf_url:
+          type: string
+          nullable: true
+        public_acceptance_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        accepted:
+          type: boolean
+        acceptance:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+          nullable: true
+    PublicGeneratedOfferAcceptResponse:
+      type: object
+      required:
+      - booking_id
+      - generated_offer_id
+      - accepted
+      - status
+      properties:
+        booking_id:
+          type: string
+        generated_offer_id:
+          type: string
+        accepted:
+          type: boolean
+        status:
+          type: string
+        acceptance:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+          nullable: true
+        otp_channel:
+          "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
+          nullable: true
+        otp_sent_to:
+          type: string
+          nullable: true
+        otp_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        retry_after_seconds:
+          type: integer
+          nullable: true
     BookingChatEvent:
       type: object
       required:
@@ -5116,6 +5326,35 @@ components:
       x-require-one-of:
       - - email
         - phone_number
+    PublicGeneratedOfferAcceptRequest:
+      type: object
+      required:
+      - acceptance_token
+      properties:
+        acceptance_token:
+          type: string
+        accepted_by_name:
+          type: string
+          nullable: true
+        accepted_by_email:
+          type: string
+          format: email
+          nullable: true
+        accepted_by_phone:
+          type: string
+          nullable: true
+        accepted_by_person_id:
+          type: string
+          nullable: true
+        language:
+          "$ref": "#/components/schemas/LanguageCode"
+          nullable: true
+        otp_channel:
+          "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
+          nullable: true
+        otp_code:
+          type: string
+          nullable: true
     BookingDeleteRequest:
       type: object
       required: []
@@ -5602,6 +5841,103 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingDetail"
+  "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access":
+    get:
+      operationId: public_generated_offer_access
+      summary: Public Generated Offer Access
+      tags:
+      - Public
+      security: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicGeneratedOfferAccessResponse"
+  "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept":
+    post:
+      operationId: public_generated_offer_accept
+      summary: Public Generated Offer Accept
+      tags:
+      - Public
+      security: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PublicGeneratedOfferAcceptRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicGeneratedOfferAcceptResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicGeneratedOfferAcceptResponse"
+  "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf":
+    get:
+      operationId: public_generated_offer_pdf
+      summary: Public Generated Offer Pdf
+      tags:
+      - Public
+      security: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: generated_offer_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
   "/public/v1/tours":
     get:
       operationId: public_tours

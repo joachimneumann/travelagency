@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Accept Offer | AsiaTravelPlan</title>
+    <meta name="description" content="Review and accept your AsiaTravelPlan offer." />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body class="offer-accept-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" href="/index.html" aria-label="AsiaTravelPlan home">
+          <img class="brand-logo" src="/assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container offer-accept-shell">
+          <article class="panel offer-accept-card">
+            <p class="offer-accept-kicker">Offer acceptance</p>
+            <h1 class="section-title" id="offer_accept_title">Accept your offer</h1>
+            <p class="offer-accept-intro" id="offer_accept_intro">Review the frozen PDF, request your verification code, and confirm acceptance.</p>
+
+            <div id="offer_accept_error" class="backend-message" role="alert" aria-live="assertive" hidden></div>
+            <p id="offer_accept_loading" class="offer-accept-loading">Loading offer…</p>
+
+            <div id="offer_accept_content" hidden>
+              <div class="offer-accept-summary" id="offer_accept_summary"></div>
+
+              <div class="offer-accept-actions">
+                <a class="btn btn-secondary" id="offer_accept_pdf_link" href="#" target="_blank" rel="noopener">Open PDF</a>
+              </div>
+
+              <div id="offer_accept_result" class="offer-accept-result" hidden>
+                <h2 class="offer-accept-result__title">Offer accepted</h2>
+                <p class="offer-accept-result__detail" id="offer_accept_result_message"></p>
+                <p class="offer-accept-result__detail" id="offer_accept_result_statement"></p>
+              </div>
+
+              <form id="offer_accept_form" class="offer-accept-form" novalidate>
+                <div class="offer-accept-form__grid">
+                  <div class="field">
+                    <label for="offer_accept_name">Full name</label>
+                    <input id="offer_accept_name" type="text" autocomplete="name" />
+                  </div>
+                  <div class="field">
+                    <label for="offer_accept_email">Email</label>
+                    <input id="offer_accept_email" type="email" autocomplete="email" />
+                  </div>
+                </div>
+
+                <div class="offer-accept-actions">
+                  <button class="btn btn-primary" id="offer_accept_send_btn" type="submit">Email verification code</button>
+                </div>
+                <div id="offer_accept_status" class="offer-accept-form__status" aria-live="polite"></div>
+
+                <div id="offer_accept_otp_panel" class="offer-accept-otp" hidden>
+                  <p class="offer-accept-otp__meta" id="offer_accept_otp_meta"></p>
+                  <div class="field">
+                    <label for="offer_accept_otp_code">Verification code</label>
+                    <input
+                      id="offer_accept_otp_code"
+                      type="text"
+                      inputmode="numeric"
+                      autocomplete="one-time-code"
+                      maxlength="6"
+                      placeholder="6-digit code"
+                    />
+                  </div>
+                  <div class="offer-accept-otp__actions">
+                    <button class="btn btn-primary" id="offer_accept_verify_btn" type="button">Verify and accept</button>
+                    <button class="btn btn-ghost" id="offer_accept_resend_btn" type="button">Resend code</button>
+                    <span class="micro" id="offer_accept_retry_after"></span>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="frontend/scripts/pages/offer_accept.js"></script>
+  </body>
+</html>

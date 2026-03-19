@@ -18,6 +18,12 @@ case "auth_me":
   return RequestFactory.authMeRequest(options);
 case "public_bookings":
   return RequestFactory.publicBookingsRequest(options);
+case "public_generated_offer_access":
+  return RequestFactory.publicGeneratedOfferAccessRequest(options);
+case "public_generated_offer_accept":
+  return RequestFactory.publicGeneratedOfferAcceptRequest(options);
+case "public_generated_offer_pdf":
+  return RequestFactory.publicGeneratedOfferPdfRequest(options);
 case "public_tours":
   return RequestFactory.publicToursRequest(options);
 case "bookings":
