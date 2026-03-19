@@ -243,19 +243,19 @@ test("generated offer email action is gated by the booking capability flag", asy
   );
 });
 
-test("server resolves relative Gmail service-account paths from the repo root", async () => {
-  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
-  const source = await readFile(serverPath, "utf8");
+test("runtime config resolves relative Gmail service-account paths from the repo root", async () => {
+  const runtimeConfigPath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const source = await readFile(runtimeConfigPath, "utf8");
 
   assert.match(
     source,
     /const REPO_ROOT = path\.resolve\(APP_ROOT, "\.\.", "\.\."\);/,
-    "server.js should derive the repository root for config-path resolution"
+    "runtime.js should derive the repository root for config-path resolution"
   );
   assert.match(
     source,
     /function resolveConfigPathFromRepoRoot\(rawPath\)/,
-    "server.js should normalize relative config paths through a dedicated helper"
+    "runtime.js should normalize relative config paths through a dedicated helper"
   );
   assert.match(
     source,
@@ -264,7 +264,7 @@ test("server resolves relative Gmail service-account paths from the repo root", 
   );
   assert.match(
     source,
-    /serviceAccountJsonPath: resolveConfigPathFromRepoRoot\(GOOGLE_SERVICE_ACCOUNT_JSON_PATH\)/,
+    /serviceAccountJsonPath: resolveConfigPathFromRepoRoot\(normalizeText\(process\.env\.GOOGLE_SERVICE_ACCOUNT_JSON_PATH \|\| ""\)\)/,
     "Gmail draft config should use repo-root-relative path resolution"
   );
 });
