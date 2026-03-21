@@ -45,6 +45,92 @@ function normalizePositiveInt(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function normalizeNonNegativeInt(value, fallback = null) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function normalizeOptionalBoolean(value, fallback = null) {
+  if (value === true) return true;
+  if (value === false) return false;
+  return fallback;
+}
+
+function normalizeTravelPlanSegmentImageSourceAttribution(rawAttribution) {
+  const source = rawAttribution && typeof rawAttribution === "object" && !Array.isArray(rawAttribution)
+    ? rawAttribution
+    : {};
+  const normalized = {
+    source_name: normalizeOptionalText(source.source_name),
+    source_url: normalizeOptionalText(source.source_url),
+    photographer: normalizeOptionalText(source.photographer),
+    license: normalizeOptionalText(source.license)
+  };
+  return Object.values(normalized).some(Boolean) ? normalized : null;
+}
+
+function normalizeTravelPlanSegmentImageFocalPoint(rawFocalPoint) {
+  const source = rawFocalPoint && typeof rawFocalPoint === "object" && !Array.isArray(rawFocalPoint)
+    ? rawFocalPoint
+    : {};
+  const x = Number(source.x);
+  const y = Number(source.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) {
+    return null;
+  }
+  return { x, y };
+}
+
+function normalizeTravelPlanSegmentCopiedFrom(rawCopiedFrom) {
+  const source = rawCopiedFrom && typeof rawCopiedFrom === "object" && !Array.isArray(rawCopiedFrom)
+    ? rawCopiedFrom
+    : {};
+  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
+  const sourceSegmentId = normalizeOptionalText(source.source_segment_id);
+  if (!sourceBookingId || !sourceSegmentId) return null;
+  return {
+    source_type: "booking_segment",
+    source_booking_id: sourceBookingId,
+    source_day_id: normalizeOptionalText(source.source_day_id),
+    source_segment_id: sourceSegmentId,
+    copied_at: normalizeOptionalText(source.copied_at),
+    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id)
+  };
+}
+
+function normalizeTravelPlanSegmentImages(images, dayIndex, segmentIndex) {
+  const sourceImages = Array.isArray(images) ? images : [];
+  const normalized = sourceImages
+    .map((image, imageIndex) => {
+      const rawImage = image && typeof image === "object" && !Array.isArray(image) ? image : {};
+      return {
+        id: normalizeText(rawImage.id) || `travel_plan_segment_image_${dayIndex + 1}_${segmentIndex + 1}_${imageIndex + 1}`,
+        storage_path: normalizeOptionalText(rawImage.storage_path),
+        caption: normalizeOptionalText(rawImage.caption),
+        alt_text: normalizeOptionalText(rawImage.alt_text),
+        sort_order: normalizeNonNegativeInt(rawImage.sort_order, imageIndex),
+        is_primary: normalizeOptionalBoolean(rawImage.is_primary, false) === true,
+        is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true),
+        width_px: normalizePositiveInt(rawImage.width_px, null),
+        height_px: normalizePositiveInt(rawImage.height_px, null),
+        source_attribution: normalizeTravelPlanSegmentImageSourceAttribution(rawImage.source_attribution),
+        focal_point: normalizeTravelPlanSegmentImageFocalPoint(rawImage.focal_point),
+        created_at: normalizeOptionalText(rawImage.created_at)
+      };
+    })
+    .filter((image) => image.storage_path)
+    .sort((left, right) => left.sort_order - right.sort_order);
+
+  const primaryIndex = normalized.findIndex((image) => image.is_primary);
+  const resolvedPrimaryIndex = primaryIndex >= 0 ? primaryIndex : (normalized.length ? 0 : -1);
+
+  return normalized.map((image, index) => ({
+    ...image,
+    sort_order: index,
+    is_primary: index === resolvedPrimaryIndex
+  }));
+}
+
 function normalizeSegmentKind(value) {
   const normalized = normalizeText(value).toLowerCase();
   return TRAVEL_PLAN_SEGMENT_KINDS.has(normalized) ? normalized : "other";
@@ -164,7 +250,9 @@ function normalizeTravelPlanDays(days, options = {}) {
           end_time: timing.end_time,
           financial_coverage_status: normalizeFinancialCoverageStatus(rawSegment.financial_coverage_status),
           financial_note: resolveLocalizedText(financial_note_i18n, flatLang) || null,
-          financial_note_i18n
+          financial_note_i18n,
+          images: normalizeTravelPlanSegmentImages(rawSegment.images, dayIndex, segmentIndex),
+          copied_from: normalizeTravelPlanSegmentCopiedFrom(rawSegment.copied_from)
         };
       });
 
@@ -258,6 +346,7 @@ export function createTravelPlanHelpers() {
     const dayIds = new Set();
     const segmentIds = new Set();
     const linkIds = new Set();
+    const imageIds = new Set();
     const supplierIds = new Set(
       (Array.isArray(options?.supplierIds) ? options.supplierIds : [])
         .map((supplierId) => normalizeText(supplierId))
@@ -307,6 +396,28 @@ export function createTravelPlanHelpers() {
       }
       if (segment.timing_kind === "range" && (!normalizeText(segment.start_time) || !normalizeText(segment.end_time))) {
         return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Start and end time are required.` };
+      }
+      let primaryImageCount = 0;
+      for (const image of Array.isArray(segment.images) ? segment.images : []) {
+        if (!normalizeText(image.id)) {
+          return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Segment image id is missing.` };
+        }
+        if (imageIds.has(image.id)) {
+          return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Segment image id is duplicated.` };
+        }
+        imageIds.add(image.id);
+        if (!normalizeText(image.storage_path)) {
+          return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Segment image storage path is required.` };
+        }
+        if (image.is_primary) primaryImageCount += 1;
+      }
+      if (primaryImageCount > 1) {
+        return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Only one primary image is allowed.` };
+      }
+      if (segment.copied_from) {
+        if (!normalizeText(segment.copied_from.source_booking_id) || !normalizeText(segment.copied_from.source_segment_id)) {
+          return { ok: false, error: `Day ${day.day_number}, Segment ${segmentNumber}: Copied-from metadata is incomplete.` };
+        }
       }
     }
   }

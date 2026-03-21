@@ -203,6 +203,207 @@
   padding-top: 0.75rem;
 }
 
+.travel-plan-images {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+}
+
+.travel-plan-images__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.travel-plan-images__title-wrap h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #16313d;
+}
+
+.travel-plan-images__copied-from {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: rgba(22, 49, 61, 0.66);
+}
+
+.travel-plan-images__empty {
+  margin: 0;
+  color: rgba(22, 49, 61, 0.72);
+  font-size: 0.9rem;
+}
+
+.travel-plan-images__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.travel-plan-image-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border: 1px solid #d9e6ee;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.travel-plan-image-card__preview {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #edf3f6;
+}
+
+.travel-plan-image-card__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.travel-plan-image-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  min-height: 1.5rem;
+}
+
+.travel-plan-image-card__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.48rem;
+  background: rgba(26, 156, 161, 0.12);
+  color: #156f75;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.travel-plan-image-card__badge--muted {
+  background: rgba(81, 105, 120, 0.12);
+  color: #516978;
+}
+
+.travel-plan-image-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.travel-plan-library-modal__panel {
+  width: min(1020px, calc(100vw - 2rem));
+}
+
+.travel-plan-library-modal__body {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.travel-plan-library-modal__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.8fr) auto;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.travel-plan-library-modal__search-action {
+  display: flex;
+  align-items: flex-end;
+}
+
+.travel-plan-library-modal__results {
+  display: grid;
+  gap: 0.8rem;
+  max-height: min(60vh, 720px);
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.travel-plan-library-modal__empty {
+  padding: 1rem;
+  border: 1px dashed #d6e5ec;
+  border-radius: 18px;
+  color: rgba(22, 49, 61, 0.72);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.travel-plan-library-card {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: stretch;
+  padding: 0.9rem;
+  border: 1px solid #d9e6ee;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.travel-plan-library-card__media {
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #edf3f6;
+}
+
+.travel-plan-library-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.travel-plan-library-card__placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: rgba(22, 49, 61, 0.56);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.travel-plan-library-card__content {
+  min-width: 0;
+}
+
+.travel-plan-library-card__content h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+  color: #16313d;
+}
+
+.travel-plan-library-card__content p {
+  margin: 0;
+  color: rgba(22, 49, 61, 0.74);
+}
+
+.travel-plan-library-card__eyebrow,
+.travel-plan-library-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  color: rgba(22, 49, 61, 0.64);
+  font-size: 0.82rem;
+}
+
+.travel-plan-library-card__eyebrow {
+  margin-bottom: 0.35rem;
+}
+
+.travel-plan-library-card__meta {
+  margin-top: 0.45rem;
+}
+
+.travel-plan-library-card__actions {
+  display: flex;
+  align-items: center;
+}
+
 .travel-plan-links__head {
   display: flex;
   align-items: center;
@@ -290,8 +491,19 @@
 
   .travel-plan-day__head,
   .travel-plan-segment__head,
-  .travel-plan-links__head {
+  .travel-plan-links__head,
+  .travel-plan-images__head {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .travel-plan-images__list,
+  .travel-plan-library-modal__filters,
+  .travel-plan-library-card {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-plan-library-card__actions {
+    justify-content: flex-start;
   }
 }

@@ -94,6 +94,62 @@ function normalizeSegmentTiming(rawSegment) {
   };
 }
 
+function normalizeSegmentImages(images) {
+  return (Array.isArray(images) ? images : [])
+    .map((image, index) => {
+      const rawImage = image && typeof image === "object" ? image : {};
+      return {
+        id: String(rawImage.id || travelPlanId("travel_plan_segment_image")),
+        storage_path: normalizeOptionalText(rawImage.storage_path),
+        caption: normalizeOptionalText(rawImage.caption),
+        alt_text: normalizeOptionalText(rawImage.alt_text),
+        sort_order: Number.isInteger(rawImage.sort_order) ? rawImage.sort_order : index,
+        is_primary: rawImage.is_primary === true,
+        is_customer_visible: rawImage.is_customer_visible !== false,
+        width_px: Number.isInteger(rawImage.width_px) && rawImage.width_px > 0 ? rawImage.width_px : null,
+        height_px: Number.isInteger(rawImage.height_px) && rawImage.height_px > 0 ? rawImage.height_px : null,
+        source_attribution: rawImage.source_attribution && typeof rawImage.source_attribution === "object" && !Array.isArray(rawImage.source_attribution)
+          ? {
+            source_name: normalizeOptionalText(rawImage.source_attribution.source_name),
+            source_url: normalizeOptionalText(rawImage.source_attribution.source_url),
+            photographer: normalizeOptionalText(rawImage.source_attribution.photographer),
+            license: normalizeOptionalText(rawImage.source_attribution.license)
+          }
+          : null,
+        focal_point: rawImage.focal_point && typeof rawImage.focal_point === "object" && !Array.isArray(rawImage.focal_point)
+          ? {
+            x: Number.isFinite(Number(rawImage.focal_point.x)) ? Number(rawImage.focal_point.x) : null,
+            y: Number.isFinite(Number(rawImage.focal_point.y)) ? Number(rawImage.focal_point.y) : null
+          }
+          : null,
+        created_at: normalizeOptionalText(rawImage.created_at)
+      };
+    })
+    .filter((image) => image.storage_path)
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .map((image, index, list) => ({
+      ...image,
+      sort_order: index,
+      is_primary: list.some((item) => item.is_primary) ? image.is_primary === true && list.findIndex((item) => item.is_primary) === index : index === 0
+    }));
+}
+
+function normalizeCopiedFrom(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+  if (!source) return null;
+  const sourceBookingId = normalizeOptionalText(source.source_booking_id);
+  const sourceSegmentId = normalizeOptionalText(source.source_segment_id);
+  if (!sourceBookingId || !sourceSegmentId) return null;
+  return {
+    source_type: "booking_segment",
+    source_booking_id: sourceBookingId,
+    source_day_id: normalizeOptionalText(source.source_day_id),
+    source_segment_id: sourceSegmentId,
+    copied_at: normalizeOptionalText(source.copied_at),
+    copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id)
+  };
+}
+
 export function createEmptyTravelPlanSegment() {
   return {
     id: travelPlanId("travel_plan_segment"),
@@ -113,7 +169,9 @@ export function createEmptyTravelPlanSegment() {
     end_time: "",
     financial_coverage_status: "not_covered",
     financial_note: "",
-    financial_note_i18n: {}
+    financial_note_i18n: {},
+    images: [],
+    copied_from: null
   };
 }
 
@@ -241,7 +299,9 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
             end_time: timing.end_time,
             financial_note: resolveLocalizedEditorText(financialNoteMap, targetLang, ""),
             financial_note_i18n: financialNoteMap,
-            financial_coverage_status: "not_covered"
+            financial_coverage_status: "not_covered",
+            images: normalizeSegmentImages(rawSegment.images),
+            copied_from: normalizeCopiedFrom(rawSegment.copied_from)
           };
         }),
         notes: resolveLocalizedEditorText(rawDay.notes_i18n ?? rawDay.notes, "en", ""),

@@ -126,6 +126,35 @@ import (
 	actor?:                         string
 }
 
+#TravelPlanSegmentImportRequest: {
+	expected_travel_plan_revision?:       >=0 & int
+	source_booking_id:                    common.#Identifier
+	source_segment_id:                    common.#Identifier
+	insert_after_segment_id?:             common.#Identifier
+	include_images:                       *true | bool
+	include_customer_visible_images_only: *false | bool
+	include_notes:                        *true | bool
+	include_translations:                 *true | bool
+	include_offer_links:                  *false | bool
+	actor?:                               string
+}
+
+#TravelPlanSegmentImageUploadRequest: #EvidenceUpload & {
+	expected_travel_plan_revision?: >=0 & int
+	actor?:                         string
+}
+
+#TravelPlanSegmentImageDeleteRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	actor?:                         string
+}
+
+#TravelPlanSegmentImageReorderRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	image_ids: [...common.#Identifier]
+	actor?: string
+}
+
 #BookingPricingUpdateRequest: {
 	expected_pricing_revision?: >=0 & int
 	pricing:                    entities.#BookingPricing

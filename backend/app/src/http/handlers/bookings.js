@@ -448,6 +448,11 @@ export function createBookingHandlers(deps) {
   });
 
   const {
+    handleSearchTravelPlanSegments,
+    handleImportTravelPlanSegment,
+    handleUploadTravelPlanSegmentImage,
+    handleDeleteTravelPlanSegmentImage,
+    handleReorderTravelPlanSegmentImages,
     handlePatchBookingTravelPlan,
     handleTranslateBookingTravelPlanFromEnglish
   } = createBookingTravelPlanHandlers({
@@ -456,6 +461,7 @@ export function createBookingHandlers(deps) {
     readStore,
     getPrincipal,
     canEditBooking,
+    canAccessBooking,
     normalizeText,
     nowIso,
     addActivity,
@@ -466,7 +472,14 @@ export function createBookingHandlers(deps) {
     incrementBookingRevision,
     validateBookingTravelPlanInput,
     normalizeBookingTravelPlan,
-    translateEntries
+    translateEntries,
+    path,
+    randomUUID,
+    TEMP_UPLOAD_DIR,
+    BOOKING_IMAGES_DIR,
+    writeFile,
+    rm,
+    processBookingImageToWebp
   });
 
   const {
@@ -768,6 +781,11 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
+    handleSearchTravelPlanSegments,
+    handleImportTravelPlanSegment,
+    handleUploadTravelPlanSegmentImage,
+    handleDeleteTravelPlanSegmentImage,
+    handleReorderTravelPlanSegmentImages,
     handlePatchBookingTravelPlan,
     handleTranslateBookingTravelPlanFromEnglish,
     handleUploadBookingPersonPhoto,

@@ -100,6 +100,28 @@ import (
 	search?:      string
 }
 
+#TravelPlanSegmentSearchResult: {
+	source_booking_id:    common.#Identifier
+	source_booking_name?: string
+	source_booking_code?: string
+	day_number?:          >0 & int
+	segment_id:           common.#Identifier
+	segment_kind?:        enums.#TravelPlanSegmentKind
+	title:                string
+	details?:             string
+	location?:            string
+	overnight_location?:  string
+	thumbnail_url?:       common.#Url | string
+	image_count?:         >=0 & int
+	supplier_name?:       string
+	updated_at?:          common.#Timestamp
+}
+
+#TravelPlanSegmentSearchResponse: {
+	items: [...#TravelPlanSegmentSearchResult]
+	total: >=0 & int
+}
+
 #OfferExchangeRatesResponse: {
 	from_currency:     string
 	to_currency:       string

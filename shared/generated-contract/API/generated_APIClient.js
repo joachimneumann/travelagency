@@ -60,6 +60,16 @@ case "booking_travel_plan":
   return RequestFactory.bookingTravelPlanRequest(options);
 case "booking_travel_plan_translate":
   return RequestFactory.bookingTravelPlanTranslateRequest(options);
+case "travel_plan_segment_search":
+  return RequestFactory.travelPlanSegmentSearchRequest(options);
+case "booking_travel_plan_segment_import":
+  return RequestFactory.bookingTravelPlanSegmentImportRequest(options);
+case "booking_travel_plan_segment_image_upload":
+  return RequestFactory.bookingTravelPlanSegmentImageUploadRequest(options);
+case "booking_travel_plan_segment_image_delete":
+  return RequestFactory.bookingTravelPlanSegmentImageDeleteRequest(options);
+case "booking_travel_plan_segment_image_reorder":
+  return RequestFactory.bookingTravelPlanSegmentImageReorderRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":

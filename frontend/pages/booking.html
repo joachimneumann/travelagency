@@ -394,6 +394,44 @@
 
           <div id="booking_whatsapp_mount"></div>
 
+          <div
+            class="modal travel-plan-library-modal"
+            id="travel_plan_segment_library_modal"
+            hidden
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="travel_plan_segment_library_title"
+          >
+            <div class="modal-panel travel-plan-library-modal__panel" role="document">
+              <div class="modal-head travel-plan-library-modal__head">
+                <div>
+                  <h2 id="travel_plan_segment_library_title">Insert existing segment</h2>
+                  <p class="micro" id="travel_plan_segment_library_subtitle">Search existing booking segments and insert a copy into this day.</p>
+                </div>
+                <button class="btn btn-ghost" id="travel_plan_segment_library_close_btn" type="button" aria-label="Close insert segment dialog">&times;</button>
+              </div>
+              <div class="modal-body travel-plan-library-modal__body">
+                <div class="travel-plan-library-modal__filters">
+                  <div class="field">
+                    <label for="travel_plan_segment_library_query">Search</label>
+                    <input id="travel_plan_segment_library_query" type="search" placeholder="Search segments, bookings, locations..." />
+                  </div>
+                  <div class="field">
+                    <label for="travel_plan_segment_library_kind">Kind</label>
+                    <select id="travel_plan_segment_library_kind"></select>
+                  </div>
+                  <div class="travel-plan-library-modal__search-action">
+                    <button class="btn btn-primary" id="travel_plan_segment_library_search_btn" type="button">Search</button>
+                  </div>
+                </div>
+                <div id="travel_plan_segment_library_status" class="micro booking-inline-status"></div>
+                <div id="travel_plan_segment_library_results" class="travel-plan-library-modal__results"></div>
+              </div>
+            </div>
+          </div>
+
+          <input id="travel_plan_segment_image_input" type="file" accept="image/*" multiple hidden />
+
           <article style="margin-bottom: 1rem;">
             <div class="field booking-content-language-field" id="booking_content_language_field">
               <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>

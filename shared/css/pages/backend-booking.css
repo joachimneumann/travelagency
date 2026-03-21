@@ -499,6 +499,18 @@
   box-shadow: 0 8px 20px rgba(255, 98, 74, 0.12);
 }
 
+#travel_plan_status.booking-inline-status--success {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #1f6a3d;
+  font-weight: 700;
+}
+
 .booking-person-modal__panel {
   width: min(980px, 96vw);
   background: rgba(249, 249, 249, 0.96);

@@ -176,6 +176,62 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingTravelPlanSegmentImageSourceAttribution"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingTravelPlanSegmentImageSourceAttribution"
+			fields: [
+				{name: "source_name", kind: "scalar", typeName: "string", required: false},
+				{name: "source_url", kind: "scalar", typeName: "string", required: false},
+				{name: "photographer", kind: "scalar", typeName: "string", required: false},
+				{name: "license", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingTravelPlanSegmentImageFocalPoint"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingTravelPlanSegmentImageFocalPoint"
+			fields: [
+				{name: "x", kind: "scalar", typeName: "float", required: true},
+				{name: "y", kind: "scalar", typeName: "float", required: true},
+			]
+		},
+		{
+			name:       "BookingTravelPlanSegmentImage"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingTravelPlanSegmentImage"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "storage_path", kind: "scalar", typeName: "string", required: true},
+				{name: "caption", kind: "scalar", typeName: "string", required: false},
+				{name: "alt_text", kind: "scalar", typeName: "string", required: false},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+				{name: "is_primary", kind: "scalar", typeName: "bool", required: false},
+				{name: "is_customer_visible", kind: "scalar", typeName: "bool", required: false},
+				{name: "width_px", kind: "scalar", typeName: "int", required: false},
+				{name: "height_px", kind: "scalar", typeName: "int", required: false},
+				{name: "source_attribution", kind: "entity", typeName: "BookingTravelPlanSegmentImageSourceAttribution", required: false},
+				{name: "focal_point", kind: "entity", typeName: "BookingTravelPlanSegmentImageFocalPoint", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "BookingTravelPlanSegmentCopiedFrom"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingTravelPlanSegmentCopiedFrom"
+			fields: [
+				{name: "source_type", kind: "scalar", typeName: "string", required: true},
+				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "source_segment_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "copied_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "copied_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
+			]
+		},
+		{
 			name:       "BookingTravelPlanSegment"
 			domain:     "booking"
 			module:     "entities"
@@ -194,6 +250,8 @@ IR: {
 				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "financial_coverage_status", kind: "enum", typeName: "TravelPlanFinancialCoverageStatus", required: true},
 				{name: "financial_note", kind: "scalar", typeName: "string", required: false},
+				{name: "images", kind: "entity", typeName: "BookingTravelPlanSegmentImage", required: false, isArray: true},
+				{name: "copied_from", kind: "entity", typeName: "BookingTravelPlanSegmentCopiedFrom", required: false},
 			]
 		},
 		{
@@ -814,6 +872,38 @@ IR: {
 			]
 		},
 		{
+			name:       "TravelPlanSegmentSearchResult"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanSegmentSearchResult"
+			fields: [
+				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_booking_name", kind: "scalar", typeName: "string", required: false},
+				{name: "source_booking_code", kind: "scalar", typeName: "string", required: false},
+				{name: "day_number", kind: "scalar", typeName: "int", required: false},
+				{name: "segment_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "segment_kind", kind: "enum", typeName: "TravelPlanSegmentKind", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: true},
+				{name: "details", kind: "scalar", typeName: "string", required: false},
+				{name: "location", kind: "scalar", typeName: "string", required: false},
+				{name: "overnight_location", kind: "scalar", typeName: "string", required: false},
+				{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
+				{name: "image_count", kind: "scalar", typeName: "int", required: false},
+				{name: "supplier_name", kind: "scalar", typeName: "string", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanSegmentSearchResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanSegmentSearchResponse"
+			fields: [
+				{name: "items", kind: "transport", typeName: "TravelPlanSegmentSearchResult", required: true, isArray: true},
+				{name: "total", kind: "scalar", typeName: "int", required: true},
+			]
+		},
+		{
 			name:       "TourList"
 			domain:     "api"
 			module:     "api"
@@ -1374,6 +1464,58 @@ IR: {
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanSegmentImportRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanSegmentImportRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_segment_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "insert_after_segment_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
+				{name: "include_offer_links", kind: "scalar", typeName: "bool", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanSegmentImageUploadRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanSegmentImageUploadRequest"
+			fields: [
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
+				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanSegmentImageDeleteRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanSegmentImageDeleteRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanSegmentImageReorderRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanSegmentImageReorderRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "image_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
