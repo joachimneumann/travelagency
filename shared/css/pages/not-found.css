@@ -1,9 +1,9 @@
 .not-found-page {
   min-height: 100vh;
-  color: #163040;
+  color: var(--text-strong);
   background:
-    radial-gradient(circle at top left, rgba(22, 48, 64, 0.08), transparent 32%),
-    linear-gradient(180deg, #f8fbfc 0%, #eef3f5 100%);
+    radial-gradient(circle at top left, var(--not-found-glow), transparent 32%),
+    linear-gradient(180deg, var(--surface-subtle-alt) 0%, var(--surface-page-soft-alt) 100%);
   display: grid;
   place-items: center;
   padding: 1.5rem;
@@ -11,11 +11,11 @@
 
 .not-found-page .not-found-shell {
   width: min(1040px, 100%);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--white-alpha-82);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(215, 224, 230, 0.95);
+  border: 1px solid var(--line-panel);
   border-radius: 28px;
-  box-shadow: 0 24px 70px rgba(22, 48, 64, 0.12);
+  box-shadow: 0 24px 70px var(--not-found-shadow);
   overflow: hidden;
 }
 
@@ -26,7 +26,7 @@
 
 .not-found-page .not-found-visual {
   min-height: 520px;
-  background: #dde5e8;
+  background: var(--surface-placeholder);
 }
 
 .not-found-page .not-found-visual img {
@@ -68,8 +68,8 @@
 .not-found-page .not-found-contact {
   margin: 0.5rem 0 0;
   padding: 1rem 1.1rem;
-  border-left: 4px solid #163040;
-  background: #f4f7f8;
+  border-left: 4px solid var(--text-strong);
+  background: var(--surface-page-muted);
   font-weight: 600;
 }
 

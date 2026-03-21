@@ -1,17 +1,19 @@
+@import url("shared-tokens.css");
+
 :root {
-  --c2-bg: #fdfdfd;
-  --c2-surface: #ffffff;
-  --c2-text: #1c2b35;
-  --c2-muted: #5c6c76;
-  --c2-line: #deeaef;
-  --c2-accent: #ff6f4d;
-  --c2-accent-soft: #ffe3d9;
-  --c2-secondary: #1fa7a0;
+  --c2-bg: var(--surface);
+  --c2-surface: var(--surface);
+  --c2-text: var(--text);
+  --c2-muted: var(--muted);
+  --c2-line: var(--line);
+  --c2-accent: var(--accent);
+  --c2-accent-soft: var(--accent-soft);
+  --c2-secondary: var(--secondary);
 }
 
 html,
 body {
-  background: #ffffff !important;
+  background: var(--c2-surface) !important;
   background-image: none !important;
   color: var(--c2-text);
   font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
@@ -19,7 +21,7 @@ body {
 
 body.login-pf,
 body.kcBodyClass {
-  background: #ffffff !important;
+  background: var(--c2-surface) !important;
   background-image: none !important;
 }
 
@@ -62,7 +64,7 @@ body.kcBodyClass {
   background: var(--c2-surface) !important;
   border: 1px solid var(--c2-line) !important;
   border-radius: 14px !important;
-  box-shadow: 0 12px 30px rgba(19, 52, 68, 0.1) !important;
+  box-shadow: var(--shadow) !important;
 }
 
 .pf-c-button.pf-m-primary,
@@ -70,7 +72,7 @@ body.kcBodyClass {
 input[type="submit"] {
   background: var(--c2-accent) !important;
   border-color: var(--c2-accent) !important;
-  color: #fff !important;
+  color: var(--surface) !important;
   border-radius: 10px !important;
 }
 
@@ -95,7 +97,7 @@ a {
 
 /* Keycloak legacy login layout */
 .login-pf-page {
-  background: #ffffff !important;
+  background: var(--c2-surface) !important;
   background-image: none !important;
   min-height: 100vh;
   display: flex;
@@ -131,7 +133,7 @@ a {
 .pf-v5-c-page,
 .pf-v5-c-page__main,
 .pf-v5-c-page__main-section {
-  background: #ffffff !important;
+  background: var(--c2-surface) !important;
   background-image: none !important;
   min-height: 100vh;
 }
@@ -203,7 +205,7 @@ a {
     min-height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #ffffff !important;
+    background: var(--c2-surface) !important;
     background-image: none !important;
   }
 
@@ -233,7 +235,7 @@ a {
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    background: #ffffff !important;
+    background: var(--c2-surface) !important;
     transform: none !important;
   }
 

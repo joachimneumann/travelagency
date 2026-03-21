@@ -720,7 +720,7 @@ export function createBookingTravelPlanModule(ctx) {
           </div>
           <div class="field">
             <label for="travel_plan_financial_note_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Financial note (ATP internal)"))}</label>
-            <textarea id="travel_plan_financial_note_${escapeHtml(segment.id)}" data-travel-plan-segment-field="financial_note" rows="3">${escapeHtml(segment.financial_note || "")}</textarea>
+            <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(segment.id)}" data-travel-plan-segment-field="financial_note" rows="3">${escapeHtml(segment.financial_note || "")}</textarea>
           </div>
         </div>
         ${travelPlanImagesModule.renderTravelPlanSegmentImages(day, segment)}

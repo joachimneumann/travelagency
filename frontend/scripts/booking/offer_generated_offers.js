@@ -394,7 +394,7 @@ export function createBookingGeneratedOffersModule(ctx) {
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
-            ? `<textarea id="generated_offer_comment_${escapeHtml(item.id)}" name="generated_offer_comment_${escapeHtml(item.id)}" data-generated-offer-comment="${escapeHtml(item.id)}" rows="1">${escapeHtml(item.comment || "")}</textarea>`
+            ? `<textarea class="booking-text-field booking-text-field--internal" id="generated_offer_comment_${escapeHtml(item.id)}" name="generated_offer_comment_${escapeHtml(item.id)}" data-generated-offer-comment="${escapeHtml(item.id)}" rows="1">${escapeHtml(item.comment || "")}</textarea>`
             : (escapeHtml(item.comment || "") || "-")}</td>
           ${canEdit
             ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button></td>`

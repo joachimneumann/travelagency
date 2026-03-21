@@ -8,6 +8,7 @@ import {
   normalizePdfLang,
   pdfT
 } from "./pdf_i18n.js";
+import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 
 const PAGE_SIZE = "A4";
@@ -40,6 +41,16 @@ const PDF_FONT_BOLD_CANDIDATES = [
   "/usr/share/fonts/opentype/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 ];
+
+const PDF_COLORS = Object.freeze({
+  surface: pdfTheme.surface,
+  surfaceMuted: pdfTheme.surfaceMuted,
+  line: pdfTheme.line,
+  text: pdfTheme.text,
+  textStrong: pdfTheme.textStrong,
+  textMuted: pdfTheme.textMuted,
+  textMutedStrong: pdfTheme.textMutedStrong
+});
 
 async function fileExists(filePath) {
   if (!filePath) return false;
@@ -81,7 +92,7 @@ function drawDivider(doc, y) {
     .moveTo(PAGE_MARGIN, y)
     .lineTo(doc.page.width - PAGE_MARGIN, y)
     .lineWidth(1)
-    .strokeColor("#D7DED9")
+    .strokeColor(PDF_COLORS.line)
     .stroke()
     .restore();
 }
@@ -102,12 +113,12 @@ function drawMetaRow(doc, label, value, x, y, width, fonts) {
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(10)
-    .fillColor("#445B63")
+    .fillColor(PDF_COLORS.textMutedStrong)
     .text(label, x, y, { width: 120 });
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10.5)
-    .fillColor("#22383F")
+    .fillColor(PDF_COLORS.textStrong)
     .text(value, x + 126, y, { width: width - 126 });
   return doc.y;
 }
@@ -151,7 +162,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(24)
-        .fillColor("#1D2E36")
+        .fillColor(PDF_COLORS.textStrong)
         .text(normalizeText(invoice?.title) || pdfT(lang, "invoice.title_fallback", "Invoice for {recipient}", {
           recipient: safeText(recipient?.name, "recipient")
         }), PAGE_MARGIN, y, { width: 320 });
@@ -160,12 +171,12 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         doc
           .font(pdfFontName("bold", fonts))
           .fontSize(12)
-          .fillColor("#1D2E36")
+          .fillColor(PDF_COLORS.textStrong)
           .text(companyProfile.name, doc.page.width - PAGE_MARGIN - 220, y, { width: 220, align: "right" });
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(10)
-          .fillColor("#51646B")
+          .fillColor(PDF_COLORS.textMuted)
           .text(companyProfile.address, doc.page.width - PAGE_MARGIN - 220, y + 18, { width: 220, align: "right" })
           .text(companyProfile.email, doc.page.width - PAGE_MARGIN - 220, y + 50, { width: 220, align: "right" })
           .text(companyProfile.website, doc.page.width - PAGE_MARGIN - 220, y + 66, { width: 220, align: "right" })
@@ -187,17 +198,17 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .save()
         .roundedRect(PAGE_MARGIN, y, leftWidth, 74, 12)
-        .fill("#F4F7F2")
+        .fill(PDF_COLORS.surfaceMuted)
         .restore();
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(11)
-        .fillColor("#23363D")
+        .fillColor(PDF_COLORS.textStrong)
         .text(pdfT(lang, "invoice.recipient", "Recipient"), PAGE_MARGIN + 14, y + 12);
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(10.5)
-        .fillColor("#33454C")
+        .fillColor(PDF_COLORS.textMutedStrong)
         .text(safeText(recipient?.name, "-"), PAGE_MARGIN + 14, y + 30, { width: leftWidth - 28 })
         .text(`${pdfT(lang, "invoice.email", "Email")}: ${safeText(recipient?.email)}`, PAGE_MARGIN + 14, y + 46, { width: leftWidth / 2 - 18 })
         .text(`${pdfT(lang, "invoice.phone", "Phone")}: ${safeText(recipient?.phone_number)}`, PAGE_MARGIN + leftWidth / 2, y + 46, { width: leftWidth / 2 - 14 });
@@ -207,7 +218,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(13)
-        .fillColor("#23363D")
+        .fillColor(PDF_COLORS.textStrong)
         .text(pdfT(lang, "invoice.components", "Components"), PAGE_MARGIN, y);
       y += 18;
 
@@ -221,10 +232,10 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .save()
         .roundedRect(PAGE_MARGIN, y, leftWidth, 28, 10)
-        .fill("#EEF3F0")
+        .fill(PDF_COLORS.surfaceMuted)
         .restore();
       let x = PAGE_MARGIN;
-      doc.font(pdfFontName("bold", fonts)).fontSize(9.2).fillColor("#43606B");
+      doc.font(pdfFontName("bold", fonts)).fontSize(9.2).fillColor(PDF_COLORS.textMutedStrong);
       for (const column of columns) {
         doc.text(column.label, x + 8, y + 8, { width: column.width - 16, align: column.align });
         x += column.width;
@@ -235,7 +246,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(10.5)
-          .fillColor("#5F6E74")
+          .fillColor(PDF_COLORS.textMuted)
           .text(pdfT(lang, "invoice.no_components", "No invoice components"), PAGE_MARGIN, y, { width: leftWidth });
         y = doc.y + 18;
       } else {
@@ -245,7 +256,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
           doc
             .save()
             .roundedRect(PAGE_MARGIN, y, leftWidth, rowHeight, 10)
-            .fill("#FFFFFF")
+            .fill(PDF_COLORS.surface)
             .restore();
           const values = [
             safeText(component?.description),
@@ -259,7 +270,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
             doc
               .font(pdfFontName("regular", fonts))
               .fontSize(10.2)
-              .fillColor("#253942")
+              .fillColor(PDF_COLORS.textStrong)
               .text(value, colX + 8, y + 8, { width: column.width - 16, align: column.align });
             colX += column.width;
           });
@@ -272,7 +283,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(11)
-        .fillColor("#22383F")
+        .fillColor(PDF_COLORS.textStrong)
         .text(pdfT(lang, "invoice.total_amount", "Total amount"), doc.page.width - PAGE_MARGIN - totalLabelWidth - 150, y, {
           width: totalLabelWidth,
           align: "right"
@@ -285,7 +296,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(11)
-        .fillColor("#22383F")
+        .fillColor(PDF_COLORS.textStrong)
         .text(pdfT(lang, "invoice.due_amount", "Due amount"), doc.page.width - PAGE_MARGIN - totalLabelWidth - 150, y, {
           width: totalLabelWidth,
           align: "right"
@@ -301,13 +312,13 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         doc
           .font(pdfFontName("bold", fonts))
           .fontSize(11)
-          .fillColor("#23363D")
+          .fillColor(PDF_COLORS.textStrong)
           .text(pdfT(lang, "invoice.notes", "Notes"), PAGE_MARGIN, y);
         y += 16;
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(10.5)
-          .fillColor("#33454C")
+          .fillColor(PDF_COLORS.textMutedStrong)
           .text(invoice.notes, PAGE_MARGIN, y, { width: leftWidth, lineGap: 2 });
       }
 
@@ -315,7 +326,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(8.5)
-        .fillColor("#708087")
+        .fillColor(PDF_COLORS.textMuted)
         .text(
           companyProfile
             ? `${companyProfile.name} · ${companyProfile.website} · ${companyProfile.email} · ${companyProfile.whatsapp}`

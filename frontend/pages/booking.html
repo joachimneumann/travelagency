@@ -78,7 +78,7 @@
           <article style="margin-bottom: 1rem;">
             <div class="field">
               <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
-                <textarea class="booking-note-input" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;" data-i18n-placeholder-id="booking.note_placeholder"></textarea>
+                <textarea class="booking-note-input booking-text-field booking-text-field--internal" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;" data-i18n-placeholder-id="booking.note_placeholder"></textarea>
                 <button class="btn btn-primary" id="booking_note_save_btn" type="button" data-i18n-id="booking.update_note">update</button>
                 <span id="booking_action_status" class="micro"></span>
               </div>
@@ -380,7 +380,7 @@
 
                 <div class="field" style="margin-top: 0.9rem;">
                   <label for="booking_person_modal_notes" data-i18n-id="booking.notes">Notes</label>
-                  <textarea id="booking_person_modal_notes" data-person-field="notes" rows="4"></textarea>
+                  <textarea class="booking-text-field booking-text-field--internal" id="booking_person_modal_notes" data-person-field="notes" rows="4"></textarea>
                 </div>
 
                 <section class="booking-danger-zone">

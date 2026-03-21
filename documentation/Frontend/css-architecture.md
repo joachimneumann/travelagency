@@ -4,8 +4,7 @@
 
 - Keep stylesheet context small for safe LLM edits.
 - Reduce selector conflicts by using BEM naming for new code.
-- Move toward utility-first styling with Tailwind.
-- Eliminate dead CSS during production builds with PurgeCSS.
+- Keep one styling system only: shared CSS modules + centralized tokens.
 
 ## File structure
 
@@ -16,8 +15,6 @@
 - Utilities: `shared/css/utilities.css`
 - Components: `shared/css/components/*.css`
 - Page-scoped styles: `shared/css/pages/*.css`
-- Tailwind input: `shared/css/tailwind.input.css`
-- Tailwind output: `shared/css/tailwind.generated.css`
 
 ## Naming rules for new styles
 
@@ -27,20 +24,6 @@
   - Modifier: `.backend-login--deferred`
 - Do not add new ID selectors for styling.
 - Keep selector specificity low; prefer one class selector over descendant chains.
-
-## Build pipeline
-
-From `frontend/`:
-
-```bash
-npm install
-npm run css:dev
-npm run css:build
-```
-
-Production build uses PostCSS + Tailwind + PurgeCSS and writes:
-
-- `shared/css/tailwind.generated.css`
 
 ## Migration policy
 

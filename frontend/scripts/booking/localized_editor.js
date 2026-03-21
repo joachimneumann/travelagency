@@ -78,9 +78,9 @@ function renderLocalizedControl({
   placeholder = ""
 }) {
   if (inputTag === "textarea") {
-    return `<textarea id="${escapeHtml(id)}" rows="${escapeHtml(String(rows))}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""}>${escapeHtml(value)}</textarea>`;
+    return `<textarea class="booking-text-field booking-text-field--customer" id="${escapeHtml(id)}" rows="${escapeHtml(String(rows))}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""}>${escapeHtml(value)}</textarea>`;
   }
-  return `<input id="${escapeHtml(id)}" type="text" value="${escapeHtml(value)}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""} />`;
+  return `<input class="booking-text-field booking-text-field--customer" id="${escapeHtml(id)}" type="text" value="${escapeHtml(value)}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""} />`;
 }
 
 export function renderLocalizedSplitField({
