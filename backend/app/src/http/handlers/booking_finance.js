@@ -43,7 +43,6 @@ export function createBookingFinanceHandlers(deps) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
-    buildBookingOfferReadModel,
     buildBookingTravelPlanReadModel,
     formatMoney,
     validateOfferExchangeRequest,
@@ -204,7 +203,7 @@ export function createBookingFinanceHandlers(deps) {
     const customerMessageSnapshot = normalizeText(requestedRoute?.customer_message_snapshot);
 
     if (mode === "DEPOSIT_PAYMENT") {
-      const paymentTerms = offerSnapshot?.payment_terms || generatedOffer?.payment_terms || null;
+      const paymentTerms = offerSnapshot?.payment_terms || null;
       const acceptanceLine = resolveGeneratedOfferAcceptancePaymentLine(
         paymentTerms,
         requestedRoute?.deposit_rule?.payment_term_line_id
@@ -224,6 +223,10 @@ export function createBookingFinanceHandlers(deps) {
           aggregation_mode: "SUM_LINKED_PAID_PAYMENTS"
         }
       };
+    }
+
+    if (!normalizeText(getBookingContactProfile(booking)?.email)) {
+      throw new Error("OTP confirmation requires a booking contact email.");
     }
 
     return {
@@ -537,10 +540,10 @@ export function createBookingFinanceHandlers(deps) {
         : null)
       || "en"
     );
-    const offerSnapshot = await buildBookingOfferReadModel(
+    const offerSnapshot = normalizeBookingOffer(
       booking.offer,
       booking.offer?.currency || booking.preferred_currency || BASE_CURRENCY,
-      { lang: documentLang }
+      { contentLang: documentLang, flatLang: documentLang }
     );
     const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, offerSnapshot, { lang: documentLang });
     const now = nowIso();
@@ -560,7 +563,6 @@ export function createBookingFinanceHandlers(deps) {
       created_by: actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
       currency: offerSnapshot.currency,
       total_price_cents: Number(offerSnapshot.total_price_cents || 0),
-      ...(offerSnapshot.payment_terms ? { payment_terms: offerSnapshot.payment_terms } : {}),
       offer: offerSnapshot,
       travel_plan: travelPlanSnapshot
     };

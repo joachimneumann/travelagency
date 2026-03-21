@@ -80,14 +80,13 @@ import (
 }
 
 #BookingOfferPaymentTermLine: {
-	id:                    common.#Identifier
-	kind:                  enums.#OfferPaymentTermKind
-	label:                 string & !=""
-	sequence:              >=1 & int
-	amount_spec:           #BookingOfferPaymentAmountSpec
-	resolved_amount_cents: >=0 & int
-	due_rule:              #BookingOfferPaymentDueRule
-	description?:          string
+	id:           common.#Identifier
+	kind:         enums.#OfferPaymentTermKind
+	label:        string & !=""
+	sequence:     >=1 & int
+	amount_spec:  #BookingOfferPaymentAmountSpec
+	due_rule:     #BookingOfferPaymentDueRule
+	description?: string
 
 	if kind == "FINAL_BALANCE" {
 		amount_spec: {
@@ -103,11 +102,9 @@ import (
 }
 
 #BookingOfferPaymentTerms: {
-	currency:                 enums.#CurrencyCode
-	basis_total_amount_cents: >=0 & int
+	currency: enums.#CurrencyCode
 	lines: [...#BookingOfferPaymentTermLine]
-	scheduled_total_amount_cents: >=0 & int
-	notes?:                       string
+	notes?: string
 }
 
 #BookingOffer: {
@@ -196,7 +193,6 @@ import (
 	created_by?:                  string
 	currency:                     enums.#CurrencyCode
 	total_price_cents:            int
-	payment_terms?:               #BookingOfferPaymentTerms
 	offer:                        #BookingOffer
 	travel_plan?:                 #BookingTravelPlan
 	pdf_frozen_at?:               common.#Timestamp

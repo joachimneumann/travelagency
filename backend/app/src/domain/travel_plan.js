@@ -1,4 +1,10 @@
 import { normalizeText } from "../lib/text.js";
+import {
+  TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES,
+  TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES,
+  TRAVEL_PLAN_SEGMENT_KIND_VALUES,
+  TRAVEL_PLAN_TIMING_KIND_VALUES
+} from "../lib/generated_catalogs.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
@@ -6,34 +12,10 @@ import {
   resolveLocalizedText
 } from "./booking_content_i18n.js";
 
-const TRAVEL_PLAN_SEGMENT_KINDS = Object.freeze(new Set([
-  "transport",
-  "accommodation",
-  "activity",
-  "meal",
-  "guide",
-  "free_time",
-  "border_crossing",
-  "other"
-]));
-
-const TRAVEL_PLAN_TIMING_KINDS = Object.freeze(new Set([
-  "label",
-  "point",
-  "range"
-]));
-
-const TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES = Object.freeze(new Set([
-  "not_applicable",
-  "not_covered",
-  "partially_covered",
-  "covered"
-]));
-
-const TRAVEL_PLAN_OFFER_COVERAGE_TYPES = Object.freeze(new Set([
-  "full",
-  "partial"
-]));
+const TRAVEL_PLAN_SEGMENT_KINDS = new Set(TRAVEL_PLAN_SEGMENT_KIND_VALUES);
+const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
+const TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES = new Set(TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES);
+const TRAVEL_PLAN_OFFER_COVERAGE_TYPES = new Set(TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES);
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);

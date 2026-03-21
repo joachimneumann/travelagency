@@ -126,6 +126,16 @@ import (
 	actor?:                         string
 }
 
+#TravelPlanSegmentSearchRequest: {
+	q?:            string
+	destination?:  string
+	country?:      enums.#CountryCode
+	style?:        string
+	segment_kind?: enums.#TravelPlanSegmentKind
+	limit?:        >=0 & int
+	offset?:       >=0 & int
+}
+
 #TravelPlanSegmentImportRequest: {
 	expected_travel_plan_revision?:       >=0 & int
 	source_booking_id:                    common.#Identifier

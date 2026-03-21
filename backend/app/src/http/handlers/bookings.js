@@ -5,6 +5,7 @@ import {
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
+import { synchronizeGeneratedOfferAcceptanceRouteStatus } from "../../domain/offer_acceptance.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -66,6 +67,7 @@ export function createBookingHandlers(deps) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
+    buildBookingOfferPaymentTermsReadModel,
     buildBookingOfferReadModel,
     buildBookingTravelPlanReadModel,
     validateBookingTravelPlanInput,
@@ -96,6 +98,18 @@ export function createBookingHandlers(deps) {
     sendFileWithCache,
     translateEntries
   } = deps;
+
+  function syncBookingGeneratedOfferRouteStatuses(booking) {
+    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
+    let changed = false;
+    const now = nowIso();
+    for (const generatedOffer of generatedOffers) {
+      if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now })) {
+        changed = true;
+      }
+    }
+    return changed;
+  }
 
   function unique(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
@@ -196,6 +210,7 @@ export function createBookingHandlers(deps) {
     normalizePdfLang,
     nowIso,
     normalizeBookingOffer,
+    buildBookingOfferPaymentTermsReadModel,
     normalizeBookingTravelPlan,
     generatedOfferPdfPath,
     writeGeneratedOfferPdf,
@@ -731,6 +746,10 @@ export function createBookingHandlers(deps) {
     if (!canAccessBooking(principal, booking)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
+    }
+
+    if (syncBookingGeneratedOfferRouteStatuses(booking)) {
+      await persistStore(store);
     }
 
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));

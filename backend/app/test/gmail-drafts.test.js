@@ -379,7 +379,7 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
     let nextPayload = {
       acceptance_token: acceptanceToken,
       accepted_by_name: "Alex Traveler",
-      accepted_by_email: "traveler@example.com",
+      accepted_by_email: "attacker@example.com",
       otp_channel: "EMAIL",
       language: "en"
     };
@@ -433,9 +433,26 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
       ["booking_1", "generated_offer_1"]
     );
 
-    assert.equal(responses[0].status, 202);
-    assert.equal(responses[0].payload.accepted, false);
-    assert.equal(responses[0].payload.status, "OTP_REQUIRED");
+    assert.equal(responses[0].status, 422);
+    assert.match(String(responses[0].payload.error || ""), /booking contact email/i);
+    assert.equal(store.offer_acceptance_challenges.length, 0);
+
+    nextPayload = {
+      acceptance_token: acceptanceToken,
+      accepted_by_name: "Alex Traveler",
+      otp_channel: "EMAIL",
+      language: "en"
+    };
+
+    await handlers.handlePublicAcceptGeneratedOffer(
+      { headers: { "user-agent": "OTP Test Agent" } },
+      {},
+      ["booking_1", "generated_offer_1"]
+    );
+
+    assert.equal(responses[1].status, 202);
+    assert.equal(responses[1].payload.accepted, false);
+    assert.equal(responses[1].payload.status, "OTP_REQUIRED");
     assert.equal(store.offer_acceptance_challenges.length, 1);
     assert.equal(store.activities.at(-1).type, "OFFER_ACCEPTANCE_OTP_SENT");
 
@@ -458,12 +475,13 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
       ["booking_1", "generated_offer_1"]
     );
 
-    assert.equal(responses[1].status, 200);
-    assert.equal(responses[1].payload.accepted, true);
-    assert.equal(responses[1].payload.acceptance.method, "PORTAL_CLICK_OTP");
-    assert.equal(responses[1].payload.acceptance.otp_channel, undefined);
+    assert.equal(responses[2].status, 200);
+    assert.equal(responses[2].payload.accepted, true);
+    assert.equal(responses[2].payload.acceptance.method, "PORTAL_CLICK_OTP");
+    assert.equal(responses[2].payload.acceptance.otp_channel, undefined);
     assert.equal(store.bookings[0].accepted_generated_offer_id, "generated_offer_1");
     assert.equal(store.bookings[0].generated_offers[0].acceptance.accepted_by_name, "Alex Traveler");
+    assert.equal(store.bookings[0].generated_offers[0].acceptance.accepted_by_email, "traveler@example.com");
     assert.equal(store.offer_acceptance_challenges.length, 0);
     assert.equal(store.activities.at(-1).type, "OFFER_ACCEPTED");
   } finally {

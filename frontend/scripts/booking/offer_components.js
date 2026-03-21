@@ -831,27 +831,25 @@ export function createBookingOfferComponentsModule(ctx) {
       components,
       ...(paymentTermsDraft && (paymentTermsDraft.lines.length || paymentTermsNotes)
         ? {
-            payment_terms: {
-              currency: paymentTermsDraft.currency,
-              basis_total_amount_cents: paymentTermsDraft.basis_total_amount_cents,
-              lines: paymentTermsDraft.lines.map((line, index) => ({
-                id: line.id || "",
+	            payment_terms: {
+	              currency: paymentTermsDraft.currency,
+	              lines: paymentTermsDraft.lines.map((line, index) => ({
+	                id: line.id || "",
                 kind: paymentTermsModule.normalizeOfferPaymentTermKindValue(line.kind),
                 label: String(line.label || "").trim() || paymentTermsModule.formatPaymentTermKindLabel(line.kind, "", {
                   installmentNumber: paymentTermsModule.resolveOfferPaymentTermInstallmentNumber(paymentTermsDraft.lines, index)
                 }),
                 sequence: index + 1,
-                amount_spec: {
-                  ...paymentTermsModule.normalizeOfferPaymentAmountSpecDraftValue(
-                    line?.amount_spec,
-                    line?.kind,
-                    line?.resolved_amount_cents
-                  )
-                },
-                resolved_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
-                due_rule: {
-                  type: paymentTermsModule.normalizeOfferPaymentDueTypeValue(line?.due_rule?.type),
-                  ...(paymentTermsModule.offerPaymentDueTypeUsesFixedDate(line?.due_rule?.type) && String(line?.due_rule?.fixed_date || "").trim()
+	                amount_spec: {
+	                  ...paymentTermsModule.normalizeOfferPaymentAmountSpecDraftValue(
+	                    line?.amount_spec,
+	                    line?.kind,
+	                    line?.resolved_amount_cents
+	                  )
+	                },
+	                due_rule: {
+	                  type: paymentTermsModule.normalizeOfferPaymentDueTypeValue(line?.due_rule?.type),
+	                  ...(paymentTermsModule.offerPaymentDueTypeUsesFixedDate(line?.due_rule?.type) && String(line?.due_rule?.fixed_date || "").trim()
                     ? { fixed_date: String(line.due_rule.fixed_date).trim() }
                     : {}),
                   ...(paymentTermsModule.offerPaymentDueTypeUsesDays(line?.due_rule?.type)
@@ -860,7 +858,6 @@ export function createBookingOfferComponentsModule(ctx) {
                 },
                 ...(String(line?.description || "").trim() ? { description: String(line.description).trim() } : {})
               })),
-              scheduled_total_amount_cents: paymentTermsDraft.scheduled_total_amount_cents,
               ...(paymentTermsNotes ? { notes: paymentTermsNotes } : {})
             }
           }

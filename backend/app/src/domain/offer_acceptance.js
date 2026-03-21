@@ -1,4 +1,5 @@
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
+import { normalizeGeneratedEnumValue } from "../lib/generated_catalogs.js";
 
 export const OFFER_ACCEPTANCE_TERMS_VERSION = "ATP_OFFER_ACCEPTANCE_V1";
 export const OFFER_ACCEPTANCE_OTP_TTL_MS = 10 * 60 * 1000;
@@ -8,8 +9,6 @@ export const OFFER_ACCEPTANCE_OTP_MAX_SENDS_PER_WINDOW = 5;
 export const OFFER_ACCEPTANCE_OTP_SEND_WINDOW_MS = 60 * 60 * 1000;
 export const OFFER_ACCEPTANCE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const OFFER_ACCEPTANCE_TOKEN_SCOPE = "generated_offer_acceptance";
-const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES = new Set(["DEPOSIT_PAYMENT", "OTP"]);
-const GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUSES = new Set(["OPEN", "AWAITING_PAYMENT", "ACCEPTED", "EXPIRED", "REVOKED"]);
 
 function normalizeAcceptanceText(value) {
   return typeof value === "string" ? value.trim() : String(value ?? "").trim();
@@ -42,15 +41,44 @@ export function readGeneratedOfferAcceptanceTokenState(generatedOffer) {
 }
 
 export function normalizeGeneratedOfferAcceptanceRouteMode(value) {
-  const normalized = normalizeAcceptanceText(value).toUpperCase();
-  return GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES.has(normalized) ? normalized : "OTP";
+  return normalizeGeneratedEnumValue("GeneratedOfferAcceptanceRouteMode", value, "OTP", {
+    transform: (rawValue) => normalizeAcceptanceText(rawValue).toUpperCase()
+  });
 }
 
 export function normalizeGeneratedOfferAcceptanceRouteStatus(value, mode = "OTP") {
   const normalizedMode = normalizeGeneratedOfferAcceptanceRouteMode(mode);
-  const normalized = normalizeAcceptanceText(value).toUpperCase();
-  if (GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUSES.has(normalized)) return normalized;
+  const normalized = normalizeGeneratedEnumValue("GeneratedOfferAcceptanceRouteStatus", value, "", {
+    transform: (rawValue) => normalizeAcceptanceText(rawValue).toUpperCase()
+  });
+  if (normalized) return normalized;
   return normalizedMode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN";
+}
+
+export function synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now = null } = {}) {
+  const route = generatedOffer?.acceptance_route;
+  if (!route || typeof route !== "object") return false;
+  const mode = normalizeGeneratedOfferAcceptanceRouteMode(route.mode);
+  const expiresAt = normalizeAcceptanceText(route.expires_at);
+  const nowMs = parseIsoTimestamp(now) ?? Date.now();
+  const expiresAtMs = parseIsoTimestamp(expiresAt);
+  let nextStatus = normalizeGeneratedOfferAcceptanceRouteStatus(route.status, mode);
+  if (generatedOffer?.acceptance && typeof generatedOffer.acceptance === "object") {
+    nextStatus = "ACCEPTED";
+  } else if (nextStatus !== "REVOKED" && expiresAt && Number.isFinite(expiresAtMs) && expiresAtMs <= nowMs) {
+    nextStatus = "EXPIRED";
+  }
+
+  let changed = false;
+  if (normalizeAcceptanceText(route.mode) !== mode) {
+    route.mode = mode;
+    changed = true;
+  }
+  if (normalizeAcceptanceText(route.status).toUpperCase() !== nextStatus) {
+    route.status = nextStatus;
+    changed = true;
+  }
+  return changed;
 }
 
 function migrateLegacyGeneratedOfferAcceptanceTokenState(generatedOffer) {
@@ -226,6 +254,9 @@ export function backfillGeneratedOfferAcceptanceTokenState(store, { now = null, 
       if (ensureGeneratedOfferAcceptanceTokenState(generatedOffer, { now, ttlMs })) {
         changed = true;
       }
+      if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now })) {
+        changed = true;
+      }
     }
   }
   return changed;
@@ -295,14 +326,7 @@ export function buildGeneratedOfferAcceptanceRouteReadModel(generatedOffer, { no
   if (!route || typeof route !== "object") return null;
   const mode = normalizeGeneratedOfferAcceptanceRouteMode(route.mode);
   const expiresAt = normalizeAcceptanceText(route.expires_at);
-  const nowMs = Number.isFinite(Date.parse(String(now || ""))) ? Date.parse(String(now)) : Date.now();
-  const expiresAtMs = Date.parse(expiresAt);
-  let status = normalizeGeneratedOfferAcceptanceRouteStatus(route.status, mode);
-  if (generatedOffer?.acceptance && typeof generatedOffer.acceptance === "object") {
-    status = "ACCEPTED";
-  } else if (expiresAt && Number.isFinite(expiresAtMs) && expiresAtMs <= nowMs && status !== "REVOKED") {
-    status = "EXPIRED";
-  }
+  const status = normalizeGeneratedOfferAcceptanceRouteStatus(route.status, mode);
 
   const selectedAt = normalizeAcceptanceText(route.selected_at);
   const selectedByStaffId = normalizeAcceptanceText(route.selected_by_atp_staff_id);
@@ -396,7 +420,6 @@ export function buildGeneratedOfferSnapshotHash(generatedOffer) {
     lang: generatedOffer.lang || null,
     currency: generatedOffer.currency || null,
     total_price_cents: Number.isFinite(Number(generatedOffer.total_price_cents)) ? Number(generatedOffer.total_price_cents) : null,
-    payment_terms: generatedOffer.payment_terms || null,
     acceptance_route: buildGeneratedOfferAcceptanceRouteReadModel(generatedOffer) || null,
     offer: generatedOffer.offer || null,
     travel_plan: generatedOffer.travel_plan || null

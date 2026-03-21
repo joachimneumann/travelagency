@@ -103,6 +103,9 @@ import (
 		GeneratedOfferAcceptancePublicSummary:            apiModel.#GeneratedOfferAcceptancePublicSummary
 		PublicGeneratedOfferDepositAcceptanceRuleView:    apiModel.#PublicGeneratedOfferDepositAcceptanceRuleView
 		PublicGeneratedOfferAcceptanceRouteView:          apiModel.#PublicGeneratedOfferAcceptanceRouteView
+		BookingOfferPaymentTermLineReadModel:             apiModel.#BookingOfferPaymentTermLineReadModel
+		BookingOfferPaymentTermsReadModel:                apiModel.#BookingOfferPaymentTermsReadModel
+		BookingOfferReadModel:                            apiModel.#BookingOfferReadModel
 		GeneratedBookingOfferReadModel:                   apiModel.#GeneratedBookingOfferReadModel
 		BookingReadModel:                                 apiModel.#BookingReadModel
 		PublicGeneratedOfferAccessResponse:               apiModel.#PublicGeneratedOfferAccessResponse
@@ -120,6 +123,7 @@ import (
 		BookingNotesUpdateRequest:                        apiModel.#BookingNotesUpdateRequest
 		BookingTravelPlanUpdateRequest:                   apiModel.#BookingTravelPlanUpdateRequest
 		BookingPricingUpdateRequest:                      apiModel.#BookingPricingUpdateRequest
+		TravelPlanSegmentSearchRequest:                   apiModel.#TravelPlanSegmentSearchRequest
 		TravelPlanSegmentImportRequest:                   apiModel.#TravelPlanSegmentImportRequest
 		TravelPlanSegmentImageUploadRequest:              apiModel.#TravelPlanSegmentImageUploadRequest
 		TravelPlanSegmentImageDeleteRequest:              apiModel.#TravelPlanSegmentImageDeleteRequest

@@ -517,7 +517,6 @@ test("booking offer patch preserves trip-relative payment-term due types", async
                   mode: "PERCENTAGE_OF_OFFER_TOTAL",
                   percentage_basis_points: 3000
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_AFTER_TRIP_START",
                   days: 3
@@ -531,7 +530,6 @@ test("booking offer patch preserves trip-relative payment-term due types", async
                 amount_spec: {
                   mode: "REMAINING_BALANCE"
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_AFTER_TRIP_END",
                   days: 5
@@ -568,6 +566,96 @@ test("booking offer patch preserves trip-relative payment-term due types", async
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.offer.payment_terms.lines[0].due_rule.type, "DAYS_AFTER_TRIP_START");
   assert.equal(detailAfter.body.booking.offer.payment_terms.lines[1].due_rule.type, "DAYS_AFTER_TRIP_END");
+});
+
+test("booking offer patch normalizes installment numbering by installment ordinal", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          payment_terms: {
+            currency: booking.preferred_currency,
+            lines: [
+              {
+                id: "payment_term_deposit_numbering",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 10000
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_installment_numbering",
+                kind: "INSTALLMENT",
+                label: "Installment 2",
+                sequence: 2,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 5000
+                },
+                due_rule: {
+                  type: "DAYS_AFTER_ACCEPTANCE",
+                  days: 30
+                }
+              },
+              {
+                id: "payment_term_final_numbering",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 3,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 7
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_installment_numbering_1",
+              category: "OTHER",
+              label: "Service",
+              details: "Numbering check",
+              quantity: 1,
+              unit_amount_cents: 30000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.payment_terms.lines[1].label, "Installment 1");
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.payment_terms.lines[1].label, "Installment 1");
 });
 
 test("booking offer patch persists component removal", async () => {
@@ -1616,6 +1704,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   assert.ok(bookingRecord);
   const generatedOfferRecord = bookingRecord.generated_offers.find((item) => item.id === generatedOfferId);
   assert.ok(generatedOfferRecord);
+  assert.equal(Object.prototype.hasOwnProperty.call(generatedOfferRecord, "payment_terms"), false);
   delete generatedOfferRecord.travel_plan.days[0].segments[0].financial_coverage_status;
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -1941,6 +2030,29 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   assert.equal(typeof generatedOffer.public_acceptance_token, "string");
   assert.ok(generatedOffer.public_acceptance_token.length > 20);
 
+  const otpRequiredResult = await requestJson(
+    endpointPath("public_generated_offer_accept")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOfferId),
+    {},
+    {
+      method: "POST",
+      body: {
+        acceptance_token: generatedOffer.public_acceptance_token,
+        accepted_by_name: "Test User",
+        language: "en"
+      }
+    }
+  );
+  assert.equal(otpRequiredResult.status, 422);
+  assert.match(String(otpRequiredResult.body.error || ""), /requires otp verification/i);
+
+  const storeBeforeLegacyAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeLegacyAccept = storeBeforeLegacyAccept.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeLegacyAccept);
+  delete bookingBeforeLegacyAccept.generated_offers[0].acceptance_route;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyAccept, null, 2)}\n`, "utf8");
+
   const acceptResult = await requestJson(
     endpointPath("public_generated_offer_accept")
       .replace("{booking_id}", bookingId)
@@ -1951,7 +2063,6 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
       body: {
         acceptance_token: generatedOffer.public_acceptance_token,
         accepted_by_name: "Test User",
-        accepted_by_email: "test@example.com",
         language: "en"
       }
     }
@@ -2080,6 +2191,13 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
   const secondGeneratedOfferId = secondGeneratedOffer.id;
   assert.equal(typeof secondGeneratedOffer.public_acceptance_token, "string");
 
+  const storeBeforeLegacyUniqueness = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeLegacyUniqueness = storeBeforeLegacyUniqueness.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeLegacyUniqueness);
+  delete bookingBeforeLegacyUniqueness.generated_offers[0].acceptance_route;
+  delete bookingBeforeLegacyUniqueness.generated_offers[1].acceptance_route;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyUniqueness, null, 2)}\n`, "utf8");
+
   const firstAcceptResult = await requestJson(
     endpointPath("public_generated_offer_accept")
       .replace("{booking_id}", bookingId)
@@ -2089,8 +2207,7 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
       method: "POST",
       body: {
         acceptance_token: firstGeneratedOffer.public_acceptance_token,
-        accepted_by_name: "Test User",
-        accepted_by_email: "test@example.com"
+        accepted_by_name: "Test User"
       }
     }
   );
@@ -2106,8 +2223,7 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
       method: "POST",
       body: {
         acceptance_token: secondGeneratedOffer.public_acceptance_token,
-        accepted_by_name: "Test User",
-        accepted_by_email: "test@example.com"
+        accepted_by_name: "Test User"
       }
     }
   );
@@ -2148,7 +2264,6 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
                   mode: "PERCENTAGE_OF_OFFER_TOTAL",
                   percentage_basis_points: 3000
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "ON_ACCEPTANCE"
                 }
@@ -2161,7 +2276,6 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
                 amount_spec: {
                   mode: "REMAINING_BALANCE"
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_BEFORE_TRIP_START",
                   days: 7
@@ -2233,6 +2347,47 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
   );
 });
 
+test("booking detail persists expired generated-offer route status instead of deriving it in the read model", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        comment: "Expiry status persistence"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
+
+  const storeBefore = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBefore = storeBefore.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBefore);
+  const generatedOfferBefore = bookingBefore.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.ok(generatedOfferBefore?.acceptance_route);
+  generatedOfferBefore.acceptance_route.status = "OPEN";
+  generatedOfferBefore.acceptance_route.expires_at = "2020-01-01T00:00:00.000Z";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBefore, null, 2)}\n`, "utf8");
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance_route.status, "EXPIRED");
+
+  const storeAfter = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingAfter = storeAfter.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingAfter);
+  const generatedOfferAfter = bookingAfter.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.equal(generatedOfferAfter?.acceptance_route?.status, "EXPIRED");
+});
+
 test("public generated offer access exposes deposit acceptance route and blocks OTP acceptance", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -2266,7 +2421,6 @@ test("public generated offer access exposes deposit acceptance route and blocks 
                   mode: "FIXED_AMOUNT",
                   fixed_amount_cents: 12000
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "ON_ACCEPTANCE"
                 }
@@ -2279,7 +2433,6 @@ test("public generated offer access exposes deposit acceptance route and blocks 
                 amount_spec: {
                   mode: "REMAINING_BALANCE"
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_BEFORE_TRIP_START",
                   days: 10

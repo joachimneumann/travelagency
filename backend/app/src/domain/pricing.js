@@ -1,5 +1,6 @@
 import path from "node:path";
 import { normalizeText } from "../lib/text.js";
+import { normalizeGeneratedEnumValue } from "../lib/generated_catalogs.js";
 import { normalizeOfferTranslationMeta } from "./booking_translation.js";
 import {
   normalizeBookingContentLang,
@@ -139,28 +140,44 @@ export function createPricingHelpers({
   }
 
   function normalizeOfferPaymentTermKind(value) {
-    const kind = normalizeText(value).toUpperCase();
-    return ["DEPOSIT", "INSTALLMENT", "FINAL_BALANCE"].includes(kind) ? kind : "INSTALLMENT";
+    return normalizeGeneratedEnumValue("OfferPaymentTermKind", value, "INSTALLMENT", {
+      transform: (rawValue) => normalizeText(rawValue).toUpperCase()
+    });
   }
 
   function normalizeOfferPaymentAmountMode(value) {
-    const mode = normalizeText(value).toUpperCase();
-    return ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL", "REMAINING_BALANCE"].includes(mode)
-      ? mode
-      : "FIXED_AMOUNT";
+    return normalizeGeneratedEnumValue("OfferPaymentAmountMode", value, "FIXED_AMOUNT", {
+      transform: (rawValue) => normalizeText(rawValue).toUpperCase()
+    });
   }
 
   function normalizeOfferPaymentDueType(value) {
-    const dueType = normalizeText(value).toUpperCase();
-    return ["ON_ACCEPTANCE", "FIXED_DATE", "DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"].includes(dueType)
-      ? dueType
-      : "ON_ACCEPTANCE";
+    return normalizeGeneratedEnumValue("OfferPaymentDueType", value, "ON_ACCEPTANCE", {
+      transform: (rawValue) => normalizeText(rawValue).toUpperCase()
+    });
   }
 
-  function defaultOfferPaymentTermLabel(kind, sequence) {
+  function legacyDefaultOfferPaymentTermLabel(kind, sequence) {
     if (kind === "DEPOSIT") return "Deposit";
     if (kind === "FINAL_BALANCE") return "Final payment";
     return sequence > 1 ? `Installment ${sequence}` : "Installment";
+  }
+
+  function defaultOfferPaymentTermLabel(kind, installmentNumber = 1) {
+    if (kind === "DEPOSIT") return "Deposit";
+    if (kind === "FINAL_BALANCE") return "Final payment";
+    return `Installment ${Math.max(1, Number(installmentNumber || 1))}`;
+  }
+
+  function resolveOfferPaymentTermLabel(rawLabel, kind, sequence, installmentNumber) {
+    const explicitLabel = normalizeText(rawLabel);
+    const nextDefaultLabel = defaultOfferPaymentTermLabel(kind, installmentNumber);
+    if (!explicitLabel) return nextDefaultLabel;
+    const legacyDefaultLabel = legacyDefaultOfferPaymentTermLabel(kind, sequence);
+    if (explicitLabel === legacyDefaultLabel || explicitLabel === nextDefaultLabel) {
+      return nextDefaultLabel;
+    }
+    return explicitLabel;
   }
 
   function normalizeOfferPaymentDueRule(rawDueRule) {
@@ -215,6 +232,13 @@ export function createPricingHelpers({
     return Math.max(0, normalizeAmountCents(amountSpec.fixed_amount_cents, 0));
   }
 
+  function computeBookingOfferPaymentTermsScheduledTotal(lines) {
+    return (Array.isArray(lines) ? lines : []).reduce(
+      (sum, line) => sum + Math.max(0, normalizeAmountCents(line?.resolved_amount_cents, 0)),
+      0
+    );
+  }
+
   function normalizeBookingOfferPaymentTerms(rawPaymentTerms, currency, basisTotalAmountCents) {
     const source = rawPaymentTerms && typeof rawPaymentTerms === "object" ? rawPaymentTerms : null;
     if (!source) return null;
@@ -228,15 +252,17 @@ export function createPricingHelpers({
       .sort((left, right) => (left.sequence - right.sequence) || (left.index - right.index));
 
     let allocatedAmountCents = 0;
+    let installmentCount = 0;
     const lines = preparedLines.map(({ line, index, sequence }) => {
       const kind = normalizeOfferPaymentTermKind(line?.kind);
+      const installmentNumber = kind === "INSTALLMENT" ? (installmentCount += 1) : null;
       const amountSpec = normalizeOfferPaymentAmountSpec(line?.amount_spec, kind, line?.resolved_amount_cents);
       const resolvedAmountCents = computeOfferPaymentResolvedAmount(amountSpec, basisTotalAmountCents, allocatedAmountCents);
       allocatedAmountCents += resolvedAmountCents;
       const normalizedLine = {
         id: normalizeText(line?.id) || `offer_payment_term_${index + 1}`,
         kind,
-        label: normalizeText(line?.label) || defaultOfferPaymentTermLabel(kind, sequence),
+        label: resolveOfferPaymentTermLabel(line?.label, kind, sequence, installmentNumber),
         sequence,
         amount_spec: amountSpec,
         resolved_amount_cents: resolvedAmountCents,
@@ -250,15 +276,20 @@ export function createPricingHelpers({
     const notes = normalizeText(source.notes);
     const normalized = {
       currency: safeCurrency(currency),
-      basis_total_amount_cents: Math.max(0, normalizeAmountCents(basisTotalAmountCents, 0)),
-      lines,
-      scheduled_total_amount_cents: lines.reduce(
-        (sum, line) => sum + Math.max(0, normalizeAmountCents(line?.resolved_amount_cents, 0)),
-        0
-      )
+      lines
     };
     if (notes) normalized.notes = notes;
     return normalized;
+  }
+
+  function buildBookingOfferPaymentTermsReadModel(rawPaymentTerms, currency, basisTotalAmountCents) {
+    const normalized = normalizeBookingOfferPaymentTerms(rawPaymentTerms, currency, basisTotalAmountCents);
+    if (!normalized) return null;
+    return {
+      ...normalized,
+      basis_total_amount_cents: Math.max(0, normalizeAmountCents(basisTotalAmountCents, 0)),
+      scheduled_total_amount_cents: computeBookingOfferPaymentTermsScheduledTotal(normalized.lines)
+    };
   }
 
   function computeBookingPricingSummary(pricing) {
@@ -987,8 +1018,15 @@ export function createPricingHelpers({
   async function buildBookingOfferReadModel(rawOffer, preferredCurrency = baseCurrency, options = {}) {
     const converted = await convertOfferForDisplay(rawOffer, preferredCurrency, options);
     const totals = computeBookingOfferTotals(converted);
+    const { payment_terms: _rawPaymentTerms, ...convertedWithoutPaymentTerms } = converted;
+    const paymentTerms = buildBookingOfferPaymentTermsReadModel(
+      converted.payment_terms,
+      converted.currency,
+      totals.total_price_cents
+    );
     return {
-      ...converted,
+      ...convertedWithoutPaymentTerms,
+      ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
       totals,
       quotation_summary: computeBookingOfferQuotationSummary(converted),
       total_price_cents: totals.total_price_cents
@@ -1074,6 +1112,7 @@ export function createPricingHelpers({
     defaultBookingOffer,
     normalizeBookingOffer,
     normalizeOfferStatus,
+    buildBookingOfferPaymentTermsReadModel,
     buildBookingOfferReadModel,
     validateBookingOfferInput,
     normalizeBookingPricing,

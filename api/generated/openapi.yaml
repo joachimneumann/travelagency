@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-21T06:21:26Z
+# 2026-03-21T08:07:05Z
 
 ---
 openapi: 3.1.0
@@ -4571,7 +4571,6 @@ components:
       - label
       - sequence
       - amount_spec
-      - resolved_amount_cents
       - due_rule
       properties:
         id:
@@ -4584,8 +4583,6 @@ components:
           type: integer
         amount_spec:
           "$ref": "#/components/schemas/BookingOfferPaymentAmountSpec"
-        resolved_amount_cents:
-          type: integer
         due_rule:
           "$ref": "#/components/schemas/BookingOfferPaymentDueRule"
         description:
@@ -4595,19 +4592,13 @@ components:
       type: object
       required:
       - currency
-      - basis_total_amount_cents
-      - scheduled_total_amount_cents
       properties:
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        basis_total_amount_cents:
-          type: integer
         lines:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferPaymentTermLine"
-        scheduled_total_amount_cents:
-          type: integer
         notes:
           type: string
           nullable: true
@@ -4803,9 +4794,6 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         total_price_cents:
           type: integer
-        payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
-          nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
         travel_plan:
@@ -5136,6 +5124,84 @@ components:
         deposit_rule:
           "$ref": "#/components/schemas/PublicGeneratedOfferDepositAcceptanceRuleView"
           nullable: true
+    BookingOfferPaymentTermLineReadModel:
+      type: object
+      required:
+      - id
+      - kind
+      - label
+      - sequence
+      - amount_spec
+      - due_rule
+      - resolved_amount_cents
+      properties:
+        id:
+          type: string
+        kind:
+          "$ref": "#/components/schemas/OfferPaymentTermKind"
+        label:
+          type: string
+        sequence:
+          type: integer
+        amount_spec:
+          "$ref": "#/components/schemas/BookingOfferPaymentAmountSpec"
+        due_rule:
+          "$ref": "#/components/schemas/BookingOfferPaymentDueRule"
+        description:
+          type: string
+          nullable: true
+        resolved_amount_cents:
+          type: integer
+    BookingOfferPaymentTermsReadModel:
+      type: object
+      required:
+      - currency
+      - basis_total_amount_cents
+      - scheduled_total_amount_cents
+      properties:
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        lines:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferPaymentTermLineReadModel"
+        notes:
+          type: string
+          nullable: true
+        basis_total_amount_cents:
+          type: integer
+        scheduled_total_amount_cents:
+          type: integer
+    BookingOfferReadModel:
+      type: object
+      required:
+      - currency
+      - totals
+      - total_price_cents
+      properties:
+        status:
+          type: string
+          nullable: true
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        category_rules:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferCategoryRule"
+        components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferComponent"
+        totals:
+          "$ref": "#/components/schemas/BookingOfferTotals"
+        quotation_summary:
+          "$ref": "#/components/schemas/BookingOfferQuotationSummary"
+          nullable: true
+        payment_terms:
+          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
+          nullable: true
+        total_price_cents:
+          type: integer
     GeneratedBookingOfferReadModel:
       type: object
       required:
@@ -5174,10 +5240,10 @@ components:
         total_price_cents:
           type: integer
         payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
         offer:
-          "$ref": "#/components/schemas/BookingOffer"
+          "$ref": "#/components/schemas/BookingOfferReadModel"
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
           nullable: true
@@ -5292,7 +5358,7 @@ components:
         pricing:
           "$ref": "#/components/schemas/BookingPricing"
         offer:
-          "$ref": "#/components/schemas/BookingOffer"
+          "$ref": "#/components/schemas/BookingOfferReadModel"
         generated_offers:
           type: array
           items:
@@ -5613,7 +5679,7 @@ components:
           type: string
           nullable: true
         payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
         acceptance_route:
           "$ref": "#/components/schemas/PublicGeneratedOfferAcceptanceRouteView"
@@ -6232,6 +6298,31 @@ components:
           "$ref": "#/components/schemas/LanguageCode"
         actor:
           type: string
+          nullable: true
+    TravelPlanSegmentSearchRequest:
+      type: object
+      required: []
+      properties:
+        q:
+          type: string
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+        country:
+          "$ref": "#/components/schemas/CountryCode"
+          nullable: true
+        style:
+          type: string
+          nullable: true
+        segment_kind:
+          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+          nullable: true
+        limit:
+          type: integer
+          nullable: true
+        offset:
+          type: integer
           nullable: true
     TravelPlanSegmentImportRequest:
       type: object

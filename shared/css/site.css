@@ -2876,8 +2876,13 @@ textarea:focus-visible {
 
 .offer-accept-form__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.8rem;
+}
+
+.offer-accept-form__hint {
+  margin: -0.1rem 0 0;
+  color: #4d616d;
 }
 
 .offer-accept-form__status {

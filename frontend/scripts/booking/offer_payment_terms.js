@@ -7,13 +7,25 @@ import {
   parseMoneyInputValue
 } from "./pricing.js";
 import { renderBookingSegmentHeader } from "./segment_headers.js";
+import {
+  OFFER_PAYMENT_AMOUNT_MODE_CATALOG,
+  OFFER_PAYMENT_DUE_TYPE_CATALOG,
+  OFFER_PAYMENT_TERM_KIND_CATALOG,
+  normalizeGeneratedEnumValue
+} from "../shared/generated_catalogs.js";
 
-const OFFER_PAYMENT_TERM_KINDS = ["DEPOSIT", "INSTALLMENT", "FINAL_BALANCE"];
-const OFFER_PAYMENT_AMOUNT_MODES = ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL", "REMAINING_BALANCE"];
-const OFFER_PAYMENT_EDITABLE_TERM_KINDS = ["DEPOSIT", "INSTALLMENT"];
-const OFFER_PAYMENT_EDITABLE_AMOUNT_MODES = ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL"];
-const OFFER_PAYMENT_DUE_TYPES = ["ON_ACCEPTANCE", "FIXED_DATE", "DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"];
-const OFFER_PAYMENT_DAY_BASED_DUE_TYPES = ["DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"];
+const OFFER_PAYMENT_TERM_KINDS = OFFER_PAYMENT_TERM_KIND_CATALOG;
+const OFFER_PAYMENT_AMOUNT_MODES = OFFER_PAYMENT_AMOUNT_MODE_CATALOG;
+const OFFER_PAYMENT_EDITABLE_TERM_KINDS = Object.freeze(
+  OFFER_PAYMENT_TERM_KINDS.filter((kind) => kind !== "FINAL_BALANCE")
+);
+const OFFER_PAYMENT_EDITABLE_AMOUNT_MODES = Object.freeze(
+  OFFER_PAYMENT_AMOUNT_MODES.filter((mode) => mode !== "REMAINING_BALANCE")
+);
+const OFFER_PAYMENT_DUE_TYPES = OFFER_PAYMENT_DUE_TYPE_CATALOG;
+const OFFER_PAYMENT_DAY_BASED_DUE_TYPES = Object.freeze(
+  OFFER_PAYMENT_DUE_TYPES.filter((type) => type !== "ON_ACCEPTANCE" && type !== "FIXED_DATE")
+);
 
 export function createBookingOfferPaymentTermsModule(ctx) {
   const {
@@ -55,22 +67,27 @@ export function createBookingOfferPaymentTermsModule(ctx) {
   }
 
   function normalizeOfferPaymentTermKindValue(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    return OFFER_PAYMENT_TERM_KINDS.includes(normalized) ? normalized : "INSTALLMENT";
+    return normalizeGeneratedEnumValue("OfferPaymentTermKind", value, "INSTALLMENT", {
+      transform: (rawValue) => String(rawValue ?? "").trim().toUpperCase()
+    });
   }
 
   function normalizeOfferPaymentAmountModeValue(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    return OFFER_PAYMENT_AMOUNT_MODES.includes(normalized) ? normalized : "FIXED_AMOUNT";
+    return normalizeGeneratedEnumValue("OfferPaymentAmountMode", value, "FIXED_AMOUNT", {
+      transform: (rawValue) => String(rawValue ?? "").trim().toUpperCase()
+    });
   }
 
   function normalizeOfferPaymentDueTypeValue(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    if (OFFER_PAYMENT_DUE_TYPES.includes(normalized)) return normalized;
-    if (normalized) {
+    const rawNormalized = String(value || "").trim().toUpperCase();
+    const normalized = normalizeGeneratedEnumValue("OfferPaymentDueType", value, "", {
+      transform: (rawValue) => String(rawValue ?? "").trim().toUpperCase()
+    });
+    if (normalized) return normalized;
+    if (rawNormalized) {
       console.error("[offer-payment-terms] Unsupported due type normalized to ON_ACCEPTANCE.", {
         requestedDueType: value,
-        normalizedDueType: normalized,
+        normalizedDueType: rawNormalized,
         supportedDueTypes: OFFER_PAYMENT_DUE_TYPES
       });
     }
