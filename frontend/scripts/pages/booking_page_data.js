@@ -131,7 +131,7 @@ export function createBookingPageDataController(ctx) {
 
   async function loadAuthStatus() {
     try {
-      const request = authMeRequest({ baseURL: apiBase });
+      const request = authMeRequest({ baseURL: apiOrigin });
       const response = await fetch(request.url, {
         method: request.method,
         credentials: "include",
@@ -168,7 +168,7 @@ export function createBookingPageDataController(ctx) {
       state.authUser = null;
       if (els.userLabel) els.userLabel.textContent = "";
       logBrowserConsoleError("[booking] Failed to load authenticated user status for the booking page.", {
-        url: authMeRequest({ baseURL: apiBase }).url,
+        url: authMeRequest({ baseURL: apiOrigin }).url,
         method: "GET"
       }, error);
     }

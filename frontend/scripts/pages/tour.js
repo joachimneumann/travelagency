@@ -67,6 +67,7 @@ function withApiLang(pathname, params = {}) {
 
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
+const apiOrigin = apiBase || window.location.origin;
 
 function normalizeText(value) {
   return String(value ?? "").trim();
@@ -745,7 +746,7 @@ const fetchApi = createApiFetcher({
 async function loadAuthStatus() {
   try {
     refreshBackendNavElements();
-    const request = authMeRequest({ baseURL: apiBase });
+    const request = authMeRequest({ baseURL: apiOrigin });
     const response = await fetch(request.url, {
       method: request.method,
       credentials: "include",

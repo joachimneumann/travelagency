@@ -188,7 +188,7 @@ async function init() {
 async function loadBackendAuthStatus() {
   refreshBackendNavElements();
   try {
-    const request = authMeRequest({ baseURL: apiBase });
+    const request = authMeRequest({ baseURL: apiOrigin });
     const response = await fetch(request.url, {
       method: request.method,
       credentials: "include",
@@ -232,7 +232,7 @@ async function loadBackendAuthStatus() {
     if (els.userLabel) els.userLabel.textContent = "";
     logBrowserConsoleError("[backend] Failed to load backend authentication status for backend.html.", {
       page_url: window.location.href,
-      auth_me_url: authMeRequest({ baseURL: apiBase }).url
+      auth_me_url: authMeRequest({ baseURL: apiOrigin }).url
     }, error);
     return null;
   }
