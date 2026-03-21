@@ -218,8 +218,7 @@ if ! git diff --cached --quiet; then
 fi
 
 if [[ "$created_commit" -eq 0 ]]; then
-  echo "No git changes to commit. Skipping push and remote deployment."
-  exit 0
+  echo "No git changes to commit. Continuing with push and remote deployment."
 fi
 
 git push
