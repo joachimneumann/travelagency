@@ -16,4 +16,4 @@ offer acceptance, accepted offer:
 - remove remove button
 - disable email, copy link, email link buttons
 
-Use color to distinguish between customer notes and internal notes 
+Use color to distinguish between customer notes and internal notes  
