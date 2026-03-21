@@ -231,9 +231,9 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-size-micro: 0.72rem;
-  --font-size-overline: 0.78rem;
-  --font-size-caption: 0.82rem;
-  --font-size-body-sm: 0.9rem;
+  --font-size-overline: var(--font-size-base);
+  --font-size-caption: var(--font-size-base);
+  --font-size-body-sm: var(--font-size-base);
   --font-size-body: 0.94rem;
   --font-size-base: 1rem;
   --font-size-title-sm: 1.05rem;

@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Vis de resterende {count} ture",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "Ingen ture i det aktuelle filter.",
-  "tour.card.from_price": "Fra ${price}",
+  "tour.card.from_price": "Fra {price}",
   "tour.card.custom_quote": "Tilpasset tilbud",
   "tour.card.days": "{days} dage",
   "tour.card.plan_trip": "Planlæg denne tur",

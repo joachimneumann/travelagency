@@ -494,10 +494,9 @@ export function createFrontendToursController(ctx) {
             />
             <div class="tour-body">
               <div class="tour-topline">
-                <span class="tour-country">${escapeHTML(countriesLabel)}</span>
+                <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>
                 <span class="rating">${escapeHTML(rating)}</span>
               </div>
-              <h3 class="tour-title">${escapeHTML(tripTitle)}</h3>
               <p class="tour-desc">${escapeHTML(tripShortDescription)}</p>
               <div class="tags">${tags}</div>
               <div class="meta">

@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Mostrar los {count} recorridos restantes",
   "tours.debug_header": "Filtro: {dest}, {style}",
   "tours.debug_empty": "No hay recorridos en el filtro actual.",
-  "tour.card.from_price": "Desde ${price}",
+  "tour.card.from_price": "Desde {price}",
   "tour.card.custom_quote": "Cotización personalizada",
   "tour.card.days": "{days} días",
   "tour.card.plan_trip": "Planifica este viaje",

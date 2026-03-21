@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Xem {count} tour con lai",
   "tours.debug_header": "Bo loc: {dest}, {style}",
   "tours.debug_empty": "Khong co tour trong bo loc hien tai.",
-  "tour.card.from_price": "Tu ${price}",
+  "tour.card.from_price": "Tu {price}",
   "tour.card.custom_quote": "Bao gia rieng",
   "tour.card.days": "{days} ngay",
   "tour.card.plan_trip": "Len ke hoach cho chuyen di nay",

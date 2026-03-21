@@ -861,7 +861,7 @@ textarea:focus-visible {
   display: flex;
   justify-content: space-between;
   gap: 0.4rem;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .tour-country {
@@ -877,6 +877,11 @@ textarea:focus-visible {
 .tour-title {
   margin: 0;
   font-size: var(--font-size-title-sm);
+}
+
+.tour-title--topline {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .tour-desc {
@@ -3360,7 +3365,7 @@ textarea:focus-visible {
   border-radius: 10px;
   background: var(--error-surface-alpha-deep);
   color: var(--error-text-strong);
-  font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font: var(--font-size-base)/1.45 var(--font-family-mono);
   white-space: pre-wrap;
   word-break: break-word;
 }

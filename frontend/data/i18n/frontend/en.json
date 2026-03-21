@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Show the remaining {count} tours",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "No tours in current filter.",
-  "tour.card.from_price": "From ${price}",
+  "tour.card.from_price": "From {price}",
   "tour.card.custom_quote": "Custom quote",
   "tour.card.days": "{days} days",
   "tour.card.plan_trip": "Plan this trip",

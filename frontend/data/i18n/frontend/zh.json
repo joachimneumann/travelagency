@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "显示剩余 {count} 个行程",
   "tours.debug_header": "筛选：{dest}, {style}",
   "tours.debug_empty": "当前筛选下没有行程。",
-  "tour.card.from_price": "起价 ${price}",
+  "tour.card.from_price": "起价 {price}",
   "tour.card.custom_quote": "定制报价",
   "tour.card.days": "{days} 天",
   "tour.card.plan_trip": "规划此行程",

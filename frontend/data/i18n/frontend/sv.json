@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Visa de återstående {count} turerna",
   "tours.debug_header": "Filter: {dest}, {style}",
   "tours.debug_empty": "Inga turer i aktuellt filter.",
-  "tour.card.from_price": "Från ${price}",
+  "tour.card.from_price": "Från {price}",
   "tour.card.custom_quote": "Anpassad offert",
   "tour.card.days": "{days} dagar",
   "tour.card.plan_trip": "Planera denna resa",
