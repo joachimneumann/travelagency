@@ -32,9 +32,9 @@ import (
 }
 
 #BookingOfferDiscount: {
-	reason:                string & !=""
-	amount_cents:          common.#NonNegativeMoneyAmount
-	currency:              enums.#CurrencyCode
+	reason:                   string & !=""
+	amount_cents:             common.#NonNegativeMoneyAmount
+	currency:                 enums.#CurrencyCode
 	line_net_amount_cents?:   common.#MoneyAmount
 	line_tax_amount_cents?:   common.#MoneyAmount
 	line_gross_amount_cents?: common.#MoneyAmount

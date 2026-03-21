@@ -209,6 +209,7 @@ function deriveOfferQuotationSummary(offer) {
   if (provided) return provided;
 
   const components = safeArray(source.components);
+  const discount = source.discount && typeof source.discount === "object" ? source.discount : null;
   const buckets = new Map();
   let subtotal = 0;
   let totalTax = 0;
@@ -237,6 +238,22 @@ function deriveOfferQuotationSummary(offer) {
     bucket.gross_amount_cents += gross;
     bucket.items_count += 1;
     buckets.set(basisPoints, bucket);
+  }
+  if (discount && Number(discount?.amount_cents || 0) > 0) {
+    const amount = Math.max(0, Number(discount.amount_cents || 0));
+    subtotal -= amount;
+    totalGross -= amount;
+    const bucket = buckets.get(0) || {
+      tax_rate_basis_points: 0,
+      net_amount_cents: 0,
+      tax_amount_cents: 0,
+      gross_amount_cents: 0,
+      items_count: 0
+    };
+    bucket.net_amount_cents -= amount;
+    bucket.gross_amount_cents -= amount;
+    bucket.items_count += 1;
+    buckets.set(0, bucket);
   }
   return {
     tax_included: true,
@@ -1038,7 +1055,36 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   y = drawTableHeader(doc, y, columns, fonts);
 
   const components = safeArray(generatedOffer?.offer?.components);
-  if (!components.length) {
+  const discount = generatedOffer?.offer?.discount && typeof generatedOffer.offer.discount === "object"
+    ? generatedOffer.offer.discount
+    : null;
+  const rows = [
+    ...components.map((component) => ({
+      category: categoryLabel(component),
+      categoryTax: formatTaxRateLabel(component?.tax_rate_basis_points, lang),
+      details: textOrNull(component?.details) || "—",
+      quantity: String(Number(component?.quantity || 1)),
+      unitText: formatMoneyValue(
+        component?.unit_total_amount_cents ?? component?.unit_amount_cents,
+        generatedOffer?.currency
+      ),
+      totalText: formatMoneyValue(
+        component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
+        generatedOffer?.currency
+      )
+    })),
+    ...(discount && Number(discount?.amount_cents || 0) > 0
+      ? [{
+          category: pdfT(lang, "offer.discount", "Discount"),
+          categoryTax: pdfT(lang, "offer.discount_adjustment", "Final adjustment"),
+          details: textOrNull(discount?.reason) || "—",
+          quantity: "—",
+          unitText: "—",
+          totalText: formatMoneyValue(-Math.max(0, Number(discount?.amount_cents || 0)), generatedOffer?.currency)
+        }]
+      : [])
+  ];
+  if (!rows.length) {
     doc
       .font(pdfFontName("regular", fonts))
       .fontSize(10.5)
@@ -1049,19 +1095,13 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     return doc.y + 18;
   }
 
-  for (const component of components) {
-    const category = categoryLabel(component);
-    const categoryTax = formatTaxRateLabel(component?.tax_rate_basis_points, lang);
-    const details = textOrNull(component?.details) || "—";
-    const quantity = String(Number(component?.quantity || 1));
-    const unitText = formatMoneyValue(
-      component?.unit_total_amount_cents ?? component?.unit_amount_cents,
-      generatedOffer?.currency
-    );
-    const totalText = formatMoneyValue(
-      component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
-      generatedOffer?.currency
-    );
+  for (const row of rows) {
+    const category = row.category;
+    const categoryTax = row.categoryTax;
+    const details = row.details;
+    const quantity = row.quantity;
+    const unitText = row.unitText;
+    const totalText = row.totalText;
     doc.font(pdfFontName("regular", fonts)).fontSize(10.5);
     const categoryTextHeight = doc.heightOfString(category, {
       width: columns[0].width - TABLE_CELL_PADDING_X * 2,

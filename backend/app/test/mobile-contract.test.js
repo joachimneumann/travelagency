@@ -754,6 +754,57 @@ test("booking offer patch rejects discounts_credits components", async () => {
   assert.match(String(patchResult.body.error || ""), /discounts_credits/i);
 });
 
+test("booking offer patch accepts an explicit offer discount with a reason", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_transport_1",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Airport transfer",
+              quantity: 1,
+              unit_amount_cents: 10000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ],
+          discount: {
+            reason: "Loyalty discount",
+            amount_cents: 500,
+            currency: createdBooking.preferred_currency
+          }
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.components.length, 1);
+  assert.equal(patchResult.body.booking.offer.discount.reason, "Loyalty discount");
+  assert.equal(patchResult.body.booking.offer.discount.amount_cents, 500);
+  assert.equal(patchResult.body.booking.offer.total_price_cents, 10500);
+  assert.equal(patchResult.body.booking.offer.quotation_summary.grand_total_amount_cents, 10500);
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.discount.reason, "Loyalty discount");
+  assert.equal(detailAfter.body.booking.offer.total_price_cents, 10500);
+});
+
 test("booking travel plan patch persists days, links, and derived financial coverage", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;

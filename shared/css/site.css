@@ -1884,11 +1884,23 @@ textarea:focus-visible {
   box-sizing: border-box;
 }
 
+.backend-table textarea[data-offer-discount-reason] {
+  width: calc(100% - 0.08rem);
+  margin-left: 0.08rem;
+  min-height: 42px;
+  resize: vertical;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
 .backend-table .offer-col-category select,
 .backend-table .offer-col-qty input,
 .backend-table .offer-col-price-single input,
 .backend-table .offer-col-price-total input,
-.backend-table textarea[data-offer-component-details] {
+.backend-table textarea[data-offer-component-details],
+.backend-table textarea[data-offer-discount-reason] {
   border: 1px solid #c5d8e1;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
@@ -1901,7 +1913,8 @@ textarea:focus-visible {
 .backend-table .offer-col-qty input:focus-visible,
 .backend-table .offer-col-price-single input:focus-visible,
 .backend-table .offer-col-price-total input:focus-visible,
-.backend-table textarea[data-offer-component-details]:focus-visible {
+.backend-table textarea[data-offer-component-details]:focus-visible,
+.backend-table textarea[data-offer-discount-reason]:focus-visible {
   outline: 3px solid rgba(26, 156, 161, 0.12);
   outline-offset: 0;
   border-color: #1a9ca1;
@@ -2079,6 +2092,14 @@ textarea:focus-visible {
   text-align: center;
   padding-inline-start: 0.5rem;
   padding-inline-end: 0.5rem;
+}
+
+.offer-add-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .backend-table td.offer-total-merged {

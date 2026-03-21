@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-21T08:07:05Z
+# 2026-03-21T09:17:21Z
 
 ---
 openapi: 3.1.0
@@ -4478,6 +4478,28 @@ components:
           type: string
           format: date-time
           nullable: true
+    BookingOfferDiscount:
+      type: object
+      required:
+      - reason
+      - amount_cents
+      - currency
+      properties:
+        reason:
+          type: string
+        amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        line_net_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_gross_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
     BookingOfferTaxBucket:
       type: object
       required:
@@ -4668,6 +4690,9 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+        discount:
+          "$ref": "#/components/schemas/BookingOfferDiscount"
+          nullable: true
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
         quotation_summary:
@@ -5192,6 +5217,9 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+        discount:
+          "$ref": "#/components/schemas/BookingOfferDiscount"
+          nullable: true
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
         quotation_summary:

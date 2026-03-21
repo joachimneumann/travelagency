@@ -102,6 +102,12 @@ export function createBookingOfferSaveController(ctx) {
             offer_revision: result.booking.offer_revision,
             offer: {
               currency: result.booking.offer?.currency,
+              discount: result.booking.offer?.discount
+                ? {
+                    reason: result.booking.offer.discount.reason,
+                    amount_cents: result.booking.offer.discount.amount_cents
+                  }
+                : null,
               components: Array.isArray(result.booking.offer?.components)
                 ? result.booking.offer.components.map((component) => ({
                     id: component.id,
