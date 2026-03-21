@@ -122,7 +122,11 @@ export function createBookingTravelPlanModule(ctx) {
 
   function updateTravelPlanDirtyState() {
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft, getOfferComponentsForLinks());
-    setTravelPlanDirty(getTravelPlanSnapshot() !== state.originalTravelPlanSnapshot);
+    const isDirty = getTravelPlanSnapshot() !== state.originalTravelPlanSnapshot;
+    setTravelPlanDirty(isDirty);
+    if (isDirty) {
+      travelPlanStatus("");
+    }
     updateTravelPlanSaveButtonState();
   }
 
@@ -727,7 +731,7 @@ export function createBookingTravelPlanModule(ctx) {
         <div class="travel-plan-links">
           <div class="travel-plan-links__head">
             <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
-            <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(segment.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Link offer component"))}</button>
+            <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(segment.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
           </div>
           ${renderTravelPlanLinkRows(segment.id)}
         </div>
@@ -921,6 +925,7 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanDraftFromDom();
     const dayIndex = findDayIndex(dayId);
     if (dayIndex < 0) return;
+    if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its segments?"))) return;
     const [removedDay] = state.travelPlanDraft.days.splice(dayIndex, 1);
     for (const segment of Array.isArray(removedDay?.segments) ? removedDay.segments : []) {
       removeSegmentLinks(segment.id);
@@ -940,6 +945,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function removeSegment(segmentId) {
     syncTravelPlanDraftFromDom();
+    if (!window.confirm(bookingT("booking.travel_plan.remove_segment_confirm", "Remove this segment?"))) return;
     for (const day of Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []) {
       const segmentIndex = (Array.isArray(day.segments) ? day.segments : []).findIndex((segment) => segment.id === segmentId);
       if (segmentIndex < 0) continue;

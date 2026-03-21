@@ -463,16 +463,12 @@
 }
 
 .booking-inline-status {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.5rem;
-  margin: 0;
-  padding: 0.55rem 0.8rem;
-  border: 1px solid transparent;
-  border-radius: 14px;
+  display: inline;
+  margin: 0 0 0 0.75rem;
   font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-regular);
   line-height: 1.35;
+  color: var(--text-muted);
 }
 
 .booking-inline-status:empty {
@@ -480,34 +476,15 @@
 }
 
 .booking-inline-status--info {
-  color: var(--text-ink-strong);
-  background: var(--white-alpha-76);
-  border-color: var(--line-focus-soft);
+  color: var(--text-muted);
 }
 
 .booking-inline-status--success {
-  color: var(--success-text-strong);
-  background: var(--success-surface-alpha-strong);
-  border-color: var(--success-line);
+  color: var(--text-muted);
 }
 
 .booking-inline-status--error {
-  color: var(--error-text-soft);
-  background: var(--error-tint);
-  border-color: var(--error-line-alpha);
-  box-shadow: 0 8px 20px var(--error-glow);
-}
-
-#travel_plan_status.booking-inline-status--success {
-  display: inline;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  color: var(--success-text-strong);
-  font-weight: var(--font-weight-bold);
+  color: var(--error-text-strong);
 }
 
 .booking-person-modal__panel {
@@ -813,19 +790,25 @@
 }
 
 .booking-collapsible__summary::after {
-  content: "▾";
+  content: "+";
   position: absolute;
   top: 50%;
   right: 1rem;
-  transform: translateY(-50%) rotate(0deg);
-  font-size: var(--font-size-title-md);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: calc(var(--font-size-title-md) * 2);
   line-height: 1;
+  font-weight: var(--font-weight-bold);
   color: var(--text-black-soft);
-  transition: transform 240ms ease;
 }
 
 .booking-collapsible.is-open .booking-collapsible__summary::after {
-  transform: translateY(-50%) rotate(180deg);
+  content: "−";
+  transform: translateY(-50%);
 }
 
 .booking-collapsible__body {

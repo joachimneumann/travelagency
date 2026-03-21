@@ -527,7 +527,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     if (readOnly) {
       els.offer_payment_terms_notes.innerHTML = `
         <div class="offer-payment-terms-notes__card">
-          <div class="offer-payment-terms-notes__title">${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes"))}</div>
+          <div class="offer-payment-terms-notes__title">${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes (ATP internal)"))}</div>
           <div class="offer-payment-terms-notes__text">${escapeHtml(notes)}</div>
         </div>
       `;
@@ -536,7 +536,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     }
     els.offer_payment_terms_notes.innerHTML = `
       <label class="offer-payment-terms__field offer-payment-terms-notes__field">
-        <span>${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes"))}</span>
+        <span>${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes (ATP internal)"))}</span>
         <textarea class="booking-text-field booking-text-field--customer" rows="2" data-offer-payment-terms-notes>${escapeHtml(String(paymentTerms?.notes || ""))}</textarea>
       </label>
     `;

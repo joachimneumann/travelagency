@@ -2309,7 +2309,7 @@ textarea:focus-visible {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-wide);
-  text-transform: var(--text-transform-caps);
+  text-transform: none;
   line-height: 1;
 }
 
@@ -3254,13 +3254,22 @@ textarea:focus-visible {
   background: var(--surface);
 }
 
-.booking-text-field--internal {
+.booking-text-field--internal,
+.field input.booking-text-field--internal,
+.field textarea.booking-text-field--internal {
   background: var(--surface-muted);
   border-color: var(--line-soft);
+  font-style: italic;
 }
 
-.booking-text-field--internal:disabled {
+.booking-text-field--internal:disabled,
+.field input.booking-text-field--internal:disabled,
+.field textarea.booking-text-field--internal:disabled {
   background: var(--surface-muted);
+}
+
+.booking-text-field--internal::placeholder {
+  font-style: italic;
 }
 
 .booking-text-field--internal:focus-visible {
