@@ -1,4 +1,5 @@
 import { bookingTranslateFieldsRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
@@ -289,6 +290,7 @@ export async function requestBookingFieldTranslation({
   bookingId,
   entries,
   fetchBookingMutation,
+  apiBase = "",
   actor = null,
   sourceLang = "en",
   targetLang = bookingContentLang()
@@ -301,24 +303,50 @@ export async function requestBookingFieldTranslation({
       .filter(([key, value]) => Boolean(key && value))
   );
   if (!bookingId || !Object.keys(payloadEntries).length) return null;
-  const request = bookingTranslateFieldsRequest({
-    params: { booking_id: bookingId },
-    body: {
+  const resolvedApiBase = String(apiBase || window.ASIATRAVELPLAN_API_BASE || window.location.origin).replace(/\/$/, "");
+  let request;
+  try {
+    request = bookingTranslateFieldsRequest({
+      baseURL: resolvedApiBase,
+      params: { booking_id: bookingId },
+      body: {
+        source_lang: normalizedSourceLang,
+        target_lang: normalizedTargetLang,
+        actor,
+        entries: Object.entries(payloadEntries).map(([key, value]) => ({ key, value }))
+      }
+    });
+  } catch (error) {
+    logBrowserConsoleError("[translation] Failed to construct booking field translation request.", {
+      booking_id: bookingId,
+      api_base: resolvedApiBase,
       source_lang: normalizedSourceLang,
       target_lang: normalizedTargetLang,
       actor,
-      entries: Object.entries(payloadEntries).map(([key, value]) => ({ key, value }))
-    }
-  });
+      entry_keys: Object.keys(payloadEntries),
+      entry_values: payloadEntries
+    }, error);
+    throw error;
+  }
   const response = await fetchBookingMutation(request.url, {
     method: request.method,
     body: request.body
   });
-  return Array.isArray(response?.entries)
-    ? Object.fromEntries(
-        response.entries
-          .map((entry) => [String(entry?.key || "").trim(), String(entry?.value || "").trim()])
-          .filter(([key, value]) => Boolean(key && value))
-      )
-    : null;
+  if (!Array.isArray(response?.entries)) {
+    logBrowserConsoleError("[translation] Booking field translation returned no translated entries.", {
+      booking_id: bookingId,
+      request_url: request.url,
+      source_lang: normalizedSourceLang,
+      target_lang: normalizedTargetLang,
+      actor,
+      entry_keys: Object.keys(payloadEntries),
+      response_payload: response
+    });
+    return null;
+  }
+  return Object.fromEntries(
+    response.entries
+      .map((entry) => [String(entry?.key || "").trim(), String(entry?.value || "").trim()])
+      .filter(([key, value]) => Boolean(key && value))
+  );
 }

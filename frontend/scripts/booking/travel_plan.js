@@ -1,6 +1,7 @@
 import {
   bookingTravelPlanRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
+import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
@@ -1064,12 +1065,23 @@ export function createBookingTravelPlanModule(ctx) {
         bookingId: state.booking?.id,
         entries: { value: sourceText },
         fetchBookingMutation,
+        apiBase: apiOrigin,
         sourceLang,
         targetLang: destinationLang
       });
       translated = String(translatedEntries?.value || "").trim();
       if (!translated) throw new Error(bookingT("booking.translation.error", "Could not translate this section."));
     } catch (error) {
+      logBrowserConsoleError("[travel-plan] Failed to translate a travel-plan field.", {
+        booking_id: state.booking?.id || "",
+        day_id: button.getAttribute("data-travel-plan-day-id") || "",
+        segment_id: button.getAttribute("data-travel-plan-segment-id") || "",
+        field: button.getAttribute("data-travel-plan-translate") || "",
+        source_lang: sourceLang,
+        target_lang: destinationLang,
+        source_text: sourceText,
+        direction
+      }, error);
       travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."));
       return;
     }
