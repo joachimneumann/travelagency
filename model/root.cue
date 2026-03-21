@@ -26,6 +26,7 @@ import (
 		BookingTravelPlanSegmentImageFocalPoint:        entityModel.#BookingTravelPlanSegmentImageFocalPoint
 		BookingTravelPlanSegmentCopiedFrom:             entityModel.#BookingTravelPlanSegmentCopiedFrom
 		BookingTravelPlanOfferComponentLink:            entityModel.#BookingTravelPlanOfferComponentLink
+		BookingOfferDiscount:                           entityModel.#BookingOfferDiscount
 		Supplier:                                       entityModel.#Supplier
 		Tour:                                           entityModel.#Tour
 	}

@@ -435,6 +435,20 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingOfferDiscount"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferDiscount"
+			fields: [
+				{name: "reason", kind: "scalar", typeName: "string", required: true},
+				{name: "amount_cents", kind: "transport", typeName: "MoneyAmount", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "line_net_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
+				{name: "line_tax_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
+				{name: "line_gross_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
+			]
+		},
+		{
 			name:       "BookingOfferTaxBucket"
 			domain:     "booking"
 			module:     "entities"
@@ -559,6 +573,7 @@ IR: {
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "discount", kind: "entity", typeName: "BookingOfferDiscount", required: false},
 				{name: "totals", kind: "entity", typeName: "BookingOfferTotals", required: true},
 				{name: "quotation_summary", kind: "entity", typeName: "BookingOfferQuotationSummary", required: false},
 				{name: "payment_terms", kind: "entity", typeName: "BookingOfferPaymentTerms", required: false},
@@ -804,6 +819,7 @@ IR: {
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "discount", kind: "entity", typeName: "BookingOfferDiscount", required: false},
 				{name: "totals", kind: "entity", typeName: "BookingOfferTotals", required: true},
 				{name: "quotation_summary", kind: "entity", typeName: "BookingOfferQuotationSummary", required: false},
 				{name: "payment_terms", kind: "transport", typeName: "BookingOfferPaymentTermsReadModel", required: false},

@@ -4,7 +4,7 @@ import {
   keycloakUsersRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
-import { resolveApiUrl } from "../shared/api.js";
+import { logBrowserConsoleError, resolveApiUrl } from "../shared/api.js";
 import {
   bookingContentLang,
   setBookingContentLang
@@ -72,9 +72,10 @@ export function createBookingPageDataController(ctx) {
   async function fetchBookingMutation(path, options = {}) {
     const method = options.method || "GET";
     const body = options.body;
+    const requestUrl = resolveApiUrl(apiOrigin, withBookingContentLang(path));
 
     try {
-      const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(path)), {
+      const response = await fetch(requestUrl, {
         method,
         credentials: "include",
         headers: {
@@ -89,6 +90,15 @@ export function createBookingPageDataController(ctx) {
           redirectToBackendLogin();
           return null;
         }
+        logBrowserConsoleError("[booking] Backend rejected a booking mutation request.", {
+          booking_id: state.id,
+          method,
+          url: requestUrl,
+          status: response.status,
+          status_text: response.statusText,
+          request_body: body,
+          response_payload: payload
+        });
         if (response.status === 409 && payload?.code === "BOOKING_REVISION_MISMATCH" && payload?.booking) {
           const instruction = getConflictReloadInstruction();
           showError(backendT(
@@ -109,7 +119,12 @@ export function createBookingPageDataController(ctx) {
       return payload;
     } catch (error) {
       showError(backendT("booking.error.connect", "Could not connect to backend API."));
-      console.error(error);
+      logBrowserConsoleError("[booking] Network error while sending a booking mutation request.", {
+        booking_id: state.id,
+        method,
+        url: requestUrl,
+        request_body: body
+      }, error);
       return null;
     }
   }
@@ -148,10 +163,14 @@ export function createBookingPageDataController(ctx) {
         canChangeStage: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF),
         canEditBooking: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF)
       };
-    } catch {
+    } catch (error) {
       state.user = "";
       state.authUser = null;
       if (els.userLabel) els.userLabel.textContent = "";
+      logBrowserConsoleError("[booking] Failed to load authenticated user status for the booking page.", {
+        url: authMeRequest({ baseURL: apiBase }).url,
+        method: "GET"
+      }, error);
     }
   }
 

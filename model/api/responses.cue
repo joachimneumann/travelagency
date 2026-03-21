@@ -199,6 +199,7 @@ import (
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
 	category_rules: [...entities.#BookingOfferCategoryRule]
 	components: [...entities.#BookingOfferComponent]
+	discount?:          entities.#BookingOfferDiscount
 	totals:             entities.#BookingOfferTotals
 	quotation_summary?: entities.#BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTermsReadModel

@@ -31,6 +31,15 @@ import (
 	updated_at?:              common.#Timestamp
 }
 
+#BookingOfferDiscount: {
+	reason:                string & !=""
+	amount_cents:          common.#NonNegativeMoneyAmount
+	currency:              enums.#CurrencyCode
+	line_net_amount_cents?:   common.#MoneyAmount
+	line_tax_amount_cents?:   common.#MoneyAmount
+	line_gross_amount_cents?: common.#MoneyAmount
+}
+
 #BookingOfferTaxBucket: {
 	tax_rate_basis_points: >=0 & <=100000 & int
 	net_amount_cents:      common.#MoneyAmount
@@ -112,6 +121,7 @@ import (
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
 	category_rules: [...#BookingOfferCategoryRule]
 	components: [...#BookingOfferComponent]
+	discount?:          #BookingOfferDiscount
 	totals:             #BookingOfferTotals
 	quotation_summary?: #BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTerms

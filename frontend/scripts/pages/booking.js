@@ -14,6 +14,7 @@ import {
   createApiFetcher,
   escapeHtml,
   formatDateTime,
+  logBrowserConsoleError,
   normalizeText,
   resolveApiUrl,
   setDirtySurface
@@ -879,7 +880,10 @@ const bookingPageDataController = createBookingPageDataController({
 });
 
 void init().catch((error) => {
-  console.error(error);
+  logBrowserConsoleError("[booking] Booking page initialization failed.", {
+    booking_id: state.id || null,
+    current_url: window.location.href
+  }, error);
   showError(backendT("booking.error.load", "Could not load booking."));
   setStatus(backendT("booking.error.load", "Could not load booking."));
 });
