@@ -1,0 +1,205 @@
+import {
+  authMeRequest,
+  bookingDetailRequest,
+  keycloakUsersRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
+import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
+import { resolveApiUrl } from "../shared/api.js";
+import {
+  bookingContentLang,
+  setBookingContentLang
+} from "../booking/i18n.js";
+
+export function createBookingPageDataController(ctx) {
+  const {
+    state,
+    els,
+    apiBase,
+    apiOrigin,
+    roles,
+    backendT,
+    normalizeBookingContentLang,
+    redirectToBackendLogin,
+    fetchApi,
+    showError,
+    clearError,
+    clearStatus,
+    setStatus,
+    resolveSubmissionCustomerLanguage,
+    updateContentLangInUrl,
+    syncContentLanguageSelector,
+    withBookingContentLang,
+    applyBookingPayload,
+    renderBookingHeader,
+    renderBookingData,
+    renderActionControls,
+    renderPersonsEditor,
+    renderPricingPanel,
+    renderTravelPlanPanel,
+    renderOfferPanel,
+    loadActivities,
+    loadInvoices,
+    ensureTourImageLoaded,
+    bookingWhatsAppRef
+  } = ctx;
+
+  function hasAnyRole(...candidateRoles) {
+    return candidateRoles.some((role) => state.roles.includes(role));
+  }
+
+  function getConflictReloadInstruction() {
+    const userAgent = String(window.navigator.userAgent || "");
+    const platform = String(window.navigator.platform || "");
+    const touchPoints = Number(window.navigator.maxTouchPoints || 0);
+    const isIPhone = /iPhone/i.test(userAgent);
+    const isIPad = /iPad/i.test(userAgent) || (/Mac/i.test(platform) && touchPoints > 1);
+    const isIOS = isIPhone || isIPad;
+    if (isIOS) {
+      return backendT("booking.reload.ios", "Reload this page in Safari by tapping the reload button in the address bar.");
+    }
+    if (/Android/i.test(userAgent)) {
+      return backendT("booking.reload.android", "Reload this page in your browser by tapping the reload button in the toolbar.");
+    }
+    if (/Mac/i.test(platform)) {
+      return backendT("booking.reload.mac", "Reload this page with Command-R.");
+    }
+    if (/Win/i.test(platform)) {
+      return backendT("booking.reload.windows", "Reload this page with Ctrl-R or F5.");
+    }
+    return backendT("booking.reload.default", "Reload this page in your browser.");
+  }
+
+  async function fetchBookingMutation(path, options = {}) {
+    const method = options.method || "GET";
+    const body = options.body;
+
+    try {
+      const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(path)), {
+        method,
+        credentials: "include",
+        headers: {
+          ...(body ? { "Content-Type": "application/json" } : {})
+        },
+        ...(body ? { body: JSON.stringify(body) } : {})
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        if (response.status === 401) {
+          redirectToBackendLogin();
+          return null;
+        }
+        if (response.status === 409 && payload?.code === "BOOKING_REVISION_MISMATCH" && payload?.booking) {
+          const instruction = getConflictReloadInstruction();
+          showError(backendT(
+            "booking.error.changed_detail",
+            "This booking was changed on another device. Please reload before editing again. {instruction}",
+            { instruction }
+          ));
+          setStatus(backendT("booking.error.changed", "This booking was changed in the backend. Reload required."));
+          return null;
+        }
+        const requestFailed = backendT("booking.error.request_failed", "Request failed");
+        const message = payload?.detail ? `${payload.error || requestFailed}: ${payload.detail}` : payload.error || requestFailed;
+        showError(message);
+        return null;
+      }
+
+      clearError();
+      return payload;
+    } catch (error) {
+      showError(backendT("booking.error.connect", "Could not connect to backend API."));
+      console.error(error);
+      return null;
+    }
+  }
+
+  async function loadAuthStatus() {
+    try {
+      const request = authMeRequest({ baseURL: apiBase });
+      const response = await fetch(request.url, {
+        method: request.method,
+        credentials: "include",
+        headers: request.headers
+      });
+      const payload = await response.json().catch(() => null);
+      if (payload) validateAuthMeResponse(payload);
+      if (response.status === 401 || (response.ok && !payload?.authenticated)) {
+        state.authUser = null;
+        if (els.userLabel) els.userLabel.textContent = "";
+        redirectToBackendLogin();
+        return;
+      }
+      if (!response.ok) {
+        state.authUser = null;
+        if (els.userLabel) els.userLabel.textContent = "";
+        return;
+      }
+      state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
+      state.authUser = payload.user || null;
+      const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
+      state.user = user || "";
+      if (els.userLabel) {
+        els.userLabel.textContent = user || "";
+      }
+      state.permissions = {
+        canChangeAssignment: hasAnyRole(roles.ADMIN, roles.MANAGER),
+        canReadAssignmentDirectory: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.ACCOUNTANT),
+        canChangeStage: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF),
+        canEditBooking: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.STAFF)
+      };
+    } catch {
+      state.user = "";
+      state.authUser = null;
+      if (els.userLabel) els.userLabel.textContent = "";
+    }
+  }
+
+  async function loadBookingPage() {
+    clearStatus();
+    const requestedContentLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
+    const requests = [
+      fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)),
+      state.permissions.canReadAssignmentDirectory
+        ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
+        : Promise.resolve(null)
+    ];
+    const [bookingPayload, usersPayload] = await Promise.all(requests);
+    if (!bookingPayload) return;
+
+    const incomingBooking = bookingPayload?.booking || null;
+    if (!state.contentLangInitialized) {
+      const submissionLang = resolveSubmissionCustomerLanguage(incomingBooking);
+      state.contentLang = setBookingContentLang(submissionLang);
+      state.contentLangInitialized = true;
+      updateContentLangInUrl(state.contentLang);
+      syncContentLanguageSelector?.();
+      if (submissionLang !== requestedContentLang) {
+        await loadBookingPage();
+        return;
+      }
+    }
+
+    state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
+    applyBookingPayload(bookingPayload);
+    await ensureTourImageLoaded();
+
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor();
+    renderPricingPanel();
+    renderTravelPlanPanel();
+    renderOfferPanel();
+    await loadActivities();
+    await bookingWhatsAppRef()?.load(state.booking);
+    await loadInvoices();
+    bookingWhatsAppRef()?.startAutoRefresh(() => state.booking);
+  }
+
+  return {
+    fetchBookingMutation,
+    loadAuthStatus,
+    loadBookingPage
+  };
+}

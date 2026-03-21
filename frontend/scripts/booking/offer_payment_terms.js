@@ -1,0 +1,970 @@
+import { bookingT, bookingLang } from "./i18n.js";
+import {
+  formatMoneyDisplay,
+  formatMoneyInputValue,
+  isWholeUnitCurrency,
+  normalizeCurrencyCode,
+  parseMoneyInputValue
+} from "./pricing.js";
+import { renderBookingSegmentHeader } from "./segment_headers.js";
+
+const OFFER_PAYMENT_TERM_KINDS = ["DEPOSIT", "INSTALLMENT", "FINAL_BALANCE"];
+const OFFER_PAYMENT_AMOUNT_MODES = ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL", "REMAINING_BALANCE"];
+const OFFER_PAYMENT_EDITABLE_TERM_KINDS = ["DEPOSIT", "INSTALLMENT"];
+const OFFER_PAYMENT_EDITABLE_AMOUNT_MODES = ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL"];
+const OFFER_PAYMENT_DUE_TYPES = ["ON_ACCEPTANCE", "FIXED_DATE", "DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"];
+const OFFER_PAYMENT_DAY_BASED_DUE_TYPES = ["DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"];
+
+export function createBookingOfferPaymentTermsModule(ctx) {
+  const {
+    state,
+    els,
+    escapeHtml,
+    setOfferSaveEnabled,
+    clearOfferStatus,
+    scheduleOfferAutosave,
+    resolveOfferTotalCents
+  } = ctx;
+
+  function updateOfferPaymentTermsPanelSummary(paymentTerms = state.offerDraft?.payment_terms) {
+    if (!els.offerPaymentTermsPanelSummary) return;
+    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    const secondary = lines.length
+      ? bookingT(
+          lines.length === 1 ? "booking.payment_terms_summary_single" : "booking.payment_terms_summary_count",
+          lines.length === 1 ? "{count} scheduled payment" : "{count} scheduled payments",
+          { count: String(lines.length) }
+        )
+      : bookingT("booking.payment_terms_summary_none", "No payment terms yet.");
+    renderBookingSegmentHeader(els.offerPaymentTermsPanelSummary, {
+      primary: bookingT("booking.payment_terms", "Payment terms"),
+      secondary
+    });
+  }
+
+  function formatGeneratedOfferDate(value) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat(bookingLang(), {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(date);
+  }
+
+  function normalizeOfferPaymentTermKindValue(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    return OFFER_PAYMENT_TERM_KINDS.includes(normalized) ? normalized : "INSTALLMENT";
+  }
+
+  function normalizeOfferPaymentAmountModeValue(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    return OFFER_PAYMENT_AMOUNT_MODES.includes(normalized) ? normalized : "FIXED_AMOUNT";
+  }
+
+  function normalizeOfferPaymentDueTypeValue(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    if (OFFER_PAYMENT_DUE_TYPES.includes(normalized)) return normalized;
+    if (normalized) {
+      console.error("[offer-payment-terms] Unsupported due type normalized to ON_ACCEPTANCE.", {
+        requestedDueType: value,
+        normalizedDueType: normalized,
+        supportedDueTypes: OFFER_PAYMENT_DUE_TYPES
+      });
+    }
+    return "ON_ACCEPTANCE";
+  }
+
+  function offerPaymentDueTypeUsesFixedDate(value) {
+    return normalizeOfferPaymentDueTypeValue(value) === "FIXED_DATE";
+  }
+
+  function offerPaymentDueTypeUsesDays(value) {
+    return OFFER_PAYMENT_DAY_BASED_DUE_TYPES.includes(normalizeOfferPaymentDueTypeValue(value));
+  }
+
+  function logOfferPaymentTermDueTypeMismatch(requestOffer, responseBooking) {
+    const requestLines = Array.isArray(requestOffer?.payment_terms?.lines) ? requestOffer.payment_terms.lines : [];
+    const responseLines = Array.isArray(responseBooking?.offer?.payment_terms?.lines) ? responseBooking.offer.payment_terms.lines : [];
+    const mismatch = requestLines
+      .map((line, index) => {
+        const requestedType = normalizeOfferPaymentDueTypeValue(line?.due_rule?.type);
+        const returnedType = normalizeOfferPaymentDueTypeValue(responseLines[index]?.due_rule?.type);
+        if (requestedType === returnedType) return null;
+        return {
+          lineIndex: index,
+          label: String(line?.label || responseLines[index]?.label || ""),
+          requestedType,
+          returnedType
+        };
+      })
+      .find(Boolean);
+    if (!mismatch) return;
+    console.error("[offer-payment-terms] Backend response changed a saved due type.", {
+      reason: "The booking offer PATCH response returned a different payment-term due type than the one sent by the browser.",
+      mismatch,
+      requestLines: requestLines.map((line) => ({
+        label: String(line?.label || ""),
+        dueType: normalizeOfferPaymentDueTypeValue(line?.due_rule?.type)
+      })),
+      responseLines: responseLines.map((line) => ({
+        label: String(line?.label || ""),
+        dueType: normalizeOfferPaymentDueTypeValue(line?.due_rule?.type)
+      }))
+    });
+  }
+
+  function normalizeOfferPaymentAmountSpecDraftValue(rawAmountSpec, kind, fallbackResolvedAmountCents = 0) {
+    const normalizedKind = normalizeOfferPaymentTermKindValue(kind);
+    if (normalizedKind === "FINAL_BALANCE") {
+      return { mode: "REMAINING_BALANCE" };
+    }
+    const mode = normalizeOfferPaymentAmountModeValue(rawAmountSpec?.mode);
+    if (mode === "REMAINING_BALANCE") {
+      return {
+        mode: "FIXED_AMOUNT",
+        fixed_amount_cents: Math.max(
+          0,
+          Math.round(Number(rawAmountSpec?.fixed_amount_cents ?? fallbackResolvedAmountCents ?? 0))
+        )
+      };
+    }
+    if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
+      return {
+        mode,
+        percentage_basis_points: Math.max(0, Math.round(Number(rawAmountSpec?.percentage_basis_points || 0)))
+      };
+    }
+    return {
+      mode: "FIXED_AMOUNT",
+      fixed_amount_cents: Math.max(0, Math.round(Number(rawAmountSpec?.fixed_amount_cents || 0)))
+    };
+  }
+
+  function formatLegacyPaymentTermKindLabel(kind, sequence) {
+    const normalizedKind = String(kind || "").trim().toUpperCase();
+    if (normalizedKind === "DEPOSIT") return bookingT("booking.offer.payment_terms.deposit", "Deposit");
+    if (normalizedKind === "FINAL_BALANCE") return bookingT("booking.offer.payment_terms.final_balance", "Final payment");
+    return bookingT("booking.offer.payment_terms.installment_numbered", "Installment {number}", { number: String(sequence || 1) });
+  }
+
+  function formatPaymentTermKindLabel(kind, fallbackLabel, options = {}) {
+    const normalizedKind = String(kind || "").trim().toUpperCase();
+    const explicitLabel = String(fallbackLabel || "").trim();
+    if (explicitLabel) return explicitLabel;
+    if (normalizedKind === "DEPOSIT") return bookingT("booking.offer.payment_terms.deposit", "Deposit");
+    if (normalizedKind === "FINAL_BALANCE") return bookingT("booking.offer.payment_terms.final_balance", "Final payment");
+    return bookingT("booking.offer.payment_terms.installment_numbered", "Installment {number}", {
+      number: String(Math.max(1, Number(options.installmentNumber || 1)))
+    });
+  }
+
+  function resolveOfferPaymentTermInstallmentNumber(lines, lineIndex, kindOverride = null) {
+    const targetIndex = Math.max(0, Number(lineIndex || 0));
+    let count = 0;
+    const items = Array.isArray(lines) ? lines : [];
+    for (let index = 0; index <= targetIndex && index < items.length; index += 1) {
+      const kind = normalizeOfferPaymentTermKindValue(index === targetIndex && kindOverride ? kindOverride : items[index]?.kind);
+      if (kind === "INSTALLMENT") count += 1;
+    }
+    return Math.max(1, count || 1);
+  }
+
+  function resolveOfferPaymentTermLabel(rawLabel, kind, sequence, installmentNumber) {
+    const explicitLabel = String(rawLabel || "").trim();
+    const nextDefaultLabel = formatPaymentTermKindLabel(kind, "", { installmentNumber });
+    if (!explicitLabel) return nextDefaultLabel;
+    const legacyDefaultLabel = formatLegacyPaymentTermKindLabel(kind, sequence);
+    if (explicitLabel === legacyDefaultLabel || explicitLabel === nextDefaultLabel) {
+      return nextDefaultLabel;
+    }
+    return explicitLabel;
+  }
+
+  function formatPercentageBasisPoints(value) {
+    const basisPoints = Math.max(0, Number(value || 0));
+    const percentage = basisPoints / 100;
+    return `${Number.isInteger(percentage) ? String(percentage) : percentage.toFixed(2).replace(/\.?0+$/, "")}%`;
+  }
+
+  function formatPaymentTermAmountModeLabel(mode) {
+    const normalizedMode = normalizeOfferPaymentAmountModeValue(mode);
+    if (normalizedMode === "PERCENTAGE_OF_OFFER_TOTAL") {
+      return bookingT("booking.offer.payment_terms.amount_mode_percentage", "% of offer total");
+    }
+    if (normalizedMode === "REMAINING_BALANCE") {
+      return bookingT("booking.offer.payment_terms.amount_mode_remaining", "Remaining balance");
+    }
+    return bookingT("booking.offer.payment_terms.amount_mode_fixed", "Fixed amount");
+  }
+
+  function formatPaymentTermDueTypeLabel(type) {
+    const normalizedType = normalizeOfferPaymentDueTypeValue(type);
+    if (normalizedType === "FIXED_DATE") {
+      return bookingT("booking.offer.payment_terms.due_type_fixed_date", "Fixed date");
+    }
+    if (normalizedType === "DAYS_AFTER_ACCEPTANCE") {
+      return bookingT("booking.offer.payment_terms.due_type_after_acceptance", "Days after acceptance");
+    }
+    if (normalizedType === "DAYS_BEFORE_TRIP_START") {
+      return bookingT("booking.offer.payment_terms.due_type_before_trip", "Days before trip start");
+    }
+    if (normalizedType === "DAYS_AFTER_TRIP_START") {
+      return bookingT("booking.offer.payment_terms.due_type_after_trip_start", "Days after trip start");
+    }
+    if (normalizedType === "DAYS_AFTER_TRIP_END") {
+      return bookingT("booking.offer.payment_terms.due_type_after_trip_end", "Days after trip end");
+    }
+    return bookingT("booking.offer.payment_terms.due_type_on_acceptance", "On acceptance");
+  }
+
+  function formatPaymentTermAmountSpec(amountSpec, currency) {
+    const mode = String(amountSpec?.mode || "").trim().toUpperCase();
+    if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
+      return bookingT("booking.offer.payment_terms.amount_percentage", "{percent} of total", {
+        percent: formatPercentageBasisPoints(amountSpec?.percentage_basis_points)
+      });
+    }
+    if (mode === "REMAINING_BALANCE") {
+      return bookingT("booking.offer.payment_terms.amount_remaining", "Remaining balance");
+    }
+    return bookingT("booking.offer.payment_terms.amount_fixed", "Fixed amount {amount}", {
+      amount: formatMoneyDisplay(amountSpec?.fixed_amount_cents || 0, currency)
+    });
+  }
+
+  function formatOfferPaymentDueRule(dueRule) {
+    const type = String(dueRule?.type || "").trim().toUpperCase();
+    if (type === "FIXED_DATE" && String(dueRule?.fixed_date || "").trim()) {
+      const formattedDate = formatGeneratedOfferDate(dueRule.fixed_date);
+      return bookingT("booking.offer.payment_terms.due_fixed_date", "Due on {date}", { date: formattedDate });
+    }
+    if (type === "DAYS_AFTER_ACCEPTANCE") {
+      const days = Math.max(0, Number(dueRule?.days || 0));
+      return bookingT("booking.offer.payment_terms.due_days_after_acceptance", "Due {days} days after acceptance", {
+        days: String(days)
+      });
+    }
+    if (type === "DAYS_BEFORE_TRIP_START") {
+      const days = Math.max(0, Number(dueRule?.days || 0));
+      return bookingT("booking.offer.payment_terms.due_days_before_trip", "Due {days} days before trip start", {
+        days: String(days)
+      });
+    }
+    if (type === "DAYS_AFTER_TRIP_START") {
+      const days = Math.max(0, Number(dueRule?.days || 0));
+      return bookingT("booking.offer.payment_terms.due_days_after_trip_start", "Due {days} days after trip start", {
+        days: String(days)
+      });
+    }
+    if (type === "DAYS_AFTER_TRIP_END") {
+      const days = Math.max(0, Number(dueRule?.days || 0));
+      return bookingT("booking.offer.payment_terms.due_days_after_trip_end", "Due {days} days after trip end", {
+        days: String(days)
+      });
+    }
+    return bookingT("booking.offer.payment_terms.due_on_acceptance", "Due on acceptance");
+  }
+
+  function formatPaymentTermAmountValueDisplay(line, currency) {
+    const mode = normalizeOfferPaymentAmountModeValue(line?.amount_spec?.mode);
+    if (mode === "FIXED_AMOUNT") {
+      return formatMoneyDisplay(line?.amount_spec?.fixed_amount_cents || 0, currency);
+    }
+    if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
+      return formatPercentageBasisPoints(line?.amount_spec?.percentage_basis_points);
+    }
+    return bookingT("booking.offer.payment_terms.remaining_balance", "Remaining balance");
+  }
+
+  function createDefaultOfferPaymentTermLine(sequence) {
+    const numericSequence = Math.max(1, Math.round(Number(sequence || 1)));
+    if (numericSequence === 1) {
+      return {
+        id: "",
+        kind: "DEPOSIT",
+        label: formatPaymentTermKindLabel("DEPOSIT"),
+        sequence: numericSequence,
+        amount_spec: {
+          mode: "PERCENTAGE_OF_OFFER_TOTAL",
+          percentage_basis_points: 3000
+        },
+        resolved_amount_cents: 0,
+        due_rule: {
+          type: "ON_ACCEPTANCE"
+        },
+        description: ""
+      };
+    }
+    return {
+      id: "",
+      kind: "INSTALLMENT",
+      label: formatPaymentTermKindLabel("INSTALLMENT", "", { installmentNumber: Math.max(1, numericSequence - 1) }),
+      sequence: numericSequence,
+      amount_spec: {
+        mode: "FIXED_AMOUNT",
+        fixed_amount_cents: 0
+      },
+      resolved_amount_cents: 0,
+      due_rule: {
+        type: "ON_ACCEPTANCE"
+      },
+      description: ""
+    };
+  }
+
+  function createDefaultFinalOfferPaymentTermLine(sequence) {
+    const numericSequence = Math.max(1, Math.round(Number(sequence || 1)));
+    return {
+      id: "",
+      kind: "FINAL_BALANCE",
+      label: formatPaymentTermKindLabel("FINAL_BALANCE"),
+      sequence: numericSequence,
+      amount_spec: {
+        mode: "REMAINING_BALANCE"
+      },
+      resolved_amount_cents: 0,
+      due_rule: {
+        type: "ON_ACCEPTANCE"
+      },
+      description: ""
+    };
+  }
+
+  function computeOfferPaymentResolvedAmountDraft(amountSpec, basisTotalAmountCents, allocatedAmountCents) {
+    const basisTotal = Math.max(0, Math.round(Number(basisTotalAmountCents || 0)));
+    const allocated = Math.max(0, Math.round(Number(allocatedAmountCents || 0)));
+    const mode = normalizeOfferPaymentAmountModeValue(amountSpec?.mode);
+    if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
+      const percentageBasisPoints = Math.max(0, Math.round(Number(amountSpec?.percentage_basis_points || 0)));
+      return Math.max(0, Math.round((basisTotal * percentageBasisPoints) / 10000));
+    }
+    if (mode === "REMAINING_BALANCE") {
+      return Math.max(0, basisTotal - allocated);
+    }
+    return Math.max(0, Math.round(Number(amountSpec?.fixed_amount_cents || 0)));
+  }
+
+  function normalizeOfferPaymentTermsDraft(rawPaymentTerms, fallbackCurrency = null) {
+    const source = rawPaymentTerms && typeof rawPaymentTerms === "object" ? rawPaymentTerms : null;
+    const currency = normalizeCurrencyCode(
+      source?.currency
+      || fallbackCurrency
+      || state.offerDraft?.currency
+      || state.booking?.preferred_currency
+      || "USD"
+    );
+    const basisTotalAmountCents = Math.max(0, Math.round(resolveOfferTotalCents()));
+    const sourceLines = Array.isArray(source?.lines) ? source.lines : [];
+    const finalLineSource = sourceLines.find((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE") || null;
+    const preparedLines = sourceLines
+      .filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "FINAL_BALANCE")
+      .map((line, index) => ({
+        line,
+        index,
+        sequence: Math.max(1, Math.round(Number(line?.sequence || index + 1)))
+      }))
+      .sort((left, right) => (left.sequence - right.sequence) || (left.index - right.index));
+
+    let allocatedAmountCents = 0;
+    let installmentNumber = 0;
+    const lines = preparedLines.map(({ line, sequence }) => {
+      const kind = normalizeOfferPaymentTermKindValue(line?.kind);
+      if (kind === "INSTALLMENT") installmentNumber += 1;
+      const amountSpec = normalizeOfferPaymentAmountSpecDraftValue(line?.amount_spec, kind, line?.resolved_amount_cents);
+
+      const dueType = normalizeOfferPaymentDueTypeValue(line?.due_rule?.type);
+      const dueRule = { type: dueType };
+      if (offerPaymentDueTypeUsesFixedDate(dueType) && String(line?.due_rule?.fixed_date || "").trim()) {
+        dueRule.fixed_date = String(line.due_rule.fixed_date).trim();
+      }
+      if (offerPaymentDueTypeUsesDays(dueType)) {
+        dueRule.days = Math.max(0, Math.round(Number(line?.due_rule?.days || 0)));
+      }
+
+      const resolvedAmountCents = computeOfferPaymentResolvedAmountDraft(amountSpec, basisTotalAmountCents, allocatedAmountCents);
+      allocatedAmountCents += resolvedAmountCents;
+
+      return {
+        id: String(line?.id || ""),
+        kind,
+        label: resolveOfferPaymentTermLabel(line?.label, kind, sequence, installmentNumber),
+        sequence,
+        amount_spec: amountSpec,
+        resolved_amount_cents: resolvedAmountCents,
+        due_rule: dueRule,
+        description: String(line?.description || "")
+      };
+    });
+
+    const finalLineTemplate = finalLineSource && typeof finalLineSource === "object"
+      ? finalLineSource
+      : createDefaultFinalOfferPaymentTermLine(lines.length + 1);
+    const finalLineSequence = lines.length + 1;
+    const finalLine = {
+      id: String(finalLineTemplate?.id || ""),
+      kind: "FINAL_BALANCE",
+      label: resolveOfferPaymentTermLabel(finalLineTemplate?.label, "FINAL_BALANCE", finalLineSequence, installmentNumber),
+      sequence: finalLineSequence,
+      amount_spec: {
+        mode: "REMAINING_BALANCE"
+      },
+      resolved_amount_cents: computeOfferPaymentResolvedAmountDraft(
+        { mode: "REMAINING_BALANCE" },
+        basisTotalAmountCents,
+        allocatedAmountCents
+      ),
+      due_rule: (() => {
+        const dueType = normalizeOfferPaymentDueTypeValue(finalLineTemplate?.due_rule?.type);
+        const dueRule = { type: dueType };
+        if (offerPaymentDueTypeUsesFixedDate(dueType) && String(finalLineTemplate?.due_rule?.fixed_date || "").trim()) {
+          dueRule.fixed_date = String(finalLineTemplate.due_rule.fixed_date).trim();
+        }
+        if (offerPaymentDueTypeUsesDays(dueType)) {
+          dueRule.days = Math.max(0, Math.round(Number(finalLineTemplate?.due_rule?.days || 0)));
+        }
+        return dueRule;
+      })(),
+      description: String(finalLineTemplate?.description || "")
+    };
+    lines.push(finalLine);
+
+    return {
+      currency,
+      basis_total_amount_cents: basisTotalAmountCents,
+      lines,
+      scheduled_total_amount_cents: lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0),
+      notes: String(source?.notes || "")
+    };
+  }
+
+  function getOfferPaymentTermsDraft() {
+    const draft = normalizeOfferPaymentTermsDraft(
+      state.offerDraft?.payment_terms,
+      state.offerDraft?.currency || state.booking?.preferred_currency || "USD"
+    );
+    if (state.offerDraft) {
+      state.offerDraft.payment_terms = draft;
+    }
+    return draft;
+  }
+
+  function ensureOfferPaymentTermsDraft() {
+    const existing = getOfferPaymentTermsDraft();
+    if (existing) return existing;
+    const draft = normalizeOfferPaymentTermsDraft({
+      currency: state.offerDraft?.currency || state.booking?.preferred_currency || "USD",
+      lines: [createDefaultFinalOfferPaymentTermLine(1)],
+      notes: ""
+    });
+    state.offerDraft.payment_terms = draft;
+    return draft;
+  }
+
+  function renderOfferPaymentTermsSummaryRows(paymentTerms, currency) {
+    return `
+      <div class="offer-payment-terms__summary">
+        <span class="offer-payment-terms__summary-label">${escapeHtml(bookingT("booking.offer.payment_terms.basis_total", "Offer total"))}</span>
+        <span class="offer-payment-terms__summary-value" data-offer-payment-terms-basis-total>${escapeHtml(formatMoneyDisplay(paymentTerms?.basis_total_amount_cents || 0, currency))}</span>
+      </div>
+      <div class="offer-payment-terms__summary">
+        <span class="offer-payment-terms__summary-label">${escapeHtml(bookingT("booking.offer.payment_terms.scheduled_total", "Scheduled total"))}</span>
+        <span class="offer-payment-terms__summary-value" data-offer-payment-terms-scheduled-total>${escapeHtml(formatMoneyDisplay(paymentTerms?.scheduled_total_amount_cents || 0, currency))}</span>
+      </div>
+    `;
+  }
+
+  function updateOfferPaymentTermsInDom() {
+    if (!els.offer_payment_terms) return;
+    const paymentTerms = getOfferPaymentTermsDraft();
+    if (!paymentTerms) return;
+    const currency = normalizeCurrencyCode(paymentTerms.currency || state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const rows = Array.from(els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-resolved]"));
+    rows.forEach((node) => {
+      const index = Number(node.getAttribute("data-offer-payment-term-resolved"));
+      const line = paymentTerms.lines[index];
+      node.textContent = formatMoneyDisplay(line?.resolved_amount_cents || 0, currency);
+    });
+    const basisNode = els.offer_payment_terms.querySelector("[data-offer-payment-terms-basis-total]");
+    const scheduledNode = els.offer_payment_terms.querySelector("[data-offer-payment-terms-scheduled-total]");
+    if (basisNode) {
+      basisNode.textContent = formatMoneyDisplay(paymentTerms.basis_total_amount_cents || 0, currency);
+    }
+    if (scheduledNode) {
+      scheduledNode.textContent = formatMoneyDisplay(paymentTerms.scheduled_total_amount_cents || 0, currency);
+    }
+  }
+
+  function renderOfferPaymentTermsNotes() {
+    if (!els.offer_payment_terms_notes) return;
+    const readOnly = !state.permissions.canEditBooking;
+    const paymentTerms = getOfferPaymentTermsDraft();
+    const notes = String(paymentTerms?.notes || "").trim();
+    if (readOnly && !notes) {
+      els.offer_payment_terms_notes.hidden = true;
+      els.offer_payment_terms_notes.innerHTML = "";
+      return;
+    }
+    if (readOnly) {
+      els.offer_payment_terms_notes.innerHTML = `
+        <div class="offer-payment-terms-notes__card">
+          <div class="offer-payment-terms-notes__title">${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes"))}</div>
+          <div class="offer-payment-terms-notes__text">${escapeHtml(notes)}</div>
+        </div>
+      `;
+      els.offer_payment_terms_notes.hidden = false;
+      return;
+    }
+    els.offer_payment_terms_notes.innerHTML = `
+      <label class="offer-payment-terms__field offer-payment-terms-notes__field">
+        <span>${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes"))}</span>
+        <textarea rows="2" data-offer-payment-terms-notes>${escapeHtml(String(paymentTerms?.notes || ""))}</textarea>
+      </label>
+    `;
+    els.offer_payment_terms_notes.hidden = false;
+    els.offer_payment_terms_notes.querySelectorAll("[data-offer-payment-terms-notes]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const draft = ensureOfferPaymentTermsDraft();
+        draft.notes = input.value;
+        state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
+        setOfferSaveEnabled(true);
+        clearOfferStatus();
+      });
+      input.addEventListener("change", () => {
+        const draft = ensureOfferPaymentTermsDraft();
+        draft.notes = input.value;
+        state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
+        setOfferSaveEnabled(true);
+        clearOfferStatus();
+        scheduleOfferAutosave();
+      });
+    });
+  }
+
+  function renderOfferPaymentTerms() {
+    if (!els.offer_payment_terms) return;
+    const readOnly = !state.permissions.canEditBooking;
+    const paymentTerms = getOfferPaymentTermsDraft();
+    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    if ((!paymentTerms || !lines.length) && readOnly) {
+      if (els.offer_payment_terms_panel) {
+        els.offer_payment_terms_panel.hidden = true;
+      }
+      els.offer_payment_terms.hidden = true;
+      els.offer_payment_terms.innerHTML = "";
+      if (els.offer_payment_terms_notes) {
+        els.offer_payment_terms_notes.hidden = true;
+        els.offer_payment_terms_notes.innerHTML = "";
+      }
+      return;
+    }
+    if (els.offer_payment_terms_panel) {
+      els.offer_payment_terms_panel.hidden = false;
+    }
+    const displayTerms = paymentTerms || ensureOfferPaymentTermsDraft();
+    const currency = normalizeCurrencyCode(displayTerms.currency || state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    updateOfferPaymentTermsPanelSummary(displayTerms);
+    if (readOnly) {
+      const rows = lines
+        .slice()
+        .sort((left, right) => (Number(left?.sequence || 0) - Number(right?.sequence || 0)))
+        .map((line, index) => {
+          const kindLabel = formatPaymentTermKindLabel(line?.kind, "", {
+            installmentNumber: resolveOfferPaymentTermInstallmentNumber(lines, index)
+          });
+          const label = String(line?.label || "").trim() || kindLabel;
+          const description = String(line?.description || "").trim();
+          return `
+            <tr class="offer-payment-terms__table-row">
+              <td class="offer-payment-term-col-kind">${escapeHtml(kindLabel)}</td>
+              <td class="offer-payment-term-col-label">${escapeHtml(label)}</td>
+              <td class="offer-payment-term-col-amount">${escapeHtml(formatPaymentTermAmountModeLabel(line?.amount_spec?.mode))}</td>
+              <td class="offer-payment-term-col-value">${escapeHtml(formatPaymentTermAmountValueDisplay(line, currency))}</td>
+              <td class="offer-payment-term-col-due">${escapeHtml(formatOfferPaymentDueRule(line?.due_rule))}</td>
+              <td class="offer-payment-term-col-resolved">${escapeHtml(formatMoneyDisplay(line?.resolved_amount_cents || 0, currency))}</td>
+              <td class="offer-payment-term-col-actions"></td>
+            </tr>
+            <tr class="offer-payment-terms__description-row">
+              <td class="offer-payment-terms__description-label">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</td>
+              <td class="offer-payment-terms__description-cell" colspan="5">${description ? escapeHtml(description) : " "}</td>
+              <td class="offer-payment-terms__description-spacer"></td>
+            </tr>
+          `;
+        })
+        .join("");
+      els.offer_payment_terms.innerHTML = `
+        <div class="offer-payment-terms__header">
+          <div class="offer-payment-terms__title">${escapeHtml(bookingT("booking.offer.payment_terms.title", "Payment terms"))}</div>
+        </div>
+        <div class="backend-table-wrap offer-payment-terms__table-wrap">
+          <table class="backend-table offer-payment-terms__table">
+            <thead>
+              <tr>
+                <th class="offer-payment-term-col-kind">${escapeHtml(bookingT("booking.offer.payment_terms.kind", "Type"))}</th>
+                <th class="offer-payment-term-col-label">${escapeHtml(bookingT("booking.offer.payment_terms.label", "Label"))}</th>
+                <th class="offer-payment-term-col-amount">${escapeHtml(bookingT("booking.offer.payment_terms.basis", "Basis"))}</th>
+                <th class="offer-payment-term-col-value">${escapeHtml(bookingT("booking.offer.payment_terms.amount_value", "Value"))}</th>
+                <th class="offer-payment-term-col-due">${escapeHtml(bookingT("booking.offer.payment_terms.due_rule", "Due"))}</th>
+                <th class="offer-payment-term-col-resolved">${escapeHtml(bookingT("booking.offer.payment_terms.resolved_amount", "Amount"))}</th>
+                <th class="offer-payment-term-col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="offer-payment-terms__card">
+          ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
+        </div>
+      `;
+      els.offer_payment_terms.hidden = false;
+      renderOfferPaymentTermsNotes();
+      return;
+    }
+
+    const amountStep = isWholeUnitCurrency(currency) ? "1" : "0.01";
+    const rows = lines.map((line, index) => {
+      const amountMode = normalizeOfferPaymentAmountModeValue(line?.amount_spec?.mode);
+      const dueType = normalizeOfferPaymentDueTypeValue(line?.due_rule?.type);
+      const isFinalBalance = normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE";
+      const installmentNumber = resolveOfferPaymentTermInstallmentNumber(lines, index);
+      const kindLabel = formatPaymentTermKindLabel(line?.kind, "", { installmentNumber });
+      const dueEditor = `<div class="offer-payment-terms__due-editor" data-offer-payment-term-due-editor="${index}">
+            <select data-offer-payment-term-due-type="${index}">
+              ${OFFER_PAYMENT_DUE_TYPES.map((type) => `<option value="${escapeHtml(type)}" ${type === dueType ? "selected" : ""}>${escapeHtml(formatPaymentTermDueTypeLabel(type))}</option>`).join("")}
+            </select>
+            <input
+              type="date"
+              data-offer-payment-term-fixed-date="${index}"
+              value="${escapeHtml(String(line?.due_rule?.fixed_date || ""))}"
+              ${offerPaymentDueTypeUsesFixedDate(dueType) ? "" : "hidden"}
+            />
+            <input
+              type="number"
+              min="0"
+              step="1"
+              data-offer-payment-term-days="${index}"
+              value="${escapeHtml(String(Math.max(0, Number(line?.due_rule?.days || 0))))}"
+              ${offerPaymentDueTypeUsesDays(dueType) ? "" : "hidden"}
+            />
+          </div>`;
+      return `
+        <tr class="offer-payment-terms__table-row">
+          <td class="offer-payment-term-col-kind">
+            ${isFinalBalance
+              ? `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`
+              : `<select data-offer-payment-term-kind="${index}">
+                  ${OFFER_PAYMENT_EDITABLE_TERM_KINDS.map((kind) => `<option value="${escapeHtml(kind)}" ${kind === line.kind ? "selected" : ""}>${escapeHtml(formatPaymentTermKindLabel(kind, "", { installmentNumber: resolveOfferPaymentTermInstallmentNumber(lines, index, kind) }))}</option>`).join("")}
+                </select>`}
+          </td>
+          <td class="offer-payment-term-col-label">
+            <input type="text" data-offer-payment-term-label="${index}" value="${escapeHtml(String(line?.label || kindLabel))}" />
+          </td>
+          <td class="offer-payment-term-col-amount">
+            ${isFinalBalance
+              ? `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`
+              : `<select data-offer-payment-term-amount-mode="${index}">
+                  ${OFFER_PAYMENT_EDITABLE_AMOUNT_MODES.map((mode) => `<option value="${escapeHtml(mode)}" ${mode === amountMode ? "selected" : ""}>${escapeHtml(formatPaymentTermAmountModeLabel(mode))}</option>`).join("")}
+                </select>`}
+          </td>
+          <td class="offer-payment-term-col-value">
+            ${amountMode === "FIXED_AMOUNT"
+              ? `<input type="number" min="0" step="${amountStep}" data-offer-payment-term-fixed-amount="${index}" value="${escapeHtml(formatMoneyInputValue(line?.amount_spec?.fixed_amount_cents || 0, currency))}" />`
+              : amountMode === "PERCENTAGE_OF_OFFER_TOTAL"
+                ? `<div class="offer-payment-terms__input-with-suffix">
+                    <input type="number" min="0" max="100" step="0.01" data-offer-payment-term-percentage="${index}" value="${escapeHtml(formatPercentageBasisPoints(line?.amount_spec?.percentage_basis_points || 0).replace(/%$/, ""))}" />
+                    <span>%</span>
+                  </div>`
+                : `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`}
+          </td>
+          <td class="offer-payment-term-col-due">
+            ${dueEditor}
+          </td>
+          <td class="offer-payment-term-col-resolved">
+            <div class="offer-payment-terms__resolved" data-offer-payment-term-resolved="${index}">${escapeHtml(formatMoneyDisplay(line?.resolved_amount_cents || 0, currency))}</div>
+          </td>
+          <td class="offer-payment-term-col-actions">
+            ${isFinalBalance
+              ? `<div class="offer-payment-terms__static offer-payment-terms__static--empty"></div>`
+              : `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-payment-term-remove="${index}" title="${escapeHtml(bookingT("booking.offer.payment_terms.remove", "Remove payment term"))}" aria-label="${escapeHtml(bookingT("booking.offer.payment_terms.remove", "Remove payment term"))}">×</button>`}
+          </td>
+        </tr>
+        <tr class="offer-payment-terms__description-row">
+          <td class="offer-payment-terms__description-label">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</td>
+          <td class="offer-payment-terms__description-cell" colspan="5">
+            <textarea rows="2" data-offer-payment-term-description="${index}">${escapeHtml(String(line?.description || ""))}</textarea>
+          </td>
+          <td class="offer-payment-terms__description-spacer"></td>
+        </tr>
+      `;
+    }).join("");
+
+    els.offer_payment_terms.innerHTML = `
+      <div class="offer-payment-terms__header">
+        <div class="offer-payment-terms__title">${escapeHtml(bookingT("booking.offer.payment_terms.title", "Payment terms"))}</div>
+        <button class="btn btn-ghost" type="button" data-offer-payment-term-add>${escapeHtml(bookingT("booking.offer.payment_terms.add", "Add deposit / installment"))}</button>
+      </div>
+      <div class="backend-table-wrap offer-payment-terms__table-wrap">
+        <table class="backend-table offer-payment-terms__table">
+          <thead>
+            <tr>
+              <th class="offer-payment-term-col-kind">${escapeHtml(bookingT("booking.offer.payment_terms.kind", "Type"))}</th>
+              <th class="offer-payment-term-col-label">${escapeHtml(bookingT("booking.offer.payment_terms.label", "Label"))}</th>
+              <th class="offer-payment-term-col-amount">${escapeHtml(bookingT("booking.offer.payment_terms.basis", "Basis"))}</th>
+              <th class="offer-payment-term-col-value">${escapeHtml(bookingT("booking.offer.payment_terms.amount_value", "Value"))}</th>
+              <th class="offer-payment-term-col-due">${escapeHtml(bookingT("booking.offer.payment_terms.due_rule", "Due"))}</th>
+              <th class="offer-payment-term-col-resolved">${escapeHtml(bookingT("booking.offer.payment_terms.resolved_amount", "Amount"))}</th>
+              <th class="offer-payment-term-col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lines.length
+              ? rows
+              : `<tr><td colspan="7" class="offer-payment-terms__empty">${escapeHtml(bookingT("booking.offer.payment_terms.empty", "No payment terms yet."))}</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <div class="offer-payment-terms__card offer-payment-terms__card--summary">
+        ${renderOfferPaymentTermsSummaryRows(displayTerms, currency)}
+      </div>
+    `;
+    els.offer_payment_terms.hidden = false;
+    renderOfferPaymentTermsNotes();
+
+    const markDirty = () => {
+      setOfferSaveEnabled(true);
+      clearOfferStatus();
+    };
+    const syncComputedOnly = () => {
+      state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(
+        state.offerDraft?.payment_terms,
+        state.offerDraft?.currency || state.booking?.preferred_currency || "USD"
+      );
+      markDirty();
+      updateOfferPaymentTermsInDom();
+    };
+    const syncAndAutosave = () => {
+      syncComputedOnly();
+      scheduleOfferAutosave();
+    };
+    const withLine = (index, callback) => {
+      const draft = ensureOfferPaymentTermsDraft();
+      const line = Array.isArray(draft.lines) ? draft.lines[index] : null;
+      if (!line) return null;
+      callback(line, draft);
+      draft.lines = draft.lines.map((entry, entryIndex) => ({
+        ...entry,
+        sequence: entryIndex + 1
+      }));
+      state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
+      return state.offerDraft.payment_terms?.lines?.[index] || null;
+    };
+
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-add]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const draft = ensureOfferPaymentTermsDraft();
+        const currentLines = Array.isArray(draft.lines) ? draft.lines : [];
+        const finalIndex = currentLines.findIndex((line) => normalizeOfferPaymentTermKindValue(line?.kind) === "FINAL_BALANCE");
+        const nonFinalCount = currentLines.filter((line) => normalizeOfferPaymentTermKindValue(line?.kind) !== "FINAL_BALANCE").length;
+        const nextLine = createDefaultOfferPaymentTermLine(nonFinalCount + 1);
+        const nextLines = [...currentLines];
+        if (finalIndex >= 0) {
+          nextLines.splice(finalIndex, 0, nextLine);
+        } else {
+          nextLines.push(nextLine, createDefaultFinalOfferPaymentTermLine(nonFinalCount + 2));
+        }
+        draft.lines = nextLines;
+        state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
+        markDirty();
+        renderOfferPaymentTerms();
+        scheduleOfferAutosave();
+      });
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-remove]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.getAttribute("data-offer-payment-term-remove"));
+        const draft = ensureOfferPaymentTermsDraft();
+        draft.lines.splice(index, 1);
+        state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
+        markDirty();
+        renderOfferPaymentTerms();
+        scheduleOfferAutosave();
+      });
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-kind]").forEach((input) => {
+      input.addEventListener("change", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-kind"));
+        withLine(index, (line) => {
+          const nextKind = normalizeOfferPaymentTermKindValue(input.value);
+          const currentLines = Array.isArray(state.offerDraft?.payment_terms?.lines) ? state.offerDraft.payment_terms.lines : [];
+          const previousDefaultLabel = formatPaymentTermKindLabel(line.kind, "", {
+            installmentNumber: resolveOfferPaymentTermInstallmentNumber(currentLines, index, line.kind)
+          });
+          line.kind = nextKind;
+          if (!String(line.label || "").trim() || String(line.label || "").trim() === previousDefaultLabel) {
+            line.label = formatPaymentTermKindLabel(nextKind, "", {
+              installmentNumber: resolveOfferPaymentTermInstallmentNumber(currentLines, index, nextKind)
+            });
+          }
+        });
+        markDirty();
+        renderOfferPaymentTerms();
+        scheduleOfferAutosave();
+      });
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-label]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-label"));
+        withLine(index, (line) => {
+          line.label = input.value;
+        });
+        markDirty();
+      });
+      input.addEventListener("change", syncAndAutosave);
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-amount-mode]").forEach((input) => {
+      input.addEventListener("change", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-amount-mode"));
+        withLine(index, (line) => {
+          const nextMode = normalizeOfferPaymentAmountModeValue(input.value);
+          line.amount_spec = normalizeOfferPaymentAmountSpecDraftValue(
+            { mode: nextMode, fixed_amount_cents: line.resolved_amount_cents, percentage_basis_points: 1000 },
+            line.kind,
+            line.resolved_amount_cents
+          );
+        });
+        markDirty();
+        renderOfferPaymentTerms();
+        scheduleOfferAutosave();
+      });
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-fixed-amount]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-fixed-amount"));
+        withLine(index, (line) => {
+          line.amount_spec = normalizeOfferPaymentAmountSpecDraftValue(
+            {
+              mode: "FIXED_AMOUNT",
+              fixed_amount_cents: parseMoneyInputValue(input.value, currency)
+            },
+            line.kind,
+            line.resolved_amount_cents
+          );
+        });
+        syncComputedOnly();
+      });
+      input.addEventListener("change", syncAndAutosave);
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-percentage]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-percentage"));
+        withLine(index, (line) => {
+          line.amount_spec = normalizeOfferPaymentAmountSpecDraftValue(
+            {
+              mode: "PERCENTAGE_OF_OFFER_TOTAL",
+              percentage_basis_points: Math.max(0, Math.round(Number(input.value || 0) * 100))
+            },
+            line.kind,
+            line.resolved_amount_cents
+          );
+        });
+        syncComputedOnly();
+      });
+      input.addEventListener("change", syncAndAutosave);
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-due-type]").forEach((input) => {
+      input.addEventListener("change", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-due-type"));
+        const requestedDueType = normalizeOfferPaymentDueTypeValue(input.value);
+        withLine(index, (line) => {
+          const nextType = requestedDueType;
+          line.due_rule = { type: nextType };
+          if (offerPaymentDueTypeUsesFixedDate(nextType)) {
+            line.due_rule.fixed_date = "";
+          } else if (offerPaymentDueTypeUsesDays(nextType)) {
+            line.due_rule.days = 0;
+          }
+        });
+        markDirty();
+        const dueEditor = els.offer_payment_terms?.querySelector(`[data-offer-payment-term-due-editor="${index}"]`);
+        const fixedDateInput = els.offer_payment_terms?.querySelector(`[data-offer-payment-term-fixed-date="${index}"]`);
+        const daysInput = els.offer_payment_terms?.querySelector(`[data-offer-payment-term-days="${index}"]`);
+        if (fixedDateInput) {
+          fixedDateInput.hidden = !offerPaymentDueTypeUsesFixedDate(requestedDueType);
+          if (offerPaymentDueTypeUsesFixedDate(requestedDueType) && !String(fixedDateInput.value || "").trim()) {
+            fixedDateInput.value = "";
+          }
+        }
+        if (daysInput) {
+          daysInput.hidden = !offerPaymentDueTypeUsesDays(requestedDueType);
+          if (offerPaymentDueTypeUsesDays(requestedDueType)) {
+            daysInput.value = String(Math.max(0, Number(state.offerDraft?.payment_terms?.lines?.[index]?.due_rule?.days || 0)));
+          }
+        }
+        if (!dueEditor) {
+          console.error("[offer-payment-terms] Due type editor mount not found after change.", {
+            reason: "The booking payment-terms row editor could not be updated in place after the user changed the due type.",
+            lineIndex: index,
+            requestedDueType
+          });
+        }
+        scheduleOfferAutosave();
+      });
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-fixed-date]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-fixed-date"));
+        withLine(index, (line) => {
+          line.due_rule.type = "FIXED_DATE";
+          line.due_rule.fixed_date = String(input.value || "");
+        });
+        markDirty();
+      });
+      input.addEventListener("change", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-fixed-date"));
+        withLine(index, (line) => {
+          line.due_rule.type = "FIXED_DATE";
+          line.due_rule.fixed_date = String(input.value || "");
+        });
+        syncAndAutosave();
+      });
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-days]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-days"));
+        withLine(index, (line) => {
+          line.due_rule.days = Math.max(0, Math.round(Number(input.value || 0)));
+        });
+        markDirty();
+      });
+      input.addEventListener("change", syncAndAutosave);
+    });
+    els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-description]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const index = Number(input.getAttribute("data-offer-payment-term-description"));
+        withLine(index, (line) => {
+          line.description = input.value;
+        });
+        markDirty();
+      });
+      input.addEventListener("change", syncAndAutosave);
+    });
+  }
+
+  return {
+    ensureOfferPaymentTermsDraft,
+    formatPaymentTermKindLabel,
+    getOfferPaymentTermsDraft,
+    logOfferPaymentTermDueTypeMismatch,
+    normalizeOfferPaymentAmountModeValue,
+    normalizeOfferPaymentAmountSpecDraftValue,
+    normalizeOfferPaymentDueTypeValue,
+    normalizeOfferPaymentTermKindValue,
+    normalizeOfferPaymentTermsDraft,
+    offerPaymentDueTypeUsesDays,
+    offerPaymentDueTypeUsesFixedDate,
+    renderOfferPaymentTerms,
+    resolveOfferPaymentTermInstallmentNumber,
+    updateOfferPaymentTermsInDom
+  };
+}

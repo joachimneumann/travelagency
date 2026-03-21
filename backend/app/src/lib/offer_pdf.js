@@ -326,6 +326,11 @@ function ensureSpace(doc, currentY, requiredHeight, headerRedraw = null) {
   return PAGE_MARGIN;
 }
 
+function startSectionOnNewPage(doc) {
+  doc.addPage();
+  return PAGE_MARGIN;
+}
+
 function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
   let y = PAGE_MARGIN;
   if (logoImage?.buffer) {
@@ -681,8 +686,7 @@ function drawTableHeader(doc, startY, columns, fonts) {
   return startY + TABLE_HEADER_HEIGHT + 10;
 }
 
-function drawQuotationSummaryCard(doc, startY, rows, fonts, lang) {
-  const title = pdfT(lang, "offer.quotation_tax_summary", "QUOTATION TAX SUMMARY");
+function drawSummaryCard(doc, startY, rows, fonts, title) {
   const cardWidth = Math.min(420, doc.page.width - PAGE_MARGIN * 2);
   const cardX = doc.page.width - PAGE_MARGIN - cardWidth;
   const contentX = cardX + 18;
@@ -756,6 +760,262 @@ function drawQuotationSummaryCard(doc, startY, rows, fonts, lang) {
   });
 
   return startY + cardHeight;
+}
+
+function drawPaymentTermsSummaryCard(doc, startY, rows, fonts, lang) {
+  const title = pdfT(lang, "offer.payment_terms.summary_title", "PAYMENT TERMS SUMMARY");
+  const cardWidth = Math.min(420, doc.page.width - PAGE_MARGIN * 2);
+  const cardX = doc.page.width - PAGE_MARGIN - cardWidth;
+  const contentX = cardX + 18;
+  const contentWidth = cardWidth - 36;
+  const valueColumnWidth = 126;
+  const labelColumnWidth = contentWidth - valueColumnWidth - 14;
+  const titleHeight = 18;
+  const normalRowHeight = 22;
+  const totalRowHeight = 26;
+  const dividerGapTop = 6;
+  const dividerGapBottom = 8;
+  const bodyHeight = rows.reduce((sum, row) => sum + (row.isTotal ? totalRowHeight : normalRowHeight), 0);
+  const dividerHeight = rows.some((row) => row.isTotal) ? dividerGapTop + dividerGapBottom + 1 : 0;
+  const cardHeight = 18 + titleHeight + 14 + bodyHeight + dividerHeight;
+
+  doc
+    .save()
+    .roundedRect(cardX, startY, cardWidth, cardHeight, 16)
+    .lineWidth(1)
+    .strokeColor("#D7E0E7")
+    .fillAndStroke("#FFFFFF", "#D7E0E7")
+    .restore();
+
+  let y = startY + 18;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(11.5)
+    .fillColor("#4D616D")
+    .text(title, contentX, y, {
+      width: contentWidth,
+      align: "left"
+    });
+  y += titleHeight + 14;
+
+  rows.forEach((row) => {
+    if (row.isTotal) {
+      doc
+        .save()
+        .moveTo(contentX, y - dividerGapTop)
+        .lineTo(contentX + contentWidth, y - dividerGapTop)
+        .lineWidth(1)
+        .strokeColor("#E1E6EA")
+        .stroke()
+        .restore();
+      y += dividerGapBottom;
+    }
+
+    const labelFont = row.isTotal ? "bold" : "regular";
+    const labelSize = row.isTotal ? 11.5 : 10.9;
+    const valueSize = row.isTotal ? 11.5 : 10.9;
+    const rowHeight = row.isTotal ? totalRowHeight : normalRowHeight;
+
+    doc
+      .font(pdfFontName(labelFont, fonts))
+      .fontSize(labelSize)
+      .fillColor(row.isTotal ? "#22383F" : "#47606D")
+      .text(row.label, contentX, y, {
+        width: labelColumnWidth,
+        align: "left"
+      });
+    doc
+      .font(pdfFontName(labelFont, fonts))
+      .fontSize(valueSize)
+      .fillColor("#22383F")
+      .text(row.value, contentX + labelColumnWidth + 14, y, {
+        width: valueColumnWidth,
+        align: "right"
+      });
+    y += rowHeight;
+  });
+
+  return startY + cardHeight;
+}
+
+function formatPaymentTermAmountSpecForPdf(amountSpec, currency, formatMoneyValue, lang) {
+  const mode = normalizeText(amountSpec?.mode).toUpperCase();
+  if (mode === "PERCENTAGE_OF_OFFER_TOTAL") {
+    const percent = Math.max(0, Number(amountSpec?.percentage_basis_points || 0)) / 100;
+    const text = Number.isInteger(percent) ? String(percent) : percent.toFixed(2).replace(/\.?0+$/, "");
+    return pdfT(lang, "offer.payment_term.amount_percentage", "{percent}% of total", { percent: text });
+  }
+  if (mode === "REMAINING_BALANCE") {
+    return pdfT(lang, "offer.payment_term.amount_remaining", "Remaining balance");
+  }
+  return pdfT(lang, "offer.payment_term.amount_fixed", "Fixed amount {amount}", {
+    amount: formatMoneyValue(amountSpec?.fixed_amount_cents, currency)
+  });
+}
+
+function formatPaymentTermDueRuleForPdf(dueRule, lang) {
+  const type = normalizeText(dueRule?.type).toUpperCase();
+  if (type === "FIXED_DATE" && textOrNull(dueRule?.fixed_date)) {
+    return pdfT(lang, "offer.payment_term.due_fixed_date", "Due on {date}", {
+      date: formatFriendlyDateOnly(dueRule.fixed_date, lang)
+    });
+  }
+  if (type === "DAYS_AFTER_ACCEPTANCE") {
+    return pdfT(lang, "offer.payment_term.due_days_after_acceptance", "Due {days} days after acceptance", {
+      days: Math.max(0, Number(dueRule?.days || 0))
+    });
+  }
+  if (type === "DAYS_BEFORE_TRIP_START") {
+    return pdfT(lang, "offer.payment_term.due_days_before_trip", "Due {days} days before trip start", {
+      days: Math.max(0, Number(dueRule?.days || 0))
+    });
+  }
+  if (type === "DAYS_AFTER_TRIP_START") {
+    return pdfT(lang, "offer.payment_term.due_days_after_trip_start", "Due {days} days after trip start", {
+      days: Math.max(0, Number(dueRule?.days || 0))
+    });
+  }
+  if (type === "DAYS_AFTER_TRIP_END") {
+    return pdfT(lang, "offer.payment_term.due_days_after_trip_end", "Due {days} days after trip end", {
+      days: Math.max(0, Number(dueRule?.days || 0))
+    });
+  }
+  return pdfT(lang, "offer.payment_term.due_on_acceptance", "Due on acceptance");
+}
+
+function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
+  const paymentTerms = generatedOffer?.payment_terms || generatedOffer?.offer?.payment_terms;
+  const lines = safeArray(paymentTerms?.lines);
+  if (!lines.length) return startY;
+
+  const currency = generatedOffer?.currency || paymentTerms?.currency;
+  const sectionTitle = pdfT(lang, "offer.payment_terms_title", "Payment terms");
+  const cardWidth = doc.page.width - PAGE_MARGIN * 2;
+  const labelWidth = 230;
+  const amountWidth = 118;
+  const metaWidth = cardWidth - labelWidth - amountWidth - 32;
+
+  let y = startY;
+  const redrawSectionHeader = (pdfDoc, nextY) => {
+    pdfDoc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(13)
+      .fillColor("#23363D")
+      .text(sectionTitle, PAGE_MARGIN, nextY);
+    return nextY + 18;
+  };
+
+  y = redrawSectionHeader(doc, y);
+
+  for (const [index, line] of lines.entries()) {
+    const label = textOrNull(line?.label)
+      || pdfT(lang, "offer.payment_term.default_label", "Payment term {index}", { index: index + 1 });
+    const amountText = formatMoneyValue(line?.resolved_amount_cents, currency);
+    const meta = [
+      formatPaymentTermAmountSpecForPdf(line?.amount_spec, currency, formatMoneyValue, lang),
+      formatPaymentTermDueRuleForPdf(line?.due_rule, lang)
+    ].filter(Boolean).join(" · ");
+    const description = textOrNull(line?.description);
+
+    doc.font(pdfFontName("bold", fonts)).fontSize(10.6);
+    const labelHeight = doc.heightOfString(label, { width: labelWidth });
+    doc.font(pdfFontName("regular", fonts)).fontSize(10);
+    const metaHeight = meta ? doc.heightOfString(meta, { width: metaWidth }) : 0;
+    const descriptionHeight = description ? doc.heightOfString(description, { width: cardWidth - 28, lineGap: 1 }) : 0;
+    const amountHeight = doc.heightOfString(amountText, { width: amountWidth, align: "right" });
+    const rowHeight = Math.max(34, Math.max(labelHeight + metaHeight + 4, amountHeight) + descriptionHeight + 18);
+
+    y = ensureSpace(doc, y, rowHeight + 8, redrawSectionHeader);
+    doc
+      .save()
+      .roundedRect(PAGE_MARGIN, y, cardWidth, rowHeight, 12)
+      .fill("#FFFFFF")
+      .restore();
+
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(10.6)
+      .fillColor("#23363D")
+      .text(label, PAGE_MARGIN + 14, y + 10, {
+        width: labelWidth
+      });
+
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(10.8)
+      .fillColor("#22383F")
+      .text(amountText, doc.page.width - PAGE_MARGIN - amountWidth - 14, y + 10, {
+        width: amountWidth,
+        align: "right"
+      });
+
+    if (meta) {
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(10)
+        .fillColor("#5E6D73")
+        .text(meta, PAGE_MARGIN + 14, y + 26, {
+          width: metaWidth + labelWidth - 10
+        });
+    }
+
+    if (description) {
+      doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(9.8)
+        .fillColor("#33454C")
+        .text(description, PAGE_MARGIN + 14, y + 26 + metaHeight + 4, {
+          width: cardWidth - 28,
+          lineGap: 1
+        });
+    }
+
+    y += rowHeight + 8;
+  }
+
+  const basisTotal = Number(paymentTerms?.basis_total_amount_cents || generatedOffer?.total_price_cents || 0);
+  const scheduledTotal = Number(
+    paymentTerms?.scheduled_total_amount_cents
+    || lines.reduce((sum, line) => sum + Math.max(0, Number(line?.resolved_amount_cents || 0)), 0)
+  );
+  const summaryRows = [
+    {
+      label: pdfT(lang, "offer.payment_terms.basis_total", "Offer total"),
+      value: formatMoneyValue(basisTotal, currency)
+    },
+    {
+      label: pdfT(lang, "offer.payment_terms.scheduled_total", "Scheduled total"),
+      value: formatMoneyValue(scheduledTotal, currency)
+    }
+  ];
+  const summaryCardHeight = 18 + 18 + 14
+    + summaryRows.reduce((sum, row) => sum + (row.isTotal ? 26 : 22), 0)
+    + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
+  y = ensureSpace(doc, y, summaryCardHeight + 8, redrawSectionHeader);
+  y = drawPaymentTermsSummaryCard(doc, y, summaryRows, fonts, lang);
+
+  const notes = textOrNull(paymentTerms?.notes);
+  if (notes) {
+    y = ensureSpace(doc, y + 8, 54, redrawSectionHeader);
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(11)
+      .fillColor("#4D616D")
+      .text(pdfT(lang, "offer.payment_terms.notes", "Notes"), PAGE_MARGIN, y + 8, {
+        width: cardWidth
+      });
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10)
+      .fillColor("#33454C")
+      .text(notes, PAGE_MARGIN, y + 24, {
+        width: cardWidth,
+        lineGap: 1
+      });
+    y = doc.y + 8;
+  }
+
+  return y + 10;
 }
 
 function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, lang) {
@@ -927,7 +1187,13 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     + (summaryRows.some((row) => row.isTotal) ? 15 : 0);
   const redrawNothing = (_pdfDoc, nextY) => nextY;
   y = ensureSpace(doc, y, summaryCardHeight + 8, redrawNothing);
-  y = drawQuotationSummaryCard(doc, y, summaryRows, fonts, lang);
+  y = drawSummaryCard(
+    doc,
+    y,
+    summaryRows,
+    fonts,
+    pdfT(lang, "offer.quotation_tax_summary", "QUOTATION TAX SUMMARY")
+  );
 
   return y + 10;
 }
@@ -1013,8 +1279,16 @@ export function createOfferPdfWriter({
       y = drawHero(doc, heroTitle, booking, generatedOffer, heroImage, y, fonts, lang);
       y = drawIntro(doc, y, fonts, lang);
       y = drawTravelers(doc, booking, y, fonts, lang);
-      y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang);
+      if (safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length) {
+        y = startSectionOnNewPage(doc);
+        y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang);
+      }
+      y = startSectionOnNewPage(doc);
       y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);
+      if (safeArray(generatedOffer?.payment_terms?.lines || generatedOffer?.offer?.payment_terms?.lines).length) {
+        y = startSectionOnNewPage(doc);
+        y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);
+      }
       y = ensureSpace(doc, y, 90);
       y = drawClosing(doc, y + 18, fonts, lang);
 

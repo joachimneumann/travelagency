@@ -45,6 +45,9 @@ import (
 		PaymentStatus:                     enumModel.#PaymentStatus
 		PricingAdjustmentType:             enumModel.#PricingAdjustmentType
 		OfferCategory:                     enumModel.#OfferCategory
+		OfferPaymentTermKind:              enumModel.#OfferPaymentTermKind
+		OfferPaymentAmountMode:            enumModel.#OfferPaymentAmountMode
+		OfferPaymentDueType:               enumModel.#OfferPaymentDueType
 		OfferAcceptanceMethod:             enumModel.#OfferAcceptanceMethod
 		OfferAcceptanceOtpChannel:         enumModel.#OfferAcceptanceOtpChannel
 		CountryCode:                       enumModel.#CountryCode

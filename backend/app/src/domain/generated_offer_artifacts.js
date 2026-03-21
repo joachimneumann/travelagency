@@ -34,11 +34,13 @@ export function createGeneratedOfferArtifactHelpers({
       contentLang: snapshotLang,
       flatLang: snapshotLang
     });
+    const paymentTerms = offerSnapshot.payment_terms || generatedOffer?.payment_terms || null;
     return {
       ...generatedOffer,
       lang: snapshotLang,
       currency: offerSnapshot.currency || snapshotCurrency,
       total_price_cents: Number(generatedOffer?.total_price_cents || offerSnapshot.total_price_cents || 0),
+      ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
       offer: offerSnapshot,
       travel_plan: normalizeBookingTravelPlan(generatedOffer?.travel_plan, offerSnapshot, {
         lang: snapshotLang,

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-19T11:08:02Z
+# 2026-03-20T16:09:23Z
 
 ---
 openapi: 3.1.0
@@ -581,6 +581,69 @@ components:
         label: DISCOUNTS_CREDITS
       - value: OTHER
         label: OTHER
+    OfferPaymentTermKind:
+      type: string
+      enum:
+      - DEPOSIT
+      - INSTALLMENT
+      - FINAL_BALANCE
+      x-enum-catalog:
+      - code: DEPOSIT
+      - code: INSTALLMENT
+      - code: FINAL_BALANCE
+      x-enum-options:
+      - value: DEPOSIT
+        label: DEPOSIT
+      - value: INSTALLMENT
+        label: INSTALLMENT
+      - value: FINAL_BALANCE
+        label: FINAL_BALANCE
+    OfferPaymentAmountMode:
+      type: string
+      enum:
+      - FIXED_AMOUNT
+      - PERCENTAGE_OF_OFFER_TOTAL
+      - REMAINING_BALANCE
+      x-enum-catalog:
+      - code: FIXED_AMOUNT
+      - code: PERCENTAGE_OF_OFFER_TOTAL
+      - code: REMAINING_BALANCE
+      x-enum-options:
+      - value: FIXED_AMOUNT
+        label: FIXED_AMOUNT
+      - value: PERCENTAGE_OF_OFFER_TOTAL
+        label: PERCENTAGE_OF_OFFER_TOTAL
+      - value: REMAINING_BALANCE
+        label: REMAINING_BALANCE
+    OfferPaymentDueType:
+      type: string
+      enum:
+      - ON_ACCEPTANCE
+      - FIXED_DATE
+      - DAYS_AFTER_ACCEPTANCE
+      - DAYS_BEFORE_TRIP_START
+      - DAYS_AFTER_TRIP_START
+      - DAYS_AFTER_TRIP_END
+      x-enum-catalog:
+      - code: ON_ACCEPTANCE
+      - code: FIXED_DATE
+      - code: DAYS_AFTER_ACCEPTANCE
+      - code: DAYS_BEFORE_TRIP_START
+      - code: DAYS_AFTER_TRIP_START
+      - code: DAYS_AFTER_TRIP_END
+      x-enum-options:
+      - value: ON_ACCEPTANCE
+        label: ON_ACCEPTANCE
+      - value: FIXED_DATE
+        label: FIXED_DATE
+      - value: DAYS_AFTER_ACCEPTANCE
+        label: DAYS_AFTER_ACCEPTANCE
+      - value: DAYS_BEFORE_TRIP_START
+        label: DAYS_BEFORE_TRIP_START
+      - value: DAYS_AFTER_TRIP_START
+        label: DAYS_AFTER_TRIP_START
+      - value: DAYS_AFTER_TRIP_END
+        label: DAYS_AFTER_TRIP_END
     OfferAcceptanceMethod:
       type: string
       enum:
@@ -4328,6 +4391,81 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferTaxBucket"
+    BookingOfferPaymentDueRule:
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          "$ref": "#/components/schemas/OfferPaymentDueType"
+        fixed_date:
+          type: string
+          format: date
+          nullable: true
+        days:
+          type: integer
+          nullable: true
+    BookingOfferPaymentAmountSpec:
+      type: object
+      required:
+      - mode
+      properties:
+        mode:
+          "$ref": "#/components/schemas/OfferPaymentAmountMode"
+        fixed_amount_cents:
+          type: integer
+          nullable: true
+        percentage_basis_points:
+          type: integer
+          nullable: true
+    BookingOfferPaymentTermLine:
+      type: object
+      required:
+      - id
+      - kind
+      - label
+      - sequence
+      - amount_spec
+      - resolved_amount_cents
+      - due_rule
+      properties:
+        id:
+          type: string
+        kind:
+          "$ref": "#/components/schemas/OfferPaymentTermKind"
+        label:
+          type: string
+        sequence:
+          type: integer
+        amount_spec:
+          "$ref": "#/components/schemas/BookingOfferPaymentAmountSpec"
+        resolved_amount_cents:
+          type: integer
+        due_rule:
+          "$ref": "#/components/schemas/BookingOfferPaymentDueRule"
+        description:
+          type: string
+          nullable: true
+    BookingOfferPaymentTerms:
+      type: object
+      required:
+      - currency
+      - basis_total_amount_cents
+      - scheduled_total_amount_cents
+      properties:
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        basis_total_amount_cents:
+          type: integer
+        lines:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferPaymentTermLine"
+        scheduled_total_amount_cents:
+          type: integer
+        notes:
+          type: string
+          nullable: true
     BookingOffer:
       type: object
       required:
@@ -4352,6 +4490,9 @@ components:
           "$ref": "#/components/schemas/BookingOfferTotals"
         quotation_summary:
           "$ref": "#/components/schemas/BookingOfferQuotationSummary"
+          nullable: true
+        payment_terms:
+          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
           nullable: true
         total_price_cents:
           type: integer
@@ -4458,6 +4599,9 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         total_price_cents:
           type: integer
+        payment_terms:
+          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
         travel_plan:
@@ -4772,6 +4916,9 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         total_price_cents:
           type: integer
+        payment_terms:
+          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
         travel_plan:

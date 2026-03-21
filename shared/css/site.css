@@ -2113,6 +2113,392 @@ textarea:focus-visible {
   margin: 0 0 1rem;
 }
 
+.offer-payment-terms {
+  margin: 0 0 1rem;
+}
+
+.offer-payment-terms__table-wrap {
+  margin: 0 0 0.9rem;
+}
+
+.offer-payment-terms__card {
+  width: 100%;
+  margin-left: 0;
+  padding: 0.85rem 1rem 0.95rem;
+  border: 1px solid #d7e0e7;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.offer-payment-terms__title {
+  margin-bottom: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #4d616d;
+}
+
+.offer-payment-terms__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.offer-payment-terms__rows {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.backend-table.offer-payment-terms__table {
+  table-layout: fixed;
+}
+
+.backend-table th.offer-payment-term-col-kind,
+.backend-table th.offer-payment-term-col-label,
+.backend-table th.offer-payment-term-col-amount,
+.backend-table th.offer-payment-term-col-value,
+.backend-table th.offer-payment-term-col-due,
+.backend-table th.offer-payment-term-col-resolved,
+.backend-table th.offer-payment-term-col-actions {
+  white-space: nowrap;
+}
+
+.backend-table .offer-payment-term-col-kind {
+  width: 132px;
+  min-width: 132px;
+}
+
+.backend-table .offer-payment-term-col-label {
+  width: 170px;
+  min-width: 170px;
+}
+
+.backend-table .offer-payment-term-col-amount {
+  width: 150px;
+  min-width: 150px;
+}
+
+.backend-table .offer-payment-term-col-value,
+.backend-table .offer-payment-term-col-resolved {
+  width: 120px;
+  min-width: 120px;
+  text-align: right;
+}
+
+.backend-table .offer-payment-term-col-due {
+  width: 220px;
+  min-width: 220px;
+}
+
+.backend-table .offer-payment-term-col-actions {
+  width: 64px;
+  min-width: 64px;
+  text-align: center;
+}
+
+.backend-table .offer-payment-term-col-kind select,
+.backend-table .offer-payment-term-col-label input,
+.backend-table .offer-payment-term-col-amount select,
+.backend-table .offer-payment-term-col-value input,
+.backend-table .offer-payment-term-col-due select,
+.backend-table .offer-payment-term-col-due input,
+.backend-table .offer-payment-terms__description-cell textarea {
+  width: 100%;
+  border: 1px solid #c5d8e1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.62rem 0.72rem;
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-sizing: border-box;
+}
+
+.backend-table .offer-payment-term-col-kind select:focus-visible,
+.backend-table .offer-payment-term-col-label input:focus-visible,
+.backend-table .offer-payment-term-col-amount select:focus-visible,
+.backend-table .offer-payment-term-col-value input:focus-visible,
+.backend-table .offer-payment-term-col-due select:focus-visible,
+.backend-table .offer-payment-term-col-due input:focus-visible,
+.backend-table .offer-payment-terms__description-cell textarea:focus-visible {
+  outline: 3px solid rgba(26, 156, 161, 0.12);
+  outline-offset: 0;
+  border-color: #1a9ca1;
+}
+
+.backend-table .offer-payment-term-col-value input,
+.backend-table .offer-payment-term-col-resolved {
+  text-align: right;
+}
+
+.backend-table .offer-payment-term-col-value input,
+.backend-table .offer-payment-term-col-due input {
+  min-height: 42px;
+}
+
+.backend-table .offer-payment-term-col-value input,
+.backend-table .offer-payment-term-col-due input {
+  -moz-appearance: textfield;
+}
+
+.backend-table .offer-payment-term-col-value input::-webkit-outer-spin-button,
+.backend-table .offer-payment-term-col-value input::-webkit-inner-spin-button,
+.backend-table .offer-payment-term-col-due input::-webkit-outer-spin-button,
+.backend-table .offer-payment-term-col-due input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.offer-payment-terms__due-editor {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.offer-payment-terms__due-editor select,
+.offer-payment-terms__due-editor input {
+  width: 100%;
+}
+
+.offer-payment-terms__table-row td {
+  vertical-align: middle;
+}
+
+.offer-payment-terms__description-row td {
+  background: rgba(247, 251, 253, 0.46);
+  border-bottom: 1px solid var(--line);
+}
+
+.offer-payment-terms__description-label {
+  color: #4d616d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  vertical-align: top;
+}
+
+.offer-payment-terms__description-cell {
+  padding-top: 0.4rem;
+  padding-bottom: 0.6rem;
+}
+
+.offer-payment-terms__description-cell textarea {
+  min-height: 3.1rem;
+  resize: vertical;
+}
+
+.offer-payment-terms__description-cell,
+.offer-payment-terms__description-cell textarea {
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.offer-payment-terms__editor-rows {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.offer-payment-terms__row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.offer-payment-terms__editor-row {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem 0;
+}
+
+.offer-payment-terms__row + .offer-payment-terms__row {
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(215, 224, 231, 0.72);
+}
+
+.offer-payment-terms__editor-row + .offer-payment-terms__editor-row {
+  border-top: 1px solid rgba(215, 224, 231, 0.72);
+}
+
+.offer-payment-terms__row-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: baseline;
+}
+
+.offer-payment-terms__row-label,
+.offer-payment-terms__row-amount,
+.offer-payment-terms__summary-label,
+.offer-payment-terms__summary-value {
+  color: #1d2e36;
+  font-size: 0.94rem;
+}
+
+.offer-payment-terms__row-amount,
+.offer-payment-terms__summary-value {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-payment-terms__row-meta,
+.offer-payment-terms__row-description,
+.offer-payment-terms__notes {
+  color: #4d616d;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.offer-payment-terms__editor-grid {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) minmax(12rem, 1.2fr) minmax(12rem, 1.1fr) minmax(9rem, 0.9fr);
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.offer-payment-terms__field {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.offer-payment-terms__field > span {
+  color: #4d616d;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.offer-payment-terms__field--description,
+.offer-payment-terms__field--notes {
+  width: 100%;
+}
+
+.offer-payment-terms__field--description textarea,
+.offer-payment-terms__field--notes textarea {
+  width: 100%;
+  min-height: 5.1rem;
+  resize: vertical;
+}
+
+.offer-payment-terms__field--resolved {
+  min-width: 0;
+}
+
+.offer-payment-terms__field--actions {
+  min-width: 0;
+}
+
+.offer-payment-terms__input-with-suffix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.offer-payment-terms__input-with-suffix span {
+  color: #4d616d;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.offer-payment-terms__resolved,
+.offer-payment-terms__static {
+  min-height: 2.85rem;
+  display: flex;
+  align-items: center;
+  color: #1d2e36;
+  font-size: 0.94rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-payment-terms__resolved {
+  justify-content: flex-end;
+}
+
+.offer-payment-terms__empty {
+  padding: 0.8rem 0.5rem;
+  color: #4d616d;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.offer-payment-terms__static--empty {
+  justify-content: center;
+  color: transparent;
+}
+
+.offer-payment-terms__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: baseline;
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e1e6ea;
+}
+
+.offer-payment-terms__summary-label,
+.offer-payment-terms__summary-value {
+  font-weight: 700;
+}
+
+.offer-payment-terms__notes {
+  margin-top: 0.6rem;
+}
+
+.offer-payment-terms-notes {
+  margin: 0 0 0.9rem;
+}
+
+.offer-payment-terms-notes__field,
+.offer-payment-terms-notes__card {
+  width: 100%;
+  padding: 0.75rem 1rem 0.9rem;
+  border: 1px solid #d7e0e7;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.offer-payment-terms-notes__card {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.offer-payment-terms-notes__title {
+  color: #4d616d;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.offer-payment-terms-notes__text {
+  color: #1d2e36;
+  font-size: 0.94rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1180px) {
+  .backend-table .offer-payment-term-col-kind {
+    width: 120px;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 720px) {
+  .offer-payment-terms__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .backend-table.offer-payment-terms__table {
+    table-layout: auto;
+  }
+}
+
 .offer-quotation-summary__card {
   width: min(420px, 100%);
   margin-left: auto;

@@ -29,16 +29,16 @@ import (
 }
 
 #BookingTravelPlanDay: {
-	id:                 common.#Identifier
-	day_number:         >0 & int
-	date?:              common.#DateOnly
-	title:              string
+	id:                  common.#Identifier
+	day_number:          >0 & int
+	date?:               common.#DateOnly
+	title:               string
 	overnight_location?: string
-	segments?:          [...#BookingTravelPlanSegment]
-	notes?:             string
+	segments?: [...#BookingTravelPlanSegment]
+	notes?: string
 }
 
 #BookingTravelPlan: {
-	days?:                  [...#BookingTravelPlanDay]
+	days?: [...#BookingTravelPlanDay]
 	offer_component_links?: [...#BookingTravelPlanOfferComponentLink]
 }

@@ -481,6 +481,90 @@ test("booking offer patch persists added offer components", async () => {
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Hotel room");
 });
 
+test("booking offer patch preserves trip-relative payment-term due types", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          payment_terms: {
+            currency: booking.preferred_currency,
+            basis_total_amount_cents: booking.offer.total_price_cents || 0,
+            lines: [
+              {
+                id: "payment_term_deposit_1",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "PERCENTAGE_OF_OFFER_TOTAL",
+                  percentage_basis_points: 3000
+                },
+                resolved_amount_cents: 0,
+                due_rule: {
+                  type: "DAYS_AFTER_TRIP_START",
+                  days: 3
+                }
+              },
+              {
+                id: "payment_term_final_1",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 2,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                resolved_amount_cents: 0,
+                due_rule: {
+                  type: "DAYS_AFTER_TRIP_END",
+                  days: 5
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_room_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Hotel room",
+              quantity: 2,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.payment_terms.lines[0].due_rule.type, "DAYS_AFTER_TRIP_START");
+  assert.equal(patchResult.body.booking.offer.payment_terms.lines[0].due_rule.days, 3);
+  assert.equal(patchResult.body.booking.offer.payment_terms.lines[1].due_rule.type, "DAYS_AFTER_TRIP_END");
+  assert.equal(patchResult.body.booking.offer.payment_terms.lines[1].due_rule.days, 5);
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.payment_terms.lines[0].due_rule.type, "DAYS_AFTER_TRIP_START");
+  assert.equal(detailAfter.body.booking.offer.payment_terms.lines[1].due_rule.type, "DAYS_AFTER_TRIP_END");
+});
+
 test("booking offer patch persists component removal", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;

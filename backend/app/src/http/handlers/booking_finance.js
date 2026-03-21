@@ -489,6 +489,7 @@ export function createBookingFinanceHandlers(deps) {
       created_by: actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
       currency: offerSnapshot.currency,
       total_price_cents: Number(offerSnapshot.total_price_cents || 0),
+      ...(offerSnapshot.payment_terms ? { payment_terms: offerSnapshot.payment_terms } : {}),
       offer: offerSnapshot,
       travel_plan: travelPlanSnapshot
     };

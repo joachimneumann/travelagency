@@ -52,6 +52,9 @@ IR: {
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
+		OfferPaymentTermKind: {catalog: "offerPaymentTermKinds"}
+		OfferPaymentAmountMode: {catalog: "offerPaymentAmountModes"}
+		OfferPaymentDueType: {catalog: "offerPaymentDueTypes"}
 		OfferAcceptanceMethod: {catalog: "offerAcceptanceMethods"}
 		OfferAcceptanceOtpChannel: {catalog: "offerAcceptanceOtpChannels"}
 		CountryCode: {catalog: "countries"}
@@ -409,6 +412,57 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingOfferPaymentDueRule"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferPaymentDueRule"
+			fields: [
+				{name: "type", kind: "enum", typeName: "OfferPaymentDueType", required: true},
+				{name: "fixed_date", kind: "scalar", typeName: "DateOnly", required: false},
+				{name: "days", kind: "scalar", typeName: "int", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferPaymentAmountSpec"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferPaymentAmountSpec"
+			fields: [
+				{name: "mode", kind: "enum", typeName: "OfferPaymentAmountMode", required: true},
+				{name: "fixed_amount_cents", kind: "scalar", typeName: "int", required: false},
+				{name: "percentage_basis_points", kind: "scalar", typeName: "int", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferPaymentTermLine"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferPaymentTermLine"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "kind", kind: "enum", typeName: "OfferPaymentTermKind", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "sequence", kind: "scalar", typeName: "int", required: true},
+				{name: "amount_spec", kind: "entity", typeName: "BookingOfferPaymentAmountSpec", required: true},
+				{name: "resolved_amount_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "due_rule", kind: "entity", typeName: "BookingOfferPaymentDueRule", required: true},
+				{name: "description", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferPaymentTerms"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferPaymentTerms"
+			fields: [
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "basis_total_amount_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "lines", kind: "entity", typeName: "BookingOfferPaymentTermLine", required: true, isArray: true},
+				{name: "scheduled_total_amount_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "BookingOffer"
 			domain:     "booking"
 			module:     "entities"
@@ -420,6 +474,7 @@ IR: {
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "totals", kind: "entity", typeName: "BookingOfferTotals", required: true},
 				{name: "quotation_summary", kind: "entity", typeName: "BookingOfferQuotationSummary", required: false},
+				{name: "payment_terms", kind: "entity", typeName: "BookingOfferPaymentTerms", required: false},
 				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -467,6 +522,7 @@ IR: {
 				{name: "created_by", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "payment_terms", kind: "entity", typeName: "BookingOfferPaymentTerms", required: false},
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_frozen_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -598,6 +654,7 @@ IR: {
 				{name: "created_by", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
 				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "payment_terms", kind: "entity", typeName: "BookingOfferPaymentTerms", required: false},
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},

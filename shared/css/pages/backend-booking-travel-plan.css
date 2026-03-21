@@ -97,14 +97,26 @@
 }
 
 .travel-plan-segment {
+  position: relative;
   margin: 0;
   margin-left: 5rem;
-  padding: 3rem 0 0;
+  padding: 3rem 0 0 2rem;
   border: 0 !important;
   border-radius: 0;
   outline: 0;
   background: none !important;
   box-shadow: none !important;
+}
+
+.travel-plan-segment::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 3rem;
+  bottom: 0;
+  width: 20px;
+  border-radius: 10px;
+  background: #d7dde2;
 }
 
 .travel-plan-segment--not-covered {
@@ -265,6 +277,11 @@
 
   .travel-plan-segment {
     margin-left: 0;
+    padding-left: 1.5rem;
+  }
+
+  .travel-plan-segment::before {
+    top: 1rem;
   }
 
   .travel-plan-link-row {

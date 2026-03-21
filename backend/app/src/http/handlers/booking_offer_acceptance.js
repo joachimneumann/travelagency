@@ -497,7 +497,8 @@ export function createBookingOfferAcceptanceHandlers(deps) {
         return;
       }
 
-      if (Date.parse(existingChallenge.expires_at || "") <= Date.now()) {
+      const nowMs = Date.parse(nowIso());
+      if (Date.parse(existingChallenge.expires_at || "") <= (Number.isFinite(nowMs) ? nowMs : Date.now())) {
         removeOfferAcceptanceChallenges(store, bookingId, generatedOfferId, otpChannel);
         await persistStore(store);
         sendJson(res, 422, { error: "The acceptance verification code has expired. Request a new code." });

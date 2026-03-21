@@ -4,17 +4,12 @@ import {
   GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST
 } from "../../Generated/Models/generated_Booking.js";
 import {
-  authMeRequest,
   bookingActivitiesRequest,
-  bookingCustomerLanguageRequest,
-  bookingDetailRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest,
-  keycloakUsersRequest,
 } from "../../Generated/API/generated_APIRequestFactory.js";
-import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import {
   createApiFetcher,
   escapeHtml,
@@ -23,6 +18,8 @@ import {
   resolveApiUrl,
   setDirtySurface
 } from "../shared/api.js";
+import { createBookingPageLanguageController } from "./booking_page_language.js";
+import { createBookingPageDataController } from "./booking_page_data.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js";
@@ -52,10 +49,7 @@ import {
   normalizeStringList
 } from "../shared/booking_persons.js";
 import {
-  BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
-  bookingContentLanguageLabel,
-  bookingContentLanguageOption,
   normalizeBookingContentLang,
   setBookingContentLang
 } from "../booking/i18n.js";
@@ -70,38 +64,6 @@ function backendT(id, fallback, vars) {
     const normalizedKey = String(key || "").trim();
     return normalizedKey in vars ? String(vars[normalizedKey]) : match;
   });
-}
-
-async function waitForBackendI18n() {
-  await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
-}
-
-function currentBackendLang() {
-  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
-}
-
-function withBackendLang(pathname, params = {}) {
-  const url = new URL(pathname, window.location.origin);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      url.searchParams.set(key, String(value));
-    }
-  });
-  const lang = currentBackendLang();
-  if (lang) url.searchParams.set("lang", lang);
-  return `${url.pathname}${url.search}`;
-}
-
-function withBookingContentLang(pathname, params = {}) {
-  const url = new URL(pathname, window.location.origin);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      url.searchParams.set(key, String(value));
-    }
-  });
-  const lang = state.contentLang || bookingContentLang("en");
-  if (lang) url.searchParams.set("lang", lang);
-  return `${url.pathname}${url.search}`;
 }
 
 const qs = new URLSearchParams(window.location.search);
@@ -176,7 +138,7 @@ const state = {
   persons_save_queued: false
 };
 
-state.dirty = { note: false, persons: false, travel_plan: false, offer: false, pricing: false, invoice: false };
+state.dirty = { note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
 state.originalPricingSnapshot = "";
 state.originalPersonsSnapshot = "";
 state.originalTravelPlanSnapshot = "";
@@ -259,11 +221,17 @@ const els = {
   pricing_status: document.getElementById("pricing_status"),
   offer_panel: document.getElementById("offer_panel"),
   offerPanelSummary: document.getElementById("offer_panel_summary"),
+  offer_payment_terms_panel: document.getElementById("offer_payment_terms_panel"),
+  offerPaymentTermsPanelSummary: document.getElementById("offer_payment_terms_panel_summary"),
+  offer_acceptance_panel: document.getElementById("offer_acceptance_panel"),
+  offerAcceptancePanelSummary: document.getElementById("offer_acceptance_panel_summary"),
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
+  offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),
+  offer_payment_terms_notes: document.getElementById("offer_payment_terms_notes"),
   generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
@@ -305,6 +273,8 @@ function setBookingSectionDirty(sectionKey, isDirty) {
     persons: els.persons_editor_panel,
     travel_plan: els.travel_plan_panel,
     offer: els.offer_panel,
+    payment_terms: els.offer_payment_terms_panel,
+    offer_acceptance: els.offer_acceptance_panel,
     pricing: els.pricing_panel,
     invoice: els.invoice_panel
   };
@@ -316,273 +286,29 @@ function hasUnsavedBookingChanges() {
   return Object.values(state.dirty).some(Boolean);
 }
 
-function updateContentLangInUrl(lang) {
-  const nextUrl = new URL(window.location.href);
-  const normalized = normalizeBookingContentLang(lang || state.contentLang || "en");
-  nextUrl.searchParams.set("content_lang", normalized);
-  window.history.replaceState({}, "", nextUrl);
-}
-
-function resolveSubmissionCustomerLanguage(booking) {
-  return normalizeBookingContentLang(booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
-}
-
-function contentLanguageLabel(lang) {
-  return bookingContentLanguageLabel(lang || "en");
-}
-
-function contentLanguageOption(lang) {
-  return bookingContentLanguageOption(lang || "en");
-}
-
-function closeContentLanguageMenu() {
-  const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
-  const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
-  const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
-  if (!menu || !trigger || !panel) return;
-  menu.classList.remove("is-open");
-  panel.hidden = true;
-  panel.style.position = "";
-  panel.style.left = "";
-  panel.style.top = "";
-  panel.style.right = "";
-  panel.style.width = "";
-  panel.style.maxHeight = "";
-  panel.style.visibility = "";
-  trigger.setAttribute("aria-expanded", "false");
-}
-
-let contentLanguageDismissHandlersBound = false;
-
-function positionContentLanguageMenu(trigger, panel) {
-  if (!trigger || !panel) return;
-  const viewportPadding = 12;
-  const menuGap = 8;
-
-  panel.style.position = "fixed";
-  panel.style.left = "0px";
-  panel.style.top = "0px";
-  panel.style.right = "auto";
-  panel.style.width = "";
-  panel.style.maxHeight = "";
-  panel.style.visibility = "hidden";
-
-  const triggerRect = trigger.getBoundingClientRect();
-  const measuredRect = panel.getBoundingClientRect();
-  const maxPanelWidth = Math.max(180, window.innerWidth - viewportPadding * 2);
-  const panelWidth = Math.min(Math.max(measuredRect.width || 240, 180), maxPanelWidth);
-  const preferredLeft = triggerRect.left;
-  const left = Math.min(
-    Math.max(preferredLeft, viewportPadding),
-    Math.max(viewportPadding, window.innerWidth - panelWidth - viewportPadding)
-  );
-
-  panel.style.width = `${Math.round(panelWidth)}px`;
-  panel.style.maxHeight = `${Math.max(180, Math.min(380, window.innerHeight - viewportPadding * 2))}px`;
-
-  const panelHeight = Math.min(panel.scrollHeight || measuredRect.height || 0, parseFloat(panel.style.maxHeight) || 380);
-  const belowTop = triggerRect.bottom + menuGap;
-  const aboveTop = triggerRect.top - menuGap - panelHeight;
-  let top = belowTop;
-  if (belowTop + panelHeight > window.innerHeight - viewportPadding && aboveTop >= viewportPadding) {
-    top = aboveTop;
-  } else if (belowTop + panelHeight > window.innerHeight - viewportPadding) {
-    top = Math.max(viewportPadding, window.innerHeight - viewportPadding - panelHeight);
-  }
-
-  panel.style.left = `${Math.round(left)}px`;
-  panel.style.top = `${Math.round(top)}px`;
-  panel.style.visibility = "";
-}
-
-function ensureContentLanguageMenuDismissHandlers() {
-  if (contentLanguageDismissHandlersBound) return;
-  contentLanguageDismissHandlersBound = true;
-  document.addEventListener("click", (event) => {
-    const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
-    if (!menu || menu.contains(event.target)) return;
-    closeContentLanguageMenu();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeContentLanguageMenu();
-  });
-  window.addEventListener("resize", () => {
-    const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
-    const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
-    const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
-    if (!menu?.classList.contains("is-open") || !trigger || !panel) return;
-    positionContentLanguageMenu(trigger, panel);
-  });
-  window.addEventListener("scroll", () => {
-    const menu = els.contentLanguageMenuMount?.querySelector('[data-booking-content-lang-menu="true"]');
-    const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
-    const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
-    if (!menu?.classList.contains("is-open") || !trigger || !panel) return;
-    positionContentLanguageMenu(trigger, panel);
-  }, { passive: true });
-}
-
-function renderContentLanguageMenu() {
-  if (!els.contentLanguageMenuMount) return;
-  ensureContentLanguageMenuDismissHandlers();
-  const active = contentLanguageOption(state.contentLang || bookingContentLang("en"));
-  const otherOptions = BOOKING_CONTENT_LANGUAGE_OPTIONS
-    .filter((option) => option.code !== active.code)
-    .map((option) => {
-      const renderedOption = contentLanguageOption(option.code);
-      return `
-        <button
-          type="button"
-          class="lang-menu-item"
-          data-booking-content-lang-option="${escapeHtml(renderedOption.code)}"
-          role="menuitem"
-        >
-          <span class="lang-flag ${escapeHtml(renderedOption.flagClass)}" aria-hidden="true"></span>
-          <span class="lang-menu-code">${escapeHtml(renderedOption.shortLabel)}</span>
-          <span class="lang-menu-label">${escapeHtml(renderedOption.label)}</span>
-        </button>
-      `;
-    })
-    .join("");
-
-  els.contentLanguageMenuMount.innerHTML = `
-    <div class="lang-menu booking-content-language-menu" data-booking-content-lang-menu="true">
-      <button
-        type="button"
-        class="lang-menu-trigger"
-        data-booking-content-lang-trigger="true"
-        aria-haspopup="menu"
-        aria-expanded="false"
-        aria-label="${escapeHtml(backendT("booking.content_language", "Customer language"))}"
-      >
-        <span class="lang-flag ${escapeHtml(active.flagClass)}" aria-hidden="true"></span>
-        <span class="lang-menu-code">${escapeHtml(active.shortLabel)}</span>
-        <span class="lang-menu-caret" aria-hidden="true"></span>
-      </button>
-      <div
-        class="lang-menu-panel"
-        data-booking-content-lang-panel="true"
-        role="menu"
-        hidden
-      >${otherOptions}</div>
-    </div>
-  `;
-
-  const menu = els.contentLanguageMenuMount.querySelector('[data-booking-content-lang-menu="true"]');
-  const trigger = menu?.querySelector('[data-booking-content-lang-trigger="true"]');
-  const panel = menu?.querySelector('[data-booking-content-lang-panel="true"]');
-  if (!menu || !trigger || !panel) return;
-
-  const openMenu = () => {
-    menu.classList.add("is-open");
-    panel.hidden = false;
-    positionContentLanguageMenu(trigger, panel);
-    trigger.setAttribute("aria-expanded", "true");
-  };
-
-  trigger.addEventListener("click", () => {
-    if (menu.classList.contains("is-open")) closeContentLanguageMenu();
-    else openMenu();
-  });
-
-  panel.querySelectorAll("[data-booking-content-lang-option]").forEach((item) => {
-    item.addEventListener("click", () => {
-      const next = normalizeBookingContentLang(item.getAttribute("data-booking-content-lang-option") || active.code);
-      closeContentLanguageMenu();
-      if (!els.contentLanguageSelect) return;
-      els.contentLanguageSelect.value = next;
-      els.contentLanguageSelect.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-  });
-}
-
-function syncContentLanguageSelector() {
-  if (!els.contentLanguageSelect) return;
-  const normalized = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
-  state.contentLang = normalized;
-  els.contentLanguageSelect.value = normalized;
-  renderContentLanguageMenu();
-}
-
-function populateContentLanguageSelect() {
-  if (!els.contentLanguageSelect) return;
-  els.contentLanguageSelect.innerHTML = BOOKING_CONTENT_LANGUAGE_OPTIONS
-    .map((option) => `<option value="${escapeHtml(option.code)}">${escapeHtml(option.label)}</option>`)
-    .join("");
-  syncContentLanguageSelector();
-}
-
-async function handleContentLanguageChange() {
-  if (!els.contentLanguageSelect) return;
-  const previousLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
-  const nextLang = normalizeBookingContentLang(els.contentLanguageSelect.value || previousLang);
-  if (nextLang === previousLang) {
-    syncContentLanguageSelector();
-    return;
-  }
-  if (hasUnsavedBookingChanges() && !window.confirm(backendT(
-    "booking.content_language_discard_confirm",
-    "You have unsaved changes. Switch content language and discard them?"
-  ))) {
-    els.contentLanguageSelect.value = previousLang;
-    syncContentLanguageSelector();
-    return;
-  }
-  state.contentLang = setBookingContentLang(nextLang);
-  state.contentLangInitialized = true;
-  updateContentLangInUrl(state.contentLang);
-  syncContentLanguageSelector();
-  clearStatus();
-  if (state.booking?.id && state.permissions.canEditBooking) {
-    try {
-      const request = bookingCustomerLanguageRequest({
-        baseURL: apiOrigin,
-        params: { booking_id: state.booking.id },
-        body: {
-          expected_core_revision: getBookingRevision("core_revision"),
-          customer_language: nextLang
-        }
-      });
-      const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(request.url)), {
-        method: request.method,
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request.body)
-      });
-      if (response.status === 404) {
-        clearError();
-        setStatus(backendT(
-          "booking.content_language_persist_pending",
-          "Customer language updated for this page. Restart the backend to persist it across reloads."
-        ));
-        await loadBookingPage();
-        return;
-      }
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const requestFailed = backendT("booking.error.request_failed", "Request failed");
-        const message = payload?.detail ? `${payload.error || requestFailed}: ${payload.detail}` : payload?.error || requestFailed;
-        showError(message);
-        state.contentLang = setBookingContentLang(previousLang);
-        updateContentLangInUrl(state.contentLang);
-        els.contentLanguageSelect.value = previousLang;
-        syncContentLanguageSelector();
-        return;
-      }
-      clearError();
-    } catch (error) {
-      console.error(error);
-      clearError();
-      setStatus(backendT(
-        "booking.content_language_persist_pending",
-        "Customer language updated for this page. Restart the backend to persist it across reloads."
-      ));
-      await loadBookingPage();
-      return;
-    }
-  }
-  await loadBookingPage();
-}
+const bookingLanguageController = createBookingPageLanguageController({
+  state,
+  els,
+  apiOrigin,
+  escapeHtml,
+  backendT,
+  getBookingRevision,
+  hasUnsavedBookingChanges,
+  showError,
+  clearError,
+  setStatus,
+  loadBookingPage
+});
+const {
+  handleContentLanguageChange,
+  populateContentLanguageSelect,
+  resolveSubmissionCustomerLanguage,
+  syncContentLanguageSelector,
+  updateContentLangInUrl,
+  waitForBackendI18n,
+  withBackendLang,
+  withBookingContentLang
+} = bookingLanguageController;
 
 function captureControlSnapshot(root) {
   if (!root) return "";
@@ -746,45 +472,7 @@ function bindSectionNavigation(activeSection) {
 }
 
 async function loadBookingPage() {
-  clearStatus();
-  const requestedContentLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
-  const requests = [
-    fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)),
-    state.permissions.canReadAssignmentDirectory
-      ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
-      : Promise.resolve(null)
-  ];
-  const [bookingPayload, usersPayload] = await Promise.all(requests);
-  if (!bookingPayload) return;
-
-  const incomingBooking = bookingPayload?.booking || null;
-  if (!state.contentLangInitialized) {
-    const submissionLang = resolveSubmissionCustomerLanguage(incomingBooking);
-    state.contentLang = setBookingContentLang(submissionLang);
-    state.contentLangInitialized = true;
-    updateContentLangInUrl(state.contentLang);
-    syncContentLanguageSelector();
-    if (submissionLang !== requestedContentLang) {
-      await loadBookingPage();
-      return;
-    }
-  }
-
-  applyBookingPayload(bookingPayload);
-  state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
-  await ensureTourImageLoaded();
-
-  renderBookingHeader();
-  renderBookingData();
-  renderActionControls();
-  renderPersonsEditor();
-  renderPricingPanel();
-  renderTravelPlanPanel();
-  renderOfferPanel();
-  await loadActivities();
-  await bookingWhatsApp?.load(state.booking);
-  await loadInvoices();
-  bookingWhatsApp?.startAutoRefresh(() => state.booking);
+  return bookingPageDataController.loadBookingPage();
 }
 
 function renderBookingHeader() {
@@ -949,6 +637,11 @@ function renderStaticSegmentHeaders() {
     secondary: backendT("booking.no_travel_plan", "No travel plan yet.")
   });
   renderBookingSegmentHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
+  renderBookingSegmentHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_terms", "Payment terms") });
+  renderBookingSegmentHeader(els.offerAcceptancePanelSummary, {
+    primary: backendT("booking.offer_acceptance", "Offer acceptance"),
+    secondary: backendT("booking.offer_acceptance_none", "No generated offers yet.")
+  });
   renderBookingSegmentHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
   renderBookingSegmentHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });
 }
@@ -1143,77 +836,46 @@ const coreModule = createBookingCoreModule({
   renderPersonsEditor: (...args) => personsModule.renderPersonsEditor(...args)
 });
 
+const bookingPageDataController = createBookingPageDataController({
+  state,
+  els,
+  apiBase,
+  apiOrigin,
+  roles: ROLES,
+  backendT,
+  normalizeBookingContentLang,
+  redirectToBackendLogin,
+  fetchApi,
+  showError,
+  clearError,
+  clearStatus,
+  setStatus,
+  resolveSubmissionCustomerLanguage,
+  updateContentLangInUrl,
+  syncContentLanguageSelector,
+  withBookingContentLang,
+  applyBookingPayload,
+  renderBookingHeader,
+  renderBookingData,
+  renderActionControls,
+  renderPersonsEditor,
+  renderPricingPanel,
+  renderTravelPlanPanel,
+  renderOfferPanel,
+  loadActivities,
+  loadInvoices,
+  ensureTourImageLoaded,
+  bookingWhatsAppRef: () => bookingWhatsApp
+});
+
 void init().catch((error) => {
   console.error(error);
   showError(backendT("booking.error.load", "Could not load booking."));
   setStatus(backendT("booking.error.load", "Could not load booking."));
 });
 
-function getConflictReloadInstruction() {
-  const userAgent = String(window.navigator.userAgent || "");
-  const platform = String(window.navigator.platform || "");
-  const touchPoints = Number(window.navigator.maxTouchPoints || 0);
-  const isIPhone = /iPhone/i.test(userAgent);
-  const isIPad = /iPad/i.test(userAgent) || (/Mac/i.test(platform) && touchPoints > 1);
-  const isIOS = isIPhone || isIPad;
-  if (isIOS) {
-    return backendT("booking.reload.ios", "Reload this page in Safari by tapping the reload button in the address bar.");
-  }
-  if (/Android/i.test(userAgent)) {
-    return backendT("booking.reload.android", "Reload this page in your browser by tapping the reload button in the toolbar.");
-  }
-  if (/Mac/i.test(platform)) {
-    return backendT("booking.reload.mac", "Reload this page with Command-R.");
-  }
-  if (/Win/i.test(platform)) {
-    return backendT("booking.reload.windows", "Reload this page with Ctrl-R or F5.");
-  }
-  return backendT("booking.reload.default", "Reload this page in your browser.");
-}
-
 async function fetchBookingMutation(path, options = {}) {
-  const method = options.method || "GET";
-  const body = options.body;
-
-  try {
-    const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(path)), {
-      method,
-      credentials: "include",
-      headers: {
-        ...(body ? { "Content-Type": "application/json" } : {})
-      },
-      ...(body ? { body: JSON.stringify(body) } : {})
-    });
-
-      const payload = await response.json();
-      if (!response.ok) {
-        if (response.status === 401) {
-          redirectToBackendLogin();
-          return null;
-        }
-        if (response.status === 409 && payload?.code === "BOOKING_REVISION_MISMATCH" && payload?.booking) {
-          const instruction = getConflictReloadInstruction();
-          showError(backendT(
-            "booking.error.changed_detail",
-            "This booking was changed on another device. Please reload before editing again. {instruction}",
-            { instruction }
-          ));
-          setStatus(backendT("booking.error.changed", "This booking was changed in the backend. Reload required."));
-          return null;
-        }
-        const requestFailed = backendT("booking.error.request_failed", "Request failed");
-        const message = payload?.detail ? `${payload.error || requestFailed}: ${payload.detail}` : payload.error || requestFailed;
-        showError(message);
-        return null;
-      }
-
-    clearError();
-    return payload;
-  } catch (error) {
-    showError(backendT("booking.error.connect", "Could not connect to backend API."));
-    console.error(error);
-    return null;
-  }
+  return bookingPageDataController.fetchBookingMutation(path, options);
 }
 
 function setStatus(message) {
@@ -1226,45 +888,7 @@ function clearStatus() {
 }
 
 async function loadAuthStatus() {
-  try {
-    const request = authMeRequest({ baseURL: apiBase });
-    const response = await fetch(request.url, {
-      method: request.method,
-      credentials: "include",
-      headers: request.headers
-    });
-    const payload = await response.json().catch(() => null);
-    if (payload) validateAuthMeResponse(payload);
-    if (response.status === 401 || (response.ok && !payload?.authenticated)) {
-      state.authUser = null;
-      if (els.userLabel) els.userLabel.textContent = "";
-      redirectToBackendLogin();
-      return;
-    }
-    if (!response.ok) {
-      state.authUser = null;
-      if (els.userLabel) els.userLabel.textContent = "";
-      return;
-    }
-    state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-    state.authUser = payload.user || null;
-    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
-    state.user = user || "";
-    if (els.userLabel) {
-      els.userLabel.textContent = user || "";
-    }
-    state.permissions = {
-      canChangeAssignment: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER),
-      canReadAssignmentDirectory: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT),
-      canChangeStage: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF),
-      canEditBooking: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.STAFF)
-    };
-  } catch {
-    state.user = "";
-    state.authUser = null;
-    if (els.userLabel) els.userLabel.textContent = "";
-    // leave defaults
-  }
+  return bookingPageDataController.loadAuthStatus();
 }
 
 function displayKeycloakUser(user) {
@@ -1281,10 +905,6 @@ function resolveCurrentAuthKeycloakUser(expectedId = "") {
     name: normalizeText(state.authUser?.name) || null,
     username: normalizeText(state.authUser?.preferred_username) || null
   };
-}
-
-function hasAnyRole(...roles) {
-  return roles.some((role) => state.roles.includes(role));
 }
 
 function showError(message) {

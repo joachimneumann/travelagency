@@ -55,6 +55,61 @@ import (
 	tax_breakdown: [...#BookingOfferTaxBucket]
 }
 
+#BookingOfferPaymentDueRule: {
+	type: enums.#OfferPaymentDueType
+
+	if type == "FIXED_DATE" {
+		fixed_date: common.#DateOnly
+	}
+
+	if type == "DAYS_AFTER_ACCEPTANCE" || type == "DAYS_BEFORE_TRIP_START" || type == "DAYS_AFTER_TRIP_START" || type == "DAYS_AFTER_TRIP_END" {
+		days: >=0 & int
+	}
+}
+
+#BookingOfferPaymentAmountSpec: {
+	mode: enums.#OfferPaymentAmountMode
+
+	if mode == "FIXED_AMOUNT" {
+		fixed_amount_cents: >=0 & int
+	}
+
+	if mode == "PERCENTAGE_OF_OFFER_TOTAL" {
+		percentage_basis_points: >0 & <=10000 & int
+	}
+}
+
+#BookingOfferPaymentTermLine: {
+	id:                    common.#Identifier
+	kind:                  enums.#OfferPaymentTermKind
+	label:                 string & !=""
+	sequence:              >=1 & int
+	amount_spec:           #BookingOfferPaymentAmountSpec
+	resolved_amount_cents: >=0 & int
+	due_rule:              #BookingOfferPaymentDueRule
+	description?:          string
+
+	if kind == "FINAL_BALANCE" {
+		amount_spec: {
+			mode: "REMAINING_BALANCE"
+		}
+	}
+
+	if kind == "DEPOSIT" || kind == "INSTALLMENT" {
+		amount_spec: {
+			mode: "FIXED_AMOUNT" | "PERCENTAGE_OF_OFFER_TOTAL"
+		}
+	}
+}
+
+#BookingOfferPaymentTerms: {
+	currency:                 enums.#CurrencyCode
+	basis_total_amount_cents: >=0 & int
+	lines: [...#BookingOfferPaymentTermLine]
+	scheduled_total_amount_cents: >=0 & int
+	notes?:                       string
+}
+
 #BookingOffer: {
 	currency: enums.#CurrencyCode
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
@@ -62,6 +117,7 @@ import (
 	components: [...#BookingOfferComponent]
 	totals:             #BookingOfferTotals
 	quotation_summary?: #BookingOfferQuotationSummary
+	payment_terms?:     #BookingOfferPaymentTerms
 	total_price_cents:  int
 }
 
@@ -99,6 +155,7 @@ import (
 	created_by?:                  string
 	currency:                     enums.#CurrencyCode
 	total_price_cents:            int
+	payment_terms?:               #BookingOfferPaymentTerms
 	offer:                        #BookingOffer
 	travel_plan?:                 #BookingTravelPlan
 	pdf_frozen_at?:               common.#Timestamp

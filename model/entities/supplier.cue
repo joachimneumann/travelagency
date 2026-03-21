@@ -6,11 +6,11 @@ import (
 )
 
 #Supplier: {
-	id:              common.#Identifier
-	name:            string
-	contact?:        string
+	id:               common.#Identifier
+	name:             string
+	contact?:         string
 	emergency_phone?: string
-	email?:          common.#Email
-	country?:        enums.#CountryCode
-	category:        enums.#SupplierCategory
+	email?:           common.#Email
+	country?:         enums.#CountryCode
+	category:         enums.#SupplierCategory
 }

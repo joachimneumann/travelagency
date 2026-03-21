@@ -150,6 +150,7 @@ import (
 	created_by?:                   string
 	currency:                      enums.#CurrencyCode
 	total_price_cents:             int
+	payment_terms?:                entities.#BookingOfferPaymentTerms
 	offer:                         entities.#BookingOffer
 	travel_plan?:                  entities.#BookingTravelPlan
 	pdf_url:                       string & !=""
