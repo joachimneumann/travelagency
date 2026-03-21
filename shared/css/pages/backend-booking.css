@@ -5,7 +5,7 @@
   --wa-text: var(--wa-text-strong);
   --wa-meta: var(--wa-text-muted);
   --booking-form-control-inline-start: 0.72rem;
-  font-family: "SF Pro Text", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--font-family-sans);
   background-color: var(--wa-bg);
   background-image:
     radial-gradient(circle at 24px 24px, var(--pattern-dot-strong) 1px, transparent 1px),
@@ -29,8 +29,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.7rem;
-  font-weight: 400;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-regular);
   line-height: 1;
   text-decoration: none;
   padding: 0.35rem 0.75rem;
@@ -55,8 +55,8 @@
 
 .booking-detail-page .booking-offer-currency-hint {
   color: var(--error-text-critical);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--font-size-overline);
+  font-weight: var(--font-weight-bold);
   margin-left: 0.32rem;
 }
 
@@ -71,8 +71,8 @@
   background: linear-gradient(180deg, var(--success-grad-start) 0%, var(--success-grad-end) 100%);
   border-color: var(--success-grad-end);
   color: var(--surface);
-  font-size: 0.94rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
   box-shadow: 0 6px 14px var(--success-shadow);
 }
@@ -130,9 +130,9 @@
 
 .booking-detail-page .booking-hero__photo-initials {
   color: var(--text-neutral-soft);
-  font-size: 3rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
 }
 
 .booking-detail-page .booking-hero__copy {
@@ -146,7 +146,7 @@
 .booking-detail-page .booking-hero__name {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  font-size: var(--font-size-fluid-section-lg);
   line-height: 1.04;
 }
 
@@ -161,7 +161,7 @@
   flex: 1;
   min-width: 0;
   font: inherit;
-  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  font-size: var(--font-size-fluid-section-lg);
   font-weight: inherit;
   line-height: 1.04;
   color: var(--text-strong);
@@ -177,8 +177,8 @@
   background: transparent;
   color: var(--text-ink-soft);
   font: inherit;
-  font-size: 1.65rem;
-  font-weight: 700;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
   padding: 0.16rem 0.32rem;
   border-radius: 10px;
@@ -195,7 +195,7 @@
 .booking-detail-page .booking-hero__id {
   margin: 0;
   color: var(--text-ink-muted);
-  font-size: 0.94rem;
+  font-size: var(--font-size-body);
 }
 
 .booking-detail-page .booking-hero__id-row {
@@ -212,8 +212,8 @@
   background: transparent;
   color: var(--text-ink-strong);
   font: inherit;
-  font-size: 0.94rem;
-  font-weight: 600;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
   padding: 0.12rem 0.2rem;
   border-radius: 10px;
@@ -230,14 +230,14 @@
 .booking-detail-page .booking-hero__id-copy-status {
   min-height: 1em;
   color: var(--text-ink-soft);
-  font-size: 0.92rem;
+  font-size: var(--font-size-body-sm);
 }
 
 .booking-persons-current {
   margin: 0;
-  font-size: 1.08rem;
+  font-size: var(--font-size-title-sm);
   line-height: 1.3;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text);
   padding: 0.18rem 0.42rem;
   border-radius: 10px;
@@ -272,7 +272,7 @@
 }
 
 .booking-segment-header__secondary {
-  font-size: 0.88rem;
+  font-size: var(--font-size-body-sm);
   line-height: 1.35;
   color: var(--text-black-soft);
   white-space: pre-line;
@@ -327,9 +327,9 @@
 
 .booking-person-card__initials {
   color: var(--text-neutral-soft);
-  font-size: 3.15rem;
-  font-weight: 500;
-  letter-spacing: 0.03em;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-ui);
 }
 
 .booking-person-card__content {
@@ -341,10 +341,10 @@
 
 .booking-person-card__title {
   margin: 0;
-  font-size: clamp(1.45rem, 2.2vw, 2.1rem);
+  font-size: var(--font-size-fluid-section);
   line-height: 1.08;
   color: var(--text-black);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .booking-person-card__identity {
@@ -352,9 +352,9 @@
   align-items: center;
   gap: 0.6rem;
   color: var(--text-black-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
   line-height: 1.35;
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
 }
 
 .booking-person-card__status-list {
@@ -366,22 +366,22 @@
 
 .booking-person-card__identity-check {
   color: var(--success-text-bright);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
 }
 
 .booking-person-card__subtitle {
   margin: 0;
   color: var(--text-black-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
   line-height: 1.35;
 }
 
 .booking-person-card__role-footer {
   grid-column: 1 / -1;
   text-align: center;
-  font-size: 0.9rem;
-  font-weight: 400;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
   line-height: 1.35;
   color: var(--text-black-muted);
 }
@@ -429,8 +429,8 @@
   justify-content: center;
   background: linear-gradient(180deg, var(--success-grad-start) 0%, var(--success-grad-end) 100%);
   color: var(--surface);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
   box-shadow: 0 8px 18px var(--success-shadow);
   flex: 0 0 auto;
@@ -448,7 +448,7 @@
 .booking-persons-mismatch-warning {
   margin: 0 0 0.8rem;
   color: var(--error-text-bright);
-  font-size: 0.94rem;
+  font-size: var(--font-size-body);
   line-height: 1.4;
 }
 
@@ -470,8 +470,8 @@
   padding: 0.55rem 0.8rem;
   border: 1px solid transparent;
   border-radius: 14px;
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.35;
 }
 
@@ -507,7 +507,7 @@
   background: none;
   box-shadow: none;
   color: var(--success-text-strong);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .booking-person-modal__panel {
@@ -565,8 +565,8 @@
 
 .booking-person-modal__avatar span {
   color: var(--text-neutral-soft);
-  font-size: 3.35rem;
-  font-weight: 500;
+  font-size: var(--font-size-display-lg);
+  font-weight: var(--font-weight-medium);
 }
 
 .booking-person-modal__avatar:disabled {
@@ -608,7 +608,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.96rem;
+  font-size: var(--font-size-body);
 }
 
 .booking-person-modal__travel-document {
@@ -635,8 +635,8 @@
   background: transparent;
   color: var(--text-black-soft);
   font: inherit;
-  font-size: 0.94rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
   padding: 0.52rem 1rem;
   border-radius: 999px;
   cursor: pointer;
@@ -645,7 +645,7 @@
 
 .booking-person-modal__document-switch-check {
   color: var(--success-text-bright);
-  font-weight: 800;
+  font-weight: var(--font-weight-bold);
 }
 
 .booking-person-modal__document-switch-btn.is-active {
@@ -685,8 +685,8 @@
   background: var(--surface);
   color: var(--text-muted-alt);
   font: inherit;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: var(--font-size-overline);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
   padding: 0.28rem 0.52rem;
   border-radius: 999px;
@@ -732,7 +732,7 @@
   border-radius: 10px;
   background: var(--surface);
   color: var(--text-muted-alt);
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
 }
 
@@ -758,7 +758,7 @@
   align-items: center;
   gap: 0.55rem;
   margin-top: 1.7rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .booking-danger-zone {
@@ -790,8 +790,8 @@
   position: relative;
   padding: 0.9rem 3rem 0.9rem var(--booking-form-control-inline-start);
   font-family: inherit;
-  font-size: 1rem;
-  font-weight: 400;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
   line-height: 1.35;
   color: var(--text-black);
   display: flex;
@@ -818,7 +818,7 @@
   top: 50%;
   right: 1rem;
   transform: translateY(-50%) rotate(0deg);
-  font-size: 1.15rem;
+  font-size: var(--font-size-title-md);
   line-height: 1;
   color: var(--text-black-soft);
   transition: transform 240ms ease;

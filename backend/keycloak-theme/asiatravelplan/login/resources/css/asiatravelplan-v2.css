@@ -16,7 +16,7 @@ body {
   background: var(--c2-surface) !important;
   background-image: none !important;
   color: var(--c2-text);
-  font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 body.login-pf,
@@ -281,7 +281,7 @@ a {
   label,
   .pf-v5-c-form__label,
   .pf-c-form__label {
-    font-size: 0.92rem !important;
+    font-size: var(--font-size-body-sm) !important;
     line-height: 1.15 !important;
     margin-bottom: 3px !important;
     margin-top: 0 !important;
@@ -294,7 +294,7 @@ a {
   #kc-login,
   input[type="submit"] {
     min-height: 38px !important;
-    font-size: 0.95rem !important;
+    font-size: var(--font-size-body) !important;
   }
 
   #password + button,

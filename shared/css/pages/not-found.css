@@ -45,22 +45,22 @@
 
 .not-found-page .not-found-eyebrow {
   margin: 0;
-  font-size: 0.8rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: var(--font-size-caption);
+  letter-spacing: var(--tracking-page);
+  text-transform: var(--text-transform-caps);
   color: var(--muted);
 }
 
 .not-found-page .not-found-title {
   margin: 0;
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
+  font-size: var(--font-size-fluid-not-found);
   line-height: 0.95;
 }
 
 .not-found-page .not-found-booking {
   margin: 0;
   max-width: 28ch;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   line-height: 1.6;
   color: var(--muted);
 }
@@ -70,7 +70,7 @@
   padding: 1rem 1.1rem;
   border-left: 4px solid var(--text-strong);
   background: var(--surface-page-muted);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .not-found-page .not-found-actions {

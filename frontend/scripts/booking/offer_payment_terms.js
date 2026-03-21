@@ -604,8 +604,10 @@ export function createBookingOfferPaymentTermsModule(ctx) {
               <td class="offer-payment-term-col-actions"></td>
             </tr>
             <tr class="offer-payment-terms__description-row">
-              <td class="offer-payment-terms__description-label">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</td>
-              <td class="offer-payment-terms__description-cell" colspan="5">${description ? escapeHtml(description) : " "}</td>
+              <td class="offer-payment-terms__description-cell" colspan="6">
+                <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
+                <div class="offer-payment-terms__description-text">${description ? escapeHtml(description) : " "}</div>
+              </td>
               <td class="offer-payment-terms__description-spacer"></td>
             </tr>
           `;
@@ -709,8 +711,8 @@ export function createBookingOfferPaymentTermsModule(ctx) {
           </td>
         </tr>
         <tr class="offer-payment-terms__description-row">
-          <td class="offer-payment-terms__description-label">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</td>
-          <td class="offer-payment-terms__description-cell" colspan="5">
+          <td class="offer-payment-terms__description-cell" colspan="6">
+            <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
             <textarea class="booking-text-field booking-text-field--customer" rows="2" data-offer-payment-term-description="${index}">${escapeHtml(String(line?.description || ""))}</textarea>
           </td>
           <td class="offer-payment-terms__description-spacer"></td>

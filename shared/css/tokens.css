@@ -222,9 +222,44 @@
 
   /* Sizing and Typography */
   --radius: 14px;
-  --menu-font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-  --menu-font-size-main: 0.92rem;
-  --menu-font-size-sub: 0.78rem;
+  --font-family-sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-ui: var(--font-family-sans);
+  --font-family-brand: var(--font-family-sans);
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-size-micro: 0.72rem;
+  --font-size-overline: 0.78rem;
+  --font-size-caption: 0.82rem;
+  --font-size-body-sm: 0.9rem;
+  --font-size-body: 0.94rem;
+  --font-size-base: 1rem;
+  --font-size-title-sm: 1.05rem;
+  --font-size-title-md: 1.15rem;
+  --font-size-title-lg: 1.45rem;
+  --font-size-heading: 1.65rem;
+  --font-size-display-sm: 1.85rem;
+  --font-size-display-md: 2.2rem;
+  --font-size-display: 3rem;
+  --font-size-display-lg: 3.35rem;
+  --font-size-fluid-section: clamp(1.45rem, 2.2vw, 2rem);
+  --font-size-fluid-section-lg: clamp(1.65rem, 3vw, 2.4rem);
+  --font-size-fluid-status: clamp(1.1rem, 2.5vw, 1.5rem);
+  --font-size-fluid-marketing: clamp(1.8rem, 3.6vw, 3rem);
+  --font-size-fluid-marketing-lg: clamp(1.9rem, 4vw, 3.4rem);
+  --font-size-fluid-not-found: clamp(2.2rem, 4vw, 3.8rem);
+  --tracking-normal: 0.01em;
+  --tracking-tight: -0.02rem;
+  --tracking-tighter: -0.08rem;
+  --tracking-wide: 0.02em;
+  --tracking-ui: 0.03em;
+  --tracking-wider: 0.04em;
+  --tracking-caps: 0.06em;
+  --tracking-section: 0.08em;
+  --tracking-page: 0.16em;
+  --text-transform-caps: uppercase;
 
   /* Flags */
   --flag-en: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%23012169'/%3E%3Cpath d='M0 0l60 40M60 0L0 40' stroke='%23fff' stroke-width='8'/%3E%3Cpath d='M0 0l60 40M60 0L0 40' stroke='%23C8102E' stroke-width='4'/%3E%3Cpath d='M30 0v40M0 20h60' stroke='%23fff' stroke-width='14'/%3E%3Cpath d='M30 0v40M0 20h60' stroke='%23C8102E' stroke-width='8'/%3E%3C/svg%3E");
