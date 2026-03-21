@@ -10,10 +10,17 @@
     <meta property="og:description" content="AsiaTravelPlan is launching soon." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="assets/happy_tourists.webp" />
-    <meta name="theme-color" content="#e8efe9" />
+    <meta name="theme-color" content="" />
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="site.webmanifest" />
     <link rel="stylesheet" href="assets/styles.css" />
+    <script>
+      window.addEventListener("load", () => {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        const themeColor = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+        if (meta && themeColor) meta.setAttribute("content", themeColor);
+      });
+    </script>
   </head>
   <body>
     <main class="simple-shell">

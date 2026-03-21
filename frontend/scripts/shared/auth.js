@@ -2,7 +2,8 @@ import { authMeRequest } from "../../Generated/API/generated_APIRequestFactory.j
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 
 export async function fetchAuthMe(apiBase = "") {
-  const request = authMeRequest({ baseURL: apiBase });
+  const authBase = String(apiBase || window.location.origin).replace(/\/$/, "");
+  const request = authMeRequest({ baseURL: authBase });
   const response = await fetch(request.url, {
     method: request.method,
     credentials: "include",

@@ -11,6 +11,7 @@ import {
   normalizePdfLang,
   pdfT
 } from "./pdf_i18n.js";
+import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 
@@ -51,6 +52,19 @@ const PDF_FONT_BOLD_CANDIDATES = [
   "/usr/share/fonts/opentype/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 ];
+
+const PDF_COLORS = Object.freeze({
+  surface: pdfTheme.surface,
+  surfaceMuted: pdfTheme.surfaceMuted,
+  surfaceSubtle: pdfTheme.surfaceSubtle,
+  surfaceSuccess: pdfTheme.surfaceSuccess,
+  line: pdfTheme.line,
+  lineStrong: pdfTheme.lineStrong,
+  text: pdfTheme.text,
+  textStrong: pdfTheme.textStrong,
+  textMuted: pdfTheme.textMuted,
+  textMutedStrong: pdfTheme.textMutedStrong
+});
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -209,6 +223,7 @@ function deriveOfferQuotationSummary(offer) {
   if (provided) return provided;
 
   const components = safeArray(source.components);
+  const discount = source.discount && typeof source.discount === "object" ? source.discount : null;
   const buckets = new Map();
   let subtotal = 0;
   let totalTax = 0;
@@ -237,6 +252,22 @@ function deriveOfferQuotationSummary(offer) {
     bucket.gross_amount_cents += gross;
     bucket.items_count += 1;
     buckets.set(basisPoints, bucket);
+  }
+  if (discount && Number(discount?.amount_cents || 0) > 0) {
+    const amount = Math.max(0, Number(discount.amount_cents || 0));
+    subtotal -= amount;
+    totalGross -= amount;
+    const bucket = buckets.get(0) || {
+      tax_rate_basis_points: 0,
+      net_amount_cents: 0,
+      tax_amount_cents: 0,
+      gross_amount_cents: 0,
+      items_count: 0
+    };
+    bucket.net_amount_cents -= amount;
+    bucket.gross_amount_cents -= amount;
+    bucket.items_count += 1;
+    buckets.set(0, bucket);
   }
   return {
     tax_included: true,
@@ -291,8 +322,8 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
 }
 
 function drawRoundedTag(doc, x, y, width, height, text, options = {}, fonts = null) {
-  const fillColor = options.fillColor || "#F2F4EA";
-  const textColor = options.textColor || "#304850";
+  const fillColor = options.fillColor || PDF_COLORS.surfaceMuted;
+  const textColor = options.textColor || PDF_COLORS.textMutedStrong;
   doc
     .save()
     .roundedRect(x, y, width, height, 9)
@@ -311,7 +342,7 @@ function drawDivider(doc, y) {
     .moveTo(PAGE_MARGIN, y)
     .lineTo(doc.page.width - PAGE_MARGIN, y)
     .lineWidth(1)
-    .strokeColor("#D7DED9")
+    .strokeColor(PDF_COLORS.line)
     .stroke()
     .restore();
 }
@@ -341,12 +372,12 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
-    .fillColor("#1D2E36")
+    .fillColor(PDF_COLORS.textStrong)
     .text(companyProfile.name, rightColumnX, y, { width: 220, align: "right" });
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10)
-    .fillColor("#51646B")
+    .fillColor(PDF_COLORS.textMuted)
     .text(companyProfile.address, rightColumnX, y + 18, { width: 220, align: "right" })
     .text(`${pdfT(lang, "header.whatsapp", "WhatsApp")}: ${companyProfile.whatsapp}`, rightColumnX, y + 50, { width: 220, align: "right" })
     .text(`${pdfT(lang, "header.email", "Email")}: ${companyProfile.email}`, rightColumnX, y + 66, { width: 220, align: "right" })
@@ -376,14 +407,14 @@ function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fo
     doc
       .save()
       .roundedRect(PAGE_MARGIN, startY, HERO_IMAGE_WIDTH, HERO_IMAGE_HEIGHT, 14)
-      .fill("#EEF2EC")
+      .fill(PDF_COLORS.surfaceMuted)
       .restore();
   }
 
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(22)
-    .fillColor("#1D2E36")
+    .fillColor(PDF_COLORS.textStrong)
     .text(heroTitle, detailsX, startY + 4, {
       width: detailsWidth
     });
@@ -393,7 +424,7 @@ function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fo
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
-    .fillColor("#5E6D73")
+    .fillColor(PDF_COLORS.textMuted)
     .text(heroSubtitle, detailsX, titleBottomY + 4, {
       width: detailsWidth
     });
@@ -411,7 +442,7 @@ function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fo
       version: Number(generatedOffer?.version || 1)
     }),
     {
-      fillColor: "#E7F1ED"
+      fillColor: PDF_COLORS.surfaceSuccess
     },
     fonts
   );
@@ -419,7 +450,7 @@ function drawHero(doc, heroTitle, booking, generatedOffer, heroImage, startY, fo
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10.5)
-    .fillColor("#5E6D73")
+    .fillColor(PDF_COLORS.textMuted)
     .text(
       pdfT(lang, "offer.intro_currency", "Prepared for your requested itinerary in {currency}.", {
         currency: generatedOffer?.currency || booking?.preferred_currency || "USD"
@@ -438,7 +469,7 @@ function drawIntro(doc, startY, fonts, lang) {
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11.5)
-    .fillColor("#33454C")
+    .fillColor(PDF_COLORS.textMutedStrong)
     .text(
       pdfT(lang, "offer.intro_body", "Thank you for considering Asia Travel Plan for your journey. We are pleased to share this offer for your trip, and we hope it feels like a strong starting point for your travel planning. If you like it, simply reply to us and we will refine the next steps together."),
       PAGE_MARGIN,
@@ -457,7 +488,7 @@ function drawTravelers(doc, booking, startY, fonts, lang) {
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
-    .fillColor("#23363D")
+    .fillColor(PDF_COLORS.textStrong)
     .text(pdfT(lang, "offer.travelers_title", "Who is traveling"), PAGE_MARGIN, startY);
 
   const boxY = startY + 18;
@@ -479,13 +510,13 @@ function drawTravelers(doc, booking, startY, fonts, lang) {
   doc
     .save()
     .roundedRect(PAGE_MARGIN, boxY, boxWidth, boxHeight, 12)
-    .fill("#F4F7F2")
+    .fill(PDF_COLORS.surfaceMuted)
     .restore();
 
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
-    .fillColor("#33454C");
+    .fillColor(PDF_COLORS.textMutedStrong);
   const gutter = 18;
   const innerWidth = boxWidth - 32;
   const columnWidth = columnCount === 2 ? (innerWidth - gutter) / 2 : innerWidth;
@@ -517,7 +548,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
     pdfDoc
       .font(pdfFontName("bold", fonts))
       .fontSize(13)
-      .fillColor("#23363D")
+      .fillColor(PDF_COLORS.textStrong)
       .text(sectionTitle, PAGE_MARGIN, nextY);
     return nextY + 18;
   };
@@ -545,13 +576,13 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
     doc
       .save()
       .roundedRect(PAGE_MARGIN, y, dayBlockWidth, dayHeaderHeight, 10)
-      .fill("#EEF3F0")
+      .fill(PDF_COLORS.surfaceMuted)
       .restore();
 
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(11)
-      .fillColor("#23363D")
+      .fillColor(PDF_COLORS.textStrong)
       .text(dayTitle, PAGE_MARGIN + 12, y + 7, {
         width: dayTitleWidth
       });
@@ -560,7 +591,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(9.5)
-        .fillColor("#5E6D73")
+        .fillColor(PDF_COLORS.textMuted)
         .text(dayMeta, PAGE_MARGIN + 12 + dayTitleWidth + 12, y + 8, {
           width: dayMetaWidth,
           align: "right"
@@ -574,7 +605,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(10)
-        .fillColor("#5E6D73")
+        .fillColor(PDF_COLORS.textMuted)
         .text(day.notes, PAGE_MARGIN + 4, y, {
           width: dayBlockWidth - 8,
           lineGap: 1
@@ -612,14 +643,14 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
       doc
         .save()
         .roundedRect(PAGE_MARGIN, y, dayBlockWidth, rowHeight, 10)
-        .fill("#FFFFFF")
+        .fill(PDF_COLORS.surface)
         .restore();
 
       if (timingText) {
         doc
           .font(pdfFontName("bold", fonts))
           .fontSize(9.8)
-          .fillColor("#43606B")
+          .fillColor(PDF_COLORS.textMutedStrong)
           .text(timingText, PAGE_MARGIN + 12, y + 10, {
             width: timingColumnWidth - 10
           });
@@ -630,7 +661,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
       doc
         .font(pdfFontName("bold", fonts))
         .fontSize(10.5)
-        .fillColor("#253942")
+        .fillColor(PDF_COLORS.textStrong)
         .text(segmentTitle, textX, textY, {
           width: segmentTextWidth
         });
@@ -640,7 +671,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(9.2)
-          .fillColor("#5E6D73")
+          .fillColor(PDF_COLORS.textMuted)
           .text(segmentMeta, textX, textY + 2, {
             width: segmentTextWidth
           });
@@ -651,7 +682,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(9.8)
-          .fillColor("#33454C")
+          .fillColor(PDF_COLORS.textMutedStrong)
           .text(segmentDetails, textX, textY + 3, {
             width: segmentTextWidth,
             lineGap: 1
@@ -672,10 +703,10 @@ function drawTableHeader(doc, startY, columns, fonts) {
   doc
     .save()
     .roundedRect(PAGE_MARGIN, startY, doc.page.width - PAGE_MARGIN * 2, TABLE_HEADER_HEIGHT, 10)
-    .fill("#EEF3F0")
+    .fill(PDF_COLORS.surfaceMuted)
     .restore();
 
-  doc.font(pdfFontName("bold", fonts)).fontSize(9.25).fillColor("#43606B");
+  doc.font(pdfFontName("bold", fonts)).fontSize(9.25).fillColor(PDF_COLORS.textMutedStrong);
   for (const column of columns) {
     doc.text(column.label, x + TABLE_CELL_PADDING_X, startY + 8, {
       width: column.width - TABLE_CELL_PADDING_X * 2,
@@ -707,15 +738,15 @@ function drawSummaryCard(doc, startY, rows, fonts, title) {
     .save()
     .roundedRect(cardX, startY, cardWidth, cardHeight, 16)
     .lineWidth(1)
-    .strokeColor("#D7E0E7")
-    .fillAndStroke("#FFFFFF", "#D7E0E7")
+    .strokeColor(PDF_COLORS.line)
+    .fillAndStroke(PDF_COLORS.surface, PDF_COLORS.line)
     .restore();
 
   let y = startY + 18;
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(11.5)
-    .fillColor("#4D616D")
+    .fillColor(PDF_COLORS.textMutedStrong)
     .text(title, contentX, y, {
       width: contentWidth,
       align: "left"
@@ -729,7 +760,7 @@ function drawSummaryCard(doc, startY, rows, fonts, title) {
         .moveTo(contentX, y - dividerGapTop)
         .lineTo(contentX + contentWidth, y - dividerGapTop)
         .lineWidth(1)
-        .strokeColor("#E1E6EA")
+        .strokeColor(PDF_COLORS.line)
         .stroke()
         .restore();
       y += dividerGapBottom;
@@ -743,7 +774,7 @@ function drawSummaryCard(doc, startY, rows, fonts, title) {
     doc
       .font(pdfFontName(labelFont, fonts))
       .fontSize(labelSize)
-      .fillColor(row.isTotal ? "#22383F" : "#47606D")
+      .fillColor(row.isTotal ? PDF_COLORS.textStrong : PDF_COLORS.textMutedStrong)
       .text(row.label, contentX, y, {
         width: labelColumnWidth,
         align: "left"
@@ -751,7 +782,7 @@ function drawSummaryCard(doc, startY, rows, fonts, title) {
     doc
       .font(pdfFontName(labelFont, fonts))
       .fontSize(valueSize)
-      .fillColor(row.isTotal ? "#22383F" : "#22383F")
+      .fillColor(row.isTotal ? PDF_COLORS.textStrong : PDF_COLORS.textStrong)
       .text(row.value, contentX + labelColumnWidth + 14, y, {
         width: valueColumnWidth,
         align: "right"
@@ -783,15 +814,15 @@ function drawPaymentTermsSummaryCard(doc, startY, rows, fonts, lang) {
     .save()
     .roundedRect(cardX, startY, cardWidth, cardHeight, 16)
     .lineWidth(1)
-    .strokeColor("#D7E0E7")
-    .fillAndStroke("#FFFFFF", "#D7E0E7")
+    .strokeColor(PDF_COLORS.line)
+    .fillAndStroke(PDF_COLORS.surface, PDF_COLORS.line)
     .restore();
 
   let y = startY + 18;
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(11.5)
-    .fillColor("#4D616D")
+    .fillColor(PDF_COLORS.textMutedStrong)
     .text(title, contentX, y, {
       width: contentWidth,
       align: "left"
@@ -805,7 +836,7 @@ function drawPaymentTermsSummaryCard(doc, startY, rows, fonts, lang) {
         .moveTo(contentX, y - dividerGapTop)
         .lineTo(contentX + contentWidth, y - dividerGapTop)
         .lineWidth(1)
-        .strokeColor("#E1E6EA")
+        .strokeColor(PDF_COLORS.line)
         .stroke()
         .restore();
       y += dividerGapBottom;
@@ -819,7 +850,7 @@ function drawPaymentTermsSummaryCard(doc, startY, rows, fonts, lang) {
     doc
       .font(pdfFontName(labelFont, fonts))
       .fontSize(labelSize)
-      .fillColor(row.isTotal ? "#22383F" : "#47606D")
+      .fillColor(row.isTotal ? PDF_COLORS.textStrong : PDF_COLORS.textMutedStrong)
       .text(row.label, contentX, y, {
         width: labelColumnWidth,
         align: "left"
@@ -827,7 +858,7 @@ function drawPaymentTermsSummaryCard(doc, startY, rows, fonts, lang) {
     doc
       .font(pdfFontName(labelFont, fonts))
       .fontSize(valueSize)
-      .fillColor("#22383F")
+      .fillColor(PDF_COLORS.textStrong)
       .text(row.value, contentX + labelColumnWidth + 14, y, {
         width: valueColumnWidth,
         align: "right"
@@ -900,7 +931,7 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
     pdfDoc
       .font(pdfFontName("bold", fonts))
       .fontSize(13)
-      .fillColor("#23363D")
+      .fillColor(PDF_COLORS.textStrong)
       .text(sectionTitle, PAGE_MARGIN, nextY);
     return nextY + 18;
   };
@@ -929,13 +960,13 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
     doc
       .save()
       .roundedRect(PAGE_MARGIN, y, cardWidth, rowHeight, 12)
-      .fill("#FFFFFF")
+      .fill(PDF_COLORS.surface)
       .restore();
 
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(10.6)
-      .fillColor("#23363D")
+      .fillColor(PDF_COLORS.textStrong)
       .text(label, PAGE_MARGIN + 14, y + 10, {
         width: labelWidth
       });
@@ -943,7 +974,7 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(10.8)
-      .fillColor("#22383F")
+      .fillColor(PDF_COLORS.textStrong)
       .text(amountText, doc.page.width - PAGE_MARGIN - amountWidth - 14, y + 10, {
         width: amountWidth,
         align: "right"
@@ -953,7 +984,7 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(10)
-        .fillColor("#5E6D73")
+        .fillColor(PDF_COLORS.textMuted)
         .text(meta, PAGE_MARGIN + 14, y + 26, {
           width: metaWidth + labelWidth - 10
         });
@@ -963,7 +994,7 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(9.8)
-        .fillColor("#33454C")
+        .fillColor(PDF_COLORS.textMutedStrong)
         .text(description, PAGE_MARGIN + 14, y + 26 + metaHeight + 4, {
           width: cardWidth - 28,
           lineGap: 1
@@ -1000,14 +1031,14 @@ function drawPaymentTerms(doc, generatedOffer, startY, formatMoneyValue, fonts, 
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(11)
-      .fillColor("#4D616D")
+      .fillColor(PDF_COLORS.textMutedStrong)
       .text(pdfT(lang, "offer.payment_terms.notes", "Notes"), PAGE_MARGIN, y + 8, {
         width: cardWidth
       });
     doc
       .font(pdfFontName("regular", fonts))
       .fontSize(10)
-      .fillColor("#33454C")
+      .fillColor(PDF_COLORS.textMutedStrong)
       .text(notes, PAGE_MARGIN, y + 24, {
         width: cardWidth,
         lineGap: 1
@@ -1030,7 +1061,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
-    .fillColor("#23363D")
+    .fillColor(PDF_COLORS.textStrong)
     .text(pdfT(lang, "offer.table_title", "Offer details"), PAGE_MARGIN, y);
   y += 18;
 
@@ -1038,30 +1069,53 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   y = drawTableHeader(doc, y, columns, fonts);
 
   const components = safeArray(generatedOffer?.offer?.components);
-  if (!components.length) {
+  const discount = generatedOffer?.offer?.discount && typeof generatedOffer.offer.discount === "object"
+    ? generatedOffer.offer.discount
+    : null;
+  const rows = [
+    ...components.map((component) => ({
+      category: categoryLabel(component),
+      categoryTax: formatTaxRateLabel(component?.tax_rate_basis_points, lang),
+      details: textOrNull(component?.details) || "—",
+      quantity: String(Number(component?.quantity || 1)),
+      unitText: formatMoneyValue(
+        component?.unit_total_amount_cents ?? component?.unit_amount_cents,
+        generatedOffer?.currency
+      ),
+      totalText: formatMoneyValue(
+        component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
+        generatedOffer?.currency
+      )
+    })),
+    ...(discount && Number(discount?.amount_cents || 0) > 0
+      ? [{
+          category: pdfT(lang, "offer.discount", "Discount"),
+          categoryTax: pdfT(lang, "offer.discount_adjustment", "Final adjustment"),
+          details: textOrNull(discount?.reason) || "—",
+          quantity: "—",
+          unitText: "—",
+          totalText: formatMoneyValue(-Math.max(0, Number(discount?.amount_cents || 0)), generatedOffer?.currency)
+        }]
+      : [])
+  ];
+  if (!rows.length) {
     doc
       .font(pdfFontName("regular", fonts))
       .fontSize(10.5)
-      .fillColor("#5F6E74")
+      .fillColor(PDF_COLORS.textMuted)
       .text(pdfT(lang, "offer.table_empty", "No offer items were included in this version of the offer."), PAGE_MARGIN, y, {
         width: doc.page.width - PAGE_MARGIN * 2
       });
     return doc.y + 18;
   }
 
-  for (const component of components) {
-    const category = categoryLabel(component);
-    const categoryTax = formatTaxRateLabel(component?.tax_rate_basis_points, lang);
-    const details = textOrNull(component?.details) || "—";
-    const quantity = String(Number(component?.quantity || 1));
-    const unitText = formatMoneyValue(
-      component?.unit_total_amount_cents ?? component?.unit_amount_cents,
-      generatedOffer?.currency
-    );
-    const totalText = formatMoneyValue(
-      component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
-      generatedOffer?.currency
-    );
+  for (const row of rows) {
+    const category = row.category;
+    const categoryTax = row.categoryTax;
+    const details = row.details;
+    const quantity = row.quantity;
+    const unitText = row.unitText;
+    const totalText = row.totalText;
     doc.font(pdfFontName("regular", fonts)).fontSize(10.5);
     const categoryTextHeight = doc.heightOfString(category, {
       width: columns[0].width - TABLE_CELL_PADDING_X * 2,
@@ -1087,7 +1141,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     doc
       .save()
       .roundedRect(PAGE_MARGIN, y, doc.page.width - PAGE_MARGIN * 2, rowHeight, 10)
-      .fill("#FFFFFF")
+      .fill(PDF_COLORS.surface)
       .restore();
 
     let x = PAGE_MARGIN;
@@ -1095,7 +1149,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     doc
       .font(pdfFontName("regular", fonts))
       .fontSize(10.5)
-      .fillColor("#253942")
+      .fillColor(PDF_COLORS.textStrong)
       .text(category, x + TABLE_CELL_PADDING_X, y + TABLE_CELL_PADDING_Y, {
         width: columns[0].width - TABLE_CELL_PADDING_X * 2,
         align: "left"
@@ -1105,7 +1159,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
     doc
       .font(pdfFontName("regular", fonts))
       .fontSize(8.8)
-      .fillColor("#5E6D73")
+      .fillColor(PDF_COLORS.textMuted)
       .text(categoryTax, x + TABLE_CELL_PADDING_X, categoryTaxY, {
         width: columns[0].width - TABLE_CELL_PADDING_X * 2,
         align: "left"
@@ -1119,7 +1173,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(10.5)
-        .fillColor("#253942")
+        .fillColor(PDF_COLORS.textStrong)
         .text(value, x + TABLE_CELL_PADDING_X, y + TABLE_CELL_PADDING_Y, {
           width: column.width - TABLE_CELL_PADDING_X * 2,
           align: column.align || "left"
@@ -1132,7 +1186,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
       .moveTo(PAGE_MARGIN, y + rowHeight + 4)
       .lineTo(doc.page.width - PAGE_MARGIN, y + rowHeight + 4)
       .lineWidth(0.5)
-      .strokeColor("#E1E6E2")
+      .strokeColor(PDF_COLORS.line)
       .stroke()
       .restore();
 
@@ -1144,7 +1198,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(12)
-    .fillColor("#22383F")
+    .fillColor(PDF_COLORS.textStrong)
     .text(pdfT(lang, "offer.total", "Total (including tax)"), PAGE_MARGIN + columns[0].width + columns[1].width, y + 6, {
       width: columns[2].width + columns[3].width - 12,
       align: "right"
@@ -1152,7 +1206,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(12)
-    .fillColor("#22383F")
+    .fillColor(PDF_COLORS.textStrong)
     .text(formatMoneyValue(
       quotationSummary?.grand_total_amount_cents ?? generatedOffer?.total_price_cents,
       generatedOffer?.currency
@@ -1237,7 +1291,7 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue)
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
-    .fillColor("#33454C")
+    .fillColor(PDF_COLORS.textMutedStrong)
     .text(
       buildClosingBody(generatedOffer, formatMoneyValue, lang),
       PAGE_MARGIN,
@@ -1252,12 +1306,12 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue)
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
-    .fillColor("#33454C")
+    .fillColor(PDF_COLORS.textMutedStrong)
     .text(pdfT(lang, "offer.closing_regards", "Warm regards,"), PAGE_MARGIN, signY);
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(12)
-    .fillColor("#23363D")
+    .fillColor(PDF_COLORS.textStrong)
     .text(pdfT(lang, "offer.closing_team", "The Asia Travel Plan Team"), PAGE_MARGIN, signY + 18);
   return doc.y + 10;
 }
@@ -1331,7 +1385,7 @@ export function createOfferPdfWriter({
       doc
         .font(pdfFontName("regular", fonts))
         .fontSize(8.5)
-        .fillColor("#708087")
+        .fillColor(PDF_COLORS.textMuted)
         .text(
           `${companyProfile.name} · ${companyProfile.website} · ${companyProfile.email} · ${companyProfile.whatsapp}`,
           PAGE_MARGIN,

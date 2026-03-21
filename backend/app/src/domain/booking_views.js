@@ -246,15 +246,20 @@ export function createBookingViewHelpers({
       generatedOffer?.currency || generatedOffer?.offer?.currency || defaultCurrency
     );
     const generatedLang = normalizeBookingContentLang(generatedOffer?.lang || options?.lang || "en");
+    const {
+      payment_terms: _rawPaymentTerms,
+      ...generatedOfferTransportFields
+    } = publicGeneratedOfferFields(generatedOffer, options);
     const generatedOfferReadModel = await buildBookingOfferReadModel(
       generatedOffer?.offer,
       generatedOfferCurrency,
       { lang: generatedLang }
     );
     return {
-      ...publicGeneratedOfferFields(generatedOffer, options),
+      ...generatedOfferTransportFields,
       currency: generatedOfferReadModel.currency || generatedOfferCurrency,
       total_price_cents: safeInt(generatedOffer?.total_price_cents) || safeInt(generatedOfferReadModel?.total_price_cents) || 0,
+      ...(generatedOfferReadModel?.payment_terms ? { payment_terms: generatedOfferReadModel.payment_terms } : {}),
       offer: generatedOfferReadModel,
       travel_plan: buildBookingTravelPlanReadModel(generatedOffer?.travel_plan, generatedOfferReadModel, { lang: generatedLang })
     };

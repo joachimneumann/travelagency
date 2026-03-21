@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Pokaż pozostałe wycieczki ({count}).",
   "tours.debug_header": "Filtruj: {dest}, {style}",
   "tours.debug_empty": "Brak wycieczek w bieżącym filtrze.",
-  "tour.card.from_price": "Od ${price}",
+  "tour.card.from_price": "Od {price}",
   "tour.card.custom_quote": "Niestandardowy cytat",
   "tour.card.days": "{days} dni",
   "tour.card.plan_trip": "Zaplanuj tę podróż",

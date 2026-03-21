@@ -384,6 +384,150 @@ package api
 		}]
 	},
 	{
+		key:           "travel_plan_segment_search"
+		path:          "/api/v1/travel-plan-segments/search"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		responseType:  "TravelPlanSegmentSearchResponse"
+		parameters: [{
+			name:     "q"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "destination"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "country"
+			location: "query"
+			required: false
+			typeName: "CountryCode"
+		}, {
+			name:     "style"
+			location: "query"
+			required: false
+			typeName: "string"
+		}, {
+			name:     "segment_kind"
+			location: "query"
+			required: false
+			typeName: "TravelPlanSegmentKind"
+		}, {
+			name:     "limit"
+			location: "query"
+			required: false
+			typeName: "int"
+		}, {
+			name:     "offset"
+			location: "query"
+			required: false
+			typeName: "int"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_segment_import"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/import"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanSegmentImportRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "day_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_segment_image_upload"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanSegmentImageUploadRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "day_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "segment_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_segment_image_delete"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/{image_id}"
+		method:        "DELETE"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanSegmentImageDeleteRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "day_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "segment_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "image_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_segment_image_reorder"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/order"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanSegmentImageReorderRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "day_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "segment_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_pricing"
 		path:          "/api/v1/bookings/{booking_id}/pricing"
 		method:        "PATCH"

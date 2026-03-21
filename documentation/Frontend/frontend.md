@@ -205,7 +205,6 @@ Two JSON-LD blocks:
   - `shared/css/site.css`
   - `shared/css/components/*.css`
   - `shared/css/pages/*.css`
-  - `shared/css/tailwind.generated.css`
 - `shared/css/site.css` contains shared site and backend styles, but page-specific overrides now live in `shared/css/pages/*.css`
 - New styles must be added to modular files under:
   - `shared/css/tokens.css`
@@ -216,9 +215,3 @@ Two JSON-LD blocks:
 - Naming convention for new styles:
   - BEM classes only (example: `backend-nav__logout`, `backend-login__user`)
   - Avoid introducing new ID-based style selectors
-- Tailwind + PurgeCSS toolchain scaffold lives in `frontend/`:
-  - `frontend/package.json`
-  - `frontend/tailwind.config.cjs`
-  - `frontend/postcss.config.cjs`
-  - Input: `shared/css/tailwind.input.css`
-  - Output: `shared/css/tailwind.generated.css`

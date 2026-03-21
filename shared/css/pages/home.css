@@ -9,9 +9,9 @@
 .home-page .hero-scrim {
   background: linear-gradient(
     180deg,
-    rgba(6, 18, 24, 0.3) 0%,
-    rgba(6, 18, 24, 0.58) 58%,
-    rgba(6, 18, 24, 0.82) 100%
+    var(--hero-scrim-top) 0%,
+    var(--hero-scrim-mid) 58%,
+    var(--hero-scrim-bottom) 100%
   );
 }
 
@@ -25,11 +25,20 @@
 }
 
 .home-page .hero-title-only {
-  color: #fff;
-  text-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  font-family: var(--font-family-display);
+  font-size: clamp(2.2rem, 4.8vw, 4rem);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.08;
+  color: var(--surface);
+  text-shadow: 0 6px 22px var(--shadow-ink-45);
   background: none;
   border: 0;
   border-radius: 0;
   padding: 0;
   backdrop-filter: none;
+}
+
+.home-page .section-title {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
 }

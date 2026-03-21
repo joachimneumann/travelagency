@@ -7,10 +7,15 @@ import {
 import { bookingContentLang, bookingContentLanguageLabel, bookingT, bookingLang } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
 import { getBookingPersons } from "../shared/booking_persons.js";
+import {
+  formatGeneratedOfferAcceptanceRouteLabel,
+  generatedOfferRouteUsesDepositPayment as routeUsesDepositPayment,
+  normalizeGeneratedOfferAcceptanceRouteMode as normalizeGeneratedOfferRouteMode,
+  normalizeGeneratedOfferAcceptanceRouteStatus as normalizeGeneratedOfferRouteStatus
+} from "../shared/offer_acceptance_catalog.js";
 import { renderBookingSegmentHeader } from "./segment_headers.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
-const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES = ["DEPOSIT_PAYMENT", "OTP"];
 let gmailWindowHandle = null;
 
 function acquireGmailWindow() {
@@ -56,21 +61,6 @@ export function createBookingGeneratedOffersModule(ctx) {
       month: "2-digit",
       day: "2-digit"
     }).format(date);
-  }
-
-  function normalizeGeneratedOfferRouteMode(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    return GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES.includes(normalized) ? normalized : "OTP";
-  }
-
-  function routeUsesDepositPayment(value) {
-    return normalizeGeneratedOfferRouteMode(value) === "DEPOSIT_PAYMENT";
-  }
-
-  function formatGeneratedOfferRouteLabel(value) {
-    return routeUsesDepositPayment(value)
-      ? bookingT("booking.offer.route.deposit_payment", "Deposit")
-      : bookingT("booking.offer.route.otp", "OTP");
   }
 
   function currentGeneratedOfferRouteMode(generatedOffer) {
@@ -150,7 +140,10 @@ export function createBookingGeneratedOffersModule(ctx) {
       };
     }
 
-    const routeStatus = String(generatedOffer?.acceptance_route?.status || "").trim().toUpperCase();
+    const routeStatus = normalizeGeneratedOfferRouteStatus(
+      generatedOffer?.acceptance_route?.status,
+      generatedOffer?.acceptance_route?.mode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN"
+    );
     if (routeStatus === "AWAITING_PAYMENT") {
       return {
         tone: "open",
@@ -313,6 +306,10 @@ export function createBookingGeneratedOffersModule(ctx) {
     syncOfferGenerationControlsState();
     const { lines, currency } = getOfferAcceptancePaymentTerms();
     const canEdit = state.permissions.canEditBooking;
+    const hasOtpRecipient = Boolean(getBookingAcceptanceRecipientEmail());
+    if (!hasOtpRecipient && !routeUsesDepositPayment(generatedOfferRouteMode)) {
+      generatedOfferRouteMode = "DEPOSIT_PAYMENT";
+    }
     const selectedPaymentTerm = resolveSelectedAcceptancePaymentTerm(lines);
     const selectedAmount = selectedPaymentTerm
       ? formatMoneyDisplay(Number(selectedPaymentTerm?.resolved_amount_cents || 0), currency)
@@ -326,11 +323,12 @@ export function createBookingGeneratedOffersModule(ctx) {
       },
       {
         value: "OTP",
-        label: bookingT("booking.offer.route.option.otp", "OTP confirmation")
+        label: bookingT("booking.offer.route.option.otp", "OTP confirmation"),
+        disabled: !hasOtpRecipient
       }
     ];
     els.offer_generation_route_mode.innerHTML = routeOptions.map((option) => `
-      <option value="${escapeHtml(option.value)}" ${option.value === generatedOfferRouteMode ? "selected" : ""}>${escapeHtml(option.label)}</option>
+      <option value="${escapeHtml(option.value)}" ${option.value === generatedOfferRouteMode ? "selected" : ""} ${option.disabled ? "disabled" : ""}>${escapeHtml(option.label)}</option>
     `).join("");
     els.offer_generation_route_mode.disabled = !canEdit;
 
@@ -374,13 +372,19 @@ export function createBookingGeneratedOffersModule(ctx) {
             ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
             : ""}
           <td class="generated-offers-col-route">${routeUsesDepositPayment(routeMode)
-            ? `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.route.deposit_payment", "Deposit"))}</span>`
+            ? `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
+                deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
+                otp: bookingT("booking.offer.route.otp", "OTP")
+              }))}</span>`
             : (canEdit && acceptanceLink
                 ? `<div class="generated-offers-link-actions">
                     <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
                     <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}"${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
                   </div>`
-                : `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.route.otp", "OTP"))}</span>`)}
+                : `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
+                    deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
+                    otp: bookingT("booking.offer.route.otp", "OTP")
+                  }))}</span>`)}
           </td>
           <td class="generated-offers-col-status">
             <span class="generated-offers-status-badge is-${escapeHtml(offerStatus.tone)}${offerStatus.variant ? ` is-${escapeHtml(offerStatus.variant)}` : ""}">${escapeHtml(offerStatus.label)}</span>
@@ -390,7 +394,7 @@ export function createBookingGeneratedOffersModule(ctx) {
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
-            ? `<textarea id="generated_offer_comment_${escapeHtml(item.id)}" name="generated_offer_comment_${escapeHtml(item.id)}" data-generated-offer-comment="${escapeHtml(item.id)}" rows="1">${escapeHtml(item.comment || "")}</textarea>`
+            ? `<textarea class="booking-text-field booking-text-field--internal" id="generated_offer_comment_${escapeHtml(item.id)}" name="generated_offer_comment_${escapeHtml(item.id)}" data-generated-offer-comment="${escapeHtml(item.id)}" rows="1">${escapeHtml(item.comment || "")}</textarea>`
             : (escapeHtml(item.comment || "") || "-")}</td>
           ${canEdit
             ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button></td>`

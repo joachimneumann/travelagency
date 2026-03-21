@@ -7,13 +7,25 @@ import {
   parseMoneyInputValue
 } from "./pricing.js";
 import { renderBookingSegmentHeader } from "./segment_headers.js";
+import {
+  OFFER_PAYMENT_AMOUNT_MODE_CATALOG,
+  OFFER_PAYMENT_DUE_TYPE_CATALOG,
+  OFFER_PAYMENT_TERM_KIND_CATALOG,
+  normalizeGeneratedEnumValue
+} from "../shared/generated_catalogs.js";
 
-const OFFER_PAYMENT_TERM_KINDS = ["DEPOSIT", "INSTALLMENT", "FINAL_BALANCE"];
-const OFFER_PAYMENT_AMOUNT_MODES = ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL", "REMAINING_BALANCE"];
-const OFFER_PAYMENT_EDITABLE_TERM_KINDS = ["DEPOSIT", "INSTALLMENT"];
-const OFFER_PAYMENT_EDITABLE_AMOUNT_MODES = ["FIXED_AMOUNT", "PERCENTAGE_OF_OFFER_TOTAL"];
-const OFFER_PAYMENT_DUE_TYPES = ["ON_ACCEPTANCE", "FIXED_DATE", "DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"];
-const OFFER_PAYMENT_DAY_BASED_DUE_TYPES = ["DAYS_AFTER_ACCEPTANCE", "DAYS_BEFORE_TRIP_START", "DAYS_AFTER_TRIP_START", "DAYS_AFTER_TRIP_END"];
+const OFFER_PAYMENT_TERM_KINDS = OFFER_PAYMENT_TERM_KIND_CATALOG;
+const OFFER_PAYMENT_AMOUNT_MODES = OFFER_PAYMENT_AMOUNT_MODE_CATALOG;
+const OFFER_PAYMENT_EDITABLE_TERM_KINDS = Object.freeze(
+  OFFER_PAYMENT_TERM_KINDS.filter((kind) => kind !== "FINAL_BALANCE")
+);
+const OFFER_PAYMENT_EDITABLE_AMOUNT_MODES = Object.freeze(
+  OFFER_PAYMENT_AMOUNT_MODES.filter((mode) => mode !== "REMAINING_BALANCE")
+);
+const OFFER_PAYMENT_DUE_TYPES = OFFER_PAYMENT_DUE_TYPE_CATALOG;
+const OFFER_PAYMENT_DAY_BASED_DUE_TYPES = Object.freeze(
+  OFFER_PAYMENT_DUE_TYPES.filter((type) => type !== "ON_ACCEPTANCE" && type !== "FIXED_DATE")
+);
 
 export function createBookingOfferPaymentTermsModule(ctx) {
   const {
@@ -55,22 +67,27 @@ export function createBookingOfferPaymentTermsModule(ctx) {
   }
 
   function normalizeOfferPaymentTermKindValue(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    return OFFER_PAYMENT_TERM_KINDS.includes(normalized) ? normalized : "INSTALLMENT";
+    return normalizeGeneratedEnumValue("OfferPaymentTermKind", value, "INSTALLMENT", {
+      transform: (rawValue) => String(rawValue ?? "").trim().toUpperCase()
+    });
   }
 
   function normalizeOfferPaymentAmountModeValue(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    return OFFER_PAYMENT_AMOUNT_MODES.includes(normalized) ? normalized : "FIXED_AMOUNT";
+    return normalizeGeneratedEnumValue("OfferPaymentAmountMode", value, "FIXED_AMOUNT", {
+      transform: (rawValue) => String(rawValue ?? "").trim().toUpperCase()
+    });
   }
 
   function normalizeOfferPaymentDueTypeValue(value) {
-    const normalized = String(value || "").trim().toUpperCase();
-    if (OFFER_PAYMENT_DUE_TYPES.includes(normalized)) return normalized;
-    if (normalized) {
+    const rawNormalized = String(value || "").trim().toUpperCase();
+    const normalized = normalizeGeneratedEnumValue("OfferPaymentDueType", value, "", {
+      transform: (rawValue) => String(rawValue ?? "").trim().toUpperCase()
+    });
+    if (normalized) return normalized;
+    if (rawNormalized) {
       console.error("[offer-payment-terms] Unsupported due type normalized to ON_ACCEPTANCE.", {
         requestedDueType: value,
-        normalizedDueType: normalized,
+        normalizedDueType: rawNormalized,
         supportedDueTypes: OFFER_PAYMENT_DUE_TYPES
       });
     }
@@ -510,7 +527,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     if (readOnly) {
       els.offer_payment_terms_notes.innerHTML = `
         <div class="offer-payment-terms-notes__card">
-          <div class="offer-payment-terms-notes__title">${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes"))}</div>
+          <div class="offer-payment-terms-notes__title">${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes (ATP internal)"))}</div>
           <div class="offer-payment-terms-notes__text">${escapeHtml(notes)}</div>
         </div>
       `;
@@ -519,8 +536,8 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     }
     els.offer_payment_terms_notes.innerHTML = `
       <label class="offer-payment-terms__field offer-payment-terms-notes__field">
-        <span>${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes"))}</span>
-        <textarea rows="2" data-offer-payment-terms-notes>${escapeHtml(String(paymentTerms?.notes || ""))}</textarea>
+        <span>${escapeHtml(bookingT("booking.offer.payment_terms.notes", "Notes (ATP internal)"))}</span>
+        <textarea class="booking-text-field booking-text-field--customer" rows="2" data-offer-payment-terms-notes>${escapeHtml(String(paymentTerms?.notes || ""))}</textarea>
       </label>
     `;
     els.offer_payment_terms_notes.hidden = false;
@@ -587,8 +604,10 @@ export function createBookingOfferPaymentTermsModule(ctx) {
               <td class="offer-payment-term-col-actions"></td>
             </tr>
             <tr class="offer-payment-terms__description-row">
-              <td class="offer-payment-terms__description-label">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</td>
-              <td class="offer-payment-terms__description-cell" colspan="5">${description ? escapeHtml(description) : " "}</td>
+              <td class="offer-payment-terms__description-cell" colspan="6">
+                <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
+                <div class="offer-payment-terms__description-text">${description ? escapeHtml(description) : " "}</div>
+              </td>
               <td class="offer-payment-terms__description-spacer"></td>
             </tr>
           `;
@@ -692,9 +711,9 @@ export function createBookingOfferPaymentTermsModule(ctx) {
           </td>
         </tr>
         <tr class="offer-payment-terms__description-row">
-          <td class="offer-payment-terms__description-label">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</td>
-          <td class="offer-payment-terms__description-cell" colspan="5">
-            <textarea rows="2" data-offer-payment-term-description="${index}">${escapeHtml(String(line?.description || ""))}</textarea>
+          <td class="offer-payment-terms__description-cell" colspan="6">
+            <div class="offer-payment-terms__description-title">${escapeHtml(bookingT("booking.offer.payment_terms.customer_note", "Note for customer"))}</div>
+            <textarea class="booking-text-field booking-text-field--customer" rows="2" data-offer-payment-term-description="${index}">${escapeHtml(String(line?.description || ""))}</textarea>
           </td>
           <td class="offer-payment-terms__description-spacer"></td>
         </tr>

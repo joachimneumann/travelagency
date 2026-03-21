@@ -1,4 +1,7 @@
-import { bookingTravelPlanRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import {
+  bookingTravelPlanRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
+import { logBrowserConsoleError } from "../shared/api.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
@@ -40,6 +43,8 @@ import {
   isValidIsoCalendarDate as isValidIsoCalendarDateImpl
 } from "./travel_plan_dates.js";
 import { validateTravelPlanDraft as validateTravelPlanDraftState } from "./travel_plan_validation.js";
+import { createBookingTravelPlanImagesModule } from "./travel_plan_images.js";
+import { createBookingTravelPlanSegmentLibraryModule } from "./travel_plan_segment_library.js";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -54,6 +59,24 @@ export function createBookingTravelPlanModule(ctx) {
     escapeHtml,
     setBookingSectionDirty
   } = ctx;
+
+  function findDraftDay(dayId) {
+    return (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).find((day) => day.id === dayId) || null;
+  }
+
+  function findDraftSegment(dayId, segmentId) {
+    const day = findDraftDay(dayId);
+    return (Array.isArray(day?.segments) ? day.segments : []).find((segment) => segment.id === segmentId) || null;
+  }
+
+  function applyTravelPlanMutationBooking(booking) {
+    if (!booking) return;
+    state.booking = booking;
+    renderBookingHeader();
+    renderBookingData();
+    applyBookingPayload();
+    renderTravelPlanPanel();
+  }
 
   function travelPlanStatus(message, type = "info") {
     if (!els.travel_plan_status) return;
@@ -99,8 +122,26 @@ export function createBookingTravelPlanModule(ctx) {
 
   function updateTravelPlanDirtyState() {
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft, getOfferComponentsForLinks());
-    setTravelPlanDirty(getTravelPlanSnapshot() !== state.originalTravelPlanSnapshot);
+    const isDirty = getTravelPlanSnapshot() !== state.originalTravelPlanSnapshot;
+    setTravelPlanDirty(isDirty);
+    if (isDirty) {
+      travelPlanStatus("");
+    }
     updateTravelPlanSaveButtonState();
+  }
+
+  async function ensureTravelPlanReadyForMutation() {
+    if (!state.permissions.canEditBooking || !state.booking?.id) return false;
+    if (!state.travelPlanDirty) return true;
+    return await saveTravelPlan();
+  }
+
+  async function finalizeTravelPlanMutation(result, successMessage) {
+    if (!result?.booking) return false;
+    applyTravelPlanMutationBooking(result.booking);
+    await loadActivities();
+    travelPlanStatus(successMessage, "success");
+    return true;
   }
 
   function applyBookingPayload() {
@@ -109,6 +150,7 @@ export function createBookingTravelPlanModule(ctx) {
     setTravelPlanDirty(false);
     updateTravelPlanSaveButtonState();
     travelPlanStatus("");
+    travelPlanSegmentLibraryModule.populateTravelPlanSegmentLibraryKindOptions();
   }
 
   function resolveLocalizedDraftBranchText(map, lang = "en", fallback = "") {
@@ -143,6 +185,35 @@ export function createBookingTravelPlanModule(ctx) {
   function formatTravelPlanDayHeading(dayIndex) {
     return bookingT("booking.travel_plan.day_heading", "Day {day}", { day: dayIndex + 1 });
   }
+
+  const travelPlanImagesModule = createBookingTravelPlanImagesModule({
+    state,
+    els,
+    apiOrigin,
+    fetchBookingMutation,
+    getBookingRevision,
+    escapeHtml,
+    ensureTravelPlanReadyForMutation,
+    finalizeTravelPlanMutation,
+    findDraftSegment,
+    applyTravelPlanMutationBooking,
+    applyBookingPayload,
+    loadActivities,
+    travelPlanStatus
+  });
+
+  const travelPlanSegmentLibraryModule = createBookingTravelPlanSegmentLibraryModule({
+    state,
+    els,
+    apiOrigin,
+    fetchBookingMutation,
+    getBookingRevision,
+    escapeHtml,
+    ensureTravelPlanReadyForMutation,
+    finalizeTravelPlanMutation,
+    findDraftDay,
+    formatTravelPlanDayHeading
+  });
 
   function isIsoDateString(value) {
     return /^\d{4}-\d{2}-\d{2}$/.test(String(value || "").trim());
@@ -653,13 +724,14 @@ export function createBookingTravelPlanModule(ctx) {
           </div>
           <div class="field">
             <label for="travel_plan_financial_note_${escapeHtml(segment.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Financial note (ATP internal)"))}</label>
-            <textarea id="travel_plan_financial_note_${escapeHtml(segment.id)}" data-travel-plan-segment-field="financial_note" rows="3">${escapeHtml(segment.financial_note || "")}</textarea>
+            <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(segment.id)}" data-travel-plan-segment-field="financial_note" rows="3">${escapeHtml(segment.financial_note || "")}</textarea>
           </div>
         </div>
+        ${travelPlanImagesModule.renderTravelPlanSegmentImages(day, segment)}
         <div class="travel-plan-links">
           <div class="travel-plan-links__head">
             <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
-            <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(segment.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Link offer component"))}</button>
+            <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(segment.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
           </div>
           ${renderTravelPlanLinkRows(segment.id)}
         </div>
@@ -728,6 +800,7 @@ export function createBookingTravelPlanModule(ctx) {
         ${segments.map((segment, segmentIndex) => renderTravelPlanSegment(day, segment, segmentIndex)).join("")}
         <div class="travel-plan-day__footer">
           <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-add-segment="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_segment", "New segment"))}</button>
+          <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-open-import="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Insert existing"))}</button>
         </div>
       </section>
     `;
@@ -759,6 +832,11 @@ export function createBookingTravelPlanModule(ctx) {
 
   function syncTravelPlanDraftFromDom() {
     if (!els.travel_plan_editor) return state.travelPlanDraft;
+    const previousSegmentsById = new Map(
+      (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
+        .flatMap((day) => (Array.isArray(day?.segments) ? day.segments : []))
+        .map((segment) => [segment.id, segment])
+    );
     const draft = createEmptyTravelPlan();
     draft.days = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-day]")).map((dayNode, dayIndex) => {
       const dayId = String(dayNode.getAttribute("data-travel-plan-day") || "").trim();
@@ -777,6 +855,7 @@ export function createBookingTravelPlanModule(ctx) {
       day.notes_i18n = dayNotes.map;
       day.segments = Array.from(dayNode.querySelectorAll("[data-travel-plan-segment]")).map((segmentNode) => {
         const segmentId = String(segmentNode.getAttribute("data-travel-plan-segment") || "").trim();
+        const previousSegment = previousSegmentsById.get(segmentId);
         const segment = createEmptyTravelPlanSegment();
         segment.id = segmentId || segment.id;
         segment.timing_kind = String(segmentNode.querySelector('[data-travel-plan-segment-field="timing_kind"]')?.value || "label").trim();
@@ -806,6 +885,8 @@ export function createBookingTravelPlanModule(ctx) {
           String(segmentNode.querySelector('[data-travel-plan-segment-field="end_time_time"]')?.value || "").trim()
         );
         segment.financial_note = String(segmentNode.querySelector('[data-travel-plan-segment-field="financial_note"]')?.value || "").trim();
+        segment.images = Array.isArray(previousSegment?.images) ? previousSegment.images : [];
+        segment.copied_from = previousSegment?.copied_from || null;
         return segment;
       });
       return day;
@@ -844,6 +925,7 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanDraftFromDom();
     const dayIndex = findDayIndex(dayId);
     if (dayIndex < 0) return;
+    if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its segments?"))) return;
     const [removedDay] = state.travelPlanDraft.days.splice(dayIndex, 1);
     for (const segment of Array.isArray(removedDay?.segments) ? removedDay.segments : []) {
       removeSegmentLinks(segment.id);
@@ -863,6 +945,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function removeSegment(segmentId) {
     syncTravelPlanDraftFromDom();
+    if (!window.confirm(bookingT("booking.travel_plan.remove_segment_confirm", "Remove this segment?"))) return;
     for (const day of Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []) {
       const segmentIndex = (Array.isArray(day.segments) ? day.segments : []).findIndex((segment) => segment.id === segmentId);
       if (segmentIndex < 0) continue;
@@ -988,12 +1071,23 @@ export function createBookingTravelPlanModule(ctx) {
         bookingId: state.booking?.id,
         entries: { value: sourceText },
         fetchBookingMutation,
+        apiBase: apiOrigin,
         sourceLang,
         targetLang: destinationLang
       });
       translated = String(translatedEntries?.value || "").trim();
       if (!translated) throw new Error(bookingT("booking.translation.error", "Could not translate this section."));
     } catch (error) {
+      logBrowserConsoleError("[travel-plan] Failed to translate a travel-plan field.", {
+        booking_id: state.booking?.id || "",
+        day_id: button.getAttribute("data-travel-plan-day-id") || "",
+        segment_id: button.getAttribute("data-travel-plan-segment-id") || "",
+        field: button.getAttribute("data-travel-plan-translate") || "",
+        source_lang: sourceLang,
+        target_lang: destinationLang,
+        source_text: sourceText,
+        direction
+      }, error);
       travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."));
       return;
     }
@@ -1054,6 +1148,10 @@ export function createBookingTravelPlanModule(ctx) {
           addSegment(button.getAttribute("data-travel-plan-add-segment"));
           return;
         }
+        if (button.hasAttribute("data-travel-plan-open-import")) {
+          travelPlanSegmentLibraryModule.openTravelPlanSegmentLibrary(button.getAttribute("data-travel-plan-open-import"));
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-remove-segment")) {
           removeSegment(button.getAttribute("data-travel-plan-remove-segment"));
           return;
@@ -1068,6 +1166,39 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-travel-plan-add-link")) {
           addLink(button.getAttribute("data-travel-plan-add-link"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-add-image")) {
+          travelPlanImagesModule.triggerTravelPlanSegmentImagePicker(
+            button.getAttribute("data-travel-plan-day-id"),
+            button.getAttribute("data-travel-plan-add-image")
+          );
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-move-image-left")) {
+          void travelPlanImagesModule.reorderTravelPlanSegmentImage(
+            button.getAttribute("data-travel-plan-day-id"),
+            button.getAttribute("data-travel-plan-segment-id"),
+            button.getAttribute("data-travel-plan-move-image-left"),
+            "left"
+          );
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-move-image-right")) {
+          void travelPlanImagesModule.reorderTravelPlanSegmentImage(
+            button.getAttribute("data-travel-plan-day-id"),
+            button.getAttribute("data-travel-plan-segment-id"),
+            button.getAttribute("data-travel-plan-move-image-right"),
+            "right"
+          );
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-remove-image")) {
+          void travelPlanImagesModule.removeTravelPlanSegmentImage(
+            button.getAttribute("data-travel-plan-day-id"),
+            button.getAttribute("data-travel-plan-segment-id"),
+            button.getAttribute("data-travel-plan-remove-image")
+          );
           return;
         }
         if (button.hasAttribute("data-localized-translate")) {
@@ -1096,6 +1227,8 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_save_btn.dataset.travelPlanBound = "true";
     }
+    travelPlanSegmentLibraryModule.bindTravelPlanSegmentLibrary();
+    travelPlanImagesModule.bindTravelPlanImageInput();
   }
 
   return {

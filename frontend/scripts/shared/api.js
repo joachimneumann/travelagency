@@ -27,6 +27,18 @@ export function setDirtySurface(element, isDirty) {
   element.classList.toggle("backend-dirty-surface", Boolean(isDirty));
 }
 
+export function logBrowserConsoleError(message, details = {}, error = null) {
+  const payload = details && typeof details === "object" ? { ...details } : { details };
+  if (error) {
+    payload.error_name = error?.name || null;
+    payload.error_message = error?.message || String(error);
+    if (error?.stack) payload.error_stack = error.stack;
+    console.error(message, payload, error);
+    return;
+  }
+  console.error(message, payload);
+}
+
 export async function fetchApiJson(path, options = {}) {
   const {
     apiBase = "",
@@ -38,9 +50,15 @@ export async function fetchApiJson(path, options = {}) {
     connectionErrorMessage = "Could not connect to backend API.",
     includeDetailInError = true
   } = options;
+  const url = resolveApiUrl(apiBase, path);
+  const requestMeta = {
+    method,
+    url,
+    ...(body !== undefined ? { request_body: body } : {})
+  };
 
   try {
-    const response = await fetch(resolveApiUrl(apiBase, path), {
+    const response = await fetch(url, {
       method,
       credentials: "include",
       headers: {
@@ -55,6 +73,14 @@ export async function fetchApiJson(path, options = {}) {
       const message = includeDetailInError && payload?.detail
         ? `${payload.error || "Request failed"}: ${payload.detail}`
         : payload?.error || "Request failed";
+      logBrowserConsoleError("[api] Backend request failed.", {
+        ...requestMeta,
+        status: response.status,
+        status_text: response.statusText,
+        response_payload: payload,
+        suppress_not_found: suppressNotFound,
+        include_detail_in_error: includeDetailInError
+      });
       if (typeof onError === "function") onError(message, payload, response);
       return null;
     }
@@ -63,7 +89,10 @@ export async function fetchApiJson(path, options = {}) {
     return payload;
   } catch (error) {
     if (typeof onError === "function") onError(connectionErrorMessage, null, null, error);
-    console.error(error);
+    logBrowserConsoleError("[api] Network error while calling backend.", {
+      ...requestMeta,
+      connection_error_message: connectionErrorMessage
+    }, error);
     return null;
   }
 }

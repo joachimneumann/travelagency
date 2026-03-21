@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-21T01:00:06Z
+# 2026-03-21T09:17:21Z
 
 ---
 openapi: 3.1.0
@@ -3998,6 +3998,96 @@ components:
         notes:
           type: string
           nullable: true
+    BookingTravelPlanSegmentImageSourceAttribution:
+      type: object
+      required: []
+      properties:
+        source_name:
+          type: string
+          nullable: true
+        source_url:
+          type: string
+          nullable: true
+        photographer:
+          type: string
+          nullable: true
+        license:
+          type: string
+          nullable: true
+    BookingTravelPlanSegmentImageFocalPoint:
+      type: object
+      required:
+      - x
+      - y
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+    BookingTravelPlanSegmentImage:
+      type: object
+      required:
+      - id
+      - storage_path
+      - sort_order
+      properties:
+        id:
+          type: string
+        storage_path:
+          type: string
+        caption:
+          type: string
+          nullable: true
+        alt_text:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+        is_primary:
+          type: boolean
+          nullable: true
+        is_customer_visible:
+          type: boolean
+          nullable: true
+        width_px:
+          type: integer
+          nullable: true
+        height_px:
+          type: integer
+          nullable: true
+        source_attribution:
+          "$ref": "#/components/schemas/BookingTravelPlanSegmentImageSourceAttribution"
+          nullable: true
+        focal_point:
+          "$ref": "#/components/schemas/BookingTravelPlanSegmentImageFocalPoint"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    BookingTravelPlanSegmentCopiedFrom:
+      type: object
+      required:
+      - source_type
+      - source_booking_id
+      - source_segment_id
+      - copied_at
+      properties:
+        source_type:
+          type: string
+        source_booking_id:
+          type: string
+        source_day_id:
+          type: string
+          nullable: true
+        source_segment_id:
+          type: string
+        copied_at:
+          type: string
+          format: date-time
+        copied_by_atp_staff_id:
+          type: string
+          nullable: true
     BookingTravelPlanSegment:
       type: object
       required:
@@ -4040,6 +4130,13 @@ components:
           "$ref": "#/components/schemas/TravelPlanFinancialCoverageStatus"
         financial_note:
           type: string
+          nullable: true
+        images:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingTravelPlanSegmentImage"
+        copied_from:
+          "$ref": "#/components/schemas/BookingTravelPlanSegmentCopiedFrom"
           nullable: true
     BookingTravelPlanOfferComponentLink:
       type: object
@@ -4381,6 +4478,28 @@ components:
           type: string
           format: date-time
           nullable: true
+    BookingOfferDiscount:
+      type: object
+      required:
+      - reason
+      - amount_cents
+      - currency
+      properties:
+        reason:
+          type: string
+        amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        line_net_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_tax_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
+        line_gross_amount_cents:
+          "$ref": "#/components/schemas/MoneyAmount"
+          nullable: true
     BookingOfferTaxBucket:
       type: object
       required:
@@ -4474,7 +4593,6 @@ components:
       - label
       - sequence
       - amount_spec
-      - resolved_amount_cents
       - due_rule
       properties:
         id:
@@ -4487,8 +4605,6 @@ components:
           type: integer
         amount_spec:
           "$ref": "#/components/schemas/BookingOfferPaymentAmountSpec"
-        resolved_amount_cents:
-          type: integer
         due_rule:
           "$ref": "#/components/schemas/BookingOfferPaymentDueRule"
         description:
@@ -4498,19 +4614,13 @@ components:
       type: object
       required:
       - currency
-      - basis_total_amount_cents
-      - scheduled_total_amount_cents
       properties:
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        basis_total_amount_cents:
-          type: integer
         lines:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferPaymentTermLine"
-        scheduled_total_amount_cents:
-          type: integer
         notes:
           type: string
           nullable: true
@@ -4580,6 +4690,9 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+        discount:
+          "$ref": "#/components/schemas/BookingOfferDiscount"
+          nullable: true
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
         quotation_summary:
@@ -4706,9 +4819,6 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         total_price_cents:
           type: integer
-        payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
-          nullable: true
         offer:
           "$ref": "#/components/schemas/BookingOffer"
         travel_plan:
@@ -5039,6 +5149,87 @@ components:
         deposit_rule:
           "$ref": "#/components/schemas/PublicGeneratedOfferDepositAcceptanceRuleView"
           nullable: true
+    BookingOfferPaymentTermLineReadModel:
+      type: object
+      required:
+      - id
+      - kind
+      - label
+      - sequence
+      - amount_spec
+      - due_rule
+      - resolved_amount_cents
+      properties:
+        id:
+          type: string
+        kind:
+          "$ref": "#/components/schemas/OfferPaymentTermKind"
+        label:
+          type: string
+        sequence:
+          type: integer
+        amount_spec:
+          "$ref": "#/components/schemas/BookingOfferPaymentAmountSpec"
+        due_rule:
+          "$ref": "#/components/schemas/BookingOfferPaymentDueRule"
+        description:
+          type: string
+          nullable: true
+        resolved_amount_cents:
+          type: integer
+    BookingOfferPaymentTermsReadModel:
+      type: object
+      required:
+      - currency
+      - basis_total_amount_cents
+      - scheduled_total_amount_cents
+      properties:
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        lines:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferPaymentTermLineReadModel"
+        notes:
+          type: string
+          nullable: true
+        basis_total_amount_cents:
+          type: integer
+        scheduled_total_amount_cents:
+          type: integer
+    BookingOfferReadModel:
+      type: object
+      required:
+      - currency
+      - totals
+      - total_price_cents
+      properties:
+        status:
+          type: string
+          nullable: true
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        category_rules:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferCategoryRule"
+        components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferComponent"
+        discount:
+          "$ref": "#/components/schemas/BookingOfferDiscount"
+          nullable: true
+        totals:
+          "$ref": "#/components/schemas/BookingOfferTotals"
+        quotation_summary:
+          "$ref": "#/components/schemas/BookingOfferQuotationSummary"
+          nullable: true
+        payment_terms:
+          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
+          nullable: true
+        total_price_cents:
+          type: integer
     GeneratedBookingOfferReadModel:
       type: object
       required:
@@ -5077,10 +5268,10 @@ components:
         total_price_cents:
           type: integer
         payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
         offer:
-          "$ref": "#/components/schemas/BookingOffer"
+          "$ref": "#/components/schemas/BookingOfferReadModel"
         travel_plan:
           "$ref": "#/components/schemas/BookingTravelPlan"
           nullable: true
@@ -5195,7 +5386,7 @@ components:
         pricing:
           "$ref": "#/components/schemas/BookingPricing"
         offer:
-          "$ref": "#/components/schemas/BookingOffer"
+          "$ref": "#/components/schemas/BookingOfferReadModel"
         generated_offers:
           type: array
           items:
@@ -5257,6 +5448,64 @@ components:
         search:
           type: string
           nullable: true
+    TravelPlanSegmentSearchResult:
+      type: object
+      required:
+      - source_booking_id
+      - segment_id
+      - title
+      properties:
+        source_booking_id:
+          type: string
+        source_booking_name:
+          type: string
+          nullable: true
+        source_booking_code:
+          type: string
+          nullable: true
+        day_number:
+          type: integer
+          nullable: true
+        segment_id:
+          type: string
+        segment_kind:
+          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+          nullable: true
+        title:
+          type: string
+        details:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        overnight_location:
+          type: string
+          nullable: true
+        thumbnail_url:
+          type: string
+          nullable: true
+        image_count:
+          type: integer
+          nullable: true
+        supplier_name:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    TravelPlanSegmentSearchResponse:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TravelPlanSegmentSearchResult"
+        total:
+          type: integer
     TourList:
       type: object
       required:
@@ -5458,7 +5707,7 @@ components:
           type: string
           nullable: true
         payment_terms:
-          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
         acceptance_route:
           "$ref": "#/components/schemas/PublicGeneratedOfferAcceptanceRouteView"
@@ -6075,6 +6324,108 @@ components:
           nullable: true
         lang:
           "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
+    TravelPlanSegmentSearchRequest:
+      type: object
+      required: []
+      properties:
+        q:
+          type: string
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+        country:
+          "$ref": "#/components/schemas/CountryCode"
+          nullable: true
+        style:
+          type: string
+          nullable: true
+        segment_kind:
+          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+          nullable: true
+        limit:
+          type: integer
+          nullable: true
+        offset:
+          type: integer
+          nullable: true
+    TravelPlanSegmentImportRequest:
+      type: object
+      required:
+      - source_booking_id
+      - source_segment_id
+      - include_images
+      - include_customer_visible_images_only
+      - include_notes
+      - include_translations
+      - include_offer_links
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        source_booking_id:
+          type: string
+        source_segment_id:
+          type: string
+        insert_after_segment_id:
+          type: string
+          nullable: true
+        include_images:
+          type: boolean
+        include_customer_visible_images_only:
+          type: boolean
+        include_notes:
+          type: boolean
+        include_translations:
+          type: boolean
+        include_offer_links:
+          type: boolean
+        actor:
+          type: string
+          nullable: true
+    TravelPlanSegmentImageUploadRequest:
+      type: object
+      required:
+      - filename
+      - data_base64
+      properties:
+        filename:
+          type: string
+        mime_type:
+          type: string
+          nullable: true
+        data_base64:
+          type: string
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    TravelPlanSegmentImageDeleteRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    TravelPlanSegmentImageReorderRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        image_ids:
+          type: array
+          items:
+            type: string
         actor:
           type: string
           nullable: true
@@ -7187,6 +7538,277 @@ paths:
                 "$ref": "#/components/schemas/BookingDetail"
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/travel-plan-segments/search":
+    get:
+      operationId: travel_plan_segment_search
+      summary: Travel Plan Segment Search
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: destination
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: style
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: segment_kind
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanSegmentSearchResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/import":
+    post:
+      operationId: booking_travel_plan_segment_import
+      summary: Booking Travel Plan Segment Import
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanSegmentImportRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images":
+    post:
+      operationId: booking_travel_plan_segment_image_upload
+      summary: Booking Travel Plan Segment Image Upload
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: segment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanSegmentImageUploadRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/{image_id}":
+    delete:
+      operationId: booking_travel_plan_segment_image_delete
+      summary: Booking Travel Plan Segment Image Delete
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: segment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: image_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanSegmentImageDeleteRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/order":
+    patch:
+      operationId: booking_travel_plan_segment_image_reorder
+      summary: Booking Travel Plan Segment Image Reorder
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: day_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: segment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanSegmentImageReorderRequest"
+      responses:
+        '200':
+          description: Success
           content:
             application/json:
               schema:

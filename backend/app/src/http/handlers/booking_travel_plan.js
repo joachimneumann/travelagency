@@ -11,6 +11,8 @@ import {
   markTravelPlanTranslationManual,
   translateTravelPlanFromEnglish
 } from "../../domain/booking_translation.js";
+import { createBookingTravelPlanImportHandlers } from "./booking_travel_plan_import.js";
+import { createBookingTravelPlanImageHandlers } from "./booking_travel_plan_images.js";
 
 export function createBookingTravelPlanHandlers(deps) {
   const {
@@ -19,6 +21,7 @@ export function createBookingTravelPlanHandlers(deps) {
     readStore,
     getPrincipal,
     canEditBooking,
+    canAccessBooking,
     normalizeText,
     nowIso,
     addActivity,
@@ -29,7 +32,14 @@ export function createBookingTravelPlanHandlers(deps) {
     incrementBookingRevision,
     validateBookingTravelPlanInput,
     normalizeBookingTravelPlan,
-    translateEntries
+    translateEntries,
+    path,
+    randomUUID,
+    TEMP_UPLOAD_DIR,
+    BOOKING_IMAGES_DIR,
+    writeFile,
+    rm,
+    processBookingImageToWebp
   } = deps;
 
   function requestContentLang(req, payload = null) {
@@ -165,6 +175,55 @@ export function createBookingTravelPlanHandlers(deps) {
     }
     sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
+  const { handleSearchTravelPlanSegments, handleImportTravelPlanSegment } = createBookingTravelPlanImportHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    getPrincipal,
+    canEditBooking,
+    canAccessBooking,
+    normalizeText,
+    nowIso,
+    addActivity,
+    actorLabel,
+    persistStore,
+    assertExpectedRevision,
+    buildBookingDetailResponse,
+    incrementBookingRevision,
+    validateBookingTravelPlanInput,
+    normalizeBookingTravelPlan,
+    requestContentLang,
+    randomUUID
+  });
+
+  const {
+    handleUploadTravelPlanSegmentImage,
+    handleDeleteTravelPlanSegmentImage,
+    handleReorderTravelPlanSegmentImages
+  } = createBookingTravelPlanImageHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    getPrincipal,
+    canEditBooking,
+    normalizeText,
+    nowIso,
+    addActivity,
+    actorLabel,
+    persistStore,
+    assertExpectedRevision,
+    buildBookingDetailResponse,
+    incrementBookingRevision,
+    validateBookingTravelPlanInput,
+    normalizeBookingTravelPlan,
+    path,
+    randomUUID,
+    TEMP_UPLOAD_DIR,
+    BOOKING_IMAGES_DIR,
+    writeFile,
+    rm,
+    processBookingImageToWebp
+  });
 
   async function handlePatchBookingTravelPlan(req, res, [bookingId]) {
     let payload;
@@ -284,6 +343,11 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   return {
+    handleSearchTravelPlanSegments,
+    handleImportTravelPlanSegment,
+    handleUploadTravelPlanSegmentImage,
+    handleDeleteTravelPlanSegmentImage,
+    handleReorderTravelPlanSegmentImages,
     handlePatchBookingTravelPlan,
     handleTranslateBookingTravelPlanFromEnglish
   };

@@ -1,6 +1,8 @@
+@import "../../shared/css/tokens.css";
+
 :root {
-  --ink: #1a2d2a;
-  --shadow: 0 24px 70px rgba(30, 50, 45, 0.12);
+  --ink: var(--text-strong);
+  --shadow: 0 24px 70px var(--shadow-card-10);
 }
 
 * {
@@ -17,10 +19,10 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background:
-    radial-gradient(circle at top left, rgba(158, 195, 173, 0.32), transparent 32%),
-    radial-gradient(circle at right 20%, rgba(208, 180, 135, 0.18), transparent 28%),
-    linear-gradient(180deg, #f8f5ee 0%, #efe7da 100%);
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
+    radial-gradient(circle at top left, var(--success-surface-alpha) 0%, transparent 32%),
+    radial-gradient(circle at right 20%, var(--warning-surface-alpha) 0%, transparent 28%),
+    linear-gradient(180deg, var(--surface-page-warm) 0%, var(--bg) 100%);
+  font-family: var(--font-family-sans);
 }
 
 body::before {
@@ -28,9 +30,9 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-image: linear-gradient(var(--line-dark-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-dark-soft) 1px, transparent 1px);
   background-size: 28px 28px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.42), transparent 80%);
+  mask-image: linear-gradient(180deg, var(--overlay-dark-45), transparent 80%);
 }
 
 .simple-shell {
@@ -55,9 +57,9 @@ body::before {
   width: min(100%, 520px);
   overflow: hidden;
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.34);
+  border: 1px solid var(--white-alpha-28);
   box-shadow: var(--shadow);
-  background: #d8d7d1;
+  background: var(--surface-disabled-strong);
 }
 
 .simple-visual {
@@ -69,10 +71,10 @@ body::before {
 
 .simple-status {
   margin: 0;
-  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: var(--font-size-fluid-status);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-page);
+  text-transform: var(--text-transform-caps);
 }
 
 @media (max-width: 640px) {

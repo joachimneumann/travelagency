@@ -232,6 +232,10 @@ async function resetStore() {
 
 async function createSeedBooking() {
   await resetStore();
+  return await createPublicBooking();
+}
+
+async function createPublicBooking(overrides = {}) {
   const result = await requestJson(endpointPath("public_bookings"), {}, {
     method: "POST",
     body: {
@@ -243,7 +247,8 @@ async function createSeedBooking() {
       destinations: ["Vietnam"],
       travel_style: ["Culture"],
       number_of_travelers: 2,
-      notes: "Seeded from contract test"
+      notes: "Seeded from contract test",
+      ...overrides
     }
   });
   assert.equal(result.status, 201);
@@ -512,7 +517,6 @@ test("booking offer patch preserves trip-relative payment-term due types", async
                   mode: "PERCENTAGE_OF_OFFER_TOTAL",
                   percentage_basis_points: 3000
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_AFTER_TRIP_START",
                   days: 3
@@ -526,7 +530,6 @@ test("booking offer patch preserves trip-relative payment-term due types", async
                 amount_spec: {
                   mode: "REMAINING_BALANCE"
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_AFTER_TRIP_END",
                   days: 5
@@ -563,6 +566,96 @@ test("booking offer patch preserves trip-relative payment-term due types", async
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.offer.payment_terms.lines[0].due_rule.type, "DAYS_AFTER_TRIP_START");
   assert.equal(detailAfter.body.booking.offer.payment_terms.lines[1].due_rule.type, "DAYS_AFTER_TRIP_END");
+});
+
+test("booking offer patch normalizes installment numbering by installment ordinal", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          payment_terms: {
+            currency: booking.preferred_currency,
+            lines: [
+              {
+                id: "payment_term_deposit_numbering",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 10000
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_installment_numbering",
+                kind: "INSTALLMENT",
+                label: "Installment 2",
+                sequence: 2,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 5000
+                },
+                due_rule: {
+                  type: "DAYS_AFTER_ACCEPTANCE",
+                  days: 30
+                }
+              },
+              {
+                id: "payment_term_final_numbering",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 3,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 7
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_installment_numbering_1",
+              category: "OTHER",
+              label: "Service",
+              details: "Numbering check",
+              quantity: 1,
+              unit_amount_cents: 30000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.payment_terms.lines[1].label, "Installment 1");
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.payment_terms.lines[1].label, "Installment 1");
 });
 
 test("booking offer patch persists component removal", async () => {
@@ -659,6 +752,57 @@ test("booking offer patch rejects discounts_credits components", async () => {
 
   assert.equal(patchResult.status, 422);
   assert.match(String(patchResult.body.error || ""), /discounts_credits/i);
+});
+
+test("booking offer patch accepts an explicit offer discount with a reason", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_transport_1",
+              category: "TRANSPORTATION",
+              label: "Transportation",
+              details: "Airport transfer",
+              quantity: 1,
+              unit_amount_cents: 10000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ],
+          discount: {
+            reason: "Loyalty discount",
+            amount_cents: 500,
+            currency: createdBooking.preferred_currency
+          }
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.components.length, 1);
+  assert.equal(patchResult.body.booking.offer.discount.reason, "Loyalty discount");
+  assert.equal(patchResult.body.booking.offer.discount.amount_cents, 500);
+  assert.equal(patchResult.body.booking.offer.total_price_cents, 10500);
+  assert.equal(patchResult.body.booking.offer.quotation_summary.grand_total_amount_cents, 10500);
+
+  const detailAfter = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.offer.discount.reason, "Loyalty discount");
+  assert.equal(detailAfter.body.booking.offer.total_price_cents, 10500);
 });
 
 test("booking travel plan patch persists days, links, and derived financial coverage", async () => {
@@ -968,6 +1112,259 @@ test("booking travel plan patch rejects invalid segments and unknown offer links
   );
   assert.equal(invalidLinkResult.status, 422);
   assert.match(String(invalidLinkResult.body.error || ""), /unknown offer component/i);
+});
+
+test("travel plan segments can be searched and imported from another booking", async () => {
+  const sourceBooking = await createSeedBooking();
+  const targetBooking = await createPublicBooking({
+    name: "Target User",
+    email: "target@example.com"
+  });
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const sourceRecord = store.bookings.find((item) => item.id === sourceBooking.id);
+  const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
+  assert.ok(sourceRecord);
+  assert.ok(targetRecord);
+
+  sourceRecord.travel_plan = {
+    days: [
+      {
+        id: "source_day_1",
+        day_number: 1,
+        date: "2026-04-01",
+        title: "Arrival",
+        overnight_location: "Hoi An",
+        segments: [
+          {
+            id: "source_segment_1",
+            timing_kind: "label",
+            time_label: "Afternoon",
+            kind: "accommodation",
+            title: "Boutique hotel check-in",
+            details: "Private transfer and riverside hotel check-in.",
+            location: "Hoi An",
+            financial_note: "",
+            images: [
+              {
+                id: "source_segment_image_1",
+                storage_path: "/public/v1/booking-images/source/segment-1.webp",
+                sort_order: 0,
+                is_primary: true,
+                is_customer_visible: true,
+                created_at: "2026-03-21T00:00:00Z"
+              }
+            ]
+          }
+        ],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  targetRecord.travel_plan = {
+    days: [
+      {
+        id: "target_day_1",
+        day_number: 1,
+        date: "2026-05-10",
+        title: "Start",
+        overnight_location: "Da Nang",
+        segments: [],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const searchResult = await requestJson(
+    `${endpointPath("travel_plan_segment_search")}?q=boutique&segment_kind=accommodation`,
+    apiHeaders()
+  );
+  assert.equal(searchResult.status, 200);
+  assert.equal(typeof searchResult.body.total, "number");
+  assert.ok(Array.isArray(searchResult.body.items));
+  const foundSegment = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
+  assert.ok(foundSegment, "Expected imported segment to appear in search results");
+  assert.equal(foundSegment.segment_id, "source_segment_1");
+  assert.equal(foundSegment.segment_kind, "accommodation");
+  assert.equal(foundSegment.thumbnail_url, "/public/v1/booking-images/source/segment-1.webp");
+
+  const importResult = await requestJson(
+    endpointPath("booking_travel_plan_segment_import")
+      .replace("{booking_id}", targetBooking.id)
+      .replace("{day_id}", "target_day_1"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: targetBooking.travel_plan_revision,
+        source_booking_id: sourceBooking.id,
+        source_segment_id: "source_segment_1",
+        include_images: true,
+        include_customer_visible_images_only: false,
+        include_notes: true,
+        include_translations: true,
+        include_offer_links: false
+      }
+    }
+  );
+  assert.equal(importResult.status, 200);
+  assert.equal(importResult.body.booking.travel_plan.days[0].segments.length, 1);
+  const importedSegment = importResult.body.booking.travel_plan.days[0].segments[0];
+  assert.equal(importedSegment.title, "Boutique hotel check-in");
+  assert.equal(importedSegment.copied_from.source_booking_id, sourceBooking.id);
+  assert.equal(importedSegment.copied_from.source_segment_id, "source_segment_1");
+  assert.equal(importedSegment.images.length, 1);
+  assert.notEqual(importedSegment.images[0].id, "source_segment_image_1");
+  assert.equal(importedSegment.images[0].storage_path, "/public/v1/booking-images/source/segment-1.webp");
+});
+
+test("travel plan segment images can be reordered and deleted", async () => {
+  const booking = await createSeedBooking();
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === booking.id);
+  assert.ok(bookingRecord);
+  bookingRecord.travel_plan = {
+    days: [
+      {
+        id: "travel_day_1",
+        day_number: 1,
+        date: "2026-04-02",
+        title: "Arrival",
+        overnight_location: "Hue",
+        segments: [
+          {
+            id: "travel_segment_1",
+            timing_kind: "label",
+            time_label: "Morning",
+            kind: "activity",
+            title: "Citadel visit",
+            details: "Guided walk",
+            location: "Hue",
+            financial_note: "",
+            images: [
+              {
+                id: "segment_image_a",
+                storage_path: "/public/v1/booking-images/a.webp",
+                sort_order: 0,
+                is_primary: true,
+                is_customer_visible: true
+              },
+              {
+                id: "segment_image_b",
+                storage_path: "/public/v1/booking-images/b.webp",
+                sort_order: 1,
+                is_primary: false,
+                is_customer_visible: true
+              }
+            ]
+          }
+        ],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const reorderResult = await requestJson(
+    endpointPath("booking_travel_plan_segment_image_reorder")
+      .replace("{booking_id}", booking.id)
+      .replace("{day_id}", "travel_day_1")
+      .replace("{segment_id}", "travel_segment_1"),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: booking.travel_plan_revision,
+        image_ids: ["segment_image_b", "segment_image_a"]
+      }
+    }
+  );
+  assert.equal(reorderResult.status, 200);
+  const reorderedImages = reorderResult.body.booking.travel_plan.days[0].segments[0].images;
+  assert.deepEqual(reorderedImages.map((image) => image.id), ["segment_image_b", "segment_image_a"]);
+  assert.equal(reorderedImages[0].is_primary, true);
+  assert.equal(reorderedImages[1].is_primary, false);
+
+  const deleteResult = await requestJson(
+    endpointPath("booking_travel_plan_segment_image_delete")
+      .replace("{booking_id}", booking.id)
+      .replace("{day_id}", "travel_day_1")
+      .replace("{segment_id}", "travel_segment_1")
+      .replace("{image_id}", "segment_image_b"),
+    apiHeaders(),
+    {
+      method: "DELETE",
+      body: {
+        expected_travel_plan_revision: reorderResult.body.booking.travel_plan_revision
+      }
+    }
+  );
+  assert.equal(deleteResult.status, 200);
+  const remainingImages = deleteResult.body.booking.travel_plan.days[0].segments[0].images;
+  assert.equal(remainingImages.length, 1);
+  assert.equal(remainingImages[0].id, "segment_image_a");
+  assert.equal(remainingImages[0].is_primary, true);
+});
+
+test("travel plan segment images can be uploaded", { skip: !HAS_MAGICK }, async () => {
+  const booking = await createSeedBooking();
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === booking.id);
+  assert.ok(bookingRecord);
+  bookingRecord.travel_plan = {
+    days: [
+      {
+        id: "travel_day_upload_1",
+        day_number: 1,
+        date: "2026-04-03",
+        title: "Upload day",
+        overnight_location: "Hanoi",
+        segments: [
+          {
+            id: "travel_segment_upload_1",
+            timing_kind: "label",
+            time_label: "Anytime",
+            kind: "activity",
+            title: "Photo segment",
+            details: "",
+            location: "Hanoi",
+            financial_note: "",
+            images: []
+          }
+        ],
+        notes: ""
+      }
+    ],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const uploadResult = await requestJson(
+    endpointPath("booking_travel_plan_segment_image_upload")
+      .replace("{booking_id}", booking.id)
+      .replace("{day_id}", "travel_day_upload_1")
+      .replace("{segment_id}", "travel_segment_upload_1"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: booking.travel_plan_revision,
+        filename: "segment.png",
+        data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC"
+      }
+    }
+  );
+  assert.equal(uploadResult.status, 200);
+  const uploadedImages = uploadResult.body.booking.travel_plan.days[0].segments[0].images;
+  assert.equal(uploadedImages.length, 1);
+  assert.match(String(uploadedImages[0].storage_path || ""), /^\/public\/v1\/booking-images\//);
+  assert.equal(uploadedImages[0].is_primary, true);
 });
 
 test("suppliers can be created and updated, and travel plan supplier references are validated", async () => {
@@ -1358,6 +1755,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   assert.ok(bookingRecord);
   const generatedOfferRecord = bookingRecord.generated_offers.find((item) => item.id === generatedOfferId);
   assert.ok(generatedOfferRecord);
+  assert.equal(Object.prototype.hasOwnProperty.call(generatedOfferRecord, "payment_terms"), false);
   delete generatedOfferRecord.travel_plan.days[0].segments[0].financial_coverage_status;
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
@@ -1683,6 +2081,29 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   assert.equal(typeof generatedOffer.public_acceptance_token, "string");
   assert.ok(generatedOffer.public_acceptance_token.length > 20);
 
+  const otpRequiredResult = await requestJson(
+    endpointPath("public_generated_offer_accept")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOfferId),
+    {},
+    {
+      method: "POST",
+      body: {
+        acceptance_token: generatedOffer.public_acceptance_token,
+        accepted_by_name: "Test User",
+        language: "en"
+      }
+    }
+  );
+  assert.equal(otpRequiredResult.status, 422);
+  assert.match(String(otpRequiredResult.body.error || ""), /requires otp verification/i);
+
+  const storeBeforeLegacyAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeLegacyAccept = storeBeforeLegacyAccept.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeLegacyAccept);
+  delete bookingBeforeLegacyAccept.generated_offers[0].acceptance_route;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyAccept, null, 2)}\n`, "utf8");
+
   const acceptResult = await requestJson(
     endpointPath("public_generated_offer_accept")
       .replace("{booking_id}", bookingId)
@@ -1693,7 +2114,6 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
       body: {
         acceptance_token: generatedOffer.public_acceptance_token,
         accepted_by_name: "Test User",
-        accepted_by_email: "test@example.com",
         language: "en"
       }
     }
@@ -1822,6 +2242,13 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
   const secondGeneratedOfferId = secondGeneratedOffer.id;
   assert.equal(typeof secondGeneratedOffer.public_acceptance_token, "string");
 
+  const storeBeforeLegacyUniqueness = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeLegacyUniqueness = storeBeforeLegacyUniqueness.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeLegacyUniqueness);
+  delete bookingBeforeLegacyUniqueness.generated_offers[0].acceptance_route;
+  delete bookingBeforeLegacyUniqueness.generated_offers[1].acceptance_route;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyUniqueness, null, 2)}\n`, "utf8");
+
   const firstAcceptResult = await requestJson(
     endpointPath("public_generated_offer_accept")
       .replace("{booking_id}", bookingId)
@@ -1831,8 +2258,7 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
       method: "POST",
       body: {
         acceptance_token: firstGeneratedOffer.public_acceptance_token,
-        accepted_by_name: "Test User",
-        accepted_by_email: "test@example.com"
+        accepted_by_name: "Test User"
       }
     }
   );
@@ -1848,8 +2274,7 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
       method: "POST",
       body: {
         acceptance_token: secondGeneratedOffer.public_acceptance_token,
-        accepted_by_name: "Test User",
-        accepted_by_email: "test@example.com"
+        accepted_by_name: "Test User"
       }
     }
   );
@@ -1890,7 +2315,6 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
                   mode: "PERCENTAGE_OF_OFFER_TOTAL",
                   percentage_basis_points: 3000
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "ON_ACCEPTANCE"
                 }
@@ -1903,7 +2327,6 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
                 amount_spec: {
                   mode: "REMAINING_BALANCE"
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_BEFORE_TRIP_START",
                   days: 7
@@ -1975,6 +2398,47 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
   );
 });
 
+test("booking detail persists expired generated-offer route status instead of deriving it in the read model", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        comment: "Expiry status persistence"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
+
+  const storeBefore = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBefore = storeBefore.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBefore);
+  const generatedOfferBefore = bookingBefore.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.ok(generatedOfferBefore?.acceptance_route);
+  generatedOfferBefore.acceptance_route.status = "OPEN";
+  generatedOfferBefore.acceptance_route.expires_at = "2020-01-01T00:00:00.000Z";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBefore, null, 2)}\n`, "utf8");
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance_route.status, "EXPIRED");
+
+  const storeAfter = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingAfter = storeAfter.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingAfter);
+  const generatedOfferAfter = bookingAfter.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.equal(generatedOfferAfter?.acceptance_route?.status, "EXPIRED");
+});
+
 test("public generated offer access exposes deposit acceptance route and blocks OTP acceptance", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -2008,7 +2472,6 @@ test("public generated offer access exposes deposit acceptance route and blocks 
                   mode: "FIXED_AMOUNT",
                   fixed_amount_cents: 12000
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "ON_ACCEPTANCE"
                 }
@@ -2021,7 +2484,6 @@ test("public generated offer access exposes deposit acceptance route and blocks 
                 amount_spec: {
                   mode: "REMAINING_BALANCE"
                 },
-                resolved_amount_cents: 0,
                 due_rule: {
                   type: "DAYS_BEFORE_TRIP_START",
                   days: 10

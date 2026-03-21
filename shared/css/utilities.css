@@ -3,11 +3,11 @@
 }
 
 .u-title-compact {
-  font-size: 1.05rem;
+  font-size: var(--font-size-title-sm);
 }
 
 .u-title-medium {
-  font-size: 1.2rem;
+  font-size: var(--font-size-title-md);
 }
 
 .u-title-no-margin {

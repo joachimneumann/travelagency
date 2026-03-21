@@ -100,6 +100,7 @@ export function createApplicationRoutes({
     convertBookingOfferToBaseCurrency: pricingHelpers.convertBookingOfferToBaseCurrency,
     normalizeBookingOffer: pricingHelpers.normalizeBookingOffer,
     normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
+    buildBookingOfferPaymentTermsReadModel: pricingHelpers.buildBookingOfferPaymentTermsReadModel,
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
     buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel,
     validateBookingTravelPlanInput: travelPlanHelpers.validateBookingTravelPlanInput,

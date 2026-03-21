@@ -2,6 +2,7 @@ import {
   createApiFetcher,
   escapeHtml,
   formatDateTime,
+  logBrowserConsoleError,
   normalizeText,
   resolveApiUrl
 } from "../shared/api.js";
@@ -187,7 +188,7 @@ async function init() {
 async function loadBackendAuthStatus() {
   refreshBackendNavElements();
   try {
-    const request = authMeRequest({ baseURL: apiBase });
+    const request = authMeRequest({ baseURL: apiOrigin });
     const response = await fetch(request.url, {
       method: request.method,
       credentials: "include",
@@ -203,7 +204,6 @@ async function loadBackendAuthStatus() {
     state.authUser = payload.user || null;
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-    const isAdmin = hasAnyRole(ROLES.ADMIN, ROLES.MANAGER);
     state.permissions = {
       canReadBookings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
       canReadSettings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT),
@@ -211,10 +211,29 @@ async function loadBackendAuthStatus() {
       canEditTours: hasAnyRole(ROLES.ADMIN)
     };
     if (els.userLabel) els.userLabel.textContent = user || "";
+    if (!SECTION_CONFIG.some((section) => section.canAccess())) {
+      logBrowserConsoleError("[backend] Authenticated user has no readable backend sections. backend.html will appear blank until backend roles are granted.", {
+        page_url: window.location.href,
+        auth_me_url: request.url,
+        authenticated_user: {
+          id: payload.user?.sub || "",
+          username: payload.user?.preferred_username || "",
+          email: payload.user?.email || ""
+        },
+        roles: state.roles,
+        computed_permissions: state.permissions,
+        expected_roles_any_of: [ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF].filter(Boolean),
+        likely_cause: "The user is authenticated in Keycloak but does not have any ATP backend roles mapped into the session."
+      });
+    }
     return payload.user;
-  } catch {
+  } catch (error) {
     state.authUser = null;
     if (els.userLabel) els.userLabel.textContent = "";
+    logBrowserConsoleError("[backend] Failed to load backend authentication status for backend.html.", {
+      page_url: window.location.href,
+      auth_me_url: authMeRequest({ baseURL: apiOrigin }).url
+    }, error);
     return null;
   }
 }

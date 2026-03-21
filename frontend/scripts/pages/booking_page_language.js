@@ -1,5 +1,5 @@
 import { bookingCustomerLanguageRequest } from "../../Generated/API/generated_APIRequestFactory.js";
-import { resolveApiUrl } from "../shared/api.js";
+import { logBrowserConsoleError, resolveApiUrl } from "../shared/api.js";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
@@ -303,7 +303,11 @@ export function createBookingPageLanguageController(ctx) {
         }
         clearError();
       } catch (error) {
-        console.error(error);
+        logBrowserConsoleError("[booking] Failed to persist the selected customer/content language.", {
+          booking_id: state.booking?.id || null,
+          previous_lang: previousLang,
+          next_lang: nextLang
+        }, error);
         clearError();
         setStatus(backendT(
           "booking.content_language_persist_pending",

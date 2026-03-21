@@ -14,6 +14,7 @@ import {
   createApiFetcher,
   escapeHtml,
   formatDateTime,
+  logBrowserConsoleError,
   normalizeText,
   resolveApiUrl,
   setDirtySurface
@@ -180,6 +181,15 @@ const els = {
   personModalName: document.getElementById("booking_person_modal_name"),
   personModalPhotoInput: document.getElementById("booking_person_modal_photo_input"),
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
+  travelPlanSegmentLibraryModal: document.getElementById("travel_plan_segment_library_modal"),
+  travelPlanSegmentLibraryCloseBtn: document.getElementById("travel_plan_segment_library_close_btn"),
+  travelPlanSegmentLibrarySubtitle: document.getElementById("travel_plan_segment_library_subtitle"),
+  travelPlanSegmentLibraryQuery: document.getElementById("travel_plan_segment_library_query"),
+  travelPlanSegmentLibraryKind: document.getElementById("travel_plan_segment_library_kind"),
+  travelPlanSegmentLibrarySearchBtn: document.getElementById("travel_plan_segment_library_search_btn"),
+  travelPlanSegmentLibraryStatus: document.getElementById("travel_plan_segment_library_status"),
+  travelPlanSegmentLibraryResults: document.getElementById("travel_plan_segment_library_results"),
+  travelPlanSegmentImageInput: document.getElementById("travel_plan_segment_image_input"),
   personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
   personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
   personModalDateOfBirthPickerBtn: document.getElementById("booking_person_modal_date_of_birth_picker_btn"),
@@ -870,7 +880,10 @@ const bookingPageDataController = createBookingPageDataController({
 });
 
 void init().catch((error) => {
-  console.error(error);
+  logBrowserConsoleError("[booking] Booking page initialization failed.", {
+    booking_id: state.id || null,
+    current_url: window.location.href
+  }, error);
   showError(backendT("booking.error.load", "Could not load booking."));
   setStatus(backendT("booking.error.load", "Could not load booking."));
 });

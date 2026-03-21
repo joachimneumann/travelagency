@@ -151,6 +151,15 @@ export function createBookingOfferComponentsModule(ctx) {
     return unitAmount + Math.round((unitAmount * taxBasisPoints) / 10000);
   }
 
+  function computeOfferDiscountLineTotals(discount) {
+    const amount = Math.max(0, Number(discount?.amount_cents || 0));
+    return {
+      line_net_amount_cents: -amount,
+      line_tax_amount_cents: 0,
+      line_gross_amount_cents: -amount
+    };
+  }
+
   function deriveUnitNetAmountFromGross(grossAmountCents, taxRateBasisPoints) {
     const gross = Math.max(0, Math.round(Number(grossAmountCents || 0)));
     const basisPoints = Math.max(0, Math.round(Number(taxRateBasisPoints || 0)));
@@ -169,7 +178,7 @@ export function createBookingOfferComponentsModule(ctx) {
     return bestNet;
   }
 
-  function computeOfferDraftTotalsFromComponents(components) {
+  function computeOfferDraftTotals(components, discount = null) {
     const normalizedComponents = Array.isArray(components) ? components : [];
     let net_amount_cents = 0;
     let tax_amount_cents = 0;
@@ -178,19 +187,24 @@ export function createBookingOfferComponentsModule(ctx) {
       net_amount_cents += line.net_amount_cents;
       tax_amount_cents += line.tax_amount_cents;
     }
+    if (discount && Number(discount?.amount_cents || 0) > 0) {
+      const line = computeOfferDiscountLineTotals(discount);
+      net_amount_cents += line.line_net_amount_cents;
+      tax_amount_cents += line.line_tax_amount_cents;
+    }
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     return {
       currency,
       net_amount_cents,
       tax_amount_cents,
       gross_amount_cents: net_amount_cents + tax_amount_cents,
-      components_count: normalizedComponents.length
+      components_count: normalizedComponents.length + (discount && Number(discount?.amount_cents || 0) > 0 ? 1 : 0)
     };
   }
 
-  function computeOfferDraftQuotationSummary(components) {
+  function computeOfferDraftQuotationSummary(components, discount = null) {
     const normalizedComponents = Array.isArray(components) ? components : [];
-    const totals = computeOfferDraftTotalsFromComponents(normalizedComponents);
+    const totals = computeOfferDraftTotals(normalizedComponents, discount);
     const buckets = new Map();
     normalizedComponents.forEach((component) => {
       const line = computeOfferComponentLineTotals(component);
@@ -209,6 +223,21 @@ export function createBookingOfferComponentsModule(ctx) {
       bucket.items_count += 1;
       buckets.set(basisPoints, bucket);
     });
+    if (discount && Number(discount?.amount_cents || 0) > 0) {
+      const line = computeOfferDiscountLineTotals(discount);
+      const bucket = buckets.get(0) || {
+        tax_rate_basis_points: 0,
+        net_amount_cents: 0,
+        tax_amount_cents: 0,
+        gross_amount_cents: 0,
+        items_count: 0
+      };
+      bucket.net_amount_cents += line.line_net_amount_cents;
+      bucket.tax_amount_cents += line.line_tax_amount_cents;
+      bucket.gross_amount_cents += line.line_gross_amount_cents;
+      bucket.items_count += 1;
+      buckets.set(0, bucket);
+    }
     return {
       tax_included: true,
       subtotal_net_amount_cents: totals.net_amount_cents,
@@ -224,7 +253,7 @@ export function createBookingOfferComponentsModule(ctx) {
       return Math.round(explicitTotal);
     }
     const offerComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    const offerTotals = computeOfferDraftTotalsFromComponents(offerComponents);
+    const offerTotals = computeOfferDraftTotals(offerComponents, state.offerDraft?.discount || null);
     return offerTotals?.gross_amount_cents || 0;
   }
 
@@ -316,12 +345,14 @@ export function createBookingOfferComponentsModule(ctx) {
     if (!els.offer_quotation_summary) return;
     const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
     const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    if (!components.length) {
+    const discount = state.offerDraft?.discount || null;
+    const hasDiscount = Boolean(discount && Number(discount?.amount_cents || 0) > 0);
+    if (!components.length && !hasDiscount) {
       els.offer_quotation_summary.hidden = true;
       els.offer_quotation_summary.innerHTML = "";
       return;
     }
-    const summary = computeOfferDraftQuotationSummary(components);
+    const summary = computeOfferDraftQuotationSummary(components, discount);
     const rows = [
       {
         label: bookingT("booking.offer.subtotal_before_tax", "Subtotal before tax"),
@@ -412,6 +443,27 @@ export function createBookingOfferComponentsModule(ctx) {
     });
   }
 
+  function readOfferDraftDiscountForRender() {
+    const fallbackDiscount = state.offerDraft?.discount && typeof state.offerDraft.discount === "object"
+      ? state.offerDraft.discount
+      : null;
+    const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const reasonInput = document.querySelector("[data-offer-discount-reason]");
+    const amountInput = document.querySelector("[data-offer-discount-amount]");
+    if (!reasonInput && !amountInput && !fallbackDiscount) return null;
+    const reason = String(reasonInput?.value ?? fallbackDiscount?.reason ?? "").trim();
+    const amount = amountInput
+      ? parseMoneyInputValue(amountInput.value, currency)
+      : Number(fallbackDiscount?.amount_cents || 0);
+    const normalizedAmount = Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
+    if (!reason && normalizedAmount <= 0) return null;
+    return {
+      reason,
+      amount_cents: normalizedAmount,
+      currency
+    };
+  }
+
   function buildDualLocalizedPayload(englishText, localizedText, targetLang) {
     const english = String(englishText || "").trim();
     const localized = String(localizedText || "").trim();
@@ -448,6 +500,17 @@ export function createBookingOfferComponentsModule(ctx) {
       sort_order: state.offerDraft.components.length
     });
     offerCategoryEditorIndexes.add(nextIndex);
+    setOfferSaveEnabled(true);
+    renderOfferComponentsTable();
+  }
+
+  function addOfferDiscount() {
+    if (!state.permissions.canEditBooking || !state.offerDraft || state.offerDraft.discount) return;
+    state.offerDraft.discount = {
+      reason: "",
+      amount_cents: 0,
+      currency: normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD")
+    };
     setOfferSaveEnabled(true);
     renderOfferComponentsTable();
   }
@@ -540,21 +603,55 @@ export function createBookingOfferComponentsModule(ctx) {
         ${priceCells}${actionCell}
       </tr>`;
     }).join("");
+    const discount = state.offerDraft?.discount && typeof state.offerDraft.discount === "object"
+      ? state.offerDraft.discount
+      : null;
+    const discountRow = discount
+      ? (() => {
+          const discountReason = String(discount.reason || "").trim();
+          const discountLabel = escapeHtml(bookingT("booking.offer.discount", "Discount"));
+          const discountAmount = Math.max(0, Number(discount.amount_cents || 0));
+          const discountTotalText = formatMoneyDisplay(computeOfferDiscountLineTotals(discount).line_gross_amount_cents, currency);
+          const reasonCell = readOnly
+            ? `<div class="offer-inline-display"><div class="offer-inline-display__primary">${escapeHtml(discountReason || bookingT("booking.no_details", "No details"))}</div></div>`
+            : `<textarea id="offer_discount_reason" name="offer_discount_reason" data-offer-discount-reason rows="2" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}">${escapeHtml(discountReason)}</textarea>`;
+          const amountCell = readOnly
+            ? `<span class="offer-price-value" data-offer-discount-total>${escapeHtml(discountTotalText)}</span>`
+            : `<input id="offer_discount_amount" name="offer_discount_amount" data-offer-discount-amount type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(discountAmount, currency))}" />`;
+          const removeButton = showActionsCol
+            ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-discount title="${escapeHtml(bookingT("booking.offer.remove_discount", "Remove discount"))}" aria-label="${escapeHtml(bookingT("booking.offer.remove_discount", "Remove discount"))}">×</button>`
+            : "";
+          return `<tr class="offer-discount-row">
+            <td class="offer-col-category">
+              <div class="offer-inline-display">
+                <div class="offer-inline-display__primary">${discountLabel}</div>
+              </div>
+            </td>
+            <td class="offer-col-details">${reasonCell}</td>
+            <td class="offer-col-qty"><span class="offer-price-placeholder">—</span></td>
+            ${showDualPrice
+              ? `<td class="offer-col-price-single"><span class="offer-price-placeholder">—</span></td><td class="offer-col-price-total"><div class="offer-total-cell">${amountCell}</div></td>`
+              : `<td class="offer-col-price-total"><div class="offer-total-cell">${amountCell}</div></td>`}
+            ${showActionsCol ? `<td class="offer-col-actions">${removeButton}</td>` : ""}
+          </tr>`;
+        })()
+      : "";
     const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     const addButtonCell = !readOnly
-      ? `<td class="offer-col-category"></td><td class="offer-add-cell"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-component>${escapeHtml(bookingT("common.new", "New"))}</button></td>`
+      ? `<td class="offer-col-category"></td><td class="offer-add-cell"><div class="offer-add-actions"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-component>${escapeHtml(bookingT("common.new", "New"))}</button>${discount ? "" : `<button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-discount>${escapeHtml(bookingT("booking.offer.add_discount", "Discount"))}</button>`}</div></td>`
       : `<td class="offer-col-category"></td><td class="offer-col-details"></td>`;
     const totalLabelCols = `<td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.offer.total_including_tax", "Total (including tax)"))}:</strong></div></td>`;
     const totalValueCol = `<td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>`;
     const totalRow = `<tr class="offer-total-row">${addButtonCell}${totalLabelCols}${totalValueCol}${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
-    els.offer_components_table.innerHTML = `${header}<tbody>${rows}${totalRow}</tbody>`;
+    els.offer_components_table.innerHTML = `${header}<tbody>${rows}${discountRow}${totalRow}</tbody>`;
     renderOfferQuotationSummary();
     paymentTermsModule.renderOfferPaymentTerms();
 
     if (!readOnly) {
       const syncOfferInputTotals = () => {
         state.offerDraft.components = readOfferDraftComponentsForRender();
+        state.offerDraft.discount = readOfferDraftDiscountForRender();
         state.offerDraft.total_price_cents = null;
         setOfferSaveEnabled(true);
         updateOfferTotalsInDom();
@@ -644,6 +741,24 @@ export function createBookingOfferComponentsModule(ctx) {
       els.offer_components_table.querySelectorAll("[data-offer-add-component]").forEach((button) => {
         button.addEventListener("click", addOfferComponent);
       });
+      els.offer_components_table.querySelectorAll("[data-offer-add-discount]").forEach((button) => {
+        button.addEventListener("click", addOfferDiscount);
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-remove-discount]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          if (!window.confirm(bookingT("booking.offer.remove_discount_confirm", "Remove this discount?"))) return;
+          state.offerDraft.discount = null;
+          setOfferSaveEnabled(true);
+          renderOfferComponentsTable();
+          await flushOfferAutosave();
+        });
+      });
+      els.offer_components_table.querySelectorAll("[data-offer-discount-reason], [data-offer-discount-amount]").forEach((input) => {
+        input.addEventListener("input", () => {
+          syncOfferInputTotals();
+        });
+        input.addEventListener("change", syncOfferAndAutosave);
+      });
       els.offer_components_table.querySelectorAll("[data-localized-translate]").forEach((button) => {
         button.addEventListener("click", async () => {
           const index = Number(button.getAttribute("data-offer-component-details-translate"));
@@ -707,6 +822,12 @@ export function createBookingOfferComponentsModule(ctx) {
       const total = computeOfferComponentLineTotals(component).gross_amount_cents;
       totalNode.textContent = formatMoneyDisplay(Math.round(total), currency);
     });
+    const discountTotalNode = document.querySelector("[data-offer-discount-total]");
+    if (discountTotalNode) {
+      const discount = state.offerDraft?.discount || null;
+      const total = computeOfferDiscountLineTotals(discount).line_gross_amount_cents;
+      discountTotalNode.textContent = formatMoneyDisplay(Math.round(total), currency);
+    }
     const totalValueNode = document.querySelector(".offer-total-value");
     if (totalValueNode) {
       totalValueNode.textContent = `${offerTotalPending ? formatPendingMoneyDisplay(currency) : formatMoneyDisplay(resolveOfferTotalCents(), currency)}`;
@@ -737,6 +858,28 @@ export function createBookingOfferComponentsModule(ctx) {
         tax_rate_basis_points: taxRateBasisPoints
       };
     });
+  }
+
+  function collectOfferDiscount({ throwOnError = true } = {}) {
+    const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const discount = readOfferDraftDiscountForRender();
+    if (!discount) return null;
+    const reason = String(discount.reason || "").trim();
+    const amountCents = Math.max(0, Math.round(Number(discount.amount_cents || 0)));
+    if (!reason && amountCents <= 0) return null;
+    if (amountCents <= 0) {
+      if (throwOnError) throw new Error(bookingT("booking.offer.error.discount_amount", "Offer discount requires a valid amount."));
+      return null;
+    }
+    if (!reason) {
+      if (throwOnError) throw new Error(bookingT("booking.offer.error.discount_reason", "Offer discount requires a reason."));
+      return null;
+    }
+    return {
+      reason,
+      amount_cents: amountCents,
+      currency
+    };
   }
 
   function collectOfferComponents({ throwOnError = true } = {}) {
@@ -799,6 +942,7 @@ export function createBookingOfferComponentsModule(ctx) {
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     const category_rules = collectOfferCategoryRules();
     const components = collectOfferComponents();
+    const discount = collectOfferDiscount();
     const paymentTermsDraft = paymentTermsModule.normalizeOfferPaymentTermsDraft(
       cloneOfferPaymentTerms(state.offerDraft?.payment_terms, currency),
       currency
@@ -829,29 +973,28 @@ export function createBookingOfferComponentsModule(ctx) {
       currency,
       category_rules,
       components,
+      ...(discount ? { discount } : {}),
       ...(paymentTermsDraft && (paymentTermsDraft.lines.length || paymentTermsNotes)
         ? {
-            payment_terms: {
-              currency: paymentTermsDraft.currency,
-              basis_total_amount_cents: paymentTermsDraft.basis_total_amount_cents,
-              lines: paymentTermsDraft.lines.map((line, index) => ({
-                id: line.id || "",
+	            payment_terms: {
+	              currency: paymentTermsDraft.currency,
+	              lines: paymentTermsDraft.lines.map((line, index) => ({
+	                id: line.id || "",
                 kind: paymentTermsModule.normalizeOfferPaymentTermKindValue(line.kind),
                 label: String(line.label || "").trim() || paymentTermsModule.formatPaymentTermKindLabel(line.kind, "", {
                   installmentNumber: paymentTermsModule.resolveOfferPaymentTermInstallmentNumber(paymentTermsDraft.lines, index)
                 }),
                 sequence: index + 1,
-                amount_spec: {
-                  ...paymentTermsModule.normalizeOfferPaymentAmountSpecDraftValue(
-                    line?.amount_spec,
-                    line?.kind,
-                    line?.resolved_amount_cents
-                  )
-                },
-                resolved_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
-                due_rule: {
-                  type: paymentTermsModule.normalizeOfferPaymentDueTypeValue(line?.due_rule?.type),
-                  ...(paymentTermsModule.offerPaymentDueTypeUsesFixedDate(line?.due_rule?.type) && String(line?.due_rule?.fixed_date || "").trim()
+	                amount_spec: {
+	                  ...paymentTermsModule.normalizeOfferPaymentAmountSpecDraftValue(
+	                    line?.amount_spec,
+	                    line?.kind,
+	                    line?.resolved_amount_cents
+	                  )
+	                },
+	                due_rule: {
+	                  type: paymentTermsModule.normalizeOfferPaymentDueTypeValue(line?.due_rule?.type),
+	                  ...(paymentTermsModule.offerPaymentDueTypeUsesFixedDate(line?.due_rule?.type) && String(line?.due_rule?.fixed_date || "").trim()
                     ? { fixed_date: String(line.due_rule.fixed_date).trim() }
                     : {}),
                   ...(paymentTermsModule.offerPaymentDueTypeUsesDays(line?.due_rule?.type)
@@ -860,7 +1003,6 @@ export function createBookingOfferComponentsModule(ctx) {
                 },
                 ...(String(line?.description || "").trim() ? { description: String(line.description).trim() } : {})
               })),
-              scheduled_total_amount_cents: paymentTermsDraft.scheduled_total_amount_cents,
               ...(paymentTermsNotes ? { notes: paymentTermsNotes } : {})
             }
           }
@@ -903,6 +1045,36 @@ export function createBookingOfferComponentsModule(ctx) {
     };
   }
 
+  async function convertOfferDiscountInBackend(currentCurrency, nextCurrency, discount) {
+    if (!discount || Number(discount?.amount_cents || 0) <= 0) return null;
+    const request = offerExchangeRatesRequest({ baseURL: apiOrigin });
+    const response = await fetchApi(request.url, {
+      method: request.method,
+      body: {
+        from_currency: currentCurrency,
+        to_currency: nextCurrency,
+        components: [
+          {
+            id: "offer_discount_conversion",
+            unit_amount_cents: Number(discount.amount_cents || 0),
+            category: "OTHER",
+            quantity: 1,
+            tax_rate_basis_points: 0
+          }
+        ]
+      }
+    });
+    const converted = Array.isArray(response?.converted_components) ? response.converted_components[0] : null;
+    if (!converted) {
+      throw new Error(response?.detail || response?.error || bookingT("booking.offer.error.exchange_failed", "Offer exchange failed."));
+    }
+    return {
+      reason: String(discount.reason || "").trim(),
+      amount_cents: Math.max(0, Number(converted.unit_amount_cents) || 0),
+      currency: nextCurrency
+    };
+  }
+
   function updateOfferCurrencyHint(selectedCurrency) {
     if (!els.offer_currency_hint) return;
     const preferredCurrency = normalizeCurrencyCode(state.booking?.web_form_submission?.preferred_currency || "");
@@ -926,8 +1098,10 @@ export function createBookingOfferComponentsModule(ctx) {
       return;
     }
     let components;
+    let discount;
     try {
       components = collectOfferComponents({ throwOnError: true });
+      discount = collectOfferDiscount({ throwOnError: true });
     } catch (error) {
       setOfferStatus(String(error?.message || error));
       els.offer_currency_input.value = currentCurrency;
@@ -941,7 +1115,10 @@ export function createBookingOfferComponentsModule(ctx) {
     }
     setOfferStatus(bookingT("booking.offer.converting_prices", "Converting prices..."));
     try {
-      const converted = await convertOfferComponentsInBackend(currentCurrency, nextCurrency, components);
+      const [converted, convertedDiscount] = await Promise.all([
+        convertOfferComponentsInBackend(currentCurrency, nextCurrency, components),
+        convertOfferDiscountInBackend(currentCurrency, nextCurrency, discount)
+      ]);
       const convertedComponents = converted.convertedComponents;
       state.offerDraft.currency = nextCurrency;
       state.offerDraft.components = components.map((component, index) => {
@@ -958,16 +1135,21 @@ export function createBookingOfferComponentsModule(ctx) {
           currency: nextCurrency
         };
       });
+      state.offerDraft.discount = convertedDiscount
+        ? {
+            ...convertedDiscount
+          }
+        : null;
       if (Number.isFinite(Number(converted.totalPriceCents))) {
-        state.offerDraft.total_price_cents = Math.round(Number(converted.totalPriceCents));
+        state.offerDraft.total_price_cents = Math.round(Number(converted.totalPriceCents)) - Math.max(0, Number(convertedDiscount?.amount_cents || 0));
       }
       if (state.offerDraft.payment_terms) {
         const nextOfferTotalCents = Math.max(
           0,
           Math.round(
             Number.isFinite(Number(converted.totalPriceCents))
-              ? Number(converted.totalPriceCents)
-              : state.offerDraft.components.reduce((sum, component) => sum + computeOfferComponentLineTotals(component).gross_amount_cents, 0)
+              ? Number(converted.totalPriceCents) - Math.max(0, Number(convertedDiscount?.amount_cents || 0))
+              : computeOfferDraftTotals(state.offerDraft.components, state.offerDraft.discount).gross_amount_cents
           )
         );
         const conversionRatio = currentOfferTotalCents > 0 && nextOfferTotalCents > 0

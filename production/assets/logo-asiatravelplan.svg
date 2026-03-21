@@ -16,7 +16,7 @@
   </g>
 
   <g transform="translate(190,50)" fill="#163040">
-    <text x="0" y="52" font-family="'Trebuchet MS', 'Avenir Next', Arial, sans-serif" font-size="72" font-weight="700">AsiaTravelPlan</text>
-    <text x="2" y="92" font-family="'Trebuchet MS', 'Avenir Next', Arial, sans-serif" font-size="22" font-weight="600" fill="#4b6978">Southeast Asia Travel</text>
+    <text x="0" y="52" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="72" font-weight="700">AsiaTravelPlan</text>
+    <text x="2" y="92" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="600" fill="#4b6978">Southeast Asia Travel</text>
   </g>
 </svg>

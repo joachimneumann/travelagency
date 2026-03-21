@@ -231,6 +231,13 @@ export function createBookingOfferModule(ctx) {
   function cloneOffer(offer) {
     const source = offer && typeof offer === "object" ? offer : {};
     const paymentTerms = cloneOfferPaymentTerms(source.payment_terms, source.currency || state.booking?.preferred_currency || "USD");
+    const discount = source.discount && typeof source.discount === "object"
+      ? {
+          reason: String(source.discount?.reason || "").trim(),
+          amount_cents: Math.max(0, Math.round(Number(source.discount?.amount_cents || 0))),
+          currency: normalizeCurrencyCode(source.discount?.currency || source.currency || state.booking?.preferred_currency || "USD")
+        }
+      : null;
     const categoryRulesByCode = new Map(
       (Array.isArray(source.category_rules) ? source.category_rules : []).map((rule) => [
         String(rule?.category || "").toUpperCase(),
@@ -258,6 +265,7 @@ export function createBookingOfferModule(ctx) {
       status: normalizeOfferStatus(source.status),
       currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
       category_rules,
+      ...(discount ? { discount } : {}),
       ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
       components: sourceComponents.map((component, index) => ({
         id: String(component?.id || ""),
@@ -336,7 +344,13 @@ export function createBookingOfferModule(ctx) {
           details: component.details,
           quantity: component.quantity,
           unit_amount_cents: component.unit_amount_cents
-        }))
+        })),
+        discount: offer.discount
+          ? {
+              reason: offer.discount.reason,
+              amount_cents: offer.discount.amount_cents
+            }
+          : null
       }
     });
     const currency = normalizeCurrencyCode(offer.currency || state.booking.preferred_currency || "USD");

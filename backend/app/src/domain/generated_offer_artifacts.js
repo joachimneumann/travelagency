@@ -1,12 +1,35 @@
 import { readFile } from "node:fs/promises";
 import { sha256Hex } from "./offer_acceptance.js";
 
+export function collapseGeneratedOfferPaymentTermsState(store) {
+  const bookings = Array.isArray(store?.bookings) ? store.bookings : [];
+  let changed = false;
+  for (const booking of bookings) {
+    const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
+    for (const generatedOffer of generatedOffers) {
+      if (!generatedOffer || typeof generatedOffer !== "object") continue;
+      const legacyPaymentTerms = generatedOffer.payment_terms;
+      if (!legacyPaymentTerms) continue;
+      if (!generatedOffer.offer || typeof generatedOffer.offer !== "object") {
+        generatedOffer.offer = {};
+      }
+      if (!generatedOffer.offer.payment_terms) {
+        generatedOffer.offer.payment_terms = legacyPaymentTerms;
+      }
+      delete generatedOffer.payment_terms;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 export function createGeneratedOfferArtifactHelpers({
   baseCurrency,
   normalizeText,
   normalizePdfLang,
   nowIso,
   normalizeBookingOffer,
+  buildBookingOfferPaymentTermsReadModel,
   normalizeBookingTravelPlan,
   generatedOfferPdfPath,
   writeGeneratedOfferPdf,
@@ -34,7 +57,11 @@ export function createGeneratedOfferArtifactHelpers({
       contentLang: snapshotLang,
       flatLang: snapshotLang
     });
-    const paymentTerms = offerSnapshot.payment_terms || generatedOffer?.payment_terms || null;
+    const paymentTerms = buildBookingOfferPaymentTermsReadModel(
+      offerSnapshot.payment_terms || null,
+      offerSnapshot.currency || snapshotCurrency,
+      Number(generatedOffer?.total_price_cents || offerSnapshot.total_price_cents || 0)
+    );
     return {
       ...generatedOffer,
       lang: snapshotLang,

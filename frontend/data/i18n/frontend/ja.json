@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "残り {count} 件のツアーを見る",
   "tours.debug_header": "フィルター: {dest}, {style}",
   "tours.debug_empty": "現在のフィルターにはツアーがありません。",
-  "tour.card.from_price": "${price} から",
+  "tour.card.from_price": "{price} から",
   "tour.card.custom_quote": "個別見積もり",
   "tour.card.days": "{days} 日間",
   "tour.card.plan_trip": "この旅を計画する",

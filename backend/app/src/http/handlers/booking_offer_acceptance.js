@@ -18,9 +18,10 @@ import {
   verifyOfferAcceptanceToken,
   findOfferAcceptanceChallenge,
   upsertOfferAcceptanceChallenge,
-  removeOfferAcceptanceChallenges,
-  buildOfferAcceptanceOtpThrottle
-} from "../../domain/offer_acceptance.js";
+    removeOfferAcceptanceChallenges,
+    buildOfferAcceptanceOtpThrottle,
+    synchronizeGeneratedOfferAcceptanceRouteStatus
+  } from "../../domain/offer_acceptance.js";
 
 export function createBookingOfferAcceptanceHandlers(deps) {
   const {
@@ -111,6 +112,36 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     };
   }
 
+  function normalizedEmailForComparison(value) {
+    return normalizeText(value).toLowerCase();
+  }
+
+  function resolveOtpAcceptanceContact(booking, payload = {}) {
+    const contactProfile = getBookingContactProfile(booking);
+    const acceptedByName = normalizeText(payload?.accepted_by_name || contactProfile?.name);
+    const acceptedByEmail = normalizeText(contactProfile?.email);
+    const acceptedByPhone = normalizeText(contactProfile?.phone_number);
+    const requestedEmail = normalizeText(payload?.accepted_by_email);
+
+    if (!acceptedByName) {
+      return { ok: false, error: "accepted_by_name is required." };
+    }
+    if (!acceptedByEmail) {
+      return { ok: false, error: "OTP verification requires a booking contact email." };
+    }
+    if (requestedEmail && normalizedEmailForComparison(requestedEmail) !== normalizedEmailForComparison(acceptedByEmail)) {
+      return { ok: false, error: "OTP verification can only be sent to the booking contact email." };
+    }
+
+    return {
+      ok: true,
+      acceptedByName,
+      acceptedByEmail,
+      acceptedByPhone: acceptedByPhone || null,
+      acceptedByPersonId: null
+    };
+  }
+
   function buildPublicGeneratedOfferAccessResponse({ booking, generatedOffer, acceptanceToken }) {
     const normalizedGeneratedOffer = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
     const acceptanceTokenState = readGeneratedOfferAcceptanceTokenState(generatedOffer);
@@ -118,6 +149,11 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     const comment = normalizeText(generatedOffer?.comment);
     const acceptanceRoute = buildPublicGeneratedOfferAcceptanceRouteView(generatedOffer, { now: nowIso() });
     const acceptanceSummary = buildGeneratedOfferAcceptancePublicSummary(generatedOffer?.acceptance);
+    const otpRecipientHint = normalizeText(
+      acceptanceRoute?.mode === "OTP"
+        ? maskOtpRecipient(getBookingContactProfile(booking)?.email)
+        : ""
+    );
     return {
       booking_id: booking.id,
       generated_offer_id: generatedOffer.id,
@@ -130,6 +166,7 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       pdf_url: `/public/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf?token=${encodeURIComponent(acceptanceToken)}`,
       ...(normalizedGeneratedOffer.payment_terms ? { payment_terms: normalizedGeneratedOffer.payment_terms } : {}),
       ...(acceptanceRoute ? { acceptance_route: acceptanceRoute } : {}),
+      ...(otpRecipientHint ? { otp_recipient_hint: otpRecipientHint } : {}),
       ...(acceptanceTokenState.expiresAt ? { public_acceptance_expires_at: acceptanceTokenState.expiresAt } : {}),
       accepted: Boolean(generatedOffer?.acceptance),
       ...(acceptanceSummary ? { acceptance: acceptanceSummary } : {})
@@ -275,6 +312,9 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
+    if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now: nowIso() })) {
+      await persistStore(store);
+    }
 
     const tokenVerification = verifyPublicGeneratedOfferToken({ req, bookingId, generatedOfferId, generatedOffer });
     if (!tokenVerification.ok) {
@@ -307,6 +347,9 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     if (!generatedOffer) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
+    }
+    if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now: nowIso() })) {
+      await persistStore(store);
     }
 
     const tokenVerification = verifyPublicGeneratedOfferToken({ req, bookingId, generatedOfferId, generatedOffer });
@@ -356,6 +399,9 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     if (!generatedOffer) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
+    }
+    if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now: nowIso() })) {
+      await persistStore(store);
     }
 
     const acceptanceTokenState = readGeneratedOfferAcceptanceTokenState(generatedOffer);
@@ -407,8 +453,13 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     }
 
     const otpChannel = normalizeText(payload?.otp_channel).toUpperCase();
+    const explicitOtpRoute = normalizeText(generatedOffer?.acceptance_route?.mode).toUpperCase() === "OTP";
     if (!otpChannel && normalizeText(payload?.otp_code)) {
       sendJson(res, 422, { error: "otp_channel is required when otp_code is provided." });
+      return;
+    }
+    if (explicitOtpRoute && !otpChannel) {
+      sendJson(res, 422, { error: "This offer requires OTP verification before it can be accepted." });
       return;
     }
 
@@ -420,13 +471,9 @@ export function createBookingOfferAcceptanceHandlers(deps) {
 
       const existingChallenge = findOfferAcceptanceChallenge(store, bookingId, generatedOfferId, otpChannel);
       if (!normalizeText(payload?.otp_code)) {
-        const contact = resolveAcceptanceContact(booking, payload);
+        const contact = resolveOtpAcceptanceContact(booking, payload);
         if (!contact.ok) {
           sendJson(res, 422, { error: contact.error });
-          return;
-        }
-        if (!normalizeText(contact.acceptedByEmail)) {
-          sendJson(res, 422, { error: "accepted_by_email is required for EMAIL OTP verification." });
           return;
         }
 

@@ -5,6 +5,42 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
+#BookingTravelPlanSegmentImageSourceAttribution: {
+	source_name?:  string
+	source_url?:   common.#Url | string
+	photographer?: string
+	license?:      string
+}
+
+#BookingTravelPlanSegmentImageFocalPoint: {
+	x: >=0 & <=1 & number
+	y: >=0 & <=1 & number
+}
+
+#BookingTravelPlanSegmentImage: {
+	id:                   common.#Identifier
+	storage_path:         string & !=""
+	caption?:             string
+	alt_text?:            string
+	sort_order:           >=0 & int
+	is_primary?:          bool
+	is_customer_visible?: bool
+	width_px?:            >0 & int
+	height_px?:           >0 & int
+	source_attribution?:  #BookingTravelPlanSegmentImageSourceAttribution
+	focal_point?:         #BookingTravelPlanSegmentImageFocalPoint
+	created_at?:          common.#Timestamp
+}
+
+#BookingTravelPlanSegmentCopiedFrom: {
+	source_type:             "booking_segment"
+	source_booking_id:       common.#Identifier
+	source_day_id?:          common.#Identifier
+	source_segment_id:       common.#Identifier
+	copied_at:               common.#Timestamp
+	copied_by_atp_staff_id?: common.#Identifier
+}
+
 #BookingTravelPlanSegment: {
 	id:                        common.#Identifier
 	timing_kind:               *"label" | enums.#TravelPlanTimingKind
@@ -19,6 +55,8 @@ import (
 	end_time?:                 string
 	financial_coverage_status: *"not_covered" | enums.#TravelPlanFinancialCoverageStatus
 	financial_note?:           string
+	images?: [...#BookingTravelPlanSegmentImage]
+	copied_from?: #BookingTravelPlanSegmentCopiedFrom
 }
 
 #BookingTravelPlanOfferComponentLink: {

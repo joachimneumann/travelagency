@@ -53,7 +53,7 @@
   "tours.show_remaining.many": "Mostra i restanti {count} tour",
   "tours.debug_header": "Filtra: {dest}, {style}",
   "tours.debug_empty": "Nessun tour nel filtro attuale.",
-  "tour.card.from_price": "A partire da ${price}",
+  "tour.card.from_price": "A partire da {price}",
   "tour.card.custom_quote": "Preventivo personalizzato",
   "tour.card.days": "{days} giorni",
   "tour.card.plan_trip": "Pianifica questo viaggio",

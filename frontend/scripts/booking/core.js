@@ -365,6 +365,7 @@ export function createBookingCoreModule(ctx) {
   function handleBookingDetailKeydown(event) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
     if (els.personModal?.hidden === false) return;
+    if (els.travelPlanSegmentLibraryModal?.hidden === false) return;
     if (!els.titleInput?.hidden) return;
     if (event.target === els.titleInput) return;
     event.preventDefault();

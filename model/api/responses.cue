@@ -100,6 +100,28 @@ import (
 	search?:      string
 }
 
+#TravelPlanSegmentSearchResult: {
+	source_booking_id:    common.#Identifier
+	source_booking_name?: string
+	source_booking_code?: string
+	day_number?:          >0 & int
+	segment_id:           common.#Identifier
+	segment_kind?:        enums.#TravelPlanSegmentKind
+	title:                string
+	details?:             string
+	location?:            string
+	overnight_location?:  string
+	thumbnail_url?:       common.#Url | string
+	image_count?:         >=0 & int
+	supplier_name?:       string
+	updated_at?:          common.#Timestamp
+}
+
+#TravelPlanSegmentSearchResponse: {
+	items: [...#TravelPlanSegmentSearchResult]
+	total: >=0 & int
+}
+
 #OfferExchangeRatesResponse: {
 	from_currency:     string
 	to_currency:       string
@@ -160,6 +182,30 @@ import (
 	deposit_rule?:              #PublicGeneratedOfferDepositAcceptanceRuleView
 }
 
+#BookingOfferPaymentTermLineReadModel: entities.#BookingOfferPaymentTermLine & {
+	resolved_amount_cents: >=0 & int
+}
+
+#BookingOfferPaymentTermsReadModel: {
+	currency: enums.#CurrencyCode
+	lines: [...#BookingOfferPaymentTermLineReadModel]
+	notes?:                       string
+	basis_total_amount_cents:     >=0 & int
+	scheduled_total_amount_cents: >=0 & int
+}
+
+#BookingOfferReadModel: {
+	currency: enums.#CurrencyCode
+	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
+	category_rules: [...entities.#BookingOfferCategoryRule]
+	components: [...entities.#BookingOfferComponent]
+	discount?:          entities.#BookingOfferDiscount
+	totals:             entities.#BookingOfferTotals
+	quotation_summary?: entities.#BookingOfferQuotationSummary
+	payment_terms?:     #BookingOfferPaymentTermsReadModel
+	total_price_cents:  int
+}
+
 #GeneratedBookingOfferReadModel: {
 	id:                            common.#Identifier
 	booking_id:                    common.#Identifier
@@ -171,8 +217,8 @@ import (
 	created_by?:                   string
 	currency:                      enums.#CurrencyCode
 	total_price_cents:             int
-	payment_terms?:                entities.#BookingOfferPaymentTerms
-	offer:                         entities.#BookingOffer
+	payment_terms?:                #BookingOfferPaymentTermsReadModel
+	offer:                         #BookingOfferReadModel
 	travel_plan?:                  entities.#BookingTravelPlan
 	pdf_url:                       string & !=""
 	acceptance_route?:             entities.#GeneratedOfferAcceptanceRoute
@@ -208,7 +254,7 @@ import (
 	travel_plan?:         entities.#BookingTravelPlan
 	web_form_submission?: entities.#BookingWebFormSubmission
 	pricing:              entities.#BookingPricing
-	offer:                entities.#BookingOffer
+	offer:                #BookingOfferReadModel
 	generated_offers?: [...#GeneratedBookingOfferReadModel]
 	travel_plan_translation_status: #TranslationStatusSummary
 	offer_translation_status:       #TranslationStatusSummary
@@ -228,8 +274,9 @@ import (
 	comment?:                      string
 	created_at:                    common.#Timestamp
 	pdf_url?:                      string & !=""
-	payment_terms?:                entities.#BookingOfferPaymentTerms
+	payment_terms?:                #BookingOfferPaymentTermsReadModel
 	acceptance_route?:             #PublicGeneratedOfferAcceptanceRouteView
+	otp_recipient_hint?:           string & !=""
 	public_acceptance_expires_at?: common.#Timestamp
 	accepted:                      bool
 	acceptance?:                   #GeneratedOfferAcceptancePublicSummary

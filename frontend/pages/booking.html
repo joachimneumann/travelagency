@@ -77,8 +77,9 @@
 
           <article style="margin-bottom: 1rem;">
             <div class="field">
+              <label for="booking_note_input" data-i18n-id="booking.note_title">Booking notes (ATP internal)</label>
               <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
-                <textarea class="booking-note-input" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;" data-i18n-placeholder-id="booking.note_placeholder"></textarea>
+                <textarea class="booking-note-input booking-text-field booking-text-field--internal" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;" data-i18n-placeholder-id="booking.note_placeholder"></textarea>
                 <button class="btn btn-primary" id="booking_note_save_btn" type="button" data-i18n-id="booking.update_note">update</button>
                 <span id="booking_action_status" class="micro"></span>
               </div>
@@ -380,7 +381,7 @@
 
                 <div class="field" style="margin-top: 0.9rem;">
                   <label for="booking_person_modal_notes" data-i18n-id="booking.notes">Notes</label>
-                  <textarea id="booking_person_modal_notes" data-person-field="notes" rows="4"></textarea>
+                  <textarea class="booking-text-field booking-text-field--internal" id="booking_person_modal_notes" data-person-field="notes" rows="4"></textarea>
                 </div>
 
                 <section class="booking-danger-zone">
@@ -393,6 +394,44 @@
           </div>
 
           <div id="booking_whatsapp_mount"></div>
+
+          <div
+            class="modal travel-plan-library-modal"
+            id="travel_plan_segment_library_modal"
+            hidden
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="travel_plan_segment_library_title"
+          >
+            <div class="modal-panel travel-plan-library-modal__panel" role="document">
+              <div class="modal-head travel-plan-library-modal__head">
+                <div>
+                  <h2 id="travel_plan_segment_library_title">Insert existing segment</h2>
+                  <p class="micro" id="travel_plan_segment_library_subtitle">Search existing booking segments and insert a copy into this day.</p>
+                </div>
+                <button class="btn btn-ghost" id="travel_plan_segment_library_close_btn" type="button" aria-label="Close insert segment dialog">&times;</button>
+              </div>
+              <div class="modal-body travel-plan-library-modal__body">
+                <div class="travel-plan-library-modal__filters">
+                  <div class="field">
+                    <label for="travel_plan_segment_library_query">Search</label>
+                    <input id="travel_plan_segment_library_query" type="search" placeholder="Search segments, bookings, locations..." />
+                  </div>
+                  <div class="field">
+                    <label for="travel_plan_segment_library_kind">Kind</label>
+                    <select id="travel_plan_segment_library_kind"></select>
+                  </div>
+                  <div class="travel-plan-library-modal__search-action">
+                    <button class="btn btn-primary" id="travel_plan_segment_library_search_btn" type="button">Search</button>
+                  </div>
+                </div>
+                <div id="travel_plan_segment_library_status" class="micro booking-inline-status"></div>
+                <div id="travel_plan_segment_library_results" class="travel-plan-library-modal__results"></div>
+              </div>
+            </div>
+          </div>
+
+          <input id="travel_plan_segment_image_input" type="file" accept="image/*" multiple hidden />
 
           <article style="margin-bottom: 1rem;">
             <div class="field booking-content-language-field" id="booking_content_language_field">

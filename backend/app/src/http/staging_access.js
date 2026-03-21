@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { URL } from "node:url";
+import { inlineTheme } from "../lib/style_tokens.js";
 import { escapeHtml, normalizeText } from "../lib/text.js";
 
 export function createStagingAccessHandlers({
@@ -85,11 +86,11 @@ export function createStagingAccessHandlers({
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Staging Access | AsiaTravelPlan</title>
-    <style>
+      <style>
       :root {
-        --ink: #16222d;
-        --muted: #5f6f7a;
-        --line: #d9e1e6;
+        --ink: ${inlineTheme.ink};
+        --muted: ${inlineTheme.muted};
+        --line: ${inlineTheme.line};
       }
       * { box-sizing: border-box; }
       body {
@@ -100,14 +101,14 @@ export function createStagingAccessHandlers({
         padding: 1.5rem;
         font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
         color: var(--ink);
-        background: linear-gradient(180deg, #f6f9fa 0%, #eef3f5 100%);
+        background: linear-gradient(180deg, ${inlineTheme.bgStart} 0%, ${inlineTheme.bgEnd} 100%);
       }
       .card {
         width: min(440px, 100%);
-        background: rgba(255,255,255,0.96);
-        border: 1px solid var(--line);
+        background: ${inlineTheme.cardBg};
+        border: 1px solid ${inlineTheme.cardBorder};
         border-radius: 20px;
-        box-shadow: 0 18px 48px rgba(16, 33, 45, 0.10);
+        box-shadow: ${inlineTheme.shadow};
         padding: 2rem;
       }
       h1 { margin: 0 0 0.75rem; font-size: 1.8rem; }
@@ -126,16 +127,16 @@ export function createStagingAccessHandlers({
         border: 0;
         border-radius: 12px;
         padding: 0.85rem 1rem;
-        background: #163040;
-        color: #fff;
+        background: ${inlineTheme.buttonBg};
+        color: ${inlineTheme.buttonText};
         font: inherit;
         font-weight: 600;
         cursor: pointer;
       }
       .error {
-        color: #a33434;
-        background: #fff0f0;
-        border: 1px solid #f0cccc;
+        color: ${inlineTheme.errorText};
+        background: ${inlineTheme.errorBg};
+        border: 1px solid ${inlineTheme.errorBorder};
         border-radius: 12px;
         padding: 0.75rem 0.9rem;
       }

@@ -7,6 +7,12 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
 import { resolveApiUrl } from "../shared/api.js";
+import {
+  formatGeneratedOfferAcceptanceRouteLabel,
+  generatedOfferRouteUsesDepositPayment,
+  normalizeGeneratedOfferAcceptanceRouteMode as normalizeAcceptanceRouteMode,
+  normalizeGeneratedOfferAcceptanceRouteStatus as normalizeAcceptanceRouteStatus
+} from "../shared/offer_acceptance_catalog.js";
 
 const query = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -42,7 +48,7 @@ const els = {
   resultStatement: document.getElementById("offer_accept_result_statement"),
   form: document.getElementById("offer_accept_form"),
   name: document.getElementById("offer_accept_name"),
-  email: document.getElementById("offer_accept_email"),
+  contactHint: document.getElementById("offer_accept_contact_hint"),
   sendBtn: document.getElementById("offer_accept_send_btn"),
   status: document.getElementById("offer_accept_status"),
   otpPanel: document.getElementById("offer_accept_otp_panel"),
@@ -64,10 +70,6 @@ function escapeHtml(value) {
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function normalizeAcceptanceRouteMode(value) {
-  return normalizeText(value).toUpperCase() === "DEPOSIT_PAYMENT" ? "DEPOSIT_PAYMENT" : "OTP";
 }
 
 function currencyDefinition(currency) {
@@ -135,7 +137,11 @@ function routeMode() {
 }
 
 function routeUsesDepositPayment() {
-  return routeMode() === "DEPOSIT_PAYMENT";
+  return generatedOfferRouteUsesDepositPayment(routeMode());
+}
+
+function otpRecipientHint() {
+  return normalizeText(state.access?.otp_recipient_hint);
 }
 
 function setError(message) {
@@ -194,7 +200,10 @@ function renderSummary() {
   const rows = [
     ["Booking", access.booking_name || access.booking_id],
     ["Offer total", `<span class="offer-accept-summary__value is-total">${escapeHtml(formatMoney(access.total_price_cents, access.currency))}</span>`],
-    ["Route", escapeHtml(routeUsesDepositPayment() ? "Deposit payment" : "OTP confirmation")],
+    ["Route", escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode(), {
+      deposit: "Deposit payment",
+      otp: "OTP confirmation"
+    }))],
     ["Offer language", escapeHtml(String(access.lang || "").toUpperCase() || "-")],
     ["Generated", escapeHtml(formatDateTime(access.created_at))],
     ["Link expires", escapeHtml(formatDateTime(access.public_acceptance_expires_at))],
@@ -219,7 +228,12 @@ function renderRouteCard() {
   }
   const mode = routeMode();
   const isDeposit = routeUsesDepositPayment();
-  const routeTitle = isDeposit ? "Deposit payment confirms the offer" : "OTP confirmation";
+  const routeTitle = isDeposit
+    ? "Deposit payment confirms the offer"
+    : formatGeneratedOfferAcceptanceRouteLabel(mode, {
+        deposit: "Deposit payment",
+        otp: "OTP confirmation"
+      });
   const defaultMessage = isDeposit
     ? (() => {
         const label = normalizeText(acceptanceRoute?.deposit_rule?.payment_term_label) || "the required payment";
@@ -229,8 +243,12 @@ function renderRouteCard() {
         return `This offer is confirmed once we receive ${amount} for ${label}.`;
       })()
     : "Request a one-time code by email and enter it below to accept the offer.";
-  const statusLabel = normalizeText(acceptanceRoute?.status)
-    ? normalizeText(String(acceptanceRoute.status).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
+  const routeStatus = normalizeAcceptanceRouteStatus(
+    acceptanceRoute?.status,
+    isDeposit ? "AWAITING_PAYMENT" : "OPEN"
+  );
+  const statusLabel = normalizeText(routeStatus)
+    ? normalizeText(String(routeStatus).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
     : (isDeposit ? "Awaiting payment" : "Open");
   const depositMeta = isDeposit && acceptanceRoute?.deposit_rule
     ? `
@@ -340,18 +358,27 @@ function render() {
   els.intro.textContent = depositRoute
     ? "Review the frozen PDF and payment terms. Your offer is confirmed once we receive the required payment."
     : "Review the frozen PDF, request your verification code, and confirm acceptance.";
+  if (els.contactHint) {
+    els.contactHint.textContent = depositRoute
+      ? ""
+      : (otpRecipientHint()
+        ? `Verification codes are sent to ${otpRecipientHint()}.`
+        : "OTP verification is unavailable because this booking has no contact email.");
+    els.contactHint.hidden = depositRoute;
+  }
 
   renderSummary();
   renderRouteCard();
   renderPaymentTerms();
   els.pdfLink.href = resolveApiUrl(apiOrigin, access.pdf_url || "#");
   els.pdfLink.hidden = !access.pdf_url;
-  els.sendBtn.disabled = state.sending;
-  els.verifyBtn.disabled = state.sending || !normalizeText(els.otpCode.value);
-  els.resendBtn.disabled = state.sending || state.retryAfterSeconds > 0;
+  const otpAvailable = depositRoute || Boolean(otpRecipientHint()) || Boolean(state.otpSentTo);
+  els.sendBtn.disabled = state.sending || !otpAvailable;
+  els.verifyBtn.disabled = state.sending || !normalizeText(els.otpCode.value) || !otpAvailable;
+  els.resendBtn.disabled = state.sending || state.retryAfterSeconds > 0 || !otpAvailable;
   els.otpPanel.hidden = !state.otpRequired || depositRoute;
   els.otpMeta.textContent = state.otpRequired
-    ? `Verification code sent to ${state.otpSentTo || "your email"}. It expires ${state.otpExpiresAt ? `at ${formatDateTime(state.otpExpiresAt)}` : "soon"}.`
+    ? `Verification code sent to ${state.otpSentTo || otpRecipientHint() || "your booking contact email"}. It expires ${state.otpExpiresAt ? `at ${formatDateTime(state.otpExpiresAt)}` : "soon"}.`
     : "";
   els.retryAfter.textContent = state.retryAfterSeconds > 0
     ? `Resend available in ${state.retryAfterSeconds}s`
@@ -389,7 +416,6 @@ function buildAcceptRequestBody({ includeOtpCode = false } = {}) {
   return {
     acceptance_token: state.token,
     accepted_by_name: normalizeText(els.name.value),
-    accepted_by_email: normalizeText(els.email.value),
     language: state.access?.lang || String(query.get("lang") || "en").toLowerCase(),
     otp_channel: "EMAIL",
     ...(includeOtpCode ? { otp_code: normalizeText(els.otpCode.value) } : {})
@@ -402,9 +428,8 @@ function validateBaseForm() {
     els.name.focus();
     return false;
   }
-  if (!normalizeText(els.email.value)) {
-    setStatus("Email is required.", "error");
-    els.email.focus();
+  if (!routeUsesDepositPayment() && !otpRecipientHint() && !state.otpSentTo) {
+    setStatus("OTP verification is unavailable because this booking has no contact email.", "error");
     return false;
   }
   return true;
@@ -433,7 +458,7 @@ async function sendOtpRequest() {
     state.otpSentTo = String(result.payload.otp_sent_to || "").trim();
     state.otpExpiresAt = String(result.payload.otp_expires_at || "").trim();
     startRetryCountdown(result.payload.retry_after_seconds || 0);
-    setStatus(`Verification code sent to ${state.otpSentTo || "your email"}.`, "success");
+    setStatus(`Verification code sent to ${state.otpSentTo || otpRecipientHint() || "your booking contact email"}.`, "success");
     render();
     return;
   }

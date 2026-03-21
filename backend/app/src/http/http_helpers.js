@@ -1,6 +1,7 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
+import { inlineTheme } from "../lib/style_tokens.js";
 import { escapeHtml, normalizeText } from "../lib/text.js";
 
 export function createHttpHelpers({ corsOrigin }) {
@@ -67,11 +68,11 @@ export function createHttpHelpers({ corsOrigin }) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Page not found | AsiaTravelPlan</title>
-    <style>
+      <style>
       :root {
-        --ink: #16222d;
-        --muted: #5f6f7a;
-        --line: #d9e1e6;
+        --ink: ${inlineTheme.ink};
+        --muted: ${inlineTheme.muted};
+        --line: ${inlineTheme.line};
       }
       * { box-sizing: border-box; }
       body {
@@ -82,14 +83,14 @@ export function createHttpHelpers({ corsOrigin }) {
         padding: 1.5rem;
         font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
         color: var(--ink);
-        background: linear-gradient(180deg, #f6f9fa 0%, #eef3f5 100%);
+        background: linear-gradient(180deg, ${inlineTheme.bgStart} 0%, ${inlineTheme.bgEnd} 100%);
       }
       main {
         width: min(560px, 100%);
-        background: rgba(255,255,255,0.96);
-        border: 1px solid var(--line);
+        background: ${inlineTheme.cardBg};
+        border: 1px solid ${inlineTheme.cardBorder};
         border-radius: 20px;
-        box-shadow: 0 18px 48px rgba(16, 33, 45, 0.10);
+        box-shadow: ${inlineTheme.shadow};
         padding: 2rem;
       }
       h1 { margin: 0 0 0.75rem; font-size: 1.8rem; }
@@ -106,15 +107,15 @@ export function createHttpHelpers({ corsOrigin }) {
         color: var(--ink);
         text-decoration: none;
         font-weight: 600;
-        background: #fff;
+        background: ${inlineTheme.buttonText};
       }
       .btn-primary {
-        background: #163040;
-        border-color: #163040;
-        color: #fff;
+        background: ${inlineTheme.buttonBg};
+        border-color: ${inlineTheme.buttonBg};
+        color: ${inlineTheme.buttonText};
       }
       code {
-        background: #f3f6f7;
+        background: ${inlineTheme.codeBg};
         border-radius: 8px;
         padding: 0.15rem 0.35rem;
       }

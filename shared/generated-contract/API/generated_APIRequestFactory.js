@@ -420,6 +420,91 @@ export function bookingTravelPlanTranslateRequest({ baseURL = '', params = {}, q
   };
 }
 
+export function travelPlanSegmentSearchPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-segments/search", params);
+}
+
+export function travelPlanSegmentSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanSegmentSearchPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "travel_plan_segment_search",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanSegmentImportPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/import", params);
+}
+
+export function bookingTravelPlanSegmentImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanSegmentImportPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_segment_import",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanSegmentImageUploadPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images", params);
+}
+
+export function bookingTravelPlanSegmentImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanSegmentImageUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_segment_image_upload",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanSegmentImageDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/{image_id}", params);
+}
+
+export function bookingTravelPlanSegmentImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanSegmentImageDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_segment_image_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanSegmentImageReorderPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/order", params);
+}
+
+export function bookingTravelPlanSegmentImageReorderRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanSegmentImageReorderPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_segment_image_reorder",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingPricingPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/pricing", params);
 }

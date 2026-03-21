@@ -9,6 +9,7 @@ import {
   validatePublicBookingCreateRequest
 } from "../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../shared/js/text.js";
+import { logBrowserConsoleError } from "./shared/api.js";
 import { fetchAuthMe } from "./shared/auth.js";
 import { createFrontendBookingFormOptionsController } from "./main_booking_form_options.js";
 import { createFrontendToursController } from "./main_tours.js";
@@ -907,7 +908,11 @@ async function submitBookingForm() {
     els.stepNext.disabled = false;
     els.stepNext.classList.remove("is-submitted");
     els.stepBack.disabled = false;
-    console.error(error);
+    logBrowserConsoleError("[website-booking] Booking form submission failed.", {
+      current_url: window.location.href,
+      selected_tour_id: state.selectedTour?.id || null,
+      current_step: state.formStep
+    }, error);
   }
 }
 

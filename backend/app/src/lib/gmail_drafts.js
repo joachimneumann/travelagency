@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { importPKCS8, SignJWT } from "jose";
+import { mailTheme } from "./style_tokens.js";
 
 const GMAIL_COMPOSE_SCOPE = "https://www.googleapis.com/auth/gmail.compose";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -44,7 +45,7 @@ function toBase64Url(value) {
 
 function buildHtmlBody({ greeting = "", intro = "", footer = "" }) {
   return [
-    "<html><body style=\"font-family:Arial,Helvetica,sans-serif;color:#1f2f3d;line-height:1.5;\">",
+    `<html><body style="font-family:Arial,Helvetica,sans-serif;color:${mailTheme.text};line-height:1.5;">`,
     greeting ? `<p>${escapeHtml(greeting)}</p>` : "",
     intro ? `<p>${escapeHtml(intro)}</p>` : "",
     footer ? `<p>${escapeHtml(footer)}</p>` : "",

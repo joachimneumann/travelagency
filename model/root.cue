@@ -9,21 +9,26 @@ import (
 
 #AbstractModel: {
 	entities: {
-		Booking:                             entityModel.#Booking
-		GeneratedBookingOffer:               entityModel.#GeneratedBookingOffer
-		GeneratedOfferAcceptanceRoute:       entityModel.#GeneratedOfferAcceptanceRoute
-		GeneratedOfferDepositAcceptanceRule: entityModel.#GeneratedOfferDepositAcceptanceRule
-		GeneratedOfferAcceptance:            entityModel.#GeneratedOfferAcceptance
-		BookingPerson:                       entityModel.#BookingPerson
-		BookingPersonAddress:                entityModel.#BookingPersonAddress
-		BookingPersonConsent:                entityModel.#BookingPersonConsent
-		BookingPersonDocument:               entityModel.#BookingPersonDocument
-		BookingTravelPlan:                   entityModel.#BookingTravelPlan
-		BookingTravelPlanDay:                entityModel.#BookingTravelPlanDay
-		BookingTravelPlanSegment:            entityModel.#BookingTravelPlanSegment
-		BookingTravelPlanOfferComponentLink: entityModel.#BookingTravelPlanOfferComponentLink
-		Supplier:                            entityModel.#Supplier
-		Tour:                                entityModel.#Tour
+		Booking:                                        entityModel.#Booking
+		GeneratedBookingOffer:                          entityModel.#GeneratedBookingOffer
+		GeneratedOfferAcceptanceRoute:                  entityModel.#GeneratedOfferAcceptanceRoute
+		GeneratedOfferDepositAcceptanceRule:            entityModel.#GeneratedOfferDepositAcceptanceRule
+		GeneratedOfferAcceptance:                       entityModel.#GeneratedOfferAcceptance
+		BookingPerson:                                  entityModel.#BookingPerson
+		BookingPersonAddress:                           entityModel.#BookingPersonAddress
+		BookingPersonConsent:                           entityModel.#BookingPersonConsent
+		BookingPersonDocument:                          entityModel.#BookingPersonDocument
+		BookingTravelPlan:                              entityModel.#BookingTravelPlan
+		BookingTravelPlanDay:                           entityModel.#BookingTravelPlanDay
+		BookingTravelPlanSegment:                       entityModel.#BookingTravelPlanSegment
+		BookingTravelPlanSegmentImage:                  entityModel.#BookingTravelPlanSegmentImage
+		BookingTravelPlanSegmentImageSourceAttribution: entityModel.#BookingTravelPlanSegmentImageSourceAttribution
+		BookingTravelPlanSegmentImageFocalPoint:        entityModel.#BookingTravelPlanSegmentImageFocalPoint
+		BookingTravelPlanSegmentCopiedFrom:             entityModel.#BookingTravelPlanSegmentCopiedFrom
+		BookingTravelPlanOfferComponentLink:            entityModel.#BookingTravelPlanOfferComponentLink
+		BookingOfferDiscount:                           entityModel.#BookingOfferDiscount
+		Supplier:                                       entityModel.#Supplier
+		Tour:                                           entityModel.#Tour
 	}
 
 	common: {
@@ -82,6 +87,8 @@ import (
 		OfferExchangeRatesResponse:                       apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                               apiModel.#BookingListFilters
 		TourListFilters:                                  apiModel.#TourListFilters
+		TravelPlanSegmentSearchResult:                    apiModel.#TravelPlanSegmentSearchResult
+		TravelPlanSegmentSearchResponse:                  apiModel.#TravelPlanSegmentSearchResponse
 		AuthenticatedUser:                                apiModel.#AuthenticatedUser
 		AuthMeResponse:                                   apiModel.#AuthMeResponse
 		MobileBootstrap:                                  apiModel.#MobileBootstrap
@@ -97,6 +104,9 @@ import (
 		GeneratedOfferAcceptancePublicSummary:            apiModel.#GeneratedOfferAcceptancePublicSummary
 		PublicGeneratedOfferDepositAcceptanceRuleView:    apiModel.#PublicGeneratedOfferDepositAcceptanceRuleView
 		PublicGeneratedOfferAcceptanceRouteView:          apiModel.#PublicGeneratedOfferAcceptanceRouteView
+		BookingOfferPaymentTermLineReadModel:             apiModel.#BookingOfferPaymentTermLineReadModel
+		BookingOfferPaymentTermsReadModel:                apiModel.#BookingOfferPaymentTermsReadModel
+		BookingOfferReadModel:                            apiModel.#BookingOfferReadModel
 		GeneratedBookingOfferReadModel:                   apiModel.#GeneratedBookingOfferReadModel
 		BookingReadModel:                                 apiModel.#BookingReadModel
 		PublicGeneratedOfferAccessResponse:               apiModel.#PublicGeneratedOfferAccessResponse
@@ -114,6 +124,11 @@ import (
 		BookingNotesUpdateRequest:                        apiModel.#BookingNotesUpdateRequest
 		BookingTravelPlanUpdateRequest:                   apiModel.#BookingTravelPlanUpdateRequest
 		BookingPricingUpdateRequest:                      apiModel.#BookingPricingUpdateRequest
+		TravelPlanSegmentSearchRequest:                   apiModel.#TravelPlanSegmentSearchRequest
+		TravelPlanSegmentImportRequest:                   apiModel.#TravelPlanSegmentImportRequest
+		TravelPlanSegmentImageUploadRequest:              apiModel.#TravelPlanSegmentImageUploadRequest
+		TravelPlanSegmentImageDeleteRequest:              apiModel.#TravelPlanSegmentImageDeleteRequest
+		TravelPlanSegmentImageReorderRequest:             apiModel.#TravelPlanSegmentImageReorderRequest
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                      apiModel.#BookingGenerateOfferRequest
 		BookingGenerateOfferDepositAcceptanceRuleRequest: apiModel.#BookingGenerateOfferDepositAcceptanceRuleRequest
