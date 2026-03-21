@@ -446,8 +446,14 @@
               <div class="backend-table-wrap" style="margin-bottom: 0.8rem;">
                 <table class="backend-table" id="generated_offers_table"></table>
               </div>
-              <div class="booking-generated-offers-actions">
-                <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-i18n-id="booking.new_pdf">new PDF</button>
+              <div class="booking-generated-offer-route">
+                <div class="field">
+                  <label for="offer_generation_route_mode">Offer Confirmation</label>
+                  <select id="offer_generation_route_mode"></select>
+                </div>
+                <div class="booking-generated-offers-actions">
+                  <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-i18n-id="booking.new_offer">new offer</button>
+                </div>
               </div>
               <span id="offer_status" class="micro"></span>
             </div>

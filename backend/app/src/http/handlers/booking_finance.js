@@ -1,8 +1,12 @@
-import { validateBookingOfferTranslateRequest } from "../../../Generated/API/generated_APIModels.js";
+import {
+  validateBookingGenerateOfferRequest,
+  validateBookingOfferTranslateRequest
+} from "../../../Generated/API/generated_APIModels.js";
 import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
+  normalizeGeneratedOfferAcceptanceRouteMode,
   ensureGeneratedOfferAcceptanceTokenState,
   removeOfferAcceptanceChallenges
 } from "../../domain/offer_acceptance.js";
@@ -164,6 +168,72 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
     sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
+  }
+
+  function resolveGeneratedOfferAcceptancePaymentLine(paymentTerms, requestedLineId = "") {
+    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    if (!lines.length) {
+      throw new Error("Deposit payment acceptance requires at least one payment term line.");
+    }
+    const normalizedRequestedLineId = normalizeText(requestedLineId);
+    if (normalizedRequestedLineId) {
+      const explicitLine = lines.find((line) => normalizeText(line?.id) === normalizedRequestedLineId);
+      if (!explicitLine) {
+        throw new Error("Selected acceptance payment term line was not found.");
+      }
+      return explicitLine;
+    }
+    return lines.find((line) => normalizeText(line?.kind).toUpperCase() === "DEPOSIT") || lines[0];
+  }
+
+  function buildGeneratedOfferAcceptanceRoute({ generatedOffer, booking, offerSnapshot, payload, principal, now }) {
+    const requestedRoute = payload?.acceptance_route && typeof payload.acceptance_route === "object"
+      ? payload.acceptance_route
+      : null;
+    const mode = requestedRoute ? normalizeGeneratedOfferAcceptanceRouteMode(requestedRoute.mode) : "OTP";
+    const selectedByATPStaffId = normalizeText(
+      principal?.sub
+      || principal?.preferred_username
+      || payload?.actor
+      || booking?.assigned_keycloak_user_id
+      || "keycloak_user"
+    ) || "keycloak_user";
+    const expiresAt = normalizeText(requestedRoute?.expires_at)
+      || (mode === "OTP" ? normalizeText(generatedOffer?.acceptance_token_expires_at) : "")
+      || "";
+    const customerMessageSnapshot = normalizeText(requestedRoute?.customer_message_snapshot);
+
+    if (mode === "DEPOSIT_PAYMENT") {
+      const paymentTerms = offerSnapshot?.payment_terms || generatedOffer?.payment_terms || null;
+      const acceptanceLine = resolveGeneratedOfferAcceptancePaymentLine(
+        paymentTerms,
+        requestedRoute?.deposit_rule?.payment_term_line_id
+      );
+      return {
+        mode,
+        status: "AWAITING_PAYMENT",
+        selected_at: now,
+        selected_by_atp_staff_id: selectedByATPStaffId,
+        ...(expiresAt ? { expires_at: expiresAt } : {}),
+        ...(customerMessageSnapshot ? { customer_message_snapshot: customerMessageSnapshot } : {}),
+        deposit_rule: {
+          payment_term_line_id: normalizeText(acceptanceLine?.id),
+          payment_term_label: normalizeText(acceptanceLine?.label) || "Deposit",
+          required_amount_cents: Math.max(0, Math.round(Number(acceptanceLine?.resolved_amount_cents || 0))),
+          currency: normalizeText(paymentTerms?.currency || offerSnapshot?.currency || generatedOffer?.currency || BASE_CURRENCY).toUpperCase() || BASE_CURRENCY,
+          aggregation_mode: "SUM_LINKED_PAID_PAYMENTS"
+        }
+      };
+    }
+
+    return {
+      mode: "OTP",
+      status: "OPEN",
+      selected_at: now,
+      selected_by_atp_staff_id: selectedByATPStaffId,
+      ...(expiresAt ? { expires_at: expiresAt } : {}),
+      ...(customerMessageSnapshot ? { customer_message_snapshot: customerMessageSnapshot } : {})
+    };
   }
 
   async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -439,6 +509,7 @@ export function createBookingFinanceHandlers(deps) {
     let payload;
     try {
       payload = await readBodyJson(req);
+      validateBookingGenerateOfferRequest(payload || {});
     } catch {
       sendJson(res, 400, { error: "Invalid JSON payload" });
       return;
@@ -494,6 +565,19 @@ export function createBookingFinanceHandlers(deps) {
       travel_plan: travelPlanSnapshot
     };
     ensureGeneratedOfferAcceptanceTokenState(generatedOffer);
+    try {
+      generatedOffer.acceptance_route = buildGeneratedOfferAcceptanceRoute({
+        generatedOffer,
+        booking,
+        offerSnapshot,
+        payload,
+        principal,
+        now
+      });
+    } catch (error) {
+      sendJson(res, 422, { error: String(error?.message || error || "Invalid generated offer acceptance route.") });
+      return;
+    }
 
     booking.generated_offers = [...existingGeneratedOffers, generatedOffer];
     await ensureFrozenGeneratedOfferPdf(generatedOffer, booking);

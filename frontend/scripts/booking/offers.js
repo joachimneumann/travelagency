@@ -133,7 +133,8 @@ export function createBookingOfferModule(ctx) {
     setOfferSaveEnabled,
     clearOfferStatus,
     scheduleOfferAutosave,
-    resolveOfferTotalCents: () => resolveOfferTotalCents()
+    resolveOfferTotalCents: () => resolveOfferTotalCents(),
+    renderOfferGenerationControls: () => generatedOffersModule.renderOfferGenerationControls()
   });
   const generatedOffersModule = createBookingGeneratedOffersModule({
     state,

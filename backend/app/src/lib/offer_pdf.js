@@ -1198,13 +1198,48 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   return y + 10;
 }
 
-function drawClosing(doc, startY, fonts, lang) {
+function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
+  const routeMode = normalizeText(generatedOffer?.acceptance_route?.mode).toUpperCase();
+  if (routeMode === "DEPOSIT_PAYMENT") {
+    const routeRule = generatedOffer?.acceptance_route?.deposit_rule && typeof generatedOffer.acceptance_route.deposit_rule === "object"
+      ? generatedOffer.acceptance_route.deposit_rule
+      : null;
+    const paymentLabel = textOrNull(routeRule?.payment_term_label) || pdfT(lang, "offer.payment_term.default_label", "Payment term {index}", { index: 1 });
+    const paymentAmount = formatMoneyValue(
+      Number(routeRule?.required_amount_cents || generatedOffer?.total_price_cents || 0),
+      routeRule?.currency || generatedOffer?.currency
+    );
+    return pdfT(
+      lang,
+      "offer.closing_body_deposit",
+      "To confirm this offer, please pay the {label} of {amount}. Once we receive this payment, we will confirm your booking and guide you through the next steps.",
+      {
+        label: paymentLabel,
+        amount: paymentAmount
+      }
+    );
+  }
+  if (routeMode === "OTP") {
+    return pdfT(
+      lang,
+      "offer.closing_body_otp",
+      "To confirm this offer, please use the secure OTP confirmation link we sent you. After the one-time verification, we will confirm the next steps with you."
+    );
+  }
+  return pdfT(
+    lang,
+    "offer.closing_body",
+    "If this offer feels right for you, simply respond to us by email or WhatsApp and we will be happy to confirm next steps, refine details, and help you move toward booking."
+  );
+}
+
+function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue) {
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
     .fillColor("#33454C")
     .text(
-      pdfT(lang, "offer.closing_body", "If this offer feels right for you, simply respond to us by email or WhatsApp and we will be happy to confirm next steps, refine details, and help you move toward booking."),
+      buildClosingBody(generatedOffer, formatMoneyValue, lang),
       PAGE_MARGIN,
       startY,
       {
@@ -1290,7 +1325,7 @@ export function createOfferPdfWriter({
         y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);
       }
       y = ensureSpace(doc, y, 90);
-      y = drawClosing(doc, y + 18, fonts, lang);
+      y = drawClosing(doc, y + 18, fonts, lang, generatedOffer, renderMoney);
 
       drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);
       doc

@@ -2559,38 +2559,62 @@ textarea:focus-visible {
   display: inline-block;
 }
 
-.backend-table th.generated-offers-col-acceptance,
-.backend-table td.generated-offers-col-acceptance {
-  min-width: 176px;
+.backend-table th.generated-offers-col-route,
+.backend-table td.generated-offers-col-route {
+  min-width: 252px;
+  text-align: center;
 }
 
 .backend-table th.generated-offers-col-status,
 .backend-table td.generated-offers-col-status {
-  min-width: 136px;
+  min-width: 124px;
+  text-align: center;
+}
+
+.generated-offers-route-label {
+  display: inline-block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #5d707c;
+  text-align: center;
+  letter-spacing: 0.01em;
 }
 
 .generated-offers-link-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 0.35rem;
+  display: inline-flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.28rem;
+  max-width: 100%;
 }
 
 .generated-offers-link-actions .btn {
-  padding: 0.35rem 0.65rem;
-  min-height: 34px;
+  padding: 0.3rem 0.58rem;
+  min-height: 32px;
+  white-space: nowrap;
+  font-size: 0.84rem;
 }
 
 .generated-offers-status-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 92px;
-  padding: 0.28rem 0.65rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.24rem 0.58rem;
   border-radius: 999px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.15;
+  white-space: nowrap;
+}
+
+.generated-offers-status-badge.is-awaiting-payment {
+  width: 6.4rem;
+  white-space: normal;
+  text-align: center;
 }
 
 .generated-offers-status-badge.is-accepted {
@@ -2617,6 +2641,7 @@ textarea:focus-visible {
   margin-top: 0.3rem;
   font-size: 0.78rem;
   color: #4d616d;
+  text-align: center;
 }
 
 .backend-table th.generated-offers-col-total,
@@ -2638,6 +2663,25 @@ textarea:focus-visible {
 
 .backend-table td.generated-offers-col-actions {
   padding-inline: 0.25rem;
+}
+
+.booking-generated-offer-route {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) auto;
+  gap: 0.85rem 1rem;
+  align-items: end;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.booking-generated-offers-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-self: end;
+  margin-bottom: 0;
 }
 
 .offer-remove-btn {
@@ -2723,6 +2767,101 @@ textarea:focus-visible {
   white-space: pre-wrap;
 }
 
+.offer-accept-route,
+.offer-accept-payment-terms {
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #d7e0e7;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.offer-accept-route__header,
+.offer-accept-payment-terms__summary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: baseline;
+}
+
+.offer-accept-route__title,
+.offer-accept-payment-terms__title {
+  margin: 0;
+  color: #243642;
+}
+
+.offer-accept-route__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.24rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(12, 99, 180, 0.1);
+  color: #0c63b4;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.offer-accept-route__body {
+  margin: 0.7rem 0 0;
+  color: #4d616d;
+  line-height: 1.55;
+}
+
+.offer-accept-route__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem 1rem;
+  margin-top: 0.85rem;
+}
+
+.offer-accept-route__meta div {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.offer-accept-route__meta strong {
+  color: #243642;
+  font-size: 0.82rem;
+}
+
+.offer-accept-payment-terms__header {
+  margin-bottom: 0.8rem;
+}
+
+.offer-accept-payment-terms__amount {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.offer-accept-payment-terms__note-row td {
+  background: rgba(247, 251, 253, 0.46);
+  color: #4d616d;
+  font-size: 0.88rem;
+}
+
+.offer-accept-payment-terms__note-label {
+  display: inline-block;
+  margin-right: 0.55rem;
+  color: #243642;
+  font-weight: 700;
+}
+
+.offer-accept-payment-terms__summary {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #d7e0e7;
+}
+
+.offer-accept-payment-terms__notes {
+  margin: 0.8rem 0 0;
+  color: #4d616d;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
 .offer-accept-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2793,9 +2932,24 @@ textarea:focus-visible {
 }
 
 @media (max-width: 720px) {
+  .booking-generated-offer-route,
   .offer-accept-form__grid,
   .offer-accept-summary__row {
     grid-template-columns: 1fr;
+  }
+
+  .offer-accept-route__meta,
+  .offer-accept-route__header,
+  .offer-accept-payment-terms__summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-generated-offers-actions {
+    justify-content: stretch;
+  }
+
+  .booking-generated-offers-actions .btn {
+    width: 100%;
   }
 }
 

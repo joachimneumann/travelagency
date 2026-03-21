@@ -231,6 +231,7 @@ const els = {
   offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),
+  offer_generation_route_mode: document.getElementById("offer_generation_route_mode"),
   offer_payment_terms_notes: document.getElementById("offer_payment_terms_notes"),
   generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),

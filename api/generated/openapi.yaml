@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-20T16:09:23Z
+# 2026-03-21T01:00:06Z
 
 ---
 openapi: 3.1.0
@@ -644,17 +644,59 @@ components:
         label: DAYS_AFTER_TRIP_START
       - value: DAYS_AFTER_TRIP_END
         label: DAYS_AFTER_TRIP_END
+    GeneratedOfferAcceptanceRouteMode:
+      type: string
+      enum:
+      - DEPOSIT_PAYMENT
+      - OTP
+      x-enum-catalog:
+      - code: DEPOSIT_PAYMENT
+      - code: OTP
+      x-enum-options:
+      - value: DEPOSIT_PAYMENT
+        label: DEPOSIT_PAYMENT
+      - value: OTP
+        label: OTP
+    GeneratedOfferAcceptanceRouteStatus:
+      type: string
+      enum:
+      - OPEN
+      - AWAITING_PAYMENT
+      - ACCEPTED
+      - EXPIRED
+      - REVOKED
+      x-enum-catalog:
+      - code: OPEN
+      - code: AWAITING_PAYMENT
+      - code: ACCEPTED
+      - code: EXPIRED
+      - code: REVOKED
+      x-enum-options:
+      - value: OPEN
+        label: OPEN
+      - value: AWAITING_PAYMENT
+        label: AWAITING_PAYMENT
+      - value: ACCEPTED
+        label: ACCEPTED
+      - value: EXPIRED
+        label: EXPIRED
+      - value: REVOKED
+        label: REVOKED
     OfferAcceptanceMethod:
       type: string
       enum:
+      - DEPOSIT_PAYMENT
       - PORTAL_CLICK
       - PORTAL_CLICK_OTP
       - ESIGN
       x-enum-catalog:
+      - code: DEPOSIT_PAYMENT
       - code: PORTAL_CLICK
       - code: PORTAL_CLICK_OTP
       - code: ESIGN
       x-enum-options:
+      - value: DEPOSIT_PAYMENT
+        label: DEPOSIT_PAYMENT
       - value: PORTAL_CLICK
         label: PORTAL_CLICK
       - value: PORTAL_CLICK_OTP
@@ -4200,6 +4242,12 @@ components:
         gross_amount_cents:
           "$ref": "#/components/schemas/MoneyAmount"
           nullable: true
+        origin_generated_offer_id:
+          type: string
+          nullable: true
+        origin_payment_term_line_id:
+          type: string
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -4466,6 +4514,52 @@ components:
         notes:
           type: string
           nullable: true
+    GeneratedOfferDepositAcceptanceRule:
+      type: object
+      required:
+      - payment_term_line_id
+      - payment_term_label
+      - required_amount_cents
+      - currency
+      - aggregation_mode
+      properties:
+        payment_term_line_id:
+          type: string
+        payment_term_label:
+          type: string
+        required_amount_cents:
+          type: integer
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        aggregation_mode:
+          type: string
+    GeneratedOfferAcceptanceRoute:
+      type: object
+      required:
+      - mode
+      - status
+      - selected_at
+      - selected_by_atp_staff_id
+      properties:
+        mode:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteMode"
+        status:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteStatus"
+        selected_at:
+          type: string
+          format: date-time
+        selected_by_atp_staff_id:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        customer_message_snapshot:
+          type: string
+          nullable: true
+        deposit_rule:
+          "$ref": "#/components/schemas/GeneratedOfferDepositAcceptanceRule"
+          nullable: true
     BookingOffer:
       type: object
       required:
@@ -4501,7 +4595,6 @@ components:
       required:
       - id
       - accepted_at
-      - accepted_by_name
       - language
       - method
       - statement_snapshot
@@ -4518,6 +4611,7 @@ components:
           format: date-time
         accepted_by_name:
           type: string
+          nullable: true
         accepted_by_email:
           type: string
           format: email
@@ -4562,6 +4656,19 @@ components:
           nullable: true
         deposit_payment_id:
           type: string
+          nullable: true
+        accepted_payment_term_line_id:
+          type: string
+          nullable: true
+        accepted_payment_ids:
+          type: array
+          items:
+            type: string
+        accepted_amount_cents:
+          type: integer
+          nullable: true
+        accepted_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
     GeneratedBookingOffer:
       type: object
@@ -4613,6 +4720,9 @@ components:
           nullable: true
         pdf_sha256:
           type: string
+          nullable: true
+        acceptance_route:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRoute"
           nullable: true
         acceptance_token_nonce:
           type: string
@@ -4879,6 +4989,56 @@ components:
         source_hash:
           type: string
           nullable: true
+    GeneratedOfferAcceptancePublicSummary:
+      type: object
+      required:
+      - accepted_at
+      - method
+      properties:
+        accepted_at:
+          type: string
+          format: date-time
+        method:
+          "$ref": "#/components/schemas/OfferAcceptanceMethod"
+        accepted_amount_cents:
+          type: integer
+          nullable: true
+        accepted_currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+          nullable: true
+    PublicGeneratedOfferDepositAcceptanceRuleView:
+      type: object
+      required:
+      - payment_term_label
+      - required_amount_cents
+      - currency
+      properties:
+        payment_term_label:
+          type: string
+        required_amount_cents:
+          type: integer
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+    PublicGeneratedOfferAcceptanceRouteView:
+      type: object
+      required:
+      - mode
+      - status
+      properties:
+        mode:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteMode"
+        status:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteStatus"
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        customer_message_snapshot:
+          type: string
+          nullable: true
+        deposit_rule:
+          "$ref": "#/components/schemas/PublicGeneratedOfferDepositAcceptanceRuleView"
+          nullable: true
     GeneratedBookingOfferReadModel:
       type: object
       required:
@@ -4926,6 +5086,9 @@ components:
           nullable: true
         pdf_url:
           type: string
+        acceptance_route:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRoute"
+          nullable: true
         public_acceptance_token:
           type: string
           nullable: true
@@ -5294,6 +5457,12 @@ components:
         pdf_url:
           type: string
           nullable: true
+        payment_terms:
+          "$ref": "#/components/schemas/BookingOfferPaymentTerms"
+          nullable: true
+        acceptance_route:
+          "$ref": "#/components/schemas/PublicGeneratedOfferAcceptanceRouteView"
+          nullable: true
         public_acceptance_expires_at:
           type: string
           format: date-time
@@ -5301,7 +5470,7 @@ components:
         accepted:
           type: boolean
         acceptance:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+          "$ref": "#/components/schemas/GeneratedOfferAcceptancePublicSummary"
           nullable: true
     PublicGeneratedOfferAcceptResponse:
       type: object
@@ -5319,8 +5488,11 @@ components:
           type: boolean
         status:
           type: string
+        acceptance_route:
+          "$ref": "#/components/schemas/PublicGeneratedOfferAcceptanceRouteView"
+          nullable: true
         acceptance:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+          "$ref": "#/components/schemas/GeneratedOfferAcceptancePublicSummary"
           nullable: true
         otp_channel:
           "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
@@ -5944,6 +6116,33 @@ components:
           nullable: true
         actor:
           type: string
+          nullable: true
+        acceptance_route:
+          "$ref": "#/components/schemas/BookingGenerateOfferAcceptanceRouteRequest"
+          nullable: true
+    BookingGenerateOfferDepositAcceptanceRuleRequest:
+      type: object
+      required:
+      - payment_term_line_id
+      properties:
+        payment_term_line_id:
+          type: string
+    BookingGenerateOfferAcceptanceRouteRequest:
+      type: object
+      required:
+      - mode
+      properties:
+        mode:
+          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteMode"
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        customer_message_snapshot:
+          type: string
+          nullable: true
+        deposit_rule:
+          "$ref": "#/components/schemas/BookingGenerateOfferDepositAcceptanceRuleRequest"
           nullable: true
     OfferExchangeRateComponent:
       type: object

@@ -148,6 +148,21 @@ import (
 	expected_offer_revision?: >=0 & int
 	comment?:                 string
 	actor?:                   string
+	acceptance_route?:        #BookingGenerateOfferAcceptanceRouteRequest
+}
+
+#BookingGenerateOfferDepositAcceptanceRuleRequest: {
+	payment_term_line_id: common.#Identifier
+}
+
+#BookingGenerateOfferAcceptanceRouteRequest: {
+	mode:                       enums.#GeneratedOfferAcceptanceRouteMode
+	expires_at?:                common.#Timestamp
+	customer_message_snapshot?: string
+
+	if mode == "DEPOSIT_PAYMENT" {
+		deposit_rule: #BookingGenerateOfferDepositAcceptanceRuleRequest
+	}
 }
 
 #BookingGeneratedOfferUpdateRequest: {

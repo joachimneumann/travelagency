@@ -33,18 +33,20 @@ import (
 }
 
 #BookingPayment: {
-	id:                    common.#Identifier
-	label:                 string & !=""
-	status:                enums.#PaymentStatus
-	net_amount_cents:      common.#NonNegativeMoneyAmount
-	tax_rate_basis_points: >=0 & int
-	due_date?:             common.#DateOnly
-	paid_at?:              common.#Timestamp
-	notes?:                string
-	tax_amount_cents?:     common.#MoneyAmount
-	gross_amount_cents?:   common.#MoneyAmount
-	created_at?:           common.#Timestamp
-	updated_at?:           common.#Timestamp
+	id:                           common.#Identifier
+	label:                        string & !=""
+	status:                       enums.#PaymentStatus
+	net_amount_cents:             common.#NonNegativeMoneyAmount
+	tax_rate_basis_points:        >=0 & int
+	due_date?:                    common.#DateOnly
+	paid_at?:                     common.#Timestamp
+	notes?:                       string
+	tax_amount_cents?:            common.#MoneyAmount
+	gross_amount_cents?:          common.#MoneyAmount
+	origin_generated_offer_id?:   common.#Identifier
+	origin_payment_term_line_id?: common.#Identifier
+	created_at?:                  common.#Timestamp
+	updated_at?:                  common.#Timestamp
 }
 
 #BookingPricingSummary: {

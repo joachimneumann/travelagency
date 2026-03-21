@@ -2,6 +2,8 @@ import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import { validatePublicGeneratedOfferAcceptRequest } from "../../../Generated/API/generated_APIModels.js";
 import {
+  buildGeneratedOfferAcceptancePublicSummary,
+  buildPublicGeneratedOfferAcceptanceRouteView,
   buildGeneratedOfferSnapshotHash,
   buildOfferAcceptanceStatement,
   buildOfferAcceptanceTermsSnapshot,
@@ -114,6 +116,8 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     const acceptanceTokenState = readGeneratedOfferAcceptanceTokenState(generatedOffer);
     const bookingName = normalizeText(booking?.name || booking?.web_form_submission?.booking_name);
     const comment = normalizeText(generatedOffer?.comment);
+    const acceptanceRoute = buildPublicGeneratedOfferAcceptanceRouteView(generatedOffer, { now: nowIso() });
+    const acceptanceSummary = buildGeneratedOfferAcceptancePublicSummary(generatedOffer?.acceptance);
     return {
       booking_id: booking.id,
       generated_offer_id: generatedOffer.id,
@@ -124,15 +128,18 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       ...(comment ? { comment } : {}),
       created_at: normalizeText(generatedOffer.created_at) || nowIso(),
       pdf_url: `/public/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf?token=${encodeURIComponent(acceptanceToken)}`,
+      ...(normalizedGeneratedOffer.payment_terms ? { payment_terms: normalizedGeneratedOffer.payment_terms } : {}),
+      ...(acceptanceRoute ? { acceptance_route: acceptanceRoute } : {}),
       ...(acceptanceTokenState.expiresAt ? { public_acceptance_expires_at: acceptanceTokenState.expiresAt } : {}),
       accepted: Boolean(generatedOffer?.acceptance),
-      ...(generatedOffer?.acceptance ? { acceptance: generatedOffer.acceptance } : {})
+      ...(acceptanceSummary ? { acceptance: acceptanceSummary } : {})
     };
   }
 
   function buildPublicGeneratedOfferAcceptResponse({
     bookingId,
     generatedOfferId,
+    generatedOffer = null,
     acceptance = null,
     otpChannel = null,
     otpSentTo = "",
@@ -144,7 +151,8 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       generated_offer_id: generatedOfferId,
       accepted: Boolean(acceptance),
       status: acceptance ? "ACCEPTED" : "OTP_REQUIRED",
-      ...(acceptance ? { acceptance } : {}),
+      ...(generatedOffer ? { acceptance_route: buildPublicGeneratedOfferAcceptanceRouteView(generatedOffer, { now: nowIso() }) } : {}),
+      ...(acceptance ? { acceptance: buildGeneratedOfferAcceptancePublicSummary(acceptance) } : {}),
       ...(otpChannel ? { otp_channel: otpChannel } : {}),
       ...(otpSentTo ? { otp_sent_to: otpSentTo } : {}),
       ...(otpExpiresAt ? { otp_expires_at: otpExpiresAt } : {}),
@@ -197,6 +205,11 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     if (generatedOffer?.acceptance && typeof generatedOffer.acceptance === "object") {
       if (!normalizeText(booking?.accepted_generated_offer_id)) {
         booking.accepted_generated_offer_id = generatedOffer.id;
+      }
+      if (generatedOffer?.acceptance_route && typeof generatedOffer.acceptance_route === "object") {
+        generatedOffer.acceptance_route.status = "ACCEPTED";
+      }
+      if (!normalizeText(booking?.accepted_generated_offer_id) || generatedOffer?.acceptance_route?.status === "ACCEPTED") {
         await persistStore(store);
       }
       removeOfferAcceptanceChallenges(store, booking.id, generatedOffer.id);
@@ -230,6 +243,9 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     };
 
     generatedOffer.acceptance = acceptance;
+    if (generatedOffer?.acceptance_route && typeof generatedOffer.acceptance_route === "object") {
+      generatedOffer.acceptance_route.status = "ACCEPTED";
+    }
     booking.accepted_generated_offer_id = generatedOffer.id;
     removeOfferAcceptanceChallenges(store, booking.id, generatedOffer.id);
     booking.offer_revision = (Number.isInteger(Number(booking.offer_revision)) ? Number(booking.offer_revision) : 0) + 1;
@@ -374,8 +390,14 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       sendJson(res, 200, buildPublicGeneratedOfferAcceptResponse({
         bookingId,
         generatedOfferId,
+        generatedOffer,
         acceptance: generatedOffer.acceptance
       }));
+      return;
+    }
+
+    if (normalizeText(generatedOffer?.acceptance_route?.mode).toUpperCase() === "DEPOSIT_PAYMENT") {
+      sendJson(res, 409, { error: "This offer is confirmed by the required deposit payment, not by OTP acceptance." });
       return;
     }
 
@@ -484,6 +506,7 @@ export function createBookingOfferAcceptanceHandlers(deps) {
         sendJson(res, 202, buildPublicGeneratedOfferAcceptResponse({
           bookingId,
           generatedOfferId,
+          generatedOffer,
           otpChannel,
           otpSentTo: maskOtpRecipient(otpChannel, contact.acceptedByEmail),
           otpExpiresAt: expiresAt,
@@ -539,6 +562,7 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       sendJson(res, 200, buildPublicGeneratedOfferAcceptResponse({
         bookingId,
         generatedOfferId,
+        generatedOffer,
         acceptance: finalized.acceptance
       }));
       return;
@@ -569,6 +593,7 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     sendJson(res, 200, buildPublicGeneratedOfferAcceptResponse({
       bookingId,
       generatedOfferId,
+      generatedOffer,
       acceptance: finalized.acceptance
     }));
   }

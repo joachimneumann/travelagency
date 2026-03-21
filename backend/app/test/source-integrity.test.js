@@ -157,20 +157,22 @@ test("booking page does not declare duplicate imported bindings", async () => {
 });
 
 test("offer row removal triggers an immediate save in the offers module", async () => {
-  const filePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const filePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_components.js");
   const source = await readFile(filePath, "utf8");
   assert.match(
     source,
-    /data-offer-remove-component[\s\S]*?renderOfferComponentsTable\(\);[\s\S]*?await saveOffer\(\);/,
-    "Removing an offer row should persist immediately instead of staying only in the local draft"
+    /data-offer-remove-component[\s\S]*?renderOfferComponentsTable\(\);[\s\S]*?await flushOfferAutosave\(\);/,
+    "Removing an offer row should re-render immediately and flush autosave so it does not stay only in the local draft"
   );
 });
 
 test("offer editor uses autosave instead of an explicit update button", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offerComponentsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_components.js");
+  const offerSavePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_save.js");
   const bookingSource = await readFile(bookingPagePath, "utf8");
-  const offersSource = await readFile(offersModulePath, "utf8");
+  const offerComponentsSource = await readFile(offerComponentsPath, "utf8");
+  const offerSaveSource = await readFile(offerSavePath, "utf8");
 
   assert.doesNotMatch(
     bookingSource,
@@ -178,12 +180,12 @@ test("offer editor uses autosave instead of an explicit update button", async ()
     "Offer UI should not expose a manual update button"
   );
   assert.match(
-    offersSource,
+    offerComponentsSource,
     /data-offer-component-quantity[\s\S]*?addEventListener\("input",[\s\S]*?syncOfferInputTotals\(\)/,
     "Offer quantity changes should update totals live"
   );
   assert.match(
-    offersSource,
+    offerSaveSource,
     /function scheduleOfferAutosave\(/,
     "Offer editor should persist through autosave"
   );
@@ -201,7 +203,7 @@ test("offer component editor does not expose discounts_credits as a selectable c
 });
 
 test("generate offer waits for pending offer autosave before POSTing", async () => {
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");
 
   assert.match(
@@ -217,7 +219,7 @@ test("generate offer waits for pending offer autosave before POSTing", async () 
 });
 
 test("generated offer comment and delete actions flush pending offer autosave", async () => {
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");
 
   assert.match(
@@ -233,7 +235,7 @@ test("generated offer comment and delete actions flush pending offer autosave", 
 });
 
 test("generated offer email action is gated by the booking capability flag", async () => {
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");
 
   assert.match(
@@ -304,9 +306,11 @@ test("booking init awaits page load and handles async init failures", async () =
 
 test("booking page wires the dedicated travel-plan module and section", async () => {
   const bookingPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const moduleSource = await readFile(bookingPageModulePath, "utf8");
+  const dataModuleSource = await readFile(bookingPageDataModulePath, "utf8");
   const pageSource = await readFile(bookingPagePath, "utf8");
   const travelPlanSource = await readFile(travelPlanModulePath, "utf8");
 
@@ -331,9 +335,9 @@ test("booking page wires the dedicated travel-plan module and section", async ()
     "booking.js should apply booking payload into the travel-plan module"
   );
   assert.match(
-    moduleSource,
+    dataModuleSource,
     /renderTravelPlanPanel\(\);[\s\S]*?renderOfferPanel\(\);/,
-    "booking.js should render Travel plan before the Offer section"
+    "booking_page_data.js should render Travel plan before the Offer section"
   );
   assert.match(
     pageSource,

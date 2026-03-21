@@ -461,7 +461,7 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
     assert.equal(responses[1].status, 200);
     assert.equal(responses[1].payload.accepted, true);
     assert.equal(responses[1].payload.acceptance.method, "PORTAL_CLICK_OTP");
-    assert.equal(responses[1].payload.acceptance.otp_channel, "EMAIL");
+    assert.equal(responses[1].payload.acceptance.otp_channel, undefined);
     assert.equal(store.bookings[0].accepted_generated_offer_id, "generated_offer_1");
     assert.equal(store.bookings[0].generated_offers[0].acceptance.accepted_by_name, "Alex Traveler");
     assert.equal(store.offer_acceptance_challenges.length, 0);

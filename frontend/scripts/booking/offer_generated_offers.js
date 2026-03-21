@@ -10,6 +10,7 @@ import { getBookingPersons } from "../shared/booking_persons.js";
 import { renderBookingSegmentHeader } from "./segment_headers.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
+const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES = ["DEPOSIT_PAYMENT", "OTP"];
 let gmailWindowHandle = null;
 
 function acquireGmailWindow() {
@@ -43,6 +44,9 @@ export function createBookingGeneratedOffersModule(ctx) {
     setOfferStatus
   } = ctx;
 
+  let generatedOfferRouteMode = "DEPOSIT_PAYMENT";
+  let generatedOfferPaymentTermLineId = "";
+
   function formatGeneratedOfferDate(value) {
     if (!value) return "-";
     const date = new Date(value);
@@ -52,6 +56,64 @@ export function createBookingGeneratedOffersModule(ctx) {
       month: "2-digit",
       day: "2-digit"
     }).format(date);
+  }
+
+  function normalizeGeneratedOfferRouteMode(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    return GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES.includes(normalized) ? normalized : "OTP";
+  }
+
+  function routeUsesDepositPayment(value) {
+    return normalizeGeneratedOfferRouteMode(value) === "DEPOSIT_PAYMENT";
+  }
+
+  function formatGeneratedOfferRouteLabel(value) {
+    return routeUsesDepositPayment(value)
+      ? bookingT("booking.offer.route.deposit_payment", "Deposit")
+      : bookingT("booking.offer.route.otp", "OTP");
+  }
+
+  function currentGeneratedOfferRouteMode(generatedOffer) {
+    return normalizeGeneratedOfferRouteMode(generatedOffer?.acceptance_route?.mode || "DEPOSIT_PAYMENT");
+  }
+
+  function getOfferAcceptancePaymentTerms() {
+    const lines = Array.isArray(state.offerDraft?.payment_terms?.lines) ? state.offerDraft.payment_terms.lines : [];
+    const currency = String(
+      state.offerDraft?.payment_terms?.currency
+      || state.offerDraft?.currency
+      || state.booking?.preferred_currency
+      || "USD"
+    ).trim().toUpperCase() || "USD";
+    return {
+      currency,
+      lines: lines.filter((line) => line && typeof line === "object" && String(line.id || "").trim())
+    };
+  }
+
+  function resolveDefaultAcceptancePaymentTermLineId(lines) {
+    const items = Array.isArray(lines) ? lines : [];
+    if (!items.length) return "";
+    const depositLine = items.find((line) => String(line?.kind || "").trim().toUpperCase() === "DEPOSIT");
+    return String(depositLine?.id || items[0]?.id || "").trim();
+  }
+
+  function resolveSelectedAcceptancePaymentTerm(lines) {
+    const items = Array.isArray(lines) ? lines : [];
+    if (!items.length) return null;
+    return items.find((line) => String(line?.id || "").trim() === generatedOfferPaymentTermLineId) || items[0] || null;
+  }
+
+  function syncOfferGenerationControlsState() {
+    generatedOfferRouteMode = normalizeGeneratedOfferRouteMode(generatedOfferRouteMode || "DEPOSIT_PAYMENT");
+    const { lines } = getOfferAcceptancePaymentTerms();
+    if (!lines.length) {
+      generatedOfferPaymentTermLineId = "";
+      return;
+    }
+    if (!generatedOfferPaymentTermLineId || !lines.some((line) => String(line?.id || "").trim() === generatedOfferPaymentTermLineId)) {
+      generatedOfferPaymentTermLineId = resolveDefaultAcceptancePaymentTermLineId(lines);
+    }
   }
 
   function updateOfferAcceptancePanelSummary() {
@@ -88,10 +150,37 @@ export function createBookingGeneratedOffersModule(ctx) {
       };
     }
 
+    const routeStatus = String(generatedOffer?.acceptance_route?.status || "").trim().toUpperCase();
+    if (routeStatus === "AWAITING_PAYMENT") {
+      return {
+        tone: "open",
+        variant: "awaiting-payment",
+        label: bookingT("booking.offer.status.awaiting_payment", "Awaiting payment"),
+        detail: ""
+      };
+    }
+    if (routeStatus === "EXPIRED") {
+      return {
+        tone: "expired",
+        variant: "expired",
+        label: bookingT("booking.offer.status.expired", "Expired"),
+        detail: ""
+      };
+    }
+    if (routeStatus === "REVOKED") {
+      return {
+        tone: "unavailable",
+        variant: "revoked",
+        label: bookingT("booking.offer.status.revoked", "Revoked"),
+        detail: ""
+      };
+    }
+
     const expiresAtMs = Date.parse(String(generatedOffer?.public_acceptance_expires_at || ""));
     if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) {
       return {
         tone: "expired",
+        variant: "expired",
         label: bookingT("booking.offer.status.expired", "Expired"),
         detail: ""
       };
@@ -100,6 +189,7 @@ export function createBookingGeneratedOffersModule(ctx) {
     if (String(generatedOffer?.public_acceptance_token || "").trim()) {
       return {
         tone: "open",
+        variant: "open",
         label: bookingT("booking.offer.status.open", "Open"),
         detail: ""
       };
@@ -107,6 +197,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
     return {
       tone: "unavailable",
+      variant: "unavailable",
       label: bookingT("booking.offer.status.unavailable", "Unavailable"),
       detail: ""
     };
@@ -147,14 +238,17 @@ export function createBookingGeneratedOffersModule(ctx) {
       setOfferStatus(bookingT("booking.offer.error.acceptance_link_unavailable", "Acceptance link is not available."));
       return;
     }
+    const copiedMessage = routeUsesDepositPayment(currentGeneratedOfferRouteMode(generatedOffer))
+      ? bookingT("booking.offer.customer_page_copied", "Customer page copied.")
+      : bookingT("booking.offer.acceptance_link_copied", "Acceptance link copied.");
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(acceptanceLink);
-        setOfferStatus(bookingT("booking.offer.acceptance_link_copied", "Acceptance link copied."));
+        setOfferStatus(copiedMessage);
         return;
       }
       window.prompt(bookingT("booking.offer.copy_link_prompt", "Copy this acceptance link:"), acceptanceLink);
-      setOfferStatus(bookingT("booking.offer.acceptance_link_copied", "Acceptance link copied."));
+      setOfferStatus(copiedMessage);
     } catch {
       setOfferStatus(bookingT("booking.offer.error.acceptance_link_copy", "Could not copy acceptance link."));
     }
@@ -177,34 +271,93 @@ export function createBookingGeneratedOffersModule(ctx) {
       Number(generatedOffer?.total_price_cents || 0),
       generatedOffer?.currency || state.offerDraft?.currency || "USD"
     );
-    const subject = bookingT("booking.offer.acceptance_email_subject", "Offer acceptance link for {booking}", {
-      booking: bookingName || bookingT("booking.title", "Booking")
-    });
-    const body = bookingT(
-      "booking.offer.acceptance_email_body",
-      "Hello,\n\nplease review and accept your offer here:\n{link}\n\nOffer total: {total}\n\nBest regards,\nAsia Travel Plan",
-      {
-        link: acceptanceLink,
-        total: totalLabel
-      }
-    );
+    const routeMode = currentGeneratedOfferRouteMode(generatedOffer);
+    const routeRule = generatedOffer?.acceptance_route?.deposit_rule && typeof generatedOffer.acceptance_route.deposit_rule === "object"
+      ? generatedOffer.acceptance_route.deposit_rule
+      : null;
+    const requiredPaymentLabel = String(routeRule?.payment_term_label || "").trim() || bookingT("booking.offer.payment_term", "payment");
+    const requiredPaymentAmount = Number.isFinite(Number(routeRule?.required_amount_cents))
+      ? formatMoneyDisplay(Number(routeRule.required_amount_cents), routeRule?.currency || generatedOffer?.currency || state.offerDraft?.currency || "USD")
+      : totalLabel;
+    const subject = routeUsesDepositPayment(routeMode)
+      ? bookingT("booking.offer.payment_email_subject", "Payment page for {booking}", {
+          booking: bookingName || bookingT("booking.title", "Booking")
+        })
+      : bookingT("booking.offer.acceptance_email_subject", "Offer acceptance link for {booking}", {
+          booking: bookingName || bookingT("booking.title", "Booking")
+        });
+    const body = routeUsesDepositPayment(routeMode)
+      ? bookingT(
+          "booking.offer.payment_email_body",
+          "Hello,\n\nplease review your offer and payment terms here:\n{link}\n\nYour offer is confirmed when we receive {amount} for {label}.\n\nBest regards,\nAsia Travel Plan",
+          {
+            link: acceptanceLink,
+            amount: requiredPaymentAmount,
+            label: requiredPaymentLabel
+          }
+        )
+      : bookingT(
+          "booking.offer.acceptance_email_body",
+          "Hello,\n\nplease review and accept your offer here:\n{link}\n\nOffer total: {total}\n\nBest regards,\nAsia Travel Plan",
+          {
+            link: acceptanceLink,
+            total: totalLabel
+          }
+        );
     window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setOfferStatus(bookingT("booking.offer.acceptance_email_opening", "Opening your mail client..."));
+  }
+
+  function renderOfferGenerationControls() {
+    if (!els.offer_generation_route_mode) return;
+    syncOfferGenerationControlsState();
+    const { lines, currency } = getOfferAcceptancePaymentTerms();
+    const canEdit = state.permissions.canEditBooking;
+    const selectedPaymentTerm = resolveSelectedAcceptancePaymentTerm(lines);
+    const selectedAmount = selectedPaymentTerm
+      ? formatMoneyDisplay(Number(selectedPaymentTerm?.resolved_amount_cents || 0), currency)
+      : "";
+    const routeOptions = [
+      {
+        value: "DEPOSIT_PAYMENT",
+        label: selectedAmount
+          ? bookingT("booking.offer.route.option.deposit_payment_amount", "Deposit of {amount}", { amount: selectedAmount })
+          : bookingT("booking.offer.route.option.deposit_payment", "Deposit")
+      },
+      {
+        value: "OTP",
+        label: bookingT("booking.offer.route.option.otp", "OTP confirmation")
+      }
+    ];
+    els.offer_generation_route_mode.innerHTML = routeOptions.map((option) => `
+      <option value="${escapeHtml(option.value)}" ${option.value === generatedOfferRouteMode ? "selected" : ""}>${escapeHtml(option.label)}</option>
+    `).join("");
+    els.offer_generation_route_mode.disabled = !canEdit;
+
+    if (els.generate_offer_btn) {
+      els.generate_offer_btn.style.display = canEdit ? "" : "none";
+      els.generate_offer_btn.disabled = routeUsesDepositPayment(generatedOfferRouteMode) && !generatedOfferPaymentTermLineId;
+    }
+
+    els.offer_generation_route_mode.onchange = canEdit ? () => {
+      generatedOfferRouteMode = normalizeGeneratedOfferRouteMode(els.offer_generation_route_mode.value || "DEPOSIT_PAYMENT");
+      syncOfferGenerationControlsState();
+      renderOfferGenerationControls();
+    } : null;
   }
 
   function renderGeneratedOffersTable() {
     if (!els.generated_offers_table) return;
     const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
     updateOfferAcceptancePanelSummary();
+    renderOfferGenerationControls();
     const canEdit = state.permissions.canEditBooking;
     const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
     const statusHeader = `<th class="generated-offers-col-status">${escapeHtml(bookingT("booking.status", "Status"))}</th>`;
-    const acceptanceLinkHeader = canEdit
-      ? `<th class="generated-offers-col-acceptance">${escapeHtml(bookingT("booking.offer.acceptance_link", "Accept link"))}</th>`
-      : "";
+    const routeHeader = `<th class="generated-offers-col-route">${escapeHtml(bookingT("booking.offer.route", "Route"))}</th>`;
     const emailHeader = emailActionEnabled ? `<th class="generated-offers-col-email">${escapeHtml(bookingT("booking.email", "Email"))}</th>` : "";
     const actionHeader = canEdit ? '<th class="generated-offers-col-actions"></th>' : "";
-    const emptyColspan = 6 + (emailActionEnabled ? 1 : 0) + (canEdit ? 2 : 0);
+    const emptyColspan = 7 + (emailActionEnabled ? 1 : 0) + (canEdit ? 1 : 0);
     const rows = items.length
       ? items
         .slice()
@@ -214,21 +367,23 @@ export function createBookingGeneratedOffersModule(ctx) {
           const acceptanceLink = buildGeneratedOfferAcceptanceLink(item);
           const recipientEmail = getBookingAcceptanceRecipientEmail();
           const offerStatus = resolveGeneratedOfferStatus(item);
+          const routeMode = currentGeneratedOfferRouteMode(item);
           return `<tr>
-          <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a>` : "-"}</td>
+          <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</a>` : "-"}</td>
           ${emailActionEnabled
             ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
             : ""}
-          ${canEdit
-            ? `<td class="generated-offers-col-acceptance">${acceptanceLink
-              ? `<div class="generated-offers-link-actions">
-                  <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.offer.copy_link", "Copy link"))}</button>
-                  <button class="btn btn-ghost" type="button" data-generated-offer-email-link="${escapeHtml(item.id)}"${recipientEmail ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.email_link", "Email link"))}</button>
-                </div>`
-              : "-"}</td>`
-            : ""}
+          <td class="generated-offers-col-route">${routeUsesDepositPayment(routeMode)
+            ? `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.route.deposit_payment", "Deposit"))}</span>`
+            : (canEdit && acceptanceLink
+                ? `<div class="generated-offers-link-actions">
+                    <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
+                    <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}"${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
+                  </div>`
+                : `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.route.otp", "OTP"))}</span>`)}
+          </td>
           <td class="generated-offers-col-status">
-            <span class="generated-offers-status-badge is-${escapeHtml(offerStatus.tone)}">${escapeHtml(offerStatus.label)}</span>
+            <span class="generated-offers-status-badge is-${escapeHtml(offerStatus.tone)}${offerStatus.variant ? ` is-${escapeHtml(offerStatus.variant)}` : ""}">${escapeHtml(offerStatus.label)}</span>
             ${offerStatus.detail ? `<div class="generated-offers-status-meta">${escapeHtml(offerStatus.detail)}</div>` : ""}
           </td>
           <td class="generated-offers-col-language">${escapeHtml(bookingContentLanguageLabel(item.lang || "en"))}</td>
@@ -244,7 +399,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         })
         .join("")
       : `<tr><td colspan="${emptyColspan}">${escapeHtml(bookingT("booking.offer.no_generated", "No generated offers yet"))}</td></tr>`;
-    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>${emailHeader}${acceptanceLinkHeader}${statusHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
+    els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</th>${emailHeader}${routeHeader}${statusHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
       els.generated_offers_table.querySelectorAll("[data-generated-offer-comment]").forEach((input) => {
@@ -267,9 +422,9 @@ export function createBookingGeneratedOffersModule(ctx) {
           void copyGeneratedOfferAcceptanceLink(button.getAttribute("data-generated-offer-copy-link"));
         });
       });
-      els.generated_offers_table.querySelectorAll("[data-generated-offer-email-link]").forEach((button) => {
+      els.generated_offers_table.querySelectorAll("[data-generated-offer-email-draft]").forEach((button) => {
         button.addEventListener("click", () => {
-          emailGeneratedOfferAcceptanceLink(button.getAttribute("data-generated-offer-email-link"));
+          void createGeneratedOfferGmailDraft(button.getAttribute("data-generated-offer-email-draft"));
         });
       });
     }
@@ -381,6 +536,11 @@ export function createBookingGeneratedOffersModule(ctx) {
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
     if (!(await flushOfferAutosave())) return;
+    const requestedRouteMode = normalizeGeneratedOfferRouteMode(
+      els.offer_generation_route_mode?.value || generatedOfferRouteMode || "DEPOSIT_PAYMENT"
+    );
+    generatedOfferRouteMode = requestedRouteMode;
+    syncOfferGenerationControlsState();
     const selectedLang = bookingContentLang();
     const missingTranslationCount = countMissingOfferPdfTranslations(state.booking, selectedLang);
     if (missingTranslationCount > 0 && !window.confirm(bookingT(
@@ -400,13 +560,24 @@ export function createBookingGeneratedOffersModule(ctx) {
     const commentInput = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), "");
     if (commentInput === null) return;
     const normalizedComment = String(commentInput || "").trim();
+    const acceptanceRoute = routeUsesDepositPayment(requestedRouteMode)
+      ? {
+          mode: "DEPOSIT_PAYMENT",
+          deposit_rule: {
+            payment_term_line_id: generatedOfferPaymentTermLineId
+          }
+        }
+      : {
+          mode: "OTP"
+        };
     setOfferStatus(bookingT("booking.offer.generating_pdf", "Generating offer PDF..."));
     const response = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
         expected_offer_revision: getBookingRevision("offer_revision"),
         comment: normalizedComment || null,
-        lang: selectedLang
+        lang: selectedLang,
+        acceptance_route: acceptanceRoute
       }
     });
     if (await applyOfferBookingResponse(response, { reloadActivities: true })) {
@@ -422,6 +593,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   return {
     renderGeneratedOffersTable,
+    renderOfferGenerationControls,
     updateOfferAcceptancePanelSummary
   };
 }

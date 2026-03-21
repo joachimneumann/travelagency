@@ -8,6 +8,8 @@ export const OFFER_ACCEPTANCE_OTP_MAX_SENDS_PER_WINDOW = 5;
 export const OFFER_ACCEPTANCE_OTP_SEND_WINDOW_MS = 60 * 60 * 1000;
 export const OFFER_ACCEPTANCE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const OFFER_ACCEPTANCE_TOKEN_SCOPE = "generated_offer_acceptance";
+const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES = new Set(["DEPOSIT_PAYMENT", "OTP"]);
+const GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUSES = new Set(["OPEN", "AWAITING_PAYMENT", "ACCEPTED", "EXPIRED", "REVOKED"]);
 
 function normalizeAcceptanceText(value) {
   return typeof value === "string" ? value.trim() : String(value ?? "").trim();
@@ -37,6 +39,18 @@ export function readGeneratedOfferAcceptanceTokenState(generatedOffer) {
       || generatedOffer?.public_acceptance_token_revoked_at
     )
   };
+}
+
+export function normalizeGeneratedOfferAcceptanceRouteMode(value) {
+  const normalized = normalizeAcceptanceText(value).toUpperCase();
+  return GENERATED_OFFER_ACCEPTANCE_ROUTE_MODES.has(normalized) ? normalized : "OTP";
+}
+
+export function normalizeGeneratedOfferAcceptanceRouteStatus(value, mode = "OTP") {
+  const normalizedMode = normalizeGeneratedOfferAcceptanceRouteMode(mode);
+  const normalized = normalizeAcceptanceText(value).toUpperCase();
+  if (GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUSES.has(normalized)) return normalized;
+  return normalizedMode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN";
 }
 
 function migrateLegacyGeneratedOfferAcceptanceTokenState(generatedOffer) {
@@ -239,6 +253,13 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
     delete publicFields.comment;
   }
 
+  const normalizedAcceptanceRoute = buildGeneratedOfferAcceptanceRouteReadModel(generatedOffer, { now: new Date().toISOString() });
+  if (normalizedAcceptanceRoute) {
+    publicFields.acceptance_route = normalizedAcceptanceRoute;
+  } else {
+    delete publicFields.acceptance_route;
+  }
+
   if (!includeAcceptanceToken) return publicFields;
 
   const normalizedSecret = normalizeAcceptanceText(secret);
@@ -267,6 +288,78 @@ export function buildGeneratedOfferTransportFields(generatedOffer, { secret = ""
   } catch {
     return publicFields;
   }
+}
+
+export function buildGeneratedOfferAcceptanceRouteReadModel(generatedOffer, { now = null } = {}) {
+  const route = generatedOffer?.acceptance_route;
+  if (!route || typeof route !== "object") return null;
+  const mode = normalizeGeneratedOfferAcceptanceRouteMode(route.mode);
+  const expiresAt = normalizeAcceptanceText(route.expires_at);
+  const nowMs = Number.isFinite(Date.parse(String(now || ""))) ? Date.parse(String(now)) : Date.now();
+  const expiresAtMs = Date.parse(expiresAt);
+  let status = normalizeGeneratedOfferAcceptanceRouteStatus(route.status, mode);
+  if (generatedOffer?.acceptance && typeof generatedOffer.acceptance === "object") {
+    status = "ACCEPTED";
+  } else if (expiresAt && Number.isFinite(expiresAtMs) && expiresAtMs <= nowMs && status !== "REVOKED") {
+    status = "EXPIRED";
+  }
+
+  const selectedAt = normalizeAcceptanceText(route.selected_at);
+  const selectedByStaffId = normalizeAcceptanceText(route.selected_by_atp_staff_id);
+  const customerMessageSnapshot = normalizeAcceptanceText(route.customer_message_snapshot);
+  const depositRule = mode === "DEPOSIT_PAYMENT" && route.deposit_rule && typeof route.deposit_rule === "object"
+    ? {
+        payment_term_line_id: normalizeAcceptanceText(route.deposit_rule.payment_term_line_id),
+        payment_term_label: normalizeAcceptanceText(route.deposit_rule.payment_term_label),
+        required_amount_cents: Math.max(0, Math.round(Number(route.deposit_rule.required_amount_cents || 0))),
+        currency: normalizeAcceptanceText(route.deposit_rule.currency || generatedOffer?.currency || generatedOffer?.offer?.currency || "USD").toUpperCase() || "USD",
+        aggregation_mode: normalizeAcceptanceText(route.deposit_rule.aggregation_mode) || "SUM_LINKED_PAID_PAYMENTS"
+      }
+    : null;
+
+  return {
+    mode,
+    status,
+    ...(selectedAt ? { selected_at: selectedAt } : {}),
+    ...(selectedByStaffId ? { selected_by_atp_staff_id: selectedByStaffId } : {}),
+    ...(expiresAt ? { expires_at: expiresAt } : {}),
+    ...(customerMessageSnapshot ? { customer_message_snapshot: customerMessageSnapshot } : {}),
+    ...(depositRule ? { deposit_rule: depositRule } : {})
+  };
+}
+
+export function buildPublicGeneratedOfferAcceptanceRouteView(generatedOffer, { now = null } = {}) {
+  const route = buildGeneratedOfferAcceptanceRouteReadModel(generatedOffer, { now });
+  if (!route) return null;
+  return {
+    mode: route.mode,
+    status: route.status,
+    ...(route.expires_at ? { expires_at: route.expires_at } : {}),
+    ...(route.customer_message_snapshot ? { customer_message_snapshot: route.customer_message_snapshot } : {}),
+    ...(route.deposit_rule
+      ? {
+          deposit_rule: {
+            payment_term_label: route.deposit_rule.payment_term_label,
+            required_amount_cents: route.deposit_rule.required_amount_cents,
+            currency: route.deposit_rule.currency
+          }
+        }
+      : {})
+  };
+}
+
+export function buildGeneratedOfferAcceptancePublicSummary(acceptance) {
+  if (!acceptance || typeof acceptance !== "object") return null;
+  return {
+    accepted_at: normalizeAcceptanceText(acceptance.accepted_at) || new Date().toISOString(),
+    method: normalizeAcceptanceText(acceptance.method).toUpperCase() || "PORTAL_CLICK",
+    ...(Number.isFinite(Number(acceptance.accepted_amount_cents))
+      ? { accepted_amount_cents: Math.max(0, Math.round(Number(acceptance.accepted_amount_cents))) }
+      : {}),
+    ...(normalizeAcceptanceText(acceptance.accepted_currency)
+      ? { accepted_currency: normalizeAcceptanceText(acceptance.accepted_currency).toUpperCase() }
+      : {})
+  };
 }
 
 export function buildOfferAcceptanceTermsSnapshot() {
@@ -303,6 +396,8 @@ export function buildGeneratedOfferSnapshotHash(generatedOffer) {
     lang: generatedOffer.lang || null,
     currency: generatedOffer.currency || null,
     total_price_cents: Number.isFinite(Number(generatedOffer.total_price_cents)) ? Number(generatedOffer.total_price_cents) : null,
+    payment_terms: generatedOffer.payment_terms || null,
+    acceptance_route: buildGeneratedOfferAcceptanceRouteReadModel(generatedOffer) || null,
     offer: generatedOffer.offer || null,
     travel_plan: generatedOffer.travel_plan || null
   };

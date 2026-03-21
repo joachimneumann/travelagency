@@ -139,6 +139,27 @@ import (
 	source_hash?:       string & !=""
 }
 
+#GeneratedOfferAcceptancePublicSummary: {
+	accepted_at:            common.#Timestamp
+	method:                 enums.#OfferAcceptanceMethod
+	accepted_amount_cents?: >=0 & int
+	accepted_currency?:     enums.#CurrencyCode
+}
+
+#PublicGeneratedOfferDepositAcceptanceRuleView: {
+	payment_term_label:    string & !=""
+	required_amount_cents: >=0 & int
+	currency:              enums.#CurrencyCode
+}
+
+#PublicGeneratedOfferAcceptanceRouteView: {
+	mode:                       enums.#GeneratedOfferAcceptanceRouteMode
+	status:                     enums.#GeneratedOfferAcceptanceRouteStatus
+	expires_at?:                common.#Timestamp
+	customer_message_snapshot?: string
+	deposit_rule?:              #PublicGeneratedOfferDepositAcceptanceRuleView
+}
+
 #GeneratedBookingOfferReadModel: {
 	id:                            common.#Identifier
 	booking_id:                    common.#Identifier
@@ -154,6 +175,7 @@ import (
 	offer:                         entities.#BookingOffer
 	travel_plan?:                  entities.#BookingTravelPlan
 	pdf_url:                       string & !=""
+	acceptance_route?:             entities.#GeneratedOfferAcceptanceRoute
 	public_acceptance_token?:      string & !=""
 	public_acceptance_expires_at?: common.#Timestamp
 	acceptance?:                   entities.#GeneratedOfferAcceptance
@@ -206,9 +228,11 @@ import (
 	comment?:                      string
 	created_at:                    common.#Timestamp
 	pdf_url?:                      string & !=""
+	payment_terms?:                entities.#BookingOfferPaymentTerms
+	acceptance_route?:             #PublicGeneratedOfferAcceptanceRouteView
 	public_acceptance_expires_at?: common.#Timestamp
 	accepted:                      bool
-	acceptance?:                   entities.#GeneratedOfferAcceptance
+	acceptance?:                   #GeneratedOfferAcceptancePublicSummary
 }
 
 #PublicGeneratedOfferAcceptResponse: {
@@ -216,7 +240,8 @@ import (
 	generated_offer_id:   common.#Identifier
 	accepted:             bool
 	status:               "ACCEPTED" | "OTP_REQUIRED"
-	acceptance?:          entities.#GeneratedOfferAcceptance
+	acceptance_route?:    #PublicGeneratedOfferAcceptanceRouteView
+	acceptance?:          #GeneratedOfferAcceptancePublicSummary
 	otp_channel?:         enums.#OfferAcceptanceOtpChannel
 	otp_sent_to?:         string
 	otp_expires_at?:      common.#Timestamp

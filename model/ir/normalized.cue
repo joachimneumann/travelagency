@@ -55,6 +55,8 @@ IR: {
 		OfferPaymentTermKind: {catalog: "offerPaymentTermKinds"}
 		OfferPaymentAmountMode: {catalog: "offerPaymentAmountModes"}
 		OfferPaymentDueType: {catalog: "offerPaymentDueTypes"}
+		GeneratedOfferAcceptanceRouteMode: {catalog: "generatedOfferAcceptanceRouteModes"}
+		GeneratedOfferAcceptanceRouteStatus: {catalog: "generatedOfferAcceptanceRouteStatuses"}
 		OfferAcceptanceMethod: {catalog: "offerAcceptanceMethods"}
 		OfferAcceptanceOtpChannel: {catalog: "offerAcceptanceOtpChannels"}
 		CountryCode: {catalog: "countries"}
@@ -301,6 +303,8 @@ IR: {
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "tax_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
 				{name: "gross_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
+				{name: "origin_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "origin_payment_term_line_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
@@ -463,6 +467,34 @@ IR: {
 			]
 		},
 		{
+			name:       "GeneratedOfferDepositAcceptanceRule"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#GeneratedOfferDepositAcceptanceRule"
+			fields: [
+				{name: "payment_term_line_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "payment_term_label", kind: "scalar", typeName: "string", required: true},
+				{name: "required_amount_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "aggregation_mode", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
+			name:       "GeneratedOfferAcceptanceRoute"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#GeneratedOfferAcceptanceRoute"
+			fields: [
+				{name: "mode", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteMode", required: true},
+				{name: "status", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteStatus", required: true},
+				{name: "selected_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "selected_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
+				{name: "deposit_rule", kind: "entity", typeName: "GeneratedOfferDepositAcceptanceRule", required: false},
+			]
+		},
+		{
 			name:       "BookingOffer"
 			domain:     "booking"
 			module:     "entities"
@@ -486,7 +518,7 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "accepted_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "accepted_by_name", kind: "scalar", typeName: "string", required: true},
+				{name: "accepted_by_name", kind: "scalar", typeName: "string", required: false},
 				{name: "accepted_by_email", kind: "scalar", typeName: "Email", required: false},
 				{name: "accepted_by_phone", kind: "scalar", typeName: "string", required: false},
 				{name: "accepted_by_person_id", kind: "scalar", typeName: "Identifier", required: false},
@@ -504,6 +536,10 @@ IR: {
 				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
 				{name: "otp_verified_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "deposit_payment_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "accepted_payment_term_line_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "accepted_payment_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "accepted_amount_cents", kind: "scalar", typeName: "int", required: false},
+				{name: "accepted_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 			]
 		},
 		{
@@ -527,6 +563,7 @@ IR: {
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_frozen_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "pdf_sha256", kind: "scalar", typeName: "string", required: false},
+				{name: "acceptance_route", kind: "entity", typeName: "GeneratedOfferAcceptanceRoute", required: false},
 				{name: "acceptance_token_nonce", kind: "scalar", typeName: "string", required: false},
 				{name: "acceptance_token_created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "acceptance_token_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -639,6 +676,42 @@ IR: {
 			]
 		},
 		{
+			name:       "GeneratedOfferAcceptancePublicSummary"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#GeneratedOfferAcceptancePublicSummary"
+			fields: [
+				{name: "accepted_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "method", kind: "enum", typeName: "OfferAcceptanceMethod", required: true},
+				{name: "accepted_amount_cents", kind: "scalar", typeName: "int", required: false},
+				{name: "accepted_currency", kind: "enum", typeName: "CurrencyCode", required: false},
+			]
+		},
+		{
+			name:       "PublicGeneratedOfferDepositAcceptanceRuleView"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#PublicGeneratedOfferDepositAcceptanceRuleView"
+			fields: [
+				{name: "payment_term_label", kind: "scalar", typeName: "string", required: true},
+				{name: "required_amount_cents", kind: "scalar", typeName: "int", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+			]
+		},
+		{
+			name:       "PublicGeneratedOfferAcceptanceRouteView"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#PublicGeneratedOfferAcceptanceRouteView"
+			fields: [
+				{name: "mode", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteMode", required: true},
+				{name: "status", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteStatus", required: true},
+				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
+				{name: "deposit_rule", kind: "transport", typeName: "PublicGeneratedOfferDepositAcceptanceRuleView", required: false},
+			]
+		},
+		{
 			name:       "GeneratedBookingOfferReadModel"
 			domain:     "api"
 			module:     "api"
@@ -658,6 +731,7 @@ IR: {
 				{name: "offer", kind: "entity", typeName: "BookingOffer", required: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},
+				{name: "acceptance_route", kind: "entity", typeName: "GeneratedOfferAcceptanceRoute", required: false},
 				{name: "public_acceptance_token", kind: "scalar", typeName: "string", required: false},
 				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
@@ -893,9 +967,11 @@ IR: {
 				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
+				{name: "payment_terms", kind: "entity", typeName: "BookingOfferPaymentTerms", required: false},
+				{name: "acceptance_route", kind: "transport", typeName: "PublicGeneratedOfferAcceptanceRouteView", required: false},
 				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "accepted", kind: "scalar", typeName: "bool", required: true},
-				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+				{name: "acceptance", kind: "transport", typeName: "GeneratedOfferAcceptancePublicSummary", required: false},
 			]
 		},
 		{
@@ -908,7 +984,8 @@ IR: {
 				{name: "generated_offer_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "accepted", kind: "scalar", typeName: "bool", required: true},
 				{name: "status", kind: "scalar", typeName: "string", required: true},
-				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+				{name: "acceptance_route", kind: "transport", typeName: "PublicGeneratedOfferAcceptanceRouteView", required: false},
+				{name: "acceptance", kind: "transport", typeName: "GeneratedOfferAcceptancePublicSummary", required: false},
 				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
 				{name: "otp_sent_to", kind: "scalar", typeName: "string", required: false},
 				{name: "otp_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -1331,6 +1408,28 @@ IR: {
 				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
+				{name: "acceptance_route", kind: "transport", typeName: "BookingGenerateOfferAcceptanceRouteRequest", required: false},
+			]
+		},
+		{
+			name:       "BookingGenerateOfferDepositAcceptanceRuleRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingGenerateOfferDepositAcceptanceRuleRequest"
+			fields: [
+				{name: "payment_term_line_id", kind: "scalar", typeName: "Identifier", required: true},
+			]
+		},
+		{
+			name:       "BookingGenerateOfferAcceptanceRouteRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingGenerateOfferAcceptanceRouteRequest"
+			fields: [
+				{name: "mode", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteMode", required: true},
+				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
+				{name: "deposit_rule", kind: "transport", typeName: "BookingGenerateOfferDepositAcceptanceRuleRequest", required: false},
 			]
 		},
 		{

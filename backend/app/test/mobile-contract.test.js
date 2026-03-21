@@ -1702,10 +1702,10 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   assert.equal(acceptResult.body.accepted, true);
   assert.equal(acceptResult.body.status, "ACCEPTED");
   assert.equal(acceptResult.body.acceptance.method, "PORTAL_CLICK");
-  assert.equal(acceptResult.body.acceptance.accepted_by_name, "Test User");
-  assert.equal(acceptResult.body.acceptance.accepted_by_email, "test@example.com");
-  assert.equal(acceptResult.body.acceptance.offer_pdf_sha256.length, 64);
-  assert.equal(acceptResult.body.acceptance.offer_snapshot_sha256.length, 64);
+  assert.equal(typeof acceptResult.body.acceptance.accepted_by_name, "undefined");
+  assert.equal(typeof acceptResult.body.acceptance.accepted_by_email, "undefined");
+  assert.equal(typeof acceptResult.body.acceptance.offer_pdf_sha256, "undefined");
+  assert.equal(typeof acceptResult.body.acceptance.offer_snapshot_sha256, "undefined");
 
   const detailResult = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
@@ -1714,6 +1714,10 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   assert.equal(detailResult.status, 200);
   assert.equal(detailResult.body.booking.accepted_generated_offer_id, generatedOfferId);
   assert.equal(detailResult.body.booking.generated_offers[0].acceptance.method, "PORTAL_CLICK");
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.accepted_by_name, "Test User");
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.accepted_by_email, "test@example.com");
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.offer_pdf_sha256.length, 64);
+  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.offer_snapshot_sha256.length, 64);
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingRecord = store.bookings.find((item) => item.id === bookingId);
@@ -1851,6 +1855,253 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
   );
   assert.equal(secondAcceptResult.status, 409);
   assert.match(String(secondAcceptResult.body.error || ""), /already been accepted/i);
+});
+
+test("generated offer creation persists deposit-payment acceptance routes in authenticated read models", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailBefore.status, 200);
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: detailBefore.body.booking.offer_revision,
+        offer: {
+          ...detailBefore.body.booking.offer,
+          currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: detailBefore.body.booking.offer.total_price_cents || 0,
+            lines: [
+              {
+                id: "payment_term_deposit_acceptance",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "PERCENTAGE_OF_OFFER_TOTAL",
+                  percentage_basis_points: 3000
+                },
+                resolved_amount_cents: 0,
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_final_acceptance",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 2,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                resolved_amount_cents: 0,
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 7
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_acceptance_route_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Deposit acceptance route room",
+              quantity: 1,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const depositLine = offerPatchResult.body.booking.offer.payment_terms.lines[0];
+  assert.equal(depositLine.kind, "DEPOSIT");
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Deposit acceptance route",
+        acceptance_route: {
+          mode: "DEPOSIT_PAYMENT",
+          deposit_rule: {
+            payment_term_line_id: depositLine.id
+          }
+        }
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  assert.equal(generatedOffer.acceptance_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(generatedOffer.acceptance_route.status, "AWAITING_PAYMENT");
+  assert.equal(generatedOffer.acceptance_route.deposit_rule.payment_term_line_id, depositLine.id);
+  assert.equal(generatedOffer.acceptance_route.deposit_rule.payment_term_label, depositLine.label);
+  assert.equal(generatedOffer.acceptance_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
+  assert.equal(generatedOffer.acceptance_route.deposit_rule.currency, createdBooking.preferred_currency);
+  assert.equal(generatedOffer.payment_terms.lines.length, 2);
+  assert.equal(typeof generatedOffer.public_acceptance_token, "string");
+
+  const detailAfter = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfter.status, 200);
+  assert.equal(detailAfter.body.booking.generated_offers[0].acceptance_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(detailAfter.body.booking.generated_offers[0].acceptance_route.status, "AWAITING_PAYMENT");
+  assert.equal(
+    detailAfter.body.booking.generated_offers[0].acceptance_route.deposit_rule.payment_term_line_id,
+    depositLine.id
+  );
+});
+
+test("public generated offer access exposes deposit acceptance route and blocks OTP acceptance", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailBefore.status, 200);
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: detailBefore.body.booking.offer_revision,
+        offer: {
+          ...detailBefore.body.booking.offer,
+          currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: detailBefore.body.booking.offer.total_price_cents || 0,
+            lines: [
+              {
+                id: "payment_term_deposit_public_access",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 12000
+                },
+                resolved_amount_cents: 0,
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_final_public_access",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 2,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                resolved_amount_cents: 0,
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 10
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_public_access_route_1",
+              category: "OTHER",
+              label: "Other",
+              details: "Deposit-based acceptance",
+              quantity: 1,
+              unit_amount_cents: 18000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const depositLine = offerPatchResult.body.booking.offer.payment_terms.lines[0];
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Deposit-based public acceptance",
+        acceptance_route: {
+          mode: "DEPOSIT_PAYMENT",
+          deposit_rule: {
+            payment_term_line_id: depositLine.id
+          }
+        }
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const accessResult = await requestJson(
+    `${endpointPath("public_generated_offer_access")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_acceptance_token)}`,
+    {}
+  );
+  assert.equal(accessResult.status, 200);
+  assert.equal(accessResult.body.accepted, false);
+  assert.equal(accessResult.body.acceptance_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(accessResult.body.acceptance_route.status, "AWAITING_PAYMENT");
+  assert.equal(accessResult.body.acceptance_route.deposit_rule.payment_term_label, depositLine.label);
+  assert.equal(accessResult.body.acceptance_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
+  assert.equal(accessResult.body.acceptance_route.deposit_rule.currency, createdBooking.preferred_currency);
+  assert.equal(accessResult.body.payment_terms.lines.length, 2);
+  assert.equal(accessResult.body.acceptance, undefined);
+
+  const acceptResult = await requestJson(
+    endpointPath("public_generated_offer_accept")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    {},
+    {
+      method: "POST",
+      body: {
+        acceptance_token: generatedOffer.public_acceptance_token,
+        accepted_by_name: "Deposit User",
+        accepted_by_email: "deposit@example.com"
+      }
+    }
+  );
+  assert.equal(acceptResult.status, 409);
+  assert.match(String(acceptResult.body.error || ""), /deposit payment/i);
 });
 
 test("public generated offer access and public pdf require a valid acceptance token", async () => {

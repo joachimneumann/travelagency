@@ -34,6 +34,8 @@ const els = {
   loading: document.getElementById("offer_accept_loading"),
   content: document.getElementById("offer_accept_content"),
   summary: document.getElementById("offer_accept_summary"),
+  route: document.getElementById("offer_accept_route"),
+  paymentTerms: document.getElementById("offer_accept_payment_terms"),
   pdfLink: document.getElementById("offer_accept_pdf_link"),
   result: document.getElementById("offer_accept_result"),
   resultMessage: document.getElementById("offer_accept_result_message"),
@@ -62,6 +64,10 @@ function escapeHtml(value) {
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeAcceptanceRouteMode(value) {
+  return normalizeText(value).toUpperCase() === "DEPOSIT_PAYMENT" ? "DEPOSIT_PAYMENT" : "OTP";
 }
 
 function currencyDefinition(currency) {
@@ -100,6 +106,36 @@ function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit"
   }).format(date);
+}
+
+function formatDateOnly(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat(document.documentElement.lang || "en", {
+    year: "numeric",
+    month: "long",
+    day: "2-digit"
+  }).format(date);
+}
+
+function formatPaymentDueRule(rule) {
+  const type = normalizeText(rule?.type).toUpperCase();
+  const days = Math.max(0, Number(rule?.days || 0));
+  if (type === "FIXED_DATE") return `Fixed date: ${formatDateOnly(rule?.fixed_date)}`;
+  if (type === "DAYS_AFTER_ACCEPTANCE") return `${days} day${days === 1 ? "" : "s"} after acceptance`;
+  if (type === "DAYS_BEFORE_TRIP_START") return `${days} day${days === 1 ? "" : "s"} before trip start`;
+  if (type === "DAYS_AFTER_TRIP_START") return `${days} day${days === 1 ? "" : "s"} after trip start`;
+  if (type === "DAYS_AFTER_TRIP_END") return `${days} day${days === 1 ? "" : "s"} after trip end`;
+  return "On acceptance";
+}
+
+function routeMode() {
+  return normalizeAcceptanceRouteMode(state.access?.acceptance_route?.mode || "OTP");
+}
+
+function routeUsesDepositPayment() {
+  return routeMode() === "DEPOSIT_PAYMENT";
 }
 
 function setError(message) {
@@ -158,6 +194,7 @@ function renderSummary() {
   const rows = [
     ["Booking", access.booking_name || access.booking_id],
     ["Offer total", `<span class="offer-accept-summary__value is-total">${escapeHtml(formatMoney(access.total_price_cents, access.currency))}</span>`],
+    ["Route", escapeHtml(routeUsesDepositPayment() ? "Deposit payment" : "OTP confirmation")],
     ["Offer language", escapeHtml(String(access.lang || "").toUpperCase() || "-")],
     ["Generated", escapeHtml(formatDateTime(access.created_at))],
     ["Link expires", escapeHtml(formatDateTime(access.public_acceptance_expires_at))],
@@ -171,19 +208,123 @@ function renderSummary() {
   `).join("");
 }
 
+function renderRouteCard() {
+  if (!els.route) return;
+  const access = state.access;
+  const acceptanceRoute = access?.acceptance_route;
+  if (!access || !acceptanceRoute) {
+    els.route.hidden = true;
+    els.route.innerHTML = "";
+    return;
+  }
+  const mode = routeMode();
+  const isDeposit = routeUsesDepositPayment();
+  const routeTitle = isDeposit ? "Deposit payment confirms the offer" : "OTP confirmation";
+  const defaultMessage = isDeposit
+    ? (() => {
+        const label = normalizeText(acceptanceRoute?.deposit_rule?.payment_term_label) || "the required payment";
+        const amount = Number.isFinite(Number(acceptanceRoute?.deposit_rule?.required_amount_cents))
+          ? formatMoney(acceptanceRoute.deposit_rule.required_amount_cents, acceptanceRoute?.deposit_rule?.currency || access.currency)
+          : formatMoney(access.total_price_cents, access.currency);
+        return `This offer is confirmed once we receive ${amount} for ${label}.`;
+      })()
+    : "Request a one-time code by email and enter it below to accept the offer.";
+  const statusLabel = normalizeText(acceptanceRoute?.status)
+    ? normalizeText(String(acceptanceRoute.status).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
+    : (isDeposit ? "Awaiting payment" : "Open");
+  const depositMeta = isDeposit && acceptanceRoute?.deposit_rule
+    ? `
+      <div class="offer-accept-route__meta">
+        <div><strong>Required payment</strong><span>${escapeHtml(acceptanceRoute.deposit_rule.payment_term_label || "Payment")}</span></div>
+        <div><strong>Amount</strong><span>${escapeHtml(formatMoney(acceptanceRoute.deposit_rule.required_amount_cents || 0, acceptanceRoute.deposit_rule.currency || access.currency))}</span></div>
+      </div>
+    `
+    : "";
+  els.route.innerHTML = `
+    <div class="offer-accept-route__header">
+      <h2 class="offer-accept-route__title">${escapeHtml(routeTitle)}</h2>
+      <span class="offer-accept-route__status">${escapeHtml(statusLabel)}</span>
+    </div>
+    <p class="offer-accept-route__body">${escapeHtml(normalizeText(acceptanceRoute?.customer_message_snapshot) || defaultMessage)}</p>
+    ${depositMeta}
+  `;
+  els.route.hidden = false;
+}
+
+function renderPaymentTerms() {
+  if (!els.paymentTerms) return;
+  const paymentTerms = state.access?.payment_terms;
+  const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+  if (!paymentTerms || !lines.length) {
+    els.paymentTerms.hidden = true;
+    els.paymentTerms.innerHTML = "";
+    return;
+  }
+  const currency = paymentTerms.currency || state.access?.currency || "USD";
+  const rows = lines.map((line) => `
+    <tr>
+      <td>${escapeHtml(line.label || "Payment")}</td>
+      <td>${escapeHtml(formatPaymentDueRule(line?.due_rule))}</td>
+      <td class="offer-accept-payment-terms__amount">${escapeHtml(formatMoney(line?.resolved_amount_cents || 0, currency))}</td>
+    </tr>
+    ${normalizeText(line?.description)
+      ? `<tr class="offer-accept-payment-terms__note-row"><td colspan="3"><span class="offer-accept-payment-terms__note-label">Note for customer</span>${escapeHtml(line.description)}</td></tr>`
+      : ""}`
+  ).join("");
+  const notes = normalizeText(paymentTerms?.notes);
+  els.paymentTerms.innerHTML = `
+    <div class="offer-accept-payment-terms__header">
+      <h2 class="offer-accept-payment-terms__title">Payment terms</h2>
+    </div>
+    <div class="backend-table-wrap">
+      <table class="backend-table offer-accept-payment-terms__table">
+        <thead>
+          <tr>
+            <th>Payment</th>
+            <th>Due</th>
+            <th class="offer-accept-payment-terms__amount">Amount</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="offer-accept-payment-terms__summary">
+      <div class="offer-accept-payment-terms__summary-row">
+        <span>Offer total</span>
+        <strong>${escapeHtml(formatMoney(paymentTerms?.basis_total_amount_cents || state.access?.total_price_cents || 0, currency))}</strong>
+      </div>
+      <div class="offer-accept-payment-terms__summary-row">
+        <span>Scheduled total</span>
+        <strong>${escapeHtml(formatMoney(paymentTerms?.scheduled_total_amount_cents || 0, currency))}</strong>
+      </div>
+    </div>
+    ${notes ? `<p class="offer-accept-payment-terms__notes">${escapeHtml(notes)}</p>` : ""}
+  `;
+  els.paymentTerms.hidden = false;
+}
+
 function renderAcceptedState() {
   const acceptance = state.access?.acceptance;
   if (!state.accepted || !acceptance) {
     els.result.hidden = true;
-    els.form.hidden = false;
     return;
   }
+  const acceptedAt = acceptance.accepted_at ? formatDateTime(acceptance.accepted_at) : "";
+  if (normalizeText(acceptance.method).toUpperCase() === "DEPOSIT_PAYMENT") {
+    els.resultMessage.textContent = acceptedAt
+      ? `Offer confirmed on ${acceptedAt}.`
+      : "Offer confirmed.";
+    els.resultStatement.textContent = Number.isFinite(Number(acceptance.accepted_amount_cents))
+      ? `Confirmed payment: ${formatMoney(acceptance.accepted_amount_cents, acceptance.accepted_currency || state.access?.currency || "USD")}`
+      : "";
+  } else {
+    els.resultMessage.textContent = acceptedAt
+      ? `Offer accepted on ${acceptedAt}.`
+      : "Offer accepted.";
+    els.resultStatement.textContent = "";
+  }
+  els.resultStatement.hidden = !normalizeText(els.resultStatement.textContent);
   els.result.hidden = false;
-  els.form.hidden = true;
-  els.resultMessage.textContent = acceptance.accepted_at
-    ? `Accepted by ${acceptance.accepted_by_name || "customer"} on ${formatDateTime(acceptance.accepted_at)}`
-    : `Accepted by ${acceptance.accepted_by_name || "customer"}`;
-  els.resultStatement.textContent = acceptance.statement_snapshot || "";
 }
 
 function render() {
@@ -192,14 +333,23 @@ function render() {
   els.content.hidden = !access;
   if (!access) return;
 
+  const depositRoute = routeUsesDepositPayment();
   document.documentElement.lang = String(access.lang || query.get("lang") || "en").toLowerCase();
+  document.title = depositRoute ? "Offer payment | AsiaTravelPlan" : "Accept Offer | AsiaTravelPlan";
+  els.title.textContent = depositRoute ? "Review your offer and payment terms" : "Accept your offer";
+  els.intro.textContent = depositRoute
+    ? "Review the frozen PDF and payment terms. Your offer is confirmed once we receive the required payment."
+    : "Review the frozen PDF, request your verification code, and confirm acceptance.";
+
   renderSummary();
+  renderRouteCard();
+  renderPaymentTerms();
   els.pdfLink.href = resolveApiUrl(apiOrigin, access.pdf_url || "#");
   els.pdfLink.hidden = !access.pdf_url;
   els.sendBtn.disabled = state.sending;
   els.verifyBtn.disabled = state.sending || !normalizeText(els.otpCode.value);
   els.resendBtn.disabled = state.sending || state.retryAfterSeconds > 0;
-  els.otpPanel.hidden = !state.otpRequired;
+  els.otpPanel.hidden = !state.otpRequired || depositRoute;
   els.otpMeta.textContent = state.otpRequired
     ? `Verification code sent to ${state.otpSentTo || "your email"}. It expires ${state.otpExpiresAt ? `at ${formatDateTime(state.otpExpiresAt)}` : "soon"}.`
     : "";
@@ -207,6 +357,7 @@ function render() {
     ? `Resend available in ${state.retryAfterSeconds}s`
     : "";
   renderAcceptedState();
+  els.form.hidden = depositRoute || state.accepted;
 }
 
 async function loadAccess() {
@@ -260,6 +411,7 @@ function validateBaseForm() {
 }
 
 async function sendOtpRequest() {
+  if (routeUsesDepositPayment()) return;
   if (!validateBaseForm()) return;
   state.sending = true;
   render();
@@ -297,6 +449,7 @@ async function sendOtpRequest() {
 }
 
 async function verifyOtpAndAccept() {
+  if (routeUsesDepositPayment()) return;
   if (!validateBaseForm()) return;
   if (!normalizeText(els.otpCode.value)) {
     setStatus("Verification code is required.", "error");
@@ -324,7 +477,8 @@ async function verifyOtpAndAccept() {
     state.access = {
       ...state.access,
       accepted: true,
-      acceptance: result.payload.acceptance || null
+      acceptance: result.payload.acceptance || null,
+      acceptance_route: result.payload.acceptance_route || state.access?.acceptance_route
     };
     setStatus("Offer accepted.", "success");
     render();

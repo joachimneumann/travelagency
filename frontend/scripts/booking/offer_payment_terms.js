@@ -23,7 +23,8 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     setOfferSaveEnabled,
     clearOfferStatus,
     scheduleOfferAutosave,
-    resolveOfferTotalCents
+    resolveOfferTotalCents,
+    renderOfferGenerationControls
   } = ctx;
 
   function updateOfferPaymentTermsPanelSummary(paymentTerms = state.offerDraft?.payment_terms) {
@@ -619,6 +620,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       `;
       els.offer_payment_terms.hidden = false;
       renderOfferPaymentTermsNotes();
+      renderOfferGenerationControls?.();
       return;
     }
 
@@ -730,6 +732,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     `;
     els.offer_payment_terms.hidden = false;
     renderOfferPaymentTermsNotes();
+    renderOfferGenerationControls?.();
 
     const markDirty = () => {
       setOfferSaveEnabled(true);

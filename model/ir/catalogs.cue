@@ -20,6 +20,8 @@ IR: {
 		offerPaymentTermKinds: [for kind in enumModel.OfferPaymentTermKindCatalog {{code: kind}}]
 		offerPaymentAmountModes: [for mode in enumModel.OfferPaymentAmountModeCatalog {{code: mode}}]
 		offerPaymentDueTypes: [for dueType in enumModel.OfferPaymentDueTypeCatalog {{code: dueType}}]
+		generatedOfferAcceptanceRouteModes: [for mode in enumModel.GeneratedOfferAcceptanceRouteModeCatalog {{code: mode}}]
+		generatedOfferAcceptanceRouteStatuses: [for status in enumModel.GeneratedOfferAcceptanceRouteStatusCatalog {{code: status}}]
 		offerAcceptanceMethods: [for method in enumModel.OfferAcceptanceMethodCatalog {{code: method}}]
 		offerAcceptanceOtpChannels: [for channel in enumModel.OfferAcceptanceOtpChannelCatalog {{code: channel}}]
 		countries: [for country in enumModel.CountryCatalog {{
