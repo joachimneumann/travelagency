@@ -1073,7 +1073,7 @@ textarea:focus-visible {
 .footer li,
 .footer a {
   color: var(--muted);
-  font-size: var(--font-size-body-sm);
+  font-size: var(--font-size-ui-md);
 }
 
 .footer p {
@@ -1264,7 +1264,7 @@ textarea:focus-visible {
   display: inline-block;
   padding-top: 0.92rem;
   color: var(--text-muted-alt);
-  font-size: var(--font-size-overline);
+  font-size: var(--font-size-ui-md);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-section);
   text-transform: var(--text-transform-caps);
@@ -1295,6 +1295,7 @@ textarea:focus-visible {
 }
 
 .localized-pair__translate-btn {
+  font-size: var(--font-size-ui-md);
   padding: 0.45rem 0.72rem;
   white-space: nowrap;
 }
@@ -1423,12 +1424,13 @@ textarea:focus-visible {
 
 .localized-editor__lang-code {
   color: var(--text-muted-alt);
-  font-size: var(--font-size-overline);
+  font-size: var(--font-size-ui-md);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-section);
 }
 
 .localized-editor__translate-btn {
+  font-size: var(--font-size-ui-md);
   padding: 0.45rem 0.72rem;
   white-space: nowrap;
 }

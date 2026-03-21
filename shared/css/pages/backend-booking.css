@@ -195,7 +195,7 @@
 .booking-detail-page .booking-hero__id {
   margin: 0;
   color: var(--text-ink-muted);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-ui-md);
 }
 
 .booking-detail-page .booking-hero__id-row {
@@ -212,7 +212,7 @@
   background: transparent;
   color: var(--text-ink-strong);
   font: inherit;
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-ui-md);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
   padding: 0.12rem 0.2rem;

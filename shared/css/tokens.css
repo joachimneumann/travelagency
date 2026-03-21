@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
 :root {
   /* Core */
   --bg: #efeae2;
@@ -222,19 +224,21 @@
 
   /* Sizing and Typography */
   --radius: 14px;
-  --font-family-sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-family-sans: "Source Sans 3", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-family-ui: var(--font-family-sans);
-  --font-family-brand: var(--font-family-sans);
+  --font-family-brand: "Montserrat", var(--font-family-sans);
+  --font-family-display: var(--font-family-brand);
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-size-micro: 0.72rem;
+  --font-size-ui-md: 0.9375rem;
   --font-size-overline: var(--font-size-base);
   --font-size-caption: var(--font-size-base);
   --font-size-body-sm: var(--font-size-base);
-  --font-size-body: 0.94rem;
+  --font-size-body: var(--font-size-ui-md);
   --font-size-base: 1rem;
   --font-size-title-sm: 1.05rem;
   --font-size-title-md: 1.15rem;

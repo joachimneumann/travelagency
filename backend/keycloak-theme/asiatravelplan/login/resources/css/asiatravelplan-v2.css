@@ -19,6 +19,13 @@ body {
   font-family: var(--font-family-sans);
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 body.login-pf,
 body.kcBodyClass {
   background: var(--c2-surface) !important;
