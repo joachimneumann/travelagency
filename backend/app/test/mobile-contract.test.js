@@ -3258,6 +3258,62 @@ test("booking person photo endpoint updates the booking when ImageMagick is avai
   assert.ok(photoResult.body.booking.persons[0].photo_ref.includes("/public/v1/booking-person-photos/"));
 });
 
+test("booking person document picture endpoint stores separate passport and ID card images when ImageMagick is available", async (t) => {
+  if (!HAS_MAGICK) {
+    t.skip("ImageMagick `magick` is not installed in this environment.");
+    return;
+  }
+
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const bookingBefore = detailBefore.body.booking;
+  const original_person = bookingBefore.persons[0];
+
+  const passportResult = await requestJson(
+    endpointPath("booking_person_document_picture")
+      .replace("{booking_id}", booking_id)
+      .replace("{person_id}", original_person.id)
+      .replace("{document_type}", "passport"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_persons_revision: bookingBefore.persons_revision,
+        filename: "passport.png",
+        data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(passportResult.status, 200);
+  const passportDocument = passportResult.body.booking.persons[0].documents.find((document) => document.document_type === "passport");
+  assert.equal(typeof passportDocument?.document_picture_ref, "string");
+  assert.ok(passportDocument.document_picture_ref.includes("/public/v1/booking-person-photos/"));
+
+  const idCardResult = await requestJson(
+    endpointPath("booking_person_document_picture")
+      .replace("{booking_id}", booking_id)
+      .replace("{person_id}", original_person.id)
+      .replace("{document_type}", "national_id"),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_persons_revision: passportResult.body.booking.persons_revision,
+        filename: "id-card.png",
+        data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(idCardResult.status, 200);
+  const idCardDocument = idCardResult.body.booking.persons[0].documents.find((document) => document.document_type === "national_id");
+  assert.equal(typeof idCardDocument?.document_picture_ref, "string");
+  assert.ok(idCardDocument.document_picture_ref.includes("/public/v1/booking-person-photos/"));
+});
+
 test("booking invoice create/update and offer exchange-rates endpoints work", async () => {
   const createdBooking = await createSeedBooking();
   const booking_id = createdBooking.id;

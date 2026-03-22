@@ -410,7 +410,8 @@ export function createBookingHandlers(deps) {
     handlePublicBookingPersonPhoto,
     handlePublicBookingImage,
     handleUploadBookingImage,
-    handleUploadBookingPersonPhoto
+    handleUploadBookingPersonPhoto,
+    handleUploadBookingPersonDocumentPicture
   } = createBookingMediaHandlers({
     readBodyJson,
     sendJson,
@@ -874,6 +875,7 @@ export function createBookingHandlers(deps) {
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish,
     handleUploadBookingPersonPhoto,
+    handleUploadBookingPersonDocumentPicture,
     handlePatchBookingNotes,
     handlePatchBookingPricing,
     handlePatchBookingOffer,

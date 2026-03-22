@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-22T13:20:08Z",
+  "generatedAt": "2026-03-22T14:23:36Z",
   "languages": [
     "en",
     "fr",
@@ -628,6 +628,35 @@
           "location": "path",
           "required": true,
           "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "booking_person_document_picture",
+      "path": "/api/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture",
+      "method": "POST",
+      "tag": "Bookings",
+      "authenticated": true,
+      "requestType": "BookingPersonPhotoUploadRequest",
+      "responseType": "BookingDetail",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "person_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "document_type",
+          "location": "path",
+          "required": true,
+          "typeName": "PersonDocumentType"
         }
       ]
     },

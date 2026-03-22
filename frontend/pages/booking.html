@@ -109,7 +109,7 @@
               </div>
               <div class="modal-body booking-person-modal__body">
                 <div class="booking-person-modal__hero">
-                  <button class="booking-person-modal__avatar" id="booking_person_modal_avatar_btn" type="button" aria-label="Choose person picture" data-i18n-aria-label-id="booking.choose_person_picture" data-requires-clean-state>
+                  <button class="booking-person-modal__avatar" id="booking_person_modal_avatar_btn" type="button" aria-label="Choose person picture" data-i18n-aria-label-id="booking.choose_person_picture">
                     <img id="booking_person_modal_photo" src="assets/img/profile_person.png" alt="" />
                     <span id="booking_person_modal_initials">P</span>
                   </button>
@@ -270,6 +270,22 @@
                         </div>
                         <div id="booking_person_modal_passport_expires_on_error" class="error"></div>
                       </div>
+                      <div class="field booking-person-modal__document-picture-field">
+                        <button
+                          class="btn btn-ghost"
+                          id="booking_person_modal_passport_picture_upload_btn"
+                          type="button"
+                          data-document-picture-upload="passport"
+                          data-i18n-id="booking.upload_passport_image"
+                        >Upload passport image</button>
+                        <input id="booking_person_modal_passport_picture_input" type="file" accept="image/*" hidden />
+                        <div class="booking-person-modal__document-picture-preview">
+                          <img id="booking_person_modal_passport_picture_preview" alt="" hidden />
+                          <span id="booking_person_modal_passport_picture_empty" class="micro" data-i18n-id="booking.no_document_image">No document image uploaded.</span>
+                        </div>
+                        <span id="booking_person_modal_passport_picture_status" class="micro booking-person-modal__document-picture-status"></span>
+                        <span id="booking_person_modal_passport_picture_dirty_hint" class="micro booking-person-modal__document-picture-hint"></span>
+                      </div>
                   </div>
 
                   <div class="booking-person-modal__grid" data-document-panel="national_id" hidden>
@@ -357,6 +373,22 @@
                           <span data-i18n-id="booking.no_expiration">No expiration date</span>
                         </label>
                       </div>
+                      <div class="field booking-person-modal__document-picture-field">
+                        <button
+                          class="btn btn-ghost"
+                          id="booking_person_modal_national_id_picture_upload_btn"
+                          type="button"
+                          data-document-picture-upload="national_id"
+                          data-i18n-id="booking.upload_id_image"
+                        >Upload ID image</button>
+                        <input id="booking_person_modal_national_id_picture_input" type="file" accept="image/*" hidden />
+                        <div class="booking-person-modal__document-picture-preview">
+                          <img id="booking_person_modal_national_id_picture_preview" alt="" hidden />
+                          <span id="booking_person_modal_national_id_picture_empty" class="micro" data-i18n-id="booking.no_document_image">No document image uploaded.</span>
+                        </div>
+                        <span id="booking_person_modal_national_id_picture_status" class="micro booking-person-modal__document-picture-status"></span>
+                        <span id="booking_person_modal_national_id_picture_dirty_hint" class="micro booking-person-modal__document-picture-hint"></span>
+                      </div>
                   </div>
                 </section>
 
@@ -388,14 +420,22 @@
                 </div>
 
                 <div class="field" style="margin-top: 0.9rem;">
-                  <label for="booking_person_modal_notes" data-i18n-id="booking.notes">Notes</label>
+                  <label for="booking_person_modal_notes" data-i18n-id="booking.notes">Notes (ATP internal)</label>
                   <textarea class="booking-text-field booking-text-field--internal" id="booking_person_modal_notes" data-person-field="notes" rows="4"></textarea>
+                </div>
+
+                <div class="booking-person-modal__footer">
+                  <span id="booking_person_modal_action_status" class="micro booking-person-modal__footer-status"></span>
+                  <div class="booking-person-modal__footer-actions">
+                    <button class="btn btn-ghost" id="booking_person_modal_discard_btn" type="button" data-i18n-id="booking.persons.discard_changes">Discard traveler changes</button>
+                    <button class="btn btn-primary" id="booking_person_modal_save_btn" type="button" data-i18n-id="booking.persons.save_traveler">Save traveler</button>
+                  </div>
                 </div>
 
                 <section class="booking-danger-zone">
                   <h2 class="section-title" style="margin-bottom: 0.45rem;" data-i18n-id="booking.danger_zone">Danger zone</h2>
                   <p class="micro" style="margin: 0 0 0.7rem;" data-i18n-id="booking.remove_person_help">Remove this person from the booking.</p>
-                  <button class="btn booking-danger-zone__delete" id="booking_person_modal_delete_btn" type="button" data-i18n-id="booking.remove_person" data-requires-clean-state>Remove person</button>
+                  <button class="btn booking-danger-zone__delete" id="booking_person_modal_delete_btn" type="button" data-i18n-id="booking.remove_person">Remove person</button>
                 </section>
               </div>
             </div>

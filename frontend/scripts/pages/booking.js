@@ -185,6 +185,9 @@ const els = {
   personModalName: document.getElementById("booking_person_modal_name"),
   personModalPhotoInput: document.getElementById("booking_person_modal_photo_input"),
   personModalPublicActionsMount: document.getElementById("booking_person_modal_public_actions_mount"),
+  personModalActionStatus: document.getElementById("booking_person_modal_action_status"),
+  personModalDiscardBtn: document.getElementById("booking_person_modal_discard_btn"),
+  personModalSaveBtn: document.getElementById("booking_person_modal_save_btn"),
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
   travelPlanItemLibraryModal: document.getElementById("travel_plan_item_library_modal"),
   travelPlanItemLibraryCloseBtn: document.getElementById("travel_plan_item_library_close_btn"),
@@ -508,13 +511,15 @@ async function init() {
     void savePageEdits();
   });
   if (els.personModal) {
-    els.personModal.addEventListener("click", (event) => {
+    els.personModal.addEventListener("click", async (event) => {
       const actionButton = event.target instanceof Element
         ? event.target.closest("[data-person-modal-traveler-details-action]")
         : null;
       if (!(actionButton instanceof HTMLButtonElement)) return;
       const action = normalizeText(actionButton.dataset.personModalTravelerDetailsAction);
       if (action === "copy") {
+        const ready = await personsModule.prepareTravelerDetailsLinkAction();
+        if (!ready) return;
         void copyTravelerDetailsLink();
       }
     });

@@ -60,6 +60,8 @@ case "booking_person_delete":
   return RequestFactory.bookingPersonDeleteRequest(options);
 case "booking_person_photo":
   return RequestFactory.bookingPersonPhotoRequest(options);
+case "booking_person_document_picture":
+  return RequestFactory.bookingPersonDocumentPictureRequest(options);
 case "booking_notes":
   return RequestFactory.bookingNotesRequest(options);
 case "booking_travel_plan":

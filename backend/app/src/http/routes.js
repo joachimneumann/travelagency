@@ -21,6 +21,7 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/persons/{person_id}", handlerKey: "handlePatchBookingPerson" },
   { method: "DELETE", path: "/api/v1/bookings/{booking_id}/persons/{person_id}", handlerKey: "handleDeleteBookingPerson" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/persons/{person_id}/photo", handlerKey: "handleUploadBookingPersonPhoto" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture", handlerKey: "handleUploadBookingPersonDocumentPicture" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link", handlerKey: "handlePostBookingPersonTravelerDetailsLink" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/notes", handlerKey: "handlePatchBookingNotes" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/travel-plan", handlerKey: "handlePatchBookingTravelPlan" },

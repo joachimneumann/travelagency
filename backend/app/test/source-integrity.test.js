@@ -184,8 +184,8 @@ test("booking person modal exposes traveler-details link actions and the public 
 
   assert.match(
     bookingSource,
-    /id="booking_person_modal_name"[\s\S]*id="booking_person_modal_public_actions_mount"/,
-    "Booking person modal should place the traveler-details action mount below the traveler name field"
+    /id="booking_person_modal_name"[\s\S]*id="booking_person_modal_public_actions_mount"[\s\S]*id="booking_person_modal_discard_btn"[\s\S]*id="booking_person_modal_save_btn"/,
+    "Booking person modal should place the traveler-details action mount below the traveler name field and expose local traveler save and discard actions"
   );
   assert.doesNotMatch(
     bookingSource,
@@ -194,18 +194,33 @@ test("booking person modal exposes traveler-details link actions and the public 
   );
   assert.match(
     personsScript,
-    /function renderTravelerDetailsLinkActions\(\)[\s\S]*booking_person_modal_traveler_details_copy_btn/,
-    "Person modal module should render the traveler-details copy action inside the person detail view"
+    /function renderTravelerDetailsLinkActions\(\)[\s\S]*booking_person_modal_traveler_details_copy_btn[\s\S]*booking\.traveler_details\.save_and_copy_link/,
+    "Person modal module should render the traveler-details copy action inside the person detail view and support a save-and-copy label when the traveler is dirty"
   );
   assert.doesNotMatch(
     personsScript,
     /booking_person_modal_traveler_details_email_btn|booking_person_modal_traveler_details_whatsapp_btn/,
     "Person modal module should no longer render email or WhatsApp traveler-details actions"
   );
+  assert.doesNotMatch(
+    personsScript,
+    /function renderTravelerDetailsLinkActions\(\)[\s\S]*data-requires-clean-state/,
+    "Person modal module should not gate the traveler-details link action behind the page-wide clean-state guard"
+  );
+  assert.match(
+    personsScript,
+    /function updatePersonModalActionControls\([\s\S]*booking\.persons\.unsaved_changes[\s\S]*function discardPersonDraftChanges\([\s\S]*function saveActivePersonDraft\(/,
+    "Person modal module should expose local traveler save and discard controls with their own dirty-state messaging"
+  );
   assert.match(
     travelerDetailsPage,
     /id="traveler_details_privacy_notice"[\s\S]*id="traveler_details_form"[\s\S]*id="traveler_details_list"[\s\S]*id="traveler_details_save_btn"/,
     "Public traveler-details page should render a dedicated single-person form with a privacy notice and save action"
+  );
+  assert.doesNotMatch(
+    travelerDetailsPage,
+    /type="file"/,
+    "Public traveler-details page should not expose backend-only document image upload inputs"
   );
   const siteStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
   const siteStyles = await readFile(siteStylesPath, "utf8");
@@ -238,6 +253,31 @@ test("booking person modal exposes traveler-details link actions and the public 
     siteStyles,
     /\.traveler-details-privacy-note \{[\s\S]*background: rgba\(190, 54, 54, 0\.14\);[\s\S]*color: #8f1f1f;/,
     "Public traveler-details privacy notice should use a red warning treatment"
+  );
+});
+
+test("booking person modal exposes separate passport and ID card document image uploads", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const personsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+  const personsSource = await readFile(personsScriptPath, "utf8");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+
+  assert.match(
+    bookingPageSource,
+    /booking_person_modal_passport_picture_upload_btn[\s\S]*booking_person_modal_passport_picture_input[\s\S]*booking_person_modal_national_id_picture_upload_btn[\s\S]*booking_person_modal_national_id_picture_input/,
+    "Booking person modal should expose separate upload controls for passport and ID card images"
+  );
+  assert.match(
+    personsSource,
+    /bookingPersonDocumentPictureRequest[\s\S]*\[\s*"passport",\s*"national_id"\s*\][\s\S]*data-document-picture-upload/,
+    "Booking persons module should upload document images through the dedicated booking person document-picture endpoint"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-person-modal__document-picture-preview \{[\s\S]*min-height: 180px;[\s\S]*border: 1px dashed var\(--line-cool-alpha\);/,
+    "Booking person modal should style the document image preview area as a dedicated upload surface"
   );
 });
 

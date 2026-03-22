@@ -5,6 +5,7 @@ import {
 } from "../../../shared/generated/language_catalog.js";
 import {
   bookingPersonCreateRequest,
+  bookingPersonDocumentPictureRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
   bookingPersonUpdateRequest
@@ -61,6 +62,15 @@ export function createBookingPersonsModule(ctx) {
     isEnabled: () => state.permissions.canEditBooking,
     onDirtyChange: (isDirty) => setBookingSectionDirty("persons", isDirty)
   });
+  let activeDocumentPictureStatusPersonId = "";
+  let documentPictureStatuses = {
+    passport: "",
+    national_id: ""
+  };
+  let activePersonModalStatusPersonId = "";
+  let personModalActionStatus = "";
+  let personModalSaveInFlight = false;
+  let personModalDiscardInFlight = false;
 
   function normalizePersonLanguageCode(value) {
     const raw = normalizeText(value);
@@ -243,7 +253,15 @@ export function createBookingPersonsModule(ctx) {
     );
   }
 
-  function markPersonsSnapshotClean() {
+  function serializeSavedPersonDrafts(booking = state.booking) {
+    return serializePersonDrafts(getBookingPersons(booking).map(clonePersonDraft));
+  }
+
+  function markPersonsSnapshotClean(booking = state.booking) {
+    if (typeof personsDirtyTracker.setCleanSnapshot === "function") {
+      personsDirtyTracker.setCleanSnapshot(serializeSavedPersonDrafts(booking));
+      return;
+    }
     personsDirtyTracker.markClean();
   }
 
@@ -254,6 +272,80 @@ export function createBookingPersonsModule(ctx) {
   function setPersonsEditorStatus(message) {
     if (!els.personsEditorStatus) return;
     els.personsEditorStatus.textContent = message || "";
+  }
+
+  function ensureActivePersonModalStatusPerson(personId = "") {
+    const normalizedPersonId = normalizeText(personId);
+    if (activePersonModalStatusPersonId !== normalizedPersonId) {
+      activePersonModalStatusPersonId = normalizedPersonId;
+      personModalActionStatus = "";
+      personModalSaveInFlight = false;
+      personModalDiscardInFlight = false;
+    }
+  }
+
+  function setPersonModalActionStatus(message, personId = state.active_person_id) {
+    ensureActivePersonModalStatusPerson(personId);
+    personModalActionStatus = normalizeText(message) || "";
+    if (els.personModalActionStatus instanceof HTMLElement) {
+      els.personModalActionStatus.textContent = personModalActionStatus;
+    }
+  }
+
+  function documentTypeLabel(documentType) {
+    return documentType === "national_id"
+      ? bookingT("booking.id_card", "ID card")
+      : bookingT("booking.passport", "Passport");
+  }
+
+  function getPersonDocumentPictureElements(documentType) {
+    if (documentType === "national_id") {
+      return {
+        uploadButton: document.getElementById("booking_person_modal_national_id_picture_upload_btn"),
+        input: document.getElementById("booking_person_modal_national_id_picture_input"),
+        previewImage: document.getElementById("booking_person_modal_national_id_picture_preview"),
+        emptyNode: document.getElementById("booking_person_modal_national_id_picture_empty"),
+        statusNode: document.getElementById("booking_person_modal_national_id_picture_status")
+      };
+    }
+    return {
+      uploadButton: document.getElementById("booking_person_modal_passport_picture_upload_btn"),
+      input: document.getElementById("booking_person_modal_passport_picture_input"),
+      previewImage: document.getElementById("booking_person_modal_passport_picture_preview"),
+      emptyNode: document.getElementById("booking_person_modal_passport_picture_empty"),
+      statusNode: document.getElementById("booking_person_modal_passport_picture_status")
+    };
+  }
+
+  function resetDocumentPictureStatuses(personId = "") {
+    activeDocumentPictureStatusPersonId = normalizeText(personId);
+    documentPictureStatuses = {
+      passport: "",
+      national_id: ""
+    };
+  }
+
+  function ensureDocumentPictureStatusPerson(personId = "") {
+    const normalizedPersonId = normalizeText(personId);
+    if (activeDocumentPictureStatusPersonId !== normalizedPersonId) {
+      resetDocumentPictureStatuses(normalizedPersonId);
+    }
+  }
+
+  function getPersonDocumentPictureStatus(documentType, personId = state.active_person_id) {
+    ensureDocumentPictureStatusPerson(personId);
+    const normalizedDocumentType = documentType === "national_id" ? "national_id" : "passport";
+    return documentPictureStatuses[normalizedDocumentType] || "";
+  }
+
+  function setPersonDocumentPictureStatus(documentType, message, personId = state.active_person_id) {
+    const normalizedDocumentType = documentType === "national_id" ? "national_id" : "passport";
+    ensureDocumentPictureStatusPerson(personId);
+    documentPictureStatuses[normalizedDocumentType] = normalizeText(message) || "";
+    const { statusNode } = getPersonDocumentPictureElements(normalizedDocumentType);
+    if (statusNode instanceof HTMLElement) {
+      statusNode.textContent = documentPictureStatuses[normalizedDocumentType];
+    }
   }
 
   function collectCommaSeparatedValues(values) {
@@ -445,6 +537,30 @@ export function createBookingPersonsModule(ctx) {
     );
   }
 
+  function buildStoredPersonPayload(booking, personId, fallbackIndex = 0) {
+    const normalizedPersonId = normalizeText(personId);
+    const persons = getBookingPersons(booking);
+    const personIndex = persons.findIndex((person) => normalizeText(person?.id) === normalizedPersonId);
+    if (personIndex < 0) return null;
+    return buildPersonPayloadFromDraft(clonePersonDraft(persons[personIndex], personIndex), personIndex);
+  }
+
+  function isPersonDraftDirtyAgainstBooking(draft, booking = state.booking, fallbackIndex = 0) {
+    if (!draft || typeof draft !== "object") return false;
+    if (draft._is_new === true) return personDraftHasMeaningfulInput(draft);
+    const draftPayload = buildPersonPayloadFromDraft(draft, fallbackIndex);
+    const storedPayload = buildStoredPersonPayload(booking, draft.id, fallbackIndex);
+    if (!storedPayload) return true;
+    return JSON.stringify(draftPayload) !== JSON.stringify(storedPayload);
+  }
+
+  function isPersonDraftDirty(personId = state.active_person_id) {
+    const normalizedPersonId = normalizeText(personId);
+    const draftIndex = state.personDrafts.findIndex((draft) => normalizeText(draft?.id) === normalizedPersonId);
+    if (draftIndex < 0) return false;
+    return isPersonDraftDirtyAgainstBooking(state.personDrafts[draftIndex], state.booking, draftIndex);
+  }
+
   function populateCountryCodeSelect(select, placeholderLabel = bookingT("booking.persons.select_nationality", "Select nationality")) {
     if (!(select instanceof HTMLSelectElement)) return;
     const current = normalizeText(select.value).toUpperCase();
@@ -546,16 +662,21 @@ export function createBookingPersonsModule(ctx) {
 
   async function persistPersonDrafts(person_id = state.active_person_id) {
     if (!state.permissions.canEditBooking || !state.booking) return false;
-    if (!state.dirty.persons) return true;
     const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
     const personIndex = state.personDrafts.findIndex((draft) => draft.id === targetPersonId);
     const currentDraft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
     if (!currentDraft) return false;
     const isNewDraft = currentDraft._is_new === true;
     if (isNewDraft && !personDraftHasMeaningfulInput(currentDraft)) return true;
+    if (!isPersonDraftDirtyAgainstBooking(currentDraft, state.booking, personIndex)) return true;
     if (!validatePersonDraft(currentDraft, { allowPartialDateOfBirth: false, focusFirstInvalid: targetPersonId === state.active_person_id })) {
       return false;
     }
+
+    const previousBooking = state.booking;
+    const previousDrafts = Array.isArray(state.personDrafts)
+      ? state.personDrafts.map((draft) => JSON.parse(JSON.stringify(draft)))
+      : [];
     const request = isNewDraft
       ? bookingPersonCreateRequest({
           baseURL: apiOrigin,
@@ -583,7 +704,26 @@ export function createBookingPersonsModule(ctx) {
           result.booking?.persons?.[result.booking.persons.length - 1]?.id
         )
       : "";
-    applyBookingPayload(result);
+    state.booking = result.booking;
+    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+    previousDrafts.forEach((draft, index) => {
+      const draftId = normalizeText(draft?.id);
+      if (!draftId || draftId === targetPersonId || draftId === createdPersonId) return;
+      if (draft._is_new === true) {
+        if (personDraftHasMeaningfulInput(draft)) {
+          state.personDrafts.push(draft);
+        }
+        return;
+      }
+      if (!isPersonDraftDirtyAgainstBooking(draft, previousBooking, index)) return;
+      const nextIndex = state.personDrafts.findIndex((person) => normalizeText(person?.id) === draftId);
+      if (nextIndex < 0) return;
+      state.personDrafts[nextIndex] = draft;
+    });
+    markPersonsSnapshotClean(state.booking);
+    const activePersonTargetId = createdPersonId || targetPersonId;
+    state.active_person_id = activeLocalPersonId === targetPersonId ? activePersonTargetId : state.active_person_id;
+    state.active_person_index = state.personDrafts.findIndex((person) => normalizeText(person?.id) === normalizeText(state.active_person_id));
     renderBookingHeader();
     renderBookingData();
     renderActionControls();
@@ -652,6 +792,75 @@ export function createBookingPersonsModule(ctx) {
     return true;
   }
 
+  function updatePersonModalActionControls(draft, canEdit) {
+    ensureActivePersonModalStatusPerson(draft?.id);
+    const isDirty = isPersonDraftDirty(normalizeText(draft?.id));
+    const isBusy = personModalSaveInFlight || personModalDiscardInFlight;
+    if (els.personModalSaveBtn instanceof HTMLButtonElement) {
+      els.personModalSaveBtn.disabled = !canEdit || isBusy || !isDirty;
+    }
+    if (els.personModalDiscardBtn instanceof HTMLButtonElement) {
+      els.personModalDiscardBtn.disabled = !canEdit || isBusy || !isDirty;
+    }
+    if (els.personModalActionStatus instanceof HTMLElement) {
+      if (personModalActionStatus) {
+        els.personModalActionStatus.textContent = personModalActionStatus;
+      } else if (isDirty) {
+        els.personModalActionStatus.textContent = bookingT("booking.persons.unsaved_changes", "Unsaved traveler changes");
+      } else {
+        els.personModalActionStatus.textContent = "";
+      }
+    }
+  }
+
+  function discardPersonDraftChanges(personId = state.active_person_id) {
+    const targetPersonId = normalizeText(personId);
+    const personIndex = state.personDrafts.findIndex((draft) => normalizeText(draft?.id) === targetPersonId);
+    const draft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
+    if (!draft) return false;
+    clearTravelerDetailsLinkStatus();
+    if (!isPersonDraftDirtyAgainstBooking(draft, state.booking, personIndex)) {
+      setPersonModalActionStatus("", targetPersonId);
+      updatePersonModalActionControls(draft, state.permissions.canEditBooking);
+      return true;
+    }
+    if (draft._is_new === true) {
+      state.personDrafts.splice(personIndex, 1);
+      updatePersonsDirtyState();
+      finalizeClosePersonModal();
+      renderPersonsEditor({ include_modal: false });
+      return true;
+    }
+    const storedPersons = getBookingPersons(state.booking);
+    const storedIndex = storedPersons.findIndex((person) => normalizeText(person?.id) === targetPersonId);
+    if (storedIndex < 0) return false;
+    state.personDrafts[personIndex] = clonePersonDraft(storedPersons[storedIndex], storedIndex);
+    setPersonModalActionStatus(bookingT("booking.persons.discarded_changes", "Traveler changes discarded"), targetPersonId);
+    renderPersonsEditor();
+    updatePersonsDirtyState();
+    return true;
+  }
+
+  async function saveActivePersonDraft(options = {}) {
+    const targetPersonId = normalizeText(options.person_id) || normalizeText(state.active_person_id);
+    const personIndex = state.personDrafts.findIndex((draft) => normalizeText(draft?.id) === targetPersonId);
+    const draft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
+    if (!draft) return false;
+    personModalSaveInFlight = true;
+    setPersonModalActionStatus(bookingT("booking.persons.saving", "Saving traveler..."), targetPersonId);
+    updatePersonModalActionControls(draft, state.permissions.canEditBooking);
+    const saved = await persistPersonDrafts(targetPersonId);
+    personModalSaveInFlight = false;
+    const activeDraft = state.personDrafts[state.active_person_index] || draft;
+    if (saved) {
+      setPersonModalActionStatus(bookingT("booking.persons.saved", "Traveler saved"), normalizeText(activeDraft?.id) || targetPersonId);
+    } else {
+      setPersonModalActionStatus("", targetPersonId);
+    }
+    updatePersonModalActionControls(activeDraft, state.permissions.canEditBooking);
+    return saved;
+  }
+
   function openPersonModal(index) {
     if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
     state.active_person_index = index;
@@ -671,6 +880,15 @@ export function createBookingPersonsModule(ctx) {
     state.active_person_id = "";
     state.active_person_document_type = "passport";
     if (els.personModalPhotoInput) els.personModalPhotoInput.value = "";
+    const passportPictureInput = document.getElementById("booking_person_modal_passport_picture_input");
+    const nationalIdPictureInput = document.getElementById("booking_person_modal_national_id_picture_input");
+    if (passportPictureInput instanceof HTMLInputElement) passportPictureInput.value = "";
+    if (nationalIdPictureInput instanceof HTMLInputElement) nationalIdPictureInput.value = "";
+    resetDocumentPictureStatuses();
+    activePersonModalStatusPersonId = "";
+    personModalActionStatus = "";
+    personModalSaveInFlight = false;
+    personModalDiscardInFlight = false;
     if (lastPersonModalTrigger instanceof HTMLElement && document.contains(lastPersonModalTrigger)) {
       lastPersonModalTrigger.focus();
     }
@@ -696,6 +914,13 @@ export function createBookingPersonsModule(ctx) {
     if (els.personModalPhotoInput) els.personModalPhotoInput.click();
   }
 
+  function triggerPersonDocumentPicturePicker(documentType) {
+    const { uploadButton, input } = getPersonDocumentPictureElements(documentType);
+    if (!(input instanceof HTMLInputElement)) return;
+    if (uploadButton instanceof HTMLButtonElement && uploadButton.disabled) return;
+    input.click();
+  }
+
   function handlePersonModalKeydown(event) {
     if (event.key !== "Escape" || els.personModal?.hidden !== false) return;
     void closePersonModal();
@@ -715,6 +940,7 @@ export function createBookingPersonsModule(ctx) {
     const title = personName || bookingT("booking.unnamed_person", "Unnamed person");
     const initials = getPersonInitials(title);
     const photoSrc = resolvePersonPhotoSrc(draft.photo_ref);
+    ensureDocumentPictureStatusPerson(draft.id);
     renderTravelerDetailsLinkActions();
 
     if (els.personModalSubtitle) {
@@ -824,11 +1050,59 @@ export function createBookingPersonsModule(ctx) {
       els.personModalDeleteBtn.disabled = !canEdit;
       els.personModalDeleteBtn.style.display = canEdit ? "" : "none";
     }
+    updatePersonDocumentPictureControls(draft, canEdit, title);
     updateTravelerDetailsLinkActions(draft, canEdit);
+    updatePersonModalActionControls(draft, canEdit);
     if (typeof ctx.updateCleanStateActionAvailability === "function") {
       ctx.updateCleanStateActionAvailability();
     }
     updatePersonModalDocumentSwitcher(draft, activeDocumentType, canEdit);
+  }
+
+  function updatePersonDocumentPictureControls(draft, canEdit, personLabel) {
+    const isSavedPerson = Boolean(normalizeText(draft?.id)) && draft?._is_new !== true;
+    const disabledStatusMessage = canEdit && !isSavedPerson
+      ? bookingT(
+          "booking.document_image.save_person_first",
+          "Save this traveler first to upload a document image."
+        )
+      : "";
+
+    ["passport", "national_id"].forEach((documentType) => {
+      const { uploadButton, input, previewImage, emptyNode, statusNode } = getPersonDocumentPictureElements(documentType);
+      const document = getPersonDocument(draft, documentType) || normalizePersonDocumentDraft({}, documentType);
+      const pictureRef = normalizeText(document.document_picture_ref);
+
+      if (previewImage instanceof HTMLImageElement) {
+        if (pictureRef) {
+          previewImage.src = resolvePersonPhotoSrc(pictureRef);
+          previewImage.alt = `${personLabel} ${documentTypeLabel(documentType)}`;
+        } else {
+          previewImage.removeAttribute("src");
+          previewImage.alt = "";
+        }
+        previewImage.hidden = !pictureRef;
+      }
+
+      if (emptyNode instanceof HTMLElement) {
+        emptyNode.hidden = Boolean(pictureRef);
+      }
+
+      if (uploadButton instanceof HTMLButtonElement) {
+        const isBaseDisabled = !canEdit || !isSavedPerson;
+        uploadButton.disabled = isBaseDisabled;
+        uploadButton.dataset.cleanStateBaseDisabled = isBaseDisabled ? "true" : "false";
+        uploadButton.title = isBaseDisabled && disabledStatusMessage ? disabledStatusMessage : "";
+      }
+
+      if (input instanceof HTMLInputElement) {
+        input.disabled = !canEdit || !isSavedPerson;
+      }
+
+      if (statusNode instanceof HTMLElement) {
+        statusNode.textContent = getPersonDocumentPictureStatus(documentType, draft?.id) || disabledStatusMessage;
+      }
+    });
   }
 
   function updatePersonModalDocumentSwitcher(draft, activeDocumentType, canEdit) {
@@ -900,6 +1174,13 @@ export function createBookingPersonsModule(ctx) {
     };
   }
 
+  function clearTravelerDetailsLinkStatus() {
+    const { statusNode } = getTravelerDetailsLinkActionNodes();
+    if (statusNode instanceof HTMLElement) {
+      statusNode.textContent = "";
+    }
+  }
+
   function renderTravelerDetailsLinkActions() {
     if (!(els.personModalPublicActionsMount instanceof HTMLElement)) return;
     els.personModalPublicActionsMount.innerHTML = `
@@ -909,12 +1190,9 @@ export function createBookingPersonsModule(ctx) {
           id="booking_person_modal_traveler_details_copy_btn"
           type="button"
           data-person-modal-traveler-details-action="copy"
-          data-requires-clean-state
-          data-clean-state-hint-id="booking_person_modal_traveler_details_dirty_hint"
         >${escapeHtml(bookingT("booking.traveler_details.copy_link", "Create and copy traveler details link"))}</button>
       </div>
       <span id="booking_person_modal_traveler_details_link_status" class="micro booking-person-modal__public-actions-status"></span>
-      <span id="booking_person_modal_traveler_details_dirty_hint" class="micro booking-person-modal__public-actions-hint"></span>
     `;
   }
 
@@ -923,26 +1201,33 @@ export function createBookingPersonsModule(ctx) {
     const actionButtons = [
       nodes.copyButton
     ].filter((button) => button instanceof HTMLButtonElement);
+    const isDirty = isPersonDraftDirty(normalizeText(draft?.id));
     const isSavedPerson = Boolean(normalizeText(draft?.id)) && draft?._is_new !== true;
     const isTraveler = isTravelingPerson(draft);
-    const baseDisabled = !canEdit || !isSavedPerson || !isTraveler;
+    const hasDraftInput = personDraftHasMeaningfulInput(draft);
+    const baseDisabled = !canEdit || !isTraveler || (!isSavedPerson && !hasDraftInput);
     let statusMessage = "";
 
-    if (canEdit && !isSavedPerson) {
-      statusMessage = bookingT(
-        "booking.traveler_details.save_person_first",
-        "Save this traveler first to enable the traveler details link."
-      );
-    } else if (canEdit && !isTraveler) {
+    if (canEdit && !isTraveler) {
       statusMessage = bookingT(
         "booking.traveler_details.traveler_role_required",
         "Add the traveler role to enable the traveler details link."
       );
+    } else if (canEdit && !isSavedPerson && !hasDraftInput) {
+      statusMessage = bookingT(
+        "booking.traveler_details.save_person_first",
+        "Save this traveler first to enable the traveler details link."
+      );
     }
 
     actionButtons.forEach((button) => {
+      button.textContent = isDirty
+        ? bookingT(
+            "booking.traveler_details.save_and_copy_link",
+            "Save traveler and copy traveler details link"
+          )
+        : bookingT("booking.traveler_details.copy_link", "Create and copy traveler details link");
       button.disabled = baseDisabled;
-      button.dataset.cleanStateBaseDisabled = baseDisabled ? "true" : "false";
       button.title = baseDisabled && statusMessage ? statusMessage : "";
     });
 
@@ -1012,6 +1297,8 @@ export function createBookingPersonsModule(ctx) {
       return;
     }
 
+    setPersonModalActionStatus("", draft.id);
+    clearTravelerDetailsLinkStatus();
     renderPersonsEditor({ include_modal: false });
     refreshOpenPersonModalHeader();
     updatePersonModalDocumentSwitcher(
@@ -1019,6 +1306,7 @@ export function createBookingPersonsModule(ctx) {
       state.active_person_document_type || getPreferredPersonDocumentType(draft),
       state.permissions.canEditBooking
     );
+    updatePersonModalActionControls(draft, state.permissions.canEditBooking);
     updatePersonsDirtyState();
   }
 
@@ -1046,6 +1334,11 @@ export function createBookingPersonsModule(ctx) {
     }
     const draft = state.personDrafts[state.active_person_index];
     if (!draft) return;
+    const documentPictureUpload = event.target.closest("[data-document-picture-upload]");
+    if (documentPictureUpload) {
+      triggerPersonDocumentPicturePicker(normalizeText(documentPictureUpload.getAttribute("data-document-picture-upload")));
+      return;
+    }
     const documentSwitch = event.target.closest("[data-document-switch]");
     if (documentSwitch) {
       state.active_person_document_type = normalizeText(documentSwitch.getAttribute("data-document-switch")) || "passport";
@@ -1069,6 +1362,22 @@ export function createBookingPersonsModule(ctx) {
     const datePickerButton = event.target.closest(".booking-person-modal__date-picker-btn");
     if (datePickerButton) {
       openPersonDatePicker(datePickerButton);
+      return;
+    }
+    if (event.target.closest("#booking_person_modal_save_btn")) {
+      await saveActivePersonDraft();
+      return;
+    }
+    if (event.target.closest("#booking_person_modal_discard_btn")) {
+      personModalDiscardInFlight = true;
+      setPersonModalActionStatus(bookingT("booking.persons.discarding", "Discarding traveler changes..."), draft.id);
+      updatePersonModalActionControls(draft, state.permissions.canEditBooking);
+      discardPersonDraftChanges(draft.id);
+      personModalDiscardInFlight = false;
+      const activeDraft = state.personDrafts[state.active_person_index] || null;
+      if (activeDraft) {
+        updatePersonModalActionControls(activeDraft, state.permissions.canEditBooking);
+      }
       return;
     }
     if (event.target.closest("#booking_person_modal_delete_btn")) {
@@ -1133,6 +1442,93 @@ export function createBookingPersonsModule(ctx) {
     if (state.active_person_index >= 0) openPersonModal(state.active_person_index);
   }
 
+  async function uploadPersonDocumentPicture(index, documentType, input = getPersonDocumentPictureElements(documentType).input) {
+    const normalizedDocumentType = documentType === "national_id" ? "national_id" : "passport";
+    if (!state.permissions.canEditBooking || !state.booking) return;
+    const person = state.personDrafts[index];
+    const file = input?.files?.[0] || null;
+    if (!person || !file) return;
+    const personLabel = normalizeText(person.name) || bookingT("booking.unnamed_person", "Unnamed person");
+
+    if (person._is_new) {
+      setPersonDocumentPictureStatus(
+        normalizedDocumentType,
+        bookingT(
+          "booking.document_image.save_person_first",
+          "Save this traveler first to upload a document image."
+        ),
+        person.id
+      );
+      updatePersonDocumentPictureControls(person, state.permissions.canEditBooking, personLabel);
+      if (input instanceof HTMLInputElement) input.value = "";
+      return;
+    }
+
+    try {
+      setPersonDocumentPictureStatus(
+        normalizedDocumentType,
+        bookingT("booking.document_image.uploading", "Uploading document image..."),
+        person.id
+      );
+      updatePersonDocumentPictureControls(person, state.permissions.canEditBooking, personLabel);
+
+      const base64 = await fileToBase64(file);
+      const request = bookingPersonDocumentPictureRequest({
+        baseURL: apiOrigin,
+        params: {
+          booking_id: state.booking.id,
+          person_id: person.id,
+          document_type: normalizedDocumentType
+        }
+      });
+      const activeDocumentType = state.active_person_document_type || normalizedDocumentType;
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_persons_revision: getBookingRevision("persons_revision"),
+          filename: file.name,
+          data_base64: base64,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) {
+        setPersonDocumentPictureStatus(
+          normalizedDocumentType,
+          bookingT("booking.document_image.upload_failed", "Could not upload the document image."),
+          person.id
+        );
+        updatePersonDocumentPictureControls(person, state.permissions.canEditBooking, personLabel);
+        return;
+      }
+
+      applyBookingPayload(result);
+      state.active_person_document_type = activeDocumentType;
+      renderBookingHeader();
+      renderBookingData();
+      renderActionControls();
+      renderPersonsEditor();
+
+      const activeDraft = state.personDrafts[state.active_person_index] || person;
+      setPersonDocumentPictureStatus(
+        normalizedDocumentType,
+        bookingT("booking.document_image.uploaded", "{document} image uploaded.", {
+          document: documentTypeLabel(normalizedDocumentType)
+        }),
+        activeDraft.id || person.id
+      );
+      renderPersonModal();
+    } catch {
+      setPersonDocumentPictureStatus(
+        normalizedDocumentType,
+        bookingT("booking.document_image.upload_failed", "Could not upload the document image."),
+        person.id
+      );
+      updatePersonDocumentPictureControls(person, state.permissions.canEditBooking, personLabel);
+    } finally {
+      if (input instanceof HTMLInputElement) input.value = "";
+    }
+  }
+
   async function fileToBase64(file) {
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1164,6 +1560,14 @@ export function createBookingPersonsModule(ctx) {
     markPersonsSnapshotClean();
   }
 
+  async function prepareTravelerDetailsLinkAction() {
+    const draft = state.personDrafts[state.active_person_index];
+    if (!draft) return false;
+    if (!isPersonDraftDirty(normalizeText(draft.id))) return true;
+    clearTravelerDetailsLinkStatus();
+    return await saveActivePersonDraft({ person_id: draft.id });
+  }
+
   function bindEvents() {
     if (els.personsEditorList) els.personsEditorList.addEventListener("click", handlePersonsEditorListClick);
     if (els.personModal) els.personModal.addEventListener("click", handlePersonModalClick);
@@ -1184,6 +1588,18 @@ export function createBookingPersonsModule(ctx) {
         await uploadPersonPhoto(state.active_person_index, els.personModalPhotoInput);
       });
     }
+    const passportPictureInput = document.getElementById("booking_person_modal_passport_picture_input");
+    if (passportPictureInput instanceof HTMLInputElement) {
+      passportPictureInput.addEventListener("change", async () => {
+        await uploadPersonDocumentPicture(state.active_person_index, "passport", passportPictureInput);
+      });
+    }
+    const nationalIdPictureInput = document.getElementById("booking_person_modal_national_id_picture_input");
+    if (nationalIdPictureInput instanceof HTMLInputElement) {
+      nationalIdPictureInput.addEventListener("change", async () => {
+        await uploadPersonDocumentPicture(state.active_person_index, "national_id", nationalIdPictureInput);
+      });
+    }
     if (els.personModalCloseBtn) els.personModalCloseBtn.addEventListener("click", closePersonModal);
     window.addEventListener("keydown", handlePersonModalKeydown);
   }
@@ -1193,6 +1609,11 @@ export function createBookingPersonsModule(ctx) {
     applyBookingPayload,
     renderPersonsEditor,
     closePersonModal,
-    saveAllPersonDrafts
+    saveAllPersonDrafts,
+    savePersonDrafts,
+    saveActivePersonDraft,
+    discardPersonDraftChanges,
+    prepareTravelerDetailsLinkAction,
+    isPersonDraftDirty
   };
 }

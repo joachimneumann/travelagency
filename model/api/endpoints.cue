@@ -407,6 +407,31 @@ package api
 		}]
 	},
 	{
+		key:           "booking_person_document_picture"
+		path:          "/api/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingPersonPhotoUploadRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "document_type"
+			location: "path"
+			required: true
+			typeName: "PersonDocumentType"
+		}]
+	},
+	{
 		key:           "booking_notes"
 		path:          "/api/v1/bookings/{booking_id}/notes"
 		method:        "PATCH"

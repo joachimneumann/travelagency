@@ -16,6 +16,13 @@ export function createSnapshotDirtyTracker({
     return cleanSnapshot;
   }
 
+  function setCleanSnapshot(snapshot = "") {
+    cleanSnapshot = String(snapshot ?? "");
+    const isDirty = Boolean(isEnabled()) && readSnapshot() !== cleanSnapshot;
+    onDirtyChange(isDirty);
+    return cleanSnapshot;
+  }
+
   function refresh() {
     const isDirty = Boolean(isEnabled()) && readSnapshot() !== cleanSnapshot;
     onDirtyChange(isDirty);
@@ -34,6 +41,7 @@ export function createSnapshotDirtyTracker({
   return {
     getCleanSnapshot,
     markClean,
+    setCleanSnapshot,
     refresh,
     setDirty
   };

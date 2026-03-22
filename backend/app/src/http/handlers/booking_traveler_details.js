@@ -194,6 +194,24 @@ function collectPublicTravelerDetailsPayload(booking, personId, rawPerson) {
 }
 
 function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
+  const existingDocuments = Array.isArray(existingPerson?.documents) ? existingPerson.documents : [];
+  const preservedDocuments = Array.isArray(normalizedPerson?.documents)
+    ? normalizedPerson.documents.map((document) => {
+        const normalizedDocumentId = String(document?.id || "").trim();
+        const normalizedDocumentType = String(document?.document_type || "").trim().toLowerCase();
+        const existingDocument = existingDocuments.find((candidate) => (
+          (normalizedDocumentId && String(candidate?.id || "").trim() === normalizedDocumentId)
+          || (normalizedDocumentType && String(candidate?.document_type || "").trim().toLowerCase() === normalizedDocumentType)
+        )) || null;
+        return {
+          ...document,
+          ...(String(existingDocument?.document_picture_ref || "").trim()
+            ? { document_picture_ref: String(existingDocument.document_picture_ref).trim() }
+            : {}),
+          created_at: String(existingDocument?.created_at || document?.created_at || "").trim() || document.created_at
+        };
+      })
+    : null;
   return {
     id: normalizedPerson.id,
     name: normalizedPerson.name,
@@ -203,7 +221,7 @@ function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
     ...(normalizedPerson.date_of_birth ? { date_of_birth: normalizedPerson.date_of_birth } : {}),
     ...(normalizedPerson.nationality ? { nationality: normalizedPerson.nationality } : {}),
     ...(normalizedPerson.address ? { address: normalizedPerson.address } : {}),
-    ...(normalizedPerson.documents ? { documents: normalizedPerson.documents } : {}),
+    ...(preservedDocuments ? { documents: preservedDocuments } : {}),
     ...(existingPerson?.photo_ref ? { photo_ref: existingPerson.photo_ref } : {}),
     ...(Array.isArray(existingPerson?.roles) ? { roles: existingPerson.roles } : {}),
     ...(Array.isArray(existingPerson?.consents) ? { consents: existingPerson.consents } : {}),

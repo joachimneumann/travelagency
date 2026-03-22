@@ -420,6 +420,23 @@ export function bookingPersonPhotoRequest({ baseURL = '', params = {}, query = {
   };
 }
 
+export function bookingPersonDocumentPicturePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture", params);
+}
+
+export function bookingPersonDocumentPictureRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPersonDocumentPicturePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_person_document_picture",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingNotesPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/notes", params);
 }
