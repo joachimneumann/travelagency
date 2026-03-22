@@ -5,6 +5,7 @@ import { createTourHelpers } from "../domain/tours_support.js";
 import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "../lib/invoice_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
+import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
 import { createKeycloakDirectory } from "../lib/keycloak_directory.js";
 import { createStoreUtils } from "../lib/store_utils.js";
 
@@ -132,6 +133,16 @@ export function createBackendServices({
     formatMoney: pricingHelpers.formatMoney
   });
 
+  const writeTravelPlanPdf = createTravelPlanPdfWriter({
+    travelPlanPdfPath: (bookingId) => `${collections.generatedOffersDir}/travel-plan-${String(bookingId || "").trim()}.pdf`,
+    bookingImagesDir: collections.bookingImagesDir,
+    readTours: storeUtils.readTours,
+    resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    logoPath: collections.logoPngPath,
+    fallbackImagePath: collections.fallbackBookingImagePath,
+    companyProfile: runtime.companyProfile
+  });
+
   return {
     pricingHelpers,
     travelPlanHelpers,
@@ -141,6 +152,7 @@ export function createBackendServices({
     metaWebhookHandlers,
     tourHelpers,
     writeInvoicePdf,
-    writeGeneratedOfferPdf
+    writeGeneratedOfferPdf,
+    writeTravelPlanPdf
   };
 }

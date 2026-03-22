@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-22T06:22:11Z
+# 2026-03-22T10:31:06Z
 
 ---
 openapi: 3.1.0
@@ -7498,6 +7498,44 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/pdf":
+    get:
+      operationId: booking_travel_plan_pdf
+      summary: Booking Travel Plan Pdf
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: lang
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
         '401':
           description: Unauthorized
           content:

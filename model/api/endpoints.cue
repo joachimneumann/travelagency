@@ -369,6 +369,24 @@ package api
 		}]
 	},
 	{
+		key:           "booking_travel_plan_pdf"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/pdf"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "lang"
+			location: "query"
+			required: false
+			typeName: "LanguageCode"
+		}]
+	},
+	{
 		key:           "booking_travel_plan_translate"
 		path:          "/api/v1/bookings/{booking_id}/travel-plan/translate"
 		method:        "POST"

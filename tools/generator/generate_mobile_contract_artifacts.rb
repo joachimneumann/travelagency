@@ -1168,6 +1168,10 @@ def openapi_schema_for_field(field, type_index, enum_schema_names)
            { type: 'string' }
          end
 
+  if field.fetch('name') == 'accommodation_days' && field.fetch('typeName') == 'int'
+    prop = prop.merge(minimum: 1, maximum: 100)
+  end
+
   prop = { type: 'array', items: prop } if field['isArray']
   prop[:nullable] = true if field['required'] == false && !field['isArray']
   prop

@@ -566,6 +566,45 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
 });
 
+test("travel plan footer exposes a clean-state-gated pdf action backed by a contract pdf endpoint", async () => {
+  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
+  const bookingPageSource = await readFile(bookingPageScriptPath, "utf8");
+  const operations = await openApiPathOperations(openApiPath);
+
+  assert.ok(
+    operations.includes("GET /api/v1/bookings/{booking_id}/travel-plan/pdf"),
+    "The API contract should expose a dedicated booking travel-plan PDF endpoint"
+  );
+  assert.match(
+    travelPlanSource,
+    /bookingTravelPlanPdfRequest/,
+    "travel_plan.js should build the travel-plan PDF link from the generated request factory"
+  );
+  assert.match(
+    travelPlanSource,
+    /data-travel-plan-create-pdf[\s\S]*data-requires-clean-state[\s\S]*data-clean-state-hint-id="travel_plan_pdf_dirty_hint"/,
+    "The travel-plan footer should render a PDF action that is blocked while the page is dirty"
+  );
+  assert.match(
+    travelPlanSource,
+    /travel-plan-footer__primary[\s\S]*data-travel-plan-add-day[\s\S]*travel-plan-footer__secondary[\s\S]*data-travel-plan-create-pdf/,
+    "The travel-plan footer should place the Create PDF action in a lower secondary row instead of next to New day"
+  );
+  assert.match(
+    travelPlanSource,
+    /function openTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*\{\s*lang:\s*bookingContentLang\(\)\s*\}/,
+    "Opening the travel-plan PDF should use the current booking content language"
+  );
+  assert.match(
+    bookingPageSource,
+    /const hintId = String\(element\.dataset\.cleanStateHintId \|\| ""\)\.trim\(\);[\s\S]*hintNode\.textContent = blocked \? message : "";/,
+    "The booking page should populate clean-state hints for any gated action, not only generated offers"
+  );
+});
+
 test("offer component editor does not expose discounts_credits as a selectable category", async () => {
   const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");

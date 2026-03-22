@@ -32,6 +32,9 @@ export function createBookingTravelPlanHandlers(deps) {
     incrementBookingRevision,
     validateBookingTravelPlanInput,
     normalizeBookingTravelPlan,
+    buildBookingTravelPlanReadModel,
+    writeTravelPlanPdf,
+    sendFileWithCache,
     translateEntries,
     path,
     randomUUID,
@@ -175,6 +178,51 @@ export function createBookingTravelPlanHandlers(deps) {
     }
     sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
+
+  async function handleGetBookingTravelPlanPdf(req, res, [bookingId]) {
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canAccessBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    let requestedLang = "";
+    try {
+      requestedLang = String(new URL(req.url, "http://localhost").searchParams.get("lang") || "").trim();
+    } catch {
+      requestedLang = "";
+    }
+    const contentLang = normalizeBookingContentLang(
+      requestedLang
+      || booking?.customer_language
+      || booking?.web_form_submission?.preferred_language
+      || "en"
+    );
+    const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, booking.offer, {
+      lang: contentLang,
+      contentLang,
+      flatLang: contentLang
+    });
+
+    let pdfPath = "";
+    try {
+      ({ outputPath: pdfPath } = await writeTravelPlanPdf(booking, travelPlanSnapshot, { lang: contentLang }));
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not render travel plan PDF", detail: String(error?.message || error) });
+      return;
+    }
+
+    await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store", {
+      "Content-Disposition": `inline; filename="ATP travel plan ${String(booking.id || "booking").replace(/"/g, "")}.pdf"`
+    });
+  }
+
   const { handleSearchTravelPlanItems, handleImportTravelPlanItem } = createBookingTravelPlanImportHandlers({
     readBodyJson,
     sendJson,
@@ -349,6 +397,7 @@ export function createBookingTravelPlanHandlers(deps) {
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
     handlePatchBookingTravelPlan,
+    handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish
   };
 }

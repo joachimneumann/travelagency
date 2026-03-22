@@ -1,4 +1,5 @@
 import {
+  bookingTravelPlanPdfRequest,
   bookingTravelPlanRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { logBrowserConsoleError } from "../shared/api.js";
@@ -58,7 +59,8 @@ export function createBookingTravelPlanModule(ctx) {
     loadActivities,
     escapeHtml,
     setBookingSectionDirty,
-    setPageSaveActionError
+    setPageSaveActionError,
+    hasUnsavedBookingChanges
   } = ctx;
 
   function requiredPlaceholder() {
@@ -964,10 +966,19 @@ export function createBookingTravelPlanModule(ctx) {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    const pdfBlocked = Boolean(hasUnsavedBookingChanges?.() || state.pageSaveInFlight || state.pageDiscardInFlight);
     els.travel_plan_editor.innerHTML = `
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
-        <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
+        <div class="travel-plan-footer__primary">
+          <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
+        </div>
+        <div class="travel-plan-footer__secondary">
+          <div class="travel-plan-pdf-actions">
+            <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button"${pdfBlocked ? " disabled" : ""}>${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
+            <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint">${pdfBlocked ? escapeHtml(bookingT("booking.action_requires_save", "Save edits to enable.")) : ""}</span>
+          </div>
+        </div>
       </div>
     `;
     updateTravelPlanDirtyState();
@@ -1227,6 +1238,24 @@ export function createBookingTravelPlanModule(ctx) {
     renderTravelPlanPanel();
   }
 
+  function openTravelPlanPdf() {
+    if (!state.booking?.id) return;
+    if (hasUnsavedBookingChanges?.() || state.pageSaveInFlight || state.pageDiscardInFlight) {
+      travelPlanStatus(bookingT("booking.action_requires_save", "Save edits to enable."), "info");
+      return;
+    }
+    const request = bookingTravelPlanPdfRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id },
+      query: { lang: bookingContentLang() }
+    });
+    const link = document.createElement("a");
+    link.href = request.url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.click();
+  }
+
   function removeLink(linkId) {
     syncTravelPlanDraftFromDom();
     state.travelPlanDraft.offer_component_links = (Array.isArray(state.travelPlanDraft.offer_component_links)
@@ -1409,6 +1438,10 @@ export function createBookingTravelPlanModule(ctx) {
         if (!button) return;
         if (button.hasAttribute("data-travel-plan-add-day")) {
           addDay();
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-create-pdf")) {
+          openTravelPlanPdf();
           return;
         }
         if (button.hasAttribute("data-travel-plan-remove-day")) {

@@ -1815,3 +1815,4 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       export function validateBookingTravelPlanItemImageFocalPoint(value) {
         return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_IMAGE_FOCAL_POINT_SCHEMA);
       }
+

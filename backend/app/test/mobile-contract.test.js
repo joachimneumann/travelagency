@@ -205,6 +205,18 @@ async function requestRaw(pathname, headers = {}, options = {}) {
   };
 }
 
+function decodePdfHexText(body) {
+  return Array.from(String(body || "").matchAll(/<([0-9A-Fa-f]+)>/g))
+    .map((match) => String(match[1] || ""))
+    .filter((hex) => hex.length >= 2 && hex.length % 2 === 0)
+    .map((hex) => Buffer.from(hex, "hex").toString("latin1"))
+    .join(" ");
+}
+
+function normalizeExtractedPdfText(text) {
+  return String(text || "").replace(/\s+/g, "");
+}
+
 function apiHeaders(roles = "atp_admin", username = "joachim", sub = "kc-joachim") {
   return {
     "x-test-roles": roles,
@@ -1793,6 +1805,88 @@ test("contract metadata exposes the public generated offer access endpoints", as
     endpointPath("public_generated_offer_pdf"),
     "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf"
   );
+});
+
+test("contract metadata exposes the booking travel plan pdf endpoint", async () => {
+  assert.equal(
+    endpointPath("booking_travel_plan_pdf"),
+    "/api/v1/bookings/{booking_id}/travel-plan/pdf"
+  );
+});
+
+test("booking travel plan pdf endpoint returns itinerary content without travelers, offers, or internal financial notes", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+
+  bookingRecord.persons = [{
+    ...(Array.isArray(bookingRecord.persons) && bookingRecord.persons[0] ? bookingRecord.persons[0] : {}),
+    id: "booking_person_pdf_marker",
+    name: "PersonMarker731",
+    roles: ["traveler"]
+  }];
+  bookingRecord.offer = {
+    ...(bookingRecord.offer || {}),
+    currency: bookingRecord.preferred_currency || "USD",
+    components: [{
+      id: "offer_component_pdf_marker",
+      category: "TRANSPORTATION",
+      label: "OfferMarker731",
+      details: "OfferMarker731",
+      quantity: 1,
+      unit_amount_cents: 12345,
+      tax_rate_basis_points: 1000,
+      currency: bookingRecord.preferred_currency || "USD",
+      notes: null,
+      sort_order: 0
+    }]
+  };
+  bookingRecord.travel_plan = {
+    days: [{
+      id: "travel_plan_day_pdf_marker",
+      day_number: 1,
+      date: "2026-03-20",
+      title: "PublicDayMarker731",
+      notes: "PublicDayNote731",
+      overnight_location: "Hoi An",
+      items: [{
+        id: "travel_plan_item_pdf_marker",
+        timing_kind: "point",
+        time_point: "2026-03-20T14:00",
+        kind: "activity",
+        title: "PublicItemMarker731",
+        location: "Hoi An",
+        details: "PublicDetailsMarker731",
+        financial_note: "FinanceMarker731",
+        images: []
+      }]
+    }],
+    offer_component_links: []
+  };
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const pdfResult = await requestRaw(
+    `${endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId)}?lang=en`,
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  assert.equal(pdfResult.headers["content-type"], "application/pdf");
+  assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP travel plan .*\.pdf/);
+  assert.match(pdfResult.body, /%PDF-/);
+  const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
+  assert.match(decodedText, /PublicDayMarker731/);
+  assert.match(decodedText, /PublicDayNote731/);
+  assert.match(decodedText, /PublicItemMarker731/);
+  assert.match(decodedText, /PublicDetailsMarker731/);
+  assert.match(decodedText, /Wewouldbehappytohearfromyou\./);
+  assert.doesNotMatch(decodedText, /PersonMarker731/);
+  assert.doesNotMatch(decodedText, /OfferMarker731/);
+  assert.doesNotMatch(decodedText, /FinanceMarker731/);
+  assert.doesNotMatch(decodedText, /Preparedforyourrequesteditineraryin/);
+  assert.doesNotMatch(decodedText, /Whoistraveling/);
 });
 
 test("booking generated offer pdf endpoint returns a pdf file", async () => {

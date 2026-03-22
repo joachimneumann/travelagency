@@ -403,6 +403,23 @@ export function bookingTravelPlanRequest({ baseURL = '', params = {}, query = {}
   };
 }
 
+export function bookingTravelPlanPdfPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/pdf", params);
+}
+
+export function bookingTravelPlanPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanPdfPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_pdf",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingTravelPlanTranslatePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/travel-plan/translate", params);
 }

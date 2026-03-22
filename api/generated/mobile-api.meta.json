@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-22T06:22:11Z",
+  "generatedAt": "2026-03-22T10:31:06Z",
   "languages": [
     "en",
     "fr",
@@ -583,6 +583,27 @@
           "location": "path",
           "required": true,
           "typeName": "Identifier"
+        }
+      ]
+    },
+    {
+      "key": "booking_travel_plan_pdf",
+      "path": "/api/v1/bookings/{booking_id}/travel-plan/pdf",
+      "method": "GET",
+      "tag": "Bookings",
+      "authenticated": true,
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "lang",
+          "location": "query",
+          "required": false,
+          "typeName": "LanguageCode"
         }
       ]
     },

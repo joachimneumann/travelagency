@@ -356,6 +356,7 @@
   "booking.travel_plan.create_days_created": "Da tao them {count} ngay cho muc luu tru nay.",
   "booking.travel_plan.create_days_no_extra": "Muc luu tru nay chi keo dai mot ngay.",
   "booking.travel_plan.create_days_title_required": "Hay dat tieu de muc lich trinh truoc khi tao ngay.",
+  "booking.travel_plan.create_pdf": "Tao PDF",
   "booking.travel_plan.generated_day_title": "Day {day}",
   "booking.required_placeholder": "bat buoc",
   "booking.travel_plan.validation.accommodation_days_action_error": "Muc luu tru trong ngay {day}, muc lich trinh {item} can so ngay tu 1 den 100.",

@@ -960,7 +960,9 @@ export function formatPdfMoney(amountCents, currency, lang) {
     USD: "$",
     EUR: "€",
     EURO: "€",
-    VND: "₫",
+    // The dong sign is not rendered reliably in every PDF font stack we ship.
+    // Use the currency code for PDFs so the output stays legible everywhere.
+    VND: "VND ",
     THB: "฿",
     AUD: "A$",
     GBP: "£",

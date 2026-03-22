@@ -242,6 +242,7 @@ IR: {
 				{name: "time_label", kind: "scalar", typeName: "string", required: false},
 				{name: "time_point", kind: "scalar", typeName: "string", required: false},
 				{name: "kind", kind: "enum", typeName: "TravelPlanItemKind", required: true},
+				{name: "accommodation_days", kind: "scalar", typeName: "int", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "details", kind: "scalar", typeName: "string", required: false},
 				{name: "location", kind: "scalar", typeName: "string", required: false},

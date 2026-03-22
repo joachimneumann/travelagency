@@ -90,6 +90,7 @@ export function createBookingHandlers(deps) {
     nextInvoiceNumber,
     writeInvoicePdf,
     writeGeneratedOfferPdf,
+    writeTravelPlanPdf,
     randomUUID,
     invoicePdfPath,
     generatedOfferPdfPath,
@@ -498,6 +499,7 @@ export function createBookingHandlers(deps) {
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
     handlePatchBookingTravelPlan,
+    handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish
   } = createBookingTravelPlanHandlers({
     readBodyJson,
@@ -516,6 +518,9 @@ export function createBookingHandlers(deps) {
     incrementBookingRevision,
     validateBookingTravelPlanInput,
     normalizeBookingTravelPlan,
+    buildBookingTravelPlanReadModel,
+    writeTravelPlanPdf,
+    sendFileWithCache,
     translateEntries,
     path,
     randomUUID,
@@ -842,6 +847,7 @@ export function createBookingHandlers(deps) {
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
     handlePatchBookingTravelPlan,
+    handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish,
     handleUploadBookingPersonPhoto,
     handlePatchBookingNotes,

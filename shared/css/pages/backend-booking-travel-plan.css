@@ -104,11 +104,48 @@
 
 .travel-plan-day__footer,
 .travel-plan-footer {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+}
+
+.travel-plan-footer__primary,
+.travel-plan-footer__secondary {
   display: flex;
   justify-content: center;
+  width: 100%;
+}
+
+.travel-plan-footer__secondary {
+  margin-top: 0.2rem;
+}
+
+.travel-plan-footer__actions {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.travel-plan-pdf-actions {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.travel-plan-pdf-actions__hint {
+  display: block;
+  margin: 0;
+  color: var(--error-text-strong);
+  text-align: center;
 }
 
 .travel-plan-add-day-btn {
+  min-width: 220px;
+}
+
+.travel-plan-pdf-btn {
   min-width: 220px;
 }
 

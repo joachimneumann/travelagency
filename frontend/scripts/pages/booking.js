@@ -366,10 +366,12 @@ function updateCleanStateActionAvailability() {
       delete element.dataset.cleanStateBlocked;
       if (element.title === message) element.title = "";
     }
+    const hintId = String(element.dataset.cleanStateHintId || "").trim();
+    const hintNode = hintId ? document.getElementById(hintId) : null;
+    if (hintNode instanceof HTMLElement) {
+      hintNode.textContent = blocked ? message : "";
+    }
   });
-  if (els.generateOfferDirtyHint) {
-    els.generateOfferDirtyHint.textContent = blocked ? message : "";
-  }
 }
 
 const bookingLanguageController = createBookingPageLanguageController({
@@ -984,7 +986,8 @@ const travelPlanModule = createBookingTravelPlanModule({
   setPageSaveActionError: (message) => {
     state.pageSaveActionError = normalizeText(message);
     updatePageDirtyBar();
-  }
+  },
+  hasUnsavedBookingChanges
 });
 
 const offerModule = createBookingOfferModule({

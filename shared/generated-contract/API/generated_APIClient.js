@@ -58,6 +58,8 @@ case "booking_notes":
   return RequestFactory.bookingNotesRequest(options);
 case "booking_travel_plan":
   return RequestFactory.bookingTravelPlanRequest(options);
+case "booking_travel_plan_pdf":
+  return RequestFactory.bookingTravelPlanPdfRequest(options);
 case "booking_travel_plan_translate":
   return RequestFactory.bookingTravelPlanTranslateRequest(options);
 case "travel_plan_item_search":

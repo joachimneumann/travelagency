@@ -44,7 +44,8 @@ export function createApplicationRoutes({
     metaWebhookHandlers,
     tourHelpers,
     writeInvoicePdf,
-    writeGeneratedOfferPdf
+    writeGeneratedOfferPdf,
+    writeTravelPlanPdf
   } = services;
 
   const bookingHandlers = createBookingHandlers({
@@ -115,6 +116,7 @@ export function createApplicationRoutes({
     nextInvoiceNumber: pricingHelpers.nextInvoiceNumber,
     writeInvoicePdf,
     writeGeneratedOfferPdf,
+    writeTravelPlanPdf,
     randomUUID,
     invoicePdfPath: pricingHelpers.invoicePdfPath,
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,

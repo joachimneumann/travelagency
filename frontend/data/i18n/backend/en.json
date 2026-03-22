@@ -356,6 +356,7 @@
   "booking.travel_plan.create_days_created": "Created {count} additional days for this accommodation.",
   "booking.travel_plan.create_days_no_extra": "This accommodation already spans one day.",
   "booking.travel_plan.create_days_title_required": "Set a travel plan item title before creating days.",
+  "booking.travel_plan.create_pdf": "Create PDF",
   "booking.travel_plan.generated_day_title": "Day {day}",
   "booking.required_placeholder": "required",
   "booking.travel_plan.validation.accommodation_days_action_error": "Accommodation stay on day {day}, travel plan item {item} needs a day count between 1 and 100.",

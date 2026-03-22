@@ -27,78 +27,84 @@
   "typeName": "Identifier"
 },
   PARAM_5: {
-  "name": "q",
+  "name": "lang",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_6: {
-  "name": "destination",
+  "name": "q",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_7: {
-  "name": "country",
+  "name": "destination",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_8: {
-  "name": "style",
+  "name": "country",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_9: {
-  "name": "item_kind",
+  "name": "style",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_10: {
-  "name": "limit",
+  "name": "item_kind",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_11: {
-  "name": "offset",
+  "name": "limit",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_12: {
+  "name": "offset",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_13: {
   "name": "day_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_13: {
+  PARAM_14: {
   "name": "item_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_14: {
+  PARAM_15: {
   "name": "image_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_15: {
+  PARAM_16: {
   "name": "supplier_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_16: {
+  PARAM_17: {
   "name": "invoice_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
-  PARAM_17: {
+  PARAM_18: {
   "name": "tour_id",
   "location": "path",
   "required": true,
@@ -376,6 +382,18 @@
         ]
       },
       {
+        key: "booking_travel_plan_pdf",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/pdf",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: null,
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5)
+        ]
+      },
+      {
         key: "booking_travel_plan_translate",
         path: "/api/v1/bookings/{booking_id}/travel-plan/translate",
         method: "POST",
@@ -394,13 +412,13 @@
         requestType: null,
         responseType: "TravelPlanItemSearchResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_7),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_8),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_9),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_10),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_11),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
         ]
       },
       {
@@ -412,7 +430,7 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
         ]
       },
       {
@@ -424,8 +442,8 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
         ]
       },
       {
@@ -437,9 +455,9 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15)
         ]
       },
       {
@@ -451,8 +469,8 @@
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_12),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_13),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_14)
         ]
       },
       {
@@ -588,7 +606,7 @@
         requestType: null,
         responseType: "SupplierResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -599,7 +617,7 @@
         requestType: "SupplierUpdateRequest",
         responseType: "SupplierResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_15)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
         ]
       },
       {
@@ -655,7 +673,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
         ]
       },
       {
@@ -667,7 +685,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
         ]
       },
       {
@@ -678,7 +696,7 @@
         requestType: null,
         responseType: null,
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_16)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
         ]
       },
       {
@@ -722,7 +740,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {
@@ -733,7 +751,7 @@
         requestType: "TourUpsertRequest",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {
@@ -755,7 +773,7 @@
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       }
     ];
