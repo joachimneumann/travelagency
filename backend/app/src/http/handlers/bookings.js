@@ -22,6 +22,7 @@ import { createBookingOfferAcceptanceHandlers } from "./booking_offer_acceptance
 import { createBookingMediaHandlers } from "./booking_media.js";
 import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
+import { createBookingTravelerDetailsHandlers } from "./booking_traveler_details.js";
 import { createBookingTravelPlanHandlers } from "./booking_travel_plan.js";
 
 export function createBookingHandlers(deps) {
@@ -96,6 +97,7 @@ export function createBookingHandlers(deps) {
     generatedOfferPdfPath,
     gmailDraftsConfig,
     offerAcceptanceTokenConfig,
+    travelerDetailsTokenConfig,
     mkdir,
     path,
     execFile,
@@ -123,6 +125,10 @@ export function createBookingHandlers(deps) {
       }
     }
     return changed;
+  }
+
+  function syncBookingPublicPortalState(booking) {
+    return syncBookingGeneratedOfferRouteStatuses(booking);
   }
 
   function unique(values) {
@@ -606,6 +612,24 @@ export function createBookingHandlers(deps) {
   });
 
   const {
+    handlePostBookingPersonTravelerDetailsLink,
+    handleGetPublicTravelerDetailsAccess,
+    handlePatchPublicTravelerDetails
+  } = createBookingTravelerDetailsHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    persistStore,
+    normalizeText,
+    nowIso,
+    addActivity,
+    incrementBookingRevision,
+    travelerDetailsTokenConfig,
+    getPrincipal,
+    canEditBooking
+  });
+
+  const {
     handleListBookingInvoices,
     handleCreateBookingInvoice,
     handlePatchBookingInvoice,
@@ -789,7 +813,7 @@ export function createBookingHandlers(deps) {
       return;
     }
 
-    if (syncBookingGeneratedOfferRouteStatuses(booking)) {
+    if (syncBookingPublicPortalState(booking)) {
       await persistStore(store);
     }
 
@@ -858,6 +882,9 @@ export function createBookingHandlers(deps) {
     handleGetPublicGeneratedOfferAccess,
     handleGetPublicGeneratedOfferPdf,
     handlePublicAcceptGeneratedOffer,
+    handlePostBookingPersonTravelerDetailsLink,
+    handleGetPublicTravelerDetailsAccess,
+    handlePatchPublicTravelerDetails,
     handlePatchGeneratedBookingOffer,
     handleDeleteGeneratedBookingOffer,
     handleGetGeneratedOfferPdf,

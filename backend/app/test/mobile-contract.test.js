@@ -2787,6 +2787,128 @@ test("public generated offer access and public pdf require a valid acceptance to
   assert.match(publicPdfResult.body, /%PDF-/);
 });
 
+test("public traveler details access and update use a signed temporary link without OTP", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  assert.equal(detailResult.body.booking.public_traveler_details_token, undefined);
+  const traveler = detailResult.body.booking.persons.find((person) => Array.isArray(person.roles) && person.roles.includes("traveler"));
+  assert.ok(traveler, "expected a traveler person on the booking");
+
+  const linkPath = endpointPath("booking_person_traveler_details_link")
+    .replace("{booking_id}", bookingId)
+    .replace("{person_id}", traveler.id);
+  const linkResult = await requestJson(linkPath, apiHeaders(), {
+    method: "POST"
+  });
+  assert.equal(linkResult.status, 200);
+  assert.equal(linkResult.body.booking_id, bookingId);
+  assert.equal(linkResult.body.person_id, traveler.id);
+  assert.equal(typeof linkResult.body.traveler_details_token, "string");
+  assert.ok(linkResult.body.traveler_details_token.length > 10);
+  assertISODateLike(
+    linkResult.body.traveler_details_expires_at,
+    "traveler_details_expires_at"
+  );
+
+  const accessPath = endpointPath("public_traveler_details_access")
+    .replace("{booking_id}", bookingId)
+    .replace("{person_id}", traveler.id);
+  const accessResult = await requestJson(
+    `${accessPath}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
+    {}
+  );
+  assert.equal(accessResult.status, 200);
+  assert.equal(accessResult.headers["cache-control"], "private, max-age=0, no-store");
+  assert.equal(accessResult.body.booking_id, bookingId);
+  assert.equal(accessResult.body.person_id, traveler.id);
+  assert.equal(accessResult.body.person.name, "Test User");
+  assert.equal(accessResult.body.person.emails, undefined);
+  assert.equal(accessResult.body.person.phone_numbers, undefined);
+  assert.equal(accessResult.body.person.date_of_birth, undefined);
+  assert.equal(accessResult.body.privacy_notice, "For privacy reasons, all prior data has been deleted, except for the traveler’s name");
+
+  const updatePath = endpointPath("public_traveler_details_update")
+    .replace("{booking_id}", bookingId)
+    .replace("{person_id}", traveler.id);
+  const updateResult = await requestJson(
+    `${updatePath}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
+    {},
+    {
+      method: "PATCH",
+      body: {
+        person: {
+          id: traveler.id,
+          name: "Test User",
+          emails: ["traveler@example.com"],
+          phone_numbers: [],
+          preferred_language: "de",
+          date_of_birth: "1988-04-12",
+          nationality: "VN",
+          address: {
+            line_1: "12 Lotus Street",
+            city: "Hoi An",
+            country_code: "VN"
+          },
+          documents: [
+            {
+              document_type: "passport",
+              holder_name: "Test User",
+              document_number: "P1234567",
+              issuing_country: "VN",
+              issued_on: "2020-01-01",
+              expires_on: "2030-01-01"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(updateResult.status, 200);
+  assert.equal(updateResult.headers["cache-control"], "private, max-age=0, no-store");
+  assertISODateLike(updateResult.body.saved_at, "public traveler details saved_at");
+  assert.equal(updateResult.body.person.name, "Test User");
+  assert.equal(updateResult.body.person.emails, undefined);
+  assert.equal(updateResult.body.privacy_notice, "For privacy reasons, all prior data has been deleted, except for the traveler’s name");
+
+  const detailAfter = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfter.status, 200);
+  const travelerAfter = detailAfter.body.booking.persons.find((person) => person.id === traveler.id);
+  assert.ok(travelerAfter);
+  assert.deepEqual(travelerAfter.emails, ["traveler@example.com"]);
+  assert.equal(travelerAfter.phone_numbers, undefined);
+  assert.equal(travelerAfter.preferred_language, "de");
+  assert.equal(travelerAfter.date_of_birth, "1988-04-12");
+  assert.equal(travelerAfter.nationality, "VN");
+  assert.equal(travelerAfter.address.line_1, "12 Lotus Street");
+  assert.equal(travelerAfter.address.city, "Hoi An");
+  assert.equal(travelerAfter.address.country_code, "VN");
+  assert.equal(travelerAfter.documents.length, 1);
+  assert.equal(travelerAfter.documents[0].document_number, "P1234567");
+
+  const accessAfterResult = await requestJson(
+    `${accessPath}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
+    {}
+  );
+  assert.equal(accessAfterResult.status, 200);
+  assert.equal(accessAfterResult.body.person.name, "Test User");
+  assert.equal(accessAfterResult.body.person.emails, undefined);
+  assert.equal(accessAfterResult.body.person.address, undefined);
+  assert.equal(accessAfterResult.body.person.documents, undefined);
+  assert.equal(accessAfterResult.body.privacy_notice, "For privacy reasons, all prior data has been deleted, except for the traveler’s name");
+
+  const invalidAccessResult = await requestJson(`${accessPath}?token=invalid-token`, {});
+  assert.equal(invalidAccessResult.status, 401);
+});
+
 test("booking name and persons endpoints update the booking", async () => {
   const createdBooking = await createSeedBooking();
   const booking_id = createdBooking.id;

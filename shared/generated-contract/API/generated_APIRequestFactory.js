@@ -114,6 +114,57 @@ export function publicGeneratedOfferPdfRequest({ baseURL = '', params = {}, quer
   };
 }
 
+export function publicTravelerDetailsAccessPath(params = {}) {
+  return buildPath("/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access", params);
+}
+
+export function publicTravelerDetailsAccessRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicTravelerDetailsAccessPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_traveler_details_access",
+    method: "GET",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
+export function publicTravelerDetailsUpdatePath(params = {}) {
+  return buildPath("/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details", params);
+}
+
+export function publicTravelerDetailsUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicTravelerDetailsUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_traveler_details_update",
+    method: "PATCH",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingPersonTravelerDetailsLinkPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link", params);
+}
+
+export function bookingPersonTravelerDetailsLinkRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingPersonTravelerDetailsLinkPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_person_traveler_details_link",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function publicToursPath(params = {}) {
   return buildPath("/public/v1/tours", params);
 }

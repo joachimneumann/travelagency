@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Traveler Details | AsiaTravelPlan</title>
+    <meta name="description" content="Fill in your traveler details for AsiaTravelPlan." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body class="traveler-details-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" href="/index.html" aria-label="AsiaTravelPlan home">
+          <img class="brand-logo" src="/assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container traveler-details-shell">
+          <article class="panel traveler-details-card">
+            <p class="offer-accept-kicker">Traveler details</p>
+            <h1 class="section-title" id="traveler_details_title">Tell us about your travelers</h1>
+            <p class="traveler-details-intro" id="traveler_details_intro">Please fill in the traveler details below. This secure link is temporary and expires automatically.</p>
+            <p id="traveler_details_privacy_notice" class="traveler-details-privacy-note" hidden></p>
+
+            <div id="traveler_details_error" class="backend-message" role="alert" aria-live="assertive" hidden></div>
+            <p id="traveler_details_loading" class="offer-accept-loading">Loading traveler details…</p>
+
+            <div id="traveler_details_content" hidden>
+              <div class="traveler-details-summary" id="traveler_details_summary"></div>
+
+              <form id="traveler_details_form" class="traveler-details-form" novalidate>
+                <div id="traveler_details_list" class="traveler-details-list"></div>
+                <div class="traveler-details-actions">
+                  <button class="btn btn-primary" id="traveler_details_save_btn" type="submit">Send traveler details to Asia Travel Plan</button>
+                  <span id="traveler_details_status" class="traveler-details-form__status" aria-live="polite"></span>
+                </div>
+              </form>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="frontend/scripts/pages/traveler_details.js"></script>
+  </body>
+</html>

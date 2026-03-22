@@ -24,6 +24,12 @@ case "public_generated_offer_accept":
   return RequestFactory.publicGeneratedOfferAcceptRequest(options);
 case "public_generated_offer_pdf":
   return RequestFactory.publicGeneratedOfferPdfRequest(options);
+case "public_traveler_details_access":
+  return RequestFactory.publicTravelerDetailsAccessRequest(options);
+case "public_traveler_details_update":
+  return RequestFactory.publicTravelerDetailsUpdateRequest(options);
+case "booking_person_traveler_details_link":
+  return RequestFactory.bookingPersonTravelerDetailsLinkRequest(options);
 case "public_tours":
   return RequestFactory.publicToursRequest(options);
 case "bookings":

@@ -192,6 +192,44 @@
         ]
       },
       {
+        key: "public_traveler_details_access",
+        path: "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access",
+        method: "GET",
+        authenticated: false,
+        requestType: null,
+        responseType: "PublicTravelerDetailsAccessResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
+        key: "public_traveler_details_update",
+        path: "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details",
+        method: "PATCH",
+        authenticated: false,
+        requestType: "PublicTravelerDetailsUpdateRequest",
+        responseType: "PublicTravelerDetailsUpdateResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
+        key: "booking_person_traveler_details_link",
+        path: "/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link",
+        method: "POST",
+        authenticated: true,
+        requestType: null,
+        responseType: "BookingPersonTravelerDetailsLinkResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4)
+        ]
+      },
+      {
         key: "public_tours",
         path: "/public/v1/tours",
         method: "GET",

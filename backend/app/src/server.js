@@ -38,6 +38,7 @@ import {
   STAGES,
   STAGE_ORDER,
   STAGING_ACCESS_CONFIG,
+  TRAVELER_DETAILS_TOKEN_CONFIG,
   TRANSLATION_CLIENT,
   TRANSLATION_ENABLED
 } from "./config/runtime.js";
@@ -84,6 +85,7 @@ const services = createBackendServices({
     normalizeGeneratedCurrencyCode: GENERATED_CURRENCY_HELPERS.normalizeGeneratedCurrencyCode,
     gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
     offerAcceptanceTokenConfig: OFFER_ACCEPTANCE_TOKEN_CONFIG,
+    travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
     keycloakDirectoryConfig: KEYCLOAK_DIRECTORY_CONFIG,
     metaWebhookConfig: META_WEBHOOK_CONFIG,
     offerCategories: OFFER_CATEGORIES,
@@ -144,6 +146,7 @@ const applicationRuntime = Object.freeze({
   computeServiceLevelAgreementDueAt,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
   offerAcceptanceTokenConfig: OFFER_ACCEPTANCE_TOKEN_CONFIG,
+  travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
   execFile,
   paths: RUNTIME_PATHS,
   translationClient: TRANSLATION_CLIENT

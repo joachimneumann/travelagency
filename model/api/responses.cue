@@ -264,6 +264,13 @@ import (
 	updated_at:                     common.#Timestamp
 }
 
+#BookingPersonTravelerDetailsLinkResponse: {
+	booking_id:                    common.#Identifier
+	person_id:                     common.#Identifier
+	traveler_details_token:        string & !=""
+	traveler_details_expires_at: common.#Timestamp
+}
+
 #PublicGeneratedOfferAccessResponse: {
 	booking_id:                    common.#Identifier
 	generated_offer_id:            common.#Identifier
@@ -293,6 +300,29 @@ import (
 	otp_sent_to?:         string
 	otp_expires_at?:      common.#Timestamp
 	retry_after_seconds?: >=0 & int
+}
+
+#PublicTravelerDetailsAccessResponse: {
+	booking_id:                          common.#Identifier
+	person_id:                           common.#Identifier
+	booking_name?:                       string
+	customer_language?:                  enums.#LanguageCode
+	persons_revision:                    >=0 & int
+	public_traveler_details_expires_at?: common.#Timestamp
+	privacy_notice?:                     string
+	person:                              entities.#BookingPerson
+}
+
+#PublicTravelerDetailsUpdateResponse: {
+	booking_id:                          common.#Identifier
+	person_id:                           common.#Identifier
+	booking_name?:                       string
+	customer_language?:                  enums.#LanguageCode
+	persons_revision:                    >=0 & int
+	public_traveler_details_expires_at?: common.#Timestamp
+	privacy_notice?:                     string
+	person:                              entities.#BookingPerson
+	saved_at: common.#Timestamp
 }
 
 #SupplierListResponse: {

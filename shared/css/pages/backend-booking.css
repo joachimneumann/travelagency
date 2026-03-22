@@ -421,6 +421,12 @@
   color: var(--text-strong);
 }
 
+.booking-detail-page .booking-hero__id-copy[disabled] {
+  background: transparent;
+  color: var(--text-muted);
+  cursor: default;
+}
+
 .booking-detail-page .booking-hero__id-copy-status {
   min-height: 1em;
   color: var(--text-ink-soft);
@@ -440,6 +446,24 @@
 
 .booking-persons-current.is-changed {
   background: var(--info-tint);
+}
+
+.booking-persons-public-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 0.55rem;
+}
+
+.booking-persons-public-actions__status,
+.booking-persons-public-actions__hint {
+  display: block;
+  min-height: 1.2rem;
+  margin-bottom: 0.55rem;
+}
+
+.booking-persons-public-actions__hint {
+  color: var(--error-text-strong);
 }
 
 .booking-persons-editor-list {
@@ -738,6 +762,22 @@
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.booking-person-modal__public-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.booking-person-modal__public-actions-status,
+.booking-person-modal__public-actions-hint {
+  display: block;
+  min-height: 1.2rem;
+}
+
+.booking-person-modal__public-actions-hint {
+  color: var(--error-text-strong);
 }
 
 .booking-person-modal__grid {

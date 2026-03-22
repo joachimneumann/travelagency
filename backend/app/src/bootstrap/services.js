@@ -47,6 +47,7 @@ export function createBackendServices({
     appRoles: runtime.appRoles,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
     offerAcceptanceTokenConfig: runtime.offerAcceptanceTokenConfig,
+    travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
     translationEnabled: runtime.translationEnabled,
     normalizeStringArray: support.normalizeStringArray,
     normalizeEmail: support.normalizeEmail,

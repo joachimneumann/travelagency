@@ -259,6 +259,22 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     invoices_revision: nonNegativeInt(booking?.invoices_revision, 0),
     assigned_keycloak_user_id: optionalText(booking?.assigned_keycloak_user_id),
     service_level_agreement_due_at: optionalText(booking?.service_level_agreement_due_at),
+    traveler_details_token_nonce: optionalText(
+      booking?.traveler_details_token_nonce
+      || booking?.public_traveler_details_token_nonce
+    ),
+    traveler_details_token_created_at: optionalText(
+      booking?.traveler_details_token_created_at
+      || booking?.public_traveler_details_token_created_at
+    ),
+    traveler_details_token_expires_at: optionalText(
+      booking?.traveler_details_token_expires_at
+      || booking?.public_traveler_details_token_expires_at
+    ),
+    traveler_details_token_revoked_at: optionalText(
+      booking?.traveler_details_token_revoked_at
+      || booking?.public_traveler_details_token_revoked_at
+    ),
     destinations: normalizedDestinations,
     travel_styles: normalizedTravelStyles,
     number_of_travelers: optionalInt(booking?.number_of_travelers ?? booking?.web_form_submission?.number_of_travelers),
@@ -275,6 +291,10 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     travel_start_day: optionalText(normalizedBooking.travel_start_day),
     travel_end_day: optionalText(normalizedBooking.travel_end_day),
     source: undefined,
+    public_traveler_details_token_nonce: undefined,
+    public_traveler_details_token_created_at: undefined,
+    public_traveler_details_token_expires_at: undefined,
+    public_traveler_details_token_revoked_at: undefined,
     created_at: optionalText(normalizedBooking.created_at) || new Date().toISOString(),
     updated_at: optionalText(normalizedBooking.updated_at) || optionalText(normalizedBooking.created_at) || new Date().toISOString()
   }) || normalizedBooking;

@@ -184,6 +184,7 @@ const els = {
   personModalInitials: document.getElementById("booking_person_modal_initials"),
   personModalName: document.getElementById("booking_person_modal_name"),
   personModalPhotoInput: document.getElementById("booking_person_modal_photo_input"),
+  personModalPublicActionsMount: document.getElementById("booking_person_modal_public_actions_mount"),
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
   travelPlanItemLibraryModal: document.getElementById("travel_plan_item_library_modal"),
   travelPlanItemLibraryCloseBtn: document.getElementById("travel_plan_item_library_close_btn"),
@@ -506,6 +507,18 @@ async function init() {
   if (els.saveEditsBtn) els.saveEditsBtn.addEventListener("click", () => {
     void savePageEdits();
   });
+  if (els.personModal) {
+    els.personModal.addEventListener("click", (event) => {
+      const actionButton = event.target instanceof Element
+        ? event.target.closest("[data-person-modal-traveler-details-action]")
+        : null;
+      if (!(actionButton instanceof HTMLButtonElement)) return;
+      const action = normalizeText(actionButton.dataset.personModalTravelerDetailsAction);
+      if (action === "copy") {
+        void copyTravelerDetailsLink();
+      }
+    });
+  }
   if (els.pricing_panel) {
     const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
     els.pricing_panel.addEventListener("input", schedulePricingDirtyState);
@@ -614,6 +627,7 @@ function applyBookingPayload(payload = {}, options = {}) {
   coreModule.applyBookingPayload(payload, options);
   personsModule.applyBookingPayload();
   travelPlanModule.applyBookingPayload();
+  setTravelerDetailsLinkStatus("");
   updatePageDirtyBar();
 }
 
@@ -668,6 +682,184 @@ function buildPersonEntries(persons) {
       value: summaryParts.join(" | ") || backendT("booking.no_details", "No details")
     };
   });
+}
+
+function setTravelerDetailsLinkStatus(message) {
+  const statusNode = document.getElementById("booking_person_modal_traveler_details_link_status");
+  if (!(statusNode instanceof HTMLElement)) return;
+  statusNode.textContent = message || "";
+}
+
+function getActiveTravelerDetailsDraft() {
+  const activeIndex = Number(state.active_person_index);
+  if (!Number.isInteger(activeIndex) || activeIndex < 0) return null;
+  return state.personDrafts[activeIndex] || null;
+}
+
+function getTravelerDetailsRecipientEmail() {
+  const draft = getActiveTravelerDetailsDraft();
+  return String(Array.isArray(draft?.emails) ? draft.emails[0] : "").trim();
+}
+
+function getTravelerDetailsRecipientPhone() {
+  const draft = getActiveTravelerDetailsDraft();
+  return String(Array.isArray(draft?.phone_numbers) ? draft.phone_numbers[0] : "").trim();
+}
+
+function travelerDetailsLinkUnavailableMessage(message = "") {
+  return normalizeText(message)
+    || backendT("booking.traveler_details.link_unavailable", "Traveler details link is not available.");
+}
+
+function buildTravelerDetailsLink({ bookingId, personId, token, expiresAt }) {
+  const normalizedBookingId = normalizeText(bookingId);
+  const normalizedPersonId = normalizeText(personId);
+  const normalizedToken = normalizeText(token);
+  const normalizedExpiresAt = normalizeText(expiresAt);
+  const expiresAtMs = Date.parse(normalizedExpiresAt);
+  if (!normalizedBookingId || !normalizedPersonId || !normalizedToken) return "";
+  if (normalizedExpiresAt && Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) return "";
+  const url = new URL("/traveler-details.html", window.location.origin);
+  url.searchParams.set("booking_id", normalizedBookingId);
+  url.searchParams.set("person_id", normalizedPersonId);
+  url.searchParams.set("token", normalizedToken);
+  const lang = normalizeText(state.booking?.customer_language).toLowerCase();
+  if (lang) url.searchParams.set("lang", lang);
+  return url.toString();
+}
+
+async function requestTravelerDetailsLink() {
+  const draft = getActiveTravelerDetailsDraft();
+  const bookingId = normalizeText(state.booking?.id);
+  const personId = normalizeText(draft?.id);
+  if (!bookingId || !personId) {
+    return {
+      ok: false,
+      error: backendT("booking.traveler_details.link_unavailable", "Traveler details link is not available.")
+    };
+  }
+
+  const requestUrl = resolveApiUrl(
+    apiOrigin,
+    `/api/v1/bookings/${encodeURIComponent(bookingId)}/persons/${encodeURIComponent(personId)}/traveler-details-link`
+  );
+
+  try {
+    const response = await fetch(requestUrl, {
+      method: "POST",
+      credentials: "include"
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      if (response.status === 401) {
+        redirectToBackendLogin();
+        return { ok: false, error: "" };
+      }
+      return {
+        ok: false,
+        error: normalizeText(payload?.error) || backendT("booking.error.request_failed", "Request failed")
+      };
+    }
+    const link = buildTravelerDetailsLink({
+      bookingId,
+      personId,
+      token: payload?.traveler_details_token,
+      expiresAt: payload?.traveler_details_expires_at
+    });
+    if (!link) {
+      return {
+        ok: false,
+        error: backendT("booking.traveler_details.link_unavailable", "Traveler details link is not available.")
+      };
+    }
+    return {
+      ok: true,
+      link,
+      expiresAt: normalizeText(payload?.traveler_details_expires_at)
+    };
+  } catch {
+    return {
+      ok: false,
+      error: backendT("booking.error.connect", "Could not connect to backend API.")
+    };
+  }
+}
+
+async function copyTravelerDetailsLink() {
+  const result = await requestTravelerDetailsLink();
+  if (!result.ok || !result.link) {
+    setTravelerDetailsLinkStatus(travelerDetailsLinkUnavailableMessage(result.error));
+    return;
+  }
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(result.link);
+      setTravelerDetailsLinkStatus(backendT("booking.traveler_details.link_copied", "Traveler details link copied."));
+      return;
+    }
+    window.prompt(
+      backendT("booking.traveler_details.copy_prompt", "Copy this traveler details link:"),
+      result.link
+    );
+    setTravelerDetailsLinkStatus(backendT("booking.traveler_details.link_copied", "Traveler details link copied."));
+  } catch {
+    setTravelerDetailsLinkStatus(
+      backendT("booking.traveler_details.link_copy_failed", "Could not copy the traveler details link.")
+    );
+  }
+}
+
+async function emailTravelerDetailsLink() {
+  const result = await requestTravelerDetailsLink();
+  if (!result.ok || !result.link) {
+    setTravelerDetailsLinkStatus(travelerDetailsLinkUnavailableMessage(result.error));
+    return;
+  }
+  const recipientEmail = getTravelerDetailsRecipientEmail();
+  if (!recipientEmail) {
+    setTravelerDetailsLinkStatus(
+      backendT("booking.traveler_details.email_missing", "Traveler has no email for the traveler details link.")
+    );
+    return;
+  }
+  const draft = getActiveTravelerDetailsDraft();
+  const bookingName = normalizeText(state.booking?.name || state.booking?.web_form_submission?.booking_name || state.booking?.id)
+    || backendT("booking.title", "Booking");
+  const travelerName = normalizeText(draft?.name) || backendT("booking.persons.this_person", "this traveler");
+  const subject = backendT("booking.traveler_details.email_subject", "Traveler details for {traveler} | {booking}", {
+    traveler: travelerName,
+    booking: bookingName
+  });
+  const body = backendT(
+    "booking.traveler_details.email_body",
+    "Hello,\n\nplease fill in your traveler details here:\n{link}\n\nBest regards,\nAsia Travel Plan",
+    { link: result.link }
+  );
+  window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  setTravelerDetailsLinkStatus(backendT("booking.traveler_details.email_opening", "Opening your mail client..."));
+}
+
+async function openTravelerDetailsWhatsAppLink() {
+  const result = await requestTravelerDetailsLink();
+  if (!result.ok || !result.link) {
+    setTravelerDetailsLinkStatus(travelerDetailsLinkUnavailableMessage(result.error));
+    return;
+  }
+  const draft = getActiveTravelerDetailsDraft();
+  const travelerName = normalizeText(draft?.name) || backendT("booking.persons.this_person", "this traveler");
+  const bookingName = normalizeText(state.booking?.name || state.booking?.web_form_submission?.booking_name || state.booking?.id)
+    || backendT("booking.title", "Booking");
+  const message = backendT(
+    "booking.traveler_details.whatsapp_body",
+    "Hello {traveler}, please fill in your traveler details for {booking} here: {link}",
+    { traveler: travelerName, booking: bookingName, link: result.link }
+  );
+  const recipientPhone = getTravelerDetailsRecipientPhone().replace(/\D+/g, "");
+  const whatsappUrl = new URL("https://api.whatsapp.com/send");
+  if (recipientPhone) whatsappUrl.searchParams.set("phone", recipientPhone);
+  whatsappUrl.searchParams.set("text", message);
+  window.open(whatsappUrl.toString(), "_blank", "noopener");
+  setTravelerDetailsLinkStatus(backendT("booking.traveler_details.whatsapp_opening", "Opening WhatsApp..."));
 }
 
 function formatPersonAddress(address) {
@@ -1037,7 +1229,8 @@ const personsModule = createBookingPersonsModule({
   renderBookingHeader,
   renderBookingData,
   renderActionControls,
-  setBookingSectionDirty
+  setBookingSectionDirty,
+  updateCleanStateActionAvailability
 });
 
 const coreModule = createBookingCoreModule({

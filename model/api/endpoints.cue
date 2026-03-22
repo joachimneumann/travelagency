@@ -115,6 +115,74 @@ package api
 		}]
 	},
 	{
+		key:           "public_traveler_details_access"
+		path:          "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access"
+		method:        "GET"
+		tag:           "Public"
+		authenticated: false
+		responseType:  "PublicTravelerDetailsAccessResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "token"
+			location: "query"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "public_traveler_details_update"
+		path:          "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details"
+		method:        "PATCH"
+		tag:           "Public"
+		authenticated: false
+		requestType:   "PublicTravelerDetailsUpdateRequest"
+		responseType:  "PublicTravelerDetailsUpdateResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "token"
+			location: "query"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "booking_person_traveler_details_link"
+		path:          "/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		responseType:  "BookingPersonTravelerDetailsLinkResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "public_tours"
 		path:          "/public/v1/tours"
 		method:        "GET"

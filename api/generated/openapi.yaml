@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-22T10:31:06Z
+# 2026-03-22T13:20:08Z
 
 ---
 openapi: 3.1.0
@@ -6857,6 +6857,116 @@ paths:
             application/json:
               schema:
                 type: object
+  "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details/access":
+    get:
+      operationId: public_traveler_details_access
+      summary: Public Traveler Details Access
+      tags:
+      - Public
+      security: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicTravelerDetailsAccessResponse"
+  "/public/v1/bookings/{booking_id}/persons/{person_id}/traveler-details":
+    patch:
+      operationId: public_traveler_details_update
+      summary: Public Traveler Details Update
+      tags:
+      - Public
+      security: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PublicTravelerDetailsUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicTravelerDetailsUpdateResponse"
+  "/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link":
+    post:
+      operationId: booking_person_traveler_details_link
+      summary: Booking Person Traveler Details Link
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingPersonTravelerDetailsLinkResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingPersonTravelerDetailsLinkResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/public/v1/tours":
     get:
       operationId: public_tours

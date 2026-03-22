@@ -32,7 +32,6 @@ export function createBookingViewHelpers({
   sendJson
 }) {
   const offerAcceptanceTokenSecret = normalizeText(offerAcceptanceTokenConfig?.secret);
-
   function normalizePersonEmails(person) {
     return Array.from(
       new Set(
@@ -286,6 +285,14 @@ export function createBookingViewHelpers({
     const {
       idempotency_key: _idempotencyKey,
       web_form_travel_month: _webFormTravelMonth,
+      traveler_details_token_nonce: _travelerDetailsTokenNonce,
+      traveler_details_token_created_at: _travelerDetailsTokenCreatedAt,
+      traveler_details_token_expires_at: _travelerDetailsTokenExpiresAt,
+      traveler_details_token_revoked_at: _travelerDetailsTokenRevokedAt,
+      public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
+      public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,
+      public_traveler_details_token_expires_at: _legacyTravelerDetailsTokenExpiresAt,
+      public_traveler_details_token_revoked_at: _legacyTravelerDetailsTokenRevokedAt,
       ...normalizedBooking
     } = { ...booking };
     delete normalizedBooking.budget;

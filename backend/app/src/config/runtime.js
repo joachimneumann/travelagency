@@ -105,6 +105,11 @@ export const OFFER_ACCEPTANCE_TOKEN_CONFIG = Object.freeze({
   ttlMs: Math.max(60, Number(process.env.OFFER_ACCEPTANCE_TOKEN_TTL_SECONDS || 60 * 60 * 24 * 7) || 60) * 1000
 });
 
+export const TRAVELER_DETAILS_TOKEN_CONFIG = Object.freeze({
+  secret: normalizeText(process.env.TRAVELER_DETAILS_TOKEN_SECRET || process.env.OFFER_ACCEPTANCE_TOKEN_SECRET || ""),
+  ttlMs: Math.max(60, Number(process.env.TRAVELER_DETAILS_TOKEN_TTL_SECONDS || 60 * 60 * 24) || 60) * 1000
+});
+
 export const TRANSLATION_CLIENT = createTranslationClient({
   apiKey: OPENAI_API_KEY,
   model: OPENAI_TRANSLATION_MODEL,

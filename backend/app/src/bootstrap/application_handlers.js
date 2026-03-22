@@ -122,6 +122,7 @@ export function createApplicationRoutes({
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
     offerAcceptanceTokenConfig: runtime.offerAcceptanceTokenConfig,
+    travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
     mkdir,
     path,
     execFile: runtime.execFile,

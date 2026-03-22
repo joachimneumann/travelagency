@@ -230,6 +230,10 @@ import (
 	otp_code?:              string & !=""
 }
 
+#PublicTravelerDetailsUpdateRequest: {
+	person: entities.#BookingPerson
+}
+
 #SupplierCreateRequest: {
 	name:             string
 	contact?:         string

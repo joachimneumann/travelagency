@@ -715,6 +715,7 @@ export function createBookingPersonsModule(ctx) {
     const title = personName || bookingT("booking.unnamed_person", "Unnamed person");
     const initials = getPersonInitials(title);
     const photoSrc = resolvePersonPhotoSrc(draft.photo_ref);
+    renderTravelerDetailsLinkActions();
 
     if (els.personModalSubtitle) {
       els.personModalSubtitle.textContent = `${getPersonPrimaryRoleLabel(draft)}`;
@@ -823,6 +824,10 @@ export function createBookingPersonsModule(ctx) {
       els.personModalDeleteBtn.disabled = !canEdit;
       els.personModalDeleteBtn.style.display = canEdit ? "" : "none";
     }
+    updateTravelerDetailsLinkActions(draft, canEdit);
+    if (typeof ctx.updateCleanStateActionAvailability === "function") {
+      ctx.updateCleanStateActionAvailability();
+    }
     updatePersonModalDocumentSwitcher(draft, activeDocumentType, canEdit);
   }
 
@@ -885,6 +890,64 @@ export function createBookingPersonsModule(ctx) {
     }
     if (els.personModalInitials && !normalizeText(draft.photo_ref)) {
       els.personModalInitials.textContent = getPersonInitials(draft.name);
+    }
+  }
+
+  function getTravelerDetailsLinkActionNodes() {
+    return {
+      copyButton: document.getElementById("booking_person_modal_traveler_details_copy_btn"),
+      statusNode: document.getElementById("booking_person_modal_traveler_details_link_status")
+    };
+  }
+
+  function renderTravelerDetailsLinkActions() {
+    if (!(els.personModalPublicActionsMount instanceof HTMLElement)) return;
+    els.personModalPublicActionsMount.innerHTML = `
+      <div class="booking-person-modal__public-actions">
+        <button
+          class="booking-hero__id-copy"
+          id="booking_person_modal_traveler_details_copy_btn"
+          type="button"
+          data-person-modal-traveler-details-action="copy"
+          data-requires-clean-state
+          data-clean-state-hint-id="booking_person_modal_traveler_details_dirty_hint"
+        >${escapeHtml(bookingT("booking.traveler_details.copy_link", "Create and copy traveler details link"))}</button>
+      </div>
+      <span id="booking_person_modal_traveler_details_link_status" class="micro booking-person-modal__public-actions-status"></span>
+      <span id="booking_person_modal_traveler_details_dirty_hint" class="micro booking-person-modal__public-actions-hint"></span>
+    `;
+  }
+
+  function updateTravelerDetailsLinkActions(draft, canEdit) {
+    const nodes = getTravelerDetailsLinkActionNodes();
+    const actionButtons = [
+      nodes.copyButton
+    ].filter((button) => button instanceof HTMLButtonElement);
+    const isSavedPerson = Boolean(normalizeText(draft?.id)) && draft?._is_new !== true;
+    const isTraveler = isTravelingPerson(draft);
+    const baseDisabled = !canEdit || !isSavedPerson || !isTraveler;
+    let statusMessage = "";
+
+    if (canEdit && !isSavedPerson) {
+      statusMessage = bookingT(
+        "booking.traveler_details.save_person_first",
+        "Save this traveler first to enable the traveler details link."
+      );
+    } else if (canEdit && !isTraveler) {
+      statusMessage = bookingT(
+        "booking.traveler_details.traveler_role_required",
+        "Add the traveler role to enable the traveler details link."
+      );
+    }
+
+    actionButtons.forEach((button) => {
+      button.disabled = baseDisabled;
+      button.dataset.cleanStateBaseDisabled = baseDisabled ? "true" : "false";
+      button.title = baseDisabled && statusMessage ? statusMessage : "";
+    });
+
+    if (nodes.statusNode instanceof HTMLElement) {
+      nodes.statusNode.textContent = statusMessage;
     }
   }
 

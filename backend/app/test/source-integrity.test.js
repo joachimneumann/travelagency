@@ -170,6 +170,77 @@ test("booking page uses a page-level dirty bar instead of local section save but
   assert.doesNotMatch(bookingSource, /id="invoice_create_btn"/, "Invoice form should no longer expose a local save button");
 });
 
+test("booking person modal exposes traveler-details link actions and the public form page", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const travelerDetailsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "traveler-details.html");
+  const bookingScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const personsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
+  const travelerDetailsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "traveler_details.js");
+  const bookingSource = await readFile(bookingPagePath, "utf8");
+  const travelerDetailsPage = await readFile(travelerDetailsPagePath, "utf8");
+  const bookingScript = await readFile(bookingScriptPath, "utf8");
+  const personsScript = await readFile(personsScriptPath, "utf8");
+  const travelerDetailsScript = await readFile(travelerDetailsScriptPath, "utf8");
+
+  assert.match(
+    bookingSource,
+    /id="booking_person_modal_name"[\s\S]*id="booking_person_modal_public_actions_mount"/,
+    "Booking person modal should place the traveler-details action mount below the traveler name field"
+  );
+  assert.doesNotMatch(
+    bookingSource,
+    /id="booking_person_modal_traveler_details_copy_btn"/,
+    "Booking page template should not hard-code the traveler-details copy button"
+  );
+  assert.match(
+    personsScript,
+    /function renderTravelerDetailsLinkActions\(\)[\s\S]*booking_person_modal_traveler_details_copy_btn/,
+    "Person modal module should render the traveler-details copy action inside the person detail view"
+  );
+  assert.doesNotMatch(
+    personsScript,
+    /booking_person_modal_traveler_details_email_btn|booking_person_modal_traveler_details_whatsapp_btn/,
+    "Person modal module should no longer render email or WhatsApp traveler-details actions"
+  );
+  assert.match(
+    travelerDetailsPage,
+    /id="traveler_details_privacy_notice"[\s\S]*id="traveler_details_form"[\s\S]*id="traveler_details_list"[\s\S]*id="traveler_details_save_btn"/,
+    "Public traveler-details page should render a dedicated single-person form with a privacy notice and save action"
+  );
+  const siteStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
+  const siteStyles = await readFile(siteStylesPath, "utf8");
+  assert.match(
+    travelerDetailsScript,
+    /buildEndpointPath\(pathname\) \{\s+return `\/public\/v1\/bookings\/\$\{encodeURIComponent\(state\.bookingId\)\}\/persons\/\$\{encodeURIComponent\(state\.personId\)\}\$\{pathname\}`;/,
+    "Public traveler-details page should target the person-specific public traveler-details endpoint"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /body: \{\s+person: buildTravelerPayload\(state\.traveler\)\s+\}/,
+    "Public traveler-details page should save a single traveler payload through the public traveler-details update endpoint"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /<select id="traveler_preferred_language"[\s\S]*renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*<select id="traveler_nationality"[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)[\s\S]*<select id="traveler_document_type"/,
+    "Public traveler-details form should render dropdowns for preferred language, nationality, and travel document type"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /const supportsNoExpirationDate = documentType === "national_id";[\s\S]*supportsNoExpirationDate && document\.no_expiration_date[\s\S]*supportsNoExpirationDate \? `[\s\S]*No expiration date/,
+    "Public traveler-details form should only expose the no-expiration control for ID cards"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /<select id="traveler_issuing_country"[\s\S]*renderCountryOptions\(document\.issuing_country, "Select issuing country"\)/,
+    "Public traveler-details form should render issuing country as a country dropdown"
+  );
+  assert.match(
+    siteStyles,
+    /\.traveler-details-privacy-note \{[\s\S]*background: rgba\(190, 54, 54, 0\.14\);[\s\S]*color: #8f1f1f;/,
+    "Public traveler-details privacy notice should use a red warning treatment"
+  );
+});
+
 test("booking page scrolls only inside the content region below the sticky control bar", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
