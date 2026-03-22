@@ -459,28 +459,28 @@ def set_day_title(driver, value):
         fail("Could not set travel-plan day title.")
 
 
-def add_segment(driver):
+def add_item(driver):
     added = driver.execute(
         """
-        const button = document.querySelector('[data-travel-plan-add-segment]');
+        const button = document.querySelector('[data-travel-plan-add-item]');
         if (!button) return false;
         button.click();
         return true;
         """
     )
     if not added:
-        fail("Could not click travel-plan add-segment button.")
+        fail("Could not click travel-plan add-item button.")
     wait_until(
-        lambda: driver.execute("return document.querySelectorAll('[data-travel-plan-segment]').length === 1;"),
-        description="first travel-plan segment to render"
+        lambda: driver.execute("return document.querySelectorAll('[data-travel-plan-item]').length === 1;"),
+        description="first travel-plan item to render"
     )
 
 
-def set_segment_title(driver, value):
+def set_item_title(driver, value):
     changed = driver.execute(
         """
         const input = document.querySelector(
-          '[data-travel-plan-segment] [data-travel-plan-segment-field="title"][data-localized-lang="en"][data-localized-role="source"]'
+          '[data-travel-plan-item] [data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]'
         );
         if (!input) return false;
         input.focus();
@@ -493,7 +493,7 @@ def set_segment_title(driver, value):
         [value]
     )
     if not changed:
-        fail("Could not set travel-plan segment title.")
+        fail("Could not set travel-plan item title.")
 
 
 def get_status_text(driver):
@@ -563,29 +563,29 @@ def main():
             fail("Autosaved travel-plan day title did not persist correctly.")
         log("Verified: valid day title autosaves to the backend.")
 
-        add_segment(driver)
+        add_item(driver)
         time.sleep(1.2)
-        booking_after_empty_segment = get_booking(args.backend_port, booking_id, session_cookie)
-        if int(booking_after_empty_segment.get("travel_plan_revision") or 0) != 1:
-            fail("Empty segment draft unexpectedly autosaved before the required title was filled.")
-        log("Verified: empty new segment does not autosave.")
+        booking_after_empty_item = get_booking(args.backend_port, booking_id, session_cookie)
+        if int(booking_after_empty_item.get("travel_plan_revision") or 0) != 1:
+            fail("Empty travel-plan item draft unexpectedly autosaved before the required title was filled.")
+        log("Verified: empty new travel-plan item does not autosave.")
 
-        set_segment_title(driver, "Smoke test segment")
+        set_item_title(driver, "Smoke test travel plan item")
         wait_until(
             lambda: int(get_booking(args.backend_port, booking_id, session_cookie).get("travel_plan_revision") or 0) == 2,
-            description="travel-plan segment autosave"
+            description="travel-plan item autosave"
         )
         final_booking = get_booking(args.backend_port, booking_id, session_cookie)
         final_day = ((final_booking.get("travel_plan") or {}).get("days") or [None])[0] or {}
-        final_segment = ((final_day.get("segments") or [None])[0]) or {}
-        if final_segment.get("title") != "Smoke test segment":
-            fail("Autosaved travel-plan segment title did not persist correctly.")
+        final_item = ((final_day.get("items") or [None])[0]) or {}
+        if final_item.get("title") != "Smoke test travel plan item":
+            fail("Autosaved travel-plan item title did not persist correctly.")
 
         status_text = get_status_text(driver)
         if not status_text:
             fail("Travel-plan status text stayed empty after autosave.")
 
-        log(f"Verified: valid segment title autosaves to the backend. Status: {status_text}")
+        log(f"Verified: valid travel-plan item title autosaves to the backend. Status: {status_text}")
         log(f"Smoke test passed for booking {booking_id}.")
     finally:
         driver.quit()

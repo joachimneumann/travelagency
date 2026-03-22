@@ -95,12 +95,12 @@ export function createBookingOfferModule(ctx) {
       considerField(day?.title_i18n);
       considerField(day?.overnight_location_i18n);
       considerField(day?.notes_i18n);
-      const segments = Array.isArray(day?.segments) ? day.segments : [];
-      segments.forEach((segment) => {
-        considerField(segment?.time_label_i18n);
-        considerField(segment?.title_i18n);
-        considerField(segment?.details_i18n);
-        considerField(segment?.location_i18n);
+      const items = Array.isArray(day?.items) ? day.items : [];
+      items.forEach((item) => {
+        considerField(item?.time_label_i18n);
+        considerField(item?.title_i18n);
+        considerField(item?.details_i18n);
+        considerField(item?.location_i18n);
       });
     });
     return missing;
@@ -118,12 +118,8 @@ export function createBookingOfferModule(ctx) {
     setBookingSectionDirty("payment_terms", isDirty);
   }
 
-  function scheduleOfferAutosave() {
-    return offerSaveController?.scheduleOfferAutosave();
-  }
-
-  function flushOfferAutosave() {
-    return offerSaveController?.flushOfferAutosave() ?? Promise.resolve(true);
+  function ensureOfferCleanState() {
+    return offerSaveController?.ensureOfferCleanState() ?? Promise.resolve(true);
   }
 
   const paymentTermsModule = createBookingOfferPaymentTermsModule({
@@ -132,7 +128,6 @@ export function createBookingOfferModule(ctx) {
     escapeHtml,
     setOfferSaveEnabled,
     clearOfferStatus,
-    scheduleOfferAutosave,
     resolveOfferTotalCents: () => resolveOfferTotalCents(),
     renderOfferGenerationControls: () => generatedOffersModule.renderOfferGenerationControls()
   });
@@ -145,7 +140,7 @@ export function createBookingOfferModule(ctx) {
     getBookingRevision,
     applyOfferBookingResponse,
     countMissingOfferPdfTranslations,
-    flushOfferAutosave,
+    ensureOfferCleanState,
     setOfferStatus
   });
   const offerComponentsModule = createBookingOfferComponentsModule({
@@ -161,8 +156,6 @@ export function createBookingOfferModule(ctx) {
     offerComponentCategories: OFFER_COMPONENT_CATEGORIES,
     setOfferSaveEnabled,
     setOfferStatus,
-    scheduleOfferAutosave,
-    flushOfferAutosave,
     getCountMissingOfferPdfTranslations: countMissingOfferPdfTranslations,
     normalizeOfferCategory,
     cloneOfferPaymentTerms,

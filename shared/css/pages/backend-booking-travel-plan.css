@@ -20,16 +20,16 @@
   align-items: start;
 }
 
-.travel-plan-grid--segment {
+.travel-plan-grid--item {
   grid-template-columns: repeat(2, minmax(180px, 1fr));
 }
 
-.travel-plan-grid--segment-timing {
+.travel-plan-grid--item-timing {
   grid-template-columns: repeat(3, minmax(160px, 1fr));
 }
 
-.travel-plan-segment .field label,
-.travel-plan-segment .field .field-label {
+.travel-plan-item .field label,
+.travel-plan-item .field .field-label {
   padding-top: 0.7rem;
 }
 
@@ -96,7 +96,7 @@
   min-width: 220px;
 }
 
-.travel-plan-segment {
+.travel-plan-item {
   position: relative;
   margin: 0;
   margin-left: 5rem;
@@ -108,7 +108,7 @@
   box-shadow: none !important;
 }
 
-.travel-plan-segment::before {
+.travel-plan-item::before {
   content: "";
   position: absolute;
   left: 0;
@@ -119,19 +119,19 @@
   background: var(--surface-disabled-strong);
 }
 
-.travel-plan-segment--not-covered {
+.travel-plan-item--not-covered {
   border-color: transparent;
 }
 
-.travel-plan-segment--partially-covered {
+.travel-plan-item--partially-covered {
   border-color: transparent;
 }
 
-.travel-plan-segment--covered {
+.travel-plan-item--covered {
   border-color: transparent;
 }
 
-.travel-plan-segment__head {
+.travel-plan-item__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -139,14 +139,14 @@
   margin-bottom: 0.8rem;
 }
 
-.travel-plan-segment__title {
+.travel-plan-item__title {
   display: flex;
   align-items: center;
   gap: 0.7rem;
   flex-wrap: wrap;
 }
 
-.travel-plan-segment__index {
+.travel-plan-item__index {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-bold);
   text-transform: var(--text-transform-caps);
@@ -154,7 +154,7 @@
   color: var(--text-ink-soft);
 }
 
-.travel-plan-segment__actions {
+.travel-plan-item__actions {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -466,7 +466,7 @@
 
 @media (max-width: 760px) {
   .travel-plan-grid,
-  .travel-plan-grid--segment {
+  .travel-plan-grid--item {
     grid-template-columns: 1fr;
   }
 
@@ -476,12 +476,12 @@
     max-width: 100%;
   }
 
-  .travel-plan-segment {
+  .travel-plan-item {
     margin-left: 0;
     padding-left: 2.25rem;
   }
 
-  .travel-plan-segment::before {
+  .travel-plan-item::before {
     top: 1rem;
   }
 
@@ -490,7 +490,7 @@
   }
 
   .travel-plan-day__head,
-  .travel-plan-segment__head,
+  .travel-plan-item__head,
   .travel-plan-links__head,
   .travel-plan-images__head {
     flex-direction: column;

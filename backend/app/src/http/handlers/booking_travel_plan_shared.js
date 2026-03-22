@@ -11,7 +11,7 @@ export function publicBookingImagePath(normalizeText, relativePath) {
   return normalized ? `/public/v1/booking-images/${normalized}` : "";
 }
 
-export function normalizeSegmentImageRefs(images = []) {
+export function normalizeItemImageRefs(images = []) {
   const items = Array.isArray(images) ? images : [];
   return items.map((image, index) => ({
     ...image,
@@ -29,13 +29,13 @@ export function cloneTravelPlanLocalizedMap(value) {
   );
 }
 
-export function findTravelPlanDayAndSegment(travelPlan, dayId, segmentId) {
+export function findTravelPlanDayAndItem(travelPlan, dayId, itemId) {
   const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
   const dayIndex = days.findIndex((day) => day.id === dayId);
-  if (dayIndex < 0) return { dayIndex: -1, segmentIndex: -1, day: null, segment: null };
+  if (dayIndex < 0) return { dayIndex: -1, itemIndex: -1, day: null, item: null };
   const day = days[dayIndex];
-  const segments = Array.isArray(day?.segments) ? day.segments : [];
-  const segmentIndex = segments.findIndex((segment) => segment.id === segmentId);
-  if (segmentIndex < 0) return { dayIndex, segmentIndex: -1, day, segment: null };
-  return { dayIndex, segmentIndex, day, segment: segments[segmentIndex] };
+  const items = Array.isArray(day?.items) ? day.items : [];
+  const itemIndex = items.findIndex((item) => item.id === itemId);
+  if (itemIndex < 0) return { dayIndex, itemIndex: -1, day, item: null };
+  return { dayIndex, itemIndex, day, item: items[itemIndex] };
 }

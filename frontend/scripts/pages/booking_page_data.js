@@ -184,7 +184,7 @@ export function createBookingPageDataController(ctx) {
         : Promise.resolve(null)
     ];
     const [bookingPayload, usersPayload] = await Promise.all(requests);
-    if (!bookingPayload) return;
+    if (!bookingPayload) return false;
 
     const incomingBooking = bookingPayload?.booking || null;
     if (!state.contentLangInitialized) {
@@ -194,13 +194,12 @@ export function createBookingPageDataController(ctx) {
       updateContentLangInUrl(state.contentLang);
       syncContentLanguageSelector?.();
       if (submissionLang !== requestedContentLang) {
-        await loadBookingPage();
-        return;
+        return await loadBookingPage();
       }
     }
 
     state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
-    applyBookingPayload(bookingPayload);
+    applyBookingPayload(bookingPayload, { forceDraftReset: true });
     await ensureTourImageLoaded();
 
     renderBookingHeader();
@@ -214,6 +213,7 @@ export function createBookingPageDataController(ctx) {
     await bookingWhatsAppRef()?.load(state.booking);
     await loadInvoices();
     bookingWhatsAppRef()?.startAutoRefresh(() => state.booking);
+    return true;
   }
 
   return {

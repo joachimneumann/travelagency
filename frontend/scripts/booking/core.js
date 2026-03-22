@@ -60,12 +60,15 @@ export function createBookingCoreModule(ctx) {
     displayKeycloakUser,
     resolveCurrentAuthKeycloakUser,
     setBookingSectionDirty,
+    hasUnsavedBookingChanges,
+    reportPersistedActionBlocked,
     rerenderWhatsApp,
     renderPersonsEditor
   } = ctx;
 
   let heroCopyClipboardPoll = null;
   let heroCopiedValue = "";
+  let titleEditStartValue = "";
 
   function withBackendLang(pathname, params = {}) {
     const url = new URL(pathname, window.location.origin);
@@ -82,17 +85,85 @@ export function createBookingCoreModule(ctx) {
   }
 
   function closeBookingDetailScreen() {
+    if (hasUnsavedBookingChanges?.() && !window.confirm(bookingT("booking.discard_navigation_confirm", "Discard unsaved edits and leave this page?"))) {
+      return;
+    }
     const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/backend.html", { section: "bookings" });
     window.location.href = fallbackHref;
   }
 
+  function ensureCoreDraft() {
+    if (!state.coreDraft || typeof state.coreDraft !== "object") {
+      state.coreDraft = {
+        name: "",
+        assigned_keycloak_user_id: "",
+        stage: ctx.stages?.[0] || "",
+        notes: ""
+      };
+    }
+    return state.coreDraft;
+  }
+
+  function syncCoreDraftFromBooking({ force = false } = {}) {
+    if (!state.booking) return ensureCoreDraft();
+    const draft = ensureCoreDraft();
+    if (force || !state.dirty.core) {
+      draft.name = normalizeText(state.booking.name) || "";
+      draft.assigned_keycloak_user_id = normalizeText(state.booking.assigned_keycloak_user_id) || "";
+      draft.stage = normalizeText(state.booking.stage).toUpperCase() || ctx.stages?.[0] || "";
+    }
+    if (force || !state.dirty.note) {
+      draft.notes = normalizeText(state.booking.notes) || "";
+      state.originalNote = draft.notes;
+    }
+    return draft;
+  }
+
+  function coreSnapshotFromBooking() {
+    return JSON.stringify([
+      normalizeText(state.booking?.name) || "",
+      normalizeText(state.booking?.assigned_keycloak_user_id) || "",
+      normalizeText(state.booking?.stage).toUpperCase() || ctx.stages?.[0] || ""
+    ]);
+  }
+
+  function coreSnapshotFromDraft() {
+    const draft = ensureCoreDraft();
+    return JSON.stringify([
+      normalizeText(draft.name) || "",
+      normalizeText(draft.assigned_keycloak_user_id) || "",
+      normalizeText(draft.stage).toUpperCase() || ctx.stages?.[0] || ""
+    ]);
+  }
+
+  function updateCoreDirtyState() {
+    if (!state.permissions.canEditBooking) {
+      setBookingSectionDirty("core", false);
+      return false;
+    }
+    const draft = ensureCoreDraft();
+    if (els.titleInput) draft.name = normalizeText(els.titleInput.value) || "";
+    if (els.ownerSelect) draft.assigned_keycloak_user_id = normalizeText(els.ownerSelect.value) || "";
+    if (els.stageSelect) draft.stage = normalizeText(els.stageSelect.value).toUpperCase() || ctx.stages?.[0] || "";
+    const isDirty = state.booking ? coreSnapshotFromDraft() !== coreSnapshotFromBooking() : false;
+    setBookingSectionDirty("core", isDirty);
+    return isDirty;
+  }
+
+  function blockPersistedAction() {
+    if (!hasUnsavedBookingChanges?.()) return false;
+    reportPersistedActionBlocked?.();
+    return true;
+  }
+
   function renderBookingHeader() {
     if (!state.booking) return;
+    const draft = syncCoreDraftFromBooking();
     const primaryContact = getPrimaryContact(state.booking);
-    const title = normalizeText(state.booking.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || bookingT("booking.title", "Booking");
+    const title = normalizeText(draft.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || bookingT("booking.title", "Booking");
     if (els.title) els.title.textContent = title;
     if (els.titleInput && document.activeElement !== els.titleInput) {
-      els.titleInput.value = title;
+      els.titleInput.value = normalizeText(draft.name) || title;
     }
     if (els.titleEditBtn) {
       els.titleEditBtn.hidden = !state.permissions.canEditBooking;
@@ -292,15 +363,16 @@ export function createBookingCoreModule(ctx) {
 
   function renderActionControls() {
     if (!state.booking) return;
+    const draft = syncCoreDraftFromBooking();
 
     if (els.stageSelect) {
       const options = ctx.stages.map((stage) => `<option value="${escapeHtml(stage)}">${escapeHtml(bookingStageLabel(stage))}</option>`).join("");
       els.stageSelect.innerHTML = options;
-      els.stageSelect.value = state.booking.stage || ctx.stages[0];
+      els.stageSelect.value = normalizeText(draft.stage).toUpperCase() || state.booking.stage || ctx.stages[0];
     }
 
     if (els.ownerSelect) {
-      const currentOwnerId = normalizeText(state.booking.assigned_keycloak_user_id);
+      const currentOwnerId = normalizeText(draft.assigned_keycloak_user_id) || normalizeText(state.booking.assigned_keycloak_user_id);
       const knownOwners = new Map((state.keycloakUsers || []).map((user) => [String(user.id || ""), user]));
       const currentOwner = knownOwners.get(currentOwnerId) || resolveCurrentAuthKeycloakUser(currentOwnerId);
       const currentOwnerName = displayKeycloakUser(currentOwner) || currentOwnerId;
@@ -327,14 +399,12 @@ export function createBookingCoreModule(ctx) {
     if (els.stageSelect) els.stageSelect.disabled = !state.permissions.canChangeStage;
     if (els.noteInput) {
       els.noteInput.disabled = !state.permissions.canEditBooking;
-      els.noteInput.value = state.booking.notes || "";
+      if (document.activeElement !== els.noteInput) {
+        els.noteInput.value = draft.notes || "";
+      }
     }
-    state.originalNote = String(state.booking.notes || "");
-    if (els.noteSaveBtn) {
-      els.noteSaveBtn.style.display = state.permissions.canEditBooking ? "" : "none";
-      updateNoteSaveButtonState();
-    }
-    if (els.invoice_create_btn) els.invoice_create_btn.style.display = state.permissions.canEditBooking ? "" : "none";
+    updateCoreDirtyState();
+    updateNoteSaveButtonState();
     if (els.deleteBtn) {
       els.deleteBtn.style.display = state.permissions.canEditBooking ? "" : "none";
       els.deleteBtn.disabled = !state.permissions.canEditBooking;
@@ -367,7 +437,7 @@ export function createBookingCoreModule(ctx) {
   function handleBookingDetailKeydown(event) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
     if (els.personModal?.hidden === false) return;
-    if (els.travelPlanSegmentLibraryModal?.hidden === false) return;
+    if (els.travelPlanItemLibraryModal?.hidden === false) return;
     if (!els.titleInput?.hidden) return;
     if (event.target === els.titleInput) return;
     event.preventDefault();
@@ -375,12 +445,12 @@ export function createBookingCoreModule(ctx) {
   }
 
   function triggerBookingPhotoPicker() {
-    if (!state.permissions.canEditBooking) return;
+    if (!state.permissions.canEditBooking || blockPersistedAction()) return;
     els.heroPhotoInput?.click();
   }
 
   async function uploadBookingPhoto() {
-    if (!state.permissions.canEditBooking || !state.booking) return;
+    if (!state.permissions.canEditBooking || !state.booking || blockPersistedAction()) return;
     const file = els.heroPhotoInput?.files?.[0] || null;
     if (!file) return;
     const base64 = await fileToBase64(file);
@@ -420,7 +490,7 @@ export function createBookingCoreModule(ctx) {
   }
 
   async function deleteBooking() {
-    if (!state.permissions.canEditBooking || !state.booking?.id) return;
+    if (!state.permissions.canEditBooking || !state.booking?.id || blockPersistedAction()) return;
     const label = normalizeText(getPrimaryContact(state.booking)?.name) || state.booking.id;
     if (!window.confirm(bookingT("booking.delete_confirm", "Delete booking for {name}? This cannot be undone.", { name: label }))) return;
 
@@ -439,133 +509,108 @@ export function createBookingCoreModule(ctx) {
   }
 
   function updateNoteSaveButtonState() {
-    if (!els.noteSaveBtn || !els.noteInput) return;
+    if (!els.noteInput) return false;
+    const draft = ensureCoreDraft();
     const current = normalizeText(els.noteInput.value);
-    const original = normalizeText(state.originalNote);
+    draft.notes = current;
+    const original = normalizeText(state.booking?.notes);
     const isDirty = state.permissions.canEditBooking && current !== original;
-    els.noteSaveBtn.disabled = !isDirty;
     setBookingSectionDirty("note", isDirty);
+    return isDirty;
   }
 
-  async function saveOwner() {
-    if (!state.permissions.canChangeAssignment || !state.booking || !els.ownerSelect) return;
-    const nextAssignedKeycloakUserId = normalizeText(els.ownerSelect.value) || null;
-    const currentAssignedKeycloakUserId = normalizeText(state.booking.assigned_keycloak_user_id) || null;
-    if (nextAssignedKeycloakUserId === currentAssignedKeycloakUserId) return;
+  async function saveCoreEdits() {
+    if (!state.permissions.canEditBooking || !state.booking) return true;
+    updateCoreDirtyState();
+    if (!state.dirty.core) return true;
+    const draft = ensureCoreDraft();
+    let latestBooking = state.booking;
 
-    const request = bookingOwnerRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_core_revision: getBookingRevision("core_revision"),
-        assigned_keycloak_user_id: nextAssignedKeycloakUserId,
-        actor: state.user
-      }
-    });
-    if (!result?.booking) {
-      renderActionControls();
-      return;
+    if (normalizeText(draft.name) !== normalizeText(latestBooking.name)) {
+      const request = bookingNameRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_core_revision: Number(latestBooking.core_revision || 0),
+          name: normalizeText(draft.name) || "",
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+      state.booking = latestBooking;
     }
 
-    applyBookingPayload(result);
+    if (state.permissions.canChangeAssignment && normalizeText(draft.assigned_keycloak_user_id) !== normalizeText(latestBooking.assigned_keycloak_user_id)) {
+      const request = bookingOwnerRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_core_revision: Number(latestBooking.core_revision || 0),
+          assigned_keycloak_user_id: normalizeText(draft.assigned_keycloak_user_id) || null,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+      state.booking = latestBooking;
+    }
+
+    const nextStage = normalizeText(draft.stage).toUpperCase() || ctx.stages?.[0] || "";
+    if (state.permissions.canChangeStage && nextStage && nextStage !== normalizeText(latestBooking.stage).toUpperCase()) {
+      const request = bookingStageRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_core_revision: Number(latestBooking.core_revision || 0),
+          stage: nextStage,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+      state.booking = latestBooking;
+    }
+
+    setBookingSectionDirty("core", false);
+    syncCoreDraftFromBooking({ force: true });
     renderBookingHeader();
     renderBookingData();
     renderActionControls();
     renderPersonsEditor();
+    return true;
   }
 
-  async function saveStage() {
-    if (!state.permissions.canChangeStage || !state.booking || !els.stageSelect) return;
-    const nextStage = normalizeText(els.stageSelect.value).toUpperCase();
-    const currentStage = normalizeText(state.booking.stage).toUpperCase();
-    if (!nextStage || nextStage === currentStage) return;
-
-    const request = bookingStageRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_core_revision: getBookingRevision("core_revision"),
-        stage: nextStage,
-        actor: state.user
-      }
-    });
-    if (!result?.booking) {
-      renderActionControls();
-      return;
-    }
-
-    applyBookingPayload(result);
-    renderBookingHeader();
-    renderBookingData();
-    renderActionControls();
-    renderPersonsEditor();
-  }
-
-  async function saveNote() {
-    if (!state.permissions.canEditBooking || !state.booking || !els.noteInput) return;
-    const nextNote = normalizeText(els.noteInput.value);
-    const currentNote = normalizeText(state.originalNote);
-    if (nextNote === currentNote) {
-      updateNoteSaveButtonState();
-      return;
-    }
-
+  async function saveNoteEdits() {
+    if (!state.permissions.canEditBooking || !state.booking || !els.noteInput) return true;
+    updateNoteSaveButtonState();
+    if (!state.dirty.note) return true;
     const request = bookingNotesRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
     const result = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
         expected_notes_revision: getBookingRevision("notes_revision"),
-        notes: nextNote,
+        notes: normalizeText(ensureCoreDraft().notes) || "",
         actor: state.user
       }
     });
-    if (!result?.booking) {
-      if (els.noteInput) els.noteInput.value = state.originalNote || "";
-      updateNoteSaveButtonState();
-      return;
-    }
-
-    applyBookingPayload(result);
+    if (!result?.booking) return false;
+    state.booking = result.booking;
+    setBookingSectionDirty("note", false);
+    syncCoreDraftFromBooking({ force: true });
     renderBookingHeader();
     renderBookingData();
     renderActionControls();
     renderPersonsEditor();
-  }
-
-  async function saveBookingName(nextNameOverride = null) {
-    if (!state.permissions.canEditBooking || !state.booking) return;
-    const nextName = normalizeText(nextNameOverride ?? els.titleInput?.value) || "";
-    const previousName = normalizeText(state.booking.name) || "";
-    state.booking.name = nextName;
-    renderBookingHeader();
-    const request = bookingNameRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_core_revision: getBookingRevision("core_revision"),
-        name: nextName,
-        actor: state.user
-      }
-    });
-    if (!result?.booking) {
-      state.booking.name = previousName;
-      renderBookingHeader();
-      return;
-    }
-
-    applyBookingPayload(result);
-    renderBookingHeader();
-    renderBookingData();
-    renderActionControls();
-    renderPersonsEditor();
-    stopBookingTitleEdit();
+    return true;
   }
 
   function startBookingTitleEdit() {
     if (!state.permissions.canEditBooking || !els.title || !els.titleInput) return;
+    titleEditStartValue = normalizeText(ensureCoreDraft().name) || normalizeText(state.booking?.name) || "";
     els.title.hidden = true;
     els.titleInput.hidden = false;
-    els.titleInput.value = normalizeText(state.booking?.name) || els.title.textContent || "";
+    els.titleInput.value = titleEditStartValue || els.title.textContent || "";
     window.requestAnimationFrame(() => {
       els.titleInput.focus();
       const length = els.titleInput.value.length;
@@ -583,35 +628,33 @@ export function createBookingCoreModule(ctx) {
     els.titleInput.hidden = true;
   }
 
-  async function commitBookingTitleEdit() {
+  function commitBookingTitleEdit() {
     if (!els.titleInput || els.titleInput.hidden) return;
-    const currentName = normalizeText(state.booking?.name) || "";
-    const nextName = normalizeText(els.titleInput.value) || "";
-    if (nextName === currentName) {
-      stopBookingTitleEdit();
-      return;
-    }
+    ensureCoreDraft().name = normalizeText(els.titleInput.value) || "";
+    updateCoreDirtyState();
     stopBookingTitleEdit();
-    await saveBookingName(nextName);
   }
 
   function handleBookingTitleInputKeydown(event) {
     if (!(event.target instanceof HTMLInputElement)) return;
     if (event.key === "Enter") {
       event.preventDefault();
-      void commitBookingTitleEdit();
+      commitBookingTitleEdit();
       return;
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      event.target.value = normalizeText(state.booking?.name) || "";
+      ensureCoreDraft().name = titleEditStartValue;
+      event.target.value = titleEditStartValue;
+      updateCoreDirtyState();
       stopBookingTitleEdit();
     }
   }
 
-  function applyBookingPayload(payload = {}) {
+  function applyBookingPayload(payload = {}, options = {}) {
     const previousTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
     state.booking = payload.booking || state.booking || null;
+    syncCoreDraftFromBooking({ force: options.forceDraftReset === true });
     const nextTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
     if (normalizeText(state.booking?.image)) {
       state.tour_image = "";
@@ -645,10 +688,10 @@ export function createBookingCoreModule(ctx) {
     handleBookingDetailKeydown,
     triggerBookingPhotoPicker,
     uploadBookingPhoto,
+    updateCoreDirtyState,
     updateNoteSaveButtonState,
-    saveOwner,
-    saveStage,
-    saveNote,
+    saveCoreEdits,
+    saveNoteEdits,
     startBookingTitleEdit,
     commitBookingTitleEdit,
     handleBookingTitleInputKeydown,

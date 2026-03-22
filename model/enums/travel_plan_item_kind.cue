@@ -1,6 +1,6 @@
 package enums
 
-TravelPlanSegmentKindCatalog: [
+TravelPlanItemKindCatalog: [
 	"transport",
 	"accommodation",
 	"activity",
@@ -11,4 +11,4 @@ TravelPlanSegmentKindCatalog: [
 	"other",
 ]
 
-#TravelPlanSegmentKind: or(TravelPlanSegmentKindCatalog)
+#TravelPlanItemKind: or(TravelPlanItemKindCatalog)

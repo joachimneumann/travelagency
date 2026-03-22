@@ -100,13 +100,13 @@ import (
 	search?:      string
 }
 
-#TravelPlanSegmentSearchResult: {
+#TravelPlanItemSearchResult: {
 	source_booking_id:    common.#Identifier
 	source_booking_name?: string
 	source_booking_code?: string
 	day_number?:          >0 & int
-	segment_id:           common.#Identifier
-	segment_kind?:        enums.#TravelPlanSegmentKind
+	item_id:           common.#Identifier
+	item_kind?:        enums.#TravelPlanItemKind
 	title:                string
 	details?:             string
 	location?:            string
@@ -117,8 +117,8 @@ import (
 	updated_at?:          common.#Timestamp
 }
 
-#TravelPlanSegmentSearchResponse: {
-	items: [...#TravelPlanSegmentSearchResult]
+#TravelPlanItemSearchResponse: {
+	items: [...#TravelPlanItemSearchResult]
 	total: >=0 & int
 }
 

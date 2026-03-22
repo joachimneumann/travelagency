@@ -155,7 +155,7 @@ function formatFriendlyDateOnly(dateValue, lang) {
   });
 }
 
-function humanizeTravelPlanSegmentKind(kind, lang) {
+function humanizeTravelPlanItemKind(kind, lang) {
   const normalizedKind = normalizeText(kind).toLowerCase();
   if (!normalizedKind) return "";
   const fallback = normalizedKind
@@ -163,7 +163,7 @@ function humanizeTravelPlanSegmentKind(kind, lang) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-  return pdfT(lang, `offer.segment.${normalizedKind}`, fallback);
+  return pdfT(lang, `offer.item.${normalizedKind}`, fallback);
 }
 
 function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate = "") {
@@ -180,18 +180,18 @@ function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate = "") {
   return raw;
 }
 
-function formatTravelPlanTiming(segment, lang, dayDate = "") {
-  const timingKind = normalizeText(segment?.timing_kind) || "label";
+function formatTravelPlanTiming(item, lang, dayDate = "") {
+  const timingKind = normalizeText(item?.timing_kind) || "label";
   if (timingKind === "point") {
-    return formatTravelPlanDateTime(segment?.time_point, lang, dayDate);
+    return formatTravelPlanDateTime(item?.time_point, lang, dayDate);
   }
   if (timingKind === "range") {
-    const start = formatTravelPlanDateTime(segment?.start_time, lang, dayDate);
-    const end = formatTravelPlanDateTime(segment?.end_time, lang, dayDate);
+    const start = formatTravelPlanDateTime(item?.start_time, lang, dayDate);
+    const end = formatTravelPlanDateTime(item?.end_time, lang, dayDate);
     if (start && end) return `${start} - ${end}`;
     return start || end || "";
   }
-  return normalizeText(segment?.time_label);
+  return normalizeText(item?.time_label);
 }
 
 function peopleTraveling(booking) {
@@ -205,7 +205,7 @@ function categoryLabel(component) {
     .toLowerCase()
     .split("_")
     .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .map((item) => item.charAt(0).toUpperCase() + item.slice(1))
     .join(" ");
 }
 
@@ -541,7 +541,7 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
   const sectionTitle = pdfT(lang, "offer.travel_plan_title", "Travel plan overview");
   const dayBlockWidth = doc.page.width - PAGE_MARGIN * 2;
   const timingColumnWidth = 110;
-  const segmentTextWidth = dayBlockWidth - timingColumnWidth - 34;
+  const itemTextWidth = dayBlockWidth - timingColumnWidth - 34;
 
   let y = startY;
   const redrawSectionHeader = (pdfDoc, nextY) => {
@@ -613,31 +613,31 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
       y = doc.y + 8;
     }
 
-    const segments = safeArray(day?.segments);
-    for (const segment of segments) {
-      const timingText = formatTravelPlanTiming(segment, lang, textOrNull(day?.date));
-      const segmentTitle = textOrNull(segment?.title) || humanizeTravelPlanSegmentKind(segment?.kind, lang) || pdfT(lang, "offer.segment_fallback", "Planned segment");
-      const segmentMetaParts = [];
-      const kindLabel = humanizeTravelPlanSegmentKind(segment?.kind, lang);
-      const location = textOrNull(segment?.location);
-      if (kindLabel) segmentMetaParts.push(kindLabel);
-      if (location) segmentMetaParts.push(location);
-      const segmentMeta = segmentMetaParts.join(" · ");
-      const segmentDetails = textOrNull(segment?.details);
+    const items = safeArray(day?.items);
+    for (const item of items) {
+      const timingText = formatTravelPlanTiming(item, lang, textOrNull(day?.date));
+      const itemTitle = textOrNull(item?.title) || humanizeTravelPlanItemKind(item?.kind, lang) || pdfT(lang, "offer.item_fallback", "Planned item");
+      const itemMetaParts = [];
+      const kindLabel = humanizeTravelPlanItemKind(item?.kind, lang);
+      const location = textOrNull(item?.location);
+      if (kindLabel) itemMetaParts.push(kindLabel);
+      if (location) itemMetaParts.push(location);
+      const itemMeta = itemMetaParts.join(" · ");
+      const itemDetails = textOrNull(item?.details);
 
       doc.font(pdfFontName("bold", fonts)).fontSize(10.5);
-      const segmentTitleHeight = doc.heightOfString(segmentTitle, { width: segmentTextWidth });
+      const itemTitleHeight = doc.heightOfString(itemTitle, { width: itemTextWidth });
       doc.font(pdfFontName("regular", fonts)).fontSize(9.2);
-      const segmentMetaHeight = segmentMeta ? doc.heightOfString(segmentMeta, { width: segmentTextWidth }) : 0;
+      const itemMetaHeight = itemMeta ? doc.heightOfString(itemMeta, { width: itemTextWidth }) : 0;
       doc.font(pdfFontName("regular", fonts)).fontSize(9.8);
-      const segmentDetailsHeight = segmentDetails ? doc.heightOfString(segmentDetails, { width: segmentTextWidth, lineGap: 1 }) : 0;
-      const segmentTimingHeight = timingText
+      const itemDetailsHeight = itemDetails ? doc.heightOfString(itemDetails, { width: itemTextWidth, lineGap: 1 }) : 0;
+      const itemTimingHeight = timingText
         ? doc.heightOfString(timingText, { width: timingColumnWidth - 8 })
         : 0;
-      const segmentContentHeight = segmentTitleHeight
-        + (segmentMeta ? segmentMetaHeight + 3 : 0)
-        + (segmentDetails ? segmentDetailsHeight + 4 : 0);
-      const rowHeight = Math.max(34, Math.max(segmentTimingHeight, segmentContentHeight) + 18);
+      const itemContentHeight = itemTitleHeight
+        + (itemMeta ? itemMetaHeight + 3 : 0)
+        + (itemDetails ? itemDetailsHeight + 4 : 0);
+      const rowHeight = Math.max(34, Math.max(itemTimingHeight, itemContentHeight) + 18);
 
       y = ensureSpace(doc, y, rowHeight + 8, redrawSectionHeader);
       doc
@@ -662,29 +662,29 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
         .font(pdfFontName("bold", fonts))
         .fontSize(10.5)
         .fillColor(PDF_COLORS.textStrong)
-        .text(segmentTitle, textX, textY, {
-          width: segmentTextWidth
+        .text(itemTitle, textX, textY, {
+          width: itemTextWidth
         });
       textY = doc.y;
 
-      if (segmentMeta) {
+      if (itemMeta) {
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(9.2)
           .fillColor(PDF_COLORS.textMuted)
-          .text(segmentMeta, textX, textY + 2, {
-            width: segmentTextWidth
+          .text(itemMeta, textX, textY + 2, {
+            width: itemTextWidth
           });
         textY = doc.y;
       }
 
-      if (segmentDetails) {
+      if (itemDetails) {
         doc
           .font(pdfFontName("regular", fonts))
           .fontSize(9.8)
           .fillColor(PDF_COLORS.textMutedStrong)
-          .text(segmentDetails, textX, textY + 3, {
-            width: segmentTextWidth,
+          .text(itemDetails, textX, textY + 3, {
+            width: itemTextWidth,
             lineGap: 1
           });
       }

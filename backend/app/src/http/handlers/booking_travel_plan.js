@@ -71,8 +71,8 @@ export function createBookingTravelPlanHandlers(deps) {
       ...nextNormalized,
       days: (Array.isArray(nextNormalized?.days) ? nextNormalized.days : []).map((day) => {
         const existingDay = existingDaysById.get(day.id);
-        const existingSegmentsById = new Map(
-          (Array.isArray(existingDay?.segments) ? existingDay.segments : []).map((segment) => [segment.id, segment])
+        const existingItemsById = new Map(
+          (Array.isArray(existingDay?.items) ? existingDay.items : []).map((item) => [item.id, item])
         );
             const nextTitleField = mergeEditableLocalizedTextField(
               existingDay?.title_i18n ?? existingDay?.title,
@@ -104,49 +104,49 @@ export function createBookingTravelPlanHandlers(deps) {
           overnight_location_i18n: nextOvernightField.map,
           notes: nextNotesField.text || null,
           notes_i18n: nextNotesField.map,
-          segments: (Array.isArray(day?.segments) ? day.segments : []).map((segment) => {
-            const existingSegment = existingSegmentsById.get(segment.id);
+          items: (Array.isArray(day?.items) ? day.items : []).map((item) => {
+            const existingItem = existingItemsById.get(item.id);
             const timeLabelField = mergeEditableLocalizedTextField(
-              existingSegment?.time_label_i18n ?? existingSegment?.time_label,
-              segment.time_label,
-              segment.time_label_i18n,
+              existingItem?.time_label_i18n ?? existingItem?.time_label,
+              item.time_label,
+              item.time_label_i18n,
               normalizedLang,
               { pruneExtraTranslationsOnEnglishChange: true }
             );
-            const titleSegmentField = mergeEditableLocalizedTextField(
-              existingSegment?.title_i18n ?? existingSegment?.title,
-              segment.title,
-              segment.title_i18n,
+            const titleItemField = mergeEditableLocalizedTextField(
+              existingItem?.title_i18n ?? existingItem?.title,
+              item.title,
+              item.title_i18n,
               normalizedLang,
               { pruneExtraTranslationsOnEnglishChange: true }
             );
             const detailsField = mergeEditableLocalizedTextField(
-              existingSegment?.details_i18n ?? existingSegment?.details,
-              segment.details,
-              segment.details_i18n,
+              existingItem?.details_i18n ?? existingItem?.details,
+              item.details,
+              item.details_i18n,
               normalizedLang,
               { pruneExtraTranslationsOnEnglishChange: true }
             );
             const locationField = mergeEditableLocalizedTextField(
-              existingSegment?.location_i18n ?? existingSegment?.location,
-              segment.location,
-              segment.location_i18n,
+              existingItem?.location_i18n ?? existingItem?.location,
+              item.location,
+              item.location_i18n,
               normalizedLang,
               { pruneExtraTranslationsOnEnglishChange: true }
             );
             const financialNoteField = mergeLocalizedTextField(
-              existingSegment?.financial_note_i18n ?? existingSegment?.financial_note,
-              segment.financial_note,
+              existingItem?.financial_note_i18n ?? existingItem?.financial_note,
+              item.financial_note,
               normalizedLang,
               { fallbackLang: normalizedLang }
             );
 
             return {
-              ...segment,
-              time_label: segment.timing_kind === "label" ? (timeLabelField.text || null) : null,
+              ...item,
+              time_label: item.timing_kind === "label" ? (timeLabelField.text || null) : null,
               time_label_i18n: timeLabelField.map,
-              title: titleSegmentField.text,
-              title_i18n: titleSegmentField.map,
+              title: titleItemField.text,
+              title_i18n: titleItemField.map,
               details: detailsField.text || null,
               details_i18n: detailsField.map,
               location: locationField.text || null,
@@ -175,7 +175,7 @@ export function createBookingTravelPlanHandlers(deps) {
     }
     sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
-  const { handleSearchTravelPlanSegments, handleImportTravelPlanSegment } = createBookingTravelPlanImportHandlers({
+  const { handleSearchTravelPlanItems, handleImportTravelPlanItem } = createBookingTravelPlanImportHandlers({
     readBodyJson,
     sendJson,
     readStore,
@@ -197,9 +197,9 @@ export function createBookingTravelPlanHandlers(deps) {
   });
 
   const {
-    handleUploadTravelPlanSegmentImage,
-    handleDeleteTravelPlanSegmentImage,
-    handleReorderTravelPlanSegmentImages
+    handleUploadTravelPlanItemImage,
+    handleDeleteTravelPlanItemImage,
+    handleReorderTravelPlanItemImages
   } = createBookingTravelPlanImageHandlers({
     readBodyJson,
     sendJson,
@@ -343,11 +343,11 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   return {
-    handleSearchTravelPlanSegments,
-    handleImportTravelPlanSegment,
-    handleUploadTravelPlanSegmentImage,
-    handleDeleteTravelPlanSegmentImage,
-    handleReorderTravelPlanSegmentImages,
+    handleSearchTravelPlanItems,
+    handleImportTravelPlanItem,
+    handleUploadTravelPlanItemImage,
+    handleDeleteTravelPlanItemImage,
+    handleReorderTravelPlanItemImages,
     handlePatchBookingTravelPlan,
     handleTranslateBookingTravelPlanFromEnglish
   };

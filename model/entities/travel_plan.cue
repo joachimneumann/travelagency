@@ -5,19 +5,19 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#BookingTravelPlanSegmentImageSourceAttribution: {
+#BookingTravelPlanItemImageSourceAttribution: {
 	source_name?:  string
 	source_url?:   common.#Url | string
 	photographer?: string
 	license?:      string
 }
 
-#BookingTravelPlanSegmentImageFocalPoint: {
+#BookingTravelPlanItemImageFocalPoint: {
 	x: >=0 & <=1 & number
 	y: >=0 & <=1 & number
 }
 
-#BookingTravelPlanSegmentImage: {
+#BookingTravelPlanItemImage: {
 	id:                   common.#Identifier
 	storage_path:         string & !=""
 	caption?:             string
@@ -27,26 +27,26 @@ import (
 	is_customer_visible?: bool
 	width_px?:            >0 & int
 	height_px?:           >0 & int
-	source_attribution?:  #BookingTravelPlanSegmentImageSourceAttribution
-	focal_point?:         #BookingTravelPlanSegmentImageFocalPoint
+	source_attribution?:  #BookingTravelPlanItemImageSourceAttribution
+	focal_point?:         #BookingTravelPlanItemImageFocalPoint
 	created_at?:          common.#Timestamp
 }
 
-#BookingTravelPlanSegmentCopiedFrom: {
-	source_type:             "booking_segment"
+#BookingTravelPlanItemCopiedFrom: {
+	source_type:             "booking_travel_plan_item"
 	source_booking_id:       common.#Identifier
 	source_day_id?:          common.#Identifier
-	source_segment_id:       common.#Identifier
+	source_item_id:       common.#Identifier
 	copied_at:               common.#Timestamp
 	copied_by_atp_staff_id?: common.#Identifier
 }
 
-#BookingTravelPlanSegment: {
+#BookingTravelPlanItem: {
 	id:                        common.#Identifier
 	timing_kind:               *"label" | enums.#TravelPlanTimingKind
 	time_label?:               string
 	time_point?:               string
-	kind:                      enums.#TravelPlanSegmentKind
+	kind:                      enums.#TravelPlanItemKind
 	title:                     string
 	details?:                  string
 	location?:                 string
@@ -55,13 +55,13 @@ import (
 	end_time?:                 string
 	financial_coverage_status: *"not_covered" | enums.#TravelPlanFinancialCoverageStatus
 	financial_note?:           string
-	images?: [...#BookingTravelPlanSegmentImage]
-	copied_from?: #BookingTravelPlanSegmentCopiedFrom
+	images?: [...#BookingTravelPlanItemImage]
+	copied_from?: #BookingTravelPlanItemCopiedFrom
 }
 
 #BookingTravelPlanOfferComponentLink: {
 	id:                     common.#Identifier
-	travel_plan_segment_id: common.#Identifier
+	travel_plan_item_id: common.#Identifier
 	offer_component_id:     common.#Identifier
 	coverage_type:          *"full" | enums.#TravelPlanOfferCoverageType
 }
@@ -72,7 +72,7 @@ import (
 	date?:               common.#DateOnly
 	title:               string
 	overnight_location?: string
-	segments?: [...#BookingTravelPlanSegment]
+	items?: [...#BookingTravelPlanItem]
 	notes?: string
 }
 

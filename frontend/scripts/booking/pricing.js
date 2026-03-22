@@ -321,8 +321,6 @@ export function createBookingPricingModule(ctx) {
       els.pricing_agreed_net_input.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
       els.pricing_agreed_net_input.disabled = !state.permissions.canEditBooking;
     }
-    if (els.pricing_save_btn) els.pricing_save_btn.style.display = state.permissions.canEditBooking ? "" : "none";
-
     renderPricingSummaryTable(pricing);
     renderPricingAdjustmentsTable();
     renderPricingPaymentsTable();

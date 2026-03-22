@@ -126,21 +126,21 @@ import (
 	actor?:                         string
 }
 
-#TravelPlanSegmentSearchRequest: {
+#TravelPlanItemSearchRequest: {
 	q?:            string
 	destination?:  string
 	country?:      enums.#CountryCode
 	style?:        string
-	segment_kind?: enums.#TravelPlanSegmentKind
+	item_kind?: enums.#TravelPlanItemKind
 	limit?:        >=0 & int
 	offset?:       >=0 & int
 }
 
-#TravelPlanSegmentImportRequest: {
+#TravelPlanItemImportRequest: {
 	expected_travel_plan_revision?:       >=0 & int
 	source_booking_id:                    common.#Identifier
-	source_segment_id:                    common.#Identifier
-	insert_after_segment_id?:             common.#Identifier
+	source_item_id:                    common.#Identifier
+	insert_after_item_id?:             common.#Identifier
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -149,17 +149,17 @@ import (
 	actor?:                               string
 }
 
-#TravelPlanSegmentImageUploadRequest: #EvidenceUpload & {
+#TravelPlanItemImageUploadRequest: #EvidenceUpload & {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string
 }
 
-#TravelPlanSegmentImageDeleteRequest: {
+#TravelPlanItemImageDeleteRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string
 }
 
-#TravelPlanSegmentImageReorderRequest: {
+#TravelPlanItemImageReorderRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	image_ids: [...common.#Identifier]
 	actor?: string

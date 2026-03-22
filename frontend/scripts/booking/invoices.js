@@ -238,8 +238,7 @@ export function createBookingInvoicesModule(ctx) {
       els.invoice_due_date_input,
       els.invoice_due_month_btn,
       els.invoice_due_amount_input,
-      els.invoice_vat_input,
-      els.invoice_create_btn
+      els.invoice_vat_input
     ].forEach((el) => {
       if (el) el.disabled = disabled;
     });
@@ -263,7 +262,7 @@ export function createBookingInvoicesModule(ctx) {
         <td><a class="btn btn-ghost" href="${escapeHtml(pdfHref)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.pdf", "PDF"))}</a></td>
         <td>${escapeHtml(invoice.invoice_number || shortId(invoice.id))}</td>
         <td>${escapeHtml(String(invoice.version || 1))}</td>
-        <td><input type="checkbox" data-invoice-sent="${escapeHtml(invoice.id)}" ${checked} ${disabled} /></td>
+        <td><input type="checkbox" data-invoice-sent="${escapeHtml(invoice.id)}" data-requires-clean-state ${checked} ${disabled} /></td>
         <td>${escapeHtml(formatMoneyDisplay(invoice.total_amount_cents || 0, invoice.currency || "USD"))}</td>
         <td>${escapeHtml(formatDateTime(invoice.updated_at))}</td>
         <td><button type="button" class="btn btn-ghost" data-select-invoice="${escapeHtml(invoice.id)}">${escapeHtml(bookingT("common.load_data", "Load data"))}</button></td>
@@ -324,6 +323,10 @@ export function createBookingInvoicesModule(ctx) {
 
   function onInvoiceSelectChange() {
     const id = String(els.invoice_select?.value || "");
+    if (state.dirty.invoice && id !== state.selectedInvoiceId && !window.confirm(bookingT("booking.invoice_discard_confirm", "Discard the current invoice edits?"))) {
+      if (els.invoice_select) els.invoice_select.value = state.selectedInvoiceId || "";
+      return;
+    }
     state.selectedInvoiceId = id;
     if (!id) {
       resetInvoiceForm();

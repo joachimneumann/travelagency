@@ -128,23 +128,23 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
       })
     ].filter(Boolean);
 
-    const segments = Array.isArray(day?.segments) ? day.segments : [];
-    const segmentDescriptors = segments.flatMap((segment, segmentIndex) => {
-      const segmentId = normalizeText(segment?.id) || `segment_${dayIndex + 1}_${segmentIndex + 1}`;
+    const items = Array.isArray(day?.items) ? day.items : [];
+    const itemDescriptors = items.flatMap((item, itemIndex) => {
+      const itemId = normalizeText(item?.id) || `item_${dayIndex + 1}_${itemIndex + 1}`;
       return [
         createFieldDescriptor({
-          key: `travel_plan.${dayId}.${segmentId}.time_label`,
-          holder: segment,
+          key: `travel_plan.${dayId}.${itemId}.time_label`,
+          holder: item,
           mapField: "time_label_i18n",
           plainField: "time_label",
           sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
           targetLang: normalizedTargetLang,
           emptyValue: null,
-          enabled: String(segment?.timing_kind || "label") === "label"
+          enabled: String(item?.timing_kind || "label") === "label"
         }),
         createFieldDescriptor({
-          key: `travel_plan.${dayId}.${segmentId}.title`,
-          holder: segment,
+          key: `travel_plan.${dayId}.${itemId}.title`,
+          holder: item,
           mapField: "title_i18n",
           plainField: "title",
           sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
@@ -152,8 +152,8 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
           emptyValue: ""
         }),
         createFieldDescriptor({
-          key: `travel_plan.${dayId}.${segmentId}.details`,
-          holder: segment,
+          key: `travel_plan.${dayId}.${itemId}.details`,
+          holder: item,
           mapField: "details_i18n",
           plainField: "details",
           sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
@@ -161,8 +161,8 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
           emptyValue: null
         }),
         createFieldDescriptor({
-          key: `travel_plan.${dayId}.${segmentId}.location`,
-          holder: segment,
+          key: `travel_plan.${dayId}.${itemId}.location`,
+          holder: item,
           mapField: "location_i18n",
           plainField: "location",
           sourceLang: DEFAULT_BOOKING_CONTENT_LANG,
@@ -172,7 +172,7 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
       ].filter(Boolean);
     });
 
-    return [...dayDescriptors, ...segmentDescriptors];
+    return [...dayDescriptors, ...itemDescriptors];
   });
 }
 

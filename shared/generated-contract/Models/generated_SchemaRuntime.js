@@ -3368,7 +3368,7 @@
 },
   FIELD_63: {
   "kind": "transport",
-  "typeName": "TravelPlanSegmentSearchResult",
+  "typeName": "TravelPlanItemSearchResult",
   "isArray": true
 },
   FIELD_64: {
@@ -3570,7 +3570,7 @@
 },
   FIELD_90: {
   "kind": "enum",
-  "typeName": "TravelPlanSegmentKind",
+  "typeName": "TravelPlanItemKind",
   "isArray": false,
   "enumValues": [
     "transport",
@@ -3688,7 +3688,7 @@
 },
   FIELD_101: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanSegment",
+  "typeName": "BookingTravelPlanItem",
   "isArray": true
 },
   FIELD_102: {
@@ -3843,22 +3843,22 @@
 },
   FIELD_110: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanSegmentImage",
+  "typeName": "BookingTravelPlanItemImage",
   "isArray": true
 },
   FIELD_111: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanSegmentCopiedFrom",
+  "typeName": "BookingTravelPlanItemCopiedFrom",
   "isArray": false
 },
   FIELD_112: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanSegmentImageSourceAttribution",
+  "typeName": "BookingTravelPlanItemImageSourceAttribution",
   "isArray": false
 },
   FIELD_113: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanSegmentImageFocalPoint",
+  "typeName": "BookingTravelPlanItemImageFocalPoint",
   "isArray": false
 }
     });

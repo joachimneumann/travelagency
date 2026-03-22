@@ -1,23 +1,23 @@
-import { validateTravelPlanSegmentImportRequest } from "../../../Generated/API/generated_APIModels.js";
+import { validateTravelPlanItemImportRequest } from "../../../Generated/API/generated_APIModels.js";
 import {
   cloneTravelPlanLocalizedMap,
   parseTravelPlanQueryInt
 } from "./booking_travel_plan_shared.js";
 
-function copySegmentForImport(sourceSegment, options = {}) {
+function copyItemForImport(sourceItem, options = {}) {
   const includeTranslations = options.includeTranslations !== false;
   const includeNotes = options.includeNotes !== false;
   const includeImages = options.includeImages !== false;
   const includeCustomerVisibleImagesOnly = options.includeCustomerVisibleImagesOnly === true;
   const importedAt = options.normalizeText(options.importedAt) || options.nowIso();
 
-  const sourceImages = Array.isArray(sourceSegment?.images) ? sourceSegment.images : [];
+  const sourceImages = Array.isArray(sourceItem?.images) ? sourceItem.images : [];
   const importedImages = includeImages
     ? sourceImages
       .filter((image) => !includeCustomerVisibleImagesOnly || image?.is_customer_visible !== false)
       .map((image, index) => ({
         ...image,
-        id: `travel_plan_segment_image_${options.randomUUID()}`,
+        id: `travel_plan_item_image_${options.randomUUID()}`,
         sort_order: index,
         is_primary: index === 0,
         created_at: importedAt
@@ -25,49 +25,49 @@ function copySegmentForImport(sourceSegment, options = {}) {
     : [];
 
   return {
-    id: `travel_plan_segment_${options.randomUUID()}`,
-    timing_kind: sourceSegment?.timing_kind || "label",
-    time_label: options.normalizeText(sourceSegment?.time_label),
-    time_label_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceSegment?.time_label_i18n) : undefined,
-    time_point: options.normalizeText(sourceSegment?.time_point),
-    kind: options.normalizeText(sourceSegment?.kind) || "other",
-    title: options.normalizeText(sourceSegment?.title),
-    title_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceSegment?.title_i18n) : undefined,
-    details: options.normalizeText(sourceSegment?.details),
-    details_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceSegment?.details_i18n) : undefined,
-    location: options.normalizeText(sourceSegment?.location),
-    location_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceSegment?.location_i18n) : undefined,
-    supplier_id: options.normalizeText(sourceSegment?.supplier_id),
-    start_time: options.normalizeText(sourceSegment?.start_time),
-    end_time: options.normalizeText(sourceSegment?.end_time),
-    financial_coverage_status: options.normalizeText(sourceSegment?.financial_coverage_status) || "not_covered",
-    financial_note: includeNotes ? options.normalizeText(sourceSegment?.financial_note) : null,
-    financial_note_i18n: includeNotes && includeTranslations ? cloneTravelPlanLocalizedMap(sourceSegment?.financial_note_i18n) : undefined,
+    id: `travel_plan_item_${options.randomUUID()}`,
+    timing_kind: sourceItem?.timing_kind || "label",
+    time_label: options.normalizeText(sourceItem?.time_label),
+    time_label_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.time_label_i18n) : undefined,
+    time_point: options.normalizeText(sourceItem?.time_point),
+    kind: options.normalizeText(sourceItem?.kind) || "other",
+    title: options.normalizeText(sourceItem?.title),
+    title_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.title_i18n) : undefined,
+    details: options.normalizeText(sourceItem?.details),
+    details_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.details_i18n) : undefined,
+    location: options.normalizeText(sourceItem?.location),
+    location_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.location_i18n) : undefined,
+    supplier_id: options.normalizeText(sourceItem?.supplier_id),
+    start_time: options.normalizeText(sourceItem?.start_time),
+    end_time: options.normalizeText(sourceItem?.end_time),
+    financial_coverage_status: options.normalizeText(sourceItem?.financial_coverage_status) || "not_covered",
+    financial_note: includeNotes ? options.normalizeText(sourceItem?.financial_note) : null,
+    financial_note_i18n: includeNotes && includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.financial_note_i18n) : undefined,
     images: importedImages,
     copied_from: {
-      source_type: "booking_segment",
+      source_type: "booking_travel_plan_item",
       source_booking_id: options.normalizeText(options.sourceBookingId),
       source_day_id: options.normalizeText(options.sourceDayId),
-      source_segment_id: options.normalizeText(sourceSegment?.id),
+      source_item_id: options.normalizeText(sourceItem?.id),
       copied_at: importedAt,
       copied_by_atp_staff_id: options.normalizeText(options.copiedByAtpStaffId)
     }
   };
 }
 
-function buildSearchResult({ booking, day, segment, supplierName = "", normalizeText }) {
-  const images = Array.isArray(segment?.images) ? segment.images : [];
+function buildSearchResult({ booking, day, item, supplierName = "", normalizeText }) {
+  const images = Array.isArray(item?.images) ? item.images : [];
   const primaryImage = images.find((image) => image?.is_primary) || images.find((image) => image?.is_customer_visible !== false) || images[0] || null;
   return {
     source_booking_id: booking.id,
     source_booking_name: normalizeText(booking.name),
     source_booking_code: booking.id,
     day_number: day?.day_number || null,
-    segment_id: segment.id,
-    segment_kind: normalizeText(segment.kind) || null,
-    title: normalizeText(segment.title),
-    details: normalizeText(segment.details),
-    location: normalizeText(segment.location),
+    item_id: item.id,
+    item_kind: normalizeText(item.kind) || null,
+    title: normalizeText(item.title),
+    details: normalizeText(item.details),
+    location: normalizeText(item.location),
     overnight_location: normalizeText(day?.overnight_location),
     thumbnail_url: normalizeText(primaryImage?.storage_path),
     image_count: images.length,
@@ -98,7 +98,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     randomUUID
   } = deps;
 
-  async function handleSearchTravelPlanSegments(req, res) {
+  async function handleSearchTravelPlanItems(req, res) {
     const principal = getPrincipal(req);
     const store = await readStore();
     const requestUrl = new URL(req.url, "http://localhost");
@@ -106,7 +106,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const destination = normalizeText(requestUrl.searchParams.get("destination")).toLowerCase();
     const country = normalizeText(requestUrl.searchParams.get("country")).toUpperCase();
     const style = normalizeText(requestUrl.searchParams.get("style")).toLowerCase();
-    const segmentKind = normalizeText(requestUrl.searchParams.get("segment_kind")).toLowerCase();
+    const itemKind = normalizeText(requestUrl.searchParams.get("item_kind")).toLowerCase();
     const limit = parseTravelPlanQueryInt(requestUrl.searchParams.get("limit"), 20, { min: 1, max: 50 });
     const offset = parseTravelPlanQueryInt(requestUrl.searchParams.get("offset"), 0, { min: 0, max: 5000 });
     const contentLang = requestContentLang(req);
@@ -142,22 +142,22 @@ export function createBookingTravelPlanImportHandlers(deps) {
       });
 
       for (const day of Array.isArray(normalizedTravelPlan?.days) ? normalizedTravelPlan.days : []) {
-        for (const segment of Array.isArray(day?.segments) ? day.segments : []) {
-          if (segmentKind && normalizeText(segment?.kind).toLowerCase() !== segmentKind) continue;
+        for (const item of Array.isArray(day?.items) ? day.items : []) {
+          if (itemKind && normalizeText(item?.kind).toLowerCase() !== itemKind) continue;
           const haystack = [
             booking.name,
             day?.title,
             day?.overnight_location,
-            segment?.title,
-            segment?.details,
-            segment?.location
+            item?.title,
+            item?.details,
+            item?.location
           ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean).join(" ");
           if (query && !haystack.includes(query)) continue;
           items.push(buildSearchResult({
             booking,
             day,
-            segment,
-            supplierName: supplierById.get(normalizeText(segment?.supplier_id)) || "",
+            item,
+            supplierName: supplierById.get(normalizeText(item?.supplier_id)) || "",
             normalizeText
           }));
         }
@@ -171,11 +171,11 @@ export function createBookingTravelPlanImportHandlers(deps) {
     });
   }
 
-  async function handleImportTravelPlanSegment(req, res, [bookingId, dayId]) {
+  async function handleImportTravelPlanItem(req, res, [bookingId, dayId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanSegmentImportRequest(payload);
+      validateTravelPlanItemImportRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -195,7 +195,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, targetBooking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const sourceBookingId = normalizeText(payload.source_booking_id);
-    const sourceSegmentId = normalizeText(payload.source_segment_id);
+    const sourceItemId = normalizeText(payload.source_item_id);
     const sourceBooking = store.bookings.find((item) => item.id === sourceBookingId);
     if (!sourceBooking || !canAccessBooking(principal, sourceBooking)) {
       sendJson(res, 404, { error: "Source booking not found" });
@@ -215,10 +215,10 @@ export function createBookingTravelPlanImportHandlers(deps) {
     });
 
     const sourceDays = Array.isArray(sourceTravelPlan?.days) ? sourceTravelPlan.days : [];
-    const sourceDay = sourceDays.find((day) => Array.isArray(day?.segments) && day.segments.some((segment) => segment.id === sourceSegmentId));
-    const sourceSegment = (Array.isArray(sourceDay?.segments) ? sourceDay.segments : []).find((segment) => segment.id === sourceSegmentId);
-    if (!sourceDay || !sourceSegment) {
-      sendJson(res, 404, { error: "Source segment not found" });
+    const sourceDay = sourceDays.find((day) => Array.isArray(day?.items) && day.items.some((item) => item.id === sourceItemId));
+    const sourceItem = (Array.isArray(sourceDay?.items) ? sourceDay.items : []).find((item) => item.id === sourceItemId);
+    if (!sourceDay || !sourceItem) {
+      sendJson(res, 404, { error: "Source item not found" });
       return;
     }
 
@@ -229,7 +229,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
       return;
     }
 
-    const importedSegment = copySegmentForImport(sourceSegment, {
+    const importedItem = copyItemForImport(sourceItem, {
       includeTranslations: payload.include_translations !== false,
       includeNotes: payload.include_notes !== false,
       includeImages: payload.include_images !== false,
@@ -244,21 +244,21 @@ export function createBookingTravelPlanImportHandlers(deps) {
     });
 
     const targetDay = targetDays[targetDayIndex];
-    const targetSegments = Array.isArray(targetDay?.segments) ? [...targetDay.segments] : [];
-    const insertAfterSegmentId = normalizeText(payload.insert_after_segment_id);
-    if (insertAfterSegmentId) {
-      const insertAfterIndex = targetSegments.findIndex((segment) => segment.id === insertAfterSegmentId);
+    const targetItems = Array.isArray(targetDay?.items) ? [...targetDay.items] : [];
+    const insertAfterItemId = normalizeText(payload.insert_after_item_id);
+    if (insertAfterItemId) {
+      const insertAfterIndex = targetItems.findIndex((item) => item.id === insertAfterItemId);
       if (insertAfterIndex < 0) {
-        sendJson(res, 422, { error: `Target segment ${insertAfterSegmentId} was not found in the target day.` });
+        sendJson(res, 422, { error: `Target item ${insertAfterItemId} was not found in the target day.` });
         return;
       }
-      targetSegments.splice(insertAfterIndex + 1, 0, importedSegment);
+      targetItems.splice(insertAfterIndex + 1, 0, importedItem);
     } else {
-      targetSegments.push(importedSegment);
+      targetItems.push(importedItem);
     }
 
     const sourceLinks = (Array.isArray(sourceTravelPlan?.offer_component_links) ? sourceTravelPlan.offer_component_links : [])
-      .filter((link) => link.travel_plan_segment_id === sourceSegmentId);
+      .filter((link) => link.travel_plan_item_id === sourceItemId);
     const targetOfferComponentIds = new Set(
       (Array.isArray(targetBooking?.offer?.components) ? targetBooking.offer.components : [])
         .map((component) => normalizeText(component?.id))
@@ -269,7 +269,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         .filter((link) => targetOfferComponentIds.has(normalizeText(link.offer_component_id)))
         .map((link) => ({
           id: `travel_plan_offer_link_${randomUUID()}`,
-          travel_plan_segment_id: importedSegment.id,
+          travel_plan_item_id: importedItem.id,
           offer_component_id: normalizeText(link.offer_component_id),
           coverage_type: normalizeText(link.coverage_type) || "full"
         }))
@@ -281,7 +281,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         index === targetDayIndex
           ? {
             ...day,
-            segments: targetSegments
+            items: targetItems
           }
           : day
       )),
@@ -311,14 +311,14 @@ export function createBookingTravelPlanImportHandlers(deps) {
       targetBooking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      `Travel plan segment imported from booking ${sourceBookingId}`
+      `Travel plan item imported from booking ${sourceBookingId}`
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(targetBooking, req));
   }
 
   return {
-    handleSearchTravelPlanSegments,
-    handleImportTravelPlanSegment
+    handleSearchTravelPlanItems,
+    handleImportTravelPlanItem
   };
 }

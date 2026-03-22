@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-21T09:17:21Z
+# 2026-03-22T06:22:11Z
 
 ---
 openapi: 3.1.0
@@ -410,7 +410,7 @@ components:
         label: point
       - value: range
         label: range
-    TravelPlanSegmentKind:
+    TravelPlanItemKind:
       type: string
       enum:
       - transport
@@ -3998,7 +3998,7 @@ components:
         notes:
           type: string
           nullable: true
-    BookingTravelPlanSegmentImageSourceAttribution:
+    BookingTravelPlanItemImageSourceAttribution:
       type: object
       required: []
       properties:
@@ -4014,7 +4014,7 @@ components:
         license:
           type: string
           nullable: true
-    BookingTravelPlanSegmentImageFocalPoint:
+    BookingTravelPlanItemImageFocalPoint:
       type: object
       required:
       - x
@@ -4024,7 +4024,7 @@ components:
           type: number
         y:
           type: number
-    BookingTravelPlanSegmentImage:
+    BookingTravelPlanItemImage:
       type: object
       required:
       - id
@@ -4056,21 +4056,21 @@ components:
           type: integer
           nullable: true
         source_attribution:
-          "$ref": "#/components/schemas/BookingTravelPlanSegmentImageSourceAttribution"
+          "$ref": "#/components/schemas/BookingTravelPlanItemImageSourceAttribution"
           nullable: true
         focal_point:
-          "$ref": "#/components/schemas/BookingTravelPlanSegmentImageFocalPoint"
+          "$ref": "#/components/schemas/BookingTravelPlanItemImageFocalPoint"
           nullable: true
         created_at:
           type: string
           format: date-time
           nullable: true
-    BookingTravelPlanSegmentCopiedFrom:
+    BookingTravelPlanItemCopiedFrom:
       type: object
       required:
       - source_type
       - source_booking_id
-      - source_segment_id
+      - source_item_id
       - copied_at
       properties:
         source_type:
@@ -4080,7 +4080,7 @@ components:
         source_day_id:
           type: string
           nullable: true
-        source_segment_id:
+        source_item_id:
           type: string
         copied_at:
           type: string
@@ -4088,7 +4088,7 @@ components:
         copied_by_atp_staff_id:
           type: string
           nullable: true
-    BookingTravelPlanSegment:
+    BookingTravelPlanItem:
       type: object
       required:
       - id
@@ -4108,7 +4108,7 @@ components:
           type: string
           nullable: true
         kind:
-          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+          "$ref": "#/components/schemas/TravelPlanItemKind"
         title:
           type: string
         details:
@@ -4134,21 +4134,21 @@ components:
         images:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingTravelPlanSegmentImage"
+            "$ref": "#/components/schemas/BookingTravelPlanItemImage"
         copied_from:
-          "$ref": "#/components/schemas/BookingTravelPlanSegmentCopiedFrom"
+          "$ref": "#/components/schemas/BookingTravelPlanItemCopiedFrom"
           nullable: true
     BookingTravelPlanOfferComponentLink:
       type: object
       required:
       - id
-      - travel_plan_segment_id
+      - travel_plan_item_id
       - offer_component_id
       - coverage_type
       properties:
         id:
           type: string
-        travel_plan_segment_id:
+        travel_plan_item_id:
           type: string
         offer_component_id:
           type: string
@@ -4174,10 +4174,10 @@ components:
         overnight_location:
           type: string
           nullable: true
-        segments:
+        items:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingTravelPlanSegment"
+            "$ref": "#/components/schemas/BookingTravelPlanItem"
         notes:
           type: string
           nullable: true
@@ -5448,11 +5448,11 @@ components:
         search:
           type: string
           nullable: true
-    TravelPlanSegmentSearchResult:
+    TravelPlanItemSearchResult:
       type: object
       required:
       - source_booking_id
-      - segment_id
+      - item_id
       - title
       properties:
         source_booking_id:
@@ -5466,10 +5466,10 @@ components:
         day_number:
           type: integer
           nullable: true
-        segment_id:
+        item_id:
           type: string
-        segment_kind:
-          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+        item_kind:
+          "$ref": "#/components/schemas/TravelPlanItemKind"
           nullable: true
         title:
           type: string
@@ -5495,7 +5495,7 @@ components:
           type: string
           format: date-time
           nullable: true
-    TravelPlanSegmentSearchResponse:
+    TravelPlanItemSearchResponse:
       type: object
       required:
       - total
@@ -5503,7 +5503,7 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/TravelPlanSegmentSearchResult"
+            "$ref": "#/components/schemas/TravelPlanItemSearchResult"
         total:
           type: integer
     TourList:
@@ -6327,7 +6327,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanSegmentSearchRequest:
+    TravelPlanItemSearchRequest:
       type: object
       required: []
       properties:
@@ -6343,8 +6343,8 @@ components:
         style:
           type: string
           nullable: true
-        segment_kind:
-          "$ref": "#/components/schemas/TravelPlanSegmentKind"
+        item_kind:
+          "$ref": "#/components/schemas/TravelPlanItemKind"
           nullable: true
         limit:
           type: integer
@@ -6352,11 +6352,11 @@ components:
         offset:
           type: integer
           nullable: true
-    TravelPlanSegmentImportRequest:
+    TravelPlanItemImportRequest:
       type: object
       required:
       - source_booking_id
-      - source_segment_id
+      - source_item_id
       - include_images
       - include_customer_visible_images_only
       - include_notes
@@ -6368,9 +6368,9 @@ components:
           nullable: true
         source_booking_id:
           type: string
-        source_segment_id:
+        source_item_id:
           type: string
-        insert_after_segment_id:
+        insert_after_item_id:
           type: string
           nullable: true
         include_images:
@@ -6386,7 +6386,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanSegmentImageUploadRequest:
+    TravelPlanItemImageUploadRequest:
       type: object
       required:
       - filename
@@ -6405,7 +6405,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanSegmentImageDeleteRequest:
+    TravelPlanItemImageDeleteRequest:
       type: object
       required: []
       properties:
@@ -6415,7 +6415,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanSegmentImageReorderRequest:
+    TravelPlanItemImageReorderRequest:
       type: object
       required: []
       properties:
@@ -7554,10 +7554,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/travel-plan-segments/search":
+  "/api/v1/travel-plan-items/search":
     get:
-      operationId: travel_plan_segment_search
-      summary: Travel Plan Segment Search
+      operationId: travel_plan_item_search
+      summary: Travel Plan Item Search
       tags:
       - Bookings
       security:
@@ -7583,7 +7583,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: segment_kind
+      - name: item_kind
         in: query
         required: false
         schema:
@@ -7604,7 +7604,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/TravelPlanSegmentSearchResponse"
+                "$ref": "#/components/schemas/TravelPlanItemSearchResponse"
         '401':
           description: Unauthorized
           content:
@@ -7617,10 +7617,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/import":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import":
     post:
-      operationId: booking_travel_plan_segment_import
-      summary: Booking Travel Plan Segment Import
+      operationId: booking_travel_plan_item_import
+      summary: Booking Travel Plan Item Import
       tags:
       - Bookings
       security:
@@ -7641,7 +7641,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanSegmentImportRequest"
+              "$ref": "#/components/schemas/TravelPlanItemImportRequest"
       responses:
         '200':
           description: Success
@@ -7667,10 +7667,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images":
     post:
-      operationId: booking_travel_plan_segment_image_upload
-      summary: Booking Travel Plan Segment Image Upload
+      operationId: booking_travel_plan_item_image_upload
+      summary: Booking Travel Plan Item Image Upload
       tags:
       - Bookings
       security:
@@ -7686,7 +7686,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: segment_id
+      - name: item_id
         in: path
         required: true
         schema:
@@ -7696,7 +7696,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanSegmentImageUploadRequest"
+              "$ref": "#/components/schemas/TravelPlanItemImageUploadRequest"
       responses:
         '200':
           description: Success
@@ -7722,10 +7722,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/{image_id}":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}":
     delete:
-      operationId: booking_travel_plan_segment_image_delete
-      summary: Booking Travel Plan Segment Image Delete
+      operationId: booking_travel_plan_item_image_delete
+      summary: Booking Travel Plan Item Image Delete
       tags:
       - Bookings
       security:
@@ -7741,7 +7741,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: segment_id
+      - name: item_id
         in: path
         required: true
         schema:
@@ -7756,7 +7756,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanSegmentImageDeleteRequest"
+              "$ref": "#/components/schemas/TravelPlanItemImageDeleteRequest"
       responses:
         '200':
           description: Success
@@ -7776,10 +7776,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/order":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order":
     patch:
-      operationId: booking_travel_plan_segment_image_reorder
-      summary: Booking Travel Plan Segment Image Reorder
+      operationId: booking_travel_plan_item_image_reorder
+      summary: Booking Travel Plan Item Image Reorder
       tags:
       - Bookings
       security:
@@ -7795,7 +7795,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: segment_id
+      - name: item_id
         in: path
         required: true
         schema:
@@ -7805,7 +7805,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanSegmentImageReorderRequest"
+              "$ref": "#/components/schemas/TravelPlanItemImageReorderRequest"
       responses:
         '200':
           description: Success

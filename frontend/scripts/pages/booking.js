@@ -16,8 +16,7 @@ import {
   formatDateTime,
   logBrowserConsoleError,
   normalizeText,
-  resolveApiUrl,
-  setDirtySurface
+  resolveApiUrl
 } from "../shared/api.js";
 import { createBookingPageLanguageController } from "./booking_page_language.js";
 import { createBookingPageDataController } from "./booking_page_data.js";
@@ -135,15 +134,23 @@ const state = {
   }
 };
 
-state.dirty = { note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
+state.dirty = { core: false, note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
 state.originalTravelPlanSnapshot = "";
 state.originalInvoiceSnapshot = "";
+state.pageSaveInFlight = false;
+state.pageDiscardInFlight = false;
+state.pageDirtyBarStatus = "";
 
 let bookingWhatsApp = null;
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
+  dirtyBar: document.getElementById("booking_dirty_bar"),
+  dirtyBarTitle: document.getElementById("booking_dirty_bar_title"),
+  dirtyBarSummary: document.getElementById("booking_dirty_bar_summary"),
+  discardEditsBtn: document.getElementById("booking_discard_edits_btn"),
+  saveEditsBtn: document.getElementById("booking_save_edits_btn"),
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
@@ -161,6 +168,7 @@ const els = {
   error: document.getElementById("detail_error"),
   booking_data_view: document.getElementById("booking_data_view"),
   actionsPanel: document.getElementById("booking_actions_panel"),
+  notePanel: document.getElementById("booking_note_panel"),
   persons_editor_panel: document.getElementById("persons_editor_panel"),
   personsPanelSummary: document.getElementById("persons_editor_panel_summary"),
   personsEditorList: document.getElementById("booking_persons_editor_list"),
@@ -175,15 +183,15 @@ const els = {
   personModalName: document.getElementById("booking_person_modal_name"),
   personModalPhotoInput: document.getElementById("booking_person_modal_photo_input"),
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
-  travelPlanSegmentLibraryModal: document.getElementById("travel_plan_segment_library_modal"),
-  travelPlanSegmentLibraryCloseBtn: document.getElementById("travel_plan_segment_library_close_btn"),
-  travelPlanSegmentLibrarySubtitle: document.getElementById("travel_plan_segment_library_subtitle"),
-  travelPlanSegmentLibraryQuery: document.getElementById("travel_plan_segment_library_query"),
-  travelPlanSegmentLibraryKind: document.getElementById("travel_plan_segment_library_kind"),
-  travelPlanSegmentLibrarySearchBtn: document.getElementById("travel_plan_segment_library_search_btn"),
-  travelPlanSegmentLibraryStatus: document.getElementById("travel_plan_segment_library_status"),
-  travelPlanSegmentLibraryResults: document.getElementById("travel_plan_segment_library_results"),
-  travelPlanSegmentImageInput: document.getElementById("travel_plan_segment_image_input"),
+  travelPlanItemLibraryModal: document.getElementById("travel_plan_item_library_modal"),
+  travelPlanItemLibraryCloseBtn: document.getElementById("travel_plan_item_library_close_btn"),
+  travelPlanItemLibrarySubtitle: document.getElementById("travel_plan_item_library_subtitle"),
+  travelPlanItemLibraryQuery: document.getElementById("travel_plan_item_library_query"),
+  travelPlanItemLibraryKind: document.getElementById("travel_plan_item_library_kind"),
+  travelPlanItemLibrarySearchBtn: document.getElementById("travel_plan_item_library_search_btn"),
+  travelPlanItemLibraryStatus: document.getElementById("travel_plan_item_library_status"),
+  travelPlanItemLibraryResults: document.getElementById("travel_plan_item_library_results"),
+  travelPlanItemImageInput: document.getElementById("travel_plan_item_image_input"),
   personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
   personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
   personModalDateOfBirthPickerBtn: document.getElementById("booking_person_modal_date_of_birth_picker_btn"),
@@ -206,7 +214,6 @@ const els = {
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
   stageSelect: document.getElementById("booking_stage_select"),
   noteInput: document.getElementById("booking_note_input"),
-  noteSaveBtn: document.getElementById("booking_note_save_btn"),
   actionStatus: document.getElementById("booking_action_status"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
@@ -220,7 +227,6 @@ const els = {
   pricing_agreed_net_input: document.getElementById("pricing_agreed_net_input"),
   pricing_adjustments_table: document.getElementById("pricing_adjustments_table"),
   pricing_payments_table: document.getElementById("pricing_payments_table"),
-  pricing_save_btn: document.getElementById("pricing_save_btn"),
   pricing_status: document.getElementById("pricing_status"),
   offer_panel: document.getElementById("offer_panel"),
   offerPanelSummary: document.getElementById("offer_panel_summary"),
@@ -235,6 +241,7 @@ const els = {
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),
   offer_generation_route_mode: document.getElementById("offer_generation_route_mode"),
+  generateOfferDirtyHint: document.getElementById("generate_offer_dirty_hint"),
   offer_payment_terms_notes: document.getElementById("offer_payment_terms_notes"),
   generate_offer_btn: document.getElementById("generate_offer_btn"),
   offer_status: document.getElementById("offer_status"),
@@ -259,7 +266,6 @@ const els = {
   invoice_vat_input: document.getElementById("invoice_vat_input"),
   invoice_notes_field: document.getElementById("invoice_notes_field"),
   invoice_notes_input: document.getElementById("invoice_notes_input"),
-  invoice_create_btn: document.getElementById("invoice_create_btn"),
   invoice_status: document.getElementById("invoice_status"),
   invoices_table: document.getElementById("invoices_table")
 };
@@ -272,22 +278,89 @@ const PERSON_MODAL_AUTOFILL_CONFIG = Object.freeze({
 });
 
 function setBookingSectionDirty(sectionKey, isDirty) {
-  const sectionMap = {
-    note: els.actionsPanel,
-    persons: els.persons_editor_panel,
-    travel_plan: els.travel_plan_panel,
-    offer: els.offer_panel,
-    payment_terms: els.offer_payment_terms_panel,
-    offer_acceptance: els.offer_acceptance_panel,
-    pricing: els.pricing_panel,
-    invoice: els.invoice_panel
-  };
   state.dirty[sectionKey] = Boolean(isDirty);
-  setDirtySurface(sectionMap[sectionKey], state.dirty[sectionKey]);
+  if (hasUnsavedBookingChanges()) {
+    state.pageDirtyBarStatus = "";
+  }
+  updatePageDirtyBar();
+  updateCleanStateActionAvailability();
 }
 
 function hasUnsavedBookingChanges() {
   return Object.values(state.dirty).some(Boolean);
+}
+
+function dirtySectionLabels() {
+  const labels = [];
+  const pushLabel = (label) => {
+    if (label && !labels.includes(label)) labels.push(label);
+  };
+  if (state.dirty.core) pushLabel(backendT("booking.dirty.core", "Booking details"));
+  if (state.dirty.note) pushLabel(backendT("booking.dirty.note", "Notes"));
+  if (state.dirty.persons) pushLabel(backendT("booking.dirty.persons", "Persons"));
+  if (state.dirty.offer || state.dirty.payment_terms) pushLabel(backendT("booking.dirty.offer", "Offer"));
+  if (state.dirty.travel_plan) pushLabel(backendT("booking.dirty.travel_plan", "Travel plan"));
+  if (state.dirty.pricing) pushLabel(backendT("booking.dirty.pricing", "Payments"));
+  if (state.dirty.invoice) pushLabel(backendT("booking.dirty.invoice", "Invoice"));
+  return labels;
+}
+
+function updatePageDirtyBar() {
+  if (!els.dirtyBar || !els.dirtyBarSummary || !els.saveEditsBtn || !els.discardEditsBtn) return;
+  const labels = dirtySectionLabels();
+  const isDirty = labels.length > 0;
+  const isSaving = state.pageSaveInFlight;
+  const isDiscarding = state.pageDiscardInFlight;
+  const isBusy = isSaving || isDiscarding;
+  els.dirtyBar.classList.toggle("booking-dirty-bar--dirty", isDirty);
+  els.dirtyBar.hidden = false;
+  if (els.dirtyBarTitle) {
+    if (isSaving) {
+      els.dirtyBarTitle.textContent = backendT("booking.page_save.saving", "Saving edits...");
+    } else if (isDiscarding) {
+      els.dirtyBarTitle.textContent = backendT("booking.page_discard.running", "Discarding edits...");
+    } else if (isDirty) {
+      els.dirtyBarTitle.textContent = backendT("booking.page_save.unsaved", "Unsaved edits");
+    } else if (state.pageDirtyBarStatus === "saved") {
+      els.dirtyBarTitle.textContent = backendT("booking.page_save.saved", "All edits saved");
+    } else if (state.pageDirtyBarStatus === "discarded") {
+      els.dirtyBarTitle.textContent = backendT("booking.page_discard.saved", "All edits reverted");
+    } else {
+      els.dirtyBarTitle.textContent = backendT("booking.page_save.clean", "No unsaved edits");
+    }
+  }
+  els.dirtyBarSummary.textContent = isDirty
+    ? backendT("booking.page_save.summary", "Changed sections: {sections}", { sections: labels.join(", ") })
+    : "";
+  els.saveEditsBtn.disabled = isBusy || !isDirty;
+  els.discardEditsBtn.disabled = isBusy || !isDirty;
+}
+
+function cleanStateBlockMessage() {
+  return backendT("booking.action_requires_save", "Save edits to enable.");
+}
+
+function updateCleanStateActionAvailability() {
+  const blocked = hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight;
+  const message = cleanStateBlockMessage();
+  document.querySelectorAll("[data-requires-clean-state]").forEach((element) => {
+    if (!(element instanceof HTMLElement) || !("disabled" in element)) return;
+    if (!Object.prototype.hasOwnProperty.call(element.dataset, "cleanStateBaseDisabled")) {
+      element.dataset.cleanStateBaseDisabled = element.disabled ? "true" : "false";
+    }
+    if (blocked) {
+      element.disabled = true;
+      element.dataset.cleanStateBlocked = "true";
+      element.title = message;
+    } else {
+      element.disabled = element.dataset.cleanStateBaseDisabled === "true";
+      delete element.dataset.cleanStateBlocked;
+      if (element.title === message) element.title = "";
+    }
+  });
+  if (els.generateOfferDirtyHint) {
+    els.generateOfferDirtyHint.textContent = blocked ? message : "";
+  }
 }
 
 const bookingLanguageController = createBookingPageLanguageController({
@@ -332,11 +405,17 @@ function captureControlSnapshot(root) {
   return JSON.stringify(snapshot);
 }
 
-window.addEventListener("beforeunload", () => {
+window.addEventListener("beforeunload", (event) => {
   bookingWhatsApp?.stopAutoRefresh();
+  if (!hasUnsavedBookingChanges()) return;
+  event.preventDefault();
+  event.returnValue = "";
 });
 
 function closeBookingDetailScreen() {
+  if (hasUnsavedBookingChanges() && !window.confirm(backendT("booking.discard_navigation_confirm", "Discard unsaved edits and leave this page?"))) {
+    return;
+  }
   const fallbackHref = normalizeText(els.back?.href) || withBackendLang("/backend.html", { section: "bookings" });
   window.location.href = fallbackHref;
 }
@@ -389,6 +468,7 @@ async function init() {
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
   populateContentLanguageSelect();
+  updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
   if (els.heroPhotoBtn) els.heroPhotoBtn.addEventListener("click", triggerBookingPhotoPicker);
@@ -400,19 +480,21 @@ async function init() {
   if (els.back) els.back.addEventListener("click", closeBookingDetailScreen);
   if (els.titleEditBtn) els.titleEditBtn.addEventListener("click", startBookingTitleEdit);
   if (els.titleInput) {
+    els.titleInput.addEventListener("input", updateCoreDirtyState);
     els.titleInput.addEventListener("keydown", handleBookingTitleInputKeydown);
-    els.titleInput.addEventListener("blur", () => {
-      void commitBookingTitleEdit();
-    });
   }
-  if (els.ownerSelect) els.ownerSelect.addEventListener("change", saveOwner);
+  if (els.ownerSelect) els.ownerSelect.addEventListener("change", updateCoreDirtyState);
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
   });
-  if (els.stageSelect) els.stageSelect.addEventListener("change", saveStage);
+  if (els.stageSelect) els.stageSelect.addEventListener("change", updateCoreDirtyState);
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
-  if (els.noteSaveBtn) els.noteSaveBtn.addEventListener("click", saveNote);
+  if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);
+  if (els.discardEditsBtn) els.discardEditsBtn.addEventListener("click", discardPageEdits);
+  if (els.saveEditsBtn) els.saveEditsBtn.addEventListener("click", () => {
+    void savePageEdits();
+  });
   if (els.pricing_panel) {
     const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
     els.pricing_panel.addEventListener("input", schedulePricingDirtyState);
@@ -421,7 +503,6 @@ async function init() {
       if (event.target.closest("button")) schedulePricingDirtyState();
     });
   }
-  if (els.pricing_save_btn) els.pricing_save_btn.addEventListener("click", savePricing);
   if (els.offer_currency_input)
     els.offer_currency_input.addEventListener("change", () => {
       void handleOfferCurrencyChange();
@@ -429,6 +510,7 @@ async function init() {
   personsModule.bindEvents();
   travelPlanModule.bindEvents();
   document.addEventListener("keydown", handleBookingDetailKeydown, true);
+  document.addEventListener("keydown", handlePageSaveKeydown, true);
   if (els.invoice_select) els.invoice_select.addEventListener("change", onInvoiceSelectChange);
   if (els.invoice_panel) {
     const scheduleInvoiceDirtyState = () => window.setTimeout(updateInvoiceDirtyState, 0);
@@ -436,7 +518,6 @@ async function init() {
     els.invoice_panel.addEventListener("change", scheduleInvoiceDirtyState);
   }
   if (els.invoice_currency_input) els.invoice_currency_input.addEventListener("change", renderInvoiceMoneyLabels);
-  if (els.invoice_create_btn) els.invoice_create_btn.addEventListener("click", createInvoice);
   if (els.invoice_issue_today_btn) {
     els.invoice_issue_today_btn.addEventListener("click", () => {
       if (els.invoice_issue_date_input) els.invoice_issue_date_input.value = formatInvoiceDateInput(new Date());
@@ -470,17 +551,26 @@ function bindSectionNavigation(activeSection) {
       button.removeAttribute("aria-current");
     }
     button.addEventListener("click", () => {
+      if (hasUnsavedBookingChanges() && !window.confirm(backendT("booking.discard_navigation_confirm", "Discard unsaved edits and leave this page?"))) {
+        return;
+      }
       window.location.href = resolveBackendSectionHref(section);
     });
   });
 }
 
 async function loadBookingPage() {
-  return bookingPageDataController.loadBookingPage();
+  const result = await bookingPageDataController.loadBookingPage();
+  updatePageDirtyBar();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function renderBookingHeader() {
-  return coreModule.renderBookingHeader();
+  const result = coreModule.renderBookingHeader();
+  updatePageDirtyBar();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function resolvePersonPhotoSrc(photoRef) {
@@ -498,17 +588,22 @@ function copyHeroIdToClipboard() {
 }
 
 function renderBookingData() {
-  return coreModule.renderBookingData();
+  const result = coreModule.renderBookingData();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function renderActionControls() {
-  return coreModule.renderActionControls();
+  const result = coreModule.renderActionControls();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
-function applyBookingPayload(payload = {}) {
-  coreModule.applyBookingPayload(payload);
+function applyBookingPayload(payload = {}, options = {}) {
+  coreModule.applyBookingPayload(payload, options);
   personsModule.applyBookingPayload();
   travelPlanModule.applyBookingPayload();
+  updatePageDirtyBar();
 }
 
 async function ensureTourImageLoaded() {
@@ -581,16 +676,16 @@ function updateNoteSaveButtonState() {
   return coreModule.updateNoteSaveButtonState();
 }
 
-async function saveOwner() {
-  return coreModule.saveOwner();
+function updateCoreDirtyState() {
+  return coreModule.updateCoreDirtyState();
 }
 
-async function saveStage() {
-  return coreModule.saveStage();
+async function saveCoreEdits() {
+  return await coreModule.saveCoreEdits();
 }
 
-async function saveNote() {
-  return coreModule.saveNote();
+async function saveNoteEdits() {
+  return await coreModule.saveNoteEdits();
 }
 
 function startBookingTitleEdit() {
@@ -610,7 +705,9 @@ function deleteBooking() {
 }
 
 function renderPersonsEditor(options) {
-  return personsModule.renderPersonsEditor(options);
+  const result = personsModule.renderPersonsEditor(options);
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function closePersonModal() {
@@ -661,15 +758,21 @@ async function loadActivities() {
 }
 
 function renderPricingPanel() {
-  return pricingModule.renderPricingPanel();
+  const result = pricingModule.renderPricingPanel();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function renderOfferPanel() {
-  return offerModule.renderOfferPanel();
+  const result = offerModule.renderOfferPanel();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function renderTravelPlanPanel() {
-  return travelPlanModule.renderTravelPlanPanel();
+  const result = travelPlanModule.renderTravelPlanPanel();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function updateInvoiceDirtyState() {
@@ -681,11 +784,17 @@ function renderInvoiceMoneyLabels() {
 }
 
 function loadInvoices() {
-  return invoicesModule.loadInvoices();
+  const result = invoicesModule.loadInvoices();
+  Promise.resolve(result).finally(() => {
+    updateCleanStateActionAvailability();
+  });
+  return result;
 }
 
 function onInvoiceSelectChange() {
-  return invoicesModule.onInvoiceSelectChange();
+  const result = invoicesModule.onInvoiceSelectChange();
+  updateCleanStateActionAvailability();
+  return result;
 }
 
 function createInvoice() {
@@ -714,6 +823,104 @@ function updatePricingDirtyState() {
 
 function markPricingSnapshotClean() {
   return pricingModule.markPricingSnapshotClean();
+}
+
+function handlePageSaveKeydown(event) {
+  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "s") return;
+  event.preventDefault();
+  void savePageEdits();
+}
+
+async function savePageEdits() {
+  if (!hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight) return true;
+  state.pageSaveInFlight = true;
+  state.pageDirtyBarStatus = "saving";
+  clearError();
+  updatePageDirtyBar();
+  updateCleanStateActionAvailability();
+  let saveCompleted = false;
+  const tasks = [
+    {
+      shouldRun: () => state.dirty.core,
+      label: backendT("booking.dirty.core", "Booking details"),
+      run: () => saveCoreEdits()
+    },
+    {
+      shouldRun: () => state.dirty.note,
+      label: backendT("booking.dirty.note", "Notes"),
+      run: () => saveNoteEdits()
+    },
+    {
+      shouldRun: () => state.dirty.persons,
+      label: backendT("booking.dirty.persons", "Persons"),
+      run: () => personsModule.saveAllPersonDrafts()
+    },
+    {
+      shouldRun: () => state.dirty.offer || state.dirty.payment_terms,
+      label: backendT("booking.dirty.offer", "Offer"),
+      run: () => saveOffer()
+    },
+    {
+      shouldRun: () => state.dirty.travel_plan,
+      label: backendT("booking.dirty.travel_plan", "Travel plan"),
+      run: () => travelPlanModule.saveTravelPlan()
+    },
+    {
+      shouldRun: () => state.dirty.pricing,
+      label: backendT("booking.dirty.pricing", "Payments"),
+      run: () => savePricing()
+    },
+    {
+      shouldRun: () => state.dirty.invoice,
+      label: backendT("booking.dirty.invoice", "Invoice"),
+      run: () => createInvoice()
+    }
+  ];
+
+  try {
+    for (const task of tasks) {
+      if (!task.shouldRun()) continue;
+      const saved = await task.run();
+      if (saved === false) return false;
+    }
+    clearStatus();
+    state.pageDirtyBarStatus = "saved";
+    saveCompleted = true;
+    return true;
+  } finally {
+    state.pageSaveInFlight = false;
+    if (!saveCompleted && state.pageDirtyBarStatus === "saving") {
+      state.pageDirtyBarStatus = "";
+    }
+    updatePageDirtyBar();
+    updateCleanStateActionAvailability();
+  }
+}
+
+async function discardPageEdits() {
+  if (!hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight) return;
+  if (!window.confirm(backendT("booking.discard_edits_confirm", "Discard all unsaved edits?"))) return;
+  clearError();
+  clearStatus();
+  state.pageDiscardInFlight = true;
+  state.pageDirtyBarStatus = "discarding";
+  updatePageDirtyBar();
+  updateCleanStateActionAvailability();
+  let discardCompleted = false;
+  try {
+    discardCompleted = await loadBookingPage();
+    if (discardCompleted !== false) {
+      state.pageDirtyBarStatus = "discarded";
+      discardCompleted = true;
+    }
+  } finally {
+    state.pageDiscardInFlight = false;
+    if (!discardCompleted && state.pageDirtyBarStatus === "discarding") {
+      state.pageDirtyBarStatus = "";
+    }
+    updatePageDirtyBar();
+    updateCleanStateActionAvailability();
+  }
 }
 
 function toEntries(obj) {
@@ -836,6 +1043,8 @@ const coreModule = createBookingCoreModule({
   displayKeycloakUser,
   resolveCurrentAuthKeycloakUser,
   setBookingSectionDirty,
+  hasUnsavedBookingChanges,
+  reportPersistedActionBlocked: () => setStatus(cleanStateBlockMessage()),
   rerenderWhatsApp: (booking) => bookingWhatsApp?.rerender(booking),
   renderPersonsEditor: (...args) => personsModule.renderPersonsEditor(...args)
 });

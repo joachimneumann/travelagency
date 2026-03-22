@@ -183,6 +183,7 @@ export function createBookingPageLanguageController(ctx) {
           type="button"
           class="lang-menu-trigger"
           data-booking-content-lang-trigger="true"
+          data-requires-clean-state
           aria-haspopup="menu"
           aria-expanded="false"
           aria-label="${escapeHtml(backendT("booking.content_language", "Customer language"))}"

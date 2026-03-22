@@ -26,8 +26,6 @@ export function createBookingOfferComponentsModule(ctx) {
     offerComponentCategories,
     setOfferSaveEnabled,
     setOfferStatus,
-    scheduleOfferAutosave,
-    flushOfferAutosave,
     getCountMissingOfferPdfTranslations,
     normalizeOfferCategory,
     cloneOfferPaymentTerms,
@@ -109,12 +107,12 @@ export function createBookingOfferComponentsModule(ctx) {
       considerField(day?.title_i18n);
       considerField(day?.overnight_location_i18n);
       considerField(day?.notes_i18n);
-      const segments = Array.isArray(day?.segments) ? day.segments : [];
-      segments.forEach((segment) => {
-        considerField(segment?.time_label_i18n);
-        considerField(segment?.title_i18n);
-        considerField(segment?.details_i18n);
-        considerField(segment?.location_i18n);
+      const items = Array.isArray(day?.items) ? day.items : [];
+      items.forEach((item) => {
+        considerField(item?.time_label_i18n);
+        considerField(item?.title_i18n);
+        considerField(item?.details_i18n);
+        considerField(item?.location_i18n);
       });
     });
     return missing;
@@ -656,12 +654,8 @@ export function createBookingOfferComponentsModule(ctx) {
         setOfferSaveEnabled(true);
         updateOfferTotalsInDom();
       };
-      const syncOfferAndAutosave = () => {
-        syncOfferInputTotals();
-        scheduleOfferAutosave();
-      };
       els.offer_components_table.querySelectorAll("[data-offer-remove-component]").forEach((button) => {
-        button.addEventListener("click", async () => {
+        button.addEventListener("click", () => {
           const index = Number(button.getAttribute("data-offer-remove-component"));
           const component = state.offerDraft.components[index];
           const categoryLabel = offerCategoryLabel(component?.category);
@@ -681,7 +675,6 @@ export function createBookingOfferComponentsModule(ctx) {
           offerTaxEditorIndexes = new Set();
           setOfferSaveEnabled(true);
           renderOfferComponentsTable();
-          await flushOfferAutosave();
         });
       });
       els.offer_components_table.querySelectorAll("[data-offer-edit-tax-rate]").forEach((button) => {
@@ -704,7 +697,6 @@ export function createBookingOfferComponentsModule(ctx) {
           offerCategoryEditorIndexes.delete(index);
           syncOfferInputTotals();
           renderOfferComponentsTable();
-          scheduleOfferAutosave();
         });
       });
       els.offer_components_table.querySelectorAll("[data-offer-component-tax-rate]").forEach((input) => {
@@ -716,11 +708,10 @@ export function createBookingOfferComponentsModule(ctx) {
           setOfferSaveEnabled(true);
           state.offerDraft.total_price_cents = null;
           renderOfferComponentsTable();
-          scheduleOfferAutosave();
         });
       });
       els.offer_components_table.querySelectorAll("[data-offer-component-details]").forEach((input) => {
-        input.addEventListener("change", syncOfferAndAutosave);
+        input.addEventListener("change", syncOfferInputTotals);
       });
       els.offer_components_table.querySelectorAll("[data-offer-component-quantity], [data-offer-component-unit], [data-offer-component-total-input]").forEach((input) => {
         input.addEventListener("input", () => {
@@ -736,7 +727,7 @@ export function createBookingOfferComponentsModule(ctx) {
           }
           syncOfferInputTotals();
         });
-        input.addEventListener("change", syncOfferAndAutosave);
+        input.addEventListener("change", syncOfferInputTotals);
       });
       els.offer_components_table.querySelectorAll("[data-offer-add-component]").forEach((button) => {
         button.addEventListener("click", addOfferComponent);
@@ -745,19 +736,18 @@ export function createBookingOfferComponentsModule(ctx) {
         button.addEventListener("click", addOfferDiscount);
       });
       els.offer_components_table.querySelectorAll("[data-offer-remove-discount]").forEach((button) => {
-        button.addEventListener("click", async () => {
+        button.addEventListener("click", () => {
           if (!window.confirm(bookingT("booking.offer.remove_discount_confirm", "Remove this discount?"))) return;
           state.offerDraft.discount = null;
           setOfferSaveEnabled(true);
           renderOfferComponentsTable();
-          await flushOfferAutosave();
         });
       });
       els.offer_components_table.querySelectorAll("[data-offer-discount-reason], [data-offer-discount-amount]").forEach((input) => {
         input.addEventListener("input", () => {
           syncOfferInputTotals();
         });
-        input.addEventListener("change", syncOfferAndAutosave);
+        input.addEventListener("change", syncOfferInputTotals);
       });
       els.offer_components_table.querySelectorAll("[data-localized-translate]").forEach((button) => {
         button.addEventListener("click", async () => {
@@ -803,7 +793,6 @@ export function createBookingOfferComponentsModule(ctx) {
               ? bookingT("booking.translation.field_translated_to_english", "Field translated to English.")
               : bookingT("booking.translation.field_translated_to_customer_language", "Field translated to {lang}.", { lang: targetOption.shortLabel })
           );
-          scheduleOfferAutosave();
         });
       });
     }
@@ -1190,7 +1179,6 @@ export function createBookingOfferComponentsModule(ctx) {
     setOfferStatus("");
     updateOfferCurrencyHint(nextCurrency);
     renderOfferComponentsTable();
-    scheduleOfferAutosave();
   }
 
   return {

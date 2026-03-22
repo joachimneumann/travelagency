@@ -3,14 +3,14 @@ import { bookingT } from "./i18n.js";
 export function validateTravelPlanDraft(plan, {
   getOfferComponentsForLinks,
   validTimingKinds,
-  validSegmentKinds,
+  validItemKinds,
   validCoverageTypes,
   splitDateTimeValue,
   isValidIsoCalendarDate
 }) {
   const normalizedPlan = plan && typeof plan === "object" ? plan : {};
   const dayIds = new Set();
-  const segmentIds = new Set();
+  const itemIds = new Set();
   const linkIds = new Set();
   const offerComponentIds = new Set(getOfferComponentsForLinks().map((component) => String(component?.id || "").trim()).filter(Boolean));
 
@@ -55,113 +55,113 @@ export function validateTravelPlanDraft(plan, {
       };
     }
 
-    for (const [segmentIndex, segment] of (Array.isArray(day?.segments) ? day.segments : []).entries()) {
-      const segmentNumber = segmentIndex + 1;
-      const segmentId = String(segment?.id || "").trim();
-      if (!segmentId) {
+    for (const [itemIndex, item] of (Array.isArray(day?.items) ? day.items : []).entries()) {
+      const itemNumber = itemIndex + 1;
+      const itemId = String(item?.id || "").trim();
+      if (!itemId) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_id_missing",
-            "Day {day}, Segment {segment}: Segment id is missing.",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_id_missing",
+            "Day {day}, travel plan item {item}: Travel plan item id is missing.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
-      if (segmentIds.has(segmentId)) {
+      if (itemIds.has(itemId)) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_id_duplicate",
-            "Day {day}, Segment {segment}: Segment id is duplicated.",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_id_duplicate",
+            "Day {day}, travel plan item {item}: Travel plan item id is duplicated.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
-      segmentIds.add(segmentId);
+      itemIds.add(itemId);
 
-      const timingKind = String(segment?.timing_kind || "").trim();
+      const timingKind = String(item?.timing_kind || "").trim();
       if (!validTimingKinds.has(timingKind)) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_timing_invalid",
-            "Day {day}, Segment {segment}: Time information is invalid.",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_timing_invalid",
+            "Day {day}, travel plan item {item}: Time information is invalid.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
 
-      const segmentKind = String(segment?.kind || "").trim();
-      if (!validSegmentKinds.has(segmentKind)) {
+      const itemKind = String(item?.kind || "").trim();
+      if (!validItemKinds.has(itemKind)) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_kind_invalid",
-            "Day {day}, Segment {segment}: Kind is invalid.",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_kind_invalid",
+            "Day {day}, travel plan item {item}: Kind is invalid.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
 
-      const segmentTitle = String(segment?.title || "").trim();
-      if (!segmentTitle) {
+      const itemTitle = String(item?.title || "").trim();
+      if (!itemTitle) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_title_required",
-            "Day {day}, Segment {segment}: Segment Title is required",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_title_required",
+            "Day {day}, travel plan item {item}: Travel plan item title is required.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
 
-      if (timingKind === "point" && !String(segment?.time_point || "").trim()) {
+      if (timingKind === "point" && !String(item?.time_point || "").trim()) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_time_point_required",
-            "Day {day}, Segment {segment}: Time point is required.",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_time_point_required",
+            "Day {day}, travel plan item {item}: Time point is required.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
 
-      if (timingKind === "point" && String(segment?.time_point || "").trim()) {
-        const pointParts = splitDateTimeValue(day?.date, segment.time_point);
+      if (timingKind === "point" && String(item?.time_point || "").trim()) {
+        const pointParts = splitDateTimeValue(day?.date, item.time_point);
         if (!isValidIsoCalendarDate(pointParts.date)) {
           return {
             ok: false,
             error: bookingT(
-              "booking.travel_plan.validation.segment_time_point_date_invalid",
-              "Day {day}, Segment {segment}: Date must use YYYY-MM-DD.",
-              { day: dayNumber, segment: segmentNumber }
+              "booking.travel_plan.validation.item_time_point_date_invalid",
+              "Day {day}, travel plan item {item}: Date must use YYYY-MM-DD.",
+              { day: dayNumber, item: itemNumber }
             )
           };
         }
       }
 
-      if (timingKind === "range" && (!String(segment?.start_time || "").trim() || !String(segment?.end_time || "").trim())) {
+      if (timingKind === "range" && (!String(item?.start_time || "").trim() || !String(item?.end_time || "").trim())) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.segment_time_range_required",
-            "Day {day}, Segment {segment}: Start and end time are required.",
-            { day: dayNumber, segment: segmentNumber }
+            "booking.travel_plan.validation.item_time_range_required",
+            "Day {day}, travel plan item {item}: Start and end time are required.",
+            { day: dayNumber, item: itemNumber }
           )
         };
       }
 
       if (timingKind === "range") {
-        const startParts = splitDateTimeValue(day?.date, segment.start_time);
-        const endParts = splitDateTimeValue(day?.date, segment.end_time);
+        const startParts = splitDateTimeValue(day?.date, item.start_time);
+        const endParts = splitDateTimeValue(day?.date, item.end_time);
         if (!isValidIsoCalendarDate(startParts.date) || !isValidIsoCalendarDate(endParts.date)) {
           return {
             ok: false,
             error: bookingT(
-              "booking.travel_plan.validation.segment_time_range_date_invalid",
-              "Day {day}, Segment {segment}: Dates must use YYYY-MM-DD.",
-              { day: dayNumber, segment: segmentNumber }
+              "booking.travel_plan.validation.item_time_range_date_invalid",
+              "Day {day}, travel plan item {item}: Dates must use YYYY-MM-DD.",
+              { day: dayNumber, item: itemNumber }
             )
           };
         }
@@ -189,14 +189,14 @@ export function validateTravelPlanDraft(plan, {
     }
     linkIds.add(linkId);
 
-    const segmentId = String(link?.travel_plan_segment_id || "").trim();
-    if (!segmentIds.has(segmentId)) {
+    const itemId = String(link?.travel_plan_item_id || "").trim();
+    if (!itemIds.has(itemId)) {
       return {
         ok: false,
         error: bookingT(
-          "booking.travel_plan.validation.link_segment_unknown",
-          "Travel-plan offer link {id} references unknown segment {segment}.",
-          { id: linkId, segment: segmentId }
+          "booking.travel_plan.validation.link_item_unknown",
+          "Travel-plan offer link {id} references unknown travel plan item {item}.",
+          { id: linkId, item: itemId }
         )
       };
     }

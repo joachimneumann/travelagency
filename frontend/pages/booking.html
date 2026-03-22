@@ -27,11 +27,22 @@
     <main id="main-content">
       <section class="section">
         <div class="container">
-          <div class="booking-detail-page__topbar">
-            <button class="btn btn-ghost booking-detail-page__close-btn" id="backToBackend" type="button" aria-label="Close booking detail" data-i18n-aria-label-id="booking.close_detail">&times;</button>
+          <div class="booking-detail-page__bar-top-gap" aria-hidden="true"></div>
+          <div class="booking-dirty-bar" id="booking_dirty_bar" hidden>
+            <div class="booking-dirty-bar__copy">
+              <strong id="booking_dirty_bar_title">Unsaved edits</strong>
+              <span class="micro booking-dirty-bar__summary" id="booking_dirty_bar_summary"></span>
+            </div>
+            <div class="booking-dirty-bar__actions">
+              <button class="btn btn-ghost" id="booking_discard_edits_btn" type="button">Discard edits</button>
+              <button class="btn btn-primary" id="booking_save_edits_btn" type="button">Save</button>
+            </div>
+            <button class="btn btn-ghost booking-detail-page__close-btn booking-dirty-bar__close" id="backToBackend" type="button" aria-label="Close booking detail" data-i18n-aria-label-id="booking.close_detail">&times;</button>
           </div>
+          <div class="booking-detail-page__bar-gap" aria-hidden="true"></div>
+          <div class="booking-detail-page__scroll">
           <div class="booking-hero">
-            <button class="booking-hero__photo" id="booking_hero_photo_btn" type="button" aria-label="Change booking picture" data-i18n-aria-label-id="booking.change_picture">
+            <button class="booking-hero__photo" id="booking_hero_photo_btn" type="button" aria-label="Change booking picture" data-i18n-aria-label-id="booking.change_picture" data-requires-clean-state>
               <img class="booking-hero__photo-image" id="booking_hero_image" src="assets/img/profile_person.png" alt="" />
               <span class="booking-hero__photo-initials" id="booking_hero_initials" hidden>P</span>
             </button>
@@ -77,12 +88,11 @@
             </div>
           </article>
 
-          <article style="margin-bottom: 1rem;">
+          <article id="booking_note_panel" style="margin-bottom: 1rem;">
             <div class="field">
               <label for="booking_note_input" data-i18n-id="booking.note_title">Booking notes (ATP internal)</label>
               <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
                 <textarea class="booking-note-input booking-text-field booking-text-field--internal" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;" data-i18n-placeholder-id="booking.note_placeholder"></textarea>
-                <button class="btn btn-primary" id="booking_note_save_btn" type="button" data-i18n-id="booking.update_note">update</button>
                 <span id="booking_action_status" class="micro"></span>
               </div>
             </div>
@@ -104,7 +114,7 @@
               </div>
               <div class="modal-body booking-person-modal__body">
                 <div class="booking-person-modal__hero">
-                  <button class="booking-person-modal__avatar" id="booking_person_modal_avatar_btn" type="button" aria-label="Choose person picture" data-i18n-aria-label-id="booking.choose_person_picture">
+                  <button class="booking-person-modal__avatar" id="booking_person_modal_avatar_btn" type="button" aria-label="Choose person picture" data-i18n-aria-label-id="booking.choose_person_picture" data-requires-clean-state>
                     <img id="booking_person_modal_photo" src="assets/img/profile_person.png" alt="" />
                     <span id="booking_person_modal_initials">P</span>
                   </button>
@@ -389,7 +399,7 @@
                 <section class="booking-danger-zone">
                   <h2 class="section-title" style="margin-bottom: 0.45rem;" data-i18n-id="booking.danger_zone">Danger zone</h2>
                   <p class="micro" style="margin: 0 0 0.7rem;" data-i18n-id="booking.remove_person_help">Remove this person from the booking.</p>
-                  <button class="btn booking-danger-zone__delete" id="booking_person_modal_delete_btn" type="button" data-i18n-id="booking.remove_person">Remove person</button>
+                  <button class="btn booking-danger-zone__delete" id="booking_person_modal_delete_btn" type="button" data-i18n-id="booking.remove_person" data-requires-clean-state>Remove person</button>
                 </section>
               </div>
             </div>
@@ -399,41 +409,41 @@
 
           <div
             class="modal travel-plan-library-modal"
-            id="travel_plan_segment_library_modal"
+            id="travel_plan_item_library_modal"
             hidden
             role="dialog"
             aria-modal="true"
-            aria-labelledby="travel_plan_segment_library_title"
+            aria-labelledby="travel_plan_item_library_title"
           >
             <div class="modal-panel travel-plan-library-modal__panel" role="document">
               <div class="modal-head travel-plan-library-modal__head">
                 <div>
-                  <h2 id="travel_plan_segment_library_title">Insert existing segment</h2>
-                  <p class="micro" id="travel_plan_segment_library_subtitle">Search existing booking segments and insert a copy into this day.</p>
+                  <h2 id="travel_plan_item_library_title">Insert existing travel plan item</h2>
+                  <p class="micro" id="travel_plan_item_library_subtitle">Search existing booking travel plan items and insert a copy into this day.</p>
                 </div>
-                <button class="btn btn-ghost" id="travel_plan_segment_library_close_btn" type="button" aria-label="Close insert segment dialog">&times;</button>
+                <button class="btn btn-ghost" id="travel_plan_item_library_close_btn" type="button" aria-label="Close insert item dialog">&times;</button>
               </div>
               <div class="modal-body travel-plan-library-modal__body">
                 <div class="travel-plan-library-modal__filters">
                   <div class="field">
-                    <label for="travel_plan_segment_library_query">Search</label>
-                    <input id="travel_plan_segment_library_query" type="search" placeholder="Search segments, bookings, locations..." />
+                    <label for="travel_plan_item_library_query">Search</label>
+                    <input id="travel_plan_item_library_query" type="search" placeholder="Search travel plan items, bookings, locations..." />
                   </div>
                   <div class="field">
-                    <label for="travel_plan_segment_library_kind">Kind</label>
-                    <select id="travel_plan_segment_library_kind"></select>
+                    <label for="travel_plan_item_library_kind">Kind</label>
+                    <select id="travel_plan_item_library_kind"></select>
                   </div>
                   <div class="travel-plan-library-modal__search-action">
-                    <button class="btn btn-primary" id="travel_plan_segment_library_search_btn" type="button">Search</button>
+                    <button class="btn btn-primary" id="travel_plan_item_library_search_btn" type="button">Search</button>
                   </div>
                 </div>
-                <div id="travel_plan_segment_library_status" class="micro booking-inline-status"></div>
-                <div id="travel_plan_segment_library_results" class="travel-plan-library-modal__results"></div>
+                <div id="travel_plan_item_library_status" class="micro booking-inline-status"></div>
+                <div id="travel_plan_item_library_results" class="travel-plan-library-modal__results"></div>
               </div>
             </div>
           </div>
 
-          <input id="travel_plan_segment_image_input" type="file" accept="image/*" multiple hidden />
+          <input id="travel_plan_item_image_input" type="file" accept="image/*" multiple hidden />
 
           <article style="margin-bottom: 1rem;">
             <div class="field booking-content-language-field" id="booking_content_language_field">
@@ -500,7 +510,8 @@
                   <select id="offer_generation_route_mode"></select>
                 </div>
                 <div class="booking-generated-offers-actions">
-                  <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-i18n-id="booking.new_offer">new offer</button>
+                  <button class="btn btn-ghost booking-offer-add-btn" id="generate_offer_btn" type="button" data-i18n-id="booking.new_offer" data-requires-clean-state>new offer</button>
+                  <span id="generate_offer_dirty_hint" class="micro booking-inline-status booking-generated-offers-actions__hint"></span>
                 </div>
               </div>
               <span id="offer_status" class="micro"></span>
@@ -542,7 +553,6 @@
               </div>
 
               <div class="backend-controls">
-                <button class="btn btn-primary" id="pricing_save_btn" type="button" data-i18n-id="booking.save_payments">Save payments</button>
                 <span id="pricing_status" class="micro"></span>
               </div>
 
@@ -594,7 +604,6 @@
                 <div class="field" id="invoice_notes_field"></div>
 
                 <div class="backend-controls">
-                  <button class="btn btn-primary" id="invoice_create_btn" type="button" style="padding:0.7rem 1.2rem; margin:0.25rem 0.35rem;" data-i18n-id="booking.create_invoice">Create Invoice</button>
                   <span id="invoice_status" class="micro"></span>
                 </div>
 
@@ -622,8 +631,9 @@
 
           <section class="booking-danger-zone">
             <h2 class="section-title u-title-compact" data-i18n-id="booking.danger_zone">DANGER ZONE</h2>
-            <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking">Delete booking</button>
+            <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
           </section>
+          </div>
         </div>
       </section>
     </main>

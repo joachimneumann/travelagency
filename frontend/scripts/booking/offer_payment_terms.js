@@ -34,7 +34,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
     escapeHtml,
     setOfferSaveEnabled,
     clearOfferStatus,
-    scheduleOfferAutosave,
     resolveOfferTotalCents,
     renderOfferGenerationControls
   } = ctx;
@@ -555,7 +554,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
         setOfferSaveEnabled(true);
         clearOfferStatus();
-        scheduleOfferAutosave();
       });
     });
   }
@@ -765,9 +763,8 @@ export function createBookingOfferPaymentTermsModule(ctx) {
       markDirty();
       updateOfferPaymentTermsInDom();
     };
-    const syncAndAutosave = () => {
+    const syncComputedChanges = () => {
       syncComputedOnly();
-      scheduleOfferAutosave();
     };
     const withLine = (index, callback) => {
       const draft = ensureOfferPaymentTermsDraft();
@@ -799,7 +796,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
         markDirty();
         renderOfferPaymentTerms();
-        scheduleOfferAutosave();
       });
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-remove]").forEach((button) => {
@@ -810,7 +806,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         state.offerDraft.payment_terms = normalizeOfferPaymentTermsDraft(draft, draft.currency);
         markDirty();
         renderOfferPaymentTerms();
-        scheduleOfferAutosave();
       });
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-kind]").forEach((input) => {
@@ -831,7 +826,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         markDirty();
         renderOfferPaymentTerms();
-        scheduleOfferAutosave();
       });
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-label]").forEach((input) => {
@@ -842,7 +836,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         markDirty();
       });
-      input.addEventListener("change", syncAndAutosave);
+      input.addEventListener("change", syncComputedChanges);
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-amount-mode]").forEach((input) => {
       input.addEventListener("change", () => {
@@ -857,7 +851,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         markDirty();
         renderOfferPaymentTerms();
-        scheduleOfferAutosave();
       });
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-fixed-amount]").forEach((input) => {
@@ -875,7 +868,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         syncComputedOnly();
       });
-      input.addEventListener("change", syncAndAutosave);
+      input.addEventListener("change", syncComputedChanges);
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-percentage]").forEach((input) => {
       input.addEventListener("input", () => {
@@ -892,7 +885,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         syncComputedOnly();
       });
-      input.addEventListener("change", syncAndAutosave);
+      input.addEventListener("change", syncComputedChanges);
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-due-type]").forEach((input) => {
       input.addEventListener("change", () => {
@@ -930,7 +923,6 @@ export function createBookingOfferPaymentTermsModule(ctx) {
             requestedDueType
           });
         }
-        scheduleOfferAutosave();
       });
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-fixed-date]").forEach((input) => {
@@ -948,7 +940,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
           line.due_rule.type = "FIXED_DATE";
           line.due_rule.fixed_date = String(input.value || "");
         });
-        syncAndAutosave();
+        syncComputedOnly();
       });
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-days]").forEach((input) => {
@@ -959,7 +951,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         markDirty();
       });
-      input.addEventListener("change", syncAndAutosave);
+      input.addEventListener("change", syncComputedChanges);
     });
     els.offer_payment_terms.querySelectorAll("[data-offer-payment-term-description]").forEach((input) => {
       input.addEventListener("input", () => {
@@ -969,7 +961,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
         });
         markDirty();
       });
-      input.addEventListener("change", syncAndAutosave);
+      input.addEventListener("change", syncComputedChanges);
     });
   }
 

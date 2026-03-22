@@ -11,16 +11,36 @@
     radial-gradient(circle at 24px 24px, var(--pattern-dot-strong) 1px, transparent 1px),
     radial-gradient(circle at 72px 72px, var(--pattern-dot-soft) 1px, transparent 1px);
   background-size: 96px 96px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.booking-detail-page #main-content {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.booking-detail-page #main-content > .section {
+  height: 100%;
+  min-height: 0;
+  padding: 0 0 1rem;
 }
 
 .booking-detail-page .section > .container {
   max-width: 1080px;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
-.booking-detail-page .booking-detail-page__topbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.08rem;
+.booking-detail-page .booking-detail-page__bar-top-gap {
+  height: 1rem;
 }
 
 .booking-detail-page .booking-detail-page__close-btn {
@@ -34,6 +54,73 @@
   line-height: 1;
   text-decoration: none;
   padding: 0.35rem 0.75rem;
+}
+
+.booking-detail-page .booking-dirty-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-white-alpha-98);
+  box-shadow: 0 16px 28px var(--shadow-sm);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.booking-detail-page .booking-dirty-bar.booking-dirty-bar--dirty {
+  border-color: var(--line-error-strong);
+  background: var(--surface-error);
+  box-shadow: 0 16px 28px var(--error-glow);
+}
+
+.booking-detail-page .booking-dirty-bar.booking-dirty-bar--dirty .booking-dirty-bar__summary {
+  color: var(--error-text-strong);
+}
+
+.booking-detail-page .booking-dirty-bar__copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.booking-detail-page .booking-dirty-bar__summary {
+  color: var(--text-muted-strong);
+}
+
+.booking-detail-page .booking-dirty-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  justify-self: center;
+}
+
+.booking-detail-page .booking-dirty-bar__close {
+  justify-self: end;
+}
+
+.booking-detail-page .booking-detail-page__bar-gap {
+  height: 1rem;
+}
+
+.booking-detail-page .booking-detail-page__scroll {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding: 0 0 2rem;
+}
+
+.booking-detail-page .booking-detail-page__scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .booking-detail-page .booking-offer-controls {
@@ -84,7 +171,61 @@
   box-shadow: 0 8px 16px var(--success-shadow-strong);
 }
 
+.booking-detail-page .booking-offer-add-btn[disabled] {
+  background: var(--surface-subtle);
+  border-color: var(--line);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.booking-detail-page .booking-generated-offers-actions {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.booking-detail-page .booking-generated-offers-actions__hint {
+  display: block;
+  margin: 0;
+  color: var(--error-text-strong);
+  text-align: center;
+}
+
 @media (max-width: 760px) {
+  .booking-detail-page #main-content > .section {
+    padding: 0 0 0.75rem;
+  }
+
+  .booking-detail-page .booking-dirty-bar {
+    top: 0;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "close copy"
+      "actions actions";
+    align-items: start;
+  }
+
+  .booking-detail-page .booking-dirty-bar__copy {
+    grid-area: copy;
+  }
+
+  .booking-detail-page .booking-dirty-bar__actions {
+    grid-area: actions;
+    justify-content: stretch;
+  }
+
+  .booking-detail-page .booking-dirty-bar__actions .btn {
+    width: 100%;
+  }
+
+  .booking-detail-page .booking-dirty-bar__close {
+    grid-area: close;
+    justify-self: end;
+  }
+
+  .booking-detail-page .booking-generated-offers-actions {
+    justify-items: stretch;
+  }
 }
 
 .booking-detail-page .booking-hero {

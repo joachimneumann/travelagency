@@ -46,7 +46,7 @@ export function createBookingGeneratedOffersModule(ctx) {
     getBookingRevision,
     applyOfferBookingResponse,
     countMissingOfferPdfTranslations,
-    flushOfferAutosave,
+    ensureOfferCleanState,
     setOfferStatus
   } = ctx;
 
@@ -398,7 +398,7 @@ export function createBookingGeneratedOffersModule(ctx) {
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</a>` : "-"}</td>
           ${emailActionEnabled
-            ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
+            ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
             : ""}
           <td class="generated-offers-col-route">${routeUsesDepositPayment(routeMode)
             ? `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
@@ -409,8 +409,8 @@ export function createBookingGeneratedOffersModule(ctx) {
                 ? `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.status.unavailable", "Unavailable"))}</span>`
                 : (canEdit && acceptanceLink
                 ? `<div class="generated-offers-link-actions">
-                    <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
-                    <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}"${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
+                    <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
+                    <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}" data-requires-clean-state${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
                   </div>`
                 : `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
                     deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
@@ -425,10 +425,11 @@ export function createBookingGeneratedOffersModule(ctx) {
           <td class="generated-offers-col-total">${escapeHtml(formatMoneyDisplay(item.total_price_cents || 0, item.currency || state.offerDraft?.currency || "USD"))}</td>
           <td class="generated-offers-col-date">${escapeHtml(formatGeneratedOfferDate(item.created_at))}</td>
           <td class="generated-offers-col-comment">${canEdit
-            ? `<textarea class="booking-text-field booking-text-field--internal" id="generated_offer_comment_${escapeHtml(item.id)}" name="generated_offer_comment_${escapeHtml(item.id)}" data-generated-offer-comment="${escapeHtml(item.id)}" rows="1">${escapeHtml(item.comment || "")}</textarea>`
+            ? `<div class="generated-offers-comment-text">${escapeHtml(item.comment || "-")}</div>
+               <button class="btn btn-ghost" type="button" data-generated-offer-edit-comment="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("common.edit", "Edit"))}</button>`
             : (escapeHtml(item.comment || "") || "-")}</td>
           ${canEdit
-            ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button></td>`
+            ? `<td class="generated-offers-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-generated-offer-delete="${escapeHtml(item.id)}" data-requires-clean-state title="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}" aria-label="${escapeHtml(bookingT("booking.offer.delete_generated", "Delete generated offer"))}">×</button></td>`
             : ""}
         </tr>`;
         })
@@ -437,9 +438,9 @@ export function createBookingGeneratedOffersModule(ctx) {
     els.generated_offers_table.innerHTML = `<thead><tr><th class="generated-offers-col-link">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</th>${emailHeader}${routeHeader}${statusHeader}<th class="generated-offers-col-language">${escapeHtml(bookingT("booking.language", "Language"))}</th><th class="generated-offers-col-total">${escapeHtml(bookingT("booking.total", "Total"))}</th><th class="generated-offers-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th><th>${escapeHtml(bookingT("booking.comments", "Comments"))}</th>${actionHeader}</tr></thead><tbody>${rows}</tbody>`;
 
     if (canEdit) {
-      els.generated_offers_table.querySelectorAll("[data-generated-offer-comment]").forEach((input) => {
-        input.addEventListener("change", () => {
-          void saveGeneratedOfferComment(input.getAttribute("data-generated-offer-comment"), input.value);
+      els.generated_offers_table.querySelectorAll("[data-generated-offer-edit-comment]").forEach((button) => {
+        button.addEventListener("click", () => {
+          void promptGeneratedOfferCommentEdit(button.getAttribute("data-generated-offer-edit-comment"));
         });
       });
       els.generated_offers_table.querySelectorAll("[data-generated-offer-delete]").forEach((button) => {
@@ -474,7 +475,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   async function saveGeneratedOfferComment(generatedOfferId, value) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
-    if (!(await flushOfferAutosave())) return;
+    if (!(await ensureOfferCleanState())) return;
     const request = bookingGeneratedOfferUpdateRequest({
       baseURL: apiOrigin,
       params: {
@@ -494,10 +495,22 @@ export function createBookingGeneratedOffersModule(ctx) {
     setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.update_comment", "Could not update generated offer comment."));
   }
 
+  async function promptGeneratedOfferCommentEdit(generatedOfferId) {
+    if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
+    if (!(await ensureOfferCleanState())) return;
+    const generatedOffer = (Array.isArray(state.booking.generated_offers) ? state.booking.generated_offers : [])
+      .find((item) => item?.id === generatedOfferId);
+    const currentValue = String(generatedOffer?.comment || "");
+    const nextValue = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), currentValue);
+    if (nextValue === null) return;
+    if (String(nextValue).trim() === currentValue.trim()) return;
+    await saveGeneratedOfferComment(generatedOfferId, nextValue);
+  }
+
   async function deleteGeneratedOffer(generatedOfferId) {
     if (!state.permissions.canEditBooking || !state.booking?.id || !generatedOfferId) return;
     if (!window.confirm(bookingT("booking.offer.delete_generated_confirm", "Delete this generated offer?"))) return;
-    if (!(await flushOfferAutosave())) return;
+    if (!(await ensureOfferCleanState())) return;
     const request = bookingGeneratedOfferDeleteRequest({
       baseURL: apiOrigin,
       params: {
@@ -570,7 +583,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
-    if (!(await flushOfferAutosave())) return;
+    if (!(await ensureOfferCleanState())) return;
     const requestedRouteMode = normalizeGeneratedOfferRouteMode(
       els.offer_generation_route_mode?.value || generatedOfferRouteMode || "DEPOSIT_PAYMENT"
     );

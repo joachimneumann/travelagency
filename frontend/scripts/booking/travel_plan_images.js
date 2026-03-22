@@ -1,7 +1,7 @@
 import {
-  bookingTravelPlanSegmentImageDeleteRequest,
-  bookingTravelPlanSegmentImageReorderRequest,
-  bookingTravelPlanSegmentImageUploadRequest
+  bookingTravelPlanItemImageDeleteRequest,
+  bookingTravelPlanItemImageReorderRequest,
+  bookingTravelPlanItemImageUploadRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { bookingT } from "./i18n.js";
 
@@ -36,16 +36,16 @@ export function createBookingTravelPlanImagesModule(deps) {
     escapeHtml,
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
-    findDraftSegment,
+    findDraftItem,
     applyTravelPlanMutationBooking,
     applyBookingPayload,
     loadActivities,
     travelPlanStatus
   } = deps;
 
-  function renderTravelPlanSegmentImages(day, segment) {
-    const images = Array.isArray(segment?.images) ? segment.images : [];
-    const copiedFrom = segment?.copied_from || null;
+  function renderTravelPlanItemImages(day, item) {
+    const images = Array.isArray(item?.images) ? item.images : [];
+    const copiedFrom = item?.copied_from || null;
     const copiedFromText = copiedFrom?.source_booking_id
       ? bookingT(
         "booking.travel_plan.copied_from_booking",
@@ -63,8 +63,9 @@ export function createBookingTravelPlanImagesModule(deps) {
           </div>
           <button
             class="btn btn-ghost travel-plan-link-add-btn"
-            data-travel-plan-add-image="${escapeHtml(segment.id)}"
+            data-travel-plan-add-image="${escapeHtml(item.id)}"
             data-travel-plan-day-id="${escapeHtml(day.id)}"
+            data-requires-clean-state
             type="button"
           >${escapeHtml(bookingT("booking.travel_plan.add_images", "Add images"))}</button>
         </div>
@@ -75,7 +76,7 @@ export function createBookingTravelPlanImagesModule(deps) {
                 <div class="travel-plan-image-card__preview">
                   <img
                     src="${escapeHtml(resolveTravelPlanImageSrc(image.storage_path, apiOrigin))}"
-                    alt="${escapeHtml(image.alt_text || image.caption || segment.title || bookingT("booking.travel_plan.picture", "Picture"))}"
+                    alt="${escapeHtml(image.alt_text || image.caption || item.title || bookingT("booking.travel_plan.picture", "Picture"))}"
                     loading="lazy"
                   />
                 </div>
@@ -88,7 +89,8 @@ export function createBookingTravelPlanImagesModule(deps) {
                     class="btn btn-ghost travel-plan-move-btn"
                     data-travel-plan-move-image-left="${escapeHtml(image.id)}"
                     data-travel-plan-day-id="${escapeHtml(day.id)}"
-                    data-travel-plan-segment-id="${escapeHtml(segment.id)}"
+                    data-travel-plan-item-id="${escapeHtml(item.id)}"
+                    data-requires-clean-state
                     type="button"
                     aria-label="${escapeHtml(bookingT("booking.travel_plan.move_image_left", "Move image left"))}"
                     ${index === 0 ? "disabled" : ""}
@@ -97,7 +99,8 @@ export function createBookingTravelPlanImagesModule(deps) {
                     class="btn btn-ghost travel-plan-move-btn"
                     data-travel-plan-move-image-right="${escapeHtml(image.id)}"
                     data-travel-plan-day-id="${escapeHtml(day.id)}"
-                    data-travel-plan-segment-id="${escapeHtml(segment.id)}"
+                    data-travel-plan-item-id="${escapeHtml(item.id)}"
+                    data-requires-clean-state
                     type="button"
                     aria-label="${escapeHtml(bookingT("booking.travel_plan.move_image_right", "Move image right"))}"
                     ${index === images.length - 1 ? "disabled" : ""}
@@ -106,7 +109,8 @@ export function createBookingTravelPlanImagesModule(deps) {
                     class="btn btn-ghost offer-remove-btn"
                     data-travel-plan-remove-image="${escapeHtml(image.id)}"
                     data-travel-plan-day-id="${escapeHtml(day.id)}"
-                    data-travel-plan-segment-id="${escapeHtml(segment.id)}"
+                    data-travel-plan-item-id="${escapeHtml(item.id)}"
+                    data-requires-clean-state
                     type="button"
                     aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_image", "Remove image"))}"
                   >&times;</button>
@@ -121,21 +125,21 @@ export function createBookingTravelPlanImagesModule(deps) {
     `;
   }
 
-  function triggerTravelPlanSegmentImagePicker(dayId, segmentId) {
-    if (!state.permissions.canEditBooking || !els.travelPlanSegmentImageInput) return;
-    els.travelPlanSegmentImageInput.dataset.dayId = String(dayId || "").trim();
-    els.travelPlanSegmentImageInput.dataset.segmentId = String(segmentId || "").trim();
-    els.travelPlanSegmentImageInput.value = "";
-    els.travelPlanSegmentImageInput.click();
+  function triggerTravelPlanItemImagePicker(dayId, itemId) {
+    if (!state.permissions.canEditBooking || !els.travelPlanItemImageInput) return;
+    els.travelPlanItemImageInput.dataset.dayId = String(dayId || "").trim();
+    els.travelPlanItemImageInput.dataset.itemId = String(itemId || "").trim();
+    els.travelPlanItemImageInput.value = "";
+    els.travelPlanItemImageInput.click();
   }
 
-  async function handleTravelPlanSegmentImageInputChange() {
-    const input = els.travelPlanSegmentImageInput;
+  async function handleTravelPlanItemImageInputChange() {
+    const input = els.travelPlanItemImageInput;
     const dayId = String(input?.dataset.dayId || "").trim();
-    const segmentId = String(input?.dataset.segmentId || "").trim();
+    const itemId = String(input?.dataset.itemId || "").trim();
     const files = Array.from(input?.files || []);
     if (input) input.value = "";
-    if (!dayId || !segmentId || !files.length) return;
+    if (!dayId || !itemId || !files.length) return;
     if (!(await ensureTravelPlanReadyForMutation())) return;
     let latestBooking = null;
     for (let index = 0; index < files.length; index += 1) {
@@ -148,12 +152,12 @@ export function createBookingTravelPlanImagesModule(deps) {
         "info"
       );
       const base64 = await fileToBase64(file);
-      const request = bookingTravelPlanSegmentImageUploadRequest({
+      const request = bookingTravelPlanItemImageUploadRequest({
         baseURL: apiOrigin,
         params: {
           booking_id: state.booking.id,
           day_id: dayId,
-          segment_id: segmentId
+          item_id: itemId
         },
         body: {
           expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
@@ -183,22 +187,22 @@ export function createBookingTravelPlanImagesModule(deps) {
     }
   }
 
-  async function reorderTravelPlanSegmentImage(dayId, segmentId, imageId, direction) {
+  async function reorderTravelPlanItemImage(dayId, itemId, imageId, direction) {
     if (!(await ensureTravelPlanReadyForMutation())) return;
-    const segment = findDraftSegment(dayId, segmentId);
-    const images = Array.isArray(segment?.images) ? [...segment.images] : [];
+    const item = findDraftItem(dayId, itemId);
+    const images = Array.isArray(item?.images) ? [...item.images] : [];
     const currentIndex = images.findIndex((image) => image.id === imageId);
     if (currentIndex < 0) return;
     const targetIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1;
     if (targetIndex < 0 || targetIndex >= images.length) return;
     const [image] = images.splice(currentIndex, 1);
     images.splice(targetIndex, 0, image);
-    const request = bookingTravelPlanSegmentImageReorderRequest({
+    const request = bookingTravelPlanItemImageReorderRequest({
       baseURL: apiOrigin,
       params: {
         booking_id: state.booking.id,
         day_id: dayId,
-        segment_id: segmentId
+        item_id: itemId
       },
       body: {
         expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
@@ -213,14 +217,14 @@ export function createBookingTravelPlanImagesModule(deps) {
     await finalizeTravelPlanMutation(result, bookingT("booking.travel_plan.image_order_updated", "Picture order updated."));
   }
 
-  async function removeTravelPlanSegmentImage(dayId, segmentId, imageId) {
+  async function removeTravelPlanItemImage(dayId, itemId, imageId) {
     if (!(await ensureTravelPlanReadyForMutation())) return;
-    const request = bookingTravelPlanSegmentImageDeleteRequest({
+    const request = bookingTravelPlanItemImageDeleteRequest({
       baseURL: apiOrigin,
       params: {
         booking_id: state.booking.id,
         day_id: dayId,
-        segment_id: segmentId,
+        item_id: itemId,
         image_id: imageId
       },
       body: {
@@ -236,20 +240,20 @@ export function createBookingTravelPlanImagesModule(deps) {
   }
 
   function bindTravelPlanImageInput() {
-    if (els.travelPlanSegmentImageInput && els.travelPlanSegmentImageInput.dataset.travelPlanBound !== "true") {
-      els.travelPlanSegmentImageInput.addEventListener("change", () => {
-        void handleTravelPlanSegmentImageInputChange();
+    if (els.travelPlanItemImageInput && els.travelPlanItemImageInput.dataset.travelPlanBound !== "true") {
+      els.travelPlanItemImageInput.addEventListener("change", () => {
+        void handleTravelPlanItemImageInputChange();
       });
-      els.travelPlanSegmentImageInput.dataset.travelPlanBound = "true";
+      els.travelPlanItemImageInput.dataset.travelPlanBound = "true";
     }
   }
 
   return {
     bindTravelPlanImageInput,
-    handleTravelPlanSegmentImageInputChange,
-    removeTravelPlanSegmentImage,
-    renderTravelPlanSegmentImages,
-    reorderTravelPlanSegmentImage,
-    triggerTravelPlanSegmentImagePicker
+    handleTravelPlanItemImageInputChange,
+    removeTravelPlanItemImage,
+    renderTravelPlanItemImages,
+    reorderTravelPlanItemImage,
+    triggerTravelPlanItemImagePicker
   };
 }

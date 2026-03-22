@@ -51,7 +51,7 @@
   "typeName": "Identifier"
 },
   PARAM_9: {
-  "name": "segment_kind",
+  "name": "item_kind",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
@@ -75,7 +75,7 @@
   "typeName": "Identifier"
 },
   PARAM_13: {
-  "name": "segment_id",
+  "name": "item_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
@@ -387,12 +387,12 @@
         ]
       },
       {
-        key: "travel_plan_segment_search",
-        path: "/api/v1/travel-plan-segments/search",
+        key: "travel_plan_item_search",
+        path: "/api/v1/travel-plan-items/search",
         method: "GET",
         authenticated: true,
         requestType: null,
-        responseType: "TravelPlanSegmentSearchResponse",
+        responseType: "TravelPlanItemSearchResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5),
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_6),
@@ -404,11 +404,11 @@
         ]
       },
       {
-        key: "booking_travel_plan_segment_import",
-        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/import",
+        key: "booking_travel_plan_item_import",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import",
         method: "POST",
         authenticated: true,
-        requestType: "TravelPlanSegmentImportRequest",
+        requestType: "TravelPlanItemImportRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
@@ -416,11 +416,11 @@
         ]
       },
       {
-        key: "booking_travel_plan_segment_image_upload",
-        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images",
+        key: "booking_travel_plan_item_image_upload",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images",
         method: "POST",
         authenticated: true,
-        requestType: "TravelPlanSegmentImageUploadRequest",
+        requestType: "TravelPlanItemImageUploadRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
@@ -429,11 +429,11 @@
         ]
       },
       {
-        key: "booking_travel_plan_segment_image_delete",
-        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/{image_id}",
+        key: "booking_travel_plan_item_image_delete",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}",
         method: "DELETE",
         authenticated: true,
-        requestType: "TravelPlanSegmentImageDeleteRequest",
+        requestType: "TravelPlanItemImageDeleteRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
@@ -443,11 +443,11 @@
         ]
       },
       {
-        key: "booking_travel_plan_segment_image_reorder",
-        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/order",
+        key: "booking_travel_plan_item_image_reorder",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order",
         method: "PATCH",
         authenticated: true,
-        requestType: "TravelPlanSegmentImageReorderRequest",
+        requestType: "TravelPlanItemImageReorderRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),

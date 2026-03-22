@@ -486,11 +486,11 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handleSearchTravelPlanSegments,
-    handleImportTravelPlanSegment,
-    handleUploadTravelPlanSegmentImage,
-    handleDeleteTravelPlanSegmentImage,
-    handleReorderTravelPlanSegmentImages,
+    handleSearchTravelPlanItems,
+    handleImportTravelPlanItem,
+    handleUploadTravelPlanItemImage,
+    handleDeleteTravelPlanItemImage,
+    handleReorderTravelPlanItemImages,
     handlePatchBookingTravelPlan,
     handleTranslateBookingTravelPlanFromEnglish
   } = createBookingTravelPlanHandlers({
@@ -830,11 +830,11 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
-    handleSearchTravelPlanSegments,
-    handleImportTravelPlanSegment,
-    handleUploadTravelPlanSegmentImage,
-    handleDeleteTravelPlanSegmentImage,
-    handleReorderTravelPlanSegmentImages,
+    handleSearchTravelPlanItems,
+    handleImportTravelPlanItem,
+    handleUploadTravelPlanItemImage,
+    handleDeleteTravelPlanItemImage,
+    handleReorderTravelPlanItemImages,
     handlePatchBookingTravelPlan,
     handleTranslateBookingTravelPlanFromEnglish,
     handleUploadBookingPersonPhoto,

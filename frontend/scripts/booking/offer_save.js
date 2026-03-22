@@ -1,5 +1,4 @@
 import { bookingOfferRequest } from "../../Generated/API/generated_APIRequestFactory.js";
-import { createQueuedAutosaveController } from "../shared/edit_state.js";
 import { bookingContentLang } from "./i18n.js";
 
 export function createBookingOfferSaveController(ctx) {
@@ -19,23 +18,17 @@ export function createBookingOfferSaveController(ctx) {
     setOfferSaveEnabled
   } = ctx;
 
-  const offerAutosaveController = createQueuedAutosaveController({
-    delayMs: 350,
-    isEnabled: () => state.permissions.canEditBooking && Boolean(state.booking),
-    save: persistOffer
-  });
-
-  async function flushOfferAutosave() {
-    const result = await offerAutosaveController.flush();
-    return result === true ? true : Boolean(result?.booking);
-  }
-
-  function scheduleOfferAutosave() {
-    offerAutosaveController.schedule();
+  async function ensureOfferCleanState() {
+    if (state.dirty.offer || state.dirty.payment_terms) {
+      setOfferStatus("Save edits to enable.");
+      return false;
+    }
+    return true;
   }
 
   async function persistOffer() {
     if (!state.booking || !state.permissions.canEditBooking) return true;
+    if (!state.dirty.offer && !state.dirty.payment_terms) return true;
     clearOfferStatus();
 
     let offer;
@@ -43,7 +36,7 @@ export function createBookingOfferSaveController(ctx) {
       offer = collectOfferPayload();
     } catch (error) {
       setOfferStatus(String(error?.message || error));
-      return;
+      return false;
     }
 
     debugOffer("save:start", {
@@ -91,23 +84,22 @@ export function createBookingOfferSaveController(ctx) {
     if (!result?.booking) {
       clearPendingTotals?.();
       updateOfferTotalsInDom?.();
-      return result;
+      return false;
     }
 
     logOfferPaymentTermDueTypeMismatch?.(offer, result.booking);
 
     await applyOfferBookingResponse(result, { reloadActivities: true });
     setOfferSaveEnabled(false);
-    return result;
+    return true;
   }
 
   async function saveOffer() {
-    return await offerAutosaveController.runNow();
+    return await persistOffer();
   }
 
   return {
-    flushOfferAutosave,
-    scheduleOfferAutosave,
+    ensureOfferCleanState,
     saveOffer
   };
 }

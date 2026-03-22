@@ -32,7 +32,7 @@ import {
   isTravelingPerson,
   normalizeStringList
 } from "../shared/booking_persons.js";
-import { createQueuedAutosaveController, createSnapshotDirtyTracker } from "../shared/edit_state.js";
+import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
 import { renderBookingSectionHeader } from "./sections.js";
 
@@ -60,11 +60,6 @@ export function createBookingPersonsModule(ctx) {
     captureSnapshot: () => serializePersonDrafts(),
     isEnabled: () => state.permissions.canEditBooking,
     onDirtyChange: (isDirty) => setBookingSectionDirty("persons", isDirty)
-  });
-  const personsAutosaveController = createQueuedAutosaveController({
-    delayMs: 700,
-    isEnabled: () => state.permissions.canEditBooking && Boolean(state.booking),
-    save: persistPersonDrafts
   });
 
   function normalizePersonLanguageCode(value) {
@@ -259,16 +254,6 @@ export function createBookingPersonsModule(ctx) {
   function setPersonsEditorStatus(message) {
     if (!els.personsEditorStatus) return;
     els.personsEditorStatus.textContent = message || "";
-  }
-
-  function clearPersonsAutosaveTimer() {
-    personsAutosaveController.clear();
-  }
-
-  function schedulePersonsAutosave(person_id = state.active_person_id) {
-    const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
-    if (!targetPersonId) return;
-    personsAutosaveController.schedule(targetPersonId);
   }
 
   function collectCommaSeparatedValues(values) {
@@ -566,7 +551,6 @@ export function createBookingPersonsModule(ctx) {
     const personIndex = state.personDrafts.findIndex((draft) => draft.id === targetPersonId);
     const currentDraft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
     if (!currentDraft) return false;
-    clearPersonsAutosaveTimer();
     const isNewDraft = currentDraft._is_new === true;
     if (isNewDraft && !personDraftHasMeaningfulInput(currentDraft)) return true;
     if (!validatePersonDraft(currentDraft, { allowPartialDateOfBirth: false, focusFirstInvalid: targetPersonId === state.active_person_id })) {
@@ -612,7 +596,60 @@ export function createBookingPersonsModule(ctx) {
   }
 
   async function savePersonDrafts(person_id = state.active_person_id) {
-    return await personsAutosaveController.flush(person_id);
+    return await persistPersonDrafts(person_id);
+  }
+
+  async function saveAllPersonDrafts() {
+    if (!state.permissions.canEditBooking || !state.booking) return true;
+    updatePersonsDirtyState();
+    if (!state.dirty.persons) return true;
+    const drafts = Array.isArray(state.personDrafts) ? state.personDrafts.map((draft) => JSON.parse(JSON.stringify(draft))) : [];
+    let latestBooking = state.booking;
+
+    for (let index = 0; index < drafts.length; index += 1) {
+      const draft = drafts[index];
+      const targetPersonId = normalizeText(draft?.id);
+      const isNewDraft = draft?._is_new === true;
+      if (isNewDraft && !personDraftHasMeaningfulInput(draft)) continue;
+
+      const bookingPerson = getBookingPersons(latestBooking).find((person) => normalizeText(person.id) === targetPersonId) || null;
+      const bookingPayload = bookingPerson ? buildPersonPayloadFromDraft(clonePersonDraft(bookingPerson, index), index) : null;
+      const draftPayload = buildPersonPayloadFromDraft(draft, index);
+      const hasChanges = isNewDraft || JSON.stringify(draftPayload) !== JSON.stringify(bookingPayload);
+      if (!hasChanges) continue;
+
+      if (!validatePersonDraft(draft, { allowPartialDateOfBirth: false, focusFirstInvalid: targetPersonId === state.active_person_id })) {
+        return false;
+      }
+
+      const request = isNewDraft
+        ? bookingPersonCreateRequest({
+            baseURL: apiOrigin,
+            params: { booking_id: latestBooking.id }
+          })
+        : bookingPersonUpdateRequest({
+            baseURL: apiOrigin,
+            params: { booking_id: latestBooking.id, person_id: targetPersonId }
+          });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_persons_revision: Number(latestBooking.persons_revision || 0),
+          person: draftPayload,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+    }
+
+    state.booking = latestBooking;
+    applyBookingPayload({ booking: latestBooking });
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor();
+    return true;
   }
 
   function openPersonModal(index) {
@@ -642,7 +679,6 @@ export function createBookingPersonsModule(ctx) {
   async function closePersonModal() {
     const activeIndex = state.active_person_index;
     const draft = state.personDrafts[activeIndex];
-    clearPersonsAutosaveTimer();
     if (draft?._is_new && !personDraftHasMeaningfulInput(draft)) {
       state.personDrafts.splice(activeIndex, 1);
       finalizeClosePersonModal();
@@ -650,10 +686,6 @@ export function createBookingPersonsModule(ctx) {
       updatePersonsDirtyState();
       setPersonsEditorStatus("");
       return;
-    }
-    if (draft && state.permissions.canEditBooking && state.dirty.persons) {
-      const saved = await savePersonDrafts(draft.id);
-      if (!saved && personDraftHasMeaningfulInput(draft)) return;
     }
     finalizeClosePersonModal();
   }
@@ -861,8 +893,6 @@ export function createBookingPersonsModule(ctx) {
     if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
     const draft = state.personDrafts[state.active_person_index];
     if (!draft) return;
-    let allowAutosave = true;
-
     const dateTextDescriptor = findPersonDateFieldDescriptorByTextInput(target);
     const datePickerDescriptor = findPersonDateFieldDescriptorByPickerInput(target);
 
@@ -878,10 +908,6 @@ export function createBookingPersonsModule(ctx) {
       dateTextDescriptor.setValue(draft, normalizedDate);
       const allowPartial = event.type === "input";
       validatePersonDateField(dateTextDescriptor, normalizedDate, { allowPartial });
-      allowAutosave = !normalizedDate || (normalizedDate.length === 10 && validatePersonDraft(draft));
-      if (allowPartial && normalizedDate && normalizedDate.length < 10) {
-        allowAutosave = false;
-      }
     } else if (target.dataset.personRole) {
       const role = normalizeText(target.dataset.personRole);
       const nextRoles = new Set(draft.roles);
@@ -931,11 +957,6 @@ export function createBookingPersonsModule(ctx) {
       state.permissions.canEditBooking
     );
     updatePersonsDirtyState();
-    if (allowAutosave && validatePersonDraft(draft)) {
-      schedulePersonsAutosave(draft.id);
-    } else {
-      clearPersonsAutosaveTimer();
-    }
   }
 
   function openPersonDatePicker(button) {
@@ -980,7 +1001,6 @@ export function createBookingPersonsModule(ctx) {
       renderPersonsEditor({ include_modal: false });
       renderPersonModal();
       updatePersonsDirtyState();
-      schedulePersonsAutosave(draft.id);
       return;
     }
     const datePickerButton = event.target.closest(".booking-person-modal__date-picker-btn");
@@ -1109,6 +1129,7 @@ export function createBookingPersonsModule(ctx) {
     bindEvents,
     applyBookingPayload,
     renderPersonsEditor,
-    closePersonModal
+    closePersonModal,
+    saveAllPersonDrafts
   };
 }

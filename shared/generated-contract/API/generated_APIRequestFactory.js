@@ -420,15 +420,15 @@ export function bookingTravelPlanTranslateRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function travelPlanSegmentSearchPath(params = {}) {
-  return buildPath("/api/v1/travel-plan-segments/search", params);
+export function travelPlanItemSearchPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-items/search", params);
 }
 
-export function travelPlanSegmentSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = travelPlanSegmentSearchPath(params);
+export function travelPlanItemSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanItemSearchPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "travel_plan_segment_search",
+    key: "travel_plan_item_search",
     method: "GET",
     authenticated: true,
     url,
@@ -437,15 +437,15 @@ export function travelPlanSegmentSearchRequest({ baseURL = '', params = {}, quer
   };
 }
 
-export function bookingTravelPlanSegmentImportPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/import", params);
+export function bookingTravelPlanItemImportPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import", params);
 }
 
-export function bookingTravelPlanSegmentImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanSegmentImportPath(params);
+export function bookingTravelPlanItemImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanItemImportPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_segment_import",
+    key: "booking_travel_plan_item_import",
     method: "POST",
     authenticated: true,
     url,
@@ -454,15 +454,15 @@ export function bookingTravelPlanSegmentImportRequest({ baseURL = '', params = {
   };
 }
 
-export function bookingTravelPlanSegmentImageUploadPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images", params);
+export function bookingTravelPlanItemImageUploadPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images", params);
 }
 
-export function bookingTravelPlanSegmentImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanSegmentImageUploadPath(params);
+export function bookingTravelPlanItemImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanItemImageUploadPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_segment_image_upload",
+    key: "booking_travel_plan_item_image_upload",
     method: "POST",
     authenticated: true,
     url,
@@ -471,15 +471,15 @@ export function bookingTravelPlanSegmentImageUploadRequest({ baseURL = '', param
   };
 }
 
-export function bookingTravelPlanSegmentImageDeletePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/{image_id}", params);
+export function bookingTravelPlanItemImageDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}", params);
 }
 
-export function bookingTravelPlanSegmentImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanSegmentImageDeletePath(params);
+export function bookingTravelPlanItemImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanItemImageDeletePath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_segment_image_delete",
+    key: "booking_travel_plan_item_image_delete",
     method: "DELETE",
     authenticated: true,
     url,
@@ -488,15 +488,15 @@ export function bookingTravelPlanSegmentImageDeleteRequest({ baseURL = '', param
   };
 }
 
-export function bookingTravelPlanSegmentImageReorderPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/segments/{segment_id}/images/order", params);
+export function bookingTravelPlanItemImageReorderPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order", params);
 }
 
-export function bookingTravelPlanSegmentImageReorderRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanSegmentImageReorderPath(params);
+export function bookingTravelPlanItemImageReorderRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanItemImageReorderPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_segment_image_reorder",
+    key: "booking_travel_plan_item_image_reorder",
     method: "PATCH",
     authenticated: true,
     url,

@@ -121,9 +121,8 @@ test("booking page keeps critical init handlers wired to real local functions", 
   const names = await moduleLevelFunctionDeclarations(filePath);
   const required = [
     "loadActivities",
-    "saveOwner",
-    "saveStage",
-    "saveNote",
+    "saveCoreEdits",
+    "saveNoteEdits",
     "updateNoteSaveButtonState",
     "savePricing",
     "handleOfferCurrencyChange",
@@ -156,38 +155,142 @@ test("booking page does not declare duplicate imported bindings", async () => {
   );
 });
 
-test("offer row removal triggers an immediate save in the offers module", async () => {
-  const filePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_components.js");
-  const source = await readFile(filePath, "utf8");
+test("booking page uses a page-level dirty bar instead of local section save buttons", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingSource = await readFile(bookingPagePath, "utf8");
+
   assert.match(
-    source,
-    /data-offer-remove-component[\s\S]*?renderOfferComponentsTable\(\);[\s\S]*?await flushOfferAutosave\(\);/,
-    "Removing an offer row should re-render immediately and flush autosave so it does not stay only in the local draft"
+    bookingSource,
+    /id="booking_dirty_bar"[\s\S]*?id="booking_discard_edits_btn"[\s\S]*?id="booking_save_edits_btn"[\s\S]*?id="backToBackend"/,
+    "Booking UI should expose one sticky page-level control bar with discard, save, and close actions"
+  );
+  assert.doesNotMatch(bookingSource, /booking-detail-page__topbar/, "Booking page should not render a separate close-button topbar");
+  assert.doesNotMatch(bookingSource, /id="booking_note_save_btn"/, "Booking notes should no longer expose a local update button");
+  assert.doesNotMatch(bookingSource, /id="pricing_save_btn"/, "Pricing should no longer expose a local save button");
+  assert.doesNotMatch(bookingSource, /id="invoice_create_btn"/, "Invoice form should no longer expose a local save button");
+});
+
+test("booking page scrolls only inside the content region below the sticky control bar", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const bookingSource = await readFile(bookingPagePath, "utf8");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+
+  assert.match(
+    bookingSource,
+    /class="booking-detail-page__scroll"/,
+    "Booking markup should wrap everything below the sticky bar in a dedicated scroll region"
+  );
+  assert.match(
+    bookingSource,
+    /class="booking-detail-page__bar-top-gap"/,
+    "Booking markup should include a dedicated top gap element above the sticky control bar"
+  );
+  assert.match(
+    bookingSource,
+    /class="booking-detail-page__bar-gap"/,
+    "Booking markup should include a dedicated gap element below the sticky control bar"
+  );
+  assert.match(
+    bookingSource,
+    /id="generate_offer_dirty_hint" class="micro booking-inline-status booking-generated-offers-actions__hint"/,
+    "The booking page should render the generated-offer dirty hint with a dedicated hint class"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \{\s*[\s\S]*overflow: hidden;[\s\S]*grid-template-rows: auto minmax\(0, 1fr\);/,
+    "The booking page should lock the page layout to the viewport instead of scrolling the full document"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.section > \.container \{\s*[\s\S]*grid-template-rows: auto auto auto minmax\(0, 1fr\);/,
+    "The booking container should reserve dedicated rows above and below the sticky control bar"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-detail-page__bar-top-gap \{\s*[\s\S]*height: 1rem;/,
+    "The booking page should render a fixed 1rem gap above the sticky control bar"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-detail-page__bar-gap \{\s*[\s\S]*height: 1rem;/,
+    "The booking page should render a fixed 1rem gap below the sticky control bar"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-detail-page__scroll \{\s*[\s\S]*overflow: auto;[\s\S]*-ms-overflow-style: none;[\s\S]*scrollbar-width: none;[\s\S]*padding: 0 0 2rem;/,
+    "The booking content below the sticky bar should scroll inside its own region without showing a native scrollbar"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-detail-page__scroll::\-webkit\-scrollbar \{\s*[\s\S]*display: none;/,
+    "The booking scroll region should hide WebKit scrollbars"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-generated-offers-actions \{\s*[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*gap: 0\.35rem;/,
+    "The generated-offer action block should stack the clean-state hint below the button"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-generated-offers-actions__hint \{\s*[\s\S]*display: block;[\s\S]*margin: 0;[\s\S]*color: var\(--error-text-strong\);[\s\S]*text-align: center;/,
+    "The generated-offer clean-state hint should render as centered red helper text under the button"
   );
 });
 
-test("offer editor uses autosave instead of an explicit update button", async () => {
-  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
-  const offerComponentsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_components.js");
-  const offerSavePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_save.js");
-  const bookingSource = await readFile(bookingPagePath, "utf8");
-  const offerComponentsSource = await readFile(offerComponentsPath, "utf8");
-  const offerSaveSource = await readFile(offerSavePath, "utf8");
+test("booking page uses the dirty bar as the only red dirty-state surface", async () => {
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const bookingSource = await readFile(bookingPageScriptPath, "utf8");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
 
   assert.doesNotMatch(
     bookingSource,
-    /id="offer_save_btn"/,
-    "Offer UI should not expose a manual update button"
+    /setDirtySurface\(/,
+    "Booking sections should no longer be painted as red dirty surfaces"
   );
   assert.match(
-    offerComponentsSource,
-    /data-offer-component-quantity[\s\S]*?addEventListener\("input",[\s\S]*?syncOfferInputTotals\(\)/,
-    "Offer quantity changes should update totals live"
+    bookingSource,
+    /dirtyBar\.classList\.toggle\("booking-dirty-bar--dirty", isDirty\);/,
+    "The page-level dirty bar should own the visual dirty state"
   );
   assert.match(
-    offerSaveSource,
-    /function scheduleOfferAutosave\(/,
-    "Offer editor should persist through autosave"
+    bookingStyles,
+    /\.booking-detail-page \.booking-dirty-bar\.booking-dirty-bar--dirty \{/,
+    "Booking styles should define a dedicated dirty-state background for the page-level dirty bar"
+  );
+});
+
+test("booking dirty bar stays visible while clean and reports save or discard progress", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+  const bookingSource = await readFile(bookingPageScriptPath, "utf8");
+
+  assert.match(
+    bookingSource,
+    /els\.dirtyBar\.hidden = false;/,
+    "The sticky dirty bar should stay visible even when there are no unsaved edits"
+  );
+  assert.match(
+    bookingSource,
+    /const isBusy = isSaving \|\| isDiscarding;[\s\S]*?els\.saveEditsBtn\.disabled = isBusy \|\| !isDirty;[\s\S]*?els\.discardEditsBtn\.disabled = isBusy \|\| !isDirty;/,
+    "Both dirty-bar buttons should be disabled while the page is clean or busy"
+  );
+  assert.match(
+    bookingSource,
+    /backendT\("booking\.page_save\.saving", "Saving edits\.\.\."\)[\s\S]*backendT\("booking\.page_discard\.running", "Discarding edits\.\.\."\)[\s\S]*backendT\("booking\.page_save\.saved", "All edits saved"\)[\s\S]*backendT\("booking\.page_discard\.saved", "All edits reverted"\)/,
+    "The dirty bar should expose explicit save and discard progress and completion text"
+  );
+  assert.match(
+    bookingSource,
+    /els\.dirtyBarSummary\.textContent = isDirty[\s\S]*\?\s*backendT\("booking\.page_save\.summary", "Changed sections: \{sections\}", \{ sections: labels\.join\(", "\) \}\)[\s\S]*:\s*"";/,
+    "The clean dirty-bar state should not repeat the title text in the summary line"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_dirty_bar_summary"><\/span>/,
+    "The booking page should not seed a duplicate clean-state summary in the initial markup"
   );
 });
 
@@ -202,35 +305,89 @@ test("offer component editor does not expose discounts_credits as a selectable c
   );
 });
 
-test("generate offer waits for pending offer autosave before POSTing", async () => {
-  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
-  const offersSource = await readFile(offersModulePath, "utf8");
+test("booking page save orchestrates dirty sections through existing section endpoints", async () => {
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingSource = await readFile(bookingPageScriptPath, "utf8");
 
   assert.match(
-    offersSource,
-    /async function handleGenerateOffer\(\)\s*\{[\s\S]*?await flushOfferAutosave\(\)[\s\S]*?bookingGenerateOfferRequest/,
-    "Generating an offer PDF should flush pending offer autosave so it uses the latest offer_revision"
-  );
-  assert.match(
-    offersSource,
-    /expected_offer_revision:\s*getBookingRevision\("offer_revision"\)/,
-    "Generating an offer PDF should send the current offer revision field, not pass the whole booking object"
+    bookingSource,
+    /async function savePageEdits\(\)\s*\{[\s\S]*?saveCoreEdits\(\)[\s\S]*?saveNoteEdits\(\)[\s\S]*?personsModule\.saveAllPersonDrafts\(\)[\s\S]*?saveOffer\(\)[\s\S]*?travelPlanModule\.saveTravelPlan\(\)[\s\S]*?savePricing\(\)[\s\S]*?createInvoice\(\)/,
+    "Page save should orchestrate the existing booking section endpoints in order"
   );
 });
 
-test("generated offer comment and delete actions flush pending offer autosave", async () => {
+test("full booking reloads force-reset core drafts so discard restores saved values", async () => {
+  const bookingPageDataModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_data.js");
+  const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const bookingPageDataSource = await readFile(bookingPageDataModulePath, "utf8");
+  const coreSource = await readFile(coreModulePath, "utf8");
+
+  assert.match(
+    bookingPageDataSource,
+    /applyBookingPayload\(bookingPayload,\s*\{\s*forceDraftReset:\s*true\s*\}\);/,
+    "A full booking reload should force-reset local drafts from the freshly fetched backend payload"
+  );
+  assert.match(
+    coreSource,
+    /function applyBookingPayload\(payload = \{\}, options = \{\}\)\s*\{[\s\S]*?syncCoreDraftFromBooking\(\{\s*force:\s*options\.forceDraftReset === true\s*\}\);/,
+    "The core booking module should accept a forced draft reset so discard restores saved booking details and notes"
+  );
+});
+
+test("offer editor persists only through explicit page save", async () => {
+  const offerSavePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_save.js");
+  const offerSaveSource = await readFile(offerSavePath, "utf8");
+
+  assert.doesNotMatch(
+    offerSaveSource,
+    /createQueuedAutosaveController/,
+    "Offer save controller should no longer depend on a queued autosave helper"
+  );
+  assert.match(
+    offerSaveSource,
+    /async function saveOffer\(\)\s*\{\s*return await persistOffer\(\);\s*\}/,
+    "Offer drafts should only persist through the explicit save path"
+  );
+});
+
+test("generated offer actions are gated behind a clean page state", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offer_generated_offers.js");
+  const bookingSource = await readFile(bookingPagePath, "utf8");
   const offersSource = await readFile(offersModulePath, "utf8");
 
   assert.match(
-    offersSource,
-    /async function saveGeneratedOfferComment\([\s\S]*?await flushOfferAutosave\(\)/,
-    "Generated-offer comment updates should wait for pending offer autosave before using offer_revision"
+    bookingSource,
+    /id="generate_offer_btn"[^>]*data-requires-clean-state/,
+    "The new-offer button should be disabled until pending page edits are saved or discarded"
   );
   assert.match(
     offersSource,
-    /async function deleteGeneratedOffer\([\s\S]*?await flushOfferAutosave\(\)/,
-    "Generated-offer deletion should wait for pending offer autosave before using offer_revision"
+    /data-generated-offer-edit-comment="[^"]+"[^>]*data-requires-clean-state[\s\S]*data-generated-offer-delete="[^"]+"[^>]*data-requires-clean-state/,
+    "Generated-offer comment edit and delete controls should be disabled while the page is dirty"
+  );
+  assert.match(
+    offersSource,
+    /ensureOfferCleanState/,
+    "Generated-offer actions should call the explicit clean-state guard before mutating generated offers"
+  );
+});
+
+test("persons and travel plan editors no longer autosave from local interactions", async () => {
+  const personsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
+  const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const personsSource = await readFile(personsModulePath, "utf8");
+  const travelPlanSource = await readFile(travelPlanModulePath, "utf8");
+
+  assert.doesNotMatch(
+    personsSource,
+    /createQueuedAutosaveController|await savePersonDrafts\(draft\.id\)/,
+    "Person drafts should stay local until the page save bar is used"
+  );
+  assert.doesNotMatch(
+    travelPlanSource,
+    /createQueuedAutosaveController|scheduleTravelPlanAutosave/,
+    "Travel plan edits should stay local until the page save bar is used"
   );
 });
 
@@ -369,7 +526,7 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   const helperSource = await readFile(travelPlanHelpersPath, "utf8");
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
-  for (const helperName of ["addDay", "removeDay", "addSegment", "removeSegment", "moveSegment", "addLink", "removeLink"]) {
+  for (const helperName of ["addDay", "removeDay", "addItem", "removeItem", "moveItem", "addLink", "removeLink"]) {
     assert.match(
       source,
       new RegExp(`function ${helperName}\\(`),
@@ -383,37 +540,37 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="timing_kind"/,
-    "travel_plan.js should render a timing mode selector for each segment"
+    /data-travel-plan-item-field="timing_kind"/,
+    "travel_plan.js should render a timing mode selector for each item"
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="time_point_date"/,
+    /data-travel-plan-item-field="time_point_date"/,
     "travel_plan.js should render a date input for point timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="time_point_time"/,
+    /data-travel-plan-item-field="time_point_time"/,
     "travel_plan.js should render a 5-minute time selector for point timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="start_time_date"/,
+    /data-travel-plan-item-field="start_time_date"/,
     "travel_plan.js should render a start-date input for range timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="start_time_time"/,
+    /data-travel-plan-item-field="start_time_time"/,
     "travel_plan.js should render a start-time selector for range timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="end_time_date"/,
+    /data-travel-plan-item-field="end_time_date"/,
     "travel_plan.js should render an end-date input for range timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-segment-field="end_time_time"/,
+    /data-travel-plan-item-field="end_time_time"/,
     "travel_plan.js should render an end-time selector for range timing mode"
   );
   assert.match(

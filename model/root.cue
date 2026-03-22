@@ -20,11 +20,11 @@ import (
 		BookingPersonDocument:                          entityModel.#BookingPersonDocument
 		BookingTravelPlan:                              entityModel.#BookingTravelPlan
 		BookingTravelPlanDay:                           entityModel.#BookingTravelPlanDay
-		BookingTravelPlanSegment:                       entityModel.#BookingTravelPlanSegment
-		BookingTravelPlanSegmentImage:                  entityModel.#BookingTravelPlanSegmentImage
-		BookingTravelPlanSegmentImageSourceAttribution: entityModel.#BookingTravelPlanSegmentImageSourceAttribution
-		BookingTravelPlanSegmentImageFocalPoint:        entityModel.#BookingTravelPlanSegmentImageFocalPoint
-		BookingTravelPlanSegmentCopiedFrom:             entityModel.#BookingTravelPlanSegmentCopiedFrom
+		BookingTravelPlanItem:                       entityModel.#BookingTravelPlanItem
+		BookingTravelPlanItemImage:                  entityModel.#BookingTravelPlanItemImage
+		BookingTravelPlanItemImageSourceAttribution: entityModel.#BookingTravelPlanItemImageSourceAttribution
+		BookingTravelPlanItemImageFocalPoint:        entityModel.#BookingTravelPlanItemImageFocalPoint
+		BookingTravelPlanItemCopiedFrom:             entityModel.#BookingTravelPlanItemCopiedFrom
 		BookingTravelPlanOfferComponentLink:            entityModel.#BookingTravelPlanOfferComponentLink
 		BookingOfferDiscount:                           entityModel.#BookingOfferDiscount
 		Supplier:                                       entityModel.#Supplier
@@ -45,7 +45,7 @@ import (
 		BookingStage:                        enumModel.#BookingStage
 		BookingPersonRole:                   enumModel.#BookingPersonRole
 		TravelPlanTimingKind:                enumModel.#TravelPlanTimingKind
-		TravelPlanSegmentKind:               enumModel.#TravelPlanSegmentKind
+		TravelPlanItemKind:               enumModel.#TravelPlanItemKind
 		TravelPlanFinancialCoverageStatus:   enumModel.#TravelPlanFinancialCoverageStatus
 		TravelPlanOfferCoverageType:         enumModel.#TravelPlanOfferCoverageType
 		SupplierCategory:                    enumModel.#SupplierCategory
@@ -87,8 +87,8 @@ import (
 		OfferExchangeRatesResponse:                       apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                               apiModel.#BookingListFilters
 		TourListFilters:                                  apiModel.#TourListFilters
-		TravelPlanSegmentSearchResult:                    apiModel.#TravelPlanSegmentSearchResult
-		TravelPlanSegmentSearchResponse:                  apiModel.#TravelPlanSegmentSearchResponse
+		TravelPlanItemSearchResult:                    apiModel.#TravelPlanItemSearchResult
+		TravelPlanItemSearchResponse:                  apiModel.#TravelPlanItemSearchResponse
 		AuthenticatedUser:                                apiModel.#AuthenticatedUser
 		AuthMeResponse:                                   apiModel.#AuthMeResponse
 		MobileBootstrap:                                  apiModel.#MobileBootstrap
@@ -124,11 +124,11 @@ import (
 		BookingNotesUpdateRequest:                        apiModel.#BookingNotesUpdateRequest
 		BookingTravelPlanUpdateRequest:                   apiModel.#BookingTravelPlanUpdateRequest
 		BookingPricingUpdateRequest:                      apiModel.#BookingPricingUpdateRequest
-		TravelPlanSegmentSearchRequest:                   apiModel.#TravelPlanSegmentSearchRequest
-		TravelPlanSegmentImportRequest:                   apiModel.#TravelPlanSegmentImportRequest
-		TravelPlanSegmentImageUploadRequest:              apiModel.#TravelPlanSegmentImageUploadRequest
-		TravelPlanSegmentImageDeleteRequest:              apiModel.#TravelPlanSegmentImageDeleteRequest
-		TravelPlanSegmentImageReorderRequest:             apiModel.#TravelPlanSegmentImageReorderRequest
+		TravelPlanItemSearchRequest:                   apiModel.#TravelPlanItemSearchRequest
+		TravelPlanItemImportRequest:                   apiModel.#TravelPlanItemImportRequest
+		TravelPlanItemImageUploadRequest:              apiModel.#TravelPlanItemImageUploadRequest
+		TravelPlanItemImageDeleteRequest:              apiModel.#TravelPlanItemImageDeleteRequest
+		TravelPlanItemImageReorderRequest:             apiModel.#TravelPlanItemImageReorderRequest
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                      apiModel.#BookingGenerateOfferRequest
 		BookingGenerateOfferDepositAcceptanceRuleRequest: apiModel.#BookingGenerateOfferDepositAcceptanceRuleRequest

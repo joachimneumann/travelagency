@@ -172,14 +172,14 @@ function pruneTravelPlan(travelPlan, keepLangs) {
       removedLanguages += result.removedLanguages;
     }
 
-    for (const segment of Array.isArray(day.segments) ? day.segments : []) {
+    for (const item of Array.isArray(day.items) ? day.items : []) {
       for (const [mapField, plainField, emptyValue] of [
         ["time_label_i18n", "time_label", null],
         ["title_i18n", "title", ""],
         ["details_i18n", "details", null],
         ["location_i18n", "location", null]
       ]) {
-        const result = applyPrunedField(segment, mapField, plainField, keepLangs, emptyValue);
+        const result = applyPrunedField(item, mapField, plainField, keepLangs, emptyValue);
         if (result.changed) fieldChanges += 1;
         removedLanguages += result.removedLanguages;
       }

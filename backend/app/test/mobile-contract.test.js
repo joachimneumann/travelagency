@@ -865,9 +865,9 @@ test("booking travel plan patch persists days, links, and derived financial cove
               day_number: 1,
               title: "Arrival",
               overnight_location: "Hoi An",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   timing_kind: "point",
                   time_point: "19:00",
                   kind: "transport",
@@ -875,7 +875,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   financial_coverage_status: "not_covered"
                 },
                 {
-                  id: "travel_plan_segment_2",
+                  id: "travel_plan_item_2",
                   timing_kind: "range",
                   start_time: "14:00",
                   end_time: "15:00",
@@ -884,7 +884,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   financial_coverage_status: "not_covered"
                 },
                 {
-                  id: "travel_plan_segment_3",
+                  id: "travel_plan_item_3",
                   timing_kind: "label",
                   time_label: "Evening",
                   kind: "free_time",
@@ -896,13 +896,13 @@ test("booking travel plan patch persists days, links, and derived financial cove
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_segment_id: "travel_plan_segment_1",
+              travel_plan_item_id: "travel_plan_item_1",
               offer_component_id: "offer_component_transfer_1",
               coverage_type: "partial"
             },
             {
               id: "travel_plan_offer_link_2",
-              travel_plan_segment_id: "travel_plan_segment_2",
+              travel_plan_item_id: "travel_plan_item_2",
               offer_component_id: "offer_component_room_1",
               coverage_type: "full"
             }
@@ -915,24 +915,24 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(travelPlanPatchResult.body.booking.travel_plan_revision, 1);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days.length, 1);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.offer_component_links.length, 2);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].timing_kind, "point");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].time_point, "19:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].time_label, null);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].timing_kind, "range");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].start_time, "14:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].end_time, "15:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[2].timing_kind, "label");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].segments[2].time_label, "Evening");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].timing_kind, "point");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].time_point, "19:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].time_label, null);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].timing_kind, "range");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].start_time, "14:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].end_time, "15:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[2].timing_kind, "label");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[2].time_label, "Evening");
   assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].financial_coverage_status,
+    travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].financial_coverage_status,
     "partially_covered"
   );
   assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].segments[1].financial_coverage_status,
+    travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].financial_coverage_status,
     "covered"
   );
   assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].segments[2].financial_coverage_status,
+    travelPlanPatchResult.body.booking.travel_plan.days[0].items[2].financial_coverage_status,
     "not_applicable"
   );
 
@@ -943,10 +943,10 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Arrival");
   assert.equal(
-    detailAfter.body.booking.travel_plan.days[0].segments[0].financial_coverage_status,
+    detailAfter.body.booking.travel_plan.days[0].items[0].financial_coverage_status,
     "partially_covered"
   );
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].segments[0].time_point, "19:00");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].items[0].time_point, "19:00");
 
   const activitiesAfter = await requestJson(
     endpointPath("booking_activities").replace("{booking_id}", bookingId),
@@ -976,7 +976,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: []
+              items: []
             }
           ],
           offer_component_links: []
@@ -999,7 +999,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: []
+              items: []
             }
           ],
           offer_component_links: []
@@ -1011,7 +1011,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
   assert.equal(stalePatch.body.code, "BOOKING_REVISION_MISMATCH");
 });
 
-test("booking travel plan patch rejects invalid segments and unknown offer links", async () => {
+test("booking travel plan patch rejects invalid items and unknown offer links", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1028,9 +1028,9 @@ test("booking travel plan patch rejects invalid segments and unknown offer links
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   kind: "transport",
                   title: ""
                 }
@@ -1058,9 +1058,9 @@ test("booking travel plan patch rejects invalid segments and unknown offer links
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   timing_kind: "point",
                   kind: "transport",
                   title: "Airport transfer"
@@ -1089,9 +1089,9 @@ test("booking travel plan patch rejects invalid segments and unknown offer links
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   kind: "transport",
                   title: "Airport transfer"
                 }
@@ -1101,7 +1101,7 @@ test("booking travel plan patch rejects invalid segments and unknown offer links
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_segment_id: "travel_plan_segment_1",
+              travel_plan_item_id: "travel_plan_item_1",
               offer_component_id: "offer_component_missing",
               coverage_type: "full"
             }
@@ -1114,7 +1114,7 @@ test("booking travel plan patch rejects invalid segments and unknown offer links
   assert.match(String(invalidLinkResult.body.error || ""), /unknown offer component/i);
 });
 
-test("travel plan segments can be searched and imported from another booking", async () => {
+test("travel plan items can be searched and imported from another booking", async () => {
   const sourceBooking = await createSeedBooking();
   const targetBooking = await createPublicBooking({
     name: "Target User",
@@ -1135,9 +1135,9 @@ test("travel plan segments can be searched and imported from another booking", a
         date: "2026-04-01",
         title: "Arrival",
         overnight_location: "Hoi An",
-        segments: [
+        items: [
           {
-            id: "source_segment_1",
+            id: "source_item_1",
             timing_kind: "label",
             time_label: "Afternoon",
             kind: "accommodation",
@@ -1147,8 +1147,8 @@ test("travel plan segments can be searched and imported from another booking", a
             financial_note: "",
             images: [
               {
-                id: "source_segment_image_1",
-                storage_path: "/public/v1/booking-images/source/segment-1.webp",
+                id: "source_item_image_1",
+                storage_path: "/public/v1/booking-images/source/item-1.webp",
                 sort_order: 0,
                 is_primary: true,
                 is_customer_visible: true,
@@ -1170,7 +1170,7 @@ test("travel plan segments can be searched and imported from another booking", a
         date: "2026-05-10",
         title: "Start",
         overnight_location: "Da Nang",
-        segments: [],
+        items: [],
         notes: ""
       }
     ],
@@ -1179,20 +1179,20 @@ test("travel plan segments can be searched and imported from another booking", a
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const searchResult = await requestJson(
-    `${endpointPath("travel_plan_segment_search")}?q=boutique&segment_kind=accommodation`,
+    `${endpointPath("travel_plan_item_search")}?q=boutique&item_kind=accommodation`,
     apiHeaders()
   );
   assert.equal(searchResult.status, 200);
   assert.equal(typeof searchResult.body.total, "number");
   assert.ok(Array.isArray(searchResult.body.items));
-  const foundSegment = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
-  assert.ok(foundSegment, "Expected imported segment to appear in search results");
-  assert.equal(foundSegment.segment_id, "source_segment_1");
-  assert.equal(foundSegment.segment_kind, "accommodation");
-  assert.equal(foundSegment.thumbnail_url, "/public/v1/booking-images/source/segment-1.webp");
+  const foundItem = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
+  assert.ok(foundItem, "Expected imported item to appear in search results");
+  assert.equal(foundItem.item_id, "source_item_1");
+  assert.equal(foundItem.item_kind, "accommodation");
+  assert.equal(foundItem.thumbnail_url, "/public/v1/booking-images/source/item-1.webp");
 
   const importResult = await requestJson(
-    endpointPath("booking_travel_plan_segment_import")
+    endpointPath("booking_travel_plan_item_import")
       .replace("{booking_id}", targetBooking.id)
       .replace("{day_id}", "target_day_1"),
     apiHeaders(),
@@ -1201,7 +1201,7 @@ test("travel plan segments can be searched and imported from another booking", a
       body: {
         expected_travel_plan_revision: targetBooking.travel_plan_revision,
         source_booking_id: sourceBooking.id,
-        source_segment_id: "source_segment_1",
+        source_item_id: "source_item_1",
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
@@ -1211,17 +1211,17 @@ test("travel plan segments can be searched and imported from another booking", a
     }
   );
   assert.equal(importResult.status, 200);
-  assert.equal(importResult.body.booking.travel_plan.days[0].segments.length, 1);
-  const importedSegment = importResult.body.booking.travel_plan.days[0].segments[0];
-  assert.equal(importedSegment.title, "Boutique hotel check-in");
-  assert.equal(importedSegment.copied_from.source_booking_id, sourceBooking.id);
-  assert.equal(importedSegment.copied_from.source_segment_id, "source_segment_1");
-  assert.equal(importedSegment.images.length, 1);
-  assert.notEqual(importedSegment.images[0].id, "source_segment_image_1");
-  assert.equal(importedSegment.images[0].storage_path, "/public/v1/booking-images/source/segment-1.webp");
+  assert.equal(importResult.body.booking.travel_plan.days[0].items.length, 1);
+  const importedItem = importResult.body.booking.travel_plan.days[0].items[0];
+  assert.equal(importedItem.title, "Boutique hotel check-in");
+  assert.equal(importedItem.copied_from.source_booking_id, sourceBooking.id);
+  assert.equal(importedItem.copied_from.source_item_id, "source_item_1");
+  assert.equal(importedItem.images.length, 1);
+  assert.notEqual(importedItem.images[0].id, "source_item_image_1");
+  assert.equal(importedItem.images[0].storage_path, "/public/v1/booking-images/source/item-1.webp");
 });
 
-test("travel plan segment images can be reordered and deleted", async () => {
+test("travel plan item images can be reordered and deleted", async () => {
   const booking = await createSeedBooking();
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -1235,9 +1235,9 @@ test("travel plan segment images can be reordered and deleted", async () => {
         date: "2026-04-02",
         title: "Arrival",
         overnight_location: "Hue",
-        segments: [
+        items: [
           {
-            id: "travel_segment_1",
+            id: "travel_item_1",
             timing_kind: "label",
             time_label: "Morning",
             kind: "activity",
@@ -1247,14 +1247,14 @@ test("travel plan segment images can be reordered and deleted", async () => {
             financial_note: "",
             images: [
               {
-                id: "segment_image_a",
+                id: "item_image_a",
                 storage_path: "/public/v1/booking-images/a.webp",
                 sort_order: 0,
                 is_primary: true,
                 is_customer_visible: true
               },
               {
-                id: "segment_image_b",
+                id: "item_image_b",
                 storage_path: "/public/v1/booking-images/b.webp",
                 sort_order: 1,
                 is_primary: false,
@@ -1271,31 +1271,31 @@ test("travel plan segment images can be reordered and deleted", async () => {
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const reorderResult = await requestJson(
-    endpointPath("booking_travel_plan_segment_image_reorder")
+    endpointPath("booking_travel_plan_item_image_reorder")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_1")
-      .replace("{segment_id}", "travel_segment_1"),
+      .replace("{item_id}", "travel_item_1"),
     apiHeaders(),
     {
       method: "PATCH",
       body: {
         expected_travel_plan_revision: booking.travel_plan_revision,
-        image_ids: ["segment_image_b", "segment_image_a"]
+        image_ids: ["item_image_b", "item_image_a"]
       }
     }
   );
   assert.equal(reorderResult.status, 200);
-  const reorderedImages = reorderResult.body.booking.travel_plan.days[0].segments[0].images;
-  assert.deepEqual(reorderedImages.map((image) => image.id), ["segment_image_b", "segment_image_a"]);
+  const reorderedImages = reorderResult.body.booking.travel_plan.days[0].items[0].images;
+  assert.deepEqual(reorderedImages.map((image) => image.id), ["item_image_b", "item_image_a"]);
   assert.equal(reorderedImages[0].is_primary, true);
   assert.equal(reorderedImages[1].is_primary, false);
 
   const deleteResult = await requestJson(
-    endpointPath("booking_travel_plan_segment_image_delete")
+    endpointPath("booking_travel_plan_item_image_delete")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_1")
-      .replace("{segment_id}", "travel_segment_1")
-      .replace("{image_id}", "segment_image_b"),
+      .replace("{item_id}", "travel_item_1")
+      .replace("{image_id}", "item_image_b"),
     apiHeaders(),
     {
       method: "DELETE",
@@ -1305,13 +1305,13 @@ test("travel plan segment images can be reordered and deleted", async () => {
     }
   );
   assert.equal(deleteResult.status, 200);
-  const remainingImages = deleteResult.body.booking.travel_plan.days[0].segments[0].images;
+  const remainingImages = deleteResult.body.booking.travel_plan.days[0].items[0].images;
   assert.equal(remainingImages.length, 1);
-  assert.equal(remainingImages[0].id, "segment_image_a");
+  assert.equal(remainingImages[0].id, "item_image_a");
   assert.equal(remainingImages[0].is_primary, true);
 });
 
-test("travel plan segment images can be uploaded", { skip: !HAS_MAGICK }, async () => {
+test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () => {
   const booking = await createSeedBooking();
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -1325,13 +1325,13 @@ test("travel plan segment images can be uploaded", { skip: !HAS_MAGICK }, async 
         date: "2026-04-03",
         title: "Upload day",
         overnight_location: "Hanoi",
-        segments: [
+        items: [
           {
-            id: "travel_segment_upload_1",
+            id: "travel_item_upload_1",
             timing_kind: "label",
             time_label: "Anytime",
             kind: "activity",
-            title: "Photo segment",
+            title: "Photo item",
             details: "",
             location: "Hanoi",
             financial_note: "",
@@ -1346,22 +1346,22 @@ test("travel plan segment images can be uploaded", { skip: !HAS_MAGICK }, async 
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const uploadResult = await requestJson(
-    endpointPath("booking_travel_plan_segment_image_upload")
+    endpointPath("booking_travel_plan_item_image_upload")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_upload_1")
-      .replace("{segment_id}", "travel_segment_upload_1"),
+      .replace("{item_id}", "travel_item_upload_1"),
     apiHeaders(),
     {
       method: "POST",
       body: {
         expected_travel_plan_revision: booking.travel_plan_revision,
-        filename: "segment.png",
+        filename: "item.png",
         data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC"
       }
     }
   );
   assert.equal(uploadResult.status, 200);
-  const uploadedImages = uploadResult.body.booking.travel_plan.days[0].segments[0].images;
+  const uploadedImages = uploadResult.body.booking.travel_plan.days[0].items[0].images;
   assert.equal(uploadedImages.length, 1);
   assert.match(String(uploadedImages[0].storage_path || ""), /^\/public\/v1\/booking-images\//);
   assert.equal(uploadedImages[0].is_primary, true);
@@ -1427,9 +1427,9 @@ test("suppliers can be created and updated, and travel plan supplier references 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   kind: "accommodation",
                   title: "Hotel check-in",
                   supplier_id: supplierId
@@ -1444,7 +1444,7 @@ test("suppliers can be created and updated, and travel plan supplier references 
   );
   assert.equal(validTravelPlanPatchResult.status, 200);
   assert.equal(
-    validTravelPlanPatchResult.body.booking.travel_plan.days[0].segments[0].supplier_id,
+    validTravelPlanPatchResult.body.booking.travel_plan.days[0].items[0].supplier_id,
     supplierId
   );
 
@@ -1461,9 +1461,9 @@ test("suppliers can be created and updated, and travel plan supplier references 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   kind: "accommodation",
                   title: "Hotel check-in",
                   supplier_id: "supplier_missing"
@@ -1529,9 +1529,9 @@ test("booking generated offers store immutable snapshots", async () => {
               date: "2026-04-10",
               title: "Arrival in Hoi An",
               overnight_location: "Hoi An",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   timing_kind: "point",
                   time_point: "2026-04-10T19:00",
                   kind: "transport",
@@ -1539,7 +1539,7 @@ test("booking generated offers store immutable snapshots", async () => {
                   details: "Private transfer from Da Nang airport to the hotel in Hoi An."
                 },
                 {
-                  id: "travel_plan_segment_2",
+                  id: "travel_plan_item_2",
                   timing_kind: "label",
                   time_label: "Evening",
                   kind: "accommodation",
@@ -1552,7 +1552,7 @@ test("booking generated offers store immutable snapshots", async () => {
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_segment_id: "travel_plan_segment_2",
+              travel_plan_item_id: "travel_plan_item_2",
               offer_component_id: "offer_component_room_1",
               coverage_type: "full"
             }
@@ -1584,7 +1584,7 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(generatedOffer.offer.components[0].details, "Hotel room");
   assert.equal(generatedOffer.travel_plan.days.length, 1);
   assert.equal(generatedOffer.travel_plan.days[0].title, "Arrival in Hoi An");
-  assert.equal(generatedOffer.travel_plan.days[0].segments[0].title, "Airport transfer");
+  assert.equal(generatedOffer.travel_plan.days[0].items[0].title, "Airport transfer");
   assert.match(generatedOffer.filename, /^ATP offer \d{4}-\d{2}-\d{2}\.pdf$/);
   assert.equal(typeof generatedOffer.pdf_url, "string");
   assert.equal("pdf_frozen_at" in generatedOffer, false);
@@ -1634,9 +1634,9 @@ test("booking generated offers store immutable snapshots", async () => {
               date: "2026-04-10",
               title: "Updated arrival plan",
               overnight_location: "Hoi An",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   timing_kind: "point",
                   time_point: "2026-04-10T20:00",
                   kind: "transport",
@@ -1660,10 +1660,10 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(detailAfter.body.booking.generated_offers.length, 1);
   assert.equal(detailAfter.body.booking.generated_offers[0].offer.components[0].details, "Hotel room");
   assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].title, "Arrival in Hoi An");
-  assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].segments[0].title, "Airport transfer");
+  assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].items[0].title, "Airport transfer");
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Updated hotel room");
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Updated arrival plan");
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].segments[0].title, "Updated airport transfer");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].items[0].title, "Updated airport transfer");
 });
 
 test("booking detail normalizes generated-offer travel plan snapshots against the frozen offer snapshot", async () => {
@@ -1713,9 +1713,9 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              segments: [
+              items: [
                 {
-                  id: "travel_plan_segment_1",
+                  id: "travel_plan_item_1",
                   kind: "accommodation",
                   title: "Hotel check-in"
                 }
@@ -1725,7 +1725,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_segment_id: "travel_plan_segment_1",
+              travel_plan_item_id: "travel_plan_item_1",
               offer_component_id: "offer_component_room_1",
               coverage_type: "full"
             }
@@ -1756,7 +1756,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   const generatedOfferRecord = bookingRecord.generated_offers.find((item) => item.id === generatedOfferId);
   assert.ok(generatedOfferRecord);
   assert.equal(Object.prototype.hasOwnProperty.call(generatedOfferRecord, "payment_terms"), false);
-  delete generatedOfferRecord.travel_plan.days[0].segments[0].financial_coverage_status;
+  delete generatedOfferRecord.travel_plan.days[0].items[0].financial_coverage_status;
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const detailResult = await requestJson(
@@ -1765,7 +1765,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   );
   assert.equal(detailResult.status, 200);
   assert.equal(
-    detailResult.body.booking.generated_offers[0].travel_plan.days[0].segments[0].financial_coverage_status,
+    detailResult.body.booking.generated_offers[0].travel_plan.days[0].items[0].financial_coverage_status,
     "covered"
   );
 });

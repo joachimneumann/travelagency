@@ -474,11 +474,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_TRAVEL_PLAN_TRANSLATE_REQUEST_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SEGMENT_SEARCH_RESPONSE_SCHEMA = {
-        name: "TravelPlanSegmentSearchResponse",
+      export const TRAVEL_PLAN_ITEM_SEARCH_RESPONSE_SCHEMA = {
+        name: "TravelPlanItemSearchResponse",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanSegmentSearchResponse",
+        sourceType: "openapi.components.schemas.TravelPlanItemSearchResponse",
         requireOneOf: [],
         fields: [
     schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_63),
@@ -486,21 +486,21 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanSegmentSearchResponse(value) {
-        return validateShape(value, TRAVEL_PLAN_SEGMENT_SEARCH_RESPONSE_SCHEMA);
+      export function validateTravelPlanItemSearchResponse(value) {
+        return validateShape(value, TRAVEL_PLAN_ITEM_SEARCH_RESPONSE_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SEGMENT_IMPORT_REQUEST_SCHEMA = {
-        name: "TravelPlanSegmentImportRequest",
+      export const TRAVEL_PLAN_ITEM_IMPORT_REQUEST_SCHEMA = {
+        name: "TravelPlanItemImportRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanSegmentImportRequest",
+        sourceType: "openapi.components.schemas.TravelPlanItemImportRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"source_segment_id","required":true,"wireName":"source_segment_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"insert_after_segment_id","required":false,"wireName":"insert_after_segment_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"source_item_id","required":true,"wireName":"source_item_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"insert_after_item_id","required":false,"wireName":"insert_after_item_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"include_images","required":true,"wireName":"include_images"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"include_customer_visible_images_only","required":true,"wireName":"include_customer_visible_images_only"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"include_notes","required":true,"wireName":"include_notes"}, SHARED_FIELD_DEFS.FIELD_8),
@@ -510,15 +510,15 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanSegmentImportRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_SEGMENT_IMPORT_REQUEST_SCHEMA);
+      export function validateTravelPlanItemImportRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_ITEM_IMPORT_REQUEST_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SEGMENT_IMAGE_UPLOAD_REQUEST_SCHEMA = {
-        name: "TravelPlanSegmentImageUploadRequest",
+      export const TRAVEL_PLAN_ITEM_IMAGE_UPLOAD_REQUEST_SCHEMA = {
+        name: "TravelPlanItemImageUploadRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanSegmentImageUploadRequest",
+        sourceType: "openapi.components.schemas.TravelPlanItemImageUploadRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"filename","required":true,"wireName":"filename"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -529,15 +529,15 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanSegmentImageUploadRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_SEGMENT_IMAGE_UPLOAD_REQUEST_SCHEMA);
+      export function validateTravelPlanItemImageUploadRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_ITEM_IMAGE_UPLOAD_REQUEST_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SEGMENT_IMAGE_DELETE_REQUEST_SCHEMA = {
-        name: "TravelPlanSegmentImageDeleteRequest",
+      export const TRAVEL_PLAN_ITEM_IMAGE_DELETE_REQUEST_SCHEMA = {
+        name: "TravelPlanItemImageDeleteRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanSegmentImageDeleteRequest",
+        sourceType: "openapi.components.schemas.TravelPlanItemImageDeleteRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
@@ -545,15 +545,15 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanSegmentImageDeleteRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_SEGMENT_IMAGE_DELETE_REQUEST_SCHEMA);
+      export function validateTravelPlanItemImageDeleteRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_ITEM_IMAGE_DELETE_REQUEST_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SEGMENT_IMAGE_REORDER_REQUEST_SCHEMA = {
-        name: "TravelPlanSegmentImageReorderRequest",
+      export const TRAVEL_PLAN_ITEM_IMAGE_REORDER_REQUEST_SCHEMA = {
+        name: "TravelPlanItemImageReorderRequest",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanSegmentImageReorderRequest",
+        sourceType: "openapi.components.schemas.TravelPlanItemImageReorderRequest",
         requireOneOf: [],
         fields: [
     schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
@@ -562,8 +562,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanSegmentImageReorderRequest(value) {
-        return validateShape(value, TRAVEL_PLAN_SEGMENT_IMAGE_REORDER_REQUEST_SCHEMA);
+      export function validateTravelPlanItemImageReorderRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_ITEM_IMAGE_REORDER_REQUEST_SCHEMA);
       }
 
       export const BOOKING_PRICING_UPDATE_REQUEST_SCHEMA = {
@@ -1210,19 +1210,19 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_TRAVEL_PLAN_SCHEMA);
       }
 
-      export const TRAVEL_PLAN_SEGMENT_SEARCH_RESULT_SCHEMA = {
-        name: "TravelPlanSegmentSearchResult",
+      export const TRAVEL_PLAN_ITEM_SEARCH_RESULT_SCHEMA = {
+        name: "TravelPlanItemSearchResult",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.TravelPlanSegmentSearchResult",
+        sourceType: "openapi.components.schemas.TravelPlanItemSearchResult",
         requireOneOf: [],
         fields: [
     schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"source_booking_name","required":false,"wireName":"source_booking_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"source_booking_code","required":false,"wireName":"source_booking_code"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"day_number","required":false,"wireName":"day_number"}, SHARED_FIELD_DEFS.FIELD_17),
-    schemaField({"name":"segment_id","required":true,"wireName":"segment_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"segment_kind","required":false,"wireName":"segment_kind"}, SHARED_FIELD_DEFS.FIELD_90),
+    schemaField({"name":"item_id","required":true,"wireName":"item_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"item_kind","required":false,"wireName":"item_kind"}, SHARED_FIELD_DEFS.FIELD_90),
     schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"details","required":false,"wireName":"details"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"location","required":false,"wireName":"location"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1234,8 +1234,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateTravelPlanSegmentSearchResult(value) {
-        return validateShape(value, TRAVEL_PLAN_SEGMENT_SEARCH_RESULT_SCHEMA);
+      export function validateTravelPlanItemSearchResult(value) {
+        return validateShape(value, TRAVEL_PLAN_ITEM_SEARCH_RESULT_SCHEMA);
       }
 
       export const BOOKING_GENERATE_OFFER_ACCEPTANCE_ROUTE_REQUEST_SCHEMA = {
@@ -1456,7 +1456,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"date","required":false,"wireName":"date"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"overnight_location","required":false,"wireName":"overnight_location"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"segments","required":false,"wireName":"segments"}, SHARED_FIELD_DEFS.FIELD_101),
+    schemaField({"name":"items","required":false,"wireName":"items"}, SHARED_FIELD_DEFS.FIELD_101),
     schemaField({"name":"notes","required":false,"wireName":"notes"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
@@ -1473,7 +1473,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"travel_plan_segment_id","required":true,"wireName":"travel_plan_segment_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"travel_plan_item_id","required":true,"wireName":"travel_plan_item_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"offer_component_id","required":true,"wireName":"offer_component_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"coverage_type","required":true,"wireName":"coverage_type"}, SHARED_FIELD_DEFS.FIELD_102)
         ]
@@ -1647,11 +1647,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, BOOKING_OFFER_PAYMENT_DUE_RULE_SCHEMA);
       }
 
-      export const BOOKING_TRAVEL_PLAN_SEGMENT_SCHEMA = {
-        name: "BookingTravelPlanSegment",
+      export const BOOKING_TRAVEL_PLAN_ITEM_SCHEMA = {
+        name: "BookingTravelPlanItem",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingTravelPlanSegment",
+        sourceType: "openapi.components.schemas.BookingTravelPlanItem",
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1672,8 +1672,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingTravelPlanSegment(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_SEGMENT_SCHEMA);
+      export function validateBookingTravelPlanItem(value) {
+        return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_SCHEMA);
       }
 
       export const BOOKING_OFFER_TAX_BUCKET_SCHEMA = {
@@ -1735,11 +1735,11 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, GENERATED_OFFER_DEPOSIT_ACCEPTANCE_RULE_SCHEMA);
       }
 
-      export const BOOKING_TRAVEL_PLAN_SEGMENT_IMAGE_SCHEMA = {
-        name: "BookingTravelPlanSegmentImage",
+      export const BOOKING_TRAVEL_PLAN_ITEM_IMAGE_SCHEMA = {
+        name: "BookingTravelPlanItemImage",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingTravelPlanSegmentImage",
+        sourceType: "openapi.components.schemas.BookingTravelPlanItemImage",
         requireOneOf: [],
         fields: [
     schemaField({"name":"id","required":true,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1757,35 +1757,35 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingTravelPlanSegmentImage(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_SEGMENT_IMAGE_SCHEMA);
+      export function validateBookingTravelPlanItemImage(value) {
+        return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_IMAGE_SCHEMA);
       }
 
-      export const BOOKING_TRAVEL_PLAN_SEGMENT_COPIED_FROM_SCHEMA = {
-        name: "BookingTravelPlanSegmentCopiedFrom",
+      export const BOOKING_TRAVEL_PLAN_ITEM_COPIED_FROM_SCHEMA = {
+        name: "BookingTravelPlanItemCopiedFrom",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingTravelPlanSegmentCopiedFrom",
+        sourceType: "openapi.components.schemas.BookingTravelPlanItemCopiedFrom",
         requireOneOf: [],
         fields: [
     schemaField({"name":"source_type","required":true,"wireName":"source_type"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"source_booking_id","required":true,"wireName":"source_booking_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"source_day_id","required":false,"wireName":"source_day_id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"source_segment_id","required":true,"wireName":"source_segment_id"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"source_item_id","required":true,"wireName":"source_item_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"copied_at","required":true,"wireName":"copied_at"}, SHARED_FIELD_DEFS.FIELD_5),
     schemaField({"name":"copied_by_atp_staff_id","required":false,"wireName":"copied_by_atp_staff_id"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateBookingTravelPlanSegmentCopiedFrom(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_SEGMENT_COPIED_FROM_SCHEMA);
+      export function validateBookingTravelPlanItemCopiedFrom(value) {
+        return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_COPIED_FROM_SCHEMA);
       }
 
-      export const BOOKING_TRAVEL_PLAN_SEGMENT_IMAGE_SOURCE_ATTRIBUTION_SCHEMA = {
-        name: "BookingTravelPlanSegmentImageSourceAttribution",
+      export const BOOKING_TRAVEL_PLAN_ITEM_IMAGE_SOURCE_ATTRIBUTION_SCHEMA = {
+        name: "BookingTravelPlanItemImageSourceAttribution",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingTravelPlanSegmentImageSourceAttribution",
+        sourceType: "openapi.components.schemas.BookingTravelPlanItemImageSourceAttribution",
         requireOneOf: [],
         fields: [
     schemaField({"name":"source_name","required":false,"wireName":"source_name"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1795,15 +1795,15 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingTravelPlanSegmentImageSourceAttribution(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_SEGMENT_IMAGE_SOURCE_ATTRIBUTION_SCHEMA);
+      export function validateBookingTravelPlanItemImageSourceAttribution(value) {
+        return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_IMAGE_SOURCE_ATTRIBUTION_SCHEMA);
       }
 
-      export const BOOKING_TRAVEL_PLAN_SEGMENT_IMAGE_FOCAL_POINT_SCHEMA = {
-        name: "BookingTravelPlanSegmentImageFocalPoint",
+      export const BOOKING_TRAVEL_PLAN_ITEM_IMAGE_FOCAL_POINT_SCHEMA = {
+        name: "BookingTravelPlanItemImageFocalPoint",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.BookingTravelPlanSegmentImageFocalPoint",
+        sourceType: "openapi.components.schemas.BookingTravelPlanItemImageFocalPoint",
         requireOneOf: [],
         fields: [
     schemaField({"name":"x","required":true,"wireName":"x"}, SHARED_FIELD_DEFS.FIELD_42),
@@ -1811,7 +1811,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         ]
       };
 
-      export function validateBookingTravelPlanSegmentImageFocalPoint(value) {
-        return validateShape(value, BOOKING_TRAVEL_PLAN_SEGMENT_IMAGE_FOCAL_POINT_SCHEMA);
+      export function validateBookingTravelPlanItemImageFocalPoint(value) {
+        return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_IMAGE_FOCAL_POINT_SCHEMA);
       }
 

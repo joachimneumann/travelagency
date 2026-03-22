@@ -1,11 +1,11 @@
 import {
-  validateTravelPlanSegmentImageDeleteRequest,
-  validateTravelPlanSegmentImageReorderRequest,
-  validateTravelPlanSegmentImageUploadRequest
+  validateTravelPlanItemImageDeleteRequest,
+  validateTravelPlanItemImageReorderRequest,
+  validateTravelPlanItemImageUploadRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import {
-  findTravelPlanDayAndSegment,
-  normalizeSegmentImageRefs,
+  findTravelPlanDayAndItem,
+  normalizeItemImageRefs,
   publicBookingImagePath
 } from "./booking_travel_plan_shared.js";
 
@@ -35,11 +35,11 @@ export function createBookingTravelPlanImageHandlers(deps) {
     processBookingImageToWebp
   } = deps;
 
-  async function handleUploadTravelPlanSegmentImage(req, res, [bookingId, dayId, segmentId]) {
+  async function handleUploadTravelPlanItemImage(req, res, [bookingId, dayId, itemId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanSegmentImageUploadRequest(payload);
+      validateTravelPlanItemImageUploadRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -59,13 +59,13 @@ export function createBookingTravelPlanImageHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
-    const { dayIndex, segmentIndex, segment } = findTravelPlanDayAndSegment(normalizedTravelPlan, dayId, segmentId);
-    if (dayIndex < 0 || segmentIndex < 0 || !segment) {
-      sendJson(res, 404, { error: "Travel plan segment not found" });
+    const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
+    if (dayIndex < 0 || itemIndex < 0 || !item) {
+      sendJson(res, 404, { error: "Travel plan item not found" });
       return;
     }
 
-    const filename = normalizeText(payload.filename) || `${segmentId}.upload`;
+    const filename = normalizeText(payload.filename) || `${itemId}.upload`;
     const base64 = normalizeText(payload.data_base64);
     if (!base64) {
       sendJson(res, 422, { error: "data_base64 is required" });
@@ -77,9 +77,9 @@ export function createBookingTravelPlanImageHandlers(deps) {
       return;
     }
 
-    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${segmentId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `${segmentId}-${Date.now()}-${randomUUID()}.webp`;
-    const outputRelativePath = `${bookingId}/travel-plan-segments/${outputName}`;
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${itemId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputName = `${itemId}-${Date.now()}-${randomUUID()}.webp`;
+    const outputRelativePath = `${bookingId}/travel-plan-items/${outputName}`;
     const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
     try {
       await writeFile(tempInputPath, sourceBuffer);
@@ -91,11 +91,11 @@ export function createBookingTravelPlanImageHandlers(deps) {
       await rm(tempInputPath, { force: true });
     }
 
-    const currentImages = Array.isArray(segment.images) ? segment.images : [];
-    const nextImages = normalizeSegmentImageRefs([
+    const currentImages = Array.isArray(item.images) ? item.images : [];
+    const nextImages = normalizeItemImageRefs([
       ...currentImages,
       {
-        id: `travel_plan_segment_image_${randomUUID()}`,
+        id: `travel_plan_item_image_${randomUUID()}`,
         storage_path: publicBookingImagePath(normalizeText, outputRelativePath),
         sort_order: currentImages.length,
         is_primary: currentImages.length === 0,
@@ -104,8 +104,8 @@ export function createBookingTravelPlanImageHandlers(deps) {
       }
     ]);
 
-    normalizedTravelPlan.days[dayIndex].segments[segmentIndex] = {
-      ...segment,
+    normalizedTravelPlan.days[dayIndex].items[itemIndex] = {
+      ...item,
       images: nextImages
     };
 
@@ -129,17 +129,17 @@ export function createBookingTravelPlanImageHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Travel plan segment image uploaded"
+      "Travel plan item image uploaded"
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleDeleteTravelPlanSegmentImage(req, res, [bookingId, dayId, segmentId, imageId]) {
+  async function handleDeleteTravelPlanItemImage(req, res, [bookingId, dayId, itemId, imageId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanSegmentImageDeleteRequest(payload);
+      validateTravelPlanItemImageDeleteRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -159,22 +159,22 @@ export function createBookingTravelPlanImageHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
-    const { dayIndex, segmentIndex, segment } = findTravelPlanDayAndSegment(normalizedTravelPlan, dayId, segmentId);
-    if (dayIndex < 0 || segmentIndex < 0 || !segment) {
-      sendJson(res, 404, { error: "Travel plan segment not found" });
+    const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
+    if (dayIndex < 0 || itemIndex < 0 || !item) {
+      sendJson(res, 404, { error: "Travel plan item not found" });
       return;
     }
 
-    const currentImages = Array.isArray(segment.images) ? segment.images : [];
+    const currentImages = Array.isArray(item.images) ? item.images : [];
     const nextImages = currentImages.filter((image) => image.id !== imageId);
     if (nextImages.length === currentImages.length) {
-      sendJson(res, 404, { error: "Segment image not found" });
+      sendJson(res, 404, { error: "Item image not found" });
       return;
     }
 
-    normalizedTravelPlan.days[dayIndex].segments[segmentIndex] = {
-      ...segment,
-      images: normalizeSegmentImageRefs(nextImages)
+    normalizedTravelPlan.days[dayIndex].items[itemIndex] = {
+      ...item,
+      images: normalizeItemImageRefs(nextImages)
     };
 
     const check = validateBookingTravelPlanInput(
@@ -197,17 +197,17 @@ export function createBookingTravelPlanImageHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Travel plan segment image removed"
+      "Travel plan item image removed"
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleReorderTravelPlanSegmentImages(req, res, [bookingId, dayId, segmentId]) {
+  async function handleReorderTravelPlanItemImages(req, res, [bookingId, dayId, itemId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanSegmentImageReorderRequest(payload);
+      validateTravelPlanItemImageReorderRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -227,28 +227,28 @@ export function createBookingTravelPlanImageHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
-    const { dayIndex, segmentIndex, segment } = findTravelPlanDayAndSegment(normalizedTravelPlan, dayId, segmentId);
-    if (dayIndex < 0 || segmentIndex < 0 || !segment) {
-      sendJson(res, 404, { error: "Travel plan segment not found" });
+    const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
+    if (dayIndex < 0 || itemIndex < 0 || !item) {
+      sendJson(res, 404, { error: "Travel plan item not found" });
       return;
     }
 
-    const currentImages = Array.isArray(segment.images) ? segment.images : [];
+    const currentImages = Array.isArray(item.images) ? item.images : [];
     const requestedOrder = Array.isArray(payload.image_ids) ? payload.image_ids.map((id) => normalizeText(id)).filter(Boolean) : [];
     if (requestedOrder.length !== currentImages.length) {
-      sendJson(res, 422, { error: "image_ids must contain all segment image ids exactly once." });
+      sendJson(res, 422, { error: "image_ids must contain all item image ids exactly once." });
       return;
     }
     const currentImageMap = new Map(currentImages.map((image) => [image.id, image]));
     const uniqueRequestedOrder = new Set(requestedOrder);
     if (uniqueRequestedOrder.size !== currentImages.length || requestedOrder.some((id) => !currentImageMap.has(id))) {
-      sendJson(res, 422, { error: "image_ids must contain all segment image ids exactly once." });
+      sendJson(res, 422, { error: "image_ids must contain all item image ids exactly once." });
       return;
     }
 
-    normalizedTravelPlan.days[dayIndex].segments[segmentIndex] = {
-      ...segment,
-      images: normalizeSegmentImageRefs(requestedOrder.map((id) => currentImageMap.get(id)))
+    normalizedTravelPlan.days[dayIndex].items[itemIndex] = {
+      ...item,
+      images: normalizeItemImageRefs(requestedOrder.map((id) => currentImageMap.get(id)))
     };
 
     const check = validateBookingTravelPlanInput(
@@ -271,15 +271,15 @@ export function createBookingTravelPlanImageHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Travel plan segment images reordered"
+      "Travel plan item images reordered"
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   return {
-    handleUploadTravelPlanSegmentImage,
-    handleDeleteTravelPlanSegmentImage,
-    handleReorderTravelPlanSegmentImages
+    handleUploadTravelPlanItemImage,
+    handleDeleteTravelPlanItemImage,
+    handleReorderTravelPlanItemImages
   };
 }
