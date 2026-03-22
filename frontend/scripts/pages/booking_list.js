@@ -487,11 +487,13 @@ function updatePaginationUi(section) {
   const pagination = els[`${section}Pagination`];
 
   if (countInfo) {
-    countInfo.textContent = backendT("common.page_status", "{total} total · page {page} of {totalPages}", {
-      total: model.total,
-      page: model.page,
-      totalPages: model.totalPages
-    });
+    countInfo.textContent = section === "bookings"
+      ? ""
+      : backendT("common.page_status", "{total} total · page {page} of {totalPages}", {
+        total: model.total,
+        page: model.page,
+        totalPages: model.totalPages
+      });
   }
 
   if (pagination) {

@@ -4,6 +4,7 @@ import {
   bookingGeneratedOfferGmailDraftRequest,
   bookingGeneratedOfferUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
+import { logBrowserConsoleError } from "../shared/api.js";
 import { bookingContentLang, bookingContentLanguageLabel, bookingT, bookingLang } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
 import { getBookingPersons } from "../shared/booking_persons.js";
@@ -51,6 +52,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   let generatedOfferRouteMode = "DEPOSIT_PAYMENT";
   let generatedOfferPaymentTermLineId = "";
+  const loggedMissingOtpAcceptanceLinks = new Set();
 
   function formatGeneratedOfferDate(value) {
     if (!value) return "-";
@@ -224,6 +226,26 @@ export function createBookingGeneratedOffersModule(ctx) {
     return url.toString();
   }
 
+  function logMissingOtpAcceptanceLink(generatedOffer) {
+    const generatedOfferId = String(generatedOffer?.id || "").trim();
+    if (!generatedOfferId || loggedMissingOtpAcceptanceLinks.has(generatedOfferId)) return;
+    loggedMissingOtpAcceptanceLinks.add(generatedOfferId);
+    logBrowserConsoleError(
+      "[offer-acceptance] OTP route is unavailable because the generated offer has no public acceptance token.",
+      {
+        booking_id: String(state.booking?.id || "").trim() || null,
+        generated_offer_id: generatedOfferId,
+        route_mode: currentGeneratedOfferRouteMode(generatedOffer),
+        route_status: normalizeGeneratedOfferRouteStatus(generatedOffer?.acceptance_route?.status, generatedOffer?.acceptance_route?.mode),
+        has_acceptance_route: Boolean(generatedOffer?.acceptance_route),
+        has_public_acceptance_token: Boolean(String(generatedOffer?.public_acceptance_token || "").trim()),
+        public_acceptance_expires_at: String(generatedOffer?.public_acceptance_expires_at || "").trim() || null,
+        generated_offer_created_at: String(generatedOffer?.created_at || "").trim() || null,
+        hint: "The backend response did not include a public acceptance token. Likely causes: the generated offer record is stale and needs token repair, the backend was not restarted after the OTP-token fix, or OFFER_ACCEPTANCE_TOKEN_SECRET is missing in this environment."
+      }
+    );
+  }
+
   async function copyGeneratedOfferAcceptanceLink(generatedOfferId) {
     const generatedOffer = findGeneratedOfferById(generatedOfferId);
     const acceptanceLink = buildGeneratedOfferAcceptanceLink(generatedOffer);
@@ -366,6 +388,13 @@ export function createBookingGeneratedOffersModule(ctx) {
           const recipientEmail = getBookingAcceptanceRecipientEmail();
           const offerStatus = resolveGeneratedOfferStatus(item);
           const routeMode = currentGeneratedOfferRouteMode(item);
+          const generatedOfferId = String(item?.id || "").trim();
+          const otpRouteUnavailable = !routeUsesDepositPayment(routeMode) && !acceptanceLink;
+          if (otpRouteUnavailable) {
+            logMissingOtpAcceptanceLink(item);
+          } else if (generatedOfferId) {
+            loggedMissingOtpAcceptanceLinks.delete(generatedOfferId);
+          }
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</a>` : "-"}</td>
           ${emailActionEnabled
@@ -376,7 +405,9 @@ export function createBookingGeneratedOffersModule(ctx) {
                 deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
                 otp: bookingT("booking.offer.route.otp", "OTP")
               }))}</span>`
-            : (canEdit && acceptanceLink
+            : (otpRouteUnavailable
+                ? `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.status.unavailable", "Unavailable"))}</span>`
+                : (canEdit && acceptanceLink
                 ? `<div class="generated-offers-link-actions">
                     <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
                     <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}"${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
@@ -384,7 +415,7 @@ export function createBookingGeneratedOffersModule(ctx) {
                 : `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
                     deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
                     otp: bookingT("booking.offer.route.otp", "OTP")
-                  }))}</span>`)}
+                  }))}</span>`))}
           </td>
           <td class="generated-offers-col-status">
             <span class="generated-offers-status-badge is-${escapeHtml(offerStatus.tone)}${offerStatus.variant ? ` is-${escapeHtml(offerStatus.variant)}` : ""}">${escapeHtml(offerStatus.label)}</span>

@@ -9,7 +9,10 @@ import {
 } from "../../domain/booking_names.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
-import { synchronizeGeneratedOfferAcceptanceRouteStatus } from "../../domain/offer_acceptance.js";
+import {
+  ensureGeneratedOfferAcceptanceTokenState,
+  synchronizeGeneratedOfferAcceptanceRouteStatus
+} from "../../domain/offer_acceptance.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -110,6 +113,9 @@ export function createBookingHandlers(deps) {
     let changed = false;
     const now = nowIso();
     for (const generatedOffer of generatedOffers) {
+      if (ensureGeneratedOfferAcceptanceTokenState(generatedOffer, { now })) {
+        changed = true;
+      }
       if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now })) {
         changed = true;
       }

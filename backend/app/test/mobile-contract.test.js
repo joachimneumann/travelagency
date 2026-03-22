@@ -2439,6 +2439,54 @@ test("booking detail persists expired generated-offer route status instead of de
   assert.equal(generatedOfferAfter?.acceptance_route?.status, "EXPIRED");
 });
 
+test("booking detail repairs missing OTP acceptance token state for generated offers", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        comment: "OTP token repair"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
+  assert.equal(generateResult.body.booking.generated_offers[0].acceptance_route.mode, "OTP");
+  assert.equal(typeof generateResult.body.booking.generated_offers[0].public_acceptance_token, "string");
+
+  const storeBefore = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBefore = storeBefore.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBefore);
+  const generatedOfferBefore = bookingBefore.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.ok(generatedOfferBefore);
+  delete generatedOfferBefore.acceptance_token_nonce;
+  delete generatedOfferBefore.acceptance_token_created_at;
+  delete generatedOfferBefore.acceptance_token_expires_at;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBefore, null, 2)}\n`, "utf8");
+
+  const detailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailResult.status, 200);
+  assert.equal(typeof detailResult.body.booking.generated_offers[0].public_acceptance_token, "string");
+  assert.ok(detailResult.body.booking.generated_offers[0].public_acceptance_token.length > 20);
+
+  const storeAfter = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingAfter = storeAfter.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingAfter);
+  const generatedOfferAfter = bookingAfter.generated_offers.find((item) => item.id === generatedOfferId);
+  assert.equal(typeof generatedOfferAfter?.acceptance_token_nonce, "string");
+  assert.ok(generatedOfferAfter.acceptance_token_nonce.length > 20);
+  assertISODateLike(generatedOfferAfter?.acceptance_token_created_at, "generated offer repaired acceptance_token_created_at");
+  assertISODateLike(generatedOfferAfter?.acceptance_token_expires_at, "generated offer repaired acceptance_token_expires_at");
+});
+
 test("public generated offer access exposes deposit acceptance route and blocks OTP acceptance", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
