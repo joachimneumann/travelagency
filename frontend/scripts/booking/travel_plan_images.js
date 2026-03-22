@@ -86,16 +86,14 @@ export function createBookingTravelPlanImagesModule(deps) {
                   type="button"
                   aria-label="${escapeHtml(bookingT("booking.travel_plan.open_full_image", "Open full size image"))}"
                 >
+                  ${image.is_primary ? `<span class="travel-plan-image-card__badge travel-plan-image-card__badge--overlay">${escapeHtml(bookingT("booking.travel_plan.primary_image", "Primary"))}</span>` : ""}
+                  ${image.is_customer_visible === false ? `<span class="travel-plan-image-card__badge travel-plan-image-card__badge--muted travel-plan-image-card__badge--overlay-start">${escapeHtml(bookingT("booking.travel_plan.internal_only", "Internal only"))}</span>` : ""}
                   <img
                     src="${escapeHtml(previewSrc)}"
                     alt="${escapeHtml(previewAlt)}"
                     loading="lazy"
                   />
                 </button>
-                <div class="travel-plan-image-card__meta">
-                  ${image.is_primary ? `<span class="travel-plan-image-card__badge">${escapeHtml(bookingT("booking.travel_plan.primary_image", "Primary"))}</span>` : ""}
-                  ${image.is_customer_visible === false ? `<span class="travel-plan-image-card__badge travel-plan-image-card__badge--muted">${escapeHtml(bookingT("booking.travel_plan.internal_only", "Internal only"))}</span>` : ""}
-                </div>
                 <div class="travel-plan-image-card__actions">
                   <button
                     class="btn btn-ghost travel-plan-move-btn"

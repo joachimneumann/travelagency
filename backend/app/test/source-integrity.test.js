@@ -259,6 +259,11 @@ test("booking page uses the dirty bar as the only red dirty-state surface", asyn
     /\.booking-detail-page \.booking-dirty-bar\.booking-dirty-bar--dirty \{/,
     "Booking styles should define a dedicated dirty-state background for the page-level dirty bar"
   );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.booking-text-field--internal:focus-visible,[\s\S]*\.booking-detail-page \.field textarea\.booking-text-field--internal:focus-visible \{[\s\S]*outline: 0;[\s\S]*border-color: var\(--text-muted-strong\);[\s\S]*box-shadow: inset 0 0 0 1px var\(--text-muted-strong\);/,
+    "Booking-page ATP-internal fields should use a gray focused border that stays inside the field bounds"
+  );
 });
 
 test("booking dirty bar stays visible while clean and reports save or discard progress", async () => {
@@ -308,9 +313,11 @@ test("travel plan item titles show a required state inline and drive a specific 
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
   const validationSource = await readFile(travelPlanValidationPath, "utf8");
   const bookingStyles = await readFile(bookingStylesPath, "utf8");
+  const travelPlanStyles = await readFile(travelPlanStylesPath, "utf8");
 
   assert.match(
     travelPlanSource,
@@ -328,6 +335,11 @@ test("travel plan item titles show a required state inline and drive a specific 
     "Travel plan save should expose a specific page-save error when an item title is missing"
   );
   assert.match(
+    travelPlanSource,
+    /travel-plan-grid travel-plan-grid--item-kind[\s\S]*booking\.travel_plan\.kind_label[\s\S]*travel-plan-grid[\s\S]*booking\.travel_plan\.item_title[\s\S]*booking\.location/,
+    "Travel plan item editing should show kind first, with title and location below it"
+  );
+  assert.match(
     validationSource,
     /code:\s*"item_title_required"[\s\S]*dayNumber[\s\S]*itemNumber/,
     "Travel plan validation should return structured metadata for missing item titles"
@@ -336,6 +348,11 @@ test("travel plan item titles show a required state inline and drive a specific 
     bookingStyles,
     /\.booking-detail-page \.travel-plan-item-title-input--required[\s\S]*background: var\(--surface-error\);[\s\S]*border-color: var\(--line-error-strong\);/,
     "The booking page should render empty required travel plan titles with an error background"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-grid--item-kind \{[\s\S]*grid-template-columns: minmax\(220px, 280px\);/,
+    "Travel plan styles should keep the kind selector on its own row above title and location"
   );
 });
 
@@ -362,6 +379,11 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
     "Travel plan image cards should expose preview metadata for the full-size modal"
   );
   assert.match(
+    travelPlanImagesSource,
+    /travel-plan-image-card__preview[\s\S]*travel-plan-image-card__badge travel-plan-image-card__badge--overlay[\s\S]*travel-plan-image-card__badge travel-plan-image-card__badge--muted travel-plan-image-card__badge--overlay-start/,
+    "Travel plan image badges should render as overlays on the image itself without a separate meta row"
+  );
+  assert.match(
     travelPlanSource,
     /data-travel-plan-preview-image[\s\S]*openTravelPlanImagePreview\(/,
     "Travel plan click handling should open the full-size image preview modal"
@@ -380,6 +402,11 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
     travelPlanStyles,
     /\.travel-plan-image-card \{[\s\S]*width: min\(100%, 240px\);[\s\S]*\.travel-plan-image-card__preview \{[\s\S]*width: 220px;[\s\S]*height: 220px;[\s\S]*\.travel-plan-image-card__actions \{[\s\S]*justify-content: center;/,
     "Inline travel plan image previews should render inside a compact fixed-size card"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-image-card__preview \{[\s\S]*position: relative;[\s\S]*\.travel-plan-image-card__badge--overlay \{[\s\S]*top: 0.55rem;[\s\S]*right: 0.55rem;[\s\S]*\.travel-plan-image-card__badge--overlay-start \{[\s\S]*top: 0.55rem;[\s\S]*left: 0.55rem;/,
+    "Travel plan image badges should be positioned as inline preview overlays instead of using a meta row"
   );
   assert.match(
     travelPlanStyles,

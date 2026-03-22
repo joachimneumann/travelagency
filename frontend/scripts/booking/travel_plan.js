@@ -699,6 +699,14 @@ export function createBookingTravelPlanModule(ctx) {
             <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove travel plan item"))}">&times;</button>
           </div>
         </div>
+        <div class="travel-plan-grid travel-plan-grid--item-kind">
+          <div class="field">
+            <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
+            <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="kind">
+              ${itemKindOptions(item.kind)}
+            </select>
+          </div>
+        </div>
         <div class="travel-plan-grid">
           <div class="field">
             ${renderTravelPlanLocalizedField({
@@ -725,12 +733,6 @@ export function createBookingTravelPlanModule(ctx) {
               englishValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, "en", ""),
               localizedValue: resolveLocalizedDraftBranchText(item.location_i18n ?? item.location, bookingContentLang(), "")
             })}
-          </div>
-          <div class="field">
-            <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
-            <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="kind">
-              ${itemKindOptions(item.kind)}
-            </select>
           </div>
         </div>
         <div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing">

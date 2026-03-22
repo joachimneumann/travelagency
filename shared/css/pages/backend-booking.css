@@ -157,6 +157,14 @@
   padding: 16px;
 }
 
+.booking-detail-page .booking-text-field--internal:focus-visible,
+.booking-detail-page .field input.booking-text-field--internal:focus-visible,
+.booking-detail-page .field textarea.booking-text-field--internal:focus-visible {
+  outline: 0;
+  border-color: var(--text-muted-strong);
+  box-shadow: inset 0 0 0 1px var(--text-muted-strong);
+}
+
 .booking-detail-page .booking-offer-currency-hint {
   color: var(--error-text-critical);
   font-size: var(--font-size-overline);
