@@ -309,6 +309,61 @@ test("booking dirty bar stays visible while clean and reports save or discard pr
   );
 });
 
+test("booking page orders the visible sections in the requested workflow sequence", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+  const orderedIds = [
+    "booking_actions_panel",
+    "booking_content_language_field",
+    "booking_note_panel",
+    "travel_plan_panel",
+    "persons_editor_panel",
+    "offer_panel",
+    "offer_payment_terms_panel",
+    "offer_acceptance_panel",
+    "pricing_panel",
+    "activities_panel",
+    "booking_data_view"
+  ];
+  const positions = orderedIds.map((id) => bookingPageSource.indexOf(`id="${id}"`));
+
+  positions.forEach((position, index) => {
+    assert.notStrictEqual(
+      position,
+      -1,
+      `Booking page should contain ${orderedIds[index]}`
+    );
+  });
+
+  for (let index = 1; index < positions.length; index += 1) {
+    assert.ok(
+      positions[index] > positions[index - 1],
+      `${orderedIds[index - 1]} should appear before ${orderedIds[index]}`
+    );
+  }
+});
+
+test("booking page top control row keeps staff, stage, and customer language visually aligned", async () => {
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+
+  assert.match(
+    bookingStyles,
+    /#booking_actions_panel \.backend-controls \{\s*[\s\S]*align-items: start;/,
+    "The booking top control row should align fields from the top so the three labels share the same vertical position"
+  );
+  assert.match(
+    bookingStyles,
+    /#booking_actions_panel \.booking-content-language-field \{\s*[\s\S]*gap: 0\.35rem;/,
+    "The booking customer-language field should use the same label-to-control gap as the neighboring fields"
+  );
+  assert.match(
+    bookingStyles,
+    /#booking_actions_panel \.lang-menu-trigger \{\s*[\s\S]*padding: 0\.68rem 0\.9rem;[\s\S]*justify-content: center;/,
+    "The booking customer-language trigger should match the booking control height scale and center its contents"
+  );
+});
+
 test("travel plan item titles show a required state inline and drive a specific page-save error", async () => {
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
@@ -581,6 +636,46 @@ test("contract route definitions stay in sync with generated OpenAPI", async () 
     expected,
     "Modeled/generated API routes must match the runtime contract route definitions exactly"
   );
+});
+
+test("booking stage catalogs no longer expose the legacy Won stage", async () => {
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "enums", "booking_stage.cue");
+  const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const mobileMetaPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "mobile-api.meta.json");
+  const generatedBookingPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_Booking.js");
+  const generatedSchemaRuntimePath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "Models", "generated_SchemaRuntime.js");
+  const enI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "en.json");
+  const viI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "data", "i18n", "backend", "vi.json");
+
+  const [
+    modelSource,
+    runtimeSource,
+    openApiSource,
+    mobileMetaSource,
+    generatedBookingSource,
+    generatedSchemaRuntimeSource,
+    enI18nSource,
+    viI18nSource
+  ] = await Promise.all([
+    readFile(modelPath, "utf8"),
+    readFile(runtimePath, "utf8"),
+    readFile(openApiPath, "utf8"),
+    readFile(mobileMetaPath, "utf8"),
+    readFile(generatedBookingPath, "utf8"),
+    readFile(generatedSchemaRuntimePath, "utf8"),
+    readFile(enI18nPath, "utf8"),
+    readFile(viI18nPath, "utf8")
+  ]);
+
+  assert.doesNotMatch(modelSource, /"WON"/, "The booking stage model should not include Won");
+  assert.doesNotMatch(runtimeSource, /\[STAGES\.WON\]/, "Runtime SLA mapping should not include Won");
+  assert.doesNotMatch(openApiSource, /\bWON\b/, "Generated OpenAPI should not include Won");
+  assert.doesNotMatch(mobileMetaSource, /"code": "WON"/, "Mobile bootstrap metadata should not include Won");
+  assert.doesNotMatch(generatedBookingSource, /"WON"/, "Generated booking stage list should not include Won");
+  assert.doesNotMatch(generatedSchemaRuntimeSource, /"WON"/, "Generated schema runtime should not include Won");
+  assert.doesNotMatch(enI18nSource, /"booking\.stage\.won"/, "English backend i18n should not expose Won");
+  assert.doesNotMatch(viI18nSource, /"booking\.stage\.won"/, "Vietnamese backend i18n should not expose Won");
 });
 
 test("booking init awaits page load and handles async init failures", async () => {

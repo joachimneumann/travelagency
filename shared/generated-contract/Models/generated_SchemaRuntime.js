@@ -3105,7 +3105,6 @@
     "NEGOTIATION",
     "INVOICE_SENT",
     "PAYMENT_RECEIVED",
-    "WON",
     "LOST",
     "POST_TRIP"
   ],
@@ -3133,10 +3132,6 @@
     {
       "value": "PAYMENT_RECEIVED",
       "label": "PAYMENT_RECEIVED"
-    },
-    {
-      "value": "WON",
-      "label": "WON"
     },
     {
       "value": "LOST",

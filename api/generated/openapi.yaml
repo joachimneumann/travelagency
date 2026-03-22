@@ -332,7 +332,6 @@ components:
       - NEGOTIATION
       - INVOICE_SENT
       - PAYMENT_RECEIVED
-      - WON
       - LOST
       - POST_TRIP
       x-enum-catalog:
@@ -342,7 +341,6 @@ components:
       - code: NEGOTIATION
       - code: INVOICE_SENT
       - code: PAYMENT_RECEIVED
-      - code: WON
       - code: LOST
       - code: POST_TRIP
       x-enum-options:
@@ -358,8 +356,6 @@ components:
         label: INVOICE_SENT
       - value: PAYMENT_RECEIVED
         label: PAYMENT_RECEIVED
-      - value: WON
-        label: WON
       - value: LOST
         label: LOST
       - value: POST_TRIP

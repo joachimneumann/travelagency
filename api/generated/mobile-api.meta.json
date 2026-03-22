@@ -137,9 +137,6 @@
       "code": "PAYMENT_RECEIVED"
     },
     {
-      "code": "WON"
-    },
-    {
       "code": "LOST"
     },
     {

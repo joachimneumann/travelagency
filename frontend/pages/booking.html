@@ -75,17 +75,11 @@
                 <label for="booking_stage_select" data-i18n-id="booking.stage_label">Stage</label>
                 <select id="booking_stage_select"></select>
               </div>
-            </div>
-          </article>
-
-          <article id="persons_editor_panel" class="booking-section is-open">
-            <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="persons_editor_panel_summary" type="button"></button>
-            </div>
-            <div class="booking-section__body">
-              <span id="booking_persons_editor_status" class="micro booking-persons-editor-status"></span>
-              <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
-              <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+              <div class="field booking-content-language-field" id="booking_content_language_field">
+                <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
+                <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
+                <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+              </div>
             </div>
           </article>
 
@@ -406,8 +400,6 @@
             </div>
           </div>
 
-          <div id="booking_whatsapp_mount"></div>
-
           <div
             class="modal travel-plan-library-modal"
             id="travel_plan_item_library_modal"
@@ -465,14 +457,6 @@
 
           <input id="travel_plan_item_image_input" type="file" accept="image/*" multiple hidden />
 
-          <article style="margin-bottom: 1rem;">
-            <div class="field booking-content-language-field" id="booking_content_language_field">
-              <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
-              <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
-              <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-            </div>
-          </article>
-
           <article id="travel_plan_panel" class="booking-section">
             <div class="booking-section__head">
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
@@ -482,6 +466,17 @@
                 <span id="travel_plan_status" class="micro booking-inline-status"></span>
               </div>
               <div id="travel_plan_editor"></div>
+            </div>
+          </article>
+
+          <article id="persons_editor_panel" class="booking-section is-open">
+            <div class="booking-section__head">
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="persons_editor_panel_summary" type="button"></button>
+            </div>
+            <div class="booking-section__body">
+              <span id="booking_persons_editor_status" class="micro booking-persons-editor-status"></span>
+              <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
+              <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
             </div>
           </article>
 
@@ -648,6 +643,8 @@
           <article class="booking-data-panel" style="margin-bottom: 1rem;">
             <div id="booking_data_view"></div>
           </article>
+
+          <div id="booking_whatsapp_mount"></div>
 
           <section class="booking-danger-zone">
             <h2 class="section-title u-title-compact" data-i18n-id="booking.danger_zone">DANGER ZONE</h2>

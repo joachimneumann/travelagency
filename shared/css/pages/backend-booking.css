@@ -142,6 +142,34 @@
   max-width: 140px;
 }
 
+.booking-detail-page #booking_actions_panel .backend-controls {
+  align-items: start;
+}
+
+.booking-detail-page #booking_actions_panel .field {
+  align-content: start;
+}
+
+.booking-detail-page #booking_actions_panel .booking-content-language-field {
+  gap: 0.35rem;
+}
+
+.booking-detail-page #booking_actions_panel select,
+.booking-detail-page #booking_actions_panel .booking-content-language-menu-mount,
+.booking-detail-page #booking_actions_panel .lang-menu,
+.booking-detail-page #booking_actions_panel .lang-menu-trigger {
+  min-height: 59px;
+}
+
+.booking-detail-page #booking_actions_panel .booking-content-language-menu-mount {
+  align-items: stretch;
+}
+
+.booking-detail-page #booking_actions_panel .lang-menu-trigger {
+  justify-content: center;
+  padding: 0.68rem 0.9rem;
+}
+
 .booking-detail-page .travel-plan-item-title-input--required,
 .booking-detail-page .localized-editor__pane input.travel-plan-item-title-input--required,
 .booking-detail-page .localized-pair__field input.travel-plan-item-title-input--required {

@@ -9,7 +9,6 @@ export const GENERATED_BOOKING_STAGES = Object.freeze([
   "NEGOTIATION",
   "INVOICE_SENT",
   "PAYMENT_RECEIVED",
-  "WON",
   "LOST",
   "POST_TRIP"
 ]);
@@ -461,4 +460,3 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
       export function validateBooking(value) {
         return validateShape(value, BOOKING_SCHEMA);
       }
-

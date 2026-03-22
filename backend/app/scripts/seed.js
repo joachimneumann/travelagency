@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const APP_ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 
-const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "WON", "LOST", "POST_TRIP"];
+const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "LOST", "POST_TRIP"];
 const DESTINATIONS = ["Vietnam", "Thailand", "Cambodia", "Laos"];
 const STYLES = ["Grand Expeditions", "Culture", "Family", "Gastronomic Experiences", "Luxury", "Beach", "Budget"];
 const LANGUAGES = ["en", "vi", "fr", "de", "es"];
@@ -55,7 +55,6 @@ function stageServiceLevelAgreement(stage, fromIso) {
     NEGOTIATION: 48,
     INVOICE_SENT: 24,
     PAYMENT_RECEIVED: 0,
-    WON: 24,
     LOST: 0,
     POST_TRIP: 0
   };

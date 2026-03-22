@@ -7,7 +7,6 @@ BookingStageCatalog: [
 	"NEGOTIATION",
 	"INVOICE_SENT",
 	"PAYMENT_RECEIVED",
-	"WON",
 	"LOST",
 	"POST_TRIP",
 ]
