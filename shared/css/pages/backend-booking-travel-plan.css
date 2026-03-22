@@ -28,8 +28,20 @@
   grid-template-columns: minmax(220px, 280px);
 }
 
+.travel-plan-grid--item-kind-accommodation {
+  grid-template-columns: minmax(220px, 280px) minmax(160px, 220px) auto;
+}
+
 .travel-plan-grid--item-timing {
   grid-template-columns: repeat(3, minmax(160px, 1fr));
+}
+
+.travel-plan-item__create-days-field {
+  align-content: end;
+}
+
+.travel-plan-item__create-days-btn {
+  min-width: 160px;
 }
 
 .travel-plan-item .field label,

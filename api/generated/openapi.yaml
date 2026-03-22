@@ -4105,6 +4105,11 @@ components:
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanItemKind"
+        accommodation_days:
+          type: integer
+          minimum: 1
+          maximum: 100
+          nullable: true
         title:
           type: string
         details:

@@ -84,6 +84,22 @@ export function createBookingTravelPlanModule(ctx) {
     return !firstEmptyInput;
   }
 
+  function syncAccommodationCreateDaysButtonStates() {
+    if (!els.travel_plan_editor) return;
+    const itemNodes = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-item]"));
+    itemNodes.forEach((itemNode) => {
+      const createDaysButton = itemNode.querySelector("[data-travel-plan-create-days]");
+      if (!(createDaysButton instanceof HTMLButtonElement)) return;
+      const kindValue = String(itemNode.querySelector('[data-travel-plan-item-field="kind"]')?.value || "").trim();
+      const titleValue = String(
+        itemNode.querySelector('[data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]')?.value || ""
+      ).trim();
+      const accommodationDaysValue = String(itemNode.querySelector('[data-travel-plan-item-field="accommodation_days"]')?.value || "").trim();
+      const isEnabled = kindValue === "accommodation" && Boolean(titleValue) && (normalizeAccommodationDays(accommodationDaysValue) || 0) > 1;
+      createDaysButton.disabled = !isEnabled;
+    });
+  }
+
   function findDraftDay(dayId) {
     return (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).find((day) => day.id === dayId) || null;
   }
@@ -91,6 +107,91 @@ export function createBookingTravelPlanModule(ctx) {
   function findDraftItem(dayId, itemId) {
     const day = findDraftDay(dayId);
     return (Array.isArray(day?.items) ? day.items : []).find((item) => item.id === itemId) || null;
+  }
+
+  function travelPlanLocalId(prefix) {
+    const safePrefix = String(prefix || "travel_plan").replace(/[^a-z0-9_]+/gi, "_").toLowerCase();
+    if (globalThis.crypto?.randomUUID) {
+      return `${safePrefix}_${globalThis.crypto.randomUUID()}`;
+    }
+    return `${safePrefix}_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
+  }
+
+  function escapeSelectorValue(value) {
+    const raw = String(value || "");
+    if (globalThis.CSS?.escape) return globalThis.CSS.escape(raw);
+    return raw.replace(/["\\]/g, "\\$&");
+  }
+
+  function normalizeAccommodationDays(value) {
+    const raw = String(value ?? "").trim();
+    if (!raw || !/^\d+$/.test(raw)) return null;
+    const parsed = Number.parseInt(raw, 10);
+    return parsed >= 1 && parsed <= 100 ? parsed : null;
+  }
+
+  function accommodationDaysInputValue(item) {
+    return String(normalizeAccommodationDays(item?.accommodation_days) || 1);
+  }
+
+  function canCreateAccommodationDays(item) {
+    return Boolean(
+      String(item?.title || "").trim()
+      && (normalizeAccommodationDays(item?.accommodation_days) || 0) > 1
+    );
+  }
+
+  function createGeneratedDayTitle(dayNumber) {
+    return bookingT("booking.travel_plan.generated_day_title", "Day {day}", { day: dayNumber });
+  }
+
+  function buildGeneratedDayTitleMap(dayNumber) {
+    return buildDualLocalizedPayload(createGeneratedDayTitle(dayNumber), "", bookingContentLang()).map;
+  }
+
+  function cloneTravelPlanItemImage(image, imageIndex) {
+    return {
+      ...image,
+      id: travelPlanLocalId("travel_plan_item_image"),
+      sort_order: imageIndex,
+      is_primary: imageIndex === 0
+    };
+  }
+
+  function cloneTravelPlanItemForGeneratedDay(sourceItem) {
+    const clonedItem = createEmptyTravelPlanItem();
+    clonedItem.timing_kind = String(sourceItem?.timing_kind || "label").trim() || "label";
+    clonedItem.time_label = String(sourceItem?.time_label || "").trim();
+    clonedItem.time_label_i18n = sourceItem?.time_label_i18n && typeof sourceItem.time_label_i18n === "object"
+      ? { ...sourceItem.time_label_i18n }
+      : {};
+    clonedItem.time_point = String(sourceItem?.time_point || "").trim();
+    clonedItem.kind = String(sourceItem?.kind || "accommodation").trim() || "accommodation";
+    clonedItem.accommodation_days = 1;
+    clonedItem.title = String(sourceItem?.title || "").trim();
+    clonedItem.title_i18n = sourceItem?.title_i18n && typeof sourceItem.title_i18n === "object"
+      ? { ...sourceItem.title_i18n }
+      : {};
+    clonedItem.details = String(sourceItem?.details || "").trim();
+    clonedItem.details_i18n = sourceItem?.details_i18n && typeof sourceItem.details_i18n === "object"
+      ? { ...sourceItem.details_i18n }
+      : {};
+    clonedItem.location = String(sourceItem?.location || "").trim();
+    clonedItem.location_i18n = sourceItem?.location_i18n && typeof sourceItem.location_i18n === "object"
+      ? { ...sourceItem.location_i18n }
+      : {};
+    clonedItem.supplier_id = String(sourceItem?.supplier_id || "").trim();
+    clonedItem.start_time = String(sourceItem?.start_time || "").trim();
+    clonedItem.end_time = String(sourceItem?.end_time || "").trim();
+    clonedItem.financial_note = String(sourceItem?.financial_note || "").trim();
+    clonedItem.financial_note_i18n = sourceItem?.financial_note_i18n && typeof sourceItem.financial_note_i18n === "object"
+      ? { ...sourceItem.financial_note_i18n }
+      : {};
+    clonedItem.images = (Array.isArray(sourceItem?.images) ? sourceItem.images : []).map((image, imageIndex) => cloneTravelPlanItemImage(image, imageIndex));
+    clonedItem.copied_from = sourceItem?.copied_from && typeof sourceItem.copied_from === "object"
+      ? { ...sourceItem.copied_from }
+      : null;
+    return clonedItem;
   }
 
   function applyTravelPlanMutationBooking(booking) {
@@ -686,6 +787,27 @@ export function createBookingTravelPlanModule(ctx) {
       .filter((link) => link.travel_plan_item_id === item.id && link.offer_component_id);
     const coverageStatus = getTravelPlanItemCoverageStatus(item.kind, links);
     const coverageLabel = coverageBadgeLabel(coverageStatus);
+    const createDaysEnabled = canCreateAccommodationDays(item);
+    const accommodationControls = item.kind === "accommodation"
+      ? `
+        <div class="field">
+          <label for="travel_plan_accommodation_days_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.accommodation_days", "Number of days"))}</label>
+          <input
+            id="travel_plan_accommodation_days_${escapeHtml(item.id)}"
+            data-travel-plan-item-field="accommodation_days"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value="${escapeHtml(accommodationDaysInputValue(item))}"
+          />
+        </div>
+        <div class="field travel-plan-item__create-days-field">
+          <span class="field-label" aria-hidden="true">&nbsp;</span>
+          <button class="btn btn-ghost travel-plan-item__create-days-btn" data-travel-plan-create-days="${escapeHtml(item.id)}" type="button"${createDaysEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.travel_plan.create_days", "Create days"))}</button>
+        </div>
+      `
+      : "";
     return `
       <div class="travel-plan-item travel-plan-item--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-item="${escapeHtml(item.id)}">
         <div class="travel-plan-item__head">
@@ -699,13 +821,14 @@ export function createBookingTravelPlanModule(ctx) {
             <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove travel plan item"))}">&times;</button>
           </div>
         </div>
-        <div class="travel-plan-grid travel-plan-grid--item-kind">
+        <div class="travel-plan-grid travel-plan-grid--item-kind${item.kind === "accommodation" ? " travel-plan-grid--item-kind-accommodation" : ""}">
           <div class="field">
             <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
             <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="kind">
               ${itemKindOptions(item.kind)}
             </select>
           </div>
+          ${accommodationControls}
         </div>
         <div class="travel-plan-grid">
           <div class="field">
@@ -849,6 +972,7 @@ export function createBookingTravelPlanModule(ctx) {
     `;
     updateTravelPlanDirtyState();
     syncTravelPlanRequiredTitleStates();
+    syncAccommodationCreateDaysButtonStates();
   }
 
   function readLocalizedFieldPayload(container, dataScope, field) {
@@ -899,6 +1023,7 @@ export function createBookingTravelPlanModule(ctx) {
           String(itemNode.querySelector('[data-travel-plan-item-field="time_point_time"]')?.value || "").trim()
         );
         item.kind = String(itemNode.querySelector('[data-travel-plan-item-field="kind"]')?.value || "").trim();
+        item.accommodation_days = String(itemNode.querySelector('[data-travel-plan-item-field="accommodation_days"]')?.value || "").trim();
         const itemTitle = readLocalizedFieldPayload(itemNode, "travel-plan-item-field", "title");
         item.title = itemTitle.text;
         item.title_i18n = itemTitle.map;
@@ -975,6 +1100,96 @@ export function createBookingTravelPlanModule(ctx) {
     renderTravelPlanPanel();
   }
 
+  function createAccommodationDays(itemId) {
+    syncTravelPlanDraftFromDom();
+    const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
+    const sourceDayIndex = days.findIndex((day) => Array.isArray(day?.items) && day.items.some((item) => item.id === itemId));
+    if (sourceDayIndex < 0) return;
+
+    const sourceDay = days[sourceDayIndex];
+    const sourceItemIndex = (Array.isArray(sourceDay?.items) ? sourceDay.items : []).findIndex((item) => item.id === itemId);
+    if (sourceItemIndex < 0) return;
+    const sourceItem = sourceDay.items[sourceItemIndex];
+    if (sourceItem?.kind !== "accommodation") return;
+
+    if (!String(sourceItem?.title || "").trim()) {
+      travelPlanStatus(
+        bookingT("booking.travel_plan.create_days_title_required", "Set a travel plan item title before creating days."),
+        "error"
+      );
+      const titleInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-item="${escapeSelectorValue(itemId)}"] [data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]`);
+      titleInput?.focus?.();
+      return;
+    }
+
+    const accommodationDays = normalizeAccommodationDays(sourceItem.accommodation_days);
+    if (!accommodationDays) {
+      travelPlanStatus(
+        bookingT(
+          "booking.travel_plan.validation.accommodation_days_invalid",
+          "Day {day}, travel plan item {item}: Accommodation days must be between 1 and 100.",
+          { day: sourceDayIndex + 1, item: sourceItemIndex + 1 }
+        ),
+        "error"
+      );
+      const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-item="${escapeSelectorValue(itemId)}"] [data-travel-plan-item-field="accommodation_days"]`);
+      invalidInput?.focus?.();
+      return;
+    }
+
+    const additionalDays = accommodationDays - 1;
+    if (additionalDays < 1) {
+      travelPlanStatus(bookingT("booking.travel_plan.create_days_no_extra", "This accommodation already spans one day."), "info");
+      return;
+    }
+
+    const sourceLinks = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
+      .filter((link) => link.travel_plan_item_id === itemId);
+    const generatedDays = [];
+    const generatedLinks = [];
+    let nextDateValue = String(sourceDay?.date || "").trim();
+
+    for (let offset = 1; offset <= additionalDays; offset += 1) {
+      const generatedDay = createEmptyTravelPlanDay(sourceDayIndex + offset);
+      const generatedDayNumber = sourceDayIndex + offset + 1;
+      generatedDay.title = createGeneratedDayTitle(generatedDayNumber);
+      generatedDay.title_i18n = buildGeneratedDayTitleMap(generatedDayNumber);
+      generatedDay.overnight_location = String(sourceItem.location || sourceDay?.overnight_location || "").trim();
+      generatedDay.overnight_location_i18n = sourceItem.location_i18n && typeof sourceItem.location_i18n === "object"
+        ? { ...sourceItem.location_i18n }
+        : sourceDay?.overnight_location_i18n && typeof sourceDay.overnight_location_i18n === "object"
+          ? { ...sourceDay.overnight_location_i18n }
+          : {};
+      nextDateValue = nextIsoDate(nextDateValue);
+      generatedDay.date = nextDateValue;
+
+      const generatedItem = cloneTravelPlanItemForGeneratedDay(sourceItem);
+      generatedDay.items = [generatedItem];
+      generatedDays.push(generatedDay);
+
+      sourceLinks.forEach((link) => {
+        generatedLinks.push({
+          ...link,
+          id: travelPlanLocalId("travel_plan_offer_link"),
+          travel_plan_item_id: generatedItem.id
+        });
+      });
+    }
+
+    sourceItem.accommodation_days = 1;
+    days.splice(sourceDayIndex + 1, 0, ...generatedDays);
+    state.travelPlanDraft.days = days;
+    state.travelPlanDraft.offer_component_links = [
+      ...(Array.isArray(state.travelPlanDraft.offer_component_links) ? state.travelPlanDraft.offer_component_links : []),
+      ...generatedLinks
+    ];
+    renderTravelPlanPanel();
+    travelPlanStatus(
+      bookingT("booking.travel_plan.create_days_created", "Created {count} additional days for this accommodation.", { count: additionalDays }),
+      "success"
+    );
+  }
+
   function removeItem(itemId) {
     syncTravelPlanDraftFromDom();
     if (!window.confirm(bookingT("booking.travel_plan.remove_item_confirm", "Remove this travel plan item?"))) return;
@@ -1040,6 +1255,17 @@ export function createBookingTravelPlanModule(ctx) {
           )
         );
         syncTravelPlanRequiredTitleStates({ focusFirst: true });
+      }
+      if (validation.code === "accommodation_days_invalid") {
+        setPageSaveActionError?.(
+          bookingT(
+            "booking.travel_plan.validation.accommodation_days_action_error",
+            "Accommodation stay on day {day}, travel plan item {item} needs a day count between 1 and 100.",
+            { item: validation.itemNumber, day: validation.dayNumber }
+          )
+        );
+        const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-item="${escapeSelectorValue(validation.itemId || "")}"] [data-travel-plan-item-field="accommodation_days"]`);
+        invalidInput?.focus?.();
       }
       travelPlanStatus(validation.error, "error");
       return false;
@@ -1153,6 +1379,7 @@ export function createBookingTravelPlanModule(ctx) {
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
         syncTravelPlanRequiredTitleStates();
+        syncAccommodationCreateDaysButtonStates();
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
@@ -1166,8 +1393,10 @@ export function createBookingTravelPlanModule(ctx) {
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
         syncTravelPlanRequiredTitleStates();
+        syncAccommodationCreateDaysButtonStates();
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-item-field="timing_kind"]')
+          || target?.matches?.('[data-travel-plan-item-field="kind"]')
           || target?.matches?.("[data-travel-plan-link-component]")
           || target?.matches?.("[data-travel-plan-link-coverage-type]")
         );
@@ -1188,6 +1417,10 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-travel-plan-add-item")) {
           addItem(button.getAttribute("data-travel-plan-add-item"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-create-days")) {
+          createAccommodationDays(button.getAttribute("data-travel-plan-create-days"));
           return;
         }
         if (button.hasAttribute("data-travel-plan-open-import")) {

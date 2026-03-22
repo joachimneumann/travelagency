@@ -128,6 +128,15 @@ function normalizeCoverageType(value) {
   return TRAVEL_PLAN_OFFER_COVERAGE_TYPES.has(normalized) ? normalized : "full";
 }
 
+function normalizeAccommodationDays(value, kind) {
+  if (normalizeItemKind(kind) !== "accommodation") return null;
+  const raw = normalizeText(value);
+  if (!raw) return 1;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isInteger(parsed)) return null;
+  return parsed >= 1 && parsed <= 100 ? parsed : null;
+}
+
 function normalizeFinancialCoverageStatus(value) {
   const normalized = normalizeText(value).toLowerCase();
   return TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES.has(normalized) ? normalized : null;
@@ -221,6 +230,7 @@ function normalizeTravelPlanDays(days, options = {}) {
           time_label_i18n,
           time_point: timing.time_point,
           kind: normalizeItemKind(rawItem.kind),
+          accommodation_days: normalizeAccommodationDays(rawItem.accommodation_days, rawItem.kind),
           title: resolveLocalizedText(title_i18n, flatLang),
           title_i18n,
           details: resolveLocalizedText(details_i18n, flatLang) || null,
@@ -366,6 +376,12 @@ export function createTravelPlanHelpers() {
       }
       if (!TRAVEL_PLAN_ITEM_KINDS.has(item.kind)) {
         return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Kind is invalid.` };
+      }
+      if (
+        item.kind === "accommodation"
+        && !(Number.isInteger(item.accommodation_days) && item.accommodation_days >= 1 && item.accommodation_days <= 100)
+      ) {
+        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Accommodation days must be between 1 and 100.` };
       }
       if (!normalizeText(item.title)) {
         return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item Title is required` };

@@ -60,6 +60,15 @@ function normalizeCoverageType(value) {
     : "full";
 }
 
+function normalizeAccommodationDays(value, kind) {
+  if (normalizeItemKind(kind) !== "accommodation") return null;
+  const raw = normalizeOptionalText(value);
+  if (!raw) return 1;
+  if (!/^\d+$/.test(raw)) return null;
+  const parsed = Number.parseInt(raw, 10);
+  return parsed >= 1 && parsed <= 100 ? parsed : null;
+}
+
 function normalizeItemTiming(rawItem) {
   const timing_kind = normalizeTimingKind(rawItem?.timing_kind);
   const time_label = normalizeOptionalText(rawItem?.time_label);
@@ -158,6 +167,7 @@ export function createEmptyTravelPlanItem() {
     time_label_i18n: {},
     time_point: "",
     kind: "other",
+    accommodation_days: null,
     title: "",
     title_i18n: {},
     details: "",
@@ -288,6 +298,7 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
             time_label_i18n: timeLabelMap,
             time_point: timing.time_point,
             kind: normalizeItemKind(rawItem.kind),
+            accommodation_days: normalizeAccommodationDays(rawItem.accommodation_days, rawItem.kind),
             title: resolveLocalizedEditorText(titleMap, "en", ""),
             title_i18n: titleMap,
             details: resolveLocalizedEditorText(detailsMap, "en", ""),

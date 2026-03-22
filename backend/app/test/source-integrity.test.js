@@ -411,6 +411,102 @@ test("travel plan item titles show a required state inline and drive a specific 
   );
 });
 
+test("accommodation travel plan items expose a day-count helper and create linked copy days", async () => {
+  const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
+  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
+  const travelPlanDomainPath = path.resolve(__dirname, "..", "src", "domain", "travel_plan.js");
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const generatedApiModelsPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "API", "generated_APIModels.js");
+  const [
+    modelSource,
+    travelPlanSource,
+    travelPlanHelpersSource,
+    validationSource,
+    domainSource,
+    travelPlanStyles,
+    openApiSource,
+    generatedApiModelsSource
+  ] = await Promise.all([
+    readFile(modelPath, "utf8"),
+    readFile(travelPlanScriptPath, "utf8"),
+    readFile(travelPlanHelpersPath, "utf8"),
+    readFile(travelPlanValidationPath, "utf8"),
+    readFile(travelPlanDomainPath, "utf8"),
+    readFile(travelPlanStylesPath, "utf8"),
+    readFile(openApiPath, "utf8"),
+    readFile(generatedApiModelsPath, "utf8")
+  ]);
+
+  assert.match(
+    modelSource,
+    /accommodation_days\?:\s+>=1 & <=100 & int/,
+    "The travel-plan item model should persist an optional accommodation day count"
+  );
+  assert.match(
+    openApiSource,
+    /BookingTravelPlanItem:[\s\S]*accommodation_days:[\s\S]*type: integer[\s\S]*minimum: 1[\s\S]*maximum: 100/,
+    "The generated OpenAPI schema should expose the accommodation day count on travel-plan items"
+  );
+  assert.match(
+    generatedApiModelsSource,
+    /schemaField\(\{"name":"accommodation_days","required":false,"wireName":"accommodation_days"\}, SHARED_FIELD_DEFS\.FIELD_17\)/,
+    "The generated API models should include accommodation_days on BookingTravelPlanItem"
+  );
+  assert.match(
+    travelPlanHelpersSource,
+    /function normalizeAccommodationDays\(value, kind\)[\s\S]*normalizeItemKind\(kind\) !== "accommodation"[\s\S]*return parsed >= 1 && parsed <= 100 \? parsed : null;/,
+    "Travel-plan draft helpers should normalize the accommodation day count only for accommodation items"
+  );
+  assert.match(
+    domainSource,
+    /function normalizeAccommodationDays\(value, kind\)[\s\S]*normalizeItemKind\(kind\) !== "accommodation"[\s\S]*return parsed >= 1 && parsed <= 100 \? parsed : null;/,
+    "Backend travel-plan normalization should persist the accommodation day count with the same range"
+  );
+  assert.match(
+    validationSource,
+    /code:\s*"accommodation_days_invalid"[\s\S]*Accommodation days must be between 1 and 100\./,
+    "Travel-plan validation should reject invalid accommodation day counts with structured metadata"
+  );
+  assert.match(
+    travelPlanSource,
+    /function canCreateAccommodationDays\(item\)[\s\S]*String\(item\?\.title \|\| ""\)\.trim\(\)[\s\S]*normalizeAccommodationDays\(item\?\.accommodation_days\)[\s\S]*> 1/,
+    "Accommodation travel-plan items should derive Create days enablement from both the title and the day count"
+  );
+  assert.match(
+    travelPlanSource,
+    /function syncAccommodationCreateDaysButtonStates\(\)[\s\S]*createDaysButton\.disabled = !isEnabled;/,
+    "Travel-plan editing should include a live sync helper for accommodation Create days button state"
+  );
+  assert.match(
+    travelPlanSource,
+    /data-travel-plan-item-field="accommodation_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
+    "Accommodation travel-plan items should render the Create days button disabled until those prerequisites are met"
+  );
+  assert.match(
+    travelPlanSource,
+    /syncTravelPlanRequiredTitleStates\(\);[\s\S]*syncAccommodationCreateDaysButtonStates\(\);[\s\S]*els\.travel_plan_editor\.addEventListener\("change"[\s\S]*syncTravelPlanRequiredTitleStates\(\);[\s\S]*syncAccommodationCreateDaysButtonStates\(\);/,
+    "Accommodation Create days enablement should resync during render and while editing title or day count fields"
+  );
+  assert.match(
+    travelPlanSource,
+    /if \(!String\(sourceItem\?\.title \|\| ""\)\.trim\(\)\) \{[\s\S]*create_days_title_required[\s\S]*data-localized-lang="en"\]\[data-localized-role="source"\]/,
+    "Create days should guard against blank accommodation titles and focus the English title input"
+  );
+  assert.match(
+    travelPlanSource,
+    /generatedDay\.title = createGeneratedDayTitle\(generatedDayNumber\);[\s\S]*cloneTravelPlanItemForGeneratedDay\(sourceItem\)[\s\S]*days\.splice\(sourceDayIndex \+ 1, 0, \.\.\.generatedDays\);/,
+    "Create days should insert generated days after the source day and clone the accommodation item into each one"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-grid--item-kind-accommodation \{[\s\S]*grid-template-columns: minmax\(220px, 280px\) minmax\(160px, 220px\) auto;/,
+    "Accommodation travel-plan items should reserve a dedicated row layout for the day-count field and Create days button"
+  );
+});
+
 test("travel plan images cap inline previews and open in a full-size modal", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");

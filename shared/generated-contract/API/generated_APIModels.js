@@ -1659,6 +1659,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"time_label","required":false,"wireName":"time_label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"time_point","required":false,"wireName":"time_point"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"kind","required":true,"wireName":"kind"}, SHARED_FIELD_DEFS.FIELD_90),
+    schemaField({"name":"accommodation_days","required":false,"wireName":"accommodation_days"}, SHARED_FIELD_DEFS.FIELD_17),
     schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"details","required":false,"wireName":"details"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"location","required":false,"wireName":"location"}, SHARED_FIELD_DEFS.FIELD_1),
@@ -1814,4 +1815,3 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       export function validateBookingTravelPlanItemImageFocalPoint(value) {
         return validateShape(value, BOOKING_TRAVEL_PLAN_ITEM_IMAGE_FOCAL_POINT_SCHEMA);
       }
-

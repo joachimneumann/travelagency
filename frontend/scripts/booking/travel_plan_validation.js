@@ -107,6 +107,26 @@ export function validateTravelPlanDraft(plan, {
         };
       }
 
+      const accommodationDays = Number(item?.accommodation_days);
+      if (
+        itemKind === "accommodation"
+        && !(Number.isInteger(accommodationDays) && accommodationDays >= 1 && accommodationDays <= 100)
+      ) {
+        return {
+          ok: false,
+          code: "accommodation_days_invalid",
+          dayId,
+          itemId,
+          dayNumber,
+          itemNumber,
+          error: bookingT(
+            "booking.travel_plan.validation.accommodation_days_invalid",
+            "Day {day}, travel plan item {item}: Accommodation days must be between 1 and 100.",
+            { day: dayNumber, item: itemNumber }
+          )
+        };
+      }
+
       const itemTitle = String(item?.title || "").trim();
       if (!itemTitle) {
         return {
