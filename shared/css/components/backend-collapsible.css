@@ -36,6 +36,7 @@
   border-radius: 16px;
   box-shadow: 0 8px 18px var(--shadow-card-04);
   overflow: hidden;
+  margin-bottom: 1rem;
 }
 
 .backend-collapsible__head,
@@ -45,8 +46,10 @@
   display: flex;
   align-items: stretch;
   gap: 0.65rem;
-  padding-right: 1rem;
   background: var(--surface);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  overflow: hidden;
 }
 
 .backend-collapsible__summary,
@@ -62,7 +65,7 @@
   flex: 1 1 auto;
   cursor: pointer;
   position: relative;
-  padding: 0.9rem 3rem 0.9rem var(--booking-form-control-inline-start);
+  padding: 1rem 4rem 1rem 1rem;
   font-family: inherit;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-regular);
@@ -74,6 +77,14 @@
   gap: 0.8rem;
   text-align: left;
   transition: border-radius 240ms ease, background-color 240ms ease;
+}
+
+.backend-collapsible:not(.is-open) .backend-collapsible__summary,
+.backend-section:not(.is-open) .backend-section__summary,
+.booking-collapsible:not(.is-open) .booking-collapsible__summary,
+.booking-section:not(.is-open) .booking-section__summary {
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 
 .backend-collapsible.is-open .backend-collapsible__summary,
@@ -88,8 +99,8 @@
 .backend-section__summary--inline-pad-16,
 .booking-collapsible__summary--inline-pad-16,
 .booking-section__summary--inline-pad-16 {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 1rem;
+  padding-right: 4rem;
 }
 
 .backend-collapsible__summary::after,
@@ -101,11 +112,7 @@
   top: 50%;
   right: 1rem;
   transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.4rem;
-  height: 2.4rem;
+  display: inline-block;
   font-size: calc(var(--font-size-title-md) * 2);
   line-height: 1;
   font-weight: var(--font-weight-bold);
@@ -129,7 +136,7 @@
   flex: 0 0 auto;
   min-width: 34px;
   height: 34px;
-  margin-right: 0;
+  margin-right: 1rem;
   border: 1px solid var(--line-error-strong);
   border-radius: 8px;
   background: var(--surface);
@@ -173,7 +180,7 @@
 .backend-section.is-open .backend-section__body,
 .booking-collapsible.is-open .booking-collapsible__body,
 .booking-section.is-open .booking-section__body {
-  padding: 1rem 1rem 1rem;
+  padding: 1rem;
   opacity: 1;
 }
 

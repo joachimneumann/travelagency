@@ -526,7 +526,6 @@ textarea:focus-visible {
 .backend-dirty-frame {
   background-color: var(--accent-alpha-0);
   border-radius: 1rem;
-  padding: 1rem;
   transition: background-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -1601,11 +1600,20 @@ textarea:focus-visible {
   background: transparent;
 }
 
+.backend-list-page #main-content > .section > .container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.backend-list-page .backend-section {
+  padding: 1rem;
+}
+
 .booking-detail-page .backend-table {
   background: transparent;
 }
 
-.booking-detail-page article {
+.booking-detail-page article:not(.booking-section):not(.backend-section) {
   padding: 0;
   border: 0;
   background: transparent;
