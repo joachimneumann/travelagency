@@ -7,7 +7,10 @@ import {
   bookingStageRequest,
   tourDetailRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
-import { buildBookingSegmentHeaderMarkup, initializeBookingCollapsibles } from "./segment_headers.js";
+import {
+  buildBookingSectionHeadMarkup,
+  initializeBookingSections
+} from "./sections.js";
 import {
   bookingContentLanguageLabel,
   bookingT,
@@ -231,7 +234,7 @@ export function createBookingCoreModule(ctx) {
       : "";
     const sections = [{
       title: bookingT("booking.web_form.title", "Web form submission"),
-      summaryClassName: "booking-collapsible__summary--inline-pad-16",
+      summaryClassName: "booking-section__summary--inline-pad-16",
       entries: [
         ["name", booking.web_form_submission?.name || submittedContact?.name],
         ["email", booking.web_form_submission?.email || submittedContact?.email],
@@ -268,14 +271,13 @@ export function createBookingCoreModule(ctx) {
     const html = sections
       .map((section) => {
         const summaryClassName = String(section.summaryClassName || "").trim();
-        const summaryClassAttribute = summaryClassName ? ` booking-collapsible__summary ${summaryClassName}` : "booking-collapsible__summary";
         const rows = (section.entries || [])
           .map((entry) => `<tr><th>${escapeHtml(entry.key)}</th><td>${escapeHtml(String(entry.value || "-"))}</td></tr>`)
           .join("");
         return `
-        <article class="booking-collapsible">
-          <button class="${summaryClassAttribute.trim()}" type="button">${buildBookingSegmentHeaderMarkup({ primary: section.title })}</button>
-          <div class="booking-collapsible__body">
+        <article class="booking-section">
+          ${buildBookingSectionHeadMarkup({ primary: section.title, summaryClassName })}
+          <div class="booking-section__body">
             <div class="backend-table-wrap">
               <table class="backend-table"><tbody>${rows || '<tr><td colspan="2">-</td></tr>'}</tbody></table>
             </div>
@@ -285,7 +287,7 @@ export function createBookingCoreModule(ctx) {
       })
       .join("");
     els.booking_data_view.innerHTML = html;
-    initializeBookingCollapsibles(els.booking_data_view);
+    initializeBookingSections(els.booking_data_view);
   }
 
   function renderActionControls() {

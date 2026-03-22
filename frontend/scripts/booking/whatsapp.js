@@ -2,10 +2,10 @@ import { bookingChatRequest } from "../../Generated/API/generated_APIRequestFact
 import { escapeHtml, normalizeText } from "../shared/api.js";
 import { bookingLang, bookingT } from "./i18n.js";
 import {
-  buildBookingSegmentHeaderMarkup,
-  initializeBookingCollapsible,
-  renderBookingSegmentHeader
-} from "./segment_headers.js";
+  buildBookingSectionHeadMarkup,
+  initializeBookingSection,
+  renderBookingSectionHeader
+} from "./sections.js";
 
 function normalizePhoneDigits(value) {
   return String(value || "").replace(/[^\d]/g, "");
@@ -191,9 +191,12 @@ export function createBookingWhatsAppController({
   function mount(root) {
     if (!root) return;
     root.innerHTML = `
-      <article id="meta_chat_panel" class="booking-collapsible wa-chat-panel" style="margin-bottom: 1rem;">
-        <button class="booking-collapsible__summary" id="meta_chat_panel_summary" type="button">${buildBookingSegmentHeaderMarkup({ primary: bookingT("booking.whatsapp.title", "WhatsApp") })}</button>
-        <div class="booking-collapsible__body">
+      <article id="meta_chat_panel" class="booking-section wa-chat-panel" style="margin-bottom: 1rem;">
+        ${buildBookingSectionHeadMarkup({
+          summaryId: "meta_chat_panel_summary",
+          primary: bookingT("booking.whatsapp.title", "WhatsApp")
+        })}
+        <div class="booking-section__body">
           <div class="wa-chat-shell" id="wa_chat_shell" data-chat-view="list">
             <section class="wa-chat-screen wa-chat-screen--list" aria-label="${escapeHtml(bookingT("booking.whatsapp.conversations", "WhatsApp conversations"))}">
               <div class="wa-chat-list-head"></div>
@@ -235,7 +238,7 @@ export function createBookingWhatsAppController({
     els.openBtn = root.querySelector("#wa_chat_open_btn");
     els.table = root.querySelector("#meta_chat_table");
 
-    initializeBookingCollapsible(els.panel);
+    initializeBookingSection(els.panel);
 
     els.contacts?.addEventListener("click", handleContactsClick);
     els.backBtn?.addEventListener("click", () => {
@@ -415,7 +418,7 @@ export function createBookingWhatsAppController({
 
     if (els.panelSummary) {
       const chatCount = entries.filter((entry) => entry.has_chat).length;
-      renderBookingSegmentHeader(els.panelSummary, {
+      renderBookingSectionHeader(els.panelSummary, {
         primary: bookingT(
           chatCount === 1 ? "booking.whatsapp.summary_one" : "booking.whatsapp.summary_many",
           chatCount === 1 ? "WhatsApp · {count} active chat" : "WhatsApp · {count} active chats",

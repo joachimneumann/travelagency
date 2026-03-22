@@ -3,13 +3,13 @@
   margin: 0 0 1rem;
 }
 
-.booking-detail-page .wa-chat-panel .booking-collapsible__summary {
+.booking-detail-page .wa-chat-panel .booking-section__summary {
   background: var(--wa-shell);
   padding-left: 16px;
   padding-right: 16px;
 }
 
-.booking-detail-page .wa-chat-panel .booking-collapsible__body {
+.booking-detail-page .wa-chat-panel .booking-section__body {
   padding: 0;
   background: var(--surface);
 }

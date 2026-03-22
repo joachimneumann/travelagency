@@ -6,7 +6,7 @@ import {
   normalizeCurrencyCode,
   parseMoneyInputValue
 } from "./pricing.js";
-import { renderBookingSegmentHeader } from "./segment_headers.js";
+import { renderBookingSectionHeader } from "./sections.js";
 import {
   OFFER_PAYMENT_AMOUNT_MODE_CATALOG,
   OFFER_PAYMENT_DUE_TYPE_CATALOG,
@@ -49,7 +49,7 @@ export function createBookingOfferPaymentTermsModule(ctx) {
           { count: String(lines.length) }
         )
       : bookingT("booking.payment_terms_summary_none", "No payment terms yet.");
-    renderBookingSegmentHeader(els.offerPaymentTermsPanelSummary, {
+    renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, {
       primary: bookingT("booking.payment_terms", "Payment terms"),
       secondary
     });

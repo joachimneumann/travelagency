@@ -9,7 +9,7 @@ import {
   bookingT
 } from "./i18n.js";
 import { formatMoneyDisplay } from "./pricing.js";
-import { renderBookingSegmentHeader } from "./segment_headers.js";
+import { renderBookingSectionHeader } from "./sections.js";
 import {
   buildDualLocalizedPayload,
   renderLocalizedStackedField,
@@ -830,7 +830,7 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
-    renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     els.travel_plan_editor.innerHTML = `
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
@@ -1120,7 +1120,7 @@ export function createBookingTravelPlanModule(ctx) {
     destinationInput.value = translated;
     syncTravelPlanDraftFromDom();
     updateTravelPlanDirtyState();
-    renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     scheduleTravelPlanAutosave();
     travelPlanStatus(
       direction === "target-to-source"
@@ -1138,7 +1138,7 @@ export function createBookingTravelPlanModule(ctx) {
         }
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
-        renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
@@ -1150,7 +1150,7 @@ export function createBookingTravelPlanModule(ctx) {
         }
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
-        renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-segment-field="timing_kind"]')
           || target?.matches?.("[data-travel-plan-link-component]")

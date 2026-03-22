@@ -5,7 +5,7 @@ import {
   setSelectValue
 } from "./pricing.js";
 import { bookingT } from "./i18n.js";
-import { renderBookingSegmentHeader } from "./segment_headers.js";
+import { renderBookingSectionHeader } from "./sections.js";
 import { createBookingGeneratedOffersModule } from "./offer_generated_offers.js";
 import { createBookingOfferComponentsModule } from "./offer_components.js";
 import { createBookingOfferPaymentTermsModule } from "./offer_payment_terms.js";
@@ -107,7 +107,7 @@ export function createBookingOfferModule(ctx) {
   }
 
   function updateOfferPanelSummary(totalCents, currency) {
-    renderBookingSegmentHeader(els.offerPanelSummary, {
+    renderBookingSectionHeader(els.offerPanelSummary, {
       primary: bookingT("booking.offer_total", "Offer {total}", { total: formatMoneyDisplay(totalCents, currency) })
     });
   }

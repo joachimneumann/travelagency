@@ -23,7 +23,7 @@ import { createBookingPageLanguageController } from "./booking_page_language.js"
 import { createBookingPageDataController } from "./booking_page_data.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
-import { initializeBookingCollapsibles, renderBookingSegmentHeader } from "../booking/segment_headers.js";
+import { initializeBookingSections, renderBookingSectionHeader } from "../booking/sections.js";
 import {
   createBookingPricingModule,
   populateCurrencySelect as populateCurrencySelectFromModule
@@ -383,8 +383,8 @@ async function init() {
     bookingWhatsApp.mount(els.meta_chat_mount);
   }
 
-  initializeBookingCollapsibles(document);
-  renderStaticSegmentHeaders();
+  initializeBookingSections(document);
+  renderStaticSectionHeaders();
   populateCurrencySelectFromModule(els.pricing_currency_input);
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
@@ -634,20 +634,20 @@ function renderActivitiesTable(items = []) {
   els.activities_table.innerHTML = `${header}<tbody>${body}</tbody>`;
 }
 
-function renderStaticSegmentHeaders() {
-  renderBookingSegmentHeader(els.personsPanelSummary, { primary: backendT("booking.no_persons", "No persons listed.") });
-  renderBookingSegmentHeader(els.travel_plan_panel_summary, {
+function renderStaticSectionHeaders() {
+  renderBookingSectionHeader(els.personsPanelSummary, { primary: backendT("booking.no_persons", "No persons listed.") });
+  renderBookingSectionHeader(els.travel_plan_panel_summary, {
     primary: backendT("booking.travel_plan", "Travel plan"),
     secondary: backendT("booking.no_travel_plan", "No travel plan yet.")
   });
-  renderBookingSegmentHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
-  renderBookingSegmentHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_terms", "Payment terms") });
-  renderBookingSegmentHeader(els.offerAcceptancePanelSummary, {
+  renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
+  renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_terms", "Payment terms") });
+  renderBookingSectionHeader(els.offerAcceptancePanelSummary, {
     primary: backendT("booking.offer_acceptance", "Offer acceptance"),
     secondary: backendT("booking.offer_acceptance_none", "No generated offers yet.")
   });
-  renderBookingSegmentHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
-  renderBookingSegmentHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });
+  renderBookingSectionHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
+  renderBookingSectionHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });
 }
 
 async function loadActivities() {

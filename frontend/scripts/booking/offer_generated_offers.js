@@ -13,7 +13,7 @@ import {
   normalizeGeneratedOfferAcceptanceRouteMode as normalizeGeneratedOfferRouteMode,
   normalizeGeneratedOfferAcceptanceRouteStatus as normalizeGeneratedOfferRouteStatus
 } from "../shared/offer_acceptance_catalog.js";
-import { renderBookingSegmentHeader } from "./segment_headers.js";
+import { renderBookingSectionHeader } from "./sections.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
 let gmailWindowHandle = null;
@@ -120,7 +120,7 @@ export function createBookingGeneratedOffersModule(ctx) {
             count: String(generatedOffers.length)
           })
       : bookingT("booking.offer_acceptance_none", "No generated offers yet.");
-    renderBookingSegmentHeader(els.offerAcceptancePanelSummary, {
+    renderBookingSectionHeader(els.offerAcceptancePanelSummary, {
       primary: bookingT("booking.offer_acceptance", "Offer acceptance"),
       secondary
     });

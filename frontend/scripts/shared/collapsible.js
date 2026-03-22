@@ -7,13 +7,29 @@ function resolveCollapsibleText(value) {
   return normalizeText(value);
 }
 
+function joinClassNames(...values) {
+  return values
+    .flatMap((value) => String(value || "").split(/\s+/))
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
 function resolveCollapsibleElements(panel) {
-  if (!(panel instanceof HTMLElement)) return { trigger: null, body: null };
-  const trigger = panel.querySelector(".backend-collapsible__summary, .booking-collapsible__summary");
-  const body = panel.querySelector(".backend-collapsible__body, .booking-collapsible__body");
+  if (!(panel instanceof HTMLElement)) return { trigger: null, body: null, deleteButton: null };
+  const trigger = panel.querySelector(
+    ".backend-section__summary, .booking-section__summary, .backend-collapsible__summary, .booking-collapsible__summary"
+  );
+  const body = panel.querySelector(
+    ".backend-section__body, .booking-section__body, .backend-collapsible__body, .booking-collapsible__body"
+  );
+  const deleteButton = panel.querySelector(
+    ".backend-section__delete, .booking-section__delete, .backend-collapsible__delete, .booking-collapsible__delete"
+  );
   return {
     trigger: trigger instanceof HTMLElement ? trigger : null,
-    body: body instanceof HTMLElement ? body : null
+    body: body instanceof HTMLElement ? body : null,
+    deleteButton: deleteButton instanceof HTMLElement ? deleteButton : null
   };
 }
 
@@ -71,16 +87,68 @@ function animateCollapsibleBody(body, isOpen) {
 export function buildBackendCollapsibleHeaderMarkup({ primary = "", secondary = "" } = {}) {
   const normalizedPrimary = resolveCollapsibleText(primary);
   const normalizedSecondary = resolveCollapsibleText(secondary);
-  const primaryMarkup = `<span class="backend-collapsible-header__primary">${escapeHtml(normalizedPrimary)}</span>`;
+  const primaryMarkup = `<span class="backend-section-header__primary">${escapeHtml(normalizedPrimary)}</span>`;
   const secondaryMarkup = normalizedSecondary
-    ? `<span class="backend-collapsible-header__secondary">${escapeHtml(normalizedSecondary)}</span>`
+    ? `<span class="backend-section-header__secondary">${escapeHtml(normalizedSecondary)}</span>`
     : "";
-  return `<span class="backend-collapsible-header">${primaryMarkup}${secondaryMarkup}</span>`;
+  return `<span class="backend-section-header">${primaryMarkup}${secondaryMarkup}</span>`;
 }
 
 export function renderBackendCollapsibleHeader(target, options = {}) {
   if (!(target instanceof HTMLElement)) return;
   target.innerHTML = buildBackendCollapsibleHeaderMarkup(options);
+}
+
+export function buildBackendSectionDeleteButtonMarkup({
+  label = "×",
+  title = "Delete section",
+  ariaLabel = title,
+  className = "",
+  confirmMessage = ""
+} = {}) {
+  const classes = joinClassNames("backend-section__delete", className);
+  const confirmAttribute = confirmMessage
+    ? ` data-section-delete-confirm="${escapeHtml(resolveCollapsibleText(confirmMessage))}"`
+    : "";
+  return `<button class="${classes}" type="button" title="${escapeHtml(resolveCollapsibleText(title))}" aria-label="${escapeHtml(resolveCollapsibleText(ariaLabel))}"${confirmAttribute}>${escapeHtml(resolveCollapsibleText(label))}</button>`;
+}
+
+export function buildBackendSectionHeadMarkup({
+  summaryId = "",
+  primary = "",
+  secondary = "",
+  summaryClassName = "",
+  deleteButton = null
+} = {}) {
+  const summaryClasses = joinClassNames("backend-section__summary", summaryClassName);
+  const summaryIdAttribute = summaryId ? ` id="${escapeHtml(summaryId)}"` : "";
+  const deleteMarkup = deleteButton
+    ? buildBackendSectionDeleteButtonMarkup(
+      typeof deleteButton === "object" ? deleteButton : {}
+    )
+    : "";
+  return `<div class="backend-section__head"><button class="${summaryClasses}" type="button"${summaryIdAttribute}>${buildBackendCollapsibleHeaderMarkup({ primary, secondary })}</button>${deleteMarkup}</div>`;
+}
+
+function handleSectionDelete(panel, body, deleteButton) {
+  if (!(panel instanceof HTMLElement) || !(deleteButton instanceof HTMLElement)) return;
+  const confirmMessage = resolveCollapsibleText(
+    deleteButton.getAttribute("data-section-delete-confirm")
+    || panel.getAttribute("data-section-delete-confirm")
+    || "Delete this section?"
+  );
+  if (confirmMessage && !window.confirm(confirmMessage)) return;
+  const deleteEvent = new CustomEvent("backend-section-delete", {
+    bubbles: true,
+    cancelable: true,
+    detail: { panel, body, deleteButton }
+  });
+  const shouldDelete = panel.dispatchEvent(deleteEvent);
+  if (!shouldDelete) return;
+  if (body instanceof HTMLElement && body !== panel && !panel.contains(body)) {
+    body.remove();
+  }
+  panel.remove();
 }
 
 export function setBackendCollapsibleOpen(panel, isOpen, options = {}) {
@@ -104,7 +172,7 @@ export function setBackendCollapsibleOpen(panel, isOpen, options = {}) {
 
 export function initializeBackendCollapsible(panel) {
   if (!(panel instanceof HTMLElement)) return;
-  const { trigger, body } = resolveCollapsibleElements(panel);
+  const { trigger, body, deleteButton } = resolveCollapsibleElements(panel);
   if (!trigger || !body) return;
 
   if (!body.id) {
@@ -122,6 +190,13 @@ export function initializeBackendCollapsible(panel) {
     trigger.addEventListener("click", () => {
       setBackendCollapsibleOpen(panel, !panel.classList.contains("is-open"));
     });
+    if (deleteButton instanceof HTMLButtonElement) {
+      deleteButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        handleSectionDelete(panel, body, deleteButton);
+      });
+    }
     panel.dataset.backendCollapsibleBound = "true";
   }
 
@@ -130,7 +205,15 @@ export function initializeBackendCollapsible(panel) {
 
 export function initializeBackendCollapsibles(root = document) {
   if (!(root instanceof Document || root instanceof HTMLElement)) return;
-  root.querySelectorAll(".backend-collapsible, .booking-collapsible").forEach((panel) => {
+  root.querySelectorAll(".backend-section, .booking-section, .backend-collapsible, .booking-collapsible").forEach((panel) => {
     initializeBackendCollapsible(panel);
   });
 }
+
+export {
+  buildBackendCollapsibleHeaderMarkup as buildBackendSectionHeaderMarkup,
+  initializeBackendCollapsible as initializeBackendSection,
+  initializeBackendCollapsibles as initializeBackendSections,
+  renderBackendCollapsibleHeader as renderBackendSectionHeader,
+  setBackendCollapsibleOpen as setBackendSectionOpen
+};

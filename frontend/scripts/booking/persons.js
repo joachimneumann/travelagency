@@ -34,7 +34,7 @@ import {
 } from "../shared/booking_persons.js";
 import { createQueuedAutosaveController, createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
-import { renderBookingSegmentHeader } from "./segment_headers.js";
+import { renderBookingSectionHeader } from "./sections.js";
 
 export function createBookingPersonsModule(ctx) {
   const {
@@ -144,7 +144,7 @@ export function createBookingPersonsModule(ctx) {
   function renderPersonsSummaryText() {
     const persons = Array.isArray(state.personDrafts) ? state.personDrafts : [];
     if (!persons.length) {
-      renderBookingSegmentHeader(els.personsPanelSummary, { primary: bookingT("booking.no_persons", "No persons listed.") });
+      renderBookingSectionHeader(els.personsPanelSummary, { primary: bookingT("booking.no_persons", "No persons listed.") });
       return;
     }
     const traveling = persons.filter((person) => isTravelingPerson(person)).map((person) => buildCollapsedPersonSummary(person));
@@ -158,7 +158,7 @@ export function createBookingPersonsModule(ctx) {
     if (notTraveling.length) {
       lines.push(bookingT("booking.persons.not_traveling_summary", "Not traveling: {people}", { people: notTraveling.join(" · ") }));
     }
-    renderBookingSegmentHeader(els.personsPanelSummary, { primary: lines.join("\n") });
+    renderBookingSectionHeader(els.personsPanelSummary, { primary: lines.join("\n") });
   }
 
   function clonePersonDraft(person = {}, index = 0) {
