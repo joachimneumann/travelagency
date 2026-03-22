@@ -1,7 +1,7 @@
 {
   "id": "tour_8fdd4246-09c4-4ce3-a353-1fd09858e24b",
   "title": {
-    "en": "Cambodia Adventure Journey",
+    "en": "Cambodia Expeditions",
     "fr": "Voyage aventure au Cambodge",
     "zh": "柬埔寨探险之旅",
     "ja": "カンボジア アドベンチャーの旅",
@@ -18,7 +18,7 @@
     "no": "Kambodsja eventyrreise"
   },
   "styles": [
-    "adventure",
+    "grand-expeditions",
     "beach"
   ],
   "priority": 50,
@@ -105,13 +105,13 @@
   "seasonality_end_month": "feb",
   "rating": 4.8,
   "updated_at": "2026-02-26T13:45:45.497Z",
-  "legacy_id": "trip-cambodia-adventure-classic",
+  "legacy_id": "trip-cambodia-grand-expeditions-classic",
   "destinations": [
     "cambodia",
     "laos"
   ],
   "short_description": {
-    "en": "A Cambodia adventure tour focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+    "en": "A Cambodia grand expeditions tour focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
     "fr": "Un itinéraire d'aventure au Cambodge pensé pour un premier voyage équilibré, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
     "zh": "这是一条以均衡的首次旅行路线为核心的柬埔寨探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
     "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたカンボジアのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",

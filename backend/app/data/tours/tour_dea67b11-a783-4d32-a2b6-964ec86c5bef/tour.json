@@ -1,7 +1,7 @@
 {
   "id": "tour_dea67b11-a783-4d32-a2b6-964ec86c5bef",
   "title": {
-    "en": "Laos Adventure Journey",
+    "en": "Laos Expeditions",
     "fr": "Voyage aventure au Laos",
     "zh": "老挝探险之旅",
     "ja": "ラオス アドベンチャーの旅",
@@ -18,7 +18,7 @@
     "no": "Laos eventyrreise"
   },
   "styles": [
-    "adventure"
+    "grand-expeditions"
   ],
   "priority": 50,
   "travel_duration_days": 10,
@@ -103,12 +103,12 @@
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
   "rating": 4.8,
-  "legacy_id": "trip-laos-adventure-classic",
+  "legacy_id": "trip-laos-grand-expeditions-classic",
   "destinations": [
     "laos"
   ],
   "short_description": {
-    "en": "A Laos adventure itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+    "en": "A Laos grand expeditions itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
     "fr": "Un itinéraire d'aventure au Laos pensé pour un premier voyage équilibré, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
     "zh": "这是一条以均衡的首次旅行路线为核心的老挝探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
     "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたラオスのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",

@@ -292,6 +292,100 @@ test("booking dirty bar stays visible while clean and reports save or discard pr
     /id="booking_dirty_bar_summary"><\/span>/,
     "The booking page should not seed a duplicate clean-state summary in the initial markup"
   );
+  assert.match(
+    bookingPageSource,
+    /id="booking_save_error_hint"/,
+    "The booking page should expose a dedicated save-error hint beside the page save button"
+  );
+  assert.match(
+    bookingSource,
+    /saveErrorHint: document\.getElementById\("booking_save_error_hint"\)/,
+    "The booking page should wire the dedicated save-error hint element"
+  );
+});
+
+test("travel plan item titles show a required state inline and drive a specific page-save error", async () => {
+  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
+  const validationSource = await readFile(travelPlanValidationPath, "utf8");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+
+  assert.match(
+    travelPlanSource,
+    /querySelectorAll\('\[data-travel-plan-item-field="title"\]\[data-localized-lang="en"\]\[data-localized-role="source"\]'\)/,
+    "Travel plan validation should target the English source title input for each travel plan item"
+  );
+  assert.match(
+    travelPlanSource,
+    /input\.classList\.toggle\("travel-plan-item-title-input--required", isEmpty\);[\s\S]*input\.placeholder = isEmpty \? requiredPlaceholder\(\) : "";/,
+    "Empty travel plan item titles should render with a required-state class and placeholder"
+  );
+  assert.match(
+    travelPlanSource,
+    /setPageSaveActionError\?\.\(\s*bookingT\(\s*"booking\.travel_plan\.validation\.item_title_action_error",\s*"Travel plan item \{item\} on day \{day\} needs a title\."/,
+    "Travel plan save should expose a specific page-save error when an item title is missing"
+  );
+  assert.match(
+    validationSource,
+    /code:\s*"item_title_required"[\s\S]*dayNumber[\s\S]*itemNumber/,
+    "Travel plan validation should return structured metadata for missing item titles"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-detail-page \.travel-plan-item-title-input--required[\s\S]*background: var\(--surface-error\);[\s\S]*border-color: var\(--line-error-strong\);/,
+    "The booking page should render empty required travel plan titles with an error background"
+  );
+});
+
+test("travel plan images cap inline previews and open in a full-size modal", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
+  const coreModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+  const travelPlanSource = await readFile(travelPlanScriptPath, "utf8");
+  const travelPlanImagesSource = await readFile(travelPlanImagesModulePath, "utf8");
+  const coreSource = await readFile(coreModulePath, "utf8");
+  const travelPlanStyles = await readFile(travelPlanStylesPath, "utf8");
+
+  assert.match(
+    bookingPageSource,
+    /id="travel_plan_image_preview_modal"[\s\S]*id="travel_plan_image_preview_close_btn"[\s\S]*id="travel_plan_image_preview_image"/,
+    "The booking page should include a dedicated modal for full-size travel plan image previews"
+  );
+  assert.match(
+    travelPlanImagesSource,
+    /data-travel-plan-preview-image="[^"]*"[\s\S]*data-travel-plan-preview-src="[^"]*"[\s\S]*data-travel-plan-preview-alt="[^"]*"/,
+    "Travel plan image cards should expose preview metadata for the full-size modal"
+  );
+  assert.match(
+    travelPlanSource,
+    /data-travel-plan-preview-image[\s\S]*openTravelPlanImagePreview\(/,
+    "Travel plan click handling should open the full-size image preview modal"
+  );
+  assert.match(
+    travelPlanImagesSource,
+    /function openTravelPlanImagePreview\(src, alt = ""\)[\s\S]*modal\.hidden = false;[\s\S]*function bindTravelPlanImagePreviewModal\(\)[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopPropagation\(\);/,
+    "The travel plan image module should manage opening and closing the preview modal"
+  );
+  assert.match(
+    coreSource,
+    /if \(els\.travelPlanImagePreviewModal\?\.hidden === false\) return;/,
+    "Booking-level Escape handling should not close the booking while the travel plan image preview is open"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-image-card \{[\s\S]*width: min\(100%, 240px\);[\s\S]*\.travel-plan-image-card__preview \{[\s\S]*width: 220px;[\s\S]*height: 220px;[\s\S]*\.travel-plan-image-card__actions \{[\s\S]*justify-content: center;/,
+    "Inline travel plan image previews should render inside a compact fixed-size card"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-image-preview-modal__image \{[\s\S]*max-width:[\s\S]*max-height:/,
+    "The full-size preview modal should render the clicked image in an unconstrained overlay view"
+  );
 });
 
 test("offer component editor does not expose discounts_credits as a selectable category", async () => {
@@ -376,8 +470,10 @@ test("generated offer actions are gated behind a clean page state", async () => 
 test("persons and travel plan editors no longer autosave from local interactions", async () => {
   const personsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
   const travelPlanModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
   const personsSource = await readFile(personsModulePath, "utf8");
   const travelPlanSource = await readFile(travelPlanModulePath, "utf8");
+  const travelPlanImagesSource = await readFile(travelPlanImagesModulePath, "utf8");
 
   assert.doesNotMatch(
     personsSource,
@@ -388,6 +484,21 @@ test("persons and travel plan editors no longer autosave from local interactions
     travelPlanSource,
     /createQueuedAutosaveController|scheduleTravelPlanAutosave/,
     "Travel plan edits should stay local until the page save bar is used"
+  );
+  assert.doesNotMatch(
+    travelPlanImagesSource,
+    /bookingTravelPlanItemImageDeleteRequest/,
+    "Travel plan image removal should stay in the local draft until the page save bar is used"
+  );
+  assert.match(
+    travelPlanImagesSource,
+    /function removeTravelPlanItemImage\(dayId, itemId, imageId\)\s*\{[\s\S]*syncTravelPlanDraftFromDom\?\.\(\);[\s\S]*item\.images = nextImages;[\s\S]*renderTravelPlanPanel\?\.\(\);/,
+    "Removing a travel plan image should mutate the local draft and rerender instead of persisting immediately"
+  );
+  assert.doesNotMatch(
+    travelPlanImagesSource,
+    /data-travel-plan-remove-image="\$\{escapeHtml\(image\.id\)\}"[\s\S]*data-requires-clean-state/,
+    "Travel plan image removal should remain available while the page has other unsaved edits"
   );
 });
 

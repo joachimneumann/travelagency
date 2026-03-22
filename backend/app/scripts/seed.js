@@ -10,7 +10,7 @@ const DATA_PATH = path.join(APP_ROOT, "data", "store.json");
 
 const STAGES = ["NEW", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "INVOICE_SENT", "PAYMENT_RECEIVED", "WON", "LOST", "POST_TRIP"];
 const DESTINATIONS = ["Vietnam", "Thailand", "Cambodia", "Laos"];
-const STYLES = ["Adventure", "Culture", "Family", "Food", "Luxury", "Beach", "Budget"];
+const STYLES = ["Grand Expeditions", "Culture", "Family", "Gastronomic Experiences", "Luxury", "Beach", "Budget"];
 const LANGUAGES = ["en", "vi", "fr", "de", "es"];
 const CURRENCIES = ["USD", "EUR", "VND"];
 const BUDGETS = [

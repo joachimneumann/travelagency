@@ -438,6 +438,7 @@ export function createBookingCoreModule(ctx) {
     if (event.key !== "Escape" || event.defaultPrevented) return;
     if (els.personModal?.hidden === false) return;
     if (els.travelPlanItemLibraryModal?.hidden === false) return;
+    if (els.travelPlanImagePreviewModal?.hidden === false) return;
     if (!els.titleInput?.hidden) return;
     if (event.target === els.titleInput) return;
     event.preventDefault();

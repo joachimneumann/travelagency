@@ -36,6 +36,7 @@
             <div class="booking-dirty-bar__actions">
               <button class="btn btn-ghost" id="booking_discard_edits_btn" type="button">Discard edits</button>
               <button class="btn btn-primary" id="booking_save_edits_btn" type="button">Save</button>
+              <span class="micro booking-dirty-bar__action-error" id="booking_save_error_hint" aria-live="polite"></span>
             </div>
             <button class="btn btn-ghost booking-detail-page__close-btn booking-dirty-bar__close" id="backToBackend" type="button" aria-label="Close booking detail" data-i18n-aria-label-id="booking.close_detail">&times;</button>
           </div>
@@ -439,6 +440,25 @@
                 </div>
                 <div id="travel_plan_item_library_status" class="micro booking-inline-status"></div>
                 <div id="travel_plan_item_library_results" class="travel-plan-library-modal__results"></div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="modal travel-plan-image-preview-modal"
+            id="travel_plan_image_preview_modal"
+            hidden
+            role="dialog"
+            aria-modal="true"
+            aria-label="Travel plan image preview"
+          >
+            <div class="modal-panel travel-plan-image-preview-modal__panel" role="document">
+              <div class="modal-head travel-plan-image-preview-modal__head">
+                <div></div>
+                <button class="btn btn-ghost" id="travel_plan_image_preview_close_btn" type="button" aria-label="Close image preview">&times;</button>
+              </div>
+              <div class="modal-body travel-plan-image-preview-modal__body">
+                <img id="travel_plan_image_preview_image" class="travel-plan-image-preview-modal__image" src="" alt="" />
               </div>
             </div>
           </div>

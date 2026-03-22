@@ -1,7 +1,7 @@
 {
   "id": "tour_feff9f98-3cd1-48f7-ae0d-f0ab6891801c",
   "title": {
-    "en": "Vietnam Adventure - Caves",
+    "en": "Vietnam Expeditions - Caves",
     "fr": "Voyage aventure au Vietnam - Exploration des grottes",
     "zh": "越南探险之旅 - 洞穴探索",
     "ja": "ベトナム アドベンチャーの旅 - 洞窟探訪",
@@ -13,12 +13,12 @@
     "ru": "Вьетнамское приключение - Пещеры",
     "nl": "Vietnam Avontuur - Grotten",
     "pl": "Przygoda w Wietnamie - jaskinie",
-    "da": "Vietnam Adventure - Huler",
+    "da": "Vietnam Expeditions - Huler",
     "sv": "Vietnamäventyr - grottor",
     "no": "Vietnameventyr - grotter"
   },
   "styles": [
-    "adventure"
+    "grand-expeditions"
   ],
   "priority": 50,
   "travel_duration_days": 11,
@@ -103,12 +103,12 @@
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.8,
-  "legacy_id": "trip-vietnam-adventure-caves",
+  "legacy_id": "trip-vietnam-grand-expeditions-caves",
   "destinations": [
     "vietnam"
   ],
   "short_description": {
-    "en": "A Vietnam adventure itinerary focused on a route shaped around Caves, with active days, scenic routes, and practical local support.",
+    "en": "A Vietnam grand expeditions itinerary focused on a route shaped around Caves, with active days, scenic routes, and practical local support.",
     "fr": "Un itinéraire d'aventure au Vietnam pensé pour un parcours construit autour des grottes, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
     "zh": "这是一条以围绕洞穴探索打造的路线为核心的越南探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
     "ja": "洞窟体験を軸に組んだルートを軸にしたベトナムのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",

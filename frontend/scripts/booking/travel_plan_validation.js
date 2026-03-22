@@ -36,6 +36,9 @@ export function validateTravelPlanDraft(plan, {
     if (!dayTitle) {
       return {
         ok: false,
+        code: "day_title_required",
+        dayId,
+        dayNumber,
         error: bookingT(
           "booking.travel_plan.validation.day_title_required",
           "Day {day} title is required.",
@@ -108,6 +111,11 @@ export function validateTravelPlanDraft(plan, {
       if (!itemTitle) {
         return {
           ok: false,
+          code: "item_title_required",
+          dayId,
+          itemId,
+          dayNumber,
+          itemNumber,
           error: bookingT(
             "booking.travel_plan.validation.item_title_required",
             "Day {day}, travel plan item {item}: Travel plan item title is required.",

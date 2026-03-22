@@ -57,8 +57,32 @@ export function createBookingTravelPlanModule(ctx) {
     renderBookingData,
     loadActivities,
     escapeHtml,
-    setBookingSectionDirty
+    setBookingSectionDirty,
+    setPageSaveActionError
   } = ctx;
+
+  function requiredPlaceholder() {
+    return bookingT("booking.required_placeholder", "required");
+  }
+
+  function syncTravelPlanRequiredTitleStates({ focusFirst = false } = {}) {
+    if (!els.travel_plan_editor) return true;
+    const titleInputs = Array.from(
+      els.travel_plan_editor.querySelectorAll('[data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]')
+    );
+    let firstEmptyInput = null;
+    for (const input of titleInputs) {
+      const isEmpty = !String(input?.value || "").trim();
+      input.classList.toggle("travel-plan-item-title-input--required", isEmpty);
+      input.toggleAttribute("aria-invalid", isEmpty);
+      input.placeholder = isEmpty ? requiredPlaceholder() : "";
+      if (!firstEmptyInput && isEmpty) firstEmptyInput = input;
+    }
+    if (focusFirst && firstEmptyInput?.focus) {
+      firstEmptyInput.focus();
+    }
+    return !firstEmptyInput;
+  }
 
   function findDraftDay(dayId) {
     return (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).find((day) => day.id === dayId) || null;
@@ -130,6 +154,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (isDirty) {
       travelPlanStatus("");
     }
+    syncTravelPlanRequiredTitleStates();
   }
 
   async function ensureTravelPlanReadyForMutation() {
@@ -198,8 +223,10 @@ export function createBookingTravelPlanModule(ctx) {
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
     findDraftItem,
+    syncTravelPlanDraftFromDom,
     applyTravelPlanMutationBooking,
     applyBookingPayload,
+    renderTravelPlanPanel,
     loadActivities,
     travelPlanStatus
   });
@@ -725,7 +752,7 @@ export function createBookingTravelPlanModule(ctx) {
             })}
           </div>
           <div class="field">
-            <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Financial note (ATP internal)"))}</label>
+            <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Supplier / financial note (ATP internal)"))}</label>
             <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-item-field="financial_note" rows="3">${escapeHtml(item.financial_note || "")}</textarea>
           </div>
         </div>
@@ -819,6 +846,7 @@ export function createBookingTravelPlanModule(ctx) {
       </div>
     `;
     updateTravelPlanDirtyState();
+    syncTravelPlanRequiredTitleStates();
   }
 
   function readLocalizedFieldPayload(container, dataScope, field) {
@@ -1001,6 +1029,16 @@ export function createBookingTravelPlanModule(ctx) {
     const travelPlanPayload = buildTravelPlanPayload();
     const validation = validateTravelPlanDraft(travelPlanPayload);
     if (!validation.ok) {
+      if (validation.code === "item_title_required") {
+        setPageSaveActionError?.(
+          bookingT(
+            "booking.travel_plan.validation.item_title_action_error",
+            "Travel plan item {item} on day {day} needs a title.",
+            { item: validation.itemNumber, day: validation.dayNumber }
+          )
+        );
+        syncTravelPlanRequiredTitleStates({ focusFirst: true });
+      }
       travelPlanStatus(validation.error, "error");
       return false;
     }
@@ -1112,6 +1150,7 @@ export function createBookingTravelPlanModule(ctx) {
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        syncTravelPlanRequiredTitleStates();
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
@@ -1124,6 +1163,7 @@ export function createBookingTravelPlanModule(ctx) {
         syncTravelPlanDraftFromDom();
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+        syncTravelPlanRequiredTitleStates();
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-item-field="timing_kind"]')
           || target?.matches?.("[data-travel-plan-link-component]")
@@ -1175,6 +1215,13 @@ export function createBookingTravelPlanModule(ctx) {
           );
           return;
         }
+        if (button.hasAttribute("data-travel-plan-preview-image")) {
+          travelPlanImagesModule.openTravelPlanImagePreview(
+            button.getAttribute("data-travel-plan-preview-src"),
+            button.getAttribute("data-travel-plan-preview-alt")
+          );
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-move-image-left")) {
           void travelPlanImagesModule.reorderTravelPlanItemImage(
             button.getAttribute("data-travel-plan-day-id"),
@@ -1223,6 +1270,7 @@ export function createBookingTravelPlanModule(ctx) {
     }
     travelPlanItemLibraryModule.bindTravelPlanItemLibrary();
     travelPlanImagesModule.bindTravelPlanImageInput();
+    travelPlanImagesModule.bindTravelPlanImagePreviewModal();
   }
 
   return {

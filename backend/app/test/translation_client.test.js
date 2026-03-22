@@ -8,7 +8,7 @@ test("google fallback preserves sentence spacing between translated segments", a
     ok: true,
     async json() {
       return [[
-        ["Un itinéraire d'aventure au Vietnam axé sur une boucle de montagne à travers Ha Giang.", null, null, null],
+        ["Un itinéraire de grandes expéditions au Vietnam axé sur une boucle de montagne à travers Ha Giang.", null, null, null],
         ["Avec des journées actives, des itinéraires panoramiques et un soutien local pratique.", null, null, null],
         ["Avec plaisir et chance", null, null, null]
       ]];
@@ -22,7 +22,7 @@ test("google fallback preserves sentence spacing between translated segments", a
     });
     const translated = await client.translateEntries(
       {
-        value: "A Vietnam adventure itinerary focused on a mountain-loop focus through Ha Giang. With active days, scenic routes, and practical local support. With fun and luck"
+        value: "A Vietnam grand expeditions itinerary focused on a mountain-loop focus through Ha Giang. With active days, scenic routes, and practical local support. With fun and luck"
       },
       "fr",
       {
@@ -33,7 +33,7 @@ test("google fallback preserves sentence spacing between translated segments", a
 
     assert.equal(
       translated.value,
-      "Un itinéraire d'aventure au Vietnam axé sur une boucle de montagne à travers Ha Giang. Avec des journées actives, des itinéraires panoramiques et un soutien local pratique. Avec plaisir et chance"
+      "Un itinéraire de grandes expéditions au Vietnam axé sur une boucle de montagne à travers Ha Giang. Avec des journées actives, des itinéraires panoramiques et un soutien local pratique. Avec plaisir et chance"
     );
   } finally {
     globalThis.fetch = originalFetch;

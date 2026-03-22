@@ -76,7 +76,7 @@ Behavior from JS:
 - Initially up to 3 tours are shown
 - If more tours exist, the first reveal button appears (capped at 3):
 - No active filters: `show more tours`
-- Style filter active: `show X more <style> tours` (example: `show 3 more adventure tours`)
+- Style filter active: `show X more <style> tours` (example: `show 3 more grand expeditions tours`)
 - Destination-only filter active: `show X more tours in <destination>`
 - Only after clicking `Show more`, a `Show the remaining X tours` button can appear to reveal the rest
 - If exactly one tour remains, the second button label becomes `There is one more tour`
@@ -87,7 +87,7 @@ Behavior from JS:
 Current inventory:
 - 32 trip entries in backend tour storage (`backend/app/data/tours/<tour_id>/tour.json`)
 - Destinations represented: Vietnam, Thailand, Cambodia, Laos
-- Styles include: Adventure, Beach, Budget, Culture, Family, Food, Luxury
+- Styles include: Grand Expeditions, Beach, Budget, Culture, Family, Gastronomic Experiences, Luxury
 - Multiple tours per country/style are supported with IDs in the form `trip-<country>-<style>-<variant>`
 - Tour images are served by backend under `/public/v1/tour-images/<tour_id>/<tour_id>.webp`
 - Each tour entry includes `priority` (human-writable, intended range `0-100`)

@@ -1,4 +1,5 @@
 import { normalizeText } from "./text.js";
+import { normalizeTourStyleLabels } from "../domain/tour_catalog_i18n.js";
 import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   languageByApiValue,
@@ -215,7 +216,7 @@ function normalizeWebFormSubmission(booking) {
   return compactObject({
     ...submission,
     destinations: normalizeStringArray(submission?.destinations || booking?.destinations),
-    travel_style: normalizeStringArray(submission?.travel_style || booking?.travel_styles),
+    travel_style: normalizeTourStyleLabels(submission?.travel_style || booking?.travel_styles, "en"),
     booking_name: optionalText(submission?.booking_name || booking?.name),
     tour_id: optionalText(submission?.tour_id || source?.tour_id),
     page_url: optionalText(submission?.page_url || source?.page_url),
@@ -243,7 +244,7 @@ function normalizeWebFormSubmission(booking) {
 
 export function normalizeStoredBookingRecord(booking, _store = {}) {
   const normalizedDestinations = normalizeStringArray(booking?.destinations);
-  const normalizedTravelStyles = normalizeStringArray(booking?.travel_styles);
+  const normalizedTravelStyles = normalizeTourStyleLabels(booking?.travel_styles, "en");
   const normalizedBooking = {
     ...booking,
     customer_language: optionalLanguageCode(booking?.customer_language || booking?.web_form_submission?.preferred_language),

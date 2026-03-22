@@ -15,17 +15,21 @@ const DESTINATION_LABELS = Object.freeze({
 });
 
 const STYLE_LABELS = Object.freeze({
-  adventure: Object.freeze({ en: "Adventure", fr: "Aventure", zh: "探险", ja: "アドベンチャー", ko: "어드벤처", vi: "Phiêu lưu", de: "Abenteuer", es: "Aventura", it: "Avventura", ru: "Приключения", nl: "Avontuur", pl: "Przygoda", da: "Eventyr", sv: "Äventyr", no: "Eventyr" }),
+  "grand-expeditions": Object.freeze({ en: "Grand Expeditions", fr: "Grandes expéditions", zh: "大型远征", ja: "壮大な遠征", ko: "대규모 원정", vi: "Đại thám hiểm", de: "Große Expeditionen", es: "Grandes expediciones", it: "Grandi spedizioni", ru: "Большие экспедиции", nl: "Grote expedities", pl: "Wielkie ekspedycje", da: "Store ekspeditioner", sv: "Stora expeditioner", no: "Store ekspedisjoner" }),
   beach: Object.freeze({ en: "Beach", fr: "Plage", zh: "海滩", ja: "ビーチ", ko: "해변", vi: "Bai bien", de: "Strand", es: "Playa", it: "Spiaggia", ru: "Пляж", nl: "Strand", pl: "Plaża", da: "Strand", sv: "Strand", no: "Strand" }),
   budget: Object.freeze({ en: "Budget", fr: "Budget", zh: "经济型", ja: "お手頃", ko: "가성비", vi: "Tiet kiem", de: "Budget", es: "Económico", it: "Economico", ru: "Эконом", nl: "Budget", pl: "Budżetowy", da: "Budget", sv: "Budget", no: "Budsjett" }),
   culture: Object.freeze({ en: "Culture", fr: "Culture", zh: "文化", ja: "文化", ko: "문화", vi: "Van hoa", de: "Kultur", es: "Cultura", it: "Cultura", ru: "Культура", nl: "Cultuur", pl: "Kultura", da: "Kultur", sv: "Kultur", no: "Kultur" }),
   family: Object.freeze({ en: "Family", fr: "Famille", zh: "家庭", ja: "家族", ko: "가족", vi: "Gia dinh", de: "Familie", es: "Familiar", it: "Famiglia", ru: "Семья", nl: "Familie", pl: "Rodzina", da: "Familie", sv: "Familj", no: "Familie" }),
-  food: Object.freeze({ en: "Food", fr: "Gastronomie", zh: "美食", ja: "食", ko: "미식", vi: "Am thuc", de: "Kulinarik", es: "Gastronomía", it: "Gastronomia", ru: "Гастрономия", nl: "Culinair", pl: "Kuchnia", da: "Mad", sv: "Mat", no: "Mat" }),
+  "gastronomic-experiences": Object.freeze({ en: "Gastronomic Experiences", fr: "Expériences gastronomiques", zh: "美食体验", ja: "美食体験", ko: "미식 체험", vi: "Trải nghiệm ẩm thực", de: "Kulinarische Erlebnisse", es: "Experiencias gastronómicas", it: "Esperienze gastronomiche", ru: "Гастрономические впечатления", nl: "Culinaire ervaringen", pl: "Doświadczenia kulinarne", da: "Gastronomiske oplevelser", sv: "Gastronomiska upplevelser", no: "Gastronomiske opplevelser" }),
   luxury: Object.freeze({ en: "Luxury", fr: "Luxe", zh: "奢华", ja: "ラグジュアリー", ko: "럭셔리", vi: "Cao cap", de: "Luxus", es: "Lujo", it: "Lusso", ru: "Люкс", nl: "Luxe", pl: "Luksus", da: "Luksus", sv: "Lyx", no: "Luksus" })
 });
 
 const DESTINATION_ORDER = Object.freeze(["vietnam", "thailand", "cambodia", "laos"]);
-const STYLE_ORDER = Object.freeze(["adventure", "beach", "budget", "culture", "family", "food", "luxury"]);
+const STYLE_ORDER = Object.freeze(["grand-expeditions", "beach", "budget", "culture", "family", "gastronomic-experiences", "luxury"]);
+const STYLE_CODE_ALIASES = Object.freeze({
+  adventure: "grand-expeditions",
+  food: "gastronomic-experiences"
+});
 
 function slugify(value) {
   return normalizeText(value)
@@ -97,7 +101,11 @@ export function normalizeTourDestinationCode(value) {
 }
 
 export function normalizeTourStyleCode(value) {
-  return catalogCodeFromValue(value, STYLE_LABELS);
+  const normalizedValue = normalizeText(value).toLowerCase();
+  const normalizedCode = catalogCodeFromValue(value, STYLE_LABELS);
+  if (STYLE_CODE_ALIASES[normalizedValue]) return STYLE_CODE_ALIASES[normalizedValue];
+  if (STYLE_CODE_ALIASES[normalizedCode]) return STYLE_CODE_ALIASES[normalizedCode];
+  return normalizedCode;
 }
 
 export function getTourDestinationLabel(code, lang = DEFAULT_TOUR_LANG) {
@@ -105,7 +113,7 @@ export function getTourDestinationLabel(code, lang = DEFAULT_TOUR_LANG) {
 }
 
 export function getTourStyleLabel(code, lang = DEFAULT_TOUR_LANG) {
-  return getCatalogLabel(STYLE_LABELS, code, lang);
+  return getCatalogLabel(STYLE_LABELS, normalizeTourStyleCode(code), lang);
 }
 
 export function sortTourDestinationCodes(codes) {
@@ -125,9 +133,19 @@ export function buildTourDestinationOption(code, lang = DEFAULT_TOUR_LANG) {
 }
 
 export function buildTourStyleOption(code, lang = DEFAULT_TOUR_LANG) {
-  const normalizedCode = normalizeText(code).toLowerCase();
+  const normalizedCode = normalizeTourStyleCode(code);
   return {
     code: normalizedCode,
     label: getTourStyleLabel(normalizedCode, lang)
   };
+}
+
+export function normalizeTourStyleLabels(values, lang = DEFAULT_TOUR_LANG) {
+  return Array.from(new Set(
+    (Array.isArray(values) ? values : [values])
+      .map((value) => normalizeTourStyleCode(value))
+      .filter(Boolean)
+      .map((code) => getTourStyleLabel(code, lang))
+      .filter(Boolean)
+  ));
 }

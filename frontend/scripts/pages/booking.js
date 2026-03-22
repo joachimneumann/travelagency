@@ -140,6 +140,7 @@ state.originalInvoiceSnapshot = "";
 state.pageSaveInFlight = false;
 state.pageDiscardInFlight = false;
 state.pageDirtyBarStatus = "";
+state.pageSaveActionError = "";
 
 let bookingWhatsApp = null;
 
@@ -151,6 +152,7 @@ const els = {
   dirtyBarSummary: document.getElementById("booking_dirty_bar_summary"),
   discardEditsBtn: document.getElementById("booking_discard_edits_btn"),
   saveEditsBtn: document.getElementById("booking_save_edits_btn"),
+  saveErrorHint: document.getElementById("booking_save_error_hint"),
   logoutLink: document.getElementById("backendLogoutLink"),
   sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: document.getElementById("backendUserLabel"),
@@ -191,6 +193,9 @@ const els = {
   travelPlanItemLibrarySearchBtn: document.getElementById("travel_plan_item_library_search_btn"),
   travelPlanItemLibraryStatus: document.getElementById("travel_plan_item_library_status"),
   travelPlanItemLibraryResults: document.getElementById("travel_plan_item_library_results"),
+  travelPlanImagePreviewModal: document.getElementById("travel_plan_image_preview_modal"),
+  travelPlanImagePreviewCloseBtn: document.getElementById("travel_plan_image_preview_close_btn"),
+  travelPlanImagePreviewImage: document.getElementById("travel_plan_image_preview_image"),
   travelPlanItemImageInput: document.getElementById("travel_plan_item_image_input"),
   personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
   personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
@@ -282,6 +287,7 @@ function setBookingSectionDirty(sectionKey, isDirty) {
   if (hasUnsavedBookingChanges()) {
     state.pageDirtyBarStatus = "";
   }
+  state.pageSaveActionError = "";
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
 }
@@ -332,6 +338,9 @@ function updatePageDirtyBar() {
   els.dirtyBarSummary.textContent = isDirty
     ? backendT("booking.page_save.summary", "Changed sections: {sections}", { sections: labels.join(", ") })
     : "";
+  if (els.saveErrorHint) {
+    els.saveErrorHint.textContent = state.pageSaveActionError || "";
+  }
   els.saveEditsBtn.disabled = isBusy || !isDirty;
   els.discardEditsBtn.disabled = isBusy || !isDirty;
 }
@@ -835,6 +844,7 @@ async function savePageEdits() {
   if (!hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight) return true;
   state.pageSaveInFlight = true;
   state.pageDirtyBarStatus = "saving";
+  state.pageSaveActionError = "";
   clearError();
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
@@ -902,6 +912,7 @@ async function discardPageEdits() {
   if (!window.confirm(backendT("booking.discard_edits_confirm", "Discard all unsaved edits?"))) return;
   clearError();
   clearStatus();
+  state.pageSaveActionError = "";
   state.pageDiscardInFlight = true;
   state.pageDirtyBarStatus = "discarding";
   updatePageDirtyBar();
@@ -969,7 +980,11 @@ const travelPlanModule = createBookingTravelPlanModule({
   renderTravelPlanPanel,
   loadActivities,
   escapeHtml,
-  setBookingSectionDirty
+  setBookingSectionDirty,
+  setPageSaveActionError: (message) => {
+    state.pageSaveActionError = normalizeText(message);
+    updatePageDirtyBar();
+  }
 });
 
 const offerModule = createBookingOfferModule({

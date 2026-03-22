@@ -63,7 +63,7 @@ You are building a static, responsive landing page for my business: a Vietnam-ba
 
 Create a top navigation with two primary entry points:
 	•	Destinations (by country)
-	•	Travel Styles (e.g., Adventure, Culture, Beach, Family, Luxury, Budget, Food)
+	•	Travel Styles (e.g., Grand Expeditions, Culture, Beach, Family, Luxury, Budget, Gastronomic Experiences)
 
 Behavior requirements:
 	•	Clicking a destination/style filters tour cards on the same page (no reload).

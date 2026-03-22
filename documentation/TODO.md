@@ -31,6 +31,20 @@ Create an UI element "section" or "Section", that is based on the current sectio
 
 The high level sections "travelling", "travel plan", offer", etc. do not have a delete buttons. But they might later contain other sections that have the delete button.
 
+Rename the travel styles `Food` to `Gastronomic Experiences` and `Adventure` to `Grand Expeditions` across the model, backend, and frontend.
 
+Test: Assign ATP staff to booking
 
+Change order: first step: Travel Plan
+Create PDF woth Travel Plan
 
+Travel plan: Hotel for 3 nights. How Automatically create days!
+
+Suppliers!
+
+Image of segement in staging broken
+
+Target arabs
+
+Travel Plan Itel: kind first
+Hotel 3 nights --> create 3 days and copy hotel. Autofill day title

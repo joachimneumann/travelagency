@@ -13,6 +13,7 @@ import {
   ensureGeneratedOfferAcceptanceTokenState,
   synchronizeGeneratedOfferAcceptanceRouteStatus
 } from "../../domain/offer_acceptance.js";
+import { normalizeTourStyleLabels } from "../../domain/tour_catalog_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
@@ -125,6 +126,11 @@ export function createBookingHandlers(deps) {
 
   function unique(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
+  }
+
+  function canonicalBookingTravelStyles(values) {
+    const normalized = normalizeTourStyleLabels(normalizeStringArray(values), "en");
+    return normalized.length ? normalized : normalizeStringArray(values);
   }
 
   async function resolveSubmittedBookingName(payload) {
@@ -678,7 +684,7 @@ export function createBookingHandlers(deps) {
 
     const submission = {
       destinations: normalizeStringArray(payload.destinations),
-      travel_style: normalizeStringArray(payload.travel_style),
+      travel_style: canonicalBookingTravelStyles(payload.travel_style),
       booking_name: initialBookingName,
       tour_id: normalizeText(payload.tour_id) || null,
       page_url: normalizeText(payload.page_url),
@@ -718,7 +724,7 @@ export function createBookingHandlers(deps) {
       assigned_keycloak_user_id: null,
       service_level_agreement_due_at: computeServiceLevelAgreementDueAt(STAGES.NEW),
       destinations: submission.destinations,
-      travel_styles: submission.travel_style,
+      travel_styles: canonicalBookingTravelStyles(submission.travel_style),
       web_form_travel_month: submission.travel_month,
       travel_start_day: null,
       travel_end_day: null,

@@ -1,7 +1,7 @@
 {
   "id": "tour_08f64aef-cfad-4d0f-9c08-eff5149ba614",
   "title": {
-    "en": "Thailand Adventure Journey",
+    "en": "Thailand Expeditions",
     "fr": "Voyage aventure en Thaïlande",
     "zh": "泰国探险之旅",
     "ja": "タイ アドベンチャーの旅",
@@ -18,7 +18,7 @@
     "no": "Thailand eventyrreise"
   },
   "styles": [
-    "adventure"
+    "grand-expeditions"
   ],
   "priority": 50,
   "travel_duration_days": 11,
@@ -103,12 +103,12 @@
   "seasonality_start_month": "nov",
   "seasonality_end_month": "mar",
   "rating": 4.8,
-  "legacy_id": "trip-thailand-adventure-classic",
+  "legacy_id": "trip-thailand-grand-expeditions-classic",
   "destinations": [
     "thailand"
   ],
   "short_description": {
-    "en": "A Thailand adventure itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+    "en": "A Thailand grand expeditions itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
     "fr": "Un itinéraire d'aventure en Thaïlande pensé pour un premier voyage équilibré, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
     "zh": "这是一条以均衡的首次旅行路线为核心的泰国探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
     "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたタイのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",

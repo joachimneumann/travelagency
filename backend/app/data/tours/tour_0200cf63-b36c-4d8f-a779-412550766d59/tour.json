@@ -1,7 +1,7 @@
 {
   "id": "tour_0200cf63-b36c-4d8f-a779-412550766d59",
   "title": {
-    "en": "Vietnam Adventure - Ha Giang Loop",
+    "en": "Vietnam Expeditions - Ha Giang Loop",
     "fr": "Voyage aventure au Vietnam - Boucle de Hà Giang",
     "zh": "越南探险之旅 - 河江环线",
     "ja": "ベトナム アドベンチャーの旅 - ハザンループ",
@@ -13,12 +13,12 @@
     "ru": "Вьетнамское приключение - Петля Хазянг",
     "nl": "Vietnam-avontuur - Ha Giang-lus",
     "pl": "Przygoda w Wietnamie – pętla Ha Giang",
-    "da": "Vietnam Adventure - Ha Giang Loop",
+    "da": "Vietnam Expeditions - Ha Giang Loop",
     "sv": "Vietnamäventyr - Ha Giang Loop",
-    "no": "Vietnam Adventure - Ha Giang Loop"
+    "no": "Vietnam Expeditions - Ha Giang Loop"
   },
   "styles": [
-    "adventure",
+    "grand-expeditions",
     "budget"
   ],
   "priority": 50,
@@ -104,12 +104,12 @@
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.8,
-  "legacy_id": "trip-vietnam-adventure-ha-giang-loop",
+  "legacy_id": "trip-vietnam-grand-expeditions-ha-giang-loop",
   "destinations": [
     "vietnam"
   ],
   "short_description": {
-    "en": "A Vietnam adventure itinerary focused on a mountain-loop focus through Ha Giang, with active days, scenic routes, and practical local support.",
+    "en": "A Vietnam grand expeditions itinerary focused on a mountain-loop focus through Ha Giang, with active days, scenic routes, and practical local support.",
     "fr": "Un itinéraire d'aventure au Vietnam pensé pour une boucle de montagne à travers Hà Giang, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
     "zh": "这是一条以穿越河江的山地环线为核心的越南探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
     "ja": "ハザンを巡る山岳ループを軸にしたベトナムのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",

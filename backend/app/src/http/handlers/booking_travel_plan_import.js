@@ -1,4 +1,5 @@
 import { validateTravelPlanItemImportRequest } from "../../../Generated/API/generated_APIModels.js";
+import { normalizeTourStyleCode } from "../../domain/tour_catalog_i18n.js";
 import {
   cloneTravelPlanLocalizedMap,
   parseTravelPlanQueryInt
@@ -105,7 +106,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const query = normalizeText(requestUrl.searchParams.get("q")).toLowerCase();
     const destination = normalizeText(requestUrl.searchParams.get("destination")).toLowerCase();
     const country = normalizeText(requestUrl.searchParams.get("country")).toUpperCase();
-    const style = normalizeText(requestUrl.searchParams.get("style")).toLowerCase();
+    const style = normalizeTourStyleCode(requestUrl.searchParams.get("style"));
     const itemKind = normalizeText(requestUrl.searchParams.get("item_kind")).toLowerCase();
     const limit = parseTravelPlanQueryInt(requestUrl.searchParams.get("limit"), 20, { min: 1, max: 50 });
     const offset = parseTravelPlanQueryInt(requestUrl.searchParams.get("offset"), 0, { min: 0, max: 5000 });
@@ -131,8 +132,10 @@ export function createBookingTravelPlanImportHandlers(deps) {
         if (!bookingDestinations.some((value) => value.includes(destination))) continue;
       }
       if (style) {
-        const bookingStyles = (Array.isArray(booking?.travel_styles) ? booking.travel_styles : []).map((value) => normalizeText(value).toLowerCase()).filter(Boolean);
-        if (!bookingStyles.some((value) => value.includes(style))) continue;
+        const bookingStyles = (Array.isArray(booking?.travel_styles) ? booking.travel_styles : [])
+          .map((value) => normalizeTourStyleCode(value))
+          .filter(Boolean);
+        if (!bookingStyles.includes(style)) continue;
       }
 
       const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, {

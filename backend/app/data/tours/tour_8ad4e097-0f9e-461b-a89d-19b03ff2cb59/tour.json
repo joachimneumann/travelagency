@@ -1,7 +1,7 @@
 {
   "id": "tour_8ad4e097-0f9e-461b-a89d-19b03ff2cb59",
   "title": {
-    "en": "Vietnam Adventure Journey",
+    "en": "Vietnam Expeditions",
     "fr": "Voyage aventure au Vietnam",
     "zh": "越南探险之旅",
     "ja": "ベトナム アドベンチャーの旅",
@@ -18,7 +18,7 @@
     "no": "Vietnam eventyrreise"
   },
   "styles": [
-    "adventure"
+    "grand-expeditions"
   ],
   "priority": 50,
   "travel_duration_days": 10,
@@ -103,12 +103,12 @@
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
   "rating": 4.8,
-  "legacy_id": "trip-vietnam-adventure-classic",
+  "legacy_id": "trip-vietnam-grand-expeditions-classic",
   "destinations": [
     "vietnam"
   ],
   "short_description": {
-    "en": "A Vietnam adventure itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
+    "en": "A Vietnam grand expeditions itinerary focused on a balanced first-trip route, with active days, scenic routes, and practical local support.",
     "fr": "Un itinéraire d'aventure au Vietnam pensé pour un premier voyage équilibré, avec des journées actives, de beaux itinéraires et un accompagnement local concret.",
     "zh": "这是一条以均衡的首次旅行路线为核心的越南探险行程，包含充满活力的每日安排、风景优美的路线以及实用的当地支持。",
     "ja": "初めての旅でもバランスのよい周遊ルートを軸にしたベトナムのアドベンチャー旅程で、アクティブな日程、美しい景観ルート、実用的な現地サポート。",

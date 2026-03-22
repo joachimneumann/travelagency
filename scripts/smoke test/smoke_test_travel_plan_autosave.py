@@ -117,7 +117,7 @@ def open_json(url, *, method="GET", payload=None, headers=None):
 def create_booking(backend_port):
     payload = {
         "destinations": ["VN"],
-        "travel_style": ["Adventure"],
+        "travel_style": ["Grand Expeditions"],
         "name": "Travel Plan Autosave Smoke Test",
         "email": "autosave-smoke@asiatravelplan.local",
         "phone_number": "+84999999999",

@@ -2712,13 +2712,13 @@ test("booking name and persons endpoints update the booking", async () => {
       method: "PATCH",
       body: {
         expected_core_revision: core_revision,
-        name: "Vietnam Adventure Journey",
+        name: "Vietnam Expeditions",
         actor: "joachim"
       }
     }
   );
   assert.equal(nameResult.status, 200);
-  assert.equal(nameResult.body.booking.name, "Vietnam Adventure Journey");
+  assert.equal(nameResult.body.booking.name, "Vietnam Expeditions");
   const detailAfterName = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
   assert.equal(detailAfterName.status, 200);
   const persons_revision_after_name = detailAfterName.body.booking.persons_revision;
@@ -2841,7 +2841,7 @@ test("booking chat stays on one canonical booking and exposes related bookings",
       preferred_language: "en",
       preferred_currency: "USD",
       destinations: ["Laos"],
-      travel_style: ["Adventure"],
+      travel_style: ["Grand Expeditions"],
       number_of_travelers: 1,
       booking_name: "Laos Journey"
     }
@@ -2924,7 +2924,7 @@ test("booking chat ignores stale deleted booking ids and rematches by phone", as
       preferred_language: "en",
       preferred_currency: "USD",
       destinations: ["Vietnam"],
-      travel_style: ["Adventure"],
+      travel_style: ["Grand Expeditions"],
       number_of_travelers: 2,
       booking_name: "Vietnam Journey"
     }
