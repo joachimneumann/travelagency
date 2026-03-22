@@ -3,6 +3,10 @@ import {
   normalizeBookingPersonsPayload
 } from "../../lib/booking_persons.js";
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
+import {
+  isSuspiciousSentinelString,
+  resolveBookingNameForStorage
+} from "../../domain/booking_names.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
 import { synchronizeGeneratedOfferAcceptanceRouteStatus } from "../../domain/offer_acceptance.js";
@@ -22,6 +26,7 @@ export function createBookingHandlers(deps) {
     sendJson,
     validateBookingInput,
     readStore,
+    readTours,
     normalizeText,
     normalizeStringArray,
     getRequestIpAddress,
@@ -96,7 +101,8 @@ export function createBookingHandlers(deps) {
     writeFile,
     rm,
     sendFileWithCache,
-    translateEntries
+    translateEntries,
+    resolveLocalizedTourText
   } = deps;
 
   function syncBookingGeneratedOfferRouteStatuses(booking) {
@@ -113,6 +119,17 @@ export function createBookingHandlers(deps) {
 
   function unique(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
+  }
+
+  async function resolveSubmittedBookingName(payload) {
+    return resolveBookingNameForStorage({
+      bookingName: payload?.booking_name,
+      tourId: payload?.tour_id,
+      preferredLanguage: payload?.preferred_language,
+      normalizeText,
+      readTours,
+      resolveLocalizedTourText
+    });
   }
 
   function resolveBookingPersonPhotoDiskPath(rawRelativePath) {
@@ -644,10 +661,19 @@ export function createBookingHandlers(deps) {
     const travelDurationMax = normalizeText(payload.travel_duration_days_max) ? safeInt(payload.travel_duration_days_max) : null;
     const bookingId = `booking_${randomUUID()}`;
 
+    const initialBookingName = await resolveSubmittedBookingName(payload);
+    if (
+      isSuspiciousSentinelString(payload.booking_name, normalizeText) &&
+      !initialBookingName
+    ) {
+      sendJson(res, 422, { error: "Invalid booking_name" });
+      return;
+    }
+
     const submission = {
       destinations: normalizeStringArray(payload.destinations),
       travel_style: normalizeStringArray(payload.travel_style),
-      booking_name: normalizeText(payload.booking_name) || null,
+      booking_name: initialBookingName,
       tour_id: normalizeText(payload.tour_id) || null,
       page_url: normalizeText(payload.page_url),
       ip_address: ipAddress || null,
@@ -670,8 +696,6 @@ export function createBookingHandlers(deps) {
       notes: normalizeText(payload.notes) || null,
       submitted_at: now
     };
-
-    const initialBookingName = normalizeText(payload.booking_name) || null;
 
     const booking = {
       id: bookingId,

@@ -2,6 +2,7 @@ import {
   bookingTravelPlanRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { logBrowserConsoleError } from "../shared/api.js";
+import { createQueuedAutosaveController } from "../shared/edit_state.js";
 import {
   bookingContentLang,
   bookingContentLanguageOption,
@@ -59,6 +60,11 @@ export function createBookingTravelPlanModule(ctx) {
     escapeHtml,
     setBookingSectionDirty
   } = ctx;
+  const travelPlanAutosaveController = createQueuedAutosaveController({
+    delayMs: 500,
+    isEnabled: () => state.permissions.canEditBooking && Boolean(state.booking),
+    save: persistTravelPlan
+  });
 
   function findDraftDay(dayId) {
     return (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []).find((day) => day.id === dayId) || null;
@@ -111,9 +117,26 @@ export function createBookingTravelPlanModule(ctx) {
     setBookingSectionDirty("travel_plan", state.travelPlanDirty);
   }
 
-  function updateTravelPlanSaveButtonState() {
-    if (!els.travel_plan_save_btn) return;
-    els.travel_plan_save_btn.disabled = !state.permissions.canEditBooking || !state.travelPlanDirty || Boolean(state.travelPlanSaving);
+  function buildTravelPlanPayload(plan = state.travelPlanDraft) {
+    return normalizeTravelPlanDraft({
+      ...plan,
+      offer_component_links: (Array.isArray(plan?.offer_component_links) ? plan.offer_component_links : [])
+        .filter((link) => String(link?.offer_component_id || "").trim())
+    }, getOfferComponentsForLinks());
+  }
+
+  function canTravelPlanAutosave() {
+    if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty) return false;
+    syncTravelPlanDraftFromDom();
+    const dateFieldValidation = validateTravelPlanDateFieldsInDom({ allowPartial: false, focusFirstInvalid: false });
+    if (!dateFieldValidation.ok) return false;
+    const validation = validateTravelPlanDraft(buildTravelPlanPayload());
+    return validation.ok;
+  }
+
+  function scheduleTravelPlanAutosave() {
+    if (!canTravelPlanAutosave()) return;
+    travelPlanAutosaveController.schedule();
   }
 
   function getTravelPlanSnapshot(plan = state.travelPlanDraft) {
@@ -127,7 +150,6 @@ export function createBookingTravelPlanModule(ctx) {
     if (isDirty) {
       travelPlanStatus("");
     }
-    updateTravelPlanSaveButtonState();
   }
 
   async function ensureTravelPlanReadyForMutation() {
@@ -148,7 +170,6 @@ export function createBookingTravelPlanModule(ctx) {
     state.travelPlanDraft = normalizeTravelPlanDraft(state.booking?.travel_plan || createEmptyTravelPlan(), getOfferComponentsForLinks());
     state.originalTravelPlanSnapshot = getTravelPlanSnapshot(state.travelPlanDraft);
     setTravelPlanDirty(false);
-    updateTravelPlanSaveButtonState();
     travelPlanStatus("");
     travelPlanSegmentLibraryModule.populateTravelPlanSegmentLibraryKindOptions();
   }
@@ -919,6 +940,7 @@ export function createBookingTravelPlanModule(ctx) {
     days.push(nextDay);
     state.travelPlanDraft.days = days;
     renderTravelPlanPanel();
+    scheduleTravelPlanAutosave();
   }
 
   function removeDay(dayId) {
@@ -931,6 +953,7 @@ export function createBookingTravelPlanModule(ctx) {
       removeSegmentLinks(segment.id);
     }
     renderTravelPlanPanel();
+    scheduleTravelPlanAutosave();
   }
 
   function addSegment(dayId) {
@@ -941,6 +964,7 @@ export function createBookingTravelPlanModule(ctx) {
     day.segments = Array.isArray(day.segments) ? day.segments : [];
     day.segments.push(createEmptyTravelPlanSegment());
     renderTravelPlanPanel();
+    scheduleTravelPlanAutosave();
   }
 
   function removeSegment(segmentId) {
@@ -952,6 +976,7 @@ export function createBookingTravelPlanModule(ctx) {
       day.segments.splice(segmentIndex, 1);
       removeSegmentLinks(segmentId);
       renderTravelPlanPanel();
+      scheduleTravelPlanAutosave();
       return;
     }
   }
@@ -967,6 +992,7 @@ export function createBookingTravelPlanModule(ctx) {
       const [segment] = segments.splice(segmentIndex, 1);
       segments.splice(nextIndex, 0, segment);
       renderTravelPlanPanel();
+      scheduleTravelPlanAutosave();
       return;
     }
   }
@@ -978,6 +1004,7 @@ export function createBookingTravelPlanModule(ctx) {
       : [];
     state.travelPlanDraft.offer_component_links.push(createEmptyTravelPlanOfferComponentLink(segmentId));
     renderTravelPlanPanel();
+    scheduleTravelPlanAutosave();
   }
 
   function removeLink(linkId) {
@@ -986,9 +1013,10 @@ export function createBookingTravelPlanModule(ctx) {
       ? state.travelPlanDraft.offer_component_links
       : []).filter((link) => link.id !== linkId);
     renderTravelPlanPanel();
+    scheduleTravelPlanAutosave();
   }
 
-  async function saveTravelPlan() {
+  async function persistTravelPlan() {
     if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty || state.travelPlanSaving) return false;
     const dateFieldValidation = validateTravelPlanDateFieldsInDom({ allowPartial: false, focusFirstInvalid: true });
     if (!dateFieldValidation.ok) {
@@ -996,18 +1024,13 @@ export function createBookingTravelPlanModule(ctx) {
       return false;
     }
     syncTravelPlanDraftFromDom();
-    const travelPlanPayload = normalizeTravelPlanDraft({
-      ...state.travelPlanDraft,
-      offer_component_links: (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-        .filter((link) => String(link?.offer_component_id || "").trim())
-    }, getOfferComponentsForLinks());
+    const travelPlanPayload = buildTravelPlanPayload();
     const validation = validateTravelPlanDraft(travelPlanPayload);
     if (!validation.ok) {
       travelPlanStatus(validation.error, "error");
       return false;
     }
     state.travelPlanSaving = true;
-    updateTravelPlanSaveButtonState();
     travelPlanStatus(bookingT("booking.travel_plan.saving", "Saving travel plan..."), "info");
     try {
       const request = bookingTravelPlanRequest({
@@ -1039,8 +1062,11 @@ export function createBookingTravelPlanModule(ctx) {
       return true;
     } finally {
       state.travelPlanSaving = false;
-      updateTravelPlanSaveButtonState();
     }
+  }
+
+  async function saveTravelPlan() {
+    return await travelPlanAutosaveController.runNow();
   }
 
   async function translateTravelPlanField(button) {
@@ -1095,6 +1121,7 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanDraftFromDom();
     updateTravelPlanDirtyState();
     renderBookingSegmentHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    scheduleTravelPlanAutosave();
     travelPlanStatus(
       direction === "target-to-source"
         ? bookingT("booking.translation.field_translated_to_english", "Field translated to English.")
@@ -1132,6 +1159,7 @@ export function createBookingTravelPlanModule(ctx) {
         if (shouldRerender) {
           renderTravelPlanPanel();
         }
+        scheduleTravelPlanAutosave();
       });
       els.travel_plan_editor.addEventListener("click", (event) => {
         const button = event.target.closest("button");
@@ -1220,12 +1248,6 @@ export function createBookingTravelPlanModule(ctx) {
         }
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
-    }
-    if (els.travel_plan_save_btn && els.travel_plan_save_btn.dataset.travelPlanBound !== "true") {
-      els.travel_plan_save_btn.addEventListener("click", () => {
-        void saveTravelPlan();
-      });
-      els.travel_plan_save_btn.dataset.travelPlanBound = "true";
     }
     travelPlanSegmentLibraryModule.bindTravelPlanSegmentLibrary();
     travelPlanImagesModule.bindTravelPlanImageInput();

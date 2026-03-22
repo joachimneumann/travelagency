@@ -52,6 +52,7 @@ export function createApplicationRoutes({
     sendJson: httpHelpers.sendJson,
     validateBookingInput: bookingViewHelpers.validateBookingInput,
     readStore: storeUtils.readStore,
+    readTours: storeUtils.readTours,
     normalizeText: support.normalizeText,
     normalizeStringArray: support.normalizeStringArray,
     getRequestIpAddress: support.getRequestIpAddress,
@@ -129,7 +130,8 @@ export function createApplicationRoutes({
     writeFile,
     rm,
     sendFileWithCache: httpHelpers.sendFileWithCache,
-    translateEntries: runtime.translationClient.translateEntries
+    translateEntries: runtime.translationClient.translateEntries,
+    resolveLocalizedTourText: tourHelpers.resolveLocalizedText
   });
 
   const keycloakUserHandlers = createKeycloakUserHandlers({

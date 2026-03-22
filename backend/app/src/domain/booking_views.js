@@ -1,6 +1,7 @@
 import { normalizeText } from "../lib/text.js";
 import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
 import { normalizeBookingContentLang } from "./booking_content_i18n.js";
+import { isSuspiciousSentinelString } from "./booking_names.js";
 import {
   buildOfferTranslationStatus,
   buildTravelPlanTranslationStatus
@@ -154,9 +155,25 @@ export function createBookingViewHelpers({
 
     const email = normalizeEmail(payload.email);
     const phone = normalizeText(payload.phone_number);
+    const submittedName = normalizeText(payload.name);
+    if (submittedName && isSuspiciousSentinelString(submittedName, normalizeText)) {
+      return { ok: false, error: "Invalid name" };
+    }
+    if (phone && isSuspiciousSentinelString(phone, normalizeText)) {
+      return { ok: false, error: "Invalid phone_number" };
+    }
     const emailOk = email ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) : false;
     if (!emailOk && !phone) return { ok: false, error: "Either email or phone_number must be present" };
     if (email && !emailOk) return { ok: false, error: "Invalid email" };
+
+    const bookingName = normalizeText(payload.booking_name);
+    if (
+      bookingName &&
+      isSuspiciousSentinelString(bookingName, normalizeText) &&
+      !normalizeText(payload.tour_id)
+    ) {
+      return { ok: false, error: "Invalid booking_name" };
+    }
 
     const travelers = safeOptionalInt(payload.number_of_travelers);
     if (travelers !== null && travelers !== undefined && (travelers < 1 || travelers > 30)) {
