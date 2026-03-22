@@ -3,6 +3,7 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
 import { bookingPricingRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { bookingLang, bookingT } from "./i18n.js";
 
 const PRICING_SUMMARY_LABELS = Object.freeze({
@@ -128,6 +129,11 @@ export function createBookingPricingModule(ctx) {
     captureControlSnapshot,
     setBookingSectionDirty
   } = ctx;
+  const pricingDirtyTracker = createSnapshotDirtyTracker({
+    captureSnapshot: () => captureControlSnapshot(els.pricing_panel),
+    isEnabled: () => state.permissions.canEditBooking,
+    onDirtyChange: (isDirty) => setBookingSectionDirty("pricing", isDirty)
+  });
 
   function setPricingStatus(message) {
     if (!els.pricing_status) return;
@@ -139,15 +145,11 @@ export function createBookingPricingModule(ctx) {
   }
 
   function updatePricingDirtyState() {
-    const isDirty =
-      state.permissions.canEditBooking &&
-      captureControlSnapshot(els.pricing_panel) !== state.originalPricingSnapshot;
-    setBookingSectionDirty("pricing", isDirty);
+    return pricingDirtyTracker.refresh();
   }
 
   function markPricingSnapshotClean() {
-    state.originalPricingSnapshot = captureControlSnapshot(els.pricing_panel);
-    setBookingSectionDirty("pricing", false);
+    pricingDirtyTracker.markClean();
   }
 
   function clonePricing(pricing) {

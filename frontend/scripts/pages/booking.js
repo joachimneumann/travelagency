@@ -132,16 +132,10 @@ const state = {
       gross_amount_cents: 0,
       components_count: 0
     }
-  },
-  persons_autosave_timer: null,
-  persons_autosave_person_id: "",
-  persons_save_in_flight: null,
-  persons_save_queued: false
+  }
 };
 
 state.dirty = { note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
-state.originalPricingSnapshot = "";
-state.originalPersonsSnapshot = "";
 state.originalTravelPlanSnapshot = "";
 state.originalInvoiceSnapshot = "";
 

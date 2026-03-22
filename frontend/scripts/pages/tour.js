@@ -15,6 +15,7 @@ import {
   resolveApiUrl,
   setDirtySurface
 } from "../shared/api.js";
+import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import {
   CUSTOMER_CONTENT_LANGUAGES,
@@ -92,8 +93,6 @@ const state = {
   }
 };
 
-state.originalFormSnapshot = "";
-
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
@@ -148,14 +147,18 @@ function captureTourFormSnapshot() {
   return JSON.stringify(snapshot);
 }
 
+const tourDirtyTracker = createSnapshotDirtyTracker({
+  captureSnapshot: () => captureTourFormSnapshot(),
+  isEnabled: () => state.permissions.canEditTours,
+  onDirtyChange: (isDirty) => setDirtySurface(els.form, isDirty)
+});
+
 function updateTourDirtyState() {
-  const isDirty = state.permissions.canEditTours && captureTourFormSnapshot() !== state.originalFormSnapshot;
-  setDirtySurface(els.form, isDirty);
+  return tourDirtyTracker.refresh();
 }
 
 function markTourSnapshotClean() {
-  state.originalFormSnapshot = captureTourFormSnapshot();
-  setDirtySurface(els.form, false);
+  tourDirtyTracker.markClean();
 }
 
 function tourTextLanguages() {

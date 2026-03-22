@@ -32,6 +32,7 @@ import {
   isTravelingPerson,
   normalizeStringList
 } from "../shared/booking_persons.js";
+import { createQueuedAutosaveController, createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
 import { renderBookingSegmentHeader } from "./segment_headers.js";
 
@@ -55,6 +56,16 @@ export function createBookingPersonsModule(ctx) {
   } = ctx;
 
   let lastPersonModalTrigger = null;
+  const personsDirtyTracker = createSnapshotDirtyTracker({
+    captureSnapshot: () => serializePersonDrafts(),
+    isEnabled: () => state.permissions.canEditBooking,
+    onDirtyChange: (isDirty) => setBookingSectionDirty("persons", isDirty)
+  });
+  const personsAutosaveController = createQueuedAutosaveController({
+    delayMs: 700,
+    isEnabled: () => state.permissions.canEditBooking && Boolean(state.booking),
+    save: persistPersonDrafts
+  });
 
   function normalizePersonLanguageCode(value) {
     const raw = normalizeText(value);
@@ -238,13 +249,11 @@ export function createBookingPersonsModule(ctx) {
   }
 
   function markPersonsSnapshotClean() {
-    state.originalPersonsSnapshot = serializePersonDrafts();
-    setBookingSectionDirty("persons", false);
+    personsDirtyTracker.markClean();
   }
 
   function updatePersonsDirtyState() {
-    const isDirty = state.permissions.canEditBooking && serializePersonDrafts() !== state.originalPersonsSnapshot;
-    setBookingSectionDirty("persons", isDirty);
+    return personsDirtyTracker.refresh();
   }
 
   function setPersonsEditorStatus(message) {
@@ -253,25 +262,13 @@ export function createBookingPersonsModule(ctx) {
   }
 
   function clearPersonsAutosaveTimer() {
-    if (state.persons_autosave_timer) {
-      window.clearTimeout(state.persons_autosave_timer);
-      state.persons_autosave_timer = null;
-    }
-    state.persons_autosave_person_id = "";
+    personsAutosaveController.clear();
   }
 
-  function schedulePersonsAutosave(person_id = state.active_person_id, delay_ms = 700) {
-    if (!state.permissions.canEditBooking || !state.booking) return;
+  function schedulePersonsAutosave(person_id = state.active_person_id) {
     const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
     if (!targetPersonId) return;
-    clearPersonsAutosaveTimer();
-    state.persons_autosave_person_id = targetPersonId;
-    state.persons_autosave_timer = window.setTimeout(() => {
-      state.persons_autosave_timer = null;
-      const autosavePersonId = state.persons_autosave_person_id;
-      state.persons_autosave_person_id = "";
-      void savePersonDrafts(autosavePersonId);
-    }, delay_ms);
+    personsAutosaveController.schedule(targetPersonId);
   }
 
   function collectCommaSeparatedValues(values) {
@@ -562,13 +559,9 @@ export function createBookingPersonsModule(ctx) {
     setPersonsEditorStatus("");
   }
 
-  async function savePersonDrafts(person_id = state.active_person_id) {
+  async function persistPersonDrafts(person_id = state.active_person_id) {
     if (!state.permissions.canEditBooking || !state.booking) return false;
     if (!state.dirty.persons) return true;
-    if (state.persons_save_in_flight) {
-      state.persons_save_queued = true;
-      return await state.persons_save_in_flight;
-    }
     const targetPersonId = normalizeText(person_id) || normalizeText(state.active_person_id);
     const personIndex = state.personDrafts.findIndex((draft) => draft.id === targetPersonId);
     const currentDraft = personIndex >= 0 ? state.personDrafts[personIndex] : null;
@@ -590,42 +583,36 @@ export function createBookingPersonsModule(ctx) {
         });
     const existingPersonIds = new Set(getBookingPersons(state.booking).map((person) => person.id));
     const activeLocalPersonId = normalizeText(state.active_person_id);
-    const saveOperation = (async () => {
-      const result = await fetchBookingMutation(request.url, {
-        method: request.method,
-        body: {
-          expected_persons_revision: getBookingRevision("persons_revision"),
-          person: buildPersonPayloadFromDraft(currentDraft, personIndex),
-          actor: state.user
-        }
-      });
-      if (!result?.booking) return false;
-
-      const createdPersonId = isNewDraft
-        ? normalizeText(
-            result.booking?.persons?.find((person) => !existingPersonIds.has(normalizeText(person?.id)))?.id ||
-            result.booking?.persons?.[result.booking.persons.length - 1]?.id
-          )
-        : "";
-      applyBookingPayload(result);
-      renderBookingHeader();
-      renderBookingData();
-      renderActionControls();
-      renderPersonsEditor();
-      if (isNewDraft && activeLocalPersonId === targetPersonId && createdPersonId) {
-        const createdIndex = state.personDrafts.findIndex((person) => person.id === createdPersonId);
-        if (createdIndex >= 0) openPersonModal(createdIndex);
+    const result = await fetchBookingMutation(request.url, {
+      method: request.method,
+      body: {
+        expected_persons_revision: getBookingRevision("persons_revision"),
+        person: buildPersonPayloadFromDraft(currentDraft, personIndex),
+        actor: state.user
       }
-      return true;
-    })();
-    state.persons_save_in_flight = saveOperation;
-    const saved = await saveOperation;
-    state.persons_save_in_flight = null;
-    if (state.persons_save_queued) {
-      state.persons_save_queued = false;
-      if (state.dirty.persons) void savePersonDrafts();
+    });
+    if (!result?.booking) return false;
+
+    const createdPersonId = isNewDraft
+      ? normalizeText(
+          result.booking?.persons?.find((person) => !existingPersonIds.has(normalizeText(person?.id)))?.id ||
+          result.booking?.persons?.[result.booking.persons.length - 1]?.id
+        )
+      : "";
+    applyBookingPayload(result);
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor();
+    if (isNewDraft && activeLocalPersonId === targetPersonId && createdPersonId) {
+      const createdIndex = state.personDrafts.findIndex((person) => person.id === createdPersonId);
+      if (createdIndex >= 0) openPersonModal(createdIndex);
     }
-    return saved;
+    return true;
+  }
+
+  async function savePersonDrafts(person_id = state.active_person_id) {
+    return await personsAutosaveController.flush(person_id);
   }
 
   function openPersonModal(index) {
