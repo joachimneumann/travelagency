@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n-id="backend.tours.heading">Tours</title>
+    <meta name="description" content="AsiaTravelPlan backend tours workspace" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body class="backend-list-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="backend.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+
+        <div id="backendNavMount"></div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <section class="backend-section" id="toursPanel">
+            <div id="toursMatrixMount" class="backend-tour-matrix" aria-live="polite"></div>
+            <p id="toursMatrixTotal" class="backend-tour-matrix__total"></p>
+            <div class="backend-controls">
+              <div class="field">
+                <label for="toursDestination" data-i18n-id="backend.tours.destination_label">Destination</label>
+                <select id="toursDestination">
+                  <option value="all" data-i18n-id="backend.tours.all_destinations">All destinations</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="toursStyle" data-i18n-id="backend.tours.style_label">Style</label>
+                <select id="toursStyle">
+                  <option value="all" data-i18n-id="backend.tours.all_styles">All styles</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button" data-i18n-id="backend.tours.clear_filters">Clear filters</button>
+              <div class="field">
+                <label for="toursSearch" data-i18n-id="backend.tours.search_label">Search tours</label>
+                <input id="toursSearch" type="text" placeholder="id, title, country, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
+              </div>
+              <button class="btn btn-ghost" id="toursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+              <span id="toursCountInfo" class="micro"></span>
+            </div>
+            <div class="backend-table-wrap">
+              <table class="backend-table" id="toursTable"></table>
+            </div>
+            <div class="backend-pagination" id="toursPagination" aria-label="Tours pagination"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/generated/language_catalog.global.js"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js"></script>
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
+      await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "tours" });
+    </script>
+    <script type="module" src="frontend/scripts/pages/tours_list.js"></script>
+  </body>
+</html>

@@ -9,27 +9,27 @@ import (
 
 #AbstractModel: {
 	entities: {
-		Booking:                                        entityModel.#Booking
-		GeneratedBookingOffer:                          entityModel.#GeneratedBookingOffer
-		GeneratedOfferAcceptanceRoute:                  entityModel.#GeneratedOfferAcceptanceRoute
-		GeneratedOfferDepositAcceptanceRule:            entityModel.#GeneratedOfferDepositAcceptanceRule
-		GeneratedOfferAcceptance:                       entityModel.#GeneratedOfferAcceptance
-		BookingPerson:                                  entityModel.#BookingPerson
-		BookingPersonAddress:                           entityModel.#BookingPersonAddress
-		BookingPersonConsent:                           entityModel.#BookingPersonConsent
-		BookingPersonDocument:                          entityModel.#BookingPersonDocument
-		BookingTravelPlan:                              entityModel.#BookingTravelPlan
-		BookingTravelPlanDay:                           entityModel.#BookingTravelPlanDay
-		BookingTravelPlanAttachment:                    entityModel.#BookingTravelPlanAttachment
+		Booking:                                     entityModel.#Booking
+		GeneratedBookingOffer:                       entityModel.#GeneratedBookingOffer
+		GeneratedOfferAcceptanceRoute:               entityModel.#GeneratedOfferAcceptanceRoute
+		GeneratedOfferDepositAcceptanceRule:         entityModel.#GeneratedOfferDepositAcceptanceRule
+		GeneratedOfferAcceptance:                    entityModel.#GeneratedOfferAcceptance
+		BookingPerson:                               entityModel.#BookingPerson
+		BookingPersonAddress:                        entityModel.#BookingPersonAddress
+		BookingPersonConsent:                        entityModel.#BookingPersonConsent
+		BookingPersonDocument:                       entityModel.#BookingPersonDocument
+		BookingTravelPlan:                           entityModel.#BookingTravelPlan
+		BookingTravelPlanDay:                        entityModel.#BookingTravelPlanDay
+		BookingTravelPlanAttachment:                 entityModel.#BookingTravelPlanAttachment
 		BookingTravelPlanItem:                       entityModel.#BookingTravelPlanItem
 		BookingTravelPlanItemImage:                  entityModel.#BookingTravelPlanItemImage
 		BookingTravelPlanItemImageSourceAttribution: entityModel.#BookingTravelPlanItemImageSourceAttribution
 		BookingTravelPlanItemImageFocalPoint:        entityModel.#BookingTravelPlanItemImageFocalPoint
 		BookingTravelPlanItemCopiedFrom:             entityModel.#BookingTravelPlanItemCopiedFrom
-		BookingTravelPlanOfferComponentLink:            entityModel.#BookingTravelPlanOfferComponentLink
-		BookingOfferDiscount:                           entityModel.#BookingOfferDiscount
-		Supplier:                                       entityModel.#Supplier
-		Tour:                                           entityModel.#Tour
+		BookingTravelPlanOfferComponentLink:         entityModel.#BookingTravelPlanOfferComponentLink
+		BookingOfferDiscount:                        entityModel.#BookingOfferDiscount
+		Supplier:                                    entityModel.#Supplier
+		Tour:                                        entityModel.#Tour
 	}
 
 	common: {
@@ -46,7 +46,7 @@ import (
 		BookingStage:                        enumModel.#BookingStage
 		BookingPersonRole:                   enumModel.#BookingPersonRole
 		TravelPlanTimingKind:                enumModel.#TravelPlanTimingKind
-		TravelPlanItemKind:               enumModel.#TravelPlanItemKind
+		TravelPlanItemKind:                  enumModel.#TravelPlanItemKind
 		TravelPlanFinancialCoverageStatus:   enumModel.#TravelPlanFinancialCoverageStatus
 		TravelPlanOfferCoverageType:         enumModel.#TravelPlanOfferCoverageType
 		SupplierCategory:                    enumModel.#SupplierCategory
@@ -60,6 +60,7 @@ import (
 		GeneratedOfferAcceptanceRouteStatus: enumModel.#GeneratedOfferAcceptanceRouteStatus
 		OfferAcceptanceMethod:               enumModel.#OfferAcceptanceMethod
 		OfferAcceptanceOtpChannel:           enumModel.#OfferAcceptanceOtpChannel
+		TourStyleCode:                       enumModel.#TourStyleCode
 		CountryCode:                         enumModel.#CountryCode
 		TimezoneCode:                        enumModel.#TimezoneCode
 		PersonConsentType:                   enumModel.#PersonConsentType
@@ -83,13 +84,14 @@ import (
 		BookingChatEvent:                                 apiModel.#BookingChatEvent
 		BookingChatConversation:                          apiModel.#BookingChatConversation
 		BookingChatResponse:                              apiModel.#BookingChatResponse
+		CatalogOption:                                    apiModel.#CatalogOption
 		TourOptions:                                      apiModel.#TourOptions
 		TourResponse:                                     apiModel.#TourResponse
 		OfferExchangeRatesResponse:                       apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                               apiModel.#BookingListFilters
 		TourListFilters:                                  apiModel.#TourListFilters
-		TravelPlanItemSearchResult:                    apiModel.#TravelPlanItemSearchResult
-		TravelPlanItemSearchResponse:                  apiModel.#TravelPlanItemSearchResponse
+		TravelPlanItemSearchResult:                       apiModel.#TravelPlanItemSearchResult
+		TravelPlanItemSearchResponse:                     apiModel.#TravelPlanItemSearchResponse
 		AuthenticatedUser:                                apiModel.#AuthenticatedUser
 		AuthMeResponse:                                   apiModel.#AuthMeResponse
 		MobileBootstrap:                                  apiModel.#MobileBootstrap
@@ -116,7 +118,7 @@ import (
 		BookingDeleteRequest:                             apiModel.#BookingDeleteRequest
 		BookingNameUpdateRequest:                         apiModel.#BookingNameUpdateRequest
 		BookingImageUploadRequest:                        apiModel.#BookingImageUploadRequest
-		BookingStageUpdateRequest:                        apiModel.#BookingStageUpdateRequest
+		BookingMilestoneActionRequest:                    apiModel.#BookingMilestoneActionRequest
 		BookingOwnerUpdateRequest:                        apiModel.#BookingOwnerUpdateRequest
 		BookingPersonCreateRequest:                       apiModel.#BookingPersonCreateRequest
 		BookingPersonUpdateRequest:                       apiModel.#BookingPersonUpdateRequest
@@ -125,13 +127,13 @@ import (
 		BookingNotesUpdateRequest:                        apiModel.#BookingNotesUpdateRequest
 		BookingTravelPlanUpdateRequest:                   apiModel.#BookingTravelPlanUpdateRequest
 		BookingPricingUpdateRequest:                      apiModel.#BookingPricingUpdateRequest
-		TravelPlanItemSearchRequest:                   apiModel.#TravelPlanItemSearchRequest
-		TravelPlanItemImportRequest:                   apiModel.#TravelPlanItemImportRequest
-		TravelPlanItemImageUploadRequest:              apiModel.#TravelPlanItemImageUploadRequest
-		TravelPlanItemImageDeleteRequest:              apiModel.#TravelPlanItemImageDeleteRequest
-		TravelPlanItemImageReorderRequest:             apiModel.#TravelPlanItemImageReorderRequest
-		TravelPlanAttachmentUploadRequest:             apiModel.#TravelPlanAttachmentUploadRequest
-		TravelPlanAttachmentDeleteRequest:             apiModel.#TravelPlanAttachmentDeleteRequest
+		TravelPlanItemSearchRequest:                      apiModel.#TravelPlanItemSearchRequest
+		TravelPlanItemImportRequest:                      apiModel.#TravelPlanItemImportRequest
+		TravelPlanItemImageUploadRequest:                 apiModel.#TravelPlanItemImageUploadRequest
+		TravelPlanItemImageDeleteRequest:                 apiModel.#TravelPlanItemImageDeleteRequest
+		TravelPlanItemImageReorderRequest:                apiModel.#TravelPlanItemImageReorderRequest
+		TravelPlanAttachmentUploadRequest:                apiModel.#TravelPlanAttachmentUploadRequest
+		TravelPlanAttachmentDeleteRequest:                apiModel.#TravelPlanAttachmentDeleteRequest
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                      apiModel.#BookingGenerateOfferRequest
 		BookingGenerateOfferDepositAcceptanceRuleRequest: apiModel.#BookingGenerateOfferDepositAcceptanceRuleRequest

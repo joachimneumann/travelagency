@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-23T02:17:28Z",
+  "generatedAt": "2026-03-23T06:12:48Z",
   "languages": [
     "en",
     "fr",
@@ -495,12 +495,12 @@
       ]
     },
     {
-      "key": "booking_stage",
-      "path": "/api/v1/bookings/{booking_id}/stage",
+      "key": "booking_owner",
+      "path": "/api/v1/bookings/{booking_id}/owner",
       "method": "PATCH",
       "tag": "Bookings",
       "authenticated": true,
-      "requestType": "BookingStageUpdateRequest",
+      "requestType": "BookingOwnerUpdateRequest",
       "responseType": "BookingDetail",
       "parameters": [
         {
@@ -512,12 +512,12 @@
       ]
     },
     {
-      "key": "booking_owner",
-      "path": "/api/v1/bookings/{booking_id}/owner",
-      "method": "PATCH",
+      "key": "booking_milestone_action",
+      "path": "/api/v1/bookings/{booking_id}/milestone-actions",
+      "method": "POST",
       "tag": "Bookings",
       "authenticated": true,
-      "requestType": "BookingOwnerUpdateRequest",
+      "requestType": "BookingMilestoneActionRequest",
       "responseType": "BookingDetail",
       "parameters": [
         {

@@ -1,0 +1,130 @@
+{
+  "id": "tour_adbaed36-e73a-4f34-b5c6-b961b172a401",
+  "title": {
+    "en": "Hoi An Wellness Reset",
+    "fr": "Réinitialisation du bien-être à Hoi An",
+    "zh": "会安健康重置",
+    "ja": "ホイアン ウェルネス リセット",
+    "ko": "호이안 웰니스 리셋",
+    "vi": "Hội An Wellness Reset",
+    "de": "Hoi An Wellness-Reset",
+    "es": "Restablecimiento del bienestar de Hoi An",
+    "it": "Hoi An Ripristino del benessere",
+    "ru": "Хойан: перезагрузка здоровья",
+    "nl": "Hoi An Wellness-reset",
+    "pl": "Reset dobrego samopoczucia w Hoi An",
+    "da": "Hoi An Wellness Nulstilling",
+    "sv": "Hoi An Wellness Reset",
+    "no": "Hoi An Wellness Reset"
+  },
+  "styles": [
+    "wellness",
+    "culture"
+  ],
+  "priority": 55,
+  "travel_duration_days": 7,
+  "highlights": {
+    "en": [
+      "Slow mornings in Hoi An with daily spa time built into the route",
+      "Facial, body-mask, and massage inspired wellness sessions between light sightseeing",
+      "Healthy meals, soft activity, and enough free time to actually recover from travel"
+    ],
+    "fr": [
+      "Matinées lentes à Hoi An avec une séance de spa quotidienne intégrée au parcours",
+      "Séances de bien-être inspirées du visage, du masque corporel et des massages entre visites légères",
+      "Des repas sains, une activité douce et suffisamment de temps libre pour réellement récupérer du voyage"
+    ],
+    "zh": [
+      "会安的缓慢早晨，路线中包含每日水疗时间",
+      "在轻松观光之间享受面部、身体面膜和按摩启发的健康课程",
+      "健康的膳食、轻松的活动以及足够的空闲时间来真正从旅行中恢复过来"
+    ],
+    "ja": [
+      "ルートに毎日のスパタイムが組み込まれたホイアンのゆっくりとした朝",
+      "軽い観光の合間にフェイシャル、ボディマスク、マッサージを取り入れたウェルネス セッション",
+      "健康的な食事、軽いアクティビティ、旅行から実際に回復するのに十分な自由時間"
+    ],
+    "ko": [
+      "코스에 매일 스파 시간이 포함된 호이안의 느린 아침",
+      "가벼운 관광 사이에 페이셜, 바디 마스크, 마사지에서 영감을 받은 웰니스 세션",
+      "건강한 식사, 가벼운 활동, 여행에서 실제로 회복할 수 있는 충분한 자유 시간"
+    ],
+    "vi": [
+      "Buổi sáng chậm rãi ở Hội An với thời gian spa hàng ngày được tích hợp sẵn trong lộ trình",
+      "Các buổi chăm sóc sức khỏe lấy cảm hứng từ mặt, đắp mặt nạ toàn thân và mát-xa giữa chuyến tham quan nhẹ nhàng",
+      "Bữa ăn lành mạnh, hoạt động nhẹ nhàng và đủ thời gian rảnh để thực sự phục hồi sau chuyến du lịch"
+    ],
+    "de": [
+      "Langsamer Morgen in Hoi An mit täglicher Spa-Zeit, die in die Route integriert ist",
+      "Von Gesichtsbehandlungen, Körpermasken und Massagen inspirierte Wellness-Sitzungen zwischen leichtem Sightseeing",
+      "Gesunde Mahlzeiten, sanfte Aktivitäten und genügend Freizeit, um sich tatsächlich von der Reise zu erholen"
+    ],
+    "es": [
+      "Mañanas tranquilas en Hoi An con tiempo de spa diario integrado en la ruta",
+      "Sesiones de bienestar inspiradas en tratamientos faciales, mascarillas corporales y masajes entre visitas turísticas ligeras",
+      "Comidas saludables, actividad suave y suficiente tiempo libre para recuperarse del viaje."
+    ],
+    "it": [
+      "Mattinate lente a Hoi An con tempo termale giornaliero integrato nel percorso",
+      "Sessioni di benessere ispirate al viso, alla maschera del corpo e al massaggio tra visite turistiche",
+      "Pasti sani, attività soft e tempo libero sufficiente per riprendersi effettivamente dal viaggio"
+    ],
+    "ru": [
+      "Медленное утро в Хойане с ежедневным спа-процедурой, включенным в маршрут",
+      "Оздоровительные сеансы для лица, маски для тела и массажа между легкими экскурсиями",
+      "Здоровое питание, легкая активность и достаточно свободного времени, чтобы восстановиться после путешествия."
+    ],
+    "nl": [
+      "Langzame ochtenden in Hoi An met dagelijkse spa-tijd ingebouwd in de route",
+      "Op gezichts-, lichaamsmasker- en massage-geïnspireerde wellnesssessies tussen lichte sightseeing",
+      "Gezonde maaltijden, zachte activiteit en voldoende vrije tijd om daadwerkelijk te herstellen van het reizen"
+    ],
+    "pl": [
+      "Spokojne poranki w Hoi An z codziennym czasem spa wbudowanym w trasę",
+      "Sesje wellness na twarz, ciało i masaż inspirowane masażem pomiędzy lekkim zwiedzaniem",
+      "Zdrowe posiłki, lekka aktywność i wystarczająca ilość wolnego czasu, aby faktycznie zregenerować siły po podróży"
+    ],
+    "da": [
+      "Langsomme morgener i Hoi An med daglig spatid indbygget i ruten",
+      "Ansigts-, kropsmaske- og massageinspirerede wellness-sessioner mellem let sightseeing",
+      "Sunde måltider, blød aktivitet og nok fritid til faktisk at komme sig efter at rejse"
+    ],
+    "sv": [
+      "Långsamma morgnar i Hoi An med daglig spatid inbyggd i rutten",
+      "Ansikts-, kroppsmask- och massageinspirerade wellness-sessioner mellan lätta sightseeing",
+      "Hälsosamma måltider, mjuk aktivitet och tillräckligt med fritid för att faktiskt återhämta sig från resan"
+    ],
+    "no": [
+      "Langsomme morgener i Hoi An med daglig spatid innebygd i ruten",
+      "Ansikts-, kroppsmaske- og massasjeinspirerte velværeøkter mellom lett sightseeing",
+      "Sunne måltider, myk aktivitet og nok fritid til å faktisk komme seg etter reisen"
+    ]
+  },
+  "seasonality_start_month": "feb",
+  "seasonality_end_month": "aug",
+  "rating": 4.8,
+  "legacy_id": "trip-vietnam-hoi-an-wellness-reset",
+  "destinations": [
+    "vietnam"
+  ],
+  "short_description": {
+    "en": "A calm Vietnam week built around Hoi An, combining gentle cultural discovery with spa rituals, easy movement, and unhurried downtime.",
+    "fr": "Une semaine vietnamienne calme construite autour de Hoi An, combinant douce découverte culturelle avec rituels de spa, mouvements faciles et temps d'arrêt sans hâte.",
+    "zh": "围绕会安展开的平静越南周，将温和的文化探索与水疗仪式、轻松的活动和悠闲的休息时间结合在一起。",
+    "ja": "ホイアンを中心に構成された穏やかなベトナム ウィークは、穏やかな文化発見とスパの儀式、簡単な移動、ゆっくりとした休憩時間を組み合わせたものです。",
+    "ko": "온화한 문화적 발견과 스파 의식, 쉬운 이동 및 여유로운 다운타임을 결합하여 호이안을 중심으로 구축된 차분한 베트남 주간입니다.",
+    "vi": "Một tuần Việt Nam êm đềm được xây dựng quanh Hội An, kết hợp khám phá văn hóa nhẹ nhàng với các nghi thức spa, di chuyển dễ dàng và thời gian nghỉ ngơi nhàn nhã.",
+    "de": "Eine ruhige Vietnam-Woche rund um Hoi An, die sanfte kulturelle Entdeckungen mit Spa-Ritualen, lockerer Bewegung und entspannter Auszeit verbindet.",
+    "es": "Una tranquila semana de Vietnam construida alrededor de Hoi An, combinando un suave descubrimiento cultural con rituales de spa, movimiento fácil y tiempo de inactividad sin prisas.",
+    "it": "Una tranquilla settimana in Vietnam costruita attorno a Hoi An, combinando una dolce scoperta culturale con rituali termali, movimento facile e tempi di inattività senza fretta.",
+    "ru": "Спокойная неделя Вьетнама, построенная вокруг Хойана, сочетающая нежные культурные открытия со спа-ритуалами, легким движением и неторопливым отдыхом.",
+    "nl": "Een rustige Vietnam-week opgebouwd rond Hoi An, waarin zachte culturele ontdekkingen worden gecombineerd met spa-rituelen, gemakkelijke beweging en ongehaaste ontspanning.",
+    "pl": "Spokojny tydzień w Wietnamie wokół Hoi An, łączący delikatne odkrycia kulturowe z rytuałami spa, swobodnym poruszaniem się i niespiesznymi przestojami.",
+    "da": "En rolig Vietnam-uge bygget op omkring Hoi An, der kombinerer blid kulturel opdagelse med spa-ritualer, nem bevægelse og rolig nedetid.",
+    "sv": "En lugn Vietnamvecka byggd kring Hoi An, som kombinerar mild kulturell upptäckt med sparitualer, enkel rörelse och lugna stillestånd.",
+    "no": "En rolig Vietnam-uke bygget rundt Hoi An, som kombinerer skånsom kulturell oppdagelse med spa-ritualer, enkel bevegelse og rolig nedetid."
+  },
+  "budget_lower_usd": 780,
+  "image": "/public/v1/tour-images/tour_adbaed36-e73a-4f34-b5c6-b961b172a401/tour_adbaed36-e73a-4f34-b5c6-b961b172a401.webp",
+  "updated_at": "2026-03-23T06:30:23Z"
+}

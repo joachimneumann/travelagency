@@ -40,6 +40,17 @@ export function createBackendServices({
 
   const travelPlanHelpers = createTravelPlanHelpers();
 
+  const keycloakDirectory = createKeycloakDirectory({
+    keycloakEnabled: runtime.keycloakDirectoryConfig.keycloakEnabled,
+    keycloakBaseUrl: runtime.keycloakDirectoryConfig.keycloakBaseUrl,
+    keycloakRealm: runtime.keycloakDirectoryConfig.keycloakRealm,
+    keycloakClientId: runtime.keycloakDirectoryConfig.keycloakClientId,
+    keycloakAllowedRoles: new Set(Object.values(runtime.appRoles).filter(Boolean)),
+    keycloakDirectoryUsername: runtime.keycloakDirectoryConfig.keycloakDirectoryUsername,
+    keycloakDirectoryPassword: runtime.keycloakDirectoryConfig.keycloakDirectoryPassword,
+    keycloakDirectoryAdminRealm: runtime.keycloakDirectoryConfig.keycloakDirectoryAdminRealm
+  });
+
   const bookingViewHelpers = createBookingViewHelpers({
     baseCurrency: runtime.baseCurrency,
     stages: runtime.stages,
@@ -62,6 +73,8 @@ export function createBackendServices({
     buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel,
     buildBookingPricingReadModel: pricingHelpers.buildBookingPricingReadModel,
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
+    listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
+    keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson: httpHelpers.sendJson
   });
 
@@ -82,17 +95,6 @@ export function createBackendServices({
     getBookingPreferredCurrency: pricingHelpers.getBookingPreferredCurrency,
     convertBookingPricingToBaseCurrency: pricingHelpers.convertBookingPricingToBaseCurrency,
     convertBookingOfferToBaseCurrency: pricingHelpers.convertBookingOfferToBaseCurrency
-  });
-
-  const keycloakDirectory = createKeycloakDirectory({
-    keycloakEnabled: runtime.keycloakDirectoryConfig.keycloakEnabled,
-    keycloakBaseUrl: runtime.keycloakDirectoryConfig.keycloakBaseUrl,
-    keycloakRealm: runtime.keycloakDirectoryConfig.keycloakRealm,
-    keycloakClientId: runtime.keycloakDirectoryConfig.keycloakClientId,
-    keycloakAllowedRoles: new Set(Object.values(runtime.appRoles).filter(Boolean)),
-    keycloakDirectoryUsername: runtime.keycloakDirectoryConfig.keycloakDirectoryUsername,
-    keycloakDirectoryPassword: runtime.keycloakDirectoryConfig.keycloakDirectoryPassword,
-    keycloakDirectoryAdminRealm: runtime.keycloakDirectoryConfig.keycloakDirectoryAdminRealm
   });
 
   const metaWebhookHandlers = createMetaWebhookHandlers({

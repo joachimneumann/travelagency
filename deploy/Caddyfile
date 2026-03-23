@@ -69,7 +69,7 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /privacy.html /offer-accept.html /traveler-details.html
+  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /settings.html /privacy.html /offer-accept.html /traveler-details.html
   rewrite @html_pages /frontend/pages{path}
 
   @staging_access path /staging-access/*

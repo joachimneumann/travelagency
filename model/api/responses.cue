@@ -83,9 +83,14 @@ import (
 	conversation_total: >=0 & int
 }
 
+#CatalogOption: {
+	code:  string & !=""
+	label: string & !=""
+}
+
 #TourOptions: {
-	destinations?: [...string]
-	styles?: [...string]
+	destinations?: [...#CatalogOption]
+	styles?: [...#CatalogOption]
 }
 
 #BookingListFilters: {
@@ -95,8 +100,8 @@ import (
 }
 
 #TourListFilters: {
-	destination?: string
-	style?:       string
+	destination?: enums.#CountryCode
+	style?:       enums.#TourStyleCode
 	search?:      string
 }
 
@@ -105,8 +110,8 @@ import (
 	source_booking_name?: string
 	source_booking_code?: string
 	day_number?:          >0 & int
-	item_id:           common.#Identifier
-	item_kind?:        enums.#TravelPlanItemKind
+	item_id:              common.#Identifier
+	item_kind?:           enums.#TravelPlanItemKind
 	title:                string
 	details?:             string
 	location?:            string
@@ -239,7 +244,11 @@ import (
 	offer_revision?:                 >=0 & int
 	invoices_revision?:              >=0 & int
 	stage:                           enums.#BookingStage
+	milestones?:                     entities.#BookingMilestones
+	last_action?:                    enums.#BookingMilestoneAction
+	last_action_at?:                 common.#Timestamp
 	assigned_keycloak_user_id?:      common.#Identifier
+	assigned_keycloak_user_label?:   string
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
@@ -265,9 +274,9 @@ import (
 }
 
 #BookingPersonTravelerDetailsLinkResponse: {
-	booking_id:                    common.#Identifier
-	person_id:                     common.#Identifier
-	traveler_details_token:        string & !=""
+	booking_id:                  common.#Identifier
+	person_id:                   common.#Identifier
+	traveler_details_token:      string & !=""
 	traveler_details_expires_at: common.#Timestamp
 }
 
@@ -324,7 +333,7 @@ import (
 	public_traveler_details_expires_at?: common.#Timestamp
 	privacy_notice?:                     string
 	person:                              entities.#BookingPerson
-	saved_at: common.#Timestamp
+	saved_at:                            common.#Timestamp
 }
 
 #SupplierListResponse: {

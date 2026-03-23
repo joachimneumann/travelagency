@@ -301,23 +301,6 @@ export function bookingImageRequest({ baseURL = '', params = {}, query = {}, bod
   };
 }
 
-export function bookingStagePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/stage", params);
-}
-
-export function bookingStageRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingStagePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_stage",
-    method: "PATCH",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingOwnerPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/owner", params);
 }
@@ -328,6 +311,23 @@ export function bookingOwnerRequest({ baseURL = '', params = {}, query = {}, bod
   return {
     key: "booking_owner",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingMilestoneActionPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/milestone-actions", params);
+}
+
+export function bookingMilestoneActionRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingMilestoneActionPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_milestone_action",
+    method: "POST",
     authenticated: true,
     url,
     headers,

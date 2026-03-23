@@ -445,7 +445,7 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handlePatchBookingStage,
+    handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
     handlePatchBookingOwner,
@@ -607,9 +607,12 @@ export function createBookingHandlers(deps) {
     readStore,
     persistStore,
     normalizeText,
+    normalizeBookingPricing,
     nowIso,
     addActivity,
     formatMoney,
+    incrementBookingRevision,
+    convertBookingPricingToBaseCurrency,
     randomUUID,
     gmailDraftsConfig,
     offerAcceptanceTokenConfig,
@@ -868,7 +871,7 @@ export function createBookingHandlers(deps) {
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
     handleUploadBookingImage,
-    handlePatchBookingStage,
+    handlePostBookingMilestoneAction,
     handlePatchBookingOwner,
     handleTranslateBookingFields,
     handleCreateBookingPerson,

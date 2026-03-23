@@ -9,7 +9,8 @@ import {
   A4_HEIGHT_POINTS,
   A4_WIDTH_POINTS,
   appendPdfAttachmentsToFile,
-  inspectPdfAttachmentBuffer
+  inspectPdfAttachmentBuffer,
+  trimTrailingBlankPagesInFile
 } from "../src/lib/pdf_attachments.js";
 
 function createPdfBuffer({ size = [A4_WIDTH_POINTS, A4_HEIGHT_POINTS], pages = 1 } = {}) {
@@ -60,6 +61,26 @@ test("travel-plan PDF attachments append extra PDFs to the generated document", 
     const mergedBytes = await readFile(outputPath);
     const mergedDocument = await PDFLibDocument.load(mergedBytes);
     assert.equal(mergedDocument.getPageCount(), 4);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("generated PDFs trim a truly blank trailing page", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-pdf-trim-"));
+  try {
+    const outputPath = path.join(tempDir, "trailing-blank.pdf");
+    const sourceDocument = await PDFLibDocument.create();
+    const firstPage = sourceDocument.addPage([A4_WIDTH_POINTS, A4_HEIGHT_POINTS]);
+    firstPage.drawText("Page 1", { x: 24, y: 24 });
+    sourceDocument.addPage([A4_WIDTH_POINTS, A4_HEIGHT_POINTS]);
+    await writeFile(outputPath, await sourceDocument.save());
+
+    const removed = await trimTrailingBlankPagesInFile(outputPath);
+    assert.equal(removed, true);
+
+    const trimmedDocument = await PDFLibDocument.load(await readFile(outputPath));
+    assert.equal(trimmedDocument.getPageCount(), 1);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }

@@ -68,5 +68,59 @@ export async function appendPdfAttachmentsToFile(outputPath, attachmentPaths = [
 
   const mergedBytes = await mergedDocument.save();
   await writeFile(outputPath, mergedBytes);
+  await trimTrailingBlankPagesInFile(outputPath);
+  return true;
+}
+
+function pageHasVisibleContent(document, page) {
+  const contents = page?.node?.Contents?.();
+  if (!contents) return false;
+
+  if (typeof contents.asArray === "function") {
+    const streams = contents.asArray()
+      .map((entry) => document.context.lookup(entry))
+      .filter(Boolean);
+    return streams.some((stream) => {
+      if (typeof stream.getContentsSize === "function") {
+        return Number(stream.getContentsSize()) > 0;
+      }
+      const raw = stream?.contents;
+      return Number(raw?.length || 0) > 0;
+    });
+  }
+
+  if (typeof contents.getContentsSize === "function") {
+    return Number(contents.getContentsSize()) > 0;
+  }
+
+  return Number(contents?.contents?.length || 0) > 0;
+}
+
+function pageHasAnnotations(page) {
+  const annots = page?.node?.Annots?.();
+  return Boolean(annots && typeof annots.size === "function" && annots.size() > 0);
+}
+
+function isTrailingBlankPage(document, page) {
+  return !pageHasVisibleContent(document, page) && !pageHasAnnotations(page);
+}
+
+export async function trimTrailingBlankPagesInFile(outputPath) {
+  const sourceBytes = await readFile(outputPath);
+  const document = await PDFDocument.load(sourceBytes);
+
+  let removed = false;
+  while (document.getPageCount() > 1) {
+    const lastIndex = document.getPageCount() - 1;
+    const lastPage = document.getPages()[lastIndex];
+    if (!isTrailingBlankPage(document, lastPage)) break;
+    document.removePage(lastIndex);
+    removed = true;
+  }
+
+  if (!removed) return false;
+
+  const trimmedBytes = await document.save();
+  await writeFile(outputPath, trimmedBytes);
   return true;
 }

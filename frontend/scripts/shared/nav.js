@@ -37,8 +37,14 @@ function withLang(urlValue) {
 }
 
 export function resolveBackendSectionHref(section) {
-  const url = new URL("backend.html", window.location.origin);
-  url.searchParams.set("section", section || "bookings");
+  const normalizedSection = String(section || "bookings").trim() || "bookings";
+  const pathname =
+    normalizedSection === "tours"
+      ? "tours.html"
+      : normalizedSection === "settings"
+        ? "settings.html"
+        : "backend.html";
+  const url = new URL(pathname, window.location.origin);
   const lang = currentLang();
   if (lang) url.searchParams.set("lang", lang);
   return `${url.pathname}${url.search}`;

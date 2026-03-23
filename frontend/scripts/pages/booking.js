@@ -1,8 +1,5 @@
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import {
-  BOOKING_PERSON_SCHEMA,
-  GENERATED_BOOKING_STAGES as GENERATED_BOOKING_STAGE_LIST
-} from "../../Generated/Models/generated_Booking.js";
+import { BOOKING_PERSON_SCHEMA } from "../../Generated/Models/generated_Booking.js";
 import {
   bookingActivitiesRequest,
   bookingPersonCreateRequest,
@@ -70,7 +67,6 @@ const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
 
-const STAGES = GENERATED_BOOKING_STAGE_LIST;
 const GENERATED_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
     GENERATED_APP_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
@@ -223,7 +219,8 @@ const els = {
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
-  stageSelect: document.getElementById("booking_stage_select"),
+  lastActionDetail: document.getElementById("booking_last_action_detail"),
+  milestoneActions: document.getElementById("booking_milestone_actions"),
   noteInput: document.getElementById("booking_note_input"),
   actionStatus: document.getElementById("booking_action_status"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
@@ -504,7 +501,15 @@ async function init() {
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
   });
-  if (els.stageSelect) els.stageSelect.addEventListener("change", updateCoreDirtyState);
+  if (els.milestoneActions) {
+    els.milestoneActions.addEventListener("click", (event) => {
+      const actionButton = event.target instanceof Element
+        ? event.target.closest("[data-booking-milestone-action]")
+        : null;
+      if (!(actionButton instanceof HTMLButtonElement)) return;
+      void recordBookingMilestoneAction(actionButton.dataset.bookingMilestoneAction);
+    });
+  }
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);
@@ -894,6 +899,10 @@ async function saveCoreEdits() {
   return await coreModule.saveCoreEdits();
 }
 
+async function recordBookingMilestoneAction(actionKey) {
+  return await coreModule.recordBookingMilestoneAction(actionKey);
+}
+
 async function saveNoteEdits() {
   return await coreModule.saveNoteEdits();
 }
@@ -1243,7 +1252,6 @@ const personsModule = createBookingPersonsModule({
 const coreModule = createBookingCoreModule({
   state,
   els,
-  stages: STAGES,
   apiBase,
   apiOrigin,
   fetchApi,

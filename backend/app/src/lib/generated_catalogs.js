@@ -44,6 +44,7 @@ export const OFFER_PAYMENT_AMOUNT_MODE_VALUES = enumValuesFor("OfferPaymentAmoun
 export const OFFER_PAYMENT_DUE_TYPE_VALUES = enumValuesFor("OfferPaymentDueType");
 export const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODE_VALUES = enumValuesFor("GeneratedOfferAcceptanceRouteMode");
 export const GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUS_VALUES = enumValuesFor("GeneratedOfferAcceptanceRouteStatus");
+export const TOUR_STYLE_CODE_VALUES = enumValuesFor("TourStyleCode");
 export const TRAVEL_PLAN_ITEM_KIND_VALUES = enumValuesFor("TravelPlanItemKind");
 export const TRAVEL_PLAN_TIMING_KIND_VALUES = enumValuesFor("TravelPlanTimingKind");
 export const TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES = enumValuesFor("TravelPlanOfferCoverageType");

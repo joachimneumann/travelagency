@@ -2870,6 +2870,8 @@
   "enumValues": [
     "BOOKING_CREATED",
     "STAGE_CHANGED",
+    "BOOKING_LIFECYCLE_UPDATED",
+    "BOOKING_MILESTONE_UPDATED",
     "ASSIGNMENT_CHANGED",
     "NOTE_UPDATED",
     "TRAVEL_PLAN_UPDATED",
@@ -2891,6 +2893,14 @@
     {
       "value": "STAGE_CHANGED",
       "label": "STAGE_CHANGED"
+    },
+    {
+      "value": "BOOKING_LIFECYCLE_UPDATED",
+      "label": "BOOKING_LIFECYCLE_UPDATED"
+    },
+    {
+      "value": "BOOKING_MILESTONE_UPDATED",
+      "label": "BOOKING_MILESTONE_UPDATED"
     },
     {
       "value": "ASSIGNMENT_CHANGED",
@@ -3145,40 +3155,50 @@
 },
   FIELD_36: {
   "kind": "entity",
-  "typeName": "BookingPerson",
-  "isArray": true
+  "typeName": "BookingMilestones",
+  "isArray": false
 },
   FIELD_37: {
   "kind": "entity",
-  "typeName": "BookingTravelPlan",
+  "typeName": "BookingMilestoneAction",
   "isArray": false
 },
   FIELD_38: {
   "kind": "entity",
-  "typeName": "BookingWebFormSubmission",
-  "isArray": false
+  "typeName": "BookingPerson",
+  "isArray": true
 },
   FIELD_39: {
   "kind": "entity",
-  "typeName": "BookingPricing",
+  "typeName": "BookingTravelPlan",
   "isArray": false
 },
   FIELD_40: {
   "kind": "entity",
-  "typeName": "BookingOffer",
+  "typeName": "BookingWebFormSubmission",
   "isArray": false
 },
   FIELD_41: {
   "kind": "entity",
+  "typeName": "BookingPricing",
+  "isArray": false
+},
+  FIELD_42: {
+  "kind": "entity",
+  "typeName": "BookingOffer",
+  "isArray": false
+},
+  FIELD_43: {
+  "kind": "entity",
   "typeName": "GeneratedBookingOffer",
   "isArray": true
 },
-  FIELD_42: {
+  FIELD_44: {
   "kind": "scalar",
   "typeName": "float",
   "isArray": false
 },
-  FIELD_43: {
+  FIELD_45: {
   "kind": "enum",
   "typeName": "MonthCode",
   "isArray": false,
@@ -3247,47 +3267,47 @@
     }
   ]
 },
-  FIELD_44: {
+  FIELD_46: {
   "kind": "transport",
   "typeName": "MobileAppVersionGate",
   "isArray": false
 },
-  FIELD_45: {
+  FIELD_47: {
   "kind": "transport",
   "typeName": "APIContractVersion",
   "isArray": false
 },
-  FIELD_46: {
+  FIELD_48: {
   "kind": "transport",
   "typeName": "FeatureFlags",
   "isArray": false
 },
-  FIELD_47: {
+  FIELD_49: {
   "kind": "transport",
   "typeName": "AuthenticatedUser",
   "isArray": false
 },
-  FIELD_48: {
+  FIELD_50: {
   "kind": "transport",
   "typeName": "BookingReadModel",
   "isArray": false
 },
-  FIELD_49: {
+  FIELD_51: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentTermsReadModel",
   "isArray": false
 },
-  FIELD_50: {
+  FIELD_52: {
   "kind": "transport",
   "typeName": "PublicGeneratedOfferAcceptanceRouteView",
   "isArray": false
 },
-  FIELD_51: {
+  FIELD_53: {
   "kind": "transport",
   "typeName": "GeneratedOfferAcceptancePublicSummary",
   "isArray": false
 },
-  FIELD_52: {
+  FIELD_54: {
   "kind": "enum",
   "typeName": "OfferAcceptanceOtpChannel",
   "isArray": false,
@@ -3311,162 +3331,226 @@
     }
   ]
 },
-  FIELD_53: {
+  FIELD_55: {
   "kind": "transport",
   "typeName": "Tour",
   "isArray": true
 },
-  FIELD_54: {
+  FIELD_56: {
   "kind": "transport",
   "typeName": "Pagination",
   "isArray": false
 },
-  FIELD_55: {
+  FIELD_57: {
   "kind": "transport",
   "typeName": "TourListFilters",
   "isArray": false
 },
-  FIELD_56: {
-  "kind": "transport",
-  "typeName": "BookingReadModel",
-  "isArray": true
-},
-  FIELD_57: {
-  "kind": "transport",
-  "typeName": "BookingListFilters",
-  "isArray": false
-},
   FIELD_58: {
   "kind": "transport",
-  "typeName": "BookingChatEvent",
+  "typeName": "CatalogOption",
   "isArray": true
 },
   FIELD_59: {
   "kind": "transport",
-  "typeName": "BookingChatConversation",
+  "typeName": "BookingReadModel",
   "isArray": true
 },
   FIELD_60: {
   "kind": "transport",
-  "typeName": "TranslationEntry",
-  "isArray": true
+  "typeName": "BookingListFilters",
+  "isArray": false
 },
   FIELD_61: {
   "kind": "transport",
-  "typeName": "BookingPerson",
-  "isArray": false
+  "typeName": "BookingChatEvent",
+  "isArray": true
 },
   FIELD_62: {
   "kind": "transport",
-  "typeName": "BookingTravelPlan",
-  "isArray": false
+  "typeName": "BookingChatConversation",
+  "isArray": true
 },
   FIELD_63: {
   "kind": "transport",
-  "typeName": "TravelPlanItemSearchResult",
-  "isArray": true
+  "typeName": "BookingMilestoneAction",
+  "isArray": false
 },
   FIELD_64: {
   "kind": "transport",
-  "typeName": "BookingPricing",
-  "isArray": false
+  "typeName": "TranslationEntry",
+  "isArray": true
 },
   FIELD_65: {
   "kind": "transport",
-  "typeName": "BookingOffer",
+  "typeName": "BookingPerson",
   "isArray": false
 },
   FIELD_66: {
   "kind": "transport",
-  "typeName": "BookingGenerateOfferAcceptanceRouteRequest",
+  "typeName": "BookingTravelPlan",
   "isArray": false
 },
   FIELD_67: {
   "kind": "transport",
-  "typeName": "OfferExchangeRateComponent",
+  "typeName": "TravelPlanItemSearchResult",
   "isArray": true
 },
   FIELD_68: {
   "kind": "transport",
-  "typeName": "BookingOfferComponent",
-  "isArray": true
+  "typeName": "BookingPricing",
+  "isArray": false
 },
   FIELD_69: {
   "kind": "transport",
-  "typeName": "BookingActivity",
-  "isArray": true
+  "typeName": "BookingOffer",
+  "isArray": false
 },
   FIELD_70: {
   "kind": "transport",
-  "typeName": "BookingActivity",
+  "typeName": "BookingGenerateOfferAcceptanceRouteRequest",
   "isArray": false
 },
   FIELD_71: {
   "kind": "transport",
-  "typeName": "BookingInvoice",
+  "typeName": "OfferExchangeRateComponent",
   "isArray": true
 },
   FIELD_72: {
   "kind": "transport",
-  "typeName": "InvoiceComponent",
+  "typeName": "BookingOfferComponent",
   "isArray": true
 },
   FIELD_73: {
   "kind": "transport",
-  "typeName": "MoneyAmount",
-  "isArray": false
+  "typeName": "BookingActivity",
+  "isArray": true
 },
   FIELD_74: {
   "kind": "transport",
-  "typeName": "BookingInvoice",
+  "typeName": "BookingActivity",
   "isArray": false
 },
   FIELD_75: {
   "kind": "transport",
-  "typeName": "KeycloakUserDirectoryEntry",
+  "typeName": "BookingInvoice",
   "isArray": true
 },
   FIELD_76: {
   "kind": "transport",
-  "typeName": "Tour",
-  "isArray": false
+  "typeName": "InvoiceComponent",
+  "isArray": true
 },
   FIELD_77: {
   "kind": "transport",
-  "typeName": "TourOptions",
+  "typeName": "MoneyAmount",
   "isArray": false
 },
   FIELD_78: {
   "kind": "transport",
-  "typeName": "BookingPerson",
-  "isArray": true
+  "typeName": "BookingInvoice",
+  "isArray": false
 },
   FIELD_79: {
   "kind": "transport",
-  "typeName": "BookingWebFormSubmission",
-  "isArray": false
+  "typeName": "KeycloakUserDirectoryEntry",
+  "isArray": true
 },
   FIELD_80: {
-  "kind": "transport",
-  "typeName": "BookingOfferReadModel",
-  "isArray": false
+  "kind": "enum",
+  "typeName": "TourStyleCode",
+  "isArray": true,
+  "enumValues": [
+    "grand-expeditions",
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "options": [
+    {
+      "value": "grand-expeditions",
+      "label": "Grand Expeditions"
+    },
+    {
+      "value": "beach",
+      "label": "Beach"
+    },
+    {
+      "value": "budget",
+      "label": "Budget"
+    },
+    {
+      "value": "culture",
+      "label": "Culture"
+    },
+    {
+      "value": "family",
+      "label": "Family"
+    },
+    {
+      "value": "gastronomic-experiences",
+      "label": "Gastronomic Experiences"
+    },
+    {
+      "value": "luxury",
+      "label": "Luxury"
+    },
+    {
+      "value": "wellness",
+      "label": "Wellness"
+    }
+  ]
 },
   FIELD_81: {
   "kind": "transport",
-  "typeName": "GeneratedBookingOfferReadModel",
-  "isArray": true
+  "typeName": "Tour",
+  "isArray": false
 },
   FIELD_82: {
   "kind": "transport",
-  "typeName": "TranslationStatusSummary",
+  "typeName": "TourOptions",
   "isArray": false
 },
   FIELD_83: {
   "kind": "transport",
+  "typeName": "BookingMilestones",
+  "isArray": false
+},
+  FIELD_84: {
+  "kind": "transport",
+  "typeName": "BookingPerson",
+  "isArray": true
+},
+  FIELD_85: {
+  "kind": "transport",
+  "typeName": "BookingWebFormSubmission",
+  "isArray": false
+},
+  FIELD_86: {
+  "kind": "transport",
+  "typeName": "BookingOfferReadModel",
+  "isArray": false
+},
+  FIELD_87: {
+  "kind": "transport",
+  "typeName": "GeneratedBookingOfferReadModel",
+  "isArray": true
+},
+  FIELD_88: {
+  "kind": "transport",
+  "typeName": "TranslationStatusSummary",
+  "isArray": false
+},
+  FIELD_89: {
+  "kind": "transport",
   "typeName": "BookingOfferPaymentTermLineReadModel",
   "isArray": true
 },
-  FIELD_84: {
+  FIELD_90: {
   "kind": "enum",
   "typeName": "GeneratedOfferAcceptanceRouteMode",
   "isArray": false,
@@ -3485,7 +3569,7 @@
     }
   ]
 },
-  FIELD_85: {
+  FIELD_91: {
   "kind": "enum",
   "typeName": "GeneratedOfferAcceptanceRouteStatus",
   "isArray": false,
@@ -3519,12 +3603,12 @@
     }
   ]
 },
-  FIELD_86: {
+  FIELD_92: {
   "kind": "transport",
   "typeName": "PublicGeneratedOfferDepositAcceptanceRuleView",
   "isArray": false
 },
-  FIELD_87: {
+  FIELD_93: {
   "kind": "enum",
   "typeName": "OfferAcceptanceMethod",
   "isArray": false,
@@ -3553,22 +3637,71 @@
     }
   ]
 },
-  FIELD_88: {
+  FIELD_94: {
+  "kind": "enum",
+  "typeName": "TourStyleCode",
+  "isArray": false,
+  "enumValues": [
+    "grand-expeditions",
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "options": [
+    {
+      "value": "grand-expeditions",
+      "label": "Grand Expeditions"
+    },
+    {
+      "value": "beach",
+      "label": "Beach"
+    },
+    {
+      "value": "budget",
+      "label": "Budget"
+    },
+    {
+      "value": "culture",
+      "label": "Culture"
+    },
+    {
+      "value": "family",
+      "label": "Family"
+    },
+    {
+      "value": "gastronomic-experiences",
+      "label": "Gastronomic Experiences"
+    },
+    {
+      "value": "luxury",
+      "label": "Luxury"
+    },
+    {
+      "value": "wellness",
+      "label": "Wellness"
+    }
+  ]
+},
+  FIELD_95: {
   "kind": "transport",
   "typeName": "BookingTravelPlanDay",
   "isArray": true
 },
-  FIELD_89: {
+  FIELD_96: {
   "kind": "transport",
   "typeName": "BookingTravelPlanOfferComponentLink",
   "isArray": true
 },
-  FIELD_90: {
+  FIELD_97: {
   "kind": "transport",
   "typeName": "BookingTravelPlanAttachment",
   "isArray": true
 },
-  FIELD_91: {
+  FIELD_98: {
   "kind": "enum",
   "typeName": "TravelPlanItemKind",
   "isArray": false,
@@ -3617,42 +3750,42 @@
     }
   ]
 },
-  FIELD_92: {
+  FIELD_99: {
   "kind": "transport",
   "typeName": "BookingGenerateOfferDepositAcceptanceRuleRequest",
   "isArray": false
 },
-  FIELD_93: {
+  FIELD_100: {
   "kind": "transport",
   "typeName": "BookingOfferCategoryRule",
   "isArray": true
 },
-  FIELD_94: {
+  FIELD_101: {
   "kind": "transport",
   "typeName": "BookingOfferDiscount",
   "isArray": false
 },
-  FIELD_95: {
+  FIELD_102: {
   "kind": "transport",
   "typeName": "BookingOfferTotals",
   "isArray": false
 },
-  FIELD_96: {
+  FIELD_103: {
   "kind": "transport",
   "typeName": "BookingOfferQuotationSummary",
   "isArray": false
 },
-  FIELD_97: {
+  FIELD_104: {
   "kind": "transport",
   "typeName": "GeneratedOfferAcceptanceRoute",
   "isArray": false
 },
-  FIELD_98: {
+  FIELD_105: {
   "kind": "transport",
   "typeName": "GeneratedOfferAcceptance",
   "isArray": false
 },
-  FIELD_99: {
+  FIELD_106: {
   "kind": "enum",
   "typeName": "OfferPaymentTermKind",
   "isArray": false,
@@ -3676,22 +3809,22 @@
     }
   ]
 },
-  FIELD_100: {
+  FIELD_107: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentAmountSpec",
   "isArray": false
 },
-  FIELD_101: {
+  FIELD_108: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentDueRule",
   "isArray": false
 },
-  FIELD_102: {
+  FIELD_109: {
   "kind": "transport",
   "typeName": "BookingTravelPlanItem",
   "isArray": true
 },
-  FIELD_103: {
+  FIELD_110: {
   "kind": "enum",
   "typeName": "TravelPlanOfferCoverageType",
   "isArray": false,
@@ -3710,22 +3843,22 @@
     }
   ]
 },
-  FIELD_104: {
+  FIELD_111: {
   "kind": "transport",
   "typeName": "BookingOfferTaxBucket",
   "isArray": true
 },
-  FIELD_105: {
+  FIELD_112: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentTermLine",
   "isArray": true
 },
-  FIELD_106: {
+  FIELD_113: {
   "kind": "transport",
   "typeName": "GeneratedOfferDepositAcceptanceRule",
   "isArray": false
 },
-  FIELD_107: {
+  FIELD_114: {
   "kind": "enum",
   "typeName": "OfferPaymentAmountMode",
   "isArray": false,
@@ -3749,7 +3882,7 @@
     }
   ]
 },
-  FIELD_108: {
+  FIELD_115: {
   "kind": "enum",
   "typeName": "OfferPaymentDueType",
   "isArray": false,
@@ -3788,7 +3921,7 @@
     }
   ]
 },
-  FIELD_109: {
+  FIELD_116: {
   "kind": "enum",
   "typeName": "TravelPlanTimingKind",
   "isArray": false,
@@ -3812,7 +3945,7 @@
     }
   ]
 },
-  FIELD_110: {
+  FIELD_117: {
   "kind": "enum",
   "typeName": "TravelPlanFinancialCoverageStatus",
   "isArray": false,
@@ -3841,22 +3974,22 @@
     }
   ]
 },
-  FIELD_111: {
+  FIELD_118: {
   "kind": "transport",
   "typeName": "BookingTravelPlanItemImage",
   "isArray": true
 },
-  FIELD_112: {
+  FIELD_119: {
   "kind": "transport",
   "typeName": "BookingTravelPlanItemCopiedFrom",
   "isArray": false
 },
-  FIELD_113: {
+  FIELD_120: {
   "kind": "transport",
   "typeName": "BookingTravelPlanItemImageSourceAttribution",
   "isArray": false
 },
-  FIELD_114: {
+  FIELD_121: {
   "kind": "transport",
   "typeName": "BookingTravelPlanItemImageFocalPoint",
   "isArray": false

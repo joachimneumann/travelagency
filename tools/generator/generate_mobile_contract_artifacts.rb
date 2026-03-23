@@ -68,7 +68,17 @@ def sync_generated_language_catalog!
   end
 end
 
+def sync_generated_tour_style_catalog!
+  stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'scripts', 'generate_tour_style_catalog.mjs'))
+  unless status.success?
+    warn stdout unless stdout.to_s.empty?
+    warn stderr unless stderr.to_s.empty?
+    abort 'Failed to generate shared tour style catalog artifacts'
+  end
+end
+
 sync_generated_language_catalog!
+sync_generated_tour_style_catalog!
 
 def load_ir_json
   stdout, stderr, status = Open3.capture3('cue', 'export', './ir', '-e', 'IR', chdir: MODEL_DIR)

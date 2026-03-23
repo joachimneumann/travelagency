@@ -70,6 +70,17 @@ import (
 	summary: #BookingPricingSummary
 }
 
+#BookingMilestones: {
+	new_booking_at?:         common.#Timestamp
+	travel_plan_sent_at?:    common.#Timestamp
+	offer_sent_at?:          common.#Timestamp
+	negotiation_started_at?: common.#Timestamp
+	deposit_request_sent_at?: common.#Timestamp
+	deposit_received_at?:    common.#Timestamp
+	booking_lost_at?:        common.#Timestamp
+	trip_completed_at?:      common.#Timestamp
+}
+
 #BookingActivityType: enums.#BookingActivityType
 
 #BookingActivity: {
@@ -95,6 +106,9 @@ import (
 	offer_revision?:                 >=0 & int
 	invoices_revision?:              >=0 & int
 	stage:                           enums.#BookingStage
+	milestones?:                     #BookingMilestones
+	last_action?:                    enums.#BookingMilestoneAction
+	last_action_at?:                 common.#Timestamp
 	assigned_keycloak_user_id?:      common.#Identifier
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?: [...enums.#CountryCode]

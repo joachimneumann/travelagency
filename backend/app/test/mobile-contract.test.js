@@ -217,6 +217,18 @@ async function createPdfBase64(pageSizes) {
   return Buffer.from(bytes).toString("base64");
 }
 
+async function createPdfBase64WithText(pageSizes, label = "Attachment page") {
+  const document = await PDFLibDocument.create();
+  for (const [index, size] of (Array.isArray(pageSizes) ? pageSizes : []).entries()) {
+    const width = Number(Array.isArray(size) ? size[0] : 0) || 0;
+    const height = Number(Array.isArray(size) ? size[1] : 0) || 0;
+    const page = document.addPage([width, height]);
+    page.drawText(`${label} ${index + 1}`, { x: 36, y: height - 56, size: 14 });
+  }
+  const bytes = await document.save();
+  return Buffer.from(bytes).toString("base64");
+}
+
 function decodePdfHexText(body) {
   return Array.from(String(body || "").matchAll(/<([0-9A-Fa-f]+)>/g))
     .map((match) => String(match[1] || ""))
@@ -1545,7 +1557,7 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
         expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
         filename: "appendix-a4.pdf",
         mime_type: "application/pdf",
-        data_base64: await createPdfBase64([[595.275591, 841.889764]])
+        data_base64: await createPdfBase64WithText([[595.275591, 841.889764]])
       }
     }
   );
@@ -2331,6 +2343,37 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
         offer: {
           ...createdBooking.offer,
           currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            lines: [
+              {
+                id: "payment_term_acceptance_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 3300
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              },
+              {
+                id: "payment_term_acceptance_final",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 2,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                due_rule: {
+                  type: "DAYS_AFTER_ACCEPTANCE",
+                  days: 14
+                }
+              }
+            ]
+          },
           components: [
             {
               id: "offer_component_acceptance_1",
@@ -2425,12 +2468,27 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   assert.equal(detailResult.body.booking.generated_offers[0].acceptance.accepted_by_email, "test@example.com");
   assert.equal(detailResult.body.booking.generated_offers[0].acceptance.offer_pdf_sha256.length, 64);
   assert.equal(detailResult.body.booking.generated_offers[0].acceptance.offer_snapshot_sha256.length, 64);
+  const acceptedDateOnly = detailResult.body.booking.generated_offers[0].acceptance.accepted_at.slice(0, 10);
+  const finalDueDate = new Date(`${acceptedDateOnly}T00:00:00.000Z`);
+  finalDueDate.setUTCDate(finalDueDate.getUTCDate() + 14);
+  assert.equal(detailResult.body.booking.pricing_revision, 1);
+  assert.equal(detailResult.body.booking.pricing.agreed_net_amount_cents, 13200);
+  assert.equal(detailResult.body.booking.pricing.payments.length, 2);
+  assert.equal(detailResult.body.booking.pricing.payments[0].label, "Deposit");
+  assert.equal(detailResult.body.booking.pricing.payments[0].due_date, acceptedDateOnly);
+  assert.equal(detailResult.body.booking.pricing.payments[0].net_amount_cents, 3300);
+  assert.equal(detailResult.body.booking.pricing.payments[0].status, "PENDING");
+  assert.equal(detailResult.body.booking.pricing.payments[1].label, "Final payment");
+  assert.equal(detailResult.body.booking.pricing.payments[1].due_date, finalDueDate.toISOString().slice(0, 10));
+  assert.equal(detailResult.body.booking.pricing.payments[1].net_amount_cents, 9900);
+  assert.equal(detailResult.body.booking.pricing.payments[1].status, "PENDING");
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingRecord = store.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingRecord);
   assert.equal(bookingRecord.accepted_generated_offer_id, generatedOfferId);
   assert.equal(bookingRecord.generated_offers[0].acceptance.accepted_by_name, "Test User");
+  assert.equal(bookingRecord.pricing.payments.length, 2);
 });
 
 test("public generated offer acceptance enforces uniqueness per booking", async () => {
@@ -3718,6 +3776,7 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   const adminList = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders("atp_admin", "admin", "kc-admin"));
   assert.equal(adminList.status, 200);
   assert.equal(adminList.body.items.length, 1);
+  assert.equal(adminList.body.items[0].assigned_keycloak_user_label, "Staff User");
 
   const staffList = await requestJson(
     `${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`,
@@ -3726,6 +3785,7 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   assert.equal(staffList.status, 200);
   assert.equal(staffList.body.items.length, 1);
   assert.equal(staffList.body.items[0].id, booking_id);
+  assert.equal(staffList.body.items[0].assigned_keycloak_user_label, "Staff User");
 
   const otherStaffList = await requestJson(
     `${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`,
@@ -3761,19 +3821,98 @@ test("accountant is read-only everywhere", async () => {
   );
   assert.equal(noteResult.status, 403);
 
-  const stageResult = await requestJson(
-    endpointPath("booking_stage").replace("{booking_id}", booking_id),
+  const milestoneResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
     apiHeaders("atp_accountant", "accountant", "kc-accountant"),
     {
-      method: "PATCH",
+      method: "POST",
       body: {
         expected_core_revision: detailBefore.body.booking.core_revision,
-        stage: "QUALIFIED",
+        action: "TRAVEL_PLAN_SENT",
         actor: "accountant"
       }
     }
   );
-  assert.equal(stageResult.status, 403);
+  assert.equal(milestoneResult.status, 403);
+});
+
+test("booking milestone actions keep timestamps and derive stage from the last saved action", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const travelPlanSentResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        action: "TRAVEL_PLAN_SENT",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(travelPlanSentResult.status, 200);
+  assert.equal(travelPlanSentResult.body.booking.stage, "QUALIFIED");
+  assert.equal(travelPlanSentResult.body.booking.last_action, "TRAVEL_PLAN_SENT");
+  assert.match(String(travelPlanSentResult.body.booking.last_action_at || ""), /T/);
+  assert.match(String(travelPlanSentResult.body.booking.milestones?.travel_plan_sent_at || ""), /T/);
+
+  const offerSentResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: travelPlanSentResult.body.booking.core_revision,
+        action: "OFFER_SENT",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(offerSentResult.status, 200);
+  assert.equal(offerSentResult.body.booking.stage, "PROPOSAL_SENT");
+  assert.equal(offerSentResult.body.booking.last_action, "OFFER_SENT");
+  assert.match(String(offerSentResult.body.booking.last_action_at || ""), /T/);
+  assert.match(String(offerSentResult.body.booking.milestones?.offer_sent_at || ""), /T/);
+  assert.match(String(offerSentResult.body.booking.milestones?.travel_plan_sent_at || ""), /T/);
+
+  const travelPlanSentAgainResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: offerSentResult.body.booking.core_revision,
+        action: "TRAVEL_PLAN_SENT",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(travelPlanSentAgainResult.status, 200);
+  assert.equal(travelPlanSentAgainResult.body.booking.stage, "QUALIFIED");
+  assert.equal(travelPlanSentAgainResult.body.booking.last_action, "TRAVEL_PLAN_SENT");
+  assert.match(String(travelPlanSentAgainResult.body.booking.milestones?.offer_sent_at || ""), /T/);
+  assert.match(String(travelPlanSentAgainResult.body.booking.milestones?.travel_plan_sent_at || ""), /T/);
+
+  const resetToNewResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: travelPlanSentAgainResult.body.booking.core_revision,
+        action: "NEW",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(resetToNewResult.status, 200);
+  assert.equal(resetToNewResult.body.booking.stage, "NEW");
+  assert.equal(resetToNewResult.body.booking.last_action, "NEW_BOOKING");
+  assert.match(String(resetToNewResult.body.booking.milestones?.new_booking_at || ""), /T/);
 });
 
 test("blank-name booking persons roundtrip without synthetic traveler names", async () => {

@@ -17,6 +17,7 @@ import {
 } from "../shared/api.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
+import { resolveBackendSectionHref } from "../shared/nav.js";
 import {
   CUSTOMER_CONTENT_LANGUAGES,
   normalizeLanguageCode
@@ -97,7 +98,6 @@ const els = {
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   logoutLink: null,
-  sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
   userLabel: null,
   title: document.getElementById("tour_title"),
   titleInput: document.getElementById("tour_title_input"),
@@ -385,7 +385,7 @@ init();
 async function init() {
   await waitForBackendI18n();
   refreshBackendNavElements();
-  const backHref = withBackendLang("/backend.html", { section: "tours" });
+  const backHref = resolveBackendSectionHref("tours");
 
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.back) els.back.href = backHref;
@@ -394,8 +394,6 @@ async function init() {
     const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
     els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
   }
-
-  bindSectionNavigation("tours");
 
   await loadAuthStatus();
   if (!state.authenticated) {
@@ -453,22 +451,6 @@ async function init() {
   }
 
   await loadTour();
-}
-
-function bindSectionNavigation(activeSection) {
-  Array.from(els.sectionNavButtons || []).forEach((button) => {
-    const section = button.dataset.backendSection;
-    if (!section) return;
-    button.classList.toggle("is-active", section === activeSection);
-    if (section === activeSection) {
-      button.setAttribute("aria-current", "page");
-    } else {
-      button.removeAttribute("aria-current");
-    }
-    button.addEventListener("click", () => {
-      window.location.href = withBackendLang("/backend.html", { section });
-    });
-  });
 }
 
 async function loadTour() {

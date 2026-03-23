@@ -1,111 +1,43 @@
 import {
   createApiFetcher,
   escapeHtml,
-  formatDateTime,
-  logBrowserConsoleError,
   normalizeText,
   resolveApiUrl
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
-  authMeRequest,
   bookingsRequest,
-  keycloakUsersRequest,
   publicToursRequest
-  ,
-  toursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
-import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
-import {
-  buildBookingHref,
-  buildTourEditHref
-} from "../shared/links.js";
-import { resolveBackendSectionHref } from "../shared/nav.js";
+import { buildBookingHref } from "../shared/links.js";
 import { renderPagination } from "../shared/pagination.js";
 import {
   getPersonInitials,
   getRepresentativeTraveler
 } from "../shared/booking_persons.js";
+import {
+  backendT,
+  getBackendApiBase,
+  getBackendApiOrigin,
+  initializeBackendPageChrome,
+  loadBackendPageAuthState
+} from "../shared/backend_page.js";
 
-function backendT(id, fallback, vars) {
-  if (typeof window.backendT === "function") {
-    return window.backendT(id, fallback, vars);
-  }
-  const template = String(fallback ?? id);
-  if (!vars || typeof vars !== "object") return template;
-  return template.replace(/\{([^{}]+)\}/g, (match, key) => {
-    const normalizedKey = String(key || "").trim();
-    return normalizedKey in vars ? String(vars[normalizedKey]) : match;
-  });
-}
-
-async function waitForBackendI18n() {
-  await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
-}
-
-function currentBackendLang() {
-  return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
-}
-
-function withBackendLang(pathname) {
-  const url = new URL(pathname, window.location.origin);
-  const lang = currentBackendLang();
-  if (lang) url.searchParams.set("lang", lang);
-  return `${url.pathname}${url.search}`;
-}
-
-function withApiLang(pathname, params = {}) {
-  const url = new URL(pathname, window.location.origin);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      url.searchParams.set(key, String(value));
-    }
-  });
-  const lang = currentBackendLang();
-  if (lang) url.searchParams.set("lang", lang);
-  return `${url.pathname}${url.search}`;
-}
-
-const qs = new URLSearchParams(window.location.search);
-const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
-const apiOrigin = apiBase || window.location.origin;
+const apiBase = getBackendApiBase();
+const apiOrigin = getBackendApiOrigin();
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
-  sectionNavButtons: document.querySelectorAll("[data-backend-section]"),
-
-  bookingsPanel: document.getElementById("bookingsPanel"),
-  toursPanel: document.getElementById("toursPanel"),
-  settingsPanel: document.getElementById("settingsPanel"),
-
   bookingsSearch: document.getElementById("bookingsSearch"),
   bookingsSearchBtn: document.getElementById("bookingsSearchBtn"),
   bookingsClearSearchBtn: document.getElementById("bookingsClearSearchBtn"),
   bookingsCountInfo: document.getElementById("bookingsCountInfo"),
   bookingsPagination: document.getElementById("bookingsPagination"),
-  bookingsTable: document.getElementById("bookingsTable"),
-
-  toursSearch: document.getElementById("toursSearch"),
-  toursDestination: document.getElementById("toursDestination"),
-  toursStyle: document.getElementById("toursStyle"),
-  toursClearFiltersBtn: document.getElementById("toursClearFiltersBtn"),
-  toursSearchBtn: document.getElementById("toursSearchBtn"),
-  toursCountInfo: document.getElementById("toursCountInfo"),
-  toursPagination: document.getElementById("toursPagination"),
-  toursTable: document.getElementById("toursTable"),
-
-  staffStatus: document.getElementById("staffStatus"),
-  staffTable: document.getElementById("staffTable")
+  bookingsTable: document.getElementById("bookingsTable")
 };
-
-const SECTION_CONFIG = [
-  { id: "bookings", canAccess: () => state.permissions.canReadBookings },
-  { id: "tours", canAccess: () => state.permissions.canReadTours },
-  { id: "settings", canAccess: () => state.permissions.canReadSettings }
-];
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
   Object.fromEntries(
@@ -124,29 +56,21 @@ const state = {
   authUser: null,
   roles: [],
   permissions: {
-    canReadBookings: false,
-    canReadSettings: false,
-    canReadTours: false,
-    canEditTours: false
+    canReadBookings: false
   },
-  bookings: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "" },
-  tours: { page: 1, pageSize: 10, totalPages: 1, total: 0, search: "", destination: "all", style: "all" },
-  keycloakUsers: [],
-  tourImagesById: new Map(),
-  activeSection: "bookings"
+  bookings: {
+    page: 1,
+    pageSize: 10,
+    totalPages: 1,
+    total: 0,
+    search: ""
+  },
+  tourImagesById: new Map()
 };
 
 function refreshBackendNavElements() {
   els.logoutLink = document.getElementById("backendLogoutLink");
   els.userLabel = document.getElementById("backendUserLabel");
-}
-
-function formatIntegerWithGrouping(value) {
-  if (!Number.isFinite(Number(value))) return "-";
-  return new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 0,
-    useGrouping: true
-  }).format(Number(value));
 }
 
 function bookingStageLabel(stage) {
@@ -161,211 +85,75 @@ function bookingStageLabel(stage) {
   );
 }
 
+function hasAnyRoleInList(roleList, ...roles) {
+  return roles.some((role) => roleList.includes(role));
+}
+
+function showError(message) {
+  if (!els.error) return;
+  els.error.textContent = message;
+  els.error.classList.add("show");
+}
+
+function clearError() {
+  if (!els.error) return;
+  els.error.textContent = "";
+  els.error.classList.remove("show");
+}
+
+const fetchApi = createApiFetcher({
+  apiBase,
+  onError: (message) => showError(message),
+  suppressNotFound: false,
+  includeDetailInError: false,
+  connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
+});
+
 init();
 
 async function init() {
-  await waitForBackendI18n();
-  refreshBackendNavElements();
-  if (els.homeLink) {
-    els.homeLink.href = resolveBackendSectionHref("bookings");
-  }
+  const chrome = await initializeBackendPageChrome({
+    currentSection: "bookings",
+    homeLink: els.homeLink,
+    refreshNav: refreshBackendNavElements
+  });
+  els.logoutLink = chrome.logoutLink;
+  els.userLabel = chrome.userLabel;
 
-  if (els.logoutLink) {
-    const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
-    els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
-  }
-
-  await loadBackendAuthStatus();
-  bindSectionNavigation();
-  applyRoleVisibility();
+  const authState = await loadBackendPageAuthState({
+    apiOrigin,
+    refreshNav: refreshBackendNavElements,
+    computePermissions: (roles) => ({
+      canReadBookings: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF)
+    }),
+    hasPageAccess: (permissions) => permissions.canReadBookings,
+    logKey: "backend-bookings",
+    pageName: "backend.html",
+    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF],
+    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to read bookings."
+  });
+  state.authUser = authState.authUser;
+  state.roles = authState.roles;
+  state.permissions = {
+    canReadBookings: Boolean(authState.permissions?.canReadBookings)
+  };
   bindControls();
 
-  if (state.permissions.canReadBookings) loadBookings();
-  if (state.permissions.canReadSettings) loadKeycloakUsers();
-  if (state.permissions.canReadTours) loadTours();
-}
-
-async function loadBackendAuthStatus() {
-  refreshBackendNavElements();
-  try {
-    const request = authMeRequest({ baseURL: apiOrigin });
-    const response = await fetch(request.url, {
-      method: request.method,
-      credentials: "include",
-      headers: request.headers
-    });
-    const payload = await response.json().catch(() => null);
-    if (payload) validateAuthMeResponse(payload);
-    if (!response.ok || !payload?.authenticated) {
-      state.authUser = null;
-      if (els.userLabel) els.userLabel.textContent = "";
-      return null;
-    }
-    state.authUser = payload.user || null;
-    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
-    state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-    state.permissions = {
-      canReadBookings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF),
-      canReadSettings: hasAnyRole(ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT),
-      canReadTours: hasAnyRole(ROLES.ADMIN, ROLES.ACCOUNTANT),
-      canEditTours: hasAnyRole(ROLES.ADMIN)
-    };
-    if (els.userLabel) els.userLabel.textContent = user || "";
-    if (!SECTION_CONFIG.some((section) => section.canAccess())) {
-      logBrowserConsoleError("[backend] Authenticated user has no readable backend sections. backend.html will appear blank until backend roles are granted.", {
-        page_url: window.location.href,
-        auth_me_url: request.url,
-        authenticated_user: {
-          id: payload.user?.sub || "",
-          username: payload.user?.preferred_username || "",
-          email: payload.user?.email || ""
-        },
-        roles: state.roles,
-        computed_permissions: state.permissions,
-        expected_roles_any_of: [ROLES.ADMIN, ROLES.MANAGER, ROLES.ACCOUNTANT, ROLES.STAFF].filter(Boolean),
-        likely_cause: "The user is authenticated in Keycloak but does not have any ATP backend roles mapped into the session."
-      });
-    }
-    return payload.user;
-  } catch (error) {
-    state.authUser = null;
-    if (els.userLabel) els.userLabel.textContent = "";
-    logBrowserConsoleError("[backend] Failed to load backend authentication status for backend.html.", {
-      page_url: window.location.href,
-      auth_me_url: authMeRequest({ baseURL: apiOrigin }).url
-    }, error);
-    return null;
-  }
-}
-
-function bindSectionNavigation() {
-  const buttons = Array.from(els.sectionNavButtons || []);
-  buttons.forEach((button) => {
-    const section = button.dataset.backendSection;
-    const allowed = isSectionAllowed(section);
-    button.classList.toggle("is-hidden", !allowed);
-
-    if (!allowed) return;
-
-    button.addEventListener("click", () => {
-      if (state.activeSection === section) return;
-      showSection(section);
-    });
-  });
-
-  if (buttons.length === 0) return;
-  if (!isSectionAllowed(state.activeSection)) {
-    state.activeSection = resolveRequestedSection();
-  }
-}
-
-function bindSearchControls() {
   if (state.permissions.canReadBookings) {
-    bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
-    if (els.bookingsClearSearchBtn) {
-      els.bookingsClearSearchBtn.addEventListener("click", () => {
-        state.bookings.search = "";
-        if (els.bookingsSearch) els.bookingsSearch.value = "";
-        state.bookings.page = 1;
-        loadBookings();
-      });
-    }
+    loadBookings();
   }
-  if (state.permissions.canReadTours) {
-    bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
-  }
-
-  if (state.permissions.canReadTours && els.toursDestination) {
-    els.toursDestination.addEventListener("change", () => {
-      state.tours.destination = els.toursDestination.value || "all";
-      state.tours.page = 1;
-      loadTours();
-    });
-  }
-
-  if (state.permissions.canReadTours && els.toursStyle) {
-    els.toursStyle.addEventListener("change", () => {
-      state.tours.style = els.toursStyle.value || "all";
-      state.tours.page = 1;
-      loadTours();
-    });
-  }
-
-  if (state.permissions.canReadTours && els.toursClearFiltersBtn) {
-    els.toursClearFiltersBtn.addEventListener("click", () => {
-      state.tours.destination = "all";
-      state.tours.style = "all";
-      state.tours.page = 1;
-      if (els.toursDestination) els.toursDestination.value = "all";
-      if (els.toursStyle) els.toursStyle.value = "all";
-      loadTours();
-    });
-  }
-  const requestedSection = resolveRequestedSection();
-  showSection(requestedSection, { updateUrl: false });
 }
 
 function bindControls() {
-  bindSearchControls();
-}
-
-function isSectionAllowed(sectionId) {
-  return SECTION_CONFIG.some((item) => item.id === sectionId && item.canAccess());
-}
-
-function sectionPanel(sectionId) {
-  return els[`${sectionId}Panel`];
-}
-
-function firstAllowedSection() {
-  const section = SECTION_CONFIG.find((item) => item.canAccess());
-  return section ? section.id : "bookings";
-}
-
-function resolveRequestedSection() {
-  const params = new URLSearchParams(window.location.search);
-  const requested = params.get("section");
-  if (!requested) return firstAllowedSection();
-  return isSectionAllowed(requested) ? requested : firstAllowedSection();
-}
-
-function showSection(sectionId, options = { updateUrl: true }) {
-  const section = isSectionAllowed(sectionId) ? sectionId : firstAllowedSection();
-  state.activeSection = section;
-
-  const allowedSections = SECTION_CONFIG.filter((item) => item.canAccess()).map((item) => item.id);
-  allowedSections.forEach((id) => {
-    const panel = sectionPanel(id);
-    if (panel) panel.classList.toggle("is-hidden", id !== section);
-  });
-
-  Array.from(els.sectionNavButtons || []).forEach((button) => {
-    const candidate = button.dataset.backendSection;
-    button.classList.toggle("is-active", candidate === section);
-  });
-
-  if (options.updateUrl) {
-    const params = new URLSearchParams(window.location.search);
-    params.set("section", section);
-    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+  bindSearch(els.bookingsSearchBtn, els.bookingsSearch, state.bookings, loadBookings);
+  if (els.bookingsClearSearchBtn) {
+    els.bookingsClearSearchBtn.addEventListener("click", () => {
+      state.bookings.search = "";
+      if (els.bookingsSearch) els.bookingsSearch.value = "";
+      state.bookings.page = 1;
+      loadBookings();
+    });
   }
-}
-
-function applyRoleVisibility() {
-  SECTION_CONFIG.forEach((section) => {
-    const allowed = section.canAccess();
-    const button = Array.from(els.sectionNavButtons || []).find(
-      (item) => item.dataset.backendSection === section.id
-    );
-    const panel = sectionPanel(section.id);
-
-    if (button) button.classList.toggle("is-hidden", !allowed);
-    if (panel) panel.classList.toggle("is-hidden", !allowed);
-  });
-}
-
-function hasAnyRole(...roles) {
-  return roles.some((role) => state.roles.includes(role));
 }
 
 function bindSearch(searchBtn, searchInput, model, reloadFn) {
@@ -410,7 +198,7 @@ async function loadBookings() {
   );
   state.bookings.total = Number(pagination.total_items || 0);
   state.bookings.page = Number(pagination.page || state.bookings.page);
-  updatePaginationUi("bookings");
+  updateBookingsPaginationUi();
   renderBookings(payload.items || []);
 }
 
@@ -428,90 +216,18 @@ async function ensureTourImageCatalog() {
   );
 }
 
-async function loadTours() {
-  clearError();
-
-  const params = new URLSearchParams({
-    page: String(state.tours.page),
-    page_size: String(state.tours.pageSize),
-    sort: "updated_at_desc"
-  });
-  if (state.tours.search) params.set("search", state.tours.search);
-  if (state.tours.destination && state.tours.destination !== "all") params.set("destination", state.tours.destination);
-  if (state.tours.style && state.tours.style !== "all") params.set("style", state.tours.style);
-
-  const request = toursRequest({ baseURL: apiOrigin, query: Object.fromEntries(params.entries()) });
-  const payload = await fetchApi(withApiLang(request.url));
-  if (!payload) return;
-  const pagination = payload.pagination || {};
-
-  state.tours.totalPages = Math.max(
-    1,
-    Number(pagination.total_pages || Math.ceil(Number(pagination.total_items || 0) / state.tours.pageSize) || 1)
-  );
-  state.tours.total = Number(pagination.total_items || 0);
-  state.tours.page = Number(pagination.page || state.tours.page);
-  populateTourFilterOptions(payload);
-  updatePaginationUi("tours");
-  renderTours(payload.items || []);
-}
-
-function populateTourFilterOptions(payload) {
-  const destinations = Array.isArray(payload?.available_destinations) ? payload.available_destinations : [];
-  const styles = Array.isArray(payload?.available_styles) ? payload.available_styles : [];
-
-  if (els.toursDestination) {
-    const current = state.tours.destination || "all";
-    const options = [`<option value="all">${escapeHtml(backendT("backend.tours.all_destinations", "All destinations"))}</option>`]
-      .concat(destinations.map((value) => `<option value="${escapeHtml(value.code || value)}">${escapeHtml(value.label || value.code || value)}</option>`))
-      .join("");
-    els.toursDestination.innerHTML = options;
-    els.toursDestination.value = destinations.some((value) => String(value?.code || value) === current) ? current : "all";
-    state.tours.destination = els.toursDestination.value;
+function updateBookingsPaginationUi() {
+  if (els.bookingsCountInfo) {
+    els.bookingsCountInfo.textContent = "";
   }
 
-  if (els.toursStyle) {
-    const current = state.tours.style || "all";
-    const options = [`<option value="all">${escapeHtml(backendT("backend.tours.all_styles", "All styles"))}</option>`]
-      .concat(styles.map((value) => `<option value="${escapeHtml(value.code || value)}">${escapeHtml(value.label || value.code || value)}</option>`))
-      .join("");
-    els.toursStyle.innerHTML = options;
-    els.toursStyle.value = styles.some((value) => String(value?.code || value) === current) ? current : "all";
-    state.tours.style = els.toursStyle.value;
-  }
-}
-
-function updatePaginationUi(section) {
-  const model = state[section];
-  const countInfo = els[`${section}CountInfo`];
-  const pagination = els[`${section}Pagination`];
-
-  if (countInfo) {
-    countInfo.textContent = section === "bookings"
-      ? ""
-      : backendT("common.page_status", "{total} total · page {page} of {totalPages}", {
-        total: model.total,
-        page: model.page,
-        totalPages: model.totalPages
-      });
-  }
-
-  if (pagination) {
-    renderPagination(pagination, model, (page) => {
-      model.page = page;
-      if (section === "bookings") loadBookings();
-      if (section === "tours") loadTours();
+  if (els.bookingsPagination) {
+    renderPagination(els.bookingsPagination, state.bookings, (page) => {
+      state.bookings.page = page;
+      loadBookings();
     });
   }
 }
-
-const fetchApi = createApiFetcher({
-  apiBase,
-  onError: (message) => showError(message),
-  suppressNotFound: false,
-  includeDetailInError: false,
-  connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
-});
 
 function renderBookings(items) {
   if (els.bookingsClearSearchBtn) {
@@ -540,7 +256,7 @@ function renderBookings(items) {
           </div>
         </td>
         <td>${escapeHtml(bookingStageLabel(booking.stage || "-"))}</td>
-        <td>${escapeHtml(resolveAssignedKeycloakUserLabel(booking.assigned_keycloak_user_id))}</td>
+        <td>${escapeHtml(resolveAssignedKeycloakUserLabel(booking))}</td>
       </tr>`;
     })
     .join("");
@@ -607,101 +323,14 @@ function resolveRepresentativePhotoSrc(photoRef) {
   return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
 }
 
-function renderTours(items) {
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.days", "Days"))}</th><th>${escapeHtml(backendT("backend.table.price", "Price"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th></tr></thead>`;
-  const rows = items
-    .map((tour) => {
-      const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
-      const countries = Array.isArray(tour.destinations) ? tour.destinations.join(", ") : "";
-      const href = buildTourEditHref(tour.id);
-      return `<tr>
-        <td><a href="${escapeHtml(href)}" title="${escapeHtml(tour.id)}">${escapeHtml(shortId(tour.id))}</a></td>
-        <td>${escapeHtml(tour.title || "-")}</td>
-        <td>${escapeHtml(countries || "-")}</td>
-        <td>${escapeHtml(styles || "-")}</td>
-        <td>${escapeHtml(String(tour.travel_duration_days ?? "-"))}</td>
-        <td>${escapeHtml(formatIntegerWithGrouping(tour.budget_lower_usd ?? "-"))}</td>
-        <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const body = rows || `<tr><td colspan="7">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
-  if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
-}
-function showError(message) {
-  if (!els.error) return;
-  els.error.textContent = message;
-  els.error.classList.add("show");
-}
-
-function clearError() {
-  if (!els.error) return;
-  els.error.textContent = "";
-  els.error.classList.remove("show");
-}
-
-async function loadKeycloakUsers() {
-  clearError();
-  const payload = await fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url);
-  if (!payload) return;
-  state.keycloakUsers = Array.isArray(payload.items) ? payload.items : [];
-  renderStaff(state.keycloakUsers);
-}
-
-function renderStaff(items) {
-  if (!els.staffTable) return;
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.name", "Name"))}</th><th>${escapeHtml(backendT("backend.table.username", "Username"))}</th><th class="keycloak-roles-col">${escapeHtml(backendT("backend.table.roles", "Roles"))}</th><th class="backend-table-align-right">${escapeHtml(backendT("backend.table.active", "Active"))}</th></tr></thead>`;
-  const rows = items
-    .map((staff) => `<tr>
-      <td>${escapeHtml(staff.name || "-")}</td>
-      <td>${escapeHtml(staff.username || "-")}</td>
-      <td class="keycloak-roles-col">${formatKeycloakRolesCell(staff)}</td>
-      <td class="backend-table-align-right">${staff.active ? escapeHtml(backendT("common.yes", "Yes")) : escapeHtml(backendT("common.no", "No"))}</td>
-      </tr>`)
-    .join("");
-  els.staffTable.innerHTML = `${header}<tbody>${rows || `<tr><td colspan="4">${escapeHtml(backendT("backend.users.no_results", "No Keycloak users found"))}</td></tr>`}</tbody>`;
-}
-
-function formatKeycloakRoleList(roles) {
-  const items = (Array.isArray(roles) ? roles : [])
-    .map((role) => normalizeText(role))
-    .filter(Boolean);
-  return items.length ? items.join(", ") : "-";
-}
-
-function formatKeycloakRolesCell(user) {
-  const clientRoles = formatKeycloakRoleList(user?.client_roles);
-  return escapeHtml(clientRoles);
-}
-
-function setStaffStatus(message) {
-  if (!els.staffStatus) return;
-  els.staffStatus.textContent = message;
-}
-
 function shortId(value) {
   const id = String(value || "");
   return id.length > 6 ? id.slice(-6) : id;
 }
 
-function displayKeycloakUser(user) {
-  if (!user || typeof user !== "object") return "";
-  return normalizeText(user.name) || normalizeText(user.username) || normalizeText(user.id) || "";
-}
-
-function resolveAssignedKeycloakUserLabel(assignedKeycloakUserId) {
-  const normalizedId = normalizeText(assignedKeycloakUserId);
-  if (!normalizedId) return backendT("common.unassigned", "Unassigned");
-  const users = Array.isArray(state.keycloakUsers) ? state.keycloakUsers : [];
-  const match = users.find((user) => normalizeText(user.id) === normalizedId);
-  if (match) return displayKeycloakUser(match) || normalizedId;
-  if (normalizeText(state.authUser?.sub) === normalizedId) {
-    return displayKeycloakUser({
-      id: state.authUser?.sub,
-      name: state.authUser?.name,
-      username: state.authUser?.preferred_username
-    }) || normalizedId;
-  }
-  return normalizedId;
+function resolveAssignedKeycloakUserLabel(booking) {
+  const assignedKeycloakUserLabel = normalizeText(booking?.assigned_keycloak_user_label);
+  if (assignedKeycloakUserLabel) return assignedKeycloakUserLabel;
+  const assignedKeycloakUserId = normalizeText(booking?.assigned_keycloak_user_id);
+  return assignedKeycloakUserId || backendT("common.unassigned", "Unassigned");
 }

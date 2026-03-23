@@ -67,9 +67,9 @@ import (
 	actor?:                  string
 }
 
-#BookingStageUpdateRequest: {
+#BookingMilestoneActionRequest: {
 	expected_core_revision?: >=0 & int
-	stage:                   enums.#BookingStage
+	action:                  enums.#BookingMilestoneAction
 	actor?:                  string
 }
 
@@ -127,20 +127,20 @@ import (
 }
 
 #TravelPlanItemSearchRequest: {
-	q?:            string
-	destination?:  string
-	country?:      enums.#CountryCode
-	style?:        string
-	item_kind?: enums.#TravelPlanItemKind
-	limit?:        >=0 & int
-	offset?:       >=0 & int
+	q?:           string
+	destination?: string
+	country?:     enums.#CountryCode
+	style?:       string
+	item_kind?:   enums.#TravelPlanItemKind
+	limit?:       >=0 & int
+	offset?:      >=0 & int
 }
 
 #TravelPlanItemImportRequest: {
 	expected_travel_plan_revision?:       >=0 & int
 	source_booking_id:                    common.#Identifier
-	source_item_id:                    common.#Identifier
-	insert_after_item_id?:             common.#Identifier
+	source_item_id:                       common.#Identifier
+	insert_after_item_id?:                common.#Identifier
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -305,8 +305,8 @@ import (
 #TourUpsertRequest: {
 	id?:    common.#Identifier
 	title?: string
-	destinations?: [...string]
-	styles?: [...string]
+	destinations?: [...enums.#CountryCode]
+	styles?: [...enums.#TourStyleCode]
 	travel_duration_days?:    >=0 & int
 	budget_lower_usd?:        >=0 & int
 	priority?:                int

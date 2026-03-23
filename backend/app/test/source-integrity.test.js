@@ -554,14 +554,54 @@ test("booking page orders the visible sections in the requested workflow sequenc
   }
 });
 
-test("booking page top control row keeps staff, stage, and customer language visually aligned", async () => {
+test("booking page replaces the stage dropdown with a derived status block and milestone actions", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+  const bookingCoreSource = await readFile(bookingCorePath, "utf8");
+
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_stage_select"/,
+    "Booking page should no longer expose a manual stage dropdown"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_milestone_actions"[\s\S]*id="booking_last_action_detail"[\s\S]*id="booking_milestone_dirty_hint"/,
+    "Booking page should render milestone action buttons and a last-action line in place of the old stage select"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_status_summary"|data-i18n-id="booking\.status_label"/,
+    "Booking page should no longer render the old booking-status title or summary block"
+  );
+  assert.doesNotMatch(
+    bookingCoreSource,
+    /bookingStageRequest|stageSelect/,
+    "Booking core should no longer save a manual stage selection from the booking page"
+  );
+  assert.match(
+    bookingCoreSource,
+    /bookingMilestoneActionRequest[\s\S]*recordBookingMilestoneAction\(actionKey\)/,
+    "Booking core should persist derived stage changes through explicit milestone actions"
+  );
+  const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
+  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+  assert.match(
+    bookingStyles,
+    /\.booking-milestone-actions__btn--current \{\s*[\s\S]*border-color: var\(--success-line\);[\s\S]*background: var\(--success-surface-alpha\);[\s\S]*color: var\(--success-text-strong\);/,
+    "The active booking milestone button should use the shared success-green styling"
+  );
+});
+
+test("booking page top control row keeps staff and customer language visually aligned", async () => {
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingStyles = await readFile(bookingStylesPath, "utf8");
 
   assert.match(
     bookingStyles,
     /#booking_actions_panel \.backend-controls \{\s*[\s\S]*align-items: start;/,
-    "The booking top control row should align fields from the top so the three labels share the same vertical position"
+    "The booking top control row should align fields from the top so the labels share the same vertical position"
   );
   assert.match(
     bookingStyles,
@@ -570,7 +610,7 @@ test("booking page top control row keeps staff, stage, and customer language vis
   );
   assert.match(
     bookingStyles,
-    /#booking_actions_panel \.lang-menu-trigger \{\s*[\s\S]*padding: 0\.68rem 0\.9rem;[\s\S]*justify-content: center;/,
+    /#booking_actions_panel \.lang-menu-trigger \{\s*[\s\S]*justify-content: center;[\s\S]*padding: 0\.68rem 0\.9rem;/,
     "The booking customer-language trigger should match the booking control height scale and center its contents"
   );
 });
@@ -803,6 +843,11 @@ test("travel plan footer exposes a clean-state-gated pdf action backed by a cont
     travelPlanSource,
     /travel-plan-footer__primary[\s\S]*data-travel-plan-add-day[\s\S]*travel-plan-footer__secondary[\s\S]*data-travel-plan-create-pdf/,
     "The travel-plan footer should place the Create PDF action in a lower secondary row instead of next to New day"
+  );
+  assert.doesNotMatch(
+    travelPlanSource,
+    /data-travel-plan-create-pdf[\s\S]*disabled/,
+    "The travel-plan footer should not hard-disable the Create PDF action during render because clean-state gating handles that transient state"
   );
   assert.match(
     travelPlanSource,
@@ -1301,10 +1346,29 @@ test("tour page reads month options from the generated catalogs layer", async ()
   );
 });
 
+test("travel style catalog stays generated from config and exposed through the generated schema helpers", async () => {
+  const configPath = path.resolve(__dirname, "..", "..", "..", "config", "tour_style_catalog.json");
+  const generatedCatalogPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated", "tour_style_catalog.js");
+  const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
+  const source = JSON.parse(await readFile(configPath, "utf8"));
+  const generatedCatalog = await import(`${pathToFileURL(generatedCatalogPath).href}?test=${Date.now()}`);
+  const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
+
+  assert.deepEqual(
+    generatedCatalog.TOUR_STYLE_CODES,
+    source.map((entry) => entry.code),
+    "Generated tour style codes should stay in sync with config/tour_style_catalog.json"
+  );
+  assert.ok(
+    generatedCatalogs.TOUR_STYLE_CODE_OPTIONS.some((option) => option.value === "wellness" && option.label === "Wellness"),
+    "Generated schema helpers should expose the travel style enum options for frontend/admin use"
+  );
+});
+
 test("settings page staff table shows separate realm and client Keycloak roles", async () => {
-  const backendPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
+  const settingsPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
-  const source = await readFile(backendPageModulePath, "utf8");
+  const source = await readFile(settingsPageModulePath, "utf8");
   const css = await readFile(siteCssPath, "utf8");
 
   assert.match(
@@ -1327,6 +1391,64 @@ test("settings page staff table shows separate realm and client Keycloak roles",
     /\.backend-table th\.keycloak-roles-col,\s*\.backend-table td\.keycloak-roles-col\s*\{\s*text-align:\s*right;/,
     "Settings roles column should right-align the header and cell content"
   );
+});
+
+test("backend list pages have dedicated entrypoints and are served by caddy", async () => {
+  const frontendRoot = path.resolve(__dirname, "..", "..", "..", "frontend");
+  const deployRoot = path.resolve(__dirname, "..", "..", "..", "deploy");
+  const backendHtml = await readFile(path.join(frontendRoot, "pages", "backend.html"), "utf8");
+  const toursHtml = await readFile(path.join(frontendRoot, "pages", "tours.html"), "utf8");
+  const settingsHtml = await readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8");
+  const localCaddy = await readFile(path.join(deployRoot, "Caddyfile.local"), "utf8");
+  const stagingCaddy = await readFile(path.join(deployRoot, "Caddyfile"), "utf8");
+
+  assert.match(
+    backendHtml,
+    /frontend\/scripts\/pages\/booking_list\.js/,
+    "backend.html should mount the bookings page script"
+  );
+  assert.match(
+    toursHtml,
+    /frontend\/scripts\/pages\/tours_list\.js/,
+    "tours.html should mount the tours page script"
+  );
+  assert.match(
+    settingsHtml,
+    /frontend\/scripts\/pages\/settings_list\.js/,
+    "settings.html should mount the settings page script"
+  );
+
+  for (const source of [localCaddy, stagingCaddy]) {
+    assert.match(source, /\/backend\.html/, "Caddy should serve backend.html");
+    assert.match(source, /\/tours\.html/, "Caddy should serve tours.html");
+    assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
+  }
+});
+
+test("runtime links use direct tours and settings pages instead of backend section query routes", async () => {
+  const filesToScan = [
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tours_list.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "nav.js"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tours.html"),
+    path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html")
+  ];
+
+  for (const filePath of filesToScan) {
+    const source = await readFile(filePath, "utf8");
+    assert.doesNotMatch(
+      source,
+      /backend\.html\?section=(tours|settings)/,
+      `${path.basename(filePath)} should not hard-code backend section query routes for tours/settings`
+    );
+    assert.doesNotMatch(
+      source,
+      /withBackendLang\(\s*"\/backend\.html"\s*,\s*\{\s*section\s*:\s*"(tours|settings)"/,
+      `${path.basename(filePath)} should not build tours/settings routes through backend.html`
+    );
+  }
 });
 
 test("contract tests use an isolated temp store instead of the runtime store.json", async () => {

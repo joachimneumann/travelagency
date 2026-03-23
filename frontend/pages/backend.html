@@ -44,42 +44,6 @@
             <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
           </section>
 
-          <section class="backend-section" id="toursPanel">
-            <h2 class="section-title u-title-medium" data-i18n-id="backend.tours.heading">Tours</h2>
-            <div class="backend-controls">
-              <div class="field">
-                <label for="toursDestination" data-i18n-id="backend.tours.destination_label">Destination</label>
-                <select id="toursDestination">
-                  <option value="all" data-i18n-id="backend.tours.all_destinations">All destinations</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="toursStyle" data-i18n-id="backend.tours.style_label">Style</label>
-                <select id="toursStyle">
-                  <option value="all" data-i18n-id="backend.tours.all_styles">All styles</option>
-                </select>
-              </div>
-              <button class="btn btn-ghost" id="toursClearFiltersBtn" type="button" data-i18n-id="backend.tours.clear_filters">Clear filters</button>
-              <div class="field">
-                <label for="toursSearch" data-i18n-id="backend.tours.search_label">Search tours</label>
-                <input id="toursSearch" type="text" placeholder="id, title, country, style..." data-i18n-placeholder-id="backend.tours.search_placeholder" />
-              </div>
-              <button class="btn btn-ghost" id="toursSearchBtn" type="button" data-i18n-id="common.search">Search</button>
-              <span id="toursCountInfo" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="toursTable"></table>
-            </div>
-            <div class="backend-pagination" id="toursPagination" aria-label="Tours pagination"></div>
-          </section>
-
-          <section class="backend-section" id="settingsPanel">
-            <h2 class="section-title u-title-medium" data-i18n-id="backend.users.heading">Users</h2>
-            <p class="micro" id="staffStatus" data-i18n-id="backend.users.status">Users are managed in Keycloak.</p>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="staffTable"></table>
-            </div>
-          </section>
         </div>
       </section>
     </main>
@@ -88,9 +52,16 @@
     <script src="frontend/scripts/shared/backend_i18n.js"></script>
     <script type="module">
       import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
-      const section = new URLSearchParams(window.location.search).get("section") || "bookings";
+      const params = new URLSearchParams(window.location.search);
+      const requestedSection = params.get("section") || "bookings";
+      if (requestedSection === "tours" || requestedSection === "settings") {
+        const target = new URL(requestedSection === "tours" ? "tours.html" : "settings.html", window.location.origin);
+        const lang = params.get("lang");
+        if (lang) target.searchParams.set("lang", lang);
+        window.location.replace(`${target.pathname}${target.search}`);
+      }
       await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
-      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: section });
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "bookings" });
     </script>
     <script type="module" src="frontend/scripts/pages/booking_list.js"></script>
   </body>

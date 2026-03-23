@@ -2,6 +2,10 @@ import {
   validateBookingCustomerLanguageUpdateRequest,
   validateTranslationEntriesRequest
 } from "../../../Generated/API/generated_APIModels.js";
+import {
+  applyBookingMilestoneAction,
+  bookingMilestoneMeta
+} from "../../domain/booking_milestones.js";
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 
 export function createBookingCoreHandlers(deps) {
@@ -16,10 +20,6 @@ export function createBookingCoreHandlers(deps) {
     canAccessBooking,
     normalizeText,
     nowIso,
-    safeInt,
-    STAGE_ORDER,
-    ALLOWED_STAGE_TRANSITIONS,
-    STAGES,
     computeServiceLevelAgreementDueAt,
     addActivity,
     actorLabel,
@@ -48,18 +48,16 @@ export function createBookingCoreHandlers(deps) {
       .filter((entry) => Boolean(entry.key && entry.value));
   }
 
-  async function handlePatchBookingStage(req, res, [bookingId]) {
+  async function handlePostBookingMilestoneAction(req, res, [bookingId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
-
-    const nextStage = normalizeText(payload.stage).toUpperCase();
-    if (!STAGE_ORDER.includes(nextStage)) {
-      sendJson(res, 422, { error: "Invalid stage" });
+    if (!bookingMilestoneMeta(payload?.action)) {
+      sendJson(res, 422, { error: "Invalid milestone action" });
       return;
     }
 
@@ -76,18 +74,25 @@ export function createBookingCoreHandlers(deps) {
     }
     if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
 
-    const allowed = ALLOWED_STAGE_TRANSITIONS[booking.stage] || [];
-    if (!allowed.includes(nextStage)) {
-      sendJson(res, 409, { error: `Transition ${booking.stage} -> ${nextStage} is not allowed` });
+    const milestoneUpdate = applyBookingMilestoneAction(booking, payload.action, {
+      now: nowIso(),
+      computeServiceLevelAgreementDueAt
+    });
+    if (!milestoneUpdate) {
+      sendJson(res, 422, { error: "Invalid milestone action" });
       return;
     }
 
-    booking.stage = nextStage;
-    booking.service_level_agreement_due_at = computeServiceLevelAgreementDueAt(nextStage);
     incrementBookingRevision(booking, "core_revision");
-    booking.updated_at = nowIso();
+    booking.updated_at = milestoneUpdate.timestamp;
 
-    addActivity(store, booking.id, "STAGE_CHANGED", actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"), `Stage updated to ${nextStage}`);
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_MILESTONE_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
+      milestoneUpdate.detail
+    );
     await persistStore(store);
 
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
@@ -402,7 +407,7 @@ export function createBookingCoreHandlers(deps) {
   }
 
   return {
-    handlePatchBookingStage,
+    handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
     handlePatchBookingOwner,

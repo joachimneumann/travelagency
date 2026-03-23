@@ -197,6 +197,41 @@ export function createTourHandlers(deps) {
     };
   }
 
+  function buildTourMatrixSummary(tours, lang) {
+    const items = Array.isArray(tours) ? tours : [];
+    const options = collectTourOptions(items, { lang });
+    const destinations = (Array.isArray(options?.destinations) ? options.destinations : [])
+      .map((value) => normalizeText(value?.label || value?.code || value))
+      .filter(Boolean);
+    const styles = (Array.isArray(options?.styles) ? options.styles : [])
+      .map((value) => normalizeText(value?.label || value?.code || value))
+      .filter(Boolean);
+    const counts = {};
+
+    items.forEach((tour) => {
+      const readModel = normalizeTourForRead(tour, { lang });
+      const tourDestinations = Array.from(
+        new Set((Array.isArray(readModel?.destinations) ? readModel.destinations : []).map((value) => normalizeText(value)).filter(Boolean))
+      );
+      const tourStyles = Array.from(
+        new Set((Array.isArray(readModel?.styles) ? readModel.styles : []).map((value) => normalizeText(value)).filter(Boolean))
+      );
+      tourDestinations.forEach((destination) => {
+        tourStyles.forEach((style) => {
+          const key = `${destination}::${style}`;
+          counts[key] = Math.max(0, Number(counts[key] || 0)) + 1;
+        });
+      });
+    });
+
+    return {
+      destinations,
+      styles,
+      counts,
+      total_tours: items.length
+    };
+  }
+
   async function handlePublicListTours(req, res) {
     const lang = requestLang(req.url);
     const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
@@ -255,7 +290,7 @@ export function createTourHandlers(deps) {
     const requestUrl = new URL(req.url, "http://localhost");
     const { items: filtered, sort, filters } = filterAndSortTours(tours, requestUrl.searchParams, lang);
     const paged = paginate(filtered, requestUrl.searchParams);
-    const options = collectTourOptions(tours, { lang });
+    const options = collectTourOptions(tours, { lang, includeAllStyleCatalogEntries: true });
     sendJson(
       res,
       200,
@@ -267,6 +302,7 @@ export function createTourHandlers(deps) {
         {
           sort,
           filters,
+          matrix: buildTourMatrixSummary(filtered, lang),
           available_destinations: options.destinations,
           available_styles: options.styles
         }
@@ -287,7 +323,7 @@ export function createTourHandlers(deps) {
       sendJson(res, 404, { error: "Tour not found" });
       return;
     }
-    const options = collectTourOptions(tours, { lang });
+    const options = collectTourOptions(tours, { lang, includeAllStyleCatalogEntries: true });
     sendJson(res, 200, {
       tour: buildTourEditorResponse(tour, lang),
       options: {

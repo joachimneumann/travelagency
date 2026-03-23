@@ -14,8 +14,8 @@ import entities "travelagency.local/model/entities"
 	pagination: #Pagination
 	filters?:   #TourListFilters
 	sort?:      string
-	available_destinations?: [...string]
-	available_styles?: [...string]
+	available_destinations?: [...#CatalogOption]
+	available_styles?: [...#CatalogOption]
 }
 
 #BookingDetail: {

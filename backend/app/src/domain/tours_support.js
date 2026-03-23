@@ -2,6 +2,7 @@ import path from "node:path";
 import { normalizeText } from "../lib/text.js";
 import { normalizeStringArray } from "../lib/collection_utils.js";
 import {
+  TOUR_STYLE_CODE_CATALOG,
   buildTourDestinationOption,
   buildTourStyleOption,
   getTourDestinationLabel,
@@ -187,10 +188,13 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
     };
   }
 
-  function collectTourOptions(tours, { lang = "en" } = {}) {
+  function collectTourOptions(tours, { lang = "en", includeAllStyleCatalogEntries = false } = {}) {
     const items = Array.isArray(tours) ? tours.map((tour) => normalizeTourForStorage(tour)) : [];
     const destinationCodes = sortTourDestinationCodes(items.flatMap((tour) => tourDestinationCodes(tour)));
-    const styleCodes = sortTourStyleCodes(items.flatMap((tour) => tourStyleCodes(tour)));
+    const styleCodes = sortTourStyleCodes([
+      ...items.flatMap((tour) => tourStyleCodes(tour)),
+      ...(includeAllStyleCatalogEntries ? TOUR_STYLE_CODE_CATALOG : [])
+    ]);
     const normalizedLang = normalizeTourLang(lang);
     return {
       destinations: destinationCodes.map((code) => buildTourDestinationOption(code, normalizedLang)),

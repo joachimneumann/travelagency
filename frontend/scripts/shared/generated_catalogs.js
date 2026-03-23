@@ -61,3 +61,5 @@ export const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODE_OPTIONS = enumOptionsFor("Gen
 export const GENERATED_OFFER_ACCEPTANCE_ROUTE_MODE_CATALOG = enumValuesFor("GeneratedOfferAcceptanceRouteMode");
 export const GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUS_OPTIONS = enumOptionsFor("GeneratedOfferAcceptanceRouteStatus");
 export const GENERATED_OFFER_ACCEPTANCE_ROUTE_STATUS_CATALOG = enumValuesFor("GeneratedOfferAcceptanceRouteStatus");
+export const TOUR_STYLE_CODE_OPTIONS = enumOptionsFor("TourStyleCode");
+export const TOUR_STYLE_CODE_CATALOG = enumValuesFor("TourStyleCode");

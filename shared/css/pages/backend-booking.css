@@ -170,6 +170,35 @@
   padding: 0.68rem 0.9rem;
 }
 
+.booking-detail-page .booking-milestone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.booking-detail-page .booking-milestone-actions__last-action {
+  min-height: 1.1rem;
+  margin-top: 0.45rem;
+  color: var(--text-muted-strong);
+}
+
+.booking-detail-page .booking-milestone-actions__btn {
+  min-height: 44px;
+}
+
+.booking-detail-page .booking-milestone-actions__btn--current {
+  border-color: var(--success-line);
+  background: var(--success-surface-alpha);
+  color: var(--success-text-strong);
+}
+
+.booking-detail-page .booking-milestone-actions__hint {
+  min-height: 1.1rem;
+  margin-top: 0.35rem;
+  color: var(--error-text-strong);
+}
+
 .booking-detail-page .travel-plan-item-title-input--required,
 .booking-detail-page .localized-editor__pane input.travel-plan-item-title-input--required,
 .booking-detail-page .localized-pair__field input.travel-plan-item-title-input--required {

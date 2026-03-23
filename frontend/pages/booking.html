@@ -70,17 +70,15 @@
                 <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP staff:</label>
                 <select id="booking_owner_select"></select>
               </div>
-
-              <div class="field">
-                <label for="booking_stage_select" data-i18n-id="booking.stage_label">Stage</label>
-                <select id="booking_stage_select"></select>
-              </div>
               <div class="field booking-content-language-field" id="booking_content_language_field">
                 <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
                 <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
                 <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
               </div>
             </div>
+            <div class="booking-milestone-actions" id="booking_milestone_actions"></div>
+            <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
+            <div class="micro booking-milestone-actions__hint" id="booking_milestone_dirty_hint"></div>
           </article>
 
           <article id="booking_note_panel" style="margin-bottom: 1rem;">

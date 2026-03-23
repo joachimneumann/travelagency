@@ -1,5 +1,6 @@
 import { normalizeText } from "./text.js";
 import { normalizeTourStyleLabels } from "../domain/tour_catalog_i18n.js";
+import { resolveBookingMilestoneState } from "../domain/booking_milestones.js";
 import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   languageByApiValue,
@@ -243,10 +244,24 @@ function normalizeWebFormSubmission(booking) {
 }
 
 export function normalizeStoredBookingRecord(booking, _store = {}) {
+  const milestoneState = resolveBookingMilestoneState({
+    milestones: booking?.milestones,
+    last_action: booking?.last_action,
+    last_action_at: booking?.last_action_at,
+    lifecycle: booking?.lifecycle
+  }, booking?.stage);
   const normalizedDestinations = normalizeStringArray(booking?.destinations);
   const normalizedTravelStyles = normalizeTourStyleLabels(booking?.travel_styles, "en");
+  const {
+    lifecycle: _legacyLifecycle,
+    public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
+    public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,
+    public_traveler_details_token_expires_at: _legacyTravelerDetailsTokenExpiresAt,
+    public_traveler_details_token_revoked_at: _legacyTravelerDetailsTokenRevokedAt,
+    ...bookingWithoutLegacyFields
+  } = booking || {};
   const normalizedBooking = {
-    ...booking,
+    ...bookingWithoutLegacyFields,
     customer_language: optionalLanguageCode(booking?.customer_language || booking?.web_form_submission?.preferred_language),
     name: optionalText(booking?.name || booking?.web_form_submission?.booking_name),
     image: optionalText(booking?.image),
@@ -259,6 +274,9 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     invoices_revision: nonNegativeInt(booking?.invoices_revision, 0),
     assigned_keycloak_user_id: optionalText(booking?.assigned_keycloak_user_id),
     service_level_agreement_due_at: optionalText(booking?.service_level_agreement_due_at),
+    milestones: milestoneState.milestones,
+    last_action: milestoneState.lastAction,
+    last_action_at: milestoneState.lastActionAt,
     traveler_details_token_nonce: optionalText(
       booking?.traveler_details_token_nonce
       || booking?.public_traveler_details_token_nonce
@@ -287,7 +305,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   return compactObject({
     ...normalizedBooking,
     id: optionalText(normalizedBooking.id),
-    stage: optionalText(normalizedBooking.stage),
+    stage: optionalText(milestoneState.stage || normalizedBooking.stage),
     travel_start_day: optionalText(normalizedBooking.travel_start_day),
     travel_end_day: optionalText(normalizedBooking.travel_end_day),
     source: undefined,

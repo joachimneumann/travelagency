@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-23T02:17:28Z
+# 2026-03-23T06:12:48Z
 
 ---
 openapi: 3.1.0
@@ -716,6 +716,51 @@ components:
         label: SMS
       - value: WHATSAPP
         label: WHATSAPP
+    TourStyleCode:
+      type: string
+      enum:
+      - grand-expeditions
+      - beach
+      - budget
+      - culture
+      - family
+      - gastronomic-experiences
+      - luxury
+      - wellness
+      x-enum-catalog:
+      - code: grand-expeditions
+        label: Grand Expeditions
+      - code: beach
+        label: Beach
+      - code: budget
+        label: Budget
+      - code: culture
+        label: Culture
+      - code: family
+        label: Family
+      - code: gastronomic-experiences
+        label: Gastronomic Experiences
+      - code: luxury
+        label: Luxury
+      - code: wellness
+        label: Wellness
+      x-enum-options:
+      - value: grand-expeditions
+        label: Grand Expeditions
+      - value: beach
+        label: Beach
+      - value: budget
+        label: Budget
+      - value: culture
+        label: Culture
+      - value: family
+        label: Family
+      - value: gastronomic-experiences
+        label: Gastronomic Experiences
+      - value: luxury
+        label: Luxury
+      - value: wellness
+        label: Wellness
     CountryCode:
       type: string
       enum:
@@ -3703,6 +3748,8 @@ components:
       enum:
       - BOOKING_CREATED
       - STAGE_CHANGED
+      - BOOKING_LIFECYCLE_UPDATED
+      - BOOKING_MILESTONE_UPDATED
       - ASSIGNMENT_CHANGED
       - NOTE_UPDATED
       - TRAVEL_PLAN_UPDATED
@@ -3718,6 +3765,8 @@ components:
       x-enum-catalog:
       - code: BOOKING_CREATED
       - code: STAGE_CHANGED
+      - code: BOOKING_LIFECYCLE_UPDATED
+      - code: BOOKING_MILESTONE_UPDATED
       - code: ASSIGNMENT_CHANGED
       - code: NOTE_UPDATED
       - code: TRAVEL_PLAN_UPDATED
@@ -3735,6 +3784,10 @@ components:
         label: BOOKING_CREATED
       - value: STAGE_CHANGED
         label: STAGE_CHANGED
+      - value: BOOKING_LIFECYCLE_UPDATED
+        label: BOOKING_LIFECYCLE_UPDATED
+      - value: BOOKING_MILESTONE_UPDATED
+        label: BOOKING_MILESTONE_UPDATED
       - value: ASSIGNMENT_CHANGED
         label: ASSIGNMENT_CHANGED
       - value: NOTE_UPDATED
@@ -3774,6 +3827,9 @@ components:
     MoneyAmount:
       type: object
       description: Defined in model (referenced as MoneyAmount).
+    BookingMilestoneAction:
+      type: object
+      description: Defined in model (referenced as BookingMilestoneAction).
     Tour:
       type: object
       required:
@@ -4983,6 +5039,42 @@ components:
           type: string
           format: date-time
           nullable: true
+    BookingMilestones:
+      type: object
+      required: []
+      properties:
+        new_booking_at:
+          type: string
+          format: date-time
+          nullable: true
+        travel_plan_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        offer_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        negotiation_started_at:
+          type: string
+          format: date-time
+          nullable: true
+        deposit_request_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        deposit_received_at:
+          type: string
+          format: date-time
+          nullable: true
+        booking_lost_at:
+          type: string
+          format: date-time
+          nullable: true
+        trip_completed_at:
+          type: string
+          format: date-time
+          nullable: true
     Booking:
       type: object
       required:
@@ -5003,7 +5095,20 @@ components:
           nullable: true
         stage:
           "$ref": "#/components/schemas/BookingStage"
+        milestones:
+          "$ref": "#/components/schemas/BookingMilestones"
+          nullable: true
+        last_action:
+          "$ref": "#/components/schemas/BookingMilestoneAction"
+          nullable: true
+        last_action_at:
+          type: string
+          format: date-time
+          nullable: true
         assigned_keycloak_user_id:
+          type: string
+          nullable: true
+        assigned_keycloak_user_label:
           type: string
           nullable: true
         core_revision:
@@ -5342,6 +5447,16 @@ components:
           nullable: true
         stage:
           "$ref": "#/components/schemas/BookingStage"
+        milestones:
+          "$ref": "#/components/schemas/BookingMilestones"
+          nullable: true
+        last_action:
+          "$ref": "#/components/schemas/BookingMilestoneAction"
+          nullable: true
+        last_action_at:
+          type: string
+          format: date-time
+          nullable: true
         assigned_keycloak_user_id:
           type: string
           nullable: true
@@ -5468,10 +5583,10 @@ components:
       required: []
       properties:
         destination:
-          type: string
+          "$ref": "#/components/schemas/CountryCode"
           nullable: true
         style:
-          type: string
+          "$ref": "#/components/schemas/TourStyleCode"
           nullable: true
         search:
           type: string
@@ -5554,11 +5669,11 @@ components:
         available_destinations:
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/CatalogOption"
         available_styles:
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/CatalogOption"
     BookingDetail:
       type: object
       required:
@@ -5569,6 +5684,16 @@ components:
         unchanged:
           type: boolean
           nullable: true
+    CatalogOption:
+      type: object
+      required:
+      - code
+      - label
+      properties:
+        code:
+          type: string
+        label:
+          type: string
     TourOptions:
       type: object
       required: []
@@ -5576,11 +5701,11 @@ components:
         destinations:
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/CatalogOption"
         styles:
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/CatalogOption"
     TourDetail:
       type: object
       required:
@@ -6224,16 +6349,16 @@ components:
         actor:
           type: string
           nullable: true
-    BookingStageUpdateRequest:
+    BookingMilestoneActionRequest:
       type: object
       required:
-      - stage
+      - action
       properties:
         expected_core_revision:
           type: integer
           nullable: true
-        stage:
-          "$ref": "#/components/schemas/BookingStage"
+        action:
+          "$ref": "#/components/schemas/BookingMilestoneAction"
         actor:
           type: string
           nullable: true
@@ -6664,11 +6789,11 @@ components:
         destinations:
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/CountryCode"
         styles:
           type: array
           items:
-            type: string
+            "$ref": "#/components/schemas/TourStyleCode"
         travel_duration_days:
           type: integer
           nullable: true
@@ -7293,45 +7418,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/stage":
-    patch:
-      operationId: booking_stage
-      summary: Booking Stage
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingStageUpdateRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/owner":
     patch:
       operationId: booking_owner
@@ -7355,6 +7441,51 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/milestone-actions":
+    post:
+      operationId: booking_milestone_action
+      summary: Booking Milestone Action
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingMilestoneActionRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
           content:
             application/json:
               schema:

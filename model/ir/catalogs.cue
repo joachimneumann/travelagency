@@ -24,6 +24,10 @@ IR: {
 		generatedOfferAcceptanceRouteStatuses: [for status in enumModel.GeneratedOfferAcceptanceRouteStatusCatalog {{code: status}}]
 		offerAcceptanceMethods: [for method in enumModel.OfferAcceptanceMethodCatalog {{code: method}}]
 		offerAcceptanceOtpChannels: [for channel in enumModel.OfferAcceptanceOtpChannelCatalog {{code: channel}}]
+		tourStyles: [for style in enumModel.TourStyleCatalog {{
+			code:  style
+			label: enumModel.TourStyleNameCatalog[style]
+		}}]
 		countries: [for country in enumModel.CountryCatalog {{
 			code:  country
 			label: "\(country) \(enumModel.CountryNameCatalog[country])"

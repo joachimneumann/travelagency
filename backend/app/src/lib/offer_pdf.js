@@ -13,6 +13,7 @@ import {
 } from "./pdf_i18n.js";
 import {
   appendPdfAttachmentsToFile,
+  trimTrailingBlankPagesInFile,
   resolveTravelPlanAttachmentAbsolutePath
 } from "./pdf_attachments.js";
 import { pdfTheme } from "./style_tokens.js";
@@ -1445,6 +1446,8 @@ export function createOfferPdfWriter({
 
     if (attachmentPaths.length) {
       await appendPdfAttachmentsToFile(outputPath, attachmentPaths);
+    } else {
+      await trimTrailingBlankPagesInFile(outputPath);
     }
 
     const pdfBuffer = await readFile(outputPath);

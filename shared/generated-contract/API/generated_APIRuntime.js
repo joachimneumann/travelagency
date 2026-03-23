@@ -330,22 +330,22 @@
         ]
       },
       {
-        key: "booking_stage",
-        path: "/api/v1/bookings/{booking_id}/stage",
+        key: "booking_owner",
+        path: "/api/v1/bookings/{booking_id}/owner",
         method: "PATCH",
         authenticated: true,
-        requestType: "BookingStageUpdateRequest",
+        requestType: "BookingOwnerUpdateRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
         ]
       },
       {
-        key: "booking_owner",
-        path: "/api/v1/bookings/{booking_id}/owner",
-        method: "PATCH",
+        key: "booking_milestone_action",
+        path: "/api/v1/bookings/{booking_id}/milestone-actions",
+        method: "POST",
         authenticated: true,
-        requestType: "BookingOwnerUpdateRequest",
+        requestType: "BookingMilestoneActionRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)

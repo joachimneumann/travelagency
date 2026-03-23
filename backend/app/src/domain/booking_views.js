@@ -1,6 +1,7 @@
 import { normalizeText } from "../lib/text.js";
 import { getBookingPersons, getBookingPrimaryContact } from "../lib/booking_persons.js";
 import { normalizeBookingContentLang } from "./booking_content_i18n.js";
+import { resolveBookingMilestoneState } from "./booking_milestones.js";
 import { isSuspiciousSentinelString } from "./booking_names.js";
 import {
   buildOfferTranslationStatus,
@@ -29,9 +30,29 @@ export function createBookingViewHelpers({
   buildBookingTravelPlanReadModel,
   buildBookingPricingReadModel,
   buildBookingOfferReadModel,
+  listAssignableKeycloakUsers,
+  keycloakDisplayName,
   sendJson
 }) {
   const offerAcceptanceTokenSecret = normalizeText(offerAcceptanceTokenConfig?.secret);
+  let assignableKeycloakUserLabelsPromise = null;
+
+  function resolveAssignableKeycloakUserLabelMap() {
+    if (!listAssignableKeycloakUsers || typeof keycloakDisplayName !== "function") {
+      return Promise.resolve(new Map());
+    }
+    if (!assignableKeycloakUserLabelsPromise) {
+      assignableKeycloakUserLabelsPromise = Promise.resolve()
+        .then(() => listAssignableKeycloakUsers())
+        .then((items) => new Map(
+          (Array.isArray(items) ? items : [])
+            .map((user) => [normalizeText(user?.id), normalizeText(keycloakDisplayName(user))])
+            .filter(([id, label]) => Boolean(id && label))
+        ))
+        .catch(() => new Map());
+    }
+    return assignableKeycloakUserLabelsPromise;
+  }
   function normalizePersonEmails(person) {
     return Array.from(
       new Set(
@@ -297,6 +318,12 @@ export function createBookingViewHelpers({
     const lang = normalizeBookingContentLang(options?.lang || "en");
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
+    const milestoneState = resolveBookingMilestoneState({
+      milestones: normalizedBooking?.milestones,
+      last_action: normalizedBooking?.last_action,
+      last_action_at: normalizedBooking?.last_action_at,
+      lifecycle: normalizedBooking?.lifecycle
+    }, normalizedBooking?.stage);
     const generatedOffers = await Promise.all(
       (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
         ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, {
@@ -306,8 +333,23 @@ export function createBookingViewHelpers({
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
       }))
     );
+    const assignedKeycloakUserId = normalizeText(normalizedBooking?.assigned_keycloak_user_id);
+    const assignedKeycloakUserLabels = assignedKeycloakUserId
+      ? await resolveAssignableKeycloakUserLabelMap()
+      : null;
+    const assignedKeycloakUserLabel = assignedKeycloakUserId
+      ? normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || assignedKeycloakUserId
+      : "";
     return {
       ...normalizedBooking,
+      stage: milestoneState.stage,
+      milestones: milestoneState.milestones,
+      last_action: milestoneState.lastAction,
+      last_action_at: milestoneState.lastActionAt,
+      ...(assignedKeycloakUserLabel ? { assigned_keycloak_user_label: assignedKeycloakUserLabel } : {}),
+      service_level_agreement_due_at: milestoneState.lastAction
+        ? computeServiceLevelAgreementDueAt(milestoneState.stage, new Date(milestoneState.lastActionAt))
+        : normalizedBooking?.service_level_agreement_due_at,
       customer_language: normalizeBookingContentLang(
         normalizedBooking?.customer_language
         || normalizedBooking?.web_form_submission?.preferred_language

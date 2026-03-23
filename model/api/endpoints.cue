@@ -287,12 +287,12 @@ package api
 		}]
 	},
 	{
-		key:           "booking_stage"
-		path:          "/api/v1/bookings/{booking_id}/stage"
+		key:           "booking_owner"
+		path:          "/api/v1/bookings/{booking_id}/owner"
 		method:        "PATCH"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "BookingStageUpdateRequest"
+		requestType:   "BookingOwnerUpdateRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
@@ -302,12 +302,12 @@ package api
 		}]
 	},
 	{
-		key:           "booking_owner"
-		path:          "/api/v1/bookings/{booking_id}/owner"
-		method:        "PATCH"
+		key:           "booking_milestone_action"
+		path:          "/api/v1/bookings/{booking_id}/milestone-actions"
+		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "BookingOwnerUpdateRequest"
+		requestType:   "BookingMilestoneActionRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"

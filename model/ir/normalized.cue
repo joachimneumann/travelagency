@@ -59,6 +59,7 @@ IR: {
 		GeneratedOfferAcceptanceRouteStatus: {catalog: "generatedOfferAcceptanceRouteStatuses"}
 		OfferAcceptanceMethod: {catalog: "offerAcceptanceMethods"}
 		OfferAcceptanceOtpChannel: {catalog: "offerAcceptanceOtpChannels"}
+		TourStyleCode: {catalog: "tourStyles"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
 		PersonConsentType: {catalog: "personConsentTypes"}
@@ -703,6 +704,22 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingMilestones"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingMilestones"
+			fields: [
+				{name: "new_booking_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "travel_plan_sent_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "offer_sent_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "negotiation_started_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "deposit_request_sent_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "deposit_received_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "booking_lost_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "trip_completed_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
 			name:       "Booking"
 			domain:     "booking"
 			module:     "entities"
@@ -712,7 +729,11 @@ IR: {
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
 				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
+				{name: "milestones", kind: "entity", typeName: "BookingMilestones", required: false},
+				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
+				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "assigned_keycloak_user_label", kind: "scalar", typeName: "string", required: false},
 				{name: "core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "persons_revision", kind: "scalar", typeName: "int", required: false},
@@ -878,6 +899,9 @@ IR: {
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "scalar", typeName: "string", required: false},
 				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
+				{name: "milestones", kind: "entity", typeName: "BookingMilestones", required: false},
+				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
+				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
@@ -939,8 +963,8 @@ IR: {
 			module:     "api"
 			sourceType: "api.#TourListFilters"
 			fields: [
-				{name: "destination", kind: "scalar", typeName: "string", required: false},
-				{name: "style", kind: "scalar", typeName: "string", required: false},
+				{name: "destination", kind: "enum", typeName: "CountryCode", required: false},
+				{name: "style", kind: "enum", typeName: "TourStyleCode", required: false},
 				{name: "search", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -986,8 +1010,8 @@ IR: {
 				{name: "pagination", kind: "transport", typeName: "Pagination", required: true},
 				{name: "filters", kind: "transport", typeName: "TourListFilters", required: false},
 				{name: "sort", kind: "scalar", typeName: "string", required: false},
-				{name: "available_destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "available_styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "available_destinations", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
+				{name: "available_styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
 			]
 		},
 		{
@@ -1001,13 +1025,23 @@ IR: {
 			]
 		},
 		{
+			name:       "CatalogOption"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#CatalogOption"
+			fields: [
+				{name: "code", kind: "scalar", typeName: "string", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
 			name:       "TourOptions"
 			domain:     "api"
 			module:     "api"
 			sourceType: "api.#TourOptions"
 			fields: [
-				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "destinations", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
+				{name: "styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
 			]
 		},
 		{
@@ -1431,13 +1465,13 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingStageUpdateRequest"
+			name:       "BookingMilestoneActionRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#BookingStageUpdateRequest"
+			sourceType: "api.#BookingMilestoneActionRequest"
 			fields: [
 				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "stage", kind: "enum", typeName: "BookingStage", required: true},
+				{name: "action", kind: "enum", typeName: "BookingMilestoneAction", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1758,8 +1792,8 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 				{name: "travel_duration_days", kind: "scalar", typeName: "int", required: false},
 				{name: "budget_lower_usd", kind: "scalar", typeName: "int", required: false},
 				{name: "priority", kind: "scalar", typeName: "int", required: false},

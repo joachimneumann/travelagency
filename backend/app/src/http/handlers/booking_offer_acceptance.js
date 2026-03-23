@@ -30,9 +30,12 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     readStore,
     persistStore,
     normalizeText,
+    normalizeBookingPricing,
     nowIso,
     addActivity,
     formatMoney,
+    incrementBookingRevision,
+    convertBookingPricingToBaseCurrency,
     randomUUID,
     gmailDraftsConfig,
     offerAcceptanceTokenConfig,
@@ -221,6 +224,103 @@ export function createBookingOfferAcceptanceHandlers(deps) {
     });
   }
 
+  function toDateOnly(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return null;
+    const directMatch = normalized.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (directMatch) return directMatch[1];
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function shiftDateOnly(value, days) {
+    const baseDate = toDateOnly(value);
+    if (!baseDate) return null;
+    const parsed = new Date(`${baseDate}T00:00:00.000Z`);
+    if (Number.isNaN(parsed.getTime())) return null;
+    parsed.setUTCDate(parsed.getUTCDate() + (Number.isFinite(Number(days)) ? Math.round(Number(days)) : 0));
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt) {
+    const dueRule = line?.due_rule && typeof line.due_rule === "object" ? line.due_rule : {};
+    const dueType = normalizeText(dueRule.type).toUpperCase();
+    const days = Number.isFinite(Number(dueRule.days)) ? Number(dueRule.days) : 0;
+
+    if (dueType === "FIXED_DATE") {
+      return toDateOnly(dueRule.fixed_date);
+    }
+    if (dueType === "DAYS_AFTER_ACCEPTANCE") {
+      return shiftDateOnly(acceptedAt, days);
+    }
+    if (dueType === "DAYS_BEFORE_TRIP_START") {
+      return shiftDateOnly(booking?.travel_start_day, -days);
+    }
+    if (dueType === "DAYS_AFTER_TRIP_START") {
+      return shiftDateOnly(booking?.travel_start_day, days);
+    }
+    if (dueType === "DAYS_AFTER_TRIP_END") {
+      return shiftDateOnly(booking?.travel_end_day, days);
+    }
+    return toDateOnly(acceptedAt);
+  }
+
+  function buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot, acceptedAt }) {
+    const paymentTerms = normalizedSnapshot?.payment_terms;
+    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    if (!lines.length) return null;
+
+    return {
+      currency: normalizeText(paymentTerms?.currency || normalizedSnapshot?.currency) || "USD",
+      agreed_net_amount_cents: Math.max(0, Math.round(Number(normalizedSnapshot?.total_price_cents || 0))),
+      adjustments: [],
+      payments: lines.map((line, index) => {
+        const label = normalizeText(line?.label) || `Payment ${index + 1}`;
+        const dueDate = resolveAcceptedOfferPaymentDueDate(line, booking, acceptedAt);
+        const notes = normalizeText(line?.description);
+        return {
+          id: `pricing_payment_${randomUUID()}`,
+          label,
+          ...(dueDate ? { due_date: dueDate } : {}),
+          net_amount_cents: Math.max(0, Math.round(Number(line?.resolved_amount_cents || 0))),
+          tax_rate_basis_points: 0,
+          status: "PENDING",
+          paid_at: null,
+          ...(notes ? { notes } : {})
+        };
+      })
+    };
+  }
+
+  async function seedAcceptedOfferPricing({ booking, normalizedSnapshot, acceptedAt }) {
+    const seedPricing = buildAcceptedOfferSeedPricing({ booking, normalizedSnapshot, acceptedAt });
+    if (!seedPricing) return false;
+
+    const currentPricing = await convertBookingPricingToBaseCurrency(booking?.pricing || {});
+    if (Array.isArray(currentPricing?.payments) && currentPricing.payments.length > 0) {
+      return false;
+    }
+
+    const convertedSeedPricing = await convertBookingPricingToBaseCurrency(seedPricing);
+    const nextPricing = normalizeBookingPricing({
+      ...currentPricing,
+      currency: convertedSeedPricing.currency,
+      agreed_net_amount_cents: Number(currentPricing?.agreed_net_amount_cents || 0) > 0
+        ? currentPricing.agreed_net_amount_cents
+        : convertedSeedPricing.agreed_net_amount_cents,
+      payments: convertedSeedPricing.payments
+    });
+
+    if (JSON.stringify(nextPricing) === JSON.stringify(currentPricing)) {
+      return false;
+    }
+
+    booking.pricing = nextPricing;
+    incrementBookingRevision(booking, "pricing_revision");
+    return true;
+  }
+
   async function finalizeGeneratedOfferAcceptance({
     req,
     store,
@@ -284,6 +384,11 @@ export function createBookingOfferAcceptanceHandlers(deps) {
       generatedOffer.acceptance_route.status = "ACCEPTED";
     }
     booking.accepted_generated_offer_id = generatedOffer.id;
+    await seedAcceptedOfferPricing({
+      booking,
+      normalizedSnapshot,
+      acceptedAt: acceptance.accepted_at
+    });
     removeOfferAcceptanceChallenges(store, booking.id, generatedOffer.id);
     booking.offer_revision = (Number.isInteger(Number(booking.offer_revision)) ? Number(booking.offer_revision) : 0) + 1;
     booking.updated_at = nowIso();
