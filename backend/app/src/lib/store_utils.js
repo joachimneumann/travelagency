@@ -61,8 +61,13 @@ export function createStoreUtils({
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
     parsed.offer_acceptance_challenges ||= [];
+    let bookingPersonsWritebackNeeded = false;
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {
+      const rawPersons = Array.isArray(booking?.persons) ? booking.persons : [];
       const normalizedBooking = normalizeStoredBookingRecord(booking, parsed);
+      if (JSON.stringify(rawPersons) !== JSON.stringify(Array.isArray(normalizedBooking?.persons) ? normalizedBooking.persons : [])) {
+        bookingPersonsWritebackNeeded = true;
+      }
       syncBookingAssignmentFields(normalizedBooking);
       normalizedBooking.pricing = normalizeBookingPricing(normalizedBooking.pricing);
       normalizedBooking.offer = normalizeBookingOffer(normalizedBooking.offer, getBookingPreferredCurrency(normalizedBooking));
@@ -75,6 +80,12 @@ export function createStoreUtils({
       return normalizedBooking;
     }));
     parsed.bookings = convertedBookings;
+    Object.defineProperty(parsed, "__bookingPersonsWritebackNeeded", {
+      value: bookingPersonsWritebackNeeded,
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
     return parsed;
   }
 

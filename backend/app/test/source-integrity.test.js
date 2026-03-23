@@ -200,6 +200,31 @@ test("discovery-call bookings without a selected tour use a neutral fallback ima
   );
 });
 
+test("backend startup backfills missing booking persons and the frontend reads only persisted persons", async () => {
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const storeUtilsPath = path.resolve(__dirname, "..", "src", "lib", "store_utils.js");
+  const frontendHelperPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "booking_persons.js");
+  const serverSource = await readFile(serverPath, "utf8");
+  const storeUtilsSource = await readFile(storeUtilsPath, "utf8");
+  const frontendHelperSource = await readFile(frontendHelperPath, "utf8");
+
+  assert.match(
+    storeUtilsSource,
+    /__bookingPersonsWritebackNeeded/,
+    "Store reads should mark when persisted bookings need a persons backfill writeback"
+  );
+  assert.match(
+    serverSource,
+    /startupStore\.__bookingPersonsWritebackNeeded === true[\s\S]*persistStore\(startupStore\)/,
+    "Backend startup should persist booking-person backfills before serving requests"
+  );
+  assert.doesNotMatch(
+    frontendHelperSource,
+    /buildFallbackSubmissionPerson|web_form_submission/,
+    "Frontend booking person helpers should rely on persisted booking.persons instead of synthesizing a fallback contact"
+  );
+});
+
 test("booking person modal exposes traveler-details link actions and the public form page", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const travelerDetailsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "traveler-details.html");

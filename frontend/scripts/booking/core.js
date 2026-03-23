@@ -691,6 +691,13 @@ export function createBookingCoreModule(ctx) {
     return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
   }
 
+  function shouldUseDiscoveryCallFallbackImage(booking) {
+    if (!booking) return false;
+    if (normalizeText(booking.image)) return false;
+    if (normalizeText(booking?.web_form_submission?.tour_id)) return false;
+    return Boolean(normalizeText(booking?.web_form_submission?.page_url));
+  }
+
   return {
     closeBookingDetailScreen,
     renderBookingHeader,
@@ -712,9 +719,3 @@ export function createBookingCoreModule(ctx) {
     applyBookingPayload
   };
 }
-  function shouldUseDiscoveryCallFallbackImage(booking) {
-    if (!booking) return false;
-    if (normalizeText(booking.image)) return false;
-    if (normalizeText(booking?.web_form_submission?.tour_id)) return false;
-    return Boolean(normalizeText(booking?.web_form_submission?.page_url));
-  }

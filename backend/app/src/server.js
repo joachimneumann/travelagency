@@ -170,11 +170,12 @@ const applicationSupport = Object.freeze({
 export async function createBackendHandler({ port = PORT } = {}) {
   await services.storeUtils.ensureStorage();
   const startupStore = await services.storeUtils.readStore();
+  const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
   if (backfillGeneratedOfferAcceptanceTokenState(startupStore, {
     now: nowIso(),
     ttlMs: OFFER_ACCEPTANCE_TOKEN_CONFIG.ttlMs
-  }) || collapsedGeneratedOfferPaymentTerms) {
+  }) || collapsedGeneratedOfferPaymentTerms || backfilledBookingPersons) {
     await services.storeUtils.persistStore(startupStore);
   }
   const auth = createAuth({ port });
