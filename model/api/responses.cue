@@ -21,6 +21,10 @@ import (
 	total: >=0 & int
 }
 
+#KeycloakUserDirectoryEntryResponse: {
+	user: #KeycloakUserDirectoryEntry
+}
+
 #BookingDeleteResponse: {
 	deleted:    bool
 	booking_id: common.#Identifier

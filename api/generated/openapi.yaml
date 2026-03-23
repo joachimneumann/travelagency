@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-23T07:01:52Z
+# 2026-03-23T11:01:01Z
 
 ---
 openapi: 3.1.0
@@ -3843,14 +3843,6 @@ components:
           type: string
         summary:
           type: string
-        countries:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
-        travel_styles:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TourStyleCode"
     AtpStaffProfile:
       type: object
       required:
@@ -3864,10 +3856,14 @@ components:
         picture_ref:
           type: string
           nullable: true
-        spoken_languages:
+        languages:
           type: array
           items:
             "$ref": "#/components/schemas/LanguageCode"
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
         experiences:
           type: array
           items:
@@ -5834,6 +5830,13 @@ components:
             "$ref": "#/components/schemas/KeycloakUserDirectoryEntry"
         total:
           type: integer
+    KeycloakUserDirectoryEntryResponse:
+      type: object
+      required:
+      - user
+      properties:
+        user:
+          "$ref": "#/components/schemas/KeycloakUserDirectoryEntry"
     BookingDeleteResponse:
       type: object
       required:
@@ -6854,6 +6857,35 @@ components:
         sent_to_recipient:
           type: boolean
           nullable: true
+    AtpStaffProfileUpdateRequest:
+      type: object
+      required: []
+      properties:
+        languages:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LanguageCode"
+        destinations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        experiences:
+          type: array
+          items:
+            "$ref": "#/components/schemas/AtpStaffExperience"
+    AtpStaffPhotoUploadRequest:
+      type: object
+      required:
+      - filename
+      - data_base64
+      properties:
+        filename:
+          type: string
+        mime_type:
+          type: string
+          nullable: true
+        data_base64:
+          type: string
     BookingInvoiceTranslateRequest:
       type: object
       required:
@@ -9214,6 +9246,122 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/KeycloakUserListResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/keycloak_users/{username}/staff-profile":
+    patch:
+      operationId: keycloak_user_staff_profile_update
+      summary: Keycloak User Staff Profile Update
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AtpStaffProfileUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/keycloak_users/{username}/staff-profile/picture":
+    post:
+      operationId: keycloak_user_staff_profile_picture_upload
+      summary: Keycloak User Staff Profile Picture Upload
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AtpStaffPhotoUploadRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: keycloak_user_staff_profile_picture_delete
+      summary: Keycloak User Staff Profile Picture Delete
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
         '401':
           description: Unauthorized
           content:

@@ -45,6 +45,7 @@ import {
   isTravelingPerson,
   normalizeStringList
 } from "../shared/booking_persons.js";
+import { wireAuthLogoutLink } from "../shared/auth.js";
 import {
   bookingContentLang,
   normalizeBookingContentLang,
@@ -460,7 +461,7 @@ async function init() {
   if (els.homeLink) els.homeLink.href = backHref;
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
-    els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
+    wireAuthLogoutLink(els.logoutLink, { apiBase: apiOrigin, returnTo });
   }
 
   if (!bookingWhatsApp && els.meta_chat_mount) {

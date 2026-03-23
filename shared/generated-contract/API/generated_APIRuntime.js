@@ -117,6 +117,12 @@
   "typeName": "Identifier"
 },
   PARAM_20: {
+  "name": "username",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_21: {
   "name": "tour_id",
   "location": "path",
   "required": true,
@@ -797,6 +803,39 @@
         ]
       },
       {
+        key: "keycloak_user_staff_profile_update",
+        path: "/api/v1/keycloak_users/{username}/staff-profile",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "AtpStaffProfileUpdateRequest",
+        responseType: "KeycloakUserDirectoryEntryResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+        ]
+      },
+      {
+        key: "keycloak_user_staff_profile_picture_upload",
+        path: "/api/v1/keycloak_users/{username}/staff-profile/picture",
+        method: "POST",
+        authenticated: true,
+        requestType: "AtpStaffPhotoUploadRequest",
+        responseType: "KeycloakUserDirectoryEntryResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+        ]
+      },
+      {
+        key: "keycloak_user_staff_profile_picture_delete",
+        path: "/api/v1/keycloak_users/{username}/staff-profile/picture",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "KeycloakUserDirectoryEntryResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+        ]
+      },
+      {
         key: "tours",
         path: "/api/v1/tours",
         method: "GET",
@@ -826,7 +865,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
       },
       {
@@ -837,7 +876,7 @@
         requestType: "TourUpsertRequest",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
       },
       {
@@ -859,7 +898,7 @@
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
       }
     ];

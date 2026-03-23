@@ -12,12 +12,15 @@ import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.
 import {
   createApiFetcher,
   escapeHtml,
+  logBrowserConsoleError,
   resolveApiUrl,
   setDirtySurface
 } from "../shared/api.js";
+import { wireAuthLogoutLink } from "../shared/auth.js";
 import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
+import { applyBackendUserLabel } from "../shared/backend_page.js";
 import {
   CUSTOMER_CONTENT_LANGUAGES,
   normalizeLanguageCode
@@ -392,7 +395,7 @@ async function init() {
   if (els.cancel) els.cancel.href = backHref;
   if (els.logoutLink) {
     const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
-    els.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
+    wireAuthLogoutLink(els.logoutLink, { apiBase, returnTo });
   }
 
   await loadAuthStatus();
@@ -746,16 +749,29 @@ async function loadAuthStatus() {
     }
     state.authenticated = true;
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-    const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
-    if (els.userLabel) els.userLabel.textContent = user || "";
+    const user = applyBackendUserLabel({
+      userLabel: els.userLabel,
+      authUser: payload.user || null,
+      logKey: "tour-page",
+      pageName: "tour.html",
+      authMeUrl: request.url,
+      extraDetails: {
+        roles: state.roles,
+        tour_id: state.id || ""
+      }
+    });
     state.permissions.canEditTours =
       state.roles.includes("atp_admin") ||
       state.roles.includes("atp_manager") ||
       state.roles.includes("atp_staff");
-  } catch {
+  } catch (error) {
     state.authenticated = false;
     if (els.userLabel) els.userLabel.textContent = "";
-    // leave defaults
+    logBrowserConsoleError("[tour-page] Failed to load authenticated user status for the tour page.", {
+      url: authMeRequest({ baseURL: apiOrigin }).url,
+      method: "GET",
+      tour_id: state.id || ""
+    }, error);
   }
 }
 

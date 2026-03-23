@@ -9,14 +9,13 @@ import (
 	id?:     common.#Identifier
 	title:   string & !=""
 	summary: string & !=""
-	countries?: [...enums.#CountryCode]
-	travel_styles?: [...enums.#TourStyleCode]
 }
 
 #AtpStaffProfile: {
 	username:     string & !=""
 	name?:        string
 	picture_ref?: string
-	spoken_languages: [...enums.#LanguageCode]
+	languages: [...enums.#LanguageCode]
+	destinations?: [...enums.#CountryCode]
 	experiences?: [...#AtpStaffExperience]
 }

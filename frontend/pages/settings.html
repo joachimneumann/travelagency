@@ -29,12 +29,53 @@
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
-          <section class="backend-section" id="settingsPanel">
-            <h2 class="section-title u-title-medium" data-i18n-id="backend.users.heading">Users</h2>
-            <p class="micro" id="staffStatus" data-i18n-id="backend.users.status">Users are managed in Keycloak.</p>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="staffTable"></table>
+          <div class="backend-table-wrap" id="settingsPanel">
+            <table class="backend-table" id="staffTable"></table>
+          </div>
+          <p class="micro settings-staff-status" id="staffStatus" data-i18n-id="backend.users.status">Users are managed in Keycloak.</p>
+
+          <section class="backend-section settings-staff-editor" id="staffEditorPanel" hidden>
+            <div class="settings-staff-editor__head">
+              <div>
+                <h2 class="section-title u-title-medium" data-i18n-id="backend.users.profile_heading">ATP staff profile</h2>
+                <p class="micro" id="staffEditorStatus"></p>
+              </div>
+              <div class="settings-staff-editor__head-actions">
+                <button class="btn btn-primary" id="staffEditorSaveBtn" type="button" data-i18n-id="common.save">Save</button>
+                <button class="settings-staff-editor__close-btn" id="staffEditorCloseBtn" type="button" data-i18n-aria-label-id="common.close" aria-label="Close">×</button>
+              </div>
             </div>
+
+            <div class="settings-staff-editor__hero">
+              <button class="settings-staff-editor__photo-button" id="staffEditorPhotoBtn" type="button" data-i18n-aria-label-id="backend.users.change_picture" aria-label="Change picture">
+                <img class="settings-staff-editor__photo" id="staffEditorPhoto" src="assets/img/profile_person.png" alt="" />
+              </button>
+              <div class="settings-staff-editor__hero-copy">
+                <p class="u-title-small settings-staff-editor__identity-title" data-i18n-id="backend.users.keycloak_information">Keycloak information</p>
+                <p class="micro settings-staff-editor__identity-line" id="staffEditorNameLine">Name: ATP staff</p>
+                <p class="micro settings-staff-editor__identity-line" id="staffEditorUsernameLine">Username: -</p>
+                <p class="micro settings-staff-editor__identity-line" id="staffEditorRolesLine">Roles: -</p>
+                <div class="settings-staff-editor__photo-actions">
+                  <input id="staffEditorPhotoInput" type="file" accept="image/*" hidden />
+                </div>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="staffEditorLanguages" data-i18n-id="backend.users.languages">Languages</label>
+              <div class="settings-staff-editor__check-grid" id="staffEditorLanguages"></div>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="staffEditorDestinations" data-i18n-id="backend.users.destinations">Destinations</label>
+              <div class="settings-staff-editor__check-grid" id="staffEditorDestinations"></div>
+            </div>
+
+            <div class="settings-staff-editor__experiences-head">
+              <h3 class="u-title-small" data-i18n-id="backend.users.experiences">Experiences</h3>
+              <button class="btn btn-secondary" id="staffEditorAddExperienceBtn" type="button" data-i18n-id="backend.users.add_experience">Add experience</button>
+            </div>
+            <div id="staffEditorExperiences"></div>
           </section>
         </div>
       </section>

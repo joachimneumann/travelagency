@@ -10,6 +10,10 @@
   font-size: var(--font-size-title-md);
 }
 
+.u-title-small {
+  font-size: var(--font-size-title-sm);
+}
+
 .u-title-no-margin {
   margin: 0;
 }

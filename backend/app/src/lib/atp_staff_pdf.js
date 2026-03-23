@@ -50,6 +50,6 @@ export async function resolveAtpGuidePdfContext({
     profile,
     experiences,
     photoDiskPath,
-    languageLabels: normalizeLanguageLabels(profile?.spoken_languages)
+    languageLabels: normalizeLanguageLabels(profile?.languages)
   };
 }

@@ -80,6 +80,7 @@ import (
 		TourDetail:                                       apiModel.#TourDetail
 		KeycloakUserDirectoryEntry:                       apiModel.#KeycloakUserDirectoryEntry
 		KeycloakUserListResponse:                         apiModel.#KeycloakUserListResponse
+		KeycloakUserDirectoryEntryResponse:               apiModel.#KeycloakUserDirectoryEntryResponse
 		BookingActivitiesResponse:                        apiModel.#BookingActivitiesResponse
 		BookingActivityResponse:                          apiModel.#BookingActivityResponse
 		BookingDeleteResponse:                            apiModel.#BookingDeleteResponse
@@ -146,6 +147,8 @@ import (
 		OfferExchangeRatesRequest:                        apiModel.#OfferExchangeRatesRequest
 		BookingActivityCreateRequest:                     apiModel.#BookingActivityCreateRequest
 		BookingInvoiceUpsertRequest:                      apiModel.#BookingInvoiceUpsertRequest
+		AtpStaffProfileUpdateRequest:                     apiModel.#AtpStaffProfileUpdateRequest
+		AtpStaffPhotoUploadRequest:                       apiModel.#AtpStaffPhotoUploadRequest
 		TourUpsertRequest:                                apiModel.#TourUpsertRequest
 		EvidenceUpload:                                   apiModel.#EvidenceUpload
 		Endpoints:                                        apiModel.#Endpoints

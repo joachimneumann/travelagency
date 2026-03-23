@@ -126,6 +126,12 @@ case "invoice_pdf":
   return RequestFactory.invoicePdfRequest(options);
 case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
+case "keycloak_user_staff_profile_update":
+  return RequestFactory.keycloakUserStaffProfileUpdateRequest(options);
+case "keycloak_user_staff_profile_picture_upload":
+  return RequestFactory.keycloakUserStaffProfilePictureUploadRequest(options);
+case "keycloak_user_staff_profile_picture_delete":
+  return RequestFactory.keycloakUserStaffProfilePictureDeleteRequest(options);
 case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_create":

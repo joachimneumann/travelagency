@@ -1367,19 +1367,26 @@ test("travel style catalog stays generated from config and exposed through the g
 
 test("settings page staff table shows separate realm and client Keycloak roles", async () => {
   const settingsPageModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "settings_list.js");
+  const settingsPageHtmlPath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "settings.html");
   const siteCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "site.css");
   const source = await readFile(settingsPageModulePath, "utf8");
+  const html = await readFile(settingsPageHtmlPath, "utf8");
   const css = await readFile(siteCssPath, "utf8");
 
   assert.match(
     source,
-    /keycloak-roles-col">.*backendT\("backend\.table\.roles", "Roles"\).*backend-table-align-right">.*backendT\("backend\.table\.active", "Active"\)/,
-    "Settings user table should include a Roles column"
+    /<th class="keycloak-roles-col">\$\{escapeHtml\(backendT\("backend\.table\.roles", "Roles"\)\)\}<\/th>/,
+    "Settings user table should include a Roles header column"
   );
   assert.match(
     source,
-    /formatKeycloakRoleList\(user\?\.client_roles\)/,
-    "Settings user table should display client roles in the Roles column"
+    /<th class="backend-table-align-right">\$\{escapeHtml\(backendT\("backend\.table\.active", "Active"\)\)\}<\/th>/,
+    "Settings user table should include an Active header column"
+  );
+  assert.match(
+    source,
+    /formatKeycloakRoleList\(getDisplayedKeycloakRoles\(user\)\)/,
+    "Settings user table should display the combined realm and client roles in the Roles column"
   );
   assert.doesNotMatch(
     source,
@@ -1390,6 +1397,16 @@ test("settings page staff table shows separate realm and client Keycloak roles",
     css,
     /\.backend-table th\.keycloak-roles-col,\s*\.backend-table td\.keycloak-roles-col\s*\{\s*text-align:\s*right;/,
     "Settings roles column should right-align the header and cell content"
+  );
+  assert.match(
+    html,
+    /id="staffEditorPanel"/,
+    "Settings page should expose the ATP staff editor panel"
+  );
+  assert.match(
+    source,
+    /keycloakUserStaffProfileUpdateRequest|keycloakUserStaffProfilePictureUploadRequest|keycloakUserStaffProfilePictureDeleteRequest/,
+    "Settings page should use the generated ATP staff profile edit endpoints"
   );
 });
 

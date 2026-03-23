@@ -78,8 +78,6 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "summary", kind: "scalar", typeName: "string", required: true},
-				{name: "countries", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "travel_styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 			]
 		},
 		{
@@ -91,7 +89,8 @@ IR: {
 				{name: "username", kind: "scalar", typeName: "string", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
 				{name: "picture_ref", kind: "scalar", typeName: "string", required: false},
-				{name: "spoken_languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
+				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
 				{name: "experiences", kind: "entity", typeName: "AtpStaffExperience", required: false, isArray: true},
 			]
 		},
@@ -1131,6 +1130,15 @@ IR: {
 			]
 		},
 		{
+			name:       "KeycloakUserDirectoryEntryResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#KeycloakUserDirectoryEntryResponse"
+			fields: [
+				{name: "user", kind: "transport", typeName: "KeycloakUserDirectoryEntry", required: true},
+			]
+		},
+		{
 			name:       "BookingDeleteResponse"
 			domain:     "api"
 			module:     "api"
@@ -1825,6 +1833,28 @@ IR: {
 				{name: "components", kind: "entity", typeName: "InvoiceComponent", required: false, isArray: true},
 				{name: "due_amount_cents", kind: "transport", typeName: "MoneyAmount", required: false},
 				{name: "sent_to_recipient", kind: "scalar", typeName: "bool", required: false},
+			]
+		},
+		{
+			name:       "AtpStaffProfileUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#AtpStaffProfileUpdateRequest"
+			fields: [
+				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
+				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "experiences", kind: "entity", typeName: "AtpStaffExperience", required: false, isArray: true},
+			]
+		},
+		{
+			name:       "AtpStaffPhotoUploadRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#AtpStaffPhotoUploadRequest"
+			fields: [
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
+				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
 			]
 		},
 		{

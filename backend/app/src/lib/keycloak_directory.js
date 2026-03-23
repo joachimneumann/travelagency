@@ -168,19 +168,37 @@ export function createKeycloakDirectory({
     const accessToken = await getAdminAccessToken();
     const realmRoleNames = [];
     const clientRoleNames = [];
-    const realmPayload = await fetchJson(`${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/realm`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    realmRoleNames.push(...(Array.isArray(realmPayload) ? realmPayload : []).map((role) => role?.name));
+    async function fetchRoleNames(primaryUrl, fallbackUrl = "") {
+      try {
+        const payload = await fetchJson(primaryUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        return (Array.isArray(payload) ? payload : []).map((role) => role?.name);
+      } catch (error) {
+        if (!fallbackUrl) throw error;
+        const payload = await fetchJson(fallbackUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        return (Array.isArray(payload) ? payload : []).map((role) => role?.name);
+      }
+    }
+
+    realmRoleNames.push(
+      ...await fetchRoleNames(
+        `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/realm/composite`,
+        `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/realm`
+      )
+    );
 
     if (cfg.keycloakClientId) {
       const clientUuid = await getClientUuid();
       if (clientUuid) {
-        const clientPayload = await fetchJson(
-          `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/clients/${encodeURIComponent(clientUuid)}`,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
+        clientRoleNames.push(
+          ...await fetchRoleNames(
+            `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/clients/${encodeURIComponent(clientUuid)}/composite`,
+            `${adminApiBase()}/users/${encodeURIComponent(normalizedUserId)}/role-mappings/clients/${encodeURIComponent(clientUuid)}`
+          )
         );
-        clientRoleNames.push(...(Array.isArray(clientPayload) ? clientPayload : []).map((role) => role?.name));
       }
     }
 

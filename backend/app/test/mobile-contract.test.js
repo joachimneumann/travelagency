@@ -95,6 +95,26 @@ global.fetch = async function mockedFetch(input, init = {}) {
     });
   }
 
+  const realmCompositeMatch = String(url).match(/^http:\/\/keycloak\.test\/admin\/realms\/asiatravelplan\/users\/([^/]+)\/role-mappings\/realm\/composite$/);
+  if (realmCompositeMatch) {
+    const userId = decodeURIComponent(realmCompositeMatch[1]);
+    const roles = (KEYCLOAK_ROLE_MAP[userId]?.realm || []).map((name) => ({ name }));
+    return new Response(JSON.stringify(roles), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
+  const clientCompositeMatch = String(url).match(/^http:\/\/keycloak\.test\/admin\/realms\/asiatravelplan\/users\/([^/]+)\/role-mappings\/clients\/client-uuid\/composite$/);
+  if (clientCompositeMatch) {
+    const userId = decodeURIComponent(clientCompositeMatch[1]);
+    const roles = (KEYCLOAK_ROLE_MAP[userId]?.client || []).map((name) => ({ name }));
+    return new Response(JSON.stringify(roles), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  }
+
   const userMatch = String(url).match(/^http:\/\/keycloak\.test\/admin\/realms\/asiatravelplan\/users\/([^/]+)$/);
   if (userMatch) {
     const userId = decodeURIComponent(userMatch[1]);
@@ -112,6 +132,7 @@ const contractMeta = JSON.parse(await readFile(CONTRACT_META_PATH, "utf8"));
 const { createBackendHandler } = await import("../src/server.js");
 const handler = await createBackendHandler({ port: 8787 });
 const HAS_MAGICK = spawnSync("magick", ["-version"], { stdio: "ignore" }).status === 0;
+const TINY_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURXqnx////yb9JEMAAAABYktHRAH/Ai3eAAAAB3RJTUUH6gMXCTo1ja6mZwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNi0wMy0yM1QwOTo1ODo1MyswMDowMLzSbEkAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjYtMDMtMjNUMDk6NTg6NTMrMDA6MDDNj9T1AAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI2LTAzLTIzVDA5OjU4OjUzKzAwOjAwmpr1KgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=";
 
 function endpointPath(key) {
   const endpoint = contractMeta.endpoints.find((candidate) => candidate.key === key);
@@ -3892,12 +3913,93 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   assert.deepEqual(admin.realm_roles, []);
   assert.deepEqual(admin.client_roles, ["atp_admin"]);
   assert.equal(admin.staff_profile.username, "admin");
-  assert.ok(Array.isArray(admin.staff_profile.spoken_languages));
+  assert.ok(Array.isArray(admin.staff_profile.languages));
+  assert.ok(Array.isArray(admin.staff_profile.destinations));
   assert.ok(String(admin.staff_profile.picture_ref || "").includes("/public/v1/atp-staff-photos/admin.svg"));
   const accountant = result.body.items.find((item) => item.username === "accountant");
   assert.deepEqual(accountant.realm_roles, []);
   assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
   assert.equal(accountant.staff_profile.username, "accountant");
+});
+
+test("admin can update ATP staff profile details while non-admin cannot", async () => {
+  const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
+
+  const forbiddenResult = await requestJson(
+    profilePath,
+    apiHeaders("atp_manager", "joachim", "kc-joachim"),
+    {
+      method: "PATCH",
+      body: {
+        languages: ["de", "en"],
+        destinations: ["VN"],
+        experiences: [{
+          title: "Manager should not write this",
+          summary: "This write should be rejected."
+        }]
+      }
+    }
+  );
+  assert.equal(forbiddenResult.status, 403);
+
+  const updateResult = await requestJson(
+    profilePath,
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "PATCH",
+      body: {
+        languages: ["de", "en", "vi"],
+        destinations: ["VN", "LA"],
+        experiences: [{
+          title: "Quiet wellness pacing",
+          summary: "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights."
+        }]
+      }
+    }
+  );
+  assert.equal(updateResult.status, 200);
+  assert.equal(updateResult.body.user.username, "joachim");
+  assert.deepEqual(updateResult.body.user.staff_profile.languages, ["de", "en", "vi"]);
+  assert.deepEqual(updateResult.body.user.staff_profile.destinations, ["VN", "LA"]);
+  assert.equal(updateResult.body.user.staff_profile.experiences.length, 1);
+  assert.equal(updateResult.body.user.staff_profile.experiences[0].title, "Quiet wellness pacing");
+  assert.equal(updateResult.body.user.staff_profile.experiences[0].countries, undefined);
+  assert.equal(updateResult.body.user.staff_profile.experiences[0].travel_styles, undefined);
+
+  const listResult = await requestJson(endpointPath("keycloak_users"), apiHeaders("atp_admin", "admin", "kc-admin"));
+  const updated = listResult.body.items.find((item) => item.username === "joachim");
+  assert.equal(updated.staff_profile.experiences[0].title, "Quiet wellness pacing");
+});
+
+test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGICK }, async () => {
+  const picturePath = endpointPath("keycloak_user_staff_profile_picture_upload").replace("{username}", "joachim");
+
+  const uploadResult = await requestJson(
+    picturePath,
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "POST",
+      body: {
+        filename: "joachim.png",
+        mime_type: "image/png",
+        data_base64: TINY_PNG_BASE64
+      }
+    }
+  );
+  assert.equal(uploadResult.status, 200);
+  assert.match(String(uploadResult.body.user.staff_profile.picture_ref || ""), /joachim\.webp$/);
+
+  const uploadedPhotoPath = path.join(TEST_DATA_DIR, "atp_staff_photos", "joachim.webp");
+  const uploadedPhotoStat = await stat(uploadedPhotoPath);
+  assert.ok(uploadedPhotoStat.size > 0);
+
+  const deleteResult = await requestJson(
+    endpointPath("keycloak_user_staff_profile_picture_delete").replace("{username}", "joachim"),
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    { method: "DELETE" }
+  );
+  assert.equal(deleteResult.status, 200);
+  assert.match(String(deleteResult.body.user.staff_profile.picture_ref || ""), /joachim\.svg$/);
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {

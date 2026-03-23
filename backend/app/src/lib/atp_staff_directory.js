@@ -4,85 +4,71 @@ import { normalizeText } from "./text.js";
 
 const DEFAULT_PROFILE_BLUEPRINTS = Object.freeze({
   "admin": {
-    spoken_languages: ["en", "vi"],
+    languages: ["en", "vi"],
+    destinations: ["VN", "TH", "KH", "LA"],
     experiences: [
       {
         id: "admin_operations_vn_th",
         title: "Operations oversight across Vietnam and Thailand",
-        summary: "Keeps arrival logistics, hotel handovers, and day-by-day pacing realistic for trips that combine urban stays with recovery time.",
-        countries: ["VN", "TH"],
-        travel_styles: ["luxury", "wellness", "culture"]
+        summary: "Keeps arrival logistics, hotel handovers, and day-by-day pacing realistic for trips that combine urban stays with recovery time."
       },
       {
         id: "admin_multicountry_coordination",
         title: "Multi-country guest support",
-        summary: "Experienced in coordinating soft-paced routes across Southeast Asia with clear airport support, calm timing, and backup options when plans shift.",
-        countries: ["VN", "TH", "KH", "LA"],
-        travel_styles: ["family", "wellness", "grand-expeditions"]
+        summary: "Experienced in coordinating soft-paced routes across Southeast Asia with clear airport support, calm timing, and backup options when plans shift."
       }
     ]
   },
   "joachim": {
-    spoken_languages: ["de", "en", "vi"],
+    languages: ["de", "en", "vi"],
+    destinations: ["VN", "TH", "KH", "LA"],
     experiences: [
       {
         id: "joachim_central_vietnam_wellness",
         title: "Central Vietnam wellness pacing",
-        summary: "Designs quiet Hoi An, Da Nang, and Hue programs with spa appointments, low-friction transfers, and enough empty space between highlights.",
-        countries: ["VN"],
-        travel_styles: ["wellness", "beach", "culture"]
+        summary: "Designs quiet Hoi An, Da Nang, and Hue programs with spa appointments, low-friction transfers, and enough empty space between highlights."
       },
       {
         id: "joachim_laos_cambodia_calm",
         title: "Gentle Cambodia and Laos journeys",
-        summary: "Builds soft-paced Siem Reap and Luang Prabang itineraries that balance heritage visits with rest, river time, and unhurried evenings.",
-        countries: ["KH", "LA"],
-        travel_styles: ["wellness", "culture", "luxury"]
+        summary: "Builds soft-paced Siem Reap and Luang Prabang itineraries that balance heritage visits with rest, river time, and unhurried evenings."
       },
       {
         id: "joachim_multicountry_handovers",
         title: "Cross-border handover planning",
-        summary: "Experienced in smoothing multi-country airport arrivals, hotel changes, and local guide transitions for couples and families.",
-        countries: ["VN", "TH", "KH", "LA"],
-        travel_styles: ["family", "wellness", "luxury"]
+        summary: "Experienced in smoothing multi-country airport arrivals, hotel changes, and local guide transitions for couples and families."
       }
     ]
   },
   "staff": {
-    spoken_languages: ["en", "vi", "th"],
+    languages: ["en", "vi", "th"],
+    destinations: ["VN", "TH", "KH", "LA"],
     experiences: [
       {
         id: "staff_thailand_coast_wellness",
         title: "Thailand coast and spa stays",
-        summary: "Shapes Phuket and Krabi stays around beach time, practical treatment windows, and easy private transfers rather than rushed sightseeing blocks.",
-        countries: ["TH"],
-        travel_styles: ["wellness", "beach", "luxury"]
+        summary: "Shapes Phuket and Krabi stays around beach time, practical treatment windows, and easy private transfers rather than rushed sightseeing blocks."
       },
       {
         id: "staff_family_pacing",
         title: "Family-friendly pacing",
-        summary: "Good at building routes with lighter mornings, flexible lunch breaks, and realistic transit times for multi-generation travelers.",
-        countries: ["VN", "TH", "KH"],
-        travel_styles: ["family", "wellness", "culture"]
+        summary: "Good at building routes with lighter mornings, flexible lunch breaks, and realistic transit times for multi-generation travelers."
       }
     ]
   },
   "accountant": {
-    spoken_languages: ["en", "vi"],
+    languages: ["en", "vi"],
+    destinations: ["VN", "TH", "KH", "LA"],
     experiences: [
       {
         id: "accountant_prearrival_support",
         title: "Pre-arrival guest support",
-        summary: "Supports guests with calm pre-trip coordination, practical arrival briefings, and simple next-step communication before departure.",
-        countries: ["VN", "TH", "KH", "LA"],
-        travel_styles: ["wellness", "luxury", "culture"]
+        summary: "Supports guests with calm pre-trip coordination, practical arrival briefings, and simple next-step communication before departure."
       },
       {
         id: "accountant_comfort_logistics",
         title: "Comfort-first logistics follow-up",
-        summary: "Keeps an eye on payment, rooming, and timing details so the on-trip flow stays comfortable and clear for guests.",
-        countries: ["VN", "TH", "KH", "LA"],
-        travel_styles: ["wellness", "family", "luxury"]
+        summary: "Keeps an eye on payment, rooming, and timing details so the on-trip flow stays comfortable and clear for guests."
       }
     ]
   }
@@ -100,10 +86,6 @@ function normalizeCountryCodes(items) {
   return unique((Array.isArray(items) ? items : []).map((item) => normalizeText(item).toUpperCase()));
 }
 
-function normalizeTravelStyles(items) {
-  return unique((Array.isArray(items) ? items : []).map((item) => normalizeText(item).toLowerCase()));
-}
-
 function normalizeExperience(experience, index = 0) {
   const normalizedTitle = normalizeText(experience?.title);
   const normalizedSummary = normalizeText(experience?.summary);
@@ -111,20 +93,26 @@ function normalizeExperience(experience, index = 0) {
   return {
     ...(normalizeText(experience?.id) ? { id: normalizeText(experience.id) } : { id: `experience_${index + 1}` }),
     title: normalizedTitle,
-    summary: normalizedSummary,
-    ...(normalizeCountryCodes(experience?.countries).length ? { countries: normalizeCountryCodes(experience.countries) } : {}),
-    ...(normalizeTravelStyles(experience?.travel_styles).length ? { travel_styles: normalizeTravelStyles(experience.travel_styles) } : {})
+    summary: normalizedSummary
   };
 }
 
 function normalizeProfile(profile) {
   const username = normalizeText(profile?.username).toLowerCase();
   if (!username) return null;
+  const legacyExperienceDestinations = normalizeCountryCodes(
+    (Array.isArray(profile?.experiences) ? profile.experiences : []).flatMap((experience) => experience?.countries || [])
+  );
   return {
     username,
     ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
     ...(normalizeText(profile?.picture_ref) ? { picture_ref: normalizeText(profile.picture_ref) } : {}),
-    spoken_languages: normalizeLanguageCodes(profile?.spoken_languages),
+    languages: normalizeLanguageCodes(profile?.languages ?? profile?.spoken_languages),
+    ...(normalizeCountryCodes(profile?.destinations).length
+      ? { destinations: normalizeCountryCodes(profile.destinations) }
+      : legacyExperienceDestinations.length
+        ? { destinations: legacyExperienceDestinations }
+        : {}),
     experiences: (Array.isArray(profile?.experiences) ? profile.experiences : [])
       .map((experience, index) => normalizeExperience(experience, index))
       .filter(Boolean)
@@ -186,24 +174,29 @@ function pictureRefForUsername(username) {
 
 function genericProfileBlueprint(user) {
   return {
-    spoken_languages: ["en", "vi"],
+    languages: ["en", "vi"],
+    destinations: ["VN", "TH", "KH", "LA"],
     experiences: [
       {
         id: `${normalizeText(user?.username) || "staff"}_regional_guest_support`,
         title: "Regional guest support",
-        summary: `${defaultDisplayNameForUser(user)} helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.`,
-        countries: ["VN", "TH", "KH", "LA"],
-        travel_styles: ["wellness", "culture", "luxury"]
+        summary: `${defaultDisplayNameForUser(user)} helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.`
       },
       {
         id: `${normalizeText(user?.username) || "staff"}_soft_paced_itineraries`,
         title: "Soft-paced itinerary planning",
-        summary: `${defaultDisplayNameForUser(user)} is comfortable balancing sightseeing with recovery time, lighter mornings, and clear guest communication throughout the trip.`,
-        countries: ["VN", "TH", "KH", "LA"],
-        travel_styles: ["wellness", "family", "culture"]
+        summary: `${defaultDisplayNameForUser(user)} is comfortable balancing sightseeing with recovery time, lighter mornings, and clear guest communication throughout the trip.`
       }
     ]
   };
+}
+
+function sortProfiles(items) {
+  return [...(Array.isArray(items) ? items : [])].sort((left, right) => {
+    const leftName = normalizeText(left?.name) || left?.username || "";
+    const rightName = normalizeText(right?.name) || right?.username || "";
+    return leftName.localeCompare(rightName);
+  });
 }
 
 function defaultProfileForUser(user) {
@@ -213,7 +206,8 @@ function defaultProfileForUser(user) {
     username,
     name: defaultDisplayNameForUser(user),
     picture_ref: pictureRefForUsername(username),
-    spoken_languages: blueprint.spoken_languages,
+    languages: blueprint.languages,
+    destinations: blueprint.destinations,
     experiences: blueprint.experiences
   });
 }
@@ -251,9 +245,12 @@ function mergeProfileWithUser(profile, user) {
     username,
     name: normalizeText(user?.name) || normalizeText(normalizedProfile?.name) || defaultProfile.name,
     picture_ref: normalizeText(normalizedProfile?.picture_ref) || defaultProfile.picture_ref,
-    spoken_languages: normalizeLanguageCodes(normalizedProfile?.spoken_languages).length
-      ? normalizeLanguageCodes(normalizedProfile.spoken_languages)
-      : defaultProfile.spoken_languages,
+    languages: normalizeLanguageCodes(normalizedProfile?.languages).length
+      ? normalizeLanguageCodes(normalizedProfile.languages)
+      : defaultProfile.languages,
+    destinations: normalizeCountryCodes(normalizedProfile?.destinations).length
+      ? normalizeCountryCodes(normalizedProfile.destinations)
+      : defaultProfile.destinations,
     experiences: Array.isArray(normalizedProfile?.experiences) && normalizedProfile.experiences.length
       ? normalizedProfile.experiences
       : defaultProfile.experiences
@@ -267,24 +264,15 @@ function collectContextCountries(booking = {}, generatedOffer = null) {
   return unique([...bookingDestinations, ...submittedDestinations, ...generatedDestinations]);
 }
 
-function collectContextStyles(booking = {}) {
-  const bookingStyles = normalizeTravelStyles(booking?.travel_styles);
-  const submittedStyles = normalizeTravelStyles(booking?.web_form_submission?.travel_style);
-  return unique([...bookingStyles, ...submittedStyles]);
-}
-
 export function selectRelevantAtpStaffExperiences(profile, booking = {}, generatedOffer = null, { limit = 3 } = {}) {
   const experiences = Array.isArray(profile?.experiences) ? profile.experiences : [];
   if (!experiences.length) return [];
-  const countries = new Set(collectContextCountries(booking, generatedOffer));
-  const styles = new Set(collectContextStyles(booking));
+  const profileDestinations = normalizeCountryCodes(profile?.destinations);
+  const contextCountries = new Set(collectContextCountries(booking, generatedOffer));
   return experiences
     .map((experience, index) => {
-      const experienceCountries = normalizeCountryCodes(experience?.countries);
-      const experienceStyles = normalizeTravelStyles(experience?.travel_styles);
-      const countryMatches = experienceCountries.filter((code) => countries.has(code)).length;
-      const styleMatches = experienceStyles.filter((code) => styles.has(code)).length;
-      const score = (countryMatches * 4) + (styleMatches * 3) + (experienceCountries.length ? 0 : 1) + (experienceStyles.length ? 0 : 1);
+      const destinationMatches = profileDestinations.filter((code) => contextCountries.has(code)).length;
+      const score = (destinationMatches * 4) + index * -0.001;
       return { experience, index, score };
     })
     .sort((left, right) => right.score - left.score || left.index - right.index)
@@ -396,6 +384,87 @@ export function createAtpStaffDirectory({
     }));
   }
 
+  async function findAssignableUserByUsername(rawUsername) {
+    const username = normalizeText(rawUsername).toLowerCase();
+    if (!username) return null;
+    const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
+    return (Array.isArray(users) ? users : []).find((user) => normalizeText(user?.username).toLowerCase() === username) || null;
+  }
+
+  async function buildDirectoryEntryForUsername(rawUsername) {
+    const username = normalizeText(rawUsername).toLowerCase();
+    if (!username) return null;
+    const user = await findAssignableUserByUsername(username);
+    if (!user) return null;
+    const profiles = await syncProfilesFromKeycloak().catch(() => []);
+    const stored = (Array.isArray(profiles) ? profiles : []).find((profile) => normalizeText(profile?.username).toLowerCase() === username);
+    return {
+      ...user,
+      staff_profile: mergeProfileWithUser(stored, user)
+    };
+  }
+
+  async function updateProfileByUsername(rawUsername, input = {}) {
+    const username = normalizeText(rawUsername).toLowerCase();
+    if (!username) return null;
+    const user = await findAssignableUserByUsername(username);
+    if (!user) return null;
+
+    await ensureStorage();
+    const stored = await readProfiles();
+    const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
+    const currentStored = itemsByUsername.get(username) || null;
+    const current = mergeProfileWithUser(currentStored, user);
+    const nextStored = normalizeProfile({
+      username,
+      picture_ref: normalizeText(currentStored?.picture_ref) || normalizeText(current?.picture_ref) || pictureRefForUsername(username),
+      languages: Array.isArray(input?.languages) ? input.languages : current?.languages,
+      destinations: Array.isArray(input?.destinations) ? input.destinations : current?.destinations,
+      experiences: Array.isArray(input?.experiences) ? input.experiences : current?.experiences
+    });
+    if (!nextStored) return null;
+    itemsByUsername.set(username, nextStored);
+    await writeAvatarIfMissing(nextStored);
+    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) });
+    return buildDirectoryEntryForUsername(username);
+  }
+
+  async function setPictureRefByUsername(rawUsername, pictureRef) {
+    const username = normalizeText(rawUsername).toLowerCase();
+    const normalizedPictureRef = normalizeText(pictureRef);
+    if (!username || !normalizedPictureRef) return null;
+    const user = await findAssignableUserByUsername(username);
+    if (!user) return null;
+
+    await ensureStorage();
+    const stored = await readProfiles();
+    const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
+    const currentStored = itemsByUsername.get(username) || null;
+    const current = mergeProfileWithUser(currentStored, user);
+    const nextStored = normalizeProfile({
+      username,
+      picture_ref: normalizedPictureRef,
+      languages: current?.languages,
+      destinations: current?.destinations,
+      experiences: current?.experiences
+    });
+    if (!nextStored) return null;
+    itemsByUsername.set(username, nextStored);
+    await persistProfiles({ items: sortProfiles(Array.from(itemsByUsername.values())) });
+    return buildDirectoryEntryForUsername(username);
+  }
+
+  async function resetPictureByUsername(rawUsername) {
+    const username = normalizeText(rawUsername).toLowerCase();
+    if (!username) return null;
+    const user = await findAssignableUserByUsername(username);
+    await writeAvatarIfMissing({
+      username,
+      name: normalizeText(user?.name) || username
+    });
+    return setPictureRefByUsername(username, pictureRefForUsername(username));
+  }
+
   async function resolveAssignedStaffProfile(keycloakUserId) {
     const normalizedUserId = normalizeText(keycloakUserId);
     if (!normalizedUserId) return null;
@@ -413,6 +482,10 @@ export function createAtpStaffDirectory({
     persistProfiles,
     syncProfilesFromKeycloak,
     listAssignableStaffUsers,
+    buildDirectoryEntryForUsername,
+    updateProfileByUsername,
+    setPictureRefByUsername,
+    resetPictureByUsername,
     resolveAssignedStaffProfile,
     resolvePhotoDiskPath
   };

@@ -3270,6 +3270,183 @@ textarea:focus-visible {
   text-align: right;
 }
 
+.settings-staff-table__photo-cell {
+  width: 4.5rem;
+}
+
+.settings-staff-table__photo {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.settings-staff-table__profile-summary {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.settings-staff-status {
+  margin: 0.85rem 0 1.25rem;
+  text-align: center;
+}
+
+.settings-staff-table__username-cell {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.settings-staff-table__username-name {
+  color: var(--text-muted-strong);
+}
+
+.settings-staff-table__row--clickable {
+  cursor: pointer;
+}
+
+.settings-staff-table__row--clickable:hover td,
+.settings-staff-table__row--clickable:focus-visible td {
+  background: var(--surface-muted-soft);
+}
+
+.settings-staff-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-staff-editor[hidden] {
+  display: none !important;
+}
+
+.settings-staff-editor__head,
+.settings-staff-editor__photo-actions,
+.settings-staff-editor__experiences-head,
+.settings-staff-experience__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.settings-staff-editor__head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.settings-staff-editor__close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--error);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--error);
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.settings-staff-editor__close-btn:hover,
+.settings-staff-editor__close-btn:focus-visible {
+  background: var(--error-soft);
+}
+
+.settings-staff-editor__hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.settings-staff-editor__photo-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.settings-staff-editor__photo-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+  border-radius: 1rem;
+}
+
+.settings-staff-editor__photo {
+  width: 7.5rem;
+  height: 7.5rem;
+  object-fit: cover;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.settings-staff-editor__hero-copy {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.settings-staff-editor__hero-copy > h3,
+.settings-staff-experience__head > h4 {
+  margin: 0;
+}
+
+.settings-staff-editor__identity-title,
+.settings-staff-editor__identity-line {
+  margin: 0;
+}
+
+.settings-staff-editor__identity-line {
+  line-height: 1.35;
+}
+
+.settings-staff-editor__check-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.settings-staff-editor__check-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.38rem 0.72rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.settings-staff-editor__check-pill input {
+  margin: 0;
+}
+
+.settings-staff-experience {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  margin-bottom: 1rem;
+}
+
+.settings-staff-editor #staffEditorStatus {
+  color: var(--text-muted);
+}
+
+.settings-staff-editor #staffEditorStatus.is-error {
+  color: var(--error-text);
+}
+
 .backend-tour-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -3822,6 +3999,21 @@ textarea:focus-visible {
 
   .tour-hero-actions .micro {
     max-width: 100%;
+  }
+
+  .settings-staff-editor__hero,
+  .settings-staff-editor__head,
+  .settings-staff-editor__photo-actions,
+  .settings-staff-editor__experiences-head,
+  .settings-staff-experience__head {
+    grid-template-columns: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-staff-editor__head-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   #tourChangeImageBtn {

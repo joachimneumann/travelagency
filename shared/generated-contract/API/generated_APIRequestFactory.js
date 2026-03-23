@@ -981,6 +981,57 @@ export function keycloakUsersRequest({ baseURL = '', params = {}, query = {}, bo
   };
 }
 
+export function keycloakUserStaffProfileUpdatePath(params = {}) {
+  return buildPath("/api/v1/keycloak_users/{username}/staff-profile", params);
+}
+
+export function keycloakUserStaffProfileUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = keycloakUserStaffProfileUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "keycloak_user_staff_profile_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function keycloakUserStaffProfilePictureUploadPath(params = {}) {
+  return buildPath("/api/v1/keycloak_users/{username}/staff-profile/picture", params);
+}
+
+export function keycloakUserStaffProfilePictureUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = keycloakUserStaffProfilePictureUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "keycloak_user_staff_profile_picture_upload",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function keycloakUserStaffProfilePictureDeletePath(params = {}) {
+  return buildPath("/api/v1/keycloak_users/{username}/staff-profile/picture", params);
+}
+
+export function keycloakUserStaffProfilePictureDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = keycloakUserStaffProfilePictureDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "keycloak_user_staff_profile_picture_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function toursPath(params = {}) {
   return buildPath("/api/v1/tours", params);
 }

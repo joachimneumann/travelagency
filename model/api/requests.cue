@@ -262,6 +262,14 @@ import (
 	category?:        enums.#SupplierCategory
 }
 
+#AtpStaffProfileUpdateRequest: {
+	languages: [...enums.#LanguageCode]
+	destinations?: [...enums.#CountryCode]
+	experiences?: [...entities.#AtpStaffExperience]
+}
+
+#AtpStaffPhotoUploadRequest: #EvidenceUpload
+
 #OfferExchangeRateComponent: {
 	id?:                    common.#Identifier
 	category:               enums.#OfferCategory

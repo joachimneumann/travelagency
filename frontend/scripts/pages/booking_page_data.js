@@ -5,6 +5,7 @@ import {
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import { logBrowserConsoleError, resolveApiUrl } from "../shared/api.js";
+import { applyBackendUserLabel } from "../shared/backend_page.js";
 import {
   bookingContentLang,
   setBookingContentLang
@@ -152,11 +153,18 @@ export function createBookingPageDataController(ctx) {
       }
       state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
       state.authUser = payload.user || null;
-      const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "";
+      const user = applyBackendUserLabel({
+        userLabel: els.userLabel,
+        authUser: payload.user || null,
+        logKey: "booking",
+        pageName: "booking.html",
+        authMeUrl: request.url,
+        extraDetails: {
+          booking_id: state.id || "",
+          roles: state.roles
+        }
+      });
       state.user = user || "";
-      if (els.userLabel) {
-        els.userLabel.textContent = user || "";
-      }
       state.permissions = {
         canChangeAssignment: hasAnyRole(roles.ADMIN, roles.MANAGER),
         canReadAssignmentDirectory: hasAnyRole(roles.ADMIN, roles.MANAGER, roles.ACCOUNTANT),

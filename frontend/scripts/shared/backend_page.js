@@ -1,6 +1,10 @@
 import { logBrowserConsoleError } from "./api.js";
-import { fetchAuthMe } from "./auth.js";
+import { fetchAuthMe, wireAuthLogoutLink } from "./auth.js";
 import { resolveBackendSectionHref } from "./nav.js";
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
 
 export function backendT(id, fallback, vars) {
   if (typeof window.backendT === "function") {
@@ -47,6 +51,64 @@ export function getBackendApiOrigin() {
   return apiBase || window.location.origin;
 }
 
+export function resolveBackendUserLabel(authUser = null) {
+  return normalizeText(authUser?.preferred_username)
+    || normalizeText(authUser?.email)
+    || normalizeText(authUser?.sub);
+}
+
+export function applyBackendUserLabel({
+  userLabel = null,
+  authUser = null,
+  logKey = "backend-page",
+  pageName = "backend page",
+  authMeUrl = "",
+  extraDetails = {}
+} = {}) {
+  const resolvedLabel = resolveBackendUserLabel(authUser);
+
+  if (!userLabel) {
+    logBrowserConsoleError(
+      `[${logKey}] Backend logout user label element is missing on ${pageName}.`,
+      {
+        page_url: window.location.href,
+        auth_me_url: authMeUrl,
+        authenticated_user: {
+          id: normalizeText(authUser?.sub),
+          username: normalizeText(authUser?.preferred_username),
+          email: normalizeText(authUser?.email)
+        },
+        resolved_logout_label: resolvedLabel,
+        reason: "The page authenticated successfully, but #backendUserLabel was not found in the DOM.",
+        ...extraDetails
+      }
+    );
+    return resolvedLabel;
+  }
+
+  userLabel.textContent = resolvedLabel;
+
+  if (!resolvedLabel) {
+    logBrowserConsoleError(
+      `[${logKey}] Authenticated user has no displayable value for the logout label on ${pageName}.`,
+      {
+        page_url: window.location.href,
+        auth_me_url: authMeUrl,
+        authenticated_user: {
+          id: normalizeText(authUser?.sub),
+          username: normalizeText(authUser?.preferred_username),
+          email: normalizeText(authUser?.email)
+        },
+        resolved_logout_label: resolvedLabel,
+        reason: "preferred_username, email, and sub were all empty, so nothing can be rendered under Logout.",
+        ...extraDetails
+      }
+    );
+  }
+
+  return resolvedLabel;
+}
+
 export function refreshBackendNavElements({
   logoutLinkId = "backendLogoutLink",
   userLabelId = "backendUserLabel"
@@ -57,6 +119,45 @@ export function refreshBackendNavElements({
   };
 }
 
+async function waitForBackendNavElements(refreshNav = refreshBackendNavElements, timeoutMs = 1500) {
+  const readElements = () => {
+    if (typeof refreshNav === "function") {
+      const refreshed = refreshNav();
+      if (refreshed && typeof refreshed === "object") {
+        return refreshed;
+      }
+    }
+    return refreshBackendNavElements();
+  };
+  let elements = readElements();
+  if (elements.logoutLink || elements.userLabel) {
+    return elements;
+  }
+
+  await new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("backend-nav-mounted", onMounted);
+      resolve();
+    };
+    const onMounted = () => {
+      window.setTimeout(finish, 0);
+    };
+    window.addEventListener("backend-nav-mounted", onMounted, { once: true });
+    window.setTimeout(finish, timeoutMs);
+  });
+
+  elements = readElements();
+  if (elements.logoutLink || elements.userLabel) {
+    return elements;
+  }
+
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+  return readElements();
+}
+
 export async function initializeBackendPageChrome({
   currentSection = "bookings",
   homeLink = null,
@@ -65,7 +166,7 @@ export async function initializeBackendPageChrome({
   await waitForBackendI18n();
   const apiBase = getBackendApiBase();
   const apiOrigin = getBackendApiOrigin();
-  const navElements = typeof refreshNav === "function" ? (refreshNav() || {}) : {};
+  const navElements = await waitForBackendNavElements(refreshNav);
 
   if (homeLink) {
     homeLink.href = resolveBackendSectionHref("bookings");
@@ -73,7 +174,7 @@ export async function initializeBackendPageChrome({
 
   if (navElements.logoutLink) {
     const returnTo = `${window.location.origin}${withBackendLang("/index.html")}`;
-    navElements.logoutLink.href = `${apiBase}/auth/logout?return_to=${encodeURIComponent(returnTo)}`;
+    wireAuthLogoutLink(navElements.logoutLink, { apiBase: apiOrigin, returnTo });
   }
 
   return {
@@ -94,7 +195,7 @@ export async function loadBackendPageAuthState({
   expectedRolesAnyOf = [],
   likelyCause = "The user is authenticated in Keycloak but does not have the ATP roles required to access this page."
 } = {}) {
-  const navElements = typeof refreshNav === "function" ? (refreshNav() || {}) : {};
+  const navElements = await waitForBackendNavElements(refreshNav);
   const userLabel = navElements.userLabel || null;
 
   try {
@@ -114,10 +215,17 @@ export async function loadBackendPageAuthState({
     const authUser = payload.user || null;
     const roles = Array.isArray(authUser?.roles) ? authUser.roles : [];
     const permissions = computePermissions(roles, authUser) || {};
-
-    if (userLabel) {
-      userLabel.textContent = authUser?.preferred_username || authUser?.email || authUser?.sub || "";
-    }
+    applyBackendUserLabel({
+      userLabel,
+      authUser,
+      logKey,
+      pageName,
+      authMeUrl: request.url,
+      extraDetails: {
+        roles,
+        computed_permissions: permissions
+      }
+    });
 
     if (!hasPageAccess(permissions, roles, authUser)) {
       logBrowserConsoleError(

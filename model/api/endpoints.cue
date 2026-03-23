@@ -986,6 +986,50 @@ package api
 		responseType:  "KeycloakUserListResponse"
 	},
 	{
+		key:           "keycloak_user_staff_profile_update"
+		path:          "/api/v1/keycloak_users/{username}/staff-profile"
+		method:        "PATCH"
+		tag:           "Auth"
+		authenticated: true
+		requestType:   "AtpStaffProfileUpdateRequest"
+		responseType:  "KeycloakUserDirectoryEntryResponse"
+		parameters: [{
+			name:     "username"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "keycloak_user_staff_profile_picture_upload"
+		path:          "/api/v1/keycloak_users/{username}/staff-profile/picture"
+		method:        "POST"
+		tag:           "Auth"
+		authenticated: true
+		requestType:   "AtpStaffPhotoUploadRequest"
+		responseType:  "KeycloakUserDirectoryEntryResponse"
+		parameters: [{
+			name:     "username"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "keycloak_user_staff_profile_picture_delete"
+		path:          "/api/v1/keycloak_users/{username}/staff-profile/picture"
+		method:        "DELETE"
+		tag:           "Auth"
+		authenticated: true
+		responseType:  "KeycloakUserDirectoryEntryResponse"
+		parameters: [{
+			name:     "username"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
 		key:           "tours"
 		path:          "/api/v1/tours"
 		method:        "GET"

@@ -27,6 +27,7 @@ export function createApplicationRoutes({
   const {
     getPrincipal,
     canViewKeycloakUsers,
+    canEditAtpStaffProfiles,
     canReadTours,
     canEditTours,
     canReadSuppliers,
@@ -149,9 +150,23 @@ export function createApplicationRoutes({
   });
 
   const atpStaffHandlers = createAtpStaffHandlers({
+    getPrincipal,
+    canEditAtpStaffProfiles,
+    readBodyJson: httpHelpers.readBodyJson,
     sendJson: httpHelpers.sendJson,
     sendFileWithCache: httpHelpers.sendFileWithCache,
-    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath
+    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
+    buildAtpStaffDirectoryEntryByUsername: atpStaffDirectory.buildDirectoryEntryForUsername,
+    updateAtpStaffProfileByUsername: atpStaffDirectory.updateProfileByUsername,
+    setAtpStaffPictureRefByUsername: atpStaffDirectory.setPictureRefByUsername,
+    resetAtpStaffPictureByUsername: atpStaffDirectory.resetPictureByUsername,
+    execFile: runtime.execFile,
+    mkdir,
+    writeFile,
+    rm,
+    TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
+    ATP_STAFF_PHOTOS_DIR: runtime.paths.atpStaffPhotosDir,
+    randomUUID
   });
 
   const supplierHandlers = createSupplierHandlers({

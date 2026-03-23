@@ -48,14 +48,30 @@ body.kcBodyClass {
   display: block !important;
 }
 
+#kc-header {
+  width: 100%;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 18px 0 !important;
+  padding: 0 !important;
+}
+
 #kc-header-wrapper {
+  position: relative;
   height: 78px;
   width: min(360px, calc(100vw - 48px));
-  margin: 0 auto 18px auto !important;
+  margin: 0 auto !important;
   padding: 0 !important;
-  background: url("../img/logo-asiatravelplan.svg") center center / contain no-repeat;
   font-size: 0 !important;
   line-height: 0 !important;
+}
+
+#kc-header-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../img/logo-asiatravelplan.svg") center center / contain no-repeat;
 }
 
 #kc-header-wrapper img,
@@ -109,13 +125,14 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   overflow-y: auto;
   padding: 24px 16px;
 }
 
 .login-pf-page .card-pf {
-  width: 100%;
+  width: min(420px, calc(100vw - 32px));
   max-width: min(420px, calc(100vw - 32px));
   margin: 0 auto !important;
 }
@@ -189,7 +206,22 @@ a {
   margin-right: auto !important;
 }
 
-@media (max-width: 900px), (max-height: 900px), (hover: none) and (pointer: coarse) {
+#kc-content,
+#kc-content-wrapper,
+#kc-form,
+#kc-form-wrapper,
+#kc-form-login {
+  width: 100% !important;
+}
+
+.pf-c-input-group,
+.pf-c-input-group .pf-c-form-control,
+.pf-c-input-group__main,
+.pf-c-input-group__item {
+  width: 100%;
+}
+
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
   html,
   body,
   body.login-pf,

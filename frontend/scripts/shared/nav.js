@@ -1,4 +1,4 @@
-import { fetchAuthMe } from "./auth.js";
+import { fetchAuthMe, wireAuthLogoutLink } from "./auth.js";
 
 function buildIconMarkup(icon) {
   if (icon?.type === "image") {
@@ -76,6 +76,7 @@ export function mountBackendNav(mount, options = {}) {
   const currentSection = options.currentSection || "";
   const apiBase = String(window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
   const websiteHref = withLang("index.html");
+  const logoutHref = withLang("index.html");
 
   mount.innerHTML = `
     <nav class="nav backend-main-nav" aria-label="Backend navigation">
@@ -103,6 +104,11 @@ export function mountBackendNav(mount, options = {}) {
   `;
 
   window.dispatchEvent(new CustomEvent("backend-nav-mounted"));
+
+  wireAuthLogoutLink(mount.querySelector("#backendLogoutLink"), {
+    apiBase,
+    returnTo: `${window.location.origin}${logoutHref}`
+  });
 
   applyNavPermissions(mount, []);
 
