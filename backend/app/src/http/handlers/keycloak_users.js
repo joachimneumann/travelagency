@@ -2,7 +2,7 @@ export function createKeycloakUserHandlers(deps) {
   const {
     getPrincipal,
     canViewKeycloakUsers,
-    listAssignableKeycloakUsers,
+    listAssignableStaffUsers,
     keycloakDisplayName,
     sendJson
   } = deps;
@@ -14,13 +14,14 @@ export function createKeycloakUserHandlers(deps) {
       return;
     }
     try {
-      const items = await listAssignableKeycloakUsers();
+      const items = await listAssignableStaffUsers();
       sendJson(res, 200, {
         items: items.map((user) => ({
           id: user.id,
           name: keycloakDisplayName(user) || null,
           username: user.username || null,
           active: user.active !== false,
+          staff_profile: user.staff_profile || null,
           realm_roles: Array.isArray(user.realm_roles) ? user.realm_roles : [],
           client_roles: Array.isArray(user.client_roles) ? user.client_roles : []
         })),

@@ -103,6 +103,9 @@ const services = createBackendServices({
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
     bookingImagesDir: RUNTIME_PATHS.bookingImagesDir,
     bookingPersonPhotosDir: RUNTIME_PATHS.bookingPersonPhotosDir,
+    atpStaffProfilesPath: RUNTIME_PATHS.atpStaffProfilesPath,
+    atpStaffPhotosDir: RUNTIME_PATHS.atpStaffPhotosDir,
+    countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,
     logoPngPath: RUNTIME_PATHS.logoPngPath,
@@ -169,6 +172,9 @@ const applicationSupport = Object.freeze({
 
 export async function createBackendHandler({ port = PORT } = {}) {
   await services.storeUtils.ensureStorage();
+  await services.atpStaffDirectory.ensureStorage();
+  await services.countryReferenceStore.ensureStorage();
+  await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);

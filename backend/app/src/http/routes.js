@@ -75,7 +75,8 @@ const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", pattern: /^\/staging-access\/logout$/, handlerKey: "handleStagingAccessLogout" },
   { method: "GET", pattern: /^\/public\/v1\/tour-images\/(.+)$/, handlerKey: "handlePublicTourImage" },
   { method: "GET", pattern: /^\/public\/v1\/booking-images\/(.+)$/, handlerKey: "handlePublicBookingImage" },
-  { method: "GET", pattern: /^\/public\/v1\/booking-person-photos\/(.+)$/, handlerKey: "handlePublicBookingPersonPhoto" }
+  { method: "GET", pattern: /^\/public\/v1\/booking-person-photos\/(.+)$/, handlerKey: "handlePublicBookingPersonPhoto" },
+  { method: "GET", pattern: /^\/public\/v1\/atp-staff-photos\/(.+)$/, handlerKey: "handlePublicAtpStaffPhoto" }
 ]);
 
 function escapeRouteLiteral(value) {

@@ -19,6 +19,7 @@ import {
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
+import { resolveAtpGuidePdfContext } from "./atp_staff_pdf.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -28,6 +29,7 @@ const PAGE_MARGIN = 44;
 const HEADER_LOGO_WIDTH = 150;
 const HERO_IMAGE_WIDTH = 195;
 const HERO_IMAGE_HEIGHT = 128;
+const GUIDE_PHOTO_SIZE = 96;
 const TABLE_ROW_GAP = 8;
 const TABLE_HEADER_HEIGHT = 28;
 const TABLE_CELL_PADDING_X = 8;
@@ -559,6 +561,153 @@ function drawTravelers(doc, booking, startY, fonts, lang) {
   });
 
   return boxY + boxHeight + 20;
+}
+
+function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
+  const profile = guideContext?.profile || null;
+  const experiences = safeArray(guideContext?.experiences);
+  const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
+  const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
+  let height = 26;
+
+  height += doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(13)
+    .heightOfString(pdfT(lang, "guide.section_title", "Your ATP guide"), { width: textWidth });
+
+  const introText = profile
+    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
+        name: textOrNull(profile?.name) || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+      })
+    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
+
+  height += 6 + doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(10.4)
+    .heightOfString(introText, { width: textWidth, lineGap: 2 });
+
+  if (guideContext?.languageLabels?.length) {
+    height += 6 + doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(9.8)
+      .heightOfString(pdfT(lang, "guide.languages", "Languages: {languages}", {
+        languages: guideContext.languageLabels.join(" · ")
+      }), { width: textWidth });
+  }
+
+  if (experiences.length) {
+    height += 8;
+    for (const experience of experiences) {
+      height += doc
+        .font(pdfFontName("bold", fonts))
+        .fontSize(10.1)
+        .heightOfString(`• ${textOrNull(experience?.title) || ""}`, { width: textWidth, lineGap: 1 });
+      height += 2 + doc
+        .font(pdfFontName("regular", fonts))
+        .fontSize(9.7)
+        .heightOfString(textOrNull(experience?.summary) || "", { width: textWidth - 12, lineGap: 1 });
+      height += 6;
+    }
+  }
+
+  return Math.max(height + 18, profile ? GUIDE_PHOTO_SIZE + 26 : 120);
+}
+
+function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
+  const profile = guideContext?.profile || null;
+  const experiences = safeArray(guideContext?.experiences);
+  const cardWidth = doc.page.width - PAGE_MARGIN * 2;
+  const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang);
+  const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
+  const textX = PAGE_MARGIN + 16 + photoWidth;
+  const textWidth = cardWidth - 32 - photoWidth;
+
+  doc
+    .save()
+    .roundedRect(PAGE_MARGIN, startY, cardWidth, cardHeight, 14)
+    .fill(PDF_COLORS.surfaceSubtle)
+    .restore();
+
+  if (profile) {
+    if (guidePhoto?.buffer) {
+      doc
+        .save()
+        .roundedRect(PAGE_MARGIN + 16, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
+        .clip();
+      doc.image(guidePhoto.buffer, PAGE_MARGIN + 16, startY + 16, {
+        width: GUIDE_PHOTO_SIZE,
+        height: GUIDE_PHOTO_SIZE
+      });
+      doc.restore();
+    } else {
+      doc
+        .save()
+        .roundedRect(PAGE_MARGIN + 16, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
+        .fill(PDF_COLORS.surfaceMuted)
+        .restore();
+    }
+  }
+
+  let y = startY + 16;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(13)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(pdfT(lang, "guide.section_title", "Your ATP guide"), textX, y, { width: textWidth });
+  y = doc.y + 4;
+
+  const introText = profile
+    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
+        name: textOrNull(profile?.name) || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+      })
+    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(10.4)
+    .fillColor(PDF_COLORS.textMutedStrong)
+    .text(introText, textX, y, {
+      width: textWidth,
+      lineGap: 2
+    });
+  y = doc.y + 5;
+
+  if (guideContext?.languageLabels?.length) {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(9.8)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(pdfT(lang, "guide.languages", "Languages: {languages}", {
+        languages: guideContext.languageLabels.join(" · ")
+      }), textX, y, { width: textWidth });
+    y = doc.y + 6;
+  }
+
+  for (const experience of experiences) {
+    const title = textOrNull(experience?.title);
+    const summary = textOrNull(experience?.summary);
+    if (!title || !summary) continue;
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(10.1)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(`• ${title}`, textX, y, {
+        width: textWidth,
+        lineGap: 1
+      });
+    y = doc.y + 1;
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(9.7)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(summary, textX + 12, y, {
+        width: textWidth - 12,
+        lineGap: 1
+      });
+    y = doc.y + 5;
+  }
+
+  return startY + cardHeight + 20;
 }
 
 function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lang) {
@@ -1371,6 +1520,8 @@ export function createOfferPdfWriter({
   bookingImagesDir,
   readTours,
   resolveTourImageDiskPath,
+  resolveAssignedAtpStaffProfile,
+  resolveAtpStaffPhotoDiskPath,
   logoPath,
   fallbackImagePath,
   travelPlanAttachmentsDir,
@@ -1384,11 +1535,24 @@ export function createOfferPdfWriter({
     await mkdir(path.dirname(outputPath), { recursive: true });
     const attachmentPaths = resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir);
 
-    const [logoImage, heroPath, fonts, heroTitle] = await Promise.all([
+    const guideContext = await resolveAtpGuidePdfContext({
+      booking,
+      generatedOffer,
+      resolveAssignedAtpStaffProfile,
+      resolveAtpStaffPhotoDiskPath
+    });
+
+    const [logoImage, heroPath, fonts, heroTitle, guidePhoto] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
       resolvePdfFonts(),
-      resolveBookingHeroTitle(booking, lang, readTours)
+      resolveBookingHeroTitle(booking, lang, readTours),
+      guideContext?.photoDiskPath
+        ? rasterizeImage(guideContext.photoDiskPath, {
+            width: 420,
+            height: 420
+          }).catch(() => null)
+        : null
     ]);
     const heroImage = await rasterizeImage(heroPath || fallbackImagePath, { width: 1200, height: 780 });
 
@@ -1416,6 +1580,8 @@ export function createOfferPdfWriter({
       y = drawHero(doc, heroTitle, booking, generatedOffer, heroImage, y, fonts, lang);
       y = drawIntro(doc, y, fonts, lang);
       y = drawTravelers(doc, booking, y, fonts, lang);
+      y = ensureSpace(doc, y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
       if (safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length) {
         y = startSectionOnNewPage(doc);
         y = drawTravelPlanOverview(doc, generatedOffer, booking, y, fonts, lang);

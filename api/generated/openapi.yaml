@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-23T06:12:48Z
+# 2026-03-23T07:01:52Z
 
 ---
 openapi: 3.1.0
@@ -3830,6 +3830,80 @@ components:
     BookingMilestoneAction:
       type: object
       description: Defined in model (referenced as BookingMilestoneAction).
+    AtpStaffExperience:
+      type: object
+      required:
+      - title
+      - summary
+      properties:
+        id:
+          type: string
+          nullable: true
+        title:
+          type: string
+        summary:
+          type: string
+        countries:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryCode"
+        travel_styles:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourStyleCode"
+    AtpStaffProfile:
+      type: object
+      required:
+      - username
+      properties:
+        username:
+          type: string
+        name:
+          type: string
+          nullable: true
+        picture_ref:
+          type: string
+          nullable: true
+        spoken_languages:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LanguageCode"
+        experiences:
+          type: array
+          items:
+            "$ref": "#/components/schemas/AtpStaffExperience"
+    CountryEmergencyContact:
+      type: object
+      required:
+      - label
+      - phone
+      properties:
+        label:
+          type: string
+        phone:
+          type: string
+        note:
+          type: string
+          nullable: true
+    CountryPracticalInfo:
+      type: object
+      required:
+      - country
+      properties:
+        country:
+          "$ref": "#/components/schemas/CountryCode"
+        practical_tips:
+          type: array
+          items:
+            type: string
+        emergency_contacts:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CountryEmergencyContact"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     Tour:
       type: object
       required:
@@ -5460,6 +5534,12 @@ components:
         assigned_keycloak_user_id:
           type: string
           nullable: true
+        assigned_keycloak_user_label:
+          type: string
+          nullable: true
+        assigned_atp_staff:
+          "$ref": "#/components/schemas/AtpStaffProfile"
+          nullable: true
         core_revision:
           type: integer
           nullable: true
@@ -5731,6 +5811,17 @@ components:
           nullable: true
         username:
           type: string
+          nullable: true
+        realm_roles:
+          type: array
+          items:
+            type: string
+        client_roles:
+          type: array
+          items:
+            type: string
+        staff_profile:
+          "$ref": "#/components/schemas/AtpStaffProfile"
           nullable: true
     KeycloakUserListResponse:
       type: object

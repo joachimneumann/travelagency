@@ -237,6 +237,25 @@ function decodePdfHexText(body) {
     .join(" ");
 }
 
+function decodePdfUtf16Text(buffer) {
+  const source = Buffer.isBuffer(buffer)
+    ? buffer.toString("latin1")
+    : Buffer.from(String(buffer || ""), "latin1").toString("latin1");
+  return Array.from(source.matchAll(/(?:\x00[\x09\x0A\x0D\x20-\x7E]){3,}/g))
+    .map((match) => String(match[0] || "").replace(/\x00/g, ""))
+    .join(" ");
+}
+
+function decodePdfEmbeddedText(buffer) {
+  const rawBuffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer || ""), "latin1");
+  return [
+    decodePdfHexText(rawBuffer.toString("latin1")),
+    decodePdfUtf16Text(rawBuffer)
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function normalizeExtractedPdfText(text) {
   return String(text || "").replace(/\s+/g, "");
 }
@@ -2094,6 +2113,45 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
   assert.doesNotMatch(decodedText, /Whoistraveling/);
 });
 
+test("booking travel plan pdf includes the assigned ATP guide section with relevant experience", async () => {
+  const createdBooking = await createSeedBooking({
+    destinations: ["Vietnam", "Laos"],
+    travel_style: ["Wellness", "Culture"]
+  });
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailBefore.status, 200);
+
+  const assignResult = await requestJson(
+    endpointPath("booking_owner").replace("{booking_id}", bookingId),
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "PATCH",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        assigned_keycloak_user_id: "kc-joachim",
+        actor: "admin"
+      }
+    }
+  );
+  assert.equal(assignResult.status, 200);
+
+  const pdfResult = await requestRaw(
+    `${endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId)}?lang=en`,
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
+  assert.match(decodedText, /YourATPguide/);
+  assert.match(decodedText, /JoachimNeumann/);
+  assert.match(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
+  assert.match(decodedText, /CentralVietnamwellnesspacing|GentleCambodiaandLaosjourneys|Cross-borderhandoverplanning/);
+});
+
 test("booking generated offer pdf endpoint returns a pdf file", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -2152,6 +2210,93 @@ test("booking generated offer pdf endpoint returns a pdf file", async () => {
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   assert.match(pdfResult.body, /%PDF-/);
+});
+
+test("booking generated offer pdf wiring includes the assigned ATP guide section", async () => {
+  const createdBooking = await createSeedBooking({
+    destinations: ["Thailand"],
+    travel_style: ["Wellness", "Beach"]
+  });
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailBefore.status, 200);
+
+  const assignResult = await requestJson(
+    endpointPath("booking_owner").replace("{booking_id}", bookingId),
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "PATCH",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        assigned_keycloak_user_id: "kc-staff",
+        actor: "admin"
+      }
+    }
+  );
+  assert.equal(assignResult.status, 200);
+  assert.equal(assignResult.body.booking.assigned_atp_staff.username, "staff");
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: assignResult.body.booking.offer_revision,
+        offer: {
+          ...assignResult.body.booking.offer,
+          currency: assignResult.body.booking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_wellness_pdf_marker",
+              category: "ACTIVITIES",
+              label: "WellnessMarker",
+              details: "SpaMarker",
+              quantity: 1,
+              unit_amount_cents: 25000,
+              tax_rate_basis_points: 1000,
+              currency: assignResult.body.booking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Guide PDF section check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  assert.equal(generateResult.body.booking.assigned_atp_staff.username, "staff");
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const pdfResult = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  assert.equal(pdfResult.headers["content-type"], "application/pdf");
+  assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
+  const source = await readFile(path.join(__dirname, "..", "src", "lib", "offer_pdf.js"), "utf8");
+  assert.match(source, /resolveAtpGuidePdfContext/);
+  assert.match(source, /drawGuideSection\(doc, y, fonts, lang, guideContext, guidePhoto\)/);
 });
 
 test("booking generated offer pdf endpoint serves the frozen artifact without re-rendering", async () => {
@@ -3746,9 +3891,13 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   const admin = result.body.items.find((item) => item.username === "admin");
   assert.deepEqual(admin.realm_roles, []);
   assert.deepEqual(admin.client_roles, ["atp_admin"]);
+  assert.equal(admin.staff_profile.username, "admin");
+  assert.ok(Array.isArray(admin.staff_profile.spoken_languages));
+  assert.ok(String(admin.staff_profile.picture_ref || "").includes("/public/v1/atp-staff-photos/admin.svg"));
   const accountant = result.body.items.find((item) => item.username === "accountant");
   assert.deepEqual(accountant.realm_roles, []);
   assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
+  assert.equal(accountant.staff_profile.username, "accountant");
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {
@@ -3772,6 +3921,8 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   );
   assert.equal(assignResult.status, 200);
   assert.equal(assignResult.body.booking.assigned_keycloak_user_id, "kc-staff");
+  assert.equal(assignResult.body.booking.assigned_atp_staff.username, "staff");
+  assert.equal(assignResult.body.booking.assigned_atp_staff.name, "Staff User");
 
   const adminList = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders("atp_admin", "admin", "kc-admin"));
   assert.equal(adminList.status, 200);

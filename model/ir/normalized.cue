@@ -70,6 +70,55 @@ IR: {
 
 	types: [
 		{
+			name:       "AtpStaffExperience"
+			domain:     "aux"
+			module:     "entities"
+			sourceType: "entities.#AtpStaffExperience"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "title", kind: "scalar", typeName: "string", required: true},
+				{name: "summary", kind: "scalar", typeName: "string", required: true},
+				{name: "countries", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "travel_styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
+			]
+		},
+		{
+			name:       "AtpStaffProfile"
+			domain:     "aux"
+			module:     "entities"
+			sourceType: "entities.#AtpStaffProfile"
+			fields: [
+				{name: "username", kind: "scalar", typeName: "string", required: true},
+				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "picture_ref", kind: "scalar", typeName: "string", required: false},
+				{name: "spoken_languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
+				{name: "experiences", kind: "entity", typeName: "AtpStaffExperience", required: false, isArray: true},
+			]
+		},
+		{
+			name:       "CountryEmergencyContact"
+			domain:     "aux"
+			module:     "entities"
+			sourceType: "entities.#CountryEmergencyContact"
+			fields: [
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "phone", kind: "scalar", typeName: "string", required: true},
+				{name: "note", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "CountryPracticalInfo"
+			domain:     "aux"
+			module:     "entities"
+			sourceType: "entities.#CountryPracticalInfo"
+			fields: [
+				{name: "country", kind: "enum", typeName: "CountryCode", required: true},
+				{name: "practical_tips", kind: "scalar", typeName: "string", required: true, isArray: true},
+				{name: "emergency_contacts", kind: "entity", typeName: "CountryEmergencyContact", required: true, isArray: true},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
 			name:       "Tour"
 			domain:     "aux"
 			module:     "entities"
@@ -903,6 +952,8 @@ IR: {
 				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
 				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "assigned_keycloak_user_label", kind: "scalar", typeName: "string", required: false},
+				{name: "assigned_atp_staff", kind: "entity", typeName: "AtpStaffProfile", required: false},
 				{name: "core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "persons_revision", kind: "scalar", typeName: "int", required: false},
@@ -1064,6 +1115,9 @@ IR: {
 				{name: "name", kind: "scalar", typeName: "string", required: true},
 				{name: "active", kind: "scalar", typeName: "bool", required: false},
 				{name: "username", kind: "scalar", typeName: "string", required: false},
+				{name: "realm_roles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "client_roles", kind: "scalar", typeName: "string", required: false, isArray: true},
+				{name: "staff_profile", kind: "entity", typeName: "AtpStaffProfile", required: false},
 			]
 		},
 		{

@@ -16,6 +16,7 @@ import {
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
+import { resolveAtpGuidePdfContext } from "./atp_staff_pdf.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -29,6 +30,7 @@ const HERO_IMAGE_HEIGHT = 128;
 const ITEM_THUMBNAIL_WIDTH = 118;
 const ITEM_THUMBNAIL_HEIGHT = 88;
 const ITEM_CARD_PADDING = 14;
+const GUIDE_PHOTO_SIZE = 92;
 const PDF_FONT_REGULAR = "ATPUnicodeRegular";
 const PDF_FONT_BOLD = "ATPUnicodeBold";
 
@@ -532,11 +534,169 @@ function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
   return doc.y + 10;
 }
 
+function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
+  const profile = guideContext?.profile || null;
+  const experiences = safeArray(guideContext?.experiences);
+  const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
+  const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
+  let height = 26;
+
+  height += measureTextHeight(doc, pdfT(lang, "guide.section_title", "Your ATP guide"), {
+    width: textWidth,
+    fontSize: 13,
+    fonts,
+    weight: "bold"
+  });
+
+  const introText = profile
+    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
+        name: textOrNull(profile?.name) || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+      })
+    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
+  height += 6 + measureTextHeight(doc, introText, {
+    width: textWidth,
+    fontSize: 10.4,
+    fonts,
+    lineGap: 2
+  });
+
+  if (guideContext?.languageLabels?.length) {
+    height += 6 + measureTextHeight(doc, pdfT(lang, "guide.languages", "Languages: {languages}", {
+      languages: guideContext.languageLabels.join(" · ")
+    }), {
+      width: textWidth,
+      fontSize: 9.8,
+      fonts
+    });
+  }
+
+  if (experiences.length) {
+    height += 8;
+    for (const experience of experiences) {
+      height += measureTextHeight(doc, `• ${textOrNull(experience?.title) || ""}`, {
+        width: textWidth,
+        fontSize: 10.1,
+        fonts,
+        weight: "bold",
+        lineGap: 1
+      });
+      height += 2 + measureTextHeight(doc, textOrNull(experience?.summary) || "", {
+        width: textWidth - 12,
+        fontSize: 9.7,
+        fonts,
+        lineGap: 1
+      });
+      height += 6;
+    }
+  }
+
+  return Math.max(height + 18, profile ? GUIDE_PHOTO_SIZE + 26 : 120);
+}
+
+function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
+  const profile = guideContext?.profile || null;
+  const experiences = safeArray(guideContext?.experiences);
+  const cardWidth = doc.page.width - PAGE_MARGIN * 2;
+  const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang);
+  const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
+  const textX = PAGE_MARGIN + 16 + photoWidth;
+  const textWidth = cardWidth - 32 - photoWidth;
+
+  doc
+    .save()
+    .roundedRect(PAGE_MARGIN, startY, cardWidth, cardHeight, 14)
+    .fill(PDF_COLORS.surfaceSubtle)
+    .restore();
+
+  if (profile) {
+    if (guidePhoto?.buffer) {
+      doc
+        .save()
+        .roundedRect(PAGE_MARGIN + 16, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
+        .clip();
+      doc.image(guidePhoto.buffer, PAGE_MARGIN + 16, startY + 16, {
+        width: GUIDE_PHOTO_SIZE,
+        height: GUIDE_PHOTO_SIZE
+      });
+      doc.restore();
+    } else {
+      doc
+        .save()
+        .roundedRect(PAGE_MARGIN + 16, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
+        .fill(PDF_COLORS.surfaceMuted)
+        .restore();
+    }
+  }
+
+  let y = startY + 16;
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(13)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(pdfT(lang, "guide.section_title", "Your ATP guide"), textX, y, { width: textWidth });
+  y = doc.y + 4;
+
+  const introText = profile
+    ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
+        name: textOrNull(profile?.name) || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+      })
+    : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
+
+  doc
+    .font(pdfFontName("regular", fonts))
+    .fontSize(10.4)
+    .fillColor(PDF_COLORS.textMutedStrong)
+    .text(introText, textX, y, {
+      width: textWidth,
+      lineGap: 2
+    });
+  y = doc.y + 5;
+
+  if (guideContext?.languageLabels?.length) {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(9.8)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(pdfT(lang, "guide.languages", "Languages: {languages}", {
+        languages: guideContext.languageLabels.join(" · ")
+      }), textX, y, { width: textWidth });
+    y = doc.y + 6;
+  }
+
+  for (const experience of experiences) {
+    const title = textOrNull(experience?.title);
+    const summary = textOrNull(experience?.summary);
+    if (!title || !summary) continue;
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(10.1)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(`• ${title}`, textX, y, {
+        width: textWidth,
+        lineGap: 1
+      });
+    y = doc.y + 1;
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(9.7)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(summary, textX + 12, y, {
+        width: textWidth - 12,
+        lineGap: 1
+      });
+    y = doc.y + 5;
+  }
+
+  return startY + cardHeight + 18;
+}
+
 export function createTravelPlanPdfWriter({
   travelPlanPdfPath,
   bookingImagesDir = "",
   readTours = null,
   resolveTourImageDiskPath = null,
+  resolveAssignedAtpStaffProfile = null,
+  resolveAtpStaffPhotoDiskPath = null,
   logoPath = "",
   fallbackImagePath = "",
   travelPlanAttachmentsDir = "",
@@ -554,11 +714,23 @@ export function createTravelPlanPdfWriter({
     const plan = travelPlan && typeof travelPlan === "object" ? travelPlan : { days: [] };
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
 
-    const [heroTitle, logoImage, heroPath, itemThumbnailMap] = await Promise.all([
+    const guideContext = await resolveAtpGuidePdfContext({
+      booking,
+      resolveAssignedAtpStaffProfile,
+      resolveAtpStaffPhotoDiskPath
+    });
+
+    const [heroTitle, logoImage, heroPath, itemThumbnailMap, guidePhoto] = await Promise.all([
       resolveBookingHeroTitle(booking, lang, readTours),
       rasterizeImage(logoPath, { width: 1000 }).catch(() => null),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
-      buildItemThumbnailMap(plan, bookingImagesDir)
+      buildItemThumbnailMap(plan, bookingImagesDir),
+      guideContext?.photoDiskPath
+        ? rasterizeImage(guideContext.photoDiskPath, {
+            width: 420,
+            height: 420
+          }).catch(() => null)
+        : null
     ]);
     const heroImage = await rasterizeImage(heroPath || fallbackImagePath, {
       width: 1200,
@@ -582,6 +754,12 @@ export function createTravelPlanPdfWriter({
           textOrNull(item?.location),
           textOrNull(item?.details)
         ])
+      ]),
+      textOrNull(guideContext?.profile?.name),
+      ...safeArray(guideContext?.languageLabels),
+      ...safeArray(guideContext?.experiences).flatMap((experience) => [
+        textOrNull(experience?.title),
+        textOrNull(experience?.summary)
       ]),
       textOrNull(companyProfile?.name),
       textOrNull(companyProfile?.website),
@@ -627,6 +805,8 @@ export function createTravelPlanPdfWriter({
 
       let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
       y = drawTravelPlanHero(doc, heroTitle, heroImage, y, fonts, lang);
+      y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
+      y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
 
       const days = safeArray(plan?.days);
       if (!days.length) {

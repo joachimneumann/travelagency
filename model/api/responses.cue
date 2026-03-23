@@ -11,6 +11,9 @@ import (
 	name:      string
 	active?:   bool
 	username?: string
+	realm_roles?: [...string]
+	client_roles?: [...string]
+	staff_profile?: entities.#AtpStaffProfile
 }
 
 #KeycloakUserListResponse: {
@@ -249,6 +252,7 @@ import (
 	last_action_at?:                 common.#Timestamp
 	assigned_keycloak_user_id?:      common.#Identifier
 	assigned_keycloak_user_label?:   string
+	assigned_atp_staff?:             entities.#AtpStaffProfile
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]

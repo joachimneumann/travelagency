@@ -8,6 +8,8 @@ import { createOfferPdfWriter } from "../lib/offer_pdf.js";
 import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
 import { createKeycloakDirectory } from "../lib/keycloak_directory.js";
 import { createStoreUtils } from "../lib/store_utils.js";
+import { createAtpStaffDirectory } from "../lib/atp_staff_directory.js";
+import { createCountryReferenceStore } from "../lib/country_reference_store.js";
 
 export function createBackendServices({
   runtime,
@@ -51,6 +53,19 @@ export function createBackendServices({
     keycloakDirectoryAdminRealm: runtime.keycloakDirectoryConfig.keycloakDirectoryAdminRealm
   });
 
+  const atpStaffDirectory = createAtpStaffDirectory({
+    dataPath: collections.atpStaffProfilesPath,
+    photosDir: collections.atpStaffPhotosDir,
+    keycloakDirectory,
+    writeQueueRef
+  });
+
+  const countryReferenceStore = createCountryReferenceStore({
+    dataPath: collections.countryReferenceInfoPath,
+    writeQueueRef,
+    nowIso: support.nowIso
+  });
+
   const bookingViewHelpers = createBookingViewHelpers({
     baseCurrency: runtime.baseCurrency,
     stages: runtime.stages,
@@ -75,6 +90,7 @@ export function createBackendServices({
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
     listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
+    resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
     sendJson: httpHelpers.sendJson
   });
 
@@ -131,6 +147,8 @@ export function createBackendServices({
     bookingImagesDir: collections.bookingImagesDir,
     readTours: storeUtils.readTours,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
+    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     logoPath: collections.logoPngPath,
     fallbackImagePath: collections.fallbackBookingImagePath,
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
@@ -143,6 +161,8 @@ export function createBackendServices({
     bookingImagesDir: collections.bookingImagesDir,
     readTours: storeUtils.readTours,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
+    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     logoPath: collections.logoPngPath,
     fallbackImagePath: collections.fallbackBookingImagePath,
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
@@ -155,6 +175,8 @@ export function createBackendServices({
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,
+    atpStaffDirectory,
+    countryReferenceStore,
     metaWebhookHandlers,
     tourHelpers,
     writeInvoicePdf,

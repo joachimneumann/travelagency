@@ -9,6 +9,7 @@ import {
 } from "../domain/tour_catalog_i18n.js";
 import { buildPaginatedListResponse } from "../http/pagination.js";
 import { buildApiRoutes } from "../http/routes.js";
+import { createAtpStaffHandlers } from "../http/handlers/atp_staff.js";
 import { createBookingHandlers } from "../http/handlers/bookings.js";
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createSupplierHandlers } from "../http/handlers/suppliers.js";
@@ -41,6 +42,7 @@ export function createApplicationRoutes({
     bookingViewHelpers,
     storeUtils,
     keycloakDirectory,
+    atpStaffDirectory,
     metaWebhookHandlers,
     tourHelpers,
     writeInvoicePdf,
@@ -141,9 +143,15 @@ export function createApplicationRoutes({
   const keycloakUserHandlers = createKeycloakUserHandlers({
     getPrincipal,
     canViewKeycloakUsers,
-    listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
+    listAssignableStaffUsers: atpStaffDirectory.listAssignableStaffUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson: httpHelpers.sendJson
+  });
+
+  const atpStaffHandlers = createAtpStaffHandlers({
+    sendJson: httpHelpers.sendJson,
+    sendFileWithCache: httpHelpers.sendFileWithCache,
+    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath
   });
 
   const supplierHandlers = createSupplierHandlers({
@@ -215,6 +223,7 @@ export function createApplicationRoutes({
       handleStagingAccessLogout: stagingAccessHandlers.handleStagingAccessLogout,
       handleMobileBootstrap: systemHandlers.handleMobileBootstrap,
       ...bookingHandlers,
+      ...atpStaffHandlers,
       ...keycloakUserHandlers,
       ...supplierHandlers,
       ...tourHandlers

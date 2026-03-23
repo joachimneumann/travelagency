@@ -32,6 +32,7 @@ export function createBookingViewHelpers({
   buildBookingOfferReadModel,
   listAssignableKeycloakUsers,
   keycloakDisplayName,
+  resolveAssignedAtpStaffProfile,
   sendJson
 }) {
   const offerAcceptanceTokenSecret = normalizeText(offerAcceptanceTokenConfig?.secret);
@@ -337,8 +338,11 @@ export function createBookingViewHelpers({
     const assignedKeycloakUserLabels = assignedKeycloakUserId
       ? await resolveAssignableKeycloakUserLabelMap()
       : null;
+    const assignedAtpStaff = assignedKeycloakUserId && typeof resolveAssignedAtpStaffProfile === "function"
+      ? await resolveAssignedAtpStaffProfile(assignedKeycloakUserId).catch(() => null)
+      : null;
     const assignedKeycloakUserLabel = assignedKeycloakUserId
-      ? normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || assignedKeycloakUserId
+      ? normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || normalizeText(assignedAtpStaff?.name) || assignedKeycloakUserId
       : "";
     return {
       ...normalizedBooking,
@@ -347,6 +351,7 @@ export function createBookingViewHelpers({
       last_action: milestoneState.lastAction,
       last_action_at: milestoneState.lastActionAt,
       ...(assignedKeycloakUserLabel ? { assigned_keycloak_user_label: assignedKeycloakUserLabel } : {}),
+      ...(assignedAtpStaff ? { assigned_atp_staff: assignedAtpStaff } : {}),
       service_level_agreement_due_at: milestoneState.lastAction
         ? computeServiceLevelAgreementDueAt(milestoneState.stage, new Date(milestoneState.lastActionAt))
         : normalizedBooking?.service_level_agreement_due_at,

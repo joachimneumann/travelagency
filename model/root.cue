@@ -28,6 +28,10 @@ import (
 		BookingTravelPlanItemCopiedFrom:             entityModel.#BookingTravelPlanItemCopiedFrom
 		BookingTravelPlanOfferComponentLink:         entityModel.#BookingTravelPlanOfferComponentLink
 		BookingOfferDiscount:                        entityModel.#BookingOfferDiscount
+		AtpStaffExperience:                          entityModel.#AtpStaffExperience
+		AtpStaffProfile:                             entityModel.#AtpStaffProfile
+		CountryEmergencyContact:                     entityModel.#CountryEmergencyContact
+		CountryPracticalInfo:                        entityModel.#CountryPracticalInfo
 		Supplier:                                    entityModel.#Supplier
 		Tour:                                        entityModel.#Tour
 	}

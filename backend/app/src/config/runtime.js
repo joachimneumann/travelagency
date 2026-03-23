@@ -29,6 +29,9 @@ export const INVOICES_DIR = path.join(DATA_ROOT, "invoices");
 export const GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
 export const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 export const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
+export const ATP_STAFF_PROFILES_PATH = path.join(DATA_ROOT, "atp_staff_profiles.json");
+export const ATP_STAFF_PHOTOS_DIR = path.join(DATA_ROOT, "atp_staff_photos");
+export const COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_reference_info.json");
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(DATA_ROOT, "booking_travel_plan_attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.large.png");
@@ -226,6 +229,9 @@ export const RUNTIME_PATHS = Object.freeze({
   generatedOffersDir: GENERATED_OFFERS_DIR,
   bookingImagesDir: BOOKING_IMAGES_DIR,
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
+  atpStaffProfilesPath: ATP_STAFF_PROFILES_PATH,
+  atpStaffPhotosDir: ATP_STAFF_PHOTOS_DIR,
+  countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   logoPngPath: LOGO_PNG_PATH,
