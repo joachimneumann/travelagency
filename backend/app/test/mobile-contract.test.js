@@ -338,6 +338,31 @@ test("bookings list response conforms to the mobile contract", async () => {
   assertBookingShape(result.body.items[0]);
 });
 
+test("public booking discovery-call request can be created without destinations or travel styles", async () => {
+  await resetStore();
+  const result = await requestJson(endpointPath("public_bookings"), {}, {
+    method: "POST",
+    body: {
+      name: "Discovery Caller",
+      email: "caller@example.com",
+      preferred_language: "en",
+      preferred_currency: "USD",
+      destinations: [],
+      travel_style: [],
+      booking_name: "",
+      tour_id: "",
+      notes: "No tour selected yet"
+    }
+  });
+
+  assert.equal(result.status, 201);
+  assertBookingShape(result.body.booking);
+  assert.deepEqual(result.body.booking.destinations, []);
+  assert.deepEqual(result.body.booking.travel_styles, []);
+  assert.equal(result.body.booking.persons.length, 1);
+  assert.equal(result.body.booking.persons[0].name, "Discovery Caller");
+});
+
 test("booking detail, activities, and invoices conform to the mobile contract", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;

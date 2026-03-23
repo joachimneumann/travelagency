@@ -146,8 +146,6 @@ export function createBookingViewHelpers({
   function validateBookingInput(payload) {
     const required = ["name", "preferred_currency", "preferred_language"];
     const missing = required.filter((key) => !normalizeText(payload[key]));
-    if (!normalizeStringArray(payload.destinations).length) missing.push("destinations");
-    if (!normalizeStringArray(payload.travel_style).length) missing.push("travel_style");
     if (missing.length) {
       return { ok: false, error: `Missing required fields: ${missing.join(", ")}` };
     }
