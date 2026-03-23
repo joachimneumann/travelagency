@@ -20,6 +20,7 @@ import (
 		BookingPersonDocument:                          entityModel.#BookingPersonDocument
 		BookingTravelPlan:                              entityModel.#BookingTravelPlan
 		BookingTravelPlanDay:                           entityModel.#BookingTravelPlanDay
+		BookingTravelPlanAttachment:                    entityModel.#BookingTravelPlanAttachment
 		BookingTravelPlanItem:                       entityModel.#BookingTravelPlanItem
 		BookingTravelPlanItemImage:                  entityModel.#BookingTravelPlanItemImage
 		BookingTravelPlanItemImageSourceAttribution: entityModel.#BookingTravelPlanItemImageSourceAttribution
@@ -129,6 +130,8 @@ import (
 		TravelPlanItemImageUploadRequest:              apiModel.#TravelPlanItemImageUploadRequest
 		TravelPlanItemImageDeleteRequest:              apiModel.#TravelPlanItemImageDeleteRequest
 		TravelPlanItemImageReorderRequest:             apiModel.#TravelPlanItemImageReorderRequest
+		TravelPlanAttachmentUploadRequest:             apiModel.#TravelPlanAttachmentUploadRequest
+		TravelPlanAttachmentDeleteRequest:             apiModel.#TravelPlanAttachmentDeleteRequest
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                      apiModel.#BookingGenerateOfferRequest
 		BookingGenerateOfferDepositAcceptanceRuleRequest: apiModel.#BookingGenerateOfferDepositAcceptanceRuleRequest

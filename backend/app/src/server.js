@@ -103,6 +103,7 @@ const services = createBackendServices({
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
     bookingImagesDir: RUNTIME_PATHS.bookingImagesDir,
     bookingPersonPhotosDir: RUNTIME_PATHS.bookingPersonPhotosDir,
+    bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,
     logoPngPath: RUNTIME_PATHS.logoPngPath,
     fallbackBookingImagePath: RUNTIME_PATHS.fallbackBookingImagePath

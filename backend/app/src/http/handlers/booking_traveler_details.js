@@ -13,7 +13,6 @@ const PRIVATE_CACHE_HEADERS = Object.freeze({
   Pragma: "no-cache"
 });
 
-const PRIVACY_NOTICE = "For privacy reasons, all prior data has been deleted, except for the traveler’s name";
 const PUBLIC_TRAVELER_DOCUMENT_TYPES = new Set(["passport", "national_id"]);
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -56,41 +55,12 @@ function findStoredPerson(booking, personId) {
   return normalizeStoredPersons(booking).find((person) => String(person?.id || "").trim() === normalizedPersonId) || null;
 }
 
-function hasDocumentInput(document) {
-  if (!document || typeof document !== "object" || Array.isArray(document)) return false;
-  return [
-    document.holder_name,
-    document.document_number,
-    document.issuing_country,
-    document.issued_on,
-    document.expires_on,
-    document.no_expiration_date === true ? "true" : ""
-  ].some((value) => String(value || "").trim());
-}
-
-function hasAddressInput(address) {
-  if (!address || typeof address !== "object" || Array.isArray(address)) return false;
-  return [
-    address.line_1,
-    address.line_2,
-    address.city,
-    address.state_region,
-    address.postal_code,
-    address.country_code
-  ].some((value) => String(value || "").trim());
-}
-
-function hasPublicPersonData(person) {
-  if (!person || typeof person !== "object" || Array.isArray(person)) return false;
-  return [
-    ...(Array.isArray(person.emails) ? person.emails : []),
-    ...(Array.isArray(person.phone_numbers) ? person.phone_numbers : []),
-    person.preferred_language,
-    person.date_of_birth,
-    person.nationality
-  ].some((value) => String(value || "").trim())
-    || hasAddressInput(person.address)
-    || (Array.isArray(person.documents) ? person.documents.some(hasDocumentInput) : false);
+function resolveTravelerNumber(booking, personId) {
+  const normalizedPersonId = String(personId || "").trim();
+  if (!normalizedPersonId) return null;
+  const travelers = normalizeStoredPersons(booking).filter((person) => isTravelingPerson(person));
+  const travelerIndex = travelers.findIndex((person) => String(person?.id || "").trim() === normalizedPersonId);
+  return travelerIndex >= 0 ? travelerIndex + 1 : null;
 }
 
 function buildPublicDocumentInput(document, personId, documentIndex) {
@@ -121,33 +91,46 @@ function buildPublicAddressInput(address) {
   return Object.values(nextAddress).some(Boolean) ? nextAddress : undefined;
 }
 
-function buildClearedPublicPerson(bookingId, person) {
-  return normalizeSingleBookingPersonPayload(bookingId, {
-    id: person?.id,
-    name: person?.name || "",
-    emails: [],
-    phone_numbers: [],
-    preferred_language: "",
-    date_of_birth: "",
-    nationality: "",
-    address: {},
-    documents: []
-  }, 0);
+function buildPublicVisiblePerson(bookingId, person) {
+  const normalized = normalizeSingleBookingPersonPayload(bookingId, person, 0);
+  if (!normalized) return null;
+  return {
+    id: normalized.id,
+    name: normalized.name,
+    ...(Array.isArray(normalized.emails) && normalized.emails.length ? { emails: normalized.emails } : {}),
+    ...(Array.isArray(normalized.phone_numbers) && normalized.phone_numbers.length ? { phone_numbers: normalized.phone_numbers } : {}),
+    ...(String(normalized.preferred_language || "").trim() ? { preferred_language: normalized.preferred_language } : {}),
+    ...(String(normalized.date_of_birth || "").trim() ? { date_of_birth: normalized.date_of_birth } : {}),
+    ...(String(normalized.nationality || "").trim() ? { nationality: normalized.nationality } : {}),
+    ...(normalized.address ? { address: normalized.address } : {}),
+    ...(Array.isArray(normalized.documents) && normalized.documents.length ? {
+      documents: normalized.documents.map((document) => ({
+        id: document.id,
+        document_type: document.document_type,
+        ...(String(document.holder_name || "").trim() ? { holder_name: document.holder_name } : {}),
+        ...(String(document.document_number || "").trim() ? { document_number: document.document_number } : {}),
+        ...(String(document.issuing_country || "").trim() ? { issuing_country: document.issuing_country } : {}),
+        ...(String(document.issued_on || "").trim() ? { issued_on: document.issued_on } : {}),
+        ...(document.no_expiration_date === true ? { no_expiration_date: true } : {}),
+        ...(String(document.expires_on || "").trim() ? { expires_on: document.expires_on } : {})
+      }))
+    } : {})
+  };
 }
 
 function buildPublicTravelerDetailsAccessResponse(booking, person, expiresAt) {
   const bookingName = String(booking?.name || booking?.web_form_submission?.booking_name || "").trim();
   const customerLanguage = String(booking?.customer_language || booking?.web_form_submission?.preferred_language || "").trim();
-  const hasExistingData = hasPublicPersonData(person);
+  const travelerNumber = resolveTravelerNumber(booking, person?.id);
   return {
     booking_id: booking.id,
     person_id: person.id,
+    ...(travelerNumber ? { traveler_number: travelerNumber } : {}),
     ...(bookingName ? { booking_name: bookingName } : {}),
     ...(customerLanguage ? { customer_language: customerLanguage } : {}),
     persons_revision: Number.isInteger(Number(booking?.persons_revision)) ? Math.max(0, Number(booking.persons_revision)) : 0,
     ...(expiresAt ? { public_traveler_details_expires_at: expiresAt } : {}),
-    person: buildClearedPublicPerson(booking.id, person),
-    ...(hasExistingData ? { privacy_notice: PRIVACY_NOTICE } : {})
+    person: buildPublicVisiblePerson(booking.id, person)
   };
 }
 

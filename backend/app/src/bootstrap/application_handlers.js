@@ -130,6 +130,7 @@ export function createApplicationRoutes({
     GENERATED_OFFERS_DIR: runtime.paths.generatedOffersDir,
     BOOKING_IMAGES_DIR: runtime.paths.bookingImagesDir,
     BOOKING_PERSON_PHOTOS_DIR: runtime.paths.bookingPersonPhotosDir,
+    BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR: runtime.paths.bookingTravelPlanAttachmentsDir,
     writeFile,
     rm,
     sendFileWithCache: httpHelpers.sendFileWithCache,

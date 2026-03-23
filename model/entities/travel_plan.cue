@@ -67,6 +67,15 @@ import (
 	coverage_type:          *"full" | enums.#TravelPlanOfferCoverageType
 }
 
+#BookingTravelPlanAttachment: {
+	id:           common.#Identifier
+	filename:     string & !=""
+	storage_path: string & !=""
+	page_count:   >0 & int
+	sort_order:   >=0 & int
+	created_at?:  common.#Timestamp
+}
+
 #BookingTravelPlanDay: {
 	id:                  common.#Identifier
 	day_number:          >0 & int
@@ -80,4 +89,5 @@ import (
 #BookingTravelPlan: {
 	days?: [...#BookingTravelPlanDay]
 	offer_component_links?: [...#BookingTravelPlanOfferComponentLink]
+	attachments?: [...#BookingTravelPlanAttachment]
 }

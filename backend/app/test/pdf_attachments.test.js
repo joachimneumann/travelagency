@@ -1,0 +1,66 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import PDFKitDocument from "pdfkit";
+import { PDFDocument as PDFLibDocument } from "pdf-lib";
+import {
+  A4_HEIGHT_POINTS,
+  A4_WIDTH_POINTS,
+  appendPdfAttachmentsToFile,
+  inspectPdfAttachmentBuffer
+} from "../src/lib/pdf_attachments.js";
+
+function createPdfBuffer({ size = [A4_WIDTH_POINTS, A4_HEIGHT_POINTS], pages = 1 } = {}) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const doc = new PDFKitDocument({
+      size,
+      margin: 0,
+      autoFirstPage: false,
+      compress: false
+    });
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("error", reject);
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    for (let index = 0; index < pages; index += 1) {
+      doc.addPage({ size });
+      doc.text(`Page ${index + 1}`, 24, 24);
+    }
+    doc.end();
+  });
+}
+
+test("travel-plan PDF attachments accept only A4 pages", async () => {
+  const a4Buffer = await createPdfBuffer({ pages: 2 });
+  const info = await inspectPdfAttachmentBuffer(a4Buffer);
+  assert.equal(info.pageCount, 2);
+
+  const letterBuffer = await createPdfBuffer({ size: [612, 792] });
+  await assert.rejects(
+    () => inspectPdfAttachmentBuffer(letterBuffer),
+    /A4 page layout/
+  );
+});
+
+test("travel-plan PDF attachments append extra PDFs to the generated document", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-pdf-attachments-"));
+  try {
+    const outputPath = path.join(tempDir, "base.pdf");
+    const attachmentOnePath = path.join(tempDir, "attachment-1.pdf");
+    const attachmentTwoPath = path.join(tempDir, "attachment-2.pdf");
+
+    await writeFile(outputPath, await createPdfBuffer({ pages: 1 }));
+    await writeFile(attachmentOnePath, await createPdfBuffer({ pages: 2 }));
+    await writeFile(attachmentTwoPath, await createPdfBuffer({ pages: 1 }));
+
+    await appendPdfAttachmentsToFile(outputPath, [attachmentOnePath, attachmentTwoPath]);
+
+    const mergedBytes = await readFile(outputPath);
+    const mergedDocument = await PDFLibDocument.load(mergedBytes);
+    assert.equal(mergedDocument.getPageCount(), 4);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});

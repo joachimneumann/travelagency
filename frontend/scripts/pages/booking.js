@@ -119,7 +119,8 @@ const state = {
     title: "",
     summary: "",
     days: [],
-    offer_component_links: []
+    offer_component_links: [],
+    attachments: []
   },
   offerDraft: {
     currency: "USD",
@@ -201,6 +202,7 @@ const els = {
   travelPlanImagePreviewCloseBtn: document.getElementById("travel_plan_image_preview_close_btn"),
   travelPlanImagePreviewImage: document.getElementById("travel_plan_image_preview_image"),
   travelPlanItemImageInput: document.getElementById("travel_plan_item_image_input"),
+  travelPlanAttachmentInput: document.getElementById("travel_plan_attachment_input"),
   personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
   personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
   personModalDateOfBirthPickerBtn: document.getElementById("booking_person_modal_date_of_birth_picker_btn"),

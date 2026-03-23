@@ -113,6 +113,27 @@ function normalizeTravelPlanItemImages(images, dayIndex, itemIndex) {
   }));
 }
 
+function normalizeTravelPlanAttachments(attachments) {
+  return (Array.isArray(attachments) ? attachments : [])
+    .map((attachment, index) => {
+      const rawAttachment = attachment && typeof attachment === "object" && !Array.isArray(attachment) ? attachment : {};
+      return {
+        id: normalizeText(rawAttachment.id) || `travel_plan_attachment_${index + 1}`,
+        filename: normalizeOptionalText(rawAttachment.filename),
+        storage_path: normalizeOptionalText(rawAttachment.storage_path),
+        page_count: normalizePositiveInt(rawAttachment.page_count, null),
+        sort_order: normalizeNonNegativeInt(rawAttachment.sort_order, index),
+        created_at: normalizeOptionalText(rawAttachment.created_at)
+      };
+    })
+    .filter((attachment) => attachment.filename && attachment.storage_path && attachment.page_count)
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .map((attachment, index) => ({
+      ...attachment,
+      sort_order: index
+    }));
+}
+
 function normalizeItemKind(value) {
   const normalized = normalizeText(value).toLowerCase();
   return TRAVEL_PLAN_ITEM_KINDS.has(normalized) ? normalized : "other";
@@ -145,7 +166,8 @@ function normalizeFinancialCoverageStatus(value) {
 function buildDefaultTravelPlan() {
   return {
     days: [],
-    offer_component_links: []
+    offer_component_links: [],
+    attachments: []
   };
 }
 
@@ -329,7 +351,8 @@ export function createTravelPlanHelpers() {
 
     return normalizeTravelPlanTranslationMeta({
       days: normalizedDays,
-      offer_component_links: returnedLinks
+      offer_component_links: returnedLinks,
+      attachments: normalizeTravelPlanAttachments(source.attachments)
     });
   }
 
@@ -339,6 +362,7 @@ export function createTravelPlanHelpers() {
     const itemIds = new Set();
     const linkIds = new Set();
     const imageIds = new Set();
+    const attachmentIds = new Set();
     const supplierIds = new Set(
       (Array.isArray(options?.supplierIds) ? options.supplierIds : [])
         .map((supplierId) => normalizeText(supplierId))
@@ -418,7 +442,26 @@ export function createTravelPlanHelpers() {
         }
       }
     }
-  }
+    }
+
+    for (const attachment of Array.isArray(normalized.attachments) ? normalized.attachments : []) {
+      if (!normalizeText(attachment.id)) {
+        return { ok: false, error: "Every travel-plan attachment needs an id." };
+      }
+      if (attachmentIds.has(attachment.id)) {
+        return { ok: false, error: `Travel-plan attachment id ${attachment.id} is duplicated.` };
+      }
+      attachmentIds.add(attachment.id);
+      if (!normalizeText(attachment.filename)) {
+        return { ok: false, error: `Travel-plan attachment ${attachment.id} is missing a filename.` };
+      }
+      if (!normalizeText(attachment.storage_path)) {
+        return { ok: false, error: `Travel-plan attachment ${attachment.id} is missing a storage path.` };
+      }
+      if (!(Number.isInteger(attachment.page_count) && attachment.page_count > 0)) {
+        return { ok: false, error: `Travel-plan attachment ${attachment.id} has an invalid page count.` };
+      }
+    }
 
     for (const link of normalized.offer_component_links) {
       if (!normalizeText(link.id)) {

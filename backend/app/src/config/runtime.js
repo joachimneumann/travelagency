@@ -29,9 +29,10 @@ export const INVOICES_DIR = path.join(DATA_ROOT, "invoices");
 export const GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
 export const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 export const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
+export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(DATA_ROOT, "booking_travel_plan_attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.large.png");
-export const FALLBACK_BOOKING_IMAGE_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "profile_booking.png");
+export const FALLBACK_BOOKING_IMAGE_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "happy_tourists.webp");
 export const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
 export const BACKEND_GENERATED_REQUEST_FACTORY_PATH = path.join(APP_ROOT, "Generated", "API", "generated_APIRequestFactory.js");
 
@@ -225,6 +226,7 @@ export const RUNTIME_PATHS = Object.freeze({
   generatedOffersDir: GENERATED_OFFERS_DIR,
   bookingImagesDir: BOOKING_IMAGES_DIR,
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
+  bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   logoPngPath: LOGO_PNG_PATH,
   fallbackBookingImagePath: FALLBACK_BOOKING_IMAGE_PATH,

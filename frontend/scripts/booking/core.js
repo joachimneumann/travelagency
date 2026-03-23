@@ -69,6 +69,7 @@ export function createBookingCoreModule(ctx) {
   let heroCopyClipboardPoll = null;
   let heroCopiedValue = "";
   let titleEditStartValue = "";
+  const DISCOVERY_CALL_FALLBACK_IMAGE = "assets/img/happy_tourists.webp";
 
   function withBackendLang(pathname, params = {}) {
     const url = new URL(pathname, window.location.origin);
@@ -206,6 +207,16 @@ export function createBookingCoreModule(ctx) {
 
     if (normalizeText(state.tour_image)) {
       els.heroImage.src = resolveBookingImageSrc(state.tour_image);
+      els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || bookingT("booking.tour_picture", "Tour picture");
+      els.heroImage.hidden = false;
+      els.heroImage.style.display = "block";
+      if (els.heroInitials) els.heroInitials.hidden = true;
+      if (els.heroInitials) els.heroInitials.style.display = "none";
+      return;
+    }
+
+    if (shouldUseDiscoveryCallFallbackImage(state.booking)) {
+      els.heroImage.src = DISCOVERY_CALL_FALLBACK_IMAGE;
       els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || bookingT("booking.tour_picture", "Tour picture");
       els.heroImage.hidden = false;
       els.heroImage.style.display = "block";
@@ -701,3 +712,9 @@ export function createBookingCoreModule(ctx) {
     applyBookingPayload
   };
 }
+  function shouldUseDiscoveryCallFallbackImage(booking) {
+    if (!booking) return false;
+    if (normalizeText(booking.image)) return false;
+    if (normalizeText(booking?.web_form_submission?.tour_id)) return false;
+    return Boolean(normalizeText(booking?.web_form_submission?.page_url));
+  }

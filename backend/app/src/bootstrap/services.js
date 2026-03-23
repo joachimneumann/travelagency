@@ -72,6 +72,7 @@ export function createBackendServices({
     generatedOffersDir: collections.generatedOffersDir,
     bookingImagesDir: collections.bookingImagesDir,
     bookingPersonPhotosDir: collections.bookingPersonPhotosDir,
+    bookingTravelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     tempUploadDir: collections.tempUploadDir,
     writeQueueRef,
     syncBookingAssignmentFields: bookingViewHelpers.syncBookingAssignmentFields,
@@ -130,6 +131,7 @@ export function createBackendServices({
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     logoPath: collections.logoPngPath,
     fallbackImagePath: collections.fallbackBookingImagePath,
+    travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile,
     formatMoney: pricingHelpers.formatMoney
   });
@@ -141,6 +143,7 @@ export function createBackendServices({
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     logoPath: collections.logoPngPath,
     fallbackImagePath: collections.fallbackBookingImagePath,
+    travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile
   });
 

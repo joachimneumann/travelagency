@@ -105,6 +105,7 @@ export function createBookingHandlers(deps) {
     GENERATED_OFFERS_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
+    BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
     writeFile,
     rm,
     sendFileWithCache,
@@ -388,6 +389,8 @@ export function createBookingHandlers(deps) {
         }
       })
     );
+    await rm(path.join(GENERATED_OFFERS_DIR, `travel-plan-${bookingId}.pdf`), { force: true }).catch(() => {});
+    await rm(path.join(BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
   }
 
   const { handleListBookingChatEvents } = createBookingChatHandlers({
@@ -505,6 +508,8 @@ export function createBookingHandlers(deps) {
     handleUploadTravelPlanItemImage,
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
+    handleUploadTravelPlanAttachment,
+    handleDeleteTravelPlanAttachment,
     handlePatchBookingTravelPlan,
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish
@@ -531,11 +536,14 @@ export function createBookingHandlers(deps) {
     translateEntries,
     path,
     randomUUID,
+    generatedOfferPdfPath,
     TEMP_UPLOAD_DIR,
     BOOKING_IMAGES_DIR,
+    BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
     writeFile,
     rm,
-    processBookingImageToWebp
+    processBookingImageToWebp,
+    mkdir
   });
 
   const {
@@ -871,6 +879,8 @@ export function createBookingHandlers(deps) {
     handleUploadTravelPlanItemImage,
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
+    handleUploadTravelPlanAttachment,
+    handleDeleteTravelPlanAttachment,
     handlePatchBookingTravelPlan,
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish,

@@ -10,6 +10,7 @@ export function createStoreUtils({
   generatedOffersDir,
   bookingImagesDir,
   bookingPersonPhotosDir,
+  bookingTravelPlanAttachmentsDir,
   tempUploadDir,
   writeQueueRef,
   syncBookingAssignmentFields,
@@ -27,6 +28,7 @@ export function createStoreUtils({
     await mkdir(generatedOffersDir, { recursive: true });
     await mkdir(bookingImagesDir, { recursive: true });
     await mkdir(bookingPersonPhotosDir, { recursive: true });
+    await mkdir(bookingTravelPlanAttachmentsDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
     try {
       await readFile(dataPath, "utf8");

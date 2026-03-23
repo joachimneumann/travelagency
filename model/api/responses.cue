@@ -305,6 +305,7 @@ import (
 #PublicTravelerDetailsAccessResponse: {
 	booking_id:                          common.#Identifier
 	person_id:                           common.#Identifier
+	traveler_number?:                    >=1 & int
 	booking_name?:                       string
 	customer_language?:                  enums.#LanguageCode
 	persons_revision:                    >=0 & int
@@ -316,6 +317,7 @@ import (
 #PublicTravelerDetailsUpdateResponse: {
 	booking_id:                          common.#Identifier
 	person_id:                           common.#Identifier
+	traveler_number?:                    >=1 & int
 	booking_name?:                       string
 	customer_language?:                  enums.#LanguageCode
 	persons_revision:                    >=0 & int

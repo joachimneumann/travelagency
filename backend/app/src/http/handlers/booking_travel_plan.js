@@ -11,6 +11,7 @@ import {
   markTravelPlanTranslationManual,
   translateTravelPlanFromEnglish
 } from "../../domain/booking_translation.js";
+import { createBookingTravelPlanAttachmentHandlers } from "./booking_travel_plan_attachments.js";
 import { createBookingTravelPlanImportHandlers } from "./booking_travel_plan_import.js";
 import { createBookingTravelPlanImageHandlers } from "./booking_travel_plan_images.js";
 
@@ -38,11 +39,14 @@ export function createBookingTravelPlanHandlers(deps) {
     translateEntries,
     path,
     randomUUID,
+    generatedOfferPdfPath,
     TEMP_UPLOAD_DIR,
     BOOKING_IMAGES_DIR,
+    BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
     writeFile,
     rm,
-    processBookingImageToWebp
+    processBookingImageToWebp,
+    mkdir
   } = deps;
 
   function requestContentLang(req, payload = null) {
@@ -273,6 +277,34 @@ export function createBookingTravelPlanHandlers(deps) {
     processBookingImageToWebp
   });
 
+  const {
+    handleUploadTravelPlanAttachment,
+    handleDeleteTravelPlanAttachment
+  } = createBookingTravelPlanAttachmentHandlers({
+    readBodyJson,
+    sendJson,
+    readStore,
+    getPrincipal,
+    canEditBooking,
+    normalizeText,
+    nowIso,
+    addActivity,
+    actorLabel,
+    persistStore,
+    assertExpectedRevision,
+    buildBookingDetailResponse,
+    incrementBookingRevision,
+    validateBookingTravelPlanInput,
+    normalizeBookingTravelPlan,
+    path,
+    randomUUID,
+    generatedOfferPdfPath,
+    BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
+    writeFile,
+    rm,
+    mkdir
+  });
+
   async function handlePatchBookingTravelPlan(req, res, [bookingId]) {
     let payload;
     try {
@@ -396,6 +428,8 @@ export function createBookingTravelPlanHandlers(deps) {
     handleUploadTravelPlanItemImage,
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
+    handleUploadTravelPlanAttachment,
+    handleDeleteTravelPlanAttachment,
     handlePatchBookingTravelPlan,
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish

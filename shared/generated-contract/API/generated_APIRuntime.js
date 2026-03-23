@@ -99,18 +99,24 @@
   "typeName": "Identifier"
 },
   PARAM_17: {
-  "name": "supplier_id",
+  "name": "attachment_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_18: {
-  "name": "invoice_id",
+  "name": "supplier_id",
   "location": "path",
   "required": true,
   "typeName": "Identifier"
 },
   PARAM_19: {
+  "name": "invoice_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_20: {
   "name": "tour_id",
   "location": "path",
   "required": true,
@@ -531,6 +537,29 @@
         ]
       },
       {
+        key: "booking_travel_plan_attachment_upload",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/attachments",
+        method: "POST",
+        authenticated: true,
+        requestType: "TravelPlanAttachmentUploadRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_travel_plan_attachment_delete",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: "TravelPlanAttachmentDeleteRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+        ]
+      },
+      {
         key: "booking_pricing",
         path: "/api/v1/bookings/{booking_id}/pricing",
         method: "PATCH",
@@ -663,7 +692,7 @@
         requestType: null,
         responseType: "SupplierResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {
@@ -674,7 +703,7 @@
         requestType: "SupplierUpdateRequest",
         responseType: "SupplierResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
         ]
       },
       {
@@ -730,7 +759,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
         ]
       },
       {
@@ -742,7 +771,7 @@
         responseType: "BookingInvoiceResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
         ]
       },
       {
@@ -753,7 +782,7 @@
         requestType: null,
         responseType: null,
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
         ]
       },
       {
@@ -797,7 +826,7 @@
         requestType: null,
         responseType: "TourDetail",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       },
       {
@@ -808,7 +837,7 @@
         requestType: "TourUpsertRequest",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       },
       {
@@ -830,7 +859,7 @@
         requestType: "EvidenceUpload",
         responseType: "TourResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20)
         ]
       }
     ];

@@ -639,6 +639,41 @@ package api
 		}]
 	},
 	{
+		key:           "booking_travel_plan_attachment_upload"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/attachments"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanAttachmentUploadRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_attachment_delete"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}"
+		method:        "DELETE"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanAttachmentDeleteRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "attachment_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_pricing"
 		path:          "/api/v1/bookings/{booking_id}/pricing"
 		method:        "PATCH"

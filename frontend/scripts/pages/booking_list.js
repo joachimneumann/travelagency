@@ -564,9 +564,14 @@ function renderBookingImageMarkup(booking) {
   const representativeTraveler = getRepresentativeTraveler(booking);
   const imageRef = bookingImage || tourImage;
   const alt = normalizeText(booking?.name) || backendT("booking.picture", "Booking picture");
+  const isDiscoveryCallWithoutTour = !imageRef && !tourId && Boolean(normalizeText(booking?.web_form_submission?.page_url));
 
   if (imageRef) {
     return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveRepresentativePhotoSrc(imageRef))}" alt="${escapeHtml(alt)}" />`;
+  }
+
+  if (isDiscoveryCallWithoutTour) {
+    return `<img class="booking-list__booking-thumb-image" src="assets/img/happy_tourists.webp" alt="${escapeHtml(alt)}" />`;
   }
 
   if (representativeTraveler && normalizeText(representativeTraveler.photo_ref)) {

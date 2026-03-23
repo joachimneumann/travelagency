@@ -7,6 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { once } from "node:events";
+import { PDFDocument as PDFLibDocument } from "pdf-lib";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -203,6 +204,17 @@ async function requestRaw(pathname, headers = {}, options = {}) {
     headers: Object.fromEntries(res.headerStore.entries()),
     body: res.body
   };
+}
+
+async function createPdfBase64(pageSizes) {
+  const document = await PDFLibDocument.create();
+  for (const size of Array.isArray(pageSizes) ? pageSizes : []) {
+    const width = Number(Array.isArray(size) ? size[0] : 0) || 0;
+    const height = Number(Array.isArray(size) ? size[1] : 0) || 0;
+    document.addPage([width, height]);
+  }
+  const bytes = await document.save();
+  return Buffer.from(bytes).toString("base64");
 }
 
 function decodePdfHexText(body) {
@@ -1377,6 +1389,162 @@ test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () 
   assert.equal(uploadedImages.length, 1);
   assert.match(String(uploadedImages[0].storage_path || ""), /^\/public\/v1\/booking-images\//);
   assert.equal(uploadedImages[0].is_primary, true);
+});
+
+test("travel plan PDF attachments reject non-A4 uploads and append to travel-plan and generated-offer PDFs", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const travelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_attachment_1",
+              day_number: 1,
+              title: "Arrival",
+              overnight_location: "Hoi An",
+              items: [
+                {
+                  id: "travel_plan_item_attachment_1",
+                  timing_kind: "label",
+                  time_label: "Afternoon",
+                  kind: "accommodation",
+                  title: "Riverside hotel check-in",
+                  details: "Private transfer and hotel arrival.",
+                  location: "Hoi An",
+                  financial_coverage_status: "not_covered"
+                }
+              ]
+            }
+          ],
+          offer_component_links: []
+        }
+      }
+    }
+  );
+  assert.equal(travelPlanPatchResult.status, 200);
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          components: [
+            {
+              id: "offer_component_attachment_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Hotel room",
+              quantity: 1,
+              unit_amount_cents: 15000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Attachment merge check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const travelPlanPdfPath = path.join(TEST_DATA_DIR, "generated_offers", `travel-plan-${bookingId}.pdf`);
+  const generatedOfferPdfPath = path.join(TEST_DATA_DIR, "generated_offers", `${generatedOffer.id}.pdf`);
+
+  const initialTravelPlanPdf = await requestRaw(
+    endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(initialTravelPlanPdf.status, 200);
+  const initialTravelPlanPdfDoc = await PDFLibDocument.load(await readFile(travelPlanPdfPath));
+  const initialTravelPlanPageCount = initialTravelPlanPdfDoc.getPageCount();
+
+  const initialGeneratedOfferPdf = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(initialGeneratedOfferPdf.status, 200);
+  const initialGeneratedOfferPdfDoc = await PDFLibDocument.load(await readFile(generatedOfferPdfPath));
+  const initialGeneratedOfferPageCount = initialGeneratedOfferPdfDoc.getPageCount();
+
+  const letterUploadResult = await requestJson(
+    endpointPath("booking_travel_plan_attachment_upload").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
+        filename: "letter-appendix.pdf",
+        mime_type: "application/pdf",
+        data_base64: await createPdfBase64([[612, 792]])
+      }
+    }
+  );
+  assert.equal(letterUploadResult.status, 422);
+  assert.match(String(letterUploadResult.body.error || ""), /A4 page layout/i);
+
+  const uploadResult = await requestJson(
+    endpointPath("booking_travel_plan_attachment_upload").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
+        filename: "appendix-a4.pdf",
+        mime_type: "application/pdf",
+        data_base64: await createPdfBase64([[595.275591, 841.889764]])
+      }
+    }
+  );
+  assert.equal(uploadResult.status, 200);
+  assert.equal(uploadResult.body.booking.travel_plan.attachments.length, 1);
+  assert.equal(uploadResult.body.booking.travel_plan.attachments[0].page_count, 1);
+
+  const mergedTravelPlanPdf = await requestRaw(
+    endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(mergedTravelPlanPdf.status, 200);
+  const mergedTravelPlanPdfDoc = await PDFLibDocument.load(await readFile(travelPlanPdfPath));
+  assert.equal(mergedTravelPlanPdfDoc.getPageCount(), initialTravelPlanPageCount + 1);
+
+  const mergedGeneratedOfferPdf = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(mergedGeneratedOfferPdf.status, 200);
+  const mergedGeneratedOfferPdfDoc = await PDFLibDocument.load(await readFile(generatedOfferPdfPath));
+  assert.equal(mergedGeneratedOfferPdfDoc.getPageCount(), initialGeneratedOfferPageCount + 1);
 });
 
 test("suppliers can be created and updated, and travel plan supplier references are validated", async () => {
@@ -2797,8 +2965,10 @@ test("public traveler details access and update use a signed temporary link with
   );
   assert.equal(detailResult.status, 200);
   assert.equal(detailResult.body.booking.public_traveler_details_token, undefined);
-  const traveler = detailResult.body.booking.persons.find((person) => Array.isArray(person.roles) && person.roles.includes("traveler"));
+  const travelers = detailResult.body.booking.persons.filter((person) => Array.isArray(person.roles) && person.roles.includes("traveler"));
+  const traveler = travelers[0];
   assert.ok(traveler, "expected a traveler person on the booking");
+  const travelerNumber = travelers.findIndex((person) => person.id === traveler.id) + 1;
 
   const linkPath = endpointPath("booking_person_traveler_details_link")
     .replace("{booking_id}", bookingId)
@@ -2827,11 +2997,13 @@ test("public traveler details access and update use a signed temporary link with
   assert.equal(accessResult.headers["cache-control"], "private, max-age=0, no-store");
   assert.equal(accessResult.body.booking_id, bookingId);
   assert.equal(accessResult.body.person_id, traveler.id);
+  assert.equal(accessResult.body.traveler_number, travelerNumber);
   assert.equal(accessResult.body.person.name, "Test User");
-  assert.equal(accessResult.body.person.emails, undefined);
-  assert.equal(accessResult.body.person.phone_numbers, undefined);
+  assert.deepEqual(accessResult.body.person.emails, ["test@example.com"]);
+  assert.deepEqual(accessResult.body.person.phone_numbers, ["+15551234567"]);
+  assert.equal(accessResult.body.person.preferred_language, "en");
   assert.equal(accessResult.body.person.date_of_birth, undefined);
-  assert.equal(accessResult.body.privacy_notice, "For privacy reasons, all prior data has been deleted, except for the traveler’s name");
+  assert.equal(accessResult.body.privacy_notice, undefined);
 
   const updatePath = endpointPath("public_traveler_details_update")
     .replace("{booking_id}", bookingId)
@@ -2872,9 +3044,15 @@ test("public traveler details access and update use a signed temporary link with
   assert.equal(updateResult.status, 200);
   assert.equal(updateResult.headers["cache-control"], "private, max-age=0, no-store");
   assertISODateLike(updateResult.body.saved_at, "public traveler details saved_at");
+  assert.equal(updateResult.body.traveler_number, travelerNumber);
   assert.equal(updateResult.body.person.name, "Test User");
-  assert.equal(updateResult.body.person.emails, undefined);
-  assert.equal(updateResult.body.privacy_notice, "For privacy reasons, all prior data has been deleted, except for the traveler’s name");
+  assert.deepEqual(updateResult.body.person.emails, ["traveler@example.com"]);
+  assert.deepEqual(updateResult.body.person.address, {
+    line_1: "12 Lotus Street",
+    city: "Hoi An",
+    country_code: "VN"
+  });
+  assert.equal(updateResult.body.privacy_notice, undefined);
 
   const detailAfter = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
@@ -2899,11 +3077,17 @@ test("public traveler details access and update use a signed temporary link with
     {}
   );
   assert.equal(accessAfterResult.status, 200);
+  assert.equal(accessAfterResult.body.traveler_number, travelerNumber);
   assert.equal(accessAfterResult.body.person.name, "Test User");
-  assert.equal(accessAfterResult.body.person.emails, undefined);
-  assert.equal(accessAfterResult.body.person.address, undefined);
-  assert.equal(accessAfterResult.body.person.documents, undefined);
-  assert.equal(accessAfterResult.body.privacy_notice, "For privacy reasons, all prior data has been deleted, except for the traveler’s name");
+  assert.deepEqual(accessAfterResult.body.person.emails, ["traveler@example.com"]);
+  assert.deepEqual(accessAfterResult.body.person.address, {
+    line_1: "12 Lotus Street",
+    city: "Hoi An",
+    country_code: "VN"
+  });
+  assert.equal(accessAfterResult.body.person.documents.length, 1);
+  assert.equal(accessAfterResult.body.person.documents[0].document_number, "P1234567");
+  assert.equal(accessAfterResult.body.privacy_notice, undefined);
 
   const invalidAccessResult = await requestJson(`${accessPath}?token=invalid-token`, {});
   assert.equal(invalidAccessResult.status, 401);

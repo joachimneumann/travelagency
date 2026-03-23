@@ -170,6 +170,36 @@ test("booking page uses a page-level dirty bar instead of local section save but
   assert.doesNotMatch(bookingSource, /id="invoice_create_btn"/, "Invoice form should no longer expose a local save button");
 });
 
+test("discovery-call bookings without a selected tour use a neutral fallback image instead of a fake tour id", async () => {
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const bookingListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
+  const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
+  const bookingCoreSource = await readFile(bookingCorePath, "utf8");
+  const bookingListSource = await readFile(bookingListPath, "utf8");
+  const runtimeSource = await readFile(runtimePath, "utf8");
+
+  assert.match(
+    bookingCoreSource,
+    /const DISCOVERY_CALL_FALLBACK_IMAGE = "assets\/img\/happy_tourists\.webp";[\s\S]*if \(shouldUseDiscoveryCallFallbackImage\(state\.booking\)\) \{[\s\S]*els\.heroImage\.src = DISCOVERY_CALL_FALLBACK_IMAGE;/,
+    "Booking detail should use a neutral fallback image for public discovery-call bookings that have no selected tour"
+  );
+  assert.match(
+    bookingCoreSource,
+    /function shouldUseDiscoveryCallFallbackImage\(booking\) \{[\s\S]*web_form_submission\?\.tour_id[\s\S]*web_form_submission\?\.page_url[\s\S]*\}/,
+    "Booking detail should detect discovery-call bookings by the public form payload and absence of a selected tour"
+  );
+  assert.match(
+    bookingListSource,
+    /const isDiscoveryCallWithoutTour = !imageRef && !tourId && Boolean\(normalizeText\(booking\?\.web_form_submission\?\.page_url\)\);[\s\S]*assets\/img\/happy_tourists\.webp/,
+    "Booking list thumbnails should use the same neutral fallback image for discovery-call bookings without a selected tour"
+  );
+  assert.match(
+    runtimeSource,
+    /FALLBACK_BOOKING_IMAGE_PATH = path\.resolve\(APP_ROOT, "\.\.", "\.\.", "assets", "img", "happy_tourists\.webp"\);/,
+    "PDF generation should use the same neutral fallback image path when a booking has no selected tour image"
+  );
+});
+
 test("booking person modal exposes traveler-details link actions and the public form page", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const travelerDetailsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "traveler-details.html");
@@ -214,8 +244,18 @@ test("booking person modal exposes traveler-details link actions and the public 
   );
   assert.match(
     travelerDetailsPage,
-    /id="traveler_details_privacy_notice"[\s\S]*id="traveler_details_form"[\s\S]*id="traveler_details_list"[\s\S]*id="traveler_details_save_btn"/,
-    "Public traveler-details page should render a dedicated single-person form with a privacy notice and save action"
+    /id="traveler_details_intro">This information helps us prepare your journey smoothly\. If you prefer, you can also provide it later, at the beginning of your trip\. The link to this page expires in 24 hours to protect your privacy\.<\/p>[\s\S]*id="traveler_details_form"[\s\S]*id="traveler_details_list"[\s\S]*id="traveler_details_actions"[\s\S]*id="traveler_details_save_btn"[\s\S]*id="traveler_details_status"/,
+    "Public traveler-details page should render the new non-blocking intro copy plus the dedicated single-person form and movable save action"
+  );
+  assert.doesNotMatch(
+    travelerDetailsPage,
+    /traveler_details_summary/,
+    "Public traveler-details page should not render the booking, traveler, or link-expiry summary block"
+  );
+  assert.doesNotMatch(
+    travelerDetailsPage,
+    /traveler_details_privacy_notice/,
+    "Public traveler-details page should no longer render the prior-data privacy warning"
   );
   assert.doesNotMatch(
     travelerDetailsPage,
@@ -234,15 +274,35 @@ test("booking person modal exposes traveler-details link actions and the public 
     /body: \{\s+person: buildTravelerPayload\(state\.traveler\)\s+\}/,
     "Public traveler-details page should save a single traveler payload through the public traveler-details update endpoint"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelerDetailsScript,
-    /<select id="traveler_preferred_language"[\s\S]*renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*<select id="traveler_nationality"[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)[\s\S]*<select id="traveler_document_type"/,
-    "Public traveler-details form should render dropdowns for preferred language, nationality, and travel document type"
+    /function summaryRows\(|renderSummary\(|booking_name \|\| access\.booking_id|Link expires|Traveler", state\.traveler\.name/,
+    "Public traveler-details page should no longer render booking, traveler, or link-expiry summary text"
+  );
+  assert.doesNotMatch(
+    travelerDetailsScript,
+    /<h3 class="traveler-details-document__title">Address<\/h3>|<h3 class="traveler-details-document__title">Travel Document<\/h3>/,
+    "Public traveler-details page should no longer show visible Address or Travel Document section titles"
   );
   assert.match(
     travelerDetailsScript,
-    /const supportsNoExpirationDate = documentType === "national_id";[\s\S]*supportsNoExpirationDate && document\.no_expiration_date[\s\S]*supportsNoExpirationDate \? `[\s\S]*No expiration date/,
-    "Public traveler-details form should only expose the no-expiration control for ID cards"
+    /const bookingName = normalizeText\(access\?\.booking_name\);[\s\S]*const travelerNumber = Number\(access\?\.traveler_number\);[\s\S]*const heading = `Traveler \$\{travelerNumber\}: \$\{bookingName\}`;[\s\S]*els\.title\.textContent = heading;[\s\S]*document\.title = `\$\{heading\} \| AsiaTravelPlan`;/,
+    "Public traveler-details page should use the traveler number plus booking name as the visible main heading when available"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /<label for="traveler_expires_on">Expires on<\/label>[\s\S]*data-document-field="expires_on"[\s\S]*traveler-details-document__checkbox-wrap[\s\S]*No expiration date/,
+    "Public traveler-details page should place the no-expiration checkbox directly below the expiry-date picker"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /<select id="traveler_preferred_language"[\s\S]*renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*<select id="traveler_nationality"[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)[\s\S]*booking-person-modal__document-switch[\s\S]*data-document-switch="passport"[\s\S]*data-document-switch="national_id"/,
+    "Public traveler-details form should render dropdowns for preferred language and nationality plus the same document switch pattern as the backend person modal"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /const supportsNoExpirationDate = documentType === "national_id";[\s\S]*supportsNoExpirationDate && document\.no_expiration_date[\s\S]*supportsNoExpirationDate \? `[\s\S]*No expiration date[\s\S]*traveler-details-document__checkbox--placeholder/,
+    "Public traveler-details form should only expose the no-expiration control for ID cards while reserving the same layout slot for passports"
   );
   assert.match(
     travelerDetailsScript,
@@ -250,9 +310,24 @@ test("booking person modal exposes traveler-details link actions and the public 
     "Public traveler-details form should render issuing country as a country dropdown"
   );
   assert.match(
+    travelerDetailsScript,
+    /<select id="traveler_country_code"[\s\S]*renderCountryOptions\(traveler\.address\.country_code, "Select country"\)/,
+    "Public traveler-details form should render address country code as a country dropdown"
+  );
+  assert.match(
     siteStyles,
-    /\.traveler-details-privacy-note \{[\s\S]*background: rgba\(190, 54, 54, 0\.14\);[\s\S]*color: #8f1f1f;/,
-    "Public traveler-details privacy notice should use a red warning treatment"
+    /\.booking-person-modal__document-switch \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);[\s\S]*background: var\(--surface-disabled-tint\);[\s\S]*\.booking-person-modal__document-switch-btn\.is-active \{/,
+    "Public traveler-details page should style the travel document switch like the backend person modal"
+  );
+  assert.match(
+    siteStyles,
+    /\.traveler-details-card__grid \{[\s\S]*gap: 0\.85rem 1rem;[\s\S]*align-items: start;[\s\S]*\.traveler-details-card__grid \.field \{[\s\S]*align-content: start;[\s\S]*\.traveler-details-document__checkbox--placeholder \{[\s\S]*visibility: hidden;[\s\S]*\.traveler-details-document__checkbox-wrap \{[\s\S]*margin-top: 10px;[\s\S]*min-height: 1\.75rem;[\s\S]*\.traveler-details-actions \{[\s\S]*justify-content: flex-start;/,
+    "Public traveler-details page should keep document fields top-aligned, reserve a stable checkbox slot below the expiry field, and left-align the submit action"
+  );
+  assert.match(
+    siteStyles,
+    /\.traveler-details-document__title \{[\s\S]*min-height: 1\.5rem;/,
+    "Public traveler-details page should preserve section spacing even when the document titles are visually removed"
   );
 });
 
@@ -713,6 +788,100 @@ test("travel plan footer exposes a clean-state-gated pdf action backed by a cont
     bookingPageSource,
     /const hintId = String\(element\.dataset\.cleanStateHintId \|\| ""\)\.trim\(\);[\s\S]*hintNode\.textContent = blocked \? message : "";/,
     "The booking page should populate clean-state hints for any gated action, not only generated offers"
+  );
+});
+
+test("travel plan footer exposes additional PDF attachment controls and contract routes", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
+  const travelPlanAttachmentsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_attachments.js");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const [bookingPageSource, travelPlanSource, travelPlanAttachmentsSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(travelPlanScriptPath, "utf8"),
+    readFile(travelPlanAttachmentsScriptPath, "utf8")
+  ]);
+  const operations = await openApiPathOperations(openApiPath);
+
+  assert.ok(
+    operations.includes("POST /api/v1/bookings/{booking_id}/travel-plan/attachments"),
+    "The API contract should expose a travel-plan PDF attachment upload endpoint"
+  );
+  assert.ok(
+    operations.includes("DELETE /api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}"),
+    "The API contract should expose a travel-plan PDF attachment delete endpoint"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="travel_plan_attachment_input" type="file" accept="application\/pdf,.pdf" multiple hidden/,
+    "booking.html should include a hidden PDF picker for travel-plan attachments"
+  );
+  assert.match(
+    travelPlanSource,
+    /travelPlanAttachmentsModule\.renderTravelPlanAttachments\(state\.travelPlanDraft\)/,
+    "travel_plan.js should render the additional PDF attachment block in the footer"
+  );
+  assert.match(
+    travelPlanAttachmentsSource,
+    /data-travel-plan-upload-attachments[\s\S]*data-clean-state-hint-id="travel_plan_attachments_dirty_hint"/,
+    "The travel-plan attachment upload action should be gated behind a clean page state"
+  );
+  assert.match(
+    travelPlanAttachmentsSource,
+    /data-travel-plan-delete-attachment/,
+    "The travel-plan footer should allow removing uploaded PDF attachments"
+  );
+});
+
+test("offer and travel-plan PDFs use exact A4 point dimensions instead of PDFKit's rounded preset", async () => {
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const [offerPdfSource, travelPlanPdfSource] = await Promise.all([
+    readFile(offerPdfPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
+
+  const exactA4Pattern = /const MM_TO_POINTS = 72 \/ 25\.4;[\s\S]*const PAGE_SIZE = Object\.freeze\(\[210 \* MM_TO_POINTS, 297 \* MM_TO_POINTS\]\);/;
+
+  assert.match(
+    offerPdfSource,
+    exactA4Pattern,
+    "Offer PDFs should use exact A4 point dimensions instead of the rounded PDFKit preset"
+  );
+  assert.doesNotMatch(
+    offerPdfSource,
+    /const PAGE_SIZE = "A4";/,
+    "Offer PDFs should not use PDFKit's built-in rounded A4 preset"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    exactA4Pattern,
+    "Travel-plan PDFs should use exact A4 point dimensions instead of the rounded PDFKit preset"
+  );
+  assert.doesNotMatch(
+    travelPlanPdfSource,
+    /const PAGE_SIZE = "A4";/,
+    "Travel-plan PDFs should not use PDFKit's built-in rounded A4 preset"
+  );
+});
+
+test("offer and travel-plan PDF closing letters mention appended attachments before the signoff", async () => {
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const [offerPdfSource, travelPlanPdfSource] = await Promise.all([
+    readFile(offerPdfPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
+
+  assert.match(
+    offerPdfSource,
+    /Please also find the attached additional PDF(?:s)? at the end of this document\./,
+    "Offer PDFs should mention appended PDF attachments in the closing letter before the signoff"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /Please also find the attached additional PDF(?:s)? at the end of this document\./,
+    "Travel-plan PDFs should mention appended PDF attachments in the closing letter before the signoff"
   );
 });
 

@@ -32,6 +32,8 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images", handlerKey: "handleUploadTravelPlanItemImage" },
   { method: "DELETE", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}", handlerKey: "handleDeleteTravelPlanItemImage" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order", handlerKey: "handleReorderTravelPlanItemImages" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/attachments", handlerKey: "handleUploadTravelPlanAttachment" },
+  { method: "DELETE", path: "/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}", handlerKey: "handleDeleteTravelPlanAttachment" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/pricing", handlerKey: "handlePatchBookingPricing" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/offer", handlerKey: "handlePatchBookingOffer" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/offer/translate", handlerKey: "handleTranslateBookingOfferFromEnglish" },

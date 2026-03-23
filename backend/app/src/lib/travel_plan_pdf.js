@@ -8,11 +8,18 @@ import {
   normalizePdfLang,
   pdfT
 } from "./pdf_i18n.js";
+import {
+  appendPdfAttachmentsToFile,
+  resolveTravelPlanAttachmentAbsolutePath
+} from "./pdf_attachments.js";
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 
-const PAGE_SIZE = "A4";
+const MM_TO_POINTS = 72 / 25.4;
+// PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
+// 21.01 x 29.71 cm. Use the exact A4 dimensions in points instead.
+const PAGE_SIZE = Object.freeze([210 * MM_TO_POINTS, 297 * MM_TO_POINTS]);
 const PAGE_MARGIN = 44;
 const PAGE_FOOTER_GAP = 28;
 const HEADER_LOGO_WIDTH = 150;
@@ -117,6 +124,19 @@ function itemKindLabel(kind, lang) {
 
 function safeBookingTitle(booking, lang) {
   return textOrNull(booking?.name) || pdfT(lang, "offer.travel_plan_title", "Travel plan overview");
+}
+
+function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) {
+  return (Array.isArray(travelPlan?.attachments) ? travelPlan.attachments : [])
+    .slice()
+    .sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+    .map((attachment) => {
+      const absolutePath = resolveTravelPlanAttachmentAbsolutePath(travelPlanAttachmentsDir, attachment?.storage_path);
+      if (!absolutePath) {
+        throw new Error(`Invalid travel-plan attachment path for ${String(attachment?.filename || attachment?.id || "attachment")}.`);
+      }
+      return absolutePath;
+    });
 }
 
 function formatTravelPlanDate(rawValue, lang) {
@@ -464,7 +484,15 @@ function drawEmptyState(doc, y, fonts, lang) {
   return y + 88;
 }
 
-function drawClosing(doc, startY, fonts, lang) {
+function buildAttachmentClosingNote(attachmentCount) {
+  const count = Number(attachmentCount) || 0;
+  if (count <= 0) return "";
+  return count === 1
+    ? "Please also find the attached additional PDF at the end of this document."
+    : "Please also find the attached additional PDFs at the end of this document.";
+}
+
+function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
@@ -478,6 +506,16 @@ function drawClosing(doc, startY, fonts, lang) {
         lineGap: 2
       }
     );
+
+  const attachmentNote = buildAttachmentClosingNote(attachmentCount);
+  if (attachmentNote) {
+    doc
+      .moveDown(0.8)
+      .text(attachmentNote, PAGE_MARGIN, doc.y, {
+        width: doc.page.width - PAGE_MARGIN * 2,
+        lineGap: 2
+      });
+  }
 
   const signY = doc.y + 18;
   doc
@@ -500,6 +538,7 @@ export function createTravelPlanPdfWriter({
   resolveTourImageDiskPath = null,
   logoPath = "",
   fallbackImagePath = "",
+  travelPlanAttachmentsDir = "",
   companyProfile = null
 }) {
   return async function writeTravelPlanPdf(booking, travelPlan, options = {}) {
@@ -512,6 +551,7 @@ export function createTravelPlanPdfWriter({
     const outputPath = travelPlanPdfPath(booking?.id);
     await mkdir(path.dirname(outputPath), { recursive: true });
     const plan = travelPlan && typeof travelPlan === "object" ? travelPlan : { days: [] };
+    const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
 
     const [heroTitle, logoImage, heroPath, itemThumbnailMap] = await Promise.all([
       resolveBookingHeroTitle(booking, lang, readTours),
@@ -726,10 +766,14 @@ export function createTravelPlanPdfWriter({
       }
 
       y = ensureSpace(y + 8, 96);
-      drawClosing(doc, y + 10, fonts, lang);
+      drawClosing(doc, y + 10, fonts, lang, attachmentPaths.length);
       drawFooter(doc, fonts, companyProfile, lang);
       doc.end();
     });
+
+    if (attachmentPaths.length) {
+      await appendPdfAttachmentsToFile(outputPath, attachmentPaths);
+    }
 
     return { outputPath };
   };

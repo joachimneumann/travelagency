@@ -120,6 +120,13 @@
   margin-top: 0.2rem;
 }
 
+.travel-plan-footer__secondary-stack {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: min(100%, 42rem);
+}
+
 .travel-plan-footer__actions {
   display: flex;
   justify-content: center;
@@ -147,6 +154,69 @@
 
 .travel-plan-pdf-btn {
   min-width: 220px;
+}
+
+.travel-plan-attachments {
+  width: 100%;
+  display: grid;
+  gap: 0.65rem;
+  justify-items: stretch;
+}
+
+.travel-plan-attachments__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.travel-plan-attachments__title-wrap h4 {
+  margin: 0;
+}
+
+.travel-plan-attachments__note,
+.travel-plan-attachments__empty {
+  margin: 0;
+  color: var(--text-ink-soft);
+  font-size: var(--font-size-body-sm);
+}
+
+.travel-plan-attachments__upload-btn {
+  min-width: 220px;
+}
+
+.travel-plan-attachments__list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.travel-plan-attachments__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-page);
+}
+
+.travel-plan-attachments__meta {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.travel-plan-attachments__filename {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-ink);
+  overflow-wrap: anywhere;
+}
+
+.travel-plan-attachments__pages {
+  color: var(--text-ink-soft);
+  font-size: var(--font-size-body-sm);
 }
 
 .travel-plan-item {

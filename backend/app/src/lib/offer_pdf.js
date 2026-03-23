@@ -11,11 +11,18 @@ import {
   normalizePdfLang,
   pdfT
 } from "./pdf_i18n.js";
+import {
+  appendPdfAttachmentsToFile,
+  resolveTravelPlanAttachmentAbsolutePath
+} from "./pdf_attachments.js";
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 
-const PAGE_SIZE = "A4";
+const MM_TO_POINTS = 72 / 25.4;
+// PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
+// 21.01 x 29.71 cm. Use the exact A4 dimensions in points instead.
+const PAGE_SIZE = Object.freeze([210 * MM_TO_POINTS, 297 * MM_TO_POINTS]);
 const PAGE_MARGIN = 44;
 const HEADER_LOGO_WIDTH = 150;
 const HERO_IMAGE_WIDTH = 195;
@@ -319,6 +326,26 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   }
 
   return null;
+}
+
+function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) {
+  return (Array.isArray(travelPlan?.attachments) ? travelPlan.attachments : [])
+    .slice()
+    .sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+    .map((attachment) => {
+      const absolutePath = resolveTravelPlanAttachmentAbsolutePath(travelPlanAttachmentsDir, attachment?.storage_path);
+      if (!absolutePath) {
+        throw new Error(`Invalid travel-plan attachment path for ${String(attachment?.filename || attachment?.id || "attachment")}.`);
+      }
+      return absolutePath;
+    });
+}
+
+function resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir) {
+  const bookingAttachments = Array.isArray(booking?.travel_plan?.attachments) ? booking.travel_plan.attachments : [];
+  const snapshotAttachments = Array.isArray(generatedOffer?.travel_plan?.attachments) ? generatedOffer.travel_plan.attachments : [];
+  const preferredAttachments = bookingAttachments.length ? bookingAttachments : snapshotAttachments;
+  return resolveTravelPlanAttachmentPaths({ attachments: preferredAttachments }, travelPlanAttachmentsDir);
 }
 
 function drawRoundedTag(doc, x, y, width, height, text, options = {}, fonts = null) {
@@ -1287,7 +1314,15 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
   );
 }
 
-function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue) {
+function buildAttachmentClosingNote(attachmentCount) {
+  const count = Number(attachmentCount) || 0;
+  if (count <= 0) return "";
+  return count === 1
+    ? "Please also find the attached additional PDF at the end of this document."
+    : "Please also find the attached additional PDFs at the end of this document.";
+}
+
+function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
@@ -1301,6 +1336,16 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue)
         lineGap: 2
       }
     );
+
+  const attachmentNote = buildAttachmentClosingNote(attachmentCount);
+  if (attachmentNote) {
+    doc
+      .moveDown(0.8)
+      .text(attachmentNote, PAGE_MARGIN, doc.y, {
+        width: doc.page.width - PAGE_MARGIN * 2,
+        lineGap: 2
+      });
+  }
 
   const signY = doc.y + 18;
   doc
@@ -1327,6 +1372,7 @@ export function createOfferPdfWriter({
   resolveTourImageDiskPath,
   logoPath,
   fallbackImagePath,
+  travelPlanAttachmentsDir,
   companyProfile,
   formatMoney
 }) {
@@ -1335,6 +1381,7 @@ export function createOfferPdfWriter({
     const renderMoney = (amountCents, currency) => fallbackFormatMoney(currency, amountCents, lang);
     const outputPath = generatedOfferPdfPath(generatedOffer.id);
     await mkdir(path.dirname(outputPath), { recursive: true });
+    const attachmentPaths = resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir);
 
     const [logoImage, heroPath, fonts, heroTitle] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
@@ -1379,7 +1426,7 @@ export function createOfferPdfWriter({
         y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);
       }
       y = ensureSpace(doc, y, 90);
-      y = drawClosing(doc, y + 18, fonts, lang, generatedOffer, renderMoney);
+      y = drawClosing(doc, y + 18, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length);
 
       drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);
       doc
@@ -1395,6 +1442,10 @@ export function createOfferPdfWriter({
 
       doc.end();
     });
+
+    if (attachmentPaths.length) {
+      await appendPdfAttachmentsToFile(outputPath, attachmentPaths);
+    }
 
     const pdfBuffer = await readFile(outputPath);
     return {

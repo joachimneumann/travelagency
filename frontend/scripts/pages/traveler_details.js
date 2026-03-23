@@ -27,13 +27,12 @@ const state = {
 const els = {
   title: document.getElementById("traveler_details_title"),
   intro: document.getElementById("traveler_details_intro"),
-  privacyNotice: document.getElementById("traveler_details_privacy_notice"),
   error: document.getElementById("traveler_details_error"),
   loading: document.getElementById("traveler_details_loading"),
   content: document.getElementById("traveler_details_content"),
-  summary: document.getElementById("traveler_details_summary"),
   form: document.getElementById("traveler_details_form"),
   list: document.getElementById("traveler_details_list"),
+  actions: document.getElementById("traveler_details_actions"),
   saveBtn: document.getElementById("traveler_details_save_btn"),
   status: document.getElementById("traveler_details_status")
 };
@@ -84,19 +83,6 @@ function parseDateOnly(value) {
   const date = new Date(`${normalized}T00:00:00.000Z`);
   if (Number.isNaN(date.getTime())) return null;
   return date.toISOString().slice(0, 10) === normalized ? normalized : null;
-}
-
-function formatDateTime(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat(document.documentElement.lang || "en", {
-    year: "numeric",
-    month: "long",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(date);
 }
 
 function setError(message) {
@@ -254,20 +240,9 @@ function buildTravelerPayload(traveler) {
   };
 }
 
-function summaryRows() {
-  const access = state.access;
-  if (!access || !state.traveler) return [];
-  return [
-    ["Booking", access.booking_name || access.booking_id],
-    ["Traveler", state.traveler.name || access.person_id],
-    ["Link expires", formatDateTime(access.public_traveler_details_expires_at)]
-  ];
-}
-
 function travelerCardMarkup(traveler) {
   const document = activeDocumentForDraft(traveler);
   const documentType = normalizeText(traveler.selected_document_type) || "passport";
-  const documentTitle = "Travel Document";
   const documentLabel = documentType === "national_id" ? "ID card" : "Passport";
   const supportsNoExpirationDate = documentType === "national_id";
   return `
@@ -303,7 +278,7 @@ function travelerCardMarkup(traveler) {
     </div>
 
     <div class="traveler-details-document__head">
-      <h3 class="traveler-details-document__title">Address</h3>
+      <h3 class="traveler-details-document__title" aria-hidden="true"></h3>
     </div>
     <div class="traveler-details-card__grid traveler-details-card__grid--document">
       <div class="field">
@@ -319,7 +294,7 @@ function travelerCardMarkup(traveler) {
         <input id="traveler_city" data-address-field="city" type="text" value="${escapeHtml(traveler.address.city)}" autocomplete="address-level2" />
       </div>
       <div class="field">
-        <label for="traveler_state_region">State / region</label>
+        <label for="traveler_state_region">State / region (optional)</label>
         <input id="traveler_state_region" data-address-field="state_region" type="text" value="${escapeHtml(traveler.address.state_region)}" autocomplete="address-level1" />
       </div>
       <div class="field">
@@ -327,21 +302,33 @@ function travelerCardMarkup(traveler) {
         <input id="traveler_postal_code" data-address-field="postal_code" type="text" value="${escapeHtml(traveler.address.postal_code)}" autocomplete="postal-code" />
       </div>
       <div class="field">
-        <label for="traveler_country_code">Country code</label>
-        <input id="traveler_country_code" data-address-field="country_code" type="text" maxlength="2" value="${escapeHtml(traveler.address.country_code)}" autocomplete="country" />
+        <label for="traveler_country_code">Country code of address</label>
+        <select id="traveler_country_code" data-address-field="country_code">
+          ${renderCountryOptions(traveler.address.country_code, "Select country")}
+        </select>
       </div>
     </div>
 
     <div class="traveler-details-document__head">
-      <h3 class="traveler-details-document__title">${escapeHtml(documentTitle)}</h3>
+      <h3 class="traveler-details-document__title" aria-hidden="true"></h3>
     </div>
     <div class="traveler-details-card__grid traveler-details-card__grid--document">
       <div class="field">
-        <label for="traveler_document_type">Travel document</label>
-        <select id="traveler_document_type" data-field="selected_document_type">
-          <option value="passport"${documentType === "passport" ? " selected" : ""}>Passport</option>
-          <option value="national_id"${documentType === "national_id" ? " selected" : ""}>ID card</option>
-        </select>
+        <label>Travel document</label>
+        <div class="booking-person-modal__document-switch traveler-details-document__switch" role="tablist" aria-label="Travel document type">
+          <button
+            class="booking-person-modal__document-switch-btn${documentType === "passport" ? " is-active" : ""}"
+            type="button"
+            data-document-switch="passport"
+            aria-selected="${documentType === "passport" ? "true" : "false"}"
+          >Passport</button>
+          <button
+            class="booking-person-modal__document-switch-btn${documentType === "national_id" ? " is-active" : ""}"
+            type="button"
+            data-document-switch="national_id"
+            aria-selected="${documentType === "national_id" ? "true" : "false"}"
+          >ID card</button>
+        </div>
       </div>
       <div class="field">
         <label for="traveler_document_holder_name">Holder name</label>
@@ -364,24 +351,19 @@ function travelerCardMarkup(traveler) {
       <div class="field">
         <label for="traveler_expires_on">Expires on</label>
         <input id="traveler_expires_on" data-document-field="expires_on" type="date" value="${escapeHtml(document.expires_on)}"${supportsNoExpirationDate && document.no_expiration_date ? " disabled" : ""} />
+        <div class="traveler-details-document__checkbox-wrap">
+        ${supportsNoExpirationDate ? `
+          <label class="traveler-details-document__checkbox">
+            <input type="checkbox" data-document-field="no_expiration_date"${document.no_expiration_date ? " checked" : ""} />
+            No expiration date
+          </label>
+        ` : `
+          <span class="traveler-details-document__checkbox traveler-details-document__checkbox--placeholder" aria-hidden="true">No expiration date</span>
+        `}
+        </div>
       </div>
     </div>
-    ${supportsNoExpirationDate ? `
-    <label class="traveler-details-document__checkbox">
-      <input type="checkbox" data-document-field="no_expiration_date"${document.no_expiration_date ? " checked" : ""} />
-      No expiration date
-    </label>
-    ` : ""}
   `;
-}
-
-function renderSummary() {
-  els.summary.innerHTML = summaryRows().map(([label, value]) => `
-    <div class="traveler-details-summary__row">
-      <div class="traveler-details-summary__label">${escapeHtml(label)}</div>
-      <div class="traveler-details-summary__value">${escapeHtml(value)}</div>
-    </div>
-  `).join("");
 }
 
 function renderTravelerCard() {
@@ -390,22 +372,22 @@ function renderTravelerCard() {
 
 function render() {
   const access = state.access;
-  const bookingName = normalizeText(access?.booking_name || access?.booking_id);
-  if (bookingName) {
-    document.title = `Traveler Details | ${bookingName}`;
+  const bookingName = normalizeText(access?.booking_name);
+  const travelerNumber = Number(access?.traveler_number);
+  if (bookingName && Number.isInteger(travelerNumber) && travelerNumber >= 1) {
+    const heading = `Traveler ${travelerNumber}: ${bookingName}`;
+    els.title.textContent = heading;
+    document.title = `${heading} | AsiaTravelPlan`;
+  } else if (bookingName) {
     els.title.textContent = bookingName;
+    document.title = `${bookingName} | AsiaTravelPlan`;
   }
   if (access?.customer_language) {
     document.documentElement.lang = normalizeText(query.get("lang") || access.customer_language || "en").toLowerCase() || "en";
   }
-  if (els.privacyNotice) {
-    els.privacyNotice.textContent = normalizeText(access?.privacy_notice);
-    els.privacyNotice.hidden = !normalizeText(access?.privacy_notice);
-  }
   els.loading.hidden = Boolean(access);
   els.content.hidden = !access;
   els.saveBtn.disabled = state.saving;
-  renderSummary();
   renderTravelerCard();
 }
 
@@ -451,6 +433,21 @@ function handleTravelerFormChange(event) {
   if (!(target instanceof HTMLSelectElement)) return;
   if (normalizeText(target.dataset.field) !== "selected_document_type" || !state.traveler) return;
   state.traveler.selected_document_type = normalizeText(target.value) || "passport";
+  if (state.traveler.selected_document_type === "passport") {
+    const passportDocument = state.traveler.documents.passport || emptyDocumentDraft("passport");
+    passportDocument.no_expiration_date = false;
+    state.traveler.documents.passport = passportDocument;
+  }
+  renderTravelerCard();
+}
+
+function handleTravelerFormClick(event) {
+  const switchButton = event.target instanceof Element
+    ? event.target.closest("[data-document-switch]")
+    : null;
+  if (!(switchButton instanceof HTMLButtonElement) || !state.traveler) return;
+  event.preventDefault();
+  state.traveler.selected_document_type = normalizeText(switchButton.getAttribute("data-document-switch")) || "passport";
   if (state.traveler.selected_document_type === "passport") {
     const passportDocument = state.traveler.documents.passport || emptyDocumentDraft("passport");
     passportDocument.no_expiration_date = false;
@@ -533,6 +530,7 @@ async function loadTravelerDetails() {
 
 els.form?.addEventListener("input", handleTravelerFormInput);
 els.form?.addEventListener("change", handleTravelerFormChange);
+els.form?.addEventListener("click", handleTravelerFormClick);
 els.form?.addEventListener("submit", (event) => {
   event.preventDefault();
   void saveTravelerDetails();

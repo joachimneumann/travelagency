@@ -6,6 +6,7 @@
   "description": "Milestone 1 backend for AsiaTravelPlan booking and CRM core",
   "dependencies": {
     "jose": "^5.9.6",
+    "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
     "sharp": "^0.34.5"
   },

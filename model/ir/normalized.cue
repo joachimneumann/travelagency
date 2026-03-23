@@ -283,6 +283,20 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingTravelPlanAttachment"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingTravelPlanAttachment"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "storage_path", kind: "scalar", typeName: "string", required: true},
+				{name: "page_count", kind: "scalar", typeName: "int", required: true},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
 			name:       "BookingTravelPlan"
 			domain:     "booking"
 			module:     "entities"
@@ -290,6 +304,7 @@ IR: {
 			fields: [
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
 				{name: "offer_component_links", kind: "entity", typeName: "BookingTravelPlanOfferComponentLink", required: false, isArray: true},
+				{name: "attachments", kind: "entity", typeName: "BookingTravelPlanAttachment", required: false, isArray: true},
 			]
 		},
 		{
@@ -1589,6 +1604,29 @@ IR: {
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "image_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanAttachmentUploadRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanAttachmentUploadRequest"
+			fields: [
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
+				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanAttachmentDeleteRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanAttachmentDeleteRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

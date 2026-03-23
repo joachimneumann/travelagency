@@ -45,6 +45,7 @@ import {
 } from "./travel_plan_dates.js";
 import { validateTravelPlanDraft as validateTravelPlanDraftState } from "./travel_plan_validation.js";
 import { createBookingTravelPlanImagesModule } from "./travel_plan_images.js";
+import { createBookingTravelPlanAttachmentsModule } from "./travel_plan_attachments.js";
 import { createBookingTravelPlanItemLibraryModule } from "./travel_plan_item_library.js";
 
 export function createBookingTravelPlanModule(ctx) {
@@ -330,6 +331,21 @@ export function createBookingTravelPlanModule(ctx) {
     applyTravelPlanMutationBooking,
     applyBookingPayload,
     renderTravelPlanPanel,
+    loadActivities,
+    travelPlanStatus
+  });
+
+  const travelPlanAttachmentsModule = createBookingTravelPlanAttachmentsModule({
+    state,
+    els,
+    apiOrigin,
+    fetchBookingMutation,
+    getBookingRevision,
+    escapeHtml,
+    ensureTravelPlanReadyForMutation,
+    finalizeTravelPlanMutation,
+    applyTravelPlanMutationBooking,
+    applyBookingPayload,
     loadActivities,
     travelPlanStatus
   });
@@ -974,9 +990,12 @@ export function createBookingTravelPlanModule(ctx) {
           <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
         </div>
         <div class="travel-plan-footer__secondary">
-          <div class="travel-plan-pdf-actions">
-            <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button"${pdfBlocked ? " disabled" : ""}>${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
-            <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint">${pdfBlocked ? escapeHtml(bookingT("booking.action_requires_save", "Save edits to enable.")) : ""}</span>
+          <div class="travel-plan-footer__secondary-stack">
+            <div class="travel-plan-pdf-actions">
+              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button"${pdfBlocked ? " disabled" : ""}>${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
+              <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint">${pdfBlocked ? escapeHtml(bookingT("booking.action_requires_save", "Save edits to enable.")) : ""}</span>
+            </div>
+            ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
           </div>
         </div>
       </div>
@@ -1065,6 +1084,7 @@ export function createBookingTravelPlanModule(ctx) {
       offer_component_id: String(linkNode.querySelector("[data-travel-plan-link-component]")?.value || "").trim(),
       coverage_type: String(linkNode.querySelector("[data-travel-plan-link-coverage-type]")?.value || "full").trim()
     }));
+    draft.attachments = Array.isArray(state.travelPlanDraft?.attachments) ? state.travelPlanDraft.attachments : [];
     state.travelPlanDraft = normalizeTravelPlanDraft(draft, getOfferComponentsForLinks());
     return state.travelPlanDraft;
   }
@@ -1444,6 +1464,14 @@ export function createBookingTravelPlanModule(ctx) {
           openTravelPlanPdf();
           return;
         }
+        if (button.hasAttribute("data-travel-plan-upload-attachments")) {
+          travelPlanAttachmentsModule.triggerTravelPlanAttachmentPicker();
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-delete-attachment")) {
+          void travelPlanAttachmentsModule.deleteTravelPlanAttachment(button.getAttribute("data-travel-plan-delete-attachment"));
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-remove-day")) {
           removeDay(button.getAttribute("data-travel-plan-remove-day"));
           return;
@@ -1539,6 +1567,7 @@ export function createBookingTravelPlanModule(ctx) {
     travelPlanItemLibraryModule.bindTravelPlanItemLibrary();
     travelPlanImagesModule.bindTravelPlanImageInput();
     travelPlanImagesModule.bindTravelPlanImagePreviewModal();
+    travelPlanAttachmentsModule.bindTravelPlanAttachmentInput();
   }
 
   return {

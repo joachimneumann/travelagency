@@ -29,21 +29,18 @@
           <article class="panel traveler-details-card">
             <p class="offer-accept-kicker">Traveler details</p>
             <h1 class="section-title" id="traveler_details_title">Tell us about your travelers</h1>
-            <p class="traveler-details-intro" id="traveler_details_intro">Please fill in the traveler details below. This secure link is temporary and expires automatically.</p>
-            <p id="traveler_details_privacy_notice" class="traveler-details-privacy-note" hidden></p>
+            <p class="traveler-details-intro" id="traveler_details_intro">This information helps us prepare your journey smoothly. If you prefer, you can also provide it later, at the beginning of your trip. The link to this page expires in 24 hours to protect your privacy.</p>
 
             <div id="traveler_details_error" class="backend-message" role="alert" aria-live="assertive" hidden></div>
             <p id="traveler_details_loading" class="offer-accept-loading">Loading traveler details…</p>
 
             <div id="traveler_details_content" hidden>
-              <div class="traveler-details-summary" id="traveler_details_summary"></div>
-
               <form id="traveler_details_form" class="traveler-details-form" novalidate>
                 <div id="traveler_details_list" class="traveler-details-list"></div>
-                <div class="traveler-details-actions">
+                <div class="traveler-details-actions" id="traveler_details_actions">
                   <button class="btn btn-primary" id="traveler_details_save_btn" type="submit">Send traveler details to Asia Travel Plan</button>
-                  <span id="traveler_details_status" class="traveler-details-form__status" aria-live="polite"></span>
                 </div>
+                <span id="traveler_details_status" class="traveler-details-form__status" aria-live="polite"></span>
               </form>
             </div>
           </article>

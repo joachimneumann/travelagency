@@ -590,6 +590,40 @@ export function bookingTravelPlanItemImageReorderRequest({ baseURL = '', params 
   };
 }
 
+export function bookingTravelPlanAttachmentUploadPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/attachments", params);
+}
+
+export function bookingTravelPlanAttachmentUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanAttachmentUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_attachment_upload",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanAttachmentDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}", params);
+}
+
+export function bookingTravelPlanAttachmentDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanAttachmentDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_attachment_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingPricingPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/pricing", params);
 }

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-22T14:23:36Z
+# 2026-03-23T02:17:28Z
 
 ---
 openapi: 3.1.0
@@ -4182,6 +4182,29 @@ components:
         notes:
           type: string
           nullable: true
+    BookingTravelPlanAttachment:
+      type: object
+      required:
+      - id
+      - filename
+      - storage_path
+      - page_count
+      - sort_order
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        storage_path:
+          type: string
+        page_count:
+          type: integer
+        sort_order:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
     BookingTravelPlan:
       type: object
       required: []
@@ -4194,6 +4217,10 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingTravelPlanOfferComponentLink"
+        attachments:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingTravelPlanAttachment"
     PricingAdjustment:
       type: object
       required:
@@ -6430,6 +6457,35 @@ components:
         actor:
           type: string
           nullable: true
+    TravelPlanAttachmentUploadRequest:
+      type: object
+      required:
+      - filename
+      - data_base64
+      properties:
+        filename:
+          type: string
+        mime_type:
+          type: string
+          nullable: true
+        data_base64:
+          type: string
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    TravelPlanAttachmentDeleteRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
     BookingOfferUpdateRequest:
       type: object
       required:
@@ -8010,6 +8066,95 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/TravelPlanItemImageReorderRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/attachments":
+    post:
+      operationId: booking_travel_plan_attachment_upload
+      summary: Booking Travel Plan Attachment Upload
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanAttachmentUploadRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}":
+    delete:
+      operationId: booking_travel_plan_attachment_delete
+      summary: Booking Travel Plan Attachment Delete
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attachment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanAttachmentDeleteRequest"
       responses:
         '200':
           description: Success

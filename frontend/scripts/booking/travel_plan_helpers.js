@@ -143,6 +143,27 @@ function normalizeItemImages(images) {
     }));
 }
 
+function normalizeTravelPlanAttachments(attachments) {
+  return (Array.isArray(attachments) ? attachments : [])
+    .map((attachment, index) => {
+      const rawAttachment = attachment && typeof attachment === "object" ? attachment : {};
+      return {
+        id: String(rawAttachment.id || travelPlanId("travel_plan_attachment")),
+        filename: normalizeOptionalText(rawAttachment.filename),
+        storage_path: normalizeOptionalText(rawAttachment.storage_path),
+        page_count: Number.isInteger(rawAttachment.page_count) && rawAttachment.page_count > 0 ? rawAttachment.page_count : null,
+        sort_order: Number.isInteger(rawAttachment.sort_order) ? rawAttachment.sort_order : index,
+        created_at: normalizeOptionalText(rawAttachment.created_at)
+      };
+    })
+    .filter((attachment) => attachment.filename && attachment.storage_path && attachment.page_count)
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .map((attachment, index) => ({
+      ...attachment,
+      sort_order: index
+    }));
+}
+
 function normalizeCopiedFrom(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
   if (!source) return null;
@@ -212,7 +233,8 @@ export function createEmptyTravelPlanOfferComponentLink(itemId = "") {
 export function createEmptyTravelPlan() {
   return {
     days: [],
-    offer_component_links: []
+    offer_component_links: [],
+    attachments: []
   };
 }
 
@@ -360,7 +382,8 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
         )
       }))
     })),
-    offer_component_links
+    offer_component_links,
+    attachments: normalizeTravelPlanAttachments(source.attachments)
   };
 }
 
