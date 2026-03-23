@@ -1,6 +1,6 @@
 import {
-  bookingDetailRequest,
   bookingTravelPlanPdfRequest,
+  bookingTravelPlanPdfCreateRequest,
   bookingTravelPlanRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { logBrowserConsoleError } from "../shared/api.js";
@@ -1285,19 +1285,32 @@ export function createBookingTravelPlanModule(ctx) {
       travelPlanStatus(bookingT("booking.action_requires_save", "Save edits to enable."), "info");
       return;
     }
-    const request = bookingTravelPlanPdfRequest({
+    const request = bookingTravelPlanPdfCreateRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id },
-      query: { lang: bookingContentLang() }
+      body: {
+        expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+        lang: bookingContentLang(),
+        actor: state.user
+      }
     });
-    const link = document.createElement("a");
-    link.href = request.url;
-    link.target = "_blank";
-    link.rel = "noopener";
-    link.click();
-    window.setTimeout(() => {
-      void refreshTravelPlanPdfList();
-    }, 750);
+    void fetchBookingMutation(request.url, {
+      method: request.method,
+      body: request.body
+    }).then((result) => {
+      const artifact = result?.artifact;
+      if (!artifact || !state.booking) return;
+      const currentArtifacts = Array.isArray(state.booking.travel_plan_pdfs) ? state.booking.travel_plan_pdfs : [];
+      state.booking.travel_plan_pdfs = [...currentArtifacts.filter((item) => item?.id !== artifact.id), artifact]
+        .sort((left, right) => String(right?.created_at || "").localeCompare(String(left?.created_at || "")));
+      renderTravelPlanPanel();
+      const link = document.createElement("a");
+      link.href = artifact.pdf_url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.click();
+      travelPlanStatus(bookingT("booking.travel_plan.pdf_created", "Travel plan PDF created."), "success");
+    });
   }
 
   function previewTravelPlanPdf() {
@@ -1318,17 +1331,6 @@ export function createBookingTravelPlanModule(ctx) {
     link.target = "_blank";
     link.rel = "noopener";
     link.click();
-  }
-
-  async function refreshTravelPlanPdfList() {
-    if (!state.booking?.id) return;
-    const request = bookingDetailRequest({
-      baseURL: apiOrigin,
-      params: { booking_id: state.booking.id }
-    });
-    const response = await fetchBookingMutation(request.url, { method: request.method });
-    if (!response?.booking) return;
-    applyTravelPlanMutationBooking(response.booking);
   }
 
   function removeLink(linkId) {

@@ -116,6 +116,8 @@ import (
 		BookingOfferPaymentTermsReadModel:                apiModel.#BookingOfferPaymentTermsReadModel
 		BookingOfferReadModel:                            apiModel.#BookingOfferReadModel
 		GeneratedBookingOfferReadModel:                   apiModel.#GeneratedBookingOfferReadModel
+		BookingTravelPlanPdfReadModel:                    apiModel.#BookingTravelPlanPdfReadModel
+		TravelPlanPdfArtifactCreateResponse:              apiModel.#TravelPlanPdfArtifactCreateResponse
 		BookingReadModel:                                 apiModel.#BookingReadModel
 		PublicGeneratedOfferAccessResponse:               apiModel.#PublicGeneratedOfferAccessResponse
 		PublicGeneratedOfferAcceptRequest:                apiModel.#PublicGeneratedOfferAcceptRequest
@@ -139,6 +141,7 @@ import (
 		TravelPlanItemImageReorderRequest:                apiModel.#TravelPlanItemImageReorderRequest
 		TravelPlanAttachmentUploadRequest:                apiModel.#TravelPlanAttachmentUploadRequest
 		TravelPlanAttachmentDeleteRequest:                apiModel.#TravelPlanAttachmentDeleteRequest
+		TravelPlanPdfArtifactCreateRequest:               apiModel.#TravelPlanPdfArtifactCreateRequest
 		TravelPlanPdfArtifactUpdateRequest:               apiModel.#TravelPlanPdfArtifactUpdateRequest
 		TravelPlanPdfArtifactDeleteRequest:               apiModel.#TravelPlanPdfArtifactDeleteRequest
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest

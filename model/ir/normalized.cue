@@ -938,6 +938,29 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingTravelPlanPdfReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingTravelPlanPdfReadModel"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "filename", kind: "scalar", typeName: "string", required: true},
+				{name: "page_count", kind: "scalar", typeName: "int", required: true},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
+				{name: "sent_to_customer", kind: "scalar", typeName: "bool", required: true},
+				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
+			name:       "TravelPlanPdfArtifactCreateResponse"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanPdfArtifactCreateResponse"
+			fields: [
+				{name: "artifact", kind: "transport", typeName: "BookingTravelPlanPdfReadModel", required: true},
+			]
+		},
+		{
 			name:       "BookingReadModel"
 			domain:     "api"
 			module:     "api"
@@ -975,6 +998,7 @@ IR: {
 				{name: "web_form_submission", kind: "entity", typeName: "BookingWebFormSubmission", required: false},
 				{name: "pricing", kind: "entity", typeName: "BookingPricing", required: true},
 				{name: "offer", kind: "transport", typeName: "BookingOfferReadModel", required: true},
+				{name: "travel_plan_pdfs", kind: "transport", typeName: "BookingTravelPlanPdfReadModel", required: false, isArray: true},
 				{name: "generated_offers", kind: "transport", typeName: "GeneratedBookingOfferReadModel", required: false, isArray: true},
 				{name: "travel_plan_translation_status", kind: "transport", typeName: "TranslationStatusSummary", required: true},
 				{name: "offer_translation_status", kind: "transport", typeName: "TranslationStatusSummary", required: true},
@@ -1723,6 +1747,18 @@ IR: {
 			sourceType: "api.#TravelPlanAttachmentDeleteRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanPdfArtifactCreateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanPdfArtifactCreateRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: false},
+				{name: "filename_suffix", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

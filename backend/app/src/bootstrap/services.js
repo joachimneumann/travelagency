@@ -68,6 +68,7 @@ export function createBackendServices({
   });
 
   const travelPlanPdfArtifacts = createTravelPlanPdfArtifacts({
+    travelPlanPdfsDir: collections.travelPlanPdfsDir,
     generatedOffersDir: collections.generatedOffersDir
   });
 
@@ -105,10 +106,12 @@ export function createBackendServices({
     toursDir: collections.toursDir,
     invoicesDir: collections.invoicesDir,
     generatedOffersDir: collections.generatedOffersDir,
+    travelPlanPdfsDir: collections.travelPlanPdfsDir,
     bookingImagesDir: collections.bookingImagesDir,
     bookingPersonPhotosDir: collections.bookingPersonPhotosDir,
     bookingTravelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     tempUploadDir: collections.tempUploadDir,
+    travelPlanPdfPreviewDir: collections.travelPlanPdfPreviewDir,
     writeQueueRef,
     syncBookingAssignmentFields: bookingViewHelpers.syncBookingAssignmentFields,
     normalizeBookingTravelPlan: travelPlanHelpers.normalizeBookingTravelPlan,
@@ -163,7 +166,6 @@ export function createBackendServices({
   });
 
   const writeTravelPlanPdf = createTravelPlanPdfWriter({
-    travelPlanPdfPath: (bookingId) => `${collections.generatedOffersDir}/travel-plan-${String(bookingId || "").trim()}.pdf`,
     bookingImagesDir: collections.bookingImagesDir,
     readTours: storeUtils.readTours,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,

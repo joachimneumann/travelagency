@@ -86,6 +86,10 @@ case "booking_travel_plan_attachment_upload":
   return RequestFactory.bookingTravelPlanAttachmentUploadRequest(options);
 case "booking_travel_plan_attachment_delete":
   return RequestFactory.bookingTravelPlanAttachmentDeleteRequest(options);
+case "booking_travel_plan_pdf_create":
+  return RequestFactory.bookingTravelPlanPdfCreateRequest(options);
+case "booking_travel_plan_pdf_artifact_pdf":
+  return RequestFactory.bookingTravelPlanPdfArtifactPdfRequest(options);
 case "booking_travel_plan_pdf_update":
   return RequestFactory.bookingTravelPlanPdfUpdateRequest(options);
 case "booking_travel_plan_pdf_delete":

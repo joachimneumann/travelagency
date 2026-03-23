@@ -651,7 +651,6 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
 }
 
 export function createTravelPlanPdfWriter({
-  travelPlanPdfPath,
   bookingImagesDir = "",
   readTours = null,
   resolveTourImageDiskPath = null,
@@ -669,7 +668,7 @@ export function createTravelPlanPdfWriter({
       || booking?.web_form_submission?.preferred_language
       || "en"
     );
-    const outputPath = String(options?.outputPath || travelPlanPdfPath(booking?.id) || "").trim();
+    const outputPath = String(options?.outputPath || "").trim();
     if (!outputPath) {
       throw new Error("Travel plan PDF output path is required");
     }

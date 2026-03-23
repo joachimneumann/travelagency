@@ -372,7 +372,7 @@ export function createBookingViewHelpers({
       travel_plan_pdfs: travelPlanPdfs.map((item) => ({
         ...item,
         sent_to_customer: item?.sent_to_customer === true,
-        pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/travel-plan/pdf?lang=${encodeURIComponent(lang)}&artifact_id=${encodeURIComponent(item.id)}`
+        pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/travel-plan/pdfs/${encodeURIComponent(item.id)}/pdf`
       })),
       offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang),
       generated_offers: generatedOffers,

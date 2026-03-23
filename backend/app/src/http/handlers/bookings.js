@@ -108,6 +108,8 @@ export function createBookingHandlers(deps) {
     execFile,
     TEMP_UPLOAD_DIR,
     GENERATED_OFFERS_DIR,
+    TRAVEL_PLAN_PDFS_DIR,
+    TRAVEL_PLAN_PDF_PREVIEW_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
     BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
@@ -394,8 +396,7 @@ export function createBookingHandlers(deps) {
         }
       })
     );
-    await rm(path.join(GENERATED_OFFERS_DIR, `travel-plan-${bookingId}.pdf`), { force: true }).catch(() => {});
-    await rm(path.join(GENERATED_OFFERS_DIR, "travel-plan-pdfs", bookingId), { recursive: true, force: true }).catch(() => {});
+    await rm(path.join(TRAVEL_PLAN_PDFS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
     await rm(path.join(BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
   }
 
@@ -517,6 +518,8 @@ export function createBookingHandlers(deps) {
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
+    handlePostBookingTravelPlanPdf,
+    handleGetBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlanPdfArtifact,
     handleDeleteBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlan,
@@ -552,6 +555,7 @@ export function createBookingHandlers(deps) {
     randomUUID,
     generatedOfferPdfPath,
     TEMP_UPLOAD_DIR,
+    TRAVEL_PLAN_PDF_PREVIEW_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
     writeFile,
@@ -899,6 +903,8 @@ export function createBookingHandlers(deps) {
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
+    handlePostBookingTravelPlanPdf,
+    handleGetBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlanPdfArtifact,
     handleDeleteBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlan,

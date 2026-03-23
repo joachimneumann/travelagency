@@ -833,7 +833,7 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
 });
 
-test("travel plan footer exposes a clean-state-gated pdf action backed by a contract pdf endpoint", async () => {
+test("travel plan footer exposes clean-state-gated preview and create actions backed by dedicated contract pdf endpoints", async () => {
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
@@ -843,12 +843,16 @@ test("travel plan footer exposes a clean-state-gated pdf action backed by a cont
 
   assert.ok(
     operations.includes("GET /api/v1/bookings/{booking_id}/travel-plan/pdf"),
-    "The API contract should expose a dedicated booking travel-plan PDF endpoint"
+    "The API contract should expose a dedicated preview endpoint for booking travel-plan PDFs"
+  );
+  assert.ok(
+    operations.includes("POST /api/v1/bookings/{booking_id}/travel-plan/pdfs"),
+    "The API contract should expose a dedicated create endpoint for persisted travel-plan PDF artifacts"
   );
   assert.match(
     travelPlanSource,
-    /bookingTravelPlanPdfRequest/,
-    "travel_plan.js should build the travel-plan PDF link from the generated request factory"
+    /bookingTravelPlanPdfRequest[\s\S]*bookingTravelPlanPdfCreateRequest/,
+    "travel_plan.js should build both preview and persisted travel-plan PDF requests from the generated request factory"
   );
   assert.match(
     travelPlanSource,
@@ -867,8 +871,13 @@ test("travel plan footer exposes a clean-state-gated pdf action backed by a cont
   );
   assert.match(
     travelPlanSource,
-    /function openTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*\{\s*lang:\s*bookingContentLang\(\)\s*\}/,
-    "Opening the travel-plan PDF should use the current booking content language"
+    /function openTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfCreateRequest\([\s\S]*lang:\s*bookingContentLang\(\)/,
+    "Persisting a travel-plan PDF should use the current booking content language through the dedicated create request"
+  );
+  assert.match(
+    travelPlanSource,
+    /function previewTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*\{\s*lang:\s*bookingContentLang\(\)\s*\}/,
+    "Previewing a travel-plan PDF should use the preview GET request with the current booking content language"
   );
   assert.match(
     bookingPageSource,
@@ -939,6 +948,10 @@ test("travel plan PDF table exposes sent and delete controls backed by dedicated
   assert.ok(
     operations.includes("PATCH /api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"),
     "The API contract should expose a travel-plan PDF sent-state update endpoint"
+  );
+  assert.ok(
+    operations.includes("GET /api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf"),
+    "The API contract should expose a dedicated stored travel-plan PDF download endpoint"
   );
   assert.ok(
     operations.includes("DELETE /api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"),

@@ -641,6 +641,40 @@ export function bookingTravelPlanAttachmentDeleteRequest({ baseURL = '', params 
   };
 }
 
+export function bookingTravelPlanPdfCreatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/pdfs", params);
+}
+
+export function bookingTravelPlanPdfCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanPdfCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_pdf_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanPdfArtifactPdfPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf", params);
+}
+
+export function bookingTravelPlanPdfArtifactPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanPdfArtifactPdfPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_pdf_artifact_pdf",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingTravelPlanPdfUpdatePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}", params);
 }

@@ -584,6 +584,29 @@
         ]
       },
       {
+        key: "booking_travel_plan_pdf_create",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/pdfs",
+        method: "POST",
+        authenticated: true,
+        requestType: "TravelPlanPdfArtifactCreateRequest",
+        responseType: "TravelPlanPdfArtifactCreateResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
+        key: "booking_travel_plan_pdf_artifact_pdf",
+        path: "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: null,
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18)
+        ]
+      },
+      {
         key: "booking_travel_plan_pdf_update",
         path: "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}",
         method: "PATCH",

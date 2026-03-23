@@ -26,6 +26,8 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/notes", handlerKey: "handlePatchBookingNotes" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/travel-plan", handlerKey: "handlePatchBookingTravelPlan" },
   { method: "GET", path: "/api/v1/bookings/{booking_id}/travel-plan/pdf", handlerKey: "handleGetBookingTravelPlanPdf" },
+  { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/pdfs", handlerKey: "handlePostBookingTravelPlanPdf" },
+  { method: "GET", path: "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf", handlerKey: "handleGetBookingTravelPlanPdfArtifact" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/translate", handlerKey: "handleTranslateBookingTravelPlanFromEnglish" },
   { method: "GET", path: "/api/v1/travel-plan-items/search", handlerKey: "handleSearchTravelPlanItems" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import", handlerKey: "handleImportTravelPlanItem" },

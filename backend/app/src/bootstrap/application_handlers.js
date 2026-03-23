@@ -137,6 +137,8 @@ export function createApplicationRoutes({
     execFile: runtime.execFile,
     TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
     GENERATED_OFFERS_DIR: runtime.paths.generatedOffersDir,
+    TRAVEL_PLAN_PDFS_DIR: runtime.paths.travelPlanPdfsDir,
+    TRAVEL_PLAN_PDF_PREVIEW_DIR: runtime.paths.travelPlanPdfPreviewDir,
     BOOKING_IMAGES_DIR: runtime.paths.bookingImagesDir,
     BOOKING_PERSON_PHOTOS_DIR: runtime.paths.bookingPersonPhotosDir,
     BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR: runtime.paths.bookingTravelPlanAttachmentsDir,

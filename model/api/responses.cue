@@ -248,6 +248,10 @@ import (
 	pdf_url:          string & !=""
 }
 
+#TravelPlanPdfArtifactCreateResponse: {
+	artifact: #BookingTravelPlanPdfReadModel
+}
+
 #BookingReadModel: {
 	id:                              common.#Identifier
 	name?:                           string

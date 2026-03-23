@@ -692,6 +692,39 @@ package api
 		}]
 	},
 	{
+		key:           "booking_travel_plan_pdf_create"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/pdfs"
+		method:        "POST"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanPdfArtifactCreateRequest"
+		responseType:  "TravelPlanPdfArtifactCreateResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_pdf_artifact_pdf"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "artifact_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_travel_plan_pdf_update"
 		path:          "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"
 		method:        "PATCH"

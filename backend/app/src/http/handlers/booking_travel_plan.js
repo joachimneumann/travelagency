@@ -1,4 +1,5 @@
 import {
+  validateTravelPlanPdfArtifactCreateRequest,
   validateTravelPlanPdfArtifactDeleteRequest,
   validateTravelPlanPdfArtifactUpdateRequest,
   validateBookingTravelPlanTranslateRequest,
@@ -48,6 +49,7 @@ export function createBookingTravelPlanHandlers(deps) {
     randomUUID,
     generatedOfferPdfPath,
     TEMP_UPLOAD_DIR,
+    TRAVEL_PLAN_PDF_PREVIEW_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
     writeFile,
@@ -72,6 +74,24 @@ export function createBookingTravelPlanHandlers(deps) {
     } catch {
       return normalizeBookingContentLang(payload?.lang || "en");
     }
+  }
+
+  function travelPlanPdfTempOutputPath(bookingId, prefix = "travel-plan-preview") {
+    const tempRoot = String(TRAVEL_PLAN_PDF_PREVIEW_DIR || TEMP_UPLOAD_DIR || "").trim();
+    return path.join(tempRoot, `${prefix}-${bookingId}-${randomUUID()}.pdf`);
+  }
+
+  function buildTravelPlanPdfArtifactResponse(bookingId, artifact) {
+    const artifactId = String(artifact?.id || "").trim();
+    if (!artifactId) return null;
+    return {
+      id: artifactId,
+      filename: String(artifact?.filename || buildTravelPlanDownloadFilename(artifact?.created_at || nowIso())).trim(),
+      page_count: Math.max(1, Number(artifact?.page_count) || 1),
+      created_at: String(artifact?.created_at || nowIso()).trim(),
+      sent_to_customer: artifact?.sent_to_customer === true,
+      pdf_url: `/api/v1/bookings/${encodeURIComponent(bookingId)}/travel-plan/pdfs/${encodeURIComponent(artifactId)}/pdf`
+    };
   }
 
   function mergeTravelPlanForLang(existingTravelPlan, nextTravelPlan, offer, lang) {
@@ -199,6 +219,32 @@ export function createBookingTravelPlanHandlers(deps) {
     sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
 
+  async function handleGetBookingTravelPlanPdfArtifact(req, res, [bookingId, artifactId]) {
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canAccessBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const existingArtifact = typeof resolveBookingTravelPlanPdfArtifact === "function"
+      ? await resolveBookingTravelPlanPdfArtifact(booking.id, artifactId).catch(() => null)
+      : null;
+    if (!existingArtifact?.storage_path) {
+      sendJson(res, 404, { error: "Travel plan PDF artifact not found" });
+      return;
+    }
+
+    await sendFileWithCache(req, res, existingArtifact.storage_path, "private, max-age=0, no-store", {
+      "Content-Disposition": `inline; filename="${String(existingArtifact.filename || buildTravelPlanDownloadFilename(existingArtifact.created_at)).replace(/"/g, "")}"`
+    });
+  }
+
   async function handleGetBookingTravelPlanPdf(req, res, [bookingId]) {
     const principal = getPrincipal(req);
     const store = await readStore();
@@ -212,93 +258,106 @@ export function createBookingTravelPlanHandlers(deps) {
       return;
     }
 
-    let requestedLang = "";
-    let filenameSuffix = "";
     let artifactId = "";
-    let previewOnly = false;
     try {
       const requestUrl = new URL(req.url, "http://localhost");
-      requestedLang = String(requestUrl.searchParams.get("lang") || "").trim();
-      filenameSuffix = String(requestUrl.searchParams.get("filename_suffix") || "").trim();
       artifactId = String(requestUrl.searchParams.get("artifact_id") || "").trim();
-      const previewParam = String(requestUrl.searchParams.get("preview") || "").trim().toLowerCase();
-      previewOnly = previewParam === "1" || previewParam === "true" || previewParam === "yes";
     } catch {
-      requestedLang = "";
-      filenameSuffix = "";
       artifactId = "";
-      previewOnly = false;
     }
-    const contentLang = normalizeBookingContentLang(
-      requestedLang
-      || booking?.customer_language
-      || booking?.web_form_submission?.preferred_language
-      || "en"
-    );
-
-    if (artifactId && typeof resolveBookingTravelPlanPdfArtifact === "function") {
-      const existingArtifact = await resolveBookingTravelPlanPdfArtifact(booking.id, artifactId).catch(() => null);
-      if (!existingArtifact?.storage_path) {
-        sendJson(res, 404, { error: "Travel plan PDF artifact not found" });
-        return;
-      }
-      await sendFileWithCache(req, res, existingArtifact.storage_path, "private, max-age=0, no-store", {
-        "Content-Disposition": `inline; filename="${String(existingArtifact.filename || buildTravelPlanDownloadFilename(existingArtifact.created_at, filenameSuffix)).replace(/"/g, "")}"`
-      });
+    if (artifactId) {
+      await handleGetBookingTravelPlanPdfArtifact(req, res, [bookingId, artifactId]);
       return;
     }
 
-    const hadLegacyCurrentArtifact = previewOnly
-      ? false
-      : typeof resolveBookingTravelPlanPdfArtifact === "function"
-        ? Boolean(await resolveBookingTravelPlanPdfArtifact(booking.id, "legacy-current").catch(() => null))
-        : false;
-
+    const contentLang = requestContentLang(req, null);
     const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, booking.offer, {
       lang: contentLang,
       contentLang,
       flatLang: contentLang
     });
 
-    let pdfPath = "";
-    let previewPath = "";
+    const previewPath = travelPlanPdfTempOutputPath(booking.id, "travel-plan-preview");
+    let renderedPath = previewPath;
     try {
-      if (previewOnly) {
-        previewPath = path.join(TEMP_UPLOAD_DIR, `travel-plan-preview-${booking.id}-${randomUUID()}.pdf`);
-      }
-      ({ outputPath: pdfPath } = await writeTravelPlanPdf(booking, travelPlanSnapshot, {
+      await mkdir(path.dirname(previewPath), { recursive: true });
+      const result = await writeTravelPlanPdf(booking, travelPlanSnapshot, {
         lang: contentLang,
-        ...(previewPath ? { outputPath: previewPath } : {})
-      }));
+        outputPath: previewPath
+      });
+      renderedPath = String(result?.outputPath || previewPath).trim() || previewPath;
+      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${buildTravelPlanDownloadFilename(nowIso()).replace(/"/g, "")}"`
+      });
     } catch (error) {
       sendJson(res, 500, { error: "Could not render travel plan PDF", detail: String(error?.message || error) });
+    } finally {
+      await rm(renderedPath, { force: true }).catch(() => {});
+      if (renderedPath !== previewPath) {
+        await rm(previewPath, { force: true }).catch(() => {});
+      }
+    }
+  }
+
+  async function handlePostBookingTravelPlanPdf(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTravelPlanPdfArtifactCreateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
     }
 
-    const createdAt = nowIso();
-    const persistedArtifact = previewOnly
-      ? null
-      : typeof persistBookingTravelPlanPdfArtifact === "function"
-        ? await persistBookingTravelPlanPdfArtifact(booking.id, pdfPath, {
-          createdAt,
-          suffix: filenameSuffix,
-          reserveLegacyCurrent: hadLegacyCurrentArtifact
-        }).catch(() => null)
-        : null;
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canAccessBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
-    const servedPath = persistedArtifact?.storage_path || pdfPath;
-    const servedFilename = String(
-      persistedArtifact?.filename
-      || buildTravelPlanDownloadFilename(createdAt, previewOnly ? "" : filenameSuffix)
-    ).replace(/"/g, "");
+    const contentLang = requestContentLang(req, payload);
+    const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, booking.offer, {
+      lang: contentLang,
+      contentLang,
+      flatLang: contentLang
+    });
 
+    const tempPdfPath = travelPlanPdfTempOutputPath(booking.id, "travel-plan-artifact");
+    let renderedPath = tempPdfPath;
     try {
-      await sendFileWithCache(req, res, servedPath, "private, max-age=0, no-store", {
-        "Content-Disposition": `inline; filename="${servedFilename}"`
+      await mkdir(path.dirname(tempPdfPath), { recursive: true });
+      const result = await writeTravelPlanPdf(booking, travelPlanSnapshot, {
+        lang: contentLang,
+        outputPath: tempPdfPath
       });
+      renderedPath = String(result?.outputPath || tempPdfPath).trim() || tempPdfPath;
+      if (typeof persistBookingTravelPlanPdfArtifact !== "function") {
+        throw new Error("Travel-plan PDF artifact storage is not configured.");
+      }
+      const artifact = await persistBookingTravelPlanPdfArtifact(booking.id, renderedPath, {
+        createdAt: nowIso(),
+        suffix: payload?.filename_suffix,
+        customerLanguage: contentLang,
+        travelPlanRevision: Number(booking?.travel_plan_revision)
+      });
+      const responseArtifact = buildTravelPlanPdfArtifactResponse(booking.id, artifact);
+      if (!responseArtifact) {
+        throw new Error("Travel-plan PDF artifact was not created.");
+      }
+      sendJson(res, 201, { artifact: responseArtifact });
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not create travel plan PDF", detail: String(error?.message || error) });
     } finally {
-      if (previewPath) {
-        await rm(previewPath, { force: true }).catch(() => {});
+      await rm(renderedPath, { force: true }).catch(() => {});
+      if (renderedPath !== tempPdfPath) {
+        await rm(tempPdfPath, { force: true }).catch(() => {});
       }
     }
   }
@@ -612,6 +671,8 @@ export function createBookingTravelPlanHandlers(deps) {
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
+    handlePostBookingTravelPlanPdf,
+    handleGetBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlanPdfArtifact,
     handleDeleteBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlan,

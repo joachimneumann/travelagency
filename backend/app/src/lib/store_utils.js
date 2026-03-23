@@ -8,10 +8,12 @@ export function createStoreUtils({
   toursDir,
   invoicesDir,
   generatedOffersDir,
+  travelPlanPdfsDir,
   bookingImagesDir,
   bookingPersonPhotosDir,
   bookingTravelPlanAttachmentsDir,
   tempUploadDir,
+  travelPlanPdfPreviewDir,
   writeQueueRef,
   syncBookingAssignmentFields,
   normalizeBookingTravelPlan,
@@ -26,10 +28,16 @@ export function createStoreUtils({
     await mkdir(toursDir, { recursive: true });
     await mkdir(invoicesDir, { recursive: true });
     await mkdir(generatedOffersDir, { recursive: true });
+    if (travelPlanPdfsDir) {
+      await mkdir(travelPlanPdfsDir, { recursive: true });
+    }
     await mkdir(bookingImagesDir, { recursive: true });
     await mkdir(bookingPersonPhotosDir, { recursive: true });
     await mkdir(bookingTravelPlanAttachmentsDir, { recursive: true });
     await mkdir(tempUploadDir, { recursive: true });
+    if (travelPlanPdfPreviewDir) {
+      await mkdir(travelPlanPdfPreviewDir, { recursive: true });
+    }
     try {
       await readFile(dataPath, "utf8");
     } catch {

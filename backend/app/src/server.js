@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
+import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -72,6 +73,41 @@ const stagingAccessHandlers = createStagingAccessHandlers({
   readBodyText: httpHelpers.readBodyText
 });
 
+async function pathExists(absolutePath) {
+  try {
+    await stat(absolutePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function moveDirectoryIfNeeded(sourceDir, targetDir) {
+  const normalizedSourceDir = String(sourceDir || "").trim();
+  const normalizedTargetDir = String(targetDir || "").trim();
+  if (!normalizedSourceDir || !normalizedTargetDir || normalizedSourceDir === normalizedTargetDir) return;
+  if (!(await pathExists(normalizedSourceDir))) return;
+  if (await pathExists(normalizedTargetDir)) return;
+  await mkdir(path.dirname(normalizedTargetDir), { recursive: true });
+  await rename(normalizedSourceDir, normalizedTargetDir);
+}
+
+async function pruneDirectoryContents(targetDir) {
+  const normalizedTargetDir = String(targetDir || "").trim();
+  if (!normalizedTargetDir) return;
+  await mkdir(normalizedTargetDir, { recursive: true });
+  let entries = [];
+  try {
+    entries = await readdir(normalizedTargetDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  await Promise.all(entries.map(async (entry) => {
+    const absolutePath = path.join(normalizedTargetDir, entry.name);
+    await rm(absolutePath, { recursive: entry.isDirectory(), force: true }).catch(() => {});
+  }));
+}
+
 const services = createBackendServices({
   runtime: {
     appRoles: APP_ROLES,
@@ -101,6 +137,7 @@ const services = createBackendServices({
     toursDir: RUNTIME_PATHS.toursDir,
     invoicesDir: RUNTIME_PATHS.invoicesDir,
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
+    travelPlanPdfsDir: RUNTIME_PATHS.travelPlanPdfsDir,
     bookingImagesDir: RUNTIME_PATHS.bookingImagesDir,
     bookingPersonPhotosDir: RUNTIME_PATHS.bookingPersonPhotosDir,
     atpStaffProfilesPath: RUNTIME_PATHS.atpStaffProfilesPath,
@@ -108,6 +145,7 @@ const services = createBackendServices({
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,
+    travelPlanPdfPreviewDir: RUNTIME_PATHS.travelPlanPdfPreviewDir,
     logoPngPath: RUNTIME_PATHS.logoPngPath,
     fallbackBookingImagePath: RUNTIME_PATHS.fallbackBookingImagePath
   },
@@ -171,7 +209,12 @@ const applicationSupport = Object.freeze({
 });
 
 export async function createBackendHandler({ port = PORT } = {}) {
+  await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyInvoicesDir, RUNTIME_PATHS.invoicesDir);
+  await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyGeneratedOffersDir, RUNTIME_PATHS.generatedOffersDir);
+  await moveDirectoryIfNeeded(RUNTIME_PATHS.legacyBookingTravelPlanAttachmentsDir, RUNTIME_PATHS.bookingTravelPlanAttachmentsDir);
   await services.storeUtils.ensureStorage();
+  await services.travelPlanPdfArtifacts.migrateLegacyTravelPlanPdfStorage();
+  await pruneDirectoryContents(RUNTIME_PATHS.travelPlanPdfPreviewDir);
   await services.atpStaffDirectory.ensureStorage();
   await services.countryReferenceStore.ensureStorage();
   await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);

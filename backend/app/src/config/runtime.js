@@ -25,19 +25,26 @@ export const REPO_ROOT = path.resolve(APP_ROOT, "..", "..");
 export const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || path.join(APP_ROOT, "data"));
 export const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
 export const TOURS_DIR = path.join(DATA_ROOT, "tours");
-export const INVOICES_DIR = path.join(DATA_ROOT, "invoices");
-export const GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
+export const PDFS_ROOT = path.join(DATA_ROOT, "pdfs");
+export const INVOICES_DIR = path.join(PDFS_ROOT, "invoices");
+export const GENERATED_OFFERS_DIR = path.join(PDFS_ROOT, "generated_offers");
+export const TRAVEL_PLAN_PDFS_DIR = path.join(PDFS_ROOT, "travel_plans");
 export const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 export const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
 export const ATP_STAFF_PROFILES_PATH = path.join(DATA_ROOT, "atp_staff_profiles.json");
 export const ATP_STAFF_PHOTOS_DIR = path.join(DATA_ROOT, "atp_staff_photos");
 export const COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_reference_info.json");
-export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(DATA_ROOT, "booking_travel_plan_attachments");
+export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
+export const TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "travel_plan_previews");
 export const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.large.png");
 export const FALLBACK_BOOKING_IMAGE_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "happy_tourists.webp");
 export const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
 export const BACKEND_GENERATED_REQUEST_FACTORY_PATH = path.join(APP_ROOT, "Generated", "API", "generated_APIRequestFactory.js");
+
+export const LEGACY_INVOICES_DIR = path.join(DATA_ROOT, "invoices");
+export const LEGACY_GENERATED_OFFERS_DIR = path.join(DATA_ROOT, "generated_offers");
+export const LEGACY_BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(DATA_ROOT, "booking_travel_plan_attachments");
 
 export const PORT = Number(process.env.PORT || 8787);
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -224,9 +231,11 @@ export const RUNTIME_PATHS = Object.freeze({
   repoRoot: REPO_ROOT,
   dataRoot: DATA_ROOT,
   dataPath: DATA_PATH,
+  pdfsRoot: PDFS_ROOT,
   toursDir: TOURS_DIR,
   invoicesDir: INVOICES_DIR,
   generatedOffersDir: GENERATED_OFFERS_DIR,
+  travelPlanPdfsDir: TRAVEL_PLAN_PDFS_DIR,
   bookingImagesDir: BOOKING_IMAGES_DIR,
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
   atpStaffProfilesPath: ATP_STAFF_PROFILES_PATH,
@@ -234,6 +243,10 @@ export const RUNTIME_PATHS = Object.freeze({
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
+  travelPlanPdfPreviewDir: TRAVEL_PLAN_PDF_PREVIEW_DIR,
+  legacyInvoicesDir: LEGACY_INVOICES_DIR,
+  legacyGeneratedOffersDir: LEGACY_GENERATED_OFFERS_DIR,
+  legacyBookingTravelPlanAttachmentsDir: LEGACY_BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   logoPngPath: LOGO_PNG_PATH,
   fallbackBookingImagePath: FALLBACK_BOOKING_IMAGE_PATH,
   mobileContractMetaPath: MOBILE_CONTRACT_META_PATH,

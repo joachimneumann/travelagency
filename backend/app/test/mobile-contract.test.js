@@ -1468,7 +1468,7 @@ test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () 
   assert.equal(uploadedImages[0].is_primary, true);
 });
 
-test("travel plan PDF attachments reject non-A4 uploads and append to travel-plan and generated-offer PDFs", async () => {
+test("travel plan PDF attachments normalize non-A4 uploads and append to travel-plan and generated-offer PDFs", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -1551,19 +1551,28 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
   assert.equal(generateResult.status, 201);
   const generatedOffer = generateResult.body.booking.generated_offers[0];
 
-  const travelPlanPdfPath = path.join(TEST_DATA_DIR, "generated_offers", `travel-plan-${bookingId}.pdf`);
-  const generatedOfferPdfPath = path.join(TEST_DATA_DIR, "generated_offers", `${generatedOffer.id}.pdf`);
+  const generatedOfferPdfPath = path.join(TEST_DATA_DIR, "pdfs", "generated_offers", `${generatedOffer.id}.pdf`);
 
-  const initialTravelPlanPdf = await requestRaw(
-    endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId),
+  const initialTravelPlanPdfCreate = await requestJson(
+    endpointPath("booking_travel_plan_pdf_create").replace("{booking_id}", bookingId),
     apiHeaders()
+    ,
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
+        lang: "en"
+      }
+    }
   );
-  assert.equal(initialTravelPlanPdf.status, 200);
+  assert.equal(initialTravelPlanPdfCreate.status, 201);
+  const initialTravelPlanArtifact = initialTravelPlanPdfCreate.body.artifact;
   assert.match(
-    String(initialTravelPlanPdf.headers["content-disposition"] || ""),
+    String(initialTravelPlanArtifact.filename || ""),
     /Asia Travel Plan \d{4}-\d{2}-\d{2}-1\.pdf/,
     "The first generated travel-plan PDF of the day should use the numbered Asia Travel Plan filename"
   );
+  const travelPlanPdfPath = path.join(TEST_DATA_DIR, "pdfs", "travel_plans", bookingId, `${initialTravelPlanArtifact.id}.pdf`);
   const initialTravelPlanPdfDoc = await PDFLibDocument.load(await readFile(travelPlanPdfPath));
   const initialTravelPlanPageCount = initialTravelPlanPdfDoc.getPageCount();
 
@@ -1638,7 +1647,7 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
   assert.equal(normalizedLetterAttachmentPdfResult.status, 200);
   const normalizedLetterStoragePath = String(letterUploadResult.body.booking.travel_plan.attachments[0].storage_path || "");
   const normalizedLetterAttachmentPdf = await PDFLibDocument.load(
-    await readFile(path.join(TEST_DATA_DIR, "booking_travel_plan_attachments", normalizedLetterStoragePath))
+    await readFile(path.join(TEST_DATA_DIR, "pdfs", "attachments", normalizedLetterStoragePath))
   );
   assert.equal(normalizedLetterAttachmentPdf.getPageCount(), 1);
   {
@@ -1678,17 +1687,27 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
     "Travel-plan attachment PDF downloads should serve the stored appendix inline"
   );
 
-  const mergedTravelPlanPdf = await requestRaw(
-    endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId),
-    apiHeaders()
+  const mergedTravelPlanPdfCreate = await requestJson(
+    endpointPath("booking_travel_plan_pdf_create").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_travel_plan_revision: uploadResult.body.booking.travel_plan_revision,
+        lang: "en"
+      }
+    }
   );
-  assert.equal(mergedTravelPlanPdf.status, 200);
+  assert.equal(mergedTravelPlanPdfCreate.status, 201);
+  const mergedTravelPlanArtifact = mergedTravelPlanPdfCreate.body.artifact;
   assert.match(
-    String(mergedTravelPlanPdf.headers["content-disposition"] || ""),
+    String(mergedTravelPlanArtifact.filename || ""),
     /Asia Travel Plan \d{4}-\d{2}-\d{2}-2\.pdf/,
     "A second generated travel-plan PDF on the same day should increment the filename suffix"
   );
-  const mergedTravelPlanPdfDoc = await PDFLibDocument.load(await readFile(travelPlanPdfPath));
+  const mergedTravelPlanPdfDoc = await PDFLibDocument.load(
+    await readFile(path.join(TEST_DATA_DIR, "pdfs", "travel_plans", bookingId, `${mergedTravelPlanArtifact.id}.pdf`))
+  );
   assert.equal(mergedTravelPlanPdfDoc.getPageCount(), initialTravelPlanPageCount + 2);
 
   const bookingAfterMergedTravelPlanPdf = await requestJson(
@@ -1699,7 +1718,7 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
   assert.equal(bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_pdfs.length, 2);
   assert.match(
     String(bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_pdfs[0].pdf_url || ""),
-    /artifact_id=/,
+    /\/travel-plan\/pdfs\/[^/]+\/pdf$/,
     "Persisted travel-plan PDF rows should point to a specific stored artifact"
   );
   const persistedTravelPlanPdf = await requestRaw(
@@ -2237,6 +2256,14 @@ test("contract metadata exposes the booking travel plan pdf endpoint", async () 
     endpointPath("booking_travel_plan_pdf"),
     "/api/v1/bookings/{booking_id}/travel-plan/pdf"
   );
+  assert.equal(
+    endpointPath("booking_travel_plan_pdf_create"),
+    "/api/v1/bookings/{booking_id}/travel-plan/pdfs"
+  );
+  assert.equal(
+    endpointPath("booking_travel_plan_pdf_artifact_pdf"),
+    "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf"
+  );
 });
 
 test("booking travel plan pdf endpoint returns itinerary content without travelers, offers, or internal financial notes", async () => {
@@ -2550,7 +2577,7 @@ test("booking generated offer pdf endpoint serves the frozen artifact without re
   );
   assert.equal(generateResult.status, 201);
   const generatedOffer = generateResult.body.booking.generated_offers[0];
-  const pdfPath = path.join(TEST_DATA_DIR, "generated_offers", `${generatedOffer.id}.pdf`);
+  const pdfPath = path.join(TEST_DATA_DIR, "pdfs", "generated_offers", `${generatedOffer.id}.pdf`);
   const initialStats = await stat(pdfPath);
 
   await new Promise((resolve) => setTimeout(resolve, 25));

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-23T15:43:23Z
+# 2026-03-23T23:22:39Z
 
 ---
 openapi: 3.1.0
@@ -5497,6 +5497,36 @@ components:
         acceptance:
           "$ref": "#/components/schemas/GeneratedOfferAcceptance"
           nullable: true
+    BookingTravelPlanPdfReadModel:
+      type: object
+      required:
+      - id
+      - filename
+      - page_count
+      - created_at
+      - sent_to_customer
+      - pdf_url
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        page_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        sent_to_customer:
+          type: boolean
+        pdf_url:
+          type: string
+    TravelPlanPdfArtifactCreateResponse:
+      type: object
+      required:
+      - artifact
+      properties:
+        artifact:
+          "$ref": "#/components/schemas/BookingTravelPlanPdfReadModel"
     BookingReadModel:
       type: object
       required:
@@ -5610,6 +5640,10 @@ components:
           "$ref": "#/components/schemas/BookingPricing"
         offer:
           "$ref": "#/components/schemas/BookingOfferReadModel"
+        travel_plan_pdfs:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingTravelPlanPdfReadModel"
         generated_offers:
           type: array
           items:
@@ -6705,6 +6739,22 @@ components:
       properties:
         expected_travel_plan_revision:
           type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+    TravelPlanPdfArtifactCreateRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+          nullable: true
+        filename_suffix:
+          type: string
           nullable: true
         actor:
           type: string
@@ -8484,6 +8534,89 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/pdfs":
+    post:
+      operationId: booking_travel_plan_pdf_create
+      summary: Booking Travel Plan Pdf Create
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanPdfArtifactCreateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanPdfArtifactCreateResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TravelPlanPdfArtifactCreateResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}/pdf":
+    get:
+      operationId: booking_travel_plan_pdf_artifact_pdf
+      summary: Booking Travel Plan Pdf Artifact Pdf
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifact_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
         '401':
           description: Unauthorized
           content:

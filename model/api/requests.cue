@@ -175,6 +175,13 @@ import (
 	actor?:                         string
 }
 
+#TravelPlanPdfArtifactCreateRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	lang?:                          enums.#LanguageCode
+	filename_suffix?:               string
+	actor?:                         string
+}
+
 #TravelPlanPdfArtifactUpdateRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	sent_to_customer:               bool
