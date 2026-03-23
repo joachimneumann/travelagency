@@ -36,6 +36,7 @@ export function createBookingTravelPlanAttachmentsModule(deps) {
     fetchBookingMutation,
     getBookingRevision,
     escapeHtml,
+    formatDateTime,
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
     applyTravelPlanMutationBooking,
@@ -44,45 +45,72 @@ export function createBookingTravelPlanAttachmentsModule(deps) {
     travelPlanStatus
   } = deps;
 
+  function resolveAttachmentPdfUrl(attachmentId) {
+    const bookingId = String(state.booking?.id || "").trim();
+    const normalizedAttachmentId = String(attachmentId || "").trim();
+    if (!bookingId || !normalizedAttachmentId) return "";
+    return `${apiOrigin}/api/v1/bookings/${encodeURIComponent(bookingId)}/travel-plan/attachments/${encodeURIComponent(normalizedAttachmentId)}/pdf`;
+  }
+
   function renderTravelPlanAttachments(plan) {
     const attachments = Array.isArray(plan?.attachments) ? plan.attachments : [];
+    const canEdit = Boolean(state.permissions?.canEditBooking);
+    const emptyColspan = canEdit ? 4 : 3;
     return `
       <div class="travel-plan-attachments">
-        <div class="travel-plan-attachments__head">
-          <div class="travel-plan-attachments__title-wrap">
-            <h4>${escapeHtml(bookingT("booking.travel_plan.additional_pdfs", "Additional PDFs"))}</h4>
-            <p class="travel-plan-attachments__note">${escapeHtml(bookingT("booking.travel_plan.additional_pdfs_note", "These A4 PDFs are appended to the end of the travel plan and offer PDFs."))}</p>
-          </div>
+        <h4 class="travel-plan-attachments__title">${escapeHtml(bookingT("booking.travel_plan.additional_pdfs", "Appended PDFs"))}</h4>
+        <div class="backend-table-wrap travel-plan-attachments__table-wrap">
+          <table class="backend-table travel-plan-attachments__table">
+            <thead>
+              <tr>
+                <th class="travel-plan-attachments-col-document">${escapeHtml(bookingT("booking.pdf", "PDF"))}</th>
+                <th class="travel-plan-attachments-col-pages">${escapeHtml(bookingT("booking.pages", "Pages"))}</th>
+                <th class="travel-plan-attachments-col-date">${escapeHtml(bookingT("booking.date", "Date"))}</th>
+                ${canEdit ? `<th class="travel-plan-attachments-col-actions">${escapeHtml(bookingT("backend.table.actions", "Actions"))}</th>` : ""}
+              </tr>
+            </thead>
+            <tbody>
+              ${attachments.length
+                ? attachments.map((attachment) => `
+                    <tr data-travel-plan-attachment="${escapeHtml(attachment.id)}">
+                      <td class="travel-plan-attachments-col-document">
+                        <a
+                          class="travel-plan-attachments__link"
+                          href="${escapeHtml(resolveAttachmentPdfUrl(attachment.id))}"
+                          target="_blank"
+                          rel="noopener"
+                        >${escapeHtml(attachment.filename)}</a>
+                      </td>
+                      <td class="travel-plan-attachments-col-pages">${escapeHtml(attachmentPageCountLabel(attachment.page_count))}</td>
+                      <td class="travel-plan-attachments-col-date">${escapeHtml(formatDateTime(attachment.created_at))}</td>
+                      ${canEdit ? `
+                        <td class="travel-plan-attachments-col-actions">
+                          <button
+                            class="btn btn-ghost offer-remove-btn"
+                            data-travel-plan-delete-attachment="${escapeHtml(attachment.id)}"
+                            data-requires-clean-state
+                            data-clean-state-hint-id="travel_plan_attachments_dirty_hint"
+                            type="button"
+                            aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_additional_pdf", "Remove additional PDF"))}"
+                            title="${escapeHtml(bookingT("booking.travel_plan.remove_additional_pdf", "Remove additional PDF"))}"
+                          >&times;</button>
+                        </td>
+                      ` : ""}
+                    </tr>
+                  `).join("")
+                : `<tr><td class="travel-plan-attachments__empty" colspan="${emptyColspan}">${escapeHtml(bookingT("booking.travel_plan.no_additional_pdfs", "No additional PDFs attached."))}</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        ${canEdit ? `
           <button
             class="btn btn-ghost booking-offer-add-btn travel-plan-attachments__upload-btn"
             data-travel-plan-upload-attachments
             data-requires-clean-state
             data-clean-state-hint-id="travel_plan_attachments_dirty_hint"
             type="button"
-          >${escapeHtml(bookingT("booking.travel_plan.upload_additional_pdfs", "Upload PDFs"))}</button>
-        </div>
-        ${attachments.length ? `
-          <div class="travel-plan-attachments__list">
-            ${attachments.map((attachment) => `
-              <div class="travel-plan-attachments__item" data-travel-plan-attachment="${escapeHtml(attachment.id)}">
-                <div class="travel-plan-attachments__meta">
-                  <span class="travel-plan-attachments__filename">${escapeHtml(attachment.filename)}</span>
-                  <span class="travel-plan-attachments__pages">${escapeHtml(attachmentPageCountLabel(attachment.page_count))}</span>
-                </div>
-                <button
-                  class="btn btn-ghost offer-remove-btn"
-                  data-travel-plan-delete-attachment="${escapeHtml(attachment.id)}"
-                  data-requires-clean-state
-                  data-clean-state-hint-id="travel_plan_attachments_dirty_hint"
-                  type="button"
-                  aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_additional_pdf", "Remove additional PDF"))}"
-                >&times;</button>
-              </div>
-            `).join("")}
-          </div>
-        ` : `
-          <p class="travel-plan-attachments__empty">${escapeHtml(bookingT("booking.travel_plan.no_additional_pdfs", "No additional PDFs attached."))}</p>
-        `}
+          >${escapeHtml(bookingT("booking.travel_plan.upload_additional_pdfs", "Add Appendix"))}</button>
+        ` : ""}
         <span id="travel_plan_attachments_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
       </div>
     `;

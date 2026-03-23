@@ -15,7 +15,8 @@
     "pl": "Podróż po kulturze Kambodży",
     "da": "Cambodjas kulturrejse",
     "sv": "Kambodjas kulturresa",
-    "no": "Kambodsja kulturreise"
+    "no": "Kambodsja kulturreise",
+    "ar": "رحلة الثقافة في كمبوديا"
   },
   "styles": [
     "culture"
@@ -98,6 +99,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Program zwiedzania Kambodży skupiający się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
     "da": "En Cambodja-kulturrute fokuserede på en afbalanceret første-tursrute med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
     "sv": "En kulturresplan för Kambodja fokuserade på en balanserad första resa med djup, lokalt liv och meningsfulla guidade besök.",
-    "no": "En kulturreise i Kambodsja fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk."
+    "no": "En kulturreise i Kambodsja fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير الرحلة الثقافي في كمبوديا على مسار الرحلة الأولى المتوازن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
   },
   "budget_lower_usd": 780
 }

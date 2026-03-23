@@ -15,7 +15,8 @@
     "pl": "Reset dobrego samopoczucia w Hoi An",
     "da": "Hoi An Wellness Nulstilling",
     "sv": "Hoi An Wellness Reset",
-    "no": "Hoi An Wellness Reset"
+    "no": "Hoi An Wellness Reset",
+    "ar": "هوي آن إعادة ضبط العافية"
   },
   "styles": [
     "wellness",
@@ -98,6 +99,11 @@
       "Langsomme morgener i Hoi An med daglig spatid innebygd i ruten",
       "Ansikts-, kroppsmaske- og massasjeinspirerte velværeøkter mellom lett sightseeing",
       "Sunne måltider, myk aktivitet og nok fritid til å faktisk komme seg etter reisen"
+    ],
+    "ar": [
+      "صباح بطيء في هوي آن مع وقت سبا يومي مدمج في الطريق",
+      "جلسات عافية مستوحاة من الوجه وقناع الجسم والتدليك بين مشاهدة المعالم السياحية الخفيفة",
+      "وجبات صحية ونشاط هادئ ووقت فراغ كافٍ للتعافي فعليًا من السفر"
     ]
   },
   "seasonality_start_month": "feb",
@@ -122,7 +128,8 @@
     "pl": "Spokojny tydzień w Wietnamie wokół Hoi An, łączący delikatne odkrycia kulturowe z rytuałami spa, swobodnym poruszaniem się i niespiesznymi przestojami.",
     "da": "En rolig Vietnam-uge bygget op omkring Hoi An, der kombinerer blid kulturel opdagelse med spa-ritualer, nem bevægelse og rolig nedetid.",
     "sv": "En lugn Vietnamvecka byggd kring Hoi An, som kombinerar mild kulturell upptäckt med sparitualer, enkel rörelse och lugna stillestånd.",
-    "no": "En rolig Vietnam-uke bygget rundt Hoi An, som kombinerer skånsom kulturell oppdagelse med spa-ritualer, enkel bevegelse og rolig nedetid."
+    "no": "En rolig Vietnam-uke bygget rundt Hoi An, som kombinerer skånsom kulturell oppdagelse med spa-ritualer, enkel bevegelse og rolig nedetid.",
+    "ar": "أسبوع هادئ في فيتنام يتمحور حول هوي آن، ويجمع بين الاكتشاف الثقافي اللطيف وطقوس السبا، وسهولة الحركة، ووقت التوقف عن العمل على مهل."
   },
   "budget_lower_usd": 780,
   "image": "/public/v1/tour-images/tour_adbaed36-e73a-4f34-b5c6-b961b172a401/tour_adbaed36-e73a-4f34-b5c6-b961b172a401.webp",

@@ -7,8 +7,8 @@ import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
   keycloakUsersRequest,
   keycloakUserStaffProfileUpdateRequest,
+  keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
-  keycloakUserStaffProfilePictureDeleteRequest,
   toursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
@@ -43,8 +43,7 @@ const els = {
   staffEditorPhotoInput: document.getElementById("staffEditorPhotoInput"),
   staffEditorLanguages: document.getElementById("staffEditorLanguages"),
   staffEditorDestinations: document.getElementById("staffEditorDestinations"),
-  staffEditorExperiences: document.getElementById("staffEditorExperiences"),
-  staffEditorAddExperienceBtn: document.getElementById("staffEditorAddExperienceBtn"),
+  staffEditorQualification: document.getElementById("staffEditorQualification"),
   staffEditorSaveBtn: document.getElementById("staffEditorSaveBtn")
 };
 
@@ -69,6 +68,17 @@ const LANGUAGE_OPTIONS = Object.freeze(
     .filter((entry) => entry.value)
 );
 
+const QUALIFICATION_LANGUAGE_OPTIONS = Object.freeze(
+  (window.ASIATRAVELPLAN_LANGUAGE_CATALOG?.languages || [])
+    .filter((entry) => entry?.customerContentSupported)
+    .map((entry) => ({
+      value: normalizeText(entry?.code).toLowerCase(),
+      label: normalizeText(entry?.shortLabel) || normalizeText(entry?.code).toUpperCase(),
+      direction: normalizeText(entry?.direction).toLowerCase() === "rtl" ? "rtl" : "ltr"
+    }))
+    .filter((entry) => entry.value)
+);
+
 const LANGUAGE_LABEL_BY_VALUE = new Map(
   (LANGUAGE_OPTIONS.length ? LANGUAGE_OPTIONS : enumOptionsFor("LanguageCode"))
     .map((option) => [normalizeText(option?.value).toLowerCase(), normalizeText(option?.label) || normalizeText(option?.value).toUpperCase()])
@@ -87,7 +97,7 @@ const state = {
   editor: {
     languages: [],
     destinations: [],
-    experiences: []
+    qualificationByLang: {}
   }
 };
 
@@ -177,14 +187,24 @@ function bindEvents() {
   els.staffTable?.addEventListener("click", handleStaffTableClick);
   els.staffTable?.addEventListener("keydown", handleStaffTableKeydown);
   els.staffEditorCloseBtn?.addEventListener("click", closeEditor);
-  els.staffEditorAddExperienceBtn?.addEventListener("click", handleAddExperience);
   els.staffEditorSaveBtn?.addEventListener("click", saveSelectedStaffProfile);
   els.staffEditorPhotoBtn?.addEventListener("click", () => els.staffEditorPhotoInput?.click());
   els.staffEditorPhotoInput?.addEventListener("change", handleStaffPhotoSelected);
   els.staffEditorLanguages?.addEventListener("change", handleLanguageToggle);
   els.staffEditorDestinations?.addEventListener("change", handleDestinationToggle);
-  els.staffEditorExperiences?.addEventListener("input", handleExperienceFieldInput);
-  els.staffEditorExperiences?.addEventListener("click", handleExperienceClick);
+  els.staffEditorQualification?.addEventListener("input", handleQualificationInput);
+  els.staffEditorQualification?.addEventListener("click", (event) => {
+    const translateAllButton = event.target.closest("[data-staff-translate-all]");
+    if (translateAllButton) {
+      event.preventDefault();
+      void translateQualificationToAll(translateAllButton);
+      return;
+    }
+    const translateButton = event.target.closest("[data-staff-translate-field]");
+    if (!translateButton) return;
+    event.preventDefault();
+    void translateQualification(translateButton);
+  });
 }
 
 function updateStatusCopy() {
@@ -284,6 +304,14 @@ function getSelectedUser() {
 
 function cloneEditorProfile(user) {
   const profile = user?.staff_profile || {};
+  const qualificationByLang = Object.fromEntries(
+    (Array.isArray(profile?.qualification_i18n) ? profile.qualification_i18n : [])
+      .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+  );
+  if (!Object.keys(qualificationByLang).length && normalizeText(profile?.qualification)) {
+    qualificationByLang.en = normalizeText(profile.qualification);
+  }
   return {
     languages: Array.isArray(profile?.languages)
       ? profile.languages.map((code) => normalizeText(code).toLowerCase()).filter(Boolean)
@@ -291,11 +319,7 @@ function cloneEditorProfile(user) {
     destinations: Array.isArray(profile?.destinations)
       ? profile.destinations.map((code) => normalizeText(code).toUpperCase()).filter(Boolean)
       : [],
-    experiences: (Array.isArray(profile?.experiences) ? profile.experiences : []).map((experience, index) => ({
-      id: normalizeText(experience?.id) || `experience_${index + 1}`,
-      title: normalizeText(experience?.title),
-      summary: normalizeText(experience?.summary)
-    }))
+    qualificationByLang
   };
 }
 
@@ -318,7 +342,7 @@ function closeEditor() {
   state.editor = {
     languages: [],
     destinations: [],
-    experiences: []
+    qualificationByLang: {}
   };
   if (els.staffEditorPhotoInput) {
     els.staffEditorPhotoInput.value = "";
@@ -359,7 +383,7 @@ function renderEditor() {
 
   renderLanguageChecklist();
   renderDestinationChecklist();
-  renderExperiences();
+  renderQualificationEditor();
 }
 
 function renderLanguageChecklist() {
@@ -398,33 +422,29 @@ function renderDestinationChecklist() {
     .join("");
 }
 
-function renderExperiences() {
-  if (!els.staffEditorExperiences) return;
-  const experiences = Array.isArray(state.editor?.experiences) ? state.editor.experiences : [];
-  if (!experiences.length) {
-    els.staffEditorExperiences.innerHTML = `<p class="micro">${escapeHtml(backendT("backend.users.no_experiences", "No experiences added yet."))}</p>`;
-    return;
-  }
-  els.staffEditorExperiences.innerHTML = experiences.map((experience, index) => renderExperienceCard(experience, index)).join("");
-}
-
-function renderExperienceCard(experience, index) {
-  return `<article class="settings-staff-experience" data-experience-index="${index}">
-    <div class="settings-staff-experience__head">
-      <h4 class="u-title-small">${escapeHtml(backendT("backend.users.experience_n", "Experience {count}", { count: index + 1 }))}</h4>
-      <button class="btn btn-ghost" type="button" data-remove-experience="${index}">${escapeHtml(backendT("common.remove", "Remove"))}</button>
-    </div>
-
-    <div class="field">
-      <label for="staff_experience_title_${index}">${escapeHtml(backendT("backend.users.experience_title", "Title"))}</label>
-      <input id="staff_experience_title_${index}" type="text" data-exp-index="${index}" data-exp-field="title" value="${escapeHtml(experience?.title || "")}" />
-    </div>
-
-    <div class="field full">
-      <label for="staff_experience_summary_${index}">${escapeHtml(backendT("backend.users.experience_summary", "Summary"))}</label>
-      <textarea id="staff_experience_summary_${index}" data-exp-index="${index}" data-exp-field="summary">${escapeHtml(experience?.summary || "")}</textarea>
-    </div>
-  </article>`;
+function renderQualificationEditor() {
+  if (!els.staffEditorQualification) return;
+  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
+    ? QUALIFICATION_LANGUAGE_OPTIONS
+    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const current = state.editor?.qualificationByLang && typeof state.editor.qualificationByLang === "object"
+    ? state.editor.qualificationByLang
+    : {};
+  const rows = options
+    .map((option) => {
+      const lang = normalizeText(option.value).toLowerCase();
+      const buttonHtml = lang === "en"
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="qualification">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="qualification" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      return `<div class="tour-localized-group__row">
+        <div class="tour-localized-group__code-cell">${buttonHtml}</div>
+        <div class="tour-localized-group__field">
+          <textarea id="${escapeHtml(qualificationTextareaId(lang))}" data-qualification-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
+        </div>
+      </div>`;
+    })
+    .join("");
+  els.staffEditorQualification.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
 }
 
 function handleStaffTableClick(event) {
@@ -441,36 +461,133 @@ function handleStaffTableKeydown(event) {
   openEditorForUsername(row.getAttribute("data-staff-edit"));
 }
 
-function handleAddExperience() {
-  if (!state.permissions.canEditStaffProfiles) return;
-  if (!Array.isArray(state.editor.experiences)) state.editor.experiences = [];
-  state.editor.experiences.push({
-    id: "",
-    title: "",
-    summary: ""
-  });
-  clearEditorStatus();
-  renderExperiences();
-}
-
-function handleExperienceClick(event) {
-  const removeButton = event.target.closest("[data-remove-experience]");
-  if (!removeButton) return;
-  const index = Number(removeButton.getAttribute("data-remove-experience"));
-  if (!Number.isInteger(index) || index < 0) return;
-  state.editor.experiences.splice(index, 1);
-  clearEditorStatus();
-  renderExperiences();
-}
-
-function handleExperienceFieldInput(event) {
-  const input = event.target.closest("[data-exp-index][data-exp-field]");
+function handleQualificationInput(event) {
+  const input = event.target.closest("[data-qualification-lang]");
   if (!input) return;
-  const index = Number(input.getAttribute("data-exp-index"));
-  const field = normalizeText(input.getAttribute("data-exp-field"));
-  if (!Number.isInteger(index) || !field || !state.editor.experiences[index]) return;
-  state.editor.experiences[index][field] = input.value;
+  const lang = normalizeText(input.getAttribute("data-qualification-lang")).toLowerCase();
+  if (!lang) return;
+  const nextValue = normalizeText(input.value);
+  if (!state.editor.qualificationByLang || typeof state.editor.qualificationByLang !== "object") {
+    state.editor.qualificationByLang = {};
+  }
+  if (nextValue) state.editor.qualificationByLang[lang] = nextValue;
+  else delete state.editor.qualificationByLang[lang];
   clearEditorStatus();
+}
+
+function qualificationTextareaId(lang) {
+  return `staff_qualification_${normalizeText(lang).toLowerCase()}`;
+}
+
+function getQualificationTextarea(lang) {
+  return document.getElementById(qualificationTextareaId(lang));
+}
+
+function buildQualificationTranslationEntries(sourceText) {
+  const value = normalizeText(sourceText);
+  return value ? { value } : {};
+}
+
+function translatedQualificationValue(entries) {
+  return normalizeText(entries?.value);
+}
+
+function setQualificationValue(lang, value) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  const normalizedValue = normalizeText(value);
+  if (!state.editor.qualificationByLang || typeof state.editor.qualificationByLang !== "object") {
+    state.editor.qualificationByLang = {};
+  }
+  if (normalizedValue) state.editor.qualificationByLang[normalizedLang] = normalizedValue;
+  else delete state.editor.qualificationByLang[normalizedLang];
+  const textarea = getQualificationTextarea(normalizedLang);
+  if (textarea && textarea.value !== normalizedValue) {
+    textarea.value = normalizedValue;
+  }
+}
+
+async function requestQualificationTranslation(targetLang, sourceText) {
+  const user = getSelectedUser();
+  if (!user) return null;
+  const entries = buildQualificationTranslationEntries(sourceText);
+  if (!Object.keys(entries).length) return null;
+  const request = keycloakUserStaffProfileTranslateFieldsRequest({
+    baseURL: apiOrigin,
+    params: { username: user.username },
+    body: {
+      source_lang: "en",
+      target_lang: targetLang,
+      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
+    }
+  });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: request.body
+  });
+  if (!Array.isArray(payload?.entries)) return null;
+  return Object.fromEntries(
+    payload.entries
+      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+      .filter(([key, value]) => Boolean(key && value))
+  );
+}
+
+async function translateQualification(button) {
+  const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
+  const englishInput = getQualificationTextarea("en");
+  const targetInput = getQualificationTextarea(targetLang);
+  if (!targetLang || !englishInput || !targetInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildQualificationTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.translation.missing_source", "Add English qualification first."), true);
+    return;
+  }
+
+  setQualificationValue(targetLang, "");
+  showEditorStatus(backendT("backend.users.translation.translating", "Translating qualification..."));
+  const translatedEntries = await requestQualificationTranslation(targetLang, englishSource);
+  if (!translatedEntries) {
+    showEditorStatus(backendT("backend.users.translation.error", "Could not translate the qualification."), true);
+    return;
+  }
+
+  setQualificationValue(targetLang, translatedQualificationValue(translatedEntries));
+  showEditorStatus(backendT("backend.users.translation.done", "Qualification translated."));
+}
+
+async function translateQualificationToAll(button) {
+  const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
+  if (field !== "qualification") return;
+  const englishInput = getQualificationTextarea("en");
+  if (!englishInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildQualificationTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.translation.missing_source", "Add English qualification first."), true);
+    return;
+  }
+
+  const targets = QUALIFICATION_LANGUAGE_OPTIONS
+    .map((option) => normalizeText(option?.value).toLowerCase())
+    .filter((lang) => lang && lang !== "en");
+  if (!targets.length) return;
+
+  for (const targetLang of targets) {
+    setQualificationValue(targetLang, "");
+  }
+  showEditorStatus(backendT("backend.users.translation.translating_all", "Translating all qualification languages..."));
+
+  for (const targetLang of targets) {
+    const translatedEntries = await requestQualificationTranslation(targetLang, englishSource);
+    if (!translatedEntries) {
+      showEditorStatus(backendT("backend.users.translation.error", "Could not translate the qualification."), true);
+      return;
+    }
+    setQualificationValue(targetLang, translatedQualificationValue(translatedEntries));
+  }
+
+  showEditorStatus(backendT("backend.users.translation.all_done", "All qualification translations updated."));
 }
 
 function handleDestinationToggle(event) {
@@ -495,24 +612,17 @@ function handleLanguageToggle(event) {
   clearEditorStatus();
 }
 
-function normalizeEditorExperiencesForSave() {
-  const source = Array.isArray(state.editor?.experiences) ? state.editor.experiences : [];
-  const normalized = [];
-  for (const experience of source) {
-    const title = normalizeText(experience?.title);
-    const summary = normalizeText(experience?.summary);
-    const hasAnyContent = Boolean(title || summary);
-    if (!hasAnyContent) continue;
-    if (!title || !summary) {
-      return { error: backendT("backend.users.experience_requires_title_summary", "Each experience needs both a title and a summary.") };
-    }
-    normalized.push({
-      ...(normalizeText(experience?.id) ? { id: normalizeText(experience.id) } : {}),
-      title,
-      summary
-    });
-  }
-  return { experiences: normalized };
+function normalizeQualificationEntriesForSave() {
+  const source = state.editor?.qualificationByLang && typeof state.editor.qualificationByLang === "object"
+    ? state.editor.qualificationByLang
+    : {};
+  return Object.entries(source)
+    .map(([lang, value]) => ({
+      lang: normalizeText(lang).toLowerCase(),
+      value: normalizeText(value)
+    }))
+    .filter((entry) => Boolean(entry.lang && entry.value))
+    .sort((left, right) => left.lang.localeCompare(right.lang));
 }
 
 async function saveSelectedStaffProfile() {
@@ -526,11 +636,7 @@ async function saveSelectedStaffProfile() {
   }
   const destinations = Array.from(new Set((Array.isArray(state.editor?.destinations) ? state.editor.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean)));
 
-  const normalizedExperiences = normalizeEditorExperiencesForSave();
-  if (normalizedExperiences.error) {
-    showEditorStatus(normalizedExperiences.error, true);
-    return;
-  }
+  const qualificationI18n = normalizeQualificationEntriesForSave();
 
   clearError();
   clearEditorStatus();
@@ -543,7 +649,7 @@ async function saveSelectedStaffProfile() {
     body: {
       languages,
       destinations,
-      experiences: normalizedExperiences.experiences
+      qualification_i18n: qualificationI18n
     }
   });
   if (!payload?.user) return;

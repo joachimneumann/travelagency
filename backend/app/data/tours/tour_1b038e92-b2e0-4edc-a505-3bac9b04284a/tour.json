@@ -15,7 +15,8 @@
     "pl": "Podróż kulturowa Wietnamu",
     "da": "Vietnam kulturrejse",
     "sv": "Vietnam kulturresa",
-    "no": "Vietnam kulturreise"
+    "no": "Vietnam kulturreise",
+    "ar": "رحلة الثقافة في فيتنام"
   },
   "styles": [
     "culture"
@@ -98,6 +99,11 @@
       "Signaturstopp i Hanoi",
       "Rutehøydepunkt rundt Hoi An",
       "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
     ]
   },
   "seasonality_start_month": "oct",
@@ -122,7 +128,8 @@
     "pl": "Plan podróży po Wietnamie skupiający się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
     "da": "En Vietnam-kulturrute fokuserede på en afbalanceret første-tursrute med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
     "sv": "En Vietnam-kulturresplan fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
-    "no": "En Vietnam-kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk."
+    "no": "En Vietnam-kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير الرحلة الثقافي الفيتنامي على مسار متوازن للرحلة الأولى، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين هادفة."
   },
   "budget_lower_usd": 860
 }

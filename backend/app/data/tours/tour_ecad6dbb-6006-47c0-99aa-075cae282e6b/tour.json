@@ -15,7 +15,8 @@
     "pl": "Podróż budżetowa Kambodży",
     "da": "Budgetrejse til Cambodja",
     "sv": "Budgetresa till Kambodja",
-    "no": "Budsjettreise til Kambodsja"
+    "no": "Budsjettreise til Kambodsja",
+    "ar": "رحلة ميزانية كمبوديا"
   },
   "styles": [
     "budget"
@@ -98,6 +99,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Budżetowy plan podróży do Kambodży skupiał się na zrównoważonej trasie pierwszej podróży, z planowaniem skoncentrowanym na wartości, z inteligentnymi trasami i wyraźnymi dodatkami.",
     "da": "En budgetrejseplan for Cambodja fokuserede på en afbalanceret rute for første tur med værdifokuseret planlægning med smart rute og klare inklusion.",
     "sv": "En budgetresplan för Kambodja fokuserade på en balanserad första-tursrutt, med värdefokuserad planering med smart rutt och tydliga inkluderingar.",
-    "no": "En budsjettreise for Kambodsja fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger."
+    "no": "En budsjettreise for Kambodsja fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger.",
+    "ar": "يركز خط سير الرحلة الخاص بميزانية كمبوديا على مسار الرحلة الأولى المتوازن، مع التخطيط الذي يركز على القيمة مع التوجيه الذكي والإضافات الواضحة."
   },
   "budget_lower_usd": 610
 }

@@ -15,7 +15,8 @@
     "pl": "Podróż kulinarna po Tajlandii",
     "da": "Thailand madrejse",
     "sv": "Thailand matresa",
-    "no": "Thailand matreise"
+    "no": "Thailand matreise",
+    "ar": "تجربة تذوق الطعام في تايلاند"
   },
   "styles": [
     "gastronomic-experiences"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Trasa kulinarna po Tajlandii skupiająca się na zrównoważonej trasie pierwszej podróży, obejmującej wizyty na rynku, degustacje i regionalne doświadczenia kulinarne.",
     "da": "En thailandsk madrejseplan fokuserede på en afbalanceret første tur-rute med markedsbesøg, smagsprøver og regionale kulinariske oplevelser.",
     "sv": "En matresplan i Thailand fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
-    "no": "En matreise i Thailand fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser."
+    "no": "En matreise i Thailand fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
+    "ar": "يركز خط سير تجارب تذوق الطعام في تايلاند على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
   },
   "budget_lower_usd": 910
 }

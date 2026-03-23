@@ -19,7 +19,7 @@ import {
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
-import { resolveAtpGuidePdfContext } from "./atp_staff_pdf.js";
+import { resolveAtpGuidePdfContext, resolveAtpGuideQualificationText } from "./atp_staff_pdf.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -565,7 +565,7 @@ function drawTravelers(doc, booking, startY, fonts, lang) {
 
 function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
   const profile = guideContext?.profile || null;
-  const experiences = safeArray(guideContext?.experiences);
+  const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
   const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
   let height = 26;
@@ -595,19 +595,11 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
       }), { width: textWidth });
   }
 
-  if (experiences.length) {
-    height += 8;
-    for (const experience of experiences) {
-      height += doc
-        .font(pdfFontName("bold", fonts))
-        .fontSize(10.1)
-        .heightOfString(`• ${textOrNull(experience?.title) || ""}`, { width: textWidth, lineGap: 1 });
-      height += 2 + doc
-        .font(pdfFontName("regular", fonts))
-        .fontSize(9.7)
-        .heightOfString(textOrNull(experience?.summary) || "", { width: textWidth - 12, lineGap: 1 });
-      height += 6;
-    }
+  if (qualificationText) {
+    height += 8 + doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(9.9)
+      .heightOfString(qualificationText, { width: textWidth, lineGap: 2 });
   }
 
   return Math.max(height + 18, profile ? GUIDE_PHOTO_SIZE + 26 : 120);
@@ -615,12 +607,13 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
 
 function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   const profile = guideContext?.profile || null;
-  const experiences = safeArray(guideContext?.experiences);
+  const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
   const cardWidth = doc.page.width - PAGE_MARGIN * 2;
   const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang);
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
-  const textX = PAGE_MARGIN + 16 + photoWidth;
+  const textX = PAGE_MARGIN + 16;
   const textWidth = cardWidth - 32 - photoWidth;
+  const photoX = PAGE_MARGIN + cardWidth - 16 - GUIDE_PHOTO_SIZE;
 
   doc
     .save()
@@ -632,9 +625,9 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
     if (guidePhoto?.buffer) {
       doc
         .save()
-        .roundedRect(PAGE_MARGIN + 16, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
+        .roundedRect(photoX, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
         .clip();
-      doc.image(guidePhoto.buffer, PAGE_MARGIN + 16, startY + 16, {
+      doc.image(guidePhoto.buffer, photoX, startY + 16, {
         width: GUIDE_PHOTO_SIZE,
         height: GUIDE_PHOTO_SIZE
       });
@@ -642,7 +635,7 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
     } else {
       doc
         .save()
-        .roundedRect(PAGE_MARGIN + 16, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
+        .roundedRect(photoX, startY + 16, GUIDE_PHOTO_SIZE, GUIDE_PHOTO_SIZE, 12)
         .fill(PDF_COLORS.surfaceMuted)
         .restore();
     }
@@ -683,26 +676,14 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
     y = doc.y + 6;
   }
 
-  for (const experience of experiences) {
-    const title = textOrNull(experience?.title);
-    const summary = textOrNull(experience?.summary);
-    if (!title || !summary) continue;
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(10.1)
-      .fillColor(PDF_COLORS.textStrong)
-      .text(`• ${title}`, textX, y, {
-        width: textWidth,
-        lineGap: 1
-      });
-    y = doc.y + 1;
+  if (qualificationText) {
     doc
       .font(pdfFontName("regular", fonts))
-      .fontSize(9.7)
+      .fontSize(9.9)
       .fillColor(PDF_COLORS.textMutedStrong)
-      .text(summary, textX + 12, y, {
-        width: textWidth - 12,
-        lineGap: 1
+      .text(qualificationText, textX, y, {
+        width: textWidth,
+        lineGap: 2
       });
     y = doc.y + 5;
   }
@@ -1464,12 +1445,12 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
   );
 }
 
-function buildAttachmentClosingNote(attachmentCount) {
+function buildAttachmentClosingNote(attachmentCount, lang) {
   const count = Number(attachmentCount) || 0;
   if (count <= 0) return "";
   return count === 1
-    ? "Please also find the attached additional PDF at the end of this document."
-    : "Please also find the attached additional PDFs at the end of this document.";
+    ? pdfT(lang, "pdf.attachment_note_single", "Please also find the attached additional PDF at the end of this document.")
+    : pdfT(lang, "pdf.attachment_note_multiple", "Please also find the attached additional PDFs at the end of this document.");
 }
 
 function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue, attachmentCount = 0) {
@@ -1487,7 +1468,7 @@ function drawClosing(doc, startY, fonts, lang, generatedOffer, formatMoneyValue,
       }
     );
 
-  const attachmentNote = buildAttachmentClosingNote(attachmentCount);
+  const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
   if (attachmentNote) {
     doc
       .moveDown(0.8)

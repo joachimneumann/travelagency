@@ -1,14 +1,12 @@
 package entities
 
 import (
-	common "travelagency.local/model/common"
 	enums "travelagency.local/model/enums"
 )
 
-#AtpStaffExperience: {
-	id?:     common.#Identifier
-	title:   string & !=""
-	summary: string & !=""
+#AtpStaffLocalizedTextEntry: {
+	lang:  enums.#LanguageCode
+	value: string & !=""
 }
 
 #AtpStaffProfile: {
@@ -17,5 +15,6 @@ import (
 	picture_ref?: string
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
-	experiences?: [...#AtpStaffExperience]
+	qualification?: string
+	qualification_i18n?: [...#AtpStaffLocalizedTextEntry]
 }

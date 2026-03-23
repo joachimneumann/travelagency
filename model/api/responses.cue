@@ -239,6 +239,15 @@ import (
 	acceptance?:                   entities.#GeneratedOfferAcceptance
 }
 
+#BookingTravelPlanPdfReadModel: {
+	id:               common.#Identifier
+	filename:         string & !=""
+	page_count:       >0 & int
+	created_at:       common.#Timestamp
+	sent_to_customer: bool
+	pdf_url:          string & !=""
+}
+
 #BookingReadModel: {
 	id:                              common.#Identifier
 	name?:                           string
@@ -273,6 +282,7 @@ import (
 	pricing:              entities.#BookingPricing
 	offer:                #BookingOfferReadModel
 	generated_offers?: [...#GeneratedBookingOfferReadModel]
+	travel_plan_pdfs?: [...#BookingTravelPlanPdfReadModel]
 	travel_plan_translation_status: #TranslationStatusSummary
 	offer_translation_status:       #TranslationStatusSummary
 	generated_offer_email_enabled:  bool

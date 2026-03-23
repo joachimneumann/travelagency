@@ -15,7 +15,8 @@
     "pl": "Wycieczka na plażę Kambodży",
     "da": "Cambodia strandrejse",
     "sv": "Kambodja strandresa",
-    "no": "Kambodsja strandreise"
+    "no": "Kambodsja strandreise",
+    "ar": "رحلة شاطئ كمبوديا"
   },
   "styles": [
     "beach"
@@ -98,6 +99,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Plan podróży na plażę w Kambodży skupia się na zrównoważonej trasie pierwszej podróży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
     "da": "En rejseplan for Cambodia-stranden fokuserede på en afbalanceret rute for første tur med afslappet kysttid afbalanceret med let lokal opdagelse.",
     "sv": "En resplan för Kambodjas strand fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
-    "no": "En reiserute på Kambodsja-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse."
+    "no": "En reiserute på Kambodsja-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse.",
+    "ar": "يركز خط سير الرحلة على شاطئ كمبوديا على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
   },
   "budget_lower_usd": 960
 }

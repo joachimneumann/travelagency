@@ -1,5 +1,5 @@
 import { LANGUAGE_BY_CODE } from "../../../../shared/generated/language_catalog.js";
-import { selectRelevantAtpStaffExperiences } from "./atp_staff_directory.js";
+import { resolveAtpStaffQualificationText } from "./atp_staff_directory.js";
 import { normalizeText } from "./text.js";
 
 function normalizeLanguageLabels(items) {
@@ -37,10 +37,6 @@ export async function resolveAtpGuidePdfContext({
       : null
   );
 
-  const experiences = profile
-    ? selectRelevantAtpStaffExperiences(profile, booking, generatedOffer, { limit: 3 })
-    : [];
-
   const photoRelativePath = extractPublicRelativePath(profile?.picture_ref, "/public/v1/atp-staff-photos/");
   const photoDiskPath = photoRelativePath && typeof resolveAtpStaffPhotoDiskPath === "function"
     ? resolveAtpStaffPhotoDiskPath(photoRelativePath)
@@ -48,8 +44,11 @@ export async function resolveAtpGuidePdfContext({
 
   return {
     profile,
-    experiences,
     photoDiskPath,
     languageLabels: normalizeLanguageLabels(profile?.languages)
   };
+}
+
+export function resolveAtpGuideQualificationText(guideContext, lang = "en") {
+  return resolveAtpStaffQualificationText(guideContext?.profile || null, lang);
 }

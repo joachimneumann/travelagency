@@ -1,76 +1,41 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  normalizeLocalizedTextMap,
+  resolveLocalizedText
+} from "../domain/booking_content_i18n.js";
 import { normalizeText } from "./text.js";
 
 const DEFAULT_PROFILE_BLUEPRINTS = Object.freeze({
   "admin": {
     languages: ["en", "vi"],
     destinations: ["VN", "TH", "KH", "LA"],
-    experiences: [
-      {
-        id: "admin_operations_vn_th",
-        title: "Operations oversight across Vietnam and Thailand",
-        summary: "Keeps arrival logistics, hotel handovers, and day-by-day pacing realistic for trips that combine urban stays with recovery time."
-      },
-      {
-        id: "admin_multicountry_coordination",
-        title: "Multi-country guest support",
-        summary: "Experienced in coordinating soft-paced routes across Southeast Asia with clear airport support, calm timing, and backup options when plans shift."
-      }
-    ]
+    qualification: {
+      en: "Oversees ATP trip operations across Vietnam, Thailand, Cambodia, and Laos with a strong focus on realistic pacing, reliable handovers, and calm guest support when plans need to shift."
+    }
   },
   "joachim": {
     languages: ["de", "en", "vi"],
     destinations: ["VN", "TH", "KH", "LA"],
-    experiences: [
-      {
-        id: "joachim_central_vietnam_wellness",
-        title: "Central Vietnam wellness pacing",
-        summary: "Designs quiet Hoi An, Da Nang, and Hue programs with spa appointments, low-friction transfers, and enough empty space between highlights."
-      },
-      {
-        id: "joachim_laos_cambodia_calm",
-        title: "Gentle Cambodia and Laos journeys",
-        summary: "Builds soft-paced Siem Reap and Luang Prabang itineraries that balance heritage visits with rest, river time, and unhurried evenings."
-      },
-      {
-        id: "joachim_multicountry_handovers",
-        title: "Cross-border handover planning",
-        summary: "Experienced in smoothing multi-country airport arrivals, hotel changes, and local guide transitions for couples and families."
-      }
-    ]
+    qualification: {
+      en: "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort, recovery time, airport handovers, and multi-country routing for couples and families.",
+      de: "Spezialisiert auf ruhig getaktete Südostasien-Reisen mit besonderem Blick für Komfort, Erholungszeit, Flughafenübergänge und länderübergreifende Routen für Paare und Familien."
+    }
   },
   "staff": {
-    languages: ["en", "vi", "th"],
+    languages: ["en", "vi"],
     destinations: ["VN", "TH", "KH", "LA"],
-    experiences: [
-      {
-        id: "staff_thailand_coast_wellness",
-        title: "Thailand coast and spa stays",
-        summary: "Shapes Phuket and Krabi stays around beach time, practical treatment windows, and easy private transfers rather than rushed sightseeing blocks."
-      },
-      {
-        id: "staff_family_pacing",
-        title: "Family-friendly pacing",
-        summary: "Good at building routes with lighter mornings, flexible lunch breaks, and realistic transit times for multi-generation travelers."
-      }
-    ]
+    qualification: {
+      en: "Experienced in shaping beach, wellness, and family-friendly routes with practical transfer timing, light daily pacing, and dependable on-trip coordination.",
+      vi: "Có kinh nghiệm xây dựng các hành trình biển, wellness và phù hợp gia đình với thời gian di chuyển hợp lý, nhịp độ nhẹ nhàng và điều phối đáng tin cậy trong suốt chuyến đi."
+    }
   },
   "accountant": {
     languages: ["en", "vi"],
     destinations: ["VN", "TH", "KH", "LA"],
-    experiences: [
-      {
-        id: "accountant_prearrival_support",
-        title: "Pre-arrival guest support",
-        summary: "Supports guests with calm pre-trip coordination, practical arrival briefings, and simple next-step communication before departure."
-      },
-      {
-        id: "accountant_comfort_logistics",
-        title: "Comfort-first logistics follow-up",
-        summary: "Keeps an eye on payment, rooming, and timing details so the on-trip flow stays comfortable and clear for guests."
-      }
-    ]
+    qualification: {
+      en: "Supports guests with clear pre-arrival coordination, payment follow-up, and practical next-step communication so the overall journey feels smooth and well prepared."
+    }
   }
 });
 
@@ -86,23 +51,58 @@ function normalizeCountryCodes(items) {
   return unique((Array.isArray(items) ? items : []).map((item) => normalizeText(item).toUpperCase()));
 }
 
-function normalizeExperience(experience, index = 0) {
-  const normalizedTitle = normalizeText(experience?.title);
-  const normalizedSummary = normalizeText(experience?.summary);
-  if (!normalizedTitle || !normalizedSummary) return null;
-  return {
-    ...(normalizeText(experience?.id) ? { id: normalizeText(experience.id) } : { id: `experience_${index + 1}` }),
-    title: normalizedTitle,
-    summary: normalizedSummary
-  };
+function qualificationTextFromLegacyExperiences(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((experience) => {
+      const title = normalizeText(experience?.title);
+      const summary = normalizeText(experience?.summary);
+      if (title && summary) return `${title}: ${summary}`;
+      return title || summary || "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
 }
 
-function normalizeProfile(profile) {
+function qualificationMapFromEntries(items) {
+  const objectValue = Object.fromEntries(
+    (Array.isArray(items) ? items : [])
+      .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+  );
+  return normalizeLocalizedTextMap(objectValue, "en");
+}
+
+function normalizeQualificationMap(value, legacyExperiences = []) {
+  if (Array.isArray(value)) {
+    const fromEntries = qualificationMapFromEntries(value);
+    if (Object.keys(fromEntries).length) return fromEntries;
+  }
+  const direct = normalizeLocalizedTextMap(value, "en");
+  if (Object.keys(direct).length) return direct;
+  return normalizeLocalizedTextMap(qualificationTextFromLegacyExperiences(legacyExperiences), "en");
+}
+
+function qualificationEntriesFromMap(value) {
+  return Object.entries(normalizeQualificationMap(value))
+    .map(([lang, text]) => ({ lang, value: text }))
+    .filter((entry) => Boolean(entry.lang && entry.value));
+}
+
+export function resolveAtpStaffQualificationText(profile, lang = "en") {
+  return resolveLocalizedText(
+    normalizeQualificationMap(profile?.qualification_i18n ?? profile?.qualification, profile?.experiences),
+    lang,
+    normalizeText(profile?.qualification)
+  );
+}
+
+function normalizeStoredProfile(profile) {
   const username = normalizeText(profile?.username).toLowerCase();
   if (!username) return null;
   const legacyExperienceDestinations = normalizeCountryCodes(
     (Array.isArray(profile?.experiences) ? profile.experiences : []).flatMap((experience) => experience?.countries || [])
   );
+  const qualification = normalizeQualificationMap(profile?.qualification ?? profile?.qualification_i18n, profile?.experiences);
   return {
     username,
     ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
@@ -113,9 +113,7 @@ function normalizeProfile(profile) {
       : legacyExperienceDestinations.length
         ? { destinations: legacyExperienceDestinations }
         : {}),
-    experiences: (Array.isArray(profile?.experiences) ? profile.experiences : [])
-      .map((experience, index) => normalizeExperience(experience, index))
-      .filter(Boolean)
+    ...(Object.keys(qualification).length ? { qualification } : {})
   };
 }
 
@@ -176,18 +174,9 @@ function genericProfileBlueprint(user) {
   return {
     languages: ["en", "vi"],
     destinations: ["VN", "TH", "KH", "LA"],
-    experiences: [
-      {
-        id: `${normalizeText(user?.username) || "staff"}_regional_guest_support`,
-        title: "Regional guest support",
-        summary: `${defaultDisplayNameForUser(user)} helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.`
-      },
-      {
-        id: `${normalizeText(user?.username) || "staff"}_soft_paced_itineraries`,
-        title: "Soft-paced itinerary planning",
-        summary: `${defaultDisplayNameForUser(user)} is comfortable balancing sightseeing with recovery time, lighter mornings, and clear guest communication throughout the trip.`
-      }
-    ]
+    qualification: {
+      en: `${defaultDisplayNameForUser(user)} helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.`
+    }
   };
 }
 
@@ -199,25 +188,25 @@ function sortProfiles(items) {
   });
 }
 
-function defaultProfileForUser(user) {
+function defaultStoredProfileForUser(user) {
   const username = normalizeText(user?.username).toLowerCase();
   const blueprint = DEFAULT_PROFILE_BLUEPRINTS[username] || genericProfileBlueprint(user);
-  return normalizeProfile({
+  return normalizeStoredProfile({
     username,
     name: defaultDisplayNameForUser(user),
     picture_ref: pictureRefForUsername(username),
     languages: blueprint.languages,
     destinations: blueprint.destinations,
-    experiences: blueprint.experiences
+    qualification: blueprint.qualification
   });
 }
 
 function seedProfiles() {
   return [
-    defaultProfileForUser({ username: "admin", name: "Admin User" }),
-    defaultProfileForUser({ username: "joachim", name: "Joachim Neumann" }),
-    defaultProfileForUser({ username: "staff", name: "Staff User" }),
-    defaultProfileForUser({ username: "accountant", name: "Accountant User" })
+    defaultStoredProfileForUser({ username: "admin", name: "Admin User" }),
+    defaultStoredProfileForUser({ username: "joachim", name: "Joachim Neumann" }),
+    defaultStoredProfileForUser({ username: "staff", name: "Staff User" }),
+    defaultStoredProfileForUser({ username: "accountant", name: "Accountant User" })
   ];
 }
 
@@ -231,14 +220,16 @@ async function fileExists(filePath) {
   }
 }
 
-function mergeProfileWithUser(profile, user) {
-  const normalizedProfile = normalizeProfile(profile);
+function mergeStoredProfileWithUser(profile, user) {
+  const normalizedProfile = normalizeStoredProfile(profile);
   const username = normalizeText(user?.username || normalizedProfile?.username).toLowerCase();
   if (!username) return null;
-  const defaultProfile = defaultProfileForUser({
+  const defaultProfile = defaultStoredProfileForUser({
     username,
     name: defaultDisplayNameForUser(user || normalizedProfile || {})
   });
+  const normalizedQualification = normalizeQualificationMap(normalizedProfile?.qualification);
+  const defaultQualification = normalizeQualificationMap(defaultProfile?.qualification);
   return {
     ...defaultProfile,
     ...normalizedProfile,
@@ -251,33 +242,18 @@ function mergeProfileWithUser(profile, user) {
     destinations: normalizeCountryCodes(normalizedProfile?.destinations).length
       ? normalizeCountryCodes(normalizedProfile.destinations)
       : defaultProfile.destinations,
-    experiences: Array.isArray(normalizedProfile?.experiences) && normalizedProfile.experiences.length
-      ? normalizedProfile.experiences
-      : defaultProfile.experiences
+    qualification: Object.keys(normalizedQualification).length ? normalizedQualification : defaultQualification
   };
 }
 
-function collectContextCountries(booking = {}, generatedOffer = null) {
-  const bookingDestinations = normalizeCountryCodes(booking?.destinations);
-  const submittedDestinations = normalizeCountryCodes(booking?.web_form_submission?.destinations);
-  const generatedDestinations = normalizeCountryCodes(generatedOffer?.travel_plan?.days?.flatMap((day) => day?.destinations || []));
-  return unique([...bookingDestinations, ...submittedDestinations, ...generatedDestinations]);
-}
-
-export function selectRelevantAtpStaffExperiences(profile, booking = {}, generatedOffer = null, { limit = 3 } = {}) {
-  const experiences = Array.isArray(profile?.experiences) ? profile.experiences : [];
-  if (!experiences.length) return [];
-  const profileDestinations = normalizeCountryCodes(profile?.destinations);
-  const contextCountries = new Set(collectContextCountries(booking, generatedOffer));
-  return experiences
-    .map((experience, index) => {
-      const destinationMatches = profileDestinations.filter((code) => contextCountries.has(code)).length;
-      const score = (destinationMatches * 4) + index * -0.001;
-      return { experience, index, score };
-    })
-    .sort((left, right) => right.score - left.score || left.index - right.index)
-    .slice(0, Math.max(1, Number(limit) || 3))
-    .map((entry) => entry.experience);
+function buildResponseProfile(profile, user) {
+  const merged = mergeStoredProfileWithUser(profile, user);
+  if (!merged) return null;
+  return {
+    ...merged,
+    qualification: resolveLocalizedText(merged.qualification, "en", ""),
+    qualification_i18n: qualificationEntriesFromMap(merged.qualification)
+  };
 }
 
 export function createAtpStaffDirectory({
@@ -299,12 +275,20 @@ export function createAtpStaffDirectory({
   async function readProfiles() {
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
-    const items = Array.isArray(parsed?.items) ? parsed.items : [];
-    return {
-      items: items
-        .map((profile) => normalizeProfile(profile))
-        .filter(Boolean)
-    };
+    const sourceItems = Array.isArray(parsed?.items) ? parsed.items : [];
+    let changed = false;
+    const items = sourceItems
+      .map((profile) => {
+        const normalized = normalizeStoredProfile(profile);
+        if (!normalized) {
+          changed = true;
+          return null;
+        }
+        if (JSON.stringify(profile) !== JSON.stringify(normalized)) changed = true;
+        return normalized;
+      })
+      .filter(Boolean);
+    return { items, changed };
   }
 
   async function persistProfiles(payload) {
@@ -320,8 +304,8 @@ export function createAtpStaffDirectory({
     if (!(await fileExists(dataPath))) {
       await writeFile(dataPath, `${JSON.stringify({ items: seedProfiles() }, null, 2)}\n`, "utf8");
     }
-    const payload = await readProfiles().catch(() => ({ items: seedProfiles() }));
-    let changed = false;
+    const payload = await readProfiles().catch(() => ({ items: seedProfiles(), changed: true }));
+    let changed = Boolean(payload.changed);
     for (const profile of payload.items) {
       if (await writeAvatarIfMissing(profile)) changed = true;
       if (!normalizeText(profile.picture_ref)) {
@@ -338,24 +322,20 @@ export function createAtpStaffDirectory({
     await ensureStorage();
     const stored = await readProfiles();
     const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
-    let changed = false;
+    let changed = Boolean(stored.changed);
     const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
     for (const user of users) {
       const username = normalizeText(user?.username).toLowerCase();
       if (!username) continue;
-      const merged = mergeProfileWithUser(itemsByUsername.get(username), user);
-      if (!merged) continue;
-      if (JSON.stringify(itemsByUsername.get(username) || null) !== JSON.stringify(merged)) {
-        itemsByUsername.set(username, merged);
+      const mergedStored = mergeStoredProfileWithUser(itemsByUsername.get(username), user);
+      if (!mergedStored) continue;
+      if (JSON.stringify(itemsByUsername.get(username) || null) !== JSON.stringify(mergedStored)) {
+        itemsByUsername.set(username, mergedStored);
         changed = true;
       }
-      if (await writeAvatarIfMissing(merged)) changed = true;
+      if (await writeAvatarIfMissing(mergedStored)) changed = true;
     }
-    const nextItems = Array.from(itemsByUsername.values()).sort((left, right) => {
-      const leftName = normalizeText(left?.name) || left?.username || "";
-      const rightName = normalizeText(right?.name) || right?.username || "";
-      return leftName.localeCompare(rightName);
-    });
+    const nextItems = sortProfiles(Array.from(itemsByUsername.values()));
     if (changed) {
       await persistProfiles({ items: nextItems });
     }
@@ -380,7 +360,7 @@ export function createAtpStaffDirectory({
     );
     return (Array.isArray(users) ? users : []).map((user) => ({
       ...user,
-      staff_profile: mergeProfileWithUser(profilesByUsername.get(normalizeText(user?.username).toLowerCase()), user)
+      staff_profile: buildResponseProfile(profilesByUsername.get(normalizeText(user?.username).toLowerCase()), user)
     }));
   }
 
@@ -400,7 +380,7 @@ export function createAtpStaffDirectory({
     const stored = (Array.isArray(profiles) ? profiles : []).find((profile) => normalizeText(profile?.username).toLowerCase() === username);
     return {
       ...user,
-      staff_profile: mergeProfileWithUser(stored, user)
+      staff_profile: buildResponseProfile(stored, user)
     };
   }
 
@@ -414,13 +394,17 @@ export function createAtpStaffDirectory({
     const stored = await readProfiles();
     const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
     const currentStored = itemsByUsername.get(username) || null;
-    const current = mergeProfileWithUser(currentStored, user);
-    const nextStored = normalizeProfile({
+    const current = mergeStoredProfileWithUser(currentStored, user);
+    const nextStored = normalizeStoredProfile({
       username,
       picture_ref: normalizeText(currentStored?.picture_ref) || normalizeText(current?.picture_ref) || pictureRefForUsername(username),
       languages: Array.isArray(input?.languages) ? input.languages : current?.languages,
       destinations: Array.isArray(input?.destinations) ? input.destinations : current?.destinations,
-      experiences: Array.isArray(input?.experiences) ? input.experiences : current?.experiences
+      qualification: input?.qualification_i18n !== undefined
+        ? input.qualification_i18n
+        : input?.qualification !== undefined
+          ? input.qualification
+          : current?.qualification
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
@@ -440,13 +424,13 @@ export function createAtpStaffDirectory({
     const stored = await readProfiles();
     const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
     const currentStored = itemsByUsername.get(username) || null;
-    const current = mergeProfileWithUser(currentStored, user);
-    const nextStored = normalizeProfile({
+    const current = mergeStoredProfileWithUser(currentStored, user);
+    const nextStored = normalizeStoredProfile({
       username,
       picture_ref: normalizedPictureRef,
       languages: current?.languages,
       destinations: current?.destinations,
-      experiences: current?.experiences
+      qualification: current?.qualification
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
@@ -473,7 +457,7 @@ export function createAtpStaffDirectory({
     if (!username) return null;
     const profiles = await syncProfilesFromKeycloak().catch(() => []);
     const stored = (Array.isArray(profiles) ? profiles : []).find((profile) => normalizeText(profile?.username).toLowerCase() === username);
-    return mergeProfileWithUser(stored, user);
+    return buildResponseProfile(stored, user);
   }
 
   return {

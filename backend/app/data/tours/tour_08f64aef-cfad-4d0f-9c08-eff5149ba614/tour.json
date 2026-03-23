@@ -15,7 +15,8 @@
     "pl": "Tajlandzka podróż przygodowa",
     "da": "Thailand eventyr rejse",
     "sv": "Thailand äventyrsresa",
-    "no": "Thailand eventyrreise"
+    "no": "Thailand eventyrreise",
+    "ar": "رحلات تايلاند"
   },
   "styles": [
     "grand-expeditions"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Plan przygody w Tajlandii skupiający się na zrównoważonej trasie pierwszej podróży, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
     "da": "En eventyrrejse i Thailand fokuserede på en afbalanceret rute for første tur med aktive dage, naturskønne ruter og praktisk lokal støtte.",
     "sv": "En äventyrsresplan i Thailand fokuserade på en balanserad första resa med aktiva dagar, natursköna rutter och praktisk lokal support.",
-    "no": "En eventyrreise i Thailand fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte."
+    "no": "En eventyrreise i Thailand fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في تايلاند على طريق متوازن للرحلة الأولى، مع أيام نشطة ومسارات ذات مناظر خلابة ودعم محلي عملي."
   },
   "budget_lower_usd": 1100
 }

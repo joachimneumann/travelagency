@@ -227,6 +227,10 @@
   background-image: var(--flag-en);
 }
 
+.flag-ar {
+  background-image: var(--flag-ar);
+}
+
 .flag-fr {
   background-image: var(--flag-fr);
 }
@@ -281,6 +285,69 @@
 
 .flag-no {
   background-image: var(--flag-no);
+}
+
+html[data-language-direction="rtl"] .home-page main :is(
+  h1,
+  h2,
+  h3,
+  p,
+  li,
+  label,
+  figcaption
+) {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+body.frontend-language-rtl :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="file"]):not([type="reset"]),
+  textarea,
+  select
+) {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+body.frontend-language-rtl :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="file"]):not([type="reset"]),
+  textarea
+)::placeholder {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+body.frontend-language-rtl .select-wrap > label,
+body.frontend-language-rtl .filter-select-trigger,
+body.frontend-language-rtl .filter-select-panel,
+body.frontend-language-rtl .filter-checkbox-option span {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+body.frontend-language-rtl .select-wrap > label {
+  padding-left: 0;
+  padding-right: 0.32rem;
+}
+
+html[data-language-direction="rtl"] .home-page .faq-question {
+  text-align: right;
+}
+
+html[data-language-direction="rtl"] .home-page .faq-question > span:first-child,
+html[data-language-direction="rtl"] .home-page .tour-title,
+html[data-language-direction="rtl"] .home-page .tour-desc,
+html[data-language-direction="rtl"] .home-page .review-card span,
+html[data-language-direction="rtl"] .home-page .metric span,
+html[data-language-direction="rtl"] .home-page .tag,
+html[data-language-direction="rtl"] .home-page .meta span {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
 }
 
 .filter-menu {
@@ -1375,6 +1442,10 @@ textarea:focus-visible {
   min-width: 0;
   text-align: left;
   resize: vertical;
+}
+
+.tour-localized-group__field textarea[dir="rtl"] {
+  text-align: right;
 }
 
 .localized-editor {
@@ -3321,9 +3392,7 @@ textarea:focus-visible {
 }
 
 .settings-staff-editor__head,
-.settings-staff-editor__photo-actions,
-.settings-staff-editor__experiences-head,
-.settings-staff-experience__head {
+.settings-staff-editor__photo-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3395,8 +3464,7 @@ textarea:focus-visible {
   gap: 0.6rem;
 }
 
-.settings-staff-editor__hero-copy > h3,
-.settings-staff-experience__head > h4 {
+.settings-staff-editor__hero-copy > h3 {
   margin: 0;
 }
 
@@ -3429,14 +3497,30 @@ textarea:focus-visible {
   margin: 0;
 }
 
-.settings-staff-experience {
+.settings-staff-editor__qualification-grid {
   display: grid;
-  gap: 0.9rem;
-  padding: 1rem;
-  border: 1px solid var(--line);
-  border-radius: 1rem;
-  background: var(--surface);
-  margin-bottom: 1rem;
+  gap: 0.8rem;
+}
+
+.settings-staff-editor__qualification-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.settings-staff-editor__qualification-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted-strong);
+}
+
+.settings-staff-editor__qualification-row textarea {
+  min-height: 7.5rem;
+  resize: vertical;
 }
 
 .settings-staff-editor #staffEditorStatus {
@@ -4003,9 +4087,7 @@ textarea:focus-visible {
 
   .settings-staff-editor__hero,
   .settings-staff-editor__head,
-  .settings-staff-editor__photo-actions,
-  .settings-staff-editor__experiences-head,
-  .settings-staff-experience__head {
+  .settings-staff-editor__photo-actions {
     grid-template-columns: none;
     flex-direction: column;
     align-items: stretch;
@@ -4014,6 +4096,16 @@ textarea:focus-visible {
   .settings-staff-editor__head-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .settings-staff-editor__qualification-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .settings-staff-editor__qualification-code {
+    min-height: auto;
+    justify-content: flex-start;
   }
 
   #tourChangeImageBtn {

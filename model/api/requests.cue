@@ -175,6 +175,17 @@ import (
 	actor?:                         string
 }
 
+#TravelPlanPdfArtifactUpdateRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	sent_to_customer:               bool
+	actor?:                         string
+}
+
+#TravelPlanPdfArtifactDeleteRequest: {
+	expected_travel_plan_revision?: >=0 & int
+	actor?:                         string
+}
+
 #BookingPricingUpdateRequest: {
 	expected_pricing_revision?: >=0 & int
 	pricing:                    entities.#BookingPricing
@@ -265,7 +276,8 @@ import (
 #AtpStaffProfileUpdateRequest: {
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
-	experiences?: [...entities.#AtpStaffExperience]
+	qualification?: string
+	qualification_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 }
 
 #AtpStaffPhotoUploadRequest: #EvidenceUpload

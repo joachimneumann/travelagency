@@ -15,7 +15,8 @@
     "pl": "Rodzinna podróż do Tajlandii",
     "da": "Familierejse til Thailand",
     "sv": "Familjeresa till Thailand",
-    "no": "Familiereise til Thailand"
+    "no": "Familiereise til Thailand",
+    "ar": "رحلة عائلية إلى تايلاند"
   },
   "styles": [
     "family"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Rodzinny plan podróży do Tajlandii skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
     "da": "En Thailands familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på turen.",
     "sv": "En Thailands familjeväg fokuserade på en balanserad första-tursrutt, med familjevänligt tempo och pålitlig logistik på resan.",
-    "no": "En familiereise i Thailand fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur."
+    "no": "En familiereise i Thailand fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur.",
+    "ar": "يركز خط سير الرحلة العائلي في تايلاند على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة."
   },
   "budget_lower_usd": 1300
 }

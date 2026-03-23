@@ -1,4 +1,6 @@
 import {
+  validateTravelPlanPdfArtifactDeleteRequest,
+  validateTravelPlanPdfArtifactUpdateRequest,
   validateBookingTravelPlanTranslateRequest,
   validateBookingTravelPlanUpdateRequest
 } from "../../../Generated/API/generated_APIModels.js";
@@ -35,6 +37,11 @@ export function createBookingTravelPlanHandlers(deps) {
     normalizeBookingTravelPlan,
     buildBookingTravelPlanReadModel,
     writeTravelPlanPdf,
+    listBookingTravelPlanPdfs,
+    persistBookingTravelPlanPdfArtifact,
+    resolveBookingTravelPlanPdfArtifact,
+    updateBookingTravelPlanPdfArtifact,
+    deleteBookingTravelPlanPdfArtifact,
     sendFileWithCache,
     translateEntries,
     path,
@@ -48,6 +55,15 @@ export function createBookingTravelPlanHandlers(deps) {
     processBookingImageToWebp,
     mkdir
   } = deps;
+
+  function buildTravelPlanDownloadFilename(nowValue = nowIso(), rawSuffix = "") {
+    const normalizedDate = String(nowValue || "").trim().slice(0, 10);
+    const datePart = /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)
+      ? normalizedDate
+      : new Date().toISOString().slice(0, 10);
+    const normalizedSuffix = normalizeText(rawSuffix).replace(/^-+/, "").replace(/[^A-Za-z0-9-]+/g, "");
+    return `Asia Travel Plan ${datePart}${normalizedSuffix ? `-${normalizedSuffix}` : ""}.pdf`;
+  }
 
   function requestContentLang(req, payload = null) {
     try {
@@ -197,10 +213,21 @@ export function createBookingTravelPlanHandlers(deps) {
     }
 
     let requestedLang = "";
+    let filenameSuffix = "";
+    let artifactId = "";
+    let previewOnly = false;
     try {
-      requestedLang = String(new URL(req.url, "http://localhost").searchParams.get("lang") || "").trim();
+      const requestUrl = new URL(req.url, "http://localhost");
+      requestedLang = String(requestUrl.searchParams.get("lang") || "").trim();
+      filenameSuffix = String(requestUrl.searchParams.get("filename_suffix") || "").trim();
+      artifactId = String(requestUrl.searchParams.get("artifact_id") || "").trim();
+      const previewParam = String(requestUrl.searchParams.get("preview") || "").trim().toLowerCase();
+      previewOnly = previewParam === "1" || previewParam === "true" || previewParam === "yes";
     } catch {
       requestedLang = "";
+      filenameSuffix = "";
+      artifactId = "";
+      previewOnly = false;
     }
     const contentLang = normalizeBookingContentLang(
       requestedLang
@@ -208,6 +235,25 @@ export function createBookingTravelPlanHandlers(deps) {
       || booking?.web_form_submission?.preferred_language
       || "en"
     );
+
+    if (artifactId && typeof resolveBookingTravelPlanPdfArtifact === "function") {
+      const existingArtifact = await resolveBookingTravelPlanPdfArtifact(booking.id, artifactId).catch(() => null);
+      if (!existingArtifact?.storage_path) {
+        sendJson(res, 404, { error: "Travel plan PDF artifact not found" });
+        return;
+      }
+      await sendFileWithCache(req, res, existingArtifact.storage_path, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${String(existingArtifact.filename || buildTravelPlanDownloadFilename(existingArtifact.created_at, filenameSuffix)).replace(/"/g, "")}"`
+      });
+      return;
+    }
+
+    const hadLegacyCurrentArtifact = previewOnly
+      ? false
+      : typeof resolveBookingTravelPlanPdfArtifact === "function"
+        ? Boolean(await resolveBookingTravelPlanPdfArtifact(booking.id, "legacy-current").catch(() => null))
+        : false;
+
     const travelPlanSnapshot = buildBookingTravelPlanReadModel(booking.travel_plan, booking.offer, {
       lang: contentLang,
       contentLang,
@@ -215,16 +261,46 @@ export function createBookingTravelPlanHandlers(deps) {
     });
 
     let pdfPath = "";
+    let previewPath = "";
     try {
-      ({ outputPath: pdfPath } = await writeTravelPlanPdf(booking, travelPlanSnapshot, { lang: contentLang }));
+      if (previewOnly) {
+        previewPath = path.join(TEMP_UPLOAD_DIR, `travel-plan-preview-${booking.id}-${randomUUID()}.pdf`);
+      }
+      ({ outputPath: pdfPath } = await writeTravelPlanPdf(booking, travelPlanSnapshot, {
+        lang: contentLang,
+        ...(previewPath ? { outputPath: previewPath } : {})
+      }));
     } catch (error) {
       sendJson(res, 500, { error: "Could not render travel plan PDF", detail: String(error?.message || error) });
       return;
     }
 
-    await sendFileWithCache(req, res, pdfPath, "private, max-age=0, no-store", {
-      "Content-Disposition": `inline; filename="ATP travel plan ${String(booking.id || "booking").replace(/"/g, "")}.pdf"`
-    });
+    const createdAt = nowIso();
+    const persistedArtifact = previewOnly
+      ? null
+      : typeof persistBookingTravelPlanPdfArtifact === "function"
+        ? await persistBookingTravelPlanPdfArtifact(booking.id, pdfPath, {
+          createdAt,
+          suffix: filenameSuffix,
+          reserveLegacyCurrent: hadLegacyCurrentArtifact
+        }).catch(() => null)
+        : null;
+
+    const servedPath = persistedArtifact?.storage_path || pdfPath;
+    const servedFilename = String(
+      persistedArtifact?.filename
+      || buildTravelPlanDownloadFilename(createdAt, previewOnly ? "" : filenameSuffix)
+    ).replace(/"/g, "");
+
+    try {
+      await sendFileWithCache(req, res, servedPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${servedFilename}"`
+      });
+    } finally {
+      if (previewPath) {
+        await rm(previewPath, { force: true }).catch(() => {});
+      }
+    }
   }
 
   const { handleSearchTravelPlanItems, handleImportTravelPlanItem } = createBookingTravelPlanImportHandlers({
@@ -278,13 +354,16 @@ export function createBookingTravelPlanHandlers(deps) {
   });
 
   const {
+    handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment
   } = createBookingTravelPlanAttachmentHandlers({
     readBodyJson,
     sendJson,
+    sendFileWithCache,
     readStore,
     getPrincipal,
+    canAccessBooking,
     canEditBooking,
     normalizeText,
     nowIso,
@@ -304,6 +383,108 @@ export function createBookingTravelPlanHandlers(deps) {
     rm,
     mkdir
   });
+
+  async function handlePatchBookingTravelPlanPdfArtifact(req, res, [bookingId, artifactId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTravelPlanPdfArtifactUpdateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
+
+    const updatedArtifact = typeof updateBookingTravelPlanPdfArtifact === "function"
+      ? await updateBookingTravelPlanPdfArtifact(booking.id, artifactId, { sent_to_customer: payload.sent_to_customer === true }).catch(() => null)
+      : null;
+    if (!updatedArtifact) {
+      sendJson(res, 404, { error: "Travel plan PDF not found" });
+      return;
+    }
+
+    incrementBookingRevision(booking, "travel_plan_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "TRAVEL_PLAN_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
+      payload.sent_to_customer === true
+        ? `Travel-plan PDF marked as sent to customer: ${normalizeText(updatedArtifact.filename) || artifactId}`
+        : `Travel-plan PDF marked as not sent to customer: ${normalizeText(updatedArtifact.filename) || artifactId}`
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
+
+  async function handleDeleteBookingTravelPlanPdfArtifact(req, res, [bookingId, artifactId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTravelPlanPdfArtifactDeleteRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
+
+    const existingArtifact = typeof resolveBookingTravelPlanPdfArtifact === "function"
+      ? await resolveBookingTravelPlanPdfArtifact(booking.id, artifactId).catch(() => null)
+      : null;
+    if (!existingArtifact) {
+      sendJson(res, 404, { error: "Travel plan PDF not found" });
+      return;
+    }
+    if (existingArtifact.sent_to_customer === true) {
+      sendJson(res, 422, { error: "Travel plan PDFs marked as sent to customer cannot be deleted." });
+      return;
+    }
+
+    const deletedArtifact = typeof deleteBookingTravelPlanPdfArtifact === "function"
+      ? await deleteBookingTravelPlanPdfArtifact(booking.id, artifactId).catch(() => null)
+      : null;
+    if (!deletedArtifact) {
+      sendJson(res, 404, { error: "Travel plan PDF not found" });
+      return;
+    }
+
+    incrementBookingRevision(booking, "travel_plan_revision");
+    booking.updated_at = nowIso();
+    addActivity(
+      store,
+      booking.id,
+      "TRAVEL_PLAN_UPDATED",
+      actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
+      `Travel-plan PDF deleted: ${normalizeText(deletedArtifact.filename) || artifactId}`
+    );
+    await persistStore(store);
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
 
   async function handlePatchBookingTravelPlan(req, res, [bookingId]) {
     let payload;
@@ -428,8 +609,11 @@ export function createBookingTravelPlanHandlers(deps) {
     handleUploadTravelPlanItemImage,
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
+    handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
+    handlePatchBookingTravelPlanPdfArtifact,
+    handleDeleteBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlan,
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish

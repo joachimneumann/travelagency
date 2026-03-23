@@ -2,6 +2,7 @@ package enums
 
 LanguageCatalog: [
 	"en",
+	"ar",
 	"fr",
 	"zh",
 	"ja",

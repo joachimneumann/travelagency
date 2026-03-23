@@ -40,6 +40,7 @@ function normalizeLanguageCatalog(source) {
       publicSupported: Boolean(entry.publicSupported),
       backendUiSupported: Boolean(entry.backendUiSupported),
       customerContentSupported: Boolean(entry.customerContentSupported),
+      direction: String(entry.direction || "ltr").trim().toLowerCase() === "rtl" ? "rtl" : "ltr",
       aliases: uniquePreserveOrder([
         code,
         apiValue,

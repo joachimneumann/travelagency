@@ -1,4 +1,5 @@
 import {
+  bookingDetailRequest,
   bookingTravelPlanPdfRequest,
   bookingTravelPlanRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -47,6 +48,7 @@ import { validateTravelPlanDraft as validateTravelPlanDraftState } from "./trave
 import { createBookingTravelPlanImagesModule } from "./travel_plan_images.js";
 import { createBookingTravelPlanAttachmentsModule } from "./travel_plan_attachments.js";
 import { createBookingTravelPlanItemLibraryModule } from "./travel_plan_item_library.js";
+import { createBookingTravelPlanPdfsModule } from "./travel_plan_pdfs.js";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -59,6 +61,7 @@ export function createBookingTravelPlanModule(ctx) {
     renderBookingData,
     loadActivities,
     escapeHtml,
+    formatDateTime,
     setBookingSectionDirty,
     setPageSaveActionError,
     hasUnsavedBookingChanges
@@ -342,12 +345,24 @@ export function createBookingTravelPlanModule(ctx) {
     fetchBookingMutation,
     getBookingRevision,
     escapeHtml,
+    formatDateTime,
     ensureTravelPlanReadyForMutation,
     finalizeTravelPlanMutation,
     applyTravelPlanMutationBooking,
     applyBookingPayload,
     loadActivities,
     travelPlanStatus
+  });
+
+  const travelPlanPdfsModule = createBookingTravelPlanPdfsModule({
+    state,
+    apiOrigin,
+    fetchBookingMutation,
+    getBookingRevision,
+    escapeHtml,
+    formatDateTime,
+    ensureTravelPlanReadyForMutation,
+    finalizeTravelPlanMutation
   });
 
   const travelPlanItemLibraryModule = createBookingTravelPlanItemLibraryModule({
@@ -985,17 +1000,24 @@ export function createBookingTravelPlanModule(ctx) {
     els.travel_plan_editor.innerHTML = `
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
-        <div class="travel-plan-footer__primary">
+        <div class="travel-plan-footer__new-day">
           <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
         </div>
-        <div class="travel-plan-footer__secondary">
-          <div class="travel-plan-footer__secondary-stack">
-            <div class="travel-plan-pdf-actions">
-              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create PDF"))}</button>
-              <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
+        <div class="travel-plan-footer__separator" aria-hidden="true"></div>
+        <div class="travel-plan-footer__existing-pdfs">
+          ${travelPlanPdfsModule.renderTravelPlanPdfsTable()}
+        </div>
+        <div class="travel-plan-footer__create-pdf">
+          <div class="travel-plan-pdf-actions">
+            <div class="travel-plan-pdf-actions__buttons">
+              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview Travel Plan PDF"))}</button>
+              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create Travel Plan PDF"))}</button>
             </div>
-            ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
+            <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
           </div>
+        </div>
+        <div class="travel-plan-footer__attachments">
+          ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
         </div>
       </div>
     `;
@@ -1273,6 +1295,40 @@ export function createBookingTravelPlanModule(ctx) {
     link.target = "_blank";
     link.rel = "noopener";
     link.click();
+    window.setTimeout(() => {
+      void refreshTravelPlanPdfList();
+    }, 750);
+  }
+
+  function previewTravelPlanPdf() {
+    if (!state.booking?.id) return;
+    if (hasUnsavedBookingChanges?.() || state.pageSaveInFlight || state.pageDiscardInFlight) {
+      travelPlanStatus(bookingT("booking.action_requires_save", "Save edits to enable."), "info");
+      return;
+    }
+    const request = bookingTravelPlanPdfRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id },
+      query: { lang: bookingContentLang() }
+    });
+    const previewUrl = new URL(request.url, window.location.origin);
+    previewUrl.searchParams.set("preview", "1");
+    const link = document.createElement("a");
+    link.href = previewUrl.toString();
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.click();
+  }
+
+  async function refreshTravelPlanPdfList() {
+    if (!state.booking?.id) return;
+    const request = bookingDetailRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id }
+    });
+    const response = await fetchBookingMutation(request.url, { method: request.method });
+    if (!response?.booking) return;
+    applyTravelPlanMutationBooking(response.booking);
   }
 
   function removeLink(linkId) {
@@ -1431,6 +1487,14 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_editor.addEventListener("change", (event) => {
         const target = event.target;
+        if (target?.matches?.("[data-travel-plan-pdf-sent]")) {
+          const artifactId = String(target.getAttribute("data-travel-plan-pdf-sent") || "").trim();
+          const sentToCustomer = target.checked === true;
+          void travelPlanPdfsModule.setTravelPlanPdfSentToCustomer(artifactId, sentToCustomer).then((ok) => {
+            if (!ok) renderTravelPlanPanel();
+          });
+          return;
+        }
         if (target?.matches?.("[data-travel-plan-date-picker-for]")) {
           applyTravelPlanDatePickerValue(target);
         }
@@ -1463,12 +1527,20 @@ export function createBookingTravelPlanModule(ctx) {
           openTravelPlanPdf();
           return;
         }
+        if (button.hasAttribute("data-travel-plan-preview-pdf")) {
+          previewTravelPlanPdf();
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-upload-attachments")) {
           travelPlanAttachmentsModule.triggerTravelPlanAttachmentPicker();
           return;
         }
         if (button.hasAttribute("data-travel-plan-delete-attachment")) {
           void travelPlanAttachmentsModule.deleteTravelPlanAttachment(button.getAttribute("data-travel-plan-delete-attachment"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-delete-pdf")) {
+          void travelPlanPdfsModule.deleteTravelPlanPdf(button.getAttribute("data-travel-plan-delete-pdf"));
           return;
         }
         if (button.hasAttribute("data-travel-plan-remove-day")) {

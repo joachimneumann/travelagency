@@ -15,7 +15,8 @@
     "pl": "Rodzinna podróż do Laosu",
     "da": "Laos familierejse",
     "sv": "Laos familjeresa",
-    "no": "Laos familiereise"
+    "no": "Laos familiereise",
+    "ar": "رحلة عائلة لاوس"
   },
   "styles": [
     "family"
@@ -98,6 +99,11 @@
       "Signaturstopp i Luang Prabang",
       "Rutehøydepunkt rundt Vang Vieng",
       "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Rodzinny plan podróży do Laosu skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
     "da": "En Laos familierejseplan fokuserede på en afbalanceret rute for første tur med familievenligt tempo og pålidelig logistik på tur.",
     "sv": "En resplan för familjen i Laos fokuserade på en balanserad första resa, med familjevänligt tempo och pålitlig logistik på resan.",
-    "no": "En familiereise i Laos fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur."
+    "no": "En familiereise i Laos fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur.",
+    "ar": "يركز خط سير الرحلة العائلي في لاوس على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة."
   },
   "budget_lower_usd": 1040
 }

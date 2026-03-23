@@ -1,5 +1,5 @@
 import { bookingCustomerLanguageRequest } from "../../Generated/API/generated_APIRequestFactory.js";
-import { logBrowserConsoleError, resolveApiUrl } from "../shared/api.js";
+import { logBrowserConsoleError, normalizeText, resolveApiUrl } from "../shared/api.js";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
@@ -64,7 +64,12 @@ export function createBookingPageLanguageController(ctx) {
   }
 
   function resolveSubmissionCustomerLanguage(booking) {
-    return normalizeBookingContentLang(booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
+    const submissionPreferredLanguage = normalizeText(booking?.web_form_submission?.preferred_language);
+    const customerLanguage = normalizeText(booking?.customer_language);
+    if (submissionPreferredLanguage) {
+      return normalizeBookingContentLang(submissionPreferredLanguage);
+    }
+    return normalizeBookingContentLang(customerLanguage || "en");
   }
 
   function closeContentLanguageMenu() {
@@ -325,6 +330,7 @@ export function createBookingPageLanguageController(ctx) {
     handleContentLanguageChange,
     populateContentLanguageSelect,
     resolveSubmissionCustomerLanguage,
+    syncContentLanguageSelector,
     updateContentLangInUrl,
     waitForBackendI18n,
     withBackendLang,

@@ -92,6 +92,11 @@ export function createBookingHandlers(deps) {
     writeInvoicePdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf,
+    listBookingTravelPlanPdfs,
+    persistBookingTravelPlanPdfArtifact,
+    resolveBookingTravelPlanPdfArtifact,
+    updateBookingTravelPlanPdfArtifact,
+    deleteBookingTravelPlanPdfArtifact,
     randomUUID,
     invoicePdfPath,
     generatedOfferPdfPath,
@@ -390,6 +395,7 @@ export function createBookingHandlers(deps) {
       })
     );
     await rm(path.join(GENERATED_OFFERS_DIR, `travel-plan-${bookingId}.pdf`), { force: true }).catch(() => {});
+    await rm(path.join(GENERATED_OFFERS_DIR, "travel-plan-pdfs", bookingId), { recursive: true, force: true }).catch(() => {});
     await rm(path.join(BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
   }
 
@@ -508,8 +514,11 @@ export function createBookingHandlers(deps) {
     handleUploadTravelPlanItemImage,
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
+    handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
+    handlePatchBookingTravelPlanPdfArtifact,
+    handleDeleteBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlan,
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish
@@ -532,6 +541,11 @@ export function createBookingHandlers(deps) {
     normalizeBookingTravelPlan,
     buildBookingTravelPlanReadModel,
     writeTravelPlanPdf,
+    listBookingTravelPlanPdfs,
+    persistBookingTravelPlanPdfArtifact,
+    resolveBookingTravelPlanPdfArtifact,
+    updateBookingTravelPlanPdfArtifact,
+    deleteBookingTravelPlanPdfArtifact,
     sendFileWithCache,
     translateEntries,
     path,
@@ -882,8 +896,11 @@ export function createBookingHandlers(deps) {
     handleUploadTravelPlanItemImage,
     handleDeleteTravelPlanItemImage,
     handleReorderTravelPlanItemImages,
+    handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
+    handlePatchBookingTravelPlanPdfArtifact,
+    handleDeleteBookingTravelPlanPdfArtifact,
     handlePatchBookingTravelPlan,
     handleGetBookingTravelPlanPdf,
     handleTranslateBookingTravelPlanFromEnglish,

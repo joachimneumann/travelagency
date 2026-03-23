@@ -32,16 +32,62 @@ export async function inspectPdfAttachmentBuffer(buffer) {
   if (!pages.length) {
     throw new Error("PDF upload must contain at least one page.");
   }
-  for (const [index, page] of pages.entries()) {
+  return {
+    pageCount: pages.length,
+    pages: pages.map((page, index) => ({
+      index,
+      width: Number(page.getWidth()),
+      height: Number(page.getHeight()),
+      isA4: isA4PageSize(Number(page.getWidth()), Number(page.getHeight()))
+    }))
+  };
+}
+
+async function appendSourceDocumentPages(targetDocument, sourceDocument) {
+  const sourcePages = sourceDocument.getPages();
+  for (const [index, page] of sourcePages.entries()) {
     const width = Number(page.getWidth());
     const height = Number(page.getHeight());
-    if (!isA4PageSize(width, height)) {
-      throw new Error(
-        `Additional PDFs must use A4 page layout on every page. Page ${index + 1} is ${width.toFixed(2)} x ${height.toFixed(2)} pt.`
-      );
+    if (isA4PageSize(width, height)) {
+      const [copiedPage] = await targetDocument.copyPages(sourceDocument, [index]);
+      targetDocument.addPage(copiedPage);
+      continue;
     }
+
+    const landscape = width > height;
+    const targetWidth = landscape ? A4_HEIGHT_POINTS : A4_WIDTH_POINTS;
+    const targetHeight = landscape ? A4_WIDTH_POINTS : A4_HEIGHT_POINTS;
+    const scale = Math.min(targetWidth / width, targetHeight / height);
+    const drawWidth = width * scale;
+    const drawHeight = height * scale;
+    const x = (targetWidth - drawWidth) / 2;
+    const y = (targetHeight - drawHeight) / 2;
+    const contents = page?.node?.Contents?.();
+    if (!contents) {
+      targetDocument.addPage([targetWidth, targetHeight]);
+      continue;
+    }
+    const embeddedPage = await targetDocument.embedPage(page);
+    const targetPage = targetDocument.addPage([targetWidth, targetHeight]);
+    targetPage.drawPage(embeddedPage, {
+      x,
+      y,
+      width: drawWidth,
+      height: drawHeight
+    });
   }
-  return { pageCount: pages.length };
+}
+
+export async function normalizePdfAttachmentBufferToA4(buffer) {
+  const inspection = await inspectPdfAttachmentBuffer(buffer);
+  const sourceDocument = await PDFDocument.load(buffer);
+  const normalizedDocument = await PDFDocument.create();
+  await appendSourceDocumentPages(normalizedDocument, sourceDocument);
+  return {
+    pageCount: inspection.pageCount,
+    normalized: inspection.pages.some((page) => !page.isA4),
+    buffer: Buffer.from(await normalizedDocument.save())
+  };
 }
 
 export function resolveTravelPlanAttachmentAbsolutePath(baseDir, rawStoragePath) {
@@ -59,11 +105,15 @@ export async function appendPdfAttachmentsToFile(outputPath, attachmentPaths = [
   if (!resolvedAttachmentPaths.length) return false;
 
   const mergedDocument = await PDFDocument.create();
-  for (const sourcePath of [outputPath, ...resolvedAttachmentPaths]) {
+  const outputBytes = await readFile(outputPath);
+  const outputDocument = await PDFDocument.load(outputBytes);
+  const copiedPages = await mergedDocument.copyPages(outputDocument, outputDocument.getPageIndices());
+  copiedPages.forEach((page) => mergedDocument.addPage(page));
+
+  for (const sourcePath of resolvedAttachmentPaths) {
     const sourceBytes = await readFile(sourcePath);
     const sourceDocument = await PDFDocument.load(sourceBytes);
-    const copiedPages = await mergedDocument.copyPages(sourceDocument, sourceDocument.getPageIndices());
-    copiedPages.forEach((page) => mergedDocument.addPage(page));
+    await appendSourceDocumentPages(mergedDocument, sourceDocument);
   }
 
   const mergedBytes = await mergedDocument.save();

@@ -15,7 +15,8 @@
     "pl": "Podróż kulturowa Tajlandii",
     "da": "Thailands kulturrejse",
     "sv": "Thailands kulturresa",
-    "no": "Thailands kulturreise"
+    "no": "Thailands kulturreise",
+    "ar": "رحلة الثقافة في تايلاند"
   },
   "styles": [
     "culture"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Plan podróży po Tajlandii skupiający się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
     "da": "En thailandsk kulturrejseplan fokuserede på en afbalanceret første-tursrute med dybde, lokalt liv og meningsfulde guidede besøg.",
     "sv": "En resplan för Thailands kultur fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
-    "no": "En thailandsk kulturreise fokuserte på en balansert førstetursrute, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk."
+    "no": "En thailandsk kulturreise fokuserte på en balansert førstetursrute, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير الرحلة الثقافي في تايلاند على مسار الرحلة الأولى المتوازن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
   },
   "budget_lower_usd": 980
 }

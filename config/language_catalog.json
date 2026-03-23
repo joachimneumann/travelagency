@@ -14,6 +14,21 @@
     "aliases": ["english"]
   },
   {
+    "code": "ar",
+    "apiValue": "Arabic",
+    "promptName": "Arabic",
+    "nativeLabel": "العربية",
+    "shortLabel": "AR",
+    "flagClass": "flag-ar",
+    "pdfLocale": "ar-SA",
+    "frontendNameKey": "language.name.arabic",
+    "publicSupported": true,
+    "backendUiSupported": false,
+    "customerContentSupported": true,
+    "direction": "rtl",
+    "aliases": ["arabic", "ar", "العربية", "arab"]
+  },
+  {
     "code": "fr",
     "apiValue": "French",
     "promptName": "French",

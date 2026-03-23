@@ -15,7 +15,8 @@
     "pl": "Rodzinna podróż do Kambodży",
     "da": "Familierejse til Cambodja",
     "sv": "Familjeresa i Kambodja",
-    "no": "Familiereise i Kambodsja"
+    "no": "Familiereise i Kambodsja",
+    "ar": "رحلة عائلة كمبوديا"
   },
   "styles": [
     "family"
@@ -98,6 +99,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Rodzinny plan podróży do Kambodży skupiający się na zrównoważonej trasie pierwszej podróży, z przyjaznym rodzinom tempem i niezawodną logistyką podróży.",
     "da": "En Cambodia familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på turen.",
     "sv": "En familjeväg i Kambodja fokuserade på en balanserad första resa med familjevänligt tempo och pålitlig logistik på resan.",
-    "no": "En Kambodsja familie reiserute fokusert på en balansert første tur rute, med familievennlig tempo og pålitelig logistikk på tur."
+    "no": "En Kambodsja familie reiserute fokusert på en balansert første tur rute, med familievennlig tempo og pålitelig logistikk på tur.",
+    "ar": "يركز خط سير الرحلة العائلي في كمبوديا على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة."
   },
   "budget_lower_usd": 1100
 }

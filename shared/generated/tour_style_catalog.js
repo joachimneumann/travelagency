@@ -7,6 +7,7 @@ const CATALOG = Object.freeze({
       "code": "grand-expeditions",
       "labels": {
         "en": "Grand Expeditions",
+        "ar": "رحلات استكشافية كبرى",
         "fr": "Grandes expéditions",
         "zh": "大型远征",
         "ja": "壮大な遠征",
@@ -31,6 +32,7 @@ const CATALOG = Object.freeze({
       "code": "beach",
       "labels": {
         "en": "Beach",
+        "ar": "شاطئ",
         "fr": "Plage",
         "zh": "海滩",
         "ja": "ビーチ",
@@ -54,6 +56,7 @@ const CATALOG = Object.freeze({
       "code": "budget",
       "labels": {
         "en": "Budget",
+        "ar": "اقتصادي",
         "fr": "Budget",
         "zh": "经济型",
         "ja": "お手頃",
@@ -77,6 +80,7 @@ const CATALOG = Object.freeze({
       "code": "culture",
       "labels": {
         "en": "Culture",
+        "ar": "ثقافة",
         "fr": "Culture",
         "zh": "文化",
         "ja": "文化",
@@ -100,6 +104,7 @@ const CATALOG = Object.freeze({
       "code": "family",
       "labels": {
         "en": "Family",
+        "ar": "عائلي",
         "fr": "Famille",
         "zh": "家庭",
         "ja": "家族",
@@ -123,6 +128,7 @@ const CATALOG = Object.freeze({
       "code": "gastronomic-experiences",
       "labels": {
         "en": "Gastronomic Experiences",
+        "ar": "تجارب طهو",
         "fr": "Expériences gastronomiques",
         "zh": "美食体验",
         "ja": "美食体験",
@@ -147,6 +153,7 @@ const CATALOG = Object.freeze({
       "code": "luxury",
       "labels": {
         "en": "Luxury",
+        "ar": "فاخر",
         "fr": "Luxe",
         "zh": "奢华",
         "ja": "ラグジュアリー",
@@ -169,7 +176,8 @@ const CATALOG = Object.freeze({
     {
       "code": "wellness",
       "labels": {
-        "en": "Wellness"
+        "en": "Wellness",
+        "ar": "عافية"
       },
       "aliases": [
         "wellness",
@@ -195,6 +203,7 @@ const CATALOG = Object.freeze({
       "code": "grand-expeditions",
       "labels": {
         "en": "Grand Expeditions",
+        "ar": "رحلات استكشافية كبرى",
         "fr": "Grandes expéditions",
         "zh": "大型远征",
         "ja": "壮大な遠征",
@@ -219,6 +228,7 @@ const CATALOG = Object.freeze({
       "code": "beach",
       "labels": {
         "en": "Beach",
+        "ar": "شاطئ",
         "fr": "Plage",
         "zh": "海滩",
         "ja": "ビーチ",
@@ -242,6 +252,7 @@ const CATALOG = Object.freeze({
       "code": "budget",
       "labels": {
         "en": "Budget",
+        "ar": "اقتصادي",
         "fr": "Budget",
         "zh": "经济型",
         "ja": "お手頃",
@@ -265,6 +276,7 @@ const CATALOG = Object.freeze({
       "code": "culture",
       "labels": {
         "en": "Culture",
+        "ar": "ثقافة",
         "fr": "Culture",
         "zh": "文化",
         "ja": "文化",
@@ -288,6 +300,7 @@ const CATALOG = Object.freeze({
       "code": "family",
       "labels": {
         "en": "Family",
+        "ar": "عائلي",
         "fr": "Famille",
         "zh": "家庭",
         "ja": "家族",
@@ -311,6 +324,7 @@ const CATALOG = Object.freeze({
       "code": "gastronomic-experiences",
       "labels": {
         "en": "Gastronomic Experiences",
+        "ar": "تجارب طهو",
         "fr": "Expériences gastronomiques",
         "zh": "美食体验",
         "ja": "美食体験",
@@ -335,6 +349,7 @@ const CATALOG = Object.freeze({
       "code": "luxury",
       "labels": {
         "en": "Luxury",
+        "ar": "فاخر",
         "fr": "Luxe",
         "zh": "奢华",
         "ja": "ラグジュアリー",
@@ -357,7 +372,8 @@ const CATALOG = Object.freeze({
     "wellness": {
       "code": "wellness",
       "labels": {
-        "en": "Wellness"
+        "en": "Wellness",
+        "ar": "عافية"
       },
       "aliases": [
         "wellness",

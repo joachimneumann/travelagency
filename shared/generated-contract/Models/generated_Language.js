@@ -4,6 +4,7 @@
 
 export const GENERATED_LANGUAGE_CODES = Object.freeze([
   "en",
+  "ar",
   "fr",
   "zh",
   "ja",

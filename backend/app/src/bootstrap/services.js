@@ -6,6 +6,7 @@ import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
 import { createInvoicePdfWriter } from "../lib/invoice_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
 import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
+import { createTravelPlanPdfArtifacts } from "../lib/travel_plan_pdf_artifacts.js";
 import { createKeycloakDirectory } from "../lib/keycloak_directory.js";
 import { createStoreUtils } from "../lib/store_utils.js";
 import { createAtpStaffDirectory } from "../lib/atp_staff_directory.js";
@@ -66,6 +67,10 @@ export function createBackendServices({
     nowIso: support.nowIso
   });
 
+  const travelPlanPdfArtifacts = createTravelPlanPdfArtifacts({
+    generatedOffersDir: collections.generatedOffersDir
+  });
+
   const bookingViewHelpers = createBookingViewHelpers({
     baseCurrency: runtime.baseCurrency,
     stages: runtime.stages,
@@ -91,6 +96,7 @@ export function createBackendServices({
     listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
+    listBookingTravelPlanPdfs: travelPlanPdfArtifacts.listBookingTravelPlanPdfs,
     sendJson: httpHelpers.sendJson
   });
 
@@ -177,6 +183,7 @@ export function createBackendServices({
     keycloakDirectory,
     atpStaffDirectory,
     countryReferenceStore,
+    travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
     writeInvoicePdf,

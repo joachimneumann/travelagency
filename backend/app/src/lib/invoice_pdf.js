@@ -164,7 +164,7 @@ export function createInvoicePdfWriter({ invoicePdfPath, companyProfile = null }
         .fontSize(24)
         .fillColor(PDF_COLORS.textStrong)
         .text(normalizeText(invoice?.title) || pdfT(lang, "invoice.title_fallback", "Invoice for {recipient}", {
-          recipient: safeText(recipient?.name, "recipient")
+          recipient: safeText(recipient?.name, pdfT(lang, "invoice.recipient_fallback", "recipient"))
         }), PAGE_MARGIN, y, { width: 320 });
 
       if (companyProfile) {

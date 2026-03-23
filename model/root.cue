@@ -28,7 +28,7 @@ import (
 		BookingTravelPlanItemCopiedFrom:             entityModel.#BookingTravelPlanItemCopiedFrom
 		BookingTravelPlanOfferComponentLink:         entityModel.#BookingTravelPlanOfferComponentLink
 		BookingOfferDiscount:                        entityModel.#BookingOfferDiscount
-		AtpStaffExperience:                          entityModel.#AtpStaffExperience
+		AtpStaffLocalizedTextEntry:                  entityModel.#AtpStaffLocalizedTextEntry
 		AtpStaffProfile:                             entityModel.#AtpStaffProfile
 		CountryEmergencyContact:                     entityModel.#CountryEmergencyContact
 		CountryPracticalInfo:                        entityModel.#CountryPracticalInfo
@@ -139,6 +139,8 @@ import (
 		TravelPlanItemImageReorderRequest:                apiModel.#TravelPlanItemImageReorderRequest
 		TravelPlanAttachmentUploadRequest:                apiModel.#TravelPlanAttachmentUploadRequest
 		TravelPlanAttachmentDeleteRequest:                apiModel.#TravelPlanAttachmentDeleteRequest
+		TravelPlanPdfArtifactUpdateRequest:               apiModel.#TravelPlanPdfArtifactUpdateRequest
+		TravelPlanPdfArtifactDeleteRequest:               apiModel.#TravelPlanPdfArtifactDeleteRequest
 		BookingOfferUpdateRequest:                        apiModel.#BookingOfferUpdateRequest
 		BookingGenerateOfferRequest:                      apiModel.#BookingGenerateOfferRequest
 		BookingGenerateOfferDepositAcceptanceRuleRequest: apiModel.#BookingGenerateOfferDepositAcceptanceRuleRequest

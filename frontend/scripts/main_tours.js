@@ -1,5 +1,9 @@
 import { publicToursRequest } from "../Generated/API/generated_APIRequestFactory.js";
 import { normalizeText } from "../../shared/js/text.js";
+import {
+  FRONTEND_LANGUAGE_CODES,
+  normalizeLanguageCode
+} from "../../shared/generated/language_catalog.js";
 
 export function createFrontendToursController(ctx) {
   const {
@@ -28,24 +32,7 @@ export function createFrontendToursController(ctx) {
   } = ctx;
 
   function normalizeFrontendTourLang(value) {
-    const normalized = normalizeText(value).toLowerCase();
-    if (!normalized) return "en";
-    if (normalized === "en" || normalized.startsWith("en-")) return "en";
-    if (normalized === "fr" || normalized.startsWith("fr-")) return "fr";
-    if (normalized === "zh" || normalized.startsWith("zh-") || normalized.includes("chinese") || normalized.includes("mandarin")) return "zh";
-    if (normalized === "ja" || normalized.startsWith("ja-") || normalized.includes("japanese")) return "ja";
-    if (normalized === "ko" || normalized.startsWith("ko-") || normalized.includes("korean")) return "ko";
-    if (normalized === "vi" || normalized.startsWith("vi-") || normalized.includes("vietnam")) return "vi";
-    if (normalized === "de" || normalized.startsWith("de-") || normalized.includes("german") || normalized.includes("deutsch")) return "de";
-    if (normalized === "es" || normalized.startsWith("es-") || normalized.includes("spanish") || normalized.includes("español") || normalized.includes("espanol")) return "es";
-    if (normalized === "it" || normalized.startsWith("it-") || normalized.includes("italian") || normalized.includes("italiano")) return "it";
-    if (normalized === "ru" || normalized.startsWith("ru-") || normalized.includes("russian") || normalized.includes("рус")) return "ru";
-    if (normalized === "nl" || normalized.startsWith("nl-") || normalized.includes("dutch") || normalized.includes("nederlands")) return "nl";
-    if (normalized === "pl" || normalized.startsWith("pl-") || normalized.includes("polish") || normalized.includes("polski")) return "pl";
-    if (normalized === "da" || normalized.startsWith("da-") || normalized.includes("danish") || normalized.includes("dansk")) return "da";
-    if (normalized === "sv" || normalized.startsWith("sv-") || normalized.includes("swedish") || normalized.includes("svenska")) return "sv";
-    if (normalized === "no" || normalized.startsWith("no-") || normalized.startsWith("nb-") || normalized.startsWith("nn-") || normalized.includes("norwegian") || normalized.includes("norsk")) return "no";
-    return "en";
+    return normalizeLanguageCode(value, { allowedCodes: FRONTEND_LANGUAGE_CODES, fallback: "en" });
   }
 
   function toursCacheKey(lang = currentFrontendLang()) {

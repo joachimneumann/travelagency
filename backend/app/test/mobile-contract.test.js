@@ -1559,8 +1559,47 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
     apiHeaders()
   );
   assert.equal(initialTravelPlanPdf.status, 200);
+  assert.match(
+    String(initialTravelPlanPdf.headers["content-disposition"] || ""),
+    /Asia Travel Plan \d{4}-\d{2}-\d{2}-1\.pdf/,
+    "The first generated travel-plan PDF of the day should use the numbered Asia Travel Plan filename"
+  );
   const initialTravelPlanPdfDoc = await PDFLibDocument.load(await readFile(travelPlanPdfPath));
   const initialTravelPlanPageCount = initialTravelPlanPdfDoc.getPageCount();
+
+  const bookingAfterInitialTravelPlanPdf = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(bookingAfterInitialTravelPlanPdf.status, 200);
+  assert.equal(bookingAfterInitialTravelPlanPdf.body.booking.travel_plan_pdfs.length, 1);
+  assert.match(
+    String(bookingAfterInitialTravelPlanPdf.body.booking.travel_plan_pdfs[0].filename || ""),
+    /Asia Travel Plan \d{4}-\d{2}-\d{2}-1\.pdf/,
+    "Booking detail should list the first persisted travel-plan PDF artifact"
+  );
+
+  const previewTravelPlanPdf = await requestRaw(
+    `${endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId)}?lang=en&preview=1`,
+    apiHeaders()
+  );
+  assert.equal(previewTravelPlanPdf.status, 200);
+  assert.match(
+    String(previewTravelPlanPdf.headers["content-disposition"] || ""),
+    /Asia Travel Plan \d{4}-\d{2}-\d{2}\.pdf/,
+    "Preview travel-plan PDFs should use the base Asia Travel Plan filename without persisting a numbered artifact"
+  );
+
+  const bookingAfterPreviewTravelPlanPdf = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(bookingAfterPreviewTravelPlanPdf.status, 200);
+  assert.equal(
+    bookingAfterPreviewTravelPlanPdf.body.booking.travel_plan_pdfs.length,
+    1,
+    "Preview travel-plan PDFs should not create stored travel-plan PDF rows"
+  );
 
   const initialGeneratedOfferPdf = await requestRaw(
     endpointPath("booking_generated_offer_pdf")
@@ -1585,8 +1624,28 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
       }
     }
   );
-  assert.equal(letterUploadResult.status, 422);
-  assert.match(String(letterUploadResult.body.error || ""), /A4 page layout/i);
+  assert.equal(letterUploadResult.status, 200);
+  assert.equal(letterUploadResult.body.booking.travel_plan.attachments.length, 1);
+  assert.equal(letterUploadResult.body.booking.travel_plan.attachments[0].page_count, 1);
+
+  const normalizedLetterAttachmentId = letterUploadResult.body.booking.travel_plan.attachments[0].id;
+  const normalizedLetterAttachmentPdfResult = await requestRaw(
+    endpointPath("booking_travel_plan_attachment_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{attachment_id}", normalizedLetterAttachmentId),
+    apiHeaders()
+  );
+  assert.equal(normalizedLetterAttachmentPdfResult.status, 200);
+  const normalizedLetterStoragePath = String(letterUploadResult.body.booking.travel_plan.attachments[0].storage_path || "");
+  const normalizedLetterAttachmentPdf = await PDFLibDocument.load(
+    await readFile(path.join(TEST_DATA_DIR, "booking_travel_plan_attachments", normalizedLetterStoragePath))
+  );
+  assert.equal(normalizedLetterAttachmentPdf.getPageCount(), 1);
+  {
+    const [page] = normalizedLetterAttachmentPdf.getPages();
+    assert.ok(Math.abs(page.getWidth() - 595.275591) < 0.1);
+    assert.ok(Math.abs(page.getHeight() - 841.889764) < 0.1);
+  }
 
   const uploadResult = await requestJson(
     endpointPath("booking_travel_plan_attachment_upload").replace("{booking_id}", bookingId),
@@ -1594,7 +1653,7 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
     {
       method: "POST",
       body: {
-        expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
+        expected_travel_plan_revision: letterUploadResult.body.booking.travel_plan_revision,
         filename: "appendix-a4.pdf",
         mime_type: "application/pdf",
         data_base64: await createPdfBase64WithText([[595.275591, 841.889764]])
@@ -1602,16 +1661,137 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
     }
   );
   assert.equal(uploadResult.status, 200);
-  assert.equal(uploadResult.body.booking.travel_plan.attachments.length, 1);
-  assert.equal(uploadResult.body.booking.travel_plan.attachments[0].page_count, 1);
+  assert.equal(uploadResult.body.booking.travel_plan.attachments.length, 2);
+  assert.equal(uploadResult.body.booking.travel_plan.attachments[1].page_count, 1);
+
+  const attachmentId = uploadResult.body.booking.travel_plan.attachments[1].id;
+  const attachmentPdfResult = await requestRaw(
+    endpointPath("booking_travel_plan_attachment_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{attachment_id}", attachmentId),
+    apiHeaders()
+  );
+  assert.equal(attachmentPdfResult.status, 200);
+  assert.match(
+    String(attachmentPdfResult.headers["content-disposition"] || ""),
+    /appendix-a4\.pdf/,
+    "Travel-plan attachment PDF downloads should serve the stored appendix inline"
+  );
 
   const mergedTravelPlanPdf = await requestRaw(
     endpointPath("booking_travel_plan_pdf").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(mergedTravelPlanPdf.status, 200);
+  assert.match(
+    String(mergedTravelPlanPdf.headers["content-disposition"] || ""),
+    /Asia Travel Plan \d{4}-\d{2}-\d{2}-2\.pdf/,
+    "A second generated travel-plan PDF on the same day should increment the filename suffix"
+  );
   const mergedTravelPlanPdfDoc = await PDFLibDocument.load(await readFile(travelPlanPdfPath));
-  assert.equal(mergedTravelPlanPdfDoc.getPageCount(), initialTravelPlanPageCount + 1);
+  assert.equal(mergedTravelPlanPdfDoc.getPageCount(), initialTravelPlanPageCount + 2);
+
+  const bookingAfterMergedTravelPlanPdf = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(bookingAfterMergedTravelPlanPdf.status, 200);
+  assert.equal(bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_pdfs.length, 2);
+  assert.match(
+    String(bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_pdfs[0].pdf_url || ""),
+    /artifact_id=/,
+    "Persisted travel-plan PDF rows should point to a specific stored artifact"
+  );
+  const persistedTravelPlanPdf = await requestRaw(
+    String(bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_pdfs[0].pdf_url || "").replace("http://localhost", ""),
+    apiHeaders()
+  );
+  assert.equal(persistedTravelPlanPdf.status, 200);
+  const persistedTravelPlanPdfRow = bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_pdfs[0];
+  const persistedTravelPlanPdfId = String(persistedTravelPlanPdfRow.id || "");
+  assert.equal(
+    persistedTravelPlanPdfRow.sent_to_customer,
+    false,
+    "Newly generated travel-plan PDFs should default to not sent to customer"
+  );
+
+  const markTravelPlanPdfSentResult = await requestJson(
+    endpointPath("booking_travel_plan_pdf_update")
+      .replace("{booking_id}", bookingId)
+      .replace("{artifact_id}", persistedTravelPlanPdfId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: bookingAfterMergedTravelPlanPdf.body.booking.travel_plan_revision,
+        sent_to_customer: true
+      }
+    }
+  );
+  assert.equal(markTravelPlanPdfSentResult.status, 200);
+  assert.equal(
+    markTravelPlanPdfSentResult.body.booking.travel_plan_pdfs.find((item) => item.id === persistedTravelPlanPdfId)?.sent_to_customer,
+    true,
+    "Travel-plan PDF rows should persist the sent-to-customer flag"
+  );
+
+  const rejectSentTravelPlanPdfDeleteResult = await requestJson(
+    endpointPath("booking_travel_plan_pdf_delete")
+      .replace("{booking_id}", bookingId)
+      .replace("{artifact_id}", persistedTravelPlanPdfId),
+    apiHeaders(),
+    {
+      method: "DELETE",
+      body: {
+        expected_travel_plan_revision: markTravelPlanPdfSentResult.body.booking.travel_plan_revision
+      }
+    }
+  );
+  assert.equal(rejectSentTravelPlanPdfDeleteResult.status, 422);
+  assert.match(
+    String(rejectSentTravelPlanPdfDeleteResult.body.error || ""),
+    /sent to customer/i,
+    "Deleting a sent travel-plan PDF should be rejected"
+  );
+
+  const unmarkTravelPlanPdfSentResult = await requestJson(
+    endpointPath("booking_travel_plan_pdf_update")
+      .replace("{booking_id}", bookingId)
+      .replace("{artifact_id}", persistedTravelPlanPdfId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: markTravelPlanPdfSentResult.body.booking.travel_plan_revision,
+        sent_to_customer: false
+      }
+    }
+  );
+  assert.equal(unmarkTravelPlanPdfSentResult.status, 200);
+  assert.equal(
+    unmarkTravelPlanPdfSentResult.body.booking.travel_plan_pdfs.find((item) => item.id === persistedTravelPlanPdfId)?.sent_to_customer,
+    false
+  );
+
+  const deleteTravelPlanPdfResult = await requestJson(
+    endpointPath("booking_travel_plan_pdf_delete")
+      .replace("{booking_id}", bookingId)
+      .replace("{artifact_id}", persistedTravelPlanPdfId),
+    apiHeaders(),
+    {
+      method: "DELETE",
+      body: {
+        expected_travel_plan_revision: unmarkTravelPlanPdfSentResult.body.booking.travel_plan_revision
+      }
+    }
+  );
+  assert.equal(deleteTravelPlanPdfResult.status, 200);
+  assert.equal(deleteTravelPlanPdfResult.body.booking.travel_plan_pdfs.length, 1);
+  assert.equal(
+    deleteTravelPlanPdfResult.body.booking.travel_plan_pdfs.some((item) => item.id === persistedTravelPlanPdfId),
+    false,
+    "Deleting an unsent travel-plan PDF should remove it from booking detail"
+  );
 
   const mergedGeneratedOfferPdf = await requestRaw(
     endpointPath("booking_generated_offer_pdf")
@@ -1621,7 +1801,7 @@ test("travel plan PDF attachments reject non-A4 uploads and append to travel-pla
   );
   assert.equal(mergedGeneratedOfferPdf.status, 200);
   const mergedGeneratedOfferPdfDoc = await PDFLibDocument.load(await readFile(generatedOfferPdfPath));
-  assert.equal(mergedGeneratedOfferPdfDoc.getPageCount(), initialGeneratedOfferPageCount + 1);
+  assert.equal(mergedGeneratedOfferPdfDoc.getPageCount(), initialGeneratedOfferPageCount + 2);
 });
 
 test("suppliers can be created and updated, and travel plan supplier references are validated", async () => {
@@ -2119,7 +2299,10 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
   );
   assert.equal(pdfResult.status, 200);
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
-  assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP travel plan .*\.pdf/);
+  assert.match(
+    String(pdfResult.headers["content-disposition"] || ""),
+    /Asia Travel Plan \d{4}-\d{2}-\d{2}(?:-[A-Za-z0-9-]+)?\.pdf/
+  );
   assert.match(pdfResult.body, /%PDF-/);
   const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
   assert.match(decodedText, /PublicDayMarker731/);
@@ -2134,7 +2317,7 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
   assert.doesNotMatch(decodedText, /Whoistraveling/);
 });
 
-test("booking travel plan pdf includes the assigned ATP guide section with relevant experience", async () => {
+test("booking travel plan pdf includes the assigned ATP guide section with the guide qualification", async () => {
   const createdBooking = await createSeedBooking({
     destinations: ["Vietnam", "Laos"],
     travel_style: ["Wellness", "Culture"]
@@ -2170,7 +2353,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with relev
   assert.match(decodedText, /YourATPguide/);
   assert.match(decodedText, /JoachimNeumann/);
   assert.match(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
-  assert.match(decodedText, /CentralVietnamwellnesspacing|GentleCambodiaandLaosjourneys|Cross-borderhandoverplanning/);
+  assert.match(decodedText, /Specializesinsoft-pacedSoutheastAsiaitineraries/);
 });
 
 test("booking generated offer pdf endpoint returns a pdf file", async () => {
@@ -3924,6 +4107,8 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
 
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
   const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
+  const qualificationEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";
+  const qualificationDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
 
   const forbiddenResult = await requestJson(
     profilePath,
@@ -3933,9 +4118,9 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
       body: {
         languages: ["de", "en"],
         destinations: ["VN"],
-        experiences: [{
-          title: "Manager should not write this",
-          summary: "This write should be rejected."
+        qualification_i18n: [{
+          lang: "en",
+          value: "This write should be rejected."
         }]
       }
     }
@@ -3950,10 +4135,16 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
       body: {
         languages: ["de", "en", "vi"],
         destinations: ["VN", "LA"],
-        experiences: [{
-          title: "Quiet wellness pacing",
-          summary: "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights."
-        }]
+        qualification_i18n: [
+          {
+            lang: "en",
+            value: qualificationEn
+          },
+          {
+            lang: "de",
+            value: qualificationDe
+          }
+        ]
       }
     }
   );
@@ -3961,14 +4152,20 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   assert.equal(updateResult.body.user.username, "joachim");
   assert.deepEqual(updateResult.body.user.staff_profile.languages, ["de", "en", "vi"]);
   assert.deepEqual(updateResult.body.user.staff_profile.destinations, ["VN", "LA"]);
-  assert.equal(updateResult.body.user.staff_profile.experiences.length, 1);
-  assert.equal(updateResult.body.user.staff_profile.experiences[0].title, "Quiet wellness pacing");
-  assert.equal(updateResult.body.user.staff_profile.experiences[0].countries, undefined);
-  assert.equal(updateResult.body.user.staff_profile.experiences[0].travel_styles, undefined);
+  assert.equal(updateResult.body.user.staff_profile.qualification, qualificationEn);
+  assert.ok(Array.isArray(updateResult.body.user.staff_profile.qualification_i18n));
+  assert.equal(
+    updateResult.body.user.staff_profile.qualification_i18n.find((entry) => entry.lang === "en")?.value,
+    qualificationEn
+  );
+  assert.equal(
+    updateResult.body.user.staff_profile.qualification_i18n.find((entry) => entry.lang === "de")?.value,
+    qualificationDe
+  );
 
   const listResult = await requestJson(endpointPath("keycloak_users"), apiHeaders("atp_admin", "admin", "kc-admin"));
   const updated = listResult.body.items.find((item) => item.username === "joachim");
-  assert.equal(updated.staff_profile.experiences[0].title, "Quiet wellness pacing");
+  assert.equal(updated.staff_profile.qualification, qualificationEn);
 });
 
 test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGICK }, async () => {

@@ -15,7 +15,8 @@
     "pl": "Podróż po plaży w Tajlandii",
     "da": "Thailand Strandrejse",
     "sv": "Thailands strandresa",
-    "no": "Thailand strandreise"
+    "no": "Thailand strandreise",
+    "ar": "رحلة شاطئ تايلاند"
   },
   "styles": [
     "beach"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Plan podróży na plażę w Tajlandii skupia się na zrównoważonej trasie pierwszej podróży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
     "da": "En strandrute i Thailand fokuserede på en afbalanceret rute for første tur, med afslappet kysttid afbalanceret med let lokal opdagelse.",
     "sv": "En strandresplan i Thailand fokuserade på en balanserad första-tursrutt, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
-    "no": "En strandreise i Thailand fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse."
+    "no": "En strandreise i Thailand fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse.",
+    "ar": "يركز خط سير الرحلة على شاطئ تايلاند على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
   },
   "budget_lower_usd": 1160
 }

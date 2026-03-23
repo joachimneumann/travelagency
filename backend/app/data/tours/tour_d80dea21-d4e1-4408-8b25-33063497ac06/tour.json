@@ -15,7 +15,8 @@
     "pl": "Podróż po kulturze Laosu",
     "da": "Laos kulturrejse",
     "sv": "Laos kulturresa",
-    "no": "Laos kulturreise"
+    "no": "Laos kulturreise",
+    "ar": "رحلة ثقافة لاوس"
   },
   "styles": [
     "culture"
@@ -98,6 +99,11 @@
       "Signaturstopp i Luang Prabang",
       "Rutehøydepunkt rundt Vang Vieng",
       "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Trasa po kulturze Laosu skupiająca się na zrównoważonej trasie pierwszej podróży, z głębią dziedzictwa kulturowego, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
     "da": "En Laos-kulturrute fokuserede på en afbalanceret første-tursrute med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
     "sv": "En Laos kulturresplan fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
-    "no": "En Laos kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk."
+    "no": "En Laos kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير الرحلة الثقافي في لاوس على مسار متوازن للرحلة الأولى، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
   },
   "budget_lower_usd": 720
 }

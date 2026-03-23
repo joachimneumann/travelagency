@@ -33,6 +33,7 @@ export function createBookingViewHelpers({
   listAssignableKeycloakUsers,
   keycloakDisplayName,
   resolveAssignedAtpStaffProfile,
+  listBookingTravelPlanPdfs,
   sendJson
 }) {
   const offerAcceptanceTokenSecret = normalizeText(offerAcceptanceTokenConfig?.secret);
@@ -341,6 +342,9 @@ export function createBookingViewHelpers({
     const assignedAtpStaff = assignedKeycloakUserId && typeof resolveAssignedAtpStaffProfile === "function"
       ? await resolveAssignedAtpStaffProfile(assignedKeycloakUserId).catch(() => null)
       : null;
+    const travelPlanPdfs = typeof listBookingTravelPlanPdfs === "function"
+      ? await listBookingTravelPlanPdfs(normalizedBooking.id).catch(() => [])
+      : [];
     const assignedKeycloakUserLabel = assignedKeycloakUserId
       ? normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || normalizeText(assignedAtpStaff?.name) || assignedKeycloakUserId
       : "";
@@ -365,6 +369,11 @@ export function createBookingViewHelpers({
       travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang),
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency, { lang }),
+      travel_plan_pdfs: travelPlanPdfs.map((item) => ({
+        ...item,
+        sent_to_customer: item?.sent_to_customer === true,
+        pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/travel-plan/pdf?lang=${encodeURIComponent(lang)}&artifact_id=${encodeURIComponent(item.id)}`
+      })),
       offer_translation_status: buildOfferTranslationStatus(normalizedBooking.offer, lang),
       generated_offers: generatedOffers,
       generated_offer_email_enabled: isGeneratedOfferEmailEnabled(),

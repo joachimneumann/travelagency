@@ -70,14 +70,13 @@ IR: {
 
 	types: [
 		{
-			name:       "AtpStaffExperience"
+			name:       "AtpStaffLocalizedTextEntry"
 			domain:     "aux"
 			module:     "entities"
-			sourceType: "entities.#AtpStaffExperience"
+			sourceType: "entities.#AtpStaffLocalizedTextEntry"
 			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "title", kind: "scalar", typeName: "string", required: true},
-				{name: "summary", kind: "scalar", typeName: "string", required: true},
+				{name: "lang", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "value", kind: "scalar", typeName: "string", required: true},
 			]
 		},
 		{
@@ -91,7 +90,8 @@ IR: {
 				{name: "picture_ref", kind: "scalar", typeName: "string", required: false},
 				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "experiences", kind: "entity", typeName: "AtpStaffExperience", required: false, isArray: true},
+				{name: "qualification", kind: "scalar", typeName: "string", required: false},
+				{name: "qualification_i18n", kind: "entity", typeName: "AtpStaffLocalizedTextEntry", required: false, isArray: true},
 			]
 		},
 		{
@@ -1727,6 +1727,27 @@ IR: {
 			]
 		},
 		{
+			name:       "TravelPlanPdfArtifactUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanPdfArtifactUpdateRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "sent_to_customer", kind: "scalar", typeName: "bool", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanPdfArtifactDeleteRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#TravelPlanPdfArtifactDeleteRequest"
+			fields: [
+				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
 			name:       "BookingOfferUpdateRequest"
 			domain:     "api"
 			module:     "api"
@@ -1843,7 +1864,8 @@ IR: {
 			fields: [
 				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "experiences", kind: "entity", typeName: "AtpStaffExperience", required: false, isArray: true},
+				{name: "qualification", kind: "scalar", typeName: "string", required: false},
+				{name: "qualification_i18n", kind: "entity", typeName: "AtpStaffLocalizedTextEntry", required: false, isArray: true},
 			]
 		},
 		{

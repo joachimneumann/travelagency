@@ -15,7 +15,8 @@
     "pl": "Podróż budżetowa Laosu",
     "da": "Laos budgetrejse",
     "sv": "Laos budgetresa",
-    "no": "Laos Budsjettreise"
+    "no": "Laos Budsjettreise",
+    "ar": "رحلة ميزانية لاوس"
   },
   "styles": [
     "budget"
@@ -98,6 +99,11 @@
       "Signaturstopp i Luang Prabang",
       "Rutehøydepunkt rundt Vang Vieng",
       "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Budżetowy plan podróży do Laosu skupiał się na zrównoważonej trasie pierwszej podróży, z planowaniem skoncentrowanym na wartości, z inteligentnymi trasami i jasnymi dodatkami.",
     "da": "En Laos-budgetrute fokuserede på en afbalanceret rute for første tur med værdifokuseret planlægning med smart rute og klare inklusion.",
     "sv": "En budgetresplan i Laos fokuserade på en balanserad första-tursrutt, med värdefokuserad planering med smart rutt och tydliga inklusioner.",
-    "no": "En Laos budsjettreise fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger."
+    "no": "En Laos budsjettreise fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger.",
+    "ar": "يركز خط سير الرحلة الاقتصادي في لاوس على مسار متوازن للرحلة الأولى، مع تخطيط يركز على القيمة مع التوجيه الذكي والإضافات الواضحة."
   },
   "budget_lower_usd": 550
 }

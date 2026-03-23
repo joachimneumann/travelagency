@@ -15,7 +15,8 @@
     "pl": "Podróż kulinarna po Wietnamie",
     "da": "Vietnam madrejse",
     "sv": "Vietnam matresa",
-    "no": "Vietnam matreise"
+    "no": "Vietnam matreise",
+    "ar": "تجربة تذوق الطعام في فيتنام"
   },
   "styles": [
     "gastronomic-experiences"
@@ -98,6 +99,11 @@
       "Signaturstopp i Hanoi",
       "Rutehøydepunkt rundt Hoi An",
       "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
     ]
   },
   "seasonality_start_month": "oct",
@@ -122,7 +128,8 @@
     "pl": "Trasa kulinarna po Wietnamie skupiająca się na zrównoważonej trasie pierwszej podróży, obejmującej wizyty na rynku, degustacje i regionalne doświadczenia kulinarne.",
     "da": "En Vietnam madrejseplan fokuserede på en afbalanceret første tur-rute med markedsbesøg, smagsprøver og regionale kulinariske oplevelser.",
     "sv": "En matresplan för Vietnam fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
-    "no": "En matreise fra Vietnam fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser."
+    "no": "En matreise fra Vietnam fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
+    "ar": "يركز خط سير تجارب تذوق الطعام في فيتنام على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
   },
   "budget_lower_usd": 790
 }

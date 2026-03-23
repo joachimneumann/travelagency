@@ -15,7 +15,8 @@
     "pl": "Przygoda w Wietnamie - jaskinie",
     "da": "Vietnam Expeditions - Huler",
     "sv": "Vietnamäventyr - grottor",
-    "no": "Vietnameventyr - grotter"
+    "no": "Vietnameventyr - grotter",
+    "ar": "بعثات فيتنام - الكهوف"
   },
   "styles": [
     "grand-expeditions"
@@ -98,6 +99,11 @@
       "Signaturstopp i Hanoi",
       "Rutehøydepunkt rundt Hoi An",
       "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
     ]
   },
   "seasonality_start_month": "oct",
@@ -122,7 +128,8 @@
     "pl": "Plan przygody w Wietnamie skupiał się na trasie wokół jaskiń, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
     "da": "En Vietnam-eventyrrute fokuserede på en rute formet omkring huler med aktive dage, naturskønne ruter og praktisk lokal støtte.",
     "sv": "En resplan för äventyr i Vietnam fokuserade på en rutt formad runt grottor, med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
-    "no": "En eventyrreise fra Vietnam fokuserte på en rute formet rundt grotter, med aktive dager, naturskjønne ruter og praktisk lokal støtte."
+    "no": "En eventyrreise fra Vietnam fokuserte på en rute formet rundt grotter, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على طريق تم تشكيله حول الكهوف، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي."
   },
   "budget_lower_usd": 1070
 }

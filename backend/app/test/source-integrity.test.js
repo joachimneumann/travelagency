@@ -225,6 +225,22 @@ test("backend startup backfills missing booking persons and the frontend reads o
   );
 });
 
+test("booking page initial customer language prefers the web-form preferred language", async () => {
+  const bookingPageLanguagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
+  const source = await readFile(bookingPageLanguagePath, "utf8");
+
+  assert.match(
+    source,
+    /function resolveSubmissionCustomerLanguage\(booking\) \{[\s\S]*web_form_submission\?\.preferred_language[\s\S]*return normalizeBookingContentLang\(submissionPreferredLanguage\);[\s\S]*return normalizeBookingContentLang\(customerLanguage \|\| "en"\);[\s\S]*\}/,
+    "Initial booking-page language should prefer the submitted web-form language before falling back to a stored customer-language value"
+  );
+  assert.match(
+    source,
+    /return \{[\s\S]*populateContentLanguageSelect,[\s\S]*resolveSubmissionCustomerLanguage,[\s\S]*syncContentLanguageSelector,[\s\S]*updateContentLangInUrl,/,
+    "Booking page language controller should export syncContentLanguageSelector so the visible customer-language control updates after booking payload load"
+  );
+});
+
 test("booking person modal exposes traveler-details link actions and the public form page", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const travelerDetailsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "traveler-details.html");
@@ -841,8 +857,8 @@ test("travel plan footer exposes a clean-state-gated pdf action backed by a cont
   );
   assert.match(
     travelPlanSource,
-    /travel-plan-footer__primary[\s\S]*data-travel-plan-add-day[\s\S]*travel-plan-footer__secondary[\s\S]*data-travel-plan-create-pdf/,
-    "The travel-plan footer should place the Create PDF action in a lower secondary row instead of next to New day"
+    /travel-plan-footer__new-day[\s\S]*data-travel-plan-add-day[\s\S]*travel-plan-footer__separator[\s\S]*travel-plan-footer__existing-pdfs[\s\S]*travel-plan-footer__create-pdf[\s\S]*data-travel-plan-create-pdf[\s\S]*travel-plan-footer__attachments/,
+    "The travel-plan footer should render the requested stacked order: New day, separator, existing travel-plan PDFs, Create PDF, then appended PDFs"
   );
   assert.doesNotMatch(
     travelPlanSource,
@@ -874,6 +890,10 @@ test("travel plan footer exposes additional PDF attachment controls and contract
   const operations = await openApiPathOperations(openApiPath);
 
   assert.ok(
+    operations.includes("GET /api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}/pdf"),
+    "The API contract should expose a travel-plan PDF attachment download endpoint"
+  );
+  assert.ok(
     operations.includes("POST /api/v1/bookings/{booking_id}/travel-plan/attachments"),
     "The API contract should expose a travel-plan PDF attachment upload endpoint"
   );
@@ -900,6 +920,39 @@ test("travel plan footer exposes additional PDF attachment controls and contract
     travelPlanAttachmentsSource,
     /data-travel-plan-delete-attachment/,
     "The travel-plan footer should allow removing uploaded PDF attachments"
+  );
+  assert.match(
+    travelPlanAttachmentsSource,
+    /href="\$\{escapeHtml\(resolveAttachmentPdfUrl\(attachment\.id\)\)\}"/,
+    "The appended PDF filename should render as a clickable link"
+  );
+});
+
+test("travel plan PDF table exposes sent and delete controls backed by dedicated contract routes", async () => {
+  const travelPlanPdfsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_pdfs.js");
+  const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
+  const [travelPlanPdfsSource, operations] = await Promise.all([
+    readFile(travelPlanPdfsScriptPath, "utf8"),
+    openApiPathOperations(openApiPath)
+  ]);
+
+  assert.ok(
+    operations.includes("PATCH /api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"),
+    "The API contract should expose a travel-plan PDF sent-state update endpoint"
+  );
+  assert.ok(
+    operations.includes("DELETE /api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"),
+    "The API contract should expose a travel-plan PDF delete endpoint"
+  );
+  assert.match(
+    travelPlanPdfsSource,
+    /bookingTravelPlanPdfUpdateRequest[\s\S]*bookingTravelPlanPdfDeleteRequest/,
+    "Travel-plan PDF mutations should be built from the generated request factory"
+  );
+  assert.match(
+    travelPlanPdfsSource,
+    /booking\.travel_plan\.sent_to_customer[\s\S]*data-travel-plan-pdf-sent[\s\S]*data-travel-plan-delete-pdf/,
+    "The travel-plan PDF table should render the sent-to-customer checkbox and delete action"
   );
 });
 
@@ -952,6 +1005,41 @@ test("offer and travel-plan PDF closing letters mention appended attachments bef
     travelPlanPdfSource,
     /Please also find the attached additional PDF(?:s)? at the end of this document\./,
     "Travel-plan PDFs should mention appended PDF attachments in the closing letter before the signoff"
+  );
+});
+
+test("travel-plan PDF removes the old hero subtitle and badge, adds a section title, and suggests the new download filename", async () => {
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const bookingTravelPlanHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");
+  const [travelPlanPdfSource, bookingTravelPlanHandlerSource] = await Promise.all([
+    readFile(travelPlanPdfPath, "utf8"),
+    readFile(bookingTravelPlanHandlerPath, "utf8")
+  ]);
+
+  assert.match(
+    travelPlanPdfSource,
+    /function travelPlanSectionTitle\(lang\)/,
+    "Travel-plan PDFs should define a dedicated itinerary section heading"
+  );
+  assert.doesNotMatch(
+    travelPlanPdfSource,
+    /drawTravelPlanHero[\s\S]*travel_plan\.pdf_subtitle[\s\S]*travel_plan\.pdf_badge/,
+    "Travel-plan hero rendering should no longer show the old subtitle and badge labels"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /text\(travelPlanSectionTitle\(lang\), PAGE_MARGIN, y,/,
+    "Travel-plan PDFs should render a standalone section heading above the first itinerary day"
+  );
+  assert.match(
+    bookingTravelPlanHandlerSource,
+    /function buildTravelPlanDownloadFilename\(nowValue = nowIso\(\), rawSuffix = ""\)/,
+    "Travel-plan PDF download responses should build the new date-based filename"
+  );
+  assert.match(
+    bookingTravelPlanHandlerSource,
+    /Asia Travel Plan \$\{datePart\}\$\{normalizedSuffix \? `-\$\{normalizedSuffix\}` : ""\}\.pdf/,
+    "Travel-plan PDF download filenames should use the Asia Travel Plan YYYY-MM-DD pattern with an optional suffix"
   );
 });
 

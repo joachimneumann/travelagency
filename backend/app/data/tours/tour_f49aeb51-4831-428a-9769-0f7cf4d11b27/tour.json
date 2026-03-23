@@ -15,7 +15,8 @@
     "pl": "Kultura Wietnamu - Hoi An",
     "da": "Vietnam Kultur - Hoi An",
     "sv": "Vietnamkultur - Hoi An",
-    "no": "Vietnam kultur - Hoi An"
+    "no": "Vietnam kultur - Hoi An",
+    "ar": "ثقافة فيتنام - هوي آن"
   },
   "styles": [
     "culture"
@@ -98,6 +99,11 @@
       "Signaturstopp i Hanoi",
       "Rutehøydepunkt rundt Hoi An",
       "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
     ]
   },
   "seasonality_start_month": "oct",
@@ -122,7 +128,8 @@
     "pl": "Trasa po kulturze Wietnamu skupiająca się na trasie wokół Hoi An, z głębią dziedzictwa, życiem lokalnym i znaczącymi wizytami z przewodnikiem.",
     "da": "En Vietnam-kulturrute fokuserede på en rute formet omkring Hoi An, med arvsdybde, lokalt liv og meningsfulde guidede besøg.",
     "sv": "En resplan för Vietnams kultur fokuserade på en rutt formad runt Hoi An, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
-    "no": "En Vietnam-kulturreise fokuserte på en rute formet rundt Hoi An, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk."
+    "no": "En Vietnam-kulturreise fokuserte på en rute formet rundt Hoi An, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk.",
+    "ar": "يركز خط سير رحلة الثقافة الفيتنامية على طريق تم تشكيله حول هوي آن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
   },
   "budget_lower_usd": 950
 }

@@ -10,6 +10,8 @@ import {
   A4_WIDTH_POINTS,
   appendPdfAttachmentsToFile,
   inspectPdfAttachmentBuffer,
+  isA4PageSize,
+  normalizePdfAttachmentBufferToA4,
   trimTrailingBlankPagesInFile
 } from "../src/lib/pdf_attachments.js";
 
@@ -33,16 +35,19 @@ function createPdfBuffer({ size = [A4_WIDTH_POINTS, A4_HEIGHT_POINTS], pages = 1
   });
 }
 
-test("travel-plan PDF attachments accept only A4 pages", async () => {
+test("travel-plan PDF attachments normalize non-A4 pages to A4", async () => {
   const a4Buffer = await createPdfBuffer({ pages: 2 });
   const info = await inspectPdfAttachmentBuffer(a4Buffer);
   assert.equal(info.pageCount, 2);
+  assert.equal(info.pages.every((page) => page.isA4), true);
 
   const letterBuffer = await createPdfBuffer({ size: [612, 792] });
-  await assert.rejects(
-    () => inspectPdfAttachmentBuffer(letterBuffer),
-    /A4 page layout/
-  );
+  const normalized = await normalizePdfAttachmentBufferToA4(letterBuffer);
+  assert.equal(normalized.pageCount, 1);
+  assert.equal(normalized.normalized, true);
+  const normalizedDocument = await PDFLibDocument.load(normalized.buffer);
+  const [page] = normalizedDocument.getPages();
+  assert.equal(isA4PageSize(page.getWidth(), page.getHeight()), true);
 });
 
 test("travel-plan PDF attachments append extra PDFs to the generated document", async () => {
@@ -53,7 +58,7 @@ test("travel-plan PDF attachments append extra PDFs to the generated document", 
     const attachmentTwoPath = path.join(tempDir, "attachment-2.pdf");
 
     await writeFile(outputPath, await createPdfBuffer({ pages: 1 }));
-    await writeFile(attachmentOnePath, await createPdfBuffer({ pages: 2 }));
+    await writeFile(attachmentOnePath, await createPdfBuffer({ size: [612, 792], pages: 2 }));
     await writeFile(attachmentTwoPath, await createPdfBuffer({ pages: 1 }));
 
     await appendPdfAttachmentsToFile(outputPath, [attachmentOnePath, attachmentTwoPath]);
@@ -61,6 +66,9 @@ test("travel-plan PDF attachments append extra PDFs to the generated document", 
     const mergedBytes = await readFile(outputPath);
     const mergedDocument = await PDFLibDocument.load(mergedBytes);
     assert.equal(mergedDocument.getPageCount(), 4);
+    mergedDocument.getPages().forEach((page) => {
+      assert.equal(isA4PageSize(page.getWidth(), page.getHeight()), true);
+    });
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }

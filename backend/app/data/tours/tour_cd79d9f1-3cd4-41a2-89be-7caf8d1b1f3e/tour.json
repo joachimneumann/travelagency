@@ -15,7 +15,8 @@
     "pl": "Podróż budżetowa Tajlandii",
     "da": "Budgetrejse til Thailand",
     "sv": "Thailands budgetresa",
-    "no": "Thailand Budsjettreise"
+    "no": "Thailand Budsjettreise",
+    "ar": "رحلة ميزانية تايلاند"
   },
   "styles": [
     "budget"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Plan budżetu Tajlandii skupiający się na zrównoważonej trasie pierwszej podróży, z planowaniem skoncentrowanym na wartościach, z inteligentnymi trasami i jasnymi dodatkami.",
     "da": "En Thailand-budgetrute fokuserede på en afbalanceret rute for første tur med værdifokuseret planlægning med smart rute og klare inklusion.",
     "sv": "En budgetresplan för Thailand fokuserade på en balanserad förstaresasrutt, med värdefokuserad planering med smart rutt och tydliga inklusioner.",
-    "no": "En budsjettreise i Thailand fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger."
+    "no": "En budsjettreise i Thailand fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger.",
+    "ar": "يركز خط سير الرحلة الاقتصادي في تايلاند على مسار الرحلة الأولى المتوازن، مع التخطيط الذي يركز على القيمة مع التوجيه الذكي والإضافات الواضحة."
   },
   "budget_lower_usd": 810
 }

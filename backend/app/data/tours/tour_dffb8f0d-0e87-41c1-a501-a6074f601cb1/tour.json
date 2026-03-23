@@ -15,7 +15,8 @@
     "pl": "Podróż po plaży w Wietnamie",
     "da": "Vietnam strandrejse",
     "sv": "Vietnam strandresa",
-    "no": "Vietnam strandreise"
+    "no": "Vietnam strandreise",
+    "ar": "رحلة شاطئ فيتنام"
   },
   "styles": [
     "beach"
@@ -98,6 +99,11 @@
       "Signaturstopp i Hanoi",
       "Rutehøydepunkt rundt Hoi An",
       "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
     ]
   },
   "seasonality_start_month": "oct",
@@ -122,7 +128,8 @@
     "pl": "Plan podróży na plażę w Wietnamie skupia się na zrównoważonej trasie pierwszej podróży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
     "da": "En rejseplan for Vietnam-stranden fokuserede på en afbalanceret rute for første tur med afslappet kysttid afbalanceret med let lokal opdagelse.",
     "sv": "En resplan för stranden i Vietnam fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
-    "no": "En reiserute på Vietnam-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse."
+    "no": "En reiserute på Vietnam-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse.",
+    "ar": "يركز خط سير الرحلة على شاطئ فيتنام على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
   },
   "budget_lower_usd": 1040
 }

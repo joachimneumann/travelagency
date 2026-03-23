@@ -15,7 +15,8 @@
     "pl": "Plaża w Tajlandii – ucieczka z wyspy",
     "da": "Thailand Beach - Island Escape",
     "sv": "Thailand Beach - Island Escape",
-    "no": "Thailand Beach - Island Escape"
+    "no": "Thailand Beach - Island Escape",
+    "ar": "شاطئ تايلاند - الهروب من الجزيرة"
   },
   "styles": [
     "beach"
@@ -98,6 +99,11 @@
       "Signaturstopp i Bangkok",
       "Rutehøydepunkt rundt Chiang Mai",
       "Jevn overføringsplanlegging via Phuket"
+    ],
+    "ar": [
+      "توقف التوقيع في بانكوك",
+      "تسليط الضوء على الطريق حول شيانغ ماي",
+      "تخطيط النقل السلس عبر فوكيت"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Plan wycieczki po Tajlandii skupiający się na rytmie wyspiarskim z dodatkowymi przestojami na plaży, z relaksującym czasem na wybrzeżu zrównoważonym łatwym odkrywaniem lokalnych atrakcji.",
     "da": "En strandrejseplan i Thailand fokuseret på en ø-fokuseret rytme med ekstra strandnedetid, med afslappet kysttid afbalanceret med let lokal opdagelse.",
     "sv": "En strandresplan i Thailand fokuserad på en ö-fokuserad rytm med extra strandstopp, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
-    "no": "En strandreise i Thailand fokusert på en øyfokusert rytme med ekstra strandnedetid, med avslappet kysttid balansert med lett lokal oppdagelse."
+    "no": "En strandreise i Thailand fokusert på en øyfokusert rytme med ekstra strandnedetid, med avslappet kysttid balansert med lett lokal oppdagelse.",
+    "ar": "يركز خط سير الرحلة على شاطئ تايلاند على إيقاع يركز على الجزيرة مع فترات راحة إضافية على الشاطئ، مع وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
   },
   "budget_lower_usd": 1250
 }

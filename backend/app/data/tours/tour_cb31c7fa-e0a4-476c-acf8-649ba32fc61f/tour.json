@@ -15,7 +15,8 @@
     "pl": "Podróż kulinarna Kambodży",
     "da": "Madrejse til Cambodja",
     "sv": "Kambodja matresa",
-    "no": "Kambodsja matreise"
+    "no": "Kambodsja matreise",
+    "ar": "كمبوديا تجربة تذوق الطعام"
   },
   "styles": [
     "gastronomic-experiences"
@@ -98,6 +99,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Trasa kulinarna po Kambodży skupiająca się na zrównoważonej trasie pierwszej podróży, obejmującej wizyty na rynku, degustacje i regionalne doświadczenia kulinarne.",
     "da": "En madrute i Cambodja fokuserede på en afbalanceret rute for første tur med markedsbesøg, smagsprøver og regionale kulinariske oplevelser.",
     "sv": "En matresplan i Kambodja fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
-    "no": "En matreise i Kambodsja fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser."
+    "no": "En matreise i Kambodsja fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
+    "ar": "يركز خط سير تجارب تذوق الطعام في كمبوديا على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
   },
   "budget_lower_usd": 710
 }

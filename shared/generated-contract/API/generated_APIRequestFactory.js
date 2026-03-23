@@ -488,6 +488,23 @@ export function bookingTravelPlanPdfRequest({ baseURL = '', params = {}, query =
   };
 }
 
+export function bookingTravelPlanAttachmentPdfPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}/pdf", params);
+}
+
+export function bookingTravelPlanAttachmentPdfRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanAttachmentPdfPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_attachment_pdf",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingTravelPlanTranslatePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/travel-plan/translate", params);
 }
@@ -616,6 +633,40 @@ export function bookingTravelPlanAttachmentDeleteRequest({ baseURL = '', params 
   const url = buildURL(baseURL, path, query);
   return {
     key: "booking_travel_plan_attachment_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanPdfUpdatePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}", params);
+}
+
+export function bookingTravelPlanPdfUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanPdfUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_pdf_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function bookingTravelPlanPdfDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}", params);
+}
+
+export function bookingTravelPlanPdfDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanPdfDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_travel_plan_pdf_delete",
     method: "DELETE",
     authenticated: true,
     url,
@@ -991,6 +1042,23 @@ export function keycloakUserStaffProfileUpdateRequest({ baseURL = '', params = {
   return {
     key: "keycloak_user_staff_profile_update",
     method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function keycloakUserStaffProfileTranslateFieldsPath(params = {}) {
+  return buildPath("/api/v1/keycloak_users/{username}/staff-profile/translate-fields", params);
+}
+
+export function keycloakUserStaffProfileTranslateFieldsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = keycloakUserStaffProfileTranslateFieldsPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "keycloak_user_staff_profile_translate_fields",
+    method: "POST",
     authenticated: true,
     url,
     headers,

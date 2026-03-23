@@ -15,7 +15,8 @@
     "pl": "Przygoda w Kambodży",
     "da": "Cambodja eventyrrejse",
     "sv": "Äventyrsresa till Kambodja",
-    "no": "Kambodsja eventyrreise"
+    "no": "Kambodsja eventyrreise",
+    "ar": "بعثات كمبوديا"
   },
   "styles": [
     "grand-expeditions",
@@ -99,6 +100,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -125,7 +131,8 @@
     "pl": "Wycieczka przygodowa po Kambodży skupiająca się na zrównoważonej trasie pierwszej podróży, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
     "da": "En eventyrtur i Cambodia fokuserede på en afbalanceret første tur-rute med aktive dage, naturskønne ruter og praktisk lokal støtte.",
     "sv": "En äventyrsturné i Kambodja fokuserade på en balanserad första resa med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
-    "no": "En eventyrtur i Kambodsja fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte."
+    "no": "En eventyrtur i Kambodsja fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركزت جولة الرحلات الاستكشافية الكبرى في كمبوديا على مسار متوازن للرحلة الأولى، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي."
   },
   "budget_lower_usd": 900
 }

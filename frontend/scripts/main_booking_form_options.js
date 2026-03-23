@@ -17,6 +17,7 @@ import { normalizeText } from "../../shared/js/text.js";
 const DEFAULT_BOOKING_CURRENCY = "USD";
 const FRONTEND_LANG_DEFAULT_CURRENCY = Object.freeze({
   en: "USD",
+  ar: "USD",
   fr: "EURO",
   zh: "CNY",
   ja: "JPY",

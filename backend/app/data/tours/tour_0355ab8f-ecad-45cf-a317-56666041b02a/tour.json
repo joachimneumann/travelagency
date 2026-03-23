@@ -15,7 +15,8 @@
     "pl": "Luksusowa podróż po Laosie",
     "da": "Laos luksusrejse",
     "sv": "Laos lyxresa",
-    "no": "Laos luksusreise"
+    "no": "Laos luksusreise",
+    "ar": "رحلة لاوس الفاخرة"
   },
   "styles": [
     "culture",
@@ -99,6 +100,11 @@
       "Signaturstopp i Luang Prabang",
       "Rutehøydepunkt rundt Vang Vieng",
       "Jevn overføringsplanlegging via Mekong-elven"
+    ],
+    "ar": [
+      "توقف التوقيع في لوانغ برابانغ",
+      "تسليط الضوء على الطريق حول فانغ فينغ",
+      "تخطيط النقل السلس عبر نهر ميكونغ"
     ]
   },
   "seasonality_start_month": "nov",
@@ -124,7 +130,8 @@
     "pl": "Luksusowy plan podróży do Laosu skupiający się na zrównoważonej trasie pierwszej podróży, z pobytami premium, prywatną obsługą i wyjątkowymi chwilami.",
     "da": "En Laos luksusrejseplan fokuserede på en afbalanceret rute for første tur med premium ophold, privat service og signaturøjeblikke.",
     "sv": "En lyxresplan i Laos fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
-    "no": "En luksusreise fra Laos fokuserte på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk."
+    "no": "En luksusreise fra Laos fokuserte på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk.",
+    "ar": "يركز خط سير الرحلة الفاخر في لاوس على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
   },
   "budget_lower_usd": 1840
 }

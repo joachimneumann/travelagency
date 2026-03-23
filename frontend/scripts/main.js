@@ -284,6 +284,9 @@ function syncI18nManagedLabels() {
 
 function syncLocalizedControlLanguage() {
   document.documentElement.lang = state.lang || currentFrontendLang() || "en";
+  const languageDirection = typeof window.frontendI18n?.getDirection === "function"
+    ? window.frontendI18n.getDirection()
+    : "ltr";
   [
     els.bookingPreferredCurrency,
     els.bookingBudget,
@@ -293,6 +296,7 @@ function syncLocalizedControlLanguage() {
     els.bookingMonthYear
   ].filter(Boolean).forEach((control) => {
     control.setAttribute("lang", state.lang || "en");
+    control.setAttribute("dir", languageDirection);
   });
   if (els.bookingMonthMonth) {
     els.bookingMonthMonth.setAttribute("aria-label", frontendT("modal.month.select_month", "Select month"));

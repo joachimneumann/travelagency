@@ -5,20 +5,23 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
-In the backend, in tours.html show a matrix with the number of tours in each combination. A tour that offered more than one travel style may contribute to several cells in this matrix. 
-Below the matrix show the total number of tours.
+Create model and storage space for practical tips and emergency numbers for each country. This information is not used at this point in time.
 
-Add section with your personal travel agent in the pdf (if ATP staff has been assigned) with contract details. 
+After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. 
 
-Make it easier to modify, add and remove travel styles. look at the model and the generated code.
+Point out that personal data needs to be filled
 
 Suppliers!
 
-include arabic language
+Arabic:
+- Translate the staff qualification into the required languages
+
+- also translate the text in the PDF, like this one:
+  We would be happy to hear from you.
+  Warm regards,
+  That's your Asia Travel Plan team.
 
 Index.html: FAQ formatting off
-
-After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. Point out that personal data needs to be filled
 
 ## payments
 

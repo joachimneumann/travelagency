@@ -15,7 +15,8 @@
     "pl": "Przygoda w Wietnamie – pętla Ha Giang",
     "da": "Vietnam Expeditions - Ha Giang Loop",
     "sv": "Vietnamäventyr - Ha Giang Loop",
-    "no": "Vietnam Expeditions - Ha Giang Loop"
+    "no": "Vietnam Expeditions - Ha Giang Loop",
+    "ar": "بعثات فيتنام - حلقة ها جيانج"
   },
   "styles": [
     "grand-expeditions",
@@ -99,6 +100,11 @@
       "Signaturstopp i Hanoi",
       "Rutehøydepunkt rundt Hoi An",
       "Jevn overføringsplanlegging via Ha Long Bay"
+    ],
+    "ar": [
+      "توقف التوقيع في هانوي",
+      "تسليط الضوء على الطريق حول هوي آن",
+      "تخطيط النقل السلس عبر خليج ها لونج"
     ]
   },
   "seasonality_start_month": "oct",
@@ -123,7 +129,8 @@
     "pl": "Plan przygody w Wietnamie skupiający się na pętli górskiej przez Ha Giang, z aktywnymi dniami, malowniczymi trasami i praktycznym lokalnym wsparciem.",
     "da": "En Vietnam-eventyrrute fokuserede på et bjerg-loop-fokus gennem Ha Giang, med aktive dage, naturskønne ruter og praktisk lokal støtte.",
     "sv": "En resplan för äventyr i Vietnam fokuserade på en bergslinga genom Ha Giang, med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
-    "no": "En eventyrreise fra Vietnam fokuserte på et fjellsløyfefokus gjennom Ha Giang, med aktive dager, naturskjønne ruter og praktisk lokal støtte."
+    "no": "En eventyrreise fra Vietnam fokuserte på et fjellsløyfefokus gjennom Ha Giang, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على التركيز على حلقة جبلية عبر ها جيانج، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي."
   },
   "budget_lower_usd": 1070,
   "updated_at": "2026-03-14T07:58:10.956Z"

@@ -480,6 +480,24 @@ package api
 		}]
 	},
 	{
+		key:           "booking_travel_plan_attachment_pdf"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}/pdf"
+		method:        "GET"
+		tag:           "Bookings"
+		authenticated: true
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "attachment_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_travel_plan_translate"
 		path:          "/api/v1/bookings/{booking_id}/travel-plan/translate"
 		method:        "POST"
@@ -668,6 +686,46 @@ package api
 			typeName: "Identifier"
 		}, {
 			name:     "attachment_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_pdf_update"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanPdfArtifactUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "artifact_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
+		key:           "booking_travel_plan_pdf_delete"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}"
+		method:        "DELETE"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "TravelPlanPdfArtifactDeleteRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "artifact_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -993,6 +1051,21 @@ package api
 		authenticated: true
 		requestType:   "AtpStaffProfileUpdateRequest"
 		responseType:  "KeycloakUserDirectoryEntryResponse"
+		parameters: [{
+			name:     "username"
+			location: "path"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
+		key:           "keycloak_user_staff_profile_translate_fields"
+		path:          "/api/v1/keycloak_users/{username}/staff-profile/translate-fields"
+		method:        "POST"
+		tag:           "Auth"
+		authenticated: true
+		requestType:   "TranslationEntriesRequest"
+		responseType:  "TranslationEntriesResponse"
 		parameters: [{
 			name:     "username"
 			location: "path"

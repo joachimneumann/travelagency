@@ -15,7 +15,8 @@
     "pl": "Centralny Wietnam Spa i ucieczka na wybrzeże",
     "da": "Central Vietnam Spa & Coast Escape",
     "sv": "Central Vietnam Spa & Coast Escape",
-    "no": "Central Vietnam Spa & Coast Escape"
+    "no": "Central Vietnam Spa & Coast Escape",
+    "ar": "سبا وسط فيتنام وساحل إسكيب"
   },
   "styles": [
     "wellness",
@@ -99,6 +100,11 @@
       "Nedetid ved stranden rundt Da Nang og Hoi An med premium spa-avtaler",
       "Detox scrub og kollagen ansiktsinspirerte behandlinger vevd inn i oppholdet",
       "Privat transport og lett tur i stedet for en fullpakket dag-for-dag-plan"
+    ],
+    "ar": [
+      "أوقات راحة على شاطئ البحر حول مدينتي دا نانج وهوي آن مع مواعيد سبا متميزة",
+      "فرك التخلص من السموم وعلاجات الوجه المستوحاة من الكولاجين مدمجة في الإقامة",
+      "النقل الخاص والجولات الخفيفة بدلاً من جدول الأعمال اليومي المزدحم"
     ]
   },
   "seasonality_start_month": "feb",
@@ -123,7 +129,8 @@
     "pl": "Regenerująca trasa po środkowym Wietnamie, łącząca czas wybrzeża z doskonałymi spa, zwiedzaniem bez stresu i prywatnym wsparciem przez cały czas.",
     "da": "En genoprettende rejseplan i det centrale Vietnam, der parrer kysttid med polerede spa-oplevelser, sightseeing med lav stress og privat støtte overalt.",
     "sv": "En återställande resplan i centrala Vietnam som kombinerar kusttid med polerade spa-upplevelser, sightseeing med låg stress och privat support genomgående.",
-    "no": "En gjenoppbyggende reiserute til sentralt Vietnam som kombinerer kysttid med polerte spa-opplevelser, sightseeing med lite stress og privat støtte hele veien."
+    "no": "En gjenoppbyggende reiserute til sentralt Vietnam som kombinerer kysttid med polerte spa-opplevelser, sightseeing med lite stress og privat støtte hele veien.",
+    "ar": "خط سير رحلة مجدد في وسط فيتنام يجمع بين الوقت الساحلي وتجارب السبا المصقولة ومشاهدة المعالم السياحية منخفضة التوتر والدعم الخاص في جميع الأنحاء."
   },
   "budget_lower_usd": 1120,
   "image": "/public/v1/tour-images/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac.webp",

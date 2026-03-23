@@ -15,7 +15,8 @@
     "pl": "Luksusowa podróż po Kambodży",
     "da": "Cambodia luksusrejse",
     "sv": "Kambodja lyxresa",
-    "no": "Luksusreise i Kambodsja"
+    "no": "Luksusreise i Kambodsja",
+    "ar": "رحلة كمبوديا الفاخرة"
   },
   "styles": [
     "luxury"
@@ -98,6 +99,11 @@
       "Signaturstopp i Siem Reap",
       "Rutehøydepunkt rundt Phnom Penh",
       "Jevn overføringsplanlegging via Tonle Sap"
+    ],
+    "ar": [
+      "توقف التوقيع في سييم ريب",
+      "تسليط الضوء على الطريق حول بنوم بنه",
+      "تخطيط النقل السلس عبر Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Luksusowy plan podróży do Kambodży skupiający się na zrównoważonej trasie pierwszej podróży, z pobytami premium, prywatną obsługą i wyjątkowymi chwilami.",
     "da": "En luksusrejseplan i Cambodja fokuseret på en afbalanceret rute for første tur med premium-ophold, privat service og signaturøjeblikke.",
     "sv": "En lyxresplan i Kambodja fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
-    "no": "En luksusreise i Kambodsja fokusert på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk."
+    "no": "En luksusreise i Kambodsja fokusert på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk.",
+    "ar": "يركز خط سير الرحلة الفاخر في كمبوديا على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
   },
   "budget_lower_usd": 1900
 }

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { validateTranslationEntriesRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../lib/text.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 
@@ -25,19 +26,33 @@ function normalizeCountryCodes(items) {
   );
 }
 
-function normalizeExperiences(items) {
-  return (Array.isArray(items) ? items : [])
-    .map((experience, index) => {
-      const title = normalizeText(experience?.title);
-      const summary = normalizeText(experience?.summary);
-      if (!title || !summary) return null;
-      return {
-        ...(normalizeText(experience?.id) ? { id: normalizeText(experience.id) } : { id: `experience_${index + 1}` }),
-        title,
-        summary
-      };
-    })
-    .filter(Boolean);
+function normalizeLanguageCode(value, fallback = "en") {
+  const normalized = normalizeText(value).toLowerCase();
+  return normalized && LANGUAGE_CODE_SET.has(normalized) ? normalized : fallback;
+}
+
+function translationEntriesToObject(entries) {
+  return Object.fromEntries(
+    (Array.isArray(entries) ? entries : [])
+      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+      .filter(([key, value]) => Boolean(key && value))
+  );
+}
+
+function translationEntriesFromObject(entries) {
+  return Object.entries(entries || {})
+    .map(([key, value]) => ({ key: normalizeText(key), value: normalizeText(value) }))
+    .filter((entry) => Boolean(entry.key && entry.value));
+}
+
+function normalizeQualificationEntries(items) {
+  return Array.from(
+    new Map(
+      (Array.isArray(items) ? items : [])
+        .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+        .filter(([lang, value]) => Boolean(lang && value && LANGUAGE_CODE_SET.has(lang)))
+    ).entries()
+  ).map(([lang, value]) => ({ lang, value }));
 }
 
 function buildUserResponse(user) {
@@ -56,6 +71,7 @@ export function createAtpStaffHandlers(deps) {
     updateAtpStaffProfileByUsername,
     setAtpStaffPictureRefByUsername,
     resetAtpStaffPictureByUsername,
+    translateEntries,
     execFile,
     mkdir,
     writeFile,
@@ -102,16 +118,20 @@ export function createAtpStaffHandlers(deps) {
     }
     const destinations = Array.isArray(payload?.destinations) ? normalizeCountryCodes(payload.destinations) : undefined;
 
-    const experiences = Array.isArray(payload?.experiences) ? normalizeExperiences(payload.experiences) : undefined;
-    if (Array.isArray(payload?.experiences) && experiences.length !== payload.experiences.filter(Boolean).length) {
-      sendJson(res, 422, { error: "Each experience requires title and summary" });
+    const qualification = payload?.qualification !== undefined ? normalizeText(payload.qualification) : undefined;
+    const qualificationI18n = Array.isArray(payload?.qualification_i18n)
+      ? normalizeQualificationEntries(payload.qualification_i18n)
+      : undefined;
+    if (Array.isArray(payload?.qualification_i18n) && qualificationI18n.length !== payload.qualification_i18n.filter(Boolean).length) {
+      sendJson(res, 422, { error: "Each qualification translation requires a valid language code and non-empty text" });
       return;
     }
 
     const updated = await updateAtpStaffProfileByUsername(username, {
       languages,
       destinations,
-      experiences
+      qualification,
+      qualification_i18n: qualificationI18n
     });
     if (!updated) {
       sendJson(res, 404, { error: "Keycloak user not found" });
@@ -119,6 +139,75 @@ export function createAtpStaffHandlers(deps) {
     }
 
     sendJson(res, 200, buildUserResponse(updated));
+  }
+
+  async function handleTranslateAtpStaffProfileFields(req, res, [rawUsername]) {
+    const principal = getPrincipal(req);
+    if (!canEditAtpStaffProfiles(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateTranslationEntriesRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const username = normalizeText(rawUsername).toLowerCase();
+    if (!username) {
+      sendJson(res, 404, { error: "Keycloak user not found" });
+      return;
+    }
+
+    const existing = await buildAtpStaffDirectoryEntryByUsername(username);
+    if (!existing) {
+      sendJson(res, 404, { error: "Keycloak user not found" });
+      return;
+    }
+
+    const sourceLang = normalizeLanguageCode(payload.source_lang, "en");
+    const targetLang = normalizeLanguageCode(payload.target_lang, "en");
+    const entries = translationEntriesToObject(payload.entries);
+    if (!Object.keys(entries).length) {
+      sendJson(res, 422, { error: "At least one source field is required." });
+      return;
+    }
+
+    if (sourceLang === targetLang) {
+      sendJson(res, 200, {
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        entries: translationEntriesFromObject(entries)
+      });
+      return;
+    }
+
+    try {
+      const translatedEntries = await translateEntries(entries, targetLang, {
+        sourceLangCode: sourceLang,
+        domain: "ATP guide qualification",
+        allowGoogleFallback: true
+      });
+      sendJson(res, 200, {
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        entries: translationEntriesFromObject(translatedEntries)
+      });
+    } catch (error) {
+      if (error?.code === "TRANSLATION_NOT_CONFIGURED") {
+        sendJson(res, 503, { error: String(error.message || "Translation provider is not configured.") });
+        return;
+      }
+      if (error?.code === "TRANSLATION_INVALID_RESPONSE" || error?.code === "TRANSLATION_REQUEST_FAILED") {
+        sendJson(res, 502, { error: String(error.message || "Translation request failed.") });
+        return;
+      }
+      sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
+    }
   }
 
   async function processAtpStaffPhotoToWebp(inputPath, outputPath) {
@@ -231,6 +320,7 @@ export function createAtpStaffHandlers(deps) {
   return {
     handlePublicAtpStaffPhoto,
     handlePatchAtpStaffProfile,
+    handleTranslateAtpStaffProfileFields,
     handleUploadAtpStaffPhoto,
     handleDeleteAtpStaffPhoto
   };

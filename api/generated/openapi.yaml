@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-23T11:01:01Z
+# 2026-03-23T15:43:23Z
 
 ---
 openapi: 3.1.0
@@ -38,6 +38,7 @@ components:
       type: string
       enum:
       - en
+      - ar
       - fr
       - zh
       - ja
@@ -54,6 +55,7 @@ components:
       - 'no'
       x-enum-catalog:
       - code: en
+      - code: ar
       - code: fr
       - code: zh
       - code: ja
@@ -71,6 +73,8 @@ components:
       x-enum-options:
       - value: en
         label: en
+      - value: ar
+        label: ar
       - value: fr
         label: fr
       - value: zh
@@ -3830,18 +3834,15 @@ components:
     BookingMilestoneAction:
       type: object
       description: Defined in model (referenced as BookingMilestoneAction).
-    AtpStaffExperience:
+    AtpStaffLocalizedTextEntry:
       type: object
       required:
-      - title
-      - summary
+      - lang
+      - value
       properties:
-        id:
-          type: string
-          nullable: true
-        title:
-          type: string
-        summary:
+        lang:
+          "$ref": "#/components/schemas/LanguageCode"
+        value:
           type: string
     AtpStaffProfile:
       type: object
@@ -3864,10 +3865,13 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
-        experiences:
+        qualification:
+          type: string
+          nullable: true
+        qualification_i18n:
           type: array
           items:
-            "$ref": "#/components/schemas/AtpStaffExperience"
+            "$ref": "#/components/schemas/AtpStaffLocalizedTextEntry"
     CountryEmergencyContact:
       type: object
       required:
@@ -6705,6 +6709,29 @@ components:
         actor:
           type: string
           nullable: true
+    TravelPlanPdfArtifactUpdateRequest:
+      type: object
+      required:
+      - sent_to_customer
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        sent_to_customer:
+          type: boolean
+        actor:
+          type: string
+          nullable: true
+    TravelPlanPdfArtifactDeleteRequest:
+      type: object
+      required: []
+      properties:
+        expected_travel_plan_revision:
+          type: integer
+          nullable: true
+        actor:
+          type: string
+          nullable: true
     BookingOfferUpdateRequest:
       type: object
       required:
@@ -6869,10 +6896,13 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
-        experiences:
+        qualification:
+          type: string
+          nullable: true
+        qualification_i18n:
           type: array
           items:
-            "$ref": "#/components/schemas/AtpStaffExperience"
+            "$ref": "#/components/schemas/AtpStaffLocalizedTextEntry"
     AtpStaffPhotoUploadRequest:
       type: object
       required:
@@ -8023,6 +8053,44 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/attachments/{attachment_id}/pdf":
+    get:
+      operationId: booking_travel_plan_attachment_pdf
+      summary: Booking Travel Plan Attachment Pdf
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attachment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/travel-plan/translate":
     post:
       operationId: booking_travel_plan_translate
@@ -8409,6 +8477,93 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/TravelPlanAttachmentDeleteRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/travel-plan/pdfs/{artifact_id}":
+    patch:
+      operationId: booking_travel_plan_pdf_update
+      summary: Booking Travel Plan Pdf Update
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifact_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanPdfArtifactUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: booking_travel_plan_pdf_delete
+      summary: Booking Travel Plan Pdf Delete
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifact_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TravelPlanPdfArtifactDeleteRequest"
       responses:
         '200':
           description: Success
@@ -9285,6 +9440,51 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/keycloak_users/{username}/staff-profile/translate-fields":
+    post:
+      operationId: keycloak_user_staff_profile_translate_fields
+      summary: Keycloak User Staff Profile Translate Fields
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TranslationEntriesRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TranslationEntriesResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TranslationEntriesResponse"
         '401':
           description: Unauthorized
           content:

@@ -1377,6 +1377,7 @@
   "isArray": false,
   "enumValues": [
     "en",
+    "ar",
     "fr",
     "zh",
     "ja",
@@ -1396,6 +1397,10 @@
     {
       "value": "en",
       "label": "en"
+    },
+    {
+      "value": "ar",
+      "label": "ar"
     },
     {
       "value": "fr",
@@ -3462,6 +3467,7 @@
   "isArray": true,
   "enumValues": [
     "en",
+    "ar",
     "fr",
     "zh",
     "ja",
@@ -3481,6 +3487,10 @@
     {
       "value": "en",
       "label": "en"
+    },
+    {
+      "value": "ar",
+      "label": "ar"
     },
     {
       "value": "fr",
@@ -3542,7 +3552,7 @@
 },
   FIELD_81: {
   "kind": "transport",
-  "typeName": "AtpStaffExperience",
+  "typeName": "AtpStaffLocalizedTextEntry",
   "isArray": true
 },
   FIELD_82: {

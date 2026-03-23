@@ -601,6 +601,39 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, TRAVEL_PLAN_ATTACHMENT_DELETE_REQUEST_SCHEMA);
       }
 
+      export const TRAVEL_PLAN_PDF_ARTIFACT_UPDATE_REQUEST_SCHEMA = {
+        name: "TravelPlanPdfArtifactUpdateRequest",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.TravelPlanPdfArtifactUpdateRequest",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"sent_to_customer","required":true,"wireName":"sent_to_customer"}, SHARED_FIELD_DEFS.FIELD_8),
+    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateTravelPlanPdfArtifactUpdateRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_PDF_ARTIFACT_UPDATE_REQUEST_SCHEMA);
+      }
+
+      export const TRAVEL_PLAN_PDF_ARTIFACT_DELETE_REQUEST_SCHEMA = {
+        name: "TravelPlanPdfArtifactDeleteRequest",
+        domain: "api",
+        module: "api",
+        sourceType: "openapi.components.schemas.TravelPlanPdfArtifactDeleteRequest",
+        requireOneOf: [],
+        fields: [
+    schemaField({"name":"expected_travel_plan_revision","required":false,"wireName":"expected_travel_plan_revision"}, SHARED_FIELD_DEFS.FIELD_17),
+    schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
+        ]
+      };
+
+      export function validateTravelPlanPdfArtifactDeleteRequest(value) {
+        return validateShape(value, TRAVEL_PLAN_PDF_ARTIFACT_DELETE_REQUEST_SCHEMA);
+      }
+
       export const BOOKING_PRICING_UPDATE_REQUEST_SCHEMA = {
         name: "BookingPricingUpdateRequest",
         domain: "api",
@@ -857,7 +890,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"languages","required":false,"wireName":"languages"}, SHARED_FIELD_DEFS.FIELD_80),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
-    schemaField({"name":"experiences","required":false,"wireName":"experiences"}, SHARED_FIELD_DEFS.FIELD_81)
+    schemaField({"name":"qualification","required":false,"wireName":"qualification"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"qualification_i18n","required":false,"wireName":"qualification_i18n"}, SHARED_FIELD_DEFS.FIELD_81)
         ]
       };
 
@@ -1432,21 +1466,20 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         return validateShape(value, KEYCLOAK_USER_DIRECTORY_ENTRY_SCHEMA);
       }
 
-      export const ATP_STAFF_EXPERIENCE_SCHEMA = {
-        name: "AtpStaffExperience",
+      export const ATP_STAFF_LOCALIZED_TEXT_ENTRY_SCHEMA = {
+        name: "AtpStaffLocalizedTextEntry",
         domain: "api",
         module: "api",
-        sourceType: "openapi.components.schemas.AtpStaffExperience",
+        sourceType: "openapi.components.schemas.AtpStaffLocalizedTextEntry",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"id","required":false,"wireName":"id"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"title","required":true,"wireName":"title"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"summary","required":true,"wireName":"summary"}, SHARED_FIELD_DEFS.FIELD_1)
+    schemaField({"name":"lang","required":true,"wireName":"lang"}, SHARED_FIELD_DEFS.FIELD_11),
+    schemaField({"name":"value","required":true,"wireName":"value"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
       };
 
-      export function validateAtpStaffExperience(value) {
-        return validateShape(value, ATP_STAFF_EXPERIENCE_SCHEMA);
+      export function validateAtpStaffLocalizedTextEntry(value) {
+        return validateShape(value, ATP_STAFF_LOCALIZED_TEXT_ENTRY_SCHEMA);
       }
 
       export const TOUR_OPTIONS_SCHEMA = {
@@ -1499,7 +1532,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"picture_ref","required":false,"wireName":"picture_ref"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"languages","required":false,"wireName":"languages"}, SHARED_FIELD_DEFS.FIELD_80),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
-    schemaField({"name":"experiences","required":false,"wireName":"experiences"}, SHARED_FIELD_DEFS.FIELD_81)
+    schemaField({"name":"qualification","required":false,"wireName":"qualification"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"qualification_i18n","required":false,"wireName":"qualification_i18n"}, SHARED_FIELD_DEFS.FIELD_81)
         ]
       };
 

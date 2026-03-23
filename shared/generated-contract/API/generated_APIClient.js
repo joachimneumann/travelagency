@@ -68,6 +68,8 @@ case "booking_travel_plan":
   return RequestFactory.bookingTravelPlanRequest(options);
 case "booking_travel_plan_pdf":
   return RequestFactory.bookingTravelPlanPdfRequest(options);
+case "booking_travel_plan_attachment_pdf":
+  return RequestFactory.bookingTravelPlanAttachmentPdfRequest(options);
 case "booking_travel_plan_translate":
   return RequestFactory.bookingTravelPlanTranslateRequest(options);
 case "travel_plan_item_search":
@@ -84,6 +86,10 @@ case "booking_travel_plan_attachment_upload":
   return RequestFactory.bookingTravelPlanAttachmentUploadRequest(options);
 case "booking_travel_plan_attachment_delete":
   return RequestFactory.bookingTravelPlanAttachmentDeleteRequest(options);
+case "booking_travel_plan_pdf_update":
+  return RequestFactory.bookingTravelPlanPdfUpdateRequest(options);
+case "booking_travel_plan_pdf_delete":
+  return RequestFactory.bookingTravelPlanPdfDeleteRequest(options);
 case "booking_pricing":
   return RequestFactory.bookingPricingRequest(options);
 case "booking_offer":
@@ -128,6 +134,8 @@ case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
 case "keycloak_user_staff_profile_update":
   return RequestFactory.keycloakUserStaffProfileUpdateRequest(options);
+case "keycloak_user_staff_profile_translate_fields":
+  return RequestFactory.keycloakUserStaffProfileTranslateFieldsRequest(options);
 case "keycloak_user_staff_profile_picture_upload":
   return RequestFactory.keycloakUserStaffProfilePictureUploadRequest(options);
 case "keycloak_user_staff_profile_picture_delete":

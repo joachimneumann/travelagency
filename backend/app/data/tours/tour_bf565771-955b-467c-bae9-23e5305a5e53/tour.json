@@ -15,7 +15,8 @@
     "pl": "Powolna podróż wellness w Luang Prabang",
     "da": "Luang Prabang Slow Wellness Journey",
     "sv": "Luang Prabang Slow Wellness Journey",
-    "no": "Luang Prabang Slow Wellness Journey"
+    "no": "Luang Prabang Slow Wellness Journey",
+    "ar": "رحلة العافية البطيئة في لوانغ برابانغ"
   },
   "styles": [
     "wellness",
@@ -98,6 +99,11 @@
       "Luang Prabang morgener, utsikt over elven og lavt stressende tempo",
       "Ritualer i hode-, fot- eller ansiktsstil som er egnet for langsom restitusjonsreise",
       "Kafétid, tempelro og enkle båt- eller landsbyutflukter"
+    ],
+    "ar": [
+      "صباح لوانغ برابانغ، وإطلالات على النهر، وسرعة منخفضة التوتر",
+      "طقوس على شكل الرأس أو القدم أو الوجه مناسبة لإبطاء رحلة التعافي",
+      "وقت المقهى، وهدوء المعبد، ورحلات استكشافية سهلة بالقارب أو القرية"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Trasa do Laosu dla podróżników, którzy pragną spokojnej strony Azji Południowo-Wschodniej, ze spokojem nad rzeką, powolną eksploracją i regenerującymi oknami spa wbudowanymi w każdy dzień.",
     "da": "En Laos-rejseplan for rejsende, der ønsker den stille side af Sydøstasien, med ro ved floden, langsom udforskning og genoprettende spa-vinduer indbygget i hver dag.",
     "sv": "En resplan till Laos för resenärer som vill ha den lugna sidan av Sydostasien, med lugnt vid floden, långsam utforskning och återställande spafönster inbyggda i varje dag.",
-    "no": "En Laos reiserute for reisende som ønsker den rolige siden av Sørøst-Asia, med ro ved elven, langsom utforskning og gjenoppbyggende spavinduer innebygd i hver dag."
+    "no": "En Laos reiserute for reisende som ønsker den rolige siden av Sørøst-Asia, med ro ved elven, langsom utforskning og gjenoppbyggende spavinduer innebygd i hver dag.",
+    "ar": "خط سير رحلة لاوس للمسافرين الذين يريدون الجانب الهادئ من جنوب شرق آسيا، مع الهدوء المطل على النهر، والاستكشاف البطيء، ونوافذ المنتجع الصحي التصالحية المدمجة في كل يوم."
   },
   "budget_lower_usd": 870,
   "image": "/public/v1/tour-images/tour_bf565771-955b-467c-bae9-23e5305a5e53/tour_bf565771-955b-467c-bae9-23e5305a5e53.webp",

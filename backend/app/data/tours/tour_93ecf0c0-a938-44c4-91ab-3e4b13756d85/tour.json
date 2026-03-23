@@ -15,7 +15,8 @@
     "pl": "Siem Reap Wellness i spokój świątyni",
     "da": "Siem Reap Wellness & Temple Calm",
     "sv": "Siem Reap Wellness & Temple Calm",
-    "no": "Siem Reap velvære og tempelro"
+    "no": "Siem Reap velvære og tempelro",
+    "ar": "سييم ريب العافية ومعبد الهدوء"
   },
   "styles": [
     "wellness",
@@ -98,6 +99,11 @@
       "Soloppgang-tempelbesøk etterfulgt av middagsspa-gjenoppretting",
       "Avgiftende behandlinger og rolige hotellettermiddager i Siem Reap",
       "Privat tempo som unngår det vanlige Angkor-rushet"
+    ],
+    "ar": [
+      "زيارات معبد شروق الشمس يتبعها التعافي في المنتجع الصحي في منتصف النهار",
+      "علاجات إزالة السموم والهدوء بعد الظهر في الفندق في سييم ريب",
+      "سرعة خاصة تتجنب الاندفاع المعتاد في أنغكور"
     ]
   },
   "seasonality_start_month": "nov",
@@ -122,7 +128,8 @@
     "pl": "Łagodniejsza trasa do Kambodży skupiająca się w Siem Reap, łącząca główne atrakcje Angkoru z przestojami regeneracyjnymi, rytuałami spa i elastycznym prywatnym tempem.",
     "da": "En blidere Cambodia-rute centreret om Siem Reap, der parrer Angkors store steder med genoprettende nedetid, spa-ritualer og fleksibelt privat tempo.",
     "sv": "En mjukare Kambodja-rutt centrerad på Siem Reap, som kombinerar Angkors stora platser med återställande driftstopp, spa-ritualer och flexibel privat takt.",
-    "no": "En mildere Kambodsja-rute sentrert om Siem Reap, og parer Angkors viktigste nettsteder med gjenopprettende nedetid, spa-ritualer og fleksibelt privat tempo."
+    "no": "En mildere Kambodsja-rute sentrert om Siem Reap, og parer Angkors viktigste nettsteder med gjenopprettende nedetid, spa-ritualer og fleksibelt privat tempo.",
+    "ar": "يتمركز طريق كمبوديا اللطيف في سيام ريب، ويجمع بين المواقع الرئيسية في أنغكور مع أوقات التوقف التصالحية وطقوس السبا والسير الخاص المرن."
   },
   "budget_lower_usd": 840,
   "image": "/public/v1/tour-images/tour_93ecf0c0-a938-44c4-91ab-3e4b13756d85/tour_93ecf0c0-a938-44c4-91ab-3e4b13756d85.webp",

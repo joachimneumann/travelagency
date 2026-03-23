@@ -15,9 +15,30 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "en",
         "english"
+      ]
+    },
+    {
+      "code": "ar",
+      "apiValue": "Arabic",
+      "promptName": "Arabic",
+      "nativeLabel": "العربية",
+      "shortLabel": "AR",
+      "flagClass": "flag-ar",
+      "pdfLocale": "ar-SA",
+      "frontendNameKey": "language.name.arabic",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "rtl",
+      "aliases": [
+        "ar",
+        "arabic",
+        "العربية",
+        "arab"
       ]
     },
     {
@@ -32,6 +53,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "fr",
         "french",
@@ -51,6 +73,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "zh",
         "mandarin",
@@ -75,6 +98,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ja",
         "japanese",
@@ -93,6 +117,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ko",
         "korean",
@@ -111,6 +136,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "vi",
         "vietnamese",
@@ -130,6 +156,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "de",
         "german",
@@ -148,6 +175,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "es",
         "spanish",
@@ -167,6 +195,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "it",
         "italian",
@@ -185,6 +214,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ru",
         "russian",
@@ -203,6 +233,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "nl",
         "dutch",
@@ -221,6 +252,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "pl",
         "polish",
@@ -239,6 +271,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "da",
         "danish",
@@ -257,6 +290,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "sv",
         "swedish",
@@ -275,6 +309,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "no",
         "norwegian",
@@ -289,6 +324,10 @@ const CATALOG = Object.freeze({
   "aliasToCode": {
     "en": "en",
     "english": "en",
+    "ar": "ar",
+    "arabic": "ar",
+    "العربية": "ar",
+    "arab": "ar",
     "fr": "fr",
     "french": "fr",
     "français": "fr",
@@ -358,9 +397,30 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "en",
         "english"
+      ]
+    },
+    {
+      "code": "ar",
+      "apiValue": "Arabic",
+      "promptName": "Arabic",
+      "nativeLabel": "العربية",
+      "shortLabel": "AR",
+      "flagClass": "flag-ar",
+      "pdfLocale": "ar-SA",
+      "frontendNameKey": "language.name.arabic",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "rtl",
+      "aliases": [
+        "ar",
+        "arabic",
+        "العربية",
+        "arab"
       ]
     },
     {
@@ -375,6 +435,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "fr",
         "french",
@@ -394,6 +455,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "zh",
         "mandarin",
@@ -418,6 +480,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ja",
         "japanese",
@@ -436,6 +499,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ko",
         "korean",
@@ -454,6 +518,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "vi",
         "vietnamese",
@@ -473,6 +538,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "de",
         "german",
@@ -491,6 +557,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "es",
         "spanish",
@@ -510,6 +577,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "it",
         "italian",
@@ -528,6 +596,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ru",
         "russian",
@@ -546,6 +615,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "nl",
         "dutch",
@@ -564,6 +634,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "pl",
         "polish",
@@ -582,6 +653,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "da",
         "danish",
@@ -600,6 +672,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "sv",
         "swedish",
@@ -618,6 +691,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "no",
         "norwegian",
@@ -642,6 +716,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "en",
         "english"
@@ -659,6 +734,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "vi",
         "vietnamese",
@@ -680,9 +756,30 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "en",
         "english"
+      ]
+    },
+    {
+      "code": "ar",
+      "apiValue": "Arabic",
+      "promptName": "Arabic",
+      "nativeLabel": "العربية",
+      "shortLabel": "AR",
+      "flagClass": "flag-ar",
+      "pdfLocale": "ar-SA",
+      "frontendNameKey": "language.name.arabic",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "rtl",
+      "aliases": [
+        "ar",
+        "arabic",
+        "العربية",
+        "arab"
       ]
     },
     {
@@ -697,6 +794,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "fr",
         "french",
@@ -716,6 +814,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "zh",
         "mandarin",
@@ -740,6 +839,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ja",
         "japanese",
@@ -758,6 +858,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ko",
         "korean",
@@ -776,6 +877,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "vi",
         "vietnamese",
@@ -795,6 +897,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "de",
         "german",
@@ -813,6 +916,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "es",
         "spanish",
@@ -832,6 +936,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "it",
         "italian",
@@ -850,6 +955,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ru",
         "russian",
@@ -868,6 +974,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "nl",
         "dutch",
@@ -886,6 +993,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "pl",
         "polish",
@@ -904,6 +1012,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "da",
         "danish",
@@ -922,6 +1031,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "sv",
         "swedish",
@@ -940,6 +1050,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "no",
         "norwegian",
@@ -964,9 +1075,30 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "en",
         "english"
+      ]
+    },
+    "ar": {
+      "code": "ar",
+      "apiValue": "Arabic",
+      "promptName": "Arabic",
+      "nativeLabel": "العربية",
+      "shortLabel": "AR",
+      "flagClass": "flag-ar",
+      "pdfLocale": "ar-SA",
+      "frontendNameKey": "language.name.arabic",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "rtl",
+      "aliases": [
+        "ar",
+        "arabic",
+        "العربية",
+        "arab"
       ]
     },
     "fr": {
@@ -981,6 +1113,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "fr",
         "french",
@@ -1000,6 +1133,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "zh",
         "mandarin",
@@ -1024,6 +1158,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ja",
         "japanese",
@@ -1042,6 +1177,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ko",
         "korean",
@@ -1060,6 +1196,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "vi",
         "vietnamese",
@@ -1079,6 +1216,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "de",
         "german",
@@ -1097,6 +1235,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "es",
         "spanish",
@@ -1116,6 +1255,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "it",
         "italian",
@@ -1134,6 +1274,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ru",
         "russian",
@@ -1152,6 +1293,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "nl",
         "dutch",
@@ -1170,6 +1312,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "pl",
         "polish",
@@ -1188,6 +1331,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "da",
         "danish",
@@ -1206,6 +1350,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "sv",
         "swedish",
@@ -1224,6 +1369,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "no",
         "norwegian",
@@ -1248,9 +1394,30 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "en",
         "english"
+      ]
+    },
+    "Arabic": {
+      "code": "ar",
+      "apiValue": "Arabic",
+      "promptName": "Arabic",
+      "nativeLabel": "العربية",
+      "shortLabel": "AR",
+      "flagClass": "flag-ar",
+      "pdfLocale": "ar-SA",
+      "frontendNameKey": "language.name.arabic",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "rtl",
+      "aliases": [
+        "ar",
+        "arabic",
+        "العربية",
+        "arab"
       ]
     },
     "French": {
@@ -1265,6 +1432,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "fr",
         "french",
@@ -1284,6 +1452,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "zh",
         "mandarin",
@@ -1308,6 +1477,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ja",
         "japanese",
@@ -1326,6 +1496,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ko",
         "korean",
@@ -1344,6 +1515,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": true,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "vi",
         "vietnamese",
@@ -1363,6 +1535,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "de",
         "german",
@@ -1381,6 +1554,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "es",
         "spanish",
@@ -1400,6 +1574,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "it",
         "italian",
@@ -1418,6 +1593,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "ru",
         "russian",
@@ -1436,6 +1612,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "nl",
         "dutch",
@@ -1454,6 +1631,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "pl",
         "polish",
@@ -1472,6 +1650,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "da",
         "danish",
@@ -1490,6 +1669,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "sv",
         "swedish",
@@ -1508,6 +1688,7 @@ const CATALOG = Object.freeze({
       "publicSupported": true,
       "backendUiSupported": false,
       "customerContentSupported": true,
+      "direction": "ltr",
       "aliases": [
         "no",
         "norwegian",
@@ -1562,4 +1743,12 @@ export function promptLanguageName(code, fallback = "English") {
 
 export function pdfLocaleForLanguage(code, fallback = "en-GB") {
   return languageByCode(code)?.pdfLocale || fallback;
+}
+
+export function languageDirection(code, fallback = "ltr") {
+  return languageByCode(code)?.direction || fallback;
+}
+
+export function isRtlLanguage(code) {
+  return languageDirection(code) === "rtl";
 }

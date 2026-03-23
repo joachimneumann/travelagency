@@ -28,20 +28,56 @@
 
   window.frontendI18n = {
     getLang: () => state.lang,
+    getDirection: () => currentDirection(),
     applyDataI18nAttributes,
+    applyLocalizedControlDirection,
     mountLanguageMenu,
-    translateDocument: () => applyDataI18nAttributes(document)
+    translateDocument: () => {
+      applyDataI18nAttributes(document);
+      applyLocalizedControlDirection(document);
+    }
   };
 
   window.__FRONTEND_I18N_PROMISE = init();
 
   async function init() {
     state.lang = resolveLang();
-    document.documentElement.lang = state.lang;
+    applyFrontendLanguagePresentation();
     state.dict = await loadDictionary(state.lang);
     applyDataI18nAttributes(document);
+    applyLocalizedControlDirection(document);
     mountLanguageMenu();
     window.dispatchEvent(new CustomEvent('frontend-i18n-ready', { detail: { lang: state.lang } }));
+  }
+
+  function currentDirection() {
+    const normalized = normalizeText(state.lang).toLowerCase();
+    return CATALOG?.byCode?.[normalized]?.direction === 'rtl' ? 'rtl' : 'ltr';
+  }
+
+  function applyFrontendLanguagePresentation() {
+    const direction = currentDirection();
+    document.documentElement.lang = state.lang;
+    document.documentElement.dir = 'ltr';
+    document.documentElement.dataset.languageDirection = direction;
+    document.documentElement.dataset.languageCode = state.lang;
+    document.body?.classList.toggle('frontend-language-rtl', direction === 'rtl');
+  }
+
+  function applyLocalizedControlDirection(root) {
+    const direction = currentDirection();
+    const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+    const selector = 'input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="file"]):not([type="reset"]), textarea, select, option';
+    const nodes = [];
+    if (typeof scope.matches === 'function' && scope.matches(selector)) {
+      nodes.push(scope);
+    }
+    nodes.push(...scope.querySelectorAll(selector));
+    nodes.forEach((node) => {
+      node.setAttribute('dir', direction);
+      node.setAttribute('lang', state.lang);
+      node.dataset.languageDirection = direction;
+    });
   }
 
   function resolveLang() {

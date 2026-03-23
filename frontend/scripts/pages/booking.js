@@ -1191,6 +1191,7 @@ const travelPlanModule = createBookingTravelPlanModule({
   renderTravelPlanPanel,
   loadActivities,
   escapeHtml,
+  formatDateTime,
   setBookingSectionDirty,
   setPageSaveActionError: (message) => {
     state.pageSaveActionError = normalizeText(message);
