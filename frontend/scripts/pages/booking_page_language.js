@@ -1,5 +1,4 @@
-import { bookingCustomerLanguageRequest } from "../../Generated/API/generated_APIRequestFactory.js";
-import { logBrowserConsoleError, normalizeText, resolveApiUrl } from "../shared/api.js";
+import { normalizeText } from "../shared/api.js";
 import {
   BOOKING_CONTENT_LANGUAGE_OPTIONS,
   bookingContentLang,
@@ -16,10 +15,7 @@ export function createBookingPageLanguageController(ctx) {
     apiOrigin,
     escapeHtml,
     backendT,
-    getBookingRevision,
-    hasUnsavedBookingChanges,
-    showError,
-    clearError,
+    updateCoreDirtyState,
     setStatus,
     loadBookingPage
   } = ctx;
@@ -66,10 +62,10 @@ export function createBookingPageLanguageController(ctx) {
   function resolveSubmissionCustomerLanguage(booking) {
     const submissionPreferredLanguage = normalizeText(booking?.web_form_submission?.preferred_language);
     const customerLanguage = normalizeText(booking?.customer_language);
-    if (submissionPreferredLanguage) {
-      return normalizeBookingContentLang(submissionPreferredLanguage);
+    if (customerLanguage) {
+      return normalizeBookingContentLang(customerLanguage);
     }
-    return normalizeBookingContentLang(customerLanguage || "en");
+    return normalizeBookingContentLang(submissionPreferredLanguage || "en");
   }
 
   function closeContentLanguageMenu() {
@@ -162,7 +158,15 @@ export function createBookingPageLanguageController(ctx) {
   function renderContentLanguageMenu() {
     if (!els.contentLanguageMenuMount) return;
     ensureContentLanguageMenuDismissHandlers();
-    const active = bookingContentLanguageOption(state.contentLang || bookingContentLang("en"));
+    const activeCode = normalizeBookingContentLang(
+      els.contentLanguageSelect?.value
+      || state.coreDraft?.customer_language
+      || state.booking?.customer_language
+      || state.booking?.web_form_submission?.preferred_language
+      || state.contentLang
+      || bookingContentLang("en")
+    );
+    const active = bookingContentLanguageOption(activeCode);
     const otherOptions = BOOKING_CONTENT_LANGUAGE_OPTIONS
       .filter((option) => option.code !== active.code)
       .map((option) => {
@@ -188,7 +192,6 @@ export function createBookingPageLanguageController(ctx) {
           type="button"
           class="lang-menu-trigger"
           data-booking-content-lang-trigger="true"
-          data-requires-clean-state
           aria-haspopup="menu"
           aria-expanded="false"
           aria-label="${escapeHtml(backendT("booking.content_language", "Customer language"))}"
@@ -236,8 +239,16 @@ export function createBookingPageLanguageController(ctx) {
 
   function syncContentLanguageSelector() {
     if (!els.contentLanguageSelect) return;
-    const normalized = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
-    state.contentLang = normalized;
+    const normalized = normalizeBookingContentLang(
+      state.coreDraft?.customer_language
+      || state.booking?.customer_language
+      || state.booking?.web_form_submission?.preferred_language
+      || state.contentLang
+      || bookingContentLang("en")
+    );
+    if (state.coreDraft && typeof state.coreDraft === "object") {
+      state.coreDraft.customer_language = normalized;
+    }
     els.contentLanguageSelect.value = normalized;
     renderContentLanguageMenu();
   }
@@ -252,78 +263,24 @@ export function createBookingPageLanguageController(ctx) {
 
   async function handleContentLanguageChange() {
     if (!els.contentLanguageSelect) return;
-    const previousLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
+    const previousLang = normalizeBookingContentLang(
+      state.coreDraft?.customer_language
+      || state.booking?.customer_language
+      || state.booking?.web_form_submission?.preferred_language
+      || bookingContentLang("en")
+    );
     const nextLang = normalizeBookingContentLang(els.contentLanguageSelect.value || previousLang);
-    if (nextLang === previousLang) {
+    if (nextLang === previousLang || !state.permissions.canEditBooking) {
       syncContentLanguageSelector();
       return;
     }
-    if (hasUnsavedBookingChanges() && !window.confirm(backendT(
-      "booking.content_language_discard_confirm",
-      "You have unsaved changes. Switch content language and discard them?"
-    ))) {
-      els.contentLanguageSelect.value = previousLang;
-      syncContentLanguageSelector();
-      return;
+    if (!state.coreDraft || typeof state.coreDraft !== "object") {
+      state.coreDraft = {};
     }
-    state.contentLang = setBookingContentLang(nextLang);
-    state.contentLangInitialized = true;
-    updateContentLangInUrl(state.contentLang);
+    state.coreDraft.customer_language = nextLang;
+    updateCoreDirtyState?.();
     syncContentLanguageSelector();
     setStatus("");
-    if (state.booking?.id && state.permissions.canEditBooking) {
-      try {
-        const request = bookingCustomerLanguageRequest({
-          baseURL: apiOrigin,
-          params: { booking_id: state.booking.id },
-          body: {
-            expected_core_revision: getBookingRevision("core_revision"),
-            customer_language: nextLang
-          }
-        });
-        const response = await fetch(resolveApiUrl(apiOrigin, withBookingContentLang(request.url)), {
-          method: request.method,
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(request.body)
-        });
-        if (response.status === 404) {
-          clearError();
-          setStatus(backendT(
-            "booking.content_language_persist_pending",
-            "Customer language updated for this page. Restart the backend to persist it across reloads."
-          ));
-          await loadBookingPage();
-          return;
-        }
-        const payload = await response.json().catch(() => null);
-        if (!response.ok) {
-          const requestFailed = backendT("booking.error.request_failed", "Request failed");
-          const message = payload?.detail ? `${payload.error || requestFailed}: ${payload.detail}` : payload?.error || requestFailed;
-          showError(message);
-          state.contentLang = setBookingContentLang(previousLang);
-          updateContentLangInUrl(state.contentLang);
-          els.contentLanguageSelect.value = previousLang;
-          syncContentLanguageSelector();
-          return;
-        }
-        clearError();
-      } catch (error) {
-        logBrowserConsoleError("[booking] Failed to persist the selected customer/content language.", {
-          booking_id: state.booking?.id || null,
-          previous_lang: previousLang,
-          next_lang: nextLang
-        }, error);
-        clearError();
-        setStatus(backendT(
-          "booking.content_language_persist_pending",
-          "Customer language updated for this page. Restart the backend to persist it across reloads."
-        ));
-        await loadBookingPage();
-        return;
-      }
-    }
-    await loadBookingPage();
   }
 
   return {

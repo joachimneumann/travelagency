@@ -7,6 +7,7 @@ import {
 
 const DEFAULT_LANG = "en";
 const SUPPORTED_PDF_LANGS = new Set(CUSTOMER_CONTENT_LANGUAGE_CODES);
+const RTL_PDF_LANGS = new Set(["ar"]);
 
 const DICTIONARY = Object.freeze({
   "en": Object.freeze({
@@ -1210,6 +1211,22 @@ export function normalizePdfLang(value) {
 
 export function pdfLocale(lang) {
   return pdfLocaleForLanguage(normalizePdfLang(lang), pdfLocaleForLanguage(DEFAULT_LANG, "en-GB"));
+}
+
+export function isPdfRtl(lang) {
+  return RTL_PDF_LANGS.has(normalizePdfLang(lang));
+}
+
+export function pdfTextAlign(lang, fallback = "left") {
+  if (fallback === "center") return "center";
+  return isPdfRtl(lang) ? "right" : fallback;
+}
+
+export function pdfTextOptions(lang, options = {}, fallbackAlign = "left") {
+  return {
+    ...options,
+    align: options?.align || pdfTextAlign(lang, fallbackAlign)
+  };
 }
 
 export function pdfT(lang, key, fallback, vars) {

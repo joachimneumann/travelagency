@@ -139,6 +139,7 @@ state.pageSaveInFlight = false;
 state.pageDiscardInFlight = false;
 state.pageDirtyBarStatus = "";
 state.pageSaveActionError = "";
+state.pendingSavedCustomerLanguage = "";
 
 let bookingWhatsApp = null;
 
@@ -381,13 +382,9 @@ function updateCleanStateActionAvailability() {
 const bookingLanguageController = createBookingPageLanguageController({
   state,
   els,
-  apiOrigin,
   escapeHtml,
   backendT,
-  getBookingRevision,
-  hasUnsavedBookingChanges,
-  showError,
-  clearError,
+  updateCoreDirtyState: () => updateCoreDirtyState(),
   setStatus,
   loadBookingPage
 });
@@ -1056,6 +1053,7 @@ async function savePageEdits() {
   state.pageSaveInFlight = true;
   state.pageDirtyBarStatus = "saving";
   state.pageSaveActionError = "";
+  state.pendingSavedCustomerLanguage = "";
   clearError();
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
@@ -1104,12 +1102,23 @@ async function savePageEdits() {
       const saved = await task.run();
       if (saved === false) return false;
     }
+    if (state.pendingSavedCustomerLanguage) {
+      state.contentLang = setBookingContentLang(state.pendingSavedCustomerLanguage);
+      state.contentLangInitialized = true;
+      updateContentLangInUrl(state.contentLang);
+      state.pendingSavedCustomerLanguage = "";
+      const reloaded = await loadBookingPage();
+      if (reloaded === false) return false;
+    }
     clearStatus();
     state.pageDirtyBarStatus = "saved";
     saveCompleted = true;
     return true;
   } finally {
     state.pageSaveInFlight = false;
+    if (!saveCompleted) {
+      state.pendingSavedCustomerLanguage = "";
+    }
     if (!saveCompleted && state.pageDirtyBarStatus === "saving") {
       state.pageDirtyBarStatus = "";
     }
@@ -1124,6 +1133,7 @@ async function discardPageEdits() {
   clearError();
   clearStatus();
   state.pageSaveActionError = "";
+  state.pendingSavedCustomerLanguage = "";
   state.pageDiscardInFlight = true;
   state.pageDirtyBarStatus = "discarding";
   updatePageDirtyBar();
@@ -1273,6 +1283,10 @@ const coreModule = createBookingCoreModule({
   setBookingSectionDirty,
   hasUnsavedBookingChanges,
   reportPersistedActionBlocked: () => setStatus(cleanStateBlockMessage()),
+  updateContentLangInUrl,
+  setPendingSavedCustomerLanguage: (lang) => {
+    state.pendingSavedCustomerLanguage = normalizeBookingContentLang(lang || "");
+  },
   rerenderWhatsApp: (booking) => bookingWhatsApp?.rerender(booking),
   renderPersonsEditor: (...args) => personsModule.renderPersonsEditor(...args)
 });

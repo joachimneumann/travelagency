@@ -923,6 +923,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"languages","required":false,"wireName":"languages"}, SHARED_FIELD_DEFS.FIELD_81),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),
+    schemaField({"name":"full_name","required":false,"wireName":"full_name"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"friendly_short_name","required":false,"wireName":"friendly_short_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"qualification","required":false,"wireName":"qualification"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"qualification_i18n","required":false,"wireName":"qualification_i18n"}, SHARED_FIELD_DEFS.FIELD_82)
         ]
@@ -1580,6 +1582,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"username","required":true,"wireName":"username"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":false,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"full_name","required":false,"wireName":"full_name"}, SHARED_FIELD_DEFS.FIELD_1),
+    schemaField({"name":"friendly_short_name","required":false,"wireName":"friendly_short_name"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"picture_ref","required":false,"wireName":"picture_ref"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"languages","required":false,"wireName":"languages"}, SHARED_FIELD_DEFS.FIELD_81),
     schemaField({"name":"destinations","required":false,"wireName":"destinations"}, SHARED_FIELD_DEFS.FIELD_16),

@@ -1,4 +1,5 @@
 import {
+  bookingCustomerLanguageRequest,
   bookingDeleteRequest,
   bookingImageRequest,
   bookingMilestoneActionRequest,
@@ -132,6 +133,8 @@ export function createBookingCoreModule(ctx) {
     normalizeText,
     escapeHtml,
     formatDateTime,
+    updateContentLangInUrl,
+    setPendingSavedCustomerLanguage,
     resolveApiUrl,
     resolvePersonPhotoSrc,
     resolveBookingImageSrc,
@@ -176,10 +179,24 @@ export function createBookingCoreModule(ctx) {
       state.coreDraft = {
         name: "",
         assigned_keycloak_user_id: "",
+        customer_language: "en",
+        milestone_action_key: "",
         notes: ""
       };
     }
     return state.coreDraft;
+  }
+
+  function savedCustomerLanguage(booking = state.booking) {
+    return normalizeBookingContentLang(
+      booking?.customer_language
+      || booking?.web_form_submission?.preferred_language
+      || "en"
+    );
+  }
+
+  function savedMilestoneActionKey(booking = state.booking) {
+    return resolveStatusPresentation(booking).currentActionKey;
   }
 
   function syncCoreDraftFromBooking({ force = false } = {}) {
@@ -188,6 +205,8 @@ export function createBookingCoreModule(ctx) {
     if (force || !state.dirty.core) {
       draft.name = normalizeText(state.booking.name) || "";
       draft.assigned_keycloak_user_id = normalizeText(state.booking.assigned_keycloak_user_id) || "";
+      draft.customer_language = savedCustomerLanguage(state.booking);
+      draft.milestone_action_key = savedMilestoneActionKey(state.booking);
     }
     if (force || !state.dirty.note) {
       draft.notes = normalizeText(state.booking.notes) || "";
@@ -199,7 +218,9 @@ export function createBookingCoreModule(ctx) {
   function coreSnapshotFromBooking() {
     return JSON.stringify([
       normalizeText(state.booking?.name) || "",
-      normalizeText(state.booking?.assigned_keycloak_user_id) || ""
+      normalizeText(state.booking?.assigned_keycloak_user_id) || "",
+      savedCustomerLanguage(state.booking),
+      savedMilestoneActionKey(state.booking)
     ]);
   }
 
@@ -207,7 +228,9 @@ export function createBookingCoreModule(ctx) {
     const draft = ensureCoreDraft();
     return JSON.stringify([
       normalizeText(draft.name) || "",
-      normalizeText(draft.assigned_keycloak_user_id) || ""
+      normalizeText(draft.assigned_keycloak_user_id) || "",
+      normalizeBookingContentLang(draft.customer_language || "en"),
+      normalizeText(draft.milestone_action_key).toUpperCase()
     ]);
   }
 
@@ -219,6 +242,8 @@ export function createBookingCoreModule(ctx) {
     const draft = ensureCoreDraft();
     if (els.titleInput) draft.name = normalizeText(els.titleInput.value) || "";
     if (els.ownerSelect) draft.assigned_keycloak_user_id = normalizeText(els.ownerSelect.value) || "";
+    draft.customer_language = normalizeBookingContentLang(draft.customer_language || savedCustomerLanguage(state.booking));
+    draft.milestone_action_key = normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase();
     const isDirty = state.booking ? coreSnapshotFromDraft() !== coreSnapshotFromBooking() : false;
     setBookingSectionDirty("core", isDirty);
     return isDirty;
@@ -228,6 +253,18 @@ export function createBookingCoreModule(ctx) {
     const meta = BOOKING_MILESTONE_ACTION_BY_KEY[normalizeText(actionKey).toUpperCase()];
     if (!meta) return "";
     return bookingT(meta.labelKey, meta.labelFallback);
+  }
+
+  function resolveAtpStaffDisplayName(user, fallbackProfile = null) {
+    return normalizeText(user?.staff_profile?.full_name)
+      || normalizeText(user?.full_name)
+      || normalizeText(fallbackProfile?.full_name)
+      || displayKeycloakUser(user)
+      || normalizeText(fallbackProfile?.name)
+      || normalizeText(user?.name)
+      || normalizeText(user?.username)
+      || normalizeText(user?.id)
+      || "";
   }
 
   function resolveStatusPresentation(booking) {
@@ -483,23 +520,35 @@ export function createBookingCoreModule(ctx) {
     if (!state.booking) return;
     const draft = syncCoreDraftFromBooking();
     const statusPresentation = resolveStatusPresentation(state.booking);
+    const draftMilestoneActionKey = normalizeText(draft.milestone_action_key).toUpperCase() || statusPresentation.currentActionKey;
+    const hasPendingMilestoneChange = draftMilestoneActionKey !== statusPresentation.currentActionKey;
 
     if (els.ownerSelect) {
       const currentOwnerId = normalizeText(draft.assigned_keycloak_user_id) || normalizeText(state.booking.assigned_keycloak_user_id);
       const knownOwners = new Map((state.keycloakUsers || []).map((user) => [String(user.id || ""), user]));
       const currentOwner = knownOwners.get(currentOwnerId) || resolveCurrentAuthKeycloakUser(currentOwnerId);
-      const currentOwnerName = displayKeycloakUser(currentOwner) || currentOwnerId;
+      const currentOwnerName = resolveAtpStaffDisplayName(currentOwner, state.booking?.assigned_atp_staff) || currentOwnerId;
       if (currentOwnerId && currentOwnerName && !knownOwners.has(currentOwnerId)) {
         knownOwners.set(currentOwnerId, {
+          ...(currentOwner && typeof currentOwner === "object" ? currentOwner : {}),
           id: currentOwnerId,
-          name: displayKeycloakUser(currentOwner) || currentOwnerId,
-          username: normalizeText(currentOwner?.username) || null
+          name: currentOwnerName || currentOwnerId,
+          username: normalizeText(currentOwner?.username) || normalizeText(state.booking?.assigned_atp_staff?.username) || null,
+          staff_profile: (
+            currentOwner?.staff_profile && typeof currentOwner.staff_profile === "object"
+          )
+            ? currentOwner.staff_profile
+            : (
+              normalizeText(state.booking?.assigned_atp_staff?.full_name)
+                ? { full_name: normalizeText(state.booking.assigned_atp_staff.full_name) }
+                : null
+            )
         });
       }
 
       const options = state.permissions.canChangeAssignment
         ? [`<option value="">${escapeHtml(bookingT("common.unassigned", "Unassigned"))}</option>`]
-            .concat([...knownOwners.values()].map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(displayKeycloakUser(user) || user.id)}</option>`))
+            .concat([...knownOwners.values()].map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(resolveAtpStaffDisplayName(user) || user.id)}</option>`))
             .join("")
         : currentOwnerId
           ? `<option value="${escapeHtml(currentOwnerId)}">${escapeHtml(currentOwnerName || bookingT("booking.assigned_user", "Assigned user"))}</option>`
@@ -510,12 +559,17 @@ export function createBookingCoreModule(ctx) {
     }
 
     if (els.lastActionDetail) {
-      els.lastActionDetail.textContent = statusPresentation.lastAction;
-      els.lastActionDetail.hidden = !statusPresentation.lastAction;
+      const text = hasPendingMilestoneChange
+        ? bookingT("booking.milestone.pending_action", "Unsaved status: {action}", {
+            action: milestoneActionLabel(draftMilestoneActionKey)
+          })
+        : statusPresentation.lastAction;
+      els.lastActionDetail.textContent = text;
+      els.lastActionDetail.hidden = !text;
     }
     if (els.milestoneActions) {
       const buttons = BOOKING_MILESTONE_ACTIONS.map((action) => {
-        const isCurrent = statusPresentation.currentActionKey === action.key;
+        const isCurrent = draftMilestoneActionKey === action.key;
         const classes = [
           "btn",
           "btn-ghost",
@@ -526,8 +580,6 @@ export function createBookingCoreModule(ctx) {
           class="${classes}"
           type="button"
           data-booking-milestone-action="${escapeHtml(action.key)}"
-          data-requires-clean-state
-          data-clean-state-hint-id="booking_milestone_dirty_hint"
           aria-pressed="${isCurrent ? "true" : "false"}"
           ${state.permissions.canChangeStage ? "" : " disabled"}
         >${escapeHtml(milestoneActionLabel(action.key))}</button>`;
@@ -694,6 +746,43 @@ export function createBookingCoreModule(ctx) {
       state.booking = latestBooking;
     }
 
+    const nextCustomerLanguage = normalizeBookingContentLang(draft.customer_language || "en");
+    if (nextCustomerLanguage !== savedCustomerLanguage(latestBooking)) {
+      const request = bookingCustomerLanguageRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_core_revision: Number(latestBooking.core_revision || 0),
+          customer_language: nextCustomerLanguage,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+      state.booking = latestBooking;
+      setPendingSavedCustomerLanguage?.(nextCustomerLanguage);
+      updateContentLangInUrl?.(nextCustomerLanguage);
+    }
+
+    const nextMilestoneActionKey = normalizeText(draft.milestone_action_key).toUpperCase();
+    if (nextMilestoneActionKey && nextMilestoneActionKey !== savedMilestoneActionKey(latestBooking)) {
+      const request = bookingMilestoneActionRequest({
+        baseURL: apiOrigin,
+        params: { booking_id: latestBooking.id }
+      });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_core_revision: Number(latestBooking.core_revision || 0),
+          action: nextMilestoneActionKey,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+      state.booking = latestBooking;
+    }
+
     setBookingSectionDirty("core", false);
     syncCoreDraftFromBooking({ force: true });
     renderBookingHeader();
@@ -704,26 +793,12 @@ export function createBookingCoreModule(ctx) {
   }
 
   async function recordBookingMilestoneAction(actionKey) {
-    if (!state.permissions.canChangeStage || !state.booking || blockPersistedAction()) return false;
+    if (!state.permissions.canChangeStage || !state.booking) return false;
     const normalizedAction = normalizeText(actionKey).toUpperCase();
     if (!BOOKING_MILESTONE_ACTION_BY_KEY[normalizedAction]) return false;
-    const request = bookingMilestoneActionRequest({
-      baseURL: apiOrigin,
-      params: { booking_id: state.booking.id }
-    });
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_core_revision: getBookingRevision("core_revision"),
-        action: normalizedAction,
-        actor: state.user
-      }
-    });
-    if (!result?.booking) return false;
-    applyBookingPayload(result);
-    renderBookingHeader();
+    ensureCoreDraft().milestone_action_key = normalizedAction;
+    updateCoreDirtyState();
     renderActionControls();
-    renderPersonsEditor();
     return true;
   }
 

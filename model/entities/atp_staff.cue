@@ -12,6 +12,8 @@ import (
 #AtpStaffProfile: {
 	username:     string & !=""
 	name?:        string
+	full_name?:   string
+	friendly_short_name?: string
 	picture_ref?: string
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]

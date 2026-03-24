@@ -956,6 +956,17 @@
         ]
       },
       {
+        key: "tour_delete",
+        path: "/api/v1/tours/{tour_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourDeleteResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22)
+        ]
+      },
+      {
         key: "tour_translate_fields",
         path: "/api/v1/tours/translate-fields",
         method: "POST",

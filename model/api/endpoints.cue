@@ -1191,6 +1191,20 @@ package api
 		}]
 	},
 	{
+		key:           "tour_delete"
+		path:          "/api/v1/tours/{tour_id}"
+		method:        "DELETE"
+		tag:           "Tours"
+		authenticated: true
+		responseType:  "TourDeleteResponse"
+		parameters: [{
+			name:     "tour_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "tour_image"
 		path:          "/api/v1/tours/{tour_id}/image"
 		method:        "POST"

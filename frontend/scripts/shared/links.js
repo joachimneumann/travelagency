@@ -21,3 +21,9 @@ export function buildTourEditHref(id) {
   addLangParam(params);
   return `tour.html?${params.toString()}`;
 }
+
+export function buildTourCreateHref() {
+  const params = new URLSearchParams();
+  addLangParam(params);
+  return params.toString() ? `tour.html?${params.toString()}` : "tour.html";
+}

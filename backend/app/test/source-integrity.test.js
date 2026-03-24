@@ -225,19 +225,24 @@ test("backend startup backfills missing booking persons and the frontend reads o
   );
 });
 
-test("booking page initial customer language prefers the web-form preferred language", async () => {
+test("booking page initial customer language prefers the saved booking customer language", async () => {
   const bookingPageLanguagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
   const source = await readFile(bookingPageLanguagePath, "utf8");
 
   assert.match(
     source,
-    /function resolveSubmissionCustomerLanguage\(booking\) \{[\s\S]*web_form_submission\?\.preferred_language[\s\S]*return normalizeBookingContentLang\(submissionPreferredLanguage\);[\s\S]*return normalizeBookingContentLang\(customerLanguage \|\| "en"\);[\s\S]*\}/,
-    "Initial booking-page language should prefer the submitted web-form language before falling back to a stored customer-language value"
+    /function resolveSubmissionCustomerLanguage\(booking\) \{[\s\S]*const submissionPreferredLanguage = normalizeText\(booking\?\.web_form_submission\?\.preferred_language\);[\s\S]*const customerLanguage = normalizeText\(booking\?\.customer_language\);[\s\S]*if \(customerLanguage\) \{[\s\S]*return normalizeBookingContentLang\(customerLanguage\);[\s\S]*return normalizeBookingContentLang\(submissionPreferredLanguage \|\| "en"\);[\s\S]*\}/,
+    "Initial booking-page language should prefer the saved booking customer-language value before falling back to the original web-form language"
   );
   assert.match(
     source,
-    /return \{[\s\S]*populateContentLanguageSelect,[\s\S]*resolveSubmissionCustomerLanguage,[\s\S]*syncContentLanguageSelector,[\s\S]*updateContentLangInUrl,/,
-    "Booking page language controller should export syncContentLanguageSelector so the visible customer-language control updates after booking payload load"
+    /function syncContentLanguageSelector\(\) \{[\s\S]*state\.coreDraft\?\.customer_language[\s\S]*state\.booking\?\.customer_language[\s\S]*state\.booking\?\.web_form_submission\?\.preferred_language/,
+    "Booking page language selector should reflect the local customer-language draft first and fall back to the saved booking value"
+  );
+  assert.match(
+    source,
+    /function renderContentLanguageMenu\(\) \{[\s\S]*els\.contentLanguageSelect\?\.value[\s\S]*state\.coreDraft\?\.customer_language[\s\S]*state\.booking\?\.customer_language/,
+    "The visible customer-language menu should render from the current draft or select value instead of snapping back to the persisted language"
   );
 });
 
@@ -583,7 +588,7 @@ test("booking page replaces the stage dropdown with a derived status block and m
   );
   assert.match(
     bookingPageSource,
-    /id="booking_milestone_actions"[\s\S]*id="booking_last_action_detail"[\s\S]*id="booking_milestone_dirty_hint"/,
+    /id="booking_milestone_actions"[\s\S]*id="booking_last_action_detail"/,
     "Booking page should render milestone action buttons and a last-action line in place of the old stage select"
   );
   assert.doesNotMatch(
@@ -598,8 +603,23 @@ test("booking page replaces the stage dropdown with a derived status block and m
   );
   assert.match(
     bookingCoreSource,
-    /bookingMilestoneActionRequest[\s\S]*recordBookingMilestoneAction\(actionKey\)/,
-    "Booking core should persist derived stage changes through explicit milestone actions"
+    /function recordBookingMilestoneAction\(actionKey\) \{[\s\S]*ensureCoreDraft\(\)\.milestone_action_key = normalizedAction;[\s\S]*updateCoreDirtyState\(\);[\s\S]*renderActionControls\(\);/,
+    "Booking core should treat milestone changes as local draft edits until page save"
+  );
+  assert.match(
+    bookingCoreSource,
+    /async function saveCoreEdits\(\) \{[\s\S]*bookingCustomerLanguageRequest[\s\S]*bookingMilestoneActionRequest/,
+    "Booking core should persist both customer-language and milestone draft changes through the page save flow"
+  );
+  assert.match(
+    bookingCoreSource,
+    /function resolveAtpStaffDisplayName\(user, fallbackProfile = null\)[\s\S]*user\?\.staff_profile\?\.full_name[\s\S]*fallbackProfile\?\.full_name[\s\S]*displayKeycloakUser\(user\)/,
+    "Booking core should prefer ATP staff full names for assignee labels before falling back to raw Keycloak display names"
+  );
+  assert.match(
+    bookingCoreSource,
+    /knownOwners\.values\(\)\]\.map\(\(user\) => `<option value="\$\{escapeHtml\(user\.id\)\}">\$\{escapeHtml\(resolveAtpStaffDisplayName\(user\) \|\| user\.id\)\}<\/option>`\)/,
+    "Booking assignee options should render ATP staff full names in the booking owner dropdown"
   );
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingStyles = await readFile(bookingStylesPath, "utf8");
@@ -1021,6 +1041,43 @@ test("offer and travel-plan PDF closing letters mention appended attachments bef
   );
 });
 
+test("offer and travel-plan PDFs route Arabic text blocks through the shared RTL alignment helpers", async () => {
+  const pdfI18nPath = path.resolve(__dirname, "..", "src", "lib", "pdf_i18n.js");
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const [pdfI18nSource, offerPdfSource, travelPlanPdfSource] = await Promise.all([
+    readFile(pdfI18nPath, "utf8"),
+    readFile(offerPdfPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
+
+  assert.match(
+    pdfI18nSource,
+    /const RTL_PDF_LANGS = new Set\(\["ar"\]\);[\s\S]*export function pdfTextAlign\(lang, fallback = "left"\)/,
+    "PDF i18n helpers should define Arabic as an RTL PDF language and expose a shared text-alignment helper"
+  );
+  assert.match(
+    offerPdfSource,
+    /import \{[\s\S]*pdfTextAlign,[\s\S]*pdfTextOptions,[\s\S]*\} from "\.\/pdf_i18n\.js";/,
+    "Offer PDFs should import the shared RTL alignment helpers"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /import \{[\s\S]*pdfTextAlign,[\s\S]*pdfTextOptions,[\s\S]*\} from "\.\/pdf_i18n\.js";/,
+    "Travel-plan PDFs should import the shared RTL alignment helpers"
+  );
+  assert.match(
+    offerPdfSource,
+    /drawHero[\s\S]*align: pdfTextAlign\(lang\)[\s\S]*drawClosing[\s\S]*pdfTextOptions\(lang,/,
+    "Offer PDFs should right-align RTL hero and closing copy through the shared helper"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /drawTravelPlanHero[\s\S]*pdfTextOptions\(lang,[\s\S]*drawClosing[\s\S]*align: pdfTextAlign\(lang\)/,
+    "Travel-plan PDFs should right-align RTL hero and closing copy through the shared helper"
+  );
+});
+
 test("travel-plan PDF removes the old hero subtitle and badge, adds a section title, and suggests the new download filename", async () => {
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
   const bookingTravelPlanHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");
@@ -1031,8 +1088,13 @@ test("travel-plan PDF removes the old hero subtitle and badge, adds a section ti
 
   assert.match(
     travelPlanPdfSource,
-    /function travelPlanSectionTitle\(lang\)/,
+    /function travelPlanSectionTitle\(lang\)[\s\S]*pdfT\(lang,\s*"travel_plan\.pdf_subtitle",\s*"Travel plan overview"\)/,
     "Travel-plan PDFs should define a dedicated itinerary section heading"
+  );
+  assert.doesNotMatch(
+    travelPlanPdfSource,
+    /travel_plan\.section_title|fallback = normalizedLang === "de" \? "Reiseplan" : "Travel plan"/,
+    "Travel-plan PDFs should not bypass the localized PDF subtitle copy with a hardcoded Travel plan fallback"
   );
   assert.doesNotMatch(
     travelPlanPdfSource,
@@ -1073,7 +1135,7 @@ test("booking page save orchestrates dirty sections through existing section end
 
   assert.match(
     bookingSource,
-    /async function savePageEdits\(\)\s*\{[\s\S]*?saveCoreEdits\(\)[\s\S]*?saveNoteEdits\(\)[\s\S]*?personsModule\.saveAllPersonDrafts\(\)[\s\S]*?saveOffer\(\)[\s\S]*?travelPlanModule\.saveTravelPlan\(\)[\s\S]*?savePricing\(\)[\s\S]*?createInvoice\(\)/,
+    /async function savePageEdits\(\)\s*\{[\s\S]*?saveCoreEdits\(\)[\s\S]*?saveNoteEdits\(\)[\s\S]*?personsModule\.saveAllPersonDrafts\(\)[\s\S]*?saveOffer\(\)[\s\S]*?travelPlanModule\.saveTravelPlan\(\)[\s\S]*?savePricing\(\)[\s\S]*?createInvoice\(\)[\s\S]*?state\.pendingSavedCustomerLanguage[\s\S]*?loadBookingPage\(\)/,
     "Page save should orchestrate the existing booking section endpoints in order"
   );
 });
@@ -1505,9 +1567,96 @@ test("settings page staff table shows separate realm and client Keycloak roles",
     "Settings page should expose the ATP staff editor panel"
   );
   assert.match(
+    html,
+    /id="staffEditorFullName"[\s\S]*id="staffEditorFriendlyShortName"/,
+    "Settings page should expose editable ATP staff full-name and friendly-short-name fields"
+  );
+  assert.match(
+    html,
+    /id="staffEditorSaveBtn"[^>]*disabled/,
+    "Settings page should render the ATP staff save button disabled by default until the profile is dirty"
+  );
+  assert.match(
     source,
     /keycloakUserStaffProfileUpdateRequest|keycloakUserStaffProfilePictureUploadRequest|keycloakUserStaffProfilePictureDeleteRequest/,
     "Settings page should use the generated ATP staff profile edit endpoints"
+  );
+  assert.match(
+    source,
+    /full_name:\s*normalizeText\(state\.editor\?\.fullName\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)/,
+    "Settings page should send the ATP staff full-name and friendly-short-name fields when saving the profile"
+  );
+  assert.match(
+    source,
+    /function isEditorDirty\(\)[\s\S]*editorHasPendingPhoto\(\)[\s\S]*normalizeEditorProfile\(state\.editor\)[\s\S]*normalizeEditorProfile\(cloneEditorProfile\(user\)\)/,
+    "Settings page should treat a pending ATP staff photo as dirty in addition to normal profile field changes"
+  );
+  assert.match(
+    source,
+    /function updateEditorSaveButtonState\(\)[\s\S]*els\.staffEditorSaveBtn\.disabled = !state\.permissions\.canEditStaffProfiles[\s\S]*\|\| !getSelectedUser\(\)[\s\S]*\|\| !isEditorDirty\(\)[\s\S]*\|\| state\.editorSaving;/,
+    "Settings page should disable the ATP staff save button while the profile is clean or already saving"
+  );
+  assert.match(
+    source,
+    /async function handleStaffPhotoSelected\(event\) \{[\s\S]*state\.editor\.pendingPhoto = \{[\s\S]*dataBase64:[\s\S]*renderEditor\(\);/,
+    "Selecting an ATP staff picture should stage a local photo draft and rerender the preview instead of uploading immediately"
+  );
+  assert.match(
+    source,
+    /async function saveSelectedStaffProfile\(\) \{[\s\S]*pendingPhoto\?\.dataBase64[\s\S]*keycloakUserStaffProfilePictureUploadRequest[\s\S]*applyUpdatedUser\(latestUser\);/,
+    "Saving an ATP staff profile should upload any pending staged photo through the generated picture-upload endpoint"
+  );
+});
+
+test("offer and travel-plan PDFs prefer ATP staff full and friendly names in the guide section", async () => {
+  const atpStaffPdfPath = path.resolve(__dirname, "..", "src", "lib", "atp_staff_pdf.js");
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const [atpStaffPdfSource, offerPdfSource, travelPlanPdfSource] = await Promise.all([
+    readFile(atpStaffPdfPath, "utf8"),
+    readFile(offerPdfPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8")
+  ]);
+
+  assert.match(
+    atpStaffPdfSource,
+    /export function resolveAtpStaffFullName\(profile\)[\s\S]*profile\?\.full_name/,
+    "ATP staff PDF helpers should read the dedicated staff-profile full name"
+  );
+  assert.doesNotMatch(
+    atpStaffPdfSource,
+    /resolveAtpStaffFullName\(profile\)[\s\S]*profile\?\.name|resolveAtpStaffFriendlyShortName\(profile\)[\s\S]*profile\?\.name/,
+    "ATP staff PDF helpers should not fall back to the raw Keycloak name in the PDFs"
+  );
+  assert.match(
+    offerPdfSource,
+    /resolveAtpStaffFullName[\s\S]*resolveAtpGuideIntroName/,
+    "Offer PDFs should use the ATP staff full name in the title and the friendly short name through the guide intro helper"
+  );
+  assert.match(
+    travelPlanPdfSource,
+    /resolveAtpStaffFullName[\s\S]*resolveAtpGuideIntroName/,
+    "Travel-plan PDFs should use the ATP staff full name in the title and the friendly short name through the guide intro helper"
+  );
+  assert.doesNotMatch(
+    offerPdfSource,
+    /guide\.languages|languageLabels/,
+    "Offer PDFs should no longer list ATP guide languages in the guide section"
+  );
+  assert.doesNotMatch(
+    offerPdfSource,
+    /heightOfString\(guideFriendlyShortName|text\(guideFriendlyShortName/,
+    "Offer PDFs should not render a separate ATP guide short-name subtitle line"
+  );
+  assert.doesNotMatch(
+    travelPlanPdfSource,
+    /guide\.languages|languageLabels/,
+    "Travel-plan PDFs should no longer list ATP guide languages in the guide section"
+  );
+  assert.doesNotMatch(
+    travelPlanPdfSource,
+    /measureTextHeight\(doc,\s*guideFriendlyShortName|text\(guideFriendlyShortName/,
+    "Travel-plan PDFs should not render a separate ATP guide short-name subtitle line"
   );
 });
 

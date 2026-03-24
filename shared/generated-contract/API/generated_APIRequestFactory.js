@@ -1202,6 +1202,23 @@ export function tourUpdateRequest({ baseURL = '', params = {}, query = {}, body,
   };
 }
 
+export function tourDeletePath(params = {}) {
+  return buildPath("/api/v1/tours/{tour_id}", params);
+}
+
+export function tourDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function tourTranslateFieldsPath(params = {}) {
   return buildPath("/api/v1/tours/translate-fields", params);
 }

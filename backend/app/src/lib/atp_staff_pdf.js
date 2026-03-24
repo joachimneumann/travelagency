@@ -2,6 +2,11 @@ import { LANGUAGE_BY_CODE } from "../../../../shared/generated/language_catalog.
 import { resolveAtpStaffQualificationText } from "./atp_staff_directory.js";
 import { normalizeText } from "./text.js";
 
+function textOrNull(value) {
+  const normalized = normalizeText(value);
+  return normalized || null;
+}
+
 function normalizeLanguageLabels(items) {
   const labels = [];
   for (const item of Array.isArray(items) ? items : []) {
@@ -51,4 +56,27 @@ export async function resolveAtpGuidePdfContext({
 
 export function resolveAtpGuideQualificationText(guideContext, lang = "en") {
   return resolveAtpStaffQualificationText(guideContext?.profile || null, lang);
+}
+
+export function resolveAtpStaffFullName(profile) {
+  return textOrNull(profile?.full_name);
+}
+
+export function resolveAtpStaffFriendlyShortName(profile) {
+  return textOrNull(profile?.friendly_short_name);
+}
+
+export function resolveAtpGuideDisplayName(profile) {
+  const fullName = resolveAtpStaffFullName(profile);
+  const friendlyShortName = resolveAtpStaffFriendlyShortName(profile);
+  if (fullName && friendlyShortName && fullName.toLowerCase() !== friendlyShortName.toLowerCase()) {
+    return `${fullName} (${friendlyShortName})`;
+  }
+  return fullName || friendlyShortName || null;
+}
+
+export function resolveAtpGuideIntroName(profile) {
+  return resolveAtpStaffFriendlyShortName(profile)
+    || resolveAtpStaffFullName(profile)
+    || null;
 }

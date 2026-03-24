@@ -8,6 +8,7 @@ export function createTourHandlers(deps) {
     toTourImagePublicUrl,
     tourDestinationCodes,
     tourStyleCodes,
+    readStore,
     readTours,
     sendJson,
     clamp,
@@ -217,6 +218,24 @@ export function createTourHandlers(deps) {
       counts,
       total_tours: items.length
     };
+  }
+
+  function countBookingsReferencingTour(store, tourId) {
+    const normalizedTourId = normalizeText(tourId);
+    if (!normalizedTourId) return 0;
+    return (Array.isArray(store?.bookings) ? store.bookings : []).filter((booking) => {
+      const referencedTourId = normalizeText(booking?.tour_id) || normalizeText(booking?.web_form_submission?.tour_id);
+      return referencedTourId === normalizedTourId;
+    }).length;
+  }
+
+  function resolveTourFolderPath(tourId) {
+    const normalizedTourId = normalizeText(tourId);
+    if (!normalizedTourId) return "";
+    const toursRoot = path.resolve(TOURS_DIR);
+    const tourFolder = path.resolve(toursRoot, normalizedTourId);
+    if (tourFolder === toursRoot || !tourFolder.startsWith(`${toursRoot}${path.sep}`)) return "";
+    return tourFolder;
   }
 
   async function handlePublicListTours(req, res) {
@@ -453,6 +472,43 @@ export function createTourHandlers(deps) {
     sendJson(res, 200, { tour: buildTourEditorResponse(updated, lang) });
   }
 
+  async function handleDeleteTour(req, res, [tourId]) {
+    const principal = getPrincipal(req);
+    if (!canEditTours(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const existing = tours.find((item) => item.id === tourId);
+    if (!existing) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+
+    const store = await readStore();
+    const bookingReferenceCount = countBookingsReferencingTour(store, tourId);
+    if (bookingReferenceCount > 0) {
+      sendJson(res, 409, {
+        error: "Tour is still referenced by bookings",
+        detail: `${bookingReferenceCount} booking(s) currently reference this tour.`
+      });
+      return;
+    }
+
+    const folderPath = resolveTourFolderPath(tourId);
+    if (!folderPath) {
+      sendJson(res, 500, { error: "Tour storage path is invalid" });
+      return;
+    }
+
+    await rm(folderPath, { recursive: true, force: true });
+    sendJson(res, 200, {
+      deleted: true,
+      tour_id: tourId
+    });
+  }
+
   async function handlePublicTourImage(req, res, [rawRelativePath]) {
     const absolutePath = resolveTourImageDiskPath(rawRelativePath);
     if (!absolutePath) {
@@ -546,6 +602,7 @@ export function createTourHandlers(deps) {
     handleTranslateTourFields,
     handleCreateTour,
     handlePatchTour,
+    handleDeleteTour,
     handlePublicTourImage,
     handleUploadTourImage
   };

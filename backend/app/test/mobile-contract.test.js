@@ -17,7 +17,7 @@ const STORE_PATH = path.join(TEST_DATA_DIR, "store.json");
 
 process.env.KEYCLOAK_ENABLED = "true";
 process.env.INSECURE_TEST_AUTH = "true";
-process.env.KEYCLOAK_ALLOWED_ROLES = "atp_admin,atp_manager,atp_accountant,atp_staff";
+process.env.KEYCLOAK_ALLOWED_ROLES = "atp_admin,atp_manager,atp_accountant,atp_staff,atp_tour_editor";
 process.env.KEYCLOAK_BASE_URL = "http://keycloak.test";
 process.env.KEYCLOAK_REALM = "asiatravelplan";
 process.env.KEYCLOAK_CLIENT_ID = "asiatravelplan-backend";
@@ -37,6 +37,7 @@ const KEYCLOAK_USERS = [
   { id: "kc-admin", username: "admin", firstName: "Admin", lastName: "User", enabled: true },
   { id: "kc-joachim", username: "joachim", firstName: "Joachim", lastName: "Neumann", enabled: true },
   { id: "kc-staff", username: "staff", firstName: "Staff", lastName: "User", enabled: true },
+  { id: "kc-tour-editor", username: "tour-editor", firstName: "Tour", lastName: "Editor", enabled: true },
   { id: "kc-accountant", username: "accountant", firstName: "Accountant", lastName: "User", enabled: true },
   { id: "kc-disabled", username: "disabled", firstName: "Disabled", lastName: "User", enabled: false }
 ];
@@ -44,6 +45,7 @@ const KEYCLOAK_ROLE_MAP = {
   "kc-admin": { realm: [], client: ["atp_admin"] },
   "kc-joachim": { realm: [], client: ["atp_manager"] },
   "kc-staff": { realm: [], client: ["atp_staff"] },
+  "kc-tour-editor": { realm: [], client: ["atp_tour_editor"] },
   "kc-accountant": { realm: [], client: ["atp_accountant"] },
   "kc-disabled": { realm: [], client: ["atp_staff"] }
 };
@@ -2350,12 +2352,29 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
     travel_style: ["Wellness", "Culture"]
   });
   const bookingId = createdBooking.id;
+  const guideProfileUpdatePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
+  const guideFullName = "Joachim Carl Neumann";
+  const guideFriendlyShortName = "Joachim";
 
   const detailBefore = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(detailBefore.status, 200);
+
+  const guideProfileUpdateResult = await requestJson(
+    guideProfileUpdatePath,
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "PATCH",
+      body: {
+        full_name: guideFullName,
+        friendly_short_name: guideFriendlyShortName,
+        languages: ["de", "en", "vi"]
+      }
+    }
+  );
+  assert.equal(guideProfileUpdateResult.status, 200);
 
   const assignResult = await requestJson(
     endpointPath("booking_owner").replace("{booking_id}", bookingId),
@@ -2377,10 +2396,12 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   );
   assert.equal(pdfResult.status, 200);
   const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
-  assert.match(decodedText, /YourATPguide/);
-  assert.match(decodedText, /JoachimNeumann/);
-  assert.match(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
-  assert.match(decodedText, /Specializesinsoft-pacedSoutheastAsiaitineraries/);
+  assert.match(decodedText, /YourATPguide:JoachimCarlNeumann/);
+  assert.match(
+    decodedText,
+    /JoachimfromAsiaTravelPlanwillkeepthisroutecomfortableandwellpacedforyou\.Specializesinsoft-pacedSoutheastAsiaitineraries/
+  );
+  assert.doesNotMatch(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
 });
 
 test("booking generated offer pdf endpoint returns a pdf file", async () => {
@@ -4116,13 +4137,15 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   assert.ok(Array.isArray(result.body.items));
   assert.deepEqual(
     result.body.items.map((item) => item.username),
-    ["accountant", "admin", "joachim", "staff"]
+    ["accountant", "admin", "joachim", "staff", "tour-editor"]
   );
   assert.ok(result.body.items.every((item) => item.active === true));
   const admin = result.body.items.find((item) => item.username === "admin");
   assert.deepEqual(admin.realm_roles, []);
   assert.deepEqual(admin.client_roles, ["atp_admin"]);
   assert.equal(admin.staff_profile.username, "admin");
+  assert.equal(admin.staff_profile.full_name, "Admin User");
+  assert.equal(admin.staff_profile.friendly_short_name, "Admin");
   assert.ok(Array.isArray(admin.staff_profile.languages));
   assert.ok(Array.isArray(admin.staff_profile.destinations));
   assert.ok(String(admin.staff_profile.picture_ref || "").includes("/public/v1/atp-staff-photos/admin.svg"));
@@ -4130,12 +4153,18 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   assert.deepEqual(accountant.realm_roles, []);
   assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
   assert.equal(accountant.staff_profile.username, "accountant");
+  const tourEditor = result.body.items.find((item) => item.username === "tour-editor");
+  assert.deepEqual(tourEditor.realm_roles, []);
+  assert.deepEqual(tourEditor.client_roles, ["atp_tour_editor"]);
+  assert.equal(tourEditor.staff_profile.username, "tour-editor");
 });
 
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
   const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const qualificationEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";
   const qualificationDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
+  const fullName = "Joachim Carl Neumann";
+  const friendlyShortName = "Joachim";
 
   const forbiddenResult = await requestJson(
     profilePath,
@@ -4160,6 +4189,8 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
     {
       method: "PATCH",
       body: {
+        full_name: fullName,
+        friendly_short_name: friendlyShortName,
         languages: ["de", "en", "vi"],
         destinations: ["VN", "LA"],
         qualification_i18n: [
@@ -4177,6 +4208,8 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   );
   assert.equal(updateResult.status, 200);
   assert.equal(updateResult.body.user.username, "joachim");
+  assert.equal(updateResult.body.user.staff_profile.full_name, fullName);
+  assert.equal(updateResult.body.user.staff_profile.friendly_short_name, friendlyShortName);
   assert.deepEqual(updateResult.body.user.staff_profile.languages, ["de", "en", "vi"]);
   assert.deepEqual(updateResult.body.user.staff_profile.destinations, ["VN", "LA"]);
   assert.equal(updateResult.body.user.staff_profile.qualification, qualificationEn);
@@ -4192,6 +4225,8 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
 
   const listResult = await requestJson(endpointPath("keycloak_users"), apiHeaders("atp_admin", "admin", "kc-admin"));
   const updated = listResult.body.items.find((item) => item.username === "joachim");
+  assert.equal(updated.staff_profile.full_name, fullName);
+  assert.equal(updated.staff_profile.friendly_short_name, friendlyShortName);
   assert.equal(updated.staff_profile.qualification, qualificationEn);
 });
 
@@ -4270,6 +4305,120 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   );
   assert.equal(otherStaffList.status, 200);
   assert.equal(otherStaffList.body.items.length, 0);
+});
+
+test("tour editor can manage tours while staff cannot access tour endpoints", async () => {
+  const createResult = await requestJson(
+    endpointPath("tour_create"),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    {
+      method: "POST",
+      body: {
+        title: "Tour editor access test",
+        destinations: ["vietnam"],
+        styles: ["culture"],
+        short_description: "Editor-created tour",
+        highlights: ["One highlight"],
+        priority: 42
+      }
+    }
+  );
+  assert.equal(createResult.status, 201);
+  const tourId = createResult.body.tour.id;
+
+  const editorList = await requestJson(
+    `${endpointPath("tours")}?page=1&page_size=20&sort=updated_at_desc`,
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+  );
+  assert.equal(editorList.status, 200);
+  assert.ok(editorList.body.items.some((tour) => tour.id === tourId));
+
+  const editorDetail = await requestJson(
+    endpointPath("tour_detail").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+  );
+  assert.equal(editorDetail.status, 200);
+  assert.equal(editorDetail.body.tour.title, "Tour editor access test");
+
+  const updateResult = await requestJson(
+    endpointPath("tour_update").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    {
+      method: "PATCH",
+      body: {
+        short_description: "Updated by the tour editor"
+      }
+    }
+  );
+  assert.equal(updateResult.status, 200);
+  assert.equal(updateResult.body.tour.short_description, "Updated by the tour editor");
+
+  const deleteResult = await requestJson(
+    endpointPath("tour_delete").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    { method: "DELETE" }
+  );
+  assert.equal(deleteResult.status, 200);
+  assert.equal(deleteResult.body.deleted, true);
+  assert.equal(deleteResult.body.tour_id, tourId);
+  await assert.rejects(() => stat(path.join(TEST_DATA_DIR, "tours", tourId)));
+
+  const deletedDetail = await requestJson(
+    endpointPath("tour_detail").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+  );
+  assert.equal(deletedDetail.status, 404);
+
+  const staffList = await requestJson(
+    `${endpointPath("tours")}?page=1&page_size=20&sort=updated_at_desc`,
+    apiHeaders("atp_staff", "staff", "kc-staff")
+  );
+  assert.equal(staffList.status, 403);
+
+  const staffDetail = await requestJson(
+    endpointPath("tour_detail").replace("{tour_id}", tourId),
+    apiHeaders("atp_staff", "staff", "kc-staff")
+  );
+  assert.equal(staffDetail.status, 403);
+});
+
+test("tour delete is blocked while bookings still reference the tour", async () => {
+  const createResult = await requestJson(
+    endpointPath("tour_create"),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    {
+      method: "POST",
+      body: {
+        title: "Tour delete guard test",
+        destinations: ["vietnam"],
+        styles: ["culture"],
+        short_description: "Tour kept by booking reference",
+        highlights: ["Still referenced"]
+      }
+    }
+  );
+  assert.equal(createResult.status, 201);
+  const tourId = createResult.body.tour.id;
+
+  const booking = await createPublicBooking({
+    tour_id: tourId,
+    notes: "This booking references a created tour."
+  });
+  assert.equal(booking.web_form_submission?.tour_id, tourId);
+
+  const deleteResult = await requestJson(
+    endpointPath("tour_delete").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor"),
+    { method: "DELETE" }
+  );
+  assert.equal(deleteResult.status, 409);
+  assert.match(String(deleteResult.body.error || ""), /referenced by bookings/i);
+
+  const detailResult = await requestJson(
+    endpointPath("tour_detail").replace("{tour_id}", tourId),
+    apiHeaders("atp_tour_editor", "tour-editor", "kc-tour-editor")
+  );
+  assert.equal(detailResult.status, 200);
 });
 
 test("accountant is read-only everywhere", async () => {

@@ -283,6 +283,8 @@ import (
 #AtpStaffProfileUpdateRequest: {
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
+	full_name?: string
+	friendly_short_name?: string
 	qualification?: string
 	qualification_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 }

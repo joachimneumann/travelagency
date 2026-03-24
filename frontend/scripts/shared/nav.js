@@ -56,14 +56,15 @@ function hasAnyRole(roles, ...expected) {
 
 function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
-  const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant");
-  const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager");
+  const canReadBookings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant", "atp_staff");
+  const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
+  const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant");
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")
     .forEach((button) => {
       const section = button.getAttribute("data-backend-section");
       const visible =
-        section === "bookings" ||
+        (section === "bookings" && canReadBookings) ||
         (section === "tours" && canReadTours) ||
         (section === "settings" && canReadSettings);
       button.hidden = !visible;

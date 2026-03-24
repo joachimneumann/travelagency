@@ -141,6 +141,8 @@ async function init() {
 
   if (state.permissions.canReadBookings) {
     loadBookings();
+  } else {
+    showError(backendT("booking.error.forbidden", "You do not have access to bookings."));
   }
 }
 

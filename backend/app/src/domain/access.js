@@ -10,8 +10,7 @@ export function createAccessHelpers({ auth, appRoles }) {
   function canReadBackend(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
       hasRole(principal, appRoles.MANAGER) ||
-      hasRole(principal, appRoles.ACCOUNTANT) ||
-      hasRole(principal, appRoles.ATP_STAFF);
+      hasRole(principal, appRoles.ACCOUNTANT);
   }
 
   function canViewKeycloakUsers(principal) {
@@ -25,13 +24,14 @@ export function createAccessHelpers({ auth, appRoles }) {
   }
 
   function canReadTours(principal) {
-    return canReadBackend(principal);
+    return hasRole(principal, appRoles.ADMIN) ||
+      hasRole(principal, appRoles.ACCOUNTANT) ||
+      hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
   function canEditTours(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
-      hasRole(principal, appRoles.MANAGER) ||
-      hasRole(principal, appRoles.ATP_STAFF);
+      hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
   function canReadSuppliers(principal) {
@@ -40,8 +40,7 @@ export function createAccessHelpers({ auth, appRoles }) {
 
   function canEditSuppliers(principal) {
     return hasRole(principal, appRoles.ADMIN) ||
-      hasRole(principal, appRoles.MANAGER) ||
-      hasRole(principal, appRoles.ATP_STAFF);
+      hasRole(principal, appRoles.MANAGER);
   }
 
   return {

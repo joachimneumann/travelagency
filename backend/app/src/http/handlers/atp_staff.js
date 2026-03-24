@@ -117,6 +117,8 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
     const destinations = Array.isArray(payload?.destinations) ? normalizeCountryCodes(payload.destinations) : undefined;
+    const fullName = payload?.full_name !== undefined ? normalizeText(payload.full_name) : undefined;
+    const friendlyShortName = payload?.friendly_short_name !== undefined ? normalizeText(payload.friendly_short_name) : undefined;
 
     const qualification = payload?.qualification !== undefined ? normalizeText(payload.qualification) : undefined;
     const qualificationI18n = Array.isArray(payload?.qualification_i18n)
@@ -130,6 +132,8 @@ export function createAtpStaffHandlers(deps) {
     const updated = await updateAtpStaffProfileByUsername(username, {
       languages,
       destinations,
+      full_name: fullName,
+      friendly_short_name: friendlyShortName,
       qualification,
       qualification_i18n: qualificationI18n
     });

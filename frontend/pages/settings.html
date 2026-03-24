@@ -41,7 +41,7 @@
                 <p class="micro" id="staffEditorStatus"></p>
               </div>
               <div class="settings-staff-editor__head-actions">
-                <button class="btn btn-primary" id="staffEditorSaveBtn" type="button" data-i18n-id="common.save">Save</button>
+                <button class="btn btn-primary" id="staffEditorSaveBtn" type="button" data-i18n-id="common.save" disabled>Save</button>
                 <button class="settings-staff-editor__close-btn" id="staffEditorCloseBtn" type="button" data-i18n-aria-label-id="common.close" aria-label="Close">×</button>
               </div>
             </div>
@@ -59,6 +59,16 @@
                   <input id="staffEditorPhotoInput" type="file" accept="image/*" hidden />
                 </div>
               </div>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="staffEditorFullName" data-i18n-id="backend.users.full_name">Full name</label>
+              <input id="staffEditorFullName" type="text" autocomplete="name" />
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="staffEditorFriendlyShortName" data-i18n-id="backend.users.friendly_short_name">Friendly short name</label>
+              <input id="staffEditorFriendlyShortName" type="text" autocomplete="nickname" />
             </div>
 
             <div class="field full">

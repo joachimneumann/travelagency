@@ -88,6 +88,10 @@ function qualificationEntriesFromMap(value) {
     .filter((entry) => Boolean(entry.lang && entry.value));
 }
 
+function firstNameToken(value) {
+  return normalizeText(value).split(/\s+/).filter(Boolean)[0] || "";
+}
+
 export function resolveAtpStaffQualificationText(profile, lang = "en") {
   return resolveLocalizedText(
     normalizeQualificationMap(profile?.qualification_i18n ?? profile?.qualification, profile?.experiences),
@@ -106,6 +110,8 @@ function normalizeStoredProfile(profile) {
   return {
     username,
     ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
+    ...(normalizeText(profile?.full_name) ? { full_name: normalizeText(profile.full_name) } : {}),
+    ...(normalizeText(profile?.friendly_short_name) ? { friendly_short_name: normalizeText(profile.friendly_short_name) } : {}),
     ...(normalizeText(profile?.picture_ref) ? { picture_ref: normalizeText(profile.picture_ref) } : {}),
     languages: normalizeLanguageCodes(profile?.languages ?? profile?.spoken_languages),
     ...(normalizeCountryCodes(profile?.destinations).length
@@ -122,6 +128,18 @@ function defaultDisplayNameForUser(user) {
     || normalizeText([user?.firstName, user?.lastName].filter(Boolean).join(" "))
     || normalizeText(user?.username)
     || "ATP Staff";
+}
+
+function defaultFullNameForUser(user) {
+  return defaultDisplayNameForUser(user);
+}
+
+function defaultFriendlyShortNameForUser(user) {
+  return normalizeText(user?.firstName)
+    || firstNameToken(user?.friendly_short_name)
+    || firstNameToken(defaultFullNameForUser(user))
+    || normalizeText(user?.username)
+    || "ATP";
 }
 
 function initialsForName(name, username) {
@@ -194,6 +212,8 @@ function defaultStoredProfileForUser(user) {
   return normalizeStoredProfile({
     username,
     name: defaultDisplayNameForUser(user),
+    full_name: defaultFullNameForUser(user),
+    friendly_short_name: defaultFriendlyShortNameForUser(user),
     picture_ref: pictureRefForUsername(username),
     languages: blueprint.languages,
     destinations: blueprint.destinations,
@@ -230,11 +250,20 @@ function mergeStoredProfileWithUser(profile, user) {
   });
   const normalizedQualification = normalizeQualificationMap(normalizedProfile?.qualification);
   const defaultQualification = normalizeQualificationMap(defaultProfile?.qualification);
+  const resolvedFullName = normalizeText(normalizedProfile?.full_name)
+    || normalizeText(defaultProfile?.full_name)
+    || normalizeText(user?.name)
+    || defaultProfile.name;
+  const resolvedFriendlyShortName = normalizeText(normalizedProfile?.friendly_short_name)
+    || normalizeText(defaultProfile?.friendly_short_name)
+    || defaultFriendlyShortNameForUser(user || normalizedProfile || { username });
   return {
     ...defaultProfile,
     ...normalizedProfile,
     username,
     name: normalizeText(user?.name) || normalizeText(normalizedProfile?.name) || defaultProfile.name,
+    full_name: resolvedFullName,
+    friendly_short_name: resolvedFriendlyShortName,
     picture_ref: normalizeText(normalizedProfile?.picture_ref) || defaultProfile.picture_ref,
     languages: normalizeLanguageCodes(normalizedProfile?.languages).length
       ? normalizeLanguageCodes(normalizedProfile.languages)
@@ -268,7 +297,11 @@ export function createAtpStaffDirectory({
     const outputPath = path.join(photosDir, `${username}.svg`);
     if (await fileExists(outputPath)) return false;
     await mkdir(path.dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, buildAvatarSvg(normalizeText(profile?.name) || username, username), "utf8");
+    await writeFile(
+      outputPath,
+      buildAvatarSvg(normalizeText(profile?.full_name) || normalizeText(profile?.name) || username, username),
+      "utf8"
+    );
     return true;
   }
 
@@ -397,6 +430,9 @@ export function createAtpStaffDirectory({
     const current = mergeStoredProfileWithUser(currentStored, user);
     const nextStored = normalizeStoredProfile({
       username,
+      name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
+      full_name: input?.full_name !== undefined ? input.full_name : current?.full_name,
+      friendly_short_name: input?.friendly_short_name !== undefined ? input.friendly_short_name : current?.friendly_short_name,
       picture_ref: normalizeText(currentStored?.picture_ref) || normalizeText(current?.picture_ref) || pictureRefForUsername(username),
       languages: Array.isArray(input?.languages) ? input.languages : current?.languages,
       destinations: Array.isArray(input?.destinations) ? input.destinations : current?.destinations,
@@ -427,6 +463,9 @@ export function createAtpStaffDirectory({
     const current = mergeStoredProfileWithUser(currentStored, user);
     const nextStored = normalizeStoredProfile({
       username,
+      name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
+      full_name: current?.full_name,
+      friendly_short_name: current?.friendly_short_name,
       picture_ref: normalizedPictureRef,
       languages: current?.languages,
       destinations: current?.destinations,

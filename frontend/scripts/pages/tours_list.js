@@ -2,11 +2,12 @@ import {
   createApiFetcher,
   escapeHtml,
   formatDateTime,
+  fetchApiJson,
   normalizeText
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
-import { toursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
-import { buildTourEditHref } from "../shared/links.js";
+import { tourDeleteRequest, toursRequest } from "../../Generated/API/generated_APIRequestFactory.js";
+import { buildTourCreateHref, buildTourEditHref } from "../shared/links.js";
 import { renderPagination } from "../shared/pagination.js";
 import {
   backendT,
@@ -30,11 +31,18 @@ const els = {
   toursStyle: document.getElementById("toursStyle"),
   toursClearFiltersBtn: document.getElementById("toursClearFiltersBtn"),
   toursSearchBtn: document.getElementById("toursSearchBtn"),
+  toursCreateBtn: document.getElementById("toursCreateBtn"),
   toursCountInfo: document.getElementById("toursCountInfo"),
+  toursActionStatus: document.getElementById("toursActionStatus"),
   toursMatrixMount: document.getElementById("toursMatrixMount"),
   toursMatrixTotal: document.getElementById("toursMatrixTotal"),
   toursPagination: document.getElementById("toursPagination"),
-  toursTable: document.getElementById("toursTable")
+  toursTable: document.getElementById("toursTable"),
+  tourDeleteModal: document.getElementById("tourDeleteModal"),
+  tourDeleteModalMessage: document.getElementById("tourDeleteModalMessage"),
+  tourDeleteModalCloseBtn: document.getElementById("tourDeleteModalCloseBtn"),
+  tourDeleteModalCancelBtn: document.getElementById("tourDeleteModalCancelBtn"),
+  tourDeleteModalConfirmBtn: document.getElementById("tourDeleteModalConfirmBtn")
 };
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
@@ -45,7 +53,8 @@ const GENERATED_ROLE_LOOKUP = Object.freeze(
 
 const ROLES = Object.freeze({
   ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
-  ACCOUNTANT: GENERATED_ROLE_LOOKUP.ACCOUNTANT
+  ACCOUNTANT: GENERATED_ROLE_LOOKUP.ACCOUNTANT,
+  TOUR_EDITOR: GENERATED_ROLE_LOOKUP.TOUR_EDITOR
 });
 
 const state = {
@@ -60,9 +69,14 @@ const state = {
     pageSize: 10,
     totalPages: 1,
     total: 0,
+    lastItems: [],
     search: "",
     destination: "all",
     style: "all",
+    pendingDeleteId: "",
+    pendingDeleteTitle: "",
+    pendingDeleteTrigger: null,
+    deletingId: "",
     loadToken: 0
   }
 };
@@ -86,6 +100,11 @@ function clearError() {
   if (!els.error) return;
   els.error.textContent = "";
   els.error.classList.remove("show");
+}
+
+function setActionStatus(message = "") {
+  if (!els.toursActionStatus) return;
+  els.toursActionStatus.textContent = message;
 }
 
 function formatIntegerWithGrouping(value) {
@@ -124,14 +143,14 @@ async function init() {
     apiOrigin,
     refreshNav: refreshBackendNavElements,
     computePermissions: (roles) => ({
-      canReadTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.ACCOUNTANT),
-      canEditTours: hasAnyRoleInList(roles, ROLES.ADMIN)
+      canReadTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR),
+      canEditTours: hasAnyRoleInList(roles, ROLES.ADMIN, ROLES.TOUR_EDITOR)
     }),
     hasPageAccess: (permissions) => permissions.canReadTours,
     logKey: "backend-tours",
     pageName: "tours.html",
-    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.ACCOUNTANT],
-    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to read tours."
+    expectedRolesAnyOf: [ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR],
+    likelyCause: "The user is authenticated in Keycloak but does not have the ATP roles required to access tours."
   });
   state.authUser = authState.authUser;
   state.roles = authState.roles;
@@ -140,14 +159,24 @@ async function init() {
     canEditTours: Boolean(authState.permissions?.canEditTours)
   };
   bindControls();
+  if (els.toursCreateBtn) els.toursCreateBtn.hidden = !state.permissions.canEditTours;
 
   if (state.permissions.canReadTours) {
     loadTours();
+  } else {
+    showError(backendT("tour.error.forbidden", "You do not have access to tours."));
   }
 }
 
 function bindControls() {
   bindSearch(els.toursSearchBtn, els.toursSearch, state.tours, loadTours);
+
+  if (els.toursCreateBtn) {
+    els.toursCreateBtn.addEventListener("click", () => {
+      if (!state.permissions.canEditTours) return;
+      window.location.href = buildTourCreateHref();
+    });
+  }
 
   if (els.toursDestination) {
     els.toursDestination.addEventListener("change", () => {
@@ -173,6 +202,39 @@ function bindControls() {
       if (els.toursDestination) els.toursDestination.value = "all";
       if (els.toursStyle) els.toursStyle.value = "all";
       loadTours();
+    });
+  }
+
+  if (els.toursTable) {
+    els.toursTable.addEventListener("click", (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-tour-delete]") : null;
+      if (!button) return;
+      const tourId = normalizeText(button.getAttribute("data-tour-delete"));
+      const title = normalizeText(button.getAttribute("data-tour-title"));
+      openDeleteModal(tourId, title, button);
+    });
+  }
+
+  if (els.tourDeleteModalCloseBtn) {
+    els.tourDeleteModalCloseBtn.addEventListener("click", () => closeDeleteModal());
+  }
+
+  if (els.tourDeleteModalCancelBtn) {
+    els.tourDeleteModalCancelBtn.addEventListener("click", () => closeDeleteModal());
+  }
+
+  if (els.tourDeleteModalConfirmBtn) {
+    els.tourDeleteModalConfirmBtn.addEventListener("click", () => confirmDeleteTour());
+  }
+
+  if (els.tourDeleteModal) {
+    els.tourDeleteModal.addEventListener("click", (event) => {
+      if (event.target === els.tourDeleteModal) closeDeleteModal();
+    });
+    els.tourDeleteModal.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeDeleteModal();
     });
   }
 }
@@ -220,9 +282,10 @@ async function loadTours() {
   );
   state.tours.total = Number(pagination.total_items || 0);
   state.tours.page = Number(pagination.page || state.tours.page);
+  state.tours.lastItems = Array.isArray(payload.items) ? payload.items : [];
   populateTourFilterOptions(payload);
   updatePaginationUi();
-  renderTours(payload.items || []);
+  renderTours(state.tours.lastItems);
   renderToursMatrix(payload?.matrix, Number((payload?.matrix?.total_tours ?? pagination.total_items) || 0));
 }
 
@@ -329,22 +392,100 @@ function renderToursMatrix(matrix, totalTours) {
 }
 
 function renderTours(items) {
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th></tr></thead>`;
+  const canEditTours = state.permissions.canEditTours;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th>${canEditTours ? `<th>${escapeHtml(backendT("backend.table.actions", "Actions"))}</th>` : ""}</tr></thead>`;
   const rows = items
     .map((tour) => {
       const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
       const countries = Array.isArray(tour.destinations) ? tour.destinations.join(", ") : "";
       const href = buildTourEditHref(tour.id);
+      const actionCell = canEditTours
+        ? `<td><button class="btn btn-ghost offer-remove-btn" type="button" data-tour-delete="${escapeHtml(tour.id)}" data-tour-title="${escapeHtml(tour.title || "")}" title="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" aria-label="${escapeHtml(backendT("backend.tours.delete", "Delete"))}" ${state.tours.deletingId === tour.id ? "disabled" : ""}>&times;</button></td>`
+        : "";
       return `<tr>
         <td><a href="${escapeHtml(href)}" title="${escapeHtml(tour.id)}">${escapeHtml(shortId(tour.id))}</a></td>
         <td>${escapeHtml(tour.title || "-")}</td>
         <td>${escapeHtml(countries || "-")}</td>
         <td>${escapeHtml(styles || "-")}</td>
         <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
+        ${actionCell}
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="5">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
+  const body = rows || `<tr><td colspan="${canEditTours ? "6" : "5"}">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
   if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
+}
+
+function openDeleteModal(tourId, title, trigger = null) {
+  if (!state.permissions.canEditTours || !tourId || !els.tourDeleteModal) return;
+  state.tours.pendingDeleteId = tourId;
+  state.tours.pendingDeleteTitle = title || "";
+  state.tours.pendingDeleteTrigger = trigger instanceof HTMLElement ? trigger : null;
+  if (els.tourDeleteModalMessage) {
+    els.tourDeleteModalMessage.textContent = backendT(
+      "backend.tours.delete_confirm",
+      "Delete tour \"{name}\"? This cannot be undone.",
+      { name: title || tourId }
+    );
+  }
+  els.tourDeleteModal.hidden = false;
+  if (!els.tourDeleteModal.hasAttribute("tabindex")) els.tourDeleteModal.setAttribute("tabindex", "-1");
+  window.setTimeout(() => {
+    if (els.tourDeleteModalConfirmBtn?.focus) {
+      els.tourDeleteModalConfirmBtn.focus();
+      return;
+    }
+    els.tourDeleteModal.focus?.();
+  }, 0);
+}
+
+function closeDeleteModal({ returnFocus = true } = {}) {
+  if (!els.tourDeleteModal) return;
+  els.tourDeleteModal.hidden = true;
+  if (returnFocus && state.tours.pendingDeleteTrigger?.focus) {
+    state.tours.pendingDeleteTrigger.focus();
+  }
+  state.tours.pendingDeleteId = "";
+  state.tours.pendingDeleteTitle = "";
+  state.tours.pendingDeleteTrigger = null;
+}
+
+async function confirmDeleteTour() {
+  const tourId = state.tours.pendingDeleteId;
+  const title = state.tours.pendingDeleteTitle;
+  closeDeleteModal({ returnFocus: false });
+  await deleteTour(tourId, title);
+}
+
+async function deleteTour(tourId, title) {
+  if (!state.permissions.canEditTours || !tourId) return;
+  clearError();
+  state.tours.deletingId = tourId;
+  setActionStatus(backendT("backend.tours.status.deleting", "Deleting tour..."));
+  renderTours(state.tours.lastItems);
+
+  const request = tourDeleteRequest({
+    baseURL: apiOrigin,
+    params: { tour_id: tourId }
+  });
+  const result = await fetchApiJson(withBackendApiLang(request.url), {
+    apiBase,
+    method: request.method,
+    includeDetailInError: false,
+    connectionErrorMessage: backendT("tour.error.connect", "Could not connect to backend API."),
+    onError: (message) => showError(message)
+  });
+
+  state.tours.deletingId = "";
+  if (!result?.deleted) {
+    renderTours(state.tours.lastItems);
+    return;
+  }
+
+  clearError();
+  setActionStatus(backendT("backend.tours.status.deleted", "Tour deleted."));
+  const wouldLeavePageEmpty = state.tours.page > 1 && state.tours.total > 0 && state.tours.total - 1 <= (state.tours.page - 1) * state.tours.pageSize;
+  if (wouldLeavePageEmpty) state.tours.page = Math.max(1, state.tours.page - 1);
+  await loadTours();
 }

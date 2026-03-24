@@ -87,6 +87,8 @@ IR: {
 			fields: [
 				{name: "username", kind: "scalar", typeName: "string", required: true},
 				{name: "name", kind: "scalar", typeName: "string", required: false},
+				{name: "full_name", kind: "scalar", typeName: "string", required: false},
+				{name: "friendly_short_name", kind: "scalar", typeName: "string", required: false},
 				{name: "picture_ref", kind: "scalar", typeName: "string", required: false},
 				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
@@ -1897,6 +1899,8 @@ IR: {
 			fields: [
 				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
+				{name: "full_name", kind: "scalar", typeName: "string", required: false},
+				{name: "friendly_short_name", kind: "scalar", typeName: "string", required: false},
 				{name: "qualification", kind: "scalar", typeName: "string", required: false},
 				{name: "qualification_i18n", kind: "entity", typeName: "AtpStaffLocalizedTextEntry", required: false, isArray: true},
 			]

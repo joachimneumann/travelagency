@@ -152,6 +152,8 @@ case "tour_detail":
   return RequestFactory.tourDetailRequest(options);
 case "tour_update":
   return RequestFactory.tourUpdateRequest(options);
+case "tour_delete":
+  return RequestFactory.tourDeleteRequest(options);
 case "tour_translate_fields":
   return RequestFactory.tourTranslateFieldsRequest(options);
 case "tour_image":

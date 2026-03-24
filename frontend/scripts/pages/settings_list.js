@@ -41,6 +41,8 @@ const els = {
   staffEditorUsernameLine: document.getElementById("staffEditorUsernameLine"),
   staffEditorRolesLine: document.getElementById("staffEditorRolesLine"),
   staffEditorPhotoInput: document.getElementById("staffEditorPhotoInput"),
+  staffEditorFullName: document.getElementById("staffEditorFullName"),
+  staffEditorFriendlyShortName: document.getElementById("staffEditorFriendlyShortName"),
   staffEditorLanguages: document.getElementById("staffEditorLanguages"),
   staffEditorDestinations: document.getElementById("staffEditorDestinations"),
   staffEditorQualification: document.getElementById("staffEditorQualification"),
@@ -94,10 +96,14 @@ const state = {
   keycloakUsers: [],
   destinationOptions: [],
   selectedUsername: "",
+  editorSaving: false,
   editor: {
+    fullName: "",
+    friendlyShortName: "",
     languages: [],
     destinations: [],
-    qualificationByLang: {}
+    qualificationByLang: {},
+    pendingPhoto: null
   }
 };
 
@@ -180,6 +186,8 @@ async function init() {
       loadKeycloakUsers(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve()
     ]);
+  } else {
+    showError(backendT("backend.settings.forbidden", "You do not have access to reports and settings."));
   }
 }
 
@@ -190,6 +198,8 @@ function bindEvents() {
   els.staffEditorSaveBtn?.addEventListener("click", saveSelectedStaffProfile);
   els.staffEditorPhotoBtn?.addEventListener("click", () => els.staffEditorPhotoInput?.click());
   els.staffEditorPhotoInput?.addEventListener("change", handleStaffPhotoSelected);
+  els.staffEditorFullName?.addEventListener("input", handleFullNameInput);
+  els.staffEditorFriendlyShortName?.addEventListener("input", handleFriendlyShortNameInput);
   els.staffEditorLanguages?.addEventListener("change", handleLanguageToggle);
   els.staffEditorDestinations?.addEventListener("change", handleDestinationToggle);
   els.staffEditorQualification?.addEventListener("input", handleQualificationInput);
@@ -313,14 +323,52 @@ function cloneEditorProfile(user) {
     qualificationByLang.en = normalizeText(profile.qualification);
   }
   return {
+    fullName: normalizeText(profile?.full_name),
+    friendlyShortName: normalizeText(profile?.friendly_short_name),
     languages: Array.isArray(profile?.languages)
       ? profile.languages.map((code) => normalizeText(code).toLowerCase()).filter(Boolean)
       : [],
     destinations: Array.isArray(profile?.destinations)
       ? profile.destinations.map((code) => normalizeText(code).toUpperCase()).filter(Boolean)
       : [],
+    qualificationByLang,
+    pendingPhoto: null
+  };
+}
+
+function normalizeEditorProfile(profile) {
+  const qualificationByLang = Object.fromEntries(
+    Object.entries(profile?.qualificationByLang && typeof profile.qualificationByLang === "object" ? profile.qualificationByLang : {})
+      .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+      .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
+  );
+  return {
+    fullName: normalizeText(profile?.fullName),
+    friendlyShortName: normalizeText(profile?.friendlyShortName),
+    languages: Array.from(new Set((Array.isArray(profile?.languages) ? profile.languages : []).map((code) => normalizeText(code).toLowerCase()).filter(Boolean))).sort(),
+    destinations: Array.from(new Set((Array.isArray(profile?.destinations) ? profile.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean))).sort(),
     qualificationByLang
   };
+}
+
+function isEditorDirty() {
+  const user = getSelectedUser();
+  if (!state.permissions.canEditStaffProfiles || !user) return false;
+  return editorHasPendingPhoto()
+    || JSON.stringify(normalizeEditorProfile(state.editor)) !== JSON.stringify(normalizeEditorProfile(cloneEditorProfile(user)));
+}
+
+function editorHasPendingPhoto() {
+  return Boolean(normalizeText(state.editor?.pendingPhoto?.dataBase64));
+}
+
+function updateEditorSaveButtonState() {
+  if (!els.staffEditorSaveBtn) return;
+  els.staffEditorSaveBtn.disabled = !state.permissions.canEditStaffProfiles
+    || !getSelectedUser()
+    || !isEditorDirty()
+    || state.editorSaving;
 }
 
 function openEditorForUsername(rawUsername) {
@@ -340,10 +388,14 @@ function closeEditor() {
   }
   state.selectedUsername = "";
   state.editor = {
+    fullName: "",
+    friendlyShortName: "",
     languages: [],
     destinations: [],
-    qualificationByLang: {}
+    qualificationByLang: {},
+    pendingPhoto: null
   };
+  state.editorSaving = false;
   if (els.staffEditorPhotoInput) {
     els.staffEditorPhotoInput.value = "";
   }
@@ -358,13 +410,16 @@ function renderEditor() {
   const user = getSelectedUser();
   if (!canEdit || !user) {
     els.staffEditorPanel.hidden = true;
+    updateEditorSaveButtonState();
     return;
   }
 
   const profile = user?.staff_profile || {};
   els.staffEditorPanel.hidden = false;
   if (els.staffEditorPhoto) {
-    els.staffEditorPhoto.src = normalizeText(profile?.picture_ref) || "assets/img/profile_person.png";
+    els.staffEditorPhoto.src = normalizeText(state.editor?.pendingPhoto?.previewSrc)
+      || normalizeText(profile?.picture_ref)
+      || "assets/img/profile_person.png";
     els.staffEditorPhoto.alt = normalizeText(user?.name) || normalizeText(user?.username) || "ATP staff";
   }
   if (els.staffEditorPhotoBtn) {
@@ -380,10 +435,17 @@ function renderEditor() {
   if (els.staffEditorRolesLine) {
     els.staffEditorRolesLine.textContent = `${backendT("backend.table.roles", "Roles")}: ${formatKeycloakRoleList(getDisplayedKeycloakRoles(user))}`;
   }
+  if (els.staffEditorFullName) {
+    els.staffEditorFullName.value = normalizeText(state.editor?.fullName);
+  }
+  if (els.staffEditorFriendlyShortName) {
+    els.staffEditorFriendlyShortName.value = normalizeText(state.editor?.friendlyShortName);
+  }
 
   renderLanguageChecklist();
   renderDestinationChecklist();
   renderQualificationEditor();
+  updateEditorSaveButtonState();
 }
 
 function renderLanguageChecklist() {
@@ -473,6 +535,19 @@ function handleQualificationInput(event) {
   if (nextValue) state.editor.qualificationByLang[lang] = nextValue;
   else delete state.editor.qualificationByLang[lang];
   clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
+function handleFullNameInput(event) {
+  state.editor.fullName = normalizeText(event.target?.value);
+  clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
+function handleFriendlyShortNameInput(event) {
+  state.editor.friendlyShortName = normalizeText(event.target?.value);
+  clearEditorStatus();
+  updateEditorSaveButtonState();
 }
 
 function qualificationTextareaId(lang) {
@@ -504,6 +579,7 @@ function setQualificationValue(lang, value) {
   if (textarea && textarea.value !== normalizedValue) {
     textarea.value = normalizedValue;
   }
+  updateEditorSaveButtonState();
 }
 
 async function requestQualificationTranslation(targetLang, sourceText) {
@@ -599,6 +675,7 @@ function handleDestinationToggle(event) {
   else set.delete(value);
   state.editor.destinations = Array.from(set);
   clearEditorStatus();
+  updateEditorSaveButtonState();
 }
 
 function handleLanguageToggle(event) {
@@ -610,6 +687,7 @@ function handleLanguageToggle(event) {
   else current.delete(value);
   state.editor.languages = Array.from(current);
   clearEditorStatus();
+  updateEditorSaveButtonState();
 }
 
 function normalizeQualificationEntriesForSave() {
@@ -628,6 +706,10 @@ function normalizeQualificationEntriesForSave() {
 async function saveSelectedStaffProfile() {
   const user = getSelectedUser();
   if (!user || !state.permissions.canEditStaffProfiles) return;
+  if (!isEditorDirty()) {
+    updateEditorSaveButtonState();
+    return;
+  }
 
   const languages = Array.from(new Set((Array.isArray(state.editor?.languages) ? state.editor.languages : []).map((code) => normalizeText(code).toLowerCase()).filter(Boolean)));
   if (!languages.length) {
@@ -637,24 +719,57 @@ async function saveSelectedStaffProfile() {
   const destinations = Array.from(new Set((Array.isArray(state.editor?.destinations) ? state.editor.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean)));
 
   const qualificationI18n = normalizeQualificationEntriesForSave();
+  const pendingPhoto = state.editor?.pendingPhoto && typeof state.editor.pendingPhoto === "object"
+    ? state.editor.pendingPhoto
+    : null;
+  const profileDirty = JSON.stringify(normalizeEditorProfile(state.editor)) !== JSON.stringify(normalizeEditorProfile(cloneEditorProfile(user)));
 
   clearError();
   clearEditorStatus();
-  const request = keycloakUserStaffProfileUpdateRequest({
-    baseURL: apiOrigin,
-    params: { username: user.username }
-  });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: {
-      languages,
-      destinations,
-      qualification_i18n: qualificationI18n
+  state.editorSaving = true;
+  updateEditorSaveButtonState();
+  try {
+    let latestUser = user;
+    if (profileDirty) {
+      const request = keycloakUserStaffProfileUpdateRequest({
+        baseURL: apiOrigin,
+        params: { username: user.username }
+      });
+      const payload = await fetchApi(request.url, {
+        method: request.method,
+        body: {
+          full_name: normalizeText(state.editor?.fullName),
+          friendly_short_name: normalizeText(state.editor?.friendlyShortName),
+          languages,
+          destinations,
+          qualification_i18n: qualificationI18n
+        }
+      });
+      if (!payload?.user) return;
+      latestUser = payload.user;
     }
-  });
-  if (!payload?.user) return;
-  applyUpdatedUser(payload.user);
-  showEditorStatus(backendT("backend.users.profile_saved", "ATP staff profile saved."));
+    if (pendingPhoto?.dataBase64) {
+      const pictureRequest = keycloakUserStaffProfilePictureUploadRequest({
+        baseURL: apiOrigin,
+        params: { username: user.username }
+      });
+      const picturePayload = await fetchApi(pictureRequest.url, {
+        method: pictureRequest.method,
+        body: {
+          filename: pendingPhoto.filename || `${user.username}.upload`,
+          mime_type: pendingPhoto.mimeType || "image/*",
+          data_base64: pendingPhoto.dataBase64
+        }
+      });
+      if (!picturePayload?.user) return;
+      latestUser = picturePayload.user;
+    }
+    applyUpdatedUser(latestUser);
+    showEditorStatus(backendT("backend.users.profile_saved", "ATP staff profile saved."));
+  } finally {
+    state.editorSaving = false;
+    updateEditorSaveButtonState();
+  }
 }
 
 async function handleStaffPhotoSelected(event) {
@@ -669,26 +784,18 @@ async function handleStaffPhotoSelected(event) {
     return;
   }
 
-  clearError();
-  clearEditorStatus();
-  const request = keycloakUserStaffProfilePictureUploadRequest({
-    baseURL: apiOrigin,
-    params: { username: user.username }
-  });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: {
-      filename: file.name || `${user.username}.upload`,
-      mime_type: file.type || "image/*",
-      data_base64: base64
-    }
-  });
   if (els.staffEditorPhotoInput) {
     els.staffEditorPhotoInput.value = "";
   }
-  if (!payload?.user) return;
-  applyUpdatedUser(payload.user);
-  showEditorStatus(backendT("backend.users.picture_uploaded", "Picture updated."));
+  state.editor.pendingPhoto = {
+    filename: file.name || `${user.username}.upload`,
+    mimeType: file.type || "image/*",
+    dataBase64: base64,
+    previewSrc: `data:${file.type || "image/*"};base64,${base64}`
+  };
+  clearError();
+  showEditorStatus(backendT("backend.users.picture_ready", "Picture ready to save."));
+  renderEditor();
 }
 
 function applyUpdatedUser(updatedUser) {

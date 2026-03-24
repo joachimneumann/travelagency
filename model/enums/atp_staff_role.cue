@@ -5,6 +5,7 @@ ATPStaffRoleCatalog: [
 	"atp_manager",
 	"atp_accountant",
 	"atp_staff",
+	"atp_tour_editor",
 ]
 
 #ATPStaffRole: or(ATPStaffRoleCatalog)

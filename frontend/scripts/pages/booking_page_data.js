@@ -208,6 +208,7 @@ export function createBookingPageDataController(ctx) {
 
     state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
     applyBookingPayload(bookingPayload, { forceDraftReset: true });
+    syncContentLanguageSelector?.();
     await ensureTourImageLoaded();
 
     renderBookingHeader();

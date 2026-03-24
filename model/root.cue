@@ -92,6 +92,7 @@ import (
 		CatalogOption:                                    apiModel.#CatalogOption
 		TourOptions:                                      apiModel.#TourOptions
 		TourResponse:                                     apiModel.#TourResponse
+		TourDeleteResponse:                               apiModel.#TourDeleteResponse
 		OfferExchangeRatesResponse:                       apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                               apiModel.#BookingListFilters
 		TourListFilters:                                  apiModel.#TourListFilters

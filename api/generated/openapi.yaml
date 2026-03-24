@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-24T04:14:38Z
+# 2026-03-24T07:34:49Z
 
 ---
 openapi: 3.1.0
@@ -14,7 +14,7 @@ info:
     Important:
     - The mobile app must not depend on backend storage details.
     - Breaking changes should increment the contract version and normally require a mobile app update.
-    - Only these app roles are supported: atp_admin, atp_manager, atp_accountant, atp_staff.
+    - Only these app roles are supported: atp_admin, atp_manager, atp_accountant, atp_staff, atp_tour_editor.
 servers:
 - url: https://api-staging.asiatravelplan.com
   description: Staging API
@@ -313,11 +313,13 @@ components:
       - atp_manager
       - atp_accountant
       - atp_staff
+      - atp_tour_editor
       x-enum-catalog:
       - code: atp_admin
       - code: atp_manager
       - code: atp_accountant
       - code: atp_staff
+      - code: atp_tour_editor
       x-enum-options:
       - value: atp_admin
         label: atp_admin
@@ -327,6 +329,8 @@ components:
         label: atp_accountant
       - value: atp_staff
         label: atp_staff
+      - value: atp_tour_editor
+        label: atp_tour_editor
     BookingStage:
       type: string
       enum:
@@ -3854,6 +3858,12 @@ components:
         name:
           type: string
           nullable: true
+        full_name:
+          type: string
+          nullable: true
+        friendly_short_name:
+          type: string
+          nullable: true
         picture_ref:
           type: string
           nullable: true
@@ -6937,6 +6947,12 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
+        full_name:
+          type: string
+          nullable: true
+        friendly_short_name:
+          type: string
+          nullable: true
         qualification:
           type: string
           nullable: true
@@ -9815,6 +9831,38 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: tour_delete
+      summary: Tour Delete
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourDeleteResponse"
         '401':
           description: Unauthorized
           content:

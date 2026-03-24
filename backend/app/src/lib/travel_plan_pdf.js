@@ -5,6 +5,8 @@ import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import {
   formatPdfDateOnly,
+  pdfTextAlign,
+  pdfTextOptions,
   normalizePdfLang,
   pdfT
 } from "./pdf_i18n.js";
@@ -16,7 +18,13 @@ import {
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
-import { resolveAtpGuidePdfContext, resolveAtpGuideQualificationText } from "./atp_staff_pdf.js";
+import {
+  resolveAtpGuideIntroName,
+  resolveAtpGuidePdfContext,
+  resolveAtpGuideQualificationText,
+  resolveAtpStaffFriendlyShortName,
+  resolveAtpStaffFullName
+} from "./atp_staff_pdf.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -130,9 +138,7 @@ function safeBookingTitle(booking, lang) {
 }
 
 function travelPlanSectionTitle(lang) {
-  const normalizedLang = normalizePdfLang(lang);
-  const fallback = normalizedLang === "de" ? "Reiseplan" : "Travel plan";
-  return pdfT(normalizedLang, "travel_plan.section_title", fallback);
+  return pdfT(lang, "travel_plan.pdf_subtitle", "Travel plan overview");
 }
 
 function resolveTravelPlanAttachmentPaths(travelPlan, travelPlanAttachmentsDir) {
@@ -397,8 +403,8 @@ function drawTravelPlanHero(doc, heroTitle, heroImage, startY, fonts, lang) {
     .font(pdfFontName("bold", fonts))
     .fontSize(22)
     .fillColor(PDF_COLORS.textStrong)
-    .text(heroTitle, detailsX, startY + 4, { width: detailsWidth });
-  const titleHeight = doc.heightOfString(heroTitle, { width: detailsWidth });
+    .text(heroTitle, detailsX, startY + 4, pdfTextOptions(lang, { width: detailsWidth }));
+  const titleHeight = doc.heightOfString(heroTitle, pdfTextOptions(lang, { width: detailsWidth }));
   const titleBottomY = startY + 4 + titleHeight;
   return Math.max(startY + HERO_IMAGE_HEIGHT, titleBottomY) + 18;
 }
@@ -410,7 +416,10 @@ function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
     .font(pdfFontName("bold", fonts))
     .fontSize(11)
     .fillColor(PDF_COLORS.textStrong)
-    .text(safeBookingTitle(booking, lang), PAGE_MARGIN, y, { width: pageWidth / 2 });
+    .text(safeBookingTitle(booking, lang), PAGE_MARGIN, y, {
+      width: pageWidth / 2,
+      align: pdfTextAlign(lang)
+    });
 
   if (companyProfile?.name) {
     doc
@@ -458,14 +467,16 @@ function drawEmptyState(doc, y, fonts, lang) {
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
     .fillColor(PDF_COLORS.textStrong)
-    .text(travelPlanSectionTitle(lang), PAGE_MARGIN + 18, y + 16);
+    .text(travelPlanSectionTitle(lang), PAGE_MARGIN + 18, y + 16, pdfTextOptions(lang, {
+      width: doc.page.width - PAGE_MARGIN * 2 - 36
+    }));
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10.5)
     .fillColor(PDF_COLORS.textMutedStrong)
-    .text(pdfT(lang, "travel_plan.empty", "No travel plan is available yet."), PAGE_MARGIN + 18, y + 38, {
+    .text(pdfT(lang, "travel_plan.empty", "No travel plan is available yet."), PAGE_MARGIN + 18, y + 38, pdfTextOptions(lang, {
       width: doc.page.width - PAGE_MARGIN * 2 - 36
-    });
+    }));
   return y + 88;
 }
 
@@ -486,20 +497,20 @@ function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
       pdfT(lang, "travel_plan.closing_body", "We would be happy to hear from you."),
       PAGE_MARGIN,
       startY,
-      {
+      pdfTextOptions(lang, {
         width: doc.page.width - PAGE_MARGIN * 2,
         lineGap: 2
-      }
+      })
     );
 
   const attachmentNote = buildAttachmentClosingNote(attachmentCount, lang);
   if (attachmentNote) {
     doc
       .moveDown(0.8)
-      .text(attachmentNote, PAGE_MARGIN, doc.y, {
+      .text(attachmentNote, PAGE_MARGIN, doc.y, pdfTextOptions(lang, {
         width: doc.page.width - PAGE_MARGIN * 2,
         lineGap: 2
-      });
+      }));
   }
 
   const signY = doc.y + 18;
@@ -507,23 +518,34 @@ function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
     .font(pdfFontName("regular", fonts))
     .fontSize(11)
     .fillColor(PDF_COLORS.textMutedStrong)
-    .text(pdfT(lang, "travel_plan.closing_regards", "Warm regards,"), PAGE_MARGIN, signY);
+    .text(pdfT(lang, "travel_plan.closing_regards", "Warm regards,"), PAGE_MARGIN, signY, {
+      width: doc.page.width - PAGE_MARGIN * 2,
+      align: pdfTextAlign(lang)
+    });
   doc
     .font(pdfFontName("bold", fonts))
     .fontSize(12)
     .fillColor(PDF_COLORS.textStrong)
-    .text(pdfT(lang, "travel_plan.closing_team", "That's your Asia Travel Plan team."), PAGE_MARGIN, signY + 18);
+    .text(pdfT(lang, "travel_plan.closing_team", "That's your Asia Travel Plan team."), PAGE_MARGIN, signY + 18, {
+      width: doc.page.width - PAGE_MARGIN * 2,
+      align: pdfTextAlign(lang)
+    });
   return doc.y + 10;
 }
 
 function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
   const profile = guideContext?.profile || null;
   const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
+  const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
+  const introName = textOrNull(resolveAtpGuideIntroName(profile));
+  const guideTitle = guideFullName
+    ? `${pdfT(lang, "guide.section_title", "Your ATP guide")}: ${guideFullName}`
+    : pdfT(lang, "guide.section_title", "Your ATP guide");
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
   const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
   let height = 26;
 
-  height += measureTextHeight(doc, pdfT(lang, "guide.section_title", "Your ATP guide"), {
+  height += measureTextHeight(doc, guideTitle, {
     width: textWidth,
     fontSize: 13,
     fonts,
@@ -532,34 +554,16 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
 
   const introText = profile
     ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
-        name: textOrNull(profile?.name) || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+        name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
       })
     : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
-  height += 6 + measureTextHeight(doc, introText, {
+  const bodyText = qualificationText ? `${introText} ${qualificationText}` : introText;
+  height += 6 + measureTextHeight(doc, bodyText, {
     width: textWidth,
     fontSize: 10.4,
     fonts,
     lineGap: 2
   });
-
-  if (guideContext?.languageLabels?.length) {
-    height += 6 + measureTextHeight(doc, pdfT(lang, "guide.languages", "Languages: {languages}", {
-      languages: guideContext.languageLabels.join(" · ")
-    }), {
-      width: textWidth,
-      fontSize: 9.8,
-      fonts
-    });
-  }
-
-  if (qualificationText) {
-    height += 8 + measureTextHeight(doc, qualificationText, {
-      width: textWidth,
-      fontSize: 9.9,
-      fonts,
-      lineGap: 2
-    });
-  }
 
   return Math.max(height + 18, profile ? GUIDE_PHOTO_SIZE + 26 : 120);
 }
@@ -567,6 +571,11 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
 function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   const profile = guideContext?.profile || null;
   const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
+  const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
+  const introName = textOrNull(resolveAtpGuideIntroName(profile));
+  const guideTitle = guideFullName
+    ? `${pdfT(lang, "guide.section_title", "Your ATP guide")}: ${guideFullName}`
+    : pdfT(lang, "guide.section_title", "Your ATP guide");
   const cardWidth = doc.page.width - PAGE_MARGIN * 2;
   const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang);
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
@@ -605,47 +614,24 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
     .font(pdfFontName("bold", fonts))
     .fontSize(13)
     .fillColor(PDF_COLORS.textStrong)
-    .text(pdfT(lang, "guide.section_title", "Your ATP guide"), textX, y, { width: textWidth });
-  y = doc.y + 4;
+    .text(guideTitle, textX, y, pdfTextOptions(lang, { width: textWidth }));
+  y = doc.y + 6;
 
   const introText = profile
     ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
-        name: textOrNull(profile?.name) || pdfT(lang, "guide.fallback_name", "Your ATP guide")
+        name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
       })
     : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
+  const bodyText = qualificationText ? `${introText} ${qualificationText}` : introText;
 
   doc
     .font(pdfFontName("regular", fonts))
     .fontSize(10.4)
     .fillColor(PDF_COLORS.textMutedStrong)
-    .text(introText, textX, y, {
+    .text(bodyText, textX, y, pdfTextOptions(lang, {
       width: textWidth,
       lineGap: 2
-    });
-  y = doc.y + 5;
-
-  if (guideContext?.languageLabels?.length) {
-    doc
-      .font(pdfFontName("bold", fonts))
-      .fontSize(9.8)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(pdfT(lang, "guide.languages", "Languages: {languages}", {
-        languages: guideContext.languageLabels.join(" · ")
-      }), textX, y, { width: textWidth });
-    y = doc.y + 6;
-  }
-
-  if (qualificationText) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(9.9)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(qualificationText, textX, y, {
-        width: textWidth,
-        lineGap: 2
-      });
-    y = doc.y + 5;
-  }
+    }));
 
   return startY + cardHeight + 18;
 }
@@ -717,8 +703,8 @@ export function createTravelPlanPdfWriter({
           textOrNull(item?.details)
         ])
       ]),
-      textOrNull(guideContext?.profile?.name),
-      ...safeArray(guideContext?.languageLabels),
+      textOrNull(resolveAtpStaffFullName(guideContext?.profile)),
+      textOrNull(resolveAtpStaffFriendlyShortName(guideContext?.profile)),
       textOrNull(resolveAtpGuideQualificationText(guideContext, lang)),
       textOrNull(companyProfile?.name),
       textOrNull(companyProfile?.website),
@@ -774,9 +760,9 @@ export function createTravelPlanPdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(18)
           .fillColor(PDF_COLORS.textStrong)
-          .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, {
+          .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
             width: doc.page.width - PAGE_MARGIN * 2
-          });
+          }));
         y = doc.y + 10;
         y = ensureSpace(y, 88);
         y = drawEmptyState(doc, y, fonts, lang);
@@ -786,9 +772,9 @@ export function createTravelPlanPdfWriter({
           .font(pdfFontName("bold", fonts))
           .fontSize(18)
           .fillColor(PDF_COLORS.textStrong)
-          .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, {
+          .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
             width: doc.page.width - PAGE_MARGIN * 2
-          });
+          }));
         y = doc.y + 10;
         for (const day of days) {
           y = ensureSpace(y, 90);
@@ -797,9 +783,9 @@ export function createTravelPlanPdfWriter({
             .font(pdfFontName("bold", fonts))
             .fontSize(15)
             .fillColor(PDF_COLORS.textStrong)
-            .text(dayHeading(day, lang), PAGE_MARGIN, y, {
+            .text(dayHeading(day, lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
               width: doc.page.width - PAGE_MARGIN * 2 - 150
-            });
+            }));
           if (dateLabel) {
             doc
               .font(pdfFontName("regular", fonts))
@@ -818,9 +804,9 @@ export function createTravelPlanPdfWriter({
               .font(pdfFontName("regular", fonts))
               .fontSize(10)
               .fillColor(PDF_COLORS.textMutedStrong)
-              .text(pdfT(lang, "offer.overnight", "Overnight: {location}", { location: overnight }), PAGE_MARGIN, y, {
+              .text(pdfT(lang, "offer.overnight", "Overnight: {location}", { location: overnight }), PAGE_MARGIN, y, pdfTextOptions(lang, {
                 width: doc.page.width - PAGE_MARGIN * 2
-              });
+              }));
             y = doc.y + 4;
           }
 
@@ -830,10 +816,10 @@ export function createTravelPlanPdfWriter({
               .font(pdfFontName("regular", fonts))
               .fontSize(10.2)
               .fillColor(PDF_COLORS.text)
-              .text(dayNotes, PAGE_MARGIN, y, {
+              .text(dayNotes, PAGE_MARGIN, y, pdfTextOptions(lang, {
                 width: doc.page.width - PAGE_MARGIN * 2,
                 lineGap: 2
-              });
+              }));
             y = doc.y + 8;
           }
 
@@ -874,10 +860,10 @@ export function createTravelPlanPdfWriter({
                 .font(pdfFontName("regular", fonts))
                 .fontSize(9.2)
                 .fillColor(PDF_COLORS.textMutedStrong)
-                .text(metaParts.join(" · "), innerX, innerY, {
+                .text(metaParts.join(" · "), innerX, innerY, pdfTextOptions(lang, {
                   width: textWidth,
                   lineGap: 1
-                });
+                }));
               innerY = doc.y + 4;
             }
 
@@ -885,10 +871,10 @@ export function createTravelPlanPdfWriter({
               .font(pdfFontName("bold", fonts))
               .fontSize(11.2)
               .fillColor(PDF_COLORS.textStrong)
-              .text(textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned item"), innerX, innerY, {
+              .text(textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned item"), innerX, innerY, pdfTextOptions(lang, {
                 width: textWidth,
                 lineGap: 1
-              });
+              }));
             innerY = doc.y + 4;
 
             const location = textOrNull(item?.location);
@@ -897,10 +883,10 @@ export function createTravelPlanPdfWriter({
                 .font(pdfFontName("regular", fonts))
                 .fontSize(9.8)
                 .fillColor(PDF_COLORS.textMutedStrong)
-                .text(location, innerX, innerY, {
+                .text(location, innerX, innerY, pdfTextOptions(lang, {
                   width: textWidth,
                   lineGap: 1
-                });
+                }));
               innerY = doc.y + 4;
             }
 
@@ -910,10 +896,10 @@ export function createTravelPlanPdfWriter({
                 .font(pdfFontName("regular", fonts))
                 .fontSize(10.2)
                 .fillColor(PDF_COLORS.text)
-                .text(details, innerX, innerY, {
+                .text(details, innerX, innerY, pdfTextOptions(lang, {
                   width: textWidth,
                   lineGap: 2
-                });
+                }));
             }
 
             y += itemHeight + 8;

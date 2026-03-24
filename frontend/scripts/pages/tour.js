@@ -8,6 +8,7 @@ import {
   ,
   tourUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
+import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import {
   createApiFetcher,
@@ -78,12 +79,25 @@ function normalizeText(value) {
   return String(value ?? "").trim();
 }
 
+const GENERATED_ROLE_LOOKUP = Object.freeze(
+  Object.fromEntries(
+    GENERATED_APP_ROLES.map((role) => [String(role).replace(/^atp_/, "").toUpperCase(), role])
+  )
+);
+
+const ROLES = Object.freeze({
+  ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
+  ACCOUNTANT: GENERATED_ROLE_LOOKUP.ACCOUNTANT,
+  TOUR_EDITOR: GENERATED_ROLE_LOOKUP.TOUR_EDITOR
+});
+
 const state = {
   id: qs.get("id") || "",
   is_create_mode: !normalizeText(qs.get("id") || ""),
   authenticated: false,
   roles: [],
   permissions: {
+    canReadTours: false,
     canEditTours: false
   },
   tour: null,
@@ -127,6 +141,10 @@ const els = {
 function refreshBackendNavElements() {
   els.logoutLink = document.getElementById("backendLogoutLink");
   els.userLabel = document.getElementById("backendUserLabel");
+}
+
+function hasAnyRoleInList(roleList, ...roles) {
+  return roles.some((role) => roleList.includes(role));
 }
 
 function captureTourFormSnapshot() {
@@ -401,6 +419,12 @@ async function init() {
   await loadAuthStatus();
   if (!state.authenticated) {
     redirectToBackendLogin();
+    return;
+  }
+  if (!state.permissions.canReadTours) {
+    applyTourPermissions();
+    showError(backendT("tour.error.forbidden", "You do not have access to tours."));
+    setStatus(backendT("tour.status.access_denied", "Access denied."));
     return;
   }
   renderMonthOptions();
@@ -737,7 +761,7 @@ async function loadAuthStatus() {
     }
     state.authenticated = true;
     state.roles = Array.isArray(payload.user?.roles) ? payload.user.roles : [];
-    const user = applyBackendUserLabel({
+    applyBackendUserLabel({
       userLabel: els.userLabel,
       authUser: payload.user || null,
       logKey: "tour-page",
@@ -748,10 +772,8 @@ async function loadAuthStatus() {
         tour_id: state.id || ""
       }
     });
-    state.permissions.canEditTours =
-      state.roles.includes("atp_admin") ||
-      state.roles.includes("atp_manager") ||
-      state.roles.includes("atp_staff");
+    state.permissions.canReadTours = hasAnyRoleInList(state.roles, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.TOUR_EDITOR);
+    state.permissions.canEditTours = hasAnyRoleInList(state.roles, ROLES.ADMIN, ROLES.TOUR_EDITOR);
   } catch (error) {
     state.authenticated = false;
     if (els.userLabel) els.userLabel.textContent = "";

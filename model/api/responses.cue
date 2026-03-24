@@ -371,6 +371,11 @@ import (
 	tour: entities.#Tour
 }
 
+#TourDeleteResponse: {
+	deleted: bool
+	tour_id: common.#Identifier
+}
+
 #AuthenticatedUser: {
 	sub?:                string
 	name?:               string

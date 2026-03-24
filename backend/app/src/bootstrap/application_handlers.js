@@ -198,6 +198,7 @@ export function createApplicationRoutes({
     toTourImagePublicUrl: tourHelpers.toTourImagePublicUrl,
     tourDestinationCodes: tourHelpers.tourDestinationCodes,
     tourStyleCodes: tourHelpers.tourStyleCodes,
+    readStore: storeUtils.readStore,
     readTours: storeUtils.readTours,
     sendJson: httpHelpers.sendJson,
     clamp: support.clamp,

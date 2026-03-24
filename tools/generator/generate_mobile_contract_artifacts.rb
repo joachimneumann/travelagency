@@ -1139,7 +1139,7 @@ OPENAPI_INFO = {
     Important:
     - The mobile app must not depend on backend storage details.
     - Breaking changes should increment the contract version and normally require a mobile app update.
-    - Only these app roles are supported: atp_admin, atp_manager, atp_accountant, atp_staff.
+    - Only these app roles are supported: atp_admin, atp_manager, atp_accountant, atp_staff, atp_tour_editor.
   DESC
 }.freeze
 

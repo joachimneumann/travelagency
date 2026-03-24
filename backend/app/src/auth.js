@@ -13,7 +13,7 @@ export function createAuth({ port }) {
     keycloakPostLogoutRedirectUri: normalizeText(process.env.KEYCLOAK_POST_LOGOUT_REDIRECT_URI),
     keycloakForceLoginPrompt: parseBoolEnv("KEYCLOAK_FORCE_LOGIN_PROMPT", false),
     keycloakAllowedRoles: new Set(
-      String(process.env.KEYCLOAK_ALLOWED_ROLES || "atp_admin,atp_manager,atp_accountant,atp_staff")
+      String(process.env.KEYCLOAK_ALLOWED_ROLES || "atp_admin,atp_manager,atp_accountant,atp_staff,atp_tour_editor")
         .split(",")
         .map((value) => normalizeText(value))
         .filter(Boolean)
