@@ -22,7 +22,6 @@
     "family"
   ],
   "priority": 50,
-  "travel_duration_days": 12,
   "image": "/public/v1/tour-images/tour_603a63c1-2967-4d78-ae35-13b638c405df/tour_603a63c1-2967-4d78-ae35-13b638c405df.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "mar",
-  "rating": 4.9,
   "legacy_id": "trip-thailand-family-classic",
   "destinations": [
     "thailand"
@@ -130,6 +128,5 @@
     "sv": "En Thailands familjeväg fokuserade på en balanserad första-tursrutt, med familjevänligt tempo och pålitlig logistik på resan.",
     "no": "En familiereise i Thailand fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur.",
     "ar": "يركز خط سير الرحلة العائلي في تايلاند على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة."
-  },
-  "budget_lower_usd": 1300
+  }
 }

@@ -22,7 +22,6 @@
     "culture"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2/tour_b2332c3c-f83d-4b08-97bb-cc8e2d177ab2.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-cambodia-culture-classic",
   "destinations": [
     "cambodia"
@@ -130,6 +128,5 @@
     "sv": "En kulturresplan för Kambodja fokuserade på en balanserad första resa med djup, lokalt liv och meningsfulla guidade besök.",
     "no": "En kulturreise i Kambodsja fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
     "ar": "يركز خط سير الرحلة الثقافي في كمبوديا على مسار الرحلة الأولى المتوازن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
-  },
-  "budget_lower_usd": 780
+  }
 }

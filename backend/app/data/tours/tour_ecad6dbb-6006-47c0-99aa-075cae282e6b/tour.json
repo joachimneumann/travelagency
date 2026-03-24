@@ -22,7 +22,6 @@
     "budget"
   ],
   "priority": 50,
-  "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_ecad6dbb-6006-47c0-99aa-075cae282e6b/tour_ecad6dbb-6006-47c0-99aa-075cae282e6b.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.6,
   "legacy_id": "trip-cambodia-budget-classic",
   "destinations": [
     "cambodia"
@@ -130,6 +128,5 @@
     "sv": "En budgetresplan för Kambodja fokuserade på en balanserad första-tursrutt, med värdefokuserad planering med smart rutt och tydliga inkluderingar.",
     "no": "En budsjettreise for Kambodsja fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger.",
     "ar": "يركز خط سير الرحلة الخاص بميزانية كمبوديا على مسار الرحلة الأولى المتوازن، مع التخطيط الذي يركز على القيمة مع التوجيه الذكي والإضافات الواضحة."
-  },
-  "budget_lower_usd": 610
+  }
 }

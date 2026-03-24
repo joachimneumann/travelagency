@@ -142,8 +142,7 @@ export function createBackendServices({
 
   const tourHelpers = createTourHelpers({
     toursDir: collections.toursDir,
-    safeInt: support.safeInt,
-    safeFloat: support.safeFloat
+    safeInt: support.safeInt
   });
 
   const writeInvoicePdf = createInvoicePdfWriter({

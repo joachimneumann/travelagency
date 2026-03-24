@@ -22,7 +22,6 @@
     "gastronomic-experiences"
   ],
   "priority": 50,
-  "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_cb31c7fa-e0a4-476c-acf8-649ba32fc61f/tour_cb31c7fa-e0a4-476c-acf8-649ba32fc61f.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-cambodia-gastronomic-experiences-classic",
   "destinations": [
     "cambodia"
@@ -130,6 +128,5 @@
     "sv": "En matresplan i Kambodja fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
     "no": "En matreise i Kambodsja fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
     "ar": "يركز خط سير تجارب تذوق الطعام في كمبوديا على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
-  },
-  "budget_lower_usd": 710
+  }
 }

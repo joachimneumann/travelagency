@@ -22,7 +22,6 @@
     "culture"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_d80dea21-d4e1-4408-8b25-33063497ac06/tour_d80dea21-d4e1-4408-8b25-33063497ac06.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-laos-culture-classic",
   "destinations": [
     "laos"
@@ -130,6 +128,5 @@
     "sv": "En Laos kulturresplan fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
     "no": "En Laos kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
     "ar": "يركز خط سير الرحلة الثقافي في لاوس على مسار متوازن للرحلة الأولى، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
-  },
-  "budget_lower_usd": 720
+  }
 }

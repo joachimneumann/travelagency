@@ -22,7 +22,6 @@
     "culture"
   ],
   "priority": 80,
-  "travel_duration_days": 10,
   "image": "/public/v1/tour-images/tour_f49aeb51-4831-428a-9769-0f7cf4d11b27/tour_f49aeb51-4831-428a-9769-0f7cf4d11b27.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 4.8,
   "legacy_id": "trip-vietnam-culture-hoi-an",
   "destinations": [
     "vietnam"
@@ -130,6 +128,5 @@
     "sv": "En resplan för Vietnams kultur fokuserade på en rutt formad runt Hoi An, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
     "no": "En Vietnam-kulturreise fokuserte på en rute formet rundt Hoi An, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk.",
     "ar": "يركز خط سير رحلة الثقافة الفيتنامية على طريق تم تشكيله حول هوي آن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
-  },
-  "budget_lower_usd": 950
+  }
 }

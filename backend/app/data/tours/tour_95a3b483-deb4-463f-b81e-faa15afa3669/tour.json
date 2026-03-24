@@ -22,7 +22,6 @@
     "beach"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_95a3b483-deb4-463f-b81e-faa15afa3669/tour_95a3b483-deb4-463f-b81e-faa15afa3669.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-cambodia-beach-classic",
   "destinations": [
     "cambodia"
@@ -130,6 +128,5 @@
     "sv": "En resplan för Kambodjas strand fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
     "no": "En reiserute på Kambodsja-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse.",
     "ar": "يركز خط سير الرحلة على شاطئ كمبوديا على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
-  },
-  "budget_lower_usd": 960
+  }
 }

@@ -329,7 +329,7 @@ function renderToursMatrix(matrix, totalTours) {
 }
 
 function renderTours(items) {
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.days", "Days"))}</th><th>${escapeHtml(backendT("backend.table.price", "Price"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th></tr></thead>`;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.title", "Title"))}</th><th>${escapeHtml(backendT("backend.table.country", "Country"))}</th><th>${escapeHtml(backendT("backend.table.styles", "Styles"))}</th><th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th></tr></thead>`;
   const rows = items
     .map((tour) => {
       const styles = Array.isArray(tour.styles) ? tour.styles.join(", ") : "";
@@ -340,13 +340,11 @@ function renderTours(items) {
         <td>${escapeHtml(tour.title || "-")}</td>
         <td>${escapeHtml(countries || "-")}</td>
         <td>${escapeHtml(styles || "-")}</td>
-        <td>${escapeHtml(String(tour.travel_duration_days ?? "-"))}</td>
-        <td>${escapeHtml(formatIntegerWithGrouping(tour.budget_lower_usd ?? "-"))}</td>
         <td>${escapeHtml(formatDateTime(tour.updated_at || tour.created_at))}</td>
       </tr>`;
     })
     .join("");
 
-  const body = rows || `<tr><td colspan="7">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
+  const body = rows || `<tr><td colspan="5">${escapeHtml(backendT("backend.tours.no_results", "No tours found"))}</td></tr>`;
   if (els.toursTable) els.toursTable.innerHTML = `${header}<tbody>${body}</tbody>`;
 }

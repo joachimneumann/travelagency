@@ -22,7 +22,6 @@
     "beach"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd/tour_d2cd0a9d-b0a8-48a4-b2cc-13da5de585cd.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-laos-beach-classic",
   "destinations": [
     "laos"
@@ -130,6 +128,5 @@
     "sv": "En resplan till Laos strand fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
     "no": "En reiserute på Laos-stranden fokuserte på en balansert førstetursrute, med avslappet kysttid balansert med lett lokal oppdagelse.",
     "ar": "يركز خط سير الرحلة على شاطئ لاوس على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
-  },
-  "budget_lower_usd": 900
+  }
 }

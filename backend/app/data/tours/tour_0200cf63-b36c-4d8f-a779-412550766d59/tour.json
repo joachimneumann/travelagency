@@ -23,7 +23,6 @@
     "budget"
   ],
   "priority": 50,
-  "travel_duration_days": 11,
   "image": "/public/v1/tour-images/tour_0200cf63-b36c-4d8f-a779-412550766d59/tour_0200cf63-b36c-4d8f-a779-412550766d59.webp",
   "highlights": {
     "en": [
@@ -109,7 +108,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 4.8,
   "legacy_id": "trip-vietnam-grand-expeditions-ha-giang-loop",
   "destinations": [
     "vietnam"
@@ -132,6 +130,5 @@
     "no": "En eventyrreise fra Vietnam fokuserte på et fjellsløyfefokus gjennom Ha Giang, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
     "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على التركيز على حلقة جبلية عبر ها جيانج، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي."
   },
-  "budget_lower_usd": 1070,
   "updated_at": "2026-03-14T07:58:10.956Z"
 }

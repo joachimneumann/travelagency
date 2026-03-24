@@ -22,7 +22,6 @@
     "beach"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1/tour_dffb8f0d-0e87-41c1-a501-a6074f601cb1.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 4.8,
   "legacy_id": "trip-vietnam-beach-classic",
   "destinations": [
     "vietnam"
@@ -130,6 +128,5 @@
     "sv": "En resplan för stranden i Vietnam fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
     "no": "En reiserute på Vietnam-stranden fokuserte på en balansert rute for første tur, med avslappet kysttid balansert med lett lokal oppdagelse.",
     "ar": "يركز خط سير الرحلة على شاطئ فيتنام على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
-  },
-  "budget_lower_usd": 1040
+  }
 }

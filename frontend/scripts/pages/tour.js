@@ -471,10 +471,7 @@ async function loadTour() {
   updateHeader(tour, destinations, styles);
 
   setInput("tour_id", tour.id || "");
-  setInput("tour_travel_duration_days", toInputNumber(tour.travel_duration_days));
-  setInput("tour_budget_lower_usd", toInputNumber(tour.budget_lower_usd));
   setInput("tour_priority", toInputNumber(tour.priority));
-  setInput("tour_rating", toInputNumber(tour.rating));
   setInput("tour_seasonality_start_month", tour.seasonality_start_month || "");
   setInput("tour_seasonality_end_month", tour.seasonality_end_month || "");
   state.localizedContent.short_description_i18n = normalizeLocalizedTextMap(
@@ -505,10 +502,7 @@ async function initializeNewTourForm() {
     destination_codes: [],
     styles: [],
     style_codes: [],
-    travel_duration_days: null,
-    budget_lower_usd: null,
     priority: 50,
-    rating: 0,
     seasonality_start_month: "",
     seasonality_end_month: "",
     short_description: "",
@@ -521,10 +515,7 @@ async function initializeNewTourForm() {
   updateHeader({ title: backendT("tour.new_title", "New tour") }, [], []);
   if (els.subtitle) els.subtitle.textContent = backendT("tour.create_subtitle", "Create a new tour");
   setInput("tour_id", "(new)");
-  setInput("tour_travel_duration_days", "");
-  setInput("tour_budget_lower_usd", "");
   setInput("tour_priority", "50");
-  setInput("tour_rating", "0");
   setInput("tour_seasonality_start_month", "");
   setInput("tour_seasonality_end_month", "");
   state.localizedContent.short_description_i18n = {};
@@ -639,10 +630,7 @@ async function submitForm(event) {
     title: getTourTitleInputValue(),
     destinations: selectedDestinationCountries,
     styles: selectedStyles,
-    travel_duration_days: toNumberOrNull(getInput("tour_travel_duration_days")),
-    budget_lower_usd: toNumberOrNull(getInput("tour_budget_lower_usd")),
     priority: toNumberOrNull(getInput("tour_priority")),
-    rating: toNumberOrNull(getInput("tour_rating")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
     short_description_i18n: readLocalizedTextareas("short_description_i18n"),

@@ -452,16 +452,6 @@ export function createFrontendToursController(ctx) {
         const tags = trip.styles.map((style) => `<span class="tag">${escapeHTML(style)}</span>`).join("");
         const countries = tourDestinations(trip);
         const countriesLabel = countries.join(", ");
-        const displayCurrency = preferredCurrencyForFrontendLang(state.lang);
-        const displayAmount = approximateDisplayAmountFromUSD(trip?.budget_lower_usd, displayCurrency);
-        const priceLabel = Number.isFinite(displayAmount)
-          ? formatDisplayMoney(displayAmount, displayCurrency, state.lang || currentFrontendLang())
-          : formatDisplayMoney(trip?.budget_lower_usd, defaultBookingCurrency, state.lang || currentFrontendLang());
-        const price = typeof trip.budget_lower_usd === "number"
-          ? frontendT("tour.card.from_price", "From ${price}", { price: priceLabel })
-          : frontendT("tour.card.custom_quote", "Custom quote");
-        const rating = typeof trip.rating === "number" ? `★ ${trip.rating.toFixed(1)}` : "";
-        const daysLabel = frontendT("tour.card.days", "{days} days", { days: trip.travel_duration_days });
         const ctaLabel = frontendT("tour.card.plan_trip", "Plan this trip");
         const loading = index < 3 ? "eager" : "lazy";
         const fetchpriority = index < 3 ? "high" : "auto";
@@ -480,16 +470,9 @@ export function createFrontendToursController(ctx) {
               height="800"
             />
             <div class="tour-body">
-              <div class="tour-topline">
-                <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>
-                <span class="rating">${escapeHTML(rating)}</span>
-              </div>
+              <h3 class="tour-title tour-title--topline">${escapeHTML(tripTitle)}</h3>
               <p class="tour-desc">${escapeHTML(tripShortDescription)}</p>
               <div class="tags">${tags}</div>
-              <div class="meta">
-                <span>${escapeHTML(daysLabel)}</span>
-                <span>${escapeHTML(price)}</span>
-              </div>
               <button class="btn btn-primary" type="button" data-open-modal data-trip-id="${escapeAttr(trip.id)}">${escapeHTML(ctaLabel)}</button>
             </div>
           </article>

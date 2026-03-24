@@ -195,7 +195,6 @@ export function createApplicationRoutes({
     normalizeText: support.normalizeText,
     normalizeStringArray: support.normalizeStringArray,
     safeInt: support.safeInt,
-    safeFloat: support.safeFloat,
     toTourImagePublicUrl: tourHelpers.toTourImagePublicUrl,
     tourDestinationCodes: tourHelpers.tourDestinationCodes,
     tourStyleCodes: tourHelpers.tourStyleCodes,

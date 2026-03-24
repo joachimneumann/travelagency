@@ -22,7 +22,6 @@
     "gastronomic-experiences"
   ],
   "priority": 50,
-  "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_1ea73c9c-5ece-4c45-af47-8715ed060bd0/tour_1ea73c9c-5ece-4c45-af47-8715ed060bd0.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-laos-gastronomic-experiences-classic",
   "destinations": [
     "laos"
@@ -130,6 +128,5 @@
     "sv": "En matresplan i Laos fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
     "no": "En matreise fra Laos fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
     "ar": "يركز خط سير تجارب تذوق الطعام في لاوس على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
-  },
-  "budget_lower_usd": 650
+  }
 }

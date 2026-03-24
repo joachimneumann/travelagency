@@ -22,7 +22,6 @@
     "family"
   ],
   "priority": 50,
-  "travel_duration_days": 11,
   "image": "/public/v1/tour-images/tour_33b3d80f-72d6-4889-b219-7424a1e4e9a9/tour_33b3d80f-72d6-4889-b219-7424a1e4e9a9.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 4.9,
   "legacy_id": "trip-vietnam-family-classic",
   "destinations": [
     "vietnam"
@@ -131,6 +129,5 @@
     "no": "En Vietnam-familiereise fokuserte på en balansert førstetursrute, med familievennlig tempo og logistikk på tur.",
     "ar": "يركز خط سير الرحلة العائلي في فيتنام على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية أثناء الرحلة."
   },
-  "budget_lower_usd": 1180,
   "updated_at": "2026-03-15T14:23:58.363Z"
 }

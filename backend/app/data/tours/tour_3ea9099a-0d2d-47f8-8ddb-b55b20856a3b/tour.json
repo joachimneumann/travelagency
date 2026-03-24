@@ -22,7 +22,6 @@
     "luxury"
   ],
   "priority": 50,
-  "travel_duration_days": 12,
   "image": "/public/v1/tour-images/tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b/tour_3ea9099a-0d2d-47f8-8ddb-b55b20856a3b.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 5,
   "legacy_id": "trip-vietnam-luxury-classic",
   "destinations": [
     "vietnam"
@@ -130,6 +128,5 @@
     "sv": "En lyxresplan i Vietnam fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
     "no": "En luksusreise fra Vietnam fokusert på en balansert rute for første tur, med førsteklasses opphold, privat service og signaturøyeblikk.",
     "ar": "يركز خط سير الرحلة الفاخر في فيتنام على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
-  },
-  "budget_lower_usd": 1980
+  }
 }

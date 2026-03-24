@@ -27,7 +27,7 @@ function hasLocalizedContent(value) {
   });
 }
 
-export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
+export function createTourHelpers({ toursDir, safeInt }) {
   function normalizeHighlights(value) {
     if (Array.isArray(value)) return value.map((entry) => normalizeText(entry)).filter(Boolean);
     const normalized = normalizeText(value);
@@ -138,7 +138,6 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
       ...(tour && typeof tour === "object" ? tour : {})
     };
     const legacyShortDescription = next.shortDescription;
-    const legacyBudgetLowerUsd = next.budget_lower_USD;
     delete next.shortDescription;
     delete next.budget_lower_USD;
 
@@ -153,15 +152,9 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
     next.seasonality_end_month = normalizeText(next.seasonality_end_month);
     next.highlights = normalizeLocalizedStringArrayMap(next.highlights);
     next.priority = safeInt(next.priority) ?? 50;
-    next.travel_duration_days = safeInt(next.travel_duration_days) ?? 0;
-    const normalizedBudgetLowerUsd = safeInt(next.budget_lower_usd);
-    const normalizedLegacyBudgetLowerUsd = safeInt(legacyBudgetLowerUsd);
-    next.budget_lower_usd = normalizedBudgetLowerUsd && normalizedBudgetLowerUsd > 0
-      ? normalizedBudgetLowerUsd
-      : normalizedLegacyBudgetLowerUsd && normalizedLegacyBudgetLowerUsd > 0
-        ? normalizedLegacyBudgetLowerUsd
-        : normalizedBudgetLowerUsd ?? 0;
-    next.rating = safeFloat(next.rating) ?? 0;
+    delete next.travel_duration_days;
+    delete next.budget_lower_usd;
+    delete next.rating;
 
     return next;
   }
@@ -181,10 +174,7 @@ export function createTourHelpers({ toursDir, safeInt, safeFloat }) {
       style_codes: styleCodes,
       image: toTourImagePublicUrl(stored.image),
       highlights: resolveLocalizedStringArray(stored.highlights, normalizedLang),
-      budget_lower_usd: safeInt(stored.budget_lower_usd) ?? 0,
-      priority: safeInt(stored.priority) ?? 50,
-      travel_duration_days: safeInt(stored.travel_duration_days) ?? 0,
-      rating: safeFloat(stored.rating) ?? 0
+      priority: safeInt(stored.priority) ?? 50
     };
   }
 

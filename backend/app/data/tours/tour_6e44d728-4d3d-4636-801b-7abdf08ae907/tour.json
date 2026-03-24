@@ -22,7 +22,6 @@
     "gastronomic-experiences"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_6e44d728-4d3d-4636-801b-7abdf08ae907/tour_6e44d728-4d3d-4636-801b-7abdf08ae907.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "mar",
-  "rating": 4.8,
   "legacy_id": "trip-thailand-gastronomic-experiences-classic",
   "destinations": [
     "thailand"
@@ -130,6 +128,5 @@
     "sv": "En matresplan i Thailand fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
     "no": "En matreise i Thailand fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
     "ar": "يركز خط سير تجارب تذوق الطعام في تايلاند على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
-  },
-  "budget_lower_usd": 910
+  }
 }

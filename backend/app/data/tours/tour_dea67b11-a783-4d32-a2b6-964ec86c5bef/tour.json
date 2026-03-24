@@ -22,7 +22,6 @@
     "grand-expeditions"
   ],
   "priority": 50,
-  "travel_duration_days": 10,
   "image": "/public/v1/tour-images/tour_dea67b11-a783-4d32-a2b6-964ec86c5bef/tour_dea67b11-a783-4d32-a2b6-964ec86c5bef.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.8,
   "legacy_id": "trip-laos-grand-expeditions-classic",
   "destinations": [
     "laos"
@@ -130,6 +128,5 @@
     "sv": "En äventyrsresplan till Laos fokuserade på en balanserad första resa med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
     "no": "En Laos eventyrreise fokuserte på en balansert førstetursrute, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
     "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في لاوس على طريق متوازن للرحلة الأولى، مع أيام نشطة ومسارات ذات مناظر خلابة ودعم محلي عملي."
-  },
-  "budget_lower_usd": 840
+  }
 }

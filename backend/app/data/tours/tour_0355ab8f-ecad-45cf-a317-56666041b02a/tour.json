@@ -23,7 +23,6 @@
     "luxury"
   ],
   "priority": 50,
-  "travel_duration_days": 12,
   "image": "/public/v1/tour-images/tour_0355ab8f-ecad-45cf-a317-56666041b02a/tour_0355ab8f-ecad-45cf-a317-56666041b02a.webp",
   "highlights": {
     "en": [
@@ -109,7 +108,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 5,
   "legacy_id": "trip-laos-luxury-classic",
   "updated_at": "2026-02-26T16:06:11.187Z",
   "destinations": [
@@ -132,6 +130,5 @@
     "sv": "En lyxresplan i Laos fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
     "no": "En luksusreise fra Laos fokuserte på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk.",
     "ar": "يركز خط سير الرحلة الفاخر في لاوس على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
-  },
-  "budget_lower_usd": 1840
+  }
 }

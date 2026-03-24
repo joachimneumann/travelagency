@@ -22,7 +22,6 @@
     "culture"
   ],
   "priority": 50,
-  "travel_duration_days": 9,
   "image": "/public/v1/tour-images/tour_1b038e92-b2e0-4edc-a505-3bac9b04284a/tour_1b038e92-b2e0-4edc-a505-3bac9b04284a.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 4.8,
   "legacy_id": "trip-vietnam-culture-classic",
   "destinations": [
     "vietnam"
@@ -130,6 +128,5 @@
     "sv": "En Vietnam-kulturresplan fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
     "no": "En Vietnam-kulturreise fokuserte på en balansert førstetursrute, med arvdybde, lokalt liv og meningsfylte guidede besøk.",
     "ar": "يركز خط سير الرحلة الثقافي الفيتنامي على مسار متوازن للرحلة الأولى، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين هادفة."
-  },
-  "budget_lower_usd": 860
+  }
 }

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-23T23:22:39Z
+# 2026-03-24T04:14:38Z
 
 ---
 openapi: 3.1.0
@@ -3922,17 +3922,8 @@ components:
           type: array
           items:
             type: string
-        travel_duration_days:
-          type: integer
-          nullable: true
-        budget_lower_usd:
-          type: integer
-          nullable: true
         priority:
           type: integer
-          nullable: true
-        rating:
-          type: number
           nullable: true
         seasonality_start_month:
           "$ref": "#/components/schemas/MonthCode"
@@ -6997,17 +6988,8 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TourStyleCode"
-        travel_duration_days:
-          type: integer
-          nullable: true
-        budget_lower_usd:
-          type: integer
-          nullable: true
         priority:
           type: integer
-          nullable: true
-        rating:
-          type: number
           nullable: true
         seasonality_start_month:
           "$ref": "#/components/schemas/MonthCode"

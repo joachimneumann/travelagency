@@ -576,13 +576,7 @@ function setSelectedTourContext(selectedTour) {
       styles: Array.isArray(selectedTour.styles)
         ? selectedTour.styles.map((item) => normalizeText(item)).filter(Boolean)
         : [],
-      seasonality_start_month: normalizeText(selectedTour.seasonality_start_month),
-      travel_duration_days: Number.isFinite(Number(selectedTour.travel_duration_days))
-        ? Number(selectedTour.travel_duration_days)
-        : null,
-      budget_lower_usd: Number.isFinite(Number(selectedTour.budget_lower_usd))
-        ? Number(selectedTour.budget_lower_usd)
-        : null
+      seasonality_start_month: normalizeText(selectedTour.seasonality_start_month)
     }
     : null;
 
@@ -1011,19 +1005,6 @@ function prefillBookingFormWithFilters() {
     const bookingMonth = document.getElementById("bookingMonth");
     if (bookingMonth && firstTravelMonth) {
       setTravelMonthValue(firstTravelMonth);
-    }
-    const bookingDuration = document.getElementById("bookingDuration");
-    if (bookingDuration) {
-      bookingDuration.value = findTravelDurationOptionByDays(state.selectedTour.travel_duration_days);
-    }
-    const preferredCurrency = normalizeCurrencyCode(els.bookingPreferredCurrency?.value || DEFAULT_BOOKING_CURRENCY);
-    renderBudgetOptions(preferredCurrency);
-    if (els.bookingBudget) {
-      els.bookingBudget.value = findBudgetOptionValueByLowerUSD(
-        preferredCurrency,
-        state.selectedTour.budget_lower_usd,
-        state.selectedTour.travel_duration_days
-      );
     }
   }
   if (els.bookingStepTitle) {

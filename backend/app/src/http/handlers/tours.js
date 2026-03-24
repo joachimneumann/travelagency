@@ -5,7 +5,6 @@ export function createTourHandlers(deps) {
     normalizeText,
     normalizeStringArray,
     safeInt,
-    safeFloat,
     toTourImagePublicUrl,
     tourDestinationCodes,
     tourStyleCodes,
@@ -124,18 +123,6 @@ export function createTourHandlers(deps) {
     if (payload.priority !== undefined || isCreate) {
       const priority = safeInt(payload.priority);
       next.priority = priority === null ? 50 : priority;
-    }
-    if (payload.travel_duration_days !== undefined || isCreate) {
-      const travelDurationDays = safeInt(payload.travel_duration_days);
-      next.travel_duration_days = travelDurationDays === null ? 0 : travelDurationDays;
-    }
-    if (payload.budget_lower_usd !== undefined || isCreate) {
-      const budgetLowerUsd = safeInt(payload.budget_lower_usd);
-      next.budget_lower_usd = budgetLowerUsd === null ? 0 : budgetLowerUsd;
-    }
-    if (payload.rating !== undefined || isCreate) {
-      const rating = safeFloat(payload.rating);
-      next.rating = rating === null ? 0 : rating;
     }
 
     return normalizeTourForStorage(next);

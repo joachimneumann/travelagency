@@ -24,7 +24,6 @@
     "luxury"
   ],
   "priority": 55,
-  "travel_duration_days": 9,
   "highlights": {
     "en": [
       "Beachside downtime around Da Nang and Hoi An with premium spa appointments",
@@ -109,7 +108,6 @@
   },
   "seasonality_start_month": "feb",
   "seasonality_end_month": "aug",
-  "rating": 4.9,
   "legacy_id": "trip-vietnam-central-spa-coast-escape",
   "destinations": [
     "vietnam"
@@ -132,7 +130,6 @@
     "no": "En gjenoppbyggende reiserute til sentralt Vietnam som kombinerer kysttid med polerte spa-opplevelser, sightseeing med lite stress og privat støtte hele veien.",
     "ar": "خط سير رحلة مجدد في وسط فيتنام يجمع بين الوقت الساحلي وتجارب السبا المصقولة ومشاهدة المعالم السياحية منخفضة التوتر والدعم الخاص في جميع الأنحاء."
   },
-  "budget_lower_usd": 1120,
   "image": "/public/v1/tour-images/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac.webp",
   "updated_at": "2026-03-23T06:31:04Z"
 }

@@ -22,7 +22,6 @@
     "family"
   ],
   "priority": 50,
-  "travel_duration_days": 11,
   "image": "/public/v1/tour-images/tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03/tour_8d0d1d98-a571-44bc-bbd3-db4c01410f03.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "feb",
-  "rating": 4.9,
   "legacy_id": "trip-cambodia-family-classic",
   "destinations": [
     "cambodia"
@@ -130,6 +128,5 @@
     "sv": "En familjeväg i Kambodja fokuserade på en balanserad första resa med familjevänligt tempo och pålitlig logistik på resan.",
     "no": "En Kambodsja familie reiserute fokusert på en balansert første tur rute, med familievennlig tempo og pålitelig logistikk på tur.",
     "ar": "يركز خط سير الرحلة العائلي في كمبوديا على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة."
-  },
-  "budget_lower_usd": 1100
+  }
 }

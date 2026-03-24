@@ -23,7 +23,6 @@
     "culture"
   ],
   "priority": 55,
-  "travel_duration_days": 7,
   "highlights": {
     "en": [
       "Slow mornings in Hoi An with daily spa time built into the route",
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "feb",
   "seasonality_end_month": "aug",
-  "rating": 4.8,
   "legacy_id": "trip-vietnam-hoi-an-wellness-reset",
   "destinations": [
     "vietnam"
@@ -131,7 +129,6 @@
     "no": "En rolig Vietnam-uke bygget rundt Hoi An, som kombinerer skånsom kulturell oppdagelse med spa-ritualer, enkel bevegelse og rolig nedetid.",
     "ar": "أسبوع هادئ في فيتنام يتمحور حول هوي آن، ويجمع بين الاكتشاف الثقافي اللطيف وطقوس السبا، وسهولة الحركة، ووقت التوقف عن العمل على مهل."
   },
-  "budget_lower_usd": 780,
   "image": "/public/v1/tour-images/tour_adbaed36-e73a-4f34-b5c6-b961b172a401/tour_adbaed36-e73a-4f34-b5c6-b961b172a401.webp",
   "updated_at": "2026-03-23T06:30:23Z"
 }

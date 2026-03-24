@@ -22,7 +22,6 @@
     "budget"
   ],
   "priority": 50,
-  "travel_duration_days": 8,
   "image": "/public/v1/tour-images/tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5/tour_8d582aae-2bf2-44c5-bb03-f0250b21c8f5.webp",
   "highlights": {
     "en": [
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "oct",
   "seasonality_end_month": "apr",
-  "rating": 4.6,
   "legacy_id": "trip-vietnam-budget-classic",
   "destinations": [
     "vietnam"
@@ -130,6 +128,5 @@
     "sv": "En budgetresplan för Vietnam fokuserade på en balanserad förstaresasrutt, med värdefokuserad planering med smart rutt och tydliga inklusioner.",
     "no": "En Vietnam-budsjettreise fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger.",
     "ar": "يركز خط سير الرحلة الاقتصادي في فيتنام على مسار الرحلة الأولى المتوازن، مع التخطيط الذي يركز على القيمة مع التوجيه الذكي والإضافات الواضحة."
-  },
-  "budget_lower_usd": 690
+  }
 }

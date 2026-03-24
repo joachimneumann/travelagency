@@ -23,7 +23,6 @@
     "culture"
   ],
   "priority": 55,
-  "travel_duration_days": 7,
   "highlights": {
     "en": [
       "Gentle Chiang Mai culture days balanced with spa recovery",
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "mar",
-  "rating": 4.7,
   "legacy_id": "trip-thailand-chiang-mai-wellness-mountain-calm",
   "destinations": [
     "thailand"
@@ -131,7 +129,6 @@
     "no": "En reiserute i Nord-Thailand for reisende som ønsker templer og matkultur uten tretthet, med spa-gjenoppretting innebygd i ruten.",
     "ar": "خط سير رحلة شمال تايلاند للمسافرين الذين يريدون المعابد وثقافة الطعام دون تعب، مع وجود منتجع صحي مدمج في المسار."
   },
-  "budget_lower_usd": 890,
   "image": "/public/v1/tour-images/tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a/tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a.webp",
   "updated_at": "2026-03-23T06:32:25Z"
 }

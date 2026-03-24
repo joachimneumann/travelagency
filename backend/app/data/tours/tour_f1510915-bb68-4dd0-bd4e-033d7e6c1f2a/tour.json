@@ -23,7 +23,6 @@
     "luxury"
   ],
   "priority": 55,
-  "travel_duration_days": 8,
   "highlights": {
     "en": [
       "Riverside Phnom Penh and boutique downtime with wellness sessions",
@@ -108,7 +107,6 @@
   },
   "seasonality_start_month": "nov",
   "seasonality_end_month": "mar",
-  "rating": 4.7,
   "legacy_id": "trip-cambodia-mekong-wellness-escape",
   "destinations": [
     "cambodia"
@@ -131,7 +129,6 @@
     "no": "En Kambodsja-reise designet rundt mykere bydager og restitusjon ved elvebredden, som kombinerer boutique-opphold med spa-tid og rolige kulturelle besøk.",
     "ar": "تم تصميم رحلة كمبوديا لتتمحور حول أيام المدينة الهادئة والتعافي على ضفاف النهر، وتجمع بين الإقامات البوتيكية ووقت السبا والزيارات الثقافية غير المستعجلة."
   },
-  "budget_lower_usd": 980,
   "image": "/public/v1/tour-images/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a.webp",
   "updated_at": "2026-03-23T06:33:50Z"
 }
