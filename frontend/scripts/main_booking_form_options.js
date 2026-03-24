@@ -324,14 +324,43 @@ export function createFrontendBookingFormOptionsController(ctx) {
       els.bookingPreferredCurrency.value || preferredCurrencyForLanguageValue(els.bookingLanguage?.value || preferredBookingLanguageForFrontendLang())
     );
     renderBudgetOptions(els.bookingPreferredCurrency.value);
-    els.bookingPreferredCurrency.addEventListener("change", () => {
-      renderBudgetOptions(els.bookingPreferredCurrency.value);
-    });
-    els.bookingLanguage?.addEventListener("change", () => {
-      const nextCurrency = preferredCurrencyForLanguageValue(els.bookingLanguage.value || preferredBookingLanguageForFrontendLang());
-      els.bookingPreferredCurrency.value = nextCurrency;
-      renderBudgetOptions(nextCurrency);
-    });
+    if (els.bookingPreferredCurrency.dataset.bound !== "1") {
+      els.bookingPreferredCurrency.addEventListener("change", () => {
+        renderBudgetOptions(els.bookingPreferredCurrency.value);
+      });
+      els.bookingLanguage?.addEventListener("change", () => {
+        const nextCurrency = preferredCurrencyForLanguageValue(els.bookingLanguage.value || preferredBookingLanguageForFrontendLang());
+        els.bookingPreferredCurrency.value = nextCurrency;
+        renderBudgetOptions(nextCurrency);
+      });
+      els.bookingPreferredCurrency.dataset.bound = "1";
+      if (els.bookingLanguage) {
+        els.bookingLanguage.dataset.bound = "1";
+      }
+    }
+  }
+
+  function refreshLocalizedBookingFormOptions() {
+    const currentPreferredLanguage = languageCodeFromValue(els.bookingLanguage?.value || "") || preferredBookingLanguageForFrontendLang();
+    const currentPreferredCurrency = normalizeCurrencyCode(
+      els.bookingPreferredCurrency?.value || preferredCurrencyForLanguageValue(currentPreferredLanguage)
+    );
+    const currentBudget = normalizeText(els.bookingBudget?.value) || "not_decided_yet";
+    const currentTravelMonth = normalizeText(els.bookingMonth?.value);
+
+    populateGeneratedWebFormOptions();
+    if (els.bookingLanguage) {
+      els.bookingLanguage.value = currentPreferredLanguage;
+    }
+    if (els.bookingPreferredCurrency) {
+      els.bookingPreferredCurrency.value = currentPreferredCurrency;
+    }
+    renderBudgetOptions(currentPreferredCurrency);
+    if (els.bookingBudget && Array.from(els.bookingBudget.options).some((option) => option.value === currentBudget)) {
+      els.bookingBudget.value = currentBudget;
+    }
+    populateTravelMonthSelects();
+    setTravelMonthValue(currentTravelMonth);
   }
 
   function travelMonthYearOptions(requiredYear = "") {
@@ -500,6 +529,7 @@ export function createFrontendBookingFormOptionsController(ctx) {
     preferredBookingLanguageForFrontendLang,
     preferredCurrencyForFrontendLang,
     preferredCurrencyForLanguageValue,
+    refreshLocalizedBookingFormOptions,
     renderBudgetOptions,
     setTravelMonthValue,
     setupBookingBudgetOptions,

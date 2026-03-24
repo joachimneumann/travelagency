@@ -18,7 +18,8 @@
 
   const state = {
     lang: 'en',
-    dict: {}
+    dict: {},
+    switchToken: 0
   };
 
   window.frontendT = function frontendT(id, fallback, vars) {
@@ -32,6 +33,7 @@
     applyDataI18nAttributes,
     applyLocalizedControlDirection,
     mountLanguageMenu,
+    setLang: (lang) => switchLanguage(lang),
     translateDocument: () => {
       applyDataI18nAttributes(document);
       applyLocalizedControlDirection(document);
@@ -41,13 +43,39 @@
   window.__FRONTEND_I18N_PROMISE = init();
 
   async function init() {
-    state.lang = resolveLang();
+    await switchLanguage(resolveLang(), { persist: false, updateUrl: false, readyEvent: false });
+    window.dispatchEvent(new CustomEvent('frontend-i18n-ready', { detail: { lang: state.lang } }));
+  }
+
+  async function switchLanguage(nextLang, { persist = true, updateUrl = true, readyEvent = true } = {}) {
+    const normalizedLang = normalizeSupportedLang(nextLang);
+    const requestToken = ++state.switchToken;
+    const dict = await loadDictionary(normalizedLang);
+    if (requestToken !== state.switchToken) return state.lang;
+
+    state.lang = normalizedLang;
+    state.dict = dict;
+
+    if (persist) {
+      localStorage.setItem(CONFIG.storageKey, normalizedLang);
+    }
+
     applyFrontendLanguagePresentation();
-    state.dict = await loadDictionary(state.lang);
     applyDataI18nAttributes(document);
     applyLocalizedControlDirection(document);
     mountLanguageMenu();
-    window.dispatchEvent(new CustomEvent('frontend-i18n-ready', { detail: { lang: state.lang } }));
+
+    if (updateUrl) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', normalizedLang);
+      window.history.replaceState(window.history.state, '', url.toString());
+    }
+
+    if (readyEvent) {
+      window.dispatchEvent(new CustomEvent('frontend-i18n-changed', { detail: { lang: normalizedLang } }));
+    }
+
+    return normalizedLang;
   }
 
   function currentDirection() {
@@ -94,15 +122,20 @@
     return CONFIG.defaultLang;
   }
 
+  function normalizeSupportedLang(value) {
+    const normalized = normalizeText(value).toLowerCase();
+    return CONFIG.supported.includes(normalized) ? normalized : CONFIG.defaultLang;
+  }
+
   async function loadDictionary(lang) {
     try {
-      const response = await fetch(`${CONFIG.basePath}/${lang}.json`, { cache: 'no-store' });
+      const response = await fetch(`${CONFIG.basePath}/${lang}.json`);
       if (response.ok) return await response.json();
     } catch {}
 
     if (lang !== CONFIG.defaultLang) {
       try {
-        const fallback = await fetch(`${CONFIG.basePath}/${CONFIG.defaultLang}.json`, { cache: 'no-store' });
+        const fallback = await fetch(`${CONFIG.basePath}/${CONFIG.defaultLang}.json`);
         if (fallback.ok) return await fallback.json();
       } catch {}
     }
@@ -112,18 +145,16 @@
 
   function mountLanguageMenu() {
     const mount = document.getElementById('frontendLangMenuMount');
-    if (!mount || mount.dataset.langMounted === '1') return;
-    mount.dataset.langMounted = '1';
-    mount.replaceChildren(createLanguageMenu());
+    if (!mount) return;
+    let root = mount.querySelector('[data-lang-menu="true"]');
+    if (!root) {
+      root = createLanguageMenu();
+      mount.replaceChildren(root);
+    }
+    renderLanguageMenu(root);
   }
 
   function createLanguageMenu() {
-    const active = LANGUAGES.find((item) => item.code === state.lang) || LANGUAGES[0] || {
-      code: state.lang || CONFIG.defaultLang,
-      label: (state.lang || CONFIG.defaultLang).toUpperCase(),
-      shortLabel: (state.lang || CONFIG.defaultLang).toUpperCase(),
-      flagClass: `flag-${state.lang || CONFIG.defaultLang}`
-    };
     const root = document.createElement('div');
     root.className = 'lang-menu';
     root.setAttribute('data-lang-menu', 'true');
@@ -131,27 +162,15 @@
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'lang-menu-trigger';
+    trigger.setAttribute('data-lang-menu-trigger', 'true');
     trigger.setAttribute('aria-haspopup', 'menu');
     trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-label', window.frontendT('lang.select_label', 'Select language'));
-    trigger.innerHTML = `
-      <span class="lang-flag ${escapeHtml(active.flagClass)}" aria-hidden="true"></span>
-      <span class="lang-menu-code">${escapeHtml(active.shortLabel)}</span>
-      <span class="lang-menu-caret" aria-hidden="true"></span>
-    `;
 
     const panel = document.createElement('div');
     panel.className = 'lang-menu-panel';
+    panel.setAttribute('data-lang-menu-panel', 'true');
     panel.setAttribute('role', 'menu');
     panel.hidden = true;
-    panel.innerHTML = LANGUAGES.filter((item) => item.code !== active.code)
-      .map((item) => `
-        <button type="button" class="lang-menu-item" data-lang-option="${escapeHtml(item.code)}" role="menuitem">
-          <span class="lang-flag ${escapeHtml(item.flagClass)}" aria-hidden="true"></span>
-          <span class="lang-menu-label">${escapeHtml(item.label)}</span>
-        </button>
-      `)
-      .join('');
 
     const closeMenu = () => {
       root.classList.remove('is-open');
@@ -170,17 +189,18 @@
       else openMenu();
     });
 
-    panel.querySelectorAll('[data-lang-option]').forEach((item) => {
-      item.addEventListener('click', () => {
-        const next = normalizeText(item.getAttribute('data-lang-option')).toLowerCase() || CONFIG.defaultLang;
-        localStorage.setItem(CONFIG.storageKey, next);
-        const url = new URL(window.location.href);
-        url.searchParams.set('lang', next);
-        window.location.href = url.toString();
-      });
+    root.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const option = target.closest('[data-lang-option]');
+      if (!option || !root.contains(option)) return;
+      closeMenu();
+      const next = normalizeSupportedLang(option.getAttribute('data-lang-option'));
+      void switchLanguage(next);
     });
 
     document.addEventListener('click', (event) => {
+      if (!root.isConnected) return;
       if (!root.contains(event.target)) closeMenu();
     });
 
@@ -191,6 +211,37 @@
     root.appendChild(trigger);
     root.appendChild(panel);
     return root;
+  }
+
+  function renderLanguageMenu(root) {
+    if (!root) return;
+    const trigger = root.querySelector('[data-lang-menu-trigger="true"]');
+    const panel = root.querySelector('[data-lang-menu-panel="true"]');
+    if (!trigger || !panel) return;
+    const active = LANGUAGES.find((item) => item.code === state.lang) || LANGUAGES[0] || {
+      code: state.lang || CONFIG.defaultLang,
+      label: (state.lang || CONFIG.defaultLang).toUpperCase(),
+      shortLabel: (state.lang || CONFIG.defaultLang).toUpperCase(),
+      flagClass: `flag-${state.lang || CONFIG.defaultLang}`
+    };
+
+    trigger.setAttribute('aria-label', window.frontendT('lang.select_label', 'Select language'));
+    trigger.innerHTML = `
+      <span class="lang-flag ${escapeHtml(active.flagClass)}" aria-hidden="true"></span>
+      <span class="lang-menu-code">${escapeHtml(active.shortLabel)}</span>
+      <span class="lang-menu-caret" aria-hidden="true"></span>
+    `;
+    panel.innerHTML = LANGUAGES.filter((item) => item.code !== active.code)
+      .map((item) => `
+        <button type="button" class="lang-menu-item" data-lang-option="${escapeHtml(item.code)}" role="menuitem">
+          <span class="lang-flag ${escapeHtml(item.flagClass)}" aria-hidden="true"></span>
+          <span class="lang-menu-label">${escapeHtml(item.label)}</span>
+        </button>
+      `)
+      .join('');
+    root.classList.remove('is-open');
+    panel.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
   }
 
   function applyDataI18nAttributes(root) {

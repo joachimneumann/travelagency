@@ -1690,6 +1690,85 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(source, /\/tours\.html/, "Caddy should serve tours.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
   }
+  assert.match(
+    stagingCaddy,
+    /import staging_html_no_cache_headers[\s\S]*import staging_static_cache_headers/,
+    "Staging should scope no-cache headers to HTML entry pages while enabling short-lived caching for static assets"
+  );
+  assert.match(
+    stagingCaddy,
+    /@staging_static path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/shared\/\* \/site\.webmanifest/,
+    "Staging should explicitly mark frontend scripts, dictionaries, shared bundles, and assets as cacheable static files"
+  );
+  assert.doesNotMatch(
+    stagingCaddy,
+    /staging\.asiatravelplan\.com \{[\s\S]*import staging_cache_headers/,
+    "Staging should no longer apply a global no-store policy to every response"
+  );
+});
+
+test("frontend language switching updates the homepage in place instead of forcing a full page reload", async () => {
+  const frontendI18nPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "frontend_i18n.js");
+  const mainPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main.js");
+  const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
+  const bookingFormOptionsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_booking_form_options.js");
+  const [frontendI18nSource, mainSource, mainToursSource, bookingFormOptionsSource] = await Promise.all([
+    readFile(frontendI18nPath, "utf8"),
+    readFile(mainPath, "utf8"),
+    readFile(mainToursPath, "utf8"),
+    readFile(bookingFormOptionsPath, "utf8")
+  ]);
+
+  assert.match(
+    frontendI18nSource,
+    /async function switchLanguage\(nextLang,[\s\S]*window\.history\.replaceState[\s\S]*frontend-i18n-changed/,
+    "Frontend i18n should switch languages in place, update the URL, and emit a change event"
+  );
+  assert.doesNotMatch(
+    frontendI18nSource,
+    /panel\.querySelectorAll\('\[data-lang-option\]'\)[\s\S]*window\.location\.href = url\.toString\(\)/,
+    "Frontend language menu should no longer navigate the whole page on option click"
+  );
+  assert.match(
+    mainSource,
+    /window\.addEventListener\("frontend-i18n-changed", \(\) => \{[\s\S]*handleFrontendLanguageChanged\(\)/,
+    "Homepage boot should listen for frontend language changes and refresh localized data in place"
+  );
+  assert.match(
+    mainSource,
+    /function scheduleDeferredTask\(task,[\s\S]*requestIdleCallback[\s\S]*setTimeout/,
+    "Homepage should defer non-critical language-switch follow-up work via idle time or a short timeout fallback"
+  );
+  assert.match(
+    mainSource,
+    /async function init\(\)[\s\S]*scheduleDeferredAuthStatusLoad\(\)[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)/,
+    "Homepage init should defer auth status loading and tour image prewarming instead of doing them on the first critical render"
+  );
+  assert.match(
+    mainSource,
+    /async function handleFrontendLanguageChanged\(\)[\s\S]*refreshLocalizedBookingFormOptions\(\)[\s\S]*loadTrips\(\)[\s\S]*populateFilterOptions\(\)[\s\S]*applyFilters\(\)/,
+    "Homepage language refresh should reload localized tours and rerender filter-driven content without a full navigation"
+  );
+  assert.match(
+    mainSource,
+    /async function handleFrontendLanguageChanged\(\)[\s\S]*scheduleDeferredTourImagePrewarm\(state\.trips\)[\s\S]*renderFormStep\(\)/,
+    "Homepage language refresh should requeue image prewarming after the localized tour list is refreshed"
+  );
+  assert.match(
+    bookingFormOptionsSource,
+    /function refreshLocalizedBookingFormOptions\(\)[\s\S]*populateGeneratedWebFormOptions\(\)[\s\S]*renderBudgetOptions\([\s\S]*populateTravelMonthSelects\(\)/,
+    "Booking form option helpers should expose a localized refresh path for the in-place homepage language switch"
+  );
+  assert.match(
+    mainToursSource,
+    /const toursRequest = publicToursRequest\({[\s\S]*query: \{ lang: currentFrontendLang\(\) \}[\s\S]*const response = await fetch\(toursRequest\.url\);/,
+    "Homepage tour loading should stop forcing uncached cache-busted requests on every language change"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /tripsRequestVersion|cache:\s*"no-store"/,
+    "Homepage tour loading should not carry a per-load version cache buster or no-store fetch mode"
+  );
 });
 
 test("runtime links use direct tours and settings pages instead of backend section query routes", async () => {

@@ -59,12 +59,14 @@ const state = {
   visibleToursCount: 3,
   showMoreUsed: false,
   selectedTour: null,
-  websiteAuthenticated: false
+  websiteAuthenticated: false,
+  websiteAuthenticatedUser: ""
 };
 
 let lastBookingModalTrigger = null;
+let authStatusLoadScheduled = false;
+let tourImagePrewarmToken = 0;
 
-const TRIPS_REQUEST_VERSION = Date.now();
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -166,6 +168,7 @@ const {
   preferredBookingLanguageForFrontendLang,
   preferredCurrencyForFrontendLang,
   preferredCurrencyForLanguageValue,
+  refreshLocalizedBookingFormOptions,
   renderBudgetOptions,
   setTravelMonthValue,
   setupBookingBudgetOptions,
@@ -176,7 +179,6 @@ const toursController = createFrontendToursController({
   els,
   apiBaseOrigin: API_BASE_ORIGIN,
   backendBaseUrl: BACKEND_BASE_URL,
-  tripsRequestVersion: TRIPS_REQUEST_VERSION,
   initialVisibleTours: INITIAL_VISIBLE_TOURS,
   showMoreBatch: SHOW_MORE_BATCH,
   toursCacheTtlMs: TOURS_CACHE_TTL_MS,
@@ -220,6 +222,9 @@ init();
 async function init() {
   await waitForFrontendI18n();
   state.lang = currentFrontendLang();
+  window.addEventListener("frontend-i18n-changed", () => {
+    void handleFrontendLanguageChanged();
+  });
   syncI18nManagedLabels();
   setupTravelMonthControls();
   setupMobileNav();
@@ -227,7 +232,7 @@ async function init() {
   setupHeroScroll();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
-  loadWebsiteAuthStatus();
+  scheduleDeferredAuthStatusLoad();
   setupModal();
   setupFormNavigation();
   setupLiveValidationReset();
@@ -255,7 +260,6 @@ async function init() {
     state.filterOptions.styles = [];
   }
   normalizeActiveFiltersFromOptions();
-  prewarmTourImages(state.trips);
 
   populateFilterOptions();
   setupFilterSelectPanels();
@@ -263,6 +267,33 @@ async function init() {
   applyFilters();
   setupFilterEvents();
   prefillBookingFormWithFilters();
+  scheduleDeferredTourImagePrewarm(state.trips);
+}
+
+function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = {}) {
+  if (typeof task !== "function") return;
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(() => task(), { timeout });
+    return;
+  }
+  window.setTimeout(() => task(), fallbackDelayMs);
+}
+
+function scheduleDeferredAuthStatusLoad() {
+  if (authStatusLoadScheduled) return;
+  authStatusLoadScheduled = true;
+  scheduleDeferredTask(() => {
+    void loadWebsiteAuthStatus();
+  }, { timeout: 1500, fallbackDelayMs: 350 });
+}
+
+function scheduleDeferredTourImagePrewarm(tours) {
+  const scheduledToken = ++tourImagePrewarmToken;
+  const snapshot = Array.isArray(tours) ? tours.slice() : [];
+  scheduleDeferredTask(() => {
+    if (scheduledToken !== tourImagePrewarmToken) return;
+    prewarmTourImages(snapshot);
+  }, { timeout: 2000, fallbackDelayMs: 500 });
 }
 
 function syncI18nManagedLabels() {
@@ -279,7 +310,7 @@ function syncI18nManagedLabels() {
     privacyLink.setAttribute("href", withLangUrl("/privacy.html"));
   }
   syncLocalizedControlLanguage();
-  updateBackendButtonLabel({ authenticated: state.websiteAuthenticated, user: "" });
+  updateBackendButtonLabel({ authenticated: state.websiteAuthenticated, user: state.websiteAuthenticatedUser });
 }
 
 function syncLocalizedControlLanguage() {
@@ -422,20 +453,112 @@ async function loadWebsiteAuthStatus() {
     const { response, payload } = await fetchAuthMe(BACKEND_BASE_URL);
     if (!response.ok || !payload?.authenticated) {
       state.websiteAuthenticated = false;
+      state.websiteAuthenticatedUser = "";
       placeBackendLogin(false);
       updateBackendButtonLabel({ authenticated: false, user: "" });
       return;
     }
     const user = payload.user?.preferred_username || payload.user?.email || payload.user?.sub || "authenticated user";
     state.websiteAuthenticated = true;
+    state.websiteAuthenticatedUser = user;
     placeBackendLogin(true);
     updateBackendButtonLabel({ authenticated: true, user });
   } catch {
     state.websiteAuthenticated = false;
+    state.websiteAuthenticatedUser = "";
     placeBackendLogin(false);
     updateBackendButtonLabel({ authenticated: false, user: "" });
   } finally {
     els.backendLoginContainer.classList.remove("backend-login--deferred");
+  }
+}
+
+function filterOptionEntries(kind) {
+  const raw = kind === "destination" ? state.filterOptions.destinations : state.filterOptions.styles;
+  return (Array.isArray(raw) ? raw : [])
+    .map((item) => ({
+      code: normalizeText(item?.code || item),
+      label: normalizeText(item?.label || item?.code || item)
+    }))
+    .filter((item) => item.code && item.label);
+}
+
+function readBookingStaticFieldValues(fieldId) {
+  const field = document.getElementById(fieldId);
+  if (!field) return [];
+  return Array.from(field.querySelectorAll('input[type="hidden"][name]'))
+    .map((input) => normalizeText(input.value))
+    .filter(Boolean);
+}
+
+function mapBookingSelectionLabelsToCodes(values, kind) {
+  const options = filterOptionEntries(kind);
+  return Array.from(new Set((Array.isArray(values) ? values : [])
+    .map((value) => {
+      const normalizedValue = normalizeText(value);
+      if (!normalizedValue) return "";
+      const lower = normalizedValue.toLowerCase();
+      const match = options.find((option) => {
+        const code = normalizeText(option.code).toLowerCase();
+        const label = normalizeText(option.label).toLowerCase();
+        return lower === code || lower === label;
+      });
+      return normalizeText(match?.code);
+    })
+    .filter(Boolean)));
+}
+
+async function handleFrontendLanguageChanged() {
+  state.lang = currentFrontendLang();
+  const selectedTourId = normalizeText(state.selectedTour?.id || els.booking_tour_id?.value);
+  const preservedBookingDestinationCodes = mapBookingSelectionLabelsToCodes(
+    readBookingStaticFieldValues("bookingDestination"),
+    "destination"
+  );
+  const preservedBookingStyleCodes = mapBookingSelectionLabelsToCodes(
+    readBookingStaticFieldValues("bookingStyle"),
+    "style"
+  );
+
+  syncI18nManagedLabels();
+  refreshLocalizedBookingFormOptions();
+
+  try {
+    const toursPayload = await loadTrips();
+    state.trips = Array.isArray(toursPayload?.items) ? toursPayload.items : [];
+    state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
+      ? toursPayload.available_destinations
+      : [];
+    state.filterOptions.styles = Array.isArray(toursPayload?.available_styles)
+      ? toursPayload.available_styles
+      : [];
+    normalizeActiveFiltersFromOptions();
+
+    if (selectedTourId) {
+      const selectedTour = state.trips.find((trip) => trip.id === selectedTourId);
+      if (selectedTour) {
+        setSelectedTourContext(selectedTour);
+      } else {
+        clearSelectedTourContext();
+      }
+    }
+
+    populateFilterOptions();
+    syncFilterInputs();
+
+    if (preservedBookingDestinationCodes.length) {
+      setBookingField("bookingDestination", filterLabels(preservedBookingDestinationCodes, "destination"));
+    }
+    if (preservedBookingStyleCodes.length) {
+      setBookingField("bookingStyle", filterLabels(preservedBookingStyleCodes, "style"));
+    }
+
+    applyFilters();
+  } catch (error) {
+    console.error("Failed to refresh localized tours after frontend language switch.", error);
+  } finally {
+    scheduleDeferredTourImagePrewarm(state.trips);
+    renderFormStep();
   }
 }
 

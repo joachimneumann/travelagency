@@ -11,7 +11,6 @@ export function createFrontendToursController(ctx) {
     els,
     apiBaseOrigin,
     backendBaseUrl,
-    tripsRequestVersion,
     initialVisibleTours,
     showMoreBatch,
     toursCacheTtlMs,
@@ -422,9 +421,9 @@ export function createFrontendToursController(ctx) {
 
     const toursRequest = publicToursRequest({
       baseURL: apiBaseOrigin,
-      query: { v: tripsRequestVersion, lang: currentFrontendLang() }
+      query: { lang: currentFrontendLang() }
     });
-    const response = await fetch(toursRequest.url, { cache: "no-store" });
+    const response = await fetch(toursRequest.url);
     if (!response.ok) {
       throw new Error(`Backend tours request failed with status ${response.status}.`);
     }

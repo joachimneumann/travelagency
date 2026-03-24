@@ -17,12 +17,18 @@
   }
 }
 
-(staging_cache_headers) {
-  header {
+(staging_html_no_cache_headers) {
+  @staging_html path / /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /settings.html /privacy.html /offer-accept.html /traveler-details.html
+  header @staging_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
     Expires "0"
   }
+}
+
+(staging_static_cache_headers) {
+  @staging_static path /assets/* /frontend/scripts/* /frontend/data/* /shared/* /site.webmanifest
+  header @staging_static Cache-Control "public, max-age=300, stale-while-revalidate=600, must-revalidate"
 }
 
 asiatravelplan.com {
@@ -50,7 +56,8 @@ www.asiatravelplan.com {
 staging.asiatravelplan.com {
   import security_headers
   import noindex_headers
-  import staging_cache_headers
+  import staging_html_no_cache_headers
+  import staging_static_cache_headers
   encode zstd gzip
   root * /srv
 
