@@ -13,13 +13,9 @@ Point out that personal data needs to be filled
 
 Suppliers!
 
-Arabic:
-- Translate the staff qualification into the required languages
-
-- also translate the text in the PDF, like this one:
-  We would be happy to hear from you.
-  Warm regards,
-  That's your Asia Travel Plan team.
+Add "Preview Travel Plan PDF" button next to "Create Travel Plan PDF", which opens a PDF, that is not stored in the backend.
+Allow deleting travel plan PDFs
+Add a "sent to customer" checkbox
 
 Index.html: FAQ formatting off
 
@@ -30,3 +26,23 @@ When the deposit paymen has been arrived, I am not sure if I want to we freeze t
 
 
 Freeze travel plan and offer after receiving deposit payment. In payments allow additional items with description to alter the travel plan. Allow creating a modified travel plan. 
+
+
+# review
+Conduct a comprehensive code review with a focus on PDF handling and recent changes.
+
+Specifically:
+	1.	PDF Storage & Structure
+	•	Review how PDFs, temporary PDFs, and temp folders are organized in the backend.
+	•	Evaluate naming conventions for PDF files and their relationship to booking IDs.
+	•	Identify any inconsistencies, risks, or scalability issues in the current structure.
+	2.	Backend ↔ Frontend Consistency
+	•	Verify that PDF locations, naming, and states (temporary vs. final) are correctly handled and reflected in the frontend.
+	•	Check for potential mismatches, edge cases, or user-facing issues.
+	3.	Review of Today’s Changes
+	•	Analyze all code changes made today.
+	•	Identify potential bugs, regressions, or design issues introduced.
+	4.	Recommendations
+	•	Propose improvements for structure, naming, and data flow.
+	•	Suggest best practices for maintainability, scalability, and clarity.
+	•	Highlight any technical debt or areas that should be refactored.
