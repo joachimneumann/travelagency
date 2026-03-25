@@ -24,12 +24,12 @@ const PDF_FONT_REGULAR_CANDIDATES = [
   "/System/Library/Fonts/STHeiti Light.ttc",
   "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/share/fonts/noto/NotoSansKR-Regular.otf",
+  "/usr/share/fonts/opentype/noto/NotoSansKR-Regular.otf",
+  "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
   "/usr/share/fonts/noto/NotoSansCJK-Regular.ttc",
   "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
   "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-  "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-  "/usr/share/fonts/noto/NotoSansKR-Regular.otf",
-  "/usr/share/fonts/opentype/noto/NotoSansKR-Regular.otf",
   "/usr/share/fonts/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Regular.ttf",
@@ -45,12 +45,12 @@ const PDF_FONT_BOLD_CANDIDATES = [
   "/System/Library/Fonts/Supplemental/Songti.ttc",
   "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/share/fonts/noto/NotoSansKR-Bold.otf",
+  "/usr/share/fonts/opentype/noto/NotoSansKR-Bold.otf",
+  "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
   "/usr/share/fonts/noto/NotoSansCJK-Bold.ttc",
   "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
   "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
-  "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
-  "/usr/share/fonts/noto/NotoSansKR-Bold.otf",
-  "/usr/share/fonts/opentype/noto/NotoSansKR-Bold.otf",
   "/usr/share/fonts/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Bold.ttf",
@@ -85,9 +85,28 @@ async function findFirstExistingPath(paths) {
   return null;
 }
 
+function canRegisterPdfFont(candidate) {
+  try {
+    const probe = new PDFDocument({ autoFirstPage: false });
+    probe.registerFont("__probe__", candidate);
+    probe.font("__probe__").fontSize(12);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function findFirstUsablePath(paths) {
+  for (const candidate of paths) {
+    if (!(await fileExists(candidate))) continue;
+    if (canRegisterPdfFont(candidate)) return candidate;
+  }
+  return null;
+}
+
 async function resolvePdfFonts() {
-  const regular = await findFirstExistingPath(PDF_FONT_REGULAR_CANDIDATES);
-  const bold = (await findFirstExistingPath(PDF_FONT_BOLD_CANDIDATES)) || regular;
+  const regular = await findFirstUsablePath(PDF_FONT_REGULAR_CANDIDATES);
+  const bold = (await findFirstUsablePath(PDF_FONT_BOLD_CANDIDATES)) || regular;
   return { regular, bold };
 }
 
