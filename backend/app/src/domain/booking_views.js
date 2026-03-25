@@ -448,6 +448,9 @@ export function createBookingViewHelpers({
         || normalizeText(milestoneState?.milestones?.deposit_received_at)
         || undefined,
       deposit_confirmed_by_atp_staff_id: normalizeText(normalizedBooking?.deposit_confirmed_by_atp_staff_id) || undefined,
+      deposit_receipt_draft_received_at: normalizeText(normalizedBooking?.deposit_receipt_draft_received_at) || undefined,
+      deposit_receipt_draft_confirmed_by_atp_staff_id: normalizeText(normalizedBooking?.deposit_receipt_draft_confirmed_by_atp_staff_id) || undefined,
+      deposit_receipt_draft_reference: normalizeText(normalizedBooking?.deposit_receipt_draft_reference) || undefined,
       milestones: milestoneState.milestones,
       last_action: milestoneState.lastAction,
       last_action_at: milestoneState.lastActionAt,

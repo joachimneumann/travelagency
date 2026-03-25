@@ -108,6 +108,9 @@ import (
 	stage:                           enums.#BookingStage
 	deposit_received_at?:            common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?: common.#Identifier
+	deposit_receipt_draft_received_at?: common.#Timestamp
+	deposit_receipt_draft_confirmed_by_atp_staff_id?: common.#Identifier
+	deposit_receipt_draft_reference?: string
 	milestones?:                     #BookingMilestones
 	last_action?:                    enums.#BookingMilestoneAction
 	last_action_at?:                 common.#Timestamp

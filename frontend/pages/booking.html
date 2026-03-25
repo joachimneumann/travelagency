@@ -587,16 +587,12 @@
 
               <div class="backend-controls" id="pricing_deposit_controls" style="margin-bottom: 1rem;" hidden>
                 <div class="field">
-                  <label for="pricing_deposit_expected_percentage" data-i18n-id="booking.pricing.deposit_expected_percentage">Expected deposit percentage</label>
-                  <input id="pricing_deposit_expected_percentage" type="text" readonly />
-                </div>
-                <div class="field">
-                  <label for="pricing_deposit_expected_amount" data-i18n-id="booking.pricing.deposit_expected_amount">Expected deposit amount</label>
-                  <input id="pricing_deposit_expected_amount" type="text" readonly />
+                  <label for="pricing_deposit_amount" data-i18n-id="booking.pricing.deposit_amount">Deposit amount</label>
+                  <div id="pricing_deposit_amount" class="pricing-deposit-amount-text" aria-live="polite"></div>
                 </div>
                 <div class="field">
                   <label for="pricing_deposit_received_at_input" data-i18n-id="booking.pricing.deposit_received_at">Deposit received at</label>
-                  <input id="pricing_deposit_received_at_input" type="datetime-local" />
+                  <input id="pricing_deposit_received_at_input" type="date" />
                 </div>
                 <div class="field">
                   <label for="pricing_deposit_confirmed_by_select" data-i18n-id="booking.pricing.confirmed_by">Confirmed by</label>
@@ -604,7 +600,12 @@
                 </div>
                 <div class="field">
                   <label for="pricing_deposit_reference_input" data-i18n-id="booking.pricing.deposit_reference">Deposit reference</label>
-                  <input id="pricing_deposit_reference_input" type="text" />
+                  <input id="pricing_deposit_reference_input" type="text" data-i18n-placeholder-id="booking.pricing.deposit_reference_placeholder" placeholder="Bank transfer ref / receipt no. (optional)" />
+                </div>
+                <div class="field field--compact-action">
+                  <label>&nbsp;</label>
+                  <button class="btn pricing-deposit-ack-btn" id="pricing_deposit_received_btn" type="button" data-i18n-id="booking.pricing.full_deposit_received">Full Deposit received</button>
+                  <span id="pricing_deposit_action_hint" class="micro booking-inline-status"></span>
                 </div>
               </div>
 

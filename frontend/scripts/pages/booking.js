@@ -140,6 +140,7 @@ const state = {
 state.dirty = { core: false, note: false, persons: false, travel_plan: false, offer: false, payment_terms: false, pricing: false, invoice: false };
 state.originalTravelPlanSnapshot = "";
 state.originalInvoiceSnapshot = "";
+state.pricingDepositReceiptArmed = false;
 state.pageSaveInFlight = false;
 state.pageDiscardInFlight = false;
 state.pageDirtyBarStatus = "";
@@ -238,11 +239,12 @@ const els = {
   pricingPanelSummary: document.getElementById("pricing_panel_summary"),
   pricing_summary_table: document.getElementById("pricing_summary_table"),
   pricing_deposit_controls: document.getElementById("pricing_deposit_controls"),
-  pricing_deposit_expected_percentage: document.getElementById("pricing_deposit_expected_percentage"),
-  pricing_deposit_expected_amount: document.getElementById("pricing_deposit_expected_amount"),
+  pricing_deposit_amount: document.getElementById("pricing_deposit_amount"),
   pricing_deposit_received_at_input: document.getElementById("pricing_deposit_received_at_input"),
   pricing_deposit_confirmed_by_select: document.getElementById("pricing_deposit_confirmed_by_select"),
   pricing_deposit_reference_input: document.getElementById("pricing_deposit_reference_input"),
+  pricing_deposit_received_btn: document.getElementById("pricing_deposit_received_btn"),
+  pricing_deposit_action_hint: document.getElementById("pricing_deposit_action_hint"),
   pricing_deposit_hint_row: document.getElementById("pricing_deposit_hint_row"),
   pricing_deposit_hint: document.getElementById("pricing_deposit_hint"),
   pricing_currency_input: document.getElementById("pricing_currency_input"),
@@ -308,6 +310,7 @@ function setBookingSectionDirty(sectionKey, isDirty) {
   state.pageSaveActionError = "";
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
+  pricingModule.refreshDepositReceiptActionState?.();
 }
 
 function hasUnsavedBookingChanges() {
@@ -551,13 +554,37 @@ async function init() {
   }
   if (els.pricing_panel) {
     const schedulePricingDirtyState = () => window.setTimeout(updatePricingDirtyState, 0);
-    els.pricing_panel.addEventListener("input", schedulePricingDirtyState);
-    els.pricing_panel.addEventListener("change", schedulePricingDirtyState);
+    els.pricing_panel.addEventListener("input", () => {
+      disarmDepositReceiptConfirmation();
+      schedulePricingDirtyState();
+    });
+    els.pricing_panel.addEventListener("change", (event) => {
+      if (event.target === els.pricing_deposit_confirmed_by_select) {
+        if (String(els.pricing_deposit_confirmed_by_select?.value || "").trim()) {
+          delete els.pricing_deposit_confirmed_by_select.dataset.userClearedSelection;
+        } else {
+          els.pricing_deposit_confirmed_by_select.dataset.userClearedSelection = "true";
+        }
+      }
+      disarmDepositReceiptConfirmation();
+      schedulePricingDirtyState();
+    });
     els.pricing_panel.addEventListener("click", (event) => {
       const button = event.target instanceof Element ? event.target.closest("button") : null;
       if (!(button instanceof HTMLButtonElement)) return;
       if (button.closest(".booking-section__head, .backend-section__head")) return;
       schedulePricingDirtyState();
+    });
+  }
+  if (els.pricing_deposit_received_btn) {
+    els.pricing_deposit_received_btn.addEventListener("click", async () => {
+      const armed = applyDefaultDepositReceiptDraft();
+      if (!armed) return;
+      logBookingSave("[booking-save] Full deposit received requested automatic page save.", {
+        booking_id: state.id || null,
+        dirty: { ...state.dirty }
+      });
+      await savePageEdits();
     });
   }
   if (els.offer_currency_input)
@@ -1047,6 +1074,14 @@ function savePricing() {
   return pricingModule.savePricing();
 }
 
+function applyDefaultDepositReceiptDraft() {
+  return pricingModule.applyDefaultDepositReceiptDraft();
+}
+
+function disarmDepositReceiptConfirmation() {
+  return pricingModule.disarmDepositReceiptConfirmation?.();
+}
+
 function addOfferComponent() {
   return offerModule.addOfferComponent();
 }
@@ -1293,7 +1328,12 @@ const pricingModule = createBookingPricingModule({
   loadActivities,
   escapeHtml,
   captureControlSnapshot,
-  setBookingSectionDirty
+  setBookingSectionDirty,
+  setPageSaveActionError: (message) => {
+    state.pageSaveActionError = normalizeText(message);
+    updatePageDirtyBar();
+  },
+  hasUnsavedBookingChanges
 });
 
 const travelPlanModule = createBookingTravelPlanModule({

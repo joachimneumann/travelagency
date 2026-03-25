@@ -274,11 +274,21 @@ export function createBookingFinanceHandlers(deps) {
     const depositReceiptPayload = payload?.deposit_receipt && typeof payload.deposit_receipt === "object"
       ? payload.deposit_receipt
       : null;
+    const depositReceiptDraftPayload = payload?.deposit_receipt_draft && typeof payload.deposit_receipt_draft === "object"
+      ? payload.deposit_receipt_draft
+      : null;
     const normalizedDepositReceipt = depositReceiptPayload
       ? {
         deposit_received_at: normalizeText(depositReceiptPayload?.deposit_received_at),
         deposit_confirmed_by_atp_staff_id: normalizeText(depositReceiptPayload?.deposit_confirmed_by_atp_staff_id),
         deposit_reference: normalizeText(depositReceiptPayload?.deposit_reference)
+      }
+      : null;
+    const normalizedDepositReceiptDraft = depositReceiptDraftPayload
+      ? {
+        deposit_received_at: normalizeText(depositReceiptDraftPayload?.deposit_received_at),
+        deposit_confirmed_by_atp_staff_id: normalizeText(depositReceiptDraftPayload?.deposit_confirmed_by_atp_staff_id),
+        deposit_reference: normalizeText(depositReceiptDraftPayload?.deposit_reference)
       }
       : null;
     if (normalizedDepositReceipt) {
@@ -308,7 +318,12 @@ export function createBookingFinanceHandlers(deps) {
       && normalizeText(booking?.accepted_deposit_reference) === normalizedDepositReceipt.deposit_reference
       && acceptedRecordAvailable
     );
-    if (!pricingChanged && depositReceiptUnchanged) {
+    const depositReceiptDraftUnchanged = !normalizedDepositReceiptDraft || (
+      normalizeText(booking?.deposit_receipt_draft_received_at) === normalizedDepositReceiptDraft.deposit_received_at
+      && normalizeText(booking?.deposit_receipt_draft_confirmed_by_atp_staff_id) === normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id
+      && normalizeText(booking?.deposit_receipt_draft_reference) === normalizedDepositReceiptDraft.deposit_reference
+    );
+    if (!pricingChanged && depositReceiptUnchanged && depositReceiptDraftUnchanged) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
@@ -334,9 +349,35 @@ export function createBookingFinanceHandlers(deps) {
         return;
       }
     }
+    const draftChanged = Boolean(normalizedDepositReceiptDraft) && (
+      normalizeText(booking?.deposit_receipt_draft_received_at) !== normalizedDepositReceiptDraft.deposit_received_at
+      || normalizeText(booking?.deposit_receipt_draft_confirmed_by_atp_staff_id) !== normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id
+      || normalizeText(booking?.deposit_receipt_draft_reference) !== normalizedDepositReceiptDraft.deposit_reference
+    );
 
     booking.pricing = nextPricingBase;
-    if (pricingChanged) {
+    if (receiptUpdate?.changed) {
+      delete booking.deposit_receipt_draft_received_at;
+      delete booking.deposit_receipt_draft_confirmed_by_atp_staff_id;
+      delete booking.deposit_receipt_draft_reference;
+    } else if (normalizedDepositReceiptDraft) {
+      if (normalizedDepositReceiptDraft.deposit_received_at) {
+        booking.deposit_receipt_draft_received_at = normalizedDepositReceiptDraft.deposit_received_at;
+      } else {
+        delete booking.deposit_receipt_draft_received_at;
+      }
+      if (normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id) {
+        booking.deposit_receipt_draft_confirmed_by_atp_staff_id = normalizedDepositReceiptDraft.deposit_confirmed_by_atp_staff_id;
+      } else {
+        delete booking.deposit_receipt_draft_confirmed_by_atp_staff_id;
+      }
+      if (normalizedDepositReceiptDraft.deposit_reference) {
+        booking.deposit_receipt_draft_reference = normalizedDepositReceiptDraft.deposit_reference;
+      } else {
+        delete booking.deposit_receipt_draft_reference;
+      }
+    }
+    if (pricingChanged || draftChanged) {
       incrementBookingRevision(booking, "pricing_revision");
     }
     if (receiptUpdate?.changed) {

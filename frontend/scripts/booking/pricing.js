@@ -128,7 +128,9 @@ export function createBookingPricingModule(ctx) {
     loadActivities,
     escapeHtml,
     captureControlSnapshot,
-    setBookingSectionDirty
+    setBookingSectionDirty,
+    setPageSaveActionError,
+    hasUnsavedBookingChanges
   } = ctx;
 
   function pricingRevision() {
@@ -162,8 +164,24 @@ export function createBookingPricingModule(ctx) {
     ).trim();
   }
 
+  function savedDepositReceiptDraftReceivedAt() {
+    return String(state.booking?.deposit_receipt_draft_received_at || "").trim();
+  }
+
   function savedDepositConfirmedById() {
     return String(state.booking?.deposit_confirmed_by_atp_staff_id || "").trim();
+  }
+
+  function savedDepositReceiptDraftConfirmedById() {
+    return String(state.booking?.deposit_receipt_draft_confirmed_by_atp_staff_id || "").trim();
+  }
+
+  function setDepositReceiptArmed(value) {
+    state.pricingDepositReceiptArmed = Boolean(value);
+  }
+
+  function depositReceiptIsArmed() {
+    return state.pricingDepositReceiptArmed === true;
   }
 
   function savedDepositReference() {
@@ -171,6 +189,10 @@ export function createBookingPricingModule(ctx) {
       state.booking?.accepted_record?.accepted_deposit_reference
       || ""
     ).trim();
+  }
+
+  function savedDepositReceiptDraftReference() {
+    return String(state.booking?.deposit_receipt_draft_reference || "").trim();
   }
 
   function currentOfferPaymentTerms() {
@@ -193,9 +215,24 @@ export function createBookingPricingModule(ctx) {
     return currentOfferPaymentTermLines().length > 0;
   }
 
+  function hasConfiguredDepositPaymentTerm() {
+    return currentOfferPaymentTermLines().some((line) => (
+      String(line?.kind || "").trim().toUpperCase() === "DEPOSIT"
+      && resolvePaymentTermLineAmount(line, 0) > 0
+    ));
+  }
+
   function findDepositPaymentTermLine() {
     const lines = currentOfferPaymentTermLines();
     return lines.find((line) => String(line?.kind || "").trim().toUpperCase() === "DEPOSIT") || lines[0] || null;
+  }
+
+  function countTravelPlanServices() {
+    const plan = state.travelPlanDraft && typeof state.travelPlanDraft === "object"
+      ? state.travelPlanDraft
+      : state.booking?.travel_plan;
+    const days = Array.isArray(plan?.days) ? plan.days : [];
+    return days.reduce((sum, day) => sum + (Array.isArray(day?.services) ? day.services.length : 0), 0);
   }
 
   function setPricingControlsVisibility(active) {
@@ -229,7 +266,24 @@ export function createBookingPricingModule(ctx) {
 
   function setPricingDepositHint(message) {
     if (!els.pricing_deposit_hint) return;
-    els.pricing_deposit_hint.textContent = message || "";
+    const normalized = message || "";
+    els.pricing_deposit_hint.textContent = normalized;
+    if (els.pricing_deposit_hint_row instanceof HTMLElement) {
+      els.pricing_deposit_hint_row.hidden = !normalized;
+    }
+  }
+
+  function setDepositActionHint(message, type = "info") {
+    if (!els.pricing_deposit_action_hint) return;
+    els.pricing_deposit_action_hint.textContent = message || "";
+    els.pricing_deposit_action_hint.classList.remove(
+      "booking-inline-status--error",
+      "booking-inline-status--success",
+      "booking-inline-status--info"
+    );
+    if (!message) return;
+    const normalizedType = type === "error" || type === "success" ? type : "info";
+    els.pricing_deposit_action_hint.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
   function updatePricingDirtyState() {
@@ -253,9 +307,19 @@ export function createBookingPricingModule(ctx) {
   }
 
   function currentOfferCurrency() {
+    const draftTotal = Number(
+      state.offerDraft?.total_price_cents
+      ?? state.offerDraft?.totals?.total_price_cents
+      ?? 0
+    );
+    const useDraftCurrency = Boolean(
+      (Array.isArray(state.offerDraft?.components) && state.offerDraft.components.length > 0)
+      || (state.offerDraft?.payment_terms && typeof state.offerDraft.payment_terms === "object")
+      || (Number.isFinite(draftTotal) && draftTotal > 0)
+    );
     return normalizeCurrencyCode(
-      state.offerDraft?.payment_terms?.currency
-      || state.offerDraft?.currency
+      (useDraftCurrency ? state.offerDraft?.payment_terms?.currency : "")
+      || (useDraftCurrency ? state.offerDraft?.currency : "")
       || state.booking?.offer?.payment_terms?.currency
       || state.booking?.offer?.currency
       || state.booking?.accepted_record?.accepted_deposit_currency
@@ -264,15 +328,30 @@ export function createBookingPricingModule(ctx) {
     );
   }
 
+  function currentOfferComponents() {
+    if (Array.isArray(state.offerDraft?.components) && state.offerDraft.components.length > 0) {
+      return state.offerDraft.components;
+    }
+    if (Array.isArray(state.booking?.offer?.components)) {
+      return state.booking.offer.components;
+    }
+    if (Array.isArray(state.booking?.accepted_record?.offer?.components)) {
+      return state.booking.accepted_record.offer.components;
+    }
+    return [];
+  }
+
   function currentOfferTotalPriceCents() {
-    const total = Number(
-      state.offerDraft?.total_price_cents
-      ?? state.offerDraft?.totals?.total_price_cents
-      ?? state.booking?.offer?.total_price_cents
-      ?? state.booking?.offer?.totals?.total_price_cents
-      ?? state.booking?.accepted_record?.offer?.total_price_cents
-      ?? 0
-    );
+    const draftDirect = Number(state.offerDraft?.total_price_cents);
+    if (Number.isFinite(draftDirect) && draftDirect > 0) return Math.max(0, Math.round(draftDirect));
+    const draftSummary = Number(state.offerDraft?.totals?.total_price_cents);
+    if (Number.isFinite(draftSummary) && draftSummary > 0) return Math.max(0, Math.round(draftSummary));
+    const bookingDirect = Number(state.booking?.offer?.total_price_cents);
+    if (Number.isFinite(bookingDirect) && bookingDirect > 0) return Math.max(0, Math.round(bookingDirect));
+    const bookingSummary = Number(state.booking?.offer?.totals?.total_price_cents);
+    if (Number.isFinite(bookingSummary) && bookingSummary > 0) return Math.max(0, Math.round(bookingSummary));
+    const acceptedDirect = Number(state.booking?.accepted_record?.offer?.total_price_cents);
+    const total = Number.isFinite(acceptedDirect) ? acceptedDirect : 0;
     return Number.isFinite(total) ? Math.max(0, Math.round(total)) : 0;
   }
 
@@ -299,7 +378,10 @@ export function createBookingPricingModule(ctx) {
     }
     const authUserId = String(state.authUser?.id || state.authUser?.sub || "").trim();
     if (authUserId && !users.has(authUserId)) {
-      users.set(authUserId, state.authUser || { id: authUserId });
+      users.set(authUserId, {
+        ...(state.authUser && typeof state.authUser === "object" ? state.authUser : {}),
+        id: authUserId
+      });
     }
     if (selectedId && !users.has(selectedId)) {
       users.set(selectedId, {
@@ -312,6 +394,7 @@ export function createBookingPricingModule(ctx) {
       user?.staff_profile?.full_name
       || user?.full_name
       || user?.name
+      || user?.preferred_username
       || user?.username
       || user?.id
       || ""
@@ -325,42 +408,131 @@ export function createBookingPricingModule(ctx) {
       .join("");
   }
 
+  function depositReceiptReadiness({ includeCleanState = true } = {}) {
+    const missing = [];
+    if (countTravelPlanServices() <= 0) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.travel_plan", "Add at least one service to the travel plan."));
+    }
+    const offerComponents = currentOfferComponents();
+    if (!offerComponents.length) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.offer_item", "Add at least one offer item."));
+    }
+    if (currentOfferTotalPriceCents() <= 0) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.offer_price", "Set the offer price above 0."));
+    }
+    if (!hasConfiguredDepositPaymentTerm()) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.deposit_term", "Configure the deposit in payment terms."));
+    }
+    if (!normalizeLocalDateToIso(els.pricing_deposit_received_at_input?.value || "")) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.received_at", "Fill \"Deposit received at\"."));
+    }
+    if (!String(els.pricing_deposit_confirmed_by_select?.value || "").trim()) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.confirmed_by", "Choose \"Confirmed by\"."));
+    }
+    if (includeCleanState && typeof hasUnsavedBookingChanges === "function" && hasUnsavedBookingChanges()) {
+      missing.push(bookingT("booking.pricing.deposit_requirement.clean_state", "Save all changes first."));
+    }
+    return {
+      ready: missing.length === 0,
+      missing
+    };
+  }
+
+  function renderDepositReceiptActionState({ locked = bookingHasRecordedDeposit() } = {}) {
+    const armed = depositReceiptIsArmed();
+    const readiness = depositReceiptReadiness({ includeCleanState: !armed });
+    if (els.pricing_deposit_received_btn) {
+      els.pricing_deposit_received_btn.disabled = locked || !state.permissions.canEditBooking || armed || !readiness.ready;
+      els.pricing_deposit_received_btn.hidden = locked;
+    }
+    if (locked) {
+      setDepositActionHint("", "info");
+      return;
+    }
+    if (armed) {
+      setDepositActionHint(
+        bookingT("booking.pricing.deposit_received_ready_hint", "Full deposit receipt confirmed. Save the page to persist it."),
+        "success"
+      );
+      return;
+    }
+    if (!readiness.ready) {
+      setDepositActionHint(readiness.missing[0] || "", "error");
+      return;
+    }
+    setDepositActionHint(
+      bookingT("booking.pricing.deposit_action_ready", "Everything is ready. Press \"Full Deposit received\" to confirm the deposit receipt."),
+      "info"
+    );
+  }
+
+  function applyDefaultDepositReceiptDraft() {
+    if (bookingHasRecordedDeposit() || !state.permissions.canEditBooking) return false;
+    const readiness = depositReceiptReadiness({ includeCleanState: false });
+    if (!readiness.ready) {
+      renderDepositReceiptActionState();
+      return false;
+    }
+    setDepositReceiptArmed(true);
+    renderDepositReceiptActionState();
+    updatePricingDirtyState();
+    return true;
+  }
+
+  function disarmDepositReceiptConfirmation() {
+    if (!depositReceiptIsArmed()) {
+      renderDepositReceiptActionState();
+      return false;
+    }
+    setDepositReceiptArmed(false);
+    renderDepositReceiptActionState();
+    return true;
+  }
+
   function renderDepositReceiptControls(pricing) {
     const depositLine = findDepositPaymentTermLine();
     const currency = normalizeCurrencyCode(pricing?.currency || currentOfferCurrency());
-    const total = currentOfferTotalPriceCents();
     const depositAmount = resolvePaymentTermLineAmount(depositLine, 0);
-    const explicitPercentage = Number(depositLine?.amount_spec?.percentage_basis_points);
-    const computedPercentage = total > 0 ? ((depositAmount / total) * 100) : 0;
-    const percentageValue = Number.isFinite(explicitPercentage)
-      ? (explicitPercentage / 100).toFixed(2).replace(/\.00$/, "")
-      : computedPercentage.toFixed(2).replace(/\.00$/, "");
     const locked = bookingHasRecordedDeposit();
 
-    if (els.pricing_deposit_expected_percentage) {
-      els.pricing_deposit_expected_percentage.value = `${percentageValue}%`;
-    }
-    if (els.pricing_deposit_expected_amount) {
-      els.pricing_deposit_expected_amount.value = formatMoneyDisplay(depositAmount, currency);
+    if (els.pricing_deposit_amount) {
+      els.pricing_deposit_amount.textContent = formatMoneyDisplay(depositAmount, currency);
     }
     if (els.pricing_deposit_received_at_input) {
-      els.pricing_deposit_received_at_input.value = normalizeDateTimeLocal(savedDepositReceivedAt());
+      els.pricing_deposit_received_at_input.value = normalizeDateInput(
+        locked ? savedDepositReceivedAt() : (savedDepositReceiptDraftReceivedAt() || savedDepositReceivedAt())
+      );
       els.pricing_deposit_received_at_input.disabled = !state.permissions.canEditBooking || locked;
     }
     if (els.pricing_deposit_confirmed_by_select) {
-      const selectedId = savedDepositConfirmedById();
+      const preserveExplicitBlank =
+        !locked
+        && !savedDepositConfirmedById()
+        && els.pricing_deposit_confirmed_by_select.dataset.userClearedSelection === "true";
+      const selectedId = preserveExplicitBlank
+        ? ""
+        : (locked ? savedDepositConfirmedById() : (savedDepositReceiptDraftConfirmedById() || savedDepositConfirmedById()));
       els.pricing_deposit_confirmed_by_select.innerHTML = buildAtpStaffOptions(selectedId);
       els.pricing_deposit_confirmed_by_select.value = selectedId;
       els.pricing_deposit_confirmed_by_select.disabled = !state.permissions.canEditBooking || locked;
+      if (!preserveExplicitBlank) {
+        delete els.pricing_deposit_confirmed_by_select.dataset.userClearedSelection;
+      }
     }
     if (els.pricing_deposit_reference_input) {
-      els.pricing_deposit_reference_input.value = savedDepositReference();
+      els.pricing_deposit_reference_input.value = locked
+        ? savedDepositReference()
+        : (savedDepositReceiptDraftReference() || "");
       els.pricing_deposit_reference_input.disabled = !state.permissions.canEditBooking || locked;
     }
+    if (locked) {
+      setDepositReceiptArmed(false);
+    }
+    renderDepositReceiptActionState({ locked });
     setPricingDepositHint(
       locked
         ? bookingT("booking.pricing.deposit_recorded_hint", "Deposit receipt recorded. The deposit row is now locked in this section.")
-        : bookingT("booking.pricing.deposit_received_hint", "Enter the deposit receipt details here, then save the page to record the deposit and freeze the accepted customer record.")
+        : ""
     );
   }
 
@@ -582,6 +754,8 @@ export function createBookingPricingModule(ctx) {
     setPricingControlsVisibility(paymentTermsAvailable);
 
     if (!paymentTermsAvailable) {
+      setDepositReceiptArmed(false);
+      setDepositActionHint("", "info");
       if (els.pricing_summary_table) {
         els.pricing_summary_table.innerHTML = `<tbody><tr><td colspan="2">${escapeHtml(bookingT("booking.pricing.deposit_setup_required", "Create an offer with payment terms before recording a deposit receipt."))}</td></tr></tbody>`;
       }
@@ -613,6 +787,9 @@ export function createBookingPricingModule(ctx) {
     if (hasDirtyDraft) {
       pricingDirtyTracker.setDirty(true);
       return;
+    }
+    if (!bookingHasRecordedDeposit()) {
+      setDepositReceiptArmed(false);
     }
     markPricingSnapshotClean();
     if (markDerivedChangesDirty && JSON.stringify(pricing) !== JSON.stringify(savedPricing)) {
@@ -682,11 +859,18 @@ export function createBookingPricingModule(ctx) {
   }
 
   function collectDepositReceiptPayload() {
-    const depositReceivedAt = normalizeLocalDateTimeToIso(els.pricing_deposit_received_at_input?.value || "");
+    const depositReceivedAt = normalizeLocalDateToIso(els.pricing_deposit_received_at_input?.value || "");
     const confirmedById = String(els.pricing_deposit_confirmed_by_select?.value || "").trim();
     const depositReference = String(els.pricing_deposit_reference_input?.value || "").trim();
     const hasAnyValue = Boolean(depositReceivedAt || confirmedById || depositReference);
     if (!hasAnyValue) return null;
+    if (!depositReceiptIsArmed()) {
+      return null;
+    }
+    const readiness = depositReceiptReadiness();
+    if (!readiness.ready) {
+      throw new Error(readiness.missing[0] || bookingT("booking.pricing.error.deposit_ack_required", "Deposit receipt is not ready."));
+    }
     if (!depositReceivedAt) {
       throw new Error(bookingT("booking.pricing.error.deposit_received_at_required", "Deposit received at is required."));
     }
@@ -700,17 +884,30 @@ export function createBookingPricingModule(ctx) {
     };
   }
 
+  function collectDepositReceiptDraftPayload() {
+    if (bookingHasRecordedDeposit()) return null;
+    return {
+      deposit_received_at: normalizeLocalDateToIso(els.pricing_deposit_received_at_input?.value || "") || null,
+      deposit_confirmed_by_atp_staff_id: String(els.pricing_deposit_confirmed_by_select?.value || "").trim() || null,
+      deposit_reference: String(els.pricing_deposit_reference_input?.value || "").trim() || null
+    };
+  }
+
   async function savePricing() {
-    if (!state.booking || !state.permissions.canEditBooking) return;
+    if (!state.booking || !state.permissions.canEditBooking) return false;
     clearPricingStatus();
     let pricing;
     let depositReceipt;
+    let depositReceiptDraft;
     try {
       pricing = collectPricingPayload();
       depositReceipt = collectDepositReceiptPayload();
+      depositReceiptDraft = collectDepositReceiptDraftPayload();
     } catch (error) {
-      setPricingStatus(String(error?.message || error));
-      return;
+      const message = String(error?.message || error);
+      setPricingStatus(message);
+      setPageSaveActionError?.(message);
+      return false;
     }
 
     const request = bookingPricingRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
@@ -720,23 +917,28 @@ export function createBookingPricingModule(ctx) {
         expected_pricing_revision: pricingRevision(),
         pricing,
         ...(depositReceipt ? { deposit_receipt: depositReceipt } : {}),
+        ...(depositReceiptDraft ? { deposit_receipt_draft: depositReceiptDraft } : {}),
         actor: state.user
       }
     });
-    if (!result?.booking) return;
+    if (!result?.booking) return false;
     state.booking = result.booking;
     renderBookingHeader();
     renderBookingData();
     renderActionControls?.();
     renderPricingPanel();
     await loadActivities();
+    return true;
   }
 
   return {
     updatePricingDirtyState,
     markPricingSnapshotClean,
     renderPricingPanel,
-    savePricing
+    savePricing,
+    applyDefaultDepositReceiptDraft,
+    disarmDepositReceiptConfirmation,
+    refreshDepositReceiptActionState: () => renderDepositReceiptActionState()
   };
 }
 
@@ -748,12 +950,27 @@ function normalizeDateTimeLocal(value) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
+function normalizeDateInput(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 function normalizeLocalDateTimeToIso(value) {
   const text = String(value || "").trim();
   if (!text) return "";
   const date = new Date(text);
   if (Number.isNaN(date.getTime())) return "";
   return date.toISOString();
+}
+
+function normalizeLocalDateToIso(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return "";
+  return `${text}T00:00:00.000Z`;
 }
 
 function formatTaxRatePercent(value) {

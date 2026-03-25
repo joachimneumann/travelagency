@@ -234,6 +234,49 @@
   color: var(--success-text-strong);
 }
 
+.booking-detail-page .field--compact-action {
+  justify-content: end;
+}
+
+.booking-detail-page .pricing-deposit-ack-btn {
+  min-height: 48px;
+  border-color: var(--success-line);
+  background: var(--success-surface-alpha);
+  color: var(--success-text-strong);
+  font-weight: 700;
+}
+
+.booking-detail-page .pricing-deposit-ack-btn:hover:not(:disabled) {
+  background: var(--success-surface-alpha);
+  box-shadow: 0 10px 22px rgba(71, 137, 82, 0.18);
+}
+
+.booking-detail-page .pricing-deposit-ack-btn:disabled {
+  border-color: var(--line-disabled);
+  background: var(--surface-disabled-alpha);
+  color: var(--text-disabled);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.booking-detail-page .pricing-deposit-amount-text {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0.1rem 0;
+  color: var(--text-strong);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.booking-detail-page #pricing_deposit_action_hint {
+  display: block;
+  margin-top: 0.55rem;
+  max-width: 26rem;
+}
+
 .booking-detail-page .booking-milestone-actions__hint {
   min-height: 1.1rem;
   margin-top: 0.35rem;
