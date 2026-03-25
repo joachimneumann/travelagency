@@ -32,7 +32,8 @@ const MM_TO_POINTS = 72 / 25.4;
 const PAGE_SIZE = Object.freeze([210 * MM_TO_POINTS, 297 * MM_TO_POINTS]);
 const PAGE_MARGIN = 44;
 const PAGE_FOOTER_GAP = 28;
-const HEADER_LOGO_WIDTH = 150;
+const HEADER_LOGO_WIDTH = 190;
+const HEADER_LOGO_HEIGHT = 74;
 const HERO_IMAGE_WIDTH = 195;
 const HERO_IMAGE_HEIGHT = 128;
 const ITEM_THUMBNAIL_WIDTH = 118;
@@ -363,7 +364,11 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
   const profile = companyProfile || {};
   let y = PAGE_MARGIN;
   if (logoImage?.buffer) {
-    doc.image(logoImage.buffer, PAGE_MARGIN, y + 2, { width: HEADER_LOGO_WIDTH });
+    doc.image(logoImage.buffer, PAGE_MARGIN, y + 2, {
+      fit: [HEADER_LOGO_WIDTH, HEADER_LOGO_HEIGHT],
+      align: "left",
+      valign: "top"
+    });
   }
 
   const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
