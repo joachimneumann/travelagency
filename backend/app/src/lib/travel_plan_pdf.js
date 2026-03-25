@@ -444,14 +444,12 @@ function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
 
 function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbnail = false) {
   const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
-  const textWidth = hasThumbnail
-    ? innerWidth - ITEM_THUMBNAIL_WIDTH - 14
-    : innerWidth;
-  const metaParts = [formatTravelPlanTiming(item, lang, dayDate), itemKindLabel(item?.kind, lang)].filter(Boolean);
+  const textWidth = innerWidth;
+  const metaParts = [formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
   const title = textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
   const location = textOrNull(item?.location);
   const details = textOrNull(item?.details);
-  let textHeight = 12;
+  let textHeight = 0;
   if (metaParts.length) {
     textHeight += measureTextHeight(doc, metaParts.join(" · "), { width: textWidth, fontSize: 9.2, fonts, lineGap: 1 }) + 4;
   }
@@ -462,8 +460,8 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbna
   if (details) {
     textHeight += measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2 }) + 4;
   }
-  const thumbnailHeight = hasThumbnail ? ITEM_THUMBNAIL_HEIGHT + 12 : 0;
-  return Math.max(72, Math.max(textHeight + 12, thumbnailHeight + 12));
+  const thumbnailHeight = hasThumbnail ? ITEM_THUMBNAIL_HEIGHT + 10 : 0;
+  return Math.max(88, ITEM_CARD_PADDING + thumbnailHeight + textHeight + ITEM_CARD_PADDING);
 }
 
 function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, dayDate) {
@@ -476,24 +474,24 @@ function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, 
 
   const innerX = x + ITEM_CARD_PADDING;
   const innerWidth = width - ITEM_CARD_PADDING * 2;
-  const thumbnailWidth = thumbnail ? ITEM_THUMBNAIL_WIDTH : 0;
-  const textWidth = thumbnail ? innerWidth - thumbnailWidth - 14 : innerWidth;
-  const thumbnailX = x + width - ITEM_CARD_PADDING - thumbnailWidth;
-  let innerY = y + 12;
+  const textWidth = innerWidth;
+  let innerY = y + ITEM_CARD_PADDING;
 
   if (thumbnail?.buffer) {
     doc
       .save()
-      .roundedRect(thumbnailX, y + 10, ITEM_THUMBNAIL_WIDTH, ITEM_THUMBNAIL_HEIGHT, 10)
+      .roundedRect(innerX, innerY, innerWidth, ITEM_THUMBNAIL_HEIGHT, 10)
       .clip();
-    doc.image(thumbnail.buffer, thumbnailX, y + 10, {
-      width: ITEM_THUMBNAIL_WIDTH,
-      height: ITEM_THUMBNAIL_HEIGHT
+    doc.image(thumbnail.buffer, innerX, innerY, {
+      fit: [innerWidth, ITEM_THUMBNAIL_HEIGHT],
+      align: "center",
+      valign: "center"
     });
     doc.restore();
+    innerY += ITEM_THUMBNAIL_HEIGHT + 10;
   }
 
-  const metaParts = [formatTravelPlanTiming(item, lang, dayDate), itemKindLabel(item?.kind, lang)].filter(Boolean);
+  const metaParts = [formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
   if (metaParts.length) {
     doc
       .font(pdfFontName("regular", fonts))
@@ -603,18 +601,6 @@ function drawTravelPlanItemColumns(doc, startY, columnWidth, pageLayout, fonts, 
   for (const entry of pageLayout.columns.right) {
     drawTravelPlanItemCard(doc, rightX, rightY, columnWidth, entry.item, entry.thumbnail, fonts, lang, dayDate);
     rightY += entry.itemHeight + ITEM_VERTICAL_GAP;
-  }
-
-  if (pageLayout.columns.left.length && pageLayout.columns.right.length) {
-    const dividerX = PAGE_MARGIN + columnWidth + ITEM_COLUMN_GAP / 2;
-    doc
-      .save()
-      .moveTo(dividerX, startY + 2)
-      .lineTo(dividerX, startY + pageLayout.height - 2)
-      .lineWidth(1)
-      .strokeColor(PDF_COLORS.line)
-      .stroke()
-      .restore();
   }
 }
 
