@@ -5,19 +5,18 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
-Create model and storage space for practical tips and emergency numbers for each country. This information is not used at this point in time.
+* Create model and storage space for practical tips and emergency numbers for each country. This information is not used at this point in time.
 
-After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. 
+* After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. 
 
-Point out that personal data needs to be filled
+* Point out that personal data needs to be filled
 
-Suppliers!
+* Suppliers!
 
-Add "Preview Travel Plan PDF" button next to "Create Travel Plan PDF", which opens a PDF, that is not stored in the backend.
-Allow deleting travel plan PDFs
-Add a "sent to customer" checkbox
+* Index.html: FAQ formatting off
 
-Index.html: FAQ formatting off
+* make days and services in the travel plan collapsable
+
 
 ## payments
 
@@ -29,7 +28,9 @@ Freeze travel plan and offer after receiving deposit payment. In payments allow 
 
 
 # review
-Conduct a comprehensive code review with a focus on PDF handling and recent changes.
+
+
+Conduct a comprehensive code review with a focus on travel plan, offer components and offer acceptance 
 
 Specifically:
 	1.	PDF Storage & Structure

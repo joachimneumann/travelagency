@@ -200,8 +200,24 @@ async function loadBookings() {
   );
   state.bookings.total = Number(pagination.total_items || 0);
   state.bookings.page = Number(pagination.page || state.bookings.page);
+  const items = Array.isArray(payload.items) ? payload.items : [];
+
+  if (!items.length && !String(state.bookings.search || "").trim()) {
+    console.warn("[backend-bookings] Empty bookings list returned by API.", {
+      requestUrl: request.url,
+      authUser: state.authUser,
+      roles: state.roles,
+      permissions: state.permissions,
+      page: state.bookings.page,
+      pageSize: state.bookings.pageSize,
+      pagination,
+      totalItems: state.bookings.total,
+      likelyCause: "The bookings API returned no items. On localhost this usually means missing seed data, filtered access, or a backend/auth mismatch."
+    });
+  }
+
   updateBookingsPaginationUi();
-  renderBookings(payload.items || []);
+  renderBookings(items);
 }
 
 async function ensureTourImageCatalog() {
