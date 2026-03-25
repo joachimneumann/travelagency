@@ -199,10 +199,19 @@
 }
 
 .booking-detail-page .booking-milestone-actions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.booking-detail-page .booking-milestone-actions__row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
-  margin-top: 0.8rem;
+}
+
+.booking-detail-page .booking-milestone-actions__row--terminal {
+  padding-top: 0.1rem;
 }
 
 .booking-detail-page .booking-milestone-actions__last-action {
@@ -213,6 +222,10 @@
 
 .booking-detail-page .booking-milestone-actions__btn {
   min-height: 44px;
+}
+
+.booking-detail-page .booking-milestone-actions__btn[disabled] {
+  opacity: 0.58;
 }
 
 .booking-detail-page .booking-milestone-actions__btn--current {

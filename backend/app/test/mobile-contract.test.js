@@ -2888,6 +2888,243 @@ test("public generated booking confirmation finalizes the frozen offer and store
   assert.equal(bookingRecord.pricing.payments.length, 2);
 });
 
+test("deposit receipt freezes the accepted customer record and keeps it stable after later offer edits", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            lines: [
+              {
+                id: "payment_term_frozen_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 3300
+                },
+                due_rule: {
+                  type: "DAYS_AFTER_ACCEPTANCE",
+                  days: 0
+                }
+              },
+              {
+                id: "payment_term_frozen_final",
+                kind: "FINAL_BALANCE",
+                label: "Final payment",
+                sequence: 2,
+                amount_spec: {
+                  mode: "REMAINING_BALANCE"
+                },
+                due_rule: {
+                  type: "DAYS_BEFORE_TRIP_START",
+                  days: 14
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_frozen_service_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "Accepted resort stay",
+              quantity: 1,
+              unit_amount_cents: 12000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
+  const travelPlanPatchResult = await requestJson(
+    endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_frozen_1",
+              day_number: 1,
+              title: "Arrival day",
+              overnight_location: "Hoi An",
+              services: [
+                {
+                  id: "travel_plan_service_frozen_1",
+                  timing_kind: "point",
+                  time_point: "18:30",
+                  kind: "transport",
+                  title: "Airport pickup",
+                  financial_coverage_status: "not_covered"
+                }
+              ]
+            }
+          ],
+          offer_component_links: [
+            {
+              id: "travel_plan_offer_link_frozen_1",
+              travel_plan_service_id: "travel_plan_service_frozen_1",
+              offer_component_id: "offer_component_frozen_service_1",
+              coverage_type: "full"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(travelPlanPatchResult.status, 200);
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Accepted customer record freeze test"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+  assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
+
+  const storeBeforeAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingBeforeAccept = storeBeforeAccept.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingBeforeAccept);
+  delete bookingBeforeAccept.generated_offers[0].booking_confirmation_route;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeAccept, null, 2)}\n`, "utf8");
+
+  const acceptResult = await requestJson(
+    endpointPath("public_generated_booking_confirmation")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    {},
+    {
+      method: "POST",
+      body: {
+        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
+        accepted_by_name: "Test User",
+        language: "en"
+      }
+    }
+  );
+  assert.equal(acceptResult.status, 200);
+
+  const acceptedDetailResult = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(acceptedDetailResult.status, 200);
+  const acceptedBooking = acceptedDetailResult.body.booking;
+  const depositReceivedAt = `${acceptedBooking.generated_offers[0].booking_confirmation.accepted_at.slice(0, 10)}T09:15:00.000Z`;
+
+  const depositReceiptPatchResult = await requestJson(
+    endpointPath("booking_pricing").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_pricing_revision: acceptedBooking.pricing_revision,
+        pricing: acceptedBooking.pricing,
+        deposit_receipt: {
+          deposit_received_at: depositReceivedAt,
+          deposit_confirmed_by_atp_staff_id: "kc-joachim",
+          deposit_reference: "BANK-REF-001"
+        }
+      }
+    }
+  );
+  assert.equal(depositReceiptPatchResult.status, 200);
+  assert.equal(depositReceiptPatchResult.body.booking.stage, "IN_PROGRESS");
+  assert.equal(depositReceiptPatchResult.body.booking.deposit_received_at, depositReceivedAt);
+  assert.equal(depositReceiptPatchResult.body.booking.deposit_confirmed_by_atp_staff_id, "kc-joachim");
+  assert.equal(depositReceiptPatchResult.body.booking.pricing_revision, acceptedBooking.pricing_revision);
+  assert.equal(depositReceiptPatchResult.body.booking.core_revision, acceptedBooking.core_revision + 1);
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.available, true);
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.deposit_received_at, depositReceivedAt);
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.deposit_confirmed_by_atp_staff_id, "kc-joachim");
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.deposit_confirmed_by_label, "Joachim Neumann");
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.accepted_deposit_amount_cents, 3300);
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.accepted_deposit_currency, createdBooking.preferred_currency);
+  assert.equal(depositReceiptPatchResult.body.booking.accepted_record.accepted_deposit_reference, "BANK-REF-001");
+  assert.equal(
+    depositReceiptPatchResult.body.booking.accepted_record.offer.components[0].details,
+    "Accepted resort stay"
+  );
+  assert.equal(
+    depositReceiptPatchResult.body.booking.accepted_record.payment_terms.lines[0].resolved_amount_cents,
+    3300
+  );
+  assert.equal(
+    depositReceiptPatchResult.body.booking.accepted_record.travel_plan.days[0].services[0].title,
+    "Airport pickup"
+  );
+  assert.equal(
+    depositReceiptPatchResult.body.booking.accepted_record.offer_artifact_ref,
+    generatedOffer.id
+  );
+
+  const storeAfterReceipt = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const mutableBookingRecord = storeAfterReceipt.bookings.find((item) => item.id === bookingId);
+  assert.ok(mutableBookingRecord);
+  mutableBookingRecord.offer.components[0].details = "Changed after deposit receipt";
+  mutableBookingRecord.offer.components[0].details_i18n = {
+    en: "Changed after deposit receipt"
+  };
+  mutableBookingRecord.offer.components[0].unit_amount_cents = 22000;
+  await writeFile(STORE_PATH, `${JSON.stringify(storeAfterReceipt, null, 2)}\n`, "utf8");
+
+  const detailAfterMutation = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfterMutation.status, 200);
+  assert.equal(detailAfterMutation.body.booking.offer.components[0].details, "Changed after deposit receipt");
+  assert.equal(
+    detailAfterMutation.body.booking.accepted_record.offer.components[0].details,
+    "Accepted resort stay"
+  );
+  assert.equal(
+    detailAfterMutation.body.booking.accepted_record.accepted_deposit_amount_cents,
+    3300
+  );
+  assert.equal(
+    detailAfterMutation.body.booking.accepted_record.travel_plan.days[0].services[0].title,
+    "Airport pickup"
+  );
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === bookingId);
+  assert.ok(bookingRecord);
+  assert.equal(bookingRecord.deposit_received_at, depositReceivedAt);
+  assert.equal(bookingRecord.deposit_confirmed_by_atp_staff_id, "kc-joachim");
+  assert.equal(bookingRecord.accepted_deposit_reference, "BANK-REF-001");
+  assert.equal(bookingRecord.accepted_offer_snapshot.components[0].details, "Accepted resort stay");
+  assert.equal(bookingRecord.accepted_payment_terms_snapshot.lines[0].id, "payment_term_frozen_deposit");
+  assert.equal(bookingRecord.accepted_travel_plan_snapshot.days[0].services[0].title, "Airport pickup");
+});
+
 test("public generated booking confirmation enforces uniqueness per booking", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
@@ -4481,7 +4718,7 @@ test("booking milestone actions keep timestamps and derive stage from the last s
     }
   );
   assert.equal(travelPlanSentResult.status, 200);
-  assert.equal(travelPlanSentResult.body.booking.stage, "QUALIFIED");
+  assert.equal(travelPlanSentResult.body.booking.stage, "TRAVEL_PLAN_SENT");
   assert.equal(travelPlanSentResult.body.booking.last_action, "TRAVEL_PLAN_SENT");
   assert.match(String(travelPlanSentResult.body.booking.last_action_at || ""), /T/);
   assert.match(String(travelPlanSentResult.body.booking.milestones?.travel_plan_sent_at || ""), /T/);
@@ -4499,7 +4736,7 @@ test("booking milestone actions keep timestamps and derive stage from the last s
     }
   );
   assert.equal(offerSentResult.status, 200);
-  assert.equal(offerSentResult.body.booking.stage, "PROPOSAL_SENT");
+  assert.equal(offerSentResult.body.booking.stage, "OFFER_SENT");
   assert.equal(offerSentResult.body.booking.last_action, "OFFER_SENT");
   assert.match(String(offerSentResult.body.booking.last_action_at || ""), /T/);
   assert.match(String(offerSentResult.body.booking.milestones?.offer_sent_at || ""), /T/);
@@ -4518,7 +4755,7 @@ test("booking milestone actions keep timestamps and derive stage from the last s
     }
   );
   assert.equal(travelPlanSentAgainResult.status, 200);
-  assert.equal(travelPlanSentAgainResult.body.booking.stage, "QUALIFIED");
+  assert.equal(travelPlanSentAgainResult.body.booking.stage, "TRAVEL_PLAN_SENT");
   assert.equal(travelPlanSentAgainResult.body.booking.last_action, "TRAVEL_PLAN_SENT");
   assert.match(String(travelPlanSentAgainResult.body.booking.milestones?.offer_sent_at || ""), /T/);
   assert.match(String(travelPlanSentAgainResult.body.booking.milestones?.travel_plan_sent_at || ""), /T/);
@@ -4530,15 +4767,196 @@ test("booking milestone actions keep timestamps and derive stage from the last s
       method: "POST",
       body: {
         expected_core_revision: travelPlanSentAgainResult.body.booking.core_revision,
-        action: "NEW",
+        action: "NEW_BOOKING",
         actor: "joachim"
       }
     }
   );
   assert.equal(resetToNewResult.status, 200);
-  assert.equal(resetToNewResult.body.booking.stage, "NEW");
+  assert.equal(resetToNewResult.body.booking.stage, "NEW_BOOKING");
   assert.equal(resetToNewResult.body.booking.last_action, "NEW_BOOKING");
   assert.match(String(resetToNewResult.body.booking.milestones?.new_booking_at || ""), /T/);
+});
+
+test("booking milestone actions enforce the deposit boundary and remaining-payment completion rules", async () => {
+  const createdBooking = await createSeedBooking();
+  const booking_id = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+
+  const blockedInProgressBeforeDeposit = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        action: "IN_PROGRESS",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(blockedInProgressBeforeDeposit.status, 409);
+  assert.match(String(blockedInProgressBeforeDeposit.body.error || ""), /post-deposit stages/i);
+
+  const blockedDepositReceivedAction = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: detailBefore.body.booking.core_revision,
+        action: "DEPOSIT_RECEIVED",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(blockedDepositReceivedAction.status, 422);
+  assert.match(String(blockedDepositReceivedAction.body.error || ""), /payments section/i);
+
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingRecord = store.bookings.find((item) => item.id === booking_id);
+  assert.ok(bookingRecord);
+  bookingRecord.deposit_received_at = "2026-03-25T09:15:00.000Z";
+  bookingRecord.deposit_confirmed_by_atp_staff_id = "kc-joachim";
+  bookingRecord.stage = "IN_PROGRESS";
+  bookingRecord.last_action = "DEPOSIT_RECEIVED";
+  bookingRecord.last_action_at = "2026-03-25T09:15:00.000Z";
+  bookingRecord.milestones = {
+    ...(bookingRecord.milestones || {}),
+    deposit_received_at: "2026-03-25T09:15:00.000Z"
+  };
+  bookingRecord.accepted_payment_terms_snapshot = {
+    currency: "USD",
+    lines: [
+      {
+        id: "deposit_line_1",
+        kind: "DEPOSIT",
+        label: "Deposit",
+        sequence: 1,
+        amount_spec: {
+          mode: "FIXED_AMOUNT",
+          fixed_amount_cents: 3300
+        },
+        due_rule: {
+          type: "DAYS_AFTER_ACCEPTANCE",
+          days: 0
+        }
+      },
+      {
+        id: "final_line_1",
+        kind: "FINAL_BALANCE",
+        label: "Final payment",
+        sequence: 2,
+        amount_spec: {
+          mode: "REMAINING_BALANCE"
+        },
+        due_rule: {
+          type: "DAYS_BEFORE_TRIP_START",
+          days: 14
+        }
+      }
+    ]
+  };
+  bookingRecord.pricing.payments = [
+    {
+      id: "pricing_payment_deposit_1",
+      label: "Deposit",
+      net_amount_cents: 3300,
+      tax_rate_basis_points: 0,
+      status: "PENDING",
+      origin_payment_term_line_id: "deposit_line_1"
+    },
+    {
+      id: "pricing_payment_final_1",
+      label: "Final payment",
+      net_amount_cents: 9900,
+      tax_rate_basis_points: 0,
+      status: "PENDING",
+      origin_payment_term_line_id: "final_line_1"
+    }
+  ];
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+
+  const detailAfterDeposit = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailAfterDeposit.status, 200);
+  assert.equal(detailAfterDeposit.body.booking.stage, "IN_PROGRESS");
+
+  const blockedPreDepositStage = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: detailAfterDeposit.body.booking.core_revision,
+        action: "TRAVEL_PLAN_SENT",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(blockedPreDepositStage.status, 409);
+  assert.match(String(blockedPreDepositStage.body.error || ""), /recorded deposit receipt/i);
+
+  const blockedTripCompleted = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: detailAfterDeposit.body.booking.core_revision,
+        action: "TRIP_COMPLETED",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(blockedTripCompleted.status, 409);
+  assert.match(String(blockedTripCompleted.body.error || ""), /remaining payments are paid/i);
+
+  const storeWithPaidFinal = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  const bookingWithPaidFinal = storeWithPaidFinal.bookings.find((item) => item.id === booking_id);
+  assert.ok(bookingWithPaidFinal);
+  bookingWithPaidFinal.pricing.payments[1].status = "PAID";
+  bookingWithPaidFinal.pricing.payments[1].paid_at = "2026-03-30T10:00:00.000Z";
+  await writeFile(STORE_PATH, `${JSON.stringify(storeWithPaidFinal, null, 2)}\n`, "utf8");
+
+  const detailBeforeTripCompleted = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", booking_id),
+    apiHeaders()
+  );
+  assert.equal(detailBeforeTripCompleted.status, 200);
+
+  const tripCompletedResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: detailBeforeTripCompleted.body.booking.core_revision,
+        action: "TRIP_COMPLETED",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(tripCompletedResult.status, 200);
+  assert.equal(tripCompletedResult.body.booking.stage, "TRIP_COMPLETED");
+  assert.equal(tripCompletedResult.body.booking.last_action, "TRIP_COMPLETED");
+
+  const moveBackToInProgressResult = await requestJson(
+    endpointPath("booking_milestone_action").replace("{booking_id}", booking_id),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_core_revision: tripCompletedResult.body.booking.core_revision,
+        action: "IN_PROGRESS",
+        actor: "joachim"
+      }
+    }
+  );
+  assert.equal(moveBackToInProgressResult.status, 200);
+  assert.equal(moveBackToInProgressResult.body.booking.stage, "IN_PROGRESS");
+  assert.equal(moveBackToInProgressResult.body.booking.last_action, "IN_PROGRESS");
 });
 
 test("blank-name booking persons roundtrip without synthetic traveler names", async () => {

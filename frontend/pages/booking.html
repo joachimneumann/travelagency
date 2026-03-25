@@ -585,6 +585,33 @@
                 <table class="backend-table" id="pricing_summary_table"></table>
               </div>
 
+              <div class="backend-controls" id="pricing_deposit_controls" style="margin-bottom: 1rem;" hidden>
+                <div class="field">
+                  <label for="pricing_deposit_expected_percentage" data-i18n-id="booking.pricing.deposit_expected_percentage">Expected deposit percentage</label>
+                  <input id="pricing_deposit_expected_percentage" type="text" readonly />
+                </div>
+                <div class="field">
+                  <label for="pricing_deposit_expected_amount" data-i18n-id="booking.pricing.deposit_expected_amount">Expected deposit amount</label>
+                  <input id="pricing_deposit_expected_amount" type="text" readonly />
+                </div>
+                <div class="field">
+                  <label for="pricing_deposit_received_at_input" data-i18n-id="booking.pricing.deposit_received_at">Deposit received at</label>
+                  <input id="pricing_deposit_received_at_input" type="datetime-local" />
+                </div>
+                <div class="field">
+                  <label for="pricing_deposit_confirmed_by_select" data-i18n-id="booking.pricing.confirmed_by">Confirmed by</label>
+                  <select id="pricing_deposit_confirmed_by_select"></select>
+                </div>
+                <div class="field">
+                  <label for="pricing_deposit_reference_input" data-i18n-id="booking.pricing.deposit_reference">Deposit reference</label>
+                  <input id="pricing_deposit_reference_input" type="text" />
+                </div>
+              </div>
+
+              <div class="backend-controls" id="pricing_deposit_hint_row" style="margin-bottom: 1rem;">
+                <span id="pricing_deposit_hint" class="micro"></span>
+              </div>
+
               <div class="backend-controls">
                 <div class="field">
                   <label for="pricing_currency_input" data-i18n-id="booking.currency">Currency</label>

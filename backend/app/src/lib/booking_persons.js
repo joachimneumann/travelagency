@@ -247,13 +247,11 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   const milestoneState = resolveBookingMilestoneState({
     milestones: booking?.milestones,
     last_action: booking?.last_action,
-    last_action_at: booking?.last_action_at,
-    lifecycle: booking?.lifecycle
+    last_action_at: booking?.last_action_at
   }, booking?.stage);
   const normalizedDestinations = normalizeStringArray(booking?.destinations);
   const normalizedTravelStyles = normalizeTourStyleLabels(booking?.travel_styles, "en");
   const {
-    lifecycle: _legacyLifecycle,
     public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
     public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,
     public_traveler_details_token_expires_at: _legacyTravelerDetailsTokenExpiresAt,

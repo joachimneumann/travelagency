@@ -23,7 +23,7 @@ test("store utils backfill missing booking persons from the public submission an
       {
         id: "booking_discovery_call",
         name: "Discovery call",
-        stage: "NEW",
+        stage: "NEW_BOOKING",
         preferred_currency: "USD",
         customer_language: "en",
         persons: [],

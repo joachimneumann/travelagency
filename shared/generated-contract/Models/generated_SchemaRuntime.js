@@ -3114,47 +3114,47 @@
   "typeName": "BookingStage",
   "isArray": false,
   "enumValues": [
-    "NEW",
-    "QUALIFIED",
-    "PROPOSAL_SENT",
-    "NEGOTIATION",
-    "INVOICE_SENT",
-    "PAYMENT_RECEIVED",
-    "LOST",
-    "POST_TRIP"
+    "NEW_BOOKING",
+    "TRAVEL_PLAN_SENT",
+    "OFFER_SENT",
+    "NEGOTIATION_STARTED",
+    "DEPOSIT_REQUEST_SENT",
+    "IN_PROGRESS",
+    "TRIP_COMPLETED",
+    "LOST"
   ],
   "options": [
     {
-      "value": "NEW",
-      "label": "NEW"
+      "value": "NEW_BOOKING",
+      "label": "NEW_BOOKING"
     },
     {
-      "value": "QUALIFIED",
-      "label": "QUALIFIED"
+      "value": "TRAVEL_PLAN_SENT",
+      "label": "TRAVEL_PLAN_SENT"
     },
     {
-      "value": "PROPOSAL_SENT",
-      "label": "PROPOSAL_SENT"
+      "value": "OFFER_SENT",
+      "label": "OFFER_SENT"
     },
     {
-      "value": "NEGOTIATION",
-      "label": "NEGOTIATION"
+      "value": "NEGOTIATION_STARTED",
+      "label": "NEGOTIATION_STARTED"
     },
     {
-      "value": "INVOICE_SENT",
-      "label": "INVOICE_SENT"
+      "value": "DEPOSIT_REQUEST_SENT",
+      "label": "DEPOSIT_REQUEST_SENT"
     },
     {
-      "value": "PAYMENT_RECEIVED",
-      "label": "PAYMENT_RECEIVED"
+      "value": "IN_PROGRESS",
+      "label": "IN_PROGRESS"
+    },
+    {
+      "value": "TRIP_COMPLETED",
+      "label": "TRIP_COMPLETED"
     },
     {
       "value": "LOST",
       "label": "LOST"
-    },
-    {
-      "value": "POST_TRIP",
-      "label": "POST_TRIP"
     }
   ]
 },

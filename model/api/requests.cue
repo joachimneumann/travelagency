@@ -196,7 +196,14 @@ import (
 #BookingPricingUpdateRequest: {
 	expected_pricing_revision?: >=0 & int
 	pricing:                    entities.#BookingPricing
+	deposit_receipt?:           #BookingDepositReceiptUpdateRequest
 	actor?:                     string
+}
+
+#BookingDepositReceiptUpdateRequest: {
+	deposit_received_at:              common.#Timestamp
+	deposit_confirmed_by_atp_staff_id: common.#Identifier
+	deposit_reference?:               string
 }
 
 #BookingOfferUpdateRequest: {

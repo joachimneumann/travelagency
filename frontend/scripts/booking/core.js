@@ -33,44 +33,52 @@ const BOOKING_MILESTONE_ACTIONS = Object.freeze([
   Object.freeze({
     key: "NEW_BOOKING",
     field: "new_booking_at",
-    stage: "NEW",
+    stage: "NEW_BOOKING",
     labelKey: "booking.milestone.action.new_booking",
     labelFallback: "New booking"
   }),
   Object.freeze({
     key: "TRAVEL_PLAN_SENT",
     field: "travel_plan_sent_at",
-    stage: "QUALIFIED",
+    stage: "TRAVEL_PLAN_SENT",
     labelKey: "booking.milestone.action.travel_plan_sent",
     labelFallback: "Travel plan sent to customer"
   }),
   Object.freeze({
     key: "OFFER_SENT",
     field: "offer_sent_at",
-    stage: "PROPOSAL_SENT",
+    stage: "OFFER_SENT",
     labelKey: "booking.milestone.action.offer_sent",
     labelFallback: "Offer sent to customer"
   }),
   Object.freeze({
     key: "NEGOTIATION_STARTED",
     field: "negotiation_started_at",
-    stage: "NEGOTIATION",
+    stage: "NEGOTIATION_STARTED",
     labelKey: "booking.milestone.action.negotiation_started",
     labelFallback: "Negotiation started"
   }),
   Object.freeze({
     key: "DEPOSIT_REQUEST_SENT",
     field: "deposit_request_sent_at",
-    stage: "INVOICE_SENT",
+    stage: "DEPOSIT_REQUEST_SENT",
     labelKey: "booking.milestone.action.deposit_request_sent",
     labelFallback: "Deposit request sent"
   }),
   Object.freeze({
     key: "DEPOSIT_RECEIVED",
     field: "deposit_received_at",
-    stage: "PAYMENT_RECEIVED",
+    stage: "IN_PROGRESS",
     labelKey: "booking.milestone.action.deposit_received",
-    labelFallback: "Deposit received"
+    labelFallback: "Deposit received",
+    hiddenFromStageControls: true
+  }),
+  Object.freeze({
+    key: "IN_PROGRESS",
+    field: null,
+    stage: "IN_PROGRESS",
+    labelKey: "booking.milestone.action.in_progress",
+    labelFallback: "In progress"
   }),
   Object.freeze({
     key: "BOOKING_LOST",
@@ -82,7 +90,7 @@ const BOOKING_MILESTONE_ACTIONS = Object.freeze([
   Object.freeze({
     key: "TRIP_COMPLETED",
     field: "trip_completed_at",
-    stage: "POST_TRIP",
+    stage: "TRIP_COMPLETED",
     labelKey: "booking.milestone.action.trip_completed",
     labelFallback: "Trip completed"
   })
@@ -93,28 +101,28 @@ const BOOKING_MILESTONE_ACTION_BY_KEY = Object.freeze(
 );
 
 const BOOKING_STAGE_FALLBACKS = Object.freeze({
-  NEW: Object.freeze({
+  NEW_BOOKING: Object.freeze({
     currentActionKey: "NEW_BOOKING"
   }),
-  QUALIFIED: Object.freeze({
+  TRAVEL_PLAN_SENT: Object.freeze({
     currentActionKey: "TRAVEL_PLAN_SENT"
   }),
-  PROPOSAL_SENT: Object.freeze({
+  OFFER_SENT: Object.freeze({
     currentActionKey: "OFFER_SENT"
   }),
-  NEGOTIATION: Object.freeze({
+  NEGOTIATION_STARTED: Object.freeze({
     currentActionKey: "NEGOTIATION_STARTED"
   }),
-  INVOICE_SENT: Object.freeze({
+  DEPOSIT_REQUEST_SENT: Object.freeze({
     currentActionKey: "DEPOSIT_REQUEST_SENT"
   }),
-  PAYMENT_RECEIVED: Object.freeze({
-    currentActionKey: "DEPOSIT_RECEIVED"
+  IN_PROGRESS: Object.freeze({
+    currentActionKey: "IN_PROGRESS"
   }),
   LOST: Object.freeze({
     currentActionKey: "BOOKING_LOST"
   }),
-  POST_TRIP: Object.freeze({
+  TRIP_COMPLETED: Object.freeze({
     currentActionKey: "TRIP_COMPLETED"
   })
 });
@@ -271,26 +279,36 @@ export function createBookingCoreModule(ctx) {
     const milestones = booking?.milestones && typeof booking.milestones === "object" ? booking.milestones : null;
     const currentAction = BOOKING_MILESTONE_ACTION_BY_KEY[normalizeText(booking?.last_action).toUpperCase()] || null;
     const currentTimestamp = normalizeText(booking?.last_action_at) || normalizeText(currentAction ? milestones?.[currentAction.field] : "");
+    const depositRecorded = Boolean(
+      normalizeText(booking?.deposit_received_at)
+      || normalizeText(milestones?.deposit_received_at)
+    );
 
     if (currentAction) {
+      const currentActionKey = currentAction.key === "DEPOSIT_RECEIVED" ? "IN_PROGRESS" : currentAction.key;
+      const lastActionLabel = currentAction.key === "DEPOSIT_RECEIVED"
+        ? bookingT("booking.milestone.action.deposit_received", "Deposit received")
+        : milestoneActionLabel(currentActionKey);
       return {
-        currentActionKey: currentAction.key,
+        currentActionKey,
         lastAction: currentTimestamp
           ? bookingT(
               "booking.milestone.last_action_at",
               "Last action: {action} on {date}",
               {
-                action: milestoneActionLabel(currentAction.key),
+                action: lastActionLabel,
                 date: formatDateTime(currentTimestamp)
               }
             )
-          : milestoneActionLabel(currentAction.key)
+          : lastActionLabel
       };
     }
 
-    const fallback = BOOKING_STAGE_FALLBACKS[normalizeText(booking?.stage).toUpperCase()] || BOOKING_STAGE_FALLBACKS.NEW;
+    const fallback = BOOKING_STAGE_FALLBACKS[normalizeText(booking?.stage).toUpperCase()] || BOOKING_STAGE_FALLBACKS.NEW_BOOKING;
     return {
-      currentActionKey: fallback.currentActionKey,
+      currentActionKey: depositRecorded && fallback.currentActionKey === "DEPOSIT_REQUEST_SENT"
+        ? "IN_PROGRESS"
+        : fallback.currentActionKey,
       lastAction: ""
     };
   }
@@ -568,21 +586,48 @@ export function createBookingCoreModule(ctx) {
       els.lastActionDetail.hidden = !text;
     }
     if (els.milestoneActions) {
-      const buttons = BOOKING_MILESTONE_ACTIONS.map((action) => {
-        const isCurrent = draftMilestoneActionKey === action.key;
-        const classes = [
-          "btn",
-          "btn-ghost",
-          "booking-milestone-actions__btn",
-          isCurrent ? "booking-milestone-actions__btn--current" : ""
-        ].filter(Boolean).join(" ");
-        return `<button
-          class="${classes}"
-          type="button"
-          data-booking-milestone-action="${escapeHtml(action.key)}"
-          aria-pressed="${isCurrent ? "true" : "false"}"
-          ${state.permissions.canChangeStage ? "" : " disabled"}
-        >${escapeHtml(milestoneActionLabel(action.key))}</button>`;
+      const hasRecordedDeposit = Boolean(
+        normalizeText(state.booking?.deposit_received_at)
+        || normalizeText(state.booking?.milestones?.deposit_received_at)
+      );
+      const actionRows = [
+        {
+          className: "booking-milestone-actions__row",
+          actions: ["NEW_BOOKING", "TRAVEL_PLAN_SENT", "OFFER_SENT", "NEGOTIATION_STARTED", "DEPOSIT_REQUEST_SENT"],
+          isEnabled: !hasRecordedDeposit
+        },
+        {
+          className: "booking-milestone-actions__row",
+          actions: ["IN_PROGRESS", "TRIP_COMPLETED"],
+          isEnabled: hasRecordedDeposit
+        },
+        {
+          className: "booking-milestone-actions__row booking-milestone-actions__row--terminal",
+          actions: ["BOOKING_LOST"],
+          isEnabled: true
+        }
+      ];
+      const buttons = actionRows.map((row) => {
+        const rowButtons = row.actions.map((actionKey) => {
+          const action = BOOKING_MILESTONE_ACTION_BY_KEY[actionKey];
+          if (!action) return "";
+          const isCurrent = draftMilestoneActionKey === action.key;
+          const classes = [
+            "btn",
+            "btn-ghost",
+            "booking-milestone-actions__btn",
+            isCurrent ? "booking-milestone-actions__btn--current" : ""
+          ].filter(Boolean).join(" ");
+          const disabled = !state.permissions.canChangeStage || !row.isEnabled;
+          return `<button
+            class="${classes}"
+            type="button"
+            data-booking-milestone-action="${escapeHtml(action.key)}"
+            aria-pressed="${isCurrent ? "true" : "false"}"
+            ${disabled ? " disabled" : ""}
+          >${escapeHtml(milestoneActionLabel(action.key))}</button>`;
+        }).join("");
+        return `<div class="${row.className}">${rowButtons}</div>`;
       }).join("");
       els.milestoneActions.innerHTML = buttons;
     }

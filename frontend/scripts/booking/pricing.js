@@ -123,6 +123,7 @@ export function createBookingPricingModule(ctx) {
     fetchBookingMutation,
     getBookingRevision,
     renderBookingHeader,
+    renderActionControls,
     renderBookingData,
     loadActivities,
     escapeHtml,
@@ -139,35 +140,62 @@ export function createBookingPricingModule(ctx) {
   }
   const pricingDirtyTracker = createSnapshotDirtyTracker({
     captureSnapshot: () => captureControlSnapshot(els.pricing_panel),
-    isEnabled: () => state.permissions.canEditBooking && isPaymentsSectionActivated(),
+    isEnabled: () => state.permissions.canEditBooking && hasPaymentTermsFoundation(),
     onDirtyChange: (isDirty) => setBookingSectionDirty("pricing", isDirty)
   });
 
-  function effectiveMilestoneActionKey() {
-    const draftAction = String(state.coreDraft?.milestone_action_key || "").trim().toUpperCase();
-    if (draftAction) return draftAction;
-    const savedAction = String(state.booking?.last_action || "").trim().toUpperCase();
-    if (savedAction) return savedAction;
-    return String(state.booking?.stage || "").trim().toUpperCase();
+  function bookingHasRecordedDeposit() {
+    return Boolean(
+      String(
+        state.booking?.deposit_received_at
+        || state.booking?.milestones?.deposit_received_at
+        || ""
+      ).trim()
+    );
   }
 
-  function isPaymentsSectionActivated() {
-    const actionKey = effectiveMilestoneActionKey();
-    return actionKey === "DEPOSIT_RECEIVED"
-      || String(state.booking?.stage || "").trim().toUpperCase() === "PAYMENT_RECEIVED"
-      || Boolean(state.booking?.milestones?.deposit_received_at);
-  }
-
-  function effectiveDepositReceivedAt() {
-    const savedTimestamp = String(
-      state.booking?.milestones?.deposit_received_at
-      || (String(state.booking?.last_action || "").trim().toUpperCase() === "DEPOSIT_RECEIVED"
-        ? state.booking?.last_action_at
-        : "")
+  function savedDepositReceivedAt() {
+    return String(
+      state.booking?.deposit_received_at
+      || state.booking?.milestones?.deposit_received_at
       || ""
     ).trim();
-    if (savedTimestamp) return savedTimestamp;
-    return isPaymentsSectionActivated() ? new Date().toISOString() : "";
+  }
+
+  function savedDepositConfirmedById() {
+    return String(state.booking?.deposit_confirmed_by_atp_staff_id || "").trim();
+  }
+
+  function savedDepositReference() {
+    return String(
+      state.booking?.accepted_record?.accepted_deposit_reference
+      || ""
+    ).trim();
+  }
+
+  function currentOfferPaymentTerms() {
+    const draftTerms = state.offerDraft?.payment_terms;
+    if (draftTerms && typeof draftTerms === "object") return draftTerms;
+    if (state.booking?.offer?.payment_terms && typeof state.booking.offer.payment_terms === "object") {
+      return state.booking.offer.payment_terms;
+    }
+    if (state.booking?.accepted_record?.payment_terms && typeof state.booking.accepted_record.payment_terms === "object") {
+      return state.booking.accepted_record.payment_terms;
+    }
+    return null;
+  }
+
+  function currentOfferPaymentTermLines() {
+    return Array.isArray(currentOfferPaymentTerms()?.lines) ? currentOfferPaymentTerms().lines : [];
+  }
+
+  function hasPaymentTermsFoundation() {
+    return currentOfferPaymentTermLines().length > 0;
+  }
+
+  function findDepositPaymentTermLine() {
+    const lines = currentOfferPaymentTermLines();
+    return lines.find((line) => String(line?.kind || "").trim().toUpperCase() === "DEPOSIT") || lines[0] || null;
   }
 
   function setPricingControlsVisibility(active) {
@@ -177,7 +205,11 @@ export function createBookingPricingModule(ctx) {
     const paymentsWrap = els.pricing_payments_table?.closest(".backend-table-wrap");
     const paymentsHeading = paymentsWrap?.previousElementSibling || null;
     const pricingStatusRow = els.pricing_status?.closest(".backend-controls");
+    const receiptControls = els.pricing_deposit_controls;
+    const receiptHintRow = els.pricing_deposit_hint_row;
 
+    if (receiptControls instanceof HTMLElement) receiptControls.hidden = !active;
+    if (receiptHintRow instanceof HTMLElement) receiptHintRow.hidden = !active;
     if (pricingControls instanceof HTMLElement) pricingControls.hidden = !active;
     if (adjustmentsHeading instanceof HTMLElement) adjustmentsHeading.hidden = !active;
     if (adjustmentsWrap instanceof HTMLElement) adjustmentsWrap.hidden = !active;
@@ -193,6 +225,11 @@ export function createBookingPricingModule(ctx) {
 
   function clearPricingStatus() {
     setPricingStatus("");
+  }
+
+  function setPricingDepositHint(message) {
+    if (!els.pricing_deposit_hint) return;
+    els.pricing_deposit_hint.textContent = message || "";
   }
 
   function updatePricingDirtyState() {
@@ -215,18 +252,13 @@ export function createBookingPricingModule(ctx) {
     );
   }
 
-  function currentOfferPaymentTerms() {
-    const draftTerms = state.offerDraft?.payment_terms;
-    if (draftTerms && typeof draftTerms === "object") return draftTerms;
-    return state.booking?.offer?.payment_terms || null;
-  }
-
   function currentOfferCurrency() {
     return normalizeCurrencyCode(
       state.offerDraft?.payment_terms?.currency
       || state.offerDraft?.currency
       || state.booking?.offer?.payment_terms?.currency
       || state.booking?.offer?.currency
+      || state.booking?.accepted_record?.accepted_deposit_currency
       || state.booking?.preferred_currency
       || "USD"
     );
@@ -238,6 +270,7 @@ export function createBookingPricingModule(ctx) {
       ?? state.offerDraft?.totals?.total_price_cents
       ?? state.booking?.offer?.total_price_cents
       ?? state.booking?.offer?.totals?.total_price_cents
+      ?? state.booking?.accepted_record?.offer?.total_price_cents
       ?? 0
     );
     return Number.isFinite(total) ? Math.max(0, Math.round(total)) : 0;
@@ -251,6 +284,86 @@ export function createBookingPricingModule(ctx) {
     return Math.max(0, Math.round(Number(fallbackAmount || 0) || 0));
   }
 
+  function isDepositPaymentRow(payment, depositLine = findDepositPaymentTermLine()) {
+    const normalizedOriginId = String(payment?.origin_payment_term_line_id || "").trim();
+    const depositLineId = String(depositLine?.id || "").trim();
+    if (normalizedOriginId && depositLineId && normalizedOriginId === depositLineId) return true;
+    return String(payment?.label || "").trim().toLowerCase().includes("deposit");
+  }
+
+  function buildAtpStaffOptions(selectedId = "") {
+    const users = new Map();
+    for (const user of Array.isArray(state.keycloakUsers) ? state.keycloakUsers : []) {
+      const userId = String(user?.id || "").trim();
+      if (userId) users.set(userId, user);
+    }
+    const authUserId = String(state.authUser?.id || state.authUser?.sub || "").trim();
+    if (authUserId && !users.has(authUserId)) {
+      users.set(authUserId, state.authUser || { id: authUserId });
+    }
+    if (selectedId && !users.has(selectedId)) {
+      users.set(selectedId, {
+        id: selectedId,
+        username: selectedId,
+        name: state.booking?.accepted_record?.deposit_confirmed_by_label || selectedId
+      });
+    }
+    const optionLabel = (user) => String(
+      user?.staff_profile?.full_name
+      || user?.full_name
+      || user?.name
+      || user?.username
+      || user?.id
+      || ""
+    ).trim();
+    return [`<option value="">${escapeHtml(bookingT("booking.pricing.confirmed_by_placeholder", "Select ATP staff"))}</option>`]
+      .concat(
+        [...users.values()]
+          .sort((left, right) => optionLabel(left).localeCompare(optionLabel(right)))
+          .map((user) => `<option value="${escapeHtml(String(user.id || "").trim())}" ${String(user.id || "").trim() === selectedId ? "selected" : ""}>${escapeHtml(optionLabel(user) || String(user.id || "").trim())}</option>`)
+      )
+      .join("");
+  }
+
+  function renderDepositReceiptControls(pricing) {
+    const depositLine = findDepositPaymentTermLine();
+    const currency = normalizeCurrencyCode(pricing?.currency || currentOfferCurrency());
+    const total = currentOfferTotalPriceCents();
+    const depositAmount = resolvePaymentTermLineAmount(depositLine, 0);
+    const explicitPercentage = Number(depositLine?.amount_spec?.percentage_basis_points);
+    const computedPercentage = total > 0 ? ((depositAmount / total) * 100) : 0;
+    const percentageValue = Number.isFinite(explicitPercentage)
+      ? (explicitPercentage / 100).toFixed(2).replace(/\.00$/, "")
+      : computedPercentage.toFixed(2).replace(/\.00$/, "");
+    const locked = bookingHasRecordedDeposit();
+
+    if (els.pricing_deposit_expected_percentage) {
+      els.pricing_deposit_expected_percentage.value = `${percentageValue}%`;
+    }
+    if (els.pricing_deposit_expected_amount) {
+      els.pricing_deposit_expected_amount.value = formatMoneyDisplay(depositAmount, currency);
+    }
+    if (els.pricing_deposit_received_at_input) {
+      els.pricing_deposit_received_at_input.value = normalizeDateTimeLocal(savedDepositReceivedAt());
+      els.pricing_deposit_received_at_input.disabled = !state.permissions.canEditBooking || locked;
+    }
+    if (els.pricing_deposit_confirmed_by_select) {
+      const selectedId = savedDepositConfirmedById();
+      els.pricing_deposit_confirmed_by_select.innerHTML = buildAtpStaffOptions(selectedId);
+      els.pricing_deposit_confirmed_by_select.value = selectedId;
+      els.pricing_deposit_confirmed_by_select.disabled = !state.permissions.canEditBooking || locked;
+    }
+    if (els.pricing_deposit_reference_input) {
+      els.pricing_deposit_reference_input.value = savedDepositReference();
+      els.pricing_deposit_reference_input.disabled = !state.permissions.canEditBooking || locked;
+    }
+    setPricingDepositHint(
+      locked
+        ? bookingT("booking.pricing.deposit_recorded_hint", "Deposit receipt recorded. The deposit row is now locked in this section.")
+        : bookingT("booking.pricing.deposit_received_hint", "Enter the deposit receipt details here, then save the page to record the deposit and freeze the accepted customer record.")
+    );
+  }
+
   function nextPricingFromPaymentTerms(basePricing) {
     const pricing = clonePricing(basePricing || {});
     const paymentTerms = currentOfferPaymentTerms();
@@ -262,7 +375,8 @@ export function createBookingPricingModule(ctx) {
     const currency = currentOfferCurrency();
     const existingPayments = Array.isArray(pricing.payments) ? pricing.payments : [];
     const remainingPayments = [...existingPayments];
-    const normalizedDepositReceivedAt = effectiveDepositReceivedAt() || new Date().toISOString();
+    const depositRecorded = bookingHasRecordedDeposit();
+    const normalizedDepositReceivedAt = savedDepositReceivedAt();
 
     const payments = lines.map((line, index) => {
       const lineLabel = String(line?.label || "").trim();
@@ -276,7 +390,7 @@ export function createBookingPricingModule(ctx) {
       const fixedDate = String(line?.due_rule?.fixed_date || "").trim();
       const existingStatus = String(existing?.status || "").trim().toUpperCase();
       const existingPaidAt = String(existing?.paid_at || "").trim();
-      const status = isDeposit ? "PAID" : (existingStatus === "PAID" ? "PAID" : "PENDING");
+      const status = isDeposit ? (depositRecorded ? "PAID" : "PENDING") : (existingStatus === "PAID" ? "PAID" : "PENDING");
       const paidAt = status === "PAID"
         ? (existingPaidAt || (isDeposit ? normalizedDepositReceivedAt : ""))
         : "";
@@ -284,6 +398,7 @@ export function createBookingPricingModule(ctx) {
       return {
         id: String(existing?.id || "").trim(),
         label: lineLabel || `${bookingT("booking.payment", "Payment")} ${index + 1}`,
+        origin_payment_term_line_id: String(existing?.origin_payment_term_line_id || line?.id || "").trim() || null,
         due_date: dueType === "FIXED_DATE"
           ? (fixedDate || null)
           : (String(existing?.due_date || "").trim() || null),
@@ -408,22 +523,27 @@ export function createBookingPricingModule(ctx) {
     const readOnly = !state.permissions.canEditBooking;
     const items = Array.isArray(state.pricingDraft.payments) ? state.pricingDraft.payments : [];
     const currency = normalizeCurrencyCode(state.pricingDraft.currency);
+    const depositLine = findDepositPaymentTermLine();
     const header = `<thead><tr><th>${escapeHtml(bookingT("booking.pricing.label", "Label"))}</th><th>${escapeHtml(bookingT("booking.due_date", "Due date"))}</th><th>${escapeHtml(bookingT("booking.pricing.net_currency", "Net ({currency})", { currency }))}</th><th>${escapeHtml(bookingT("booking.pricing.tax_percent", "Tax %"))}</th><th>${escapeHtml(bookingT("booking.pricing.status", "Status"))}</th><th>${escapeHtml(bookingT("booking.pricing.paid_at", "Paid at"))}</th><th>${escapeHtml(bookingT("booking.notes", "Notes"))}</th>${readOnly ? "" : "<th></th>"}</tr></thead>`;
     const rows = items
-      .map((item, index) => `<tr>
-      <td><input id="pricing_payment_label_${index}" name="pricing_payment_label_${index}" data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input id="pricing_payment_due_date_${index}" name="pricing_payment_due_date_${index}" data-pricing-payment-due-date="${index}" type="date" value="${escapeHtml(item.due_date || "")}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input id="pricing_payment_net_${index}" name="pricing_payment_net_${index}" data-pricing-payment-net="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.net_amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input id="pricing_payment_tax_${index}" name="pricing_payment_tax_${index}" data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
+      .map((item, index) => {
+        const depositLocked = isDepositPaymentRow(item, depositLine);
+        const rowReadOnly = readOnly || depositLocked;
+        return `<tr>
+      <td><input id="pricing_payment_label_${index}" name="pricing_payment_label_${index}" data-pricing-payment-label="${index}" type="text" value="${escapeHtml(item.label || "")}" ${rowReadOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_due_date_${index}" name="pricing_payment_due_date_${index}" data-pricing-payment-due-date="${index}" type="date" value="${escapeHtml(item.due_date || "")}" ${rowReadOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_net_${index}" name="pricing_payment_net_${index}" data-pricing-payment-net="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(item.net_amount_cents || 0, currency))}" ${rowReadOnly ? "disabled" : ""} /></td>
+      <td><input id="pricing_payment_tax_${index}" name="pricing_payment_tax_${index}" data-pricing-payment-tax="${index}" type="number" min="0" max="100" step="0.01" value="${escapeHtml(formatTaxRatePercent(item.tax_rate_basis_points))}" ${rowReadOnly ? "disabled" : ""} /></td>
       <td>
-        <select id="pricing_payment_status_${index}" name="pricing_payment_status_${index}" data-pricing-payment-status="${index}" ${readOnly ? "disabled" : ""}>
+        <select id="pricing_payment_status_${index}" name="pricing_payment_status_${index}" data-pricing-payment-status="${index}" ${readOnly || depositLocked ? "disabled" : ""}>
           ${["PENDING", "PAID"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${escapeHtml(pricingPaymentStatusLabel(status))}</option>`).join("")}
         </select>
       </td>
-      <td><input id="pricing_payment_paid_at_${index}" name="pricing_payment_paid_at_${index}" data-pricing-payment-paid-at="${index}" type="datetime-local" value="${escapeHtml(normalizeDateTimeLocal(item.paid_at))}" ${readOnly ? "disabled" : ""} /></td>
-      <td><input class="booking-text-field booking-text-field--internal" id="pricing_payment_notes_${index}" name="pricing_payment_notes_${index}" data-pricing-payment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${readOnly ? "disabled" : ""} /></td>
-      ${readOnly ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">${escapeHtml(bookingT("common.remove", "Remove"))}</button></td>`}
-    </tr>`)
+      <td><input id="pricing_payment_paid_at_${index}" name="pricing_payment_paid_at_${index}" data-pricing-payment-paid-at="${index}" type="datetime-local" value="${escapeHtml(normalizeDateTimeLocal(item.paid_at))}" ${readOnly || depositLocked ? "disabled" : ""} /></td>
+      <td><input class="booking-text-field booking-text-field--internal" id="pricing_payment_notes_${index}" name="pricing_payment_notes_${index}" data-pricing-payment-notes="${index}" type="text" value="${escapeHtml(item.notes || "")}" ${rowReadOnly ? "disabled" : ""} /></td>
+      ${readOnly || depositLocked ? "" : `<td><button class="btn btn-ghost" type="button" data-pricing-remove-payment="${index}">${escapeHtml(bookingT("common.remove", "Remove"))}</button></td>`}
+    </tr>`;
+      })
       .join("");
     const addRow = readOnly ? "" : `<tr><td colspan="8"><button class="btn btn-ghost" type="button" data-pricing-add-payment>${escapeHtml(bookingT("common.add", "Add"))}</button></td></tr>`;
     const body = (rows || `<tr><td colspan="${readOnly ? 7 : 8}">${escapeHtml(bookingT("booking.pricing.no_payments", "No payments scheduled"))}</td></tr>`) + addRow;
@@ -452,21 +572,22 @@ export function createBookingPricingModule(ctx) {
     if (!els.pricing_panel || !state.booking) return;
     const preserveDraft = options?.preserveDraft === true;
     const markDerivedChangesDirty = options?.markDerivedChangesDirty === true;
-    const paymentsActivated = isPaymentsSectionActivated();
+    const paymentTermsAvailable = hasPaymentTermsFoundation();
     const savedPricing = clonePricing(state.booking.pricing || {});
     const hasDirtyDraft = preserveDraft && state.dirty.pricing && state.pricingDraft && typeof state.pricingDraft === "object";
-    const pricing = paymentsActivated
+    const pricing = paymentTermsAvailable
       ? nextPricingFromPaymentTerms(hasDirtyDraft ? state.pricingDraft : savedPricing)
       : savedPricing;
     state.pricingDraft = pricing;
-    setPricingControlsVisibility(paymentsActivated);
+    setPricingControlsVisibility(paymentTermsAvailable);
 
-    if (!paymentsActivated) {
+    if (!paymentTermsAvailable) {
       if (els.pricing_summary_table) {
-        els.pricing_summary_table.innerHTML = `<tbody><tr><td colspan="2">${escapeHtml(bookingT("booking.pricing.deposit_received_required", 'No payment totals yet. Press "Deposit received" at the top of this page to indicate that the deposit has been received by ATP'))}</td></tr></tbody>`;
+        els.pricing_summary_table.innerHTML = `<tbody><tr><td colspan="2">${escapeHtml(bookingT("booking.pricing.deposit_setup_required", "Create an offer with payment terms before recording a deposit receipt."))}</td></tr></tbody>`;
       }
       if (els.pricing_adjustments_table) els.pricing_adjustments_table.innerHTML = "";
       if (els.pricing_payments_table) els.pricing_payments_table.innerHTML = "";
+      setPricingDepositHint("");
       clearPricingStatus();
       markPricingSnapshotClean();
       return;
@@ -484,6 +605,7 @@ export function createBookingPricingModule(ctx) {
       els.pricing_agreed_net_input.value = formatMoneyInputValue(pricing.agreed_net_amount_cents || 0, currency);
       els.pricing_agreed_net_input.disabled = !state.permissions.canEditBooking;
     }
+    renderDepositReceiptControls(pricing);
     renderPricingSummaryTable(pricing);
     renderPricingAdjustmentsTable();
     renderPricingPaymentsTable();
@@ -559,12 +681,33 @@ export function createBookingPricingModule(ctx) {
     };
   }
 
+  function collectDepositReceiptPayload() {
+    const depositReceivedAt = normalizeLocalDateTimeToIso(els.pricing_deposit_received_at_input?.value || "");
+    const confirmedById = String(els.pricing_deposit_confirmed_by_select?.value || "").trim();
+    const depositReference = String(els.pricing_deposit_reference_input?.value || "").trim();
+    const hasAnyValue = Boolean(depositReceivedAt || confirmedById || depositReference);
+    if (!hasAnyValue) return null;
+    if (!depositReceivedAt) {
+      throw new Error(bookingT("booking.pricing.error.deposit_received_at_required", "Deposit received at is required."));
+    }
+    if (!confirmedById) {
+      throw new Error(bookingT("booking.pricing.error.deposit_confirmed_by_required", "Confirmed by is required."));
+    }
+    return {
+      deposit_received_at: depositReceivedAt,
+      deposit_confirmed_by_atp_staff_id: confirmedById,
+      ...(depositReference ? { deposit_reference: depositReference } : {})
+    };
+  }
+
   async function savePricing() {
     if (!state.booking || !state.permissions.canEditBooking) return;
     clearPricingStatus();
     let pricing;
+    let depositReceipt;
     try {
       pricing = collectPricingPayload();
+      depositReceipt = collectDepositReceiptPayload();
     } catch (error) {
       setPricingStatus(String(error?.message || error));
       return;
@@ -576,6 +719,7 @@ export function createBookingPricingModule(ctx) {
       body: {
         expected_pricing_revision: pricingRevision(),
         pricing,
+        ...(depositReceipt ? { deposit_receipt: depositReceipt } : {}),
         actor: state.user
       }
     });
@@ -583,6 +727,7 @@ export function createBookingPricingModule(ctx) {
     state.booking = result.booking;
     renderBookingHeader();
     renderBookingData();
+    renderActionControls?.();
     renderPricingPanel();
     await loadActivities();
   }

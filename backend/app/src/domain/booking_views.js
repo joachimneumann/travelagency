@@ -30,6 +30,7 @@ export function createBookingViewHelpers({
   buildBookingTravelPlanReadModel,
   buildBookingPricingReadModel,
   buildBookingOfferReadModel,
+  buildBookingOfferPaymentTermsReadModel,
   listAssignableKeycloakUsers,
   keycloakDisplayName,
   resolveAssignedAtpStaffProfile,
@@ -114,12 +115,12 @@ export function createBookingViewHelpers({
 
   function activeBookingStages() {
     return new Set([
-      stages.NEW,
-      stages.QUALIFIED,
-      stages.PROPOSAL_SENT,
-      stages.NEGOTIATION,
-      stages.INVOICE_SENT,
-      stages.PAYMENT_RECEIVED
+      stages.NEW_BOOKING,
+      stages.TRAVEL_PLAN_SENT,
+      stages.OFFER_SENT,
+      stages.NEGOTIATION_STARTED,
+      stages.DEPOSIT_REQUEST_SENT,
+      stages.IN_PROGRESS
     ]);
   }
 
@@ -324,8 +325,7 @@ export function createBookingViewHelpers({
     const milestoneState = resolveBookingMilestoneState({
       milestones: normalizedBooking?.milestones,
       last_action: normalizedBooking?.last_action,
-      last_action_at: normalizedBooking?.last_action_at,
-      lifecycle: normalizedBooking?.lifecycle
+      last_action_at: normalizedBooking?.last_action_at
     }, normalizedBooking?.stage);
     const generatedOffers = listMode
       ? []
@@ -358,9 +358,96 @@ export function createBookingViewHelpers({
     const offerDisplayCurrency = listMode
       ? safeCurrency(normalizedBooking?.offer?.currency || offerCurrency)
       : offerCurrency;
+    async function resolveKeycloakUserLabel(keycloakUserId) {
+      const normalizedKeycloakUserId = normalizeText(keycloakUserId);
+      if (!normalizedKeycloakUserId) return "";
+      const atpStaffProfile = typeof resolveAssignedAtpStaffProfile === "function"
+        ? await resolveAssignedAtpStaffProfile(normalizedKeycloakUserId).catch(() => null)
+        : null;
+      const profileLabel = normalizeText(atpStaffProfile?.name);
+      if (profileLabel) return profileLabel;
+      const assignableKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
+      return normalizeText(assignableKeycloakUserLabels?.get(normalizedKeycloakUserId)) || normalizedKeycloakUserId;
+    }
+    async function buildAcceptedRecordReadModel() {
+      const hasAcceptedRecord = Boolean(
+        normalizeText(normalizedBooking?.deposit_received_at)
+        || normalizedBooking?.accepted_offer_snapshot
+        || normalizedBooking?.accepted_payment_terms_snapshot
+        || normalizedBooking?.accepted_travel_plan_snapshot
+        || normalizeText(normalizedBooking?.accepted_offer_artifact_ref)
+        || normalizeText(normalizedBooking?.accepted_travel_plan_artifact_ref)
+      );
+      if (!hasAcceptedRecord) return { available: false };
+
+      const acceptedOfferSnapshot = normalizedBooking?.accepted_offer_snapshot && typeof normalizedBooking.accepted_offer_snapshot === "object"
+        ? normalizedBooking.accepted_offer_snapshot
+        : null;
+      const acceptedOfferReadModel = acceptedOfferSnapshot
+        ? await buildBookingOfferReadModel(
+          acceptedOfferSnapshot,
+          safeCurrency(acceptedOfferSnapshot?.currency || normalizedBooking?.accepted_deposit_currency || preferredCurrency),
+          { lang }
+        )
+        : null;
+      const acceptedPaymentTermsSnapshot = normalizedBooking?.accepted_payment_terms_snapshot && typeof normalizedBooking.accepted_payment_terms_snapshot === "object"
+        ? normalizedBooking.accepted_payment_terms_snapshot
+        : null;
+      const acceptedPaymentTerms = acceptedPaymentTermsSnapshot && typeof buildBookingOfferPaymentTermsReadModel === "function"
+        ? buildBookingOfferPaymentTermsReadModel(
+          acceptedPaymentTermsSnapshot,
+          safeCurrency(
+            acceptedPaymentTermsSnapshot?.currency
+            || acceptedOfferReadModel?.currency
+            || normalizedBooking?.accepted_deposit_currency
+            || preferredCurrency
+          ),
+          Number(acceptedOfferReadModel?.total_price_cents || 0)
+        )
+        : (acceptedOfferReadModel?.payment_terms || null);
+      const acceptedTravelPlanSnapshot = normalizedBooking?.accepted_travel_plan_snapshot && typeof normalizedBooking.accepted_travel_plan_snapshot === "object"
+        ? normalizedBooking.accepted_travel_plan_snapshot
+        : null;
+      const depositConfirmedById = normalizeText(normalizedBooking?.deposit_confirmed_by_atp_staff_id);
+      return {
+        available: true,
+        ...(normalizeText(normalizedBooking?.deposit_received_at)
+          ? { deposit_received_at: normalizeText(normalizedBooking.deposit_received_at) }
+          : {}),
+        ...(depositConfirmedById ? { deposit_confirmed_by_atp_staff_id: depositConfirmedById } : {}),
+        ...(depositConfirmedById
+          ? { deposit_confirmed_by_label: await resolveKeycloakUserLabel(depositConfirmedById) }
+          : {}),
+        ...(Number.isFinite(Number(normalizedBooking?.accepted_deposit_amount_cents))
+          ? { accepted_deposit_amount_cents: Math.max(0, Math.round(Number(normalizedBooking.accepted_deposit_amount_cents))) }
+          : {}),
+        ...(normalizeText(normalizedBooking?.accepted_deposit_currency)
+          ? { accepted_deposit_currency: normalizeText(normalizedBooking.accepted_deposit_currency).toUpperCase() }
+          : {}),
+        ...(normalizeText(normalizedBooking?.accepted_deposit_reference)
+          ? { accepted_deposit_reference: normalizeText(normalizedBooking.accepted_deposit_reference) }
+          : {}),
+        ...(acceptedOfferReadModel ? { offer: acceptedOfferReadModel } : {}),
+        ...(acceptedPaymentTerms ? { payment_terms: acceptedPaymentTerms } : {}),
+        ...(acceptedTravelPlanSnapshot
+          ? { travel_plan: buildBookingTravelPlanReadModel(acceptedTravelPlanSnapshot, acceptedOfferSnapshot, { lang }) }
+          : {}),
+        ...(normalizeText(normalizedBooking?.accepted_offer_artifact_ref)
+          ? { offer_artifact_ref: normalizeText(normalizedBooking.accepted_offer_artifact_ref) }
+          : {}),
+        ...(normalizeText(normalizedBooking?.accepted_travel_plan_artifact_ref)
+          ? { travel_plan_artifact_ref: normalizeText(normalizedBooking.accepted_travel_plan_artifact_ref) }
+          : {})
+      };
+    }
+    const acceptedRecord = listMode ? undefined : await buildAcceptedRecordReadModel();
     return {
       ...normalizedBooking,
       stage: milestoneState.stage,
+      deposit_received_at: normalizeText(normalizedBooking?.deposit_received_at)
+        || normalizeText(milestoneState?.milestones?.deposit_received_at)
+        || undefined,
+      deposit_confirmed_by_atp_staff_id: normalizeText(normalizedBooking?.deposit_confirmed_by_atp_staff_id) || undefined,
       milestones: milestoneState.milestones,
       last_action: milestoneState.lastAction,
       last_action_at: milestoneState.lastActionAt,
@@ -379,6 +466,7 @@ export function createBookingViewHelpers({
       travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang),
       pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, pricingDisplayCurrency),
       offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerDisplayCurrency, { lang }),
+      ...(acceptedRecord ? { accepted_record: acceptedRecord } : {}),
       travel_plan_pdfs: travelPlanPdfs.map((item) => ({
         ...item,
         sent_to_customer: item?.sent_to_customer === true,

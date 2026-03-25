@@ -3,14 +3,14 @@
 
 import { SHARED_FIELD_DEFS, schemaField, validateShape } from './generated_SchemaRuntime.js';
 export const GENERATED_BOOKING_STAGES = Object.freeze([
-  "NEW",
-  "QUALIFIED",
-  "PROPOSAL_SENT",
-  "NEGOTIATION",
-  "INVOICE_SENT",
-  "PAYMENT_RECEIVED",
-  "LOST",
-  "POST_TRIP"
+  "NEW_BOOKING",
+  "TRAVEL_PLAN_SENT",
+  "OFFER_SENT",
+  "NEGOTIATION_STARTED",
+  "DEPOSIT_REQUEST_SENT",
+  "IN_PROGRESS",
+  "TRIP_COMPLETED",
+  "LOST"
 ]);
 export const GENERATED_PAYMENT_STATUSES = Object.freeze([
   "PENDING",

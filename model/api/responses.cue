@@ -218,6 +218,21 @@ import (
 	total_price_cents:  int
 }
 
+#BookingAcceptedRecordReadModel: {
+	available:                        bool
+	deposit_received_at?:             common.#Timestamp
+	deposit_confirmed_by_atp_staff_id?: common.#Identifier
+	deposit_confirmed_by_label?:      string
+	accepted_deposit_amount_cents?:   >=0 & int
+	accepted_deposit_currency?:       enums.#CurrencyCode
+	accepted_deposit_reference?:      string
+	offer?:                           #BookingOfferReadModel
+	payment_terms?:                   #BookingOfferPaymentTermsReadModel
+	travel_plan?:                     entities.#BookingTravelPlan
+	offer_artifact_ref?:              common.#Identifier
+	travel_plan_artifact_ref?:        common.#Identifier
+}
+
 #GeneratedBookingOfferReadModel: {
 	id:                            common.#Identifier
 	booking_id:                    common.#Identifier
@@ -264,6 +279,8 @@ import (
 	offer_revision?:                 >=0 & int
 	invoices_revision?:              >=0 & int
 	stage:                           enums.#BookingStage
+	deposit_received_at?:            common.#Timestamp
+	deposit_confirmed_by_atp_staff_id?: common.#Identifier
 	milestones?:                     entities.#BookingMilestones
 	last_action?:                    enums.#BookingMilestoneAction
 	last_action_at?:                 common.#Timestamp
@@ -279,6 +296,7 @@ import (
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
 	confirmed_generated_offer_id?: common.#Identifier
+	accepted_record?:             #BookingAcceptedRecordReadModel
 	notes?:                       string
 	persons?: [...entities.#BookingPerson]
 	travel_plan?:         entities.#BookingTravelPlan

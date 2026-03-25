@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-25T02:14:09Z",
+  "generatedAt": "2026-03-25T07:35:20Z",
   "languages": [
     "en",
     "ar",
@@ -123,28 +123,28 @@
   ],
   "stages": [
     {
-      "code": "NEW"
+      "code": "NEW_BOOKING"
     },
     {
-      "code": "QUALIFIED"
+      "code": "TRAVEL_PLAN_SENT"
     },
     {
-      "code": "PROPOSAL_SENT"
+      "code": "OFFER_SENT"
     },
     {
-      "code": "NEGOTIATION"
+      "code": "NEGOTIATION_STARTED"
     },
     {
-      "code": "INVOICE_SENT"
+      "code": "DEPOSIT_REQUEST_SENT"
     },
     {
-      "code": "PAYMENT_RECEIVED"
+      "code": "IN_PROGRESS"
+    },
+    {
+      "code": "TRIP_COMPLETED"
     },
     {
       "code": "LOST"
-    },
-    {
-      "code": "POST_TRIP"
     }
   ],
   "paymentStatuses": [

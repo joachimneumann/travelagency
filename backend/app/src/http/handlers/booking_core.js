@@ -4,7 +4,8 @@ import {
 } from "../../../Generated/API/generated_APIModels.js";
 import {
   applyBookingMilestoneAction,
-  bookingMilestoneMeta
+  bookingMilestoneMeta,
+  validateBookingMilestoneAction
 } from "../../domain/booking_milestones.js";
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 
@@ -73,6 +74,12 @@ export function createBookingCoreHandlers(deps) {
       return;
     }
     if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
+
+    const milestoneValidation = validateBookingMilestoneAction(booking, payload.action);
+    if (!milestoneValidation?.ok) {
+      sendJson(res, milestoneValidation?.status || 422, { error: milestoneValidation?.error || "Invalid milestone action" });
+      return;
+    }
 
     const milestoneUpdate = applyBookingMilestoneAction(booking, payload.action, {
       now: nowIso(),

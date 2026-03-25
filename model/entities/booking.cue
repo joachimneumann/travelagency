@@ -106,6 +106,8 @@ import (
 	offer_revision?:                 >=0 & int
 	invoices_revision?:              >=0 & int
 	stage:                           enums.#BookingStage
+	deposit_received_at?:            common.#Timestamp
+	deposit_confirmed_by_atp_staff_id?: common.#Identifier
 	milestones?:                     #BookingMilestones
 	last_action?:                    enums.#BookingMilestoneAction
 	last_action_at?:                 common.#Timestamp
@@ -119,6 +121,14 @@ import (
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
 	confirmed_generated_offer_id?: common.#Identifier
+	accepted_deposit_amount_cents?: common.#NonNegativeMoneyAmount
+	accepted_deposit_currency?:     enums.#CurrencyCode
+	accepted_deposit_reference?:    string
+	accepted_offer_snapshot?:       #BookingOffer
+	accepted_payment_terms_snapshot?: #BookingOfferPaymentTerms
+	accepted_travel_plan_snapshot?: #BookingTravelPlan
+	accepted_offer_artifact_ref?:   common.#Identifier
+	accepted_travel_plan_artifact_ref?: common.#Identifier
 	notes?:                       string
 	persons?: [...#BookingPerson]
 	travel_plan?:         #BookingTravelPlan

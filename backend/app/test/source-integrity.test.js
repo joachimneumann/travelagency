@@ -630,6 +630,41 @@ test("booking page replaces the stage dropdown with a derived status block and m
   );
 });
 
+test("booking page records deposit receipt from the payments section instead of a top milestone action", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const pricingModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "pricing.js");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+  const bookingCoreSource = await readFile(bookingCorePath, "utf8");
+  const pricingSource = await readFile(pricingModulePath, "utf8");
+
+  assert.match(
+    bookingPageSource,
+    /id="pricing_deposit_controls"[\s\S]*id="pricing_deposit_received_at_input"[\s\S]*id="pricing_deposit_confirmed_by_select"[\s\S]*id="pricing_deposit_reference_input"/,
+    "Payments section should expose dedicated deposit receipt inputs"
+  );
+  assert.match(
+    bookingCoreSource,
+    /actions: \["NEW_BOOKING", "TRAVEL_PLAN_SENT", "OFFER_SENT", "NEGOTIATION_STARTED", "DEPOSIT_REQUEST_SENT"\][\s\S]*actions: \["IN_PROGRESS", "TRIP_COMPLETED"\][\s\S]*actions: \["BOOKING_LOST"\]/,
+    "Top milestone controls should no longer render a Deposit received action"
+  );
+  assert.doesNotMatch(
+    bookingCoreSource,
+    /actions: \[[^\]]*DEPOSIT_RECEIVED[^\]]*\]/,
+    "Deposit received should stay out of the visible top milestone rows"
+  );
+  assert.match(
+    pricingSource,
+    /function collectDepositReceiptPayload\(\) \{[\s\S]*deposit_received_at[\s\S]*deposit_confirmed_by_atp_staff_id[\s\S]*deposit_reference[\s\S]*\}/,
+    "Pricing module should collect deposit receipt details from the payments section"
+  );
+  assert.match(
+    pricingSource,
+    /async function savePricing\(\) \{[\s\S]*collectDepositReceiptPayload\(\)[\s\S]*deposit_receipt: depositReceipt/,
+    "Pricing save should persist deposit receipt details through the pricing endpoint"
+  );
+});
+
 test("booking page top control row keeps staff and customer language visually aligned", async () => {
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingStyles = await readFile(bookingStylesPath, "utf8");

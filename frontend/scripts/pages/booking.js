@@ -64,6 +64,11 @@ function backendT(id, fallback, vars) {
   });
 }
 
+function logBookingSave(message, details = {}) {
+  const payload = details && typeof details === "object" ? { ...details } : { details };
+  console.info(message, payload);
+}
+
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
@@ -232,6 +237,14 @@ const els = {
   pricing_panel: document.getElementById("pricing_panel"),
   pricingPanelSummary: document.getElementById("pricing_panel_summary"),
   pricing_summary_table: document.getElementById("pricing_summary_table"),
+  pricing_deposit_controls: document.getElementById("pricing_deposit_controls"),
+  pricing_deposit_expected_percentage: document.getElementById("pricing_deposit_expected_percentage"),
+  pricing_deposit_expected_amount: document.getElementById("pricing_deposit_expected_amount"),
+  pricing_deposit_received_at_input: document.getElementById("pricing_deposit_received_at_input"),
+  pricing_deposit_confirmed_by_select: document.getElementById("pricing_deposit_confirmed_by_select"),
+  pricing_deposit_reference_input: document.getElementById("pricing_deposit_reference_input"),
+  pricing_deposit_hint_row: document.getElementById("pricing_deposit_hint_row"),
+  pricing_deposit_hint: document.getElementById("pricing_deposit_hint"),
   pricing_currency_input: document.getElementById("pricing_currency_input"),
   pricing_agreed_net_label: document.getElementById("pricing_agreed_net_label"),
   pricing_agreed_net_input: document.getElementById("pricing_agreed_net_input"),
@@ -513,6 +526,13 @@ async function init() {
   if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);
   if (els.discardEditsBtn) els.discardEditsBtn.addEventListener("click", discardPageEdits);
   if (els.saveEditsBtn) els.saveEditsBtn.addEventListener("click", () => {
+    logBookingSave("[booking-save] Save button clicked.", {
+      booking_id: state.id || null,
+      dirty: { ...state.dirty },
+      has_unsaved_changes: hasUnsavedBookingChanges(),
+      page_save_in_flight: state.pageSaveInFlight,
+      page_discard_in_flight: state.pageDiscardInFlight
+    });
     void savePageEdits();
   });
   if (els.personModal) {
@@ -1054,7 +1074,18 @@ function handlePageSaveKeydown(event) {
 }
 
 async function savePageEdits() {
-  if (!hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight) return true;
+  if (!hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight) {
+    logBookingSave("[booking-save] Save request returned early.", {
+      booking_id: state.id || null,
+      reason: !hasUnsavedBookingChanges()
+        ? "no_unsaved_changes"
+        : state.pageSaveInFlight
+          ? "page_save_in_flight"
+          : "page_discard_in_flight",
+      dirty: { ...state.dirty }
+    });
+    return true;
+  }
   state.pageSaveInFlight = true;
   state.pageDirtyBarStatus = "saving";
   state.pageSaveActionError = "";
@@ -1062,6 +1093,20 @@ async function savePageEdits() {
   clearError();
   updatePageDirtyBar();
   updateCleanStateActionAvailability();
+  const saveStartedAt = Date.now();
+  let savePendingWarningTimer = window.setTimeout(() => {
+    logBookingSave("[booking-save] Save flow is still pending after 3000ms.", {
+      booking_id: state.id || null,
+      pending_for_ms: Date.now() - saveStartedAt,
+      dirty: { ...state.dirty },
+      page_dirty_bar_status: state.pageDirtyBarStatus || ""
+    });
+  }, 3000);
+  logBookingSave("[booking-save] Save flow started.", {
+    booking_id: state.id || null,
+    dirty: { ...state.dirty },
+    page_dirty_bar_status: state.pageDirtyBarStatus || ""
+  });
   let saveCompleted = false;
   const tasks = [
     {
@@ -1103,23 +1148,70 @@ async function savePageEdits() {
 
   try {
     for (const task of tasks) {
-      if (!task.shouldRun()) continue;
+      if (!task.shouldRun()) {
+        logBookingSave("[booking-save] Skipping clean save task.", {
+          booking_id: state.id || null,
+          task: task.label
+        });
+        continue;
+      }
+      const taskStartedAt = Date.now();
+      logBookingSave("[booking-save] Running save task.", {
+        booking_id: state.id || null,
+        task: task.label
+      });
       const saved = await task.run();
-      if (saved === false) return false;
+      logBookingSave("[booking-save] Save task finished.", {
+        booking_id: state.id || null,
+        task: task.label,
+        duration_ms: Date.now() - taskStartedAt,
+        result: saved === false ? "blocked_or_failed" : "completed"
+      });
+      if (saved === false) {
+        logBookingSave("[booking-save] Save flow stopped because a task returned false.", {
+          booking_id: state.id || null,
+          task: task.label,
+          dirty: { ...state.dirty }
+        });
+        return false;
+      }
     }
     if (state.pendingSavedCustomerLanguage) {
+      logBookingSave("[booking-save] Reloading booking page to apply saved customer language.", {
+        booking_id: state.id || null,
+        pending_saved_customer_language: state.pendingSavedCustomerLanguage
+      });
       state.contentLang = setBookingContentLang(state.pendingSavedCustomerLanguage);
       state.contentLangInitialized = true;
       updateContentLangInUrl(state.contentLang);
       state.pendingSavedCustomerLanguage = "";
       const reloaded = await loadBookingPage();
+      logBookingSave("[booking-save] Booking page reload after language save finished.", {
+        booking_id: state.id || null,
+        result: reloaded === false ? "failed" : "completed"
+      });
       if (reloaded === false) return false;
     }
     clearStatus();
     state.pageDirtyBarStatus = "saved";
     saveCompleted = true;
+    logBookingSave("[booking-save] Save flow completed.", {
+      booking_id: state.id || null,
+      duration_ms: Date.now() - saveStartedAt
+    });
     return true;
+  } catch (error) {
+    logBrowserConsoleError("[booking-save] Save flow threw an error.", {
+      booking_id: state.id || null,
+      dirty: { ...state.dirty },
+      page_dirty_bar_status: state.pageDirtyBarStatus || ""
+    }, error);
+    throw error;
   } finally {
+    if (savePendingWarningTimer) {
+      window.clearTimeout(savePendingWarningTimer);
+      savePendingWarningTimer = null;
+    }
     state.pageSaveInFlight = false;
     if (!saveCompleted) {
       state.pendingSavedCustomerLanguage = "";
@@ -1127,6 +1219,13 @@ async function savePageEdits() {
     if (!saveCompleted && state.pageDirtyBarStatus === "saving") {
       state.pageDirtyBarStatus = "";
     }
+    logBookingSave("[booking-save] Save flow finalized.", {
+      booking_id: state.id || null,
+      save_completed: saveCompleted,
+      duration_ms: Date.now() - saveStartedAt,
+      page_dirty_bar_status: state.pageDirtyBarStatus || "",
+      dirty: { ...state.dirty }
+    });
     updatePageDirtyBar();
     updateCleanStateActionAvailability();
   }
@@ -1189,6 +1288,7 @@ const pricingModule = createBookingPricingModule({
   fetchBookingMutation,
   getBookingRevision,
   renderBookingHeader,
+  renderActionControls,
   renderBookingData,
   loadActivities,
   escapeHtml,

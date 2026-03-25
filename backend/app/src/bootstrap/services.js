@@ -96,6 +96,7 @@ export function createBackendServices({
     buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel,
     buildBookingPricingReadModel: pricingHelpers.buildBookingPricingReadModel,
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
+    buildBookingOfferPaymentTermsReadModel: pricingHelpers.buildBookingOfferPaymentTermsReadModel,
     listAssignableKeycloakUsers: atpStaffDirectory.listCachedAssignableUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,

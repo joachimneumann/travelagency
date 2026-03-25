@@ -1,14 +1,14 @@
 package enums
 
 BookingStageCatalog: [
-	"NEW",
-	"QUALIFIED",
-	"PROPOSAL_SENT",
-	"NEGOTIATION",
-	"INVOICE_SENT",
-	"PAYMENT_RECEIVED",
+	"NEW_BOOKING",
+	"TRAVEL_PLAN_SENT",
+	"OFFER_SENT",
+	"NEGOTIATION_STARTED",
+	"DEPOSIT_REQUEST_SENT",
+	"IN_PROGRESS",
+	"TRIP_COMPLETED",
 	"LOST",
-	"POST_TRIP",
 ]
 
 #BookingStage: or(BookingStageCatalog)

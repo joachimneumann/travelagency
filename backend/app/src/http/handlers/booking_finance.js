@@ -19,6 +19,7 @@ import {
   markOfferTranslationManual,
   translateOfferFromEnglish
 } from "../../domain/booking_translation.js";
+import { freezeAcceptedCommercialRecord } from "../../domain/accepted_record.js";
 
 export function createBookingFinanceHandlers(deps) {
   const {
@@ -36,6 +37,7 @@ export function createBookingFinanceHandlers(deps) {
     assertExpectedRevision,
     buildBookingDetailResponse,
     incrementBookingRevision,
+    computeServiceLevelAgreementDueAt,
     validateBookingPricingInput,
     convertBookingPricingToBaseCurrency,
     normalizeBookingPricing,
@@ -43,6 +45,7 @@ export function createBookingFinanceHandlers(deps) {
     convertBookingOfferToBaseCurrency,
     normalizeBookingOffer,
     normalizeBookingTravelPlan,
+    buildBookingOfferPaymentTermsReadModel,
     buildBookingTravelPlanReadModel,
     formatMoney,
     validateOfferExchangeRequest,
@@ -52,6 +55,7 @@ export function createBookingFinanceHandlers(deps) {
     generatedOfferPdfPath,
     gmailDraftsConfig,
     getBookingContactProfile,
+    listBookingTravelPlanPdfs,
     rm,
     canAccessBooking,
     sendFileWithCache,
@@ -267,23 +271,84 @@ export function createBookingFinanceHandlers(deps) {
       return;
     }
 
+    const depositReceiptPayload = payload?.deposit_receipt && typeof payload.deposit_receipt === "object"
+      ? payload.deposit_receipt
+      : null;
+    const normalizedDepositReceipt = depositReceiptPayload
+      ? {
+        deposit_received_at: normalizeText(depositReceiptPayload?.deposit_received_at),
+        deposit_confirmed_by_atp_staff_id: normalizeText(depositReceiptPayload?.deposit_confirmed_by_atp_staff_id),
+        deposit_reference: normalizeText(depositReceiptPayload?.deposit_reference)
+      }
+      : null;
+    if (normalizedDepositReceipt) {
+      if (!normalizedDepositReceipt.deposit_received_at) {
+        sendJson(res, 422, { error: "deposit_receipt.deposit_received_at is required." });
+        return;
+      }
+      if (!normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id) {
+        sendJson(res, 422, { error: "deposit_receipt.deposit_confirmed_by_atp_staff_id is required." });
+        return;
+      }
+    }
+
     const nextPricingBase = await convertBookingPricingToBaseCurrency(check.pricing);
     const nextPricingJson = JSON.stringify(nextPricingBase);
     const currentPricingJson = JSON.stringify(normalizeBookingPricing(booking.pricing));
-    if (nextPricingJson === currentPricingJson) {
+    const pricingChanged = nextPricingJson !== currentPricingJson;
+    const acceptedRecordAvailable = Boolean(
+      booking?.accepted_offer_snapshot
+      && booking?.accepted_payment_terms_snapshot
+      && Number.isFinite(Number(booking?.accepted_deposit_amount_cents))
+      && normalizeText(booking?.accepted_deposit_currency)
+    );
+    const depositReceiptUnchanged = !normalizedDepositReceipt || (
+      normalizeText(booking?.deposit_received_at) === normalizedDepositReceipt.deposit_received_at
+      && normalizeText(booking?.deposit_confirmed_by_atp_staff_id) === normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id
+      && normalizeText(booking?.accepted_deposit_reference) === normalizedDepositReceipt.deposit_reference
+      && acceptedRecordAvailable
+    );
+    if (!pricingChanged && depositReceiptUnchanged) {
       sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
       return;
     }
 
+    let receiptUpdate = null;
+    if (normalizedDepositReceipt) {
+      try {
+        receiptUpdate = await freezeAcceptedCommercialRecord(booking, {
+          now: nowIso(),
+          depositReceivedAt: normalizedDepositReceipt.deposit_received_at,
+          depositConfirmedByAtpStaffId: normalizedDepositReceipt.deposit_confirmed_by_atp_staff_id,
+          depositReference: normalizedDepositReceipt.deposit_reference,
+          baseCurrency: BASE_CURRENCY,
+          normalizeGeneratedOfferSnapshot,
+          normalizeBookingOffer,
+          normalizeBookingTravelPlan,
+          buildBookingOfferPaymentTermsReadModel,
+          listBookingTravelPlanPdfs,
+          computeServiceLevelAgreementDueAt
+        });
+      } catch (error) {
+        sendJson(res, 422, { error: String(error?.message || error) });
+        return;
+      }
+    }
+
     booking.pricing = nextPricingBase;
-    incrementBookingRevision(booking, "pricing_revision");
+    if (pricingChanged) {
+      incrementBookingRevision(booking, "pricing_revision");
+    }
+    if (receiptUpdate?.changed) {
+      incrementBookingRevision(booking, "core_revision");
+    }
     booking.updated_at = nowIso();
     addActivity(
       store,
       booking.id,
       "PRICING_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Booking commercials updated"
+      receiptUpdate?.detail || "Booking commercials updated"
     );
     await persistStore(store);
 

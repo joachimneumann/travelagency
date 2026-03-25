@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-25T02:14:09Z
+# 2026-03-25T07:35:21Z
 
 ---
 openapi: 3.1.0
@@ -334,40 +334,40 @@ components:
     BookingStage:
       type: string
       enum:
-      - NEW
-      - QUALIFIED
-      - PROPOSAL_SENT
-      - NEGOTIATION
-      - INVOICE_SENT
-      - PAYMENT_RECEIVED
+      - NEW_BOOKING
+      - TRAVEL_PLAN_SENT
+      - OFFER_SENT
+      - NEGOTIATION_STARTED
+      - DEPOSIT_REQUEST_SENT
+      - IN_PROGRESS
+      - TRIP_COMPLETED
       - LOST
-      - POST_TRIP
       x-enum-catalog:
-      - code: NEW
-      - code: QUALIFIED
-      - code: PROPOSAL_SENT
-      - code: NEGOTIATION
-      - code: INVOICE_SENT
-      - code: PAYMENT_RECEIVED
+      - code: NEW_BOOKING
+      - code: TRAVEL_PLAN_SENT
+      - code: OFFER_SENT
+      - code: NEGOTIATION_STARTED
+      - code: DEPOSIT_REQUEST_SENT
+      - code: IN_PROGRESS
+      - code: TRIP_COMPLETED
       - code: LOST
-      - code: POST_TRIP
       x-enum-options:
-      - value: NEW
-        label: NEW
-      - value: QUALIFIED
-        label: QUALIFIED
-      - value: PROPOSAL_SENT
-        label: PROPOSAL_SENT
-      - value: NEGOTIATION
-        label: NEGOTIATION
-      - value: INVOICE_SENT
-        label: INVOICE_SENT
-      - value: PAYMENT_RECEIVED
-        label: PAYMENT_RECEIVED
+      - value: NEW_BOOKING
+        label: NEW_BOOKING
+      - value: TRAVEL_PLAN_SENT
+        label: TRAVEL_PLAN_SENT
+      - value: OFFER_SENT
+        label: OFFER_SENT
+      - value: NEGOTIATION_STARTED
+        label: NEGOTIATION_STARTED
+      - value: DEPOSIT_REQUEST_SENT
+        label: DEPOSIT_REQUEST_SENT
+      - value: IN_PROGRESS
+        label: IN_PROGRESS
+      - value: TRIP_COMPLETED
+        label: TRIP_COMPLETED
       - value: LOST
         label: LOST
-      - value: POST_TRIP
-        label: POST_TRIP
     BookingPersonRole:
       type: string
       enum:

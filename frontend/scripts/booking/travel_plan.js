@@ -67,6 +67,11 @@ export function createBookingTravelPlanModule(ctx) {
     hasUnsavedBookingChanges
   } = ctx;
 
+  function logTravelPlanSave(message, details = {}) {
+    const payload = details && typeof details === "object" ? { ...details } : { details };
+    console.info(message, payload);
+  }
+
   function requiredPlaceholder() {
     return bookingT("booking.required_placeholder", "required");
   }
@@ -1342,16 +1347,41 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   async function persistTravelPlan() {
-    if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty || state.travelPlanSaving) return false;
+    if (!state.permissions.canEditBooking || !state.booking || !state.travelPlanDirty || state.travelPlanSaving) {
+      logTravelPlanSave("[booking-save][travel-plan] Persist returned early.", {
+        booking_id: state.booking?.id || null,
+        can_edit_booking: state.permissions.canEditBooking === true,
+        has_booking: Boolean(state.booking),
+        travel_plan_dirty: state.travelPlanDirty === true,
+        travel_plan_saving: state.travelPlanSaving === true
+      });
+      return false;
+    }
+    const saveStartedAt = Date.now();
+    let pendingWarningTimer = null;
     const dateFieldValidation = validateTravelPlanDateFieldsInDom({ allowPartial: false, focusFirstInvalid: true });
     if (!dateFieldValidation.ok) {
+      logTravelPlanSave("[booking-save][travel-plan] Date validation blocked save.", {
+        booking_id: state.booking.id,
+        message: dateFieldValidation.message || ""
+      });
       travelPlanStatus(dateFieldValidation.message, "error");
       return false;
     }
     syncTravelPlanDraftFromDom();
     const travelPlanPayload = buildTravelPlanPayload();
+    logTravelPlanSave("[booking-save][travel-plan] Persist started.", {
+      booking_id: state.booking.id,
+      day_count: Array.isArray(travelPlanPayload?.days) ? travelPlanPayload.days.length : 0,
+      service_count: countTravelPlanServices(travelPlanPayload)
+    });
     const validation = validateTravelPlanDraft(travelPlanPayload);
     if (!validation.ok) {
+      logTravelPlanSave("[booking-save][travel-plan] Schema validation blocked save.", {
+        booking_id: state.booking.id,
+        code: validation.code || null,
+        message: validation.error || ""
+      });
       if (validation.code === "item_title_required") {
         setPageSaveActionError?.(
           bookingT(
@@ -1378,24 +1408,48 @@ export function createBookingTravelPlanModule(ctx) {
     }
     state.travelPlanSaving = true;
     travelPlanStatus(bookingT("booking.travel_plan.saving", "Saving travel plan..."), "info");
+    pendingWarningTimer = window.setTimeout(() => {
+      logTravelPlanSave("[booking-save][travel-plan] Mutation is still pending after 3000ms.", {
+        booking_id: state.booking?.id || null,
+        pending_for_ms: Date.now() - saveStartedAt,
+        expected_travel_plan_revision: getBookingRevision("travel_plan_revision")
+      });
+    }, 3000);
     try {
+      const expectedTravelPlanRevision = getBookingRevision("travel_plan_revision");
       const request = bookingTravelPlanRequest({
         baseURL: apiOrigin,
         params: { booking_id: state.booking.id },
         body: {
-          expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+          expected_travel_plan_revision: expectedTravelPlanRevision,
           travel_plan: travelPlanPayload,
           lang: bookingContentLang()
         }
+      });
+      logTravelPlanSave("[booking-save][travel-plan] Sending mutation request.", {
+        booking_id: state.booking.id,
+        expected_travel_plan_revision: expectedTravelPlanRevision,
+        request_url: request.url,
+        method: request.method
       });
       const response = await fetchBookingMutation(request.url, {
         method: request.method,
         body: request.body
       });
       if (!response?.booking) {
+        logTravelPlanSave("[booking-save][travel-plan] Mutation returned no booking payload.", {
+          booking_id: state.booking.id,
+          duration_ms: Date.now() - saveStartedAt
+        });
         travelPlanStatus("");
         return false;
       }
+      logTravelPlanSave("[booking-save][travel-plan] Mutation succeeded.", {
+        booking_id: state.booking.id,
+        duration_ms: Date.now() - saveStartedAt,
+        unchanged: response.unchanged === true,
+        next_travel_plan_revision: response.booking?.travel_plan_revision ?? null
+      });
       state.booking = response.booking;
       renderBookingHeader();
       renderBookingData();
@@ -1406,7 +1460,22 @@ export function createBookingTravelPlanModule(ctx) {
         ? bookingT("booking.travel_plan.no_changes", "No travel-plan changes.")
         : bookingT("booking.travel_plan.saved", "Travel plan saved."), response.unchanged ? "info" : "success");
       return true;
+    } catch (error) {
+      logBrowserConsoleError("[booking-save][travel-plan] Mutation threw an error.", {
+        booking_id: state.booking?.id || null,
+        duration_ms: Date.now() - saveStartedAt
+      }, error);
+      throw error;
     } finally {
+      if (pendingWarningTimer) {
+        window.clearTimeout(pendingWarningTimer);
+        pendingWarningTimer = null;
+      }
+      logTravelPlanSave("[booking-save][travel-plan] Persist finished.", {
+        booking_id: state.booking?.id || null,
+        duration_ms: Date.now() - saveStartedAt,
+        still_dirty: state.travelPlanDirty === true
+      });
       state.travelPlanSaving = false;
     }
   }
