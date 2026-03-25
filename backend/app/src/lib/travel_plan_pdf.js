@@ -32,8 +32,8 @@ const MM_TO_POINTS = 72 / 25.4;
 const PAGE_SIZE = Object.freeze([210 * MM_TO_POINTS, 297 * MM_TO_POINTS]);
 const PAGE_MARGIN = 44;
 const PAGE_FOOTER_GAP = 28;
-const HEADER_LOGO_WIDTH = 190;
-const HEADER_LOGO_HEIGHT = 74;
+const HEADER_LOGO_WIDTH = 250;
+const HEADER_LOGO_HEIGHT = 98;
 const HERO_IMAGE_WIDTH = 195;
 const HERO_IMAGE_HEIGHT = 128;
 const ITEM_THUMBNAIL_WIDTH = 118;
@@ -363,12 +363,14 @@ function drawFooter(doc, fonts, companyProfile, lang) {
 function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
   const profile = companyProfile || {};
   let y = PAGE_MARGIN;
+  let logoBottomY = y;
   if (logoImage?.buffer) {
     doc.image(logoImage.buffer, PAGE_MARGIN, y + 2, {
       fit: [HEADER_LOGO_WIDTH, HEADER_LOGO_HEIGHT],
       align: "left",
       valign: "top"
     });
+    logoBottomY = y + 2 + HEADER_LOGO_HEIGHT;
   }
 
   const rightColumnX = doc.page.width - PAGE_MARGIN - 220;
@@ -386,7 +388,8 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
     .text(`${pdfT(lang, "header.email", "Email")}: ${profile.email || ""}`, rightColumnX, y + 66, { width: 220, align: "right" })
     .text(profile.website || "", rightColumnX, y + 82, { width: 220, align: "right" });
 
-  const nextY = y + 106;
+  const rightColumnBottomY = y + 98;
+  const nextY = Math.max(logoBottomY, rightColumnBottomY) + 10;
   drawDivider(doc, nextY);
   return nextY + 18;
 }
