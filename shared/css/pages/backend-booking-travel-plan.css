@@ -696,6 +696,20 @@
   padding: 0.45rem 0.8rem;
 }
 
+.booking-detail-page .travel-plan-day-add-btn--positive {
+  background: linear-gradient(180deg, var(--success-grad-start) 0%, var(--success-grad-end) 100%);
+  border-color: var(--success-grad-end);
+  color: var(--surface);
+  box-shadow: 0 6px 14px var(--success-shadow);
+}
+
+.booking-detail-page .travel-plan-day-add-btn--positive:hover,
+.booking-detail-page .travel-plan-day-add-btn--positive:focus-visible {
+  color: var(--surface);
+  border-color: var(--success-grad-end-hover);
+  box-shadow: 0 8px 16px var(--success-shadow-strong);
+}
+
 .travel-plan-link-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 150px 34px;

@@ -580,11 +580,11 @@ async function init() {
     els.pricing_deposit_received_btn.addEventListener("click", async () => {
       const armed = applyDefaultDepositReceiptDraft();
       if (!armed) return;
-      logBookingSave("[booking-save] Full deposit received requested automatic page save.", {
+      logBookingSave("[booking-save] Full deposit received requested direct pricing save.", {
         booking_id: state.id || null,
         dirty: { ...state.dirty }
       });
-      await savePageEdits();
+      await savePricing();
     });
   }
   if (els.offer_currency_input)

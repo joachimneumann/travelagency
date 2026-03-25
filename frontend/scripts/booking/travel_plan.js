@@ -73,20 +73,34 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function requiredPlaceholder() {
-    return bookingT("booking.required_placeholder", "required");
+    return bookingT("booking.travel_plan.item_title", "Service title");
+  }
+
+  function requiredDayTitlePlaceholder() {
+    return bookingT("booking.travel_plan.day_title", "Day title");
   }
 
   function syncTravelPlanRequiredTitleStates({ focusFirst = false } = {}) {
     if (!els.travel_plan_editor) return true;
-    const titleInputs = Array.from(
+    const serviceTitleInputs = Array.from(
       els.travel_plan_editor.querySelectorAll('[data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]')
     );
+    const dayTitleInputs = Array.from(
+      els.travel_plan_editor.querySelectorAll('[data-travel-plan-day-field="title"][data-localized-lang="en"][data-localized-role="source"]')
+    );
     let firstEmptyInput = null;
-    for (const input of titleInputs) {
+    for (const input of serviceTitleInputs) {
       const isEmpty = !String(input?.value || "").trim();
       input.classList.toggle("travel-plan-service-title-input--required", isEmpty);
       input.toggleAttribute("aria-invalid", isEmpty);
       input.placeholder = isEmpty ? requiredPlaceholder() : "";
+      if (!firstEmptyInput && isEmpty) firstEmptyInput = input;
+    }
+    for (const input of dayTitleInputs) {
+      const isEmpty = !String(input?.value || "").trim();
+      input.classList.toggle("travel-plan-service-title-input--required", isEmpty);
+      input.toggleAttribute("aria-invalid", isEmpty);
+      input.placeholder = isEmpty ? requiredDayTitlePlaceholder() : "";
       if (!firstEmptyInput && isEmpty) firstEmptyInput = input;
     }
     if (focusFirst && firstEmptyInput?.focus) {
@@ -991,7 +1005,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
         <div class="travel-plan-day__footer">
-          <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
+          <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--positive" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
           <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Insert existing"))}</button>
         </div>
       </section>
