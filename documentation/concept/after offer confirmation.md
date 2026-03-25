@@ -4,11 +4,12 @@
 
 This document defines how the backend UI should behave after a customer has confirmed an offer and the deposit has been paid.
 
-The UI must clearly separate:
+The backend must clearly separate:
 
 - current editable working data
 - frozen customer-facing records
-- exceptional reversal logic
+- deposit receipt logic
+- normal stage transitions versus exceptional reversal logic
 
 ## Core principle
 
@@ -20,7 +21,54 @@ After deposit payment:
 - ATP staff may continue editing the current working data
 - normal workflow must not move the booking back to a pre-deposit state
 
-The frozen area should follow the same read-only pattern as `Web form submission`.
+The frozen area should use the same read-only pattern as `Web form submission`.
+
+## Canonical trigger
+
+The canonical trigger is not a stage button.
+
+There must be no stage button `Deposit received`.
+
+Instead, the canonical trigger is:
+
+- the deposit receipt saved in the payments section
+
+This action persists:
+
+- `deposit_paid_at`
+- `deposit_confirmed_by_atp_staff_id`
+
+When this is saved for the first time, the system freezes the accepted customer-facing snapshots.
+
+## Payment terms rule
+
+The payment terms must always contain a deposit configuration.
+
+Rules:
+
+- default deposit percentage: `30%`
+- allowed deposit percentage: `0%` to `100%`
+- additional installment payments are allowed
+- the payment rows are:
+  - `Deposit`
+  - `0..n Installments`
+  - `Final payment`
+- the total percentage across deposit, installments, and final payment must always be exactly `100%`
+- final payment percentage is always the remainder to `100%`
+- if deposit is `0%`, ATP staff may still manually press `Deposit received`
+- if deposit is `100%`, final payment becomes `0%`
+
+Installment timing must be explicit.
+
+For each installment, the due timing should support:
+
+- `fixed_date`
+- `days_before_trip`
+- `days_after_trip`
+
+This allows all non-deposit payments to be anchored either to a calendar date or to the trip dates.
+
+This keeps the payment structure explicit and avoids a separate `Deposit received` stage action.
 
 ## Booking page structure
 
@@ -30,17 +78,18 @@ The frozen area should follow the same read-only pattern as `Web form submission
 - stage
 - ATP staff
 - top-level controls
-- compact status banner when deposit is paid
+- compact deposit-paid banner when applicable
 
 Recommended banner content:
 
-- `Deposit paid on <date>`
+- `Deposit received on <date>`
 - accepted deposit amount
+- `Confirmed by <atp_staff>`
 - shortcut links to accepted records
 
 ### Main editable working area
 
-Keep the editable sections in the normal working area higher on the page.
+Keep the editable sections higher on the page.
 
 Recommended section titles:
 
@@ -58,11 +107,11 @@ Recommended title:
 
 - `Accepted by Customer`
 
-This section should contain read-only snapshots of:
+This section contains read-only snapshots of:
 
 - accepted offer
 - accepted payment terms
-- accepted travel plan, if one existed at the time of deposit payment
+- accepted travel plan, if one existed at the time deposit was marked received
 
 It should also show:
 
@@ -76,12 +125,12 @@ It should also show:
 This keeps the page easy to understand:
 
 - the top and middle remain the active working area
-- the lower section becomes the historical record
+- the lower section is the historical record
 - staff can compare accepted data with the current draft without mixing both states
 
 ## Travel plan after deposit paid
 
-The travel plan should usually remain editable after deposit paid.
+The travel plan usually remains editable after deposit paid.
 
 The UI should show:
 
@@ -92,30 +141,93 @@ The UI should show:
 
 The accepted offer snapshot is frozen and read-only.
 
-If ATP staff make further commercial edits after deposit paid, those changes belong only in the current working section. They do not replace the accepted record.
+If ATP staff make later commercial changes, those changes belong only in `Current commercial draft`. They do not replace the accepted record.
 
 ## Payment terms after deposit paid
 
 The accepted payment terms snapshot is frozen and read-only in `Accepted by Customer`.
 
-In the editable working area:
+In `Current payment terms`:
 
-- the deposit row stays clearly marked as paid
+- the deposit row stays clearly marked as paid once received
+- the deposit row is locked after receipt is recorded
 - remaining unpaid terms may remain editable according to business rules
-- any later edits must be clearly shown as post-deposit working changes, not as the accepted terms
+- later changes are working changes, not historical accepted changes
+- `Trip completed` is disabled until all installments and final payment have been paid
+
+## Payments UI
+
+The editable payments section should show:
+
+- expected deposit percentage
+- expected deposit amount
+- a control labeled `Deposit received at`
+- an ATP staff dropdown labeled `Confirmed by`
+
+Recommended behavior:
+
+- the `Deposit received` mechanism exists only in the payments section
+- it is independent of the selected first-row stage button
+- it is available whenever `deposit_paid_at` is not yet set
+- the user sets the date
+- the user selects the ATP staff member who confirms it
+- both fields are required before `Deposit received` can be saved
+- `Deposit received` is blocked unless payment terms and offer already exist
+- when blocked, the UI shows a clear hint explaining that payment terms and offer must exist first
+- saving this sets `deposit_paid_at`
+- saving this sets `deposit_confirmed_by_atp_staff_id`
+- this save is the trigger for freezing the accepted snapshots
+- after saving, these fields are read-only for `atp_staff` users
+- a future version may allow editing by `atp_admin` users only
 
 ## Stage logic after deposit paid
+
+### Stage buttons
+
+The stage UI is organized into two rows of stage buttons.
+
+First row:
+
+- `New booking`
+- `Travel plan sent to customer`
+- `Offer sent to customer`
+- `Negotiation started`
+- `Deposit request sent`
+
+Second row:
+
+- `In progress`
+- `Trip completed`
+
+Separate terminal action:
+
+- `Booking lost`
 
 ### Normal rule
 
 The normal stage control must not allow moving the booking back to a stage before deposit paid.
 
-If the stage UI is shown in two rows, the split should be:
+There is no stage button `Deposit received`.
 
-- before deposit paid
-- after deposit paid
+Before deposit has been paid:
 
-Once the booking is in the post-deposit row, normal stage changes must stay within that row.
+- the first row is enabled
+- the second row is disabled
+- `Booking lost` is enabled
+
+After deposit has been paid:
+
+- the first row is disabled
+- the second row is enabled
+- `Booking lost` remains enabled
+
+The switch between both rows is controlled only by the deposit receipt recorded in the payments section.
+
+Instead:
+
+- `deposit_paid_at` defines whether the booking is pre-deposit or post-deposit
+- once `deposit_paid_at` exists, normal stage changes must stay within the second row
+- before `deposit_paid_at` exists, normal stage changes must stay within the first row
 
 ### Reason
 
@@ -132,7 +244,7 @@ Do not implement this now.
 
 Possible later solution:
 
-- a separate explicit admin-only action such as `Reverse deposit milestone`
+- a separate explicit admin-only action such as `Reverse deposit receipt`
 - mandatory reason
 - confirmation step
 - audit log entry
@@ -161,6 +273,14 @@ After offer confirmation and deposit payment:
 - keep travel plan, offer, and payment terms editable in the main working area
 - add a frozen read-only section near the bottom, similar to `Web form submission`
 - store and show accepted offer, accepted payment terms, and accepted travel plan there
+- remove the stage button `Deposit received`
+- use two stage rows:
+  - first row before deposit: `New booking`, `Travel plan sent to customer`, `Offer sent to customer`, `Negotiation started`, `Deposit request sent`
+  - second row after deposit: `In progress`, `Trip completed`
+  - separate terminal action: `Booking lost`
+- always configure a deposit in payment terms, default `30%`
+- mark deposit as received in the payments section with date and ATP staff
+- allow additional installment payments
 - block normal rollback to stages before deposit paid
 - keep any future reversal flow separate and explicitly audited
 
@@ -170,33 +290,30 @@ After offer confirmation and deposit payment:
 
 Implement now:
 
-- frozen accepted snapshots at deposit payment
+- frozen accepted snapshots at deposit receipt
 - backend UI to display accepted snapshots read-only
 - top banner and shortcut links
 - clear separation between current editable sections and accepted historical sections
+- removal of the stage button `Deposit received`
+- deposit configuration always present in payment terms
+- deposit receipt UI in the payments section
+- support for additional installment payments
 - normal stage control blocking rollback to before deposit paid
 
 Do not implement now:
 
-- admin reversal flow
+- reversal flow
 - refund logic
-- special accounting workflows beyond showing the paid deposit row
-
-### Assumptions
-
-- `deposit paid` is represented by an existing booking stage or milestone action
-- the booking already has editable current sections for travel plan, commercial data, and payment terms
-- accepted customer-facing PDFs or artifacts may already exist for offer and travel plan
-
-If the current runtime does not yet have a single canonical `deposit paid` event, that should be normalized first. The rest of this implementation should be anchored to one explicit business event.
+- backfilling accepted snapshots for existing bookings
 
 ### Data model changes
 
 Store frozen accepted snapshots on the booking.
 
-Recommended new booking fields:
+Recommended booking fields:
 
-- `accepted_at`
+- `deposit_paid_at`
+- `deposit_confirmed_by_atp_staff_id`
 - `accepted_deposit_amount`
 - `accepted_deposit_currency`
 - `accepted_deposit_reference`
@@ -206,97 +323,120 @@ Recommended new booking fields:
 - `accepted_offer_artifact_ref`
 - `accepted_travel_plan_artifact_ref`
 
+Recommended payment-term rules in the model:
+
+- deposit percentage is mandatory
+- default deposit percentage is `30`
+- allowed range is `0` to `100`
+- additional installments are allowed
+- final payment percentage is derived as `100 - deposit percentage - installment percentages total`
+- final payment row always exists
+- each non-deposit payment row must define a due mode
+- supported non-deposit due modes:
+  - `fixed_date`
+  - `days_before_trip`
+  - `days_after_trip`
+- for `fixed_date`, a calendar date is required
+- for `days_before_trip` and `days_after_trip`, an integer day offset is required
+
 Design rules:
 
 - snapshots are immutable once written
-- snapshots are stored directly on the booking, not recalculated from current editable state
-- snapshots contain the customer-facing content at the moment deposit is paid
+- snapshots are stored directly on the booking
+- snapshots contain the customer-facing content at the time deposit was marked received
 - if no travel plan existed at that moment, `accepted_travel_plan_snapshot` remains empty
-
-### Snapshot shape
-
-The snapshot should be self-contained enough for stable rendering later.
-
-Recommended approach:
-
-- `accepted_offer_snapshot`: full commercial read model shown to the customer
-- `accepted_payment_terms_snapshot`: full accepted payment schedule
-- `accepted_travel_plan_snapshot`: customer-facing travel-plan snapshot only
-
-Do not reference current mutable objects from the snapshot. Store a frozen copy.
+- `deposit_paid_at` and `deposit_confirmed_by_atp_staff_id` become read-only for `atp_staff` users after saving `Deposit received`
 
 ### Trigger point
 
-Create the accepted snapshots exactly when the booking crosses into `deposit paid`.
+Create the accepted snapshots exactly when `Deposit received` is saved in the payments section.
 
-Recommended rule:
+Rules:
 
-- if booking enters `deposit paid` and accepted snapshots do not exist yet, create them
+- if `deposit_paid_at` is set and accepted snapshots do not exist yet, create them
 - if accepted snapshots already exist, do not overwrite them
 
-This logic should be idempotent.
+This must be idempotent.
+
+Normal saves must not clear or rewrite accepted snapshots.
 
 ### Backend service logic
 
-Add one dedicated application-level routine, for example:
+Add one application-level routine, for example:
 
 - `freezeAcceptedCommercialRecord(booking, store, now)`
 
 Responsibilities:
 
 - validate that the booking has enough data to freeze
+- validate that payment terms and offer exist before allowing `Deposit received`
+- read the configured deposit payment term
+- read `deposit_paid_at`
+- read `deposit_confirmed_by_atp_staff_id`
 - collect current customer-facing offer data
 - collect current payment terms
 - collect current travel plan if present
 - persist immutable accepted snapshot fields
-- link any existing accepted artifacts if available
+- link accepted artifacts if available
 
-Keep this logic in one place. Do not duplicate snapshot-building logic across handlers.
+Keep this logic in one place.
 
 ### Stage transition logic
 
-Update the stage transition rules so that the normal stage control cannot move a booking back before `deposit paid`.
+Update the stage transition rules so that the stage UI is split into two rows and normal stage control cannot move a booking back before deposit paid.
 
-Recommended implementation:
+Rules:
 
-- define a stage boundary at `deposit paid`
-- allow normal transitions only within the pre-deposit group or within the post-deposit group
-- disallow normal transitions from any post-deposit stage back to any pre-deposit stage
+- determine the boundary from `deposit_paid_at`, not from a stage button
+- before `deposit_paid_at`, enable only the first row:
+  - `New booking`
+  - `Travel plan sent to customer`
+  - `Offer sent to customer`
+  - `Negotiation started`
+  - `Deposit request sent`
+- after `deposit_paid_at`, disable the first row and enable only the second row:
+  - `In progress`
+  - `Trip completed`
+- keep `Booking lost` as a separate terminal action available both before and after deposit receipt
+- reject any normal transition from the second row back to the first row
+- allow `Trip completed` only when all installments and final payment have been paid
+- remove the stage button `Deposit received` completely
 
 Enforce this:
 
 - in backend validation
 - in frontend stage UI
 
-Frontend blocking alone is not sufficient.
+Frontend-only blocking is not sufficient.
 
 ### Backend API changes
 
-Extend the booking detail response so the page can render both working and accepted states.
+Extend the booking detail response so the page can render both current and accepted states.
 
-Recommended additions to booking detail response:
+Recommended additions:
 
 - `accepted_record`
 - `accepted_record.available`
-- `accepted_record.accepted_at`
+- `accepted_record.deposit_paid_at`
 - `accepted_record.deposit`
 - `accepted_record.offer`
 - `accepted_record.payment_terms`
 - `accepted_record.travel_plan`
 - `accepted_record.offer_artifact_url`
 - `accepted_record.travel_plan_artifact_url`
+- `payments.expected_deposit`
+- `payments.deposit_receipt`
 - `capabilities.can_move_before_deposit_paid`
-
-This keeps UI logic simple and avoids reconstructing accepted state in the browser.
 
 ### Booking page UI changes
 
 #### Top banner
 
-When the booking has an accepted record, show a compact banner near the top with:
+When accepted record data exists, show:
 
-- `Deposit paid on <date>`
+- `Deposit received on <date>`
 - accepted deposit amount
+- `Confirmed by <atp_staff>`
 - accepted payment reference if available
 - links:
   - `Accepted offer`
@@ -305,13 +445,11 @@ When the booking has an accepted record, show a compact banner near the top with
 
 #### Editable sections
 
-Rename existing editable section headers if needed:
+Rename section headers if needed:
 
 - `Travel plan` -> `Current travel plan`
 - `Offer` -> `Current commercial draft`
 - `Payment terms` -> `Current payment terms`
-
-These sections remain editable.
 
 #### Read-only accepted section
 
@@ -331,57 +469,54 @@ Each subsection should:
 
 - use the same visual language as other read-only backend sections
 - avoid edit controls
-- support collapsed/expanded display if content is large
+- support collapse/expand for large content
 
-### Payment terms UI rules
+#### Payments section
 
-In the editable section:
+Add:
 
-- show the deposit row as paid and visually locked
-- allow editing of remaining unpaid terms if business rules allow it
-- if the working payment terms differ from the accepted snapshot, show the difference implicitly by keeping accepted terms below in the read-only section
+- expected deposit percentage
+- expected deposit amount
+- `Deposit received at`
+- `Confirmed by`
+- installment rows
+- final payment row
+- due-mode control for each non-deposit payment row
+- due-value control for each non-deposit payment row
 
-Do not try to merge both views into a single table in the first implementation.
+After saving `Deposit received`:
 
-### Travel plan UI rules
+- the deposit row is marked paid
+- the deposit row is locked
+- the receipt fields are locked
+- accepted snapshots are created if not already present
+- the lock applies to `atp_staff` users
+- a later version may allow `atp_admin` override
 
-In the editable section:
+For each installment row, the UI should allow:
 
-- keep the current travel plan fully editable
+- selecting the due mode:
+  - `Fixed date`
+  - `Days before trip`
+  - `Days after trip`
+- entering the matching value:
+  - a date for `Fixed date`
+  - a day offset for `Days before trip`
+  - a day offset for `Days after trip`
 
-In the read-only section:
-
-- show the accepted travel plan snapshot exactly as frozen
-
-The accepted snapshot should not depend on the current travel-plan draft.
-
-### Offer UI rules
-
-In the editable section:
-
-- keep the current commercial offer editable according to existing rules
-
-In the read-only section:
-
-- show the accepted offer snapshot
-
-If current and accepted offer differ, that is expected and should not require special warning in the first implementation. The visual separation already communicates the distinction.
+For the final payment row, the UI should allow the same due-mode choices and matching value input.
 
 ### Storage and migration
 
-Existing bookings will likely fall into three groups:
+No backfilling of accepted snapshots for existing bookings is allowed.
 
-- bookings before deposit paid: no accepted snapshot needed
-- bookings after deposit paid with enough current data to backfill snapshots
-- bookings after deposit paid but with incomplete historical data
+Rules:
 
-Recommended first migration:
+- only create accepted snapshots when a booking crosses the new `Deposit received` trigger after this feature is implemented
+- older bookings may have no accepted snapshot
+- if an older booking has no accepted snapshot, either hide the accepted section or show a short note such as `Accepted record not available`
 
-- do not backfill aggressively in the first pass
-- for already-paid bookings, create accepted snapshots only when there is a reliable accepted source
-- if reliable accepted source is missing, leave accepted record empty and show no accepted section for that booking
-
-This avoids inventing false historical records.
+This is intentional. It avoids inventing false historical records from mutable current data.
 
 ### Rendering order on `booking.html`
 
@@ -402,12 +537,26 @@ Recommended order:
 
 Add tests for:
 
-- entering `deposit paid` creates snapshots once
-- re-entering or re-saving does not overwrite accepted snapshots
+- saving `Deposit received` creates snapshots once
+- re-saving deposit receipt does not overwrite accepted snapshots
 - accepted snapshots remain stable when current offer changes later
 - accepted snapshots remain stable when current travel plan changes later
 - accepted snapshots remain stable when payment terms change later
-- normal stage transition rejects moving from post-deposit to pre-deposit
+- default deposit is `30%`
+- deposit can be `0%` and `100%` with final payment auto-adjusted correctly
+- installments can be added and the final payment auto-adjusts correctly
+- all non-deposit payments support `fixed_date`, `days_before_trip`, and `days_after_trip`
+- non-deposit payment validation requires the correct value type for each due mode
+- `Deposit received` persists `deposit_paid_at`
+- `Deposit received` persists `deposit_confirmed_by_atp_staff_id`
+- `Deposit received` becomes read-only for `atp_staff` users after save
+- `Deposit received` is blocked until payment terms and offer exist
+- before `deposit_paid_at`, only first-row stage transitions are allowed
+- after `deposit_paid_at`, only second-row stage transitions are allowed
+- `Booking lost` is available as a separate terminal action before and after deposit receipt
+- normal stage transition rejects moving from the second row back to the first row
+- `Trip completed` is rejected until all installments and final payment are paid
+- `Deposit received` is no longer available as a stage action
 
 #### Frontend tests
 
@@ -417,58 +566,76 @@ Add tests for:
 - booking page renders accepted section only when accepted record exists
 - accepted section is read-only
 - editable sections still render and remain editable
-- normal stage UI does not offer invalid pre-deposit rollback
+- payments section shows expected deposit and `Deposit received` controls
+- payments section supports installment rows and recalculates final payment
+- payments section supports due-mode controls for all non-deposit payment rows
+- payments section shows a hint when `Deposit received` is blocked because offer or payment terms are missing
+- before deposit, first-row stage buttons are enabled and second-row stage buttons are disabled
+- after deposit, first-row stage buttons are disabled and second-row stage buttons are enabled
+- `Booking lost` is rendered as a separate terminal action
+- `Trip completed` stays disabled until all non-deposit payments are paid
+- `Deposit received` is not rendered as a stage button
 
-#### Manual smoke tests
-
-Manual flow:
+#### Manual smoke test
 
 1. create a booking
 2. create offer, payment terms, and travel plan
-3. mark deposit paid
-4. verify accepted section appears
-5. edit current travel plan
-6. verify accepted travel plan remains unchanged
-7. edit current payment terms
-8. verify accepted payment terms remain unchanged
-9. attempt normal stage rollback to pre-deposit
-10. verify backend rejects it
+3. verify only the first-row stage buttons are enabled
+4. verify `Booking lost` is available as a separate action
+5. verify deposit defaults to `30%`
+6. add installment rows and verify final payment auto-adjusts
+7. verify due-mode timing works for installments and final payment with `Fixed date`, `Days before trip`, and `Days after trip`
+8. verify `Deposit received` is blocked until payment terms and offer exist and that the UI shows a hint
+9. press `Deposit received` in the payments section with date and ATP staff
+10. verify accepted section appears
+11. verify the first-row stage buttons are disabled
+12. verify the second-row stage buttons are enabled
+13. verify `Booking lost` is still available
+14. verify `Trip completed` is disabled until all remaining payments are paid
+15. edit current travel plan
+16. verify accepted travel plan remains unchanged
+17. edit current payment terms
+18. verify accepted payment terms remain unchanged
+19. verify `Deposit received` fields are read-only for `atp_staff`
+20. attempt normal stage rollback to the first row
+21. verify backend rejects it
 
 ### Implementation sequence
 
-Recommended order of work:
+Recommended order:
 
-1. define accepted snapshot fields in the model
-2. generate contract changes
-3. implement backend snapshot-freeze routine
-4. enforce backend stage-transition rule
-5. extend booking detail response
-6. add top banner and accepted read-only section in backend UI
-7. rename editable section labels
-8. add automated tests
-9. run manual smoke test on a booking that crosses the deposit-paid boundary
+1. update the model with deposit receipt and accepted snapshot fields
+2. update the payment terms model so deposit is always configured with default `30%`, supports installments, and supports installment due modes
+3. generate contract changes
+4. implement backend deposit-receipt and snapshot-freeze routine
+5. remove the stage button `Deposit received`
+6. implement the two-row stage model in backend validation and UI state
+7. enforce row switching from `deposit_paid_at`
+8. extend booking detail response
+9. add payments receipt controls in backend UI
+10. add top banner and accepted read-only section in backend UI
+11. rename editable section labels
+12. add automated tests
+13. run the manual smoke test
 
 ### Risks and tradeoffs
 
-#### Risk: unclear source of truth for deposit paid
+#### Risk: unclear source of truth
 
-If current code uses several loosely related indicators, snapshot creation may fire at the wrong time.
-
-Mitigation:
-
-- define one canonical trigger before implementation
-
-#### Risk: weak historical data for old bookings
-
-Backfilling accepted snapshots for existing bookings may create inaccurate history.
+If the code still uses several loose indicators for deposit state, snapshot creation may fire at the wrong time.
 
 Mitigation:
 
-- do not fabricate history
-- backfill only when the accepted source is reliable
+- use only the payments receipt fields as the canonical trigger
 
-#### Tradeoff: duplicated data on the booking
+#### Tradeoff: duplicated snapshot data
 
 The accepted snapshots duplicate current working data at one moment in time.
 
 This is intentional. Stability and audit clarity are more important here than normalization.
+
+#### Tradeoff: no backfill
+
+Older bookings may not show an accepted record, even if a deposit was paid in the past.
+
+This is intentional. It is better to show no historical snapshot than an inaccurate reconstructed one.
