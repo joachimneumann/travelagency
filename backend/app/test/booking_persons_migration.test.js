@@ -47,7 +47,7 @@ test("store utils backfill missing booking persons from the public submission an
     chat_channel_accounts: [],
     chat_conversations: [],
     chat_events: [],
-    offer_acceptance_challenges: []
+    booking_confirmation_challenges: []
   }, null, 2)}\n`, "utf8");
 
   const storeUtils = createStoreUtils({

@@ -1,4 +1,4 @@
-import { validateTravelPlanItemImportRequest } from "../../../Generated/API/generated_APIModels.js";
+import { validateTravelPlanServiceImportRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeTourStyleCode } from "../../domain/tour_catalog_i18n.js";
 import {
   cloneTravelPlanLocalizedMap,
@@ -18,7 +18,7 @@ function copyItemForImport(sourceItem, options = {}) {
       .filter((image) => !includeCustomerVisibleImagesOnly || image?.is_customer_visible !== false)
       .map((image, index) => ({
         ...image,
-        id: `travel_plan_item_image_${options.randomUUID()}`,
+        id: `travel_plan_service_image_${options.randomUUID()}`,
         sort_order: index,
         is_primary: index === 0,
         created_at: importedAt
@@ -26,7 +26,7 @@ function copyItemForImport(sourceItem, options = {}) {
     : [];
 
   return {
-    id: `travel_plan_item_${options.randomUUID()}`,
+    id: `travel_plan_service_${options.randomUUID()}`,
     timing_kind: sourceItem?.timing_kind || "label",
     time_label: options.normalizeText(sourceItem?.time_label),
     time_label_i18n: includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.time_label_i18n) : undefined,
@@ -46,10 +46,10 @@ function copyItemForImport(sourceItem, options = {}) {
     financial_note_i18n: includeNotes && includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.financial_note_i18n) : undefined,
     images: importedImages,
     copied_from: {
-      source_type: "booking_travel_plan_item",
+      source_type: "booking_travel_plan_service",
       source_booking_id: options.normalizeText(options.sourceBookingId),
       source_day_id: options.normalizeText(options.sourceDayId),
-      source_item_id: options.normalizeText(sourceItem?.id),
+      source_service_id: options.normalizeText(sourceItem?.id),
       copied_at: importedAt,
       copied_by_atp_staff_id: options.normalizeText(options.copiedByAtpStaffId)
     }
@@ -64,8 +64,8 @@ function buildSearchResult({ booking, day, item, supplierName = "", normalizeTex
     source_booking_name: normalizeText(booking.name),
     source_booking_code: booking.id,
     day_number: day?.day_number || null,
-    item_id: item.id,
-    item_kind: normalizeText(item.kind) || null,
+    service_id: item.id,
+    service_kind: normalizeText(item.kind) || null,
     title: normalizeText(item.title),
     details: normalizeText(item.details),
     location: normalizeText(item.location),
@@ -99,7 +99,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     randomUUID
   } = deps;
 
-  async function handleSearchTravelPlanItems(req, res) {
+  async function handleSearchTravelPlanServices(req, res) {
     const principal = getPrincipal(req);
     const store = await readStore();
     const requestUrl = new URL(req.url, "http://localhost");
@@ -107,7 +107,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     const destination = normalizeText(requestUrl.searchParams.get("destination")).toLowerCase();
     const country = normalizeText(requestUrl.searchParams.get("country")).toUpperCase();
     const style = normalizeTourStyleCode(requestUrl.searchParams.get("style"));
-    const itemKind = normalizeText(requestUrl.searchParams.get("item_kind")).toLowerCase();
+    const serviceKind = normalizeText(requestUrl.searchParams.get("service_kind")).toLowerCase();
     const limit = parseTravelPlanQueryInt(requestUrl.searchParams.get("limit"), 20, { min: 1, max: 50 });
     const offset = parseTravelPlanQueryInt(requestUrl.searchParams.get("offset"), 0, { min: 0, max: 5000 });
     const contentLang = requestContentLang(req);
@@ -145,8 +145,8 @@ export function createBookingTravelPlanImportHandlers(deps) {
       });
 
       for (const day of Array.isArray(normalizedTravelPlan?.days) ? normalizedTravelPlan.days : []) {
-        for (const item of Array.isArray(day?.items) ? day.items : []) {
-          if (itemKind && normalizeText(item?.kind).toLowerCase() !== itemKind) continue;
+        for (const item of Array.isArray(day?.services) ? day.services : []) {
+          if (serviceKind && normalizeText(item?.kind).toLowerCase() !== serviceKind) continue;
           const haystack = [
             booking.name,
             day?.title,
@@ -174,11 +174,11 @@ export function createBookingTravelPlanImportHandlers(deps) {
     });
   }
 
-  async function handleImportTravelPlanItem(req, res, [bookingId, dayId]) {
+  async function handleImportTravelPlanService(req, res, [bookingId, dayId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanItemImportRequest(payload);
+      validateTravelPlanServiceImportRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -198,7 +198,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     if (!(await assertExpectedRevision(req, payload, targetBooking, "expected_travel_plan_revision", "travel_plan_revision", res))) return;
 
     const sourceBookingId = normalizeText(payload.source_booking_id);
-    const sourceItemId = normalizeText(payload.source_item_id);
+    const sourceItemId = normalizeText(payload.source_service_id) || normalizeText(payload.source_item_id);
     const sourceBooking = store.bookings.find((item) => item.id === sourceBookingId);
     if (!sourceBooking || !canAccessBooking(principal, sourceBooking)) {
       sendJson(res, 404, { error: "Source booking not found" });
@@ -218,10 +218,10 @@ export function createBookingTravelPlanImportHandlers(deps) {
     });
 
     const sourceDays = Array.isArray(sourceTravelPlan?.days) ? sourceTravelPlan.days : [];
-    const sourceDay = sourceDays.find((day) => Array.isArray(day?.items) && day.items.some((item) => item.id === sourceItemId));
-    const sourceItem = (Array.isArray(sourceDay?.items) ? sourceDay.items : []).find((item) => item.id === sourceItemId);
+    const sourceDay = sourceDays.find((day) => Array.isArray(day?.services) && day.services.some((item) => item.id === sourceItemId));
+    const sourceItem = (Array.isArray(sourceDay?.services) ? sourceDay.services : []).find((item) => item.id === sourceItemId);
     if (!sourceDay || !sourceItem) {
-      sendJson(res, 404, { error: "Source item not found" });
+      sendJson(res, 404, { error: "Source service not found" });
       return;
     }
 
@@ -247,12 +247,12 @@ export function createBookingTravelPlanImportHandlers(deps) {
     });
 
     const targetDay = targetDays[targetDayIndex];
-    const targetItems = Array.isArray(targetDay?.items) ? [...targetDay.items] : [];
-    const insertAfterItemId = normalizeText(payload.insert_after_item_id);
+    const targetItems = Array.isArray(targetDay?.services) ? [...targetDay.services] : [];
+    const insertAfterItemId = normalizeText(payload.insert_after_service_id) || normalizeText(payload.insert_after_item_id);
     if (insertAfterItemId) {
       const insertAfterIndex = targetItems.findIndex((item) => item.id === insertAfterItemId);
       if (insertAfterIndex < 0) {
-        sendJson(res, 422, { error: `Target item ${insertAfterItemId} was not found in the target day.` });
+        sendJson(res, 422, { error: `Target service ${insertAfterItemId} was not found in the target day.` });
         return;
       }
       targetItems.splice(insertAfterIndex + 1, 0, importedItem);
@@ -261,7 +261,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
     }
 
     const sourceLinks = (Array.isArray(sourceTravelPlan?.offer_component_links) ? sourceTravelPlan.offer_component_links : [])
-      .filter((link) => link.travel_plan_item_id === sourceItemId);
+      .filter((link) => link.travel_plan_service_id === sourceItemId);
     const targetOfferComponentIds = new Set(
       (Array.isArray(targetBooking?.offer?.components) ? targetBooking.offer.components : [])
         .map((component) => normalizeText(component?.id))
@@ -272,7 +272,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         .filter((link) => targetOfferComponentIds.has(normalizeText(link.offer_component_id)))
         .map((link) => ({
           id: `travel_plan_offer_link_${randomUUID()}`,
-          travel_plan_item_id: importedItem.id,
+          travel_plan_service_id: importedItem.id,
           offer_component_id: normalizeText(link.offer_component_id),
           coverage_type: normalizeText(link.coverage_type) || "full"
         }))
@@ -284,7 +284,7 @@ export function createBookingTravelPlanImportHandlers(deps) {
         index === targetDayIndex
           ? {
             ...day,
-            items: targetItems
+            services: targetItems
           }
           : day
       )),
@@ -314,14 +314,14 @@ export function createBookingTravelPlanImportHandlers(deps) {
       targetBooking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      `Travel plan item imported from booking ${sourceBookingId}`
+      `Service imported from booking ${sourceBookingId}`
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(targetBooking, req));
   }
 
   return {
-    handleSearchTravelPlanItems,
-    handleImportTravelPlanItem
+    handleSearchTravelPlanServices,
+    handleImportTravelPlanService
   };
 }

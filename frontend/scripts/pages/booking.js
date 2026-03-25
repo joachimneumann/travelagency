@@ -188,18 +188,18 @@ const els = {
   personModalDiscardBtn: document.getElementById("booking_person_modal_discard_btn"),
   personModalSaveBtn: document.getElementById("booking_person_modal_save_btn"),
   personModalDeleteBtn: document.getElementById("booking_person_modal_delete_btn"),
-  travelPlanItemLibraryModal: document.getElementById("travel_plan_item_library_modal"),
-  travelPlanItemLibraryCloseBtn: document.getElementById("travel_plan_item_library_close_btn"),
-  travelPlanItemLibrarySubtitle: document.getElementById("travel_plan_item_library_subtitle"),
-  travelPlanItemLibraryQuery: document.getElementById("travel_plan_item_library_query"),
-  travelPlanItemLibraryKind: document.getElementById("travel_plan_item_library_kind"),
-  travelPlanItemLibrarySearchBtn: document.getElementById("travel_plan_item_library_search_btn"),
-  travelPlanItemLibraryStatus: document.getElementById("travel_plan_item_library_status"),
-  travelPlanItemLibraryResults: document.getElementById("travel_plan_item_library_results"),
+  travelPlanServiceLibraryModal: document.getElementById("travel_plan_service_library_modal"),
+  travelPlanServiceLibraryCloseBtn: document.getElementById("travel_plan_service_library_close_btn"),
+  travelPlanServiceLibrarySubtitle: document.getElementById("travel_plan_service_library_subtitle"),
+  travelPlanServiceLibraryQuery: document.getElementById("travel_plan_service_library_query"),
+  travelPlanServiceLibraryKind: document.getElementById("travel_plan_service_library_kind"),
+  travelPlanServiceLibrarySearchBtn: document.getElementById("travel_plan_service_library_search_btn"),
+  travelPlanServiceLibraryStatus: document.getElementById("travel_plan_service_library_status"),
+  travelPlanServiceLibraryResults: document.getElementById("travel_plan_service_library_results"),
   travelPlanImagePreviewModal: document.getElementById("travel_plan_image_preview_modal"),
   travelPlanImagePreviewCloseBtn: document.getElementById("travel_plan_image_preview_close_btn"),
   travelPlanImagePreviewImage: document.getElementById("travel_plan_image_preview_image"),
-  travelPlanItemImageInput: document.getElementById("travel_plan_item_image_input"),
+  travelPlanServiceImageInput: document.getElementById("travel_plan_service_image_input"),
   travelPlanAttachmentInput: document.getElementById("travel_plan_attachment_input"),
   personModalPreferredLanguage: document.getElementById("booking_person_modal_preferred_language"),
   personModalDateOfBirth: document.getElementById("booking_person_modal_date_of_birth"),
@@ -242,8 +242,8 @@ const els = {
   offerPanelSummary: document.getElementById("offer_panel_summary"),
   offer_payment_terms_panel: document.getElementById("offer_payment_terms_panel"),
   offerPaymentTermsPanelSummary: document.getElementById("offer_payment_terms_panel_summary"),
-  offer_acceptance_panel: document.getElementById("offer_acceptance_panel"),
-  offerAcceptancePanelSummary: document.getElementById("offer_acceptance_panel_summary"),
+  booking_confirmation_panel: document.getElementById("booking_confirmation_panel"),
+  bookingConfirmationPanelSummary: document.getElementById("booking_confirmation_panel_summary"),
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
@@ -956,9 +956,9 @@ function renderStaticSectionHeaders() {
   });
   renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.offer", "Offer") });
   renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_terms", "Payment terms") });
-  renderBookingSectionHeader(els.offerAcceptancePanelSummary, {
-    primary: backendT("booking.offer_acceptance", "Offer acceptance"),
-    secondary: backendT("booking.offer_acceptance_none", "No generated offers yet.")
+  renderBookingSectionHeader(els.bookingConfirmationPanelSummary, {
+    primary: backendT("booking.booking_confirmation", "Booking confirmation"),
+    secondary: backendT("booking.booking_confirmation_none", "No generated offers yet.")
   });
   renderBookingSectionHeader(els.pricingPanelSummary, { primary: backendT("booking.payments", "Payments") });
   renderBookingSectionHeader(els.activitiesPanelSummary, { primary: backendT("booking.activities", "Activities") });

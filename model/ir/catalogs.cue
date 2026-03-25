@@ -10,7 +10,7 @@ IR: {
 		stages: [for stage in enumModel.BookingStageCatalog {{code: stage}}]
 		bookingPersonRoles: [for role in enumModel.BookingPersonRoleCatalog {{code: role}}]
 		travelPlanTimingKinds: [for kind in enumModel.TravelPlanTimingKindCatalog {{code: kind}}]
-		travelPlanItemKinds: [for kind in enumModel.TravelPlanItemKindCatalog {{code: kind}}]
+		travelPlanServiceKinds: [for kind in enumModel.TravelPlanServiceKindCatalog {{code: kind}}]
 		travelPlanFinancialCoverageStatuses: [for status in enumModel.TravelPlanFinancialCoverageStatusCatalog {{code: status}}]
 		travelPlanOfferCoverageTypes: [for coverageType in enumModel.TravelPlanOfferCoverageTypeCatalog {{code: coverageType}}]
 		supplierCategories: [for category in enumModel.SupplierCategoryCatalog {{code: category}}]
@@ -20,10 +20,10 @@ IR: {
 		offerPaymentTermKinds: [for kind in enumModel.OfferPaymentTermKindCatalog {{code: kind}}]
 		offerPaymentAmountModes: [for mode in enumModel.OfferPaymentAmountModeCatalog {{code: mode}}]
 		offerPaymentDueTypes: [for dueType in enumModel.OfferPaymentDueTypeCatalog {{code: dueType}}]
-		generatedOfferAcceptanceRouteModes: [for mode in enumModel.GeneratedOfferAcceptanceRouteModeCatalog {{code: mode}}]
-		generatedOfferAcceptanceRouteStatuses: [for status in enumModel.GeneratedOfferAcceptanceRouteStatusCatalog {{code: status}}]
-		offerAcceptanceMethods: [for method in enumModel.OfferAcceptanceMethodCatalog {{code: method}}]
-		offerAcceptanceOtpChannels: [for channel in enumModel.OfferAcceptanceOtpChannelCatalog {{code: channel}}]
+		generatedOfferBookingConfirmationRouteModes: [for mode in enumModel.GeneratedOfferBookingConfirmationRouteModeCatalog {{code: mode}}]
+		generatedOfferBookingConfirmationRouteStatuses: [for status in enumModel.GeneratedOfferBookingConfirmationRouteStatusCatalog {{code: status}}]
+		bookingConfirmationMethods: [for method in enumModel.BookingConfirmationMethodCatalog {{code: method}}]
+		bookingConfirmationOtpChannels: [for channel in enumModel.BookingConfirmationOtpChannelCatalog {{code: channel}}]
 		tourStyles: [for style in enumModel.TourStyleCatalog {{
 			code:  style
 			label: enumModel.TourStyleNameCatalog[style]

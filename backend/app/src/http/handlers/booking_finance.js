@@ -6,10 +6,10 @@ import { readFile } from "node:fs/promises";
 import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
-  normalizeGeneratedOfferAcceptanceRouteMode,
-  ensureGeneratedOfferAcceptanceTokenState,
-  removeOfferAcceptanceChallenges
-} from "../../domain/offer_acceptance.js";
+  normalizeGeneratedOfferBookingConfirmationRouteMode,
+  ensureGeneratedOfferBookingConfirmationTokenState,
+  removeBookingConfirmationChallenges
+} from "../../domain/booking_confirmation.js";
 import {
   mergeEditableLocalizedTextField,
   mergeLocalizedTextField,
@@ -169,7 +169,7 @@ export function createBookingFinanceHandlers(deps) {
     sendJson(res, 500, { error: String(error?.message || error || "Translation failed.") });
   }
 
-  function resolveGeneratedOfferAcceptancePaymentLine(paymentTerms, requestedLineId = "") {
+  function resolveGeneratedOfferBookingConfirmationPaymentLine(paymentTerms, requestedLineId = "") {
     const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
     if (!lines.length) {
       throw new Error("Deposit payment acceptance requires at least one payment term line.");
@@ -185,11 +185,11 @@ export function createBookingFinanceHandlers(deps) {
     return lines.find((line) => normalizeText(line?.kind).toUpperCase() === "DEPOSIT") || lines[0];
   }
 
-  function buildGeneratedOfferAcceptanceRoute({ generatedOffer, booking, offerSnapshot, payload, principal, now }) {
-    const requestedRoute = payload?.acceptance_route && typeof payload.acceptance_route === "object"
-      ? payload.acceptance_route
+  function buildGeneratedOfferBookingConfirmationRoute({ generatedOffer, booking, offerSnapshot, payload, principal, now }) {
+    const requestedRoute = payload?.booking_confirmation_route && typeof payload.booking_confirmation_route === "object"
+      ? payload.booking_confirmation_route
       : null;
-    const mode = requestedRoute ? normalizeGeneratedOfferAcceptanceRouteMode(requestedRoute.mode) : "OTP";
+    const mode = requestedRoute ? normalizeGeneratedOfferBookingConfirmationRouteMode(requestedRoute.mode) : "OTP";
     const selectedByATPStaffId = normalizeText(
       principal?.sub
       || principal?.preferred_username
@@ -198,13 +198,13 @@ export function createBookingFinanceHandlers(deps) {
       || "keycloak_user"
     ) || "keycloak_user";
     const expiresAt = normalizeText(requestedRoute?.expires_at)
-      || (mode === "OTP" ? normalizeText(generatedOffer?.acceptance_token_expires_at) : "")
+      || (mode === "OTP" ? normalizeText(generatedOffer?.booking_confirmation_token_expires_at) : "")
       || "";
     const customerMessageSnapshot = normalizeText(requestedRoute?.customer_message_snapshot);
 
     if (mode === "DEPOSIT_PAYMENT") {
       const paymentTerms = offerSnapshot?.payment_terms || null;
-      const acceptanceLine = resolveGeneratedOfferAcceptancePaymentLine(
+      const acceptanceLine = resolveGeneratedOfferBookingConfirmationPaymentLine(
         paymentTerms,
         requestedRoute?.deposit_rule?.payment_term_line_id
       );
@@ -566,9 +566,9 @@ export function createBookingFinanceHandlers(deps) {
       offer: offerSnapshot,
       travel_plan: travelPlanSnapshot
     };
-    ensureGeneratedOfferAcceptanceTokenState(generatedOffer);
+    ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer);
     try {
-      generatedOffer.acceptance_route = buildGeneratedOfferAcceptanceRoute({
+      generatedOffer.booking_confirmation_route = buildGeneratedOfferBookingConfirmationRoute({
         generatedOffer,
         booking,
         offerSnapshot,
@@ -577,7 +577,7 @@ export function createBookingFinanceHandlers(deps) {
         now
       });
     } catch (error) {
-      sendJson(res, 422, { error: String(error?.message || error || "Invalid generated offer acceptance route.") });
+      sendJson(res, 422, { error: String(error?.message || error || "Invalid generated booking confirmation route.") });
       return;
     }
 
@@ -802,14 +802,14 @@ export function createBookingFinanceHandlers(deps) {
       sendJson(res, 404, { error: "Generated offer not found" });
       return;
     }
-    if (normalizeText(booking?.accepted_generated_offer_id) === generatedOfferId) {
-      sendJson(res, 409, { error: "Accepted generated offers cannot be deleted." });
+    if (normalizeText(booking?.confirmed_generated_offer_id) === generatedOfferId) {
+      sendJson(res, 409, { error: "Confirmed generated offers cannot be deleted." });
       return;
     }
 
     const [removed] = generatedOffers.splice(index, 1);
     booking.generated_offers = generatedOffers;
-    removeOfferAcceptanceChallenges(store, booking.id, generatedOfferId);
+    removeBookingConfirmationChallenges(store, booking.id, generatedOfferId);
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(

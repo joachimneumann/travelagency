@@ -301,7 +301,7 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   return null;
 }
 
-function resolveTravelPlanItemThumbnailPath(item, bookingImagesDir) {
+function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
   if (!bookingImagesDir) return null;
   const candidate = safeArray(item?.images)
     .filter((image) => image?.is_customer_visible !== false)
@@ -311,9 +311,9 @@ function resolveTravelPlanItemThumbnailPath(item, bookingImagesDir) {
 }
 
 async function buildItemThumbnailMap(plan, bookingImagesDir) {
-  const items = safeArray(plan?.days).flatMap((day) => safeArray(day?.items));
+  const items = safeArray(plan?.days).flatMap((day) => safeArray(day?.services || day?.items));
   const entries = await Promise.all(items.map(async (item) => {
-    const thumbnailPath = resolveTravelPlanItemThumbnailPath(item, bookingImagesDir);
+    const thumbnailPath = resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir);
     if (!thumbnailPath || !(await fileExists(thumbnailPath))) return [item.id, null];
     const thumbnail = await rasterizeImage(thumbnailPath, {
       width: ITEM_THUMBNAIL_WIDTH * 3,
@@ -439,7 +439,7 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbna
     ? innerWidth - ITEM_THUMBNAIL_WIDTH - 14
     : innerWidth;
   const metaParts = [formatTravelPlanTiming(item, lang, dayDate), itemKindLabel(item?.kind, lang)].filter(Boolean);
-  const title = textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned item");
+  const title = textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
   const location = textOrNull(item?.location);
   const details = textOrNull(item?.details);
   let textHeight = 12;
@@ -693,7 +693,7 @@ export function createTravelPlanPdfWriter({
         textOrNull(day?.date),
         textOrNull(day?.overnight_location),
         textOrNull(day?.notes),
-        ...safeArray(day?.items).flatMap((item) => [
+        ...safeArray(day?.services || day?.items).flatMap((item) => [
           textOrNull(item?.time_label),
           textOrNull(item?.time_point),
           textOrNull(item?.start_time),
@@ -823,7 +823,7 @@ export function createTravelPlanPdfWriter({
             y = doc.y + 8;
           }
 
-          for (const item of safeArray(day?.items)) {
+          for (const item of safeArray(day?.services || day?.items)) {
             const thumbnail = itemThumbnailMap.get(item?.id) || null;
             const contentWidth = doc.page.width - PAGE_MARGIN * 2;
             const itemHeight = itemBoxHeight(doc, item, fonts, lang, day?.date, contentWidth, Boolean(thumbnail));
@@ -871,7 +871,7 @@ export function createTravelPlanPdfWriter({
               .font(pdfFontName("bold", fonts))
               .fontSize(11.2)
               .fillColor(PDF_COLORS.textStrong)
-              .text(textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned item"), innerX, innerY, pdfTextOptions(lang, {
+              .text(textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned service"), innerX, innerY, pdfTextOptions(lang, {
                 width: textWidth,
                 lineGap: 1
               }));

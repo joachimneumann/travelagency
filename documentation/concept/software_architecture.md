@@ -96,8 +96,8 @@ Examples:
 These types describe how data moves across HTTP.
 
 Important rule:
-- transport-only fields such as `pdf_url`, `public_acceptance_token`, or translation summaries belong in `model/api/`
-- persisted entity state such as `acceptance_token_nonce` belongs in `model/entities/`
+- transport-only fields such as `pdf_url`, `public_booking_confirmation_token`, or translation summaries belong in `model/api/`
+- persisted entity state such as `booking_confirmation_token_nonce` belongs in `model/entities/`
 - transport-only data must not leak back into entity types
 
 ### `model/enums/` and `model/common/`
@@ -159,8 +159,8 @@ Examples:
 - `api.#GeneratedBookingOfferReadModel`
   - customer/admin-facing response shape
   - `pdf_url`
-  - `public_acceptance_token`
-  - `public_acceptance_expires_at`
+  - `public_booking_confirmation_token`
+  - `public_booking_confirmation_expires_at`
 
 - `entities.#Booking`
   - persisted operational booking record
@@ -212,15 +212,15 @@ This layer may add behavior, but it should not redefine the shared data contract
 Current important runtime split:
 - `booking_finance.js`
   - offer editing, generation, PDF mail drafts, finance mutations
-- `booking_offer_acceptance.js`
+- `booking_booking_confirmation.js`
   - public generated-offer access
   - public PDF access
-  - offer acceptance
+  - booking confirmation
   - email OTP issue and verification
   - resend throttling responses including `retry_after_seconds`
 - `generated_offer_artifacts.js`
   - frozen PDF artifact creation and lookup
-- `offer_acceptance.js`
+- `booking_confirmation.js`
   - acceptance-token state
   - acceptance-token verification
   - OTP challenge primitives
@@ -264,7 +264,7 @@ Additional backend rule:
 The frontend is responsible for:
 - public booking form
 - public tours catalog
-- public offer-acceptance page
+- public booking-confirmationance page
 - backend workspace pages
 - booking detail page
 - tour edit page

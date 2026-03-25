@@ -126,21 +126,21 @@ import (
 	actor?:                         string
 }
 
-#TravelPlanItemSearchRequest: {
+#TravelPlanServiceSearchRequest: {
 	q?:           string
 	destination?: string
 	country?:     enums.#CountryCode
 	style?:       string
-	item_kind?:   enums.#TravelPlanItemKind
+	service_kind?:   enums.#TravelPlanServiceKind
 	limit?:       >=0 & int
 	offset?:      >=0 & int
 }
 
-#TravelPlanItemImportRequest: {
+#TravelPlanServiceImportRequest: {
 	expected_travel_plan_revision?:       >=0 & int
 	source_booking_id:                    common.#Identifier
-	source_item_id:                       common.#Identifier
-	insert_after_item_id?:                common.#Identifier
+	source_service_id:                       common.#Identifier
+	insert_after_service_id?:                common.#Identifier
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
@@ -149,17 +149,17 @@ import (
 	actor?:                               string
 }
 
-#TravelPlanItemImageUploadRequest: #EvidenceUpload & {
+#TravelPlanServiceImageUploadRequest: #EvidenceUpload & {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string
 }
 
-#TravelPlanItemImageDeleteRequest: {
+#TravelPlanServiceImageDeleteRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	actor?:                         string
 }
 
-#TravelPlanItemImageReorderRequest: {
+#TravelPlanServiceImageReorderRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	image_ids: [...common.#Identifier]
 	actor?: string
@@ -215,20 +215,20 @@ import (
 	expected_offer_revision?: >=0 & int
 	comment?:                 string
 	actor?:                   string
-	acceptance_route?:        #BookingGenerateOfferAcceptanceRouteRequest
+	booking_confirmation_route?:        #BookingGenerateOfferBookingConfirmationRouteRequest
 }
 
-#BookingGenerateOfferDepositAcceptanceRuleRequest: {
+#BookingGenerateOfferDepositBookingConfirmationRuleRequest: {
 	payment_term_line_id: common.#Identifier
 }
 
-#BookingGenerateOfferAcceptanceRouteRequest: {
-	mode:                       enums.#GeneratedOfferAcceptanceRouteMode
+#BookingGenerateOfferBookingConfirmationRouteRequest: {
+	mode:                       enums.#GeneratedOfferBookingConfirmationRouteMode
 	expires_at?:                common.#Timestamp
 	customer_message_snapshot?: string
 
 	if mode == "DEPOSIT_PAYMENT" {
-		deposit_rule: #BookingGenerateOfferDepositAcceptanceRuleRequest
+		deposit_rule: #BookingGenerateOfferDepositBookingConfirmationRuleRequest
 	}
 }
 
@@ -248,13 +248,13 @@ import (
 }
 
 #PublicGeneratedOfferAcceptRequest: {
-	acceptance_token:       string & !=""
+	booking_confirmation_token:       string & !=""
 	accepted_by_name?:      string
 	accepted_by_email?:     common.#Email
 	accepted_by_phone?:     string
 	accepted_by_person_id?: common.#Identifier
 	language?:              enums.#LanguageCode
-	otp_channel?:           enums.#OfferAcceptanceOtpChannel
+	otp_channel?:           enums.#BookingConfirmationOtpChannel
 	otp_code?:              string & !=""
 }
 

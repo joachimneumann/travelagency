@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Booking Confirmation | AsiaTravelPlan</title>
+    <meta name="description" content="Review and confirm your AsiaTravelPlan booking." />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = "http://localhost:8787";
+      }
+    </script>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body class="booking-confirmation-page">
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" href="/index.html" aria-label="AsiaTravelPlan home">
+          <img class="brand-logo" src="/assets/img/logo-asiatravelplan.svg" alt="AsiaTravelPlan" width="320" height="76" />
+        </a>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container booking-confirmation-shell">
+          <article class="panel booking-confirmation-card">
+            <p class="booking-confirmation-kicker">Booking confirmation</p>
+            <h1 class="section-title" id="booking_confirmation_title">Confirm your booking</h1>
+            <p class="booking-confirmation-intro" id="booking_confirmation_intro">Review the frozen PDF, request your verification code, and confirm your booking.</p>
+
+            <div id="booking_confirmation_error" class="backend-message" role="alert" aria-live="assertive" hidden></div>
+            <p id="booking_confirmation_loading" class="booking-confirmation-loading">Loading booking confirmation…</p>
+
+            <div id="booking_confirmation_content" hidden>
+              <div class="booking-confirmation-summary" id="booking_confirmation_summary"></div>
+              <div id="booking_confirmation_route" class="booking-confirmation-route" hidden></div>
+              <div id="booking_confirmation_payment_terms" class="booking-confirmation-payment-terms" hidden></div>
+
+              <div class="booking-confirmation-actions">
+                <a class="btn btn-secondary" id="booking_confirmation_pdf_link" href="#" target="_blank" rel="noopener">Open PDF</a>
+              </div>
+
+              <div id="booking_confirmation_result" class="booking-confirmation-result" hidden>
+                <h2 class="booking-confirmation-result__title">Booking confirmed</h2>
+                <p class="booking-confirmation-result__detail" id="booking_confirmation_result_message"></p>
+                <p class="booking-confirmation-result__detail" id="booking_confirmation_result_statement"></p>
+              </div>
+
+              <form id="booking_confirmation_form" class="booking-confirmation-form" novalidate>
+                <div class="booking-confirmation-form__grid">
+                  <div class="field">
+                    <label for="booking_confirmation_name">Full name</label>
+                    <input id="booking_confirmation_name" type="text" autocomplete="name" />
+                  </div>
+                </div>
+                <p class="booking-confirmation-form__hint micro" id="booking_confirmation_contact_hint"></p>
+
+                <div class="booking-confirmation-actions">
+                  <button class="btn btn-primary" id="booking_confirmation_send_btn" type="submit">Email booking confirmation code</button>
+                </div>
+                <div id="booking_confirmation_status" class="booking-confirmation-form__status" aria-live="polite"></div>
+
+                <div id="booking_confirmation_otp_panel" class="booking-confirmation-otp" hidden>
+                  <p class="booking-confirmation-otp__meta" id="booking_confirmation_otp_meta"></p>
+                  <div class="field">
+                    <label for="booking_confirmation_otp_code">Verification code</label>
+                    <input
+                      id="booking_confirmation_otp_code"
+                      type="text"
+                      inputmode="numeric"
+                      autocomplete="one-time-code"
+                      maxlength="6"
+                      placeholder="6-digit code"
+                    />
+                  </div>
+                  <div class="booking-confirmation-otp__actions">
+                    <button class="btn btn-primary" id="booking_confirmation_verify_btn" type="button">Verify and confirm booking</button>
+                    <button class="btn btn-ghost" id="booking_confirmation_resend_btn" type="button">Resend code</button>
+                    <span class="micro" id="booking_confirmation_retry_after"></span>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="frontend/scripts/pages/booking_confirmation.js"></script>
+  </body>
+</html>

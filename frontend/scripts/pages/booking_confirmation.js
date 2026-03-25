@@ -8,11 +8,11 @@ import {
 } from "../../Generated/Models/generated_Currency.js";
 import { resolveApiUrl } from "../shared/api.js";
 import {
-  formatGeneratedOfferAcceptanceRouteLabel,
+  formatGeneratedOfferBookingConfirmationRouteLabel,
   generatedOfferRouteUsesDepositPayment,
-  normalizeGeneratedOfferAcceptanceRouteMode as normalizeAcceptanceRouteMode,
-  normalizeGeneratedOfferAcceptanceRouteStatus as normalizeAcceptanceRouteStatus
-} from "../shared/offer_acceptance_catalog.js";
+  normalizeGeneratedOfferBookingConfirmationRouteMode as normalizeBookingConfirmationRouteMode,
+  normalizeGeneratedOfferBookingConfirmationRouteStatus as normalizeBookingConfirmationRouteStatus
+} from "../shared/booking_confirmation_catalog.js";
 
 const query = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -23,7 +23,7 @@ const state = {
   generatedOfferId: String(query.get("generated_offer_id") || "").trim(),
   token: String(query.get("token") || "").trim(),
   access: null,
-  accepted: false,
+  confirmed: false,
   sending: false,
   otpRequired: false,
   retryAfterSeconds: 0,
@@ -34,29 +34,29 @@ const state = {
 };
 
 const els = {
-  title: document.getElementById("offer_accept_title"),
-  intro: document.getElementById("offer_accept_intro"),
-  error: document.getElementById("offer_accept_error"),
-  loading: document.getElementById("offer_accept_loading"),
-  content: document.getElementById("offer_accept_content"),
-  summary: document.getElementById("offer_accept_summary"),
-  route: document.getElementById("offer_accept_route"),
-  paymentTerms: document.getElementById("offer_accept_payment_terms"),
-  pdfLink: document.getElementById("offer_accept_pdf_link"),
-  result: document.getElementById("offer_accept_result"),
-  resultMessage: document.getElementById("offer_accept_result_message"),
-  resultStatement: document.getElementById("offer_accept_result_statement"),
-  form: document.getElementById("offer_accept_form"),
-  name: document.getElementById("offer_accept_name"),
-  contactHint: document.getElementById("offer_accept_contact_hint"),
-  sendBtn: document.getElementById("offer_accept_send_btn"),
-  status: document.getElementById("offer_accept_status"),
-  otpPanel: document.getElementById("offer_accept_otp_panel"),
-  otpMeta: document.getElementById("offer_accept_otp_meta"),
-  otpCode: document.getElementById("offer_accept_otp_code"),
-  verifyBtn: document.getElementById("offer_accept_verify_btn"),
-  resendBtn: document.getElementById("offer_accept_resend_btn"),
-  retryAfter: document.getElementById("offer_accept_retry_after")
+  title: document.getElementById("booking_confirmation_title"),
+  intro: document.getElementById("booking_confirmation_intro"),
+  error: document.getElementById("booking_confirmation_error"),
+  loading: document.getElementById("booking_confirmation_loading"),
+  content: document.getElementById("booking_confirmation_content"),
+  summary: document.getElementById("booking_confirmation_summary"),
+  route: document.getElementById("booking_confirmation_route"),
+  paymentTerms: document.getElementById("booking_confirmation_payment_terms"),
+  pdfLink: document.getElementById("booking_confirmation_pdf_link"),
+  result: document.getElementById("booking_confirmation_result"),
+  resultMessage: document.getElementById("booking_confirmation_result_message"),
+  resultStatement: document.getElementById("booking_confirmation_result_statement"),
+  form: document.getElementById("booking_confirmation_form"),
+  name: document.getElementById("booking_confirmation_name"),
+  contactHint: document.getElementById("booking_confirmation_contact_hint"),
+  sendBtn: document.getElementById("booking_confirmation_send_btn"),
+  status: document.getElementById("booking_confirmation_status"),
+  otpPanel: document.getElementById("booking_confirmation_otp_panel"),
+  otpMeta: document.getElementById("booking_confirmation_otp_meta"),
+  otpCode: document.getElementById("booking_confirmation_otp_code"),
+  verifyBtn: document.getElementById("booking_confirmation_verify_btn"),
+  resendBtn: document.getElementById("booking_confirmation_resend_btn"),
+  retryAfter: document.getElementById("booking_confirmation_retry_after")
 };
 
 function escapeHtml(value) {
@@ -125,15 +125,15 @@ function formatPaymentDueRule(rule) {
   const type = normalizeText(rule?.type).toUpperCase();
   const days = Math.max(0, Number(rule?.days || 0));
   if (type === "FIXED_DATE") return `Fixed date: ${formatDateOnly(rule?.fixed_date)}`;
-  if (type === "DAYS_AFTER_ACCEPTANCE") return `${days} day${days === 1 ? "" : "s"} after acceptance`;
+  if (type === "DAYS_AFTER_ACCEPTANCE") return `${days} day${days === 1 ? "" : "s"} after booking confirmation`;
   if (type === "DAYS_BEFORE_TRIP_START") return `${days} day${days === 1 ? "" : "s"} before trip start`;
   if (type === "DAYS_AFTER_TRIP_START") return `${days} day${days === 1 ? "" : "s"} after trip start`;
   if (type === "DAYS_AFTER_TRIP_END") return `${days} day${days === 1 ? "" : "s"} after trip end`;
-  return "On acceptance";
+  return "On booking confirmation";
 }
 
 function routeMode() {
-  return normalizeAcceptanceRouteMode(state.access?.acceptance_route?.mode || "OTP");
+  return normalizeBookingConfirmationRouteMode(state.access?.booking_confirmation_route?.mode || "OTP");
 }
 
 function routeUsesDepositPayment() {
@@ -199,20 +199,20 @@ function renderSummary() {
   }
   const rows = [
     ["Booking", access.booking_name || access.booking_id],
-    ["Offer total", `<span class="offer-accept-summary__value is-total">${escapeHtml(formatMoney(access.total_price_cents, access.currency))}</span>`],
-    ["Route", escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode(), {
+    ["Offer total", `<span class="booking-confirmation-summary__value is-total">${escapeHtml(formatMoney(access.total_price_cents, access.currency))}</span>`],
+    ["Route", escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), {
       deposit: "Deposit payment",
       otp: "OTP confirmation"
     }))],
     ["Offer language", escapeHtml(String(access.lang || "").toUpperCase() || "-")],
     ["Generated", escapeHtml(formatDateTime(access.created_at))],
-    ["Link expires", escapeHtml(formatDateTime(access.public_acceptance_expires_at))],
-    ["Comment", `<span class="offer-accept-summary__comment">${escapeHtml(access.comment || "-")}</span>`]
+    ["Link expires", escapeHtml(formatDateTime(access.public_booking_confirmation_expires_at))],
+    ["Comment", `<span class="booking-confirmation-summary__comment">${escapeHtml(access.comment || "-")}</span>`]
   ];
   els.summary.innerHTML = rows.map(([label, value]) => `
-    <div class="offer-accept-summary__row">
-      <div class="offer-accept-summary__label">${escapeHtml(label)}</div>
-      <div class="offer-accept-summary__value">${value}</div>
+    <div class="booking-confirmation-summary__row">
+      <div class="booking-confirmation-summary__label">${escapeHtml(label)}</div>
+      <div class="booking-confirmation-summary__value">${value}</div>
     </div>
   `).join("");
 }
@@ -220,8 +220,8 @@ function renderSummary() {
 function renderRouteCard() {
   if (!els.route) return;
   const access = state.access;
-  const acceptanceRoute = access?.acceptance_route;
-  if (!access || !acceptanceRoute) {
+  const bookingConfirmationRoute = access?.booking_confirmation_route;
+  if (!access || !bookingConfirmationRoute) {
     els.route.hidden = true;
     els.route.innerHTML = "";
     return;
@@ -230,40 +230,40 @@ function renderRouteCard() {
   const isDeposit = routeUsesDepositPayment();
   const routeTitle = isDeposit
     ? "Deposit payment confirms the offer"
-    : formatGeneratedOfferAcceptanceRouteLabel(mode, {
+    : formatGeneratedOfferBookingConfirmationRouteLabel(mode, {
         deposit: "Deposit payment",
         otp: "OTP confirmation"
       });
   const defaultMessage = isDeposit
     ? (() => {
-        const label = normalizeText(acceptanceRoute?.deposit_rule?.payment_term_label) || "the required payment";
-        const amount = Number.isFinite(Number(acceptanceRoute?.deposit_rule?.required_amount_cents))
-          ? formatMoney(acceptanceRoute.deposit_rule.required_amount_cents, acceptanceRoute?.deposit_rule?.currency || access.currency)
+        const label = normalizeText(bookingConfirmationRoute?.deposit_rule?.payment_term_label) || "the required payment";
+        const amount = Number.isFinite(Number(bookingConfirmationRoute?.deposit_rule?.required_amount_cents))
+          ? formatMoney(bookingConfirmationRoute.deposit_rule.required_amount_cents, bookingConfirmationRoute?.deposit_rule?.currency || access.currency)
           : formatMoney(access.total_price_cents, access.currency);
         return `This offer is confirmed once we receive ${amount} for ${label}.`;
       })()
-    : "Request a one-time code by email and enter it below to accept the offer.";
-  const routeStatus = normalizeAcceptanceRouteStatus(
-    acceptanceRoute?.status,
+    : "Request a one-time code by email and enter it below to confirm your booking.";
+  const routeStatus = normalizeBookingConfirmationRouteStatus(
+    bookingConfirmationRoute?.status,
     isDeposit ? "AWAITING_PAYMENT" : "OPEN"
   );
   const statusLabel = normalizeText(routeStatus)
     ? normalizeText(String(routeStatus).replace(/_/g, " ").toLowerCase()).replace(/^\w/, (char) => char.toUpperCase())
     : (isDeposit ? "Awaiting payment" : "Open");
-  const depositMeta = isDeposit && acceptanceRoute?.deposit_rule
+  const depositMeta = isDeposit && bookingConfirmationRoute?.deposit_rule
     ? `
-      <div class="offer-accept-route__meta">
-        <div><strong>Required payment</strong><span>${escapeHtml(acceptanceRoute.deposit_rule.payment_term_label || "Payment")}</span></div>
-        <div><strong>Amount</strong><span>${escapeHtml(formatMoney(acceptanceRoute.deposit_rule.required_amount_cents || 0, acceptanceRoute.deposit_rule.currency || access.currency))}</span></div>
+      <div class="booking-confirmation-route__meta">
+        <div><strong>Required payment</strong><span>${escapeHtml(bookingConfirmationRoute.deposit_rule.payment_term_label || "Payment")}</span></div>
+        <div><strong>Amount</strong><span>${escapeHtml(formatMoney(bookingConfirmationRoute.deposit_rule.required_amount_cents || 0, bookingConfirmationRoute.deposit_rule.currency || access.currency))}</span></div>
       </div>
     `
     : "";
   els.route.innerHTML = `
-    <div class="offer-accept-route__header">
-      <h2 class="offer-accept-route__title">${escapeHtml(routeTitle)}</h2>
-      <span class="offer-accept-route__status">${escapeHtml(statusLabel)}</span>
+    <div class="booking-confirmation-route__header">
+      <h2 class="booking-confirmation-route__title">${escapeHtml(routeTitle)}</h2>
+      <span class="booking-confirmation-route__status">${escapeHtml(statusLabel)}</span>
     </div>
-    <p class="offer-accept-route__body">${escapeHtml(normalizeText(acceptanceRoute?.customer_message_snapshot) || defaultMessage)}</p>
+    <p class="booking-confirmation-route__body">${escapeHtml(normalizeText(bookingConfirmationRoute?.customer_message_snapshot) || defaultMessage)}</p>
     ${depositMeta}
   `;
   els.route.hidden = false;
@@ -283,62 +283,62 @@ function renderPaymentTerms() {
     <tr>
       <td>${escapeHtml(line.label || "Payment")}</td>
       <td>${escapeHtml(formatPaymentDueRule(line?.due_rule))}</td>
-      <td class="offer-accept-payment-terms__amount">${escapeHtml(formatMoney(line?.resolved_amount_cents || 0, currency))}</td>
+      <td class="booking-confirmation-payment-terms__amount">${escapeHtml(formatMoney(line?.resolved_amount_cents || 0, currency))}</td>
     </tr>
     ${normalizeText(line?.description)
-      ? `<tr class="offer-accept-payment-terms__note-row"><td colspan="3"><span class="offer-accept-payment-terms__note-label">Note for customer</span>${escapeHtml(line.description)}</td></tr>`
+      ? `<tr class="booking-confirmation-payment-terms__note-row"><td colspan="3"><span class="booking-confirmation-payment-terms__note-label">Note for customer</span>${escapeHtml(line.description)}</td></tr>`
       : ""}`
   ).join("");
   const notes = normalizeText(paymentTerms?.notes);
   els.paymentTerms.innerHTML = `
-    <div class="offer-accept-payment-terms__header">
-      <h2 class="offer-accept-payment-terms__title">Payment terms</h2>
+    <div class="booking-confirmation-payment-terms__header">
+      <h2 class="booking-confirmation-payment-terms__title">Payment terms</h2>
     </div>
     <div class="backend-table-wrap">
-      <table class="backend-table offer-accept-payment-terms__table">
+      <table class="backend-table booking-confirmation-payment-terms__table">
         <thead>
           <tr>
             <th>Payment</th>
             <th>Due</th>
-            <th class="offer-accept-payment-terms__amount">Amount</th>
+            <th class="booking-confirmation-payment-terms__amount">Amount</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div class="offer-accept-payment-terms__summary">
-      <div class="offer-accept-payment-terms__summary-row">
+    <div class="booking-confirmation-payment-terms__summary">
+      <div class="booking-confirmation-payment-terms__summary-row">
         <span>Offer total</span>
         <strong>${escapeHtml(formatMoney(paymentTerms?.basis_total_amount_cents || state.access?.total_price_cents || 0, currency))}</strong>
       </div>
-      <div class="offer-accept-payment-terms__summary-row">
+      <div class="booking-confirmation-payment-terms__summary-row">
         <span>Scheduled total</span>
         <strong>${escapeHtml(formatMoney(paymentTerms?.scheduled_total_amount_cents || 0, currency))}</strong>
       </div>
     </div>
-    ${notes ? `<p class="offer-accept-payment-terms__notes">${escapeHtml(notes)}</p>` : ""}
+    ${notes ? `<p class="booking-confirmation-payment-terms__notes">${escapeHtml(notes)}</p>` : ""}
   `;
   els.paymentTerms.hidden = false;
 }
 
-function renderAcceptedState() {
-  const acceptance = state.access?.acceptance;
-  if (!state.accepted || !acceptance) {
+function renderConfirmedState() {
+  const bookingConfirmation = state.access?.booking_confirmation;
+  if (!state.confirmed || !bookingConfirmation) {
     els.result.hidden = true;
     return;
   }
-  const acceptedAt = acceptance.accepted_at ? formatDateTime(acceptance.accepted_at) : "";
-  if (normalizeText(acceptance.method).toUpperCase() === "DEPOSIT_PAYMENT") {
-    els.resultMessage.textContent = acceptedAt
-      ? `Offer confirmed on ${acceptedAt}.`
+  const confirmedAt = bookingConfirmation.accepted_at ? formatDateTime(bookingConfirmation.accepted_at) : "";
+  if (normalizeText(bookingConfirmation.method).toUpperCase() === "DEPOSIT_PAYMENT") {
+    els.resultMessage.textContent = confirmedAt
+      ? `Offer confirmed on ${confirmedAt}.`
       : "Offer confirmed.";
-    els.resultStatement.textContent = Number.isFinite(Number(acceptance.accepted_amount_cents))
-      ? `Confirmed payment: ${formatMoney(acceptance.accepted_amount_cents, acceptance.accepted_currency || state.access?.currency || "USD")}`
+    els.resultStatement.textContent = Number.isFinite(Number(bookingConfirmation.accepted_amount_cents))
+      ? `Confirmed payment: ${formatMoney(bookingConfirmation.accepted_amount_cents, bookingConfirmation.accepted_currency || state.access?.currency || "USD")}`
       : "";
   } else {
-    els.resultMessage.textContent = acceptedAt
-      ? `Offer accepted on ${acceptedAt}.`
-      : "Offer accepted.";
+    els.resultMessage.textContent = confirmedAt
+      ? `Booking confirmed on ${confirmedAt}.`
+      : "Booking confirmed.";
     els.resultStatement.textContent = "";
   }
   els.resultStatement.hidden = !normalizeText(els.resultStatement.textContent);
@@ -353,11 +353,11 @@ function render() {
 
   const depositRoute = routeUsesDepositPayment();
   document.documentElement.lang = String(access.lang || query.get("lang") || "en").toLowerCase();
-  document.title = depositRoute ? "Offer payment | AsiaTravelPlan" : "Accept Offer | AsiaTravelPlan";
-  els.title.textContent = depositRoute ? "Review your offer and payment terms" : "Accept your offer";
+  document.title = depositRoute ? "Offer payment | AsiaTravelPlan" : "Booking Confirmation | AsiaTravelPlan";
+  els.title.textContent = depositRoute ? "Review your offer and payment terms" : "Confirm your booking";
   els.intro.textContent = depositRoute
     ? "Review the frozen PDF and payment terms. Your offer is confirmed once we receive the required payment."
-    : "Review the frozen PDF, request your verification code, and confirm acceptance.";
+    : "Review the frozen PDF, request your verification code, and confirm your booking.";
   if (els.contactHint) {
     els.contactHint.textContent = depositRoute
       ? ""
@@ -383,13 +383,13 @@ function render() {
   els.retryAfter.textContent = state.retryAfterSeconds > 0
     ? `Resend available in ${state.retryAfterSeconds}s`
     : "";
-  renderAcceptedState();
-  els.form.hidden = depositRoute || state.accepted;
+  renderConfirmedState();
+  els.form.hidden = depositRoute || state.confirmed;
 }
 
 async function loadAccess() {
   if (!state.bookingId || !state.generatedOfferId || !state.token) {
-    setError("This acceptance link is incomplete.");
+    setError("This booking confirmation link is incomplete.");
     return;
   }
   const request = publicGeneratedOfferAccessRequest({
@@ -404,17 +404,17 @@ async function loadAccess() {
   });
   const result = await requestJson(request.url, { method: request.method });
   if (!result.ok || !result.payload) {
-    setError(result.payload?.error || "Could not load this offer acceptance link.");
+    setError(result.payload?.error || "Could not load this booking confirmation link.");
     return;
   }
   state.access = result.payload;
-  state.accepted = Boolean(result.payload.accepted);
+  state.confirmed = Boolean(result.payload.confirmed);
   render();
 }
 
 function buildAcceptRequestBody({ includeOtpCode = false } = {}) {
   return {
-    acceptance_token: state.token,
+    booking_confirmation_token: state.token,
     accepted_by_name: normalizeText(els.name.value),
     language: state.access?.lang || String(query.get("lang") || "en").toLowerCase(),
     otp_channel: "EMAIL",
@@ -496,16 +496,16 @@ async function verifyOtpAndAccept() {
     body: buildAcceptRequestBody({ includeOtpCode: true })
   });
   state.sending = false;
-  if (result.ok && result.payload?.accepted) {
-    state.accepted = true;
+  if (result.ok && result.payload?.confirmed) {
+    state.confirmed = true;
     state.otpRequired = false;
     state.access = {
       ...state.access,
-      accepted: true,
-      acceptance: result.payload.acceptance || null,
-      acceptance_route: result.payload.acceptance_route || state.access?.acceptance_route
+      confirmed: true,
+      booking_confirmation: result.payload.booking_confirmation || null,
+      booking_confirmation_route: result.payload.booking_confirmation_route || state.access?.booking_confirmation_route
     };
-    setStatus("Offer accepted.", "success");
+    setStatus("Booking confirmed.", "success");
     render();
     return;
   }

@@ -1,6 +1,6 @@
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
-  TRAVEL_PLAN_ITEM_KIND_OPTIONS,
+  TRAVEL_PLAN_SERVICE_KIND_OPTIONS,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
 import { bookingT } from "./i18n.js";
@@ -41,7 +41,7 @@ function normalizeOptionalText(value) {
 
 function normalizeItemKind(value) {
   const normalized = normalizeOptionalText(value).toLowerCase();
-  return TRAVEL_PLAN_ITEM_KIND_OPTIONS.some((option) => option.value === normalized)
+  return TRAVEL_PLAN_SERVICE_KIND_OPTIONS.some((option) => option.value === normalized)
     ? normalized
     : "other";
 }
@@ -108,7 +108,7 @@ function normalizeItemImages(images) {
     .map((image, index) => {
       const rawImage = image && typeof image === "object" ? image : {};
       return {
-        id: String(rawImage.id || travelPlanId("travel_plan_item_image")),
+        id: String(rawImage.id || travelPlanId("travel_plan_service_image")),
         storage_path: normalizeOptionalText(rawImage.storage_path),
         caption: normalizeOptionalText(rawImage.caption),
         alt_text: normalizeOptionalText(rawImage.alt_text),
@@ -168,21 +168,21 @@ function normalizeCopiedFrom(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : null;
   if (!source) return null;
   const sourceBookingId = normalizeOptionalText(source.source_booking_id);
-  const sourceItemId = normalizeOptionalText(source.source_item_id);
+  const sourceItemId = normalizeOptionalText(source.source_service_id) || normalizeOptionalText(source.source_item_id);
   if (!sourceBookingId || !sourceItemId) return null;
   return {
-    source_type: "booking_travel_plan_item",
+    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_service",
     source_booking_id: sourceBookingId,
     source_day_id: normalizeOptionalText(source.source_day_id),
-    source_item_id: sourceItemId,
+    source_service_id: sourceItemId,
     copied_at: normalizeOptionalText(source.copied_at),
     copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id)
   };
 }
 
-export function createEmptyTravelPlanItem() {
+export function createEmptyTravelPlanService() {
   return {
-    id: travelPlanId("travel_plan_item"),
+    id: travelPlanId("travel_plan_service"),
     timing_kind: "label",
     time_label: "",
     time_label_i18n: {},
@@ -215,7 +215,7 @@ export function createEmptyTravelPlanDay(index = 0) {
     title_i18n: {},
     overnight_location: "",
     overnight_location_i18n: {},
-    items: [],
+    services: [],
     notes: "",
     notes_i18n: {}
   };
@@ -224,7 +224,7 @@ export function createEmptyTravelPlanDay(index = 0) {
 export function createEmptyTravelPlanOfferComponentLink(itemId = "") {
   return {
     id: travelPlanId("travel_plan_offer_link"),
-    travel_plan_item_id: String(itemId || "").trim(),
+    travel_plan_service_id: String(itemId || "").trim(),
     offer_component_id: "",
     coverage_type: "full"
   };
@@ -238,8 +238,8 @@ export function createEmptyTravelPlan() {
   };
 }
 
-export function getTravelPlanItemKindLabel(kind) {
-  const option = TRAVEL_PLAN_ITEM_KIND_OPTIONS.find((entry) => entry.value === kind);
+export function getTravelPlanServiceKindLabel(kind) {
+  const option = TRAVEL_PLAN_SERVICE_KIND_OPTIONS.find((entry) => entry.value === kind);
   return bookingT(`booking.travel_plan.kind.${kind}`, option?.label || "Other");
 }
 
@@ -248,7 +248,7 @@ export function getTravelPlanCoverageTypeLabel(coverageType) {
   return bookingT(`booking.travel_plan.coverage_type.${coverageType}`, option?.label || "Full");
 }
 
-export function getTravelPlanItemCoverageStatus(kind, links = []) {
+export function getTravelPlanServiceCoverageStatus(kind, links = []) {
   if (!Array.isArray(links) || links.length === 0) {
     return normalizeItemKind(kind) === "free_time" ? "not_applicable" : "not_covered";
   }
@@ -289,7 +289,11 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
           resolveLocalizedEditorBranchText(rawDay.overnight_location_i18n ?? rawDay.overnight_location, targetLang, ""),
           targetLang
         ).map,
-        items: (Array.isArray(rawDay.items) ? rawDay.items : []).map((item) => {
+        services: (
+          Array.isArray(rawDay.services)
+            ? rawDay.services
+            : (Array.isArray(rawDay.items) ? rawDay.items : [])
+        ).map((item) => {
           const rawItem = item && typeof item === "object" ? item : {};
           const timing = normalizeItemTiming(rawItem);
           const timeLabelMap = buildDualLocalizedPayload(
@@ -314,7 +318,7 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
           ).map;
           const financialNoteMap = normalizeLocalizedEditorMap(rawItem.financial_note_i18n ?? rawItem.financial_note, "en");
           return {
-            id: String(rawItem.id || travelPlanId("travel_plan_item")),
+            id: String(rawItem.id || travelPlanId("travel_plan_service")),
             timing_kind: timing.timing_kind,
             time_label: resolveLocalizedEditorText(timeLabelMap, "en", ""),
             time_label_i18n: timeLabelMap,
@@ -346,19 +350,19 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
       };
     });
 
-  const itemIdSet = new Set(days.flatMap((day) => day.items.map((item) => item.id)));
+  const itemIdSet = new Set(days.flatMap((day) => day.services.map((item) => item.id)));
   const offer_component_links = (Array.isArray(source.offer_component_links) ? source.offer_component_links : [])
     .map((link) => {
       const rawLink = link && typeof link === "object" ? link : {};
       return {
         id: String(rawLink.id || travelPlanId("travel_plan_offer_link")),
-        travel_plan_item_id: String(rawLink.travel_plan_item_id || "").trim(),
+        travel_plan_service_id: String(rawLink.travel_plan_service_id || rawLink.travel_plan_item_id || "").trim(),
         offer_component_id: String(rawLink.offer_component_id || "").trim(),
         coverage_type: normalizeCoverageType(rawLink.coverage_type)
       };
     })
     .filter((link) => {
-      if (!itemIdSet.has(link.travel_plan_item_id)) return false;
+      if (!itemIdSet.has(link.travel_plan_service_id)) return false;
       if (!link.offer_component_id) return true;
       return linkableOfferComponentIds.has(link.offer_component_id);
     });
@@ -366,17 +370,17 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
   const linksByItemId = new Map();
   for (const link of offer_component_links) {
     if (!link.offer_component_id) continue;
-    const list = linksByItemId.get(link.travel_plan_item_id) || [];
+    const list = linksByItemId.get(link.travel_plan_service_id) || [];
     list.push(link);
-    linksByItemId.set(link.travel_plan_item_id, list);
+    linksByItemId.set(link.travel_plan_service_id, list);
   }
 
   return {
     days: days.map((day) => ({
       ...day,
-      items: day.items.map((item) => ({
+      services: day.services.map((item) => ({
         ...item,
-        financial_coverage_status: getTravelPlanItemCoverageStatus(
+        financial_coverage_status: getTravelPlanServiceCoverageStatus(
           item.kind,
           linksByItemId.get(item.id) || []
         )
@@ -387,17 +391,17 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
   };
 }
 
-export function countTravelPlanItems(plan) {
+export function countTravelPlanServices(plan) {
   return (Array.isArray(plan?.days) ? plan.days : []).reduce(
-    (sum, day) => sum + (Array.isArray(day?.items) ? day.items.length : 0),
+    (sum, day) => sum + (Array.isArray(day?.services) ? day.services.length : 0),
     0
   );
 }
 
-export function countUncoveredTravelPlanItems(plan) {
+export function countUncoveredTravelPlanServices(plan) {
   return (Array.isArray(plan?.days) ? plan.days : []).reduce(
     (sum, day) =>
-      sum + (Array.isArray(day?.items) ? day.items.filter((item) => item?.financial_coverage_status === "not_covered").length : 0),
+      sum + (Array.isArray(day?.services) ? day.services.filter((item) => item?.financial_coverage_status === "not_covered").length : 0),
     0
   );
 }

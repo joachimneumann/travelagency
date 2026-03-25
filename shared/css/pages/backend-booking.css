@@ -199,14 +199,14 @@
   color: var(--error-text-strong);
 }
 
-.booking-detail-page .travel-plan-item-title-input--required,
-.booking-detail-page .localized-editor__pane input.travel-plan-item-title-input--required,
-.booking-detail-page .localized-pair__field input.travel-plan-item-title-input--required {
+.booking-detail-page .travel-plan-service-title-input--required,
+.booking-detail-page .localized-editor__pane input.travel-plan-service-title-input--required,
+.booking-detail-page .localized-pair__field input.travel-plan-service-title-input--required {
   background: var(--surface-error);
   border-color: var(--line-error-strong);
 }
 
-.booking-detail-page .travel-plan-item-title-input--required::placeholder {
+.booking-detail-page .travel-plan-service-title-input--required::placeholder {
   color: var(--error-text-strong);
 }
 

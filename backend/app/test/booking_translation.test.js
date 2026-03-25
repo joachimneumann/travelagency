@@ -46,7 +46,7 @@ test("travel plan translation status counts customer-facing fields only", () => 
         overnight_location_i18n: { en: "Hanoi" },
         notes: "Easy evening walk in the old quarter.",
         notes_i18n: { en: "Easy evening walk in the old quarter." },
-        items: [
+        services: [
           {
             id: "seg_1",
             timing_kind: "label",

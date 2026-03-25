@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-24T07:34:49Z
+# 2026-03-25T02:14:09Z
 
 ---
 openapi: 3.1.0
@@ -414,7 +414,7 @@ components:
         label: point
       - value: range
         label: range
-    TravelPlanItemKind:
+    TravelPlanServiceKind:
       type: string
       enum:
       - transport
@@ -648,7 +648,7 @@ components:
         label: DAYS_AFTER_TRIP_START
       - value: DAYS_AFTER_TRIP_END
         label: DAYS_AFTER_TRIP_END
-    GeneratedOfferAcceptanceRouteMode:
+    GeneratedOfferBookingConfirmationRouteMode:
       type: string
       enum:
       - DEPOSIT_PAYMENT
@@ -661,18 +661,18 @@ components:
         label: DEPOSIT_PAYMENT
       - value: OTP
         label: OTP
-    GeneratedOfferAcceptanceRouteStatus:
+    GeneratedOfferBookingConfirmationRouteStatus:
       type: string
       enum:
       - OPEN
       - AWAITING_PAYMENT
-      - ACCEPTED
+      - CONFIRMED
       - EXPIRED
       - REVOKED
       x-enum-catalog:
       - code: OPEN
       - code: AWAITING_PAYMENT
-      - code: ACCEPTED
+      - code: CONFIRMED
       - code: EXPIRED
       - code: REVOKED
       x-enum-options:
@@ -680,13 +680,13 @@ components:
         label: OPEN
       - value: AWAITING_PAYMENT
         label: AWAITING_PAYMENT
-      - value: ACCEPTED
-        label: ACCEPTED
+      - value: CONFIRMED
+        label: CONFIRMED
       - value: EXPIRED
         label: EXPIRED
       - value: REVOKED
         label: REVOKED
-    OfferAcceptanceMethod:
+    BookingConfirmationMethod:
       type: string
       enum:
       - DEPOSIT_PAYMENT
@@ -707,7 +707,7 @@ components:
         label: PORTAL_CLICK_OTP
       - value: ESIGN
         label: ESIGN
-    OfferAcceptanceOtpChannel:
+    BookingConfirmationOtpChannel:
       type: string
       enum:
       - EMAIL
@@ -3765,8 +3765,8 @@ components:
       - OFFER_UPDATED
       - OFFER_TRANSLATED
       - OFFER_EMAIL_DRAFT_CREATED
-      - OFFER_ACCEPTANCE_OTP_SENT
-      - OFFER_ACCEPTED
+      - BOOKING_CONFIRMATION_OTP_SENT
+      - BOOKING_CONFIRMED
       - INVOICE_CREATED
       - INVOICE_UPDATED
       - PAYMENT_UPDATED
@@ -3782,8 +3782,8 @@ components:
       - code: OFFER_UPDATED
       - code: OFFER_TRANSLATED
       - code: OFFER_EMAIL_DRAFT_CREATED
-      - code: OFFER_ACCEPTANCE_OTP_SENT
-      - code: OFFER_ACCEPTED
+      - code: BOOKING_CONFIRMATION_OTP_SENT
+      - code: BOOKING_CONFIRMED
       - code: INVOICE_CREATED
       - code: INVOICE_UPDATED
       - code: PAYMENT_UPDATED
@@ -3810,10 +3810,10 @@ components:
         label: OFFER_TRANSLATED
       - value: OFFER_EMAIL_DRAFT_CREATED
         label: OFFER_EMAIL_DRAFT_CREATED
-      - value: OFFER_ACCEPTANCE_OTP_SENT
-        label: OFFER_ACCEPTANCE_OTP_SENT
-      - value: OFFER_ACCEPTED
-        label: OFFER_ACCEPTED
+      - value: BOOKING_CONFIRMATION_OTP_SENT
+        label: BOOKING_CONFIRMATION_OTP_SENT
+      - value: BOOKING_CONFIRMED
+        label: BOOKING_CONFIRMED
       - value: INVOICE_CREATED
         label: INVOICE_CREATED
       - value: INVOICE_UPDATED
@@ -4125,7 +4125,7 @@ components:
         notes:
           type: string
           nullable: true
-    BookingTravelPlanItemImageSourceAttribution:
+    BookingTravelPlanServiceImageSourceAttribution:
       type: object
       required: []
       properties:
@@ -4141,7 +4141,7 @@ components:
         license:
           type: string
           nullable: true
-    BookingTravelPlanItemImageFocalPoint:
+    BookingTravelPlanServiceImageFocalPoint:
       type: object
       required:
       - x
@@ -4151,7 +4151,7 @@ components:
           type: number
         y:
           type: number
-    BookingTravelPlanItemImage:
+    BookingTravelPlanServiceImage:
       type: object
       required:
       - id
@@ -4183,21 +4183,21 @@ components:
           type: integer
           nullable: true
         source_attribution:
-          "$ref": "#/components/schemas/BookingTravelPlanItemImageSourceAttribution"
+          "$ref": "#/components/schemas/BookingTravelPlanServiceImageSourceAttribution"
           nullable: true
         focal_point:
-          "$ref": "#/components/schemas/BookingTravelPlanItemImageFocalPoint"
+          "$ref": "#/components/schemas/BookingTravelPlanServiceImageFocalPoint"
           nullable: true
         created_at:
           type: string
           format: date-time
           nullable: true
-    BookingTravelPlanItemCopiedFrom:
+    BookingTravelPlanServiceCopiedFrom:
       type: object
       required:
       - source_type
       - source_booking_id
-      - source_item_id
+      - source_service_id
       - copied_at
       properties:
         source_type:
@@ -4207,7 +4207,7 @@ components:
         source_day_id:
           type: string
           nullable: true
-        source_item_id:
+        source_service_id:
           type: string
         copied_at:
           type: string
@@ -4215,7 +4215,7 @@ components:
         copied_by_atp_staff_id:
           type: string
           nullable: true
-    BookingTravelPlanItem:
+    BookingTravelPlanService:
       type: object
       required:
       - id
@@ -4235,7 +4235,7 @@ components:
           type: string
           nullable: true
         kind:
-          "$ref": "#/components/schemas/TravelPlanItemKind"
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
         accommodation_days:
           type: integer
           minimum: 1
@@ -4266,21 +4266,21 @@ components:
         images:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingTravelPlanItemImage"
+            "$ref": "#/components/schemas/BookingTravelPlanServiceImage"
         copied_from:
-          "$ref": "#/components/schemas/BookingTravelPlanItemCopiedFrom"
+          "$ref": "#/components/schemas/BookingTravelPlanServiceCopiedFrom"
           nullable: true
     BookingTravelPlanOfferComponentLink:
       type: object
       required:
       - id
-      - travel_plan_item_id
+      - travel_plan_service_id
       - offer_component_id
       - coverage_type
       properties:
         id:
           type: string
-        travel_plan_item_id:
+        travel_plan_service_id:
           type: string
         offer_component_id:
           type: string
@@ -4306,10 +4306,10 @@ components:
         overnight_location:
           type: string
           nullable: true
-        items:
+        services:
           type: array
           items:
-            "$ref": "#/components/schemas/BookingTravelPlanItem"
+            "$ref": "#/components/schemas/BookingTravelPlanService"
         notes:
           type: string
           nullable: true
@@ -4783,7 +4783,7 @@ components:
         notes:
           type: string
           nullable: true
-    GeneratedOfferDepositAcceptanceRule:
+    GeneratedOfferDepositBookingConfirmationRule:
       type: object
       required:
       - payment_term_line_id
@@ -4802,7 +4802,7 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         aggregation_mode:
           type: string
-    GeneratedOfferAcceptanceRoute:
+    GeneratedOfferBookingConfirmationRoute:
       type: object
       required:
       - mode
@@ -4811,9 +4811,9 @@ components:
       - selected_by_atp_staff_id
       properties:
         mode:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteMode"
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteMode"
         status:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteStatus"
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteStatus"
         selected_at:
           type: string
           format: date-time
@@ -4827,7 +4827,7 @@ components:
           type: string
           nullable: true
         deposit_rule:
-          "$ref": "#/components/schemas/GeneratedOfferDepositAcceptanceRule"
+          "$ref": "#/components/schemas/GeneratedOfferDepositBookingConfirmationRule"
           nullable: true
     BookingOffer:
       type: object
@@ -4862,7 +4862,7 @@ components:
           nullable: true
         total_price_cents:
           type: integer
-    GeneratedOfferAcceptance:
+    GeneratedOfferBookingConfirmation:
       type: object
       required:
       - id
@@ -4897,7 +4897,7 @@ components:
         language:
           "$ref": "#/components/schemas/LanguageCode"
         method:
-          "$ref": "#/components/schemas/OfferAcceptanceMethod"
+          "$ref": "#/components/schemas/BookingConfirmationMethod"
         statement_snapshot:
           type: string
         terms_version:
@@ -4920,7 +4920,7 @@ components:
           type: string
           nullable: true
         otp_channel:
-          "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
+          "$ref": "#/components/schemas/BookingConfirmationOtpChannel"
           nullable: true
         otp_verified_at:
           type: string
@@ -4990,26 +4990,26 @@ components:
         pdf_sha256:
           type: string
           nullable: true
-        acceptance_route:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRoute"
+        booking_confirmation_route:
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRoute"
           nullable: true
-        acceptance_token_nonce:
+        booking_confirmation_token_nonce:
           type: string
           nullable: true
-        acceptance_token_created_at:
-          type: string
-          format: date-time
-          nullable: true
-        acceptance_token_expires_at:
+        booking_confirmation_token_created_at:
           type: string
           format: date-time
           nullable: true
-        acceptance_token_revoked_at:
+        booking_confirmation_token_expires_at:
           type: string
           format: date-time
           nullable: true
-        acceptance:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+        booking_confirmation_token_revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        booking_confirmation:
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmation"
           nullable: true
     BookingActivity:
       type: object
@@ -5236,7 +5236,7 @@ components:
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
-        accepted_generated_offer_id:
+        confirmed_generated_offer_id:
           type: string
           nullable: true
         notes:
@@ -5307,7 +5307,7 @@ components:
         source_hash:
           type: string
           nullable: true
-    GeneratedOfferAcceptancePublicSummary:
+    GeneratedOfferBookingConfirmationPublicSummary:
       type: object
       required:
       - accepted_at
@@ -5317,14 +5317,14 @@ components:
           type: string
           format: date-time
         method:
-          "$ref": "#/components/schemas/OfferAcceptanceMethod"
+          "$ref": "#/components/schemas/BookingConfirmationMethod"
         accepted_amount_cents:
           type: integer
           nullable: true
         accepted_currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
           nullable: true
-    PublicGeneratedOfferDepositAcceptanceRuleView:
+    PublicGeneratedOfferDepositBookingConfirmationRuleView:
       type: object
       required:
       - payment_term_label
@@ -5337,16 +5337,16 @@ components:
           type: integer
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-    PublicGeneratedOfferAcceptanceRouteView:
+    PublicGeneratedOfferBookingConfirmationRouteView:
       type: object
       required:
       - mode
       - status
       properties:
         mode:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteMode"
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteMode"
         status:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteStatus"
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteStatus"
         expires_at:
           type: string
           format: date-time
@@ -5355,7 +5355,7 @@ components:
           type: string
           nullable: true
         deposit_rule:
-          "$ref": "#/components/schemas/PublicGeneratedOfferDepositAcceptanceRuleView"
+          "$ref": "#/components/schemas/PublicGeneratedOfferDepositBookingConfirmationRuleView"
           nullable: true
     BookingOfferPaymentTermLineReadModel:
       type: object
@@ -5485,18 +5485,18 @@ components:
           nullable: true
         pdf_url:
           type: string
-        acceptance_route:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRoute"
+        booking_confirmation_route:
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRoute"
           nullable: true
-        public_acceptance_token:
+        public_booking_confirmation_token:
           type: string
           nullable: true
-        public_acceptance_expires_at:
+        public_booking_confirmation_expires_at:
           type: string
           format: date-time
           nullable: true
-        acceptance:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptance"
+        booking_confirmation:
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmation"
           nullable: true
     BookingTravelPlanPdfReadModel:
       type: object
@@ -5621,7 +5621,7 @@ components:
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
-        accepted_generated_offer_id:
+        confirmed_generated_offer_id:
           type: string
           nullable: true
         notes:
@@ -5706,11 +5706,11 @@ components:
         search:
           type: string
           nullable: true
-    TravelPlanItemSearchResult:
+    TravelPlanServiceSearchResult:
       type: object
       required:
       - source_booking_id
-      - item_id
+      - service_id
       - title
       properties:
         source_booking_id:
@@ -5724,10 +5724,10 @@ components:
         day_number:
           type: integer
           nullable: true
-        item_id:
+        service_id:
           type: string
-        item_kind:
-          "$ref": "#/components/schemas/TravelPlanItemKind"
+        service_kind:
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
           nullable: true
         title:
           type: string
@@ -5753,7 +5753,7 @@ components:
           type: string
           format: date-time
           nullable: true
-    TravelPlanItemSearchResponse:
+    TravelPlanServiceSearchResponse:
       type: object
       required:
       - total
@@ -5761,7 +5761,7 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/TravelPlanItemSearchResult"
+            "$ref": "#/components/schemas/TravelPlanServiceSearchResult"
         total:
           type: integer
     TourList:
@@ -5968,7 +5968,7 @@ components:
       - currency
       - total_price_cents
       - created_at
-      - accepted
+      - confirmed
       properties:
         booking_id:
           type: string
@@ -5995,42 +5995,42 @@ components:
         payment_terms:
           "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
-        acceptance_route:
-          "$ref": "#/components/schemas/PublicGeneratedOfferAcceptanceRouteView"
+        booking_confirmation_route:
+          "$ref": "#/components/schemas/PublicGeneratedOfferBookingConfirmationRouteView"
           nullable: true
-        public_acceptance_expires_at:
+        public_booking_confirmation_expires_at:
           type: string
           format: date-time
           nullable: true
-        accepted:
+        confirmed:
           type: boolean
-        acceptance:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptancePublicSummary"
+        booking_confirmation:
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationPublicSummary"
           nullable: true
     PublicGeneratedOfferAcceptResponse:
       type: object
       required:
       - booking_id
       - generated_offer_id
-      - accepted
+      - confirmed
       - status
       properties:
         booking_id:
           type: string
         generated_offer_id:
           type: string
-        accepted:
+        confirmed:
           type: boolean
         status:
           type: string
-        acceptance_route:
-          "$ref": "#/components/schemas/PublicGeneratedOfferAcceptanceRouteView"
+        booking_confirmation_route:
+          "$ref": "#/components/schemas/PublicGeneratedOfferBookingConfirmationRouteView"
           nullable: true
-        acceptance:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptancePublicSummary"
+        booking_confirmation:
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationPublicSummary"
           nullable: true
         otp_channel:
-          "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
+          "$ref": "#/components/schemas/BookingConfirmationOtpChannel"
           nullable: true
         otp_sent_to:
           type: string
@@ -6404,9 +6404,9 @@ components:
     PublicGeneratedOfferAcceptRequest:
       type: object
       required:
-      - acceptance_token
+      - booking_confirmation_token
       properties:
-        acceptance_token:
+        booking_confirmation_token:
           type: string
         accepted_by_name:
           type: string
@@ -6425,7 +6425,7 @@ components:
           "$ref": "#/components/schemas/LanguageCode"
           nullable: true
         otp_channel:
-          "$ref": "#/components/schemas/OfferAcceptanceOtpChannel"
+          "$ref": "#/components/schemas/BookingConfirmationOtpChannel"
           nullable: true
         otp_code:
           type: string
@@ -6613,7 +6613,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanItemSearchRequest:
+    TravelPlanServiceSearchRequest:
       type: object
       required: []
       properties:
@@ -6629,8 +6629,8 @@ components:
         style:
           type: string
           nullable: true
-        item_kind:
-          "$ref": "#/components/schemas/TravelPlanItemKind"
+        service_kind:
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
           nullable: true
         limit:
           type: integer
@@ -6638,11 +6638,11 @@ components:
         offset:
           type: integer
           nullable: true
-    TravelPlanItemImportRequest:
+    TravelPlanServiceImportRequest:
       type: object
       required:
       - source_booking_id
-      - source_item_id
+      - source_service_id
       - include_images
       - include_customer_visible_images_only
       - include_notes
@@ -6654,9 +6654,9 @@ components:
           nullable: true
         source_booking_id:
           type: string
-        source_item_id:
+        source_service_id:
           type: string
-        insert_after_item_id:
+        insert_after_service_id:
           type: string
           nullable: true
         include_images:
@@ -6672,7 +6672,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanItemImageUploadRequest:
+    TravelPlanServiceImageUploadRequest:
       type: object
       required:
       - filename
@@ -6691,7 +6691,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanItemImageDeleteRequest:
+    TravelPlanServiceImageDeleteRequest:
       type: object
       required: []
       properties:
@@ -6701,7 +6701,7 @@ components:
         actor:
           type: string
           nullable: true
-    TravelPlanItemImageReorderRequest:
+    TravelPlanServiceImageReorderRequest:
       type: object
       required: []
       properties:
@@ -6822,23 +6822,23 @@ components:
         actor:
           type: string
           nullable: true
-        acceptance_route:
-          "$ref": "#/components/schemas/BookingGenerateOfferAcceptanceRouteRequest"
+        booking_confirmation_route:
+          "$ref": "#/components/schemas/BookingGenerateOfferBookingConfirmationRouteRequest"
           nullable: true
-    BookingGenerateOfferDepositAcceptanceRuleRequest:
+    BookingGenerateOfferDepositBookingConfirmationRuleRequest:
       type: object
       required:
       - payment_term_line_id
       properties:
         payment_term_line_id:
           type: string
-    BookingGenerateOfferAcceptanceRouteRequest:
+    BookingGenerateOfferBookingConfirmationRouteRequest:
       type: object
       required:
       - mode
       properties:
         mode:
-          "$ref": "#/components/schemas/GeneratedOfferAcceptanceRouteMode"
+          "$ref": "#/components/schemas/GeneratedOfferBookingConfirmationRouteMode"
         expires_at:
           type: string
           format: date-time
@@ -6847,7 +6847,7 @@ components:
           type: string
           nullable: true
         deposit_rule:
-          "$ref": "#/components/schemas/BookingGenerateOfferDepositAcceptanceRuleRequest"
+          "$ref": "#/components/schemas/BookingGenerateOfferDepositBookingConfirmationRuleRequest"
           nullable: true
     OfferExchangeRateComponent:
       type: object
@@ -7174,8 +7174,8 @@ paths:
                 "$ref": "#/components/schemas/PublicGeneratedOfferAccessResponse"
   "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept":
     post:
-      operationId: public_generated_offer_accept
-      summary: Public Generated Offer Accept
+      operationId: public_generated_booking_confirmation
+      summary: Public Generated Booking Confirmation
       tags:
       - Public
       security: []
@@ -8184,10 +8184,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/travel-plan-items/search":
+  "/api/v1/travel-plan-services/search":
     get:
-      operationId: travel_plan_item_search
-      summary: Travel Plan Item Search
+      operationId: travel_plan_service_search
+      summary: Travel Plan Service Search
       tags:
       - Bookings
       security:
@@ -8213,7 +8213,7 @@ paths:
         required: false
         schema:
           type: string
-      - name: item_kind
+      - name: service_kind
         in: query
         required: false
         schema:
@@ -8234,7 +8234,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/TravelPlanItemSearchResponse"
+                "$ref": "#/components/schemas/TravelPlanServiceSearchResponse"
         '401':
           description: Unauthorized
           content:
@@ -8247,10 +8247,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import":
     post:
-      operationId: booking_travel_plan_item_import
-      summary: Booking Travel Plan Item Import
+      operationId: booking_travel_plan_service_import
+      summary: Booking Travel Plan Service Import
       tags:
       - Bookings
       security:
@@ -8271,7 +8271,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanItemImportRequest"
+              "$ref": "#/components/schemas/TravelPlanServiceImportRequest"
       responses:
         '200':
           description: Success
@@ -8297,10 +8297,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images":
     post:
-      operationId: booking_travel_plan_item_image_upload
-      summary: Booking Travel Plan Item Image Upload
+      operationId: booking_travel_plan_service_image_upload
+      summary: Booking Travel Plan Service Image Upload
       tags:
       - Bookings
       security:
@@ -8316,7 +8316,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: item_id
+      - name: service_id
         in: path
         required: true
         schema:
@@ -8326,7 +8326,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanItemImageUploadRequest"
+              "$ref": "#/components/schemas/TravelPlanServiceImageUploadRequest"
       responses:
         '200':
           description: Success
@@ -8352,10 +8352,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/{image_id}":
     delete:
-      operationId: booking_travel_plan_item_image_delete
-      summary: Booking Travel Plan Item Image Delete
+      operationId: booking_travel_plan_service_image_delete
+      summary: Booking Travel Plan Service Image Delete
       tags:
       - Bookings
       security:
@@ -8371,7 +8371,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: item_id
+      - name: service_id
         in: path
         required: true
         schema:
@@ -8386,7 +8386,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanItemImageDeleteRequest"
+              "$ref": "#/components/schemas/TravelPlanServiceImageDeleteRequest"
       responses:
         '200':
           description: Success
@@ -8406,10 +8406,10 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order":
+  "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/order":
     patch:
-      operationId: booking_travel_plan_item_image_reorder
-      summary: Booking Travel Plan Item Image Reorder
+      operationId: booking_travel_plan_service_image_reorder
+      summary: Booking Travel Plan Service Image Reorder
       tags:
       - Bookings
       security:
@@ -8425,7 +8425,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: item_id
+      - name: service_id
         in: path
         required: true
         schema:
@@ -8435,7 +8435,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/TravelPlanItemImageReorderRequest"
+              "$ref": "#/components/schemas/TravelPlanServiceImageReorderRequest"
       responses:
         '200':
           description: Success

@@ -78,7 +78,7 @@ export function createBackendServices({
     stageOrder: runtime.stageOrder,
     appRoles: runtime.appRoles,
     gmailDraftsConfig: runtime.gmailDraftsConfig,
-    offerAcceptanceTokenConfig: runtime.offerAcceptanceTokenConfig,
+    bookingConfirmationTokenConfig: runtime.bookingConfirmationTokenConfig,
     travelerDetailsTokenConfig: runtime.travelerDetailsTokenConfig,
     translationEnabled: runtime.translationEnabled,
     normalizeStringArray: support.normalizeStringArray,

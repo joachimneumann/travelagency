@@ -95,8 +95,10 @@ export function createBookingOfferModule(ctx) {
       considerField(day?.title_i18n);
       considerField(day?.overnight_location_i18n);
       considerField(day?.notes_i18n);
-      const items = Array.isArray(day?.items) ? day.items : [];
-      items.forEach((item) => {
+      const services = Array.isArray(day?.services)
+        ? day.services
+        : (Array.isArray(day?.items) ? day.items : []);
+      services.forEach((item) => {
         considerField(item?.time_label_i18n);
         considerField(item?.title_i18n);
         considerField(item?.details_i18n);
@@ -355,7 +357,7 @@ export function createBookingOfferModule(ctx) {
     }
     offerComponentsModule.updateOfferCurrencyHint(currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
-    generatedOffersModule.updateOfferAcceptancePanelSummary();
+    generatedOffersModule.updateBookingConfirmationPanelSummary();
     setOfferSaveEnabled(false);
 
     renderOfferComponentsTable();

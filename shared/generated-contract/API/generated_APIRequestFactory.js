@@ -80,15 +80,15 @@ export function publicGeneratedOfferAccessRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function publicGeneratedOfferAcceptPath(params = {}) {
+export function publicGeneratedBookingConfirmationPath(params = {}) {
   return buildPath("/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept", params);
 }
 
-export function publicGeneratedOfferAcceptRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = publicGeneratedOfferAcceptPath(params);
+export function publicGeneratedBookingConfirmationRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicGeneratedBookingConfirmationPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "public_generated_offer_accept",
+    key: "public_generated_booking_confirmation",
     method: "POST",
     authenticated: false,
     url,
@@ -522,15 +522,15 @@ export function bookingTravelPlanTranslateRequest({ baseURL = '', params = {}, q
   };
 }
 
-export function travelPlanItemSearchPath(params = {}) {
-  return buildPath("/api/v1/travel-plan-items/search", params);
+export function travelPlanServiceSearchPath(params = {}) {
+  return buildPath("/api/v1/travel-plan-services/search", params);
 }
 
-export function travelPlanItemSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = travelPlanItemSearchPath(params);
+export function travelPlanServiceSearchRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = travelPlanServiceSearchPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "travel_plan_item_search",
+    key: "travel_plan_service_search",
     method: "GET",
     authenticated: true,
     url,
@@ -539,15 +539,15 @@ export function travelPlanItemSearchRequest({ baseURL = '', params = {}, query =
   };
 }
 
-export function bookingTravelPlanItemImportPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import", params);
+export function bookingTravelPlanServiceImportPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import", params);
 }
 
-export function bookingTravelPlanItemImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanItemImportPath(params);
+export function bookingTravelPlanServiceImportRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanServiceImportPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_item_import",
+    key: "booking_travel_plan_service_import",
     method: "POST",
     authenticated: true,
     url,
@@ -556,15 +556,15 @@ export function bookingTravelPlanItemImportRequest({ baseURL = '', params = {}, 
   };
 }
 
-export function bookingTravelPlanItemImageUploadPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images", params);
+export function bookingTravelPlanServiceImageUploadPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images", params);
 }
 
-export function bookingTravelPlanItemImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanItemImageUploadPath(params);
+export function bookingTravelPlanServiceImageUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanServiceImageUploadPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_item_image_upload",
+    key: "booking_travel_plan_service_image_upload",
     method: "POST",
     authenticated: true,
     url,
@@ -573,15 +573,15 @@ export function bookingTravelPlanItemImageUploadRequest({ baseURL = '', params =
   };
 }
 
-export function bookingTravelPlanItemImageDeletePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}", params);
+export function bookingTravelPlanServiceImageDeletePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/{image_id}", params);
 }
 
-export function bookingTravelPlanItemImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanItemImageDeletePath(params);
+export function bookingTravelPlanServiceImageDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanServiceImageDeletePath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_item_image_delete",
+    key: "booking_travel_plan_service_image_delete",
     method: "DELETE",
     authenticated: true,
     url,
@@ -590,15 +590,15 @@ export function bookingTravelPlanItemImageDeleteRequest({ baseURL = '', params =
   };
 }
 
-export function bookingTravelPlanItemImageReorderPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order", params);
+export function bookingTravelPlanServiceImageReorderPath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/order", params);
 }
 
-export function bookingTravelPlanItemImageReorderRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingTravelPlanItemImageReorderPath(params);
+export function bookingTravelPlanServiceImageReorderRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingTravelPlanServiceImageReorderPath(params);
   const url = buildURL(baseURL, path, query);
   return {
-    key: "booking_travel_plan_item_image_reorder",
+    key: "booking_travel_plan_service_image_reorder",
     method: "PATCH",
     authenticated: true,
     url,

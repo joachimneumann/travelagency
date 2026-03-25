@@ -8,7 +8,7 @@ import {
   normalizeEmail,
   normalizePhone
 } from "./domain/phone_matching.js";
-import { backfillGeneratedOfferAcceptanceTokenState } from "./domain/offer_acceptance.js";
+import { backfillGeneratedOfferBookingConfirmationTokenState } from "./domain/booking_confirmation.js";
 import { collapseGeneratedOfferPaymentTermsState } from "./domain/generated_offer_artifacts.js";
 import { createBackendServices } from "./bootstrap/services.js";
 import { createApplicationRoutes } from "./bootstrap/application_handlers.js";
@@ -29,7 +29,7 @@ import {
   META_WEBHOOK_CONFIG,
   MOBILE_APP_CONFIG,
   nowIso,
-  OFFER_ACCEPTANCE_TOKEN_CONFIG,
+  BOOKING_CONFIRMATION_TOKEN_CONFIG,
   OFFER_CATEGORIES,
   OFFER_CATEGORY_ORDER,
   PAYMENT_STATUSES,
@@ -120,7 +120,7 @@ const services = createBackendServices({
     generatedCurrencyDefinition: GENERATED_CURRENCY_HELPERS.generatedCurrencyDefinition,
     normalizeGeneratedCurrencyCode: GENERATED_CURRENCY_HELPERS.normalizeGeneratedCurrencyCode,
     gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
-    offerAcceptanceTokenConfig: OFFER_ACCEPTANCE_TOKEN_CONFIG,
+    bookingConfirmationTokenConfig: BOOKING_CONFIRMATION_TOKEN_CONFIG,
     travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
     keycloakDirectoryConfig: KEYCLOAK_DIRECTORY_CONFIG,
     metaWebhookConfig: META_WEBHOOK_CONFIG,
@@ -187,7 +187,7 @@ const applicationRuntime = Object.freeze({
   allowedStageTransitions: ALLOWED_STAGE_TRANSITIONS,
   computeServiceLevelAgreementDueAt,
   gmailDraftsConfig: GMAIL_DRAFTS_CONFIG,
-  offerAcceptanceTokenConfig: OFFER_ACCEPTANCE_TOKEN_CONFIG,
+  bookingConfirmationTokenConfig: BOOKING_CONFIRMATION_TOKEN_CONFIG,
   travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
   execFile,
   paths: RUNTIME_PATHS,
@@ -221,9 +221,9 @@ export async function createBackendHandler({ port = PORT } = {}) {
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
-  if (backfillGeneratedOfferAcceptanceTokenState(startupStore, {
+  if (backfillGeneratedOfferBookingConfirmationTokenState(startupStore, {
     now: nowIso(),
-    ttlMs: OFFER_ACCEPTANCE_TOKEN_CONFIG.ttlMs
+    ttlMs: BOOKING_CONFIRMATION_TOKEN_CONFIG.ttlMs
   }) || collapsedGeneratedOfferPaymentTerms || backfilledBookingPersons) {
     await services.storeUtils.persistStore(startupStore);
   }

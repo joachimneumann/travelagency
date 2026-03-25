@@ -118,7 +118,7 @@ import (
 	number_of_travelers?:         >=0 & <=common.#MaxTravelers & int
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
-	accepted_generated_offer_id?: common.#Identifier
+	confirmed_generated_offer_id?: common.#Identifier
 	notes?:                       string
 	persons?: [...#BookingPerson]
 	travel_plan?:         #BookingTravelPlan

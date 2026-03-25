@@ -58,15 +58,18 @@ export function validateTravelPlanDraft(plan, {
       };
     }
 
-    for (const [itemIndex, item] of (Array.isArray(day?.items) ? day.items : []).entries()) {
+    const services = Array.isArray(day?.services)
+      ? day.services
+      : (Array.isArray(day?.items) ? day.items : []);
+    for (const [itemIndex, item] of services.entries()) {
       const itemNumber = itemIndex + 1;
       const itemId = String(item?.id || "").trim();
       if (!itemId) {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.item_id_missing",
-            "Day {day}, travel plan item {item}: Travel plan item id is missing.",
+            "booking.travel_plan.validation.service_id_missing",
+            "Day {day}, service {item}: Service id is missing.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -75,8 +78,8 @@ export function validateTravelPlanDraft(plan, {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.item_id_duplicate",
-            "Day {day}, travel plan item {item}: Travel plan item id is duplicated.",
+            "booking.travel_plan.validation.service_id_duplicate",
+            "Day {day}, service {item}: Service id is duplicated.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -89,7 +92,7 @@ export function validateTravelPlanDraft(plan, {
           ok: false,
           error: bookingT(
             "booking.travel_plan.validation.item_timing_invalid",
-            "Day {day}, travel plan item {item}: Time information is invalid.",
+            "Day {day}, service {item}: Time information is invalid.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -100,8 +103,8 @@ export function validateTravelPlanDraft(plan, {
         return {
           ok: false,
           error: bookingT(
-            "booking.travel_plan.validation.item_kind_invalid",
-            "Day {day}, travel plan item {item}: Kind is invalid.",
+            "booking.travel_plan.validation.service_kind_invalid",
+            "Day {day}, service {item}: Kind is invalid.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -121,7 +124,7 @@ export function validateTravelPlanDraft(plan, {
           itemNumber,
           error: bookingT(
             "booking.travel_plan.validation.accommodation_days_invalid",
-            "Day {day}, travel plan item {item}: Accommodation days must be between 1 and 100.",
+            "Day {day}, service {item}: Accommodation days must be between 1 and 100.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -138,7 +141,7 @@ export function validateTravelPlanDraft(plan, {
           itemNumber,
           error: bookingT(
             "booking.travel_plan.validation.item_title_required",
-            "Day {day}, travel plan item {item}: Travel plan item title is required.",
+            "Day {day}, service {item}: Service title is required.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -149,7 +152,7 @@ export function validateTravelPlanDraft(plan, {
           ok: false,
           error: bookingT(
             "booking.travel_plan.validation.item_time_point_required",
-            "Day {day}, travel plan item {item}: Time point is required.",
+            "Day {day}, service {item}: Time point is required.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -162,7 +165,7 @@ export function validateTravelPlanDraft(plan, {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.item_time_point_date_invalid",
-              "Day {day}, travel plan item {item}: Date must use YYYY-MM-DD.",
+              "Day {day}, service {item}: Date must use YYYY-MM-DD.",
               { day: dayNumber, item: itemNumber }
             )
           };
@@ -174,7 +177,7 @@ export function validateTravelPlanDraft(plan, {
           ok: false,
           error: bookingT(
             "booking.travel_plan.validation.item_time_range_required",
-            "Day {day}, travel plan item {item}: Start and end time are required.",
+            "Day {day}, service {item}: Start and end time are required.",
             { day: dayNumber, item: itemNumber }
           )
         };
@@ -188,7 +191,7 @@ export function validateTravelPlanDraft(plan, {
             ok: false,
             error: bookingT(
               "booking.travel_plan.validation.item_time_range_date_invalid",
-              "Day {day}, travel plan item {item}: Dates must use YYYY-MM-DD.",
+              "Day {day}, service {item}: Dates must use YYYY-MM-DD.",
               { day: dayNumber, item: itemNumber }
             )
           };
@@ -217,13 +220,13 @@ export function validateTravelPlanDraft(plan, {
     }
     linkIds.add(linkId);
 
-    const itemId = String(link?.travel_plan_item_id || "").trim();
+    const itemId = String(link?.travel_plan_service_id || "").trim();
     if (!itemIds.has(itemId)) {
       return {
         ok: false,
         error: bookingT(
           "booking.travel_plan.validation.link_item_unknown",
-          "Travel-plan offer link {id} references unknown travel plan item {item}.",
+          "Travel-plan offer link {id} references unknown service {item}.",
           { id: linkId, item: itemId }
         )
       };

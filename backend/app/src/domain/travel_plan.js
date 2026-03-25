@@ -2,7 +2,7 @@ import { normalizeText } from "../lib/text.js";
 import {
   TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES,
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES,
-  TRAVEL_PLAN_ITEM_KIND_VALUES,
+  TRAVEL_PLAN_SERVICE_KIND_VALUES,
   TRAVEL_PLAN_TIMING_KIND_VALUES
 } from "../lib/generated_catalogs.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
@@ -12,7 +12,7 @@ import {
   resolveLocalizedText
 } from "./booking_content_i18n.js";
 
-const TRAVEL_PLAN_ITEM_KINDS = new Set(TRAVEL_PLAN_ITEM_KIND_VALUES);
+const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
 const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
 const TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES = new Set(TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES);
 const TRAVEL_PLAN_OFFER_COVERAGE_TYPES = new Set(TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES);
@@ -38,7 +38,7 @@ function normalizeOptionalBoolean(value, fallback = null) {
   return fallback;
 }
 
-function normalizeTravelPlanItemImageSourceAttribution(rawAttribution) {
+function normalizeTravelPlanServiceImageSourceAttribution(rawAttribution) {
   const source = rawAttribution && typeof rawAttribution === "object" && !Array.isArray(rawAttribution)
     ? rawAttribution
     : {};
@@ -51,7 +51,7 @@ function normalizeTravelPlanItemImageSourceAttribution(rawAttribution) {
   return Object.values(normalized).some(Boolean) ? normalized : null;
 }
 
-function normalizeTravelPlanItemImageFocalPoint(rawFocalPoint) {
+function normalizeTravelPlanServiceImageFocalPoint(rawFocalPoint) {
   const source = rawFocalPoint && typeof rawFocalPoint === "object" && !Array.isArray(rawFocalPoint)
     ? rawFocalPoint
     : {};
@@ -63,30 +63,30 @@ function normalizeTravelPlanItemImageFocalPoint(rawFocalPoint) {
   return { x, y };
 }
 
-function normalizeTravelPlanItemCopiedFrom(rawCopiedFrom) {
+function normalizeTravelPlanServiceCopiedFrom(rawCopiedFrom) {
   const source = rawCopiedFrom && typeof rawCopiedFrom === "object" && !Array.isArray(rawCopiedFrom)
     ? rawCopiedFrom
     : {};
   const sourceBookingId = normalizeOptionalText(source.source_booking_id);
-  const sourceItemId = normalizeOptionalText(source.source_item_id);
-  if (!sourceBookingId || !sourceItemId) return null;
+  const sourceServiceId = normalizeOptionalText(source.source_service_id) || normalizeOptionalText(source.source_item_id);
+  if (!sourceBookingId || !sourceServiceId) return null;
   return {
-    source_type: "booking_travel_plan_item",
+    source_type: normalizeOptionalText(source.source_type) || "booking_travel_plan_service",
     source_booking_id: sourceBookingId,
     source_day_id: normalizeOptionalText(source.source_day_id),
-    source_item_id: sourceItemId,
+    source_service_id: sourceServiceId,
     copied_at: normalizeOptionalText(source.copied_at),
     copied_by_atp_staff_id: normalizeOptionalText(source.copied_by_atp_staff_id)
   };
 }
 
-function normalizeTravelPlanItemImages(images, dayIndex, itemIndex) {
+function normalizeTravelPlanServiceImages(images, dayIndex, itemIndex) {
   const sourceImages = Array.isArray(images) ? images : [];
   const normalized = sourceImages
     .map((image, imageIndex) => {
       const rawImage = image && typeof image === "object" && !Array.isArray(image) ? image : {};
       return {
-        id: normalizeText(rawImage.id) || `travel_plan_item_image_${dayIndex + 1}_${itemIndex + 1}_${imageIndex + 1}`,
+        id: normalizeText(rawImage.id) || `travel_plan_service_image_${dayIndex + 1}_${itemIndex + 1}_${imageIndex + 1}`,
         storage_path: normalizeOptionalText(rawImage.storage_path),
         caption: normalizeOptionalText(rawImage.caption),
         alt_text: normalizeOptionalText(rawImage.alt_text),
@@ -95,8 +95,8 @@ function normalizeTravelPlanItemImages(images, dayIndex, itemIndex) {
         is_customer_visible: normalizeOptionalBoolean(rawImage.is_customer_visible, true),
         width_px: normalizePositiveInt(rawImage.width_px, null),
         height_px: normalizePositiveInt(rawImage.height_px, null),
-        source_attribution: normalizeTravelPlanItemImageSourceAttribution(rawImage.source_attribution),
-        focal_point: normalizeTravelPlanItemImageFocalPoint(rawImage.focal_point),
+        source_attribution: normalizeTravelPlanServiceImageSourceAttribution(rawImage.source_attribution),
+        focal_point: normalizeTravelPlanServiceImageFocalPoint(rawImage.focal_point),
         created_at: normalizeOptionalText(rawImage.created_at)
       };
     })
@@ -136,7 +136,7 @@ function normalizeTravelPlanAttachments(attachments) {
 
 function normalizeItemKind(value) {
   const normalized = normalizeText(value).toLowerCase();
-  return TRAVEL_PLAN_ITEM_KINDS.has(normalized) ? normalized : "other";
+  return TRAVEL_PLAN_SERVICE_KINDS.has(normalized) ? normalized : "other";
 }
 
 function normalizeTimingKind(value) {
@@ -234,7 +234,11 @@ function normalizeTravelPlanDays(days, options = {}) {
     })
     .map((entry, dayIndex) => {
       const day = entry.raw;
-      const items = (Array.isArray(day?.items) ? day.items : []).map((item, itemIndex) => {
+      const services = (
+        Array.isArray(day?.services)
+          ? day.services
+          : (Array.isArray(day?.items) ? day.items : [])
+      ).map((item, itemIndex) => {
         const rawItem = item && typeof item === "object" && !Array.isArray(item) ? item : {};
         const timing = normalizeItemTiming(rawItem);
         const time_label_i18n = normalizeLocalizedTextMap(rawItem?.time_label_i18n ?? timing.time_label, contentLang);
@@ -246,7 +250,7 @@ function normalizeTravelPlanDays(days, options = {}) {
           contentLang
         );
         return {
-          id: normalizeText(rawItem.id) || `travel_plan_item_${dayIndex + 1}_${itemIndex + 1}`,
+          id: normalizeText(rawItem.id) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
           timing_kind: timing.timing_kind,
           time_label: timing.timing_kind === "label" ? (resolveLocalizedText(time_label_i18n, flatLang) || null) : null,
           time_label_i18n,
@@ -265,8 +269,8 @@ function normalizeTravelPlanDays(days, options = {}) {
           financial_coverage_status: normalizeFinancialCoverageStatus(rawItem.financial_coverage_status),
           financial_note: resolveLocalizedText(financial_note_i18n, flatLang) || null,
           financial_note_i18n,
-          images: normalizeTravelPlanItemImages(rawItem.images, dayIndex, itemIndex),
-          copied_from: normalizeTravelPlanItemCopiedFrom(rawItem.copied_from)
+          images: normalizeTravelPlanServiceImages(rawItem.images, dayIndex, itemIndex),
+          copied_from: normalizeTravelPlanServiceCopiedFrom(rawItem.copied_from)
         };
       });
 
@@ -285,7 +289,7 @@ function normalizeTravelPlanDays(days, options = {}) {
         title_i18n,
         overnight_location: resolveLocalizedText(overnight_location_i18n, flatLang) || null,
         overnight_location_i18n,
-        items,
+        services,
         notes: resolveLocalizedText(notes_i18n, flatLang) || null,
         notes_i18n
       };
@@ -298,7 +302,7 @@ function normalizeTravelPlanLinks(links) {
     const rawLink = link && typeof link === "object" && !Array.isArray(link) ? link : {};
     return {
       id: normalizeText(rawLink.id) || `travel_plan_offer_link_${index + 1}`,
-      travel_plan_item_id: normalizeText(rawLink.travel_plan_item_id),
+      travel_plan_service_id: normalizeText(rawLink.travel_plan_service_id) || normalizeText(rawLink.travel_plan_item_id),
       offer_component_id: normalizeText(rawLink.offer_component_id),
       coverage_type: normalizeCoverageType(rawLink.coverage_type)
     };
@@ -317,7 +321,7 @@ export function createTravelPlanHelpers() {
       : {};
     const days = normalizeTravelPlanDays(source.days, options);
     const links = normalizeTravelPlanLinks(source.offer_component_links);
-    const itemIdSet = new Set(days.flatMap((day) => day.items.map((item) => item.id)));
+    const itemIdSet = new Set(days.flatMap((day) => day.services.map((item) => item.id)));
     const offerComponentIdSet = new Set(
       (Array.isArray(offer?.components) ? offer.components : [])
         .map((component) => normalizeText(component?.id))
@@ -325,7 +329,7 @@ export function createTravelPlanHelpers() {
     );
 
     const validLinks = links.filter((link) => {
-      const hasItem = itemIdSet.has(link.travel_plan_item_id);
+      const hasItem = itemIdSet.has(link.travel_plan_service_id);
       const hasOfferComponent = offerComponentIdSet.has(link.offer_component_id);
       return hasItem && hasOfferComponent;
     });
@@ -333,14 +337,14 @@ export function createTravelPlanHelpers() {
 
     const linksByItemId = new Map();
     for (const link of validLinks) {
-      const current = linksByItemId.get(link.travel_plan_item_id) || [];
+      const current = linksByItemId.get(link.travel_plan_service_id) || [];
       current.push(link);
-      linksByItemId.set(link.travel_plan_item_id, current);
+      linksByItemId.set(link.travel_plan_service_id, current);
     }
 
     const normalizedDays = days.map((day) => ({
       ...day,
-      items: day.items.map((item) => {
+      services: day.services.map((item) => {
         const itemLinks = linksByItemId.get(item.id) || [];
         return {
           ...item,
@@ -386,62 +390,62 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Day ${day.day_number} title is required.` };
       }
 
-      for (const [itemIndex, item] of day.items.entries()) {
+      for (const [itemIndex, item] of day.services.entries()) {
         const itemNumber = itemIndex + 1;
         if (!normalizeText(item.id)) {
-          return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item id is missing.` };
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service id is missing.` };
         }
-      if (itemIds.has(item.id)) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item id is duplicated.` };
-      }
-      itemIds.add(item.id);
-      if (!TRAVEL_PLAN_TIMING_KINDS.has(item.timing_kind)) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Time information is invalid.` };
-      }
-      if (!TRAVEL_PLAN_ITEM_KINDS.has(item.kind)) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Kind is invalid.` };
-      }
-      if (
-        item.kind === "accommodation"
-        && !(Number.isInteger(item.accommodation_days) && item.accommodation_days >= 1 && item.accommodation_days <= 100)
-      ) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Accommodation days must be between 1 and 100.` };
-      }
-      if (!normalizeText(item.title)) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item Title is required` };
-      }
-      if (normalizeText(item.supplier_id) && !supplierIds.has(item.supplier_id)) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Unknown supplier ${item.supplier_id}.` };
-      }
-      if (item.timing_kind === "point" && !normalizeText(item.time_point)) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Time point is required.` };
-      }
-      if (item.timing_kind === "range" && (!normalizeText(item.start_time) || !normalizeText(item.end_time))) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Start and end time are required.` };
-      }
-      let primaryImageCount = 0;
-      for (const image of Array.isArray(item.images) ? item.images : []) {
-        if (!normalizeText(image.id)) {
-          return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item image id is missing.` };
+        if (itemIds.has(item.id)) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service id is duplicated.` };
         }
-        if (imageIds.has(image.id)) {
-          return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item image id is duplicated.` };
+        itemIds.add(item.id);
+        if (!TRAVEL_PLAN_TIMING_KINDS.has(item.timing_kind)) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Time information is invalid.` };
         }
-        imageIds.add(image.id);
-        if (!normalizeText(image.storage_path)) {
-          return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Item image storage path is required.` };
+        if (!TRAVEL_PLAN_SERVICE_KINDS.has(item.kind)) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Kind is invalid.` };
         }
-        if (image.is_primary) primaryImageCount += 1;
-      }
-      if (primaryImageCount > 1) {
-        return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Only one primary image is allowed.` };
-      }
-      if (item.copied_from) {
-        if (!normalizeText(item.copied_from.source_booking_id) || !normalizeText(item.copied_from.source_item_id)) {
-          return { ok: false, error: `Day ${day.day_number}, Item ${itemNumber}: Copied-from metadata is incomplete.` };
+        if (
+          item.kind === "accommodation"
+          && !(Number.isInteger(item.accommodation_days) && item.accommodation_days >= 1 && item.accommodation_days <= 100)
+        ) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Accommodation days must be between 1 and 100.` };
+        }
+        if (!normalizeText(item.title)) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service title is required.` };
+        }
+        if (normalizeText(item.supplier_id) && !supplierIds.has(item.supplier_id)) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Unknown supplier ${item.supplier_id}.` };
+        }
+        if (item.timing_kind === "point" && !normalizeText(item.time_point)) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Time point is required.` };
+        }
+        if (item.timing_kind === "range" && (!normalizeText(item.start_time) || !normalizeText(item.end_time))) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Start and end time are required.` };
+        }
+        let primaryImageCount = 0;
+        for (const image of Array.isArray(item.images) ? item.images : []) {
+          if (!normalizeText(image.id)) {
+            return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service image id is missing.` };
+          }
+          if (imageIds.has(image.id)) {
+            return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service image id is duplicated.` };
+          }
+          imageIds.add(image.id);
+          if (!normalizeText(image.storage_path)) {
+            return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service image storage path is required.` };
+          }
+          if (image.is_primary) primaryImageCount += 1;
+        }
+        if (primaryImageCount > 1) {
+          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Only one primary image is allowed.` };
+        }
+        if (item.copied_from) {
+          if (!normalizeText(item.copied_from.source_booking_id) || !normalizeText(item.copied_from.source_service_id)) {
+            return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Copied-from metadata is incomplete.` };
+          }
         }
       }
-    }
     }
 
     for (const attachment of Array.isArray(normalized.attachments) ? normalized.attachments : []) {
@@ -471,10 +475,10 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Travel-plan offer link id ${link.id} is duplicated.` };
       }
       linkIds.add(link.id);
-      if (!itemIds.has(link.travel_plan_item_id)) {
+      if (!itemIds.has(link.travel_plan_service_id)) {
         return {
           ok: false,
-          error: `Travel-plan offer link ${link.id} references unknown item ${link.travel_plan_item_id}.`
+          error: `Travel-plan offer link ${link.id} references unknown service ${link.travel_plan_service_id}.`
         };
       }
       if (!offerComponentIds.has(link.offer_component_id)) {

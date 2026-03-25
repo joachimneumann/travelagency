@@ -158,12 +158,12 @@ export function createBookingQueryModule(deps) {
       persons: getBookingPersons(booking)
     }, {
       lang: resolveRequestedLang(options),
-      includeAcceptanceToken: Boolean(options?.includeAcceptanceToken)
+      includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
     });
   }
 
   async function buildBookingDetailResponse(booking, options = {}) {
-    return { booking: await buildBookingPayload(booking, { ...options, includeAcceptanceToken: true }) };
+    return { booking: await buildBookingPayload(booking, { ...options, includeBookingConfirmationToken: true }) };
   }
 
   return {

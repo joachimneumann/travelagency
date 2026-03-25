@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { sha256Hex } from "./offer_acceptance.js";
+import { sha256Hex } from "./booking_confirmation.js";
 
 export function collapseGeneratedOfferPaymentTermsState(store) {
   const bookings = Array.isArray(store?.bookings) ? store.bookings : [];

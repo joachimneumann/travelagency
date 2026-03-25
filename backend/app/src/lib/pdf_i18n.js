@@ -25,7 +25,7 @@ const DICTIONARY = Object.freeze({
     "offer.travel_plan_title": "Travel plan overview",
     "offer.day_label": "Day {day}",
     "offer.overnight": "Overnight: {location}",
-    "offer.item_fallback": "Planned item",
+    "offer.item_fallback": "Planned service",
     "offer.item.transport": "Transport",
     "offer.item.accommodation": "Accommodation",
     "offer.item.activity": "Activity",

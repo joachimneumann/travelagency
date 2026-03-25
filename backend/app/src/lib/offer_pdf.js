@@ -172,7 +172,7 @@ function formatFriendlyDateOnly(dateValue, lang) {
   });
 }
 
-function humanizeTravelPlanItemKind(kind, lang) {
+function humanizeTravelPlanServiceKind(kind, lang) {
   const normalizedKind = normalizeText(kind).toLowerCase();
   if (!normalizedKind) return "";
   const fallback = normalizedKind
@@ -758,12 +758,12 @@ function drawTravelPlanOverview(doc, generatedOffer, booking, startY, fonts, lan
       y = doc.y + 8;
     }
 
-    const items = safeArray(day?.items);
+    const items = safeArray(day?.services || day?.items);
     for (const item of items) {
       const timingText = formatTravelPlanTiming(item, lang, textOrNull(day?.date));
-      const itemTitle = textOrNull(item?.title) || humanizeTravelPlanItemKind(item?.kind, lang) || pdfT(lang, "offer.item_fallback", "Planned item");
+      const itemTitle = textOrNull(item?.title) || humanizeTravelPlanServiceKind(item?.kind, lang) || pdfT(lang, "offer.item_fallback", "Planned service");
       const itemMetaParts = [];
-      const kindLabel = humanizeTravelPlanItemKind(item?.kind, lang);
+      const kindLabel = humanizeTravelPlanServiceKind(item?.kind, lang);
       const location = textOrNull(item?.location);
       if (kindLabel) itemMetaParts.push(kindLabel);
       if (location) itemMetaParts.push(location);
@@ -1411,10 +1411,10 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
 }
 
 function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
-  const routeMode = normalizeText(generatedOffer?.acceptance_route?.mode).toUpperCase();
+  const routeMode = normalizeText(generatedOffer?.booking_confirmation_route?.mode).toUpperCase();
   if (routeMode === "DEPOSIT_PAYMENT") {
-    const routeRule = generatedOffer?.acceptance_route?.deposit_rule && typeof generatedOffer.acceptance_route.deposit_rule === "object"
-      ? generatedOffer.acceptance_route.deposit_rule
+    const routeRule = generatedOffer?.booking_confirmation_route?.deposit_rule && typeof generatedOffer.booking_confirmation_route.deposit_rule === "object"
+      ? generatedOffer.booking_confirmation_route.deposit_rule
       : null;
     const paymentLabel = textOrNull(routeRule?.payment_term_label) || pdfT(lang, "offer.payment_term.default_label", "Payment term {index}", { index: 1 });
     const paymentAmount = formatMoneyValue(

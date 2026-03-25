@@ -10,7 +10,7 @@ Create a Gmail draft from the ATP backend so ATP staff can:
 
 This is intentionally a **draft creation** flow, not an automatic send flow.
 
-It is also intentionally separate from the public offer-acceptance flow.
+It is also intentionally separate from the public booking-confirmationance flow.
 
 Current backend booking UI distinction:
 - `Email` in the generated-offers table creates a Gmail draft with the frozen PDF attachment
@@ -187,11 +187,11 @@ That means:
 - the PDF is immutable once generated
 - the Gmail draft always uses the frozen artifact, not a re-rendered historical PDF
 - later edits to the draft offer do not change already generated PDFs
-- offer acceptance records can reference the same frozen PDF hash
+- booking confirmation records can reference the same frozen PDF hash
 
-### Offer acceptance relationship
+### Booking confirmation relationship
 
-Generated-offer email and generated-offer acceptance are separate workflows.
+Generated-offer email and generated-booking confirmation are separate workflows.
 
 Email draft flow:
 - ATP staff prepares outbound customer communication
@@ -199,10 +199,10 @@ Email draft flow:
 - draft creation does not by itself mark the offer as sent
 - draft creation does not by itself mark the offer as accepted
 
-Offer acceptance flow:
-- customer uses a dedicated public acceptance link
-- the link opens the public acceptance page `offer-accept.html`
-- the link is based on a public acceptance token
+Booking confirmation flow:
+- customer uses a dedicated public booking confirmation link
+- the link opens the public acceptance page `booking-confirmation.html`
+- the link is based on a public booking confirmation token
 - optional email OTP verification can be required before final acceptance
 - resend throttling is enforced server-side and exposed to the page via `retry_after_seconds`
 - acceptance is tied to the frozen generated-offer snapshot and frozen PDF
@@ -227,7 +227,7 @@ ATP staff then:
 - optionally changes the text
 - sends it manually
 
-If ATP later includes an acceptance link in the email body, that link should point to the dedicated public acceptance page and tokenized acceptance flow, not to a mutable booking page.
+If ATP later includes an booking confirmation link in the email body, that link should point to the dedicated public acceptance page and tokenized acceptance flow, not to a mutable booking page.
 
 ### Acceptance-link helpers
 

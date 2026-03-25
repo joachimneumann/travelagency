@@ -81,7 +81,7 @@ export function createBookingTravelPlanAttachmentHandlers(deps) {
     const generatedOffers = Array.isArray(booking?.generated_offers) ? booking.generated_offers : [];
     for (const generatedOffer of generatedOffers) {
       if (!generatedOffer || typeof generatedOffer !== "object") continue;
-      if (generatedOffer.acceptance && typeof generatedOffer.acceptance === "object") continue;
+      if (generatedOffer.booking_confirmation && typeof generatedOffer.booking_confirmation === "object") continue;
       const pdfPath = generatedOfferPdfPath(normalizeText(generatedOffer.id));
       delete generatedOffer.pdf_frozen_at;
       delete generatedOffer.pdf_sha256;

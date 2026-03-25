@@ -72,7 +72,7 @@ package api
 		}]
 	},
 	{
-		key:           "public_generated_offer_accept"
+		key:           "public_generated_booking_confirmation"
 		path:          "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept"
 		method:        "POST"
 		tag:           "Public"
@@ -513,12 +513,12 @@ package api
 		}]
 	},
 	{
-		key:           "travel_plan_item_search"
-		path:          "/api/v1/travel-plan-items/search"
+		key:           "travel_plan_service_search"
+		path:          "/api/v1/travel-plan-services/search"
 		method:        "GET"
 		tag:           "Bookings"
 		authenticated: true
-		responseType:  "TravelPlanItemSearchResponse"
+		responseType:  "TravelPlanServiceSearchResponse"
 		parameters: [{
 			name:     "q"
 			location: "query"
@@ -540,10 +540,10 @@ package api
 			required: false
 			typeName: "string"
 		}, {
-			name:     "item_kind"
+			name:     "service_kind"
 			location: "query"
 			required: false
-			typeName: "TravelPlanItemKind"
+			typeName: "TravelPlanServiceKind"
 		}, {
 			name:     "limit"
 			location: "query"
@@ -557,12 +557,12 @@ package api
 		}]
 	},
 	{
-		key:           "booking_travel_plan_item_import"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/import"
+		key:           "booking_travel_plan_service_import"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/import"
 		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "TravelPlanItemImportRequest"
+		requestType:   "TravelPlanServiceImportRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
@@ -577,12 +577,12 @@ package api
 		}]
 	},
 	{
-		key:           "booking_travel_plan_item_image_upload"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images"
+		key:           "booking_travel_plan_service_image_upload"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images"
 		method:        "POST"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "TravelPlanItemImageUploadRequest"
+		requestType:   "TravelPlanServiceImageUploadRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
@@ -595,19 +595,19 @@ package api
 			required: true
 			typeName: "Identifier"
 		}, {
-			name:     "item_id"
+			name:     "service_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"
 		}]
 	},
 	{
-		key:           "booking_travel_plan_item_image_delete"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/{image_id}"
+		key:           "booking_travel_plan_service_image_delete"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/{image_id}"
 		method:        "DELETE"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "TravelPlanItemImageDeleteRequest"
+		requestType:   "TravelPlanServiceImageDeleteRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
@@ -620,7 +620,7 @@ package api
 			required: true
 			typeName: "Identifier"
 		}, {
-			name:     "item_id"
+			name:     "service_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"
@@ -632,12 +632,12 @@ package api
 		}]
 	},
 	{
-		key:           "booking_travel_plan_item_image_reorder"
-		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/items/{item_id}/images/order"
+		key:           "booking_travel_plan_service_image_reorder"
+		path:          "/api/v1/bookings/{booking_id}/travel-plan/days/{day_id}/services/{service_id}/images/order"
 		method:        "PATCH"
 		tag:           "Bookings"
 		authenticated: true
-		requestType:   "TravelPlanItemImageReorderRequest"
+		requestType:   "TravelPlanServiceImageReorderRequest"
 		responseType:  "BookingDetail"
 		parameters: [{
 			name:     "booking_id"
@@ -650,7 +650,7 @@ package api
 			required: true
 			typeName: "Identifier"
 		}, {
-			name:     "item_id"
+			name:     "service_id"
 			location: "path"
 			required: true
 			typeName: "Identifier"

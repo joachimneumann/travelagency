@@ -128,8 +128,10 @@ function collectTravelPlanFieldDescriptors(travelPlan, targetLang) {
       })
     ].filter(Boolean);
 
-    const items = Array.isArray(day?.items) ? day.items : [];
-    const itemDescriptors = items.flatMap((item, itemIndex) => {
+    const services = Array.isArray(day?.services)
+      ? day.services
+      : (Array.isArray(day?.items) ? day.items : []);
+    const itemDescriptors = services.flatMap((item, itemIndex) => {
       const itemId = normalizeText(item?.id) || `item_${dayIndex + 1}_${itemIndex + 1}`;
       return [
         createFieldDescriptor({

@@ -7,7 +7,7 @@ import {
   buildOfferTranslationStatus,
   buildTravelPlanTranslationStatus
 } from "./booking_translation.js";
-import { buildGeneratedOfferTransportFields } from "./offer_acceptance.js";
+import { buildGeneratedOfferTransportFields } from "./booking_confirmation.js";
 
 export function createBookingViewHelpers({
   baseCurrency,
@@ -15,7 +15,7 @@ export function createBookingViewHelpers({
   stageOrder,
   appRoles,
   gmailDraftsConfig,
-  offerAcceptanceTokenConfig,
+  bookingConfirmationTokenConfig,
   translationEnabled,
   normalizeStringArray,
   normalizeEmail,
@@ -36,7 +36,7 @@ export function createBookingViewHelpers({
   listBookingTravelPlanPdfs,
   sendJson
 }) {
-  const offerAcceptanceTokenSecret = normalizeText(offerAcceptanceTokenConfig?.secret);
+  const bookingConfirmationTokenSecret = normalizeText(bookingConfirmationTokenConfig?.secret);
   let assignableKeycloakUserLabelsPromise = null;
 
   function resolveAssignableKeycloakUserLabelMap() {
@@ -273,8 +273,8 @@ export function createBookingViewHelpers({
 
   function publicGeneratedOfferFields(generatedOffer, options = {}) {
     return buildGeneratedOfferTransportFields(generatedOffer, {
-      secret: offerAcceptanceTokenSecret,
-      includeAcceptanceToken: Boolean(options?.includeAcceptanceToken)
+      secret: bookingConfirmationTokenSecret,
+      includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
     });
   }
 
@@ -330,7 +330,7 @@ export function createBookingViewHelpers({
       (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
         ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, {
           lang,
-          includeAcceptanceToken: Boolean(options?.includeAcceptanceToken)
+          includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
         })),
         pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
       }))

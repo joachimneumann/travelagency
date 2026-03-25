@@ -36,16 +36,16 @@
   grid-template-columns: repeat(3, minmax(160px, 1fr));
 }
 
-.travel-plan-item__create-days-field {
+.travel-plan-service__create-days-field {
   align-content: end;
 }
 
-.travel-plan-item__create-days-btn {
+.travel-plan-service__create-days-btn {
   min-width: 160px;
 }
 
-.travel-plan-item .field label,
-.travel-plan-item .field .field-label {
+.travel-plan-service .field label,
+.travel-plan-service .field .field-label {
   padding-top: 0.7rem;
 }
 
@@ -312,7 +312,7 @@
   cursor: not-allowed;
 }
 
-.travel-plan-item {
+.travel-plan-service {
   position: relative;
   margin: 0;
   margin-left: 5rem;
@@ -324,7 +324,7 @@
   box-shadow: none !important;
 }
 
-.travel-plan-item::before {
+.travel-plan-service::before {
   content: "";
   position: absolute;
   left: 0;
@@ -335,19 +335,19 @@
   background: var(--surface-disabled-strong);
 }
 
-.travel-plan-item--not-covered {
+.travel-plan-service--not-covered {
   border-color: transparent;
 }
 
-.travel-plan-item--partially-covered {
+.travel-plan-service--partially-covered {
   border-color: transparent;
 }
 
-.travel-plan-item--covered {
+.travel-plan-service--covered {
   border-color: transparent;
 }
 
-.travel-plan-item__head {
+.travel-plan-service__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -355,14 +355,14 @@
   margin-bottom: 0.8rem;
 }
 
-.travel-plan-item__title {
+.travel-plan-service__title {
   display: flex;
   align-items: center;
   gap: 0.7rem;
   flex-wrap: wrap;
 }
 
-.travel-plan-item__index {
+.travel-plan-service__index {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-bold);
   text-transform: var(--text-transform-caps);
@@ -370,7 +370,7 @@
   color: var(--text-ink-soft);
 }
 
-.travel-plan-item__actions {
+.travel-plan-service__actions {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -771,12 +771,12 @@
     max-width: 100%;
   }
 
-  .travel-plan-item {
+  .travel-plan-service {
     margin-left: 0;
     padding-left: 2.25rem;
   }
 
-  .travel-plan-item::before {
+  .travel-plan-service::before {
     top: 1rem;
   }
 
@@ -785,7 +785,7 @@
   }
 
   .travel-plan-day__head,
-  .travel-plan-item__head,
+  .travel-plan-service__head,
   .travel-plan-links__head,
   .travel-plan-images__head {
     flex-direction: column;

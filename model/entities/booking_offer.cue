@@ -128,7 +128,7 @@ import (
 	total_price_cents:  int
 }
 
-#GeneratedOfferDepositAcceptanceRule: {
+#GeneratedOfferDepositBookingConfirmationRule: {
 	payment_term_line_id:  common.#Identifier
 	payment_term_label:    string & !=""
 	required_amount_cents: >=0 & int
@@ -136,20 +136,20 @@ import (
 	aggregation_mode:      "SUM_LINKED_PAID_PAYMENTS"
 }
 
-#GeneratedOfferAcceptanceRoute: {
-	mode:                       enums.#GeneratedOfferAcceptanceRouteMode
-	status:                     enums.#GeneratedOfferAcceptanceRouteStatus
+#GeneratedOfferBookingConfirmationRoute: {
+	mode:                       enums.#GeneratedOfferBookingConfirmationRouteMode
+	status:                     enums.#GeneratedOfferBookingConfirmationRouteStatus
 	selected_at:                common.#Timestamp
 	selected_by_atp_staff_id:   common.#Identifier
 	expires_at?:                common.#Timestamp
 	customer_message_snapshot?: string
 
 	if mode == "DEPOSIT_PAYMENT" {
-		deposit_rule: #GeneratedOfferDepositAcceptanceRule
+		deposit_rule: #GeneratedOfferDepositBookingConfirmationRule
 	}
 }
 
-#GeneratedOfferAcceptance: {
+#GeneratedOfferBookingConfirmation: {
 	id:                             common.#Identifier
 	accepted_at:                    common.#Timestamp
 	accepted_by_name?:              string & !=""
@@ -157,7 +157,7 @@ import (
 	accepted_by_phone?:             string
 	accepted_by_person_id?:         common.#Identifier
 	language:                       enums.#LanguageCode
-	method:                         enums.#OfferAcceptanceMethod
+	method:                         enums.#BookingConfirmationMethod
 	statement_snapshot:             string & !=""
 	terms_version?:                 string & !=""
 	terms_snapshot:                 string & !=""
@@ -167,7 +167,7 @@ import (
 	offer_snapshot_sha256:          string & =~"^[a-f0-9]{64}$"
 	ip_address?:                    string
 	user_agent?:                    string
-	otp_channel?:                   enums.#OfferAcceptanceOtpChannel
+	otp_channel?:                   enums.#BookingConfirmationOtpChannel
 	otp_verified_at?:               common.#Timestamp
 	deposit_payment_id?:            common.#Identifier
 	accepted_payment_term_line_id?: common.#Identifier
@@ -180,7 +180,7 @@ import (
 	}
 
 	if method == "PORTAL_CLICK_OTP" {
-		otp_channel:     enums.#OfferAcceptanceOtpChannel
+		otp_channel:     enums.#BookingConfirmationOtpChannel
 		otp_verified_at: common.#Timestamp
 	}
 
@@ -207,10 +207,10 @@ import (
 	travel_plan?:                 #BookingTravelPlan
 	pdf_frozen_at?:               common.#Timestamp
 	pdf_sha256?:                  string & =~"^[a-f0-9]{64}$"
-	acceptance_route?:            #GeneratedOfferAcceptanceRoute
-	acceptance_token_nonce?:      string & !=""
-	acceptance_token_created_at?: common.#Timestamp
-	acceptance_token_expires_at?: common.#Timestamp
-	acceptance_token_revoked_at?: common.#Timestamp
-	acceptance?:                  #GeneratedOfferAcceptance
+	booking_confirmation_route?:            #GeneratedOfferBookingConfirmationRoute
+	booking_confirmation_token_nonce?:      string & !=""
+	booking_confirmation_token_created_at?: common.#Timestamp
+	booking_confirmation_token_expires_at?: common.#Timestamp
+	booking_confirmation_token_revoked_at?: common.#Timestamp
+	booking_confirmation?:                  #GeneratedOfferBookingConfirmation
 }

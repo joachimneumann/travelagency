@@ -6,8 +6,8 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { generateKeyPairSync } from "node:crypto";
 import { createGmailDraftsClient } from "../src/lib/gmail_drafts.js";
 import { createBookingFinanceHandlers } from "../src/http/handlers/booking_finance.js";
-import { createBookingOfferAcceptanceHandlers } from "../src/http/handlers/booking_offer_acceptance.js";
-import { buildOfferAcceptanceToken } from "../src/domain/offer_acceptance.js";
+import { createBookingConfirmationHandlers } from "../src/http/handlers/booking_confirmation.js";
+import { buildBookingConfirmationToken } from "../src/domain/booking_confirmation.js";
 
 function decodeBase64Url(value) {
   const padded = String(value).replace(/-/g, "+").replace(/_/g, "/");
@@ -144,7 +144,7 @@ test("gmail drafts client can send an HTML email message", async () => {
 
     const result = await gmailDrafts.sendMessage({
       to: "traveler@example.com",
-      subject: "Your acceptance code",
+      subject: "Your booking confirmation code",
       greeting: "Hello",
       intro: "Use code 123456.",
       footer: "Asia Travel Plan",
@@ -158,7 +158,7 @@ test("gmail drafts client can send an HTML email message", async () => {
     const sendPayload = JSON.parse(fetchCalls[1].init.body);
     const rawMime = decodeBase64Url(sendPayload.raw);
     const htmlBody = decodeMimeHtmlPart(rawMime);
-    assert.match(rawMime, /Subject: Your acceptance code/);
+    assert.match(rawMime, /Subject: Your booking confirmation code/);
     assert.match(rawMime, /To: traveler@example\.com/);
     assert.match(htmlBody, /Use code 123456\./);
   } finally {
@@ -278,13 +278,13 @@ test("gmail draft handler returns success when activity persistence fails after 
   }
 });
 
-test("public generated offer acceptance handler issues email OTP and finalizes acceptance", async () => {
-  const { tempDir, serviceAccountPath } = await createServiceAccountFixture("offer-acceptance-otp-test-");
+test("public generated booking confirmation handler issues email OTP and finalizes acceptance", async () => {
+  const { tempDir, serviceAccountPath } = await createServiceAccountFixture("booking-confirmationance-otp-test-");
   const originalFetch = global.fetch;
   const fetchCalls = [];
   const pdfPath = path.join(tempDir, "generated-offer.pdf");
-  const offerAcceptanceTokenSecret = "offer-acceptance-test-secret";
-  const offerAcceptanceTokenExpiresAt = "2026-03-26T10:00:00.000Z";
+  const bookingConfirmationTokenSecret = "booking-confirmationance-test-secret";
+  const bookingConfirmationTokenExpiresAt = "2026-03-26T10:00:00.000Z";
   try {
     global.fetch = createGoogleFetchStub(fetchCalls, "draft-unused", "message-otp-123");
 
@@ -313,9 +313,9 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
               filename: "ATP offer 2026-03-19.pdf",
               lang: "en",
               created_at: "2026-03-19T10:00:00.000Z",
-              public_acceptance_token_nonce: "nonce_acceptance_otp",
-              public_acceptance_token_created_at: "2026-03-19T10:00:00.000Z",
-              public_acceptance_token_expires_at: offerAcceptanceTokenExpiresAt,
+              public_booking_confirmation_token_nonce: "nonce_acceptance_otp",
+              public_booking_confirmation_token_created_at: "2026-03-19T10:00:00.000Z",
+              public_booking_confirmation_token_expires_at: bookingConfirmationTokenExpiresAt,
               currency: "USD",
               total_price_cents: 16500,
               offer: {
@@ -365,26 +365,26 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
         }
       ],
       activities: [],
-      offer_acceptance_challenges: []
+      booking_confirmation_challenges: []
     };
 
     const responses = [];
-    const acceptanceToken = buildOfferAcceptanceToken({
+    const acceptanceToken = buildBookingConfirmationToken({
       bookingId: "booking_1",
       generatedOfferId: "generated_offer_1",
       nonce: "nonce_acceptance_otp",
-      expiresAt: offerAcceptanceTokenExpiresAt,
-      secret: offerAcceptanceTokenSecret
+      expiresAt: bookingConfirmationTokenExpiresAt,
+      secret: bookingConfirmationTokenSecret
     });
     let nextPayload = {
-      acceptance_token: acceptanceToken,
+      booking_confirmation_token: acceptanceToken,
       accepted_by_name: "Alex Traveler",
       accepted_by_email: "attacker@example.com",
       otp_channel: "EMAIL",
       language: "en"
     };
 
-    const handlers = createBookingOfferAcceptanceHandlers({
+    const handlers = createBookingConfirmationHandlers({
       readBodyJson: async () => nextPayload,
       sendJson: (_res, status, payload) => {
         responses.push({ status, payload });
@@ -410,8 +410,8 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
         serviceAccountJsonPath: serviceAccountPath,
         impersonatedEmail: "info@asiatravelplan.com"
       },
-      offerAcceptanceTokenConfig: {
-        secret: offerAcceptanceTokenSecret,
+      bookingConfirmationTokenConfig: {
+        secret: bookingConfirmationTokenSecret,
         ttlMs: 7 * 24 * 60 * 60 * 1000
       },
       getBookingContactProfile: () => ({
@@ -435,10 +435,10 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
 
     assert.equal(responses[0].status, 422);
     assert.match(String(responses[0].payload.error || ""), /booking contact email/i);
-    assert.equal(store.offer_acceptance_challenges.length, 0);
+    assert.equal(store.booking_confirmation_challenges.length, 0);
 
     nextPayload = {
-      acceptance_token: acceptanceToken,
+      booking_confirmation_token: acceptanceToken,
       accepted_by_name: "Alex Traveler",
       otp_channel: "EMAIL",
       language: "en"
@@ -451,10 +451,10 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
     );
 
     assert.equal(responses[1].status, 202);
-    assert.equal(responses[1].payload.accepted, false);
+    assert.equal(responses[1].payload.confirmed, false);
     assert.equal(responses[1].payload.status, "OTP_REQUIRED");
-    assert.equal(store.offer_acceptance_challenges.length, 1);
-    assert.equal(store.activities.at(-1).type, "OFFER_ACCEPTANCE_OTP_SENT");
+    assert.equal(store.booking_confirmation_challenges.length, 1);
+    assert.equal(store.activities.at(-1).type, "BOOKING_CONFIRMATION_OTP_SENT");
 
     const sendCall = fetchCalls.find((call) => call.url === "https://gmail.googleapis.com/gmail/v1/users/me/messages/send");
     assert.ok(sendCall);
@@ -464,7 +464,7 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
     assert.ok(otpCodeMatch);
 
     nextPayload = {
-      acceptance_token: acceptanceToken,
+      booking_confirmation_token: acceptanceToken,
       otp_channel: "EMAIL",
       otp_code: otpCodeMatch[1]
     };
@@ -476,28 +476,28 @@ test("public generated offer acceptance handler issues email OTP and finalizes a
     );
 
     assert.equal(responses[2].status, 200);
-    assert.equal(responses[2].payload.accepted, true);
-    assert.equal(responses[2].payload.acceptance.method, "PORTAL_CLICK_OTP");
-    assert.equal(responses[2].payload.acceptance.otp_channel, undefined);
-    assert.equal(store.bookings[0].accepted_generated_offer_id, "generated_offer_1");
-    assert.equal(store.bookings[0].generated_offers[0].acceptance.accepted_by_name, "Alex Traveler");
-    assert.equal(store.bookings[0].generated_offers[0].acceptance.accepted_by_email, "traveler@example.com");
-    assert.equal(store.offer_acceptance_challenges.length, 0);
-    assert.equal(store.activities.at(-1).type, "OFFER_ACCEPTED");
+    assert.equal(responses[2].payload.confirmed, true);
+    assert.equal(responses[2].payload.booking_confirmation.method, "PORTAL_CLICK_OTP");
+    assert.equal(responses[2].payload.booking_confirmation.otp_channel, undefined);
+    assert.equal(store.bookings[0].confirmed_generated_offer_id, "generated_offer_1");
+    assert.equal(store.bookings[0].generated_offers[0].booking_confirmation.accepted_by_name, "Alex Traveler");
+    assert.equal(store.bookings[0].generated_offers[0].booking_confirmation.accepted_by_email, "traveler@example.com");
+    assert.equal(store.booking_confirmation_challenges.length, 0);
+    assert.equal(store.activities.at(-1).type, "BOOKING_CONFIRMED");
   } finally {
     global.fetch = originalFetch;
     await rm(tempDir, { recursive: true, force: true });
   }
 });
 
-test("public generated offer acceptance handler throttles OTP resends and allows retry after cooldown", async () => {
-  const { tempDir, serviceAccountPath } = await createServiceAccountFixture("offer-acceptance-throttle-test-");
+test("public generated booking confirmation handler throttles OTP resends and allows retry after cooldown", async () => {
+  const { tempDir, serviceAccountPath } = await createServiceAccountFixture("booking-confirmationance-throttle-test-");
   const originalFetch = global.fetch;
   const fetchCalls = [];
   const pdfPath = path.join(tempDir, "generated-offer.pdf");
   let currentTime = "2026-03-19T12:00:00.000Z";
-  const offerAcceptanceTokenSecret = "offer-acceptance-test-secret";
-  const offerAcceptanceTokenExpiresAt = "2026-03-26T10:00:00.000Z";
+  const bookingConfirmationTokenSecret = "booking-confirmationance-test-secret";
+  const bookingConfirmationTokenExpiresAt = "2026-03-26T10:00:00.000Z";
   try {
     global.fetch = createGoogleFetchStub(fetchCalls, "draft-unused", "message-otp-throttle");
 
@@ -526,9 +526,9 @@ test("public generated offer acceptance handler throttles OTP resends and allows
               filename: "ATP offer 2026-03-19.pdf",
               lang: "en",
               created_at: "2026-03-19T10:00:00.000Z",
-              public_acceptance_token_nonce: "nonce_acceptance_throttle",
-              public_acceptance_token_created_at: "2026-03-19T10:00:00.000Z",
-              public_acceptance_token_expires_at: offerAcceptanceTokenExpiresAt,
+              public_booking_confirmation_token_nonce: "nonce_acceptance_throttle",
+              public_booking_confirmation_token_created_at: "2026-03-19T10:00:00.000Z",
+              public_booking_confirmation_token_expires_at: bookingConfirmationTokenExpiresAt,
               currency: "USD",
               total_price_cents: 16500,
               offer: {
@@ -567,26 +567,26 @@ test("public generated offer acceptance handler throttles OTP resends and allows
         }
       ],
       activities: [],
-      offer_acceptance_challenges: []
+      booking_confirmation_challenges: []
     };
 
     const responses = [];
-    const acceptanceToken = buildOfferAcceptanceToken({
+    const acceptanceToken = buildBookingConfirmationToken({
       bookingId: "booking_1",
       generatedOfferId: "generated_offer_1",
       nonce: "nonce_acceptance_throttle",
-      expiresAt: offerAcceptanceTokenExpiresAt,
-      secret: offerAcceptanceTokenSecret
+      expiresAt: bookingConfirmationTokenExpiresAt,
+      secret: bookingConfirmationTokenSecret
     });
     const payload = {
-      acceptance_token: acceptanceToken,
+      booking_confirmation_token: acceptanceToken,
       accepted_by_name: "Alex Traveler",
       accepted_by_email: "traveler@example.com",
       otp_channel: "EMAIL",
       language: "en"
     };
 
-    const handlers = createBookingOfferAcceptanceHandlers({
+    const handlers = createBookingConfirmationHandlers({
       readBodyJson: async () => payload,
       sendJson: (_res, status, responsePayload) => {
         responses.push({ status, payload: responsePayload });
@@ -612,8 +612,8 @@ test("public generated offer acceptance handler throttles OTP resends and allows
         serviceAccountJsonPath: serviceAccountPath,
         impersonatedEmail: "info@asiatravelplan.com"
       },
-      offerAcceptanceTokenConfig: {
-        secret: offerAcceptanceTokenSecret,
+      bookingConfirmationTokenConfig: {
+        secret: bookingConfirmationTokenSecret,
         ttlMs: 7 * 24 * 60 * 60 * 1000
       },
       getBookingContactProfile: () => ({
@@ -636,8 +636,8 @@ test("public generated offer acceptance handler throttles OTP resends and allows
     );
 
     assert.equal(responses[0].status, 202);
-    assert.equal(store.offer_acceptance_challenges.length, 1);
-    assert.equal(store.offer_acceptance_challenges[0].send_count, 1);
+    assert.equal(store.booking_confirmation_challenges.length, 1);
+    assert.equal(store.booking_confirmation_challenges[0].send_count, 1);
     assert.equal(fetchCalls.filter((call) => call.url.endsWith("/messages/send")).length, 1);
 
     await handlers.handlePublicAcceptGeneratedOffer(
@@ -650,8 +650,8 @@ test("public generated offer acceptance handler throttles OTP resends and allows
     assert.match(String(responses[1].payload.error || ""), /wait before requesting another/i);
     assert.equal(Number(responses[1].payload.retry_after_seconds) > 0, true);
     assert.equal(fetchCalls.filter((call) => call.url.endsWith("/messages/send")).length, 1);
-    assert.equal(store.offer_acceptance_challenges.length, 1);
-    assert.equal(store.offer_acceptance_challenges[0].send_count, 1);
+    assert.equal(store.booking_confirmation_challenges.length, 1);
+    assert.equal(store.booking_confirmation_challenges[0].send_count, 1);
 
     currentTime = "2026-03-19T12:01:01.000Z";
 
@@ -663,9 +663,9 @@ test("public generated offer acceptance handler throttles OTP resends and allows
 
     assert.equal(responses[2].status, 202);
     assert.equal(fetchCalls.filter((call) => call.url.endsWith("/messages/send")).length, 2);
-    assert.equal(store.offer_acceptance_challenges.length, 1);
-    assert.equal(store.offer_acceptance_challenges[0].send_count, 2);
-    assert.equal(store.offer_acceptance_challenges[0].issued_at, "2026-03-19T12:01:01.000Z");
+    assert.equal(store.booking_confirmation_challenges.length, 1);
+    assert.equal(store.booking_confirmation_challenges[0].send_count, 2);
+    assert.equal(store.booking_confirmation_challenges[0].issued_at, "2026-03-19T12:01:01.000Z");
   } finally {
     global.fetch = originalFetch;
     await rm(tempDir, { recursive: true, force: true });

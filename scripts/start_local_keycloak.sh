@@ -7,7 +7,9 @@ source "$ROOT_DIR/scripts/lib/docker_runtime.sh"
 import_zsh_env() {
   command -v zsh >/dev/null 2>&1 || return 0
   local exported
-  exported="$(zsh -lc 'typeset -px KEYCLOAK_BASE_URL KEYCLOAK_REALM 2>/dev/null' 2>/dev/null || true)"
+  exported="$(
+    zsh -lc 'typeset -px KEYCLOAK_BASE_URL KEYCLOAK_REALM KEYCLOAK_CLIENT_SECRET 2>/dev/null' 2>/dev/null || true
+  )"
   [ -n "$exported" ] || return 0
   eval "$exported"
 }
@@ -52,3 +54,13 @@ done
 echo "Keycloak: ${KEYCLOAK_BASE_URL}"
 echo "Compose file: $COMPOSE_FILE"
 echo "Docker context: $(docker_context_name)"
+
+echo "Bootstrapping local Keycloak demo users ..."
+"$ROOT_DIR/scripts/bootstrap_local_keycloak_users.sh"
+
+if [ -n "${KEYCLOAK_CLIENT_SECRET:-}" ]; then
+  echo "Bootstrapping local Keycloak backend client ..."
+  "$ROOT_DIR/scripts/bootstrap_local_keycloak_backend_client.sh"
+else
+  echo "Skipping backend client bootstrap because KEYCLOAK_CLIENT_SECRET is not set."
+fi

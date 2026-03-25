@@ -30,7 +30,7 @@ process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
 process.env.STORE_FILE = STORE_PATH;
 process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH = "";
 process.env.GOOGLE_IMPERSONATED_EMAIL = "";
-process.env.OFFER_ACCEPTANCE_TOKEN_SECRET = "offer-acceptance-contract-test-secret";
+process.env.BOOKING_CONFIRMATION_TOKEN_SECRET = "booking-confirmationance-contract-test-secret";
 
 const originalFetch = global.fetch;
 const KEYCLOAK_USERS = [
@@ -968,9 +968,9 @@ test("booking travel plan patch persists days, links, and derived financial cove
               day_number: 1,
               title: "Arrival",
               overnight_location: "Hoi An",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   timing_kind: "point",
                   time_point: "19:00",
                   kind: "transport",
@@ -978,7 +978,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   financial_coverage_status: "not_covered"
                 },
                 {
-                  id: "travel_plan_item_2",
+                  id: "travel_plan_service_2",
                   timing_kind: "range",
                   start_time: "14:00",
                   end_time: "15:00",
@@ -987,7 +987,7 @@ test("booking travel plan patch persists days, links, and derived financial cove
                   financial_coverage_status: "not_covered"
                 },
                 {
-                  id: "travel_plan_item_3",
+                  id: "travel_plan_service_3",
                   timing_kind: "label",
                   time_label: "Evening",
                   kind: "free_time",
@@ -999,13 +999,13 @@ test("booking travel plan patch persists days, links, and derived financial cove
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_item_id: "travel_plan_item_1",
+              travel_plan_service_id: "travel_plan_service_1",
               offer_component_id: "offer_component_transfer_1",
               coverage_type: "partial"
             },
             {
               id: "travel_plan_offer_link_2",
-              travel_plan_item_id: "travel_plan_item_2",
+              travel_plan_service_id: "travel_plan_service_2",
               offer_component_id: "offer_component_room_1",
               coverage_type: "full"
             }
@@ -1018,24 +1018,24 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(travelPlanPatchResult.body.booking.travel_plan_revision, 1);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days.length, 1);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.offer_component_links.length, 2);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].timing_kind, "point");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].time_point, "19:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].time_label, null);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].timing_kind, "range");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].start_time, "14:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].end_time, "15:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[2].timing_kind, "label");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].items[2].time_label, "Evening");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].timing_kind, "point");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time_label, null);
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].timing_kind, "range");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].start_time, "14:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].end_time, "15:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].timing_kind, "label");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].time_label, "Evening");
   assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].items[0].financial_coverage_status,
+    travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].financial_coverage_status,
     "partially_covered"
   );
   assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].items[1].financial_coverage_status,
+    travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].financial_coverage_status,
     "covered"
   );
   assert.equal(
-    travelPlanPatchResult.body.booking.travel_plan.days[0].items[2].financial_coverage_status,
+    travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].financial_coverage_status,
     "not_applicable"
   );
 
@@ -1046,10 +1046,10 @@ test("booking travel plan patch persists days, links, and derived financial cove
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Arrival");
   assert.equal(
-    detailAfter.body.booking.travel_plan.days[0].items[0].financial_coverage_status,
+    detailAfter.body.booking.travel_plan.days[0].services[0].financial_coverage_status,
     "partially_covered"
   );
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].items[0].time_point, "19:00");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
 
   const activitiesAfter = await requestJson(
     endpointPath("booking_activities").replace("{booking_id}", bookingId),
@@ -1079,7 +1079,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: []
+              services: []
             }
           ],
           offer_component_links: []
@@ -1102,7 +1102,7 @@ test("booking travel plan patch rejects stale revisions", async () => {
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: []
+              services: []
             }
           ],
           offer_component_links: []
@@ -1131,9 +1131,9 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   kind: "transport",
                   title: ""
                 }
@@ -1161,9 +1161,9 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   timing_kind: "point",
                   kind: "transport",
                   title: "Airport transfer"
@@ -1192,9 +1192,9 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   kind: "transport",
                   title: "Airport transfer"
                 }
@@ -1204,7 +1204,7 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_item_id: "travel_plan_item_1",
+              travel_plan_service_id: "travel_plan_service_1",
               offer_component_id: "offer_component_missing",
               coverage_type: "full"
             }
@@ -1217,7 +1217,7 @@ test("booking travel plan patch rejects invalid items and unknown offer links", 
   assert.match(String(invalidLinkResult.body.error || ""), /unknown offer component/i);
 });
 
-test("travel plan items can be searched and imported from another booking", async () => {
+test("services can be searched and imported from another booking", async () => {
   const sourceBooking = await createSeedBooking();
   const targetBooking = await createPublicBooking({
     name: "Target User",
@@ -1238,7 +1238,7 @@ test("travel plan items can be searched and imported from another booking", asyn
         date: "2026-04-01",
         title: "Arrival",
         overnight_location: "Hoi An",
-        items: [
+        services: [
           {
             id: "source_item_1",
             timing_kind: "label",
@@ -1273,7 +1273,7 @@ test("travel plan items can be searched and imported from another booking", asyn
         date: "2026-05-10",
         title: "Start",
         overnight_location: "Da Nang",
-        items: [],
+        services: [],
         notes: ""
       }
     ],
@@ -1282,7 +1282,7 @@ test("travel plan items can be searched and imported from another booking", asyn
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const searchResult = await requestJson(
-    `${endpointPath("travel_plan_item_search")}?q=boutique&item_kind=accommodation`,
+    `${endpointPath("travel_plan_service_search")}?q=boutique&service_kind=accommodation`,
     apiHeaders()
   );
   assert.equal(searchResult.status, 200);
@@ -1290,12 +1290,12 @@ test("travel plan items can be searched and imported from another booking", asyn
   assert.ok(Array.isArray(searchResult.body.items));
   const foundItem = searchResult.body.items.find((item) => item.source_booking_id === sourceBooking.id);
   assert.ok(foundItem, "Expected imported item to appear in search results");
-  assert.equal(foundItem.item_id, "source_item_1");
-  assert.equal(foundItem.item_kind, "accommodation");
+  assert.equal(foundItem.service_id, "source_item_1");
+  assert.equal(foundItem.service_kind, "accommodation");
   assert.equal(foundItem.thumbnail_url, "/public/v1/booking-images/source/item-1.webp");
 
   const importResult = await requestJson(
-    endpointPath("booking_travel_plan_item_import")
+    endpointPath("booking_travel_plan_service_import")
       .replace("{booking_id}", targetBooking.id)
       .replace("{day_id}", "target_day_1"),
     apiHeaders(),
@@ -1304,7 +1304,7 @@ test("travel plan items can be searched and imported from another booking", asyn
       body: {
         expected_travel_plan_revision: targetBooking.travel_plan_revision,
         source_booking_id: sourceBooking.id,
-        source_item_id: "source_item_1",
+        source_service_id: "source_item_1",
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
@@ -1314,17 +1314,17 @@ test("travel plan items can be searched and imported from another booking", asyn
     }
   );
   assert.equal(importResult.status, 200);
-  assert.equal(importResult.body.booking.travel_plan.days[0].items.length, 1);
-  const importedItem = importResult.body.booking.travel_plan.days[0].items[0];
+  assert.equal(importResult.body.booking.travel_plan.days[0].services.length, 1);
+  const importedItem = importResult.body.booking.travel_plan.days[0].services[0];
   assert.equal(importedItem.title, "Boutique hotel check-in");
   assert.equal(importedItem.copied_from.source_booking_id, sourceBooking.id);
-  assert.equal(importedItem.copied_from.source_item_id, "source_item_1");
+  assert.equal(importedItem.copied_from.source_service_id, "source_item_1");
   assert.equal(importedItem.images.length, 1);
   assert.notEqual(importedItem.images[0].id, "source_item_image_1");
   assert.equal(importedItem.images[0].storage_path, "/public/v1/booking-images/source/item-1.webp");
 });
 
-test("travel plan item images can be reordered and deleted", async () => {
+test("service images can be reordered and deleted", async () => {
   const booking = await createSeedBooking();
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -1338,7 +1338,7 @@ test("travel plan item images can be reordered and deleted", async () => {
         date: "2026-04-02",
         title: "Arrival",
         overnight_location: "Hue",
-        items: [
+        services: [
           {
             id: "travel_item_1",
             timing_kind: "label",
@@ -1374,10 +1374,10 @@ test("travel plan item images can be reordered and deleted", async () => {
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const reorderResult = await requestJson(
-    endpointPath("booking_travel_plan_item_image_reorder")
+    endpointPath("booking_travel_plan_service_image_reorder")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_1")
-      .replace("{item_id}", "travel_item_1"),
+      .replace("{service_id}", "travel_item_1"),
     apiHeaders(),
     {
       method: "PATCH",
@@ -1388,16 +1388,16 @@ test("travel plan item images can be reordered and deleted", async () => {
     }
   );
   assert.equal(reorderResult.status, 200);
-  const reorderedImages = reorderResult.body.booking.travel_plan.days[0].items[0].images;
+  const reorderedImages = reorderResult.body.booking.travel_plan.days[0].services[0].images;
   assert.deepEqual(reorderedImages.map((image) => image.id), ["item_image_b", "item_image_a"]);
   assert.equal(reorderedImages[0].is_primary, true);
   assert.equal(reorderedImages[1].is_primary, false);
 
   const deleteResult = await requestJson(
-    endpointPath("booking_travel_plan_item_image_delete")
+    endpointPath("booking_travel_plan_service_image_delete")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_1")
-      .replace("{item_id}", "travel_item_1")
+      .replace("{service_id}", "travel_item_1")
       .replace("{image_id}", "item_image_b"),
     apiHeaders(),
     {
@@ -1408,13 +1408,13 @@ test("travel plan item images can be reordered and deleted", async () => {
     }
   );
   assert.equal(deleteResult.status, 200);
-  const remainingImages = deleteResult.body.booking.travel_plan.days[0].items[0].images;
+  const remainingImages = deleteResult.body.booking.travel_plan.days[0].services[0].images;
   assert.equal(remainingImages.length, 1);
   assert.equal(remainingImages[0].id, "item_image_a");
   assert.equal(remainingImages[0].is_primary, true);
 });
 
-test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () => {
+test("service images can be uploaded", { skip: !HAS_MAGICK }, async () => {
   const booking = await createSeedBooking();
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -1428,7 +1428,7 @@ test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () 
         date: "2026-04-03",
         title: "Upload day",
         overnight_location: "Hanoi",
-        items: [
+        services: [
           {
             id: "travel_item_upload_1",
             timing_kind: "label",
@@ -1449,10 +1449,10 @@ test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () 
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const uploadResult = await requestJson(
-    endpointPath("booking_travel_plan_item_image_upload")
+    endpointPath("booking_travel_plan_service_image_upload")
       .replace("{booking_id}", booking.id)
       .replace("{day_id}", "travel_day_upload_1")
-      .replace("{item_id}", "travel_item_upload_1"),
+      .replace("{service_id}", "travel_item_upload_1"),
     apiHeaders(),
     {
       method: "POST",
@@ -1464,7 +1464,7 @@ test("travel plan item images can be uploaded", { skip: !HAS_MAGICK }, async () 
     }
   );
   assert.equal(uploadResult.status, 200);
-  const uploadedImages = uploadResult.body.booking.travel_plan.days[0].items[0].images;
+  const uploadedImages = uploadResult.body.booking.travel_plan.days[0].services[0].images;
   assert.equal(uploadedImages.length, 1);
   assert.match(String(uploadedImages[0].storage_path || ""), /^\/public\/v1\/booking-images\//);
   assert.equal(uploadedImages[0].is_primary, true);
@@ -1488,9 +1488,9 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
               day_number: 1,
               title: "Arrival",
               overnight_location: "Hoi An",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_attachment_1",
+                  id: "travel_plan_service_attachment_1",
                   timing_kind: "label",
                   time_label: "Afternoon",
                   kind: "accommodation",
@@ -1885,9 +1885,9 @@ test("suppliers can be created and updated, and travel plan supplier references 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   kind: "accommodation",
                   title: "Hotel check-in",
                   supplier_id: supplierId
@@ -1902,7 +1902,7 @@ test("suppliers can be created and updated, and travel plan supplier references 
   );
   assert.equal(validTravelPlanPatchResult.status, 200);
   assert.equal(
-    validTravelPlanPatchResult.body.booking.travel_plan.days[0].items[0].supplier_id,
+    validTravelPlanPatchResult.body.booking.travel_plan.days[0].services[0].supplier_id,
     supplierId
   );
 
@@ -1919,9 +1919,9 @@ test("suppliers can be created and updated, and travel plan supplier references 
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   kind: "accommodation",
                   title: "Hotel check-in",
                   supplier_id: "supplier_missing"
@@ -1987,9 +1987,9 @@ test("booking generated offers store immutable snapshots", async () => {
               date: "2026-04-10",
               title: "Arrival in Hoi An",
               overnight_location: "Hoi An",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   timing_kind: "point",
                   time_point: "2026-04-10T19:00",
                   kind: "transport",
@@ -1997,7 +1997,7 @@ test("booking generated offers store immutable snapshots", async () => {
                   details: "Private transfer from Da Nang airport to the hotel in Hoi An."
                 },
                 {
-                  id: "travel_plan_item_2",
+                  id: "travel_plan_service_2",
                   timing_kind: "label",
                   time_label: "Evening",
                   kind: "accommodation",
@@ -2010,7 +2010,7 @@ test("booking generated offers store immutable snapshots", async () => {
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_item_id: "travel_plan_item_2",
+              travel_plan_service_id: "travel_plan_service_2",
               offer_component_id: "offer_component_room_1",
               coverage_type: "full"
             }
@@ -2042,7 +2042,7 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(generatedOffer.offer.components[0].details, "Hotel room");
   assert.equal(generatedOffer.travel_plan.days.length, 1);
   assert.equal(generatedOffer.travel_plan.days[0].title, "Arrival in Hoi An");
-  assert.equal(generatedOffer.travel_plan.days[0].items[0].title, "Airport transfer");
+  assert.equal(generatedOffer.travel_plan.days[0].services[0].title, "Airport transfer");
   assert.match(generatedOffer.filename, /^ATP offer \d{4}-\d{2}-\d{2}\.pdf$/);
   assert.equal(typeof generatedOffer.pdf_url, "string");
   assert.equal("pdf_frozen_at" in generatedOffer, false);
@@ -2092,9 +2092,9 @@ test("booking generated offers store immutable snapshots", async () => {
               date: "2026-04-10",
               title: "Updated arrival plan",
               overnight_location: "Hoi An",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   timing_kind: "point",
                   time_point: "2026-04-10T20:00",
                   kind: "transport",
@@ -2118,10 +2118,10 @@ test("booking generated offers store immutable snapshots", async () => {
   assert.equal(detailAfter.body.booking.generated_offers.length, 1);
   assert.equal(detailAfter.body.booking.generated_offers[0].offer.components[0].details, "Hotel room");
   assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].title, "Arrival in Hoi An");
-  assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].items[0].title, "Airport transfer");
+  assert.equal(detailAfter.body.booking.generated_offers[0].travel_plan.days[0].services[0].title, "Airport transfer");
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Updated hotel room");
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Updated arrival plan");
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].items[0].title, "Updated airport transfer");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].title, "Updated airport transfer");
 });
 
 test("booking detail normalizes generated-offer travel plan snapshots against the frozen offer snapshot", async () => {
@@ -2171,9 +2171,9 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              items: [
+              services: [
                 {
-                  id: "travel_plan_item_1",
+                  id: "travel_plan_service_1",
                   kind: "accommodation",
                   title: "Hotel check-in"
                 }
@@ -2183,7 +2183,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
           offer_component_links: [
             {
               id: "travel_plan_offer_link_1",
-              travel_plan_item_id: "travel_plan_item_1",
+              travel_plan_service_id: "travel_plan_service_1",
               offer_component_id: "offer_component_room_1",
               coverage_type: "full"
             }
@@ -2214,7 +2214,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   const generatedOfferRecord = bookingRecord.generated_offers.find((item) => item.id === generatedOfferId);
   assert.ok(generatedOfferRecord);
   assert.equal(Object.prototype.hasOwnProperty.call(generatedOfferRecord, "payment_terms"), false);
-  delete generatedOfferRecord.travel_plan.days[0].items[0].financial_coverage_status;
+  delete generatedOfferRecord.travel_plan.days[0].services[0].financial_coverage_status;
   await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 
   const detailResult = await requestJson(
@@ -2223,7 +2223,7 @@ test("booking detail normalizes generated-offer travel plan snapshots against th
   );
   assert.equal(detailResult.status, 200);
   assert.equal(
-    detailResult.body.booking.generated_offers[0].travel_plan.days[0].items[0].financial_coverage_status,
+    detailResult.body.booking.generated_offers[0].travel_plan.days[0].services[0].financial_coverage_status,
     "covered"
   );
 });
@@ -2235,9 +2235,9 @@ test("contract metadata exposes the generated offer gmail draft endpoint", async
   );
 });
 
-test("contract metadata exposes the public generated offer acceptance endpoint", async () => {
+test("contract metadata exposes the public generated booking confirmation endpoint", async () => {
   assert.equal(
-    endpointPath("public_generated_offer_accept"),
+    endpointPath("public_generated_booking_confirmation"),
     "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/accept"
   );
 });
@@ -2306,8 +2306,8 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
       title: "PublicDayMarker731",
       notes: "PublicDayNote731",
       overnight_location: "Hoi An",
-      items: [{
-        id: "travel_plan_item_pdf_marker",
+      services: [{
+        id: "travel_plan_service_pdf_marker",
         timing_kind: "point",
         time_point: "2026-03-20T14:00",
         kind: "activity",
@@ -2726,7 +2726,7 @@ test("booking generated offers support comment update and delete", async () => {
   assert.equal(deleteResult.body.booking.generated_offers.length, 0);
 });
 
-test("public generated offer acceptance finalizes the frozen offer and stores the booking pointer", async () => {
+test("public generated booking confirmation finalizes the frozen offer and stores the booking pointer", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -2805,18 +2805,18 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   assert.equal(generateResult.status, 201);
   const generatedOffer = generateResult.body.booking.generated_offers[0];
   const generatedOfferId = generatedOffer.id;
-  assert.equal(typeof generatedOffer.public_acceptance_token, "string");
-  assert.ok(generatedOffer.public_acceptance_token.length > 20);
+  assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
+  assert.ok(generatedOffer.public_booking_confirmation_token.length > 20);
 
   const otpRequiredResult = await requestJson(
-    endpointPath("public_generated_offer_accept")
+    endpointPath("public_generated_booking_confirmation")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", generatedOfferId),
     {},
     {
       method: "POST",
       body: {
-        acceptance_token: generatedOffer.public_acceptance_token,
+        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
         accepted_by_name: "Test User",
         language: "en"
       }
@@ -2828,44 +2828,44 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   const storeBeforeLegacyAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBeforeLegacyAccept = storeBeforeLegacyAccept.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBeforeLegacyAccept);
-  delete bookingBeforeLegacyAccept.generated_offers[0].acceptance_route;
+  delete bookingBeforeLegacyAccept.generated_offers[0].booking_confirmation_route;
   await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyAccept, null, 2)}\n`, "utf8");
 
   const acceptResult = await requestJson(
-    endpointPath("public_generated_offer_accept")
+    endpointPath("public_generated_booking_confirmation")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", generatedOfferId),
     {},
     {
       method: "POST",
       body: {
-        acceptance_token: generatedOffer.public_acceptance_token,
+        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
         accepted_by_name: "Test User",
         language: "en"
       }
     }
   );
   assert.equal(acceptResult.status, 200);
-  assert.equal(acceptResult.body.accepted, true);
-  assert.equal(acceptResult.body.status, "ACCEPTED");
-  assert.equal(acceptResult.body.acceptance.method, "PORTAL_CLICK");
-  assert.equal(typeof acceptResult.body.acceptance.accepted_by_name, "undefined");
-  assert.equal(typeof acceptResult.body.acceptance.accepted_by_email, "undefined");
-  assert.equal(typeof acceptResult.body.acceptance.offer_pdf_sha256, "undefined");
-  assert.equal(typeof acceptResult.body.acceptance.offer_snapshot_sha256, "undefined");
+  assert.equal(acceptResult.body.confirmed, true);
+  assert.equal(acceptResult.body.status, "CONFIRMED");
+  assert.equal(acceptResult.body.booking_confirmation.method, "PORTAL_CLICK");
+  assert.equal(typeof acceptResult.body.booking_confirmation.accepted_by_name, "undefined");
+  assert.equal(typeof acceptResult.body.booking_confirmation.accepted_by_email, "undefined");
+  assert.equal(typeof acceptResult.body.booking_confirmation.offer_pdf_sha256, "undefined");
+  assert.equal(typeof acceptResult.body.booking_confirmation.offer_snapshot_sha256, "undefined");
 
   const detailResult = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(detailResult.status, 200);
-  assert.equal(detailResult.body.booking.accepted_generated_offer_id, generatedOfferId);
-  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.method, "PORTAL_CLICK");
-  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.accepted_by_name, "Test User");
-  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.accepted_by_email, "test@example.com");
-  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.offer_pdf_sha256.length, 64);
-  assert.equal(detailResult.body.booking.generated_offers[0].acceptance.offer_snapshot_sha256.length, 64);
-  const acceptedDateOnly = detailResult.body.booking.generated_offers[0].acceptance.accepted_at.slice(0, 10);
+  assert.equal(detailResult.body.booking.confirmed_generated_offer_id, generatedOfferId);
+  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.method, "PORTAL_CLICK");
+  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.accepted_by_name, "Test User");
+  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.accepted_by_email, "test@example.com");
+  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.offer_pdf_sha256.length, 64);
+  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation.offer_snapshot_sha256.length, 64);
+  const acceptedDateOnly = detailResult.body.booking.generated_offers[0].booking_confirmation.accepted_at.slice(0, 10);
   const finalDueDate = new Date(`${acceptedDateOnly}T00:00:00.000Z`);
   finalDueDate.setUTCDate(finalDueDate.getUTCDate() + 14);
   assert.equal(detailResult.body.booking.pricing_revision, 1);
@@ -2883,12 +2883,12 @@ test("public generated offer acceptance finalizes the frozen offer and stores th
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingRecord = store.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingRecord);
-  assert.equal(bookingRecord.accepted_generated_offer_id, generatedOfferId);
-  assert.equal(bookingRecord.generated_offers[0].acceptance.accepted_by_name, "Test User");
+  assert.equal(bookingRecord.confirmed_generated_offer_id, generatedOfferId);
+  assert.equal(bookingRecord.generated_offers[0].booking_confirmation.accepted_by_name, "Test User");
   assert.equal(bookingRecord.pricing.payments.length, 2);
 });
 
-test("public generated offer acceptance enforces uniqueness per booking", async () => {
+test("public generated booking confirmation enforces uniqueness per booking", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -2936,7 +2936,7 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
   assert.equal(firstGenerateResult.status, 201);
   const firstGeneratedOffer = firstGenerateResult.body.booking.generated_offers[0];
   const firstGeneratedOfferId = firstGeneratedOffer.id;
-  assert.equal(typeof firstGeneratedOffer.public_acceptance_token, "string");
+  assert.equal(typeof firstGeneratedOffer.public_booking_confirmation_token, "string");
 
   const secondOfferPatchResult = await requestJson(
     endpointPath("booking_offer").replace("{booking_id}", bookingId),
@@ -2982,46 +2982,46 @@ test("public generated offer acceptance enforces uniqueness per booking", async 
   assert.equal(secondGenerateResult.body.booking.generated_offers.length, 2);
   const secondGeneratedOffer = secondGenerateResult.body.booking.generated_offers[1];
   const secondGeneratedOfferId = secondGeneratedOffer.id;
-  assert.equal(typeof secondGeneratedOffer.public_acceptance_token, "string");
+  assert.equal(typeof secondGeneratedOffer.public_booking_confirmation_token, "string");
 
   const storeBeforeLegacyUniqueness = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBeforeLegacyUniqueness = storeBeforeLegacyUniqueness.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBeforeLegacyUniqueness);
-  delete bookingBeforeLegacyUniqueness.generated_offers[0].acceptance_route;
-  delete bookingBeforeLegacyUniqueness.generated_offers[1].acceptance_route;
+  delete bookingBeforeLegacyUniqueness.generated_offers[0].booking_confirmation_route;
+  delete bookingBeforeLegacyUniqueness.generated_offers[1].booking_confirmation_route;
   await writeFile(STORE_PATH, `${JSON.stringify(storeBeforeLegacyUniqueness, null, 2)}\n`, "utf8");
 
   const firstAcceptResult = await requestJson(
-    endpointPath("public_generated_offer_accept")
+    endpointPath("public_generated_booking_confirmation")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", firstGeneratedOfferId),
     {},
     {
       method: "POST",
       body: {
-        acceptance_token: firstGeneratedOffer.public_acceptance_token,
+        booking_confirmation_token: firstGeneratedOffer.public_booking_confirmation_token,
         accepted_by_name: "Test User"
       }
     }
   );
   assert.equal(firstAcceptResult.status, 200);
-  assert.equal(firstAcceptResult.body.accepted, true);
+  assert.equal(firstAcceptResult.body.confirmed, true);
 
   const secondAcceptResult = await requestJson(
-    endpointPath("public_generated_offer_accept")
+    endpointPath("public_generated_booking_confirmation")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", secondGeneratedOfferId),
     {},
     {
       method: "POST",
       body: {
-        acceptance_token: secondGeneratedOffer.public_acceptance_token,
+        booking_confirmation_token: secondGeneratedOffer.public_booking_confirmation_token,
         accepted_by_name: "Test User"
       }
     }
   );
   assert.equal(secondAcceptResult.status, 409);
-  assert.match(String(secondAcceptResult.body.error || ""), /already been accepted/i);
+  assert.match(String(secondAcceptResult.body.error || ""), /already been confirmed/i);
 });
 
 test("generated offer creation persists deposit-payment acceptance routes in authenticated read models", async () => {
@@ -3078,7 +3078,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
           },
           components: [
             {
-              id: "offer_component_acceptance_route_1",
+              id: "offer_component_booking_confirmation_route_1",
               category: "ACCOMMODATION",
               label: "Accommodation",
               details: "Deposit acceptance route room",
@@ -3107,7 +3107,7 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
         comment: "Deposit acceptance route",
-        acceptance_route: {
+        booking_confirmation_route: {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
             payment_term_line_id: depositLine.id
@@ -3118,24 +3118,24 @@ test("generated offer creation persists deposit-payment acceptance routes in aut
   );
   assert.equal(generateResult.status, 201);
   const generatedOffer = generateResult.body.booking.generated_offers[0];
-  assert.equal(generatedOffer.acceptance_route.mode, "DEPOSIT_PAYMENT");
-  assert.equal(generatedOffer.acceptance_route.status, "AWAITING_PAYMENT");
-  assert.equal(generatedOffer.acceptance_route.deposit_rule.payment_term_line_id, depositLine.id);
-  assert.equal(generatedOffer.acceptance_route.deposit_rule.payment_term_label, depositLine.label);
-  assert.equal(generatedOffer.acceptance_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
-  assert.equal(generatedOffer.acceptance_route.deposit_rule.currency, createdBooking.preferred_currency);
+  assert.equal(generatedOffer.booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(generatedOffer.booking_confirmation_route.status, "AWAITING_PAYMENT");
+  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.payment_term_line_id, depositLine.id);
+  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.payment_term_label, depositLine.label);
+  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
+  assert.equal(generatedOffer.booking_confirmation_route.deposit_rule.currency, createdBooking.preferred_currency);
   assert.equal(generatedOffer.payment_terms.lines.length, 2);
-  assert.equal(typeof generatedOffer.public_acceptance_token, "string");
+  assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
 
   const detailAfter = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(detailAfter.status, 200);
-  assert.equal(detailAfter.body.booking.generated_offers[0].acceptance_route.mode, "DEPOSIT_PAYMENT");
-  assert.equal(detailAfter.body.booking.generated_offers[0].acceptance_route.status, "AWAITING_PAYMENT");
+  assert.equal(detailAfter.body.booking.generated_offers[0].booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(detailAfter.body.booking.generated_offers[0].booking_confirmation_route.status, "AWAITING_PAYMENT");
   assert.equal(
-    detailAfter.body.booking.generated_offers[0].acceptance_route.deposit_rule.payment_term_line_id,
+    detailAfter.body.booking.generated_offers[0].booking_confirmation_route.deposit_rule.payment_term_line_id,
     depositLine.id
   );
 });
@@ -3162,9 +3162,9 @@ test("booking detail persists expired generated-offer route status instead of de
   const bookingBefore = storeBefore.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBefore);
   const generatedOfferBefore = bookingBefore.generated_offers.find((item) => item.id === generatedOfferId);
-  assert.ok(generatedOfferBefore?.acceptance_route);
-  generatedOfferBefore.acceptance_route.status = "OPEN";
-  generatedOfferBefore.acceptance_route.expires_at = "2020-01-01T00:00:00.000Z";
+  assert.ok(generatedOfferBefore?.booking_confirmation_route);
+  generatedOfferBefore.booking_confirmation_route.status = "OPEN";
+  generatedOfferBefore.booking_confirmation_route.expires_at = "2020-01-01T00:00:00.000Z";
   await writeFile(STORE_PATH, `${JSON.stringify(storeBefore, null, 2)}\n`, "utf8");
 
   const detailResult = await requestJson(
@@ -3172,16 +3172,16 @@ test("booking detail persists expired generated-offer route status instead of de
     apiHeaders()
   );
   assert.equal(detailResult.status, 200);
-  assert.equal(detailResult.body.booking.generated_offers[0].acceptance_route.status, "EXPIRED");
+  assert.equal(detailResult.body.booking.generated_offers[0].booking_confirmation_route.status, "EXPIRED");
 
   const storeAfter = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingAfter = storeAfter.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingAfter);
   const generatedOfferAfter = bookingAfter.generated_offers.find((item) => item.id === generatedOfferId);
-  assert.equal(generatedOfferAfter?.acceptance_route?.status, "EXPIRED");
+  assert.equal(generatedOfferAfter?.booking_confirmation_route?.status, "EXPIRED");
 });
 
-test("booking detail repairs missing OTP acceptance token state for generated offers", async () => {
+test("booking detail repairs missing OTP booking confirmation token state for generated offers", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -3198,17 +3198,17 @@ test("booking detail repairs missing OTP acceptance token state for generated of
   );
   assert.equal(generateResult.status, 201);
   const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
-  assert.equal(generateResult.body.booking.generated_offers[0].acceptance_route.mode, "OTP");
-  assert.equal(typeof generateResult.body.booking.generated_offers[0].public_acceptance_token, "string");
+  assert.equal(generateResult.body.booking.generated_offers[0].booking_confirmation_route.mode, "OTP");
+  assert.equal(typeof generateResult.body.booking.generated_offers[0].public_booking_confirmation_token, "string");
 
   const storeBefore = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBefore = storeBefore.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingBefore);
   const generatedOfferBefore = bookingBefore.generated_offers.find((item) => item.id === generatedOfferId);
   assert.ok(generatedOfferBefore);
-  delete generatedOfferBefore.acceptance_token_nonce;
-  delete generatedOfferBefore.acceptance_token_created_at;
-  delete generatedOfferBefore.acceptance_token_expires_at;
+  delete generatedOfferBefore.booking_confirmation_token_nonce;
+  delete generatedOfferBefore.booking_confirmation_token_created_at;
+  delete generatedOfferBefore.booking_confirmation_token_expires_at;
   await writeFile(STORE_PATH, `${JSON.stringify(storeBefore, null, 2)}\n`, "utf8");
 
   const detailResult = await requestJson(
@@ -3216,17 +3216,17 @@ test("booking detail repairs missing OTP acceptance token state for generated of
     apiHeaders()
   );
   assert.equal(detailResult.status, 200);
-  assert.equal(typeof detailResult.body.booking.generated_offers[0].public_acceptance_token, "string");
-  assert.ok(detailResult.body.booking.generated_offers[0].public_acceptance_token.length > 20);
+  assert.equal(typeof detailResult.body.booking.generated_offers[0].public_booking_confirmation_token, "string");
+  assert.ok(detailResult.body.booking.generated_offers[0].public_booking_confirmation_token.length > 20);
 
   const storeAfter = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingAfter = storeAfter.bookings.find((item) => item.id === bookingId);
   assert.ok(bookingAfter);
   const generatedOfferAfter = bookingAfter.generated_offers.find((item) => item.id === generatedOfferId);
-  assert.equal(typeof generatedOfferAfter?.acceptance_token_nonce, "string");
-  assert.ok(generatedOfferAfter.acceptance_token_nonce.length > 20);
-  assertISODateLike(generatedOfferAfter?.acceptance_token_created_at, "generated offer repaired acceptance_token_created_at");
-  assertISODateLike(generatedOfferAfter?.acceptance_token_expires_at, "generated offer repaired acceptance_token_expires_at");
+  assert.equal(typeof generatedOfferAfter?.booking_confirmation_token_nonce, "string");
+  assert.ok(generatedOfferAfter.booking_confirmation_token_nonce.length > 20);
+  assertISODateLike(generatedOfferAfter?.booking_confirmation_token_created_at, "generated offer repaired booking_confirmation_token_created_at");
+  assertISODateLike(generatedOfferAfter?.booking_confirmation_token_expires_at, "generated offer repaired booking_confirmation_token_expires_at");
 });
 
 test("public generated offer access exposes deposit acceptance route and blocks OTP acceptance", async () => {
@@ -3310,7 +3310,7 @@ test("public generated offer access exposes deposit acceptance route and blocks 
       body: {
         expected_offer_revision: offerPatchResult.body.booking.offer_revision,
         comment: "Deposit-based public acceptance",
-        acceptance_route: {
+        booking_confirmation_route: {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
             payment_term_line_id: depositLine.id
@@ -3325,28 +3325,28 @@ test("public generated offer access exposes deposit acceptance route and blocks 
   const accessResult = await requestJson(
     `${endpointPath("public_generated_offer_access")
       .replace("{booking_id}", bookingId)
-      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_acceptance_token)}`,
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_booking_confirmation_token)}`,
     {}
   );
   assert.equal(accessResult.status, 200);
-  assert.equal(accessResult.body.accepted, false);
-  assert.equal(accessResult.body.acceptance_route.mode, "DEPOSIT_PAYMENT");
-  assert.equal(accessResult.body.acceptance_route.status, "AWAITING_PAYMENT");
-  assert.equal(accessResult.body.acceptance_route.deposit_rule.payment_term_label, depositLine.label);
-  assert.equal(accessResult.body.acceptance_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
-  assert.equal(accessResult.body.acceptance_route.deposit_rule.currency, createdBooking.preferred_currency);
+  assert.equal(accessResult.body.confirmed, false);
+  assert.equal(accessResult.body.booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
+  assert.equal(accessResult.body.booking_confirmation_route.status, "AWAITING_PAYMENT");
+  assert.equal(accessResult.body.booking_confirmation_route.deposit_rule.payment_term_label, depositLine.label);
+  assert.equal(accessResult.body.booking_confirmation_route.deposit_rule.required_amount_cents, depositLine.resolved_amount_cents);
+  assert.equal(accessResult.body.booking_confirmation_route.deposit_rule.currency, createdBooking.preferred_currency);
   assert.equal(accessResult.body.payment_terms.lines.length, 2);
-  assert.equal(accessResult.body.acceptance, undefined);
+  assert.equal(accessResult.body.booking_confirmation, undefined);
 
   const acceptResult = await requestJson(
-    endpointPath("public_generated_offer_accept")
+    endpointPath("public_generated_booking_confirmation")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", generatedOffer.id),
     {},
     {
       method: "POST",
       body: {
-        acceptance_token: generatedOffer.public_acceptance_token,
+        booking_confirmation_token: generatedOffer.public_booking_confirmation_token,
         accepted_by_name: "Deposit User",
         accepted_by_email: "deposit@example.com"
       }
@@ -3356,7 +3356,7 @@ test("public generated offer access exposes deposit acceptance route and blocks 
   assert.match(String(acceptResult.body.error || ""), /deposit payment/i);
 });
 
-test("public generated offer access and public pdf require a valid acceptance token", async () => {
+test("public generated offer access and public pdf require a valid booking confirmation token", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -3407,13 +3407,13 @@ test("public generated offer access and public pdf require a valid acceptance to
   const accessResult = await requestJson(
     `${endpointPath("public_generated_offer_access")
       .replace("{booking_id}", bookingId)
-      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_acceptance_token)}`,
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_booking_confirmation_token)}`,
     {}
   );
   assert.equal(accessResult.status, 200);
   assert.equal(accessResult.body.booking_id, bookingId);
   assert.equal(accessResult.body.generated_offer_id, generatedOffer.id);
-  assert.equal(accessResult.body.accepted, false);
+  assert.equal(accessResult.body.confirmed, false);
   assert.match(String(accessResult.body.pdf_url || ""), /\/public\/v1\/bookings\//);
 
   const invalidAccessResult = await requestJson(
@@ -3427,7 +3427,7 @@ test("public generated offer access and public pdf require a valid acceptance to
   const publicPdfResult = await requestRaw(
     `${endpointPath("public_generated_offer_pdf")
       .replace("{booking_id}", bookingId)
-      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_acceptance_token)}`,
+      .replace("{generated_offer_id}", generatedOffer.id)}?token=${encodeURIComponent(generatedOffer.public_booking_confirmation_token)}`,
     {}
   );
   assert.equal(publicPdfResult.status, 200);

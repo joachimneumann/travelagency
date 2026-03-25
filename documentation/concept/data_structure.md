@@ -23,7 +23,7 @@ This means:
 - stage, assignment, notes
 - commercial data such as pricing, offer, invoices
 - `customer_language`
-- `accepted_generated_offer_id`
+- `confirmed_generated_offer_id`
 - `number_of_travelers`
 - `web_form_submission`
 - `persons[]`
@@ -167,10 +167,10 @@ ATP quotation semantics:
 - `travel_plan`
 - `pdf_frozen_at`
 - `pdf_sha256`
-- `acceptance_token_nonce`
-- `acceptance_token_created_at`
-- `acceptance_token_expires_at`
-- `acceptance_token_revoked_at`
+- `booking_confirmation_token_nonce`
+- `booking_confirmation_token_created_at`
+- `booking_confirmation_token_expires_at`
+- `booking_confirmation_token_revoked_at`
 - `acceptance`
 
 Meaning:
@@ -179,12 +179,12 @@ Meaning:
 - the PDF artifact is frozen from this snapshot at generation time
 
 Important boundary:
-- transport fields such as `pdf_url` and `public_acceptance_token` are not part of this entity
+- transport fields such as `pdf_url` and `public_booking_confirmation_token` are not part of this entity
 - those belong to the API read model only
 
-## GeneratedOfferAcceptance
+## GeneratedOfferBookingConfirmation
 
-`GeneratedOfferAcceptance`
+`GeneratedOfferBookingConfirmation`
 - `id`
 - `accepted_at`
 - `accepted_by_name`
@@ -214,15 +214,15 @@ Meaning:
 Current implementation note:
 - OTP is optional at the model level
 - the current public acceptance flow uses email OTP when second-factor verification is requested
-- resend throttling and rolling send caps are runtime challenge-state concerns and are not stored inside `GeneratedOfferAcceptance`
+- resend throttling and rolling send caps are runtime challenge-state concerns and are not stored inside `GeneratedOfferBookingConfirmation`
 
 ## API Read Models
 
 `GeneratedBookingOfferReadModel`
 - customer/admin-facing generated-offer response shape
 - `pdf_url`
-- `public_acceptance_token`
-- `public_acceptance_expires_at`
+- `public_booking_confirmation_token`
+- `public_booking_confirmation_expires_at`
 - acceptance data projected for UI/API consumption
 
 `BookingReadModel`
@@ -247,8 +247,8 @@ Important boundary:
 - a booking should usually have one `primary_contact`
 - a generated offer is an immutable snapshot once created
 - the generated-offer PDF is frozen at generation time
-- `accepted_generated_offer_id` may point to at most one accepted generated offer per booking
-- public offer acceptance is authorized by a dedicated acceptance token, not by `booking_id` and `generated_offer_id` alone
+- `confirmed_generated_offer_id` may point to at most one confirmed generated offer per booking
+- public booking confirmation is authorized by a dedicated booking confirmation token, not by `booking_id` and `generated_offer_id` alone
 - public generated-offer links and PDF URLs belong to API read models, not persisted entities
 
 ## Conflict Detection

@@ -24,7 +24,7 @@ The current active domain vocabulary includes:
 - activity
 - currencies and languages
 - generated offers
-- generated-offer acceptance
+- generated-booking confirmation
 
 It does not include separate shared person-master-data entities outside the booking.
 
@@ -91,11 +91,11 @@ Backend:
 - persistence orchestration
 - chat/webhook integration
 - generated-offer freezing and serving
-- generated-offer acceptance and OTP verification
+- generated-booking confirmation and OTP verification
 
 Frontend:
 - public website interactions
-- public offer-acceptance page
+- public booking-confirmationance page
 - backend booking workspace
 - booking detail page
 - tour editing page
@@ -113,7 +113,7 @@ The important current handler split is:
   - finance and offer mutation flow
   - generated-offer creation
   - generated-offer Gmail draft flow
-- `backend/app/src/http/handlers/booking_offer_acceptance.js`
+- `backend/app/src/http/handlers/booking_booking_confirmation.js`
   - public generated-offer access
   - public generated-offer PDF
   - public acceptance
@@ -121,13 +121,13 @@ The important current handler split is:
   - resend throttling responses including `retry_after_seconds`
 - `backend/app/src/domain/generated_offer_artifacts.js`
   - frozen generated-offer PDF artifact logic
-- `backend/app/src/domain/offer_acceptance.js`
+- `backend/app/src/domain/booking_confirmation.js`
   - acceptance-token lifecycle
   - acceptance-token verification
   - OTP challenge helpers
-- `frontend/pages/offer-accept.html`
+- `frontend/pages/booking-confirmation.html`
   - public acceptance page
-- `frontend/scripts/pages/offer_accept.js`
+- `frontend/scripts/pages/booking_confirmation.js`
   - token-gated public generated-offer read flow
   - email OTP issue/verify UX
   - resend countdown using `retry_after_seconds`
@@ -147,13 +147,13 @@ Persisted generated offer entity:
 
 Generated read model:
 - `pdf_url`
-- `public_acceptance_token`
-- `public_acceptance_expires_at`
+- `public_booking_confirmation_token`
+- `public_booking_confirmation_expires_at`
 - booking translation summaries and generated-offer capability flags exposed through `BookingReadModel`
 
 These read models are consumed by:
 - authenticated backend booking screens
-- the public offer-acceptance page
+- the public booking-confirmationance page
 
 This prevents public transport fields from becoming stored source-of-truth fields.
 

@@ -19,18 +19,18 @@ import {
 } from "./localized_editor.js";
 import {
   TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS,
-  TRAVEL_PLAN_ITEM_KIND_OPTIONS
+  TRAVEL_PLAN_SERVICE_KIND_OPTIONS
 } from "../shared/generated_catalogs.js";
 import {
-  countTravelPlanItems,
-  countUncoveredTravelPlanItems,
+  countTravelPlanServices,
+  countUncoveredTravelPlanServices,
   createEmptyTravelPlan,
   createEmptyTravelPlanDay,
   createEmptyTravelPlanOfferComponentLink,
-  createEmptyTravelPlanItem,
+  createEmptyTravelPlanService,
   getLinkableOfferComponents,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
-  getTravelPlanItemCoverageStatus,
+  getTravelPlanServiceCoverageStatus,
   normalizeTravelPlanDraft
 } from "./travel_plan_helpers.js";
 import {
@@ -47,7 +47,7 @@ import {
 import { validateTravelPlanDraft as validateTravelPlanDraftState } from "./travel_plan_validation.js";
 import { createBookingTravelPlanImagesModule } from "./travel_plan_images.js";
 import { createBookingTravelPlanAttachmentsModule } from "./travel_plan_attachments.js";
-import { createBookingTravelPlanItemLibraryModule } from "./travel_plan_item_library.js";
+import { createBookingTravelPlanServiceLibraryModule } from "./travel_plan_service_library.js";
 import { createBookingTravelPlanPdfsModule } from "./travel_plan_pdfs.js";
 
 export function createBookingTravelPlanModule(ctx) {
@@ -74,12 +74,12 @@ export function createBookingTravelPlanModule(ctx) {
   function syncTravelPlanRequiredTitleStates({ focusFirst = false } = {}) {
     if (!els.travel_plan_editor) return true;
     const titleInputs = Array.from(
-      els.travel_plan_editor.querySelectorAll('[data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]')
+      els.travel_plan_editor.querySelectorAll('[data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]')
     );
     let firstEmptyInput = null;
     for (const input of titleInputs) {
       const isEmpty = !String(input?.value || "").trim();
-      input.classList.toggle("travel-plan-item-title-input--required", isEmpty);
+      input.classList.toggle("travel-plan-service-title-input--required", isEmpty);
       input.toggleAttribute("aria-invalid", isEmpty);
       input.placeholder = isEmpty ? requiredPlaceholder() : "";
       if (!firstEmptyInput && isEmpty) firstEmptyInput = input;
@@ -92,15 +92,15 @@ export function createBookingTravelPlanModule(ctx) {
 
   function syncAccommodationCreateDaysButtonStates() {
     if (!els.travel_plan_editor) return;
-    const itemNodes = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-item]"));
+    const itemNodes = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-service]"));
     itemNodes.forEach((itemNode) => {
       const createDaysButton = itemNode.querySelector("[data-travel-plan-create-days]");
       if (!(createDaysButton instanceof HTMLButtonElement)) return;
-      const kindValue = String(itemNode.querySelector('[data-travel-plan-item-field="kind"]')?.value || "").trim();
+      const kindValue = String(itemNode.querySelector('[data-travel-plan-service-field="kind"]')?.value || "").trim();
       const titleValue = String(
-        itemNode.querySelector('[data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]')?.value || ""
+        itemNode.querySelector('[data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]')?.value || ""
       ).trim();
-      const accommodationDaysValue = String(itemNode.querySelector('[data-travel-plan-item-field="accommodation_days"]')?.value || "").trim();
+      const accommodationDaysValue = String(itemNode.querySelector('[data-travel-plan-service-field="accommodation_days"]')?.value || "").trim();
       const isEnabled = kindValue === "accommodation" && Boolean(titleValue) && (normalizeAccommodationDays(accommodationDaysValue) || 0) > 1;
       createDaysButton.disabled = !isEnabled;
     });
@@ -112,7 +112,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function findDraftItem(dayId, itemId) {
     const day = findDraftDay(dayId);
-    return (Array.isArray(day?.items) ? day.items : []).find((item) => item.id === itemId) || null;
+    return (Array.isArray(day?.services) ? day.services : []).find((item) => item.id === itemId) || null;
   }
 
   function travelPlanLocalId(prefix) {
@@ -155,17 +155,17 @@ export function createBookingTravelPlanModule(ctx) {
     return buildDualLocalizedPayload(createGeneratedDayTitle(dayNumber), "", bookingContentLang()).map;
   }
 
-  function cloneTravelPlanItemImage(image, imageIndex) {
+  function cloneTravelPlanServiceImage(image, imageIndex) {
     return {
       ...image,
-      id: travelPlanLocalId("travel_plan_item_image"),
+      id: travelPlanLocalId("travel_plan_service_image"),
       sort_order: imageIndex,
       is_primary: imageIndex === 0
     };
   }
 
-  function cloneTravelPlanItemForGeneratedDay(sourceItem) {
-    const clonedItem = createEmptyTravelPlanItem();
+  function cloneTravelPlanServiceForGeneratedDay(sourceItem) {
+    const clonedItem = createEmptyTravelPlanService();
     clonedItem.timing_kind = String(sourceItem?.timing_kind || "label").trim() || "label";
     clonedItem.time_label = String(sourceItem?.time_label || "").trim();
     clonedItem.time_label_i18n = sourceItem?.time_label_i18n && typeof sourceItem.time_label_i18n === "object"
@@ -193,7 +193,7 @@ export function createBookingTravelPlanModule(ctx) {
     clonedItem.financial_note_i18n = sourceItem?.financial_note_i18n && typeof sourceItem.financial_note_i18n === "object"
       ? { ...sourceItem.financial_note_i18n }
       : {};
-    clonedItem.images = (Array.isArray(sourceItem?.images) ? sourceItem.images : []).map((image, imageIndex) => cloneTravelPlanItemImage(image, imageIndex));
+    clonedItem.images = (Array.isArray(sourceItem?.images) ? sourceItem.images : []).map((image, imageIndex) => cloneTravelPlanServiceImage(image, imageIndex));
     clonedItem.copied_from = sourceItem?.copied_from && typeof sourceItem.copied_from === "object"
       ? { ...sourceItem.copied_from }
       : null;
@@ -226,7 +226,7 @@ export function createBookingTravelPlanModule(ctx) {
     return validateTravelPlanDraftState(plan, {
       getOfferComponentsForLinks,
       validTimingKinds: new Set(TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value)),
-      validItemKinds: new Set(TRAVEL_PLAN_ITEM_KIND_OPTIONS.map((option) => option.value)),
+      validItemKinds: new Set(TRAVEL_PLAN_SERVICE_KIND_OPTIONS.map((option) => option.value)),
       validCoverageTypes: new Set(TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS.map((option) => option.value)),
       splitDateTimeValue,
       isValidIsoCalendarDate
@@ -284,7 +284,7 @@ export function createBookingTravelPlanModule(ctx) {
     state.originalTravelPlanSnapshot = getTravelPlanSnapshot(state.travelPlanDraft);
     setTravelPlanDirty(false);
     travelPlanStatus("");
-    travelPlanItemLibraryModule.populateTravelPlanItemLibraryKindOptions();
+    travelPlanServiceLibraryModule.populateTravelPlanServiceLibraryKindOptions();
   }
 
   function resolveLocalizedDraftBranchText(map, lang = "en", fallback = "") {
@@ -306,12 +306,12 @@ export function createBookingTravelPlanModule(ctx) {
       commonData: {
         [dataScope]: field,
         ...(dayId ? { "travel-plan-day-id": dayId } : {}),
-        ...(itemId ? { "travel-plan-item-id": itemId } : {})
+        ...(itemId ? { "travel-plan-service-id": itemId } : {})
       },
       translatePayload: {
         "travel-plan-translate": field,
         ...(dayId ? { "travel-plan-day-id": dayId } : {}),
-        ...(itemId ? { "travel-plan-item-id": itemId } : {})
+        ...(itemId ? { "travel-plan-service-id": itemId } : {})
       }
     });
   }
@@ -365,7 +365,7 @@ export function createBookingTravelPlanModule(ctx) {
     finalizeTravelPlanMutation
   });
 
-  const travelPlanItemLibraryModule = createBookingTravelPlanItemLibraryModule({
+  const travelPlanServiceLibraryModule = createBookingTravelPlanServiceLibraryModule({
     state,
     els,
     apiOrigin,
@@ -409,8 +409,8 @@ export function createBookingTravelPlanModule(ctx) {
 
   function travelPlanSummary() {
     const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days.length : 0;
-    const items = countTravelPlanItems(state.travelPlanDraft);
-    const uncovered = countUncoveredTravelPlanItems(state.travelPlanDraft);
+    const items = countTravelPlanServices(state.travelPlanDraft);
+    const uncovered = countUncoveredTravelPlanServices(state.travelPlanDraft);
     if (!days && !items) {
       return {
         primary: bookingT("booking.travel_plan", "Travel plan"),
@@ -425,7 +425,7 @@ export function createBookingTravelPlanModule(ctx) {
       ),
       bookingT(
         items === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items",
-        items === 1 ? "{count} travel plan item" : "{count} travel plan items",
+        items === 1 ? "{count} service" : "{count} services",
         { count: items }
       )
     ];
@@ -474,7 +474,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function itemKindOptions(selectedValue = "other") {
-    return TRAVEL_PLAN_ITEM_KIND_OPTIONS.map((option) => (
+    return TRAVEL_PLAN_SERVICE_KIND_OPTIONS.map((option) => (
       `<option value="${escapeHtml(option.value)}"${option.value === selectedValue ? " selected" : ""}>${escapeHtml(bookingT(`booking.travel_plan.kind.${option.value}`, option.label))}</option>`
     )).join("");
   }
@@ -699,7 +699,7 @@ export function createBookingTravelPlanModule(ctx) {
       return `
         <div class="field">
           <label for="travel_plan_timing_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "Time information"))}</label>
-          <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="timing_kind">
+          <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="timing_kind">
             ${timingKindOptions(timingKind)}
           </select>
         </div>
@@ -707,7 +707,7 @@ export function createBookingTravelPlanModule(ctx) {
           <label for="travel_plan_time_point_date_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
           ${renderTravelPlanDateInput({
             id: `travel_plan_time_point_date_${item.id}`,
-            dataAttribute: 'data-travel-plan-item-field="time_point_date"',
+            dataAttribute: 'data-travel-plan-service-field="time_point_date"',
             value: pointParts.date,
             disabled: !state.permissions.canEditBooking,
             ariaLabel: bookingT("booking.date", "Date")
@@ -715,7 +715,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           <label for="travel_plan_time_point_time_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.time", "Time"))}</label>
-          <select id="travel_plan_time_point_time_${escapeHtml(item.id)}" data-travel-plan-item-field="time_point_time">
+          <select id="travel_plan_time_point_time_${escapeHtml(item.id)}" data-travel-plan-service-field="time_point_time">
             ${timeSelectOptions(pointParts.time)}
           </select>
         </div>
@@ -727,7 +727,7 @@ export function createBookingTravelPlanModule(ctx) {
       return `
         <div class="field">
           <label for="travel_plan_timing_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "Time information"))}</label>
-          <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="timing_kind">
+          <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="timing_kind">
             ${timingKindOptions(timingKind)}
           </select>
         </div>
@@ -735,7 +735,7 @@ export function createBookingTravelPlanModule(ctx) {
           <label for="travel_plan_start_time_date_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.start_date", "Start date"))}</label>
           ${renderTravelPlanDateInput({
             id: `travel_plan_start_time_date_${item.id}`,
-            dataAttribute: 'data-travel-plan-item-field="start_time_date"',
+            dataAttribute: 'data-travel-plan-service-field="start_time_date"',
             value: startParts.date,
             disabled: !state.permissions.canEditBooking,
             ariaLabel: bookingT("booking.travel_plan.start_date", "Start date")
@@ -743,7 +743,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           <label for="travel_plan_start_time_time_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.start_time", "Start time"))}</label>
-          <select id="travel_plan_start_time_time_${escapeHtml(item.id)}" data-travel-plan-item-field="start_time_time">
+          <select id="travel_plan_start_time_time_${escapeHtml(item.id)}" data-travel-plan-service-field="start_time_time">
             ${timeSelectOptions(startParts.time)}
           </select>
         </div>
@@ -751,7 +751,7 @@ export function createBookingTravelPlanModule(ctx) {
           <label for="travel_plan_end_time_date_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.end_date", "End date"))}</label>
           ${renderTravelPlanDateInput({
             id: `travel_plan_end_time_date_${item.id}`,
-            dataAttribute: 'data-travel-plan-item-field="end_time_date"',
+            dataAttribute: 'data-travel-plan-service-field="end_time_date"',
             value: endParts.date,
             disabled: !state.permissions.canEditBooking,
             ariaLabel: bookingT("booking.travel_plan.end_date", "End date")
@@ -759,7 +759,7 @@ export function createBookingTravelPlanModule(ctx) {
         </div>
         <div class="field">
           <label for="travel_plan_end_time_time_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.end_time", "End time"))}</label>
-          <select id="travel_plan_end_time_time_${escapeHtml(item.id)}" data-travel-plan-item-field="end_time_time">
+          <select id="travel_plan_end_time_time_${escapeHtml(item.id)}" data-travel-plan-service-field="end_time_time">
             ${timeSelectOptions(endParts.time)}
           </select>
         </div>
@@ -768,7 +768,7 @@ export function createBookingTravelPlanModule(ctx) {
     return `
       <div class="field">
         <label for="travel_plan_timing_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "Time information"))}</label>
-        <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="timing_kind">
+        <select id="travel_plan_timing_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="timing_kind">
           ${timingKindOptions(timingKind)}
         </select>
       </div>
@@ -776,7 +776,7 @@ export function createBookingTravelPlanModule(ctx) {
         ${renderTravelPlanLocalizedField({
           label: bookingT("booking.travel_plan.human_readable_time", "Human readable time"),
           idBase: `travel_plan_time_${item.id}`,
-          dataScope: "travel-plan-item-field",
+          dataScope: "travel-plan-service-field",
           dayId: day.id,
           itemId: item.id,
           field: "time_label",
@@ -790,7 +790,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function renderTravelPlanLinkRows(itemId) {
     const itemLinks = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .filter((link) => link.travel_plan_item_id === itemId);
+      .filter((link) => link.travel_plan_service_id === itemId);
 
     if (!itemLinks.length) {
       return `
@@ -815,10 +815,10 @@ export function createBookingTravelPlanModule(ctx) {
     `).join("");
   }
 
-  function renderTravelPlanItem(day, item, itemIndex) {
+  function renderTravelPlanService(day, item, itemIndex) {
     const links = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .filter((link) => link.travel_plan_item_id === item.id && link.offer_component_id);
-    const coverageStatus = getTravelPlanItemCoverageStatus(item.kind, links);
+      .filter((link) => link.travel_plan_service_id === item.id && link.offer_component_id);
+    const coverageStatus = getTravelPlanServiceCoverageStatus(item.kind, links);
     const coverageLabel = coverageBadgeLabel(coverageStatus);
     const createDaysEnabled = canCreateAccommodationDays(item);
     const accommodationControls = item.kind === "accommodation"
@@ -827,7 +827,7 @@ export function createBookingTravelPlanModule(ctx) {
           <label for="travel_plan_accommodation_days_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.accommodation_days", "Number of days"))}</label>
           <input
             id="travel_plan_accommodation_days_${escapeHtml(item.id)}"
-            data-travel-plan-item-field="accommodation_days"
+            data-travel-plan-service-field="accommodation_days"
             type="number"
             min="1"
             max="100"
@@ -835,29 +835,29 @@ export function createBookingTravelPlanModule(ctx) {
             value="${escapeHtml(accommodationDaysInputValue(item))}"
           />
         </div>
-        <div class="field travel-plan-item__create-days-field">
+        <div class="field travel-plan-service__create-days-field">
           <span class="field-label" aria-hidden="true">&nbsp;</span>
-          <button class="btn btn-ghost travel-plan-item__create-days-btn" data-travel-plan-create-days="${escapeHtml(item.id)}" type="button"${createDaysEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.travel_plan.create_days", "Create days"))}</button>
+          <button class="btn btn-ghost travel-plan-service__create-days-btn" data-travel-plan-create-days="${escapeHtml(item.id)}" type="button"${createDaysEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.travel_plan.create_days", "Create days"))}</button>
         </div>
       `
       : "";
     return `
-      <div class="travel-plan-item travel-plan-item--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-item="${escapeHtml(item.id)}">
-        <div class="travel-plan-item__head">
-          <div class="travel-plan-item__title">
-            <span class="travel-plan-item__index">${escapeHtml(bookingT("booking.travel_plan.item_heading", "Travel plan item {item}", { item: itemIndex + 1 }))}</span>
+      <div class="travel-plan-service travel-plan-service--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-service="${escapeHtml(item.id)}">
+        <div class="travel-plan-service__head">
+          <div class="travel-plan-service__title">
+            <span class="travel-plan-service__index">${escapeHtml(bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 }))}</span>
             <span class="travel-plan-coverage-badge travel-plan-coverage-badge--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-coverage-badge="${escapeHtml(item.id)}">${escapeHtml(coverageLabel)}</span>
           </div>
-          <div class="travel-plan-item__actions">
-            <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move travel plan item up"))}">&#8593;</button>
-            <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-down="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_down", "Move travel plan item down"))}">&#8595;</button>
-            <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove travel plan item"))}">&times;</button>
+          <div class="travel-plan-service__actions">
+            <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move service up"))}">&#8593;</button>
+            <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-down="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_down", "Move service down"))}">&#8595;</button>
+            <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove service"))}">&times;</button>
           </div>
         </div>
         <div class="travel-plan-grid travel-plan-grid--item-kind${item.kind === "accommodation" ? " travel-plan-grid--item-kind-accommodation" : ""}">
           <div class="field">
             <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
-            <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-item-field="kind">
+            <select id="travel_plan_kind_${escapeHtml(item.id)}" data-travel-plan-service-field="kind">
               ${itemKindOptions(item.kind)}
             </select>
           </div>
@@ -866,9 +866,9 @@ export function createBookingTravelPlanModule(ctx) {
         <div class="travel-plan-grid">
           <div class="field">
             ${renderTravelPlanLocalizedField({
-              label: bookingT("booking.travel_plan.item_title", "Travel plan item title"),
+              label: bookingT("booking.travel_plan.item_title", "Service title"),
               idBase: `travel_plan_title_${item.id}`,
-              dataScope: "travel-plan-item-field",
+              dataScope: "travel-plan-service-field",
               dayId: day.id,
               itemId: item.id,
               field: "title",
@@ -881,7 +881,7 @@ export function createBookingTravelPlanModule(ctx) {
             ${renderTravelPlanLocalizedField({
               label: bookingT("booking.location", "Location"),
               idBase: `travel_plan_location_${item.id}`,
-              dataScope: "travel-plan-item-field",
+              dataScope: "travel-plan-service-field",
               dayId: day.id,
               itemId: item.id,
               field: "location",
@@ -899,7 +899,7 @@ export function createBookingTravelPlanModule(ctx) {
             ${renderTravelPlanLocalizedField({
               label: bookingT("booking.details", "Details"),
               idBase: `travel_plan_details_${item.id}`,
-              dataScope: "travel-plan-item-field",
+              dataScope: "travel-plan-service-field",
               dayId: day.id,
               itemId: item.id,
               field: "details",
@@ -911,10 +911,10 @@ export function createBookingTravelPlanModule(ctx) {
           </div>
           <div class="field">
             <label for="travel_plan_financial_note_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.financial_note", "Supplier / financial note (ATP internal)"))}</label>
-            <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-item-field="financial_note" rows="3">${escapeHtml(item.financial_note || "")}</textarea>
+            <textarea class="booking-text-field booking-text-field--internal" id="travel_plan_financial_note_${escapeHtml(item.id)}" data-travel-plan-service-field="financial_note" rows="3">${escapeHtml(item.financial_note || "")}</textarea>
           </div>
         </div>
-        ${travelPlanImagesModule.renderTravelPlanItemImages(day, item)}
+        ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item)}
         <div class="travel-plan-links">
           <div class="travel-plan-links__head">
             <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
@@ -927,7 +927,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function renderTravelPlanDay(day, dayIndex) {
-    const items = Array.isArray(day.items) ? day.items : [];
+    const items = Array.isArray(day.services) ? day.services : [];
     return `
       <section class="travel-plan-day" data-travel-plan-day="${escapeHtml(day.id)}">
         <div class="travel-plan-day__head">
@@ -984,9 +984,9 @@ export function createBookingTravelPlanModule(ctx) {
             localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
           })}
         </div>
-        ${items.map((item, itemIndex) => renderTravelPlanItem(day, item, itemIndex)).join("")}
+        ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
         <div class="travel-plan-day__footer">
-          <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New travel plan item"))}</button>
+          <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-add-item="${escapeHtml(day.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.new_item", "New service"))}</button>
           <button class="btn btn-ghost travel-plan-day-add-btn" data-travel-plan-open-import="${escapeHtml(day.id)}" data-requires-clean-state type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing", "Insert existing"))}</button>
         </div>
       </section>
@@ -1041,7 +1041,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (!els.travel_plan_editor) return state.travelPlanDraft;
     const previousItemsById = new Map(
       (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
-        .flatMap((day) => (Array.isArray(day?.items) ? day.items : []))
+        .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
         .map((item) => [item.id, item])
     );
     const draft = createEmptyTravelPlan();
@@ -1060,39 +1060,39 @@ export function createBookingTravelPlanModule(ctx) {
       const dayNotes = readLocalizedFieldPayload(dayNode, "travel-plan-day-field", "notes");
       day.notes = dayNotes.text;
       day.notes_i18n = dayNotes.map;
-      day.items = Array.from(dayNode.querySelectorAll("[data-travel-plan-item]")).map((itemNode) => {
-        const itemId = String(itemNode.getAttribute("data-travel-plan-item") || "").trim();
+      day.services = Array.from(dayNode.querySelectorAll("[data-travel-plan-service]")).map((itemNode) => {
+        const itemId = String(itemNode.getAttribute("data-travel-plan-service") || "").trim();
         const previousItem = previousItemsById.get(itemId);
-        const item = createEmptyTravelPlanItem();
+        const item = createEmptyTravelPlanService();
         item.id = itemId || item.id;
-        item.timing_kind = String(itemNode.querySelector('[data-travel-plan-item-field="timing_kind"]')?.value || "label").trim();
-        const timeLabel = readLocalizedFieldPayload(itemNode, "travel-plan-item-field", "time_label");
+        item.timing_kind = String(itemNode.querySelector('[data-travel-plan-service-field="timing_kind"]')?.value || "label").trim();
+        const timeLabel = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "time_label");
         item.time_label = timeLabel.text;
         item.time_label_i18n = timeLabel.map;
         item.time_point = combineDateAndTime(
-          String(itemNode.querySelector('[data-travel-plan-item-field="time_point_date"]')?.value || day.date || "").trim(),
-          String(itemNode.querySelector('[data-travel-plan-item-field="time_point_time"]')?.value || "").trim()
+          String(itemNode.querySelector('[data-travel-plan-service-field="time_point_date"]')?.value || day.date || "").trim(),
+          String(itemNode.querySelector('[data-travel-plan-service-field="time_point_time"]')?.value || "").trim()
         );
-        item.kind = String(itemNode.querySelector('[data-travel-plan-item-field="kind"]')?.value || "").trim();
-        item.accommodation_days = String(itemNode.querySelector('[data-travel-plan-item-field="accommodation_days"]')?.value || "").trim();
-        const itemTitle = readLocalizedFieldPayload(itemNode, "travel-plan-item-field", "title");
+        item.kind = String(itemNode.querySelector('[data-travel-plan-service-field="kind"]')?.value || "").trim();
+        item.accommodation_days = String(itemNode.querySelector('[data-travel-plan-service-field="accommodation_days"]')?.value || "").trim();
+        const itemTitle = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "title");
         item.title = itemTitle.text;
         item.title_i18n = itemTitle.map;
-        const itemLocation = readLocalizedFieldPayload(itemNode, "travel-plan-item-field", "location");
+        const itemLocation = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "location");
         item.location = itemLocation.text;
         item.location_i18n = itemLocation.map;
-        const itemDetails = readLocalizedFieldPayload(itemNode, "travel-plan-item-field", "details");
+        const itemDetails = readLocalizedFieldPayload(itemNode, "travel-plan-service-field", "details");
         item.details = itemDetails.text;
         item.details_i18n = itemDetails.map;
         item.start_time = combineDateAndTime(
-          String(itemNode.querySelector('[data-travel-plan-item-field="start_time_date"]')?.value || day.date || "").trim(),
-          String(itemNode.querySelector('[data-travel-plan-item-field="start_time_time"]')?.value || "").trim()
+          String(itemNode.querySelector('[data-travel-plan-service-field="start_time_date"]')?.value || day.date || "").trim(),
+          String(itemNode.querySelector('[data-travel-plan-service-field="start_time_time"]')?.value || "").trim()
         );
         item.end_time = combineDateAndTime(
-          String(itemNode.querySelector('[data-travel-plan-item-field="end_time_date"]')?.value || day.date || "").trim(),
-          String(itemNode.querySelector('[data-travel-plan-item-field="end_time_time"]')?.value || "").trim()
+          String(itemNode.querySelector('[data-travel-plan-service-field="end_time_date"]')?.value || day.date || "").trim(),
+          String(itemNode.querySelector('[data-travel-plan-service-field="end_time_time"]')?.value || "").trim()
         );
-        item.financial_note = String(itemNode.querySelector('[data-travel-plan-item-field="financial_note"]')?.value || "").trim();
+        item.financial_note = String(itemNode.querySelector('[data-travel-plan-service-field="financial_note"]')?.value || "").trim();
         item.images = Array.isArray(previousItem?.images) ? previousItem.images : [];
         item.copied_from = previousItem?.copied_from || null;
         return item;
@@ -1101,7 +1101,7 @@ export function createBookingTravelPlanModule(ctx) {
     });
     draft.offer_component_links = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-link]")).map((linkNode) => ({
       id: String(linkNode.getAttribute("data-travel-plan-link") || "").trim(),
-      travel_plan_item_id: String(linkNode.closest("[data-travel-plan-item]")?.getAttribute("data-travel-plan-item") || "").trim(),
+      travel_plan_service_id: String(linkNode.closest("[data-travel-plan-service]")?.getAttribute("data-travel-plan-service") || "").trim(),
       offer_component_id: String(linkNode.querySelector("[data-travel-plan-link-component]")?.value || "").trim(),
       coverage_type: String(linkNode.querySelector("[data-travel-plan-link-coverage-type]")?.value || "full").trim()
     }));
@@ -1117,7 +1117,7 @@ export function createBookingTravelPlanModule(ctx) {
   function removeItemLinks(itemId) {
     state.travelPlanDraft.offer_component_links = (Array.isArray(state.travelPlanDraft.offer_component_links)
       ? state.travelPlanDraft.offer_component_links
-      : []).filter((link) => link.travel_plan_item_id !== itemId);
+      : []).filter((link) => link.travel_plan_service_id !== itemId);
   }
 
   function addDay() {
@@ -1134,9 +1134,9 @@ export function createBookingTravelPlanModule(ctx) {
     syncTravelPlanDraftFromDom();
     const dayIndex = findDayIndex(dayId);
     if (dayIndex < 0) return;
-    if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its travel plan items?"))) return;
+    if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its services?"))) return;
     const [removedDay] = state.travelPlanDraft.days.splice(dayIndex, 1);
-    for (const item of Array.isArray(removedDay?.items) ? removedDay.items : []) {
+    for (const item of Array.isArray(removedDay?.services) ? removedDay.services : []) {
       removeItemLinks(item.id);
     }
     renderTravelPlanPanel();
@@ -1147,29 +1147,29 @@ export function createBookingTravelPlanModule(ctx) {
     const dayIndex = findDayIndex(dayId);
     if (dayIndex < 0) return;
     const day = state.travelPlanDraft.days[dayIndex];
-    day.items = Array.isArray(day.items) ? day.items : [];
-    day.items.push(createEmptyTravelPlanItem());
+    day.services = Array.isArray(day.services) ? day.services : [];
+    day.services.push(createEmptyTravelPlanService());
     renderTravelPlanPanel();
   }
 
   function createAccommodationDays(itemId) {
     syncTravelPlanDraftFromDom();
     const days = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
-    const sourceDayIndex = days.findIndex((day) => Array.isArray(day?.items) && day.items.some((item) => item.id === itemId));
+    const sourceDayIndex = days.findIndex((day) => Array.isArray(day?.services) && day.services.some((item) => item.id === itemId));
     if (sourceDayIndex < 0) return;
 
     const sourceDay = days[sourceDayIndex];
-    const sourceItemIndex = (Array.isArray(sourceDay?.items) ? sourceDay.items : []).findIndex((item) => item.id === itemId);
+    const sourceItemIndex = (Array.isArray(sourceDay?.services) ? sourceDay.services : []).findIndex((item) => item.id === itemId);
     if (sourceItemIndex < 0) return;
-    const sourceItem = sourceDay.items[sourceItemIndex];
+    const sourceItem = sourceDay.services[sourceItemIndex];
     if (sourceItem?.kind !== "accommodation") return;
 
     if (!String(sourceItem?.title || "").trim()) {
       travelPlanStatus(
-        bookingT("booking.travel_plan.create_days_title_required", "Set a travel plan item title before creating days."),
+        bookingT("booking.travel_plan.create_days_title_required", "Set a service title before creating days."),
         "error"
       );
-      const titleInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-item="${escapeSelectorValue(itemId)}"] [data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]`);
+      const titleInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-service="${escapeSelectorValue(itemId)}"] [data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]`);
       titleInput?.focus?.();
       return;
     }
@@ -1179,12 +1179,12 @@ export function createBookingTravelPlanModule(ctx) {
       travelPlanStatus(
         bookingT(
           "booking.travel_plan.validation.accommodation_days_invalid",
-          "Day {day}, travel plan item {item}: Accommodation days must be between 1 and 100.",
+          "Day {day}, service {item}: Accommodation days must be between 1 and 100.",
           { day: sourceDayIndex + 1, item: sourceItemIndex + 1 }
         ),
         "error"
       );
-      const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-item="${escapeSelectorValue(itemId)}"] [data-travel-plan-item-field="accommodation_days"]`);
+      const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-service="${escapeSelectorValue(itemId)}"] [data-travel-plan-service-field="accommodation_days"]`);
       invalidInput?.focus?.();
       return;
     }
@@ -1196,7 +1196,7 @@ export function createBookingTravelPlanModule(ctx) {
     }
 
     const sourceLinks = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
-      .filter((link) => link.travel_plan_item_id === itemId);
+      .filter((link) => link.travel_plan_service_id === itemId);
     const generatedDays = [];
     const generatedLinks = [];
     let nextDateValue = String(sourceDay?.date || "").trim();
@@ -1215,15 +1215,15 @@ export function createBookingTravelPlanModule(ctx) {
       nextDateValue = nextIsoDate(nextDateValue);
       generatedDay.date = nextDateValue;
 
-      const generatedItem = cloneTravelPlanItemForGeneratedDay(sourceItem);
-      generatedDay.items = [generatedItem];
+      const generatedItem = cloneTravelPlanServiceForGeneratedDay(sourceItem);
+      generatedDay.services = [generatedItem];
       generatedDays.push(generatedDay);
 
       sourceLinks.forEach((link) => {
         generatedLinks.push({
           ...link,
           id: travelPlanLocalId("travel_plan_offer_link"),
-          travel_plan_item_id: generatedItem.id
+          travel_plan_service_id: generatedItem.id
         });
       });
     }
@@ -1244,11 +1244,11 @@ export function createBookingTravelPlanModule(ctx) {
 
   function removeItem(itemId) {
     syncTravelPlanDraftFromDom();
-    if (!window.confirm(bookingT("booking.travel_plan.remove_item_confirm", "Remove this travel plan item?"))) return;
+    if (!window.confirm(bookingT("booking.travel_plan.remove_item_confirm", "Remove this service?"))) return;
     for (const day of Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []) {
-      const itemIndex = (Array.isArray(day.items) ? day.items : []).findIndex((item) => item.id === itemId);
+      const itemIndex = (Array.isArray(day.services) ? day.services : []).findIndex((item) => item.id === itemId);
       if (itemIndex < 0) continue;
-      day.items.splice(itemIndex, 1);
+      day.services.splice(itemIndex, 1);
       removeItemLinks(itemId);
       renderTravelPlanPanel();
       return;
@@ -1258,7 +1258,7 @@ export function createBookingTravelPlanModule(ctx) {
   function moveItem(itemId, direction) {
     syncTravelPlanDraftFromDom();
     for (const day of Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []) {
-      const items = Array.isArray(day.items) ? day.items : [];
+      const items = Array.isArray(day.services) ? day.services : [];
       const itemIndex = items.findIndex((item) => item.id === itemId);
       if (itemIndex < 0) continue;
       const nextIndex = direction === "up" ? itemIndex - 1 : itemIndex + 1;
@@ -1356,7 +1356,7 @@ export function createBookingTravelPlanModule(ctx) {
         setPageSaveActionError?.(
           bookingT(
             "booking.travel_plan.validation.item_title_action_error",
-            "Travel plan item {item} on day {day} needs a title.",
+            "Service {item} on day {day} needs a title.",
             { item: validation.itemNumber, day: validation.dayNumber }
           )
         );
@@ -1366,11 +1366,11 @@ export function createBookingTravelPlanModule(ctx) {
         setPageSaveActionError?.(
           bookingT(
             "booking.travel_plan.validation.accommodation_days_action_error",
-            "Accommodation stay on day {day}, travel plan item {item} needs a day count between 1 and 100.",
+            "Accommodation stay on day {day}, service {item} needs a day count between 1 and 100.",
             { item: validation.itemNumber, day: validation.dayNumber }
           )
         );
-        const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-item="${escapeSelectorValue(validation.itemId || "")}"] [data-travel-plan-item-field="accommodation_days"]`);
+        const invalidInput = els.travel_plan_editor?.querySelector(`[data-travel-plan-service="${escapeSelectorValue(validation.itemId || "")}"] [data-travel-plan-service-field="accommodation_days"]`);
         invalidInput?.focus?.();
       }
       travelPlanStatus(validation.error, "error");
@@ -1453,7 +1453,7 @@ export function createBookingTravelPlanModule(ctx) {
       logBrowserConsoleError("[travel-plan] Failed to translate a travel-plan field.", {
         booking_id: state.booking?.id || "",
         day_id: button.getAttribute("data-travel-plan-day-id") || "",
-        item_id: button.getAttribute("data-travel-plan-item-id") || "",
+        service_id: button.getAttribute("data-travel-plan-service-id") || "",
         field: button.getAttribute("data-travel-plan-translate") || "",
         source_lang: sourceLang,
         target_lang: destinationLang,
@@ -1509,8 +1509,8 @@ export function createBookingTravelPlanModule(ctx) {
         syncTravelPlanRequiredTitleStates();
         syncAccommodationCreateDaysButtonStates();
         const shouldRerender = Boolean(
-          target?.matches?.('[data-travel-plan-item-field="timing_kind"]')
-          || target?.matches?.('[data-travel-plan-item-field="kind"]')
+          target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
+          || target?.matches?.('[data-travel-plan-service-field="kind"]')
           || target?.matches?.("[data-travel-plan-link-component]")
           || target?.matches?.("[data-travel-plan-link-coverage-type]")
         );
@@ -1558,7 +1558,7 @@ export function createBookingTravelPlanModule(ctx) {
           return;
         }
         if (button.hasAttribute("data-travel-plan-open-import")) {
-          travelPlanItemLibraryModule.openTravelPlanItemLibrary(button.getAttribute("data-travel-plan-open-import"));
+          travelPlanServiceLibraryModule.openTravelPlanServiceLibrary(button.getAttribute("data-travel-plan-open-import"));
           return;
         }
         if (button.hasAttribute("data-travel-plan-remove-item")) {
@@ -1578,7 +1578,7 @@ export function createBookingTravelPlanModule(ctx) {
           return;
         }
         if (button.hasAttribute("data-travel-plan-add-image")) {
-          travelPlanImagesModule.triggerTravelPlanItemImagePicker(
+          travelPlanImagesModule.triggerTravelPlanServiceImagePicker(
             button.getAttribute("data-travel-plan-day-id"),
             button.getAttribute("data-travel-plan-add-image")
           );
@@ -1592,27 +1592,27 @@ export function createBookingTravelPlanModule(ctx) {
           return;
         }
         if (button.hasAttribute("data-travel-plan-move-image-left")) {
-          void travelPlanImagesModule.reorderTravelPlanItemImage(
+          void travelPlanImagesModule.reorderTravelPlanServiceImage(
             button.getAttribute("data-travel-plan-day-id"),
-            button.getAttribute("data-travel-plan-item-id"),
+            button.getAttribute("data-travel-plan-service-id"),
             button.getAttribute("data-travel-plan-move-image-left"),
             "left"
           );
           return;
         }
         if (button.hasAttribute("data-travel-plan-move-image-right")) {
-          void travelPlanImagesModule.reorderTravelPlanItemImage(
+          void travelPlanImagesModule.reorderTravelPlanServiceImage(
             button.getAttribute("data-travel-plan-day-id"),
-            button.getAttribute("data-travel-plan-item-id"),
+            button.getAttribute("data-travel-plan-service-id"),
             button.getAttribute("data-travel-plan-move-image-right"),
             "right"
           );
           return;
         }
         if (button.hasAttribute("data-travel-plan-remove-image")) {
-          void travelPlanImagesModule.removeTravelPlanItemImage(
+          void travelPlanImagesModule.removeTravelPlanServiceImage(
             button.getAttribute("data-travel-plan-day-id"),
-            button.getAttribute("data-travel-plan-item-id"),
+            button.getAttribute("data-travel-plan-service-id"),
             button.getAttribute("data-travel-plan-remove-image")
           );
           return;
@@ -1637,7 +1637,7 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
     }
-    travelPlanItemLibraryModule.bindTravelPlanItemLibrary();
+    travelPlanServiceLibraryModule.bindTravelPlanServiceLibrary();
     travelPlanImagesModule.bindTravelPlanImageInput();
     travelPlanImagesModule.bindTravelPlanImagePreviewModal();
     travelPlanAttachmentsModule.bindTravelPlanAttachmentInput();

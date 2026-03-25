@@ -115,7 +115,8 @@ export function createBookingTravelPlanHandlers(deps) {
       days: (Array.isArray(nextNormalized?.days) ? nextNormalized.days : []).map((day) => {
         const existingDay = existingDaysById.get(day.id);
         const existingItemsById = new Map(
-          (Array.isArray(existingDay?.items) ? existingDay.items : []).map((item) => [item.id, item])
+          (Array.isArray(existingDay?.services) ? existingDay.services : (Array.isArray(existingDay?.items) ? existingDay.items : []))
+            .map((item) => [item.id, item])
         );
             const nextTitleField = mergeEditableLocalizedTextField(
               existingDay?.title_i18n ?? existingDay?.title,
@@ -147,7 +148,7 @@ export function createBookingTravelPlanHandlers(deps) {
           overnight_location_i18n: nextOvernightField.map,
           notes: nextNotesField.text || null,
           notes_i18n: nextNotesField.map,
-          items: (Array.isArray(day?.items) ? day.items : []).map((item) => {
+          services: (Array.isArray(day?.services) ? day.services : []).map((item) => {
             const existingItem = existingItemsById.get(item.id);
             const timeLabelField = mergeEditableLocalizedTextField(
               existingItem?.time_label_i18n ?? existingItem?.time_label,
@@ -362,7 +363,7 @@ export function createBookingTravelPlanHandlers(deps) {
     }
   }
 
-  const { handleSearchTravelPlanItems, handleImportTravelPlanItem } = createBookingTravelPlanImportHandlers({
+  const { handleSearchTravelPlanServices, handleImportTravelPlanService } = createBookingTravelPlanImportHandlers({
     readBodyJson,
     sendJson,
     readStore,
@@ -384,9 +385,9 @@ export function createBookingTravelPlanHandlers(deps) {
   });
 
   const {
-    handleUploadTravelPlanItemImage,
-    handleDeleteTravelPlanItemImage,
-    handleReorderTravelPlanItemImages
+    handleUploadTravelPlanServiceImage,
+    handleDeleteTravelPlanServiceImage,
+    handleReorderTravelPlanServiceImages
   } = createBookingTravelPlanImageHandlers({
     readBodyJson,
     sendJson,
@@ -663,11 +664,11 @@ export function createBookingTravelPlanHandlers(deps) {
   }
 
   return {
-    handleSearchTravelPlanItems,
-    handleImportTravelPlanItem,
-    handleUploadTravelPlanItemImage,
-    handleDeleteTravelPlanItemImage,
-    handleReorderTravelPlanItemImages,
+    handleSearchTravelPlanServices,
+    handleImportTravelPlanService,
+    handleUploadTravelPlanServiceImage,
+    handleDeleteTravelPlanServiceImage,
+    handleReorderTravelPlanServiceImages,
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,

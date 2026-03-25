@@ -9,11 +9,11 @@ import { bookingContentLang, bookingContentLanguageLabel, bookingT, bookingLang 
 import { formatMoneyDisplay } from "./pricing.js";
 import { getBookingPersons } from "../shared/booking_persons.js";
 import {
-  formatGeneratedOfferAcceptanceRouteLabel,
+  formatGeneratedOfferBookingConfirmationRouteLabel,
   generatedOfferRouteUsesDepositPayment as routeUsesDepositPayment,
-  normalizeGeneratedOfferAcceptanceRouteMode as normalizeGeneratedOfferRouteMode,
-  normalizeGeneratedOfferAcceptanceRouteStatus as normalizeGeneratedOfferRouteStatus
-} from "../shared/offer_acceptance_catalog.js";
+  normalizeGeneratedOfferBookingConfirmationRouteMode as normalizeGeneratedOfferRouteMode,
+  normalizeGeneratedOfferBookingConfirmationRouteStatus as normalizeGeneratedOfferRouteStatus
+} from "../shared/booking_confirmation_catalog.js";
 import { renderBookingSectionHeader } from "./sections.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
@@ -52,7 +52,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   let generatedOfferRouteMode = "DEPOSIT_PAYMENT";
   let generatedOfferPaymentTermLineId = "";
-  const loggedMissingOtpAcceptanceLinks = new Set();
+  const loggedMissingOtpBookingConfirmationLinks = new Set();
 
   function formatGeneratedOfferDate(value) {
     if (!value) return "-";
@@ -66,10 +66,10 @@ export function createBookingGeneratedOffersModule(ctx) {
   }
 
   function currentGeneratedOfferRouteMode(generatedOffer) {
-    return normalizeGeneratedOfferRouteMode(generatedOffer?.acceptance_route?.mode || "DEPOSIT_PAYMENT");
+    return normalizeGeneratedOfferRouteMode(generatedOffer?.booking_confirmation_route?.mode || "DEPOSIT_PAYMENT");
   }
 
-  function getOfferAcceptancePaymentTerms() {
+  function getBookingConfirmationPaymentTerms() {
     const lines = Array.isArray(state.offerDraft?.payment_terms?.lines) ? state.offerDraft.payment_terms.lines : [];
     const currency = String(
       state.offerDraft?.payment_terms?.currency
@@ -83,14 +83,14 @@ export function createBookingGeneratedOffersModule(ctx) {
     };
   }
 
-  function resolveDefaultAcceptancePaymentTermLineId(lines) {
+  function resolveDefaultBookingConfirmationPaymentTermLineId(lines) {
     const items = Array.isArray(lines) ? lines : [];
     if (!items.length) return "";
     const depositLine = items.find((line) => String(line?.kind || "").trim().toUpperCase() === "DEPOSIT");
     return String(depositLine?.id || items[0]?.id || "").trim();
   }
 
-  function resolveSelectedAcceptancePaymentTerm(lines) {
+  function resolveSelectedBookingConfirmationPaymentTerm(lines) {
     const items = Array.isArray(lines) ? lines : [];
     if (!items.length) return null;
     return items.find((line) => String(line?.id || "").trim() === generatedOfferPaymentTermLineId) || items[0] || null;
@@ -98,53 +98,53 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   function syncOfferGenerationControlsState() {
     generatedOfferRouteMode = normalizeGeneratedOfferRouteMode(generatedOfferRouteMode || "DEPOSIT_PAYMENT");
-    const { lines } = getOfferAcceptancePaymentTerms();
+    const { lines } = getBookingConfirmationPaymentTerms();
     if (!lines.length) {
       generatedOfferPaymentTermLineId = "";
       return;
     }
     if (!generatedOfferPaymentTermLineId || !lines.some((line) => String(line?.id || "").trim() === generatedOfferPaymentTermLineId)) {
-      generatedOfferPaymentTermLineId = resolveDefaultAcceptancePaymentTermLineId(lines);
+      generatedOfferPaymentTermLineId = resolveDefaultBookingConfirmationPaymentTermLineId(lines);
     }
   }
 
-  function updateOfferAcceptancePanelSummary() {
-    if (!els.offerAcceptancePanelSummary) return;
+  function updateBookingConfirmationPanelSummary() {
+    if (!els.bookingConfirmationPanelSummary) return;
     const generatedOffers = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
-    const acceptedCount = generatedOffers.filter((item) => item?.acceptance && typeof item.acceptance === "object").length;
+    const confirmedCount = generatedOffers.filter((item) => item?.booking_confirmation && typeof item.booking_confirmation === "object").length;
     const secondary = generatedOffers.length
-      ? acceptedCount > 0
-        ? bookingT("booking.offer_acceptance_summary_accepted", "{accepted} accepted of {count} generated offer(s)", {
-            accepted: String(acceptedCount),
+      ? confirmedCount > 0
+        ? bookingT("booking.booking_confirmation_summary_confirmed", "{confirmed} confirmed of {count} generated offer(s)", {
+            confirmed: String(confirmedCount),
             count: String(generatedOffers.length)
           })
-        : bookingT("booking.offer_acceptance_summary_count", "{count} generated offer(s)", {
+        : bookingT("booking.booking_confirmation_summary_count", "{count} generated offer(s)", {
             count: String(generatedOffers.length)
           })
-      : bookingT("booking.offer_acceptance_none", "No generated offers yet.");
-    renderBookingSectionHeader(els.offerAcceptancePanelSummary, {
-      primary: bookingT("booking.offer_acceptance", "Offer acceptance"),
+      : bookingT("booking.booking_confirmation_none", "No generated offers yet.");
+    renderBookingSectionHeader(els.bookingConfirmationPanelSummary, {
+      primary: bookingT("booking.booking_confirmation", "Booking confirmation"),
       secondary
     });
   }
 
   function resolveGeneratedOfferStatus(generatedOffer) {
-    const acceptance = generatedOffer?.acceptance;
-    if (acceptance && typeof acceptance === "object") {
+    const bookingConfirmation = generatedOffer?.booking_confirmation;
+    if (bookingConfirmation && typeof bookingConfirmation === "object") {
       return {
-        tone: "accepted",
-        label: bookingT("booking.offer.status.accepted", "Accepted"),
-        detail: acceptance.accepted_at
-          ? bookingT("booking.offer.status.accepted_on", "Accepted on {date}", {
-              date: formatGeneratedOfferDate(acceptance.accepted_at)
+        tone: "confirmed",
+        label: bookingT("booking.offer.status.confirmed", "Confirmed"),
+        detail: bookingConfirmation.accepted_at
+          ? bookingT("booking.offer.status.confirmed_on", "Confirmed on {date}", {
+              date: formatGeneratedOfferDate(bookingConfirmation.accepted_at)
             })
           : ""
       };
     }
 
     const routeStatus = normalizeGeneratedOfferRouteStatus(
-      generatedOffer?.acceptance_route?.status,
-      generatedOffer?.acceptance_route?.mode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN"
+      generatedOffer?.booking_confirmation_route?.status,
+      generatedOffer?.booking_confirmation_route?.mode === "DEPOSIT_PAYMENT" ? "AWAITING_PAYMENT" : "OPEN"
     );
     if (routeStatus === "AWAITING_PAYMENT") {
       return {
@@ -171,7 +171,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       };
     }
 
-    const expiresAtMs = Date.parse(String(generatedOffer?.public_acceptance_expires_at || ""));
+    const expiresAtMs = Date.parse(String(generatedOffer?.public_booking_confirmation_expires_at || ""));
     if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) {
       return {
         tone: "expired",
@@ -181,7 +181,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       };
     }
 
-    if (String(generatedOffer?.public_acceptance_token || "").trim()) {
+    if (String(generatedOffer?.public_booking_confirmation_token || "").trim()) {
       return {
         tone: "open",
         variant: "open",
@@ -198,7 +198,7 @@ export function createBookingGeneratedOffersModule(ctx) {
     };
   }
 
-  function getBookingAcceptanceRecipientEmail() {
+  function getBookingConfirmationRecipientEmail() {
     const persons = getBookingPersons(state.booking);
     const primaryContact = persons.find((person) => Array.isArray(person?.roles) && person.roles.includes("primary_contact") && person.emails?.length)
       || persons.find((person) => person.emails?.length)
@@ -210,12 +210,12 @@ export function createBookingGeneratedOffersModule(ctx) {
     return (Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : []).find((item) => item?.id === generatedOfferId) || null;
   }
 
-  function buildGeneratedOfferAcceptanceLink(generatedOffer) {
+  function buildGeneratedOfferBookingConfirmationLink(generatedOffer) {
     const bookingId = String(state.booking?.id || "").trim();
     const generatedOfferId = String(generatedOffer?.id || "").trim();
-    const token = String(generatedOffer?.public_acceptance_token || "").trim();
+    const token = String(generatedOffer?.public_booking_confirmation_token || "").trim();
     if (!bookingId || !generatedOfferId || !token) return "";
-    const url = new URL("/offer-accept.html", window.location.origin);
+    const url = new URL("/booking-confirmation.html", window.location.origin);
     url.searchParams.set("booking_id", bookingId);
     url.searchParams.set("generated_offer_id", generatedOfferId);
     url.searchParams.set("token", token);
@@ -226,59 +226,59 @@ export function createBookingGeneratedOffersModule(ctx) {
     return url.toString();
   }
 
-  function logMissingOtpAcceptanceLink(generatedOffer) {
+  function logMissingOtpBookingConfirmationLink(generatedOffer) {
     const generatedOfferId = String(generatedOffer?.id || "").trim();
-    if (!generatedOfferId || loggedMissingOtpAcceptanceLinks.has(generatedOfferId)) return;
-    loggedMissingOtpAcceptanceLinks.add(generatedOfferId);
+    if (!generatedOfferId || loggedMissingOtpBookingConfirmationLinks.has(generatedOfferId)) return;
+    loggedMissingOtpBookingConfirmationLinks.add(generatedOfferId);
     logBrowserConsoleError(
-      "[offer-acceptance] OTP route is unavailable because the generated offer has no public acceptance token.",
+      "[booking-confirmation] OTP route is unavailable because the generated offer has no public booking confirmation token.",
       {
         booking_id: String(state.booking?.id || "").trim() || null,
         generated_offer_id: generatedOfferId,
         route_mode: currentGeneratedOfferRouteMode(generatedOffer),
-        route_status: normalizeGeneratedOfferRouteStatus(generatedOffer?.acceptance_route?.status, generatedOffer?.acceptance_route?.mode),
-        has_acceptance_route: Boolean(generatedOffer?.acceptance_route),
-        has_public_acceptance_token: Boolean(String(generatedOffer?.public_acceptance_token || "").trim()),
-        public_acceptance_expires_at: String(generatedOffer?.public_acceptance_expires_at || "").trim() || null,
+        route_status: normalizeGeneratedOfferRouteStatus(generatedOffer?.booking_confirmation_route?.status, generatedOffer?.booking_confirmation_route?.mode),
+        has_booking_confirmation_route: Boolean(generatedOffer?.booking_confirmation_route),
+        has_public_booking_confirmation_token: Boolean(String(generatedOffer?.public_booking_confirmation_token || "").trim()),
+        public_booking_confirmation_expires_at: String(generatedOffer?.public_booking_confirmation_expires_at || "").trim() || null,
         generated_offer_created_at: String(generatedOffer?.created_at || "").trim() || null,
-        hint: "The backend response did not include a public acceptance token. Likely causes: the generated offer record is stale and needs token repair, the backend was not restarted after the OTP-token fix, or OFFER_ACCEPTANCE_TOKEN_SECRET is missing in this environment."
+        hint: "The backend response did not include a public booking confirmation token. Likely causes: the generated offer record is stale and needs token repair, the backend was not restarted after the OTP-token fix, or BOOKING_CONFIRMATION_TOKEN_SECRET is missing in this environment."
       }
     );
   }
 
-  async function copyGeneratedOfferAcceptanceLink(generatedOfferId) {
+  async function copyGeneratedOfferBookingConfirmationLink(generatedOfferId) {
     const generatedOffer = findGeneratedOfferById(generatedOfferId);
-    const acceptanceLink = buildGeneratedOfferAcceptanceLink(generatedOffer);
-    if (!acceptanceLink) {
-      setOfferStatus(bookingT("booking.offer.error.acceptance_link_unavailable", "Acceptance link is not available."));
+    const bookingConfirmationLink = buildGeneratedOfferBookingConfirmationLink(generatedOffer);
+    if (!bookingConfirmationLink) {
+      setOfferStatus(bookingT("booking.offer.error.booking_confirmation_link_unavailable", "Booking confirmation link is not available."));
       return;
     }
     const copiedMessage = routeUsesDepositPayment(currentGeneratedOfferRouteMode(generatedOffer))
       ? bookingT("booking.offer.customer_page_copied", "Customer page copied.")
-      : bookingT("booking.offer.acceptance_link_copied", "Acceptance link copied.");
+      : bookingT("booking.offer.booking_confirmation_link_copied", "Booking confirmation link copied.");
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(acceptanceLink);
+        await navigator.clipboard.writeText(bookingConfirmationLink);
         setOfferStatus(copiedMessage);
         return;
       }
-      window.prompt(bookingT("booking.offer.copy_link_prompt", "Copy this acceptance link:"), acceptanceLink);
+      window.prompt(bookingT("booking.offer.copy_link_prompt", "Copy this booking confirmation link:"), bookingConfirmationLink);
       setOfferStatus(copiedMessage);
     } catch {
-      setOfferStatus(bookingT("booking.offer.error.acceptance_link_copy", "Could not copy acceptance link."));
+      setOfferStatus(bookingT("booking.offer.error.booking_confirmation_link_copy", "Could not copy booking confirmation link."));
     }
   }
 
-  function emailGeneratedOfferAcceptanceLink(generatedOfferId) {
+  function emailGeneratedOfferBookingConfirmationLink(generatedOfferId) {
     const generatedOffer = findGeneratedOfferById(generatedOfferId);
-    const acceptanceLink = buildGeneratedOfferAcceptanceLink(generatedOffer);
-    if (!acceptanceLink) {
-      setOfferStatus(bookingT("booking.offer.error.acceptance_link_unavailable", "Acceptance link is not available."));
+    const bookingConfirmationLink = buildGeneratedOfferBookingConfirmationLink(generatedOffer);
+    if (!bookingConfirmationLink) {
+      setOfferStatus(bookingT("booking.offer.error.booking_confirmation_link_unavailable", "Booking confirmation link is not available."));
       return;
     }
-    const recipientEmail = getBookingAcceptanceRecipientEmail();
+    const recipientEmail = getBookingConfirmationRecipientEmail();
     if (!recipientEmail) {
-      setOfferStatus(bookingT("booking.offer.error.acceptance_link_email_missing", "Booking has no recipient email for the acceptance link."));
+      setOfferStatus(bookingT("booking.offer.error.booking_confirmation_link_email_missing", "Booking has no recipient email for the booking confirmation link."));
       return;
     }
     const bookingName = String(state.booking?.name || state.booking?.web_form_submission?.booking_name || state.booking?.id || "").trim();
@@ -287,8 +287,8 @@ export function createBookingGeneratedOffersModule(ctx) {
       generatedOffer?.currency || state.offerDraft?.currency || "USD"
     );
     const routeMode = currentGeneratedOfferRouteMode(generatedOffer);
-    const routeRule = generatedOffer?.acceptance_route?.deposit_rule && typeof generatedOffer.acceptance_route.deposit_rule === "object"
-      ? generatedOffer.acceptance_route.deposit_rule
+    const routeRule = generatedOffer?.booking_confirmation_route?.deposit_rule && typeof generatedOffer.booking_confirmation_route.deposit_rule === "object"
+      ? generatedOffer.booking_confirmation_route.deposit_rule
       : null;
     const requiredPaymentLabel = String(routeRule?.payment_term_label || "").trim() || bookingT("booking.offer.payment_term", "payment");
     const requiredPaymentAmount = Number.isFinite(Number(routeRule?.required_amount_cents))
@@ -298,7 +298,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       ? bookingT("booking.offer.payment_email_subject", "Payment page for {booking}", {
           booking: bookingName || bookingT("booking.title", "Booking")
         })
-      : bookingT("booking.offer.acceptance_email_subject", "Offer acceptance link for {booking}", {
+      : bookingT("booking.offer.booking_confirmation_email_subject", "Booking confirmation link for {booking}", {
           booking: bookingName || bookingT("booking.title", "Booking")
         });
     const body = routeUsesDepositPayment(routeMode)
@@ -306,33 +306,33 @@ export function createBookingGeneratedOffersModule(ctx) {
           "booking.offer.payment_email_body",
           "Hello,\n\nplease review your offer and payment terms here:\n{link}\n\nYour offer is confirmed when we receive {amount} for {label}.\n\nBest regards,\nAsia Travel Plan",
           {
-            link: acceptanceLink,
+            link: bookingConfirmationLink,
             amount: requiredPaymentAmount,
             label: requiredPaymentLabel
           }
         )
       : bookingT(
-          "booking.offer.acceptance_email_body",
-          "Hello,\n\nplease review and accept your offer here:\n{link}\n\nOffer total: {total}\n\nBest regards,\nAsia Travel Plan",
+          "booking.offer.booking_confirmation_email_body",
+          "Hello,\n\nplease review and confirm your booking here:\n{link}\n\nOffer total: {total}\n\nBest regards,\nAsia Travel Plan",
           {
-            link: acceptanceLink,
+            link: bookingConfirmationLink,
             total: totalLabel
           }
         );
     window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setOfferStatus(bookingT("booking.offer.acceptance_email_opening", "Opening your mail client..."));
+    setOfferStatus(bookingT("booking.offer.booking_confirmation_email_opening", "Opening your mail client..."));
   }
 
   function renderOfferGenerationControls() {
     if (!els.offer_generation_route_mode) return;
     syncOfferGenerationControlsState();
-    const { lines, currency } = getOfferAcceptancePaymentTerms();
+    const { lines, currency } = getBookingConfirmationPaymentTerms();
     const canEdit = state.permissions.canEditBooking;
-    const hasOtpRecipient = Boolean(getBookingAcceptanceRecipientEmail());
+    const hasOtpRecipient = Boolean(getBookingConfirmationRecipientEmail());
     if (!hasOtpRecipient && !routeUsesDepositPayment(generatedOfferRouteMode)) {
       generatedOfferRouteMode = "DEPOSIT_PAYMENT";
     }
-    const selectedPaymentTerm = resolveSelectedAcceptancePaymentTerm(lines);
+    const selectedPaymentTerm = resolveSelectedBookingConfirmationPaymentTerm(lines);
     const selectedAmount = selectedPaymentTerm
       ? formatMoneyDisplay(Number(selectedPaymentTerm?.resolved_amount_cents || 0), currency)
       : "";
@@ -369,7 +369,7 @@ export function createBookingGeneratedOffersModule(ctx) {
   function renderGeneratedOffersTable() {
     if (!els.generated_offers_table) return;
     const items = Array.isArray(state.booking?.generated_offers) ? state.booking.generated_offers : [];
-    updateOfferAcceptancePanelSummary();
+    updateBookingConfirmationPanelSummary();
     renderOfferGenerationControls();
     const canEdit = state.permissions.canEditBooking;
     const emailActionEnabled = canEdit && Boolean(state.booking?.generated_offer_email_enabled);
@@ -384,16 +384,16 @@ export function createBookingGeneratedOffersModule(ctx) {
         .sort((left, right) => String(right.created_at || "").localeCompare(String(left.created_at || "")))
         .map((item) => {
           const pdfUrl = String(item.pdf_url || "").trim();
-          const acceptanceLink = buildGeneratedOfferAcceptanceLink(item);
-          const recipientEmail = getBookingAcceptanceRecipientEmail();
+          const bookingConfirmationLink = buildGeneratedOfferBookingConfirmationLink(item);
+          const recipientEmail = getBookingConfirmationRecipientEmail();
           const offerStatus = resolveGeneratedOfferStatus(item);
           const routeMode = currentGeneratedOfferRouteMode(item);
           const generatedOfferId = String(item?.id || "").trim();
-          const otpRouteUnavailable = !routeUsesDepositPayment(routeMode) && !acceptanceLink;
+          const otpRouteUnavailable = !routeUsesDepositPayment(routeMode) && !bookingConfirmationLink;
           if (otpRouteUnavailable) {
-            logMissingOtpAcceptanceLink(item);
+            logMissingOtpBookingConfirmationLink(item);
           } else if (generatedOfferId) {
-            loggedMissingOtpAcceptanceLinks.delete(generatedOfferId);
+            loggedMissingOtpBookingConfirmationLinks.delete(generatedOfferId);
           }
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</a>` : "-"}</td>
@@ -401,18 +401,18 @@ export function createBookingGeneratedOffersModule(ctx) {
             ? `<td class="generated-offers-col-email"><button class="btn btn-ghost" type="button" data-generated-offer-email="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.email", "Email"))}</button></td>`
             : ""}
           <td class="generated-offers-col-route">${routeUsesDepositPayment(routeMode)
-            ? `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
+            ? `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode, {
                 deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
                 otp: bookingT("booking.offer.route.otp", "OTP")
               }))}</span>`
             : (otpRouteUnavailable
                 ? `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.status.unavailable", "Unavailable"))}</span>`
-                : (canEdit && acceptanceLink
+                : (canEdit && bookingConfirmationLink
                 ? `<div class="generated-offers-link-actions">
                     <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
                     <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}" data-requires-clean-state${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
                   </div>`
-                : `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferAcceptanceRouteLabel(routeMode, {
+                : `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode, {
                     deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
                     otp: bookingT("booking.offer.route.otp", "OTP")
                   }))}</span>`))}
@@ -455,7 +455,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       });
       els.generated_offers_table.querySelectorAll("[data-generated-offer-copy-link]").forEach((button) => {
         button.addEventListener("click", () => {
-          void copyGeneratedOfferAcceptanceLink(button.getAttribute("data-generated-offer-copy-link"));
+          void copyGeneratedOfferBookingConfirmationLink(button.getAttribute("data-generated-offer-copy-link"));
         });
       });
       els.generated_offers_table.querySelectorAll("[data-generated-offer-email-draft]").forEach((button) => {
@@ -608,7 +608,7 @@ export function createBookingGeneratedOffersModule(ctx) {
     const commentInput = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), "");
     if (commentInput === null) return;
     const normalizedComment = String(commentInput || "").trim();
-    const acceptanceRoute = routeUsesDepositPayment(requestedRouteMode)
+    const bookingConfirmationRoute = routeUsesDepositPayment(requestedRouteMode)
       ? {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
@@ -625,7 +625,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         expected_offer_revision: getBookingRevision("offer_revision"),
         comment: normalizedComment || null,
         lang: selectedLang,
-        acceptance_route: acceptanceRoute
+        booking_confirmation_route: bookingConfirmationRoute
       }
     });
     if (await applyOfferBookingResponse(response, { reloadActivities: true })) {
@@ -642,6 +642,6 @@ export function createBookingGeneratedOffersModule(ctx) {
   return {
     renderGeneratedOffersTable,
     renderOfferGenerationControls,
-    updateOfferAcceptancePanelSummary
+    updateBookingConfirmationPanelSummary
   };
 }

@@ -552,7 +552,7 @@ test("booking page orders the visible sections in the requested workflow sequenc
     "persons_editor_panel",
     "offer_panel",
     "offer_payment_terms_panel",
-    "offer_acceptance_panel",
+    "booking_confirmation_panel",
     "pricing_panel",
     "activities_panel",
     "booking_data_view"
@@ -651,7 +651,7 @@ test("booking page top control row keeps staff and customer language visually al
   );
 });
 
-test("travel plan item titles show a required state inline and drive a specific page-save error", async () => {
+test("service titles show a required state inline and drive a specific page-save error", async () => {
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanValidationPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_validation.js");
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
@@ -663,23 +663,23 @@ test("travel plan item titles show a required state inline and drive a specific 
 
   assert.match(
     travelPlanSource,
-    /querySelectorAll\('\[data-travel-plan-item-field="title"\]\[data-localized-lang="en"\]\[data-localized-role="source"\]'\)/,
-    "Travel plan validation should target the English source title input for each travel plan item"
+    /querySelectorAll\('\[data-travel-plan-service-field="title"\]\[data-localized-lang="en"\]\[data-localized-role="source"\]'\)/,
+    "Travel plan validation should target the English source title input for each service"
   );
   assert.match(
     travelPlanSource,
-    /input\.classList\.toggle\("travel-plan-item-title-input--required", isEmpty\);[\s\S]*input\.placeholder = isEmpty \? requiredPlaceholder\(\) : "";/,
-    "Empty travel plan item titles should render with a required-state class and placeholder"
+    /input\.classList\.toggle\("travel-plan-service-title-input--required", isEmpty\);[\s\S]*input\.placeholder = isEmpty \? requiredPlaceholder\(\) : "";/,
+    "Empty service titles should render with a required-state class and placeholder"
   );
   assert.match(
     travelPlanSource,
-    /setPageSaveActionError\?\.\(\s*bookingT\(\s*"booking\.travel_plan\.validation\.item_title_action_error",\s*"Travel plan item \{item\} on day \{day\} needs a title\."/,
+    /setPageSaveActionError\?\.\(\s*bookingT\(\s*"booking\.travel_plan\.validation\.item_title_action_error",\s*"Service \{item\} on day \{day\} needs a title\."/,
     "Travel plan save should expose a specific page-save error when an item title is missing"
   );
   assert.match(
     travelPlanSource,
     /travel-plan-grid travel-plan-grid--item-kind[\s\S]*booking\.travel_plan\.kind_label[\s\S]*travel-plan-grid[\s\S]*booking\.travel_plan\.item_title[\s\S]*booking\.location/,
-    "Travel plan item editing should show kind first, with title and location below it"
+    "Service editing should show kind first, with title and location below it"
   );
   assert.match(
     validationSource,
@@ -688,7 +688,7 @@ test("travel plan item titles show a required state inline and drive a specific 
   );
   assert.match(
     bookingStyles,
-    /\.booking-detail-page \.travel-plan-item-title-input--required[\s\S]*background: var\(--surface-error\);[\s\S]*border-color: var\(--line-error-strong\);/,
+    /\.booking-detail-page \.travel-plan-service-title-input--required[\s\S]*background: var\(--surface-error\);[\s\S]*border-color: var\(--line-error-strong\);/,
     "The booking page should render empty required travel plan titles with an error background"
   );
   assert.match(
@@ -698,7 +698,7 @@ test("travel plan item titles show a required state inline and drive a specific 
   );
 });
 
-test("accommodation travel plan items expose a day-count helper and create linked copy days", async () => {
+test("accommodation services expose a day-count helper and create linked copy days", async () => {
   const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "entities", "travel_plan.cue");
   const travelPlanScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan.js");
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
@@ -734,13 +734,13 @@ test("accommodation travel plan items expose a day-count helper and create linke
   );
   assert.match(
     openApiSource,
-    /BookingTravelPlanItem:[\s\S]*accommodation_days:[\s\S]*type: integer[\s\S]*minimum: 1[\s\S]*maximum: 100/,
+    /BookingTravelPlanService:[\s\S]*accommodation_days:[\s\S]*type: integer[\s\S]*minimum: 1[\s\S]*maximum: 100/,
     "The generated OpenAPI schema should expose the accommodation day count on travel-plan items"
   );
   assert.match(
     generatedApiModelsSource,
     /schemaField\(\{"name":"accommodation_days","required":false,"wireName":"accommodation_days"\}, SHARED_FIELD_DEFS\.FIELD_17\)/,
-    "The generated API models should include accommodation_days on BookingTravelPlanItem"
+    "The generated API models should include accommodation_days on BookingTravelPlanService"
   );
   assert.match(
     travelPlanHelpersSource,
@@ -769,7 +769,7 @@ test("accommodation travel plan items expose a day-count helper and create linke
   );
   assert.match(
     travelPlanSource,
-    /data-travel-plan-item-field="accommodation_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
+    /data-travel-plan-service-field="accommodation_days"[\s\S]*data-travel-plan-create-days="[^"]*"[\s\S]*type="button"\$\{createDaysEnabled \? "" : " disabled"\}/,
     "Accommodation travel-plan items should render the Create days button disabled until those prerequisites are met"
   );
   assert.match(
@@ -784,7 +784,7 @@ test("accommodation travel plan items expose a day-count helper and create linke
   );
   assert.match(
     travelPlanSource,
-    /generatedDay\.title = createGeneratedDayTitle\(generatedDayNumber\);[\s\S]*cloneTravelPlanItemForGeneratedDay\(sourceItem\)[\s\S]*days\.splice\(sourceDayIndex \+ 1, 0, \.\.\.generatedDays\);/,
+    /generatedDay\.title = createGeneratedDayTitle\(generatedDayNumber\);[\s\S]*cloneTravelPlanServiceForGeneratedDay\(sourceItem\)[\s\S]*days\.splice\(sourceDayIndex \+ 1, 0, \.\.\.generatedDays\);/,
     "Create days should insert generated days after the source day and clone the accommodation item into each one"
   );
   assert.match(
@@ -1217,12 +1217,12 @@ test("persons and travel plan editors no longer autosave from local interactions
   );
   assert.doesNotMatch(
     travelPlanImagesSource,
-    /bookingTravelPlanItemImageDeleteRequest/,
+    /bookingTravelPlanServiceImageDeleteRequest/,
     "Travel plan image removal should stay in the local draft until the page save bar is used"
   );
   assert.match(
     travelPlanImagesSource,
-    /function removeTravelPlanItemImage\(dayId, itemId, imageId\)\s*\{[\s\S]*syncTravelPlanDraftFromDom\?\.\(\);[\s\S]*item\.images = nextImages;[\s\S]*renderTravelPlanPanel\?\.\(\);/,
+    /function removeTravelPlanServiceImage\(dayId, itemId, imageId\)\s*\{[\s\S]*syncTravelPlanDraftFromDom\?\.\(\);[\s\S]*item\.images = nextImages;[\s\S]*renderTravelPlanPanel\?\.\(\);/,
     "Removing a travel plan image should mutate the local draft and rerender instead of persisting immediately"
   );
   assert.doesNotMatch(
@@ -1421,37 +1421,37 @@ test("travel-plan module preserves add/remove/reorder and offer-link editing hel
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="timing_kind"/,
+    /data-travel-plan-service-field="timing_kind"/,
     "travel_plan.js should render a timing mode selector for each item"
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="time_point_date"/,
+    /data-travel-plan-service-field="time_point_date"/,
     "travel_plan.js should render a date input for point timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="time_point_time"/,
+    /data-travel-plan-service-field="time_point_time"/,
     "travel_plan.js should render a 5-minute time selector for point timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="start_time_date"/,
+    /data-travel-plan-service-field="start_time_date"/,
     "travel_plan.js should render a start-date input for range timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="start_time_time"/,
+    /data-travel-plan-service-field="start_time_time"/,
     "travel_plan.js should render a start-time selector for range timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="end_time_date"/,
+    /data-travel-plan-service-field="end_time_date"/,
     "travel_plan.js should render an end-date input for range timing mode"
   );
   assert.match(
     source,
-    /data-travel-plan-item-field="end_time_time"/,
+    /data-travel-plan-service-field="end_time_time"/,
     "travel_plan.js should render an end-time selector for range timing mode"
   );
   assert.match(

@@ -5,19 +5,19 @@ import (
 	enums "travelagency.local/model/enums"
 )
 
-#BookingTravelPlanItemImageSourceAttribution: {
+#BookingTravelPlanServiceImageSourceAttribution: {
 	source_name?:  string
 	source_url?:   common.#Url | string
 	photographer?: string
 	license?:      string
 }
 
-#BookingTravelPlanItemImageFocalPoint: {
+#BookingTravelPlanServiceImageFocalPoint: {
 	x: >=0 & <=1 & number
 	y: >=0 & <=1 & number
 }
 
-#BookingTravelPlanItemImage: {
+#BookingTravelPlanServiceImage: {
 	id:                   common.#Identifier
 	storage_path:         string & !=""
 	caption?:             string
@@ -27,26 +27,26 @@ import (
 	is_customer_visible?: bool
 	width_px?:            >0 & int
 	height_px?:           >0 & int
-	source_attribution?:  #BookingTravelPlanItemImageSourceAttribution
-	focal_point?:         #BookingTravelPlanItemImageFocalPoint
+	source_attribution?:  #BookingTravelPlanServiceImageSourceAttribution
+	focal_point?:         #BookingTravelPlanServiceImageFocalPoint
 	created_at?:          common.#Timestamp
 }
 
-#BookingTravelPlanItemCopiedFrom: {
-	source_type:             "booking_travel_plan_item"
+#BookingTravelPlanServiceCopiedFrom: {
+	source_type:             "booking_travel_plan_service"
 	source_booking_id:       common.#Identifier
 	source_day_id?:          common.#Identifier
-	source_item_id:       common.#Identifier
+	source_service_id:       common.#Identifier
 	copied_at:               common.#Timestamp
 	copied_by_atp_staff_id?: common.#Identifier
 }
 
-#BookingTravelPlanItem: {
+#BookingTravelPlanService: {
 	id:                        common.#Identifier
 	timing_kind:               *"label" | enums.#TravelPlanTimingKind
 	time_label?:               string
 	time_point?:               string
-	kind:                      enums.#TravelPlanItemKind
+	kind:                      enums.#TravelPlanServiceKind
 	accommodation_days?:       >=1 & <=100 & int
 	title:                     string
 	details?:                  string
@@ -56,13 +56,13 @@ import (
 	end_time?:                 string
 	financial_coverage_status: *"not_covered" | enums.#TravelPlanFinancialCoverageStatus
 	financial_note?:           string
-	images?: [...#BookingTravelPlanItemImage]
-	copied_from?: #BookingTravelPlanItemCopiedFrom
+	images?: [...#BookingTravelPlanServiceImage]
+	copied_from?: #BookingTravelPlanServiceCopiedFrom
 }
 
 #BookingTravelPlanOfferComponentLink: {
 	id:                     common.#Identifier
-	travel_plan_item_id: common.#Identifier
+	travel_plan_service_id: common.#Identifier
 	offer_component_id:     common.#Identifier
 	coverage_type:          *"full" | enums.#TravelPlanOfferCoverageType
 }
@@ -82,7 +82,7 @@ import (
 	date?:               common.#DateOnly
 	title:               string
 	overnight_location?: string
-	items?: [...#BookingTravelPlanItem]
+	services?: [...#BookingTravelPlanService]
 	notes?: string
 }
 

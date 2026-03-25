@@ -18,8 +18,8 @@ There are also some good security choices already in place:
 - JWT verification uses `jose`
 - role-based authorization is enforced on `/api/v1/*`
 - invoice PDFs are served through authenticated endpoints
-- public generated-offer access and public generated-offer PDFs are gated by a dedicated acceptance token
-- offer acceptance can require a separate email OTP with resend throttling and a rolling send cap
+- public generated-offer access and public generated-offer PDFs are gated by a dedicated booking confirmation token
+- booking confirmation can require a separate email OTP with resend throttling and a rolling send cap
 - booking image path resolution uses path-bound checks
 - image conversion uses `execFile(...)` instead of spawning a shell command string
 
@@ -77,14 +77,14 @@ The booking, invoice, offer, and chat handlers generally check `canAccessBooking
 
 That is an important baseline control and is better than trusting IDs in the URL alone.
 
-### 5. Public offer acceptance is no longer authorized by identifiers alone
+### 5. Public booking confirmation is no longer authorized by identifiers alone
 
 Relevant code:
-- `backend/app/src/http/handlers/booking_offer_acceptance.js`
-- `backend/app/src/domain/offer_acceptance.js`
+- `backend/app/src/http/handlers/booking_booking_confirmation.js`
+- `backend/app/src/domain/booking_confirmation.js`
 
 Current behavior:
-- public acceptance requires a dedicated acceptance token
+- public booking confirmation requires a dedicated booking confirmation token
 - optional email OTP can be required before final acceptance
 - OTP issue flow has resend throttling and a rolling send cap
 
@@ -253,7 +253,7 @@ I did not find route-level or global rate limiting for:
 - authenticated API mutations
 
 Important exception:
-- the public generated-offer acceptance OTP flow does implement resend throttling and a rolling send cap in `backend/app/src/domain/offer_acceptance.js`
+- the public generated-booking confirmation OTP flow does implement resend throttling and a rolling send cap in `backend/app/src/domain/booking_confirmation.js`
 
 Impact:
 - easier brute force and abuse
@@ -263,7 +263,7 @@ Impact:
 Recommendation:
 - add IP-based and route-based throttling
 - add stricter limits for login and upload routes
-- keep the current offer-acceptance OTP throttling, but do not treat it as a substitute for system-wide rate limiting
+- keep the current booking-confirmationance OTP throttling, but do not treat it as a substitute for system-wide rate limiting
 - log and alert on repeated failures
 
 ### 9. `INSECURE_TEST_AUTH` is a dangerous production footgun

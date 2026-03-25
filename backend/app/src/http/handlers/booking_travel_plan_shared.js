@@ -34,7 +34,9 @@ export function findTravelPlanDayAndItem(travelPlan, dayId, itemId) {
   const dayIndex = days.findIndex((day) => day.id === dayId);
   if (dayIndex < 0) return { dayIndex: -1, itemIndex: -1, day: null, item: null };
   const day = days[dayIndex];
-  const items = Array.isArray(day?.items) ? day.items : [];
+  const items = Array.isArray(day?.services)
+    ? day.services
+    : (Array.isArray(day?.items) ? day.items : []);
   const itemIndex = items.findIndex((item) => item.id === itemId);
   if (itemIndex < 0) return { dayIndex, itemIndex: -1, day, item: null };
   return { dayIndex, itemIndex, day, item: items[itemIndex] };

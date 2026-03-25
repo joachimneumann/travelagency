@@ -112,13 +112,13 @@ import (
 	search?:      string
 }
 
-#TravelPlanItemSearchResult: {
+#TravelPlanServiceSearchResult: {
 	source_booking_id:    common.#Identifier
 	source_booking_name?: string
 	source_booking_code?: string
 	day_number?:          >0 & int
-	item_id:              common.#Identifier
-	item_kind?:           enums.#TravelPlanItemKind
+	service_id:              common.#Identifier
+	service_kind?:           enums.#TravelPlanServiceKind
 	title:                string
 	details?:             string
 	location?:            string
@@ -129,8 +129,8 @@ import (
 	updated_at?:          common.#Timestamp
 }
 
-#TravelPlanItemSearchResponse: {
-	items: [...#TravelPlanItemSearchResult]
+#TravelPlanServiceSearchResponse: {
+	items: [...#TravelPlanServiceSearchResult]
 	total: >=0 & int
 }
 
@@ -173,25 +173,25 @@ import (
 	source_hash?:       string & !=""
 }
 
-#GeneratedOfferAcceptancePublicSummary: {
+#GeneratedOfferBookingConfirmationPublicSummary: {
 	accepted_at:            common.#Timestamp
-	method:                 enums.#OfferAcceptanceMethod
+	method:                 enums.#BookingConfirmationMethod
 	accepted_amount_cents?: >=0 & int
 	accepted_currency?:     enums.#CurrencyCode
 }
 
-#PublicGeneratedOfferDepositAcceptanceRuleView: {
+#PublicGeneratedOfferDepositBookingConfirmationRuleView: {
 	payment_term_label:    string & !=""
 	required_amount_cents: >=0 & int
 	currency:              enums.#CurrencyCode
 }
 
-#PublicGeneratedOfferAcceptanceRouteView: {
-	mode:                       enums.#GeneratedOfferAcceptanceRouteMode
-	status:                     enums.#GeneratedOfferAcceptanceRouteStatus
+#PublicGeneratedOfferBookingConfirmationRouteView: {
+	mode:                       enums.#GeneratedOfferBookingConfirmationRouteMode
+	status:                     enums.#GeneratedOfferBookingConfirmationRouteStatus
 	expires_at?:                common.#Timestamp
 	customer_message_snapshot?: string
-	deposit_rule?:              #PublicGeneratedOfferDepositAcceptanceRuleView
+	deposit_rule?:              #PublicGeneratedOfferDepositBookingConfirmationRuleView
 }
 
 #BookingOfferPaymentTermLineReadModel: entities.#BookingOfferPaymentTermLine & {
@@ -233,10 +233,10 @@ import (
 	offer:                         #BookingOfferReadModel
 	travel_plan?:                  entities.#BookingTravelPlan
 	pdf_url:                       string & !=""
-	acceptance_route?:             entities.#GeneratedOfferAcceptanceRoute
-	public_acceptance_token?:      string & !=""
-	public_acceptance_expires_at?: common.#Timestamp
-	acceptance?:                   entities.#GeneratedOfferAcceptance
+	booking_confirmation_route?:             entities.#GeneratedOfferBookingConfirmationRoute
+	public_booking_confirmation_token?:      string & !=""
+	public_booking_confirmation_expires_at?: common.#Timestamp
+	booking_confirmation?:                   entities.#GeneratedOfferBookingConfirmation
 }
 
 #BookingTravelPlanPdfReadModel: {
@@ -278,7 +278,7 @@ import (
 	number_of_travelers?:         >=0 & int
 	preferred_currency?:          enums.#CurrencyCode
 	customer_language?:           enums.#LanguageCode
-	accepted_generated_offer_id?: common.#Identifier
+	confirmed_generated_offer_id?: common.#Identifier
 	notes?:                       string
 	persons?: [...entities.#BookingPerson]
 	travel_plan?:         entities.#BookingTravelPlan
@@ -313,21 +313,21 @@ import (
 	created_at:                    common.#Timestamp
 	pdf_url?:                      string & !=""
 	payment_terms?:                #BookingOfferPaymentTermsReadModel
-	acceptance_route?:             #PublicGeneratedOfferAcceptanceRouteView
+	booking_confirmation_route?:             #PublicGeneratedOfferBookingConfirmationRouteView
 	otp_recipient_hint?:           string & !=""
-	public_acceptance_expires_at?: common.#Timestamp
-	accepted:                      bool
-	acceptance?:                   #GeneratedOfferAcceptancePublicSummary
+	public_booking_confirmation_expires_at?: common.#Timestamp
+	confirmed:                     bool
+	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
 }
 
 #PublicGeneratedOfferAcceptResponse: {
 	booking_id:           common.#Identifier
 	generated_offer_id:   common.#Identifier
-	accepted:             bool
-	status:               "ACCEPTED" | "OTP_REQUIRED"
-	acceptance_route?:    #PublicGeneratedOfferAcceptanceRouteView
-	acceptance?:          #GeneratedOfferAcceptancePublicSummary
-	otp_channel?:         enums.#OfferAcceptanceOtpChannel
+	confirmed:            bool
+	status:               "CONFIRMED" | "OTP_REQUIRED"
+	booking_confirmation_route?:    #PublicGeneratedOfferBookingConfirmationRouteView
+	booking_confirmation?:          #GeneratedOfferBookingConfirmationPublicSummary
+	otp_channel?:         enums.#BookingConfirmationOtpChannel
 	otp_sent_to?:         string
 	otp_expires_at?:      common.#Timestamp
 	retry_after_seconds?: >=0 & int

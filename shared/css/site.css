@@ -2805,6 +2805,7 @@ textarea:focus-visible {
   text-align: center;
 }
 
+.generated-offers-status-badge.is-confirmed,
 .generated-offers-status-badge.is-accepted {
   background: var(--success-surface-alpha);
   color: var(--success-text-deep);
@@ -2891,22 +2892,22 @@ textarea:focus-visible {
   border-color: var(--accent);
 }
 
-.offer-accept-page {
+.booking-confirmation-page {
   min-height: 100vh;
   background:
     radial-gradient(circle at top left, var(--accent-glow), transparent 26rem),
     linear-gradient(180deg, var(--surface-page-warm) 0%, var(--surface-page-warm-alt) 100%);
 }
 
-.offer-accept-shell {
+.booking-confirmation-shell {
   max-width: 860px;
 }
 
-.offer-accept-card {
+.booking-confirmation-card {
   padding: clamp(1.4rem, 2.4vw, 2rem);
 }
 
-.offer-accept-kicker {
+.booking-confirmation-kicker {
   margin: 0 0 0.45rem;
   font-size: var(--font-size-body-sm);
   font-weight: var(--font-weight-bold);
@@ -2915,48 +2916,48 @@ textarea:focus-visible {
   color: var(--text-muted-strong);
 }
 
-.offer-accept-intro {
+.booking-confirmation-intro {
   margin: 0 0 1rem;
   color: var(--text-muted-strong);
 }
 
-.offer-accept-loading {
+.booking-confirmation-loading {
   color: var(--text-muted-strong);
 }
 
-.offer-accept-summary {
+.booking-confirmation-summary {
   display: grid;
   gap: 0.65rem;
   margin-bottom: 1rem;
 }
 
-.offer-accept-summary__row {
+.booking-confirmation-summary__row {
   display: grid;
   grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
   gap: 0.8rem;
   align-items: start;
 }
 
-.offer-accept-summary__label {
+.booking-confirmation-summary__label {
   font-weight: var(--font-weight-bold);
   color: var(--text-strong-alt);
 }
 
-.offer-accept-summary__value {
+.booking-confirmation-summary__value {
   color: var(--text-strong-alt);
 }
 
-.offer-accept-summary__value.is-total {
+.booking-confirmation-summary__value.is-total {
   font-size: var(--font-size-title-md);
   font-weight: var(--font-weight-bold);
 }
 
-.offer-accept-summary__comment {
+.booking-confirmation-summary__comment {
   white-space: pre-wrap;
 }
 
-.offer-accept-route,
-.offer-accept-payment-terms {
+.booking-confirmation-route,
+.booking-confirmation-payment-terms {
   margin-bottom: 1rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--line-soft);
@@ -2964,21 +2965,21 @@ textarea:focus-visible {
   background: var(--white-alpha-80);
 }
 
-.offer-accept-route__header,
-.offer-accept-payment-terms__summary-row {
+.booking-confirmation-route__header,
+.booking-confirmation-payment-terms__summary-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.8rem;
   align-items: baseline;
 }
 
-.offer-accept-route__title,
-.offer-accept-payment-terms__title {
+.booking-confirmation-route__title,
+.booking-confirmation-payment-terms__title {
   margin: 0;
   color: var(--text-strong-alt);
 }
 
-.offer-accept-route__status {
+.booking-confirmation-route__status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2990,52 +2991,52 @@ textarea:focus-visible {
   font-weight: var(--font-weight-bold);
 }
 
-.offer-accept-route__body {
+.booking-confirmation-route__body {
   margin: 0.7rem 0 0;
   color: var(--text-muted-strong);
   line-height: 1.55;
 }
 
-.offer-accept-route__meta {
+.booking-confirmation-route__meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.7rem 1rem;
   margin-top: 0.85rem;
 }
 
-.offer-accept-route__meta div {
+.booking-confirmation-route__meta div {
   display: grid;
   gap: 0.18rem;
 }
 
-.offer-accept-route__meta strong {
+.booking-confirmation-route__meta strong {
   color: var(--text-strong-alt);
   font-size: var(--font-size-caption);
 }
 
-.offer-accept-payment-terms__header {
+.booking-confirmation-payment-terms__header {
   margin-bottom: 0.8rem;
 }
 
-.offer-accept-payment-terms__amount {
+.booking-confirmation-payment-terms__amount {
   text-align: right;
   white-space: nowrap;
 }
 
-.offer-accept-payment-terms__note-row td {
+.booking-confirmation-payment-terms__note-row td {
   background: var(--surface-subtle);
   color: var(--text-muted-strong);
   font-size: var(--font-size-body-sm);
 }
 
-.offer-accept-payment-terms__note-label {
+.booking-confirmation-payment-terms__note-label {
   display: inline-block;
   margin-right: 0.55rem;
   color: var(--text-strong-alt);
   font-weight: var(--font-weight-bold);
 }
 
-.offer-accept-payment-terms__summary {
+.booking-confirmation-payment-terms__summary {
   display: grid;
   gap: 0.35rem;
   margin-top: 0.85rem;
@@ -3043,52 +3044,52 @@ textarea:focus-visible {
   border-top: 1px solid var(--line-soft);
 }
 
-.offer-accept-payment-terms__notes {
+.booking-confirmation-payment-terms__notes {
   margin: 0.8rem 0 0;
   color: var(--text-muted-strong);
   line-height: 1.55;
   white-space: pre-wrap;
 }
 
-.offer-accept-actions {
+.booking-confirmation-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-bottom: 1rem;
 }
 
-.offer-accept-form {
+.booking-confirmation-form {
   display: grid;
   gap: 0.85rem;
 }
 
-.offer-accept-form__grid {
+.booking-confirmation-form__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.8rem;
 }
 
-.offer-accept-form__hint {
+.booking-confirmation-form__hint {
   margin: -0.1rem 0 0;
   color: var(--text-muted-strong);
 }
 
-.offer-accept-form__status {
+.booking-confirmation-form__status {
   min-height: 1.2rem;
   color: var(--text-muted-strong);
 }
 
-.offer-accept-form__status.is-error {
+.booking-confirmation-form__status.is-error {
   color: var(--error-text);
   font-weight: var(--font-weight-bold);
 }
 
-.offer-accept-form__status.is-success {
+.booking-confirmation-form__status.is-success {
   color: var(--success-text-deep);
   font-weight: var(--font-weight-bold);
 }
 
-.offer-accept-otp {
+.booking-confirmation-otp {
   display: grid;
   gap: 0.8rem;
   padding: 1rem;
@@ -3097,29 +3098,29 @@ textarea:focus-visible {
   background: var(--white-alpha-72);
 }
 
-.offer-accept-otp__meta {
+.booking-confirmation-otp__meta {
   color: var(--text-muted-strong);
 }
 
-.offer-accept-otp__actions {
+.booking-confirmation-otp__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
 }
 
-.offer-accept-result {
+.booking-confirmation-result {
   padding: 1rem;
   border-radius: 16px;
   border: 1px solid var(--line-soft);
   background: var(--white-alpha-72);
 }
 
-.offer-accept-result__title {
+.booking-confirmation-result__title {
   margin: 0 0 0.4rem;
 }
 
-.offer-accept-result__detail {
+.booking-confirmation-result__detail {
   margin: 0.2rem 0 0;
   color: var(--text-muted-strong);
 }
@@ -3291,16 +3292,16 @@ textarea:focus-visible {
 
 @media (max-width: 720px) {
   .booking-generated-offer-route,
-  .offer-accept-form__grid,
-  .offer-accept-summary__row,
+  .booking-confirmation-form__grid,
+  .booking-confirmation-summary__row,
   .traveler-details-summary__row,
   .traveler-details-card__grid {
     grid-template-columns: 1fr;
   }
 
-  .offer-accept-route__meta,
-  .offer-accept-route__header,
-  .offer-accept-payment-terms__summary-row {
+  .booking-confirmation-route__meta,
+  .booking-confirmation-route__header,
+  .booking-confirmation-payment-terms__summary-row {
     grid-template-columns: 1fr;
   }
 

@@ -138,11 +138,11 @@ Use these terms consistently:
 - `one-time verification code`: the short code entered by the traveler after opening the link
 - `traveler session`: the authenticated browser session created after successful verification
 
-Keep this distinct from the generated-offer acceptance flow:
-- `acceptance token`: capability token scoped to one frozen generated offer
-- `acceptance OTP`: optional short verification code used during offer acceptance
-- `offer acceptance record`: immutable commercial acceptance evidence
-- `offer-accept.html`: separate public acceptance page for the frozen generated-offer snapshot and PDF
+Keep this distinct from the generated-booking confirmation flow:
+- `booking confirmation token`: capability token scoped to one frozen generated offer
+- `acceptance OTP`: optional short verification code used during booking confirmation
+- `booking confirmation record`: immutable commercial acceptance evidence
+- `booking-confirmation.html`: separate public acceptance page for the frozen generated-offer snapshot and PDF
 - current acceptance OTP transport: email
 - acceptance resend throttling is handled independently from traveler-page throttling
 
@@ -150,10 +150,10 @@ Do not call the week-long invitation token an OTP.
 
 An OTP is the short verification code, not the reusable invitation link.
 
-Do not reuse traveler invitation tokens or traveler sessions for offer acceptance.
+Do not reuse traveler invitation tokens or traveler sessions for booking confirmation.
 These are different scopes with different data access:
 - traveler page -> traveler data for one booking person
-- offer acceptance -> one frozen generated offer and its PDF
+- booking confirmation -> one frozen generated offer and its PDF
 
 ### 1. Token design
 

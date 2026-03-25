@@ -45,7 +45,7 @@ IR: {
 		BookingStage: {catalog: "stages"}
 		BookingPersonRole: {catalog: "bookingPersonRoles"}
 		TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
-		TravelPlanItemKind: {catalog: "travelPlanItemKinds"}
+		TravelPlanServiceKind: {catalog: "travelPlanServiceKinds"}
 		TravelPlanFinancialCoverageStatus: {catalog: "travelPlanFinancialCoverageStatuses"}
 		TravelPlanOfferCoverageType: {catalog: "travelPlanOfferCoverageTypes"}
 		SupplierCategory: {catalog: "supplierCategories"}
@@ -55,10 +55,10 @@ IR: {
 		OfferPaymentTermKind: {catalog: "offerPaymentTermKinds"}
 		OfferPaymentAmountMode: {catalog: "offerPaymentAmountModes"}
 		OfferPaymentDueType: {catalog: "offerPaymentDueTypes"}
-		GeneratedOfferAcceptanceRouteMode: {catalog: "generatedOfferAcceptanceRouteModes"}
-		GeneratedOfferAcceptanceRouteStatus: {catalog: "generatedOfferAcceptanceRouteStatuses"}
-		OfferAcceptanceMethod: {catalog: "offerAcceptanceMethods"}
-		OfferAcceptanceOtpChannel: {catalog: "offerAcceptanceOtpChannels"}
+		GeneratedOfferBookingConfirmationRouteMode: {catalog: "generatedOfferBookingConfirmationRouteModes"}
+		GeneratedOfferBookingConfirmationRouteStatus: {catalog: "generatedOfferBookingConfirmationRouteStatuses"}
+		BookingConfirmationMethod: {catalog: "bookingConfirmationMethods"}
+		BookingConfirmationOtpChannel: {catalog: "bookingConfirmationOtpChannels"}
 		TourStyleCode: {catalog: "tourStyles"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
@@ -224,10 +224,10 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingTravelPlanItemImageSourceAttribution"
+			name:       "BookingTravelPlanServiceImageSourceAttribution"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanItemImageSourceAttribution"
+			sourceType: "entities.#BookingTravelPlanServiceImageSourceAttribution"
 			fields: [
 				{name: "source_name", kind: "scalar", typeName: "string", required: false},
 				{name: "source_url", kind: "scalar", typeName: "string", required: false},
@@ -236,20 +236,20 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingTravelPlanItemImageFocalPoint"
+			name:       "BookingTravelPlanServiceImageFocalPoint"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanItemImageFocalPoint"
+			sourceType: "entities.#BookingTravelPlanServiceImageFocalPoint"
 			fields: [
 				{name: "x", kind: "scalar", typeName: "float", required: true},
 				{name: "y", kind: "scalar", typeName: "float", required: true},
 			]
 		},
 		{
-			name:       "BookingTravelPlanItemImage"
+			name:       "BookingTravelPlanServiceImage"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanItemImage"
+			sourceType: "entities.#BookingTravelPlanServiceImage"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "storage_path", kind: "scalar", typeName: "string", required: true},
@@ -260,36 +260,36 @@ IR: {
 				{name: "is_customer_visible", kind: "scalar", typeName: "bool", required: false},
 				{name: "width_px", kind: "scalar", typeName: "int", required: false},
 				{name: "height_px", kind: "scalar", typeName: "int", required: false},
-				{name: "source_attribution", kind: "entity", typeName: "BookingTravelPlanItemImageSourceAttribution", required: false},
-				{name: "focal_point", kind: "entity", typeName: "BookingTravelPlanItemImageFocalPoint", required: false},
+				{name: "source_attribution", kind: "entity", typeName: "BookingTravelPlanServiceImageSourceAttribution", required: false},
+				{name: "focal_point", kind: "entity", typeName: "BookingTravelPlanServiceImageFocalPoint", required: false},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 			]
 		},
 		{
-			name:       "BookingTravelPlanItemCopiedFrom"
+			name:       "BookingTravelPlanServiceCopiedFrom"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanItemCopiedFrom"
+			sourceType: "entities.#BookingTravelPlanServiceCopiedFrom"
 			fields: [
 				{name: "source_type", kind: "scalar", typeName: "string", required: true},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "source_item_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "source_service_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "copied_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "copied_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: false},
 			]
 		},
 		{
-			name:       "BookingTravelPlanItem"
+			name:       "BookingTravelPlanService"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#BookingTravelPlanItem"
+			sourceType: "entities.#BookingTravelPlanService"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
 				{name: "time_label", kind: "scalar", typeName: "string", required: false},
 				{name: "time_point", kind: "scalar", typeName: "string", required: false},
-				{name: "kind", kind: "enum", typeName: "TravelPlanItemKind", required: true},
+				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
 				{name: "accommodation_days", kind: "scalar", typeName: "int", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "details", kind: "scalar", typeName: "string", required: false},
@@ -299,8 +299,8 @@ IR: {
 				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "financial_coverage_status", kind: "enum", typeName: "TravelPlanFinancialCoverageStatus", required: true},
 				{name: "financial_note", kind: "scalar", typeName: "string", required: false},
-				{name: "images", kind: "entity", typeName: "BookingTravelPlanItemImage", required: false, isArray: true},
-				{name: "copied_from", kind: "entity", typeName: "BookingTravelPlanItemCopiedFrom", required: false},
+				{name: "images", kind: "entity", typeName: "BookingTravelPlanServiceImage", required: false, isArray: true},
+				{name: "copied_from", kind: "entity", typeName: "BookingTravelPlanServiceCopiedFrom", required: false},
 			]
 		},
 		{
@@ -310,7 +310,7 @@ IR: {
 			sourceType: "entities.#BookingTravelPlanOfferComponentLink"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "travel_plan_item_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "travel_plan_service_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "offer_component_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "coverage_type", kind: "enum", typeName: "TravelPlanOfferCoverageType", required: true},
 			]
@@ -326,7 +326,7 @@ IR: {
 				{name: "date", kind: "scalar", typeName: "DateOnly", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "overnight_location", kind: "scalar", typeName: "string", required: false},
-				{name: "items", kind: "entity", typeName: "BookingTravelPlanItem", required: false, isArray: true},
+				{name: "services", kind: "entity", typeName: "BookingTravelPlanService", required: false, isArray: true},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -600,10 +600,10 @@ IR: {
 			]
 		},
 		{
-			name:       "GeneratedOfferDepositAcceptanceRule"
+			name:       "GeneratedOfferDepositBookingConfirmationRule"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#GeneratedOfferDepositAcceptanceRule"
+			sourceType: "entities.#GeneratedOfferDepositBookingConfirmationRule"
 			fields: [
 				{name: "payment_term_line_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "payment_term_label", kind: "scalar", typeName: "string", required: true},
@@ -613,18 +613,18 @@ IR: {
 			]
 		},
 		{
-			name:       "GeneratedOfferAcceptanceRoute"
+			name:       "GeneratedOfferBookingConfirmationRoute"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#GeneratedOfferAcceptanceRoute"
+			sourceType: "entities.#GeneratedOfferBookingConfirmationRoute"
 			fields: [
-				{name: "mode", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteMode", required: true},
-				{name: "status", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteStatus", required: true},
+				{name: "mode", kind: "enum", typeName: "GeneratedOfferBookingConfirmationRouteMode", required: true},
+				{name: "status", kind: "enum", typeName: "GeneratedOfferBookingConfirmationRouteStatus", required: true},
 				{name: "selected_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "selected_by_atp_staff_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
-				{name: "deposit_rule", kind: "entity", typeName: "GeneratedOfferDepositAcceptanceRule", required: false},
+				{name: "deposit_rule", kind: "entity", typeName: "GeneratedOfferDepositBookingConfirmationRule", required: false},
 			]
 		},
 		{
@@ -645,10 +645,10 @@ IR: {
 			]
 		},
 		{
-			name:       "GeneratedOfferAcceptance"
+			name:       "GeneratedOfferBookingConfirmation"
 			domain:     "booking"
 			module:     "entities"
-			sourceType: "entities.#GeneratedOfferAcceptance"
+			sourceType: "entities.#GeneratedOfferBookingConfirmation"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "accepted_at", kind: "scalar", typeName: "Timestamp", required: true},
@@ -657,7 +657,7 @@ IR: {
 				{name: "accepted_by_phone", kind: "scalar", typeName: "string", required: false},
 				{name: "accepted_by_person_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "language", kind: "enum", typeName: "LanguageCode", required: true},
-				{name: "method", kind: "enum", typeName: "OfferAcceptanceMethod", required: true},
+				{name: "method", kind: "enum", typeName: "BookingConfirmationMethod", required: true},
 				{name: "statement_snapshot", kind: "scalar", typeName: "string", required: true},
 				{name: "terms_version", kind: "scalar", typeName: "string", required: false},
 				{name: "terms_snapshot", kind: "scalar", typeName: "string", required: true},
@@ -667,7 +667,7 @@ IR: {
 				{name: "offer_snapshot_sha256", kind: "scalar", typeName: "string", required: true},
 				{name: "ip_address", kind: "scalar", typeName: "string", required: false},
 				{name: "user_agent", kind: "scalar", typeName: "string", required: false},
-				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
+				{name: "otp_channel", kind: "enum", typeName: "BookingConfirmationOtpChannel", required: false},
 				{name: "otp_verified_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "deposit_payment_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "accepted_payment_term_line_id", kind: "scalar", typeName: "Identifier", required: false},
@@ -696,12 +696,12 @@ IR: {
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_frozen_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "pdf_sha256", kind: "scalar", typeName: "string", required: false},
-				{name: "acceptance_route", kind: "entity", typeName: "GeneratedOfferAcceptanceRoute", required: false},
-				{name: "acceptance_token_nonce", kind: "scalar", typeName: "string", required: false},
-				{name: "acceptance_token_created_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "acceptance_token_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "acceptance_token_revoked_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+				{name: "booking_confirmation_route", kind: "entity", typeName: "GeneratedOfferBookingConfirmationRoute", required: false},
+				{name: "booking_confirmation_token_nonce", kind: "scalar", typeName: "string", required: false},
+				{name: "booking_confirmation_token_created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "booking_confirmation_token_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "booking_confirmation_token_revoked_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "booking_confirmation", kind: "entity", typeName: "GeneratedOfferBookingConfirmation", required: false},
 			]
 		},
 		{
@@ -796,7 +796,7 @@ IR: {
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "accepted_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "confirmed_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
@@ -829,22 +829,22 @@ IR: {
 			]
 		},
 		{
-			name:       "GeneratedOfferAcceptancePublicSummary"
+			name:       "GeneratedOfferBookingConfirmationPublicSummary"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#GeneratedOfferAcceptancePublicSummary"
+			sourceType: "api.#GeneratedOfferBookingConfirmationPublicSummary"
 			fields: [
 				{name: "accepted_at", kind: "scalar", typeName: "Timestamp", required: true},
-				{name: "method", kind: "enum", typeName: "OfferAcceptanceMethod", required: true},
+				{name: "method", kind: "enum", typeName: "BookingConfirmationMethod", required: true},
 				{name: "accepted_amount_cents", kind: "scalar", typeName: "int", required: false},
 				{name: "accepted_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 			]
 		},
 		{
-			name:       "PublicGeneratedOfferDepositAcceptanceRuleView"
+			name:       "PublicGeneratedOfferDepositBookingConfirmationRuleView"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#PublicGeneratedOfferDepositAcceptanceRuleView"
+			sourceType: "api.#PublicGeneratedOfferDepositBookingConfirmationRuleView"
 			fields: [
 				{name: "payment_term_label", kind: "scalar", typeName: "string", required: true},
 				{name: "required_amount_cents", kind: "scalar", typeName: "int", required: true},
@@ -852,16 +852,16 @@ IR: {
 			]
 		},
 		{
-			name:       "PublicGeneratedOfferAcceptanceRouteView"
+			name:       "PublicGeneratedOfferBookingConfirmationRouteView"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#PublicGeneratedOfferAcceptanceRouteView"
+			sourceType: "api.#PublicGeneratedOfferBookingConfirmationRouteView"
 			fields: [
-				{name: "mode", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteMode", required: true},
-				{name: "status", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteStatus", required: true},
+				{name: "mode", kind: "enum", typeName: "GeneratedOfferBookingConfirmationRouteMode", required: true},
+				{name: "status", kind: "enum", typeName: "GeneratedOfferBookingConfirmationRouteStatus", required: true},
 				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
-				{name: "deposit_rule", kind: "transport", typeName: "PublicGeneratedOfferDepositAcceptanceRuleView", required: false},
+				{name: "deposit_rule", kind: "transport", typeName: "PublicGeneratedOfferDepositBookingConfirmationRuleView", required: false},
 			]
 		},
 		{
@@ -930,10 +930,10 @@ IR: {
 				{name: "offer", kind: "transport", typeName: "BookingOfferReadModel", required: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: true},
-				{name: "acceptance_route", kind: "entity", typeName: "GeneratedOfferAcceptanceRoute", required: false},
-				{name: "public_acceptance_token", kind: "scalar", typeName: "string", required: false},
-				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "acceptance", kind: "entity", typeName: "GeneratedOfferAcceptance", required: false},
+				{name: "booking_confirmation_route", kind: "entity", typeName: "GeneratedOfferBookingConfirmationRoute", required: false},
+				{name: "public_booking_confirmation_token", kind: "scalar", typeName: "string", required: false},
+				{name: "public_booking_confirmation_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "booking_confirmation", kind: "entity", typeName: "GeneratedOfferBookingConfirmation", required: false},
 			]
 		},
 		{
@@ -990,7 +990,7 @@ IR: {
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: false},
 				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "accepted_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "confirmed_generated_offer_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "notes", kind: "scalar", typeName: "string", required: false},
 				{name: "persons", kind: "entity", typeName: "BookingPerson", required: false, isArray: true},
 				{name: "travel_plan", kind: "entity", typeName: "BookingTravelPlan", required: false},
@@ -1042,17 +1042,17 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanItemSearchResult"
+			name:       "TravelPlanServiceSearchResult"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemSearchResult"
+			sourceType: "api.#TravelPlanServiceSearchResult"
 			fields: [
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "source_booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "source_booking_code", kind: "scalar", typeName: "string", required: false},
 				{name: "day_number", kind: "scalar", typeName: "int", required: false},
-				{name: "item_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "item_kind", kind: "enum", typeName: "TravelPlanItemKind", required: false},
+				{name: "service_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "service_kind", kind: "enum", typeName: "TravelPlanServiceKind", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: true},
 				{name: "details", kind: "scalar", typeName: "string", required: false},
 				{name: "location", kind: "scalar", typeName: "string", required: false},
@@ -1064,12 +1064,12 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanItemSearchResponse"
+			name:       "TravelPlanServiceSearchResponse"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemSearchResponse"
+			sourceType: "api.#TravelPlanServiceSearchResponse"
 			fields: [
-				{name: "items", kind: "transport", typeName: "TravelPlanItemSearchResult", required: true, isArray: true},
+				{name: "items", kind: "transport", typeName: "TravelPlanServiceSearchResult", required: true, isArray: true},
 				{name: "total", kind: "scalar", typeName: "int", required: true},
 			]
 		},
@@ -1250,10 +1250,10 @@ IR: {
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: true},
 				{name: "pdf_url", kind: "scalar", typeName: "string", required: false},
 				{name: "payment_terms", kind: "transport", typeName: "BookingOfferPaymentTermsReadModel", required: false},
-				{name: "acceptance_route", kind: "transport", typeName: "PublicGeneratedOfferAcceptanceRouteView", required: false},
-				{name: "public_acceptance_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "accepted", kind: "scalar", typeName: "bool", required: true},
-				{name: "acceptance", kind: "transport", typeName: "GeneratedOfferAcceptancePublicSummary", required: false},
+				{name: "booking_confirmation_route", kind: "transport", typeName: "PublicGeneratedOfferBookingConfirmationRouteView", required: false},
+				{name: "public_booking_confirmation_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "confirmed", kind: "scalar", typeName: "bool", required: true},
+				{name: "booking_confirmation", kind: "transport", typeName: "GeneratedOfferBookingConfirmationPublicSummary", required: false},
 			]
 		},
 		{
@@ -1264,11 +1264,11 @@ IR: {
 			fields: [
 				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "generated_offer_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "accepted", kind: "scalar", typeName: "bool", required: true},
+				{name: "confirmed", kind: "scalar", typeName: "bool", required: true},
 				{name: "status", kind: "scalar", typeName: "string", required: true},
-				{name: "acceptance_route", kind: "transport", typeName: "PublicGeneratedOfferAcceptanceRouteView", required: false},
-				{name: "acceptance", kind: "transport", typeName: "GeneratedOfferAcceptancePublicSummary", required: false},
-				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
+				{name: "booking_confirmation_route", kind: "transport", typeName: "PublicGeneratedOfferBookingConfirmationRouteView", required: false},
+				{name: "booking_confirmation", kind: "transport", typeName: "GeneratedOfferBookingConfirmationPublicSummary", required: false},
+				{name: "otp_channel", kind: "enum", typeName: "BookingConfirmationOtpChannel", required: false},
 				{name: "otp_sent_to", kind: "scalar", typeName: "string", required: false},
 				{name: "otp_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "retry_after_seconds", kind: "scalar", typeName: "int", required: false},
@@ -1495,13 +1495,13 @@ IR: {
 			module:     "api"
 			sourceType: "api.#PublicGeneratedOfferAcceptRequest"
 			fields: [
-				{name: "acceptance_token", kind: "scalar", typeName: "string", required: true},
+				{name: "booking_confirmation_token", kind: "scalar", typeName: "string", required: true},
 				{name: "accepted_by_name", kind: "scalar", typeName: "string", required: false},
 				{name: "accepted_by_email", kind: "scalar", typeName: "Email", required: false},
 				{name: "accepted_by_phone", kind: "scalar", typeName: "string", required: false},
 				{name: "accepted_by_person_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "otp_channel", kind: "enum", typeName: "OfferAcceptanceOtpChannel", required: false},
+				{name: "otp_channel", kind: "enum", typeName: "BookingConfirmationOtpChannel", required: false},
 				{name: "otp_code", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -1660,30 +1660,30 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanItemSearchRequest"
+			name:       "TravelPlanServiceSearchRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemSearchRequest"
+			sourceType: "api.#TravelPlanServiceSearchRequest"
 			fields: [
 				{name: "q", kind: "scalar", typeName: "string", required: false},
 				{name: "destination", kind: "scalar", typeName: "string", required: false},
 				{name: "country", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "style", kind: "scalar", typeName: "string", required: false},
-				{name: "item_kind", kind: "enum", typeName: "TravelPlanItemKind", required: false},
+				{name: "service_kind", kind: "enum", typeName: "TravelPlanServiceKind", required: false},
 				{name: "limit", kind: "scalar", typeName: "int", required: false},
 				{name: "offset", kind: "scalar", typeName: "int", required: false},
 			]
 		},
 		{
-			name:       "TravelPlanItemImportRequest"
+			name:       "TravelPlanServiceImportRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemImportRequest"
+			sourceType: "api.#TravelPlanServiceImportRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "source_booking_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "source_item_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "insert_after_item_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "source_service_id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "insert_after_service_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
@@ -1693,10 +1693,10 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanItemImageUploadRequest"
+			name:       "TravelPlanServiceImageUploadRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemImageUploadRequest"
+			sourceType: "api.#TravelPlanServiceImageUploadRequest"
 			fields: [
 				{name: "filename", kind: "scalar", typeName: "string", required: true},
 				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
@@ -1706,20 +1706,20 @@ IR: {
 			]
 		},
 		{
-			name:       "TravelPlanItemImageDeleteRequest"
+			name:       "TravelPlanServiceImageDeleteRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemImageDeleteRequest"
+			sourceType: "api.#TravelPlanServiceImageDeleteRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{
-			name:       "TravelPlanItemImageReorderRequest"
+			name:       "TravelPlanServiceImageReorderRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#TravelPlanItemImageReorderRequest"
+			sourceType: "api.#TravelPlanServiceImageReorderRequest"
 			fields: [
 				{name: "expected_travel_plan_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "image_ids", kind: "scalar", typeName: "Identifier", required: true, isArray: true},
@@ -1813,28 +1813,28 @@ IR: {
 				{name: "expected_offer_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "comment", kind: "scalar", typeName: "string", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
-				{name: "acceptance_route", kind: "transport", typeName: "BookingGenerateOfferAcceptanceRouteRequest", required: false},
+				{name: "booking_confirmation_route", kind: "transport", typeName: "BookingGenerateOfferBookingConfirmationRouteRequest", required: false},
 			]
 		},
 		{
-			name:       "BookingGenerateOfferDepositAcceptanceRuleRequest"
+			name:       "BookingGenerateOfferDepositBookingConfirmationRuleRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#BookingGenerateOfferDepositAcceptanceRuleRequest"
+			sourceType: "api.#BookingGenerateOfferDepositBookingConfirmationRuleRequest"
 			fields: [
 				{name: "payment_term_line_id", kind: "scalar", typeName: "Identifier", required: true},
 			]
 		},
 		{
-			name:       "BookingGenerateOfferAcceptanceRouteRequest"
+			name:       "BookingGenerateOfferBookingConfirmationRouteRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#BookingGenerateOfferAcceptanceRouteRequest"
+			sourceType: "api.#BookingGenerateOfferBookingConfirmationRouteRequest"
 			fields: [
-				{name: "mode", kind: "enum", typeName: "GeneratedOfferAcceptanceRouteMode", required: true},
+				{name: "mode", kind: "enum", typeName: "GeneratedOfferBookingConfirmationRouteMode", required: true},
 				{name: "expires_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "customer_message_snapshot", kind: "scalar", typeName: "string", required: false},
-				{name: "deposit_rule", kind: "transport", typeName: "BookingGenerateOfferDepositAcceptanceRuleRequest", required: false},
+				{name: "deposit_rule", kind: "transport", typeName: "BookingGenerateOfferDepositBookingConfirmationRuleRequest", required: false},
 			]
 		},
 		{

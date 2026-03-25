@@ -440,36 +440,36 @@
 
           <div
             class="modal travel-plan-library-modal"
-            id="travel_plan_item_library_modal"
+            id="travel_plan_service_library_modal"
             hidden
             role="dialog"
             aria-modal="true"
-            aria-labelledby="travel_plan_item_library_title"
+            aria-labelledby="travel_plan_service_library_title"
           >
             <div class="modal-panel travel-plan-library-modal__panel" role="document">
               <div class="modal-head travel-plan-library-modal__head">
                 <div>
-                  <h2 id="travel_plan_item_library_title">Insert existing travel plan item</h2>
-                  <p class="micro" id="travel_plan_item_library_subtitle">Search existing booking travel plan items and insert a copy into this day.</p>
+                  <h2 id="travel_plan_service_library_title">Insert existing service</h2>
+                  <p class="micro" id="travel_plan_service_library_subtitle">Search existing booking services and insert a copy into this day.</p>
                 </div>
-                <button class="btn btn-ghost" id="travel_plan_item_library_close_btn" type="button" aria-label="Close insert item dialog">&times;</button>
+                <button class="btn btn-ghost" id="travel_plan_service_library_close_btn" type="button" aria-label="Close insert service dialog">&times;</button>
               </div>
               <div class="modal-body travel-plan-library-modal__body">
                 <div class="travel-plan-library-modal__filters">
                   <div class="field">
-                    <label for="travel_plan_item_library_query">Search</label>
-                    <input id="travel_plan_item_library_query" type="search" placeholder="Search travel plan items, bookings, locations..." />
+                    <label for="travel_plan_service_library_query">Search</label>
+                    <input id="travel_plan_service_library_query" type="search" placeholder="Search services, bookings, locations..." />
                   </div>
                   <div class="field">
-                    <label for="travel_plan_item_library_kind">Kind</label>
-                    <select id="travel_plan_item_library_kind"></select>
+                    <label for="travel_plan_service_library_kind">Kind</label>
+                    <select id="travel_plan_service_library_kind"></select>
                   </div>
                   <div class="travel-plan-library-modal__search-action">
-                    <button class="btn btn-primary" id="travel_plan_item_library_search_btn" type="button">Search</button>
+                    <button class="btn btn-primary" id="travel_plan_service_library_search_btn" type="button">Search</button>
                   </div>
                 </div>
-                <div id="travel_plan_item_library_status" class="micro booking-inline-status"></div>
-                <div id="travel_plan_item_library_results" class="travel-plan-library-modal__results"></div>
+                <div id="travel_plan_service_library_status" class="micro booking-inline-status"></div>
+                <div id="travel_plan_service_library_results" class="travel-plan-library-modal__results"></div>
               </div>
             </div>
           </div>
@@ -493,7 +493,7 @@
             </div>
           </div>
 
-          <input id="travel_plan_item_image_input" type="file" accept="image/*" multiple hidden />
+          <input id="travel_plan_service_image_input" type="file" accept="image/*" multiple hidden />
           <input id="travel_plan_attachment_input" type="file" accept="application/pdf,.pdf" multiple hidden />
 
           <article id="travel_plan_panel" class="booking-section">
@@ -550,9 +550,9 @@
             </div>
           </article>
 
-          <article id="offer_acceptance_panel" class="booking-section">
+          <article id="booking_confirmation_panel" class="booking-section">
             <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="offer_acceptance_panel_summary" type="button"></button>
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="booking_confirmation_panel_summary" type="button"></button>
             </div>
             <div class="booking-section__body">
               <div class="backend-table-wrap" style="margin-bottom: 0.8rem;">

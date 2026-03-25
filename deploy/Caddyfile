@@ -18,7 +18,7 @@
 }
 
 (staging_html_no_cache_headers) {
-  @staging_html path / /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /settings.html /privacy.html /offer-accept.html /traveler-details.html
+  @staging_html path / /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /settings.html /privacy.html /booking-confirmation.html /traveler-details.html
   header @staging_html {
     Cache-Control "no-store, no-cache, must-revalidate"
     Pragma "no-cache"
@@ -36,8 +36,8 @@ asiatravelplan.com {
   encode zstd gzip
   root * /srv/production
 
-  @offer_accept_page path /offer-accept.html
-  rewrite @offer_accept_page /frontend/pages/offer-accept.html
+  @booking_confirmation_page path /booking-confirmation.html
+  rewrite @booking_confirmation_page /frontend/pages/booking-confirmation.html
 
   @traveler_details_page path /traveler-details.html
   rewrite @traveler_details_page /frontend/pages/traveler-details.html
@@ -76,7 +76,7 @@ staging.asiatravelplan.com {
     file_server
   }
 
-  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /settings.html /privacy.html /offer-accept.html /traveler-details.html
+  @html_pages path /index.html /404.html /backend.html /booking.html /persons.html /tour.html /tours.html /settings.html /privacy.html /booking-confirmation.html /traveler-details.html
   rewrite @html_pages /frontend/pages{path}
 
   @staging_access path /staging-access/*

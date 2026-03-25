@@ -10,15 +10,15 @@ import {
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
 import {
-  ensureGeneratedOfferAcceptanceTokenState,
-  synchronizeGeneratedOfferAcceptanceRouteStatus
-} from "../../domain/offer_acceptance.js";
+  ensureGeneratedOfferBookingConfirmationTokenState,
+  synchronizeGeneratedOfferBookingConfirmationRouteStatus
+} from "../../domain/booking_confirmation.js";
 import { normalizeTourStyleLabels } from "../../domain/tour_catalog_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
 import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
 import { createBookingFinanceHandlers } from "./booking_finance.js";
-import { createBookingOfferAcceptanceHandlers } from "./booking_offer_acceptance.js";
+import { createBookingConfirmationHandlers } from "./booking_confirmation.js";
 import { createBookingMediaHandlers } from "./booking_media.js";
 import { createBookingInvoiceHandlers } from "./booking_invoices.js";
 import { createBookingPeopleHandlers } from "./booking_people.js";
@@ -101,7 +101,7 @@ export function createBookingHandlers(deps) {
     invoicePdfPath,
     generatedOfferPdfPath,
     gmailDraftsConfig,
-    offerAcceptanceTokenConfig,
+    bookingConfirmationTokenConfig,
     travelerDetailsTokenConfig,
     mkdir,
     path,
@@ -125,10 +125,10 @@ export function createBookingHandlers(deps) {
     let changed = false;
     const now = nowIso();
     for (const generatedOffer of generatedOffers) {
-      if (ensureGeneratedOfferAcceptanceTokenState(generatedOffer, { now })) {
+      if (ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer, { now })) {
         changed = true;
       }
-      if (synchronizeGeneratedOfferAcceptanceRouteStatus(generatedOffer, { now })) {
+      if (synchronizeGeneratedOfferBookingConfirmationRouteStatus(generatedOffer, { now })) {
         changed = true;
       }
     }
@@ -365,8 +365,8 @@ export function createBookingHandlers(deps) {
     store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
     store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
     store.invoices = Array.isArray(store.invoices) ? store.invoices.filter((invoice) => invoice.booking_id !== bookingId) : [];
-    store.offer_acceptance_challenges = Array.isArray(store.offer_acceptance_challenges)
-      ? store.offer_acceptance_challenges.filter((challenge) => normalizeText(challenge.booking_id) !== bookingId)
+    store.booking_confirmation_challenges = Array.isArray(store.booking_confirmation_challenges)
+      ? store.booking_confirmation_challenges.filter((challenge) => normalizeText(challenge.booking_id) !== bookingId)
       : [];
 
     ensureMetaChatCollections(store);
@@ -510,11 +510,11 @@ export function createBookingHandlers(deps) {
   });
 
   const {
-    handleSearchTravelPlanItems,
-    handleImportTravelPlanItem,
-    handleUploadTravelPlanItemImage,
-    handleDeleteTravelPlanItemImage,
-    handleReorderTravelPlanItemImages,
+    handleSearchTravelPlanServices,
+    handleImportTravelPlanService,
+    handleUploadTravelPlanServiceImage,
+    handleDeleteTravelPlanServiceImage,
+    handleReorderTravelPlanServiceImages,
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,
@@ -619,7 +619,7 @@ export function createBookingHandlers(deps) {
     handleGetPublicGeneratedOfferAccess,
     handleGetPublicGeneratedOfferPdf,
     handlePublicAcceptGeneratedOffer
-  } = createBookingOfferAcceptanceHandlers({
+  } = createBookingConfirmationHandlers({
     readBodyJson,
     sendJson,
     readStore,
@@ -633,7 +633,7 @@ export function createBookingHandlers(deps) {
     convertBookingPricingToBaseCurrency,
     randomUUID,
     gmailDraftsConfig,
-    offerAcceptanceTokenConfig,
+    bookingConfirmationTokenConfig,
     getBookingContactProfile,
     getRequestIpAddress,
     normalizeGeneratedOfferSnapshot,
@@ -895,11 +895,11 @@ export function createBookingHandlers(deps) {
     handleCreateBookingPerson,
     handlePatchBookingPerson,
     handleDeleteBookingPerson,
-    handleSearchTravelPlanItems,
-    handleImportTravelPlanItem,
-    handleUploadTravelPlanItemImage,
-    handleDeleteTravelPlanItemImage,
-    handleReorderTravelPlanItemImages,
+    handleSearchTravelPlanServices,
+    handleImportTravelPlanService,
+    handleUploadTravelPlanServiceImage,
+    handleDeleteTravelPlanServiceImage,
+    handleReorderTravelPlanServiceImages,
     handleGetTravelPlanAttachmentPdf,
     handleUploadTravelPlanAttachment,
     handleDeleteTravelPlanAttachment,

@@ -1,7 +1,7 @@
 import {
-  validateTravelPlanItemImageDeleteRequest,
-  validateTravelPlanItemImageReorderRequest,
-  validateTravelPlanItemImageUploadRequest
+  validateTravelPlanServiceImageDeleteRequest,
+  validateTravelPlanServiceImageReorderRequest,
+  validateTravelPlanServiceImageUploadRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import {
   findTravelPlanDayAndItem,
@@ -35,11 +35,11 @@ export function createBookingTravelPlanImageHandlers(deps) {
     processBookingImageToWebp
   } = deps;
 
-  async function handleUploadTravelPlanItemImage(req, res, [bookingId, dayId, itemId]) {
+  async function handleUploadTravelPlanServiceImage(req, res, [bookingId, dayId, itemId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanItemImageUploadRequest(payload);
+      validateTravelPlanServiceImageUploadRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -61,7 +61,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
     const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
     const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
     if (dayIndex < 0 || itemIndex < 0 || !item) {
-      sendJson(res, 404, { error: "Travel plan item not found" });
+      sendJson(res, 404, { error: "Service not found" });
       return;
     }
 
@@ -79,7 +79,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
 
     const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${itemId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
     const outputName = `${itemId}-${Date.now()}-${randomUUID()}.webp`;
-    const outputRelativePath = `${bookingId}/travel-plan-items/${outputName}`;
+    const outputRelativePath = `${bookingId}/travel-plan-services/${outputName}`;
     const outputPath = path.join(BOOKING_IMAGES_DIR, outputRelativePath);
     try {
       await writeFile(tempInputPath, sourceBuffer);
@@ -95,7 +95,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
     const nextImages = normalizeItemImageRefs([
       ...currentImages,
       {
-        id: `travel_plan_item_image_${randomUUID()}`,
+        id: `travel_plan_service_image_${randomUUID()}`,
         storage_path: publicBookingImagePath(normalizeText, outputRelativePath),
         sort_order: currentImages.length,
         is_primary: currentImages.length === 0,
@@ -104,7 +104,7 @@ export function createBookingTravelPlanImageHandlers(deps) {
       }
     ]);
 
-    normalizedTravelPlan.days[dayIndex].items[itemIndex] = {
+    normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
       ...item,
       images: nextImages
     };
@@ -129,17 +129,17 @@ export function createBookingTravelPlanImageHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Travel plan item image uploaded"
+      "Service image uploaded"
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleDeleteTravelPlanItemImage(req, res, [bookingId, dayId, itemId, imageId]) {
+  async function handleDeleteTravelPlanServiceImage(req, res, [bookingId, dayId, itemId, imageId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanItemImageDeleteRequest(payload);
+      validateTravelPlanServiceImageDeleteRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -161,18 +161,18 @@ export function createBookingTravelPlanImageHandlers(deps) {
     const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
     const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
     if (dayIndex < 0 || itemIndex < 0 || !item) {
-      sendJson(res, 404, { error: "Travel plan item not found" });
+      sendJson(res, 404, { error: "Service not found" });
       return;
     }
 
     const currentImages = Array.isArray(item.images) ? item.images : [];
     const nextImages = currentImages.filter((image) => image.id !== imageId);
     if (nextImages.length === currentImages.length) {
-      sendJson(res, 404, { error: "Item image not found" });
+      sendJson(res, 404, { error: "Service image not found" });
       return;
     }
 
-    normalizedTravelPlan.days[dayIndex].items[itemIndex] = {
+    normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
       ...item,
       images: normalizeItemImageRefs(nextImages)
     };
@@ -197,17 +197,17 @@ export function createBookingTravelPlanImageHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Travel plan item image removed"
+      "Service image removed"
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleReorderTravelPlanItemImages(req, res, [bookingId, dayId, itemId]) {
+  async function handleReorderTravelPlanServiceImages(req, res, [bookingId, dayId, itemId]) {
     let payload;
     try {
       payload = await readBodyJson(req);
-      validateTravelPlanItemImageReorderRequest(payload);
+      validateTravelPlanServiceImageReorderRequest(payload);
     } catch (error) {
       sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
       return;
@@ -229,24 +229,24 @@ export function createBookingTravelPlanImageHandlers(deps) {
     const normalizedTravelPlan = normalizeBookingTravelPlan(booking.travel_plan, booking.offer, { strictReferences: false });
     const { dayIndex, itemIndex, item } = findTravelPlanDayAndItem(normalizedTravelPlan, dayId, itemId);
     if (dayIndex < 0 || itemIndex < 0 || !item) {
-      sendJson(res, 404, { error: "Travel plan item not found" });
+      sendJson(res, 404, { error: "Service not found" });
       return;
     }
 
     const currentImages = Array.isArray(item.images) ? item.images : [];
     const requestedOrder = Array.isArray(payload.image_ids) ? payload.image_ids.map((id) => normalizeText(id)).filter(Boolean) : [];
     if (requestedOrder.length !== currentImages.length) {
-      sendJson(res, 422, { error: "image_ids must contain all item image ids exactly once." });
+      sendJson(res, 422, { error: "image_ids must contain all service image ids exactly once." });
       return;
     }
     const currentImageMap = new Map(currentImages.map((image) => [image.id, image]));
     const uniqueRequestedOrder = new Set(requestedOrder);
     if (uniqueRequestedOrder.size !== currentImages.length || requestedOrder.some((id) => !currentImageMap.has(id))) {
-      sendJson(res, 422, { error: "image_ids must contain all item image ids exactly once." });
+      sendJson(res, 422, { error: "image_ids must contain all service image ids exactly once." });
       return;
     }
 
-    normalizedTravelPlan.days[dayIndex].items[itemIndex] = {
+    normalizedTravelPlan.days[dayIndex].services[itemIndex] = {
       ...item,
       images: normalizeItemImageRefs(requestedOrder.map((id) => currentImageMap.get(id)))
     };
@@ -271,15 +271,15 @@ export function createBookingTravelPlanImageHandlers(deps) {
       booking.id,
       "TRAVEL_PLAN_UPDATED",
       actorLabel(principal, normalizeText(payload.actor) || "keycloak_user"),
-      "Travel plan item images reordered"
+      "Service images reordered"
     );
     await persistStore(store);
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
   return {
-    handleUploadTravelPlanItemImage,
-    handleDeleteTravelPlanItemImage,
-    handleReorderTravelPlanItemImages
+    handleUploadTravelPlanServiceImage,
+    handleDeleteTravelPlanServiceImage,
+    handleReorderTravelPlanServiceImages
   };
 }
