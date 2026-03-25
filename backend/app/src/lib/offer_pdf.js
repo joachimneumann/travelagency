@@ -18,6 +18,7 @@ import {
   trimTrailingBlankPagesInFile,
   resolveTravelPlanAttachmentAbsolutePath
 } from "./pdf_attachments.js";
+import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
@@ -123,38 +124,6 @@ async function fileExists(filePath) {
   } catch {
     return false;
   }
-}
-
-async function findFirstExistingPath(paths) {
-  for (const candidate of paths) {
-    if (await fileExists(candidate)) return candidate;
-  }
-  return null;
-}
-
-function canRegisterPdfFont(candidate) {
-  try {
-    const probe = new PDFDocument({ autoFirstPage: false });
-    probe.registerFont("__probe__", candidate);
-    probe.font("__probe__").fontSize(12);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function findFirstUsablePath(paths) {
-  for (const candidate of paths) {
-    if (!(await fileExists(candidate))) continue;
-    if (canRegisterPdfFont(candidate)) return candidate;
-  }
-  return null;
-}
-
-async function resolvePdfFonts() {
-  const regular = await findFirstUsablePath(PDF_FONT_REGULAR_CANDIDATES);
-  const bold = (await findFirstUsablePath(PDF_FONT_BOLD_CANDIDATES)) || regular;
-  return { regular, bold };
 }
 
 function registerPdfFonts(doc, fonts) {
@@ -1567,7 +1536,11 @@ export function createOfferPdfWriter({
     const [logoImage, heroPath, fonts, heroTitle, guidePhoto] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
-      resolvePdfFonts(),
+      resolvePdfFontsForLang({
+        lang,
+        regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
+        boldCandidates: PDF_FONT_BOLD_CANDIDATES
+      }),
       resolveBookingHeroTitle(booking, lang, readTours),
       guideContext?.photoDiskPath
         ? rasterizeImage(guideContext.photoDiskPath, {

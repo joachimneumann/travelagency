@@ -17,6 +17,7 @@ import {
 } from "./pdf_attachments.js";
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
+import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 import {
   resolveAtpGuideIntroName,
@@ -234,38 +235,6 @@ async function fileExists(filePath) {
   } catch {
     return false;
   }
-}
-
-async function findFirstExistingPath(paths) {
-  for (const candidate of paths) {
-    if (await fileExists(candidate)) return candidate;
-  }
-  return null;
-}
-
-function canRegisterPdfFont(candidate) {
-  try {
-    const probe = new PDFDocument({ autoFirstPage: false });
-    probe.registerFont("__probe__", candidate);
-    probe.font("__probe__").fontSize(12);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function findFirstUsablePath(paths) {
-  for (const candidate of paths) {
-    if (!(await fileExists(candidate))) continue;
-    if (canRegisterPdfFont(candidate)) return candidate;
-  }
-  return null;
-}
-
-async function resolvePdfFonts() {
-  const regular = await findFirstUsablePath(PDF_FONT_REGULAR_CANDIDATES);
-  const bold = (await findFirstUsablePath(PDF_FONT_BOLD_CANDIDATES)) || regular;
-  return { regular, bold };
 }
 
 function registerPdfFonts(doc, fonts) {
@@ -934,7 +903,11 @@ export function createTravelPlanPdfWriter({
       .filter(Boolean)
       .every((value) => /^[\x09\x0A\x0D\x20-\x7E]*$/.test(String(value)));
 
-    const fonts = asciiOnly ? null : await resolvePdfFonts();
+    const fonts = asciiOnly ? null : await resolvePdfFontsForLang({
+      lang,
+      regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
+      boldCandidates: PDF_FONT_BOLD_CANDIDATES
+    });
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
