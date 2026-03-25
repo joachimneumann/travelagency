@@ -10,6 +10,14 @@ const LANGUAGE_FONT_PROBES = Object.freeze({
   zh: "中文"
 });
 
+function isSupportedPdfFontContainer(filePath) {
+  const normalized = String(filePath || "").trim().toLowerCase();
+  if (!normalized) return false;
+  // PDFKit/fontkit behave inconsistently with TrueType Collections and can
+  // either fail at subset generation or emit mojibake for CJK text.
+  return !normalized.endsWith(".ttc");
+}
+
 async function fileExists(filePath) {
   if (!filePath) return false;
   try {
@@ -55,6 +63,7 @@ function fontSupportsText(candidate, sampleText = "") {
 
 async function findFirstUsablePath(paths, sampleText = "") {
   for (const candidate of paths) {
+    if (!isSupportedPdfFontContainer(candidate)) continue;
     if (!(await fileExists(candidate))) continue;
     if (!canRegisterPdfFont(candidate)) continue;
     if (!fontSupportsText(candidate, sampleText)) continue;
