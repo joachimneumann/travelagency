@@ -82,6 +82,12 @@ Start backend only:
 ./scripts/start_local_backend.sh
 ```
 
+Wipe all booking data locally:
+
+```bash
+./scripts/wipe_local_bookings.sh --yes
+```
+
 Update staging:
 
 ```bash
@@ -89,6 +95,7 @@ Update staging:
 ./scripts/update_staging.sh caddy
 ./scripts/update_staging.sh keycloak
 ./scripts/update_staging.sh all
+./scripts/wipe_staging_bookings.sh --yes
 ```
 
 ## Documentation Conventions
