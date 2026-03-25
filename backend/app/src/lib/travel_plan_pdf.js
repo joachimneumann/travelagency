@@ -18,6 +18,7 @@ import {
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
+import { drawMultifontText, measureMultifontTextHeight } from "./pdf_multifont_text.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 import {
   resolveAtpGuideIntroName,
@@ -45,6 +46,8 @@ const ITEM_VERTICAL_GAP = 8;
 const GUIDE_PHOTO_SIZE = 92;
 const PDF_FONT_REGULAR = "ATPUnicodeRegular";
 const PDF_FONT_BOLD = "ATPUnicodeBold";
+const PDF_FONT_ACCENT_REGULAR = "ATPUnicodeAccentRegular";
+const PDF_FONT_ACCENT_BOLD = "ATPUnicodeAccentBold";
 
 const PDF_FONT_REGULAR_CANDIDATES = [
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
@@ -238,12 +241,26 @@ async function fileExists(filePath) {
 function registerPdfFonts(doc, fonts) {
   if (fonts?.regular) doc.registerFont(PDF_FONT_REGULAR, fonts.regular);
   if (fonts?.bold) doc.registerFont(PDF_FONT_BOLD, fonts.bold);
+  if (fonts?.accentRegular) doc.registerFont(PDF_FONT_ACCENT_REGULAR, fonts.accentRegular);
+  if (fonts?.accentBold) doc.registerFont(PDF_FONT_ACCENT_BOLD, fonts.accentBold);
 }
 
 function pdfFontName(weight = "regular", fonts = null) {
   if (!fonts?.regular) return weight === "bold" ? "Helvetica-Bold" : "Helvetica";
   if (weight === "bold" && fonts?.bold) return PDF_FONT_BOLD;
   return PDF_FONT_REGULAR;
+}
+
+function mixedFontChoices(weight = "regular", fonts = null) {
+  const choices = [];
+  if (weight === "bold") {
+    if (fonts?.regular) choices.push({ name: PDF_FONT_BOLD, path: fonts?.bold || fonts?.regular });
+    if (fonts?.accentRegular) choices.push({ name: PDF_FONT_ACCENT_BOLD, path: fonts?.accentBold || fonts?.accentRegular });
+    return choices;
+  }
+  if (fonts?.regular) choices.push({ name: PDF_FONT_REGULAR, path: fonts.regular });
+  if (fonts?.accentRegular) choices.push({ name: PDF_FONT_ACCENT_REGULAR, path: fonts.accentRegular });
+  return choices;
 }
 
 async function rasterizeImage(filePath, { width, height } = {}) {
@@ -730,14 +747,22 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
     : pdfT(lang, "guide.section_title", "Your ATP guide");
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
   const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
+  const titleChoices = mixedFontChoices("bold", fonts);
+  const bodyChoices = mixedFontChoices("regular", fonts);
   let height = 26;
 
-  height += measureTextHeight(doc, guideTitle, {
-    width: textWidth,
-    fontSize: 13,
-    fonts,
-    weight: "bold"
-  });
+  height += titleChoices.length
+    ? measureMultifontTextHeight(doc, guideTitle, {
+        width: textWidth,
+        fontSize: 13,
+        fontChoices: titleChoices
+      })
+    : measureTextHeight(doc, guideTitle, {
+        width: textWidth,
+        fontSize: 13,
+        fonts,
+        weight: "bold"
+      });
 
   const introText = profile
     ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
@@ -745,12 +770,21 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
       })
     : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
   const bodyText = qualificationText ? `${introText} ${qualificationText}` : introText;
-  height += 6 + measureTextHeight(doc, bodyText, {
-    width: textWidth,
-    fontSize: 10.4,
-    fonts,
-    lineGap: 2
-  });
+  height += 6 + (
+    bodyChoices.length
+      ? measureMultifontTextHeight(doc, bodyText, {
+          width: textWidth,
+          fontSize: 10.4,
+          lineGap: 2,
+          fontChoices: bodyChoices
+        })
+      : measureTextHeight(doc, bodyText, {
+          width: textWidth,
+          fontSize: 10.4,
+          fonts,
+          lineGap: 2
+        })
+  );
 
   return Math.max(height + 18, profile ? GUIDE_PHOTO_SIZE + 26 : 120);
 }
@@ -769,6 +803,8 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   const textX = PAGE_MARGIN + 16;
   const textWidth = cardWidth - 32 - photoWidth;
   const photoX = PAGE_MARGIN + cardWidth - 16 - GUIDE_PHOTO_SIZE;
+  const titleChoices = mixedFontChoices("bold", fonts);
+  const bodyChoices = mixedFontChoices("regular", fonts);
 
   doc
     .save()
@@ -797,12 +833,21 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   }
 
   let y = startY + 16;
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(13)
-    .fillColor(PDF_COLORS.textStrong)
-    .text(guideTitle, textX, y, pdfTextOptions(lang, { width: textWidth }));
-  y = doc.y + 6;
+  if (titleChoices.length) {
+    y = drawMultifontText(doc, guideTitle, textX, y, {
+      width: textWidth,
+      fontSize: 13,
+      fontChoices: titleChoices,
+      fillColor: PDF_COLORS.textStrong
+    }) + 6;
+  } else {
+    doc
+      .font(pdfFontName("bold", fonts))
+      .fontSize(13)
+      .fillColor(PDF_COLORS.textStrong)
+      .text(guideTitle, textX, y, pdfTextOptions(lang, { width: textWidth }));
+    y = doc.y + 6;
+  }
 
   const introText = profile
     ? pdfT(lang, "guide.intro_named", "{name} from Asia Travel Plan will keep this route comfortable and well paced for you.", {
@@ -811,14 +856,24 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
     : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
   const bodyText = qualificationText ? `${introText} ${qualificationText}` : introText;
 
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(10.4)
-    .fillColor(PDF_COLORS.textMutedStrong)
-    .text(bodyText, textX, y, pdfTextOptions(lang, {
+  if (bodyChoices.length) {
+    drawMultifontText(doc, bodyText, textX, y, {
       width: textWidth,
-      lineGap: 2
-    }));
+      fontSize: 10.4,
+      lineGap: 2,
+      fontChoices: bodyChoices,
+      fillColor: PDF_COLORS.textMutedStrong
+    });
+  } else {
+    doc
+      .font(pdfFontName("regular", fonts))
+      .fontSize(10.4)
+      .fillColor(PDF_COLORS.textMutedStrong)
+      .text(bodyText, textX, y, pdfTextOptions(lang, {
+        width: textWidth,
+        lineGap: 2
+      }));
+  }
 
   return startY + cardHeight + 18;
 }
@@ -901,11 +956,31 @@ export function createTravelPlanPdfWriter({
       .filter(Boolean)
       .every((value) => /^[\x09\x0A\x0D\x20-\x7E]*$/.test(String(value)));
 
-    const fonts = asciiOnly ? null : await resolvePdfFontsForLang({
-      lang,
-      regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
-      boldCandidates: PDF_FONT_BOLD_CANDIDATES
-    });
+    const [baseFonts, accentFonts] = asciiOnly
+      ? [null, null]
+      : await Promise.all([
+          resolvePdfFontsForLang({
+            lang,
+            regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
+            boldCandidates: PDF_FONT_BOLD_CANDIDATES
+          }),
+          resolvePdfFontsForLang({
+            lang: "vi",
+            sampleText: [
+              textOrNull(resolveAtpStaffFullName(guideContext?.profile)),
+              textOrNull(resolveAtpGuideIntroName(guideContext?.profile))
+            ].filter(Boolean).join(" "),
+            regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
+            boldCandidates: PDF_FONT_BOLD_CANDIDATES
+          })
+        ]);
+    const fonts = baseFonts
+      ? {
+          ...baseFonts,
+          accentRegular: accentFonts?.regular || null,
+          accentBold: accentFonts?.bold || accentFonts?.regular || null
+        }
+      : null;
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({

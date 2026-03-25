@@ -74,11 +74,12 @@ async function findFirstUsablePath(paths, sampleText = "") {
 
 export async function resolvePdfFontsForLang({
   lang = "en",
+  sampleText = "",
   regularCandidates = [],
   boldCandidates = []
 } = {}) {
-  const sampleText = LANGUAGE_FONT_PROBES[String(lang || "").trim().toLowerCase()] || "";
-  const regular = await findFirstUsablePath(regularCandidates, sampleText);
-  const bold = (await findFirstUsablePath(boldCandidates, sampleText)) || regular;
+  const combinedSampleText = `${LANGUAGE_FONT_PROBES[String(lang || "").trim().toLowerCase()] || ""} ${String(sampleText || "").trim()}`.trim();
+  const regular = await findFirstUsablePath(regularCandidates, combinedSampleText);
+  const bold = (await findFirstUsablePath(boldCandidates, combinedSampleText)) || regular;
   return { regular, bold };
 }
