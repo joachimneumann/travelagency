@@ -445,18 +445,14 @@ function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
 function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, hasThumbnail = false) {
   const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
   const textWidth = innerWidth;
-  const metaParts = [formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
+  const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
   const title = textOrNull(item?.title) || pdfT(lang, "offer.item_fallback", "Planned service");
-  const location = textOrNull(item?.location);
   const details = textOrNull(item?.details);
   let textHeight = 0;
   if (metaParts.length) {
     textHeight += measureTextHeight(doc, metaParts.join(" · "), { width: textWidth, fontSize: 9.2, fonts, lineGap: 1 }) + 4;
   }
   textHeight += measureTextHeight(doc, title, { width: textWidth, fontSize: 11.2, fonts, weight: "bold", lineGap: 1 }) + 4;
-  if (location) {
-    textHeight += measureTextHeight(doc, location, { width: textWidth, fontSize: 9.8, fonts, lineGap: 1 }) + 4;
-  }
   if (details) {
     textHeight += measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2 }) + 4;
   }
@@ -491,7 +487,7 @@ function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, 
     innerY += ITEM_THUMBNAIL_HEIGHT + 10;
   }
 
-  const metaParts = [formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
+  const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate)].filter(Boolean);
   if (metaParts.length) {
     doc
       .font(pdfFontName("regular", fonts))
@@ -513,19 +509,6 @@ function drawTravelPlanItemCard(doc, x, y, width, item, thumbnail, fonts, lang, 
       lineGap: 1
     }));
   innerY = doc.y + 4;
-
-  const location = textOrNull(item?.location);
-  if (location) {
-    doc
-      .font(pdfFontName("regular", fonts))
-      .fontSize(9.8)
-      .fillColor(PDF_COLORS.textMutedStrong)
-      .text(location, innerX, innerY, pdfTextOptions(lang, {
-        width: textWidth,
-        lineGap: 1
-      }));
-    innerY = doc.y + 4;
-  }
 
   const details = textOrNull(item?.details);
   if (details) {
