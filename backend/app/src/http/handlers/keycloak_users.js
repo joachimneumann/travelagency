@@ -3,9 +3,22 @@ export function createKeycloakUserHandlers(deps) {
     getPrincipal,
     canViewKeycloakUsers,
     listAssignableStaffUsers,
+    listCachedAssignableStaffUsers,
     keycloakDisplayName,
     sendJson
   } = deps;
+
+  function toKeycloakUserResponse(user) {
+    return {
+      id: user.id,
+      name: keycloakDisplayName(user) || null,
+      username: user.username || null,
+      active: user.active !== false,
+      staff_profile: user.staff_profile || null,
+      realm_roles: Array.isArray(user.realm_roles) ? user.realm_roles : [],
+      client_roles: Array.isArray(user.client_roles) ? user.client_roles : []
+    };
+  }
 
   async function handleListKeycloakUsers(req, res) {
     const principal = getPrincipal(req);
@@ -16,29 +29,20 @@ export function createKeycloakUserHandlers(deps) {
     try {
       const items = await listAssignableStaffUsers();
       sendJson(res, 200, {
-        items: items.map((user) => ({
-          id: user.id,
-          name: keycloakDisplayName(user) || null,
-          username: user.username || null,
-          active: user.active !== false,
-          staff_profile: user.staff_profile || null,
-          realm_roles: Array.isArray(user.realm_roles) ? user.realm_roles : [],
-          client_roles: Array.isArray(user.client_roles) ? user.client_roles : []
-        })),
+        items: items.map(toKeycloakUserResponse),
         total: items.length
       });
     } catch (error) {
       const detail = String(error?.message || error || "");
-      if (/not configured/i.test(detail)) {
-        sendJson(res, 200, {
-          items: [],
-          total: 0,
-          unavailable: true,
-          warning: `Keycloak user directory unavailable: ${detail}`
-        });
-        return;
-      }
-      sendJson(res, 503, { error: `Keycloak user directory unavailable: ${String(error?.message || error)}` });
+      const cachedItems = await listCachedAssignableStaffUsers().catch(() => []);
+      const warningSuffix = cachedItems.length ? " Showing cached users from the last successful sync." : "";
+      sendJson(res, 200, {
+        items: cachedItems.map(toKeycloakUserResponse),
+        total: cachedItems.length,
+        unavailable: true,
+        stale: cachedItems.length > 0,
+        warning: `Keycloak user directory unavailable: ${detail}.${warningSuffix}`.trim()
+      });
     }
   }
 

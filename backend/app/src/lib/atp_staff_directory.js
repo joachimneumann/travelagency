@@ -401,6 +401,20 @@ export function createAtpStaffDirectory({
     return Array.isArray(payload?.items) ? payload.items : [];
   }
 
+  async function listCachedAssignableStaffUsers() {
+    const [users, profiles] = await Promise.all([
+      listCachedAssignableUsers(),
+      readProfiles().catch(() => ({ items: [] }))
+    ]);
+    const profilesByUsername = new Map(
+      (Array.isArray(profiles?.items) ? profiles.items : []).map((profile) => [normalizeText(profile?.username).toLowerCase(), profile])
+    );
+    return (Array.isArray(users) ? users : []).map((user) => ({
+      ...user,
+      staff_profile: buildResponseProfile(profilesByUsername.get(normalizeText(user?.username).toLowerCase()), user)
+    }));
+  }
+
   async function syncKeycloakUserSnapshotFromUsers(users) {
     await ensureKeycloakUserSnapshotStorage();
     const stored = await readKeycloakUserSnapshot().catch(() => ({ items: [], changed: false }));
@@ -489,7 +503,7 @@ export function createAtpStaffDirectory({
 
   async function listAssignableStaffUsers() {
     const [users, profiles] = await Promise.all([
-      keycloakDirectory.listAssignableUsers().catch(() => []),
+      keycloakDirectory.listAssignableUsers(),
       syncProfilesFromKeycloak().catch(() => [])
     ]);
     const profilesByUsername = new Map(
@@ -626,6 +640,7 @@ export function createAtpStaffDirectory({
     setPictureRefByUsername,
     resetPictureByUsername,
     listCachedAssignableUsers,
+    listCachedAssignableStaffUsers,
     primeLocalKeycloakSnapshot,
     resolveAssignedStaffProfile,
     resolvePhotoDiskPath

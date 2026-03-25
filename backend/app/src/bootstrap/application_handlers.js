@@ -153,6 +153,7 @@ export function createApplicationRoutes({
     getPrincipal,
     canViewKeycloakUsers,
     listAssignableStaffUsers: atpStaffDirectory.listAssignableStaffUsers,
+    listCachedAssignableStaffUsers: atpStaffDirectory.listCachedAssignableStaffUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson: httpHelpers.sendJson
   });
