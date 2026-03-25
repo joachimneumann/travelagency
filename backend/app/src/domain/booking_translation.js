@@ -302,7 +302,8 @@ async function translateSection(section, targetLang, translateEntries, timestamp
   const entries = Object.fromEntries(descriptors.map((descriptor) => [descriptor.key, descriptor.sourceText]));
   const translatedEntries = await translateEntries(entries, normalizedTargetLang, {
     sourceLang: "English",
-    domain: "travel planning"
+    domain: "travel planning",
+    allowGoogleFallback: true
   });
   descriptors.forEach((descriptor) => {
     const translatedText = normalizeText(translatedEntries[descriptor.key]);

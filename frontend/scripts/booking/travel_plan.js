@@ -1,7 +1,8 @@
 import {
   bookingTravelPlanPdfRequest,
   bookingTravelPlanPdfCreateRequest,
-  bookingTravelPlanRequest
+  bookingTravelPlanRequest,
+  bookingTravelPlanTranslateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { logBrowserConsoleError } from "../shared/api.js";
 import {
@@ -49,6 +50,11 @@ import { createBookingTravelPlanImagesModule } from "./travel_plan_images.js";
 import { createBookingTravelPlanAttachmentsModule } from "./travel_plan_attachments.js";
 import { createBookingTravelPlanServiceLibraryModule } from "./travel_plan_service_library.js";
 import { createBookingTravelPlanPdfsModule } from "./travel_plan_pdfs.js";
+import {
+  retranslateConfirmText,
+  translationBusyText,
+  translationSuccessText
+} from "./translation_status.js";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -241,6 +247,43 @@ export function createBookingTravelPlanModule(ctx) {
     els.travel_plan_status.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
+  function travelPlanSectionLabel() {
+    return bookingT("booking.travel_plan", "Travel plan");
+  }
+
+  function travelPlanTranslateButtonState() {
+    const targetLang = bookingContentLang();
+    const status = state.booking?.travel_plan_translation_status || {};
+    const disabledReason = !state.permissions.canEditBooking
+      ? bookingT("booking.translation.disabled.no_permission", "Disabled: you do not have permission to edit this booking.")
+      : targetLang === "en"
+        ? bookingT("booking.translation.disabled.source_language", "Disabled: English is the source language.")
+        : state.travelPlanDirty
+          ? bookingT("booking.travel_plan.translate_everything_clean_state", "Save or discard unsaved travel-plan edits before translating everything.")
+          : !status.has_source_content
+            ? bookingT("booking.translation.disabled.no_source", "Disabled: add English {section} content first.", {
+                section: travelPlanSectionLabel()
+              })
+            : "";
+    return {
+      disabled: Boolean(disabledReason),
+      disabledReason
+    };
+  }
+
+  function syncTravelPlanTranslateButton() {
+    if (!(els.travel_plan_translate_all_btn instanceof HTMLButtonElement)) return;
+    const button = els.travel_plan_translate_all_btn;
+    const { disabled, disabledReason } = travelPlanTranslateButtonState();
+    button.textContent = bookingT("booking.translation.translate_everything", "Translate everything");
+    button.disabled = disabled;
+    if (disabledReason) {
+      button.title = disabledReason;
+    } else {
+      button.removeAttribute("title");
+    }
+  }
+
   function validateTravelPlanDraft(plan) {
     return validateTravelPlanDraftState(plan, {
       getOfferComponentsForLinks,
@@ -281,6 +324,7 @@ export function createBookingTravelPlanModule(ctx) {
       travelPlanStatus("");
     }
     syncTravelPlanRequiredTitleStates();
+    syncTravelPlanTranslateButton();
   }
 
   async function ensureTravelPlanReadyForMutation() {
@@ -1012,39 +1056,6 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
-  function renderTravelPlanPanel() {
-    if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
-    state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
-    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-    els.travel_plan_editor.innerHTML = `
-      ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
-      <div class="travel-plan-footer">
-        <div class="travel-plan-footer__new-day">
-          <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
-        </div>
-        <div class="travel-plan-footer__separator" aria-hidden="true"></div>
-        <div class="travel-plan-footer__existing-pdfs">
-          ${travelPlanPdfsModule.renderTravelPlanPdfsTable()}
-        </div>
-        <div class="travel-plan-footer__create-pdf">
-          <div class="travel-plan-pdf-actions">
-            <div class="travel-plan-pdf-actions__buttons">
-              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview Travel Plan PDF"))}</button>
-              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create Travel Plan PDF"))}</button>
-            </div>
-            <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
-          </div>
-        </div>
-        <div class="travel-plan-footer__attachments">
-          ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
-        </div>
-      </div>
-    `;
-    updateTravelPlanDirtyState();
-    syncTravelPlanRequiredTitleStates();
-    syncAccommodationCreateDaysButtonStates();
-  }
-
   function readLocalizedFieldPayload(container, dataScope, field) {
     const englishInput = container?.querySelector(`[data-${dataScope}="${field}"][data-localized-lang="en"][data-localized-role="source"]`);
     const targetLang = bookingContentLang();
@@ -1557,6 +1568,66 @@ export function createBookingTravelPlanModule(ctx) {
     );
   }
 
+  async function translateEntireTravelPlan() {
+    if (!state.booking?.id) return;
+    const { disabled, disabledReason } = travelPlanTranslateButtonState();
+    if (disabled) {
+      travelPlanStatus(disabledReason, "info");
+      return;
+    }
+
+    const status = state.booking?.travel_plan_translation_status || {};
+    if (status.has_target_content && !window.confirm(retranslateConfirmText(status, travelPlanSectionLabel()))) {
+      return;
+    }
+
+    const request = bookingTravelPlanTranslateRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id },
+      body: {
+        expected_travel_plan_revision: getBookingRevision("travel_plan_revision"),
+        lang: bookingContentLang(),
+        actor: state.user || "keycloak_user"
+      }
+    });
+
+    travelPlanStatus(translationBusyText(travelPlanSectionLabel()), "info");
+    if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
+      els.travel_plan_translate_all_btn.disabled = true;
+    }
+
+    try {
+      const response = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: request.body
+      });
+      if (!response?.booking) {
+        syncTravelPlanTranslateButton();
+        return;
+      }
+      state.booking = response.booking;
+      renderBookingHeader();
+      renderBookingData();
+      applyBookingPayload();
+      renderTravelPlanPanel();
+      await loadActivities();
+      travelPlanStatus(
+        response.unchanged
+          ? bookingT("booking.travel_plan.no_changes", "No travel-plan changes.")
+          : translationSuccessText(travelPlanSectionLabel()),
+        response.unchanged ? "info" : "success"
+      );
+    } catch (error) {
+      logBrowserConsoleError("[travel-plan] Failed to translate the full travel plan.", {
+        booking_id: state.booking?.id || "",
+        target_lang: bookingContentLang()
+      }, error);
+      travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."), "error");
+    } finally {
+      syncTravelPlanTranslateButton();
+    }
+  }
+
   function bindEvents() {
     if (els.travel_plan_editor && els.travel_plan_editor.dataset.travelPlanBound !== "true") {
       els.travel_plan_editor.addEventListener("input", (event) => {
@@ -1720,10 +1791,51 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
     }
+    if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement && els.travel_plan_translate_all_btn.dataset.travelPlanBound !== "true") {
+      els.travel_plan_translate_all_btn.addEventListener("click", () => {
+        void translateEntireTravelPlan();
+      });
+      els.travel_plan_translate_all_btn.dataset.travelPlanBound = "true";
+    }
     travelPlanServiceLibraryModule.bindTravelPlanServiceLibrary();
     travelPlanImagesModule.bindTravelPlanImageInput();
     travelPlanImagesModule.bindTravelPlanImagePreviewModal();
     travelPlanAttachmentsModule.bindTravelPlanAttachmentInput();
+    syncTravelPlanTranslateButton();
+  }
+
+  function renderTravelPlanPanel() {
+    if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
+    state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
+    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    els.travel_plan_editor.innerHTML = `
+      ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
+      <div class="travel-plan-footer">
+        <div class="travel-plan-footer__new-day">
+          <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn" data-travel-plan-add-day type="button">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button>
+        </div>
+        <div class="travel-plan-footer__separator" aria-hidden="true"></div>
+        <div class="travel-plan-footer__existing-pdfs">
+          ${travelPlanPdfsModule.renderTravelPlanPdfsTable()}
+        </div>
+        <div class="travel-plan-footer__create-pdf">
+          <div class="travel-plan-pdf-actions">
+            <div class="travel-plan-pdf-actions__buttons">
+              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-preview-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview Travel Plan PDF"))}</button>
+              <button class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn" data-travel-plan-create-pdf data-requires-clean-state data-clean-state-hint-id="travel_plan_pdf_dirty_hint" type="button">${escapeHtml(bookingT("booking.travel_plan.create_pdf", "Create Travel Plan PDF"))}</button>
+            </div>
+            <span id="travel_plan_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
+          </div>
+        </div>
+        <div class="travel-plan-footer__attachments">
+          ${travelPlanAttachmentsModule.renderTravelPlanAttachments(state.travelPlanDraft)}
+        </div>
+      </div>
+    `;
+    updateTravelPlanDirtyState();
+    syncTravelPlanRequiredTitleStates();
+    syncAccommodationCreateDaysButtonStates();
+    syncTravelPlanTranslateButton();
   }
 
   return {

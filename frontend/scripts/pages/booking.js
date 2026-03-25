@@ -5,7 +5,7 @@ import {
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
-  bookingPersonUpdateRequest,
+  bookingPersonUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   createApiFetcher,
@@ -234,6 +234,7 @@ const els = {
   travel_plan_panel: document.getElementById("travel_plan_panel"),
   travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
   travel_plan_editor: document.getElementById("travel_plan_editor"),
+  travel_plan_translate_all_btn: document.getElementById("travel_plan_translate_all_btn"),
   travel_plan_status: document.getElementById("travel_plan_status"),
   pricing_panel: document.getElementById("pricing_panel"),
   pricingPanelSummary: document.getElementById("pricing_panel_summary"),
