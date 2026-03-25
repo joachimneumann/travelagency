@@ -2,6 +2,7 @@ import {
   getBookingPersons,
   normalizeBookingPersonsPayload
 } from "../../lib/booking_persons.js";
+import { execImageMagick } from "../../lib/imagemagick.js";
 import { normalizeBookingContentLang } from "../../domain/booking_content_i18n.js";
 import {
   isSuspiciousSentinelString,
@@ -177,7 +178,7 @@ export function createBookingHandlers(deps) {
 
   async function processBookingImageToWebp(inputPath, outputPath) {
     await mkdir(path.dirname(outputPath), { recursive: true });
-    await execFile("magick", [
+    await execImageMagick(execFile, [
       inputPath,
       "-auto-orient",
       "-resize",
@@ -191,7 +192,7 @@ export function createBookingHandlers(deps) {
 
   async function processBookingPersonImageToWebp(inputPath, outputPath) {
     await mkdir(path.dirname(outputPath), { recursive: true });
-    await execFile("magick", [
+    await execImageMagick(execFile, [
       inputPath,
       "-auto-orient",
       "-resize",

@@ -2,6 +2,7 @@ import path from "node:path";
 import { validateTranslationEntriesRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../lib/text.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
+import { execImageMagick } from "../../lib/imagemagick.js";
 
 const LANGUAGE_CODE_SET = enumValueSetFor("LanguageCode");
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
@@ -216,7 +217,7 @@ export function createAtpStaffHandlers(deps) {
 
   async function processAtpStaffPhotoToWebp(inputPath, outputPath) {
     await mkdir(path.dirname(outputPath), { recursive: true });
-    await execFile("magick", [
+    await execImageMagick(execFile, [
       inputPath,
       "-auto-orient",
       "-resize",

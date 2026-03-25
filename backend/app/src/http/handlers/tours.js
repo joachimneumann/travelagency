@@ -1,4 +1,5 @@
 import { validateTourTranslateFieldsRequest } from "../../../Generated/API/generated_APIModels.js";
+import { execImageMagick } from "../../lib/imagemagick.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -520,7 +521,7 @@ export function createTourHandlers(deps) {
 
   async function processTourImageToWebp(inputPath, outputPath) {
     await mkdir(path.dirname(outputPath), { recursive: true });
-    await execFile("magick", [
+    await execImageMagick(execFile, [
       inputPath,
       "-auto-orient",
       "-resize",
