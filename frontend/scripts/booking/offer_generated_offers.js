@@ -128,6 +128,50 @@ export function createBookingGeneratedOffersModule(ctx) {
     });
   }
 
+  function hasTravelPlanServices(travelPlan) {
+    const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
+    return days.some((day) => {
+      const services = Array.isArray(day?.services)
+        ? day.services
+        : (Array.isArray(day?.items) ? day.items : []);
+      return services.length > 0;
+    });
+  }
+
+  function formatGenerateOfferError(response) {
+    const detail = String(response?.detail || "").trim();
+    const error = String(response?.error || "").trim();
+    const message = detail || error;
+    if (!message) {
+      return bookingT("booking.offer.error.generate_pdf", "Could not generate offer PDF.");
+    }
+    if (/otp confirmation requires a booking contact email/i.test(message)) {
+      return bookingT(
+        "booking.offer.error.generate_missing_booking_confirmation_email",
+        "This booking cannot generate a new offer yet because OTP booking confirmation requires a customer email address."
+      );
+    }
+    if (/deposit payment acceptance requires at least one payment term line/i.test(message)) {
+      return bookingT(
+        "booking.offer.error.generate_missing_payment_terms",
+        "This booking cannot generate a new offer yet because the selected booking confirmation route needs at least one payment term line."
+      );
+    }
+    if (/selected acceptance payment term line was not found/i.test(message)) {
+      return bookingT(
+        "booking.offer.error.generate_invalid_payment_term",
+        "This booking cannot generate a new offer because the selected payment term line for booking confirmation is missing."
+      );
+    }
+    if (/no travel plan|travel plan.*not available|travel plan.*empty/i.test(message)) {
+      return bookingT(
+        "booking.offer.error.generate_missing_travel_plan",
+        "Add at least one travel-plan service before generating a new offer."
+      );
+    }
+    return message;
+  }
+
   function resolveGeneratedOfferStatus(generatedOffer) {
     const bookingConfirmation = generatedOffer?.booking_confirmation;
     if (bookingConfirmation && typeof bookingConfirmation === "object") {
@@ -584,6 +628,16 @@ export function createBookingGeneratedOffersModule(ctx) {
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
     if (!(await ensureOfferCleanState())) return;
+    if (!hasTravelPlanServices(state.booking?.travel_plan)) {
+      setOfferStatus(
+        bookingT(
+          "booking.offer.error.generate_missing_travel_plan",
+          "Add at least one travel-plan service before generating a new offer."
+        ),
+        "error"
+      );
+      return;
+    }
     const requestedRouteMode = normalizeGeneratedOfferRouteMode(
       els.offer_generation_route_mode?.value || generatedOfferRouteMode || "DEPOSIT_PAYMENT"
     );
@@ -618,7 +672,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       : {
           mode: "OTP"
         };
-    setOfferStatus(bookingT("booking.offer.generating_pdf", "Generating offer PDF..."));
+    setOfferStatus(bookingT("booking.offer.generating_pdf", "Generating offer PDF..."), "info");
     const response = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
@@ -636,7 +690,7 @@ export function createBookingGeneratedOffersModule(ctx) {
       setOfferStatus("");
       return;
     }
-    setOfferStatus(response?.detail || response?.error || bookingT("booking.offer.error.generate_pdf", "Could not generate offer PDF."));
+    setOfferStatus(formatGenerateOfferError(response), "error");
   }
 
   return {

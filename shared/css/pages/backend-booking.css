@@ -67,6 +67,10 @@
   margin: 0;
 }
 
+.booking-detail-page .booking-dirty-bar.booking-dirty-bar--dirty {
+  background: transparent;
+}
+
 .booking-detail-page .booking-dirty-bar__panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

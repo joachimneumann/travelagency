@@ -206,6 +206,31 @@ function sortProfiles(items) {
   });
 }
 
+function normalizeRoleNames(items) {
+  return unique((Array.isArray(items) ? items : []).map((item) => normalizeText(item)).filter(Boolean));
+}
+
+function normalizeKeycloakUserSnapshotEntry(user) {
+  const id = normalizeText(user?.id);
+  if (!id) return null;
+  const username = normalizeText(user?.username).toLowerCase();
+  return {
+    id,
+    ...(username ? { username } : {}),
+    ...(normalizeText(user?.name) ? { name: normalizeText(user.name) } : {}),
+    active: user?.active !== false,
+    roles: normalizeRoleNames(user?.roles)
+  };
+}
+
+function sortKeycloakUserSnapshotItems(items) {
+  return [...(Array.isArray(items) ? items : [])].sort((left, right) => {
+    const leftLabel = normalizeText(left?.name) || normalizeText(left?.username) || normalizeText(left?.id);
+    const rightLabel = normalizeText(right?.name) || normalizeText(right?.username) || normalizeText(right?.id);
+    return leftLabel.localeCompare(rightLabel);
+  });
+}
+
 function defaultStoredProfileForUser(user) {
   const username = normalizeText(user?.username).toLowerCase();
   const blueprint = DEFAULT_PROFILE_BLUEPRINTS[username] || genericProfileBlueprint(user);
@@ -291,6 +316,8 @@ export function createAtpStaffDirectory({
   keycloakDirectory,
   writeQueueRef
 }) {
+  const keycloakUsersSnapshotPath = path.join(path.dirname(dataPath), "keycloak_users_snapshot.json");
+
   async function writeAvatarIfMissing(profile) {
     const username = normalizeText(profile?.username).toLowerCase();
     if (!username) return false;
@@ -331,6 +358,81 @@ export function createAtpStaffDirectory({
     await writeQueueRef.current;
   }
 
+  async function readKeycloakUserSnapshot() {
+    const raw = await readFile(keycloakUsersSnapshotPath, "utf8");
+    const parsed = JSON.parse(raw);
+    const sourceItems = Array.isArray(parsed?.items) ? parsed.items : [];
+    let changed = false;
+    const items = sourceItems
+      .map((entry) => {
+        const normalized = normalizeKeycloakUserSnapshotEntry(entry);
+        if (!normalized) {
+          changed = true;
+          return null;
+        }
+        if (JSON.stringify(entry) !== JSON.stringify(normalized)) changed = true;
+        return normalized;
+      })
+      .filter(Boolean);
+    return { items: sortKeycloakUserSnapshotItems(items), changed };
+  }
+
+  async function persistKeycloakUserSnapshot(payload) {
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      await writeFile(keycloakUsersSnapshotPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+    });
+    await writeQueueRef.current;
+  }
+
+  async function ensureKeycloakUserSnapshotStorage() {
+    await mkdir(path.dirname(keycloakUsersSnapshotPath), { recursive: true });
+    if (!(await fileExists(keycloakUsersSnapshotPath))) {
+      await writeFile(keycloakUsersSnapshotPath, `${JSON.stringify({ items: [] }, null, 2)}\n`, "utf8");
+    }
+    const payload = await readKeycloakUserSnapshot().catch(() => ({ items: [], changed: true }));
+    if (payload.changed) {
+      await persistKeycloakUserSnapshot({ items: payload.items });
+    }
+  }
+
+  async function listCachedAssignableUsers() {
+    await ensureKeycloakUserSnapshotStorage();
+    const payload = await readKeycloakUserSnapshot().catch(() => ({ items: [] }));
+    return Array.isArray(payload?.items) ? payload.items : [];
+  }
+
+  async function syncKeycloakUserSnapshotFromUsers(users) {
+    await ensureKeycloakUserSnapshotStorage();
+    const stored = await readKeycloakUserSnapshot().catch(() => ({ items: [], changed: false }));
+    const itemsById = new Map(
+      (Array.isArray(stored?.items) ? stored.items : [])
+        .map((item) => [normalizeText(item?.id), normalizeKeycloakUserSnapshotEntry(item)])
+        .filter(([id, item]) => Boolean(id && item))
+    );
+    const liveIds = new Set();
+
+    for (const user of Array.isArray(users) ? users : []) {
+      const normalized = normalizeKeycloakUserSnapshotEntry(user);
+      if (!normalized) continue;
+      itemsById.set(normalized.id, normalized);
+      liveIds.add(normalized.id);
+    }
+
+    for (const [id, item] of itemsById.entries()) {
+      if (liveIds.has(id)) continue;
+      itemsById.set(id, {
+        ...item,
+        active: false
+      });
+    }
+
+    const nextItems = sortKeycloakUserSnapshotItems(Array.from(itemsById.values()));
+    if (JSON.stringify(Array.isArray(stored?.items) ? stored.items : []) !== JSON.stringify(nextItems)) {
+      await persistKeycloakUserSnapshot({ items: nextItems });
+    }
+    return nextItems;
+  }
+
   async function ensureStorage() {
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(photosDir, { recursive: true });
@@ -349,6 +451,7 @@ export function createAtpStaffDirectory({
     if (changed) {
       await persistProfiles({ items: payload.items });
     }
+    await ensureKeycloakUserSnapshotStorage();
   }
 
   async function syncProfilesFromKeycloak() {
@@ -357,6 +460,7 @@ export function createAtpStaffDirectory({
     const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
     let changed = Boolean(stored.changed);
     const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
+    await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
     for (const user of users) {
       const username = normalizeText(user?.username).toLowerCase();
       if (!username) continue;
@@ -491,12 +595,24 @@ export function createAtpStaffDirectory({
   async function resolveAssignedStaffProfile(keycloakUserId) {
     const normalizedUserId = normalizeText(keycloakUserId);
     if (!normalizedUserId) return null;
-    const user = await keycloakDirectory.getUserById(normalizedUserId).catch(() => null);
+    await ensureStorage();
+    const snapshot = await readKeycloakUserSnapshot().catch(() => ({ items: [] }));
+    const user = (Array.isArray(snapshot?.items) ? snapshot.items : [])
+      .find((item) => normalizeText(item?.id) === normalizedUserId) || null;
     const username = normalizeText(user?.username).toLowerCase();
-    if (!username) return null;
-    const profiles = await syncProfilesFromKeycloak().catch(() => []);
-    const stored = (Array.isArray(profiles) ? profiles : []).find((profile) => normalizeText(profile?.username).toLowerCase() === username);
-    return buildResponseProfile(stored, user);
+    const storedProfiles = await readProfiles().catch(() => ({ items: [] }));
+    const stored = username
+      ? (Array.isArray(storedProfiles?.items) ? storedProfiles.items : [])
+        .find((profile) => normalizeText(profile?.username).toLowerCase() === username)
+      : null;
+    if (!stored && !user) return null;
+    return buildResponseProfile(stored, user || { id: normalizedUserId, username: "", name: "", active: false, roles: [] });
+  }
+
+  async function primeLocalKeycloakSnapshot() {
+    await ensureStorage();
+    const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
+    return syncKeycloakUserSnapshotFromUsers(users);
   }
 
   return {
@@ -509,6 +625,8 @@ export function createAtpStaffDirectory({
     updateProfileByUsername,
     setPictureRefByUsername,
     resetPictureByUsername,
+    listCachedAssignableUsers,
+    primeLocalKeycloakSnapshot,
     resolveAssignedStaffProfile,
     resolvePhotoDiskPath
   };

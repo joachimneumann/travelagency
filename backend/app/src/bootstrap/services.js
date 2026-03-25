@@ -61,6 +61,8 @@ export function createBackendServices({
     writeQueueRef
   });
 
+  atpStaffDirectory.primeLocalKeycloakSnapshot().catch(() => {});
+
   const countryReferenceStore = createCountryReferenceStore({
     dataPath: collections.countryReferenceInfoPath,
     writeQueueRef,
@@ -94,7 +96,7 @@ export function createBackendServices({
     buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel,
     buildBookingPricingReadModel: pricingHelpers.buildBookingPricingReadModel,
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
-    listAssignableKeycloakUsers: keycloakDirectory.listAssignableUsers,
+    listAssignableKeycloakUsers: atpStaffDirectory.listCachedAssignableUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
     listBookingTravelPlanPdfs: travelPlanPdfArtifacts.listBookingTravelPlanPdfs,

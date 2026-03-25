@@ -534,7 +534,10 @@ async function init() {
     els.pricing_panel.addEventListener("input", schedulePricingDirtyState);
     els.pricing_panel.addEventListener("change", schedulePricingDirtyState);
     els.pricing_panel.addEventListener("click", (event) => {
-      if (event.target.closest("button")) schedulePricingDirtyState();
+      const button = event.target instanceof Element ? event.target.closest("button") : null;
+      if (!(button instanceof HTMLButtonElement)) return;
+      if (button.closest(".booking-section__head, .backend-section__head")) return;
+      schedulePricingDirtyState();
     });
   }
   if (els.offer_currency_input)
@@ -898,7 +901,9 @@ async function saveCoreEdits() {
 }
 
 async function recordBookingMilestoneAction(actionKey) {
-  return await coreModule.recordBookingMilestoneAction(actionKey);
+  const result = await coreModule.recordBookingMilestoneAction(actionKey);
+  renderPricingPanel({ preserveDraft: true, markDerivedChangesDirty: true });
+  return result;
 }
 
 async function saveNoteEdits() {
@@ -974,8 +979,8 @@ async function loadActivities() {
   renderActivitiesTable(Array.isArray(payload?.items) ? payload.items : payload?.activities);
 }
 
-function renderPricingPanel() {
-  const result = pricingModule.renderPricingPanel();
+function renderPricingPanel(options = {}) {
+  const result = pricingModule.renderPricingPanel(options);
   updateCleanStateActionAvailability();
   return result;
 }
@@ -1182,6 +1187,7 @@ const pricingModule = createBookingPricingModule({
   els,
   apiOrigin,
   fetchBookingMutation,
+  getBookingRevision,
   renderBookingHeader,
   renderBookingData,
   loadActivities,

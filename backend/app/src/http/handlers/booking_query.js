@@ -158,7 +158,8 @@ export function createBookingQueryModule(deps) {
       persons: getBookingPersons(booking)
     }, {
       lang: resolveRequestedLang(options),
-      includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
+      includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken),
+      listMode: options?.listMode === true
     });
   }
 

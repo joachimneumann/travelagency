@@ -46,7 +46,8 @@ export function createKeycloakDirectory({
   keycloakDirectoryUsername,
   keycloakDirectoryPassword,
   keycloakDirectoryAdminRealm,
-  listCacheTtlMs = 60 * 1000
+  listCacheTtlMs = 60 * 1000,
+  requestTimeoutMs = 2500
 }) {
   const cfg = {
     keycloakEnabled: Boolean(keycloakEnabled),
@@ -61,7 +62,8 @@ export function createKeycloakDirectory({
     keycloakDirectoryUsername: normalizeText(keycloakDirectoryUsername),
     keycloakDirectoryPassword: normalizeText(keycloakDirectoryPassword),
     keycloakDirectoryAdminRealm: normalizeText(keycloakDirectoryAdminRealm) || "master",
-    listCacheTtlMs
+    listCacheTtlMs,
+    requestTimeoutMs: Math.max(250, Number(requestTimeoutMs) || 2500)
   };
 
   let tokenCache = null;
@@ -88,12 +90,26 @@ export function createKeycloakDirectory({
   }
 
   async function fetchJson(url, options = {}) {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      throw new Error(`Keycloak directory HTTP ${response.status} for ${url}: ${detail || "no response body"}`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), cfg.requestTimeoutMs);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      if (!response.ok) {
+        const detail = await response.text().catch(() => "");
+        throw new Error(`Keycloak directory HTTP ${response.status} for ${url}: ${detail || "no response body"}`);
+      }
+      return response.json();
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error(`Keycloak directory request timed out after ${cfg.requestTimeoutMs}ms for ${url}`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
     }
-    return response.json();
   }
 
   async function getAdminAccessToken() {

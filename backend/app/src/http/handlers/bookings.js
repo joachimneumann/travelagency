@@ -823,7 +823,7 @@ export function createBookingHandlers(deps) {
     const { items: filtered, filters, sort } = filterBookings(store, requestUrl.searchParams);
     const visibleBookings = filtered.filter((booking) => canAccessBooking(principal, booking));
     const visible = await Promise.all(
-      visibleBookings.map((booking) => buildBookingPayload(booking, req))
+      visibleBookings.map((booking) => buildBookingPayload(booking, { req, listMode: true }))
     );
     const paged = paginate(visible, requestUrl.searchParams);
     sendJson(res, 200, buildPaginatedListResponse(paged, { filters, sort }));

@@ -63,9 +63,17 @@ export function createBookingOfferModule(ctx) {
     // }
   }
 
-  function setOfferStatus(message) {
+  function setOfferStatus(message, type = "info") {
     if (!els.offer_status) return;
     els.offer_status.textContent = message;
+    els.offer_status.classList.remove(
+      "booking-inline-status--error",
+      "booking-inline-status--success",
+      "booking-inline-status--info"
+    );
+    if (!message) return;
+    const normalizedType = type === "error" || type === "success" ? type : "info";
+    els.offer_status.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
   function clearOfferStatus() {

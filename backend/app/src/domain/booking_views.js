@@ -318,6 +318,7 @@ export function createBookingViewHelpers({
     } = { ...booking };
     delete normalizedBooking.budget;
     const lang = normalizeBookingContentLang(options?.lang || "en");
+    const listMode = options?.listMode === true;
     const preferredCurrency = safeCurrency(normalizedBooking?.preferred_currency || normalizedBooking?.pricing?.currency || baseCurrency);
     const offerCurrency = safeCurrency(normalizedBooking?.offer?.currency || preferredCurrency);
     const milestoneState = resolveBookingMilestoneState({
@@ -326,28 +327,37 @@ export function createBookingViewHelpers({
       last_action_at: normalizedBooking?.last_action_at,
       lifecycle: normalizedBooking?.lifecycle
     }, normalizedBooking?.stage);
-    const generatedOffers = await Promise.all(
-      (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
-        ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, {
-          lang,
-          includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
-        })),
-        pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
-      }))
-    );
+    const generatedOffers = listMode
+      ? []
+      : await Promise.all(
+        (Array.isArray(normalizedBooking?.generated_offers) ? normalizedBooking.generated_offers : []).map(async (generatedOffer) => ({
+          ...(await buildGeneratedOfferSnapshotReadModel(generatedOffer, offerCurrency, {
+            lang,
+            includeBookingConfirmationToken: Boolean(options?.includeBookingConfirmationToken)
+          })),
+          pdf_url: `/api/v1/bookings/${encodeURIComponent(normalizedBooking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf`
+        }))
+      );
     const assignedKeycloakUserId = normalizeText(normalizedBooking?.assigned_keycloak_user_id);
-    const assignedKeycloakUserLabels = assignedKeycloakUserId
-      ? await resolveAssignableKeycloakUserLabelMap()
-      : null;
     const assignedAtpStaff = assignedKeycloakUserId && typeof resolveAssignedAtpStaffProfile === "function"
       ? await resolveAssignedAtpStaffProfile(assignedKeycloakUserId).catch(() => null)
       : null;
-    const travelPlanPdfs = typeof listBookingTravelPlanPdfs === "function"
+    const travelPlanPdfs = !listMode && typeof listBookingTravelPlanPdfs === "function"
       ? await listBookingTravelPlanPdfs(normalizedBooking.id).catch(() => [])
       : [];
-    const assignedKeycloakUserLabel = assignedKeycloakUserId
-      ? normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || normalizeText(assignedAtpStaff?.name) || assignedKeycloakUserId
+    let assignedKeycloakUserLabel = assignedKeycloakUserId
+      ? normalizeText(assignedAtpStaff?.name)
       : "";
+    if (assignedKeycloakUserId && !assignedKeycloakUserLabel) {
+      const assignedKeycloakUserLabels = await resolveAssignableKeycloakUserLabelMap().catch(() => new Map());
+      assignedKeycloakUserLabel = normalizeText(assignedKeycloakUserLabels?.get(assignedKeycloakUserId)) || assignedKeycloakUserId;
+    }
+    const pricingDisplayCurrency = listMode
+      ? safeCurrency(normalizedBooking?.pricing?.currency || preferredCurrency)
+      : preferredCurrency;
+    const offerDisplayCurrency = listMode
+      ? safeCurrency(normalizedBooking?.offer?.currency || offerCurrency)
+      : offerCurrency;
     return {
       ...normalizedBooking,
       stage: milestoneState.stage,
@@ -367,8 +377,8 @@ export function createBookingViewHelpers({
       preferred_currency: preferredCurrency,
       travel_plan: buildBookingTravelPlanReadModel(normalizedBooking.travel_plan, normalizedBooking.offer, { lang }),
       travel_plan_translation_status: buildTravelPlanTranslationStatus(normalizedBooking.travel_plan, lang),
-      pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, preferredCurrency),
-      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerCurrency, { lang }),
+      pricing: await buildBookingPricingReadModel(normalizedBooking.pricing, pricingDisplayCurrency),
+      offer: await buildBookingOfferReadModel(normalizedBooking.offer, offerDisplayCurrency, { lang }),
       travel_plan_pdfs: travelPlanPdfs.map((item) => ({
         ...item,
         sent_to_customer: item?.sent_to_customer === true,

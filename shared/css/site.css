@@ -2916,6 +2916,10 @@ textarea:focus-visible {
   color: var(--text-muted-strong);
 }
 
+.booking-confirmation-heading-spacer {
+  height: 1.35rem;
+}
+
 .booking-confirmation-intro {
   margin: 0 0 1rem;
   color: var(--text-muted-strong);

@@ -129,11 +129,62 @@ export function createBookingPricingModule(ctx) {
     captureControlSnapshot,
     setBookingSectionDirty
   } = ctx;
+
+  function pricingRevision() {
+    if (typeof getBookingRevision === "function") {
+      return getBookingRevision("pricing_revision");
+    }
+    const value = Number(state.booking?.pricing_revision);
+    return Number.isFinite(value) && value >= 0 ? Math.trunc(value) : 0;
+  }
   const pricingDirtyTracker = createSnapshotDirtyTracker({
     captureSnapshot: () => captureControlSnapshot(els.pricing_panel),
-    isEnabled: () => state.permissions.canEditBooking,
+    isEnabled: () => state.permissions.canEditBooking && isPaymentsSectionActivated(),
     onDirtyChange: (isDirty) => setBookingSectionDirty("pricing", isDirty)
   });
+
+  function effectiveMilestoneActionKey() {
+    const draftAction = String(state.coreDraft?.milestone_action_key || "").trim().toUpperCase();
+    if (draftAction) return draftAction;
+    const savedAction = String(state.booking?.last_action || "").trim().toUpperCase();
+    if (savedAction) return savedAction;
+    return String(state.booking?.stage || "").trim().toUpperCase();
+  }
+
+  function isPaymentsSectionActivated() {
+    const actionKey = effectiveMilestoneActionKey();
+    return actionKey === "DEPOSIT_RECEIVED"
+      || String(state.booking?.stage || "").trim().toUpperCase() === "PAYMENT_RECEIVED"
+      || Boolean(state.booking?.milestones?.deposit_received_at);
+  }
+
+  function effectiveDepositReceivedAt() {
+    const savedTimestamp = String(
+      state.booking?.milestones?.deposit_received_at
+      || (String(state.booking?.last_action || "").trim().toUpperCase() === "DEPOSIT_RECEIVED"
+        ? state.booking?.last_action_at
+        : "")
+      || ""
+    ).trim();
+    if (savedTimestamp) return savedTimestamp;
+    return isPaymentsSectionActivated() ? new Date().toISOString() : "";
+  }
+
+  function setPricingControlsVisibility(active) {
+    const pricingControls = els.pricing_currency_input?.closest(".backend-controls");
+    const adjustmentsWrap = els.pricing_adjustments_table?.closest(".backend-table-wrap");
+    const adjustmentsHeading = adjustmentsWrap?.previousElementSibling || null;
+    const paymentsWrap = els.pricing_payments_table?.closest(".backend-table-wrap");
+    const paymentsHeading = paymentsWrap?.previousElementSibling || null;
+    const pricingStatusRow = els.pricing_status?.closest(".backend-controls");
+
+    if (pricingControls instanceof HTMLElement) pricingControls.hidden = !active;
+    if (adjustmentsHeading instanceof HTMLElement) adjustmentsHeading.hidden = !active;
+    if (adjustmentsWrap instanceof HTMLElement) adjustmentsWrap.hidden = !active;
+    if (paymentsHeading instanceof HTMLElement) paymentsHeading.hidden = !active;
+    if (paymentsWrap instanceof HTMLElement) paymentsWrap.hidden = !active;
+    if (pricingStatusRow instanceof HTMLElement) pricingStatusRow.hidden = !active;
+  }
 
   function setPricingStatus(message) {
     if (!els.pricing_status) return;
@@ -162,6 +213,99 @@ export function createBookingPricingModule(ctx) {
         summary: pricing.summary || {}
       })
     );
+  }
+
+  function currentOfferPaymentTerms() {
+    const draftTerms = state.offerDraft?.payment_terms;
+    if (draftTerms && typeof draftTerms === "object") return draftTerms;
+    return state.booking?.offer?.payment_terms || null;
+  }
+
+  function currentOfferCurrency() {
+    return normalizeCurrencyCode(
+      state.offerDraft?.payment_terms?.currency
+      || state.offerDraft?.currency
+      || state.booking?.offer?.payment_terms?.currency
+      || state.booking?.offer?.currency
+      || state.booking?.preferred_currency
+      || "USD"
+    );
+  }
+
+  function currentOfferTotalPriceCents() {
+    const total = Number(
+      state.offerDraft?.total_price_cents
+      ?? state.offerDraft?.totals?.total_price_cents
+      ?? state.booking?.offer?.total_price_cents
+      ?? state.booking?.offer?.totals?.total_price_cents
+      ?? 0
+    );
+    return Number.isFinite(total) ? Math.max(0, Math.round(total)) : 0;
+  }
+
+  function resolvePaymentTermLineAmount(line, fallbackAmount = 0) {
+    const resolved = Number(line?.resolved_amount_cents);
+    if (Number.isFinite(resolved)) return Math.max(0, Math.round(resolved));
+    const fixed = Number(line?.amount_spec?.fixed_amount_cents);
+    if (Number.isFinite(fixed)) return Math.max(0, Math.round(fixed));
+    return Math.max(0, Math.round(Number(fallbackAmount || 0) || 0));
+  }
+
+  function nextPricingFromPaymentTerms(basePricing) {
+    const pricing = clonePricing(basePricing || {});
+    const paymentTerms = currentOfferPaymentTerms();
+    const lines = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines : [];
+    if (!lines.length) {
+      return pricing;
+    }
+
+    const currency = currentOfferCurrency();
+    const existingPayments = Array.isArray(pricing.payments) ? pricing.payments : [];
+    const remainingPayments = [...existingPayments];
+    const normalizedDepositReceivedAt = effectiveDepositReceivedAt() || new Date().toISOString();
+
+    const payments = lines.map((line, index) => {
+      const lineLabel = String(line?.label || "").trim();
+      const matchingIndex = remainingPayments.findIndex((payment) => String(payment?.label || "").trim() === lineLabel);
+      const existing = matchingIndex >= 0
+        ? remainingPayments.splice(matchingIndex, 1)[0]
+        : remainingPayments.shift() || null;
+      const kind = String(line?.kind || "").trim().toUpperCase();
+      const isDeposit = kind === "DEPOSIT";
+      const dueType = String(line?.due_rule?.type || "").trim().toUpperCase();
+      const fixedDate = String(line?.due_rule?.fixed_date || "").trim();
+      const existingStatus = String(existing?.status || "").trim().toUpperCase();
+      const existingPaidAt = String(existing?.paid_at || "").trim();
+      const status = isDeposit ? "PAID" : (existingStatus === "PAID" ? "PAID" : "PENDING");
+      const paidAt = status === "PAID"
+        ? (existingPaidAt || (isDeposit ? normalizedDepositReceivedAt : ""))
+        : "";
+
+      return {
+        id: String(existing?.id || "").trim(),
+        label: lineLabel || `${bookingT("booking.payment", "Payment")} ${index + 1}`,
+        due_date: dueType === "FIXED_DATE"
+          ? (fixedDate || null)
+          : (String(existing?.due_date || "").trim() || null),
+        net_amount_cents: resolvePaymentTermLineAmount(line, existing?.net_amount_cents || 0),
+        tax_rate_basis_points: Number.isFinite(Number(existing?.tax_rate_basis_points))
+          ? Number(existing.tax_rate_basis_points)
+          : 0,
+        status,
+        paid_at: paidAt || null,
+        notes: String(existing?.notes || line?.description || "").trim() || null
+      };
+    });
+
+    return {
+      ...pricing,
+      currency,
+      agreed_net_amount_cents: Number(pricing.agreed_net_amount_cents || 0) > 0
+        ? Math.round(Number(pricing.agreed_net_amount_cents || 0))
+        : currentOfferTotalPriceCents(),
+      adjustments: Array.isArray(pricing.adjustments) ? pricing.adjustments : [],
+      payments
+    };
   }
 
   function renderPricingSummaryTable(pricing) {
@@ -304,12 +448,31 @@ export function createBookingPricingModule(ctx) {
     }
   }
 
-  function renderPricingPanel() {
+  function renderPricingPanel(options = {}) {
     if (!els.pricing_panel || !state.booking) return;
-    const pricing = clonePricing(state.booking.pricing || {});
+    const preserveDraft = options?.preserveDraft === true;
+    const markDerivedChangesDirty = options?.markDerivedChangesDirty === true;
+    const paymentsActivated = isPaymentsSectionActivated();
+    const savedPricing = clonePricing(state.booking.pricing || {});
+    const hasDirtyDraft = preserveDraft && state.dirty.pricing && state.pricingDraft && typeof state.pricingDraft === "object";
+    const pricing = paymentsActivated
+      ? nextPricingFromPaymentTerms(hasDirtyDraft ? state.pricingDraft : savedPricing)
+      : savedPricing;
     state.pricingDraft = pricing;
-    const currency = normalizeCurrencyCode(pricing.currency);
+    setPricingControlsVisibility(paymentsActivated);
 
+    if (!paymentsActivated) {
+      if (els.pricing_summary_table) {
+        els.pricing_summary_table.innerHTML = `<tbody><tr><td colspan="2">${escapeHtml(bookingT("booking.pricing.deposit_received_required", 'No payment totals yet. Press "Deposit received" at the top of this page to indicate that the deposit has been received by ATP'))}</td></tr></tbody>`;
+      }
+      if (els.pricing_adjustments_table) els.pricing_adjustments_table.innerHTML = "";
+      if (els.pricing_payments_table) els.pricing_payments_table.innerHTML = "";
+      clearPricingStatus();
+      markPricingSnapshotClean();
+      return;
+    }
+
+    const currency = normalizeCurrencyCode(pricing.currency);
     if (els.pricing_currency_input) {
       els.pricing_currency_input.value = currency;
       els.pricing_currency_input.disabled = !state.permissions.canEditBooking;
@@ -325,7 +488,14 @@ export function createBookingPricingModule(ctx) {
     renderPricingAdjustmentsTable();
     renderPricingPaymentsTable();
     clearPricingStatus();
+    if (hasDirtyDraft) {
+      pricingDirtyTracker.setDirty(true);
+      return;
+    }
     markPricingSnapshotClean();
+    if (markDerivedChangesDirty && JSON.stringify(pricing) !== JSON.stringify(savedPricing)) {
+      pricingDirtyTracker.setDirty(true);
+    }
   }
 
   function collectPricingPayload() {
@@ -404,7 +574,7 @@ export function createBookingPricingModule(ctx) {
     const result = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
-        expected_pricing_revision: getBookingRevision("pricing_revision"),
+        expected_pricing_revision: pricingRevision(),
         pricing,
         actor: state.user
       }
