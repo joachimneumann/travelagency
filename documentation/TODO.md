@@ -17,7 +17,9 @@ Then Automatically derive the stage and write a description of the stage and las
 
 * make days and services in the travel plan collapsable
 
+* can you show the day plan in the PDF for each day in a two column layout to add more services on one page, dynamically distributing the services, but with a a rough chronological order from top to bottom over the two columns.
 
+* title of services: no kind
 ## payments
 
 ok, I want to move on to payments section in booking.html.
