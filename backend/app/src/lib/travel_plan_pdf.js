@@ -50,8 +50,10 @@ const PDF_FONT_REGULAR_CANDIDATES = [
   "/System/Library/Fonts/STHeiti Light.ttc",
   "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/share/fonts/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Regular.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 ];
 
@@ -63,8 +65,10 @@ const PDF_FONT_BOLD_CANDIDATES = [
   "/System/Library/Fonts/Supplemental/Songti.ttc",
   "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/share/fonts/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Bold.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 ];
 
@@ -301,13 +305,16 @@ async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours,
   return null;
 }
 
-function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
+export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir) {
   if (!bookingImagesDir) return null;
   const candidate = safeArray(item?.images)
     .filter((image) => image?.is_customer_visible !== false)
     .find((image) => textOrNull(image?.storage_path));
   if (!candidate) return null;
-  return path.resolve(bookingImagesDir, String(candidate.storage_path).replace(/^\/+/, ""));
+  const storagePath = String(candidate.storage_path || "");
+  const publicRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");
+  const relativePath = publicRelativePath || storagePath.replace(/^\/+/, "");
+  return relativePath ? path.resolve(bookingImagesDir, relativePath) : null;
 }
 
 async function buildItemThumbnailMap(plan, bookingImagesDir) {

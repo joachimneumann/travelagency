@@ -24,8 +24,10 @@ const PDF_FONT_REGULAR_CANDIDATES = [
   "/System/Library/Fonts/STHeiti Light.ttc",
   "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/share/fonts/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Regular.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 ];
 
@@ -37,8 +39,10 @@ const PDF_FONT_BOLD_CANDIDATES = [
   "/System/Library/Fonts/Supplemental/Songti.ttc",
   "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
   "/Library/Fonts/Arial Unicode.ttf",
+  "/usr/share/fonts/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
   "/usr/share/fonts/opentype/noto/NotoSans-Bold.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 ];
 
