@@ -1,5 +1,39 @@
 FROM node:22-alpine
 
-RUN apk add --no-cache imagemagick libwebp-tools font-noto font-noto-cjk font-droid-nonlatin font-unifont ttf-dejavu
+RUN apk add --no-cache imagemagick libwebp-tools python3 py3-fonttools font-noto font-noto-cjk font-droid-nonlatin font-unifont ttf-dejavu \
+  && mkdir -p /usr/local/share/fonts/extracted \
+  && python3 - <<'PY'
+from pathlib import Path
+from fontTools.ttLib import TTCollection
+
+targets = [
+    ("/usr/share/fonts/noto/NotoSansCJK-Regular.ttc", "KR", "/usr/local/share/fonts/extracted/NotoSansCJKkr-Regular.ttf"),
+    ("/usr/share/fonts/noto/NotoSansCJK-Bold.ttc", "KR", "/usr/local/share/fonts/extracted/NotoSansCJKkr-Bold.ttf"),
+]
+
+for source_path, marker, output_path in targets:
+    source = Path(source_path)
+    if not source.exists():
+        continue
+    collection = TTCollection(str(source))
+    selected_font = None
+    for font in collection.fonts:
+        name_table = font["name"]
+        names = []
+        for record in name_table.names:
+            try:
+                names.append(record.toUnicode())
+            except Exception:
+                continue
+        joined = " ".join(names)
+        if marker.lower() in joined.lower():
+            selected_font = font
+            break
+    if selected_font is None and collection.fonts:
+        selected_font = collection.fonts[0]
+    if selected_font is not None:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        selected_font.save(output_path)
+PY
 
 WORKDIR /srv/backend/app
