@@ -17,7 +17,10 @@ services:
         condition: service_healthy
 
   backend:
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.staging
+    image: asiatravelplan-backend-staging:latest
     restart: unless-stopped
     working_dir: /srv/backend/app
     command: sh -c "npm ci && npm start"
