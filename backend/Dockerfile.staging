@@ -7,6 +7,10 @@ from pathlib import Path
 from fontTools.ttLib import TTCollection
 
 targets = [
+    ("/usr/share/fonts/noto/NotoSansCJK-Regular.ttc", "JP", "/usr/local/share/fonts/extracted/NotoSansCJKjp-Regular.ttf"),
+    ("/usr/share/fonts/noto/NotoSansCJK-Bold.ttc", "JP", "/usr/local/share/fonts/extracted/NotoSansCJKjp-Bold.ttf"),
+    ("/usr/share/fonts/noto/NotoSansCJK-Regular.ttc", "SC", "/usr/local/share/fonts/extracted/NotoSansCJKsc-Regular.ttf"),
+    ("/usr/share/fonts/noto/NotoSansCJK-Bold.ttc", "SC", "/usr/local/share/fonts/extracted/NotoSansCJKsc-Bold.ttf"),
     ("/usr/share/fonts/noto/NotoSansCJK-Regular.ttc", "KR", "/usr/local/share/fonts/extracted/NotoSansCJKkr-Regular.ttf"),
     ("/usr/share/fonts/noto/NotoSansCJK-Bold.ttc", "KR", "/usr/local/share/fonts/extracted/NotoSansCJKkr-Bold.ttf"),
 ]

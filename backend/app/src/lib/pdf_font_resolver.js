@@ -10,6 +10,12 @@ const LANGUAGE_FONT_PROBES = Object.freeze({
   zh: "中文"
 });
 
+const LANGUAGE_FONT_PRIORITY_MARKERS = Object.freeze({
+  ja: ["notosanscjkjp-"],
+  ko: ["notosanscjkkr-"],
+  zh: ["notosanscjksc-"]
+});
+
 function isSupportedPdfFontContainer(filePath) {
   const normalized = String(filePath || "").trim().toLowerCase();
   if (!normalized) return false;
@@ -72,6 +78,22 @@ async function findFirstUsablePath(paths, sampleText = "") {
   return null;
 }
 
+function prioritizeCandidatesForLang(paths = [], lang = "en") {
+  const priorityMarkers = LANGUAGE_FONT_PRIORITY_MARKERS[String(lang || "").trim().toLowerCase()] || [];
+  if (!priorityMarkers.length) return Array.isArray(paths) ? paths : [];
+  const ranked = Array.isArray(paths) ? [...paths] : [];
+  ranked.sort((left, right) => {
+    const leftPath = String(left || "").trim().toLowerCase();
+    const rightPath = String(right || "").trim().toLowerCase();
+    const leftRank = priorityMarkers.findIndex((marker) => leftPath.includes(marker));
+    const rightRank = priorityMarkers.findIndex((marker) => rightPath.includes(marker));
+    const normalizedLeftRank = leftRank >= 0 ? leftRank : Number.MAX_SAFE_INTEGER;
+    const normalizedRightRank = rightRank >= 0 ? rightRank : Number.MAX_SAFE_INTEGER;
+    return normalizedLeftRank - normalizedRightRank;
+  });
+  return ranked;
+}
+
 export async function resolvePdfFontsForLang({
   lang = "en",
   sampleText = "",
@@ -79,7 +101,7 @@ export async function resolvePdfFontsForLang({
   boldCandidates = []
 } = {}) {
   const combinedSampleText = `${LANGUAGE_FONT_PROBES[String(lang || "").trim().toLowerCase()] || ""} ${String(sampleText || "").trim()}`.trim();
-  const regular = await findFirstUsablePath(regularCandidates, combinedSampleText);
-  const bold = (await findFirstUsablePath(boldCandidates, combinedSampleText)) || regular;
+  const regular = await findFirstUsablePath(prioritizeCandidatesForLang(regularCandidates, lang), combinedSampleText);
+  const bold = (await findFirstUsablePath(prioritizeCandidatesForLang(boldCandidates, lang), combinedSampleText)) || regular;
   return { regular, bold };
 }

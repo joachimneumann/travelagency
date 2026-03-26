@@ -4,7 +4,6 @@ import {
   languageByCode
 } from "../../../shared/generated/language_catalog.js";
 import {
-  bookingDetailRequest,
   bookingPersonCreateRequest,
   bookingPersonDocumentPictureRequest,
   bookingPersonDeleteRequest,
@@ -55,7 +54,9 @@ export function createBookingPersonsModule(ctx) {
     renderBookingHeader,
     renderBookingData,
     renderActionControls,
-    setBookingSectionDirty
+    setBookingSectionDirty,
+    hasUnsavedBookingChanges,
+    reloadBookingPageForLatestTravelerData
   } = ctx;
 
   let lastPersonModalTrigger = null;
@@ -888,60 +889,11 @@ export function createBookingPersonsModule(ctx) {
     if (els.personModal) els.personModal.hidden = false;
   }
 
-  function rehydratePersonDraftsFromBooking(nextBooking, { preferredPersonId = "" } = {}) {
-    const previousBooking = state.booking;
-    const previousDrafts = Array.isArray(state.personDrafts)
-      ? state.personDrafts.map((draft) => JSON.parse(JSON.stringify(draft)))
-      : [];
-    const preferredId = normalizeText(preferredPersonId) || normalizeText(state.active_person_id);
-
-    state.booking = nextBooking;
-    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
-
-    previousDrafts.forEach((draft, index) => {
-      const draftId = normalizeText(draft?.id);
-      if (!draftId) return;
-      if (draft._is_new === true) {
-        if (personDraftHasMeaningfulInput(draft)) state.personDrafts.push(draft);
-        return;
-      }
-      if (!isPersonDraftDirtyAgainstBooking(draft, previousBooking, index)) return;
-      const nextIndex = state.personDrafts.findIndex((person) => normalizeText(person?.id) === draftId);
-      if (nextIndex >= 0) {
-        state.personDrafts[nextIndex] = draft;
-        return;
-      }
-      state.personDrafts.push(draft);
-    });
-
-    if (preferredId) {
-      state.active_person_id = preferredId;
-      state.active_person_index = state.personDrafts.findIndex((person) => normalizeText(person?.id) === preferredId);
-      if (state.active_person_index < 0) {
-        state.active_person_index = -1;
-        state.active_person_id = "";
-      }
-    }
-
-    markPersonsSnapshotClean(state.booking);
-    updatePersonsDirtyState();
-  }
-
   async function refreshPersonDraftFromBackend(personId) {
     const normalizedPersonId = normalizeText(personId);
     if (!normalizedPersonId || !state.booking?.id) return false;
-    const request = bookingDetailRequest({
-      baseURL: apiOrigin,
-      params: { booking_id: state.booking.id }
-    });
-    const payload = await fetchApi(request.url, { suppressNotFound: true });
-    if (!payload?.booking) return false;
-    rehydratePersonDraftsFromBooking(payload.booking, { preferredPersonId: normalizedPersonId });
-    renderBookingHeader();
-    renderBookingData();
-    renderActionControls();
-    renderPersonsEditor({ include_modal: false });
-    return true;
+    if (typeof reloadBookingPageForLatestTravelerData !== "function") return false;
+    return await reloadBookingPageForLatestTravelerData(normalizedPersonId);
   }
 
   async function openPersonModalFromBackend(index) {
@@ -950,9 +902,21 @@ export function createBookingPersonsModule(ctx) {
     if (!draft) return;
     const personId = normalizeText(draft.id);
     if (!draft._is_new && personId) {
+      if (typeof hasUnsavedBookingChanges === "function" && hasUnsavedBookingChanges()) {
+        setPersonsEditorStatus(bookingT(
+          "booking.persons.loading_latest_blocked_by_unsaved",
+          "Save or discard page edits before loading the latest traveler data."
+        ));
+        openPersonModal(index);
+        return;
+      }
       setPersonsEditorStatus(bookingT("booking.persons.loading_latest", "Loading latest traveler data..."));
-      await refreshPersonDraftFromBackend(personId);
+      const refreshed = await refreshPersonDraftFromBackend(personId);
       setPersonsEditorStatus("");
+      if (!refreshed) {
+        openPersonModal(index);
+        return;
+      }
       const refreshedIndex = state.personDrafts.findIndex((person) => normalizeText(person?.id) === personId);
       openPersonModal(refreshedIndex >= 0 ? refreshedIndex : index);
       return;

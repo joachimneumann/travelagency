@@ -202,6 +202,12 @@ function collectPublicTravelerDetailsPayload(booking, personId, rawPerson) {
   if (!normalized) {
     return { ok: false, error: "Traveler details are invalid." };
   }
+  if (!Object.prototype.hasOwnProperty.call(rawPerson, "hotel_room_smoker")) {
+    delete normalized.hotel_room_smoker;
+  }
+  if (!Object.prototype.hasOwnProperty.call(rawPerson, "hotel_room_sharing_ok")) {
+    delete normalized.hotel_room_sharing_ok;
+  }
   return { ok: true, person: normalized };
 }
 
@@ -232,8 +238,16 @@ function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
     ...(normalizedPerson.preferred_language ? { preferred_language: normalizedPerson.preferred_language } : {}),
     ...(normalizedPerson.food_preferences ? { food_preferences: normalizedPerson.food_preferences } : {}),
     ...(normalizedPerson.allergies ? { allergies: normalizedPerson.allergies } : {}),
-    hotel_room_smoker: normalizedPerson.hotel_room_smoker === true,
-    hotel_room_sharing_ok: normalizedPerson.hotel_room_sharing_ok !== false,
+    hotel_room_smoker: normalizedPerson.hotel_room_smoker === true
+      ? true
+      : normalizedPerson.hotel_room_smoker === false
+        ? false
+        : existingPerson?.hotel_room_smoker === true,
+    hotel_room_sharing_ok: normalizedPerson.hotel_room_sharing_ok === true
+      ? true
+      : normalizedPerson.hotel_room_sharing_ok === false
+        ? false
+        : existingPerson?.hotel_room_sharing_ok !== false,
     ...(normalizedPerson.date_of_birth ? { date_of_birth: normalizedPerson.date_of_birth } : {}),
     ...(normalizedPerson.nationality ? { nationality: normalizedPerson.nationality } : {}),
     ...(normalizedPerson.address ? { address: normalizedPerson.address } : {}),

@@ -1113,6 +1113,49 @@ test("offer and travel-plan PDFs route Arabic text blocks through the shared RTL
   );
 });
 
+test("staging PDF font stack includes Japanese and Chinese smoke coverage paths", async () => {
+  const dockerfilePath = path.resolve(__dirname, "..", "..", "..", "backend", "Dockerfile.staging");
+  const resolverPath = path.resolve(__dirname, "..", "src", "lib", "pdf_font_resolver.js");
+  const offerPdfPath = path.resolve(__dirname, "..", "src", "lib", "offer_pdf.js");
+  const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
+  const invoicePdfPath = path.resolve(__dirname, "..", "src", "lib", "invoice_pdf.js");
+  const [dockerfileSource, resolverSource, offerPdfSource, travelPlanPdfSource, invoicePdfSource] = await Promise.all([
+    readFile(dockerfilePath, "utf8"),
+    readFile(resolverPath, "utf8"),
+    readFile(offerPdfPath, "utf8"),
+    readFile(travelPlanPdfPath, "utf8"),
+    readFile(invoicePdfPath, "utf8")
+  ]);
+
+  assert.match(
+    dockerfileSource,
+    /NotoSansCJKjp-Regular\.ttf[\s\S]*NotoSansCJKjp-Bold\.ttf[\s\S]*NotoSansCJKsc-Regular\.ttf[\s\S]*NotoSansCJKsc-Bold\.ttf/,
+    "The staging image should extract dedicated Japanese and Simplified Chinese CJK font faces"
+  );
+  assert.match(
+    resolverSource,
+    /const LANGUAGE_FONT_PRIORITY_MARKERS = Object\.freeze\(\{[\s\S]*ja:\s*\["notosanscjkjp-"\][\s\S]*zh:\s*\["notosanscjksc-"\]/,
+    "The PDF font resolver should prioritize language-matching Japanese and Chinese CJK faces"
+  );
+
+  for (const [source, label] of [
+    [offerPdfSource, "Offer PDFs"],
+    [travelPlanPdfSource, "Travel-plan PDFs"],
+    [invoicePdfSource, "Invoice PDFs"]
+  ]) {
+    assert.match(
+      source,
+      /NotoSansCJKjp-Regular\.ttf[\s\S]*NotoSansCJKsc-Regular\.ttf[\s\S]*NotoSansCJKkr-Regular\.ttf/,
+      `${label} should include staging candidates for Japanese, Chinese, and Korean regular fonts`
+    );
+    assert.match(
+      source,
+      /NotoSansCJKjp-Bold\.ttf[\s\S]*NotoSansCJKsc-Bold\.ttf[\s\S]*NotoSansCJKkr-Bold\.ttf/,
+      `${label} should include staging candidates for Japanese, Chinese, and Korean bold fonts`
+    );
+  }
+});
+
 test("travel-plan PDF removes the old hero subtitle and badge, adds a section title, and suggests the new download filename", async () => {
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
   const bookingTravelPlanHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");

@@ -340,7 +340,10 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function getOfferComponentsForLinks() {
-    return getLinkableOfferComponents(state.booking?.offer?.components || []);
+    const offerDraftComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+    const bookingOfferComponents = Array.isArray(state.booking?.offer?.components) ? state.booking.offer.components : [];
+    const sourceComponents = state.dirty?.offer ? offerDraftComponents : bookingOfferComponents;
+    return getLinkableOfferComponents(sourceComponents);
   }
 
   function setTravelPlanDirty(isDirty) {
@@ -632,6 +635,9 @@ export function createBookingTravelPlanModule(ctx) {
       .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
       .find((entry) => String(entry?.id || "").trim() === normalizedId);
     if (!item) return;
+    const hasLinkedOfferComponents = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
+      .some((link) => String(link?.travel_plan_service_id || "").trim() === normalizedId && String(link?.offer_component_id || "").trim());
+    if (hasLinkedOfferComponents) return;
     item.financial_coverage_needed = item.financial_coverage_needed === false;
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft, getOfferComponentsForLinks());
     updateTravelPlanDirtyState();
@@ -1029,6 +1035,7 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanService(day, item, itemIndex) {
     const links = (Array.isArray(state.travelPlanDraft?.offer_component_links) ? state.travelPlanDraft.offer_component_links : [])
       .filter((link) => link.travel_plan_service_id === item.id && link.offer_component_id);
+    const hasLinkedOfferComponents = links.length > 0;
     const noFinancialCoverageNeeded = item.financial_coverage_needed === false;
     const coverageStatus = getTravelPlanServiceCoverageStatus(item.kind, links, item.financial_coverage_needed);
     const coverageLabel = coverageBadgeLabel(coverageStatus);
@@ -1153,7 +1160,7 @@ export function createBookingTravelPlanModule(ctx) {
             <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
             <div class="travel-plan-links__actions">
               <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(item.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
-              <button class="btn btn-ghost travel-plan-link-toggle-btn${noFinancialCoverageNeeded ? " travel-plan-link-toggle-btn--active" : ""}" data-travel-plan-toggle-no-coverage="${escapeHtml(item.id)}" type="button" aria-pressed="${noFinancialCoverageNeeded ? "true" : "false"}">${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_needed", "No financial coverage needed"))}</button>
+              <button class="btn btn-ghost travel-plan-link-toggle-btn${noFinancialCoverageNeeded ? " travel-plan-link-toggle-btn--active" : ""}" data-travel-plan-toggle-no-coverage="${escapeHtml(item.id)}" type="button" aria-pressed="${noFinancialCoverageNeeded ? "true" : "false"}"${hasLinkedOfferComponents ? ` disabled title="${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_blocked", "Remove linked offer components first."))}"` : ""}>${escapeHtml(bookingT("booking.travel_plan.no_financial_coverage_needed", "No financial coverage needed"))}</button>
             </div>
           </div>
           ${renderTravelPlanLinkRows(item.id, day.day_number)}

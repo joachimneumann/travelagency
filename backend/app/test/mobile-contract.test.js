@@ -3737,6 +3737,8 @@ test("public traveler details access and update use a signed temporary link with
           emails: ["traveler@example.com"],
           phone_numbers: [],
           preferred_language: "de",
+          hotel_room_smoker: true,
+          hotel_room_sharing_ok: false,
           date_of_birth: "1988-04-12",
           nationality: "VN",
           address: {
@@ -3764,6 +3766,8 @@ test("public traveler details access and update use a signed temporary link with
   assert.equal(updateResult.body.traveler_number, travelerNumber);
   assert.equal(updateResult.body.person.name, "Test User");
   assert.deepEqual(updateResult.body.person.emails, ["traveler@example.com"]);
+  assert.equal(updateResult.body.person.hotel_room_smoker, true);
+  assert.equal(updateResult.body.person.hotel_room_sharing_ok, false);
   assert.deepEqual(updateResult.body.person.address, {
     line_1: "12 Lotus Street",
     city: "Hoi An",
@@ -3781,6 +3785,8 @@ test("public traveler details access and update use a signed temporary link with
   assert.deepEqual(travelerAfter.emails, ["traveler@example.com"]);
   assert.equal(travelerAfter.phone_numbers, undefined);
   assert.equal(travelerAfter.preferred_language, "de");
+  assert.equal(travelerAfter.hotel_room_smoker, true);
+  assert.equal(travelerAfter.hotel_room_sharing_ok, false);
   assert.equal(travelerAfter.date_of_birth, "1988-04-12");
   assert.equal(travelerAfter.nationality, "VN");
   assert.equal(travelerAfter.address.line_1, "12 Lotus Street");
@@ -3789,6 +3795,52 @@ test("public traveler details access and update use a signed temporary link with
   assert.equal(travelerAfter.documents.length, 1);
   assert.equal(travelerAfter.documents[0].document_number, "P1234567");
 
+  const partialUpdateResult = await requestJson(
+    `${updatePath}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
+    {},
+    {
+      method: "PATCH",
+      body: {
+        person: {
+          id: traveler.id,
+          name: "Test User",
+          emails: ["traveler+partial@example.com"],
+          preferred_language: "fr",
+          address: {
+            line_1: "12 Lotus Street",
+            city: "Hoi An",
+            country_code: "VN"
+          },
+          documents: [
+            {
+              document_type: "passport",
+              holder_name: "Test User",
+              document_number: "P1234567",
+              issuing_country: "VN",
+              issued_on: "2020-01-01",
+              expires_on: "2030-01-01"
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(partialUpdateResult.status, 200);
+  assert.equal(partialUpdateResult.body.person.hotel_room_smoker, true);
+  assert.equal(partialUpdateResult.body.person.hotel_room_sharing_ok, false);
+
+  const detailAfterPartial = await requestJson(
+    endpointPath("booking_detail").replace("{booking_id}", bookingId),
+    apiHeaders()
+  );
+  assert.equal(detailAfterPartial.status, 200);
+  const travelerAfterPartial = detailAfterPartial.body.booking.persons.find((person) => person.id === traveler.id);
+  assert.ok(travelerAfterPartial);
+  assert.deepEqual(travelerAfterPartial.emails, ["traveler+partial@example.com"]);
+  assert.equal(travelerAfterPartial.preferred_language, "fr");
+  assert.equal(travelerAfterPartial.hotel_room_smoker, true);
+  assert.equal(travelerAfterPartial.hotel_room_sharing_ok, false);
+
   const accessAfterResult = await requestJson(
     `${accessPath}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
     {}
@@ -3796,7 +3848,9 @@ test("public traveler details access and update use a signed temporary link with
   assert.equal(accessAfterResult.status, 200);
   assert.equal(accessAfterResult.body.traveler_number, travelerNumber);
   assert.equal(accessAfterResult.body.person.name, "Test User");
-  assert.deepEqual(accessAfterResult.body.person.emails, ["traveler@example.com"]);
+  assert.deepEqual(accessAfterResult.body.person.emails, ["traveler+partial@example.com"]);
+  assert.equal(accessAfterResult.body.person.hotel_room_smoker, true);
+  assert.equal(accessAfterResult.body.person.hotel_room_sharing_ok, false);
   assert.deepEqual(accessAfterResult.body.person.address, {
     line_1: "12 Lotus Street",
     city: "Hoi An",

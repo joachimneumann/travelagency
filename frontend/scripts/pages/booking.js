@@ -687,6 +687,10 @@ async function loadBookingPage() {
   return result;
 }
 
+async function reloadBookingPageForLatestTravelerData(_personId = "") {
+  return await loadBookingPage();
+}
+
 function renderBookingHeader() {
   const result = coreModule.renderBookingHeader();
   updatePageDirtyBar();
@@ -1438,11 +1442,10 @@ const personsModule = createBookingPersonsModule({
   fetchApi,
   fetchBookingMutation,
   getBookingRevision,
-  renderBookingHeader,
-  renderBookingData,
-  renderActionControls,
   setBookingSectionDirty,
-  updateCleanStateActionAvailability
+  updateCleanStateActionAvailability,
+  hasUnsavedBookingChanges,
+  reloadBookingPageForLatestTravelerData
 });
 
 const coreModule = createBookingCoreModule({
