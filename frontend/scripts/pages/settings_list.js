@@ -53,6 +53,7 @@ const els = {
   staffEditorDestinations: document.getElementById("staffEditorDestinations"),
   staffEditorQualification: document.getElementById("staffEditorQualification"),
   staffEditorDescription: document.getElementById("staffEditorDescription"),
+  staffEditorMobileDescription: document.getElementById("staffEditorMobileDescription"),
   staffEditorSaveBtn: document.getElementById("staffEditorSaveBtn")
 };
 
@@ -121,6 +122,7 @@ const state = {
     positionByLang: {},
     qualificationByLang: {},
     descriptionByLang: {},
+    mobileDescriptionByLang: {},
     pendingPhoto: null
   }
 };
@@ -279,6 +281,19 @@ function bindEvents() {
     if (!translateButton) return;
     event.preventDefault();
     void translateDescription(translateButton);
+  });
+  els.staffEditorMobileDescription?.addEventListener("input", handleMobileDescriptionInput);
+  els.staffEditorMobileDescription?.addEventListener("click", (event) => {
+    const translateAllButton = event.target.closest("[data-staff-translate-all]");
+    if (translateAllButton) {
+      event.preventDefault();
+      void translateMobileDescriptionToAll(translateAllButton);
+      return;
+    }
+    const translateButton = event.target.closest("[data-staff-translate-field]");
+    if (!translateButton) return;
+    event.preventDefault();
+    void translateMobileDescription(translateButton);
   });
 }
 
@@ -448,6 +463,14 @@ function cloneEditorProfile(user) {
   if (!Object.keys(descriptionByLang).length && normalizeText(profile?.description)) {
     descriptionByLang.en = normalizeText(profile.description);
   }
+  const mobileDescriptionByLang = Object.fromEntries(
+    (Array.isArray(profile?.mobile_description_i18n) ? profile.mobile_description_i18n : [])
+      .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+  );
+  if (!Object.keys(mobileDescriptionByLang).length && normalizeText(profile?.mobile_description)) {
+    mobileDescriptionByLang.en = normalizeText(profile.mobile_description);
+  }
   return {
     fullName: normalizeText(profile?.full_name),
     friendlyShortName: normalizeText(profile?.friendly_short_name),
@@ -461,6 +484,7 @@ function cloneEditorProfile(user) {
     positionByLang,
     qualificationByLang,
     descriptionByLang,
+    mobileDescriptionByLang,
     pendingPhoto: null
   };
 }
@@ -484,6 +508,12 @@ function normalizeEditorProfile(profile) {
       .filter(([lang, value]) => Boolean(lang && value))
       .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
   );
+  const mobileDescriptionByLang = Object.fromEntries(
+    Object.entries(profile?.mobileDescriptionByLang && typeof profile.mobileDescriptionByLang === "object" ? profile.mobileDescriptionByLang : {})
+      .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+      .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
+  );
   return {
     fullName: normalizeText(profile?.fullName),
     friendlyShortName: normalizeText(profile?.friendlyShortName),
@@ -492,7 +522,8 @@ function normalizeEditorProfile(profile) {
     destinations: Array.from(new Set((Array.isArray(profile?.destinations) ? profile.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean))).sort(),
     positionByLang,
     qualificationByLang,
-    descriptionByLang
+    descriptionByLang,
+    mobileDescriptionByLang
   };
 }
 
@@ -540,6 +571,7 @@ function closeEditor() {
     positionByLang: {},
     qualificationByLang: {},
     descriptionByLang: {},
+    mobileDescriptionByLang: {},
     pendingPhoto: null
   };
   state.editorSaving = false;
@@ -597,6 +629,7 @@ function renderEditor() {
   renderPositionEditor();
   renderQualificationEditor();
   renderDescriptionEditor();
+  renderMobileDescriptionEditor();
   updateEditorSaveButtonState();
 }
 
@@ -711,6 +744,31 @@ function renderDescriptionEditor() {
   els.staffEditorDescription.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
 }
 
+function renderMobileDescriptionEditor() {
+  if (!els.staffEditorMobileDescription) return;
+  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
+    ? QUALIFICATION_LANGUAGE_OPTIONS
+    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const current = state.editor?.mobileDescriptionByLang && typeof state.editor.mobileDescriptionByLang === "object"
+    ? state.editor.mobileDescriptionByLang
+    : {};
+  const rows = options
+    .map((option) => {
+      const lang = normalizeText(option.value).toLowerCase();
+      const buttonHtml = lang === "en"
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="mobile-description">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="mobile-description" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      return `<div class="tour-localized-group__row">
+        <div class="tour-localized-group__code-cell">${buttonHtml}</div>
+        <div class="tour-localized-group__field">
+          <textarea id="${escapeHtml(mobileDescriptionTextareaId(lang))}" data-mobile-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
+        </div>
+      </div>`;
+    })
+    .join("");
+  els.staffEditorMobileDescription.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
+}
+
 function handleStaffTableClick(event) {
   const editButton = event.target.closest("[data-staff-edit]");
   if (!editButton) return;
@@ -751,6 +809,21 @@ function handleDescriptionInput(event) {
   }
   if (nextValue) state.editor.descriptionByLang[lang] = nextValue;
   else delete state.editor.descriptionByLang[lang];
+  clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
+function handleMobileDescriptionInput(event) {
+  const input = event.target.closest("[data-mobile-description-lang]");
+  if (!input) return;
+  const lang = normalizeText(input.getAttribute("data-mobile-description-lang")).toLowerCase();
+  if (!lang) return;
+  const nextValue = normalizeText(input.value);
+  if (!state.editor.mobileDescriptionByLang || typeof state.editor.mobileDescriptionByLang !== "object") {
+    state.editor.mobileDescriptionByLang = {};
+  }
+  if (nextValue) state.editor.mobileDescriptionByLang[lang] = nextValue;
+  else delete state.editor.mobileDescriptionByLang[lang];
   clearEditorStatus();
   updateEditorSaveButtonState();
 }
@@ -802,6 +875,14 @@ function descriptionTextareaId(lang) {
 
 function getDescriptionTextarea(lang) {
   return document.getElementById(descriptionTextareaId(lang));
+}
+
+function mobileDescriptionTextareaId(lang) {
+  return `staff_mobile_description_${normalizeText(lang).toLowerCase()}`;
+}
+
+function getMobileDescriptionTextarea(lang) {
+  return document.getElementById(mobileDescriptionTextareaId(lang));
 }
 
 function positionInputId(lang) {
@@ -884,6 +965,30 @@ function setDescriptionValue(lang, value) {
   updateEditorSaveButtonState();
 }
 
+function buildMobileDescriptionTranslationEntries(sourceText) {
+  const value = normalizeText(sourceText);
+  return value ? { value } : {};
+}
+
+function translatedMobileDescriptionValue(entries) {
+  return normalizeText(entries?.value);
+}
+
+function setMobileDescriptionValue(lang, value) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  const normalizedValue = normalizeText(value);
+  if (!state.editor.mobileDescriptionByLang || typeof state.editor.mobileDescriptionByLang !== "object") {
+    state.editor.mobileDescriptionByLang = {};
+  }
+  if (normalizedValue) state.editor.mobileDescriptionByLang[normalizedLang] = normalizedValue;
+  else delete state.editor.mobileDescriptionByLang[normalizedLang];
+  const textarea = getMobileDescriptionTextarea(normalizedLang);
+  if (textarea && textarea.value !== normalizedValue) {
+    textarea.value = normalizedValue;
+  }
+  updateEditorSaveButtonState();
+}
+
 async function requestQualificationTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
@@ -940,6 +1045,32 @@ async function requestDescriptionTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
   const entries = buildDescriptionTranslationEntries(sourceText);
+  if (!Object.keys(entries).length) return null;
+  const request = keycloakUserStaffProfileTranslateFieldsRequest({
+    baseURL: apiOrigin,
+    params: { username: user.username },
+    body: {
+      source_lang: "en",
+      target_lang: targetLang,
+      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
+    }
+  });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: request.body
+  });
+  if (!Array.isArray(payload?.entries)) return null;
+  return Object.fromEntries(
+    payload.entries
+      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+      .filter(([key, value]) => Boolean(key && value))
+  );
+}
+
+async function requestMobileDescriptionTranslation(targetLang, sourceText) {
+  const user = getSelectedUser();
+  if (!user) return null;
+  const entries = buildMobileDescriptionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
@@ -1136,6 +1267,64 @@ async function translateDescriptionToAll(button) {
   showEditorStatus(backendT("backend.users.description_translation.all_done", "All description translations updated."));
 }
 
+async function translateMobileDescription(button) {
+  const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
+  const englishInput = getMobileDescriptionTextarea("en");
+  const targetInput = getMobileDescriptionTextarea(targetLang);
+  if (!targetLang || !englishInput || !targetInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildMobileDescriptionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.mobile_description_translation.missing_source", "Add English mobile description first."), true);
+    return;
+  }
+
+  setMobileDescriptionValue(targetLang, "");
+  showEditorStatus(backendT("backend.users.mobile_description_translation.translating", "Translating mobile description..."));
+  const translatedEntries = await requestMobileDescriptionTranslation(targetLang, englishSource);
+  if (!translatedEntries) {
+    showEditorStatus(backendT("backend.users.mobile_description_translation.error", "Could not translate the mobile description."), true);
+    return;
+  }
+
+  setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries));
+  showEditorStatus(backendT("backend.users.mobile_description_translation.done", "Mobile description translated."));
+}
+
+async function translateMobileDescriptionToAll(button) {
+  const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
+  if (field !== "mobile-description") return;
+  const englishInput = getMobileDescriptionTextarea("en");
+  if (!englishInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildMobileDescriptionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.mobile_description_translation.missing_source", "Add English mobile description first."), true);
+    return;
+  }
+
+  const targets = QUALIFICATION_LANGUAGE_OPTIONS
+    .map((option) => normalizeText(option?.value).toLowerCase())
+    .filter((lang) => lang && lang !== "en");
+  if (!targets.length) return;
+
+  for (const targetLang of targets) {
+    setMobileDescriptionValue(targetLang, "");
+  }
+  showEditorStatus(backendT("backend.users.mobile_description_translation.translating_all", "Translating all mobile description languages..."));
+
+  for (const targetLang of targets) {
+    const translatedEntries = await requestMobileDescriptionTranslation(targetLang, englishSource);
+    if (!translatedEntries) {
+      showEditorStatus(backendT("backend.users.mobile_description_translation.error", "Could not translate the mobile description."), true);
+      return;
+    }
+    setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries));
+  }
+
+  showEditorStatus(backendT("backend.users.mobile_description_translation.all_done", "All mobile description translations updated."));
+}
+
 function handleDestinationToggle(event) {
   const input = event.target.closest("[data-staff-destination]");
   if (!input) return;
@@ -1199,6 +1388,19 @@ function normalizeDescriptionEntriesForSave() {
     .sort((left, right) => left.lang.localeCompare(right.lang));
 }
 
+function normalizeMobileDescriptionEntriesForSave() {
+  const source = state.editor?.mobileDescriptionByLang && typeof state.editor.mobileDescriptionByLang === "object"
+    ? state.editor.mobileDescriptionByLang
+    : {};
+  return Object.entries(source)
+    .map(([lang, value]) => ({
+      lang: normalizeText(lang).toLowerCase(),
+      value: normalizeText(value)
+    }))
+    .filter((entry) => Boolean(entry.lang && entry.value))
+    .sort((left, right) => left.lang.localeCompare(right.lang));
+}
+
 async function saveSelectedStaffProfile() {
   const user = getSelectedUser();
   if (!user || !state.permissions.canEditStaffProfiles) return;
@@ -1217,6 +1419,7 @@ async function saveSelectedStaffProfile() {
   const qualificationI18n = normalizeQualificationEntriesForSave();
   const positionI18n = normalizePositionEntriesForSave();
   const descriptionI18n = normalizeDescriptionEntriesForSave();
+  const mobileDescriptionI18n = normalizeMobileDescriptionEntriesForSave();
   const pendingPhoto = state.editor?.pendingPhoto && typeof state.editor.pendingPhoto === "object"
     ? state.editor.pendingPhoto
     : null;
@@ -1243,7 +1446,8 @@ async function saveSelectedStaffProfile() {
           languages,
           destinations,
           qualification_i18n: qualificationI18n,
-          description_i18n: descriptionI18n
+          description_i18n: descriptionI18n,
+          mobile_description_i18n: mobileDescriptionI18n
         }
       });
       if (!payload?.user) return;

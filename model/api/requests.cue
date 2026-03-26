@@ -162,7 +162,7 @@ import (
 #TravelPlanServiceImageReorderRequest: {
 	expected_travel_plan_revision?: >=0 & int
 	image_ids: [...common.#Identifier]
-	actor?: string
+	actor?:                      string
 }
 
 #TravelPlanAttachmentUploadRequest: #EvidenceUpload & {
@@ -202,15 +202,15 @@ import (
 }
 
 #BookingDepositReceiptUpdateRequest: {
-	deposit_received_at:              common.#Timestamp
+	deposit_received_at:               common.#Timestamp
 	deposit_confirmed_by_atp_staff_id: common.#Identifier
-	deposit_reference?:               string
+	deposit_reference?:                string
 }
 
 #BookingDepositReceiptDraftUpdateRequest: {
-	deposit_received_at?:              common.#Timestamp
+	deposit_received_at?:               common.#Timestamp
 	deposit_confirmed_by_atp_staff_id?: common.#Identifier
-	deposit_reference?:               string
+	deposit_reference?:                string
 }
 
 #BookingOfferUpdateRequest: {
@@ -296,16 +296,18 @@ import (
 
 #AtpStaffProfileUpdateRequest: {
 	languages: [...enums.#LanguageCode]
-	destinations?: [...enums.#CountryCode]
-	full_name?: string
-	position?: string
+	destinations?:               [...enums.#CountryCode]
+	full_name?:                  string
+	position?:                   string
 	position_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 	friendly_short_name?: string
 	appears_in_team_web_page?: bool
-	qualification?: string
+	qualification?:              string
 	qualification_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
-	description?: string
+	description?:                string
 	description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
+	mobile_description?: string
+	mobile_description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 }
 
 #AtpStaffPhotoUploadRequest: #EvidenceUpload

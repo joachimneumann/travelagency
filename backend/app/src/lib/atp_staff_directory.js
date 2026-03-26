@@ -67,6 +67,14 @@ function normalizeDescriptionMap(value) {
   return normalizeLocalizedTextMap(value, "en");
 }
 
+function normalizeMobileDescriptionMap(value) {
+  if (Array.isArray(value)) {
+    const fromEntries = qualificationMapFromEntries(value);
+    if (Object.keys(fromEntries).length) return fromEntries;
+  }
+  return normalizeLocalizedTextMap(value, "en");
+}
+
 function normalizePositionMap(value) {
   if (Array.isArray(value)) {
     const fromEntries = qualificationMapFromEntries(value);
@@ -77,6 +85,12 @@ function normalizePositionMap(value) {
 
 function descriptionEntriesFromMap(value) {
   return Object.entries(normalizeDescriptionMap(value))
+    .map(([lang, text]) => ({ lang, value: text }))
+    .filter((entry) => Boolean(entry.lang && entry.value));
+}
+
+function mobileDescriptionEntriesFromMap(value) {
+  return Object.entries(normalizeMobileDescriptionMap(value))
     .map(([lang, text]) => ({ lang, value: text }))
     .filter((entry) => Boolean(entry.lang && entry.value));
 }
@@ -131,6 +145,7 @@ function normalizeStoredProfile(profile) {
   const qualification = normalizeQualificationMap(profile?.qualification ?? profile?.qualification_i18n, profile?.experiences);
   const position = normalizePositionMap(profile?.position ?? profile?.position_i18n);
   const description = normalizeDescriptionMap(profile?.description ?? profile?.description_i18n);
+  const mobileDescription = normalizeMobileDescriptionMap(profile?.mobile_description ?? profile?.mobile_description_i18n);
   return {
     username,
     ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
@@ -148,7 +163,8 @@ function normalizeStoredProfile(profile) {
         : {}),
     appears_in_team_web_page: normalizeAppearsInTeamWebPage(profile?.appears_in_team_web_page, true),
     ...(Object.keys(qualification).length ? { qualification } : {}),
-    ...(Object.keys(description).length ? { description } : {})
+    ...(Object.keys(description).length ? { description } : {}),
+    ...(Object.keys(mobileDescription).length ? { mobile_description: mobileDescription } : {})
   };
 }
 
@@ -299,6 +315,7 @@ function mergeStoredProfileWithUser(profile, user) {
   const normalizedQualification = normalizeQualificationMap(normalizedProfile?.qualification);
   const normalizedPosition = normalizePositionMap(normalizedProfile?.position);
   const normalizedDescription = normalizeDescriptionMap(normalizedProfile?.description);
+  const normalizedMobileDescription = normalizeMobileDescriptionMap(normalizedProfile?.mobile_description);
   const resolvedFullName = normalizeText(normalizedProfile?.full_name)
     || normalizeText(defaultProfile?.full_name)
     || normalizeText(user?.name)
@@ -322,7 +339,8 @@ function mergeStoredProfileWithUser(profile, user) {
       normalizeAppearsInTeamWebPage(defaultProfile?.appears_in_team_web_page, true)
     ),
     qualification: Object.keys(normalizedQualification).length ? normalizedQualification : {},
-    description: Object.keys(normalizedDescription).length ? normalizedDescription : {}
+    description: Object.keys(normalizedDescription).length ? normalizedDescription : {},
+    mobile_description: Object.keys(normalizedMobileDescription).length ? normalizedMobileDescription : {}
   };
 }
 
@@ -334,6 +352,7 @@ function buildResponseProfile(profile, user) {
     qualification,
     position,
     description,
+    mobile_description,
     ...responseBase
   } = merged;
   return {
@@ -344,7 +363,9 @@ function buildResponseProfile(profile, user) {
     position: resolveLocalizedText(position, "en", ""),
     position_i18n: positionEntriesFromMap(position),
     description: resolveLocalizedText(description, "en", ""),
-    description_i18n: descriptionEntriesFromMap(description)
+    description_i18n: descriptionEntriesFromMap(description),
+    mobile_description: resolveLocalizedText(mobile_description, "en", ""),
+    mobile_description_i18n: mobileDescriptionEntriesFromMap(mobile_description)
   };
 }
 
@@ -663,7 +684,12 @@ export function createAtpStaffDirectory({
         ? input.description_i18n
         : input?.description !== undefined
           ? input.description
-          : current?.description
+          : current?.description,
+      mobile_description: input?.mobile_description_i18n !== undefined
+        ? input.mobile_description_i18n
+        : input?.mobile_description !== undefined
+          ? input.mobile_description
+          : current?.mobile_description
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
@@ -695,7 +721,8 @@ export function createAtpStaffDirectory({
       destinations: current?.destinations,
       appears_in_team_web_page: normalizeAppearsInTeamWebPage(current?.appears_in_team_web_page, true),
       qualification: current?.qualification,
-      description: current?.description
+      description: current?.description,
+      mobile_description: current?.mobile_description
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);

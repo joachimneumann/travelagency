@@ -185,6 +185,15 @@ export function createAtpStaffHandlers(deps) {
       sendJson(res, 422, { error: "Each description translation requires a valid language code and non-empty text" });
       return;
     }
+    const mobileDescription = payload?.mobile_description !== undefined ? normalizeText(payload.mobile_description) : undefined;
+    const mobileDescriptionI18n = Array.isArray(payload?.mobile_description_i18n)
+      ? normalizeQualificationEntries(payload.mobile_description_i18n)
+      : undefined;
+    if (Array.isArray(payload?.mobile_description_i18n)
+      && mobileDescriptionI18n.length !== payload.mobile_description_i18n.filter(Boolean).length) {
+      sendJson(res, 422, { error: "Each mobile description translation requires a valid language code and non-empty text" });
+      return;
+    }
 
     const updated = await updateAtpStaffProfileByUsername(username, {
       languages,
@@ -197,7 +206,9 @@ export function createAtpStaffHandlers(deps) {
       qualification,
       qualification_i18n: qualificationI18n,
       description,
-      description_i18n: descriptionI18n
+      description_i18n: descriptionI18n,
+      mobile_description: mobileDescription,
+      mobile_description_i18n: mobileDescriptionI18n
     });
     if (!updated) {
       sendJson(res, 404, { error: "Keycloak user not found" });

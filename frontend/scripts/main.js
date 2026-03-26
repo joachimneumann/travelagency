@@ -356,11 +356,13 @@ function normalizeTeamMemberProfile(profile) {
     || "Team member";
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description)
     || resolveLocalizedStaticValue(profile?.qualification_i18n ?? profile?.qualification);
+  const mobileDescription = resolveLocalizedStaticValue(profile?.mobile_description_i18n ?? profile?.mobile_description);
   return {
     username: normalizedUsername,
     fullName,
     role,
     description,
+    mobileDescription,
     pictureRef: resolveFrontendAssetUrl(profile?.picture_ref) || `${API_BASE_ORIGIN}/public/v1/atp-staff-photos/${encodeURIComponent(`${normalizedUsername}.svg`)}`,
     appearsInTeamWebPage: profile?.appears_in_team_web_page !== false
   };
@@ -484,7 +486,8 @@ function renderTeamSection() {
     return;
   }
 
-  const detailBody = selected.description || frontendT(
+  const useMobileDescription = window.matchMedia("(max-width: 760px)").matches;
+  const detailBody = (useMobileDescription ? selected.mobileDescription || selected.description : selected.description || selected.mobileDescription) || frontendT(
     "trust.team.description_fallback",
     "This team member supports AsiaTravelPlan guests before and during their journey."
   );

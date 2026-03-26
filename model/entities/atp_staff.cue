@@ -24,4 +24,6 @@ import (
 	qualification_i18n?: [...#AtpStaffLocalizedTextEntry]
 	description?: string
 	description_i18n?: [...#AtpStaffLocalizedTextEntry]
+	mobile_description?: string
+	mobile_description_i18n?: [...#AtpStaffLocalizedTextEntry]
 }
