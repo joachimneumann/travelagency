@@ -439,16 +439,6 @@ function renderTeamSection() {
   const selectedUsername = normalizeText(state.selectedTeamMemberUsername).toLowerCase();
   const selected = members.find((member) => member.username === selectedUsername) || null;
 
-  if (els.teamSectionTitle) {
-    els.teamSectionTitle.textContent = frontendT("trust.team.heading", "Meet the team");
-  }
-  if (els.teamSectionBody) {
-    els.teamSectionBody.textContent = frontendT(
-      "trust.team.body",
-      "Meet the ATP team behind your route planning and local trip support. Click a profile to read more."
-    );
-  }
-
   if (!members.length) {
     els.teamSection.hidden = true;
     els.teamGrid.innerHTML = "";
