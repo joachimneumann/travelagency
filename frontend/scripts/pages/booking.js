@@ -312,6 +312,31 @@ const PERSON_MODAL_AUTOFILL_CONFIG = Object.freeze({
   booking_person_modal_national_id_issuing_country_autofill: { document_type: "national_id", field: "issuing_country", source: "nationality" }
 });
 
+function refreshBackendNavRefs() {
+  els.logoutLink = document.getElementById("backendLogoutLink");
+  els.userLabel = document.getElementById("backendUserLabel");
+}
+
+async function waitForBackendNavRefs(timeoutMs = 1500) {
+  refreshBackendNavRefs();
+  if (els.logoutLink || els.userLabel) return;
+  await new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("backend-nav-mounted", onMounted);
+      resolve();
+    };
+    const onMounted = () => {
+      window.setTimeout(finish, 0);
+    };
+    window.addEventListener("backend-nav-mounted", onMounted, { once: true });
+    window.setTimeout(finish, timeoutMs);
+  });
+  refreshBackendNavRefs();
+}
+
 function setBookingSectionDirty(sectionKey, isDirty) {
   state.dirty[sectionKey] = Boolean(isDirty);
   if (hasUnsavedBookingChanges()) {
@@ -472,6 +497,8 @@ function redirectToBackendLogin() {
 
 async function init() {
   await waitForBackendI18n();
+  window.addEventListener("backend-nav-mounted", refreshBackendNavRefs);
+  await waitForBackendNavRefs();
   if (state.contentLangInitialized && state.contentLang) {
     state.contentLang = setBookingContentLang(state.contentLang);
     updateContentLangInUrl(state.contentLang);
