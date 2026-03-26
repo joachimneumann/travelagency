@@ -4,6 +4,7 @@ import {
   languageByCode
 } from "../../../shared/generated/language_catalog.js";
 import {
+  bookingDetailRequest,
   bookingPersonCreateRequest,
   bookingPersonDocumentPictureRequest,
   bookingPersonDeleteRequest,
@@ -48,6 +49,7 @@ export function createBookingPersonsModule(ctx) {
     escapeHtml,
     normalizeText,
     resolvePersonPhotoSrc,
+    fetchApi,
     fetchBookingMutation,
     getBookingRevision,
     renderBookingHeader,
@@ -175,6 +177,10 @@ export function createBookingPersonsModule(ctx) {
       emails: Array.isArray(person.emails) ? [...person.emails] : [],
       phone_numbers: Array.isArray(person.phone_numbers) ? [...person.phone_numbers] : [],
       preferred_language: normalizePersonLanguageCode(person.preferred_language),
+      food_preferences: Array.isArray(person.food_preferences) ? [...person.food_preferences] : [],
+      allergies: Array.isArray(person.allergies) ? [...person.allergies] : [],
+      hotel_room_smoker: person?.hotel_room_smoker === true,
+      hotel_room_sharing_ok: person?.hotel_room_sharing_ok !== false,
       date_of_birth: normalizeText(person.date_of_birth) || "",
       nationality: normalizeText(person.nationality) || "",
       address: person.address && typeof person.address === "object" ? { ...person.address } : {},
@@ -196,6 +202,10 @@ export function createBookingPersonsModule(ctx) {
       emails: [],
       phone_numbers: [],
       preferred_language: "",
+      food_preferences: [],
+      allergies: [],
+      hotel_room_smoker: false,
+      hotel_room_sharing_ok: true,
       date_of_birth: "",
       nationality: "",
       address: {},
@@ -504,6 +514,10 @@ export function createBookingPersonsModule(ctx) {
       emails: collectCommaSeparatedValues(draft?.emails),
       phone_numbers: collectCommaSeparatedValues(draft?.phone_numbers),
       preferred_language: normalizePersonLanguageCode(draft?.preferred_language) || undefined,
+      food_preferences: collectCommaSeparatedValues(draft?.food_preferences),
+      allergies: collectCommaSeparatedValues(draft?.allergies),
+      hotel_room_smoker: draft?.hotel_room_smoker === true,
+      hotel_room_sharing_ok: draft?.hotel_room_sharing_ok !== false,
       date_of_birth: normalizeText(draft?.date_of_birth) || undefined,
       nationality: normalizeText(draft?.nationality).toUpperCase() || undefined,
       address: Object.keys(cleanedAddress).length ? cleanedAddress : undefined,
@@ -527,6 +541,10 @@ export function createBookingPersonsModule(ctx) {
       collectCommaSeparatedValues(draft.emails).length ||
       collectCommaSeparatedValues(draft.phone_numbers).length ||
       normalizePersonLanguageCode(draft.preferred_language) ||
+      collectCommaSeparatedValues(draft.food_preferences).length ||
+      collectCommaSeparatedValues(draft.allergies).length ||
+      draft.hotel_room_smoker === true ||
+      draft.hotel_room_sharing_ok === false ||
       normalizeText(draft.date_of_birth) ||
       normalizeText(draft.nationality) ||
       addressValues.some((value) => normalizeText(value)) ||
@@ -647,7 +665,7 @@ export function createBookingPersonsModule(ctx) {
     const index = Number(card.getAttribute("data-person-card"));
     if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
     lastPersonModalTrigger = card;
-    openPersonModal(index);
+    void openPersonModalFromBackend(index);
   }
 
   function addPersonDraft() {
@@ -870,6 +888,78 @@ export function createBookingPersonsModule(ctx) {
     if (els.personModal) els.personModal.hidden = false;
   }
 
+  function rehydratePersonDraftsFromBooking(nextBooking, { preferredPersonId = "" } = {}) {
+    const previousBooking = state.booking;
+    const previousDrafts = Array.isArray(state.personDrafts)
+      ? state.personDrafts.map((draft) => JSON.parse(JSON.stringify(draft)))
+      : [];
+    const preferredId = normalizeText(preferredPersonId) || normalizeText(state.active_person_id);
+
+    state.booking = nextBooking;
+    state.personDrafts = getBookingPersons(state.booking).map(clonePersonDraft);
+
+    previousDrafts.forEach((draft, index) => {
+      const draftId = normalizeText(draft?.id);
+      if (!draftId) return;
+      if (draft._is_new === true) {
+        if (personDraftHasMeaningfulInput(draft)) state.personDrafts.push(draft);
+        return;
+      }
+      if (!isPersonDraftDirtyAgainstBooking(draft, previousBooking, index)) return;
+      const nextIndex = state.personDrafts.findIndex((person) => normalizeText(person?.id) === draftId);
+      if (nextIndex >= 0) {
+        state.personDrafts[nextIndex] = draft;
+        return;
+      }
+      state.personDrafts.push(draft);
+    });
+
+    if (preferredId) {
+      state.active_person_id = preferredId;
+      state.active_person_index = state.personDrafts.findIndex((person) => normalizeText(person?.id) === preferredId);
+      if (state.active_person_index < 0) {
+        state.active_person_index = -1;
+        state.active_person_id = "";
+      }
+    }
+
+    markPersonsSnapshotClean(state.booking);
+    updatePersonsDirtyState();
+  }
+
+  async function refreshPersonDraftFromBackend(personId) {
+    const normalizedPersonId = normalizeText(personId);
+    if (!normalizedPersonId || !state.booking?.id) return false;
+    const request = bookingDetailRequest({
+      baseURL: apiOrigin,
+      params: { booking_id: state.booking.id }
+    });
+    const payload = await fetchApi(request.url, { suppressNotFound: true });
+    if (!payload?.booking) return false;
+    rehydratePersonDraftsFromBooking(payload.booking, { preferredPersonId: normalizedPersonId });
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor({ include_modal: false });
+    return true;
+  }
+
+  async function openPersonModalFromBackend(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= state.personDrafts.length) return;
+    const draft = state.personDrafts[index];
+    if (!draft) return;
+    const personId = normalizeText(draft.id);
+    if (!draft._is_new && personId) {
+      setPersonsEditorStatus(bookingT("booking.persons.loading_latest", "Loading latest traveler data..."));
+      await refreshPersonDraftFromBackend(personId);
+      setPersonsEditorStatus("");
+      const refreshedIndex = state.personDrafts.findIndex((person) => normalizeText(person?.id) === personId);
+      openPersonModal(refreshedIndex >= 0 ? refreshedIndex : index);
+      return;
+    }
+    openPersonModal(index);
+  }
+
   function finalizeClosePersonModal() {
     const activeElement = document.activeElement;
     if (activeElement instanceof HTMLElement && els.personModal?.contains(activeElement)) {
@@ -987,6 +1077,30 @@ export function createBookingPersonsModule(ctx) {
     if (els.personModalPhoneNumbers) {
       els.personModalPhoneNumbers.value = collectCommaSeparatedValues(draft.phone_numbers).join(", ");
       els.personModalPhoneNumbers.disabled = !canEdit;
+    }
+    if (els.personModalFoodPreferences) {
+      els.personModalFoodPreferences.value = collectCommaSeparatedValues(draft.food_preferences).join(", ");
+      els.personModalFoodPreferences.disabled = !canEdit;
+    }
+    if (els.personModalAllergies) {
+      els.personModalAllergies.value = collectCommaSeparatedValues(draft.allergies).join(", ");
+      els.personModalAllergies.disabled = !canEdit;
+    }
+    if (els.personModalHotelRoomSmoker) {
+      els.personModalHotelRoomSmoker.innerHTML = [
+        `<option value="false">${escapeHtml(bookingT("booking.persons.hotel_room_smoking.non_smoker", "Non-smoker"))}</option>`,
+        `<option value="true">${escapeHtml(bookingT("booking.persons.hotel_room_smoking.smoker", "Smoker"))}</option>`
+      ].join("");
+      els.personModalHotelRoomSmoker.value = draft.hotel_room_smoker === true ? "true" : "false";
+      els.personModalHotelRoomSmoker.disabled = !canEdit;
+    }
+    if (els.personModalHotelRoomPreference) {
+      els.personModalHotelRoomPreference.innerHTML = [
+        `<option value="true">${escapeHtml(bookingT("booking.persons.hotel_room_preference.sharing_ok", "Sharing room ok"))}</option>`,
+        `<option value="false">${escapeHtml(bookingT("booking.persons.hotel_room_preference.single_room", "Single room"))}</option>`
+      ].join("");
+      els.personModalHotelRoomPreference.value = draft.hotel_room_sharing_ok !== false ? "true" : "false";
+      els.personModalHotelRoomPreference.disabled = !canEdit;
     }
     if (els.personModalRoles) {
       els.personModalRoles.innerHTML = bookingPersonRoleOptions.map((role) => `
@@ -1287,6 +1401,12 @@ export function createBookingPersonsModule(ctx) {
       const field = String(target.dataset.personField || "");
       if (field === "emails" || field === "phone_numbers") {
         draft[field] = collectCommaSeparatedValues(target.value);
+      } else if (field === "food_preferences" || field === "allergies") {
+        draft[field] = collectCommaSeparatedValues(target.value);
+      } else if (field === "hotel_room_smoker") {
+        draft[field] = String(target.value || "").trim() === "true";
+      } else if (field === "hotel_room_sharing_ok") {
+        draft[field] = String(target.value || "").trim() !== "false";
       } else if (field === "nationality") {
         draft[field] = normalizeText(target.value).toUpperCase();
         target.value = draft[field];

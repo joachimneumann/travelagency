@@ -144,6 +144,30 @@ function normalizeDocuments(person, fallbackPrefix = "document") {
     .filter(Boolean);
 }
 
+function normalizePreferenceStrings(value) {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((entry) => optionalText(entry)).filter(Boolean)));
+  }
+  const normalized = optionalText(value);
+  if (!normalized) return undefined;
+  return Array.from(new Set(
+    normalized
+      .split(",")
+      .map((entry) => optionalText(entry))
+      .filter(Boolean)
+  ));
+}
+
+function optionalBoolean(value, fallback = undefined) {
+  if (value === true || value === false) return value;
+  const normalizedText = optionalText(value);
+  if (!normalizedText) return fallback;
+  const normalized = normalizedText.toLowerCase();
+  if (["true", "1", "yes", "y", "smoker", "single_room", "single"].includes(normalized)) return true;
+  if (["false", "0", "no", "n", "non_smoker", "nonsmoker", "sharing_room_ok", "sharing_ok", "sharing"].includes(normalized)) return false;
+  return fallback;
+}
+
 export function normalizeBookingPerson(person, index = 0, bookingId = "booking") {
   if (!person || typeof person !== "object" || Array.isArray(person)) return null;
   const normalized = compactObject({
@@ -153,6 +177,10 @@ export function normalizeBookingPerson(person, index = 0, bookingId = "booking")
     emails: normalizeEmails(person),
     phone_numbers: normalizePhoneNumbers(person),
     preferred_language: optionalLanguageCode(person.preferred_language),
+    food_preferences: normalizePreferenceStrings(person.food_preferences),
+    allergies: normalizePreferenceStrings(person.allergies),
+    hotel_room_smoker: optionalBoolean(person.hotel_room_smoker, false),
+    hotel_room_sharing_ok: optionalBoolean(person.hotel_room_sharing_ok, true),
     date_of_birth: optionalText(person.date_of_birth),
     nationality: optionalUppercaseText(person.nationality),
     address: normalizeAddress(person),

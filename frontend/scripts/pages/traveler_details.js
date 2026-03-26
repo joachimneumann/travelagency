@@ -157,6 +157,10 @@ function createTravelerDraft(traveler = {}) {
     email: normalizeText(Array.isArray(traveler.emails) ? traveler.emails[0] : ""),
     phone: normalizeText(Array.isArray(traveler.phone_numbers) ? traveler.phone_numbers[0] : ""),
     preferred_language: normalizeTravelerLanguageCode(traveler.preferred_language),
+    food_preferences: normalizePreferenceList(traveler.food_preferences),
+    allergies: normalizePreferenceList(traveler.allergies),
+    hotel_room_smoker: traveler?.hotel_room_smoker === true,
+    hotel_room_sharing_ok: traveler?.hotel_room_sharing_ok !== false,
     date_of_birth: normalizeText(traveler.date_of_birth),
     nationality: normalizeText(traveler.nationality).toUpperCase(),
     address: {
@@ -207,6 +211,20 @@ function addressHasInput(address) {
   ].some((value) => normalizeText(value));
 }
 
+function normalizePreferenceList(value) {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((entry) => normalizeText(entry)).filter(Boolean)));
+  }
+  const normalized = normalizeText(value);
+  if (!normalized) return [];
+  return Array.from(new Set(
+    normalized
+      .split(",")
+      .map((entry) => normalizeText(entry))
+      .filter(Boolean)
+  ));
+}
+
 function buildTravelerPayload(traveler) {
   const document = activeDocumentForDraft(traveler);
   const hasDocument = documentHasInput(document);
@@ -217,6 +235,10 @@ function buildTravelerPayload(traveler) {
     emails: normalizeText(traveler.email) ? [normalizeText(traveler.email)] : [],
     phone_numbers: normalizeText(traveler.phone) ? [normalizeText(traveler.phone)] : [],
     preferred_language: normalizeTravelerLanguageCode(traveler.preferred_language),
+    food_preferences: normalizePreferenceList(traveler.food_preferences),
+    allergies: normalizePreferenceList(traveler.allergies),
+    hotel_room_smoker: traveler.hotel_room_smoker === true,
+    hotel_room_sharing_ok: traveler.hotel_room_sharing_ok !== false,
     date_of_birth: normalizeText(traveler.date_of_birth),
     nationality: normalizeText(traveler.nationality).toUpperCase(),
     ...(hasAddress ? {
@@ -273,6 +295,28 @@ function travelerCardMarkup(traveler) {
         <label for="traveler_nationality">Nationality</label>
         <select id="traveler_nationality" data-field="nationality">
           ${renderCountryOptions(traveler.nationality, "Select nationality")}
+        </select>
+      </div>
+      <div class="field">
+        <label for="traveler_food_preferences">Food preferences</label>
+        <input id="traveler_food_preferences" data-field="food_preferences" type="text" value="${escapeHtml(traveler.food_preferences.join(", "))}" placeholder="Vegetarian, vegan, halal..." />
+      </div>
+      <div class="field">
+        <label for="traveler_allergies">Allergies</label>
+        <input id="traveler_allergies" data-field="allergies" type="text" value="${escapeHtml(traveler.allergies.join(", "))}" placeholder="Peanuts, shellfish..." />
+      </div>
+      <div class="field">
+        <label for="traveler_hotel_room_smoker">Hotel room smoking preference</label>
+        <select id="traveler_hotel_room_smoker" data-field="hotel_room_smoker">
+          <option value="false"${traveler.hotel_room_smoker === true ? "" : " selected"}>Non-smoker</option>
+          <option value="true"${traveler.hotel_room_smoker === true ? " selected" : ""}>Smoker</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="traveler_hotel_room_preference">Hotel room preference</label>
+        <select id="traveler_hotel_room_preference" data-field="hotel_room_sharing_ok">
+          <option value="true"${traveler.hotel_room_sharing_ok !== false ? " selected" : ""}>Sharing room ok</option>
+          <option value="false"${traveler.hotel_room_sharing_ok === false ? " selected" : ""}>Single room</option>
         </select>
       </div>
     </div>
@@ -398,9 +442,17 @@ function handleTravelerFormInput(event) {
 
   if (target.hasAttribute("data-field")) {
     const field = normalizeText(target.dataset.field);
-    state.traveler[field] = field === "nationality"
-      ? normalizeText(target.value).toUpperCase()
-      : normalizeText(target.value);
+    if (field === "nationality") {
+      state.traveler[field] = normalizeText(target.value).toUpperCase();
+    } else if (field === "food_preferences" || field === "allergies") {
+      state.traveler[field] = normalizePreferenceList(target.value);
+    } else if (field === "hotel_room_smoker") {
+      state.traveler[field] = normalizeText(target.value) === "true";
+    } else if (field === "hotel_room_sharing_ok") {
+      state.traveler[field] = normalizeText(target.value) !== "false";
+    } else {
+      state.traveler[field] = normalizeText(target.value);
+    }
     return;
   }
 

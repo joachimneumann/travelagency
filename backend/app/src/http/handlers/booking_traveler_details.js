@@ -29,6 +29,27 @@ function normalizeStringArray(value) {
   return Array.from(new Set(value.map((entry) => String(entry || "").trim()).filter(Boolean)));
 }
 
+function normalizePreferenceInput(value) {
+  if (Array.isArray(value)) return normalizeStringArray(value);
+  const normalized = String(value || "").trim();
+  if (!normalized) return [];
+  return Array.from(new Set(
+    normalized
+      .split(",")
+      .map((entry) => String(entry || "").trim())
+      .filter(Boolean)
+  ));
+}
+
+function normalizeBooleanInput(value, fallback) {
+  if (value === true || value === false) return value;
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return fallback;
+  if (["true", "1", "yes", "y", "smoker", "single_room", "single"].includes(normalized)) return true;
+  if (["false", "0", "no", "n", "non_smoker", "nonsmoker", "sharing_room_ok", "sharing_ok", "sharing"].includes(normalized)) return false;
+  return fallback;
+}
+
 function resolveTravelerDetailsTokenFromRequest(req) {
   try {
     const requestUrl = new URL(req.url, "http://localhost");
@@ -100,6 +121,10 @@ function buildPublicVisiblePerson(bookingId, person) {
     ...(Array.isArray(normalized.emails) && normalized.emails.length ? { emails: normalized.emails } : {}),
     ...(Array.isArray(normalized.phone_numbers) && normalized.phone_numbers.length ? { phone_numbers: normalized.phone_numbers } : {}),
     ...(String(normalized.preferred_language || "").trim() ? { preferred_language: normalized.preferred_language } : {}),
+    ...(Array.isArray(normalized.food_preferences) && normalized.food_preferences.length ? { food_preferences: normalized.food_preferences } : {}),
+    ...(Array.isArray(normalized.allergies) && normalized.allergies.length ? { allergies: normalized.allergies } : {}),
+    ...(normalized.hotel_room_smoker === true ? { hotel_room_smoker: true } : {}),
+    ...(normalized.hotel_room_sharing_ok === false ? { hotel_room_sharing_ok: false } : {}),
     ...(String(normalized.date_of_birth || "").trim() ? { date_of_birth: normalized.date_of_birth } : {}),
     ...(String(normalized.nationality || "").trim() ? { nationality: normalized.nationality } : {}),
     ...(normalized.address ? { address: normalized.address } : {}),
@@ -148,6 +173,10 @@ function collectPublicTravelerDetailsPayload(booking, personId, rawPerson) {
     emails: normalizeStringArray(rawPerson.emails),
     phone_numbers: normalizeStringArray(rawPerson.phone_numbers),
     preferred_language: String(rawPerson.preferred_language || "").trim(),
+    food_preferences: normalizePreferenceInput(rawPerson.food_preferences),
+    allergies: normalizePreferenceInput(rawPerson.allergies),
+    hotel_room_smoker: normalizeBooleanInput(rawPerson.hotel_room_smoker, false),
+    hotel_room_sharing_ok: normalizeBooleanInput(rawPerson.hotel_room_sharing_ok, true),
     date_of_birth: String(rawPerson.date_of_birth || "").trim(),
     nationality: String(rawPerson.nationality || "").trim().toUpperCase(),
     address: buildPublicAddressInput(rawPerson.address),
@@ -201,6 +230,10 @@ function buildStoredPersonOverwrite(existingPerson, normalizedPerson) {
     ...(normalizedPerson.emails ? { emails: normalizedPerson.emails } : {}),
     ...(normalizedPerson.phone_numbers ? { phone_numbers: normalizedPerson.phone_numbers } : {}),
     ...(normalizedPerson.preferred_language ? { preferred_language: normalizedPerson.preferred_language } : {}),
+    ...(normalizedPerson.food_preferences ? { food_preferences: normalizedPerson.food_preferences } : {}),
+    ...(normalizedPerson.allergies ? { allergies: normalizedPerson.allergies } : {}),
+    hotel_room_smoker: normalizedPerson.hotel_room_smoker === true,
+    hotel_room_sharing_ok: normalizedPerson.hotel_room_sharing_ok !== false,
     ...(normalizedPerson.date_of_birth ? { date_of_birth: normalizedPerson.date_of_birth } : {}),
     ...(normalizedPerson.nationality ? { nationality: normalizedPerson.nationality } : {}),
     ...(normalizedPerson.address ? { address: normalizedPerson.address } : {}),

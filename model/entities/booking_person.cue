@@ -46,6 +46,10 @@ import (
 	emails?: [...common.#Email]
 	phone_numbers?: [...string]
 	preferred_language?: enums.#LanguageCode
+	food_preferences?:  [...string]
+	allergies?:         [...string]
+	hotel_room_smoker?: *false | bool
+	hotel_room_sharing_ok?: *true | bool
 	date_of_birth?:      common.#DateOnly
 	nationality?:        enums.#CountryCode
 	address?:            #BookingPersonAddress
