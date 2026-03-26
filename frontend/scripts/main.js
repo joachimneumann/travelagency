@@ -467,7 +467,9 @@ function renderTeamSection() {
         aria-pressed="${isActive ? "true" : "false"}"
         style="--team-card-index:${memberIndex};"
       >
-        <img class="team-card__photo" src="${escapeAttr(member.pictureRef)}" alt="${escapeAttr(member.fullName)}" loading="lazy" />
+        <span class="team-card__photo-wrap">
+          <img class="team-card__photo" src="${escapeAttr(member.pictureRef)}" alt="${escapeAttr(member.fullName)}" loading="lazy" />
+        </span>
         <span class="team-card__name">${escapeHTML(member.fullName)}</span>
         <span class="team-card__role">${escapeHTML(role)}</span>
       </button>

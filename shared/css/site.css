@@ -1064,12 +1064,12 @@ textarea:focus-visible {
 
 .team-section {
   display: grid;
-  gap: 1.9rem;
-  margin: 2.7rem 0 2.1rem;
+  gap: 2.35rem;
+  margin: 3.4rem 0 2.7rem;
 }
 
 .team-section__head {
-  max-width: 42rem;
+  max-width: 44rem;
 }
 
 .team-section__title {
@@ -1083,8 +1083,8 @@ textarea:focus-visible {
 
 .team-grid {
   display: grid;
-  gap: 2rem 1.55rem;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2.4rem 1.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
 }
 
 .team-card {
@@ -1095,14 +1095,14 @@ textarea:focus-visible {
   overflow: visible;
   text-align: left;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.78rem;
   cursor: pointer;
   opacity: 0;
   transform: translateY(26px);
   transition:
     opacity 0.52s ease,
     transform 0.52s cubic-bezier(0.2, 0.9, 0.22, 1),
-    color 0.18s ease;
+    color 0.22s ease;
   transition-delay: calc(var(--team-card-index, 0) * 70ms);
   will-change: opacity, transform;
 }
@@ -1114,11 +1114,19 @@ textarea:focus-visible {
 
 .team-card:hover,
 .team-card:focus-visible {
-  transform: translateY(-4px);
+  transform: translateY(-8px);
 }
 
 .team-card.is-active {
   color: var(--accent-text-deep);
+}
+
+.team-card__photo-wrap {
+  display: block;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--surface-white);
+  box-shadow: 0 20px 40px var(--shadow-ink-12);
 }
 
 .team-card__photo {
@@ -1126,19 +1134,26 @@ textarea:focus-visible {
   aspect-ratio: 1 / 1;
   object-fit: cover;
   display: block;
-  border-radius: 18px;
-  box-shadow: 0 20px 40px var(--shadow-ink-12);
   background: var(--surface-white);
+  transform: scale(1);
+  transition: transform 0.62s cubic-bezier(0.2, 0.9, 0.22, 1), filter 0.3s ease;
+  will-change: transform;
+}
+
+.team-card:hover .team-card__photo,
+.team-card:focus-visible .team-card__photo {
+  transform: scale(1.055);
+  filter: saturate(1.03);
 }
 
 .team-card__name,
 .team-card__role {
   display: block;
-  padding-inline: 0.15rem;
+  padding-inline: 0.18rem;
 }
 
 .team-card__name {
-  padding-top: 0.15rem;
+  padding-top: 0.2rem;
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-body);
   color: var(--text);
@@ -1158,8 +1173,8 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 22px;
   background: linear-gradient(135deg, var(--surface-white-alpha-92), var(--accent-soft));
-  padding: 1.45rem 1.55rem;
-  animation: team-detail-reveal 0.42s cubic-bezier(0.2, 0.9, 0.22, 1);
+  padding: 1.7rem 1.75rem;
+  animation: team-detail-reveal 0.5s cubic-bezier(0.2, 0.9, 0.22, 1);
 }
 
 .team-detail__content {
@@ -4245,12 +4260,12 @@ textarea:focus-visible {
   }
 
   .team-section {
-    gap: 1.35rem;
-    margin: 2rem 0 1.5rem;
+    gap: 1.65rem;
+    margin: 2.4rem 0 1.8rem;
   }
 
   .team-grid {
-    gap: 1.35rem;
+    gap: 1.55rem;
   }
 
   .team-card__role {
