@@ -126,6 +126,8 @@
   "booking.translation.not_needed_for_english": "Ngon ngu khach hang la tieng Anh. Khong can dich.",
   "booking.translation.translated": "Da dich {section} tu tieng Anh.",
   "booking.translation.translating": "Dang dich {section} tu tieng Anh...",
+  "booking.translation.translating_overlay": "Dang dich lich trinh. Vui long cho.",
+  "booking.translation.complete": "Da dich xong",
   "booking.travel_plan.translate_everything_clean_state": "Hay luu hoac bo cac thay doi travel plan chua luu truoc khi dich tat ca.",
   "booking.copied": "Da sao chep",
   "booking.copy": "Sao chep",

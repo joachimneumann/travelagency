@@ -150,6 +150,9 @@ state.pendingSavedCustomerLanguage = "";
 let bookingWhatsApp = null;
 
 const els = {
+  pageBody: document.body,
+  pageHeader: document.getElementById("top"),
+  mainContent: document.getElementById("main-content"),
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   dirtyBar: document.getElementById("booking_dirty_bar"),
@@ -236,6 +239,8 @@ const els = {
   travel_plan_editor: document.getElementById("travel_plan_editor"),
   travel_plan_translate_all_btn: document.getElementById("travel_plan_translate_all_btn"),
   travel_plan_status: document.getElementById("travel_plan_status"),
+  travel_plan_translate_overlay: document.getElementById("travel_plan_translate_overlay"),
+  travel_plan_translate_overlay_text: document.getElementById("travel_plan_translate_overlay_text"),
   pricing_panel: document.getElementById("pricing_panel"),
   pricingPanelSummary: document.getElementById("pricing_panel_summary"),
   pricing_summary_table: document.getElementById("pricing_summary_table"),

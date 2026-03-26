@@ -52,8 +52,7 @@ import { createBookingTravelPlanServiceLibraryModule } from "./travel_plan_servi
 import { createBookingTravelPlanPdfsModule } from "./travel_plan_pdfs.js";
 import {
   retranslateConfirmText,
-  translationBusyText,
-  translationSuccessText
+  translationBusyText
 } from "./translation_status.js";
 
 export function createBookingTravelPlanModule(ctx) {
@@ -248,6 +247,36 @@ export function createBookingTravelPlanModule(ctx) {
     els.travel_plan_status.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
+  function setTravelPlanTranslationOverlay(isVisible, message = "") {
+    if (els.travel_plan_translate_overlay_text) {
+      els.travel_plan_translate_overlay_text.textContent = String(
+        message || bookingT("booking.translation.translating_overlay", "Translating travel plan. Please wait.")
+      ).trim();
+    }
+    if (els.pageBody instanceof HTMLElement) {
+      els.pageBody.classList.toggle("booking-detail-page--translation-busy", Boolean(isVisible));
+    }
+    if (els.pageHeader instanceof HTMLElement) {
+      els.pageHeader.inert = Boolean(isVisible);
+      els.pageHeader.setAttribute("aria-busy", isVisible ? "true" : "false");
+    }
+    if (els.mainContent instanceof HTMLElement) {
+      els.mainContent.inert = Boolean(isVisible);
+      els.mainContent.setAttribute("aria-busy", isVisible ? "true" : "false");
+    }
+    if (!(els.travel_plan_translate_overlay instanceof HTMLElement)) return;
+    if (isVisible) {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      els.travel_plan_translate_overlay.hidden = false;
+      els.travel_plan_translate_overlay.setAttribute("aria-hidden", "false");
+      return;
+    }
+    els.travel_plan_translate_overlay.hidden = true;
+    els.travel_plan_translate_overlay.setAttribute("aria-hidden", "true");
+  }
+
   function travelPlanSectionLabel() {
     return bookingT("booking.travel_plan", "Travel plan");
   }
@@ -275,8 +304,16 @@ export function createBookingTravelPlanModule(ctx) {
   function syncTravelPlanTranslateButton() {
     if (!(els.travel_plan_translate_all_btn instanceof HTMLButtonElement)) return;
     const button = els.travel_plan_translate_all_btn;
+    const targetLang = bookingContentLang();
+    const shouldShow = targetLang !== "en";
+    button.hidden = !shouldShow;
+    if (!shouldShow) {
+      button.disabled = true;
+      button.removeAttribute("title");
+      return;
+    }
     const { disabled, disabledReason } = travelPlanTranslateButtonState();
-    const targetOption = bookingContentLanguageOption(bookingContentLang());
+    const targetOption = bookingContentLanguageOption(targetLang);
     button.textContent = bookingT(
       "booking.translation.translate_everything_to_code",
       "Translate everything to {code} (CAUTION)",
@@ -1686,6 +1723,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
       els.travel_plan_translate_all_btn.disabled = true;
     }
+    setTravelPlanTranslationOverlay(true);
 
     try {
       const response = await fetchBookingMutation(request.url, {
@@ -1693,6 +1731,7 @@ export function createBookingTravelPlanModule(ctx) {
         body: request.body
       });
       if (!response?.booking) {
+        travelPlanStatus(bookingT("booking.travel_plan.no_changes", "No travel-plan changes."), "info");
         syncTravelPlanTranslateButton();
         return;
       }
@@ -1702,12 +1741,7 @@ export function createBookingTravelPlanModule(ctx) {
       applyBookingPayload();
       renderTravelPlanPanel();
       await loadActivities();
-      travelPlanStatus(
-        response.unchanged
-          ? bookingT("booking.travel_plan.no_changes", "No travel-plan changes.")
-          : translationSuccessText(travelPlanSectionLabel()),
-        response.unchanged ? "info" : "success"
-      );
+      travelPlanStatus(bookingT("booking.translation.complete", "Translations complete"), "success");
     } catch (error) {
       logBrowserConsoleError("[travel-plan] Failed to translate the full travel plan.", {
         booking_id: state.booking?.id || "",
@@ -1715,6 +1749,7 @@ export function createBookingTravelPlanModule(ctx) {
       }, error);
       travelPlanStatus(error?.message || bookingT("booking.translation.error", "Could not translate this section."), "error");
     } finally {
+      setTravelPlanTranslationOverlay(false);
       syncTravelPlanTranslateButton();
     }
   }

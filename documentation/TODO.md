@@ -15,13 +15,7 @@ Then Automatically derive the stage and write a description of the stage and las
 
 * Index.html: FAQ formatting off
 
-* make days and services in the travel plan collapsable
-
-* can you show the day plan in the PDF for each day in a two column layout to add more services on one page, dynamically distributing the services, but with a a rough chronological order from top to bottom over the two columns.
-
-* title of services: no kind
-
-* add Malay language
+* in the model for the service add that the service can be without financial component. Add abutton next to "Add offer component" that says "no financial coverage needed". In this case, remove the not covered information fom the top
 
 * add food preferences and allergies to persons
 

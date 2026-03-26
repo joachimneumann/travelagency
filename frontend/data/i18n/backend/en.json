@@ -126,6 +126,8 @@
   "booking.translation.not_needed_for_english": "Customer language is English. No translation is needed.",
   "booking.translation.translated": "{section} translated from English.",
   "booking.translation.translating": "Translating {section} from English...",
+  "booking.translation.translating_overlay": "Translating travel plan. Please wait.",
+  "booking.translation.complete": "Translations complete",
   "booking.travel_plan.translate_everything_clean_state": "Save or discard unsaved travel-plan edits before translating everything.",
   "booking.copied": "Copied",
   "booking.copy": "Copy",
