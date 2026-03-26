@@ -115,6 +115,7 @@
   "booking.translation.status.stale": "Stale",
   "booking.translation.stale_description": "English changed after the last translation. {progress}",
   "booking.translation.translate_everything": "Translate everything",
+  "booking.translation.translate_everything_to_code": "Translate everything to {code} (CAUTION)",
   "booking.translation.translate_from_english": "Translate from English",
   "booking.translation.field_translated": "Field translated from English.",
   "booking.translation.field_translated_to_customer_language": "Field translated to {lang}.",

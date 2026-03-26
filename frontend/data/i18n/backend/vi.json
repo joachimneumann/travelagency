@@ -115,6 +115,7 @@
   "booking.translation.status.stale": "Da cu",
   "booking.translation.stale_description": "Noi dung tieng Anh da thay doi sau lan dich cuoi. {progress}",
   "booking.translation.translate_everything": "Dich tat ca",
+  "booking.translation.translate_everything_to_code": "Dich tat ca sang {code} (CAN THAN)",
   "booking.translation.translate_from_english": "Dich tu tieng Anh",
   "booking.translation.field_translated": "Da dich truong nay tu tieng Anh.",
   "booking.translation.field_translated_to_customer_language": "Da dich truong nay sang {lang}.",

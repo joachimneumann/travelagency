@@ -240,10 +240,11 @@ export function createBookingTravelPlanModule(ctx) {
     els.travel_plan_status.classList.remove(
       "booking-inline-status--error",
       "booking-inline-status--success",
-      "booking-inline-status--info"
+      "booking-inline-status--info",
+      "booking-inline-status--loading"
     );
     if (!message) return;
-    const normalizedType = type === "error" || type === "success" ? type : "info";
+    const normalizedType = type === "error" || type === "success" || type === "loading" ? type : "info";
     els.travel_plan_status.classList.add(`booking-inline-status--${normalizedType}`);
   }
 
@@ -275,7 +276,12 @@ export function createBookingTravelPlanModule(ctx) {
     if (!(els.travel_plan_translate_all_btn instanceof HTMLButtonElement)) return;
     const button = els.travel_plan_translate_all_btn;
     const { disabled, disabledReason } = travelPlanTranslateButtonState();
-    button.textContent = bookingT("booking.translation.translate_everything", "Translate everything");
+    const targetOption = bookingContentLanguageOption(bookingContentLang());
+    button.textContent = bookingT(
+      "booking.translation.translate_everything_to_code",
+      "Translate everything to {code} (CAUTION)",
+      { code: targetOption.shortLabel || String(targetOption.code || "").trim().toUpperCase() || "EN" }
+    );
     button.disabled = disabled;
     if (disabledReason) {
       button.title = disabledReason;
@@ -1676,7 +1682,7 @@ export function createBookingTravelPlanModule(ctx) {
       }
     });
 
-    travelPlanStatus(translationBusyText(travelPlanSectionLabel()), "info");
+    travelPlanStatus(translationBusyText(travelPlanSectionLabel()), "loading");
     if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
       els.travel_plan_translate_all_btn.disabled = true;
     }
