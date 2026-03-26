@@ -221,11 +221,12 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await services.atpStaffDirectory.syncProfilesFromKeycloak().catch(() => []);
   const startupStore = await services.storeUtils.readStore();
   const backfilledBookingPersons = startupStore.__bookingPersonsWritebackNeeded === true;
+  const backfilledBookingOffers = startupStore.__bookingOfferWritebackNeeded === true;
   const collapsedGeneratedOfferPaymentTerms = collapseGeneratedOfferPaymentTermsState(startupStore);
   if (backfillGeneratedOfferBookingConfirmationTokenState(startupStore, {
     now: nowIso(),
     ttlMs: BOOKING_CONFIRMATION_TOKEN_CONFIG.ttlMs
-  }) || collapsedGeneratedOfferPaymentTerms || backfilledBookingPersons) {
+  }) || collapsedGeneratedOfferPaymentTerms || backfilledBookingPersons || backfilledBookingOffers) {
     await services.storeUtils.persistStore(startupStore);
   }
   const auth = createAuth({ port });

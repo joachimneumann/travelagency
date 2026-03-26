@@ -52,6 +52,7 @@ IR: {
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
+		OfferPricingGranularity: {catalog: "offerPricingGranularities"}
 		OfferPaymentTermKind: {catalog: "offerPaymentTermKinds"}
 		OfferPaymentAmountMode: {catalog: "offerPaymentAmountModes"}
 		OfferPaymentDueType: {catalog: "offerPaymentDueTypes"}
@@ -632,6 +633,70 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingOfferTripPriceInternal"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferTripPriceInternal"
+			fields: [
+				{name: "label", kind: "scalar", typeName: "string", required: false},
+				{name: "amount_cents", kind: "scalar", typeName: "NonNegativeMoneyAmount", required: true},
+				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "line_net_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_tax_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_gross_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_total_amount_cents", kind: "scalar", typeName: "int", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferDayPriceInternal"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferDayPriceInternal"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "day_number", kind: "scalar", typeName: "int", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: false},
+				{name: "amount_cents", kind: "scalar", typeName: "NonNegativeMoneyAmount", required: true},
+				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: false},
+				{name: "line_net_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_tax_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_gross_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_total_amount_cents", kind: "scalar", typeName: "int", required: false},
+			]
+		},
+		{
+			name:       "BookingOfferAdditionalItem"
+			domain:     "booking"
+			module:     "entities"
+			sourceType: "entities.#BookingOfferAdditionalItem"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "label", kind: "scalar", typeName: "string", required: true},
+				{name: "details", kind: "scalar", typeName: "string", required: false},
+				{name: "day_number", kind: "scalar", typeName: "int", required: false},
+				{name: "quantity", kind: "scalar", typeName: "int", required: true},
+				{name: "unit_amount_cents", kind: "scalar", typeName: "NonNegativeMoneyAmount", required: true},
+				{name: "unit_tax_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "unit_total_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "tax_rate_basis_points", kind: "scalar", typeName: "int", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "category", kind: "enum", typeName: "OfferCategory", required: false},
+				{name: "line_net_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_tax_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_gross_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: false},
+				{name: "line_total_amount_cents", kind: "scalar", typeName: "int", required: false},
+				{name: "notes", kind: "scalar", typeName: "string", required: false},
+				{name: "sort_order", kind: "scalar", typeName: "int", required: false},
+				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+			]
+		},
+		{
 			name:       "BookingOffer"
 			domain:     "booking"
 			module:     "entities"
@@ -639,8 +704,13 @@ IR: {
 			fields: [
 				{name: "status", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "pricing_granularity_internal", kind: "enum", typeName: "OfferPricingGranularity", required: true},
+				{name: "pricing_granularity_visible", kind: "enum", typeName: "OfferPricingGranularity", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "trip_price_internal", kind: "entity", typeName: "BookingOfferTripPriceInternal", required: false},
+				{name: "days_internal", kind: "entity", typeName: "BookingOfferDayPriceInternal", required: false, isArray: true},
+				{name: "additional_items", kind: "entity", typeName: "BookingOfferAdditionalItem", required: false, isArray: true},
 				{name: "discount", kind: "entity", typeName: "BookingOfferDiscount", required: false},
 				{name: "totals", kind: "entity", typeName: "BookingOfferTotals", required: true},
 				{name: "quotation_summary", kind: "entity", typeName: "BookingOfferQuotationSummary", required: false},
@@ -898,6 +968,49 @@ IR: {
 			]
 		},
 		{
+			name:       "BookingOfferVisibleTripPriceReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingOfferVisibleTripPriceReadModel"
+			fields: [
+				{name: "label", kind: "scalar", typeName: "string", required: false},
+				{name: "amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "line_net_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+				{name: "line_tax_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+				{name: "line_gross_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+			]
+		},
+		{
+			name:       "BookingOfferVisibleDayPriceReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingOfferVisibleDayPriceReadModel"
+			fields: [
+				{name: "day_number", kind: "scalar", typeName: "int", required: false},
+				{name: "label", kind: "scalar", typeName: "string", required: false},
+				{name: "amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "line_net_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+				{name: "line_tax_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+				{name: "line_gross_amount_cents", kind: "scalar", typeName: "MoneyAmount", required: true},
+			]
+		},
+		{
+			name:       "BookingOfferVisiblePricingReadModel"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingOfferVisiblePricingReadModel"
+			fields: [
+				{name: "granularity", kind: "enum", typeName: "OfferPricingGranularity", required: true},
+				{name: "derivable", kind: "scalar", typeName: "bool", required: true},
+				{name: "trip_price", kind: "transport", typeName: "BookingOfferVisibleTripPriceReadModel", required: false},
+				{name: "days", kind: "transport", typeName: "BookingOfferVisibleDayPriceReadModel", required: true, isArray: true},
+				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "additional_items", kind: "entity", typeName: "BookingOfferAdditionalItem", required: true, isArray: true},
+			]
+		},
+		{
 			name:       "BookingOfferReadModel"
 			domain:     "api"
 			module:     "api"
@@ -905,12 +1018,18 @@ IR: {
 			fields: [
 				{name: "status", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
+				{name: "pricing_granularity_internal", kind: "enum", typeName: "OfferPricingGranularity", required: true},
+				{name: "pricing_granularity_visible", kind: "enum", typeName: "OfferPricingGranularity", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
+				{name: "trip_price_internal", kind: "entity", typeName: "BookingOfferTripPriceInternal", required: false},
+				{name: "days_internal", kind: "entity", typeName: "BookingOfferDayPriceInternal", required: false, isArray: true},
+				{name: "additional_items", kind: "entity", typeName: "BookingOfferAdditionalItem", required: false, isArray: true},
 				{name: "discount", kind: "entity", typeName: "BookingOfferDiscount", required: false},
 				{name: "totals", kind: "entity", typeName: "BookingOfferTotals", required: true},
 				{name: "quotation_summary", kind: "entity", typeName: "BookingOfferQuotationSummary", required: false},
 				{name: "payment_terms", kind: "transport", typeName: "BookingOfferPaymentTermsReadModel", required: false},
+				{name: "visible_pricing", kind: "transport", typeName: "BookingOfferVisiblePricingReadModel", required: true},
 				{name: "total_price_cents", kind: "scalar", typeName: "int", required: true},
 			]
 		},

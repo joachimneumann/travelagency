@@ -353,6 +353,18 @@ function assertBookingShape(booking) {
   assert.equal(typeof booking.preferred_currency, "string");
   assert.ok(Array.isArray(booking.destinations));
   assert.ok(Array.isArray(booking.travel_styles));
+  assert.equal(typeof booking.offer, "object");
+  assert.equal(typeof booking.offer.pricing_granularity_internal, "string");
+  assert.equal(typeof booking.offer.pricing_granularity_visible, "string");
+  assert.ok(Array.isArray(booking.offer.components));
+  assert.ok(Array.isArray(booking.offer.days_internal));
+  assert.ok(Array.isArray(booking.offer.additional_items));
+  assert.equal(typeof booking.offer.visible_pricing, "object");
+  assert.equal(typeof booking.offer.visible_pricing.granularity, "string");
+  assert.equal(typeof booking.offer.visible_pricing.derivable, "boolean");
+  assert.ok(Array.isArray(booking.offer.visible_pricing.days));
+  assert.ok(Array.isArray(booking.offer.visible_pricing.components));
+  assert.ok(Array.isArray(booking.offer.visible_pricing.additional_items));
   assert.equal(typeof booking.travel_plan_revision, "number");
   assert.equal(typeof booking.travel_plan, "object");
   assert.ok(Array.isArray(booking.travel_plan.days));
@@ -589,6 +601,180 @@ test("booking offer patch persists added offer components", async () => {
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.offer.components.length, 1);
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Hotel room");
+});
+
+test("booking offer patch persists internal trip granularity with additional items", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          pricing_granularity_internal: "trip",
+          pricing_granularity_visible: "trip",
+          components: [],
+          trip_price_internal: {
+            label: "Trip total",
+            amount_cents: 50000,
+            tax_rate_basis_points: 1000,
+            currency: booking.preferred_currency,
+            notes: "Main trip total"
+          },
+          days_internal: [],
+          additional_items: [
+            {
+              id: "offer_additional_airport_pickup",
+              label: "Airport pickup",
+              quantity: 1,
+              unit_amount_cents: 10000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              notes: "Arrival transfer",
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.pricing_granularity_internal, "trip");
+  assert.equal(patchResult.body.booking.offer.pricing_granularity_visible, "trip");
+  assert.equal(patchResult.body.booking.offer.components.length, 0);
+  assert.equal(patchResult.body.booking.offer.days_internal.length, 0);
+  assert.equal(patchResult.body.booking.offer.additional_items.length, 1);
+  assert.equal(patchResult.body.booking.offer.trip_price_internal.amount_cents, 50000);
+  assert.equal(patchResult.body.booking.offer.total_price_cents, 66000);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.granularity, "trip");
+  assert.equal(patchResult.body.booking.offer.visible_pricing.derivable, true);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.trip_price.amount_cents, 50000);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.additional_items.length, 1);
+});
+
+test("booking offer patch rejects visible granularity finer than internal granularity", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          pricing_granularity_internal: "day",
+          pricing_granularity_visible: "component",
+          components: [],
+          days_internal: [
+            {
+              id: "offer_day_internal_1",
+              day_number: 1,
+              label: "Day 1",
+              amount_cents: 25000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency
+            }
+          ],
+          additional_items: []
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 422);
+  assert.match(String(patchResult.body.error || ""), /visible pricing granularity/i);
+});
+
+test("booking offer read model derives visible day projection from internal components", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const detailBefore = await requestJson(endpointPath("booking_detail").replace("{booking_id}", bookingId), apiHeaders());
+  assert.equal(detailBefore.status, 200);
+  const booking = detailBefore.body.booking;
+
+  const patchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: booking.offer_revision,
+        offer: {
+          ...booking.offer,
+          currency: booking.preferred_currency,
+          pricing_granularity_internal: "component",
+          pricing_granularity_visible: "day",
+          components: [
+            {
+              id: "offer_component_day_1",
+              category: "ACCOMMODATION",
+              label: "Hotel",
+              details: "Night 1",
+              day_number: 1,
+              quantity: 1,
+              unit_amount_cents: 10000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              sort_order: 0
+            },
+            {
+              id: "offer_component_day_2",
+              category: "TRANSPORTATION",
+              label: "Transfer",
+              details: "Day 2 transfer",
+              day_number: 2,
+              quantity: 1,
+              unit_amount_cents: 20000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              sort_order: 1
+            }
+          ],
+          additional_items: [
+            {
+              id: "offer_additional_item_1",
+              label: "VIP support",
+              quantity: 1,
+              unit_amount_cents: 3000,
+              tax_rate_basis_points: 1000,
+              currency: booking.preferred_currency,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+
+  assert.equal(patchResult.status, 200);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.granularity, "day");
+  assert.equal(patchResult.body.booking.offer.visible_pricing.derivable, true);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.days.length, 2);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.days[0].day_number, 1);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.days[0].amount_cents, 10000);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.days[1].day_number, 2);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.days[1].amount_cents, 20000);
+  assert.equal(patchResult.body.booking.offer.visible_pricing.additional_items.length, 1);
 });
 
 test("booking offer patch preserves trip-relative payment-term due types", async () => {
@@ -2467,6 +2653,100 @@ test("booking generated offer pdf endpoint returns a pdf file", async () => {
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   assert.match(pdfResult.body, /%PDF-/);
+});
+
+test("booking generated offer pdf renders customer-visible day pricing while keeping additional items visible", async () => {
+  const createdBooking = await createSeedBooking();
+  const bookingId = createdBooking.id;
+
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          pricing_granularity_internal: "component",
+          pricing_granularity_visible: "day",
+          components: [
+            {
+              id: "offer_component_hidden_day_1",
+              category: "ACCOMMODATION",
+              label: "Accommodation",
+              details: "HiddenComponentMarkerAlpha",
+              day_number: 1,
+              quantity: 1,
+              unit_amount_cents: 12000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              sort_order: 0
+            },
+            {
+              id: "offer_component_hidden_day_2",
+              category: "TRANSPORTATION",
+              label: "Transfer",
+              details: "HiddenComponentMarkerBeta",
+              day_number: 2,
+              quantity: 1,
+              unit_amount_cents: 8000,
+              tax_rate_basis_points: 1000,
+              currency: createdBooking.preferred_currency,
+              sort_order: 1
+            }
+          ],
+          additional_items: [
+            {
+              id: "offer_additional_item_visible_pdf",
+              label: "VisibleAddonMarkerGamma",
+              details: "VisibleAddonMarkerDelta",
+              quantity: 1,
+              unit_amount_cents: 1500,
+              tax_rate_basis_points: 0,
+              currency: createdBooking.preferred_currency,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+  assert.equal(offerPatchResult.body.booking.offer.visible_pricing.granularity, "day");
+
+  const generateResult = await requestJson(
+    endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "POST",
+      body: {
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
+        comment: "Visible pricing PDF check"
+      }
+    }
+  );
+  assert.equal(generateResult.status, 201);
+  const generatedOffer = generateResult.body.booking.generated_offers[0];
+
+  const pdfResult = await requestRaw(
+    endpointPath("booking_generated_offer_pdf")
+      .replace("{booking_id}", bookingId)
+      .replace("{generated_offer_id}", generatedOffer.id),
+    apiHeaders()
+  );
+  assert.equal(pdfResult.status, 200);
+  assert.equal(pdfResult.headers["content-type"], "application/pdf");
+  assert.match(pdfResult.body, /%PDF-/);
+  assert.equal(generatedOffer.offer.visible_pricing.granularity, "day");
+  assert.equal(generatedOffer.offer.visible_pricing.derivable, true);
+  assert.equal(generatedOffer.offer.visible_pricing.days.length, 2);
+  assert.equal(generatedOffer.offer.visible_pricing.additional_items.length, 1);
+  const source = await readFile(path.join(__dirname, "..", "src", "lib", "offer_pdf.js"), "utf8");
+  assert.match(source, /visible_pricing/);
+  assert.match(source, /buildOfferTableRows/);
+  assert.match(source, /additional_items/);
 });
 
 test("booking generated offer pdf wiring includes the assigned ATP guide section", async () => {

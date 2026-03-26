@@ -126,8 +126,12 @@ const state = {
   },
   offerDraft: {
     currency: "USD",
+    pricing_granularity_internal: "component",
+    pricing_granularity_visible: "component",
     category_rules: [],
     components: [],
+    days_internal: [],
+    additional_items: [],
     totals: {
       net_amount_cents: 0,
       tax_amount_cents: 0,
@@ -271,7 +275,12 @@ const els = {
   bookingConfirmationPanelSummary: document.getElementById("booking_confirmation_panel_summary"),
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
+  offer_pricing_granularity_internal_input: document.getElementById("offer_pricing_granularity_internal_input"),
+  offer_pricing_granularity_visible_input: document.getElementById("offer_pricing_granularity_visible_input"),
+  offer_visible_pricing_hint: document.getElementById("offer_visible_pricing_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
+  offer_additional_items_table: document.getElementById("offer_additional_items_table"),
+  offer_discount_editor: document.getElementById("offer_discount_editor"),
   offer_payment_terms: document.getElementById("offer_payment_terms"),
   offer_quotation_summary: document.getElementById("offer_quotation_summary"),
   generated_offers_table: document.getElementById("generated_offers_table"),
@@ -627,6 +636,14 @@ async function init() {
   if (els.offer_currency_input)
     els.offer_currency_input.addEventListener("change", () => {
       void handleOfferCurrencyChange();
+    });
+  if (els.offer_pricing_granularity_internal_input)
+    els.offer_pricing_granularity_internal_input.addEventListener("change", () => {
+      void handleOfferInternalGranularityChange();
+    });
+  if (els.offer_pricing_granularity_visible_input)
+    els.offer_pricing_granularity_visible_input.addEventListener("change", () => {
+      void handleOfferVisibleGranularityChange();
     });
   personsModule.bindEvents();
   travelPlanModule.bindEvents();
@@ -1129,6 +1146,14 @@ function addOfferComponent() {
 
 function handleOfferCurrencyChange() {
   return offerModule.handleOfferCurrencyChange();
+}
+
+function handleOfferInternalGranularityChange() {
+  return offerModule.handleOfferInternalGranularityChange();
+}
+
+function handleOfferVisibleGranularityChange() {
+  return offerModule.handleOfferVisibleGranularityChange();
 }
 
 function saveOffer() {

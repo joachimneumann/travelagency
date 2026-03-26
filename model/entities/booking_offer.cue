@@ -32,6 +32,55 @@ import (
 	updated_at?:              common.#Timestamp
 }
 
+#BookingOfferTripPriceInternal: {
+	label?: string
+	amount_cents: common.#NonNegativeMoneyAmount
+	tax_rate_basis_points: >=0 & <=100000 & int
+	currency: enums.#CurrencyCode
+	notes?: string
+	line_net_amount_cents?:   common.#MoneyAmount
+	line_tax_amount_cents?:   common.#MoneyAmount
+	line_gross_amount_cents?: common.#MoneyAmount
+	line_total_amount_cents?: int
+}
+
+#BookingOfferDayPriceInternal: {
+	id?: common.#Identifier
+	day_number: >0 & int
+	label?: string
+	amount_cents: common.#NonNegativeMoneyAmount
+	tax_rate_basis_points: >=0 & <=100000 & int
+	currency: enums.#CurrencyCode
+	notes?: string
+	sort_order?: int
+	line_net_amount_cents?:   common.#MoneyAmount
+	line_tax_amount_cents?:   common.#MoneyAmount
+	line_gross_amount_cents?: common.#MoneyAmount
+	line_total_amount_cents?: int
+}
+
+#BookingOfferAdditionalItem: {
+	id:                       common.#Identifier
+	label:                    string & !=""
+	details?:                 string
+	day_number?:              >0 & int
+	quantity:                 >0 & int
+	unit_amount_cents:        common.#NonNegativeMoneyAmount
+	unit_tax_amount_cents?:   common.#MoneyAmount
+	unit_total_amount_cents?: common.#MoneyAmount
+	tax_rate_basis_points:    >=0 & <=100000 & int
+	currency:                 enums.#CurrencyCode
+	category?:                enums.#OfferCategory
+	line_net_amount_cents?:   common.#MoneyAmount
+	line_tax_amount_cents?:   common.#MoneyAmount
+	line_gross_amount_cents?: common.#MoneyAmount
+	line_total_amount_cents?: int
+	notes?:                   string
+	sort_order?:              int
+	created_at?:              common.#Timestamp
+	updated_at?:              common.#Timestamp
+}
+
 #BookingOfferDiscount: {
 	reason:                   string & !=""
 	amount_cents:             common.#NonNegativeMoneyAmount
@@ -120,8 +169,13 @@ import (
 #BookingOffer: {
 	currency: enums.#CurrencyCode
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
+	pricing_granularity_internal: enums.#OfferPricingGranularity
+	pricing_granularity_visible:  enums.#OfferPricingGranularity
 	category_rules: [...#BookingOfferCategoryRule]
 	components: [...#BookingOfferComponent]
+	trip_price_internal?: #BookingOfferTripPriceInternal
+	days_internal?: [...#BookingOfferDayPriceInternal]
+	additional_items?: [...#BookingOfferAdditionalItem]
 	discount?:          #BookingOfferDiscount
 	totals:             #BookingOfferTotals
 	quotation_summary?: #BookingOfferQuotationSummary

@@ -261,6 +261,96 @@ function formatTaxRateLabel(basisPoints, lang) {
   return pdfT(lang, "offer.tax_rate", "Tax {rate}%", { rate: value });
 }
 
+function formatVisiblePricingLabel(item, lang) {
+  const dayNumber = Number(item?.day_number || 0);
+  if (Number.isInteger(dayNumber) && dayNumber >= 1) {
+    return pdfT(lang, "offer.day_label", "Day {day}", { day: dayNumber });
+  }
+  return pdfT(lang, "offer.trip_label", "Trip");
+}
+
+function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
+  const offer = generatedOffer?.offer && typeof generatedOffer.offer === "object" ? generatedOffer.offer : {};
+  const visiblePricing = offer?.visible_pricing && typeof offer.visible_pricing === "object"
+    ? offer.visible_pricing
+    : null;
+  const currency = generatedOffer?.currency || offer?.currency;
+  const discount = offer?.discount && typeof offer.discount === "object" ? offer.discount : null;
+
+  const componentRows = safeArray(offer?.components).map((component) => ({
+    category: categoryLabel(component),
+    categoryTax: formatTaxRateLabel(component?.tax_rate_basis_points, lang),
+    details: textOrNull(component?.details) || "—",
+    quantity: String(Number(component?.quantity || 1)),
+    unitText: formatMoneyValue(
+      component?.unit_total_amount_cents ?? component?.unit_amount_cents,
+      currency
+    ),
+    totalText: formatMoneyValue(
+      component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
+      currency
+    )
+  }));
+
+  let mainRows = componentRows;
+  if (visiblePricing?.granularity === "trip" && visiblePricing?.trip_price) {
+    const tripPrice = visiblePricing.trip_price;
+    mainRows = [{
+      category: pdfT(lang, "offer.trip_label", "Trip"),
+      categoryTax: textOrNull(tripPrice?.label) || pdfT(lang, "offer.trip_total", "Trip total"),
+      details: textOrNull(tripPrice?.label) || "—",
+      quantity: "—",
+      unitText: "—",
+      totalText: formatMoneyValue(
+        tripPrice?.line_gross_amount_cents ?? tripPrice?.line_total_amount_cents ?? tripPrice?.amount_cents,
+        currency
+      )
+    }];
+  } else if (visiblePricing?.granularity === "day" && visiblePricing?.derivable !== false && safeArray(visiblePricing?.days).length) {
+    mainRows = safeArray(visiblePricing.days).map((dayPrice) => ({
+      category: formatVisiblePricingLabel(dayPrice, lang),
+      categoryTax: textOrNull(dayPrice?.label) || pdfT(lang, "offer.daily_total", "Daily total"),
+      details: textOrNull(dayPrice?.label) || "—",
+      quantity: "—",
+      unitText: "—",
+      totalText: formatMoneyValue(
+        dayPrice?.line_gross_amount_cents ?? dayPrice?.line_total_amount_cents ?? dayPrice?.amount_cents,
+        currency
+      )
+    }));
+  }
+
+  const additionalItemRows = safeArray(visiblePricing?.additional_items || offer?.additional_items).map((item) => ({
+    category: Number.isInteger(Number(item?.day_number)) && Number(item?.day_number) >= 1
+      ? pdfT(lang, "offer.additional_item_day", "Additional item · Day {day}", { day: Number(item.day_number) })
+      : pdfT(lang, "offer.additional_item", "Additional item"),
+    categoryTax: formatTaxRateLabel(item?.tax_rate_basis_points, lang),
+    details: [textOrNull(item?.label), textOrNull(item?.details)].filter(Boolean).join(" · ") || "—",
+    quantity: String(Number(item?.quantity || 1)),
+    unitText: formatMoneyValue(
+      item?.unit_total_amount_cents ?? item?.unit_amount_cents,
+      currency
+    ),
+    totalText: formatMoneyValue(
+      item?.line_gross_amount_cents ?? item?.line_total_amount_cents,
+      currency
+    )
+  }));
+
+  const discountRows = discount && Number(discount?.amount_cents || 0) > 0
+    ? [{
+        category: pdfT(lang, "offer.discount", "Discount"),
+        categoryTax: pdfT(lang, "offer.discount_adjustment", "Final adjustment"),
+        details: textOrNull(discount?.reason) || "—",
+        quantity: "—",
+        unitText: "—",
+        totalText: formatMoneyValue(-Math.max(0, Number(discount?.amount_cents || 0)), currency)
+      }]
+    : [];
+
+  return [...mainRows, ...additionalItemRows, ...discountRows];
+}
+
 function deriveOfferQuotationSummary(offer) {
   const source = offer && typeof offer === "object" ? offer : {};
   const provided = source.quotation_summary && typeof source.quotation_summary === "object"
@@ -268,15 +358,25 @@ function deriveOfferQuotationSummary(offer) {
     : null;
   if (provided) return provided;
 
-  const components = safeArray(source.components);
+  const internalGranularity = normalizeText(source?.pricing_granularity_internal).toLowerCase() || "component";
+  const components = internalGranularity === "component" ? safeArray(source.components) : [];
+  const dayPrices = internalGranularity === "day" ? safeArray(source.days_internal) : [];
+  const tripPrice = internalGranularity === "trip" && source?.trip_price_internal ? source.trip_price_internal : null;
+  const additionalItems = safeArray(source.additional_items);
   const discount = source.discount && typeof source.discount === "object" ? source.discount : null;
   const buckets = new Map();
   let subtotal = 0;
   let totalTax = 0;
   let totalGross = 0;
-  for (const component of components) {
+  const chargeLines = [
+    ...components,
+    ...dayPrices,
+    ...(tripPrice ? [tripPrice] : []),
+    ...additionalItems
+  ];
+  for (const component of chargeLines) {
     const basisPoints = Math.max(0, Number(component?.tax_rate_basis_points || 0));
-    const net = Number(component?.line_net_amount_cents || 0);
+    const net = Number(component?.line_net_amount_cents ?? component?.amount_cents ?? component?.line_total_amount_cents ?? 0) || 0;
     const tax = Number(component?.line_tax_amount_cents || 0);
     const gross = Number(
       component?.line_gross_amount_cents
@@ -1292,36 +1392,7 @@ function drawOfferTable(doc, generatedOffer, startY, formatMoneyValue, fonts, la
   const redrawHeader = (pdfDoc, nextY) => drawTableHeader(pdfDoc, nextY, columns, fonts, lang);
   y = drawTableHeader(doc, y, columns, fonts, lang);
 
-  const components = safeArray(generatedOffer?.offer?.components);
-  const discount = generatedOffer?.offer?.discount && typeof generatedOffer.offer.discount === "object"
-    ? generatedOffer.offer.discount
-    : null;
-  const rows = [
-    ...components.map((component) => ({
-      category: categoryLabel(component),
-      categoryTax: formatTaxRateLabel(component?.tax_rate_basis_points, lang),
-      details: textOrNull(component?.details) || "—",
-      quantity: String(Number(component?.quantity || 1)),
-      unitText: formatMoneyValue(
-        component?.unit_total_amount_cents ?? component?.unit_amount_cents,
-        generatedOffer?.currency
-      ),
-      totalText: formatMoneyValue(
-        component?.line_gross_amount_cents ?? component?.line_total_amount_cents,
-        generatedOffer?.currency
-      )
-    })),
-    ...(discount && Number(discount?.amount_cents || 0) > 0
-      ? [{
-          category: pdfT(lang, "offer.discount", "Discount"),
-          categoryTax: pdfT(lang, "offer.discount_adjustment", "Final adjustment"),
-          details: textOrNull(discount?.reason) || "—",
-          quantity: "—",
-          unitText: "—",
-          totalText: formatMoneyValue(-Math.max(0, Number(discount?.amount_cents || 0)), generatedOffer?.currency)
-        }]
-      : [])
-  ];
+  const rows = buildOfferTableRows(generatedOffer, formatMoneyValue, lang);
   if (!rows.length) {
     doc
       .font(pdfFontName("regular", fonts))

@@ -16,6 +16,16 @@ import {
 } from "./localized_editor.js";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
+const OFFER_PRICING_GRANULARITY_ORDER = Object.freeze({
+  trip: 1,
+  day: 2,
+  component: 3
+});
+const OFFER_PRICING_GRANULARITY_OPTIONS = Object.freeze([
+  { value: "component", label: "Per component" },
+  { value: "day", label: "Per day" },
+  { value: "trip", label: "Per trip" }
+]);
 
 const OFFER_CATEGORIES = GENERATED_OFFER_CATEGORY_LIST.map((code) => ({ code }));
 
@@ -42,6 +52,15 @@ export function createBookingOfferModule(ctx) {
   function normalizeOfferStatus(value) {
     const normalized = String(value || "").trim().toUpperCase();
     return ["DRAFT", "APPROVED", "OFFER_SENT"].includes(normalized) ? normalized : "DRAFT";
+  }
+
+  function normalizeOfferPricingGranularity(value, fallback = "component") {
+    const normalized = String(value || "").trim().toLowerCase();
+    return Object.prototype.hasOwnProperty.call(OFFER_PRICING_GRANULARITY_ORDER, normalized) ? normalized : fallback;
+  }
+
+  function isVisibleGranularityFinerThanInternal(visible, internal) {
+    return (OFFER_PRICING_GRANULARITY_ORDER[visible] || 0) > (OFFER_PRICING_GRANULARITY_ORDER[internal] || 0);
   }
 
   function isOfferCurrencyEditable() {
@@ -168,6 +187,8 @@ export function createBookingOfferModule(ctx) {
     setOfferStatus,
     getCountMissingOfferPdfTranslations: countMissingOfferPdfTranslations,
     normalizeOfferCategory,
+    normalizeOfferPricingGranularity,
+    isVisibleGranularityFinerThanInternal,
     cloneOfferPaymentTerms,
     updateOfferPanelSummary
   });
@@ -263,10 +284,19 @@ export function createBookingOfferModule(ctx) {
     });
 
     const sourceComponents = Array.isArray(source.components) ? source.components : [];
+    const sourceDaysInternal = Array.isArray(source.days_internal) ? source.days_internal : [];
+    const sourceAdditionalItems = Array.isArray(source.additional_items) ? source.additional_items : [];
+    const pricingGranularityInternal = normalizeOfferPricingGranularity(source.pricing_granularity_internal, "component");
+    const requestedVisibleGranularity = normalizeOfferPricingGranularity(source.pricing_granularity_visible, pricingGranularityInternal);
+    const pricingGranularityVisible = isVisibleGranularityFinerThanInternal(requestedVisibleGranularity, pricingGranularityInternal)
+      ? pricingGranularityInternal
+      : requestedVisibleGranularity;
 
     return {
       status: normalizeOfferStatus(source.status),
       currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
+      pricing_granularity_internal: pricingGranularityInternal,
+      pricing_granularity_visible: pricingGranularityVisible,
       category_rules,
       ...(discount ? { discount } : {}),
       ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
@@ -288,6 +318,50 @@ export function createBookingOfferModule(ctx) {
         notes: String(component?.notes || ""),
         sort_order: Number.isFinite(Number(component?.sort_order)) ? Number(component.sort_order) : index
       })),
+      ...(source.trip_price_internal && typeof source.trip_price_internal === "object"
+        ? {
+            trip_price_internal: {
+              label: String(source.trip_price_internal?.label || "").trim(),
+              amount_cents: Math.max(0, Math.round(Number(source.trip_price_internal?.amount_cents || 0))),
+              tax_rate_basis_points: Number.isFinite(Number(source.trip_price_internal?.tax_rate_basis_points))
+                ? Math.max(0, Math.round(Number(source.trip_price_internal.tax_rate_basis_points)))
+                : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
+              currency: normalizeCurrencyCode(source.trip_price_internal?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+              notes: String(source.trip_price_internal?.notes || "").trim()
+            }
+          }
+        : {}),
+      days_internal: sourceDaysInternal.map((dayPrice, index) => ({
+        id: String(dayPrice?.id || ""),
+        day_number: Number.isInteger(Number(dayPrice?.day_number)) && Number(dayPrice?.day_number) >= 1
+          ? Number(dayPrice.day_number)
+          : index + 1,
+        label: String(dayPrice?.label || "").trim(),
+        amount_cents: Math.max(0, Math.round(Number(dayPrice?.amount_cents || 0))),
+        tax_rate_basis_points: Number.isFinite(Number(dayPrice?.tax_rate_basis_points))
+          ? Math.max(0, Math.round(Number(dayPrice.tax_rate_basis_points)))
+          : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
+        currency: normalizeCurrencyCode(dayPrice?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+        notes: String(dayPrice?.notes || "").trim(),
+        sort_order: Number.isFinite(Number(dayPrice?.sort_order)) ? Number(dayPrice.sort_order) : index
+      })),
+      additional_items: sourceAdditionalItems.map((item, index) => ({
+        id: String(item?.id || ""),
+        label: String(item?.label || "").trim(),
+        details: String(item?.details || "").trim(),
+        day_number: Number.isInteger(Number(item?.day_number)) && Number(item?.day_number) >= 1
+          ? Number(item.day_number)
+          : null,
+        quantity: Math.max(1, Number(item?.quantity || 1)),
+        unit_amount_cents: Math.max(0, Math.round(Number(item?.unit_amount_cents || 0))),
+        tax_rate_basis_points: Number.isFinite(Number(item?.tax_rate_basis_points))
+          ? Math.max(0, Math.round(Number(item.tax_rate_basis_points)))
+          : DEFAULT_OFFER_TAX_RATE_BASIS_POINTS,
+        currency: normalizeCurrencyCode(item?.currency || source.currency || state.booking?.preferred_currency || "USD"),
+        category: normalizeOfferCategory(item?.category || "OTHER"),
+        notes: String(item?.notes || "").trim(),
+        sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index
+      })),
       totals: source.totals || {
         net_amount_cents: 0,
         tax_amount_cents: 0,
@@ -295,6 +369,65 @@ export function createBookingOfferModule(ctx) {
         components_count: 0
       }
     };
+  }
+
+  function populateOfferGranularitySelect(select, selectedValue, { disableFinerThan = null } = {}) {
+    if (!(select instanceof HTMLSelectElement)) return;
+    const normalizedSelected = normalizeOfferPricingGranularity(selectedValue);
+    const html = OFFER_PRICING_GRANULARITY_OPTIONS.map((option) => {
+      const disabled = disableFinerThan
+        ? isVisibleGranularityFinerThanInternal(option.value, disableFinerThan)
+        : false;
+      return `<option value="${option.value}"${option.value === normalizedSelected ? " selected" : ""}${disabled ? " disabled" : ""}>${option.label}</option>`;
+    }).join("");
+    select.innerHTML = html;
+    if (Array.from(select.options).some((option) => option.value === normalizedSelected)) {
+      select.value = normalizedSelected;
+    }
+  }
+
+  function updateOfferVisiblePricingHint() {
+    if (!els.offer_visible_pricing_hint) return;
+    const internalGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_internal, "component");
+    const visibleGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_visible, internalGranularity);
+    const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+    const missingDayAssignments = internalGranularity === "component"
+      && visibleGranularity === "day"
+      && components.some((component) => !Number.isInteger(Number(component?.day_number)) || Number(component?.day_number) < 1);
+    if (missingDayAssignments) {
+      els.offer_visible_pricing_hint.textContent = bookingT(
+        "booking.offer.visible_pricing_day_requires_day_numbers",
+        "Customer-visible day pricing needs every internal component assigned to a day."
+      );
+      els.offer_visible_pricing_hint.classList.remove("booking-inline-status--success");
+      els.offer_visible_pricing_hint.classList.add("booking-inline-status--error");
+      return;
+    }
+    els.offer_visible_pricing_hint.textContent = bookingT(
+      "booking.offer.visible_pricing_hint",
+      "Customer documents will show {granularity} pricing. Additional items stay visible as separate lines.",
+      {
+        granularity: OFFER_PRICING_GRANULARITY_OPTIONS.find((option) => option.value === visibleGranularity)?.label.toLowerCase() || visibleGranularity
+      }
+    );
+    els.offer_visible_pricing_hint.classList.remove("booking-inline-status--error");
+    els.offer_visible_pricing_hint.classList.add("booking-inline-status--success");
+  }
+
+  function syncOfferGranularityControls() {
+    const internalGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_internal, "component");
+    const visibleGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_visible, internalGranularity);
+    populateOfferGranularitySelect(els.offer_pricing_granularity_internal_input, internalGranularity);
+    populateOfferGranularitySelect(els.offer_pricing_granularity_visible_input, visibleGranularity, {
+      disableFinerThan: internalGranularity
+    });
+    if (els.offer_pricing_granularity_internal_input) {
+      els.offer_pricing_granularity_internal_input.disabled = !state.permissions.canEditBooking;
+    }
+    if (els.offer_pricing_granularity_visible_input) {
+      els.offer_pricing_granularity_visible_input.disabled = !state.permissions.canEditBooking;
+    }
+    updateOfferVisiblePricingHint();
   }
 
   function normalizeOfferCategory(value) {
@@ -366,6 +499,7 @@ export function createBookingOfferModule(ctx) {
       setSelectValue(els.offer_currency_input, currency);
       els.offer_currency_input.disabled = !isOfferCurrencyEditable();
     }
+    syncOfferGranularityControls();
     offerComponentsModule.updateOfferCurrencyHint(currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     generatedOffersModule.updateBookingConfirmationPanelSummary();
@@ -384,6 +518,16 @@ export function createBookingOfferModule(ctx) {
     renderOfferPanel,
     addOfferComponent,
     handleOfferCurrencyChange: () => offerComponentsModule.handleOfferCurrencyChange(),
+    handleOfferInternalGranularityChange: () => {
+      const nextValue = els.offer_pricing_granularity_internal_input?.value;
+      offerComponentsModule.handleOfferInternalGranularityChange(nextValue);
+      syncOfferGranularityControls();
+    },
+    handleOfferVisibleGranularityChange: () => {
+      const nextValue = els.offer_pricing_granularity_visible_input?.value;
+      offerComponentsModule.handleOfferVisibleGranularityChange(nextValue);
+      syncOfferGranularityControls();
+    },
     saveOffer
   };
 }

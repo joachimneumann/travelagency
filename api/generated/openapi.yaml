@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-26T10:54:39Z
+# 2026-03-26T13:02:02Z
 
 ---
 openapi: 3.1.0
@@ -589,6 +589,23 @@ components:
         label: DISCOUNTS_CREDITS
       - value: OTHER
         label: OTHER
+    OfferPricingGranularity:
+      type: string
+      enum:
+      - trip
+      - day
+      - component
+      x-enum-catalog:
+      - code: trip
+      - code: day
+      - code: component
+      x-enum-options:
+      - value: trip
+        label: trip
+      - value: day
+        label: day
+      - value: component
+        label: component
     OfferPaymentTermKind:
       type: string
       enum:
@@ -4847,10 +4864,146 @@ components:
         deposit_rule:
           "$ref": "#/components/schemas/GeneratedOfferDepositBookingConfirmationRule"
           nullable: true
+    BookingOfferTripPriceInternal:
+      type: object
+      required:
+      - amount_cents
+      - tax_rate_basis_points
+      - currency
+      properties:
+        label:
+          type: string
+          nullable: true
+        amount_cents:
+          type: string
+        tax_rate_basis_points:
+          type: integer
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        notes:
+          type: string
+          nullable: true
+        line_net_amount_cents:
+          type: string
+          nullable: true
+        line_tax_amount_cents:
+          type: string
+          nullable: true
+        line_gross_amount_cents:
+          type: string
+          nullable: true
+        line_total_amount_cents:
+          type: integer
+          nullable: true
+    BookingOfferDayPriceInternal:
+      type: object
+      required:
+      - day_number
+      - amount_cents
+      - tax_rate_basis_points
+      - currency
+      properties:
+        id:
+          type: string
+          nullable: true
+        day_number:
+          type: integer
+        label:
+          type: string
+          nullable: true
+        amount_cents:
+          type: string
+        tax_rate_basis_points:
+          type: integer
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        notes:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+          nullable: true
+        line_net_amount_cents:
+          type: string
+          nullable: true
+        line_tax_amount_cents:
+          type: string
+          nullable: true
+        line_gross_amount_cents:
+          type: string
+          nullable: true
+        line_total_amount_cents:
+          type: integer
+          nullable: true
+    BookingOfferAdditionalItem:
+      type: object
+      required:
+      - id
+      - label
+      - quantity
+      - unit_amount_cents
+      - tax_rate_basis_points
+      - currency
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        details:
+          type: string
+          nullable: true
+        day_number:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+        unit_amount_cents:
+          type: string
+        unit_tax_amount_cents:
+          type: string
+          nullable: true
+        unit_total_amount_cents:
+          type: string
+          nullable: true
+        tax_rate_basis_points:
+          type: integer
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        category:
+          "$ref": "#/components/schemas/OfferCategory"
+          nullable: true
+        line_net_amount_cents:
+          type: string
+          nullable: true
+        line_tax_amount_cents:
+          type: string
+          nullable: true
+        line_gross_amount_cents:
+          type: string
+          nullable: true
+        line_total_amount_cents:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     BookingOffer:
       type: object
       required:
       - currency
+      - pricing_granularity_internal
+      - pricing_granularity_visible
       - totals
       - total_price_cents
       properties:
@@ -4859,6 +5012,10 @@ components:
           nullable: true
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
+        pricing_granularity_internal:
+          "$ref": "#/components/schemas/OfferPricingGranularity"
+        pricing_granularity_visible:
+          "$ref": "#/components/schemas/OfferPricingGranularity"
         category_rules:
           type: array
           items:
@@ -4867,6 +5024,17 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+        trip_price_internal:
+          "$ref": "#/components/schemas/BookingOfferTripPriceInternal"
+          nullable: true
+        days_internal:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferDayPriceInternal"
+        additional_items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferAdditionalItem"
         discount:
           "$ref": "#/components/schemas/BookingOfferDiscount"
           nullable: true
@@ -5423,11 +5591,86 @@ components:
           type: integer
         scheduled_total_amount_cents:
           type: integer
+    BookingOfferVisibleTripPriceReadModel:
+      type: object
+      required:
+      - amount_cents
+      - currency
+      - line_net_amount_cents
+      - line_tax_amount_cents
+      - line_gross_amount_cents
+      properties:
+        label:
+          type: string
+          nullable: true
+        amount_cents:
+          type: string
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        line_net_amount_cents:
+          type: string
+        line_tax_amount_cents:
+          type: string
+        line_gross_amount_cents:
+          type: string
+    BookingOfferVisibleDayPriceReadModel:
+      type: object
+      required:
+      - amount_cents
+      - currency
+      - line_net_amount_cents
+      - line_tax_amount_cents
+      - line_gross_amount_cents
+      properties:
+        day_number:
+          type: integer
+          nullable: true
+        label:
+          type: string
+          nullable: true
+        amount_cents:
+          type: string
+        currency:
+          "$ref": "#/components/schemas/ATPCurrencyCode"
+        line_net_amount_cents:
+          type: string
+        line_tax_amount_cents:
+          type: string
+        line_gross_amount_cents:
+          type: string
+    BookingOfferVisiblePricingReadModel:
+      type: object
+      required:
+      - granularity
+      - derivable
+      properties:
+        granularity:
+          "$ref": "#/components/schemas/OfferPricingGranularity"
+        derivable:
+          type: boolean
+        trip_price:
+          "$ref": "#/components/schemas/BookingOfferVisibleTripPriceReadModel"
+          nullable: true
+        days:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferVisibleDayPriceReadModel"
+        components:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferComponent"
+        additional_items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferAdditionalItem"
     BookingOfferReadModel:
       type: object
       required:
       - currency
+      - pricing_granularity_internal
+      - pricing_granularity_visible
       - totals
+      - visible_pricing
       - total_price_cents
       properties:
         status:
@@ -5435,6 +5678,10 @@ components:
           nullable: true
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
+        pricing_granularity_internal:
+          "$ref": "#/components/schemas/OfferPricingGranularity"
+        pricing_granularity_visible:
+          "$ref": "#/components/schemas/OfferPricingGranularity"
         category_rules:
           type: array
           items:
@@ -5443,6 +5690,17 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+        trip_price_internal:
+          "$ref": "#/components/schemas/BookingOfferTripPriceInternal"
+          nullable: true
+        days_internal:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferDayPriceInternal"
+        additional_items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/BookingOfferAdditionalItem"
         discount:
           "$ref": "#/components/schemas/BookingOfferDiscount"
           nullable: true
@@ -5454,6 +5712,8 @@ components:
         payment_terms:
           "$ref": "#/components/schemas/BookingOfferPaymentTermsReadModel"
           nullable: true
+        visible_pricing:
+          "$ref": "#/components/schemas/BookingOfferVisiblePricingReadModel"
         total_price_cents:
           type: integer
     GeneratedBookingOfferReadModel:

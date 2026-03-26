@@ -29,6 +29,7 @@ export function createGeneratedOfferArtifactHelpers({
   normalizePdfLang,
   nowIso,
   normalizeBookingOffer,
+  buildVisiblePricingProjection,
   buildBookingOfferPaymentTermsReadModel,
   normalizeBookingTravelPlan,
   generatedOfferPdfPath,
@@ -62,13 +63,17 @@ export function createGeneratedOfferArtifactHelpers({
       offerSnapshot.currency || snapshotCurrency,
       Number(generatedOffer?.total_price_cents || offerSnapshot.total_price_cents || 0)
     );
+    const offerSnapshotWithVisiblePricing = {
+      ...offerSnapshot,
+      visible_pricing: buildVisiblePricingProjection(offerSnapshot)
+    };
     return {
       ...generatedOffer,
       lang: snapshotLang,
       currency: offerSnapshot.currency || snapshotCurrency,
       total_price_cents: Number(generatedOffer?.total_price_cents || offerSnapshot.total_price_cents || 0),
       ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
-      offer: offerSnapshot,
+      offer: offerSnapshotWithVisiblePricing,
       travel_plan: normalizeBookingTravelPlan(generatedOffer?.travel_plan, offerSnapshot, {
         lang: snapshotLang,
         strictReferences: false

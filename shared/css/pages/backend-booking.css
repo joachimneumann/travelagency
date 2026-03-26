@@ -219,6 +219,17 @@
   max-width: 140px;
 }
 
+.booking-detail-page .booking-offer-editor-head {
+  align-items: center;
+  margin: 0 0 0.55rem;
+}
+
+.booking-detail-page .booking-offer-editor-head__title {
+  margin: 0;
+  flex: 1;
+  font-size: 0.98rem;
+}
+
 .booking-detail-page #booking_actions_panel .backend-controls {
   align-items: start;
 }

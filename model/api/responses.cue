@@ -225,15 +225,49 @@ import (
 	scheduled_total_amount_cents: >=0 & int
 }
 
+#BookingOfferVisibleTripPriceReadModel: {
+	label?: string
+	amount_cents:           common.#MoneyAmount
+	currency:               enums.#CurrencyCode
+	line_net_amount_cents:  common.#MoneyAmount
+	line_tax_amount_cents:  common.#MoneyAmount
+	line_gross_amount_cents: common.#MoneyAmount
+}
+
+#BookingOfferVisibleDayPriceReadModel: {
+	day_number?: >0 & int
+	label?: string
+	amount_cents:           common.#MoneyAmount
+	currency:               enums.#CurrencyCode
+	line_net_amount_cents:  common.#MoneyAmount
+	line_tax_amount_cents:  common.#MoneyAmount
+	line_gross_amount_cents: common.#MoneyAmount
+}
+
+#BookingOfferVisiblePricingReadModel: {
+	granularity:      enums.#OfferPricingGranularity
+	derivable:        bool
+	trip_price?:      #BookingOfferVisibleTripPriceReadModel
+	days:             [...#BookingOfferVisibleDayPriceReadModel]
+	components:       [...entities.#BookingOfferComponent]
+	additional_items: [...entities.#BookingOfferAdditionalItem]
+}
+
 #BookingOfferReadModel: {
 	currency: enums.#CurrencyCode
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
+	pricing_granularity_internal: enums.#OfferPricingGranularity
+	pricing_granularity_visible:  enums.#OfferPricingGranularity
 	category_rules: [...entities.#BookingOfferCategoryRule]
 	components: [...entities.#BookingOfferComponent]
+	trip_price_internal?: entities.#BookingOfferTripPriceInternal
+	days_internal?: [...entities.#BookingOfferDayPriceInternal]
+	additional_items?: [...entities.#BookingOfferAdditionalItem]
 	discount?:          entities.#BookingOfferDiscount
 	totals:             entities.#BookingOfferTotals
 	quotation_summary?: entities.#BookingOfferQuotationSummary
 	payment_terms?:     #BookingOfferPaymentTermsReadModel
+	visible_pricing:    #BookingOfferVisiblePricingReadModel
 	total_price_cents:  int
 }
 

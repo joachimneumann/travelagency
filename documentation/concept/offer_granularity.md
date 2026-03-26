@@ -2,116 +2,116 @@
 
 ## Goal
 
-Allow ATP staff to choose how an offer is priced:
+Separate:
 
-1. One price for the complete trip
-2. One price per day
-3. One price per offer component
+- internal pricing granularity
+- customer-visible pricing granularity
 
-The third mode is the current implementation.
+ATP often needs to calculate with detailed commercial structure while presenting a simpler customer-facing offer.
 
-In the first two modes, ATP staff must also be able to add additional items that are charged on top.
+Examples:
 
-In the travel-plan service UI, the default state should become `No offer component`.
-This replaces the current wording `No financial coverage needed`.
+- internal: `component`, visible: `trip`
+- internal: `component`, visible: `day`
+- internal: `day`, visible: `trip`
 
-## Why this makes sense
+This is better than forcing one field to do both jobs.
 
-These are three real commercial modes:
+## Core Recommendation
 
-- `trip`
-  ATP sells one total for the whole trip.
-- `day`
-  ATP sells a daily structure, but not necessarily each internal service separately.
-- `component`
-  ATP sells line-by-line offer components, with direct linkage to travel-plan services.
+Use two explicit fields:
 
-Treating these as explicit offer granularities is better than forcing all pricing into the current component-only structure.
+- `pricing_granularity_internal`
+- `pricing_granularity_visible`
 
-## Recommendation
+Internal granularity is canonical for calculation.
 
-Do not create three unrelated offer models.
+Visible granularity is canonical for customer rendering.
 
-Use one offer model with:
+## Granularity Order
 
-- `pricing_granularity`
-- one primary pricing section depending on that granularity
-- one shared additive section for items charged on top
+Use this partial order:
 
-This keeps:
+- `component` = finest
+- `day` = medium
+- `trip` = coarsest
 
-- totals
-- discounts
-- taxes
-- payment terms
-- PDFs
-- invoices
+## Validity Rule
 
-on one coherent calculation path.
+Visible granularity may be equal to or coarser than internal granularity.
 
-## Proposed Offer Shape
+Visible granularity must never be finer than internal granularity.
 
-Use a single `offer` with:
+Allowed:
 
-- `pricing_granularity: trip | day | component`
+- internal `component` -> visible `component`
+- internal `component` -> visible `day`
+- internal `component` -> visible `trip`
+- internal `day` -> visible `day`
+- internal `day` -> visible `trip`
+- internal `trip` -> visible `trip`
 
-Exactly one main pricing block is active:
+Not allowed:
 
-- `trip_price`
-- `day_prices[]`
-- `components[]`
+- internal `trip` -> visible `day`
+- internal `trip` -> visible `component`
+- internal `day` -> visible `component`
 
-Always allowed:
+## Why This Matters
 
-- `additional_items[]`
-- discounts
-- taxes
-- payment terms
+This model preserves:
 
-## Proposed Model
+- internal explainability
+- detailed commercial control
+- clean customer-facing offers
 
-This is the proposed logical shape.
+It avoids a bad tradeoff where ATP must either:
 
-It is not yet an implementation commitment, but it is the recommended target.
+- store only coarse customer-facing pricing and lose detail
+- or expose internal line-item structure to the customer
 
-### Core offer fields
+With two fields:
 
-- `pricing_granularity: "trip" | "day" | "component"`
+- internal totals remain fully auditable
+- visible structures can be derived from the canonical internals
+- PDFs and UI stay simple without throwing away pricing detail
+
+## Canonical Model
+
+### Core fields
+
+- `pricing_granularity_internal: "trip" | "day" | "component"`
+- `pricing_granularity_visible: "trip" | "day" | "component"`
 - `currency`
 - `discounts[]`
 - `taxes[]`
 - `payment_terms`
 
-### Main pricing blocks
+### Canonical internal pricing blocks
 
-Exactly one of these is used, depending on `pricing_granularity`.
+Exactly one internal pricing block is canonical, depending on `pricing_granularity_internal`.
 
-#### A. Trip pricing
+#### Internal trip pricing
 
-- `trip_price`
+- `trip_price_internal`
   - `label`
   - `amount`
   - `notes?`
 
-Use for one clean total for the main trip.
+#### Internal day pricing
 
-#### B. Day pricing
-
-- `days[]`
+- `days_internal[]`
   - `day_number`
   - `label?`
   - `amount`
   - `notes?`
 
-Use when ATP wants one main price per day.
+#### Internal component pricing
 
-#### C. Component pricing
-
-- `components[]`
+- `components_internal[]`
   - current offer component model
-  - plus optional day association already discussed elsewhere
-
-Use when ATP wants the most detailed commercial structure.
+  - optional day association
+  - optional presentation metadata if needed later
 
 ### Additional items
 
@@ -123,20 +123,196 @@ Always allowed:
   - `amount`
   - `quantity`
   - `notes?`
-  - `day_number?: int`
-  - `category?: optional`
+  - `day_number?`
+  - `category?`
 
-Purpose:
+These are additive commercial lines on top of the main internal structure.
 
-- extras charged on top of the main granularity
-- supported for all three modes
-- especially important for `trip` and `day`
+They should always remain customer-visible.
 
-### Travel plan service linkage
+## Visible Pricing Is a Projection
 
-Travel-plan services should no longer assume that every service needs a direct offer component.
+Visible pricing should usually be treated as a projection of the canonical internal structure.
 
-Recommended service-side financial linkage fields:
+Examples:
+
+- internal `component` + visible `day`
+  day totals are derived by grouping components by day
+- internal `component` + visible `trip`
+  one trip total is derived by summing the main priced components
+- internal `day` + visible `trip`
+  trip total is derived by summing all day totals
+
+This means `days[]` and `trip_price` should not always be assumed to be canonical stored pricing blocks.
+
+In many cases they are view projections.
+
+## Presentation Metadata
+
+If ATP needs visible-level labels or notes that cannot be derived from the internal structure, keep that separate from canonical pricing math.
+
+Recommended direction:
+
+- canonical internal pricing stays calculation-safe
+- visible presentation metadata stays render-oriented
+
+Examples of presentation-only metadata:
+
+- day label overrides for customer PDFs
+- visible section notes
+- trip-level summary label
+- customer-facing grouping headings
+
+These should not replace the internal pricing structure.
+
+## Total Calculation Rules
+
+Totals are always calculated from the internal structure.
+
+Recommended pipeline:
+
+1. calculate internal main subtotal
+2. add `additional_items[]`
+3. apply discounts
+4. apply taxes
+5. produce final total
+
+### Main subtotal logic
+
+- if `pricing_granularity_internal = trip`
+  - `main_subtotal = trip_price_internal.amount`
+- if `pricing_granularity_internal = day`
+  - `main_subtotal = sum(days_internal[].amount)`
+- if `pricing_granularity_internal = component`
+  - `main_subtotal = sum(component totals)`
+
+### Additional items subtotal
+
+- `additional_subtotal = sum(additional_items[].amount * quantity)`
+
+### Final formula
+
+- `pre_discount_total = main_subtotal + additional_subtotal`
+- then existing discount and tax logic applies
+
+## Validation Rules
+
+The backend should enforce:
+
+1. exactly one canonical internal pricing block is active
+2. `pricing_granularity_visible` is not finer than `pricing_granularity_internal`
+3. visible projections can be derived from the internal structure
+4. presentation metadata cannot override calculation totals directly
+
+Recommended helper order:
+
+- `component = 3`
+- `day = 2`
+- `trip = 1`
+
+Then validate:
+
+- `visible_rank <= internal_rank`
+
+## UI Behavior
+
+### Offer editor
+
+Expose two separate controls:
+
+- internal pricing granularity
+- customer-visible pricing granularity
+
+The UI must make the distinction explicit:
+
+- internal controls determine calculation structure
+- visible controls determine customer rendering structure
+
+### Internal editor sections
+
+Show exactly one canonical internal editor based on `pricing_granularity_internal`.
+
+#### Internal `trip`
+
+Visible:
+
+- trip price editor
+- additional items
+- discounts
+- taxes
+- payment terms
+
+#### Internal `day`
+
+Visible:
+
+- day pricing editor
+- additional items
+- discounts
+- taxes
+- payment terms
+
+#### Internal `component`
+
+Visible:
+
+- component pricing editor
+- additional items
+- discounts
+- taxes
+- payment terms
+
+### Visible preview sections
+
+The customer preview and PDF preview should reflect `pricing_granularity_visible`.
+
+Examples:
+
+- visible `trip`
+  show one main trip total
+- visible `day`
+  show one customer-facing line per day
+- visible `component`
+  show detailed visible components
+
+## PDF Behavior
+
+Customer documents should always render using the visible granularity.
+
+### Visible `trip`
+
+Show:
+
+- one main trip total
+- all `additional_items[]` as separate visible lines
+- subtotal / discount / tax / total
+
+### Visible `day`
+
+Show:
+
+- one line per visible priced day
+- all `additional_items[]` as separate visible lines
+- subtotal / discount / tax / total
+
+### Visible `component`
+
+Show:
+
+- detailed customer-visible line items
+- all `additional_items[]` as separate visible lines
+- subtotal / discount / tax / total
+
+Important rule:
+
+- PDF presentation must not redefine totals
+- it only decides how the already-calculated totals are grouped and shown
+
+## Travel Plan Service Linkage
+
+Travel-plan services should no longer assume that customer-visible pricing structure must match internal calculation structure one-to-one.
+
+Recommended service-side linkage fields:
 
 - `offer_link_mode`
   - `none`
@@ -149,17 +325,15 @@ Recommended service-side financial linkage fields:
 Interpretation:
 
 - `none`
-  service has no direct financial linkage
+  no direct commercial linkage
 - `component`
-  service is financially represented by one or more offer components
+  covered by internal components
 - `day`
-  service is covered by the commercial day price
+  covered by day-level commercial structure
 - `trip`
-  service is covered only by the whole-trip price
+  covered by whole-trip pricing
 
-### Default service state
-
-The default service state becomes:
+The default service state remains:
 
 - `No offer component`
 
@@ -167,338 +341,57 @@ This replaces:
 
 - `No financial coverage needed`
 
-That wording is better because it describes actual linkage state.
+That wording is clearer because it describes linkage state, not an abstract accounting rule.
 
-## Proposed Total Calculation Rules
+## Invoices
 
-Recommended total pipeline:
-
-1. calculate main subtotal from exactly one active main pricing block
-2. add `additional_items[]`
-3. apply discounts
-4. apply taxes
-5. produce final offer total
-
-This keeps one calculation path even with three pricing granularities.
-
-### Main subtotal logic
-
-- if `pricing_granularity = trip`
-  - `main_subtotal = trip_price.amount`
-- if `pricing_granularity = day`
-  - `main_subtotal = sum(days[].amount)`
-- if `pricing_granularity = component`
-  - `main_subtotal = sum(component totals)`
-
-### Additional items subtotal
-
-- `additional_subtotal = sum(additional_items[].amount * quantity)`
-
-### Final pricing formula
-
-- `pre_discount_total = main_subtotal + additional_subtotal`
-- then existing discount and tax logic applies
-
-## Proposed UI Behavior Spec
-
-### Offer editor: top-level choice
-
-At the top of the offer editor, ATP staff selects:
-
-- `Complete trip`
-- `Per day`
-- `Per offer component`
-
-This setting controls which main pricing block is visible.
-
-### Offer editor: visible sections by mode
-
-#### Mode 1: Complete trip
-
-Visible:
-
-- trip price editor
-- additional items
-- discounts
-- taxes
-- payment terms
-
-Hidden:
-
-- day pricing table
-- offer component pricing table
-
-#### Mode 2: Per day
-
-Visible:
-
-- day pricing table
-- additional items
-- discounts
-- taxes
-- payment terms
-
-Hidden:
-
-- trip price editor
-- offer component pricing table
-
-#### Mode 3: Per offer component
-
-Visible:
-
-- offer components table
-- additional items
-- discounts
-- taxes
-- payment terms
-
-Hidden:
-
-- trip price editor
-- day pricing table
-
-### Offer editor: mode switching behavior
-
-Recommended behavior:
-
-- ATP staff can switch granularity explicitly
-- when switching, the previous main pricing block should not be silently merged into the new one
-- the UI should either:
-  - reset the now-inactive block
-  - or keep it as draft-only hidden state until save/discard
-
-Recommended first implementation:
-
-- keep inactive blocks in local draft only
-- on save, persist only the active block
-
-This is the safest and clearest rule.
-
-### Service UI behavior
-
-#### Default state
-
-Each service starts with:
-
-- `No offer component`
-
-#### In component mode
-
-Service can link to one or more offer components.
-
-Header status options:
-
-- `No offer component`
-- `Covered`
-- `Partially covered`
-
-#### In day mode
-
-Service can either:
-
-- stay unlinked
-- or be marked as covered by its day
-
-Header status options:
-
-- `No offer component`
-- `Covered by day`
-
-#### In trip mode
-
-Service can either:
-
-- stay unlinked
-- or be marked as covered by trip total
-
-Header status options:
-
-- `No offer component`
-- `Covered by trip`
-
-### Additional items UI behavior
-
-Additional items should be a separate section from the main pricing block.
-
-Recommended UI:
-
-- table or list below the main pricing area
-- each row includes:
-  - label
-  - amount
-  - quantity
-  - optional day
-  - optional note
-
-This keeps extras visible without confusing them with the main pricing granularity.
-
-### PDF behavior by mode
-
-#### Trip mode PDF
-
-Show:
-
-- one main trip price line
-- separate additional items lines
-- subtotal / discount / tax / total
-
-#### Day mode PDF
-
-Show:
-
-- one row per priced day
-- separate additional items lines
-- subtotal / discount / tax / total
-
-#### Component mode PDF
-
-Show:
-
-- current detailed component structure
-- additional items lines
-- subtotal / discount / tax / total
-
-### Invoice behavior
-
-Invoices should not need a separate granularity model.
+Invoices do not need a separate granularity model.
 
 They should consume:
 
 - final totals
 - payment terms
-- selected commercial lines if line-item display is needed
+- selected invoice lines if detailed display is required
 
 The key principle is:
 
-- offer granularity changes presentation and main-price structure
-- not the downstream accounting logic
+- offer granularity affects commercial editing and customer presentation
+- it should not distort downstream accounting logic
 
-## Meaning of Each Granularity
+## Biggest Design Consequence
 
-### 1. Trip price
+The biggest shift is this:
 
-One main price for the complete trip.
+- `days[]` and `trip_price` are not always canonical stored pricing blocks
+- they may be derived visible projections
 
-Use this when ATP wants to quote one clean total without exposing internal structure.
+That is a good thing.
 
-Additional items may still be added on top, for example:
-
-- airport pickup
-- premium room upgrade
-- visa support
-- optional activity
-- surcharge
-
-### 2. Day price
-
-One main price per day.
-
-Use this when ATP wants to present a more structured offer, but not at the level of each service.
-
-Additional items may still be added on top.
-
-### 3. Offer component price
-
-One price per offer component.
-
-This is the current model.
-
-In this mode, service-to-offer linkage remains directly relevant.
-
-## Additional Items
-
-For `trip` and `day`, additional items should be modeled separately from the main pricing block.
-
-Reason:
-
-- they are optional or additive
-- they should not distort the main granularity structure
-- they still need to appear in totals and PDFs
-
-Examples:
-
-- extra transfer
-- extra night
-- special meal plan
-- room upgrade
-- add-on activity
-
-## Travel Plan Service Implications
-
-The current service coverage logic is tightly coupled to offer components.
-
-That must change.
-
-Recommended service states:
-
-- `No offer component`
-- `Covered by day`
-- `Covered`
-- `Partially covered`
-
-Interpretation:
-
-- in `component` mode:
-  service coverage is based on linked offer components
-- in `day` mode:
-  a service can be considered covered by its day even if it has no direct offer component
-- in `trip` mode:
-  service-level coverage is mostly informational, not financial
-
-## UI Recommendation
-
-At the top of the offer editor, ATP staff chooses:
-
-- `Complete trip`
-- `Per day`
-- `Per offer component`
-
-Then the editor shows only the relevant main pricing section.
-
-Shared sections remain visible:
-
-- discounts
-- taxes
-- payment terms
-- additional items
-
-## Rename in Services
-
-In travel-plan services:
-
-- replace `No financial coverage needed`
-- with `No offer component`
-
-This is clearer because it describes linkage state, not an abstract financial rule.
-
-## Biggest Risk
-
-The biggest complexity is not the backend math.
-
-The biggest complexity is:
-
-- editor clarity
-- PDF clarity
-- understandable service coverage semantics across all three modes
+It means ATP can keep fine internal detail while still showing coarse pricing externally.
 
 ## Recommended Next Step Before Implementation
 
 Before coding, define these precisely:
 
-1. exact model structure
-2. total calculation rules
-3. PDF rendering for each granularity
-4. service coverage behavior for each granularity
-5. invoice implications
+1. exact canonical internal model
+2. visible projection rules for each allowed pair
+3. validation rule for `visible <= internal`
+4. PDF rendering rules for each visible mode
+5. service coverage semantics under each internal mode
+6. presentation-only metadata needs for day and trip summaries
 
-## Current Recommendation Summary
+## Recommendation Summary
 
 Use:
 
-- one offer model
-- one explicit granularity field
-- one main pricing block depending on granularity
-- one shared additive block for additional items
+- one offer domain model
+- two explicit granularity fields
+- one canonical internal pricing structure
+- one derived or configured visible structure
+- one invariant: visible granularity cannot be finer than internal
 
-This is the cleanest path forward.
+This is cleaner than a single granularity field because it preserves:
+
+- pricing control
+- internal explainability
+- customer simplicity

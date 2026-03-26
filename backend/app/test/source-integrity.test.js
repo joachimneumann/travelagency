@@ -225,6 +225,24 @@ test("backend startup backfills missing booking persons and the frontend reads o
   );
 });
 
+test("backend startup writes back legacy offers with explicit pricing granularity fields", async () => {
+  const serverPath = path.resolve(__dirname, "..", "src", "server.js");
+  const storeUtilsPath = path.resolve(__dirname, "..", "src", "lib", "store_utils.js");
+  const serverSource = await readFile(serverPath, "utf8");
+  const storeUtilsSource = await readFile(storeUtilsPath, "utf8");
+
+  assert.match(
+    storeUtilsSource,
+    /let bookingOfferWritebackNeeded = false;[\s\S]*const rawOffer = booking\?\.offer && typeof booking\.offer === "object" \? booking\.offer : null;[\s\S]*const normalizedOffer = normalizeBookingOffer\(normalizedBooking\.offer, getBookingPreferredCurrency\(normalizedBooking\)\);[\s\S]*if \(rawOffer && JSON\.stringify\(rawOffer\) !== JSON\.stringify\(normalizedOffer\)\) \{[\s\S]*bookingOfferWritebackNeeded = true;[\s\S]*\}[\s\S]*__bookingOfferWritebackNeeded/,
+    "Store reads should mark legacy offers for a one-time writeback when normalization adds the explicit pricing granularity shape"
+  );
+  assert.match(
+    serverSource,
+    /startupStore\.__bookingOfferWritebackNeeded === true[\s\S]*persistStore\(startupStore\)/,
+    "Backend startup should persist legacy-offer writebacks before serving requests"
+  );
+});
+
 test("booking page initial customer language prefers the saved booking customer language", async () => {
   const bookingPageLanguagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_page_language.js");
   const source = await readFile(bookingPageLanguagePath, "utf8");
@@ -1204,6 +1222,22 @@ test("offer component editor does not expose discounts_credits as a selectable c
     offersSource,
     /const OFFER_COMPONENT_CATEGORIES = OFFER_CATEGORIES\.filter\(\(category\) => category\.code !== "DISCOUNTS_CREDITS"\);/,
     "Offer component rows should not allow discounts_credits because that creates negative sellable line items"
+  );
+});
+
+test("offer granularity select uses literal granularity values instead of currency normalization", async () => {
+  const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
+  const offersSource = await readFile(offersModulePath, "utf8");
+
+  assert.match(
+    offersSource,
+    /function populateOfferGranularitySelect\(select, selectedValue, \{ disableFinerThan = null \} = \{\}\) \{[\s\S]*select\.innerHTML = html;[\s\S]*select\.value = normalizedSelected;/,
+    "Offer granularity selects should keep the literal component/day/trip value after rendering options"
+  );
+  assert.doesNotMatch(
+    offersSource,
+    /function populateOfferGranularitySelect[\s\S]*setSelectValue\(select, normalizedSelected\)/,
+    "Offer granularity selects must not use the currency-only select helper because it injects USD for unknown values"
   );
 });
 

@@ -17,6 +17,7 @@ IR: {
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]
+		offerPricingGranularities: [for granularity in enumModel.OfferPricingGranularityCatalog {{code: granularity}}]
 		offerPaymentTermKinds: [for kind in enumModel.OfferPaymentTermKindCatalog {{code: kind}}]
 		offerPaymentAmountModes: [for mode in enumModel.OfferPaymentAmountModeCatalog {{code: mode}}]
 		offerPaymentDueTypes: [for dueType in enumModel.OfferPaymentDueTypeCatalog {{code: dueType}}]

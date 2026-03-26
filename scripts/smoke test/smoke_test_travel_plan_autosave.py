@@ -14,7 +14,7 @@ import urllib.request
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_BACKEND_PORT = int(os.environ.get("BACKEND_PORT", "8787"))
 DEFAULT_FRONTEND_PORT = int(os.environ.get("FRONTEND_PORT", "8080"))
 DEFAULT_DRIVER_PORT = int(os.environ.get("SAFARI_DRIVER_PORT", "4445"))
@@ -31,7 +31,7 @@ def fail(message, exit_code=1):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Local Safari smoke test for booking travel-plan autosave."
+        description="Local Safari smoke test for booking page save flows, including travel-plan and offer pricing granularity."
     )
     parser.add_argument("--backend-port", type=int, default=DEFAULT_BACKEND_PORT)
     parser.add_argument("--frontend-port", type=int, default=DEFAULT_FRONTEND_PORT)
@@ -397,6 +397,16 @@ def browser_wait_for_editor(driver):
     wait_until(
         lambda: driver.execute(
             """
+            const dirtyBar = document.querySelector('#booking_dirty_bar');
+            const saveButton = document.querySelector('#booking_save_edits_btn');
+            return Boolean(dirtyBar && saveButton && !dirtyBar.hidden);
+            """
+        ),
+        description="page dirty bar"
+    )
+    wait_until(
+        lambda: driver.execute(
+            """
             const panel = document.querySelector('#travel_plan_panel');
             const summary = document.querySelector('#travel_plan_panel_summary');
             if (!panel || !summary) return false;
@@ -411,6 +421,33 @@ def browser_wait_for_editor(driver):
             "return Boolean(document.querySelector('[data-travel-plan-add-day]'));"
         ),
         description="travel-plan add-day button"
+    )
+
+
+def browser_wait_for_offer_editor(driver):
+    wait_until(
+        lambda: driver.execute(
+            """
+            const panel = document.querySelector('#offer_panel');
+            const summary = document.querySelector('#offer_panel_summary');
+            if (!panel || !summary) return false;
+            if (!panel.classList.contains('is-open')) summary.click();
+            return panel.classList.contains('is-open');
+            """
+        ),
+        description="offer panel to open"
+    )
+    wait_until(
+        lambda: driver.execute(
+            """
+            return Boolean(
+              document.querySelector('#offer_pricing_granularity_internal_input')
+              && document.querySelector('#offer_pricing_granularity_visible_input')
+              && document.querySelector('#offer_components_table')
+            );
+            """
+        ),
+        description="offer granularity controls"
     )
 
 
@@ -471,8 +508,8 @@ def add_item(driver):
     if not added:
         fail("Could not click travel-plan add-item button.")
     wait_until(
-        lambda: driver.execute("return document.querySelectorAll('[data-travel-plan-item]').length === 1;"),
-        description="first travel-plan item to render"
+        lambda: driver.execute("return document.querySelectorAll('[data-travel-plan-service]').length === 1;"),
+        description="first travel-plan service to render"
     )
 
 
@@ -480,7 +517,7 @@ def set_item_title(driver, value):
     changed = driver.execute(
         """
         const input = document.querySelector(
-          '[data-travel-plan-item] [data-travel-plan-item-field="title"][data-localized-lang="en"][data-localized-role="source"]'
+          '[data-travel-plan-service] [data-travel-plan-service-field="title"][data-localized-lang="en"][data-localized-role="source"]'
         );
         if (!input) return false;
         input.focus();
@@ -500,6 +537,116 @@ def get_status_text(driver):
     return driver.execute(
         "return String(document.querySelector('#travel_plan_status')?.textContent || '').trim();"
     ) or ""
+
+
+def set_select_value(driver, selector, value):
+    changed = driver.execute(
+        """
+        const input = document.querySelector(arguments[0]);
+        if (!input) return false;
+        input.focus();
+        input.value = arguments[1];
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.blur();
+        return input.value === arguments[1];
+        """,
+        [selector, value]
+    )
+    if not changed:
+        fail(f"Could not set select value for {selector}.")
+
+
+def set_input_value(driver, selector, value):
+    changed = driver.execute(
+        """
+        const input = document.querySelector(arguments[0]);
+        if (!input) return false;
+        input.focus();
+        input.value = arguments[1];
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.blur();
+        return true;
+        """,
+        [selector, value]
+    )
+    if not changed:
+        fail(f"Could not set input value for {selector}.")
+
+
+def wait_for_dirty_save_enabled(driver):
+    wait_until(
+        lambda: driver.execute(
+            """
+            const button = document.querySelector('#booking_save_edits_btn');
+            return Boolean(button && !button.disabled);
+            """
+        ),
+        description="dirty-bar save button to enable"
+    )
+
+
+def click_page_save(driver):
+    clicked = driver.execute(
+        """
+        const button = document.querySelector('#booking_save_edits_btn');
+        if (!button || button.disabled) return false;
+        button.click();
+        return true;
+        """
+    )
+    if not clicked:
+        fail("Could not click the page save button.")
+
+
+def visible_granularity_option_disabled(driver, value):
+    return driver.execute(
+        """
+        const select = document.querySelector('#offer_pricing_granularity_visible_input');
+        if (!select) return null;
+        const option = select.querySelector(`option[value="${arguments[0]}"]`);
+        return option ? Boolean(option.disabled) : null;
+        """,
+        [value]
+    )
+
+
+def set_offer_day_price_row(driver, row_index, *, day_number, label, amount, tax_rate):
+    base_selector = f'[data-offer-day-price-row="{row_index}"]'
+    set_input_value(driver, f"{base_selector} [data-offer-day-number]", str(day_number))
+    set_input_value(driver, f"{base_selector} [data-offer-day-label]", label)
+    set_input_value(driver, f"{base_selector} [data-offer-day-tax-rate]", str(tax_rate))
+    set_input_value(driver, f"{base_selector} [data-offer-day-amount]", str(amount))
+
+
+def add_offer_additional_item(driver):
+    added = driver.execute(
+        """
+        const button = document.querySelector('[data-offer-add-additional]');
+        if (!button) return false;
+        button.click();
+        return true;
+        """
+    )
+    if not added:
+        fail("Could not add an offer additional item.")
+    wait_until(
+        lambda: driver.execute(
+            "return document.querySelectorAll('[data-offer-additional-item-row]').length >= 1;"
+        ),
+        description="offer additional item row"
+    )
+
+
+def set_offer_additional_item(driver, row_index, *, label, details, day_number, quantity, tax_rate, unit_amount):
+    base_selector = f'[data-offer-additional-item-row="{row_index}"]'
+    set_input_value(driver, f"{base_selector} [data-offer-additional-label]", label)
+    set_input_value(driver, f"{base_selector} [data-offer-additional-details]", details)
+    set_select_value(driver, f"{base_selector} [data-offer-additional-day-number]", str(day_number))
+    set_input_value(driver, f"{base_selector} [data-offer-additional-quantity]", str(quantity))
+    set_input_value(driver, f"{base_selector} [data-offer-additional-tax-rate]", str(tax_rate))
+    set_input_value(driver, f"{base_selector} [data-offer-additional-unit]", str(unit_amount))
 
 
 def main():
@@ -544,48 +691,110 @@ def main():
         initial_booking = get_booking(args.backend_port, booking_id, session_cookie)
         if int(initial_booking.get("travel_plan_revision") or 0) != 0:
             fail("Fresh smoke-test booking did not start with travel_plan_revision = 0.")
+        if int(initial_booking.get("offer_revision") or 0) != 0:
+            fail("Fresh smoke-test booking did not start with offer_revision = 0.")
 
         add_day(driver)
         time.sleep(1.2)
         booking_after_empty_day = get_booking(args.backend_port, booking_id, session_cookie)
         if int(booking_after_empty_day.get("travel_plan_revision") or 0) != 0:
-            fail("Empty day draft unexpectedly autosaved before the required title was filled.")
-        log("Verified: empty new day does not autosave.")
+            fail("Empty day draft unexpectedly saved before the page-level save action.")
+        log("Verified: empty new day does not save before the dirty-bar save.")
 
         set_day_title(driver, "Smoke test day")
-        wait_until(
-            lambda: int(get_booking(args.backend_port, booking_id, session_cookie).get("travel_plan_revision") or 0) == 1,
-            description="travel-plan day autosave"
-        )
+        time.sleep(0.8)
         booking_after_day_title = get_booking(args.backend_port, booking_id, session_cookie)
-        first_day = ((booking_after_day_title.get("travel_plan") or {}).get("days") or [None])[0] or {}
-        if first_day.get("title") != "Smoke test day":
-            fail("Autosaved travel-plan day title did not persist correctly.")
-        log("Verified: valid day title autosaves to the backend.")
+        if int(booking_after_day_title.get("travel_plan_revision") or 0) != 0:
+            fail("Travel-plan day title unexpectedly saved before the page-level save action.")
+        log("Verified: valid day title stays local until the page-level save.")
 
         add_item(driver)
         time.sleep(1.2)
         booking_after_empty_item = get_booking(args.backend_port, booking_id, session_cookie)
-        if int(booking_after_empty_item.get("travel_plan_revision") or 0) != 1:
-            fail("Empty travel-plan item draft unexpectedly autosaved before the required title was filled.")
-        log("Verified: empty new travel-plan item does not autosave.")
+        if int(booking_after_empty_item.get("travel_plan_revision") or 0) != 0:
+            fail("Empty travel-plan item draft unexpectedly saved before the page-level save action.")
+        log("Verified: empty new travel-plan item does not save before the dirty-bar save.")
 
         set_item_title(driver, "Smoke test travel plan item")
+        time.sleep(0.8)
+        booking_before_travel_plan_save = get_booking(args.backend_port, booking_id, session_cookie)
+        if int(booking_before_travel_plan_save.get("travel_plan_revision") or 0) != 0:
+            fail("Travel-plan item title unexpectedly saved before the page-level save action.")
+        wait_for_dirty_save_enabled(driver)
+        click_page_save(driver)
         wait_until(
-            lambda: int(get_booking(args.backend_port, booking_id, session_cookie).get("travel_plan_revision") or 0) == 2,
-            description="travel-plan item autosave"
+            lambda: int(get_booking(args.backend_port, booking_id, session_cookie).get("travel_plan_revision") or 0) == 1,
+            description="travel-plan save"
         )
         final_booking = get_booking(args.backend_port, booking_id, session_cookie)
         final_day = ((final_booking.get("travel_plan") or {}).get("days") or [None])[0] or {}
-        final_item = ((final_day.get("items") or [None])[0]) or {}
+        final_item = ((final_day.get("services") or [None])[0]) or {}
+        if final_day.get("title") != "Smoke test day":
+            fail("Saved travel-plan day title did not persist correctly.")
         if final_item.get("title") != "Smoke test travel plan item":
-            fail("Autosaved travel-plan item title did not persist correctly.")
+            fail("Saved travel-plan item title did not persist correctly.")
 
         status_text = get_status_text(driver)
         if not status_text:
-            fail("Travel-plan status text stayed empty after autosave.")
+            fail("Travel-plan status text stayed empty after save.")
 
-        log(f"Verified: valid travel-plan item title autosaves to the backend. Status: {status_text}")
+        log(f"Verified: travel-plan edits persist through the page-level save. Status: {status_text}")
+
+        browser_wait_for_offer_editor(driver)
+        set_select_value(driver, "#offer_pricing_granularity_internal_input", "day")
+        wait_until(
+            lambda: visible_granularity_option_disabled(driver, "component") is True,
+            description="component visible granularity to disable for internal day pricing"
+        )
+        set_select_value(driver, "#offer_pricing_granularity_visible_input", "trip")
+        set_offer_day_price_row(
+            driver,
+            0,
+            day_number=1,
+            label="Day 1 total",
+            amount=1250,
+            tax_rate=10
+        )
+        add_offer_additional_item(driver)
+        set_offer_additional_item(
+            driver,
+            0,
+            label="Airport transfer",
+            details="Arrival pickup",
+            day_number=1,
+            quantity=1,
+            tax_rate=10,
+            unit_amount=150
+        )
+        offer_before_save = get_booking(args.backend_port, booking_id, session_cookie)
+        if int(offer_before_save.get("offer_revision") or 0) != 0:
+            fail("Offer edits unexpectedly saved before the page-level save action.")
+        wait_for_dirty_save_enabled(driver)
+        click_page_save(driver)
+        wait_until(
+            lambda: int(get_booking(args.backend_port, booking_id, session_cookie).get("offer_revision") or 0) == 1,
+            description="offer save"
+        )
+        booking_after_offer_save = get_booking(args.backend_port, booking_id, session_cookie)
+        saved_offer = booking_after_offer_save.get("offer") or {}
+        saved_days = saved_offer.get("days_internal") or []
+        saved_additional_items = saved_offer.get("additional_items") or []
+        if saved_offer.get("pricing_granularity_internal") != "day":
+            fail("Saved offer internal pricing granularity did not persist as day.")
+        if saved_offer.get("pricing_granularity_visible") != "trip":
+            fail("Saved offer visible pricing granularity did not persist as trip.")
+        if len(saved_days) != 1:
+            fail("Saved offer did not persist one internal day price row.")
+        if (saved_days[0] or {}).get("day_number") != 1 or (saved_days[0] or {}).get("amount_cents") != 125000:
+            fail("Saved offer internal day price row did not persist the expected values.")
+        if len(saved_additional_items) != 1:
+            fail("Saved offer did not persist one additional item.")
+        if (saved_additional_items[0] or {}).get("label") != "Airport transfer":
+            fail("Saved offer additional item label did not persist correctly.")
+        if (saved_additional_items[0] or {}).get("unit_amount_cents") != 15000:
+            fail("Saved offer additional item amount did not persist correctly.")
+
+        log("Verified: offer pricing granularity, internal day pricing, and additional items persist through the page-level save.")
         log(f"Smoke test passed for booking {booking_id}.")
     finally:
         driver.quit()
