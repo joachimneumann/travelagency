@@ -5,11 +5,13 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
+* add food preferences and allergies to persons
+
+* add hotel room preference: Single Double
+
 * Create model and storage space for practical tips and emergency numbers for each country. This information is not used at this point in time.
 
 * After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. 
-
-* rename offer components to "Travel Components"
 
 * Point out that personal data needs to be filled
 
@@ -17,11 +19,6 @@ Then Automatically derive the stage and write a description of the stage and las
 
 * Index.html: FAQ formatting off
 
-* in the model add day to offer component.
-
-* add food preferences and allergies to persons
-
-* add hotel room preference: Single Double
 
 ## payments
 
