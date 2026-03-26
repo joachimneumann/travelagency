@@ -152,6 +152,7 @@ export function createTranslationClient({
                     `You translate ${domainLabel} copy from ${sourceLang} into ${targetLanguageName}.`,
                     "Return JSON only.",
                     "Keep the exact same keys.",
+                    "Preserve line breaks and blank lines within each value exactly.",
                     "Preserve proper nouns, brand names, phone numbers, ISO codes, URLs, and currency codes unless a natural translation requires otherwise.",
                     "Do not add explanations."
                   ].join(" ")

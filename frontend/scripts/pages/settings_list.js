@@ -942,12 +942,11 @@ function setQualificationValue(lang, value) {
 }
 
 function buildDescriptionTranslationEntries(sourceText) {
-  const value = normalizeText(sourceText);
-  return value ? { value } : {};
+  return buildMultilineTranslationEntries(sourceText);
 }
 
-function translatedDescriptionValue(entries) {
-  return normalizeText(entries?.value);
+function translatedDescriptionValue(entries, sourceText) {
+  return mergeMultilineTranslatedValue(entries, sourceText);
 }
 
 function setDescriptionValue(lang, value) {
@@ -966,12 +965,32 @@ function setDescriptionValue(lang, value) {
 }
 
 function buildMobileDescriptionTranslationEntries(sourceText) {
-  const value = normalizeText(sourceText);
-  return value ? { value } : {};
+  return buildMultilineTranslationEntries(sourceText);
 }
 
-function translatedMobileDescriptionValue(entries) {
-  return normalizeText(entries?.value);
+function translatedMobileDescriptionValue(entries, sourceText) {
+  return mergeMultilineTranslatedValue(entries, sourceText);
+}
+
+function buildMultilineTranslationEntries(sourceText) {
+  const lines = String(sourceText || "").replace(/\r\n?/g, "\n").split("\n");
+  return Object.fromEntries(
+    lines
+      .map((line, index) => [`line_${index}`, normalizeText(line)])
+      .filter(([, value]) => Boolean(value))
+  );
+}
+
+function mergeMultilineTranslatedValue(entries, sourceText) {
+  const translatedEntries = entries && typeof entries === "object" ? entries : {};
+  const sourceLines = String(sourceText || "").replace(/\r\n?/g, "\n").split("\n");
+  return sourceLines
+    .map((line, index) => {
+      if (!normalizeText(line)) return "";
+      return normalizeText(translatedEntries[`line_${index}`]) || normalizeText(line);
+    })
+    .join("\n")
+    .trim();
 }
 
 function setMobileDescriptionValue(lang, value) {
@@ -1229,7 +1248,7 @@ async function translateDescription(button) {
     return;
   }
 
-  setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries));
+  setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, englishSource));
   showEditorStatus(backendT("backend.users.description_translation.done", "Description translated."));
 }
 
@@ -1261,7 +1280,7 @@ async function translateDescriptionToAll(button) {
       showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
       return;
     }
-    setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries));
+    setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries, englishSource));
   }
 
   showEditorStatus(backendT("backend.users.description_translation.all_done", "All description translations updated."));
@@ -1287,7 +1306,7 @@ async function translateMobileDescription(button) {
     return;
   }
 
-  setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries));
+  setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries, englishSource));
   showEditorStatus(backendT("backend.users.mobile_description_translation.done", "Mobile description translated."));
 }
 
@@ -1319,7 +1338,7 @@ async function translateMobileDescriptionToAll(button) {
       showEditorStatus(backendT("backend.users.mobile_description_translation.error", "Could not translate the mobile description."), true);
       return;
     }
-    setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries));
+    setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries, englishSource));
   }
 
   showEditorStatus(backendT("backend.users.mobile_description_translation.all_done", "All mobile description translations updated."));
