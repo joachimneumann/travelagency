@@ -16,7 +16,8 @@
     "da": "Central Vietnam Spa & Coast Escape",
     "sv": "Central Vietnam Spa & Coast Escape",
     "no": "Central Vietnam Spa & Coast Escape",
-    "ar": "سبا وسط فيتنام وساحل إسكيب"
+    "ar": "سبا وسط فيتنام وساحل إسكيب",
+    "ms": "Pelarian Spa & Pantai Vietnam Tengah"
   },
   "styles": [
     "wellness",
@@ -104,6 +105,11 @@
       "أوقات راحة على شاطئ البحر حول مدينتي دا نانج وهوي آن مع مواعيد سبا متميزة",
       "فرك التخلص من السموم وعلاجات الوجه المستوحاة من الكولاجين مدمجة في الإقامة",
       "النقل الخاص والجولات الخفيفة بدلاً من جدول الأعمال اليومي المزدحم"
+    ],
+    "ms": [
+      "Masa rehat di tepi pantai sekitar Da Nang dan Hoi An dengan janji temu spa premium",
+      "Rawatan berinspirasikan lulur detoks dan rawatan muka kolagen yang disepadukan ke dalam penginapan",
+      "Pemindahan peribadi dan lawatan ringan menggantikan jadual harian yang padat"
     ]
   },
   "seasonality_start_month": "feb",
@@ -128,7 +134,8 @@
     "da": "En genoprettende rejseplan i det centrale Vietnam, der parrer kysttid med polerede spa-oplevelser, sightseeing med lav stress og privat støtte overalt.",
     "sv": "En återställande resplan i centrala Vietnam som kombinerar kusttid med polerade spa-upplevelser, sightseeing med låg stress och privat support genomgående.",
     "no": "En gjenoppbyggende reiserute til sentralt Vietnam som kombinerer kysttid med polerte spa-opplevelser, sightseeing med lite stress og privat støtte hele veien.",
-    "ar": "خط سير رحلة مجدد في وسط فيتنام يجمع بين الوقت الساحلي وتجارب السبا المصقولة ومشاهدة المعالم السياحية منخفضة التوتر والدعم الخاص في جميع الأنحاء."
+    "ar": "خط سير رحلة مجدد في وسط فيتنام يجمع بين الوقت الساحلي وتجارب السبا المصقولة ومشاهدة المعالم السياحية منخفضة التوتر والدعم الخاص في جميع الأنحاء.",
+    "ms": "Jadual perjalanan pemulihan di Vietnam tengah yang menggabungkan masa di pesisir dengan pengalaman spa yang kemas, lawatan tanpa tekanan dan sokongan peribadi sepanjang masa."
   },
   "image": "/public/v1/tour-images/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac/tour_ee68e41e-355e-4099-91cf-9ba133f4f4ac.webp",
   "updated_at": "2026-03-23T06:31:04Z"

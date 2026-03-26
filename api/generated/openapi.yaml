@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-25T10:48:50Z
+# 2026-03-26T00:53:00Z
 
 ---
 openapi: 3.1.0
@@ -44,6 +44,7 @@ components:
       - ja
       - ko
       - vi
+      - ms
       - de
       - es
       - it
@@ -61,6 +62,7 @@ components:
       - code: ja
       - code: ko
       - code: vi
+      - code: ms
       - code: de
       - code: es
       - code: it
@@ -85,6 +87,8 @@ components:
         label: ko
       - value: vi
         label: vi
+      - value: ms
+        label: ms
       - value: de
         label: de
       - value: es

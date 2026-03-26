@@ -16,7 +16,8 @@
     "da": "Laos River & Renewal Retreat",
     "sv": "Laos River & Renewal Retreat",
     "no": "Laos River & Renewal Retreat",
-    "ar": "نهر لاوس وتراجع التجديد"
+    "ar": "نهر لاوس وتراجع التجديد",
+    "ms": "Retret Sungai & Pembaharuan Laos"
   },
   "styles": [
     "wellness",
@@ -103,6 +104,11 @@
       "إقامة نهرية بوتيكية مع وقت عافية يومي",
       "علاجات مستوحاة من تدليك الاسترخاء العميق لإعادة ضبط النفس بالكامل",
       "الحد الأدنى من التنقلات والكثير من الوقت للراحة بين النزهات"
+    ],
+    "ms": [
+      "Penginapan butik di tepi sungai dengan masa kesejahteraan setiap hari",
+      "Rawatan berinspirasikan urutan relaksasi mendalam untuk set semula menyeluruh",
+      "Pemindahan minimum dan banyak masa untuk berehat antara aktiviti"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,7 +133,8 @@
     "da": "Et kort Laos-retræte bygget til restitution snarere end kilometertal, med en boutique-flodbase, udvalgte udflugter og spa-ledet nedetid.",
     "sv": "En kort Laos reträtt byggd för återhämtning snarare än körsträcka, med en boutiqueflodbas, utvalda utflykter och spa-ledda stillestånd.",
     "no": "Et kort Laos-tilfluktssted bygget for restitusjon i stedet for kjørelengde, med en boutique-elvebase, utvalgte utflukter og spa-ledet nedetid.",
-    "ar": "ملاذ قصير في لاوس تم تصميمه من أجل التعافي وليس المسافة المقطوعة، مع قاعدة نهرية بوتيكية، ورحلات استكشافية منسقة، وفترات توقف عن العمل تحت إشراف المنتجع الصحي."
+    "ar": "ملاذ قصير في لاوس تم تصميمه من أجل التعافي وليس المسافة المقطوعة، مع قاعدة نهرية بوتيكية، ورحلات استكشافية منسقة، وفترات توقف عن العمل تحت إشراف المنتجع الصحي.",
+    "ms": "Retret singkat Laos yang direka untuk pemulihan, bukannya mengejar jarak, dengan penginapan butik di tepi sungai, lawatan terpilih dan masa rehat yang dipimpin oleh spa."
   },
   "image": "/public/v1/tour-images/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea/tour_5e82480b-9f5f-4975-af53-1a85c72e0dea.webp",
   "updated_at": "2026-03-23T06:35:13Z"

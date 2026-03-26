@@ -16,7 +16,8 @@
     "da": "Cambodia luksusrejse",
     "sv": "Kambodja lyxresa",
     "no": "Luksusreise i Kambodsja",
-    "ar": "رحلة كمبوديا الفاخرة"
+    "ar": "رحلة كمبوديا الفاخرة",
+    "ms": "Perjalanan Mewah Kemboja"
   },
   "styles": [
     "luxury"
@@ -103,6 +104,11 @@
       "توقف التوقيع في سييم ريب",
       "تسليط الضوء على الطريق حول بنوم بنه",
       "تخطيط النقل السلس عبر Tonle Sap"
+    ],
+    "ms": [
+      "Persinggahan utama di Siem Reap",
+      "Sorotan laluan sekitar Phnom Penh",
+      "Perancangan pemindahan lancar melalui Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,6 +133,7 @@
     "da": "En luksusrejseplan i Cambodja fokuseret på en afbalanceret rute for første tur med premium-ophold, privat service og signaturøjeblikke.",
     "sv": "En lyxresplan i Kambodja fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
     "no": "En luksusreise i Kambodsja fokusert på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk.",
-    "ar": "يركز خط سير الرحلة الفاخر في كمبوديا على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
+    "ar": "يركز خط سير الرحلة الفاخر في كمبوديا على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة.",
+    "ms": "Jadual perjalanan mewah Kemboja yang berfokus pada laluan lawatan pertama yang seimbang, dengan penginapan premium, servis peribadi dan detik-detik istimewa."
   }
 }

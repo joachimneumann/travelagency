@@ -16,7 +16,8 @@
     "da": "Madrejse til Cambodja",
     "sv": "Kambodja matresa",
     "no": "Kambodsja matreise",
-    "ar": "كمبوديا تجربة تذوق الطعام"
+    "ar": "كمبوديا تجربة تذوق الطعام",
+    "ms": "Pengalaman Gastronomi Kemboja"
   },
   "styles": [
     "gastronomic-experiences"
@@ -103,6 +104,11 @@
       "توقف التوقيع في سييم ريب",
       "تسليط الضوء على الطريق حول بنوم بنه",
       "تخطيط النقل السلس عبر Tonle Sap"
+    ],
+    "ms": [
+      "Persinggahan utama di Siem Reap",
+      "Sorotan laluan sekitar Phnom Penh",
+      "Perancangan pemindahan lancar melalui Tonle Sap"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,6 +133,7 @@
     "da": "En madrute i Cambodja fokuserede på en afbalanceret rute for første tur med markedsbesøg, smagsprøver og regionale kulinariske oplevelser.",
     "sv": "En matresplan i Kambodja fokuserade på en balanserad första resa med marknadsbesök, provningar och regionala kulinariska upplevelser.",
     "no": "En matreise i Kambodsja fokuserte på en balansert førstetursrute, med markedsbesøk, smaksprøver og regionale kulinariske opplevelser.",
-    "ar": "يركز خط سير تجارب تذوق الطعام في كمبوديا على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية."
+    "ar": "يركز خط سير تجارب تذوق الطعام في كمبوديا على مسار الرحلة الأولى المتوازن، مع زيارات السوق والتذوق وتجارب الطهي الإقليمية.",
+    "ms": "Jadual perjalanan pengalaman gastronomi Kemboja yang berfokus pada laluan lawatan pertama yang seimbang, dengan lawatan pasar, sesi merasa dan pengalaman kulinari serantau."
   }
 }

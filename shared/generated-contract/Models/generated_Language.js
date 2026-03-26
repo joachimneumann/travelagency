@@ -10,6 +10,7 @@ export const GENERATED_LANGUAGE_CODES = Object.freeze([
   "ja",
   "ko",
   "vi",
+  "ms",
   "de",
   "es",
   "it",

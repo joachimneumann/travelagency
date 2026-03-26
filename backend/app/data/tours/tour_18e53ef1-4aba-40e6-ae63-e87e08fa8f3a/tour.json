@@ -16,7 +16,8 @@
     "da": "Chiang Mai Wellness & Mountain Calm",
     "sv": "Chiang Mai Wellness & Mountain Calm",
     "no": "Chiang Mai velvære og fjellro",
-    "ar": "شيانغ ماي العافية والهدوء الجبلي"
+    "ar": "شيانغ ماي العافية والهدوء الجبلي",
+    "ms": "Chiang Mai Kesejahteraan & Ketenangan Gunung"
   },
   "styles": [
     "wellness",
@@ -103,6 +104,11 @@
       "أيام الثقافة اللطيفة في شيانغ ماي متوازنة مع التعافي في المنتجع الصحي",
       "الاسترخاء على طراز الحجر الدافئ بعد زيارات المعبد والسوق",
       "مساحة لليوجا ووقت المقهى وإيقاع شمال تايلاند الأبطأ"
+    ],
+    "ms": [
+      "Hari budaya Chiang Mai yang lembut diimbangi dengan pemulihan spa",
+      "Relaksasi gaya batu hangat selepas lawatan ke kuil dan pasar",
+      "Ruang untuk yoga, masa di kafe dan rentak Thailand utara yang lebih santai"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,7 +133,8 @@
     "da": "En rejseplan til det nordlige Thailand for rejsende, der ønsker templer og madkultur uden træthed, med spa-genopretning indbygget i ruten.",
     "sv": "En resplan till norra Thailand för resenärer som vill ha tempel och matkultur utan trötthet, med spa-återhämtning inbyggd i rutten.",
     "no": "En reiserute i Nord-Thailand for reisende som ønsker templer og matkultur uten tretthet, med spa-gjenoppretting innebygd i ruten.",
-    "ar": "خط سير رحلة شمال تايلاند للمسافرين الذين يريدون المعابد وثقافة الطعام دون تعب، مع وجود منتجع صحي مدمج في المسار."
+    "ar": "خط سير رحلة شمال تايلاند للمسافرين الذين يريدون المعابد وثقافة الطعام دون تعب، مع وجود منتجع صحي مدمج في المسار.",
+    "ms": "Jadual perjalanan utara Thailand untuk pengembara yang mahukan kuil dan budaya makanan tanpa keletihan, dengan masa pemulihan spa yang dibina ke dalam laluan."
   },
   "image": "/public/v1/tour-images/tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a/tour_18e53ef1-4aba-40e6-ae63-e87e08fa8f3a.webp",
   "updated_at": "2026-03-23T06:32:25Z"

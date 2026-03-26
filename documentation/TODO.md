@@ -23,6 +23,10 @@ Then Automatically derive the stage and write a description of the stage and las
 
 * add Malay language
 
+* add food preferences and allergies to persons
+
+* add hotel room preference: Single Double
+
 ## payments
 
 ok, I want to move on to payments section in booking.html.

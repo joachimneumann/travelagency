@@ -16,7 +16,8 @@
     "da": "Vietnam luksusrejse",
     "sv": "Vietnam lyxresa",
     "no": "Vietnam luksusreise",
-    "ar": "رحلة فيتنام الفاخرة"
+    "ar": "رحلة فيتنام الفاخرة",
+    "ms": "Perjalanan Mewah Vietnam"
   },
   "styles": [
     "luxury"
@@ -103,6 +104,11 @@
       "توقف التوقيع في هانوي",
       "تسليط الضوء على الطريق حول هوي آن",
       "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
     ]
   },
   "seasonality_start_month": "oct",
@@ -127,6 +133,7 @@
     "da": "En luksusrejseplan i Vietnam fokuserede på en afbalanceret rute for første tur med premium-ophold, privat service og signaturøjeblikke.",
     "sv": "En lyxresplan i Vietnam fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
     "no": "En luksusreise fra Vietnam fokusert på en balansert rute for første tur, med førsteklasses opphold, privat service og signaturøyeblikk.",
-    "ar": "يركز خط سير الرحلة الفاخر في فيتنام على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
+    "ar": "يركز خط سير الرحلة الفاخر في فيتنام على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة.",
+    "ms": "Jadual perjalanan mewah Vietnam yang berfokus pada laluan lawatan pertama yang seimbang, dengan penginapan premium, servis peribadi dan detik-detik istimewa."
   }
 }

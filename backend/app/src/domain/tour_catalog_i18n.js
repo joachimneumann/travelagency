@@ -13,10 +13,10 @@ export const TOUR_TEXT_LANGUAGES = CUSTOMER_CONTENT_LANGUAGE_CODES;
 const DEFAULT_TOUR_LANG = "en";
 
 const DESTINATION_LABELS = Object.freeze({
-  cambodia: Object.freeze({ en: "Cambodia", ar: "كمبوديا", fr: "Cambodge", zh: "柬埔寨", ja: "カンボジア", ko: "캄보디아", vi: "Campuchia", de: "Kambodscha", es: "Camboya", it: "Cambogia", ru: "Камбоджа", nl: "Cambodja", pl: "Kambodża", da: "Cambodja", sv: "Kambodja", no: "Kambodsja" }),
-  laos: Object.freeze({ en: "Laos", ar: "لاوس", fr: "Laos", zh: "老挝", ja: "ラオス", ko: "라오스", vi: "Lao", de: "Laos", es: "Laos", it: "Laos", ru: "Лаос", nl: "Laos", pl: "Laos", da: "Laos", sv: "Laos", no: "Laos" }),
-  thailand: Object.freeze({ en: "Thailand", ar: "تايلاند", fr: "Thailande", zh: "泰国", ja: "タイ", ko: "태국", vi: "Thai Lan", de: "Thailand", es: "Tailandia", it: "Thailandia", ru: "Таиланд", nl: "Thailand", pl: "Tajlandia", da: "Thailand", sv: "Thailand", no: "Thailand" }),
-  vietnam: Object.freeze({ en: "Vietnam", ar: "فيتنام", fr: "Vietnam", zh: "越南", ja: "ベトナム", ko: "베트남", vi: "Viet Nam", de: "Vietnam", es: "Vietnam", it: "Vietnam", ru: "Вьетнам", nl: "Vietnam", pl: "Wietnam", da: "Vietnam", sv: "Vietnam", no: "Vietnam" })
+  cambodia: Object.freeze({ en: "Cambodia", ar: "كمبوديا", fr: "Cambodge", zh: "柬埔寨", ja: "カンボジア", ko: "캄보디아", vi: "Campuchia", ms: "Kemboja", de: "Kambodscha", es: "Camboya", it: "Cambogia", ru: "Камбоджа", nl: "Cambodja", pl: "Kambodża", da: "Cambodja", sv: "Kambodja", no: "Kambodsja" }),
+  laos: Object.freeze({ en: "Laos", ar: "لاوس", fr: "Laos", zh: "老挝", ja: "ラオス", ko: "라오스", vi: "Lao", ms: "Laos", de: "Laos", es: "Laos", it: "Laos", ru: "Лаос", nl: "Laos", pl: "Laos", da: "Laos", sv: "Laos", no: "Laos" }),
+  thailand: Object.freeze({ en: "Thailand", ar: "تايلاند", fr: "Thailande", zh: "泰国", ja: "タイ", ko: "태국", vi: "Thai Lan", ms: "Thailand", de: "Thailand", es: "Tailandia", it: "Thailandia", ru: "Таиланд", nl: "Thailand", pl: "Tajlandia", da: "Thailand", sv: "Thailand", no: "Thailand" }),
+  vietnam: Object.freeze({ en: "Vietnam", ar: "فيتنام", fr: "Vietnam", zh: "越南", ja: "ベトナム", ko: "베트남", vi: "Viet Nam", ms: "Vietnam", de: "Vietnam", es: "Vietnam", it: "Vietnam", ru: "Вьетнам", nl: "Vietnam", pl: "Wietnam", da: "Vietnam", sv: "Vietnam", no: "Vietnam" })
 });
 
 const STYLE_LABELS = Object.freeze(

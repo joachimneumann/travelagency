@@ -16,7 +16,8 @@
     "da": "Vietnam Expeditions - Huler",
     "sv": "Vietnamäventyr - grottor",
     "no": "Vietnameventyr - grotter",
-    "ar": "بعثات فيتنام - الكهوف"
+    "ar": "بعثات فيتنام - الكهوف",
+    "ms": "Ekspedisi Vietnam - Gua"
   },
   "styles": [
     "grand-expeditions"
@@ -103,6 +104,11 @@
       "توقف التوقيع في هانوي",
       "تسليط الضوء على الطريق حول هوي آن",
       "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
     ]
   },
   "seasonality_start_month": "oct",
@@ -127,6 +133,7 @@
     "da": "En Vietnam-eventyrrute fokuserede på en rute formet omkring huler med aktive dage, naturskønne ruter og praktisk lokal støtte.",
     "sv": "En resplan för äventyr i Vietnam fokuserade på en rutt formad runt grottor, med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
     "no": "En eventyrreise fra Vietnam fokuserte på en rute formet rundt grotter, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
-    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على طريق تم تشكيله حول الكهوف، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي."
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على طريق تم تشكيله حول الكهوف، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي.",
+    "ms": "Jadual perjalanan ekspedisi besar Vietnam yang berfokus pada laluan yang dibentuk sekitar Gua, dengan hari-hari aktif, laluan pemandangan indah dan sokongan tempatan yang praktikal."
   }
 }

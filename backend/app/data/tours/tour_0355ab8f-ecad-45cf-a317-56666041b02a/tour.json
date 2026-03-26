@@ -16,7 +16,8 @@
     "da": "Laos luksusrejse",
     "sv": "Laos lyxresa",
     "no": "Laos luksusreise",
-    "ar": "رحلة لاوس الفاخرة"
+    "ar": "رحلة لاوس الفاخرة",
+    "ms": "Perjalanan Mewah Laos"
   },
   "styles": [
     "culture",
@@ -104,6 +105,11 @@
       "توقف التوقيع في لوانغ برابانغ",
       "تسليط الضوء على الطريق حول فانغ فينغ",
       "تخطيط النقل السلس عبر نهر ميكونغ"
+    ],
+    "ms": [
+      "Persinggahan utama di Luang Prabang",
+      "Sorotan laluan sekitar Vang Vieng",
+      "Perancangan pemindahan lancar melalui Sungai Mekong"
     ]
   },
   "seasonality_start_month": "nov",
@@ -129,6 +135,7 @@
     "da": "En Laos luksusrejseplan fokuserede på en afbalanceret rute for første tur med premium ophold, privat service og signaturøjeblikke.",
     "sv": "En lyxresplan i Laos fokuserad på en balanserad första resa med premiumvistelser, privat service och signaturögonblick.",
     "no": "En luksusreise fra Laos fokuserte på en balansert førstetursrute, med førsteklasses opphold, privat service og signaturøyeblikk.",
-    "ar": "يركز خط سير الرحلة الفاخر في لاوس على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة."
+    "ar": "يركز خط سير الرحلة الفاخر في لاوس على مسار متوازن للرحلة الأولى، مع إقامات متميزة وخدمة خاصة ولحظات مميزة.",
+    "ms": "Jadual perjalanan budaya Laos yang berfokus pada laluan lawatan pertama yang seimbang, dengan kedalaman warisan, kehidupan tempatan dan lawatan berpandu yang bermakna."
   }
 }

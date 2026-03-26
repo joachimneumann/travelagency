@@ -8,6 +8,7 @@ LanguageCatalog: [
 	"ja",
 	"ko",
 	"vi",
+	"ms",
 	"de",
 	"es",
 	"it",

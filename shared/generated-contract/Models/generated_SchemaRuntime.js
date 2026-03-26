@@ -1383,6 +1383,7 @@
     "ja",
     "ko",
     "vi",
+    "ms",
     "de",
     "es",
     "it",
@@ -1421,6 +1422,10 @@
     {
       "value": "vi",
       "label": "vi"
+    },
+    {
+      "value": "ms",
+      "label": "ms"
     },
     {
       "value": "de",
@@ -3478,6 +3483,7 @@
     "ja",
     "ko",
     "vi",
+    "ms",
     "de",
     "es",
     "it",
@@ -3516,6 +3522,10 @@
     {
       "value": "vi",
       "label": "vi"
+    },
+    {
+      "value": "ms",
+      "label": "ms"
     },
     {
       "value": "de",

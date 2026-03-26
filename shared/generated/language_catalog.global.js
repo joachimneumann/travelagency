@@ -145,6 +145,26 @@
       ]
     },
     {
+      "code": "ms",
+      "apiValue": "Malay",
+      "promptName": "Malay",
+      "nativeLabel": "Bahasa Melayu",
+      "shortLabel": "MS",
+      "flagClass": "flag-ms",
+      "pdfLocale": "ms-MY",
+      "frontendNameKey": "language.name.malay",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "ltr",
+      "aliases": [
+        "ms",
+        "malay",
+        "bahasa melayu",
+        "ms-my"
+      ]
+    },
+    {
       "code": "de",
       "apiValue": "German",
       "promptName": "German",
@@ -351,6 +371,10 @@
     "vietnamese": "vi",
     "tiếng việt": "vi",
     "tieng viet": "vi",
+    "ms": "ms",
+    "malay": "ms",
+    "bahasa melayu": "ms",
+    "ms-my": "ms",
     "de": "de",
     "german": "de",
     "deutsch": "de",
@@ -524,6 +548,26 @@
         "vietnamese",
         "tiếng việt",
         "tieng viet"
+      ]
+    },
+    {
+      "code": "ms",
+      "apiValue": "Malay",
+      "promptName": "Malay",
+      "nativeLabel": "Bahasa Melayu",
+      "shortLabel": "MS",
+      "flagClass": "flag-ms",
+      "pdfLocale": "ms-MY",
+      "frontendNameKey": "language.name.malay",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "ltr",
+      "aliases": [
+        "ms",
+        "malay",
+        "bahasa melayu",
+        "ms-my"
       ]
     },
     {
@@ -886,6 +930,26 @@
       ]
     },
     {
+      "code": "ms",
+      "apiValue": "Malay",
+      "promptName": "Malay",
+      "nativeLabel": "Bahasa Melayu",
+      "shortLabel": "MS",
+      "flagClass": "flag-ms",
+      "pdfLocale": "ms-MY",
+      "frontendNameKey": "language.name.malay",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "ltr",
+      "aliases": [
+        "ms",
+        "malay",
+        "bahasa melayu",
+        "ms-my"
+      ]
+    },
+    {
       "code": "de",
       "apiValue": "German",
       "promptName": "German",
@@ -1202,6 +1266,26 @@
         "vietnamese",
         "tiếng việt",
         "tieng viet"
+      ]
+    },
+    "ms": {
+      "code": "ms",
+      "apiValue": "Malay",
+      "promptName": "Malay",
+      "nativeLabel": "Bahasa Melayu",
+      "shortLabel": "MS",
+      "flagClass": "flag-ms",
+      "pdfLocale": "ms-MY",
+      "frontendNameKey": "language.name.malay",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "ltr",
+      "aliases": [
+        "ms",
+        "malay",
+        "bahasa melayu",
+        "ms-my"
       ]
     },
     "de": {
@@ -1521,6 +1605,26 @@
         "vietnamese",
         "tiếng việt",
         "tieng viet"
+      ]
+    },
+    "Malay": {
+      "code": "ms",
+      "apiValue": "Malay",
+      "promptName": "Malay",
+      "nativeLabel": "Bahasa Melayu",
+      "shortLabel": "MS",
+      "flagClass": "flag-ms",
+      "pdfLocale": "ms-MY",
+      "frontendNameKey": "language.name.malay",
+      "publicSupported": true,
+      "backendUiSupported": false,
+      "customerContentSupported": true,
+      "direction": "ltr",
+      "aliases": [
+        "ms",
+        "malay",
+        "bahasa melayu",
+        "ms-my"
       ]
     },
     "German": {

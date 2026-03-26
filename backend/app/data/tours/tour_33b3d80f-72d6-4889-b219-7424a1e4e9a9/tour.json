@@ -16,7 +16,8 @@
     "da": "Vietnam familierejse",
     "sv": "Vietnam familjeresa",
     "no": "Familiereise i Vietnam",
-    "ar": "رحلة عائلة فيتنام"
+    "ar": "رحلة عائلة فيتنام",
+    "ms": "Perjalanan Keluarga Vietnam"
   },
   "styles": [
     "family"
@@ -103,6 +104,11 @@
       "توقف التوقيع في هانوي",
       "تسليط الضوء على الطريق حول هوي آن",
       "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
     ]
   },
   "seasonality_start_month": "oct",
@@ -127,7 +133,8 @@
     "da": "En familierejseplan i Vietnam fokuserede på en afbalanceret rute for første tur med familievenligt tempo og logistik på tur.",
     "sv": "En familjeväg i Vietnam fokuserade på en balanserad första resa med familjevänligt tempo och logistik på resan.",
     "no": "En Vietnam-familiereise fokuserte på en balansert førstetursrute, med familievennlig tempo og logistikk på tur.",
-    "ar": "يركز خط سير الرحلة العائلي في فيتنام على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية أثناء الرحلة."
+    "ar": "يركز خط سير الرحلة العائلي في فيتنام على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية أثناء الرحلة.",
+    "ms": "Jadual perjalanan keluarga Vietnam yang berfokus pada laluan lawatan pertama yang seimbang, dengan rentak mesra keluarga dan logistik perjalanan di lokasi yang boleh diharap."
   },
   "updated_at": "2026-03-15T14:23:58.363Z"
 }

@@ -16,7 +16,8 @@
     "da": "Phuket Wellness ved havet",
     "sv": "Phuket Wellness vid havet",
     "no": "Phuket velvære ved sjøen",
-    "ar": "منتجع فوكيت الصحي على البحر"
+    "ar": "منتجع فوكيت الصحي على البحر",
+    "ms": "Kesejahteraan Phuket di Tepi Laut"
   },
   "styles": [
     "wellness",
@@ -104,6 +105,11 @@
       "فترة توقف في مواجهة البحر مع جلسات التعافي التي يقودها التدليك",
       "فرك اختياري أو علاجات على طراز الحجر الساخن بين أنشطة الجزيرة",
       "إيقاع المنتجع والرحلات الاستكشافية السهلة ووقت الفراغ السخي عند غروب الشمس"
+    ],
+    "ms": [
+      "Masa rehat menghadap laut dengan sesi pemulihan berasaskan urutan",
+      "Pilihan rawatan lulur atau gaya batu panas di antara aktiviti pulau",
+      "Rentak resort, lawatan mudah dan masa lapang waktu senja yang luas"
     ]
   },
   "seasonality_start_month": "nov",
@@ -128,7 +134,8 @@
     "da": "En strandflugt fra Thailand med et wellness-fokus, bygget op omkring havluft, langsommere dage og spa-aftaler, der nulstiller kroppen uden at overbelaste tidsplanen.",
     "sv": "En strandflykt från Thailand med fokus på välmående, byggd kring havsluft, långsammare dagar och spamöten som återställer kroppen utan att överbelasta schemat.",
     "no": "En strandflukt fra Thailand med et velværefokus, bygget rundt sjøluft, langsommere dager og spaavtaler som tilbakestiller kroppen uten å overbelaste timeplanen.",
-    "ar": "ملاذ على شاطئ تايلاند مع التركيز على العافية، حيث يتمحور حول هواء البحر والأيام البطيئة ومواعيد السبا التي تعيد ضبط الجسم دون زيادة الضغط على الجدول الزمني."
+    "ar": "ملاذ على شاطئ تايلاند مع التركيز على العافية، حيث يتمحور حول هواء البحر والأيام البطيئة ومواعيد السبا التي تعيد ضبط الجسم دون زيادة الضغط على الجدول الزمني.",
+    "ms": "Pelarian pantai Thailand dengan fokus kesejahteraan, dibina sekitar udara laut, hari-hari yang lebih santai dan janji temu spa yang menyegarkan tubuh tanpa membebankan jadual."
   },
   "image": "/public/v1/tour-images/tour_ea36473e-561b-426a-8db5-52c360e1adad/tour_ea36473e-561b-426a-8db5-52c360e1adad.webp",
   "updated_at": "2026-03-23T06:31:46Z"

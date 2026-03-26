@@ -16,7 +16,8 @@
     "da": "Cambodia Mekong Wellness Escape",
     "sv": "Kambodja Mekong Wellness Escape",
     "no": "Kambodsja Mekong Wellness Escape",
-    "ar": "كمبوديا ميكونغ العافية الهروب"
+    "ar": "كمبوديا ميكونغ العافية الهروب",
+    "ms": "Pelarian Kesejahteraan Mekong Kemboja"
   },
   "styles": [
     "wellness",
@@ -103,6 +104,11 @@
       "ريفرسايد بنوم بنه واستراحة البوتيك مع جلسات العافية",
       "فرك الجسم والانتعاش المستوحى من التدليك بعد استكشاف المدينة",
       "طعام منسق، وتيرة أكثر ليونة، وخدمات لوجستية خاصة سهلة"
+    ],
+    "ms": [
+      "Phnom Penh di tepi sungai dan masa rehat butik dengan sesi kesejahteraan",
+      "Pemulihan berinspirasikan lulur badan dan urutan selepas meneroka bandar",
+      "Santapan terpilih, rentak yang lebih lembut dan logistik peribadi yang mudah"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,7 +133,8 @@
     "da": "En Cambodia-rejse designet omkring blødere bydage og restitution ved floden, der kombinerer boutique-ophold med spa-tid og afslappede kulturelle besøg.",
     "sv": "En resa i Kambodja designad kring mjukare stadsdagar och återhämtning vid floden, som kombinerar boutiquevistelser med spatid och lugna kulturbesök.",
     "no": "En Kambodsja-reise designet rundt mykere bydager og restitusjon ved elvebredden, som kombinerer boutique-opphold med spa-tid og rolige kulturelle besøk.",
-    "ar": "تم تصميم رحلة كمبوديا لتتمحور حول أيام المدينة الهادئة والتعافي على ضفاف النهر، وتجمع بين الإقامات البوتيكية ووقت السبا والزيارات الثقافية غير المستعجلة."
+    "ar": "تم تصميم رحلة كمبوديا لتتمحور حول أيام المدينة الهادئة والتعافي على ضفاف النهر، وتجمع بين الإقامات البوتيكية ووقت السبا والزيارات الثقافية غير المستعجلة.",
+    "ms": "Perjalanan Kemboja yang direka sekitar hari-hari bandar yang lebih lembut dan pemulihan di tepi sungai, menggabungkan penginapan butik dengan masa spa dan lawatan budaya yang tidak tergesa-gesa."
   },
   "image": "/public/v1/tour-images/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a/tour_f1510915-bb68-4dd0-bd4e-033d7e6c1f2a.webp",
   "updated_at": "2026-03-23T06:33:50Z"

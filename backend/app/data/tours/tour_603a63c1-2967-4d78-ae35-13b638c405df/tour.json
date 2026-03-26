@@ -16,7 +16,8 @@
     "da": "Familierejse til Thailand",
     "sv": "Familjeresa till Thailand",
     "no": "Familiereise til Thailand",
-    "ar": "رحلة عائلية إلى تايلاند"
+    "ar": "رحلة عائلية إلى تايلاند",
+    "ms": "Perjalanan Keluarga Thailand"
   },
   "styles": [
     "family"
@@ -103,6 +104,11 @@
       "توقف التوقيع في بانكوك",
       "تسليط الضوء على الطريق حول شيانغ ماي",
       "تخطيط النقل السلس عبر فوكيت"
+    ],
+    "ms": [
+      "Persinggahan utama di Bangkok",
+      "Sorotan laluan sekitar Chiang Mai",
+      "Perancangan pemindahan lancar melalui Phuket"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,6 +133,7 @@
     "da": "En Thailands familierejseplan fokuserede på en afbalanceret første tur-rute med familievenligt tempo og pålidelig logistik på turen.",
     "sv": "En Thailands familjeväg fokuserade på en balanserad första-tursrutt, med familjevänligt tempo och pålitlig logistik på resan.",
     "no": "En familiereise i Thailand fokuserte på en balansert førstetursrute, med familievennlig tempo og pålitelig logistikk på tur.",
-    "ar": "يركز خط سير الرحلة العائلي في تايلاند على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة."
+    "ar": "يركز خط سير الرحلة العائلي في تايلاند على مسار متوازن للرحلة الأولى، مع سرعة مناسبة للعائلة وخدمات لوجستية يمكن الاعتماد عليها أثناء الرحلة.",
+    "ms": "Jadual perjalanan keluarga Thailand yang berfokus pada laluan lawatan pertama yang seimbang, dengan rentak mesra keluarga dan logistik perjalanan di lokasi yang boleh diharap."
   }
 }

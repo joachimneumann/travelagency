@@ -16,7 +16,8 @@
     "da": "Vietnam budgetrejse",
     "sv": "Vietnam budgetresa",
     "no": "Vietnam Budsjettreise",
-    "ar": "رحلة ميزانية فيتنام"
+    "ar": "رحلة ميزانية فيتنام",
+    "ms": "Perjalanan Bajet Vietnam"
   },
   "styles": [
     "budget"
@@ -103,6 +104,11 @@
       "توقف التوقيع في هانوي",
       "تسليط الضوء على الطريق حول هوي آن",
       "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
     ]
   },
   "seasonality_start_month": "oct",
@@ -127,6 +133,7 @@
     "da": "En Vietnam-budgetrute fokuserede på en afbalanceret rute for første tur med værdifokuseret planlægning med smart rute og klare inklusion.",
     "sv": "En budgetresplan för Vietnam fokuserade på en balanserad förstaresasrutt, med värdefokuserad planering med smart rutt och tydliga inklusioner.",
     "no": "En Vietnam-budsjettreise fokuserte på en balansert førstetursrute, med verdifokusert planlegging med smart ruting og klare inkluderinger.",
-    "ar": "يركز خط سير الرحلة الاقتصادي في فيتنام على مسار الرحلة الأولى المتوازن، مع التخطيط الذي يركز على القيمة مع التوجيه الذكي والإضافات الواضحة."
+    "ar": "يركز خط سير الرحلة الاقتصادي في فيتنام على مسار الرحلة الأولى المتوازن، مع التخطيط الذي يركز على القيمة مع التوجيه الذكي والإضافات الواضحة.",
+    "ms": "Jadual perjalanan bajet Vietnam yang berfokus pada laluan lawatan pertama yang seimbang, dengan perancangan berfokus nilai, laluan pintar dan skop yang jelas."
   }
 }

@@ -9,6 +9,7 @@
       "ja": "壮大な遠征",
       "ko": "대규모 원정",
       "vi": "Đại thám hiểm",
+      "ms": "Ekspedisi Besar",
       "de": "Große Expeditionen",
       "es": "Grandes expediciones",
       "it": "Grandi spedizioni",
@@ -31,6 +32,7 @@
       "ja": "ビーチ",
       "ko": "해변",
       "vi": "Bai bien",
+      "ms": "Pantai",
       "de": "Strand",
       "es": "Playa",
       "it": "Spiaggia",
@@ -52,6 +54,7 @@
       "ja": "お手頃",
       "ko": "가성비",
       "vi": "Tiet kiem",
+      "ms": "Bajet",
       "de": "Budget",
       "es": "Económico",
       "it": "Economico",
@@ -73,6 +76,7 @@
       "ja": "文化",
       "ko": "문화",
       "vi": "Van hoa",
+      "ms": "Budaya",
       "de": "Kultur",
       "es": "Cultura",
       "it": "Cultura",
@@ -94,6 +98,7 @@
       "ja": "家族",
       "ko": "가족",
       "vi": "Gia dinh",
+      "ms": "Keluarga",
       "de": "Familie",
       "es": "Familiar",
       "it": "Famiglia",
@@ -115,6 +120,7 @@
       "ja": "美食体験",
       "ko": "미식 체험",
       "vi": "Trải nghiệm ẩm thực",
+      "ms": "Pengalaman Gastronomi",
       "de": "Kulinarische Erlebnisse",
       "es": "Experiencias gastronómicas",
       "it": "Esperienze gastronomiche",
@@ -137,6 +143,7 @@
       "ja": "ラグジュアリー",
       "ko": "럭셔리",
       "vi": "Cao cap",
+      "ms": "Mewah",
       "de": "Luxus",
       "es": "Lujo",
       "it": "Lusso",
@@ -152,7 +159,8 @@
     "code": "wellness",
     "labels": {
       "en": "Wellness",
-      "ar": "عافية"
+      "ar": "عافية",
+      "ms": "Kesejahteraan"
     },
     "aliases": ["spa"]
   }

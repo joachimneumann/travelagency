@@ -16,7 +16,8 @@
     "da": "Laos strandrejse",
     "sv": "Laos strandresa",
     "no": "Laos strandreise",
-    "ar": "رحلة شاطئ لاوس"
+    "ar": "رحلة شاطئ لاوس",
+    "ms": "Perjalanan Pantai Laos"
   },
   "styles": [
     "beach"
@@ -103,6 +104,11 @@
       "توقف التوقيع في لوانغ برابانغ",
       "تسليط الضوء على الطريق حول فانغ فينغ",
       "تخطيط النقل السلس عبر نهر ميكونغ"
+    ],
+    "ms": [
+      "Persinggahan utama di Luang Prabang",
+      "Sorotan laluan sekitar Vang Vieng",
+      "Perancangan pemindahan lancar melalui Sungai Mekong"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,6 +133,7 @@
     "da": "En Laos-strandrute fokuserede på en afbalanceret rute for første tur, med afslappet kysttid afbalanceret med let lokal opdagelse.",
     "sv": "En resplan till Laos strand fokuserade på en balanserad första resa, med avslappnad kusttid balanserad med enkel lokal upptäckt.",
     "no": "En reiserute på Laos-stranden fokuserte på en balansert førstetursrute, med avslappet kysttid balansert med lett lokal oppdagelse.",
-    "ar": "يركز خط سير الرحلة على شاطئ لاوس على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي."
+    "ar": "يركز خط سير الرحلة على شاطئ لاوس على مسار متوازن للرحلة الأولى، مع توفير وقت مريح على الساحل متوازن مع سهولة الاكتشاف المحلي.",
+    "ms": "Jadual perjalanan pantai Laos yang berfokus pada laluan lawatan pertama yang seimbang, dengan masa santai di pesisir yang diimbangi dengan penemuan tempatan yang mudah."
   }
 }

@@ -16,7 +16,8 @@
     "da": "Thailands kulturrejse",
     "sv": "Thailands kulturresa",
     "no": "Thailands kulturreise",
-    "ar": "رحلة الثقافة في تايلاند"
+    "ar": "رحلة الثقافة في تايلاند",
+    "ms": "Perjalanan Budaya Thailand"
   },
   "styles": [
     "culture"
@@ -103,6 +104,11 @@
       "توقف التوقيع في بانكوك",
       "تسليط الضوء على الطريق حول شيانغ ماي",
       "تخطيط النقل السلس عبر فوكيت"
+    ],
+    "ms": [
+      "Persinggahan utama di Bangkok",
+      "Sorotan laluan sekitar Chiang Mai",
+      "Perancangan pemindahan lancar melalui Phuket"
     ]
   },
   "seasonality_start_month": "nov",
@@ -127,6 +133,7 @@
     "da": "En thailandsk kulturrejseplan fokuserede på en afbalanceret første-tursrute med dybde, lokalt liv og meningsfulde guidede besøg.",
     "sv": "En resplan för Thailands kultur fokuserade på en balanserad första-tursrutt, med arvsdjup, lokalt liv och meningsfulla guidade besök.",
     "no": "En thailandsk kulturreise fokuserte på en balansert førstetursrute, med kulturarvsdybde, lokalt liv og meningsfylte guidede besøk.",
-    "ar": "يركز خط سير الرحلة الثقافي في تايلاند على مسار الرحلة الأولى المتوازن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى."
+    "ar": "يركز خط سير الرحلة الثقافي في تايلاند على مسار الرحلة الأولى المتوازن، مع عمق التراث والحياة المحلية والزيارات المصحوبة بمرشدين ذات مغزى.",
+    "ms": "Jadual perjalanan budaya Thailand yang berfokus pada laluan lawatan pertama yang seimbang, dengan kedalaman warisan, kehidupan tempatan dan lawatan berpandu yang bermakna."
   }
 }

@@ -16,7 +16,8 @@
     "da": "Vietnam Expeditions - Ha Giang Loop",
     "sv": "Vietnamäventyr - Ha Giang Loop",
     "no": "Vietnam Expeditions - Ha Giang Loop",
-    "ar": "بعثات فيتنام - حلقة ها جيانج"
+    "ar": "بعثات فيتنام - حلقة ها جيانج",
+    "ms": "Ekspedisi Vietnam - Gelung Ha Giang"
   },
   "styles": [
     "grand-expeditions",
@@ -104,6 +105,11 @@
       "توقف التوقيع في هانوي",
       "تسليط الضوء على الطريق حول هوي آن",
       "تخطيط النقل السلس عبر خليج ها لونج"
+    ],
+    "ms": [
+      "Persinggahan utama di Hanoi",
+      "Sorotan laluan sekitar Hoi An",
+      "Perancangan pemindahan lancar melalui Teluk Ha Long"
     ]
   },
   "seasonality_start_month": "oct",
@@ -128,7 +134,8 @@
     "da": "En Vietnam-eventyrrute fokuserede på et bjerg-loop-fokus gennem Ha Giang, med aktive dage, naturskønne ruter og praktisk lokal støtte.",
     "sv": "En resplan för äventyr i Vietnam fokuserade på en bergslinga genom Ha Giang, med aktiva dagar, natursköna rutter och praktiskt lokalt stöd.",
     "no": "En eventyrreise fra Vietnam fokuserte på et fjellsløyfefokus gjennom Ha Giang, med aktive dager, naturskjønne ruter og praktisk lokal støtte.",
-    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على التركيز على حلقة جبلية عبر ها جيانج، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي."
+    "ar": "ركز خط سير الرحلات الاستكشافية الكبرى في فيتنام على التركيز على حلقة جبلية عبر ها جيانج، مع أيام نشطة وطرق ذات مناظر خلابة ودعم محلي عملي.",
+    "ms": "Jadual perjalanan ekspedisi besar Vietnam yang berfokus pada laluan gelung gunung melalui Ha Giang, dengan hari-hari aktif, laluan pemandangan indah dan sokongan tempatan yang praktikal."
   },
   "updated_at": "2026-03-14T07:58:10.956Z"
 }

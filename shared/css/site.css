@@ -251,6 +251,10 @@
   background-image: var(--flag-vi);
 }
 
+.flag-ms {
+  background-image: var(--flag-ms);
+}
+
 .flag-de {
   background-image: var(--flag-de);
 }
