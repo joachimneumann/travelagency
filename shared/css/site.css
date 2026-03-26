@@ -1871,6 +1871,11 @@ textarea:focus-visible {
   background: transparent;
 }
 
+.backend-list-page {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 .backend-list-page #main-content > .section > .container {
   padding-top: 1rem;
   padding-bottom: 1rem;
@@ -3669,6 +3674,49 @@ textarea:focus-visible {
   margin: 0;
   line-height: 0;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.settings-staff-editor__photo-button::before,
+.settings-staff-editor__photo-button::after {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.settings-staff-editor__photo-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--text-black) 38%, transparent);
+}
+
+.settings-staff-editor__photo-button::after {
+  content: "✎";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--text-strong);
+  font-size: 1.35rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.settings-staff-editor__photo-button:hover::before,
+.settings-staff-editor__photo-button:hover::after,
+.settings-staff-editor__photo-button:focus-visible::before,
+.settings-staff-editor__photo-button:focus-visible::after {
+  opacity: 1;
 }
 
 .settings-staff-editor__photo-button:focus-visible {
@@ -3684,6 +3732,7 @@ textarea:focus-visible {
   border-radius: 1rem;
   border: 1px solid var(--line);
   background: var(--surface-muted);
+  pointer-events: none;
 }
 
 .settings-staff-editor__hero-copy {
@@ -3727,6 +3776,10 @@ textarea:focus-visible {
 .settings-staff-editor__qualification-grid {
   display: grid;
   gap: 0.8rem;
+}
+
+.settings-staff-editor__text-section {
+  margin-top: 30px;
 }
 
 .settings-staff-editor__qualification-row {

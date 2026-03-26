@@ -6,6 +6,50 @@ docker_daemon_available() {
   docker info >/dev/null 2>&1
 }
 
+colima_is_running() {
+  if ! command -v colima >/dev/null 2>&1; then
+    return 1
+  fi
+
+  local list_json
+  list_json="$(colima list --json 2>/dev/null || true)"
+  if [ -n "$list_json" ] && printf '%s' "$list_json" | grep -qi '"status":"running"'; then
+    return 0
+  fi
+
+  local status_output
+  status_output="$(colima status 2>/dev/null || true)"
+  if printf '%s' "$status_output" | grep -qiE '(^status:\s*running|colima is running)'; then
+    return 0
+  fi
+
+  return 1
+}
+
+colima_reported_status() {
+  if ! command -v colima >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local list_json
+  list_json="$(colima list --json 2>/dev/null || true)"
+  if [ -n "$list_json" ]; then
+    local parsed_status
+    parsed_status="$(printf '%s' "$list_json" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p' | head -n 1)"
+    if [ -n "$parsed_status" ]; then
+      printf '%s\n' "$parsed_status"
+      return 0
+    fi
+  fi
+
+  local status_output
+  status_output="$(colima status 2>/dev/null || true)"
+  if printf '%s' "$status_output" | grep -qiE '(^status:\s*running|colima is running)'; then
+    printf 'Running\n'
+    return 0
+  fi
+}
+
 docker_context_name() {
   docker context show 2>/dev/null || true
 }
@@ -104,7 +148,18 @@ ensure_local_docker_runtime() {
 
   ensure_colima_context
 
-  if ! colima status 2>/dev/null | grep -qi '^status:\s*running'; then
+  local initial_colima_status
+  initial_colima_status="$(colima_reported_status)"
+  if [ -n "$initial_colima_status" ] && [ "${initial_colima_status}" = "Broken" ]; then
+    echo "Error: Colima reports status 'Broken' before startup." >&2
+    echo "Run these recovery commands first:" >&2
+    echo "  colima stop" >&2
+    echo "  colima start" >&2
+    echo "Then rerun this script." >&2
+    exit 1
+  fi
+
+  if ! colima_is_running; then
     echo "Starting Colima ..."
     colima start
   fi
@@ -115,7 +170,7 @@ ensure_local_docker_runtime() {
     return 0
   fi
 
-  if colima status 2>/dev/null | grep -qi '^status:\s*running'; then
+  if colima_is_running; then
     echo "Docker daemon is still unavailable even though Colima reports running. Restarting Colima once ..." >&2
     colima stop >/dev/null 2>&1 || true
     colima start

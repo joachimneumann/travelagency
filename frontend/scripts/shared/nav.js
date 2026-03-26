@@ -1,4 +1,4 @@
-import { fetchAuthMe, wireAuthLogoutLink } from "./auth.js";
+import { fetchAuthMe, readCachedAuthMe, wireAuthLogoutLink } from "./auth.js";
 
 function buildIconMarkup(icon) {
   if (icon?.type === "image") {
@@ -54,6 +54,10 @@ function hasAnyRole(roles, ...expected) {
   return expected.some((role) => roles.includes(role));
 }
 
+function resolveUserLabel(authUser = null) {
+  return String(authUser?.preferred_username || authUser?.email || authUser?.sub || "").trim();
+}
+
 function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
   const canReadBookings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant", "atp_staff");
@@ -84,7 +88,7 @@ export function mountBackendNav(mount, options = {}) {
       <div class="backend-section-nav-wrap">
         <div class="backend-section-nav" role="tablist" aria-label="${backendT("a11y.backend_sections", "Backend sections")}">
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
-          ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), "📊")}
+          ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
           ${buildSectionButton("tours", backendT("nav.tours", "Tours"), "🗺️")}
         </div>
       </div>
@@ -111,7 +115,14 @@ export function mountBackendNav(mount, options = {}) {
     returnTo: `${window.location.origin}${logoutHref}`
   });
 
-  applyNavPermissions(mount, []);
+  const cachedAuth = readCachedAuthMe();
+  const cachedRoles = Array.isArray(cachedAuth?.user?.roles) ? cachedAuth.user.roles : [];
+  applyNavPermissions(mount, cachedRoles);
+  const cachedUserLabel = resolveUserLabel(cachedAuth?.user);
+  const userLabelEl = mount.querySelector("#backendUserLabel");
+  if (userLabelEl) {
+    userLabelEl.textContent = cachedUserLabel;
+  }
 
   if (currentSection) {
     const activeButton = mount.querySelector(`.backend-section-nav__item[data-backend-section="${currentSection}"]`);
@@ -134,8 +145,13 @@ export function mountBackendNav(mount, options = {}) {
     .then(({ payload }) => {
       const roles = Array.isArray(payload?.user?.roles) ? payload.user.roles : [];
       applyNavPermissions(mount, roles);
+      const liveUserLabel = resolveUserLabel(payload?.user);
+      const labelElement = mount.querySelector("#backendUserLabel");
+      if (labelElement) {
+        labelElement.textContent = liveUserLabel;
+      }
     })
     .catch(() => {
-      applyNavPermissions(mount, []);
+      applyNavPermissions(mount, cachedRoles);
     });
 }

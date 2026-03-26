@@ -1,8 +1,48 @@
 import { authMeRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 
+const BACKEND_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";
+
 export function resolveAuthBase(apiBase = "") {
   return String(apiBase || window.ASIATRAVELPLAN_API_BASE || window.location.origin).replace(/\/$/, "");
+}
+
+function normalizeCachedAuthPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  if (payload.authenticated !== true || !payload.user || typeof payload.user !== "object") return null;
+  const user = payload.user;
+  return {
+    authenticated: true,
+    user: {
+      sub: String(user.sub || "").trim(),
+      preferred_username: String(user.preferred_username || "").trim(),
+      email: String(user.email || "").trim(),
+      roles: Array.isArray(user.roles) ? user.roles.map((role) => String(role || "").trim()).filter(Boolean) : []
+    }
+  };
+}
+
+export function readCachedAuthMe() {
+  try {
+    const raw = window.sessionStorage.getItem(BACKEND_AUTH_CACHE_KEY);
+    if (!raw) return null;
+    return normalizeCachedAuthPayload(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedAuthMe(payload) {
+  try {
+    const normalized = normalizeCachedAuthPayload(payload);
+    if (!normalized) {
+      window.sessionStorage.removeItem(BACKEND_AUTH_CACHE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(BACKEND_AUTH_CACHE_KEY, JSON.stringify(normalized));
+  } catch {
+    // Ignore cache write failures.
+  }
 }
 
 export function buildAuthLogoutHref({ apiBase = "", returnTo = "" } = {}) {
@@ -44,5 +84,6 @@ export async function fetchAuthMe(apiBase = "") {
   });
   const payload = await response.json().catch(() => null);
   if (payload) validateAuthMeResponse(payload);
+  writeCachedAuthMe(payload);
   return { request, response, payload };
 }
