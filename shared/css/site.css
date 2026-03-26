@@ -1083,9 +1083,10 @@ textarea:focus-visible {
 
 .team-grid {
   display: grid;
-  gap: 1.65rem 1rem;
+  row-gap: 1.65rem;
+  column-gap: clamp(1rem, 4vw, 6.25rem);
   grid-template-columns: repeat(3, minmax(0, 225px));
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .team-card {
