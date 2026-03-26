@@ -418,6 +418,7 @@ export function createPricingHelpers({
       .filter((component) => normalizeOfferCategory(component?.category) !== offerCategories.DISCOUNTS_CREDITS)
       .map((component, index) => {
         const computedAmounts = computeOfferComponentAmounts(component);
+        const normalizedDayNumber = Number.parseInt(component?.day_number, 10);
         const label_i18n = normalizeLocalizedTextMap(component?.label_i18n ?? component?.label, contentLang);
         const details_i18n = normalizeLocalizedTextMap(
           component?.details_i18n ?? component?.details ?? component?.description,
@@ -431,6 +432,7 @@ export function createPricingHelpers({
           label_i18n,
           details: resolveLocalizedText(details_i18n, flatLang),
           details_i18n,
+          day_number: Number.isInteger(normalizedDayNumber) && normalizedDayNumber >= 1 ? normalizedDayNumber : null,
           quantity: computedAmounts.quantity,
           unit_amount_cents: computedAmounts.unit_amount_cents,
           unit_net_amount_cents: computedAmounts.unit_net_amount_cents,

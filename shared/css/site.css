@@ -1923,6 +1923,7 @@ textarea:focus-visible {
 
 .backend-table th.offer-col-category,
 .backend-table th.offer-col-details,
+.backend-table th.offer-col-day,
 .backend-table th.offer-col-qty,
 .backend-table th.offer-col-price-single,
 .backend-table th.offer-col-price-total,
@@ -1931,6 +1932,7 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-col-category,
+.backend-table .offer-col-day,
 .backend-table .offer-col-qty,
 .backend-table .offer-col-price-single,
 .backend-table .offer-col-price-total,
@@ -1968,6 +1970,24 @@ textarea:focus-visible {
   min-width: 100px;
   text-align: right;
   padding-inline-end: 0.5em;
+  box-sizing: border-box;
+}
+
+.backend-table .offer-col-day {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  text-align: center;
+  padding-inline: 0.4rem;
+  box-sizing: border-box;
+}
+
+.backend-table th.offer-col-day {
+  text-align: center;
+}
+
+.backend-table .offer-col-day select {
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -2060,6 +2080,7 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-col-category select,
+.backend-table .offer-col-day select,
 .backend-table .offer-col-qty input,
 .backend-table .offer-col-price-single input,
 .backend-table .offer-col-price-total input,
@@ -2074,6 +2095,7 @@ textarea:focus-visible {
 }
 
 .backend-table .offer-col-category select:focus-visible,
+.backend-table .offer-col-day select:focus-visible,
 .backend-table .offer-col-qty input:focus-visible,
 .backend-table .offer-col-price-single input:focus-visible,
 .backend-table .offer-col-price-total input:focus-visible,

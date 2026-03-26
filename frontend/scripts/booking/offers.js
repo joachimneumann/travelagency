@@ -276,6 +276,9 @@ export function createBookingOfferModule(ctx) {
         label: String(component?.label || ""),
         details: resolveLocalizedEditorText(component?.details_i18n ?? component?.details ?? component?.description, "en", ""),
         details_i18n: normalizeLocalizedEditorMap(component?.details_i18n ?? component?.details ?? component?.description, "en"),
+        day_number: Number.isInteger(Number(component?.day_number)) && Number(component?.day_number) >= 1
+          ? Number(component.day_number)
+          : null,
         quantity: Math.max(1, Number(component?.quantity || 1)),
         unit_amount_cents: Math.max(0, Number(component?.unit_amount_cents || 0)),
         tax_rate_basis_points: Number.isFinite(Number(component?.tax_rate_basis_points))

@@ -297,6 +297,32 @@ export function createBookingOfferComponentsModule(ctx) {
     });
   }
 
+  function maxOfferComponentDayNumber() {
+    const travelPlanDays = Array.isArray(state.travelPlanDraft?.days)
+      ? state.travelPlanDraft.days.length
+      : (Array.isArray(state.booking?.travel_plan?.days) ? state.booking.travel_plan.days.length : 0);
+    const componentDays = (Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [])
+      .map((component) => Number(component?.day_number || 0))
+      .filter((value) => Number.isInteger(value) && value >= 1);
+    return Math.max(travelPlanDays, componentDays.length ? Math.max(...componentDays) : 0);
+  }
+
+  function offerComponentDayOptions(selectedDayNumber = null) {
+    const selected = Number.isInteger(Number(selectedDayNumber)) && Number(selectedDayNumber) >= 1
+      ? Number(selectedDayNumber)
+      : null;
+    const maxDay = Math.max(maxOfferComponentDayNumber(), selected || 0);
+    const options = [
+      `<option value="">${escapeHtml(bookingT("booking.offer.day_number.not_applicable", "Not applicable"))}</option>`
+    ];
+    for (let dayNumber = 1; dayNumber <= maxDay; dayNumber += 1) {
+      options.push(
+        `<option value="${dayNumber}"${selected === dayNumber ? " selected" : ""}>${escapeHtml(bookingT("booking.offer.day_number.day", "Day {day}", { day: dayNumber }))}</option>`
+      );
+    }
+    return options.join("");
+  }
+
   function isOfferCategoryEditorOpen(index) {
     return offerCategoryEditorIndexes.has(Number(index));
   }
@@ -408,6 +434,7 @@ export function createBookingOfferComponentsModule(ctx) {
       const quantityInput = document.querySelector(`[data-offer-component-quantity="${index}"]`);
       const totalInput = document.querySelector(`[data-offer-component-total-input="${index}"]`);
       const unitInput = document.querySelector(`[data-offer-component-unit="${index}"]`);
+      const dayNumberInput = document.querySelector(`[data-offer-component-day-number="${index}"]`);
       const quantityRaw = Number(quantityInput?.value || fallbackComponent?.quantity || "1");
       const quantity = Number.isFinite(quantityRaw) && quantityRaw >= 1 ? Math.round(quantityRaw) : 1;
       const taxRateBasisPoints = getOfferCategoryTaxRateBasisPoints(category);
@@ -430,6 +457,11 @@ export function createBookingOfferComponentsModule(ctx) {
         label: String(fallbackComponent.label || ""),
         details: detailsPayload.text || null,
         details_i18n: detailsPayload.map,
+        day_number: (() => {
+          const rawValue = dayNumberInput?.value ?? fallbackComponent?.day_number ?? "";
+          const parsed = Number.parseInt(String(rawValue).trim(), 10);
+          return Number.isInteger(parsed) && parsed >= 1 ? parsed : null;
+        })(),
         quantity,
         unit_amount_cents:
           Number.isFinite(displayedAmount) && displayedAmount >= 0
@@ -492,6 +524,7 @@ export function createBookingOfferComponentsModule(ctx) {
       label: "",
       details: "",
       details_i18n: {},
+      day_number: null,
       quantity: 1,
       unit_amount_cents: 0,
       tax_rate_basis_points: getOfferCategoryTaxRateBasisPoints(category),
@@ -526,7 +559,7 @@ export function createBookingOfferComponentsModule(ctx) {
       ? `<th class="offer-col-price-single">${escapeHtml(bookingT("booking.offer.unit", "Unit"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total", "Total"))}</th>`
       : `<th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.total_currency", "Total ({currency})", { currency }))}</th>`;
     const actionHeader = showActionsCol ? '<th class="offer-col-actions"></th>' : "";
-    const header = `<thead><tr><th class="offer-col-category">${escapeHtml(bookingT("booking.offer.category", "Offer category"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.details", "Offer details"))}</th><th class="offer-col-qty">${escapeHtml(bookingT("booking.offer.quantity", "Quantity"))}</th>${priceHeaders}${actionHeader}</tr></thead>`;
+    const header = `<thead><tr><th class="offer-col-category">${escapeHtml(bookingT("booking.offer.category", "Offer category"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.details", "Offer details"))}</th><th class="offer-col-day">${escapeHtml(bookingT("booking.offer.day_number", "Day"))}</th><th class="offer-col-qty">${escapeHtml(bookingT("booking.offer.quantity", "Quantity"))}</th>${priceHeaders}${actionHeader}</tr></thead>`;
     const rows = offerComponents.map((component, index) => {
       const category = normalizeOfferCategory(component.category || "OTHER");
       const quantity = Math.max(1, Number(component.quantity || 1));
@@ -582,6 +615,7 @@ export function createBookingOfferComponentsModule(ctx) {
                 ${readOnly ? "" : `<button class="offer-inline-change-btn" type="button" data-offer-edit-quantity="${index}">${changeLabel}</button>`}
               </div>
             </div>`;
+      const dayNumberCellContent = `<select id="offer_component_day_number_${index}" name="offer_component_day_number_${index}" data-offer-component-day-number="${index}" ${readOnly ? "disabled" : ""}>${offerComponentDayOptions(component?.day_number)}</select>`;
       const totalPriceCell = showDualPrice
         ? `<td class="offer-col-price-total"><div class="offer-total-cell">${multiQuantityMode
             ? `<span class="offer-price-value" data-offer-component-total="${index}">${escapeHtml(componentTotalText)}</span>`
@@ -599,6 +633,7 @@ export function createBookingOfferComponentsModule(ctx) {
       return `<tr>
         <td class="offer-col-category"><div>${categoryCellContent}</div></td>
         <td class="offer-col-details">${renderOfferLocalizedDetailsField(component, index)}</td>
+        <td class="offer-col-day">${dayNumberCellContent}</td>
         <td class="offer-col-qty">${quantityCellContent}</td>
         ${priceCells}${actionCell}
       </tr>`;
@@ -628,6 +663,7 @@ export function createBookingOfferComponentsModule(ctx) {
               </div>
             </td>
             <td class="offer-col-details">${reasonCell}</td>
+            <td class="offer-col-day"><span class="offer-price-placeholder">—</span></td>
             <td class="offer-col-qty"><span class="offer-price-placeholder">—</span></td>
             ${showDualPrice
               ? `<td class="offer-col-price-single"><span class="offer-price-placeholder">—</span></td><td class="offer-col-price-total"><div class="offer-total-cell">${amountCell}</div></td>`
@@ -715,10 +751,11 @@ export function createBookingOfferComponentsModule(ctx) {
       els.offer_components_table.querySelectorAll("[data-offer-component-details]").forEach((input) => {
         input.addEventListener("change", syncOfferInputTotals);
       });
-      els.offer_components_table.querySelectorAll("[data-offer-component-quantity], [data-offer-component-unit], [data-offer-component-total-input]").forEach((input) => {
+      els.offer_components_table.querySelectorAll("[data-offer-component-day-number], [data-offer-component-quantity], [data-offer-component-unit], [data-offer-component-total-input]").forEach((input) => {
         input.addEventListener("input", () => {
           const index = Number(
-            input.getAttribute("data-offer-component-quantity")
+            input.getAttribute("data-offer-component-day-number")
+            || input.getAttribute("data-offer-component-quantity")
             || input.getAttribute("data-offer-component-unit")
             || input.getAttribute("data-offer-component-total-input")
             || "-1"
@@ -893,6 +930,7 @@ export function createBookingOfferComponentsModule(ctx) {
       const quantityInput = document.querySelector(`[data-offer-component-quantity="${index}"]`);
       const totalInput = document.querySelector(`[data-offer-component-total-input="${index}"]`);
       const unitInput = document.querySelector(`[data-offer-component-unit="${index}"]`);
+      const dayNumberInput = document.querySelector(`[data-offer-component-day-number="${index}"]`);
       const quantity = Number(quantityInput?.value || fallbackComponent?.quantity || "1");
       const displayedGrossAmount = parseMoneyInputValue(totalInput?.value ?? unitInput?.value ?? "0", currency);
       const taxRateBasisPoints = getOfferCategoryTaxRateBasisPoints(category);
@@ -918,6 +956,12 @@ export function createBookingOfferComponentsModule(ctx) {
         label,
         details: detailsPayload.text || null,
         details_i18n: detailsPayload.map,
+        ...(() => {
+          const parsedDayNumber = Number.parseInt(String(dayNumberInput?.value || "").trim(), 10);
+          return Number.isInteger(parsedDayNumber) && parsedDayNumber >= 1
+            ? { day_number: parsedDayNumber }
+            : {};
+        })(),
         quantity: Math.round(quantity),
         unit_amount_cents: Math.round(unitAmount),
         tax_rate_basis_points: taxRateBasisPoints,

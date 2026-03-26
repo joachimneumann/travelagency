@@ -9,13 +9,15 @@ Then Automatically derive the stage and write a description of the stage and las
 
 * After accepting the offer (deposit paid) generate another pdf that also includes travel documents with practical tips and emergency numbers. 
 
+* rename offer components to "Travel Components"
+
 * Point out that personal data needs to be filled
 
 * Suppliers!
 
 * Index.html: FAQ formatting off
 
-* in the model for the service add that the service can be without financial component. Add abutton next to "Add offer component" that says "no financial coverage needed". In this case, remove the not covered information fom the top
+* in the model add day to offer component.
 
 * add food preferences and allergies to persons
 

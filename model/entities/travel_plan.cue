@@ -54,6 +54,7 @@ import (
 	supplier_id?:              common.#Identifier
 	start_time?:               string
 	end_time?:                 string
+	financial_coverage_needed?: *true | bool
 	financial_coverage_status: *"not_covered" | enums.#TravelPlanFinancialCoverageStatus
 	financial_note?:           string
 	images?: [...#BookingTravelPlanServiceImage]

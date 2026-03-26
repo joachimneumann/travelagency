@@ -198,6 +198,7 @@ export function createEmptyTravelPlanService() {
     supplier_id: "",
     start_time: "",
     end_time: "",
+    financial_coverage_needed: true,
     financial_coverage_status: "not_covered",
     financial_note: "",
     financial_note_i18n: {},
@@ -248,8 +249,11 @@ export function getTravelPlanCoverageTypeLabel(coverageType) {
   return bookingT(`booking.travel_plan.coverage_type.${coverageType}`, option?.label || "Full");
 }
 
-export function getTravelPlanServiceCoverageStatus(kind, links = []) {
+export function getTravelPlanServiceCoverageStatus(kind, links = [], financialCoverageNeeded = true) {
   if (!Array.isArray(links) || links.length === 0) {
+    if (financialCoverageNeeded === false) {
+      return "not_applicable";
+    }
     return normalizeItemKind(kind) === "free_time" ? "not_applicable" : "not_covered";
   }
   if (links.some((link) => normalizeCoverageType(link?.coverage_type) === "full")) {
@@ -334,6 +338,7 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
             supplier_id: normalizeOptionalText(rawItem.supplier_id),
             start_time: timing.start_time,
             end_time: timing.end_time,
+            financial_coverage_needed: rawItem.financial_coverage_needed !== false,
             financial_note: resolveLocalizedEditorText(financialNoteMap, targetLang, ""),
             financial_note_i18n: financialNoteMap,
             financial_coverage_status: "not_covered",
@@ -380,9 +385,13 @@ export function normalizeTravelPlanDraft(plan, offerComponents = []) {
       ...day,
       services: day.services.map((item) => ({
         ...item,
+        financial_coverage_needed: (linksByItemId.get(item.id) || []).length > 0
+          ? true
+          : item.financial_coverage_needed !== false,
         financial_coverage_status: getTravelPlanServiceCoverageStatus(
           item.kind,
-          linksByItemId.get(item.id) || []
+          linksByItemId.get(item.id) || [],
+          (linksByItemId.get(item.id) || []).length > 0 ? true : item.financial_coverage_needed
         )
       }))
     })),

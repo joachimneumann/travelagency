@@ -15,6 +15,7 @@ import (
 	category:                 enums.#OfferCategory
 	label:                    string & !=""
 	details?:                 string
+	day_number?:              >0 & int
 	quantity:                 >0 & int
 	unit_amount_cents:        common.#NonNegativeMoneyAmount
 	unit_tax_amount_cents?:   common.#MoneyAmount

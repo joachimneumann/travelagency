@@ -41,6 +41,7 @@ function copyItemForImport(sourceItem, options = {}) {
     supplier_id: options.normalizeText(sourceItem?.supplier_id),
     start_time: options.normalizeText(sourceItem?.start_time),
     end_time: options.normalizeText(sourceItem?.end_time),
+    financial_coverage_needed: sourceItem?.financial_coverage_needed !== false,
     financial_coverage_status: options.normalizeText(sourceItem?.financial_coverage_status) || "not_covered",
     financial_note: includeNotes ? options.normalizeText(sourceItem?.financial_note) : null,
     financial_note_i18n: includeNotes && includeTranslations ? cloneTravelPlanLocalizedMap(sourceItem?.financial_note_i18n) : undefined,

@@ -10,6 +10,15 @@
 .booking-detail-page .travel-plan-actions #travel_plan_status {
   margin-left: 0;
   text-align: center;
+  min-height: calc(var(--font-size-body-sm) * 1.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.booking-detail-page .travel-plan-actions #travel_plan_status:empty {
+  display: inline-flex;
+  visibility: hidden;
 }
 
 #travel_plan_editor {
@@ -747,6 +756,14 @@
   margin-bottom: 0.55rem;
 }
 
+.travel-plan-links__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
 .travel-plan-links__head h4 {
   margin: 0;
   font-size: var(--font-size-body-sm);
@@ -757,6 +774,12 @@
 .travel-plan-day-add-btn {
   min-height: 36px;
   padding: 0.45rem 0.8rem;
+}
+
+.travel-plan-link-toggle-btn--active {
+  border-color: var(--neutral-line);
+  background: var(--neutral-surface-alpha);
+  color: var(--neutral-text);
 }
 
 .booking-detail-page .travel-plan-day-add-btn--positive {
@@ -867,6 +890,10 @@
   .travel-plan-images__head {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .travel-plan-links__actions {
+    justify-content: stretch;
   }
 
   .travel-plan-images__list,

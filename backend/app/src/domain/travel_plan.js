@@ -163,6 +163,10 @@ function normalizeFinancialCoverageStatus(value) {
   return TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUSES.has(normalized) ? normalized : null;
 }
 
+function normalizeFinancialCoverageNeeded(value) {
+  return value !== false;
+}
+
 function buildDefaultTravelPlan() {
   return {
     days: [],
@@ -171,8 +175,11 @@ function buildDefaultTravelPlan() {
   };
 }
 
-function buildDerivedCoverageStatus(kind, links) {
+function buildDerivedCoverageStatus(kind, links, financialCoverageNeeded = true) {
   if (!Array.isArray(links) || links.length === 0) {
+    if (financialCoverageNeeded === false) {
+      return "not_applicable";
+    }
     return kind === "free_time" ? "not_applicable" : "not_covered";
   }
   if (links.some((link) => link.coverage_type === "full")) {
@@ -266,6 +273,7 @@ function normalizeTravelPlanDays(days, options = {}) {
           supplier_id: normalizeOptionalText(rawItem.supplier_id),
           start_time: timing.start_time,
           end_time: timing.end_time,
+          financial_coverage_needed: normalizeFinancialCoverageNeeded(rawItem.financial_coverage_needed),
           financial_coverage_status: normalizeFinancialCoverageStatus(rawItem.financial_coverage_status),
           financial_note: resolveLocalizedText(financial_note_i18n, flatLang) || null,
           financial_note_i18n,
@@ -346,9 +354,13 @@ export function createTravelPlanHelpers() {
       ...day,
       services: day.services.map((item) => {
         const itemLinks = linksByItemId.get(item.id) || [];
+        const financialCoverageNeeded = itemLinks.length > 0
+          ? true
+          : item.financial_coverage_needed;
         return {
           ...item,
-          financial_coverage_status: buildDerivedCoverageStatus(item.kind, itemLinks)
+          financial_coverage_needed: financialCoverageNeeded !== false,
+          financial_coverage_status: buildDerivedCoverageStatus(item.kind, itemLinks, financialCoverageNeeded)
         };
       })
     }));
