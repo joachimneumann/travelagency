@@ -57,9 +57,12 @@ export function createBackendServices({
   const atpStaffDirectory = createAtpStaffDirectory({
     dataPath: collections.atpStaffProfilesPath,
     photosDir: collections.atpStaffPhotosDir,
+    legacyDataPath: collections.legacyRepoAtpStaffProfilesPath,
+    legacyPhotosDir: collections.legacyRepoAtpStaffPhotosDir,
     keycloakUsersSnapshotPath: collections.keycloakUserSnapshotPath,
     keycloakDirectory,
-    writeQueueRef
+    writeQueueRef,
+    staffRoleNames: [runtime.appRoles.ATP_STAFF, runtime.appRoles.ADMIN]
   });
 
   atpStaffDirectory.primeLocalKeycloakSnapshot().catch(() => {});
@@ -98,7 +101,7 @@ export function createBackendServices({
     buildBookingPricingReadModel: pricingHelpers.buildBookingPricingReadModel,
     buildBookingOfferReadModel: pricingHelpers.buildBookingOfferReadModel,
     buildBookingOfferPaymentTermsReadModel: pricingHelpers.buildBookingOfferPaymentTermsReadModel,
-    listAssignableKeycloakUsers: atpStaffDirectory.listCachedAssignableUsers,
+    listAssignableKeycloakUsers: atpStaffDirectory.listCachedEligibleStaffUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     resolveAssignedAtpStaffProfile: atpStaffDirectory.resolveAssignedStaffProfile,
     listBookingTravelPlanPdfs: travelPlanPdfArtifacts.listBookingTravelPlanPdfs,

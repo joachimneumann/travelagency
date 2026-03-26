@@ -32,12 +32,18 @@ export const GENERATED_OFFERS_DIR = path.join(PDFS_ROOT, "generated_offers");
 export const TRAVEL_PLAN_PDFS_DIR = path.join(PDFS_ROOT, "travel_plans");
 export const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 export const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
-export const ATP_STAFF_PROFILES_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.ATP_STAFF_PROFILES_PATH || path.join("content", "atp_staff", "staff.json"))
+export const LEGACY_REPO_ATP_STAFF_ROOT = resolveConfigPathFromRepoRoot(path.join("content", "atp_staff"));
+export const ATP_STAFF_ROOT = path.resolve(
+  normalizeText(process.env.ATP_STAFF_ROOT || path.join(CONTENT_ROOT, "atp_staff"))
 );
-export const ATP_STAFF_PHOTOS_DIR = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.ATP_STAFF_PHOTOS_DIR || path.join("content", "atp_staff", "photos"))
+export const ATP_STAFF_PROFILES_PATH = path.resolve(
+  normalizeText(process.env.ATP_STAFF_PROFILES_PATH || path.join(ATP_STAFF_ROOT, "staff.json"))
 );
+export const ATP_STAFF_PHOTOS_DIR = path.resolve(
+  normalizeText(process.env.ATP_STAFF_PHOTOS_DIR || path.join(ATP_STAFF_ROOT, "photos"))
+);
+export const LEGACY_REPO_ATP_STAFF_PROFILES_PATH = path.join(LEGACY_REPO_ATP_STAFF_ROOT, "staff.json");
+export const LEGACY_REPO_ATP_STAFF_PHOTOS_DIR = path.join(LEGACY_REPO_ATP_STAFF_ROOT, "photos");
 export const KEYCLOAK_USER_SNAPSHOT_PATH = path.join(DATA_ROOT, "keycloak_users_snapshot.json");
 export const COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_reference_info.json");
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
@@ -246,8 +252,11 @@ export const RUNTIME_PATHS = Object.freeze({
   travelPlanPdfsDir: TRAVEL_PLAN_PDFS_DIR,
   bookingImagesDir: BOOKING_IMAGES_DIR,
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
+  atpStaffRoot: ATP_STAFF_ROOT,
   atpStaffProfilesPath: ATP_STAFF_PROFILES_PATH,
   atpStaffPhotosDir: ATP_STAFF_PHOTOS_DIR,
+  legacyRepoAtpStaffProfilesPath: LEGACY_REPO_ATP_STAFF_PROFILES_PATH,
+  legacyRepoAtpStaffPhotosDir: LEGACY_REPO_ATP_STAFF_PHOTOS_DIR,
   keycloakUserSnapshotPath: KEYCLOAK_USER_SNAPSHOT_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,

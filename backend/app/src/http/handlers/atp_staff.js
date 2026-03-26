@@ -64,11 +64,12 @@ function buildUserResponse(user) {
 export function createAtpStaffHandlers(deps) {
   const {
     getPrincipal,
+    canViewAtpStaffProfiles,
     canEditAtpStaffProfiles,
     readBodyJson,
     sendJson,
-    sendFileWithCache,
-    resolveAtpStaffPhotoDiskPath,
+    listAtpStaffDirectoryEntries,
+    listPublicAtpStaffProfiles,
     buildAtpStaffDirectoryEntryByUsername,
     updateAtpStaffProfileByUsername,
     setAtpStaffPictureRefByUsername,
@@ -80,8 +81,39 @@ export function createAtpStaffHandlers(deps) {
     rm,
     TEMP_UPLOAD_DIR,
     ATP_STAFF_PHOTOS_DIR,
+    resolveAtpStaffPhotoDiskPath,
+    sendFileWithCache,
     randomUUID
   } = deps;
+
+  async function handleListAtpStaffDirectoryEntries(req, res) {
+    const principal = getPrincipal(req);
+    if (!canViewAtpStaffProfiles(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    try {
+      const items = await listAtpStaffDirectoryEntries();
+      sendJson(res, 200, {
+        items,
+        total: items.length
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: String(error?.message || error || "Could not load ATP staff profiles") });
+    }
+  }
+
+  async function handleListPublicAtpStaffProfiles(_req, res) {
+    try {
+      const items = await listPublicAtpStaffProfiles();
+      sendJson(res, 200, {
+        items,
+        total: items.length
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: String(error?.message || error || "Could not load ATP staff team") });
+    }
+  }
 
   async function handlePublicAtpStaffPhoto(req, res, [rawRelativePath]) {
     const absolutePath = resolveAtpStaffPhotoDiskPath(rawRelativePath);
@@ -313,7 +345,7 @@ export function createAtpStaffHandlers(deps) {
       await rm(tempInputPath, { force: true });
     }
 
-    const updated = await setAtpStaffPictureRefByUsername(username, `/public/v1/atp-staff-photos/${outputName}`);
+    const updated = await setAtpStaffPictureRefByUsername(username, `/content/atp_staff/photos/${outputName}`);
     if (!updated) {
       sendJson(res, 404, { error: "Keycloak user not found" });
       return;
@@ -352,6 +384,8 @@ export function createAtpStaffHandlers(deps) {
   }
 
   return {
+    handleListAtpStaffDirectoryEntries,
+    handleListPublicAtpStaffProfiles,
     handlePublicAtpStaffPhoto,
     handlePatchAtpStaffProfile,
     handleTranslateAtpStaffProfileFields,

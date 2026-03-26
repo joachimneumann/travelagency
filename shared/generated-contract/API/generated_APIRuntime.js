@@ -265,6 +265,17 @@
         ]
       },
       {
+        key: "public_atp_staff_team",
+        path: "/public/v1/team",
+        method: "GET",
+        authenticated: false,
+        requestType: null,
+        responseType: "PublicAtpStaffTeamResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "bookings",
         path: "/api/v1/bookings",
         method: "GET",
@@ -868,12 +879,23 @@
         ]
       },
       {
+        key: "staff_profiles",
+        path: "/api/v1/staff-profiles",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "KeycloakUserStaffProfileListResponse",
+        parameters: [
+
+        ]
+      },
+      {
         key: "keycloak_user_staff_profile_update",
         path: "/api/v1/keycloak_users/{username}/staff-profile",
         method: "PATCH",
         authenticated: true,
         requestType: "AtpStaffProfileUpdateRequest",
-        responseType: "KeycloakUserDirectoryEntryResponse",
+        responseType: "KeycloakUserStaffProfileEntryResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
@@ -895,7 +917,7 @@
         method: "POST",
         authenticated: true,
         requestType: "AtpStaffPhotoUploadRequest",
-        responseType: "KeycloakUserDirectoryEntryResponse",
+        responseType: "KeycloakUserStaffProfileEntryResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]
@@ -906,7 +928,7 @@
         method: "DELETE",
         authenticated: true,
         requestType: null,
-        responseType: "KeycloakUserDirectoryEntryResponse",
+        responseType: "KeycloakUserStaffProfileEntryResponse",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
         ]

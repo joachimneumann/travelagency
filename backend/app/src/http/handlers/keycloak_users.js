@@ -2,8 +2,8 @@ export function createKeycloakUserHandlers(deps) {
   const {
     getPrincipal,
     canViewKeycloakUsers,
-    listAssignableStaffUsers,
-    listCachedAssignableStaffUsers,
+    listAssignableUsers,
+    listCachedAssignableUsers,
     keycloakDisplayName,
     sendJson
   } = deps;
@@ -14,7 +14,6 @@ export function createKeycloakUserHandlers(deps) {
       name: keycloakDisplayName(user) || null,
       username: user.username || null,
       active: user.active !== false,
-      staff_profile: user.staff_profile || null,
       realm_roles: Array.isArray(user.realm_roles) ? user.realm_roles : [],
       client_roles: Array.isArray(user.client_roles) ? user.client_roles : []
     };
@@ -27,14 +26,14 @@ export function createKeycloakUserHandlers(deps) {
       return;
     }
     try {
-      const items = await listAssignableStaffUsers();
+      const items = await listAssignableUsers();
       sendJson(res, 200, {
         items: items.map(toKeycloakUserResponse),
         total: items.length
       });
     } catch (error) {
       const detail = String(error?.message || error || "");
-      const cachedItems = await listCachedAssignableStaffUsers().catch(() => []);
+      const cachedItems = await listCachedAssignableUsers().catch(() => []);
       const warningSuffix = cachedItems.length ? " Showing cached users from the last successful sync." : "";
       sendJson(res, 200, {
         items: cachedItems.map(toKeycloakUserResponse),

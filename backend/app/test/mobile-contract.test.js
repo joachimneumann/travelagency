@@ -45,7 +45,7 @@ const KEYCLOAK_USERS = [
 ];
 const KEYCLOAK_ROLE_MAP = {
   "kc-admin": { realm: [], client: ["atp_admin"] },
-  "kc-joachim": { realm: [], client: ["atp_manager"] },
+  "kc-joachim": { realm: [], client: ["atp_admin"] },
   "kc-staff": { realm: [], client: ["atp_staff"] },
   "kc-tour-editor": { realm: [], client: ["atp_tour_editor"] },
   "kc-accountant": { realm: [], client: ["atp_accountant"] },
@@ -2357,6 +2357,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   const guideProfileUpdatePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const guideFullName = "Joachim Carl Neumann";
   const guideFriendlyShortName = "Joachim";
+  const guideQualification = "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort.";
 
   const detailBefore = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
@@ -2372,7 +2373,9 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
       body: {
         full_name: guideFullName,
         friendly_short_name: guideFriendlyShortName,
-        languages: ["de", "en", "vi"]
+        languages: ["de", "en", "vi"],
+        qualification: guideQualification,
+        qualification_i18n: [{ lang: "en", value: guideQualification }]
       }
     }
   );
@@ -4436,20 +4439,15 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   const admin = result.body.items.find((item) => item.username === "admin");
   assert.deepEqual(admin.realm_roles, []);
   assert.deepEqual(admin.client_roles, ["atp_admin"]);
-  assert.equal(admin.staff_profile.username, "admin");
-  assert.equal(admin.staff_profile.full_name, "Admin User");
-  assert.equal(admin.staff_profile.friendly_short_name, "Admin");
-  assert.ok(Array.isArray(admin.staff_profile.languages));
-  assert.ok(Array.isArray(admin.staff_profile.destinations));
-  assert.ok(String(admin.staff_profile.picture_ref || "").includes("/public/v1/atp-staff-photos/admin.svg"));
+  assert.equal(admin.name, "Admin User");
   const accountant = result.body.items.find((item) => item.username === "accountant");
   assert.deepEqual(accountant.realm_roles, []);
   assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
-  assert.equal(accountant.staff_profile.username, "accountant");
+  assert.equal(accountant.name, "Accountant User");
   const tourEditor = result.body.items.find((item) => item.username === "tour-editor");
   assert.deepEqual(tourEditor.realm_roles, []);
   assert.deepEqual(tourEditor.client_roles, ["atp_tour_editor"]);
-  assert.equal(tourEditor.staff_profile.username, "tour-editor");
+  assert.equal(tourEditor.username, "tour-editor");
 });
 
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
@@ -4518,9 +4516,8 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
 
   const listResult = await requestJson(endpointPath("keycloak_users"), apiHeaders("atp_admin", "admin", "kc-admin"));
   const updated = listResult.body.items.find((item) => item.username === "joachim");
-  assert.equal(updated.staff_profile.full_name, fullName);
-  assert.equal(updated.staff_profile.friendly_short_name, friendlyShortName);
-  assert.equal(updated.staff_profile.qualification, qualificationEn);
+  assert.equal(updated.name, "Joachim Neumann");
+  assert.equal(updated.staff_profile, undefined);
 });
 
 test("admin can translate ATP staff profile text from English to Malay", async () => {

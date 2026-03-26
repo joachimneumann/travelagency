@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-26T05:12:12Z
+# 2026-03-26T06:36:01Z
 
 ---
 openapi: 3.1.0
@@ -7382,6 +7382,21 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TourList"
+  "/public/v1/team":
+    get:
+      operationId: public_atp_staff_team
+      summary: Public Atp Staff Team
+      tags:
+      - Public
+      security: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicAtpStaffTeamResponse"
   "/api/v1/bookings":
     get:
       operationId: bookings
@@ -9562,6 +9577,34 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/staff-profiles":
+    get:
+      operationId: staff_profiles
+      summary: Staff Profiles
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/KeycloakUserStaffProfileListResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/keycloak_users/{username}/staff-profile":
     patch:
       operationId: keycloak_user_staff_profile_update
@@ -9588,7 +9631,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+                "$ref": "#/components/schemas/KeycloakUserStaffProfileEntryResponse"
         '401':
           description: Unauthorized
           content:
@@ -9672,13 +9715,13 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+                "$ref": "#/components/schemas/KeycloakUserStaffProfileEntryResponse"
         '201':
           description: Created
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+                "$ref": "#/components/schemas/KeycloakUserStaffProfileEntryResponse"
         '401':
           description: Unauthorized
           content:
@@ -9710,7 +9753,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/KeycloakUserDirectoryEntryResponse"
+                "$ref": "#/components/schemas/KeycloakUserStaffProfileEntryResponse"
         '401':
           description: Unauthorized
           content:

@@ -32,6 +32,8 @@ case "booking_person_traveler_details_link":
   return RequestFactory.bookingPersonTravelerDetailsLinkRequest(options);
 case "public_tours":
   return RequestFactory.publicToursRequest(options);
+case "public_atp_staff_team":
+  return RequestFactory.publicAtpStaffTeamRequest(options);
 case "bookings":
   return RequestFactory.bookingsRequest(options);
 case "booking_detail":
@@ -136,6 +138,8 @@ case "invoice_pdf":
   return RequestFactory.invoicePdfRequest(options);
 case "keycloak_users":
   return RequestFactory.keycloakUsersRequest(options);
+case "staff_profiles":
+  return RequestFactory.staffProfilesRequest(options);
 case "keycloak_user_staff_profile_update":
   return RequestFactory.keycloakUserStaffProfileUpdateRequest(options);
 case "keycloak_user_staff_profile_translate_fields":

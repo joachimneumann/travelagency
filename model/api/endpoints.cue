@@ -191,6 +191,14 @@ package api
 		responseType:  "TourList"
 	},
 	{
+		key:           "public_atp_staff_team"
+		path:          "/public/v1/team"
+		method:        "GET"
+		tag:           "Public"
+		authenticated: false
+		responseType:  "PublicAtpStaffTeamResponse"
+	},
+	{
 		key:           "bookings"
 		path:          "/api/v1/bookings"
 		method:        "GET"
@@ -1077,13 +1085,21 @@ package api
 		responseType:  "KeycloakUserListResponse"
 	},
 	{
+		key:           "staff_profiles"
+		path:          "/api/v1/staff-profiles"
+		method:        "GET"
+		tag:           "Auth"
+		authenticated: true
+		responseType:  "KeycloakUserStaffProfileListResponse"
+	},
+	{
 		key:           "keycloak_user_staff_profile_update"
 		path:          "/api/v1/keycloak_users/{username}/staff-profile"
 		method:        "PATCH"
 		tag:           "Auth"
 		authenticated: true
 		requestType:   "AtpStaffProfileUpdateRequest"
-		responseType:  "KeycloakUserDirectoryEntryResponse"
+		responseType:  "KeycloakUserStaffProfileEntryResponse"
 		parameters: [{
 			name:     "username"
 			location: "path"
@@ -1113,7 +1129,7 @@ package api
 		tag:           "Auth"
 		authenticated: true
 		requestType:   "AtpStaffPhotoUploadRequest"
-		responseType:  "KeycloakUserDirectoryEntryResponse"
+		responseType:  "KeycloakUserStaffProfileEntryResponse"
 		parameters: [{
 			name:     "username"
 			location: "path"
@@ -1127,7 +1143,7 @@ package api
 		method:        "DELETE"
 		tag:           "Auth"
 		authenticated: true
-		responseType:  "KeycloakUserDirectoryEntryResponse"
+		responseType:  "KeycloakUserStaffProfileEntryResponse"
 		parameters: [{
 			name:     "username"
 			location: "path"

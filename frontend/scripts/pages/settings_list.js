@@ -5,7 +5,6 @@ import {
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
-  keycloakUsersRequest,
   keycloakUserStaffProfileUpdateRequest,
   keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
@@ -28,6 +27,7 @@ import {
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
+const STAFF_DIRECTORY_API_URL = `${apiOrigin}/api/v1/staff-profiles`;
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -64,6 +64,7 @@ const GENERATED_ROLE_LOOKUP = Object.freeze(
 
 const ROLES = Object.freeze({
   ADMIN: GENERATED_ROLE_LOOKUP.ADMIN,
+  STAFF: GENERATED_ROLE_LOOKUP.STAFF,
   MANAGER: GENERATED_ROLE_LOOKUP.MANAGER,
   ACCOUNTANT: GENERATED_ROLE_LOOKUP.ACCOUNTANT
 });
@@ -107,6 +108,7 @@ const state = {
     canEditStaffProfiles: false
   },
   keycloakUsers: [],
+  staffProfilesByUsername: {},
   destinationOptions: [],
   selectedUsername: "",
   editorSaving: false,
@@ -130,6 +132,26 @@ function refreshBackendNavElements() {
 
 function hasAnyRoleInList(roleList, ...roles) {
   return roles.some((role) => roleList.includes(role));
+}
+
+function collectKeycloakRoleNames(user) {
+  return [
+    ...(Array.isArray(user?.realm_roles) ? user.realm_roles : []),
+    ...(Array.isArray(user?.client_roles) ? user.client_roles : [])
+  ].map((role) => normalizeText(role)).filter(Boolean);
+}
+
+function isEligibleAtpStaffUser(user) {
+  const roles = collectKeycloakRoleNames(user);
+  return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.STAFF);
+}
+
+function resolveStaffPhotoUrl(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  if (normalized.startsWith("/public/")) return `${apiOrigin}${normalized}`;
+  return normalized;
 }
 
 function showError(message) {
@@ -199,7 +221,7 @@ async function init() {
   updateStatusCopy();
   if (state.permissions.canReadSettings) {
     await Promise.all([
-      loadKeycloakUsers(),
+      loadStaffDirectoryEntries(),
       state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve()
     ]);
   } else {
@@ -267,6 +289,40 @@ function updateStatusCopy() {
     : backendT("backend.users.status", "Users are managed in Keycloak.");
 }
 
+function localizedEntriesFromProfileValue(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => ({
+        lang: normalizeText(entry?.lang).toLowerCase(),
+        value: normalizeText(entry?.value)
+      }))
+      .filter((entry) => Boolean(entry.lang && entry.value));
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value)
+      .map(([lang, text]) => ({
+        lang: normalizeText(lang).toLowerCase(),
+        value: normalizeText(text)
+      }))
+      .filter((entry) => Boolean(entry.lang && entry.value));
+  }
+  const normalized = normalizeText(value);
+  return normalized ? [{ lang: "en", value: normalized }] : [];
+}
+
+function englishTextFromLocalizedEntries(entries) {
+  const normalizedEntries = localizedEntriesFromProfileValue(entries);
+  return normalizeText(
+    normalizedEntries.find((entry) => entry.lang === "en")?.value
+    || normalizedEntries[0]?.value
+  );
+}
+
+function getStaffProfileForUsername(rawUsername) {
+  const username = normalizeText(rawUsername).toLowerCase();
+  return username ? state.staffProfilesByUsername[username] || null : null;
+}
+
 async function loadDestinationOptions() {
   try {
     const request = toursRequest({
@@ -290,16 +346,27 @@ async function loadDestinationOptions() {
   renderDestinationChecklist();
 }
 
-async function loadKeycloakUsers() {
+async function loadStaffDirectoryEntries() {
   clearError();
-  const payload = await fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url);
+  const payload = await fetchApi(STAFF_DIRECTORY_API_URL);
   if (!payload) return;
-  state.keycloakUsers = Array.isArray(payload.items) ? payload.items : [];
-  if (payload.warning && els.staffStatus) {
-    els.staffStatus.textContent = payload.warning;
-  } else {
-    updateStatusCopy();
-  }
+  const items = (Array.isArray(payload.items) ? payload.items : []).filter((user) => isEligibleAtpStaffUser(user));
+  state.keycloakUsers = items.map((user) => ({
+    id: normalizeText(user?.id),
+    username: normalizeText(user?.username),
+    name: normalizeText(user?.name),
+    active: user?.active !== false,
+    realm_roles: Array.isArray(user?.realm_roles) ? user.realm_roles : [],
+    client_roles: Array.isArray(user?.client_roles) ? user.client_roles : []
+  }));
+  state.staffProfilesByUsername = Object.fromEntries(
+    items
+      .map((user) => [normalizeText(user?.username).toLowerCase(), user?.staff_profile && typeof user.staff_profile === "object"
+        ? { ...user.staff_profile, picture_ref: resolveStaffPhotoUrl(user.staff_profile.picture_ref) }
+        : null])
+      .filter(([username, profile]) => Boolean(username && profile))
+  );
+  updateStatusCopy();
   renderStaff(state.keycloakUsers);
   renderEditor();
 }
@@ -316,9 +383,9 @@ function renderStaff(items) {
 
   const rows = items
     .map((staff) => {
-      const profile = staff?.staff_profile || {};
       const username = normalizeText(staff?.username);
-      const photoRef = normalizeText(profile?.picture_ref);
+      const profile = getStaffProfileForUsername(username) || {};
+      const photoRef = resolveStaffPhotoUrl(profile?.picture_ref);
       const languages = formatLanguageList(profile?.languages);
       const destinations = formatDestinationList(profile?.destinations);
       const isSelected = username && username === state.selectedUsername;
@@ -356,7 +423,7 @@ function getSelectedUser() {
 }
 
 function cloneEditorProfile(user) {
-  const profile = user?.staff_profile || {};
+  const profile = getStaffProfileForUsername(user?.username) || {};
   const positionByLang = Object.fromEntries(
     (Array.isArray(profile?.position_i18n) ? profile.position_i18n : [])
       .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
@@ -494,11 +561,11 @@ function renderEditor() {
     return;
   }
 
-  const profile = user?.staff_profile || {};
+  const profile = getStaffProfileForUsername(user?.username) || {};
   els.staffEditorPanel.hidden = false;
   if (els.staffEditorPhoto) {
     els.staffEditorPhoto.src = normalizeText(state.editor?.pendingPhoto?.previewSrc)
-      || normalizeText(profile?.picture_ref)
+      || resolveStaffPhotoUrl(profile?.picture_ref)
       || "assets/img/profile_person.png";
     els.staffEditorPhoto.alt = normalizeText(user?.name) || normalizeText(user?.username) || "ATP staff";
   }
@@ -1235,7 +1302,21 @@ async function handleStaffPhotoSelected(event) {
 function applyUpdatedUser(updatedUser) {
   const username = normalizeText(updatedUser?.username);
   if (!username) return;
-  state.keycloakUsers = state.keycloakUsers.map((user) => (normalizeText(user?.username) === username ? updatedUser : user));
+  if (updatedUser?.staff_profile && typeof updatedUser.staff_profile === "object") {
+    state.staffProfilesByUsername[username.toLowerCase()] = {
+      ...updatedUser.staff_profile,
+      picture_ref: resolveStaffPhotoUrl(updatedUser.staff_profile.picture_ref)
+    };
+  }
+  const normalizedUser = {
+    id: normalizeText(updatedUser?.id),
+    username,
+    name: normalizeText(updatedUser?.name),
+    active: updatedUser?.active !== false,
+    realm_roles: Array.isArray(updatedUser?.realm_roles) ? updatedUser.realm_roles : [],
+    client_roles: Array.isArray(updatedUser?.client_roles) ? updatedUser.client_roles : []
+  };
+  state.keycloakUsers = state.keycloakUsers.map((user) => (normalizeText(user?.username) === username ? normalizedUser : user));
   const currentUser = getSelectedUser();
   if (currentUser) {
     state.editor = cloneEditorProfile(currentUser);

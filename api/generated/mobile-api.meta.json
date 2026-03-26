@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-26T05:12:12Z",
+  "generatedAt": "2026-03-26T06:36:01Z",
   "languages": [
     "en",
     "ar",
@@ -390,6 +390,14 @@
       "tag": "Public",
       "authenticated": false,
       "responseType": "TourList"
+    },
+    {
+      "key": "public_atp_staff_team",
+      "path": "/public/v1/team",
+      "method": "GET",
+      "tag": "Public",
+      "authenticated": false,
+      "responseType": "PublicAtpStaffTeamResponse"
     },
     {
       "key": "bookings",
@@ -1403,13 +1411,21 @@
       "responseType": "KeycloakUserListResponse"
     },
     {
+      "key": "staff_profiles",
+      "path": "/api/v1/staff-profiles",
+      "method": "GET",
+      "tag": "Auth",
+      "authenticated": true,
+      "responseType": "KeycloakUserStaffProfileListResponse"
+    },
+    {
       "key": "keycloak_user_staff_profile_update",
       "path": "/api/v1/keycloak_users/{username}/staff-profile",
       "method": "PATCH",
       "tag": "Auth",
       "authenticated": true,
       "requestType": "AtpStaffProfileUpdateRequest",
-      "responseType": "KeycloakUserDirectoryEntryResponse",
+      "responseType": "KeycloakUserStaffProfileEntryResponse",
       "parameters": [
         {
           "name": "username",
@@ -1443,7 +1459,7 @@
       "tag": "Auth",
       "authenticated": true,
       "requestType": "AtpStaffPhotoUploadRequest",
-      "responseType": "KeycloakUserDirectoryEntryResponse",
+      "responseType": "KeycloakUserStaffProfileEntryResponse",
       "parameters": [
         {
           "name": "username",
@@ -1459,7 +1475,7 @@
       "method": "DELETE",
       "tag": "Auth",
       "authenticated": true,
-      "responseType": "KeycloakUserDirectoryEntryResponse",
+      "responseType": "KeycloakUserStaffProfileEntryResponse",
       "parameters": [
         {
           "name": "username",

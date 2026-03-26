@@ -13,7 +13,6 @@ import (
 	username?: string
 	realm_roles?: [...string]
 	client_roles?: [...string]
-	staff_profile?: entities.#AtpStaffProfile
 }
 
 #KeycloakUserListResponse: {
@@ -21,8 +20,28 @@ import (
 	total: >=0 & int
 }
 
-#KeycloakUserDirectoryEntryResponse: {
-	user: #KeycloakUserDirectoryEntry
+#KeycloakUserStaffProfileEntry: {
+	id:        common.#Identifier
+	name:      string
+	active?:   bool
+	username?: string
+	realm_roles?: [...string]
+	client_roles?: [...string]
+	staff_profile: entities.#AtpStaffProfile
+}
+
+#KeycloakUserStaffProfileEntryResponse: {
+	user: #KeycloakUserStaffProfileEntry
+}
+
+#KeycloakUserStaffProfileListResponse: {
+	items: [...#KeycloakUserStaffProfileEntry]
+	total: >=0 & int
+}
+
+#PublicAtpStaffTeamResponse: {
+	items: [...entities.#AtpStaffProfile]
+	total: >=0 & int
 }
 
 #BookingDeleteResponse: {

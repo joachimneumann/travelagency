@@ -1,43 +1,10 @@
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../domain/booking_content_i18n.js";
 import { normalizeText } from "./text.js";
-
-const DEFAULT_PROFILE_BLUEPRINTS = Object.freeze({
-  "admin": {
-    languages: ["en", "vi"],
-    destinations: ["VN", "TH", "KH", "LA"],
-    qualification: {
-      en: "Oversees ATP trip operations across Vietnam, Thailand, Cambodia, and Laos with a strong focus on realistic pacing, reliable handovers, and calm guest support when plans need to shift."
-    }
-  },
-  "joachim": {
-    languages: ["de", "en", "vi"],
-    destinations: ["VN", "TH", "KH", "LA"],
-    qualification: {
-      en: "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort, recovery time, airport handovers, and multi-country routing for couples and families.",
-      de: "Spezialisiert auf ruhig getaktete Südostasien-Reisen mit besonderem Blick für Komfort, Erholungszeit, Flughafenübergänge und länderübergreifende Routen für Paare und Familien."
-    }
-  },
-  "staff": {
-    languages: ["en", "vi"],
-    destinations: ["VN", "TH", "KH", "LA"],
-    qualification: {
-      en: "Experienced in shaping beach, wellness, and family-friendly routes with practical transfer timing, light daily pacing, and dependable on-trip coordination.",
-      vi: "Có kinh nghiệm xây dựng các hành trình biển, wellness và phù hợp gia đình với thời gian di chuyển hợp lý, nhịp độ nhẹ nhàng và điều phối đáng tin cậy trong suốt chuyến đi."
-    }
-  },
-  "accountant": {
-    languages: ["en", "vi"],
-    destinations: ["VN", "TH", "KH", "LA"],
-    qualification: {
-      en: "Supports guests with clear pre-arrival coordination, payment follow-up, and practical next-step communication so the overall journey feels smooth and well prepared."
-    }
-  }
-});
 
 function unique(items) {
   return Array.from(new Set((Array.isArray(items) ? items : []).filter(Boolean)));
@@ -140,10 +107,13 @@ function defaultPictureFilenameForUsername(username) {
 function pictureFilenameFromStoredValue(value, username = "") {
   const normalized = normalizeText(value);
   if (!normalized) return defaultPictureFilenameForUsername(username);
-  const publicMatch = normalized.match(/\/public\/v1\/atp-staff-photos\/([^/?#]+)$/i);
-  const candidate = publicMatch
-    ? decodeURIComponent(publicMatch[1])
-    : path.basename(normalized);
+  const staticMatch = normalized.match(/\/content\/atp_staff\/photos\/([^/?#]+)$/i);
+  const legacyPublicMatch = normalized.match(/\/public\/v1\/atp-staff-photos\/([^/?#]+)$/i);
+  const candidate = staticMatch
+    ? decodeURIComponent(staticMatch[1])
+    : legacyPublicMatch
+      ? decodeURIComponent(legacyPublicMatch[1])
+      : path.basename(normalized);
   return normalizeText(candidate) || defaultPictureFilenameForUsername(username);
 }
 
@@ -243,16 +213,6 @@ function buildAvatarSvg(name, username) {
 `;
 }
 
-function genericProfileBlueprint(user) {
-  return {
-    languages: ["en", "vi"],
-    destinations: ["VN", "TH", "KH", "LA"],
-    qualification: {
-      en: `${defaultDisplayNameForUser(user)} helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.`
-    }
-  };
-}
-
 function sortProfiles(items) {
   return [...(Array.isArray(items) ? items : [])].sort((left, right) => {
     const leftName = normalizeText(left?.name) || left?.username || "";
@@ -265,6 +225,14 @@ function normalizeRoleNames(items) {
   return unique((Array.isArray(items) ? items : []).map((item) => normalizeText(item)).filter(Boolean));
 }
 
+function collectRoleNames(user) {
+  return normalizeRoleNames([
+    ...(Array.isArray(user?.roles) ? user.roles : []),
+    ...(Array.isArray(user?.realm_roles) ? user.realm_roles : []),
+    ...(Array.isArray(user?.client_roles) ? user.client_roles : [])
+  ]);
+}
+
 function normalizeKeycloakUserSnapshotEntry(user) {
   const id = normalizeText(user?.id);
   if (!id) return null;
@@ -274,7 +242,9 @@ function normalizeKeycloakUserSnapshotEntry(user) {
     ...(username ? { username } : {}),
     ...(normalizeText(user?.name) ? { name: normalizeText(user.name) } : {}),
     active: user?.active !== false,
-    roles: normalizeRoleNames(user?.roles)
+    roles: collectRoleNames(user),
+    realm_roles: normalizeRoleNames(user?.realm_roles),
+    client_roles: normalizeRoleNames(user?.client_roles)
   };
 }
 
@@ -286,28 +256,26 @@ function sortKeycloakUserSnapshotItems(items) {
   });
 }
 
+function isEligibleStaffUser(user, allowedStaffRoleNames) {
+  const allowed = allowedStaffRoleNames instanceof Set
+    ? allowedStaffRoleNames
+    : new Set(normalizeRoleNames(allowedStaffRoleNames));
+  if (!allowed.size) return false;
+  return collectRoleNames(user).some((role) => allowed.has(role));
+}
+
 function defaultStoredProfileForUser(user) {
   const username = normalizeText(user?.username).toLowerCase();
-  const blueprint = DEFAULT_PROFILE_BLUEPRINTS[username] || genericProfileBlueprint(user);
   return normalizeStoredProfile({
     username,
     name: defaultDisplayNameForUser(user),
     full_name: defaultFullNameForUser(user),
     friendly_short_name: defaultFriendlyShortNameForUser(user),
     picture: defaultPictureFilenameForUsername(username),
-    languages: blueprint.languages,
-    destinations: blueprint.destinations,
-    qualification: blueprint.qualification
+    languages: [],
+    destinations: [],
+    appears_in_team_web_page: true
   });
-}
-
-function seedProfiles() {
-  return [
-    defaultStoredProfileForUser({ username: "admin", name: "Admin User" }),
-    defaultStoredProfileForUser({ username: "joachim", name: "Joachim Neumann" }),
-    defaultStoredProfileForUser({ username: "staff", name: "Staff User" }),
-    defaultStoredProfileForUser({ username: "accountant", name: "Accountant User" })
-  ];
 }
 
 async function fileExists(filePath) {
@@ -329,11 +297,8 @@ function mergeStoredProfileWithUser(profile, user) {
     name: defaultDisplayNameForUser(user || normalizedProfile || {})
   });
   const normalizedQualification = normalizeQualificationMap(normalizedProfile?.qualification);
-  const defaultQualification = normalizeQualificationMap(defaultProfile?.qualification);
   const normalizedPosition = normalizePositionMap(normalizedProfile?.position);
-  const defaultPosition = normalizePositionMap(defaultProfile?.position);
   const normalizedDescription = normalizeDescriptionMap(normalizedProfile?.description);
-  const defaultDescription = normalizeDescriptionMap(defaultProfile?.description);
   const resolvedFullName = normalizeText(normalizedProfile?.full_name)
     || normalizeText(defaultProfile?.full_name)
     || normalizeText(user?.name)
@@ -347,21 +312,17 @@ function mergeStoredProfileWithUser(profile, user) {
     username,
     name: normalizeText(user?.name) || normalizeText(normalizedProfile?.name) || defaultProfile.name,
     full_name: resolvedFullName,
-    position: Object.keys(normalizedPosition).length ? normalizedPosition : defaultPosition,
+    position: Object.keys(normalizedPosition).length ? normalizedPosition : {},
     friendly_short_name: resolvedFriendlyShortName,
     picture: pictureFilenameFromStoredValue(normalizedProfile?.picture, username) || defaultProfile.picture,
-    languages: normalizeLanguageCodes(normalizedProfile?.languages).length
-      ? normalizeLanguageCodes(normalizedProfile.languages)
-      : defaultProfile.languages,
-    destinations: normalizeCountryCodes(normalizedProfile?.destinations).length
-      ? normalizeCountryCodes(normalizedProfile.destinations)
-      : defaultProfile.destinations,
+    languages: normalizeLanguageCodes(normalizedProfile?.languages),
+    destinations: normalizeCountryCodes(normalizedProfile?.destinations),
     appears_in_team_web_page: normalizeAppearsInTeamWebPage(
       normalizedProfile?.appears_in_team_web_page,
       normalizeAppearsInTeamWebPage(defaultProfile?.appears_in_team_web_page, true)
     ),
-    qualification: Object.keys(normalizedQualification).length ? normalizedQualification : defaultQualification,
-    description: Object.keys(normalizedDescription).length ? normalizedDescription : defaultDescription
+    qualification: Object.keys(normalizedQualification).length ? normalizedQualification : {},
+    description: Object.keys(normalizedDescription).length ? normalizedDescription : {}
   };
 }
 
@@ -390,10 +351,15 @@ function buildResponseProfile(profile, user) {
 export function createAtpStaffDirectory({
   dataPath,
   photosDir,
+  legacyDataPath = "",
+  legacyPhotosDir = "",
   keycloakUsersSnapshotPath,
   keycloakDirectory,
-  writeQueueRef
+  writeQueueRef,
+  staffRoleNames = []
 }) {
+  const allowedStaffRoleNames = new Set(normalizeRoleNames(staffRoleNames));
+
   function profilesDocumentFromItems(items) {
     const staff = Object.fromEntries(
       sortProfiles(items).map((profile) => {
@@ -508,18 +474,19 @@ export function createAtpStaffDirectory({
     return Array.isArray(payload?.items) ? payload.items : [];
   }
 
-  async function listCachedAssignableStaffUsers() {
-    const [users, profiles] = await Promise.all([
-      listCachedAssignableUsers(),
-      readProfiles().catch(() => ({ items: [] }))
-    ]);
-    const profilesByUsername = new Map(
-      (Array.isArray(profiles?.items) ? profiles.items : []).map((profile) => [normalizeText(profile?.username).toLowerCase(), profile])
+  function filterEligibleStaffUsers(items, { activeOnly = false } = {}) {
+    return sortKeycloakUserSnapshotItems(
+      (Array.isArray(items) ? items : []).filter((user) => {
+        if (!isEligibleStaffUser(user, allowedStaffRoleNames)) return false;
+        if (activeOnly && user?.active === false) return false;
+        return true;
+      })
     );
-    return (Array.isArray(users) ? users : []).map((user) => ({
-      ...user,
-      staff_profile: buildResponseProfile(profilesByUsername.get(normalizeText(user?.username).toLowerCase()), user)
-    }));
+  }
+
+  async function listCachedEligibleStaffUsers(options = {}) {
+    const cached = await listCachedAssignableUsers();
+    return filterEligibleStaffUsers(cached, options);
   }
 
   async function syncKeycloakUserSnapshotFromUsers(users) {
@@ -558,9 +525,23 @@ export function createAtpStaffDirectory({
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(photosDir, { recursive: true });
     if (!(await fileExists(dataPath))) {
-      await writeFile(dataPath, `${JSON.stringify(profilesDocumentFromItems(seedProfiles()), null, 2)}\n`, "utf8");
+      if (legacyDataPath && await fileExists(legacyDataPath)) {
+        await copyFile(legacyDataPath, dataPath);
+      } else {
+        await writeFile(dataPath, `${JSON.stringify({ staff: {} }, null, 2)}\n`, "utf8");
+      }
     }
-    const payload = await readProfiles().catch(() => ({ items: seedProfiles(), changed: true }));
+    if (legacyPhotosDir && await fileExists(legacyPhotosDir)) {
+      const entries = await readdir(legacyPhotosDir, { withFileTypes: true }).catch(() => []);
+      for (const entry of entries) {
+        if (!entry?.isFile?.()) continue;
+        const sourcePath = path.join(legacyPhotosDir, entry.name);
+        const targetPath = path.join(photosDir, entry.name);
+        if (await fileExists(targetPath)) continue;
+        await copyFile(sourcePath, targetPath).catch(() => {});
+      }
+    }
+    const payload = await readProfiles().catch(() => ({ items: [], changed: true }));
     let changed = Boolean(payload.changed);
     for (const profile of payload.items) {
       if (await writeAvatarIfMissing(profile)) changed = true;
@@ -577,27 +558,10 @@ export function createAtpStaffDirectory({
 
   async function syncProfilesFromKeycloak() {
     await ensureStorage();
-    const stored = await readProfiles();
-    const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
-    let changed = Boolean(stored.changed);
     const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
     await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
-    for (const user of users) {
-      const username = normalizeText(user?.username).toLowerCase();
-      if (!username) continue;
-      const mergedStored = mergeStoredProfileWithUser(itemsByUsername.get(username), user);
-      if (!mergedStored) continue;
-      if (JSON.stringify(itemsByUsername.get(username) || null) !== JSON.stringify(mergedStored)) {
-        itemsByUsername.set(username, mergedStored);
-        changed = true;
-      }
-      if (await writeAvatarIfMissing(mergedStored)) changed = true;
-    }
-    const nextItems = sortProfiles(Array.from(itemsByUsername.values()));
-    if (changed) {
-      await persistProfiles({ items: nextItems });
-    }
-    return nextItems;
+    const stored = await readProfiles().catch(() => ({ items: [] }));
+    return Array.isArray(stored?.items) ? stored.items : [];
   }
 
   function resolvePhotoDiskPath(rawRelativePath) {
@@ -608,44 +572,65 @@ export function createAtpStaffDirectory({
     return absolutePath;
   }
 
-  async function listAssignableStaffUsers() {
-    const [users, profiles] = await Promise.all([
-      keycloakDirectory.listAssignableUsers(),
-      syncProfilesFromKeycloak().catch(() => [])
-    ]);
-    const profilesByUsername = new Map(
-      (Array.isArray(profiles) ? profiles : []).map((profile) => [normalizeText(profile?.username).toLowerCase(), profile])
-    );
-    return (Array.isArray(users) ? users : []).map((user) => ({
-      ...user,
-      staff_profile: buildResponseProfile(profilesByUsername.get(normalizeText(user?.username).toLowerCase()), user)
-    }));
+  async function listEligibleStaffUsers(options = {}) {
+    const { activeOnly = false } = options;
+    try {
+      const users = await keycloakDirectory.listAssignableUsers();
+      await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
+      return filterEligibleStaffUsers(users, { activeOnly });
+    } catch {
+      return listCachedEligibleStaffUsers({ activeOnly });
+    }
   }
 
-  async function findAssignableUserByUsername(rawUsername) {
+  async function findEligibleStaffUserByUsername(rawUsername) {
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
-    const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
-    return (Array.isArray(users) ? users : []).find((user) => normalizeText(user?.username).toLowerCase() === username) || null;
+    const liveUsers = await listEligibleStaffUsers().catch(() => []);
+    const liveMatch = (Array.isArray(liveUsers) ? liveUsers : [])
+      .find((user) => normalizeText(user?.username).toLowerCase() === username) || null;
+    if (liveMatch) return liveMatch;
+    const cachedUsers = await listCachedEligibleStaffUsers().catch(() => []);
+    return (Array.isArray(cachedUsers) ? cachedUsers : [])
+      .find((user) => normalizeText(user?.username).toLowerCase() === username) || null;
+  }
+
+  async function readStoredProfileByUsername(rawUsername) {
+    const username = normalizeText(rawUsername).toLowerCase();
+    if (!username) return null;
+    const stored = await readProfiles().catch(() => ({ items: [] }));
+    return (Array.isArray(stored?.items) ? stored.items : [])
+      .find((profile) => normalizeText(profile?.username).toLowerCase() === username) || null;
+  }
+
+  async function ensureAvatarForResponseProfile(profile) {
+    if (!profile?.username) return;
+    await writeAvatarIfMissing({
+      username: profile.username,
+      name: normalizeText(profile?.full_name) || normalizeText(profile?.name) || profile.username,
+      picture: pictureFilenameFromStoredValue(profile?.picture_ref, profile.username)
+    }).catch(() => {});
   }
 
   async function buildDirectoryEntryForUsername(rawUsername) {
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
-    const user = await findAssignableUserByUsername(username);
+    await ensureStorage();
+    const user = await findEligibleStaffUserByUsername(username);
     if (!user) return null;
-    const profiles = await syncProfilesFromKeycloak().catch(() => []);
-    const stored = (Array.isArray(profiles) ? profiles : []).find((profile) => normalizeText(profile?.username).toLowerCase() === username);
+    const stored = await readStoredProfileByUsername(username);
+    const staffProfile = buildResponseProfile(stored, user);
+    await ensureAvatarForResponseProfile(staffProfile);
     return {
       ...user,
-      staff_profile: buildResponseProfile(stored, user)
+      staff_profile: staffProfile
     };
   }
 
   async function updateProfileByUsername(rawUsername, input = {}) {
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
-    const user = await findAssignableUserByUsername(username);
+    const user = await findEligibleStaffUserByUsername(username);
     if (!user) return null;
 
     await ensureStorage();
@@ -691,7 +676,7 @@ export function createAtpStaffDirectory({
     const username = normalizeText(rawUsername).toLowerCase();
     const normalizedPicture = pictureFilenameFromStoredValue(pictureRef, username);
     if (!username || !normalizedPicture) return null;
-    const user = await findAssignableUserByUsername(username);
+    const user = await findEligibleStaffUserByUsername(username);
     if (!user) return null;
 
     await ensureStorage();
@@ -721,7 +706,7 @@ export function createAtpStaffDirectory({
   async function resetPictureByUsername(rawUsername) {
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
-    const user = await findAssignableUserByUsername(username);
+    const user = await findEligibleStaffUserByUsername(username);
     await writeAvatarIfMissing({
       username,
       name: normalizeText(user?.name) || username
@@ -736,14 +721,61 @@ export function createAtpStaffDirectory({
     const snapshot = await readKeycloakUserSnapshot().catch(() => ({ items: [] }));
     const user = (Array.isArray(snapshot?.items) ? snapshot.items : [])
       .find((item) => normalizeText(item?.id) === normalizedUserId) || null;
+    if (!isEligibleStaffUser(user, allowedStaffRoleNames)) return null;
     const username = normalizeText(user?.username).toLowerCase();
+    const stored = username ? await readStoredProfileByUsername(username) : null;
+    const profile = buildResponseProfile(stored, user);
+    await ensureAvatarForResponseProfile(profile);
+    return profile;
+  }
+
+  async function listPublicTeamProfiles() {
+    await ensureStorage();
+    const users = await listEligibleStaffUsers({ activeOnly: true });
     const storedProfiles = await readProfiles().catch(() => ({ items: [] }));
-    const stored = username
-      ? (Array.isArray(storedProfiles?.items) ? storedProfiles.items : [])
-        .find((profile) => normalizeText(profile?.username).toLowerCase() === username)
-      : null;
-    if (!stored && !user) return null;
-    return buildResponseProfile(stored, user || { id: normalizedUserId, username: "", name: "", active: false, roles: [] });
+    const storedByUsername = new Map(
+      (Array.isArray(storedProfiles?.items) ? storedProfiles.items : [])
+        .map((profile) => [normalizeText(profile?.username).toLowerCase(), profile])
+        .filter(([username, profile]) => Boolean(username && profile))
+    );
+
+    const items = [];
+    for (const user of users) {
+      const username = normalizeText(user?.username).toLowerCase();
+      if (!username) continue;
+      const profile = buildResponseProfile(storedByUsername.get(username) || null, user);
+      if (!profile || profile.appears_in_team_web_page !== true) continue;
+      await ensureAvatarForResponseProfile(profile);
+      items.push(profile);
+    }
+    return sortProfiles(items);
+  }
+
+  async function listDirectoryEntries() {
+    await ensureStorage();
+    const users = await listEligibleStaffUsers();
+    const storedProfiles = await readProfiles().catch(() => ({ items: [] }));
+    const storedByUsername = new Map(
+      (Array.isArray(storedProfiles?.items) ? storedProfiles.items : [])
+        .map((profile) => [normalizeText(profile?.username).toLowerCase(), profile])
+        .filter(([username, profile]) => Boolean(username && profile))
+    );
+    const items = [];
+    for (const user of users) {
+      const username = normalizeText(user?.username).toLowerCase();
+      if (!username) continue;
+      const staffProfile = buildResponseProfile(storedByUsername.get(username) || null, user);
+      await ensureAvatarForResponseProfile(staffProfile);
+      items.push({
+        ...user,
+        staff_profile: staffProfile
+      });
+    }
+    return items.sort((left, right) => {
+      const leftLabel = normalizeText(left?.name) || normalizeText(left?.username);
+      const rightLabel = normalizeText(right?.name) || normalizeText(right?.username);
+      return leftLabel.localeCompare(rightLabel);
+    });
   }
 
   async function primeLocalKeycloakSnapshot() {
@@ -757,13 +789,14 @@ export function createAtpStaffDirectory({
     readProfiles,
     persistProfiles,
     syncProfilesFromKeycloak,
-    listAssignableStaffUsers,
     buildDirectoryEntryForUsername,
     updateProfileByUsername,
     setPictureRefByUsername,
     resetPictureByUsername,
     listCachedAssignableUsers,
-    listCachedAssignableStaffUsers,
+    listCachedEligibleStaffUsers,
+    listDirectoryEntries,
+    listPublicTeamProfiles,
     primeLocalKeycloakSnapshot,
     resolveAssignedStaffProfile,
     resolvePhotoDiskPath

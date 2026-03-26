@@ -41,9 +41,18 @@ function withLangUrl(pathname) {
   return url.toString();
 }
 
+function resolveFrontendAssetUrl(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  if (normalized.startsWith("/public/")) return `${API_BASE_ORIGIN}${normalized}`;
+  return normalized;
+}
+
 const state = {
   lang: currentFrontendLang(),
   trips: [],
+  teamMembers: [],
   filteredTrips: [],
   filterOptions: {
     destinations: [],
@@ -59,6 +68,7 @@ const state = {
   visibleToursCount: 3,
   showMoreUsed: false,
   selectedTour: null,
+  selectedTeamMemberUsername: "",
   websiteAuthenticated: false,
   websiteAuthenticatedUser: ""
 };
@@ -66,12 +76,14 @@ const state = {
 let lastBookingModalTrigger = null;
 let authStatusLoadScheduled = false;
 let tourImagePrewarmToken = 0;
+let teamSectionRevealObserved = false;
 
 const INITIAL_VISIBLE_TOURS = 3;
 const SHOW_MORE_BATCH = 3;
 const TOURS_CACHE_TTL_MS = 5 * 60 * 1000;
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
+const ATP_STAFF_TEAM_URL = `${API_BASE_ORIGIN}/public/v1/team`;
 const els = {
   navToggle: document.getElementById("navToggle"),
   siteNav: document.getElementById("siteNav"),
@@ -95,6 +107,11 @@ const els = {
   activeFilters: document.getElementById("activeFilters"),
   toursTitle: document.getElementById("toursTitle"),
   toursBooking: document.getElementById("toursBooking"),
+  teamSection: document.getElementById("teamSection"),
+  teamSectionTitle: document.getElementById("teamSectionTitle"),
+  teamSectionBody: document.getElementById("teamSectionBody"),
+  teamGrid: document.getElementById("teamGrid"),
+  teamDetail: document.getElementById("teamDetail"),
   heroDynamicSubtitle: document.getElementById("heroDynamicSubtitle"),
   heroScrollLink: document.getElementById("heroScrollLink"),
   bookingTitle: document.getElementById("bookingTitle"),
@@ -230,6 +247,7 @@ async function init() {
   setupMobileNav();
   setupFAQ();
   setupHeroScroll();
+  setupTeamSection();
   setupBackendLogin();
   setupHiddenBackendQuickLogin();
   scheduleDeferredAuthStatusLoad();
@@ -245,7 +263,10 @@ async function init() {
   state.filters.style = normalizeFilterSelection(urlFilters.style.length ? urlFilters.style : savedFilters?.style);
 
   try {
-    const toursPayload = await loadTrips();
+    const [, toursPayload] = await Promise.all([
+      loadTeamMembers(),
+      loadTrips()
+    ]);
     state.trips = Array.isArray(toursPayload?.items) ? toursPayload.items : [];
     state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
       ? toursPayload.available_destinations
@@ -294,6 +315,190 @@ function scheduleDeferredTourImagePrewarm(tours) {
     if (scheduledToken !== tourImagePrewarmToken) return;
     prewarmTourImages(snapshot);
   }, { timeout: 2000, fallbackDelayMs: 500 });
+}
+
+function localizedEntriesFromStaticValue(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => ({
+        lang: normalizeText(entry?.lang).toLowerCase(),
+        value: normalizeText(entry?.value)
+      }))
+      .filter((entry) => entry.lang && entry.value);
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value)
+      .map(([lang, text]) => ({
+        lang: normalizeText(lang).toLowerCase(),
+        value: normalizeText(text)
+      }))
+      .filter((entry) => entry.lang && entry.value);
+  }
+  const normalized = normalizeText(value);
+  return normalized ? [{ lang: "en", value: normalized }] : [];
+}
+
+function resolveLocalizedStaticValue(value, lang = state.lang || currentFrontendLang()) {
+  const entries = localizedEntriesFromStaticValue(value);
+  const normalizedLang = normalizeText(lang).toLowerCase() || "en";
+  return normalizeText(
+    entries.find((entry) => entry.lang === normalizedLang)?.value
+    || entries.find((entry) => entry.lang === "en")?.value
+    || entries[0]?.value
+  );
+}
+
+function normalizeTeamMemberProfile(profile) {
+  const normalizedUsername = normalizeText(profile?.username).toLowerCase();
+  if (!normalizedUsername || !profile || typeof profile !== "object") return null;
+  const fullName = normalizeText(profile?.full_name) || normalizeText(profile?.name) || normalizedUsername;
+  const role = resolveLocalizedStaticValue(profile?.position_i18n ?? profile?.position)
+    || resolveLocalizedStaticValue(profile?.qualification_i18n ?? profile?.qualification);
+  const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description)
+    || resolveLocalizedStaticValue(profile?.qualification_i18n ?? profile?.qualification);
+  return {
+    username: normalizedUsername,
+    fullName,
+    role,
+    description,
+    pictureRef: resolveFrontendAssetUrl(profile?.picture_ref) || `${API_BASE_ORIGIN}/public/v1/atp-staff-photos/${encodeURIComponent(`${normalizedUsername}.svg`)}`,
+    appearsInTeamWebPage: profile?.appears_in_team_web_page !== false
+  };
+}
+
+async function loadTeamMembers() {
+  try {
+    const response = await fetch(ATP_STAFF_TEAM_URL, {
+      credentials: "same-origin",
+      cache: "default"
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    const source = Array.isArray(payload?.items) ? payload.items : [];
+    state.teamMembers = source
+      .map((profile) => normalizeTeamMemberProfile(profile))
+      .filter((member) => member?.appearsInTeamWebPage);
+    renderTeamSection();
+  } catch (error) {
+    state.teamMembers = [];
+    if (els.teamSection instanceof HTMLElement) {
+      els.teamSection.hidden = true;
+    }
+    logBrowserConsoleError("[frontend-home] Failed to load public ATP staff team content.", {
+      url: ATP_STAFF_TEAM_URL,
+      page_url: window.location.href
+    }, error);
+  }
+}
+
+function setupTeamSection() {
+  if (!els.teamGrid || els.teamGrid.dataset.teamBound === "1") return;
+  els.teamGrid.dataset.teamBound = "1";
+  const handleToggle = (element) => {
+    const username = normalizeText(element?.getAttribute?.("data-team-member")).toLowerCase();
+    if (!username) return;
+    state.selectedTeamMemberUsername = state.selectedTeamMemberUsername === username ? "" : username;
+    renderTeamSection();
+  };
+  els.teamGrid.addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest("[data-team-member]") : null;
+    if (!button) return;
+    handleToggle(button);
+  });
+  els.teamDetail?.addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest("[data-team-member]") : null;
+    if (!button) return;
+    handleToggle(button);
+  });
+  if (els.teamSection instanceof HTMLElement && !teamSectionRevealObserved && "IntersectionObserver" in window) {
+    teamSectionRevealObserved = true;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        els.teamSection?.classList.add("is-visible");
+        observer.disconnect();
+        break;
+      }
+    }, {
+      threshold: 0.16,
+      rootMargin: "0px 0px -10% 0px"
+    });
+    observer.observe(els.teamSection);
+  } else if (els.teamSection instanceof HTMLElement) {
+    els.teamSection.classList.add("is-visible");
+  }
+}
+
+function renderTeamSection() {
+  if (!(els.teamSection instanceof HTMLElement) || !els.teamGrid || !els.teamDetail) return;
+  const members = Array.isArray(state.teamMembers) ? state.teamMembers : [];
+  const selectedUsername = normalizeText(state.selectedTeamMemberUsername).toLowerCase();
+  const selected = members.find((member) => member.username === selectedUsername) || null;
+
+  if (els.teamSectionTitle) {
+    els.teamSectionTitle.textContent = frontendT("trust.team.heading", "Meet the team");
+  }
+  if (els.teamSectionBody) {
+    els.teamSectionBody.textContent = frontendT(
+      "trust.team.body",
+      "Meet the ATP team behind your route planning and local trip support. Click a profile to read more."
+    );
+  }
+
+  if (!members.length) {
+    els.teamSection.hidden = true;
+    els.teamGrid.innerHTML = "";
+    els.teamDetail.hidden = true;
+    els.teamDetail.innerHTML = "";
+    return;
+  }
+
+  els.teamSection.hidden = false;
+  els.teamGrid.innerHTML = members.map((member, memberIndex) => {
+    const isActive = member.username === selectedUsername;
+    const role = member.role || frontendT("trust.team.role_fallback", "AsiaTravelPlan team");
+    return `
+      <button
+        class="team-card${isActive ? " is-active" : ""}"
+        type="button"
+        data-team-member="${escapeAttr(member.username)}"
+        aria-pressed="${isActive ? "true" : "false"}"
+        style="--team-card-index:${memberIndex};"
+      >
+        <img class="team-card__photo" src="${escapeAttr(member.pictureRef)}" alt="${escapeAttr(member.fullName)}" loading="lazy" />
+        <span class="team-card__name">${escapeHTML(member.fullName)}</span>
+        <span class="team-card__role">${escapeHTML(role)}</span>
+      </button>
+    `;
+  }).join("");
+
+  if (!selected) {
+    els.teamDetail.hidden = true;
+    els.teamDetail.innerHTML = "";
+    return;
+  }
+
+  const detailRole = selected.role || frontendT("trust.team.role_fallback", "AsiaTravelPlan team");
+  const detailBody = selected.description || frontendT(
+    "trust.team.description_fallback",
+    "This team member supports AsiaTravelPlan guests before and during their journey."
+  );
+  els.teamDetail.hidden = false;
+  els.teamDetail.innerHTML = `
+    <div class="team-detail__content">
+      <div class="team-detail__copy">
+        <p class="team-detail__eyebrow">${escapeHTML(frontendT("trust.team.detail_label", "About"))}</p>
+        <h4 class="team-detail__name">${escapeHTML(selected.fullName)}</h4>
+        <p class="team-detail__role">${escapeHTML(detailRole)}</p>
+        <p class="team-detail__body">${escapeHTML(detailBody)}</p>
+      </div>
+      <button class="btn btn-ghost team-detail__close" type="button" data-team-member="${escapeAttr(selected.username)}">
+        ${escapeHTML(frontendT("trust.team.close", "Hide description"))}
+      </button>
+    </div>
+  `;
 }
 
 function syncI18nManagedLabels() {
@@ -524,7 +729,10 @@ async function handleFrontendLanguageChanged() {
   refreshLocalizedBookingFormOptions();
 
   try {
-    const toursPayload = await loadTrips();
+    const [, toursPayload] = await Promise.all([
+      loadTeamMembers(),
+      loadTrips()
+    ]);
     state.trips = Array.isArray(toursPayload?.items) ? toursPayload.items : [];
     state.filterOptions.destinations = Array.isArray(toursPayload?.available_destinations)
       ? toursPayload.available_destinations

@@ -42,7 +42,8 @@ export async function resolveAtpGuidePdfContext({
       : null
   );
 
-  const photoRelativePath = extractPublicRelativePath(profile?.picture_ref, "/public/v1/atp-staff-photos/");
+  const photoRelativePath = extractPublicRelativePath(profile?.picture_ref, "/content/atp_staff/photos/")
+    || extractPublicRelativePath(profile?.picture_ref, "/public/v1/atp-staff-photos/");
   const photoDiskPath = photoRelativePath && typeof resolveAtpStaffPhotoDiskPath === "function"
     ? resolveAtpStaffPhotoDiskPath(photoRelativePath)
     : null;

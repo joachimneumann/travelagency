@@ -1,6 +1,7 @@
 export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", path: "/public/v1/mobile/bootstrap", handlerKey: "handleMobileBootstrap" },
   { method: "GET", path: "/public/v1/tours", handlerKey: "handlePublicListTours" },
+  { method: "GET", path: "/public/v1/team", handlerKey: "handleListPublicAtpStaffProfiles" },
   { method: "POST", path: "/public/v1/bookings", handlerKey: "handleCreateBooking" },
   { method: "GET", path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/access", handlerKey: "handleGetPublicGeneratedOfferAccess" },
   { method: "GET", path: "/public/v1/bookings/{booking_id}/generated-offers/{generated_offer_id}/pdf", handlerKey: "handleGetPublicGeneratedOfferPdf" },
@@ -56,6 +57,7 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "POST", path: "/api/v1/bookings/{booking_id}/invoices/{invoice_id}/translate", handlerKey: "handleTranslateBookingInvoiceFromEnglish" },
   { method: "GET", path: "/api/v1/invoices/{invoice_id}/pdf", handlerKey: "handleGetInvoicePdf" },
   { method: "GET", path: "/api/v1/keycloak_users", handlerKey: "handleListKeycloakUsers" },
+  { method: "GET", path: "/api/v1/staff-profiles", handlerKey: "handleListAtpStaffDirectoryEntries" },
   { method: "PATCH", path: "/api/v1/keycloak_users/{username}/staff-profile", handlerKey: "handlePatchAtpStaffProfile" },
   { method: "POST", path: "/api/v1/keycloak_users/{username}/staff-profile/translate-fields", handlerKey: "handleTranslateAtpStaffProfileFields" },
   { method: "POST", path: "/api/v1/keycloak_users/{username}/staff-profile/picture", handlerKey: "handleUploadAtpStaffPhoto" },

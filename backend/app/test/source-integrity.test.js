@@ -613,8 +613,8 @@ test("booking page replaces the stage dropdown with a derived status block and m
   );
   assert.match(
     bookingCoreSource,
-    /function resolveAtpStaffDisplayName\(user, fallbackProfile = null\)[\s\S]*user\?\.staff_profile\?\.full_name[\s\S]*fallbackProfile\?\.full_name[\s\S]*displayKeycloakUser\(user\)/,
-    "Booking core should prefer ATP staff full names for assignee labels before falling back to raw Keycloak display names"
+    /function resolveAtpStaffDisplayName\(user, fallbackProfile = null\)[\s\S]*fallbackProfile\?\.full_name[\s\S]*user\?\.full_name[\s\S]*displayKeycloakUser\(user\)/,
+    "Booking core should prefer booking-level ATP staff names before falling back to raw Keycloak display names"
   );
   assert.match(
     bookingCoreSource,

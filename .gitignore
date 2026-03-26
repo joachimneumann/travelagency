@@ -12,6 +12,10 @@ backend/app/data/consent-evidence/
 backend/app/data/customer-photos/
 backend/app/data/invoices/
 backend/app/data/tmp/
+content/atp_staff/staff.json
+content/atp_staff/photos/*
+!content/atp_staff/.gitkeep
+!content/atp_staff/photos/.gitkeep
 __pycache__/
 *.xcuserstate
 *.xccheckout

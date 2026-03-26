@@ -264,9 +264,8 @@ export function createBookingCoreModule(ctx) {
   }
 
   function resolveAtpStaffDisplayName(user, fallbackProfile = null) {
-    return normalizeText(user?.staff_profile?.full_name)
+    return normalizeText(fallbackProfile?.full_name)
       || normalizeText(user?.full_name)
-      || normalizeText(fallbackProfile?.full_name)
       || displayKeycloakUser(user)
       || normalizeText(fallbackProfile?.name)
       || normalizeText(user?.name)
@@ -552,15 +551,7 @@ export function createBookingCoreModule(ctx) {
           id: currentOwnerId,
           name: currentOwnerName || currentOwnerId,
           username: normalizeText(currentOwner?.username) || normalizeText(state.booking?.assigned_atp_staff?.username) || null,
-          staff_profile: (
-            currentOwner?.staff_profile && typeof currentOwner.staff_profile === "object"
-          )
-            ? currentOwner.staff_profile
-            : (
-              normalizeText(state.booking?.assigned_atp_staff?.full_name)
-                ? { full_name: normalizeText(state.booking.assigned_atp_staff.full_name) }
-                : null
-            )
+          full_name: normalizeText(state.booking?.assigned_atp_staff?.full_name) || normalizeText(currentOwner?.full_name) || ""
         });
       }
 

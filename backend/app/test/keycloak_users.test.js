@@ -7,21 +7,16 @@ test("keycloak users endpoint returns a warning and cached users when live direc
   const handlers = createKeycloakUserHandlers({
     getPrincipal: () => ({ roles: ["atp_admin"] }),
     canViewKeycloakUsers: () => true,
-    listAssignableStaffUsers: async () => {
+    listAssignableUsers: async () => {
       throw new Error("Keycloak directory request timed out after 2500ms for https://auth-staging.example/admin");
     },
-    listCachedAssignableStaffUsers: async () => [{
+    listCachedAssignableUsers: async () => [{
       id: "kc-joachim",
       username: "joachim",
       name: "Joachim Neumann",
       active: true,
-      staff_profile: {
-        username: "joachim",
-        full_name: "Joachim Neumann",
-        friendly_short_name: "Joachim",
-        languages: ["de", "en"],
-        destinations: ["VN"]
-      }
+      realm_roles: [],
+      client_roles: ["atp_staff"]
     }],
     keycloakDisplayName: (user) => user?.name || user?.username || "",
     sendJson: (_res, status, body) => {
@@ -39,5 +34,6 @@ test("keycloak users endpoint returns a warning and cached users when live direc
   assert.match(String(calls[0].body.warning || ""), /Showing cached users/i);
   assert.equal(calls[0].body.total, 1);
   assert.equal(calls[0].body.items[0].username, "joachim");
-  assert.equal(calls[0].body.items[0].staff_profile.full_name, "Joachim Neumann");
+  assert.equal(calls[0].body.items[0].name, "Joachim Neumann");
+  assert.deepEqual(calls[0].body.items[0].client_roles, ["atp_staff"]);
 });

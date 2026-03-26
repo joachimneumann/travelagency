@@ -182,6 +182,23 @@ export function publicToursRequest({ baseURL = '', params = {}, query = {}, body
   };
 }
 
+export function publicAtpStaffTeamPath(params = {}) {
+  return buildPath("/public/v1/team", params);
+}
+
+export function publicAtpStaffTeamRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicAtpStaffTeamPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_atp_staff_team",
+    method: "GET",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingsPath(params = {}) {
   return buildPath("/api/v1/bookings", params);
 }
@@ -1058,6 +1075,23 @@ export function keycloakUsersRequest({ baseURL = '', params = {}, query = {}, bo
   const url = buildURL(baseURL, path, query);
   return {
     key: "keycloak_users",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function staffProfilesPath(params = {}) {
+  return buildPath("/api/v1/staff-profiles", params);
+}
+
+export function staffProfilesRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = staffProfilesPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "staff_profiles",
     method: "GET",
     authenticated: true,
     url,

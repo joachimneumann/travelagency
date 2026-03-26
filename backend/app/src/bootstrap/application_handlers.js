@@ -152,19 +152,20 @@ export function createApplicationRoutes({
   const keycloakUserHandlers = createKeycloakUserHandlers({
     getPrincipal,
     canViewKeycloakUsers,
-    listAssignableStaffUsers: atpStaffDirectory.listAssignableStaffUsers,
-    listCachedAssignableStaffUsers: atpStaffDirectory.listCachedAssignableStaffUsers,
+    listAssignableUsers: keycloakDirectory.listAssignableUsers,
+    listCachedAssignableUsers: atpStaffDirectory.listCachedAssignableUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson: httpHelpers.sendJson
   });
 
   const atpStaffHandlers = createAtpStaffHandlers({
     getPrincipal,
+    canViewAtpStaffProfiles: canViewKeycloakUsers,
     canEditAtpStaffProfiles,
     readBodyJson: httpHelpers.readBodyJson,
     sendJson: httpHelpers.sendJson,
-    sendFileWithCache: httpHelpers.sendFileWithCache,
-    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
+    listAtpStaffDirectoryEntries: atpStaffDirectory.listDirectoryEntries,
+    listPublicAtpStaffProfiles: atpStaffDirectory.listPublicTeamProfiles,
     buildAtpStaffDirectoryEntryByUsername: atpStaffDirectory.buildDirectoryEntryForUsername,
     updateAtpStaffProfileByUsername: atpStaffDirectory.updateProfileByUsername,
     setAtpStaffPictureRefByUsername: atpStaffDirectory.setPictureRefByUsername,
@@ -176,6 +177,8 @@ export function createApplicationRoutes({
     rm,
     TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
     ATP_STAFF_PHOTOS_DIR: runtime.paths.atpStaffPhotosDir,
+    resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
+    sendFileWithCache: httpHelpers.sendFileWithCache,
     randomUUID
   });
 

@@ -80,7 +80,10 @@ import (
 		TourDetail:                                       apiModel.#TourDetail
 		KeycloakUserDirectoryEntry:                       apiModel.#KeycloakUserDirectoryEntry
 		KeycloakUserListResponse:                         apiModel.#KeycloakUserListResponse
-		KeycloakUserDirectoryEntryResponse:               apiModel.#KeycloakUserDirectoryEntryResponse
+		KeycloakUserStaffProfileEntry:                    apiModel.#KeycloakUserStaffProfileEntry
+		KeycloakUserStaffProfileEntryResponse:            apiModel.#KeycloakUserStaffProfileEntryResponse
+		KeycloakUserStaffProfileListResponse:             apiModel.#KeycloakUserStaffProfileListResponse
+		PublicAtpStaffTeamResponse:                       apiModel.#PublicAtpStaffTeamResponse
 		BookingActivitiesResponse:                        apiModel.#BookingActivitiesResponse
 		BookingActivityResponse:                          apiModel.#BookingActivityResponse
 		BookingDeleteResponse:                            apiModel.#BookingDeleteResponse
