@@ -5,6 +5,24 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
+* change the web page (index.html):
+
+* atp_staff model: add a boolean: appears in team on web page (default: yes)
+
+Trust -> About us
+Add a section shing the team, showing the atp staff pictures and descriptions (if missing show "descrition missing)
+
+* change the offer detail level.
+As default, have only one price per day.
+
+* request passport/ID card (vietnamese only) picture
+
+* in traveler-details.html, after "Send traveler details to Asia Travel Plan" the confirmation should be "your data has been sent to AsiaTravePlan".
+
+* In the traveler details, show ID card only when the nationality of the traveler is Vietnamese. Otherwise, remove the pill that allows you to switch between passport and ID, and just replace the title "travel document" with "passport". 
+
+* in booking.html when clicking on the traveler, load the data from the backend. THe traveler might have submitted his data.
+
 * add food preferences and allergies to persons
 
 * add hotel room preference: Single Double
@@ -19,6 +37,7 @@ Then Automatically derive the stage and write a description of the stage and las
 
 * Index.html: FAQ formatting off
 
+* rename the "Activities" section to "Activity logs"
 
 ## payments
 

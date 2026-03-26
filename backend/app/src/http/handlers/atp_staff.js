@@ -3,6 +3,7 @@ import { validateTranslationEntriesRequest } from "../../../Generated/API/genera
 import { normalizeText } from "../../lib/text.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 import { execImageMagick } from "../../lib/imagemagick.js";
+import { normalizeLanguageCode as normalizeCatalogLanguageCode } from "../../../../../shared/generated/language_catalog.js";
 
 const LANGUAGE_CODE_SET = enumValueSetFor("LanguageCode");
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
@@ -11,7 +12,7 @@ function normalizeLanguageCodes(items) {
   return Array.from(
     new Set(
       (Array.isArray(items) ? items : [])
-        .map((item) => normalizeText(item).toLowerCase())
+        .map((item) => normalizeCatalogLanguageCode(item, { fallback: "" }))
         .filter((item) => item && LANGUAGE_CODE_SET.has(item))
     )
   );
@@ -28,7 +29,7 @@ function normalizeCountryCodes(items) {
 }
 
 function normalizeLanguageCode(value, fallback = "en") {
-  const normalized = normalizeText(value).toLowerCase();
+  const normalized = normalizeCatalogLanguageCode(value, { fallback });
   return normalized && LANGUAGE_CODE_SET.has(normalized) ? normalized : fallback;
 }
 
@@ -50,7 +51,7 @@ function normalizeQualificationEntries(items) {
   return Array.from(
     new Map(
       (Array.isArray(items) ? items : [])
-        .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+        .map((entry) => [normalizeLanguageCode(entry?.lang, ""), normalizeText(entry?.value)])
         .filter(([lang, value]) => Boolean(lang && value && LANGUAGE_CODE_SET.has(lang)))
     ).entries()
   ).map(([lang, value]) => ({ lang, value }));
@@ -119,7 +120,22 @@ export function createAtpStaffHandlers(deps) {
     }
     const destinations = Array.isArray(payload?.destinations) ? normalizeCountryCodes(payload.destinations) : undefined;
     const fullName = payload?.full_name !== undefined ? normalizeText(payload.full_name) : undefined;
+    const position = payload?.position !== undefined ? normalizeText(payload.position) : undefined;
+    const positionI18n = Array.isArray(payload?.position_i18n)
+      ? normalizeQualificationEntries(payload.position_i18n)
+      : undefined;
+    if (Array.isArray(payload?.position_i18n) && positionI18n.length !== payload.position_i18n.filter(Boolean).length) {
+      sendJson(res, 422, { error: "Each position translation requires a valid language code and non-empty text" });
+      return;
+    }
     const friendlyShortName = payload?.friendly_short_name !== undefined ? normalizeText(payload.friendly_short_name) : undefined;
+    if (payload?.appears_in_team_web_page !== undefined && typeof payload.appears_in_team_web_page !== "boolean") {
+      sendJson(res, 422, { error: "appears_in_team_web_page must be a boolean" });
+      return;
+    }
+    const appearsInTeamWebPage = payload?.appears_in_team_web_page !== undefined
+      ? payload.appears_in_team_web_page === true
+      : undefined;
 
     const qualification = payload?.qualification !== undefined ? normalizeText(payload.qualification) : undefined;
     const qualificationI18n = Array.isArray(payload?.qualification_i18n)
@@ -129,14 +145,27 @@ export function createAtpStaffHandlers(deps) {
       sendJson(res, 422, { error: "Each qualification translation requires a valid language code and non-empty text" });
       return;
     }
+    const description = payload?.description !== undefined ? normalizeText(payload.description) : undefined;
+    const descriptionI18n = Array.isArray(payload?.description_i18n)
+      ? normalizeQualificationEntries(payload.description_i18n)
+      : undefined;
+    if (Array.isArray(payload?.description_i18n) && descriptionI18n.length !== payload.description_i18n.filter(Boolean).length) {
+      sendJson(res, 422, { error: "Each description translation requires a valid language code and non-empty text" });
+      return;
+    }
 
     const updated = await updateAtpStaffProfileByUsername(username, {
       languages,
       destinations,
       full_name: fullName,
+      position,
+      position_i18n: positionI18n,
       friendly_short_name: friendlyShortName,
+      appears_in_team_web_page: appearsInTeamWebPage,
       qualification,
-      qualification_i18n: qualificationI18n
+      qualification_i18n: qualificationI18n,
+      description,
+      description_i18n: descriptionI18n
     });
     if (!updated) {
       sendJson(res, 404, { error: "Keycloak user not found" });
@@ -194,7 +223,7 @@ export function createAtpStaffHandlers(deps) {
     try {
       const translatedEntries = await translateEntries(entries, targetLang, {
         sourceLangCode: sourceLang,
-        domain: "ATP guide qualification",
+        domain: "ATP staff profile text",
         allowGoogleFallback: true
       });
       sendJson(res, 200, {

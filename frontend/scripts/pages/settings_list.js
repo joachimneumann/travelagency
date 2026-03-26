@@ -15,6 +15,10 @@ import {
   enumOptionsFor
 } from "../shared/generated_catalogs.js";
 import {
+  CUSTOMER_CONTENT_LANGUAGES,
+  normalizeLanguageCode as normalizeCatalogLanguageCode
+} from "../../../shared/generated/language_catalog.js";
+import {
   backendT,
   getBackendApiBase,
   getBackendApiOrigin,
@@ -42,10 +46,13 @@ const els = {
   staffEditorRolesLine: document.getElementById("staffEditorRolesLine"),
   staffEditorPhotoInput: document.getElementById("staffEditorPhotoInput"),
   staffEditorFullName: document.getElementById("staffEditorFullName"),
+  staffEditorPosition: document.getElementById("staffEditorPosition"),
   staffEditorFriendlyShortName: document.getElementById("staffEditorFriendlyShortName"),
+  staffEditorAppearsInTeamWebPage: document.getElementById("staffEditorAppearsInTeamWebPage"),
   staffEditorLanguages: document.getElementById("staffEditorLanguages"),
   staffEditorDestinations: document.getElementById("staffEditorDestinations"),
   staffEditorQualification: document.getElementById("staffEditorQualification"),
+  staffEditorDescription: document.getElementById("staffEditorDescription"),
   staffEditorSaveBtn: document.getElementById("staffEditorSaveBtn")
 };
 
@@ -62,19 +69,25 @@ const ROLES = Object.freeze({
 });
 
 const LANGUAGE_OPTIONS = Object.freeze(
-  (window.ASIATRAVELPLAN_LANGUAGE_CATALOG?.languages || [])
+  (Array.isArray(window.ASIATRAVELPLAN_LANGUAGE_CATALOG?.languages)
+    && window.ASIATRAVELPLAN_LANGUAGE_CATALOG.languages.length
+    ? window.ASIATRAVELPLAN_LANGUAGE_CATALOG.languages
+    : CUSTOMER_CONTENT_LANGUAGES)
     .map((entry) => ({
-      value: normalizeText(entry?.code).toLowerCase(),
+      value: normalizeCatalogLanguageCode(entry?.code, { fallback: "" }),
       label: normalizeText(entry?.nativeLabel) || normalizeText(entry?.apiValue) || normalizeText(entry?.code).toUpperCase()
     }))
     .filter((entry) => entry.value)
 );
 
 const QUALIFICATION_LANGUAGE_OPTIONS = Object.freeze(
-  (window.ASIATRAVELPLAN_LANGUAGE_CATALOG?.languages || [])
+  (Array.isArray(window.ASIATRAVELPLAN_LANGUAGE_CATALOG?.languages)
+    && window.ASIATRAVELPLAN_LANGUAGE_CATALOG.languages.length
+    ? window.ASIATRAVELPLAN_LANGUAGE_CATALOG.languages
+    : CUSTOMER_CONTENT_LANGUAGES)
     .filter((entry) => entry?.customerContentSupported)
     .map((entry) => ({
-      value: normalizeText(entry?.code).toLowerCase(),
+      value: normalizeCatalogLanguageCode(entry?.code, { fallback: "" }),
       label: normalizeText(entry?.shortLabel) || normalizeText(entry?.code).toUpperCase(),
       direction: normalizeText(entry?.direction).toLowerCase() === "rtl" ? "rtl" : "ltr"
     }))
@@ -100,9 +113,12 @@ const state = {
   editor: {
     fullName: "",
     friendlyShortName: "",
+    appearsInTeamWebPage: true,
     languages: [],
     destinations: [],
+    positionByLang: {},
     qualificationByLang: {},
+    descriptionByLang: {},
     pendingPhoto: null
   }
 };
@@ -199,7 +215,21 @@ function bindEvents() {
   els.staffEditorPhotoBtn?.addEventListener("click", () => els.staffEditorPhotoInput?.click());
   els.staffEditorPhotoInput?.addEventListener("change", handleStaffPhotoSelected);
   els.staffEditorFullName?.addEventListener("input", handleFullNameInput);
+  els.staffEditorPosition?.addEventListener("input", handlePositionInput);
+  els.staffEditorPosition?.addEventListener("click", (event) => {
+    const translateAllButton = event.target.closest("[data-staff-translate-all]");
+    if (translateAllButton) {
+      event.preventDefault();
+      void translatePositionToAll(translateAllButton);
+      return;
+    }
+    const translateButton = event.target.closest("[data-staff-translate-field]");
+    if (!translateButton) return;
+    event.preventDefault();
+    void translatePosition(translateButton);
+  });
   els.staffEditorFriendlyShortName?.addEventListener("input", handleFriendlyShortNameInput);
+  els.staffEditorAppearsInTeamWebPage?.addEventListener("change", handleAppearsInTeamWebPageChange);
   els.staffEditorLanguages?.addEventListener("change", handleLanguageToggle);
   els.staffEditorDestinations?.addEventListener("change", handleDestinationToggle);
   els.staffEditorQualification?.addEventListener("input", handleQualificationInput);
@@ -214,6 +244,19 @@ function bindEvents() {
     if (!translateButton) return;
     event.preventDefault();
     void translateQualification(translateButton);
+  });
+  els.staffEditorDescription?.addEventListener("input", handleDescriptionInput);
+  els.staffEditorDescription?.addEventListener("click", (event) => {
+    const translateAllButton = event.target.closest("[data-staff-translate-all]");
+    if (translateAllButton) {
+      event.preventDefault();
+      void translateDescriptionToAll(translateAllButton);
+      return;
+    }
+    const translateButton = event.target.closest("[data-staff-translate-field]");
+    if (!translateButton) return;
+    event.preventDefault();
+    void translateDescription(translateButton);
   });
 }
 
@@ -314,6 +357,14 @@ function getSelectedUser() {
 
 function cloneEditorProfile(user) {
   const profile = user?.staff_profile || {};
+  const positionByLang = Object.fromEntries(
+    (Array.isArray(profile?.position_i18n) ? profile.position_i18n : [])
+      .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+  );
+  if (!Object.keys(positionByLang).length && normalizeText(profile?.position)) {
+    positionByLang.en = normalizeText(profile.position);
+  }
   const qualificationByLang = Object.fromEntries(
     (Array.isArray(profile?.qualification_i18n) ? profile.qualification_i18n : [])
       .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
@@ -322,23 +373,46 @@ function cloneEditorProfile(user) {
   if (!Object.keys(qualificationByLang).length && normalizeText(profile?.qualification)) {
     qualificationByLang.en = normalizeText(profile.qualification);
   }
+  const descriptionByLang = Object.fromEntries(
+    (Array.isArray(profile?.description_i18n) ? profile.description_i18n : [])
+      .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+  );
+  if (!Object.keys(descriptionByLang).length && normalizeText(profile?.description)) {
+    descriptionByLang.en = normalizeText(profile.description);
+  }
   return {
     fullName: normalizeText(profile?.full_name),
     friendlyShortName: normalizeText(profile?.friendly_short_name),
+    appearsInTeamWebPage: profile?.appears_in_team_web_page !== false,
     languages: Array.isArray(profile?.languages)
       ? profile.languages.map((code) => normalizeText(code).toLowerCase()).filter(Boolean)
       : [],
     destinations: Array.isArray(profile?.destinations)
       ? profile.destinations.map((code) => normalizeText(code).toUpperCase()).filter(Boolean)
       : [],
+    positionByLang,
     qualificationByLang,
+    descriptionByLang,
     pendingPhoto: null
   };
 }
 
 function normalizeEditorProfile(profile) {
+  const positionByLang = Object.fromEntries(
+    Object.entries(profile?.positionByLang && typeof profile.positionByLang === "object" ? profile.positionByLang : {})
+      .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+      .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
+  );
   const qualificationByLang = Object.fromEntries(
     Object.entries(profile?.qualificationByLang && typeof profile.qualificationByLang === "object" ? profile.qualificationByLang : {})
+      .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
+      .filter(([lang, value]) => Boolean(lang && value))
+      .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
+  );
+  const descriptionByLang = Object.fromEntries(
+    Object.entries(profile?.descriptionByLang && typeof profile.descriptionByLang === "object" ? profile.descriptionByLang : {})
       .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
       .filter(([lang, value]) => Boolean(lang && value))
       .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
@@ -346,9 +420,12 @@ function normalizeEditorProfile(profile) {
   return {
     fullName: normalizeText(profile?.fullName),
     friendlyShortName: normalizeText(profile?.friendlyShortName),
+    appearsInTeamWebPage: profile?.appearsInTeamWebPage !== false,
     languages: Array.from(new Set((Array.isArray(profile?.languages) ? profile.languages : []).map((code) => normalizeText(code).toLowerCase()).filter(Boolean))).sort(),
     destinations: Array.from(new Set((Array.isArray(profile?.destinations) ? profile.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean))).sort(),
-    qualificationByLang
+    positionByLang,
+    qualificationByLang,
+    descriptionByLang
   };
 }
 
@@ -390,9 +467,12 @@ function closeEditor() {
   state.editor = {
     fullName: "",
     friendlyShortName: "",
+    appearsInTeamWebPage: true,
     languages: [],
     destinations: [],
+    positionByLang: {},
     qualificationByLang: {},
+    descriptionByLang: {},
     pendingPhoto: null
   };
   state.editorSaving = false;
@@ -441,10 +521,15 @@ function renderEditor() {
   if (els.staffEditorFriendlyShortName) {
     els.staffEditorFriendlyShortName.value = normalizeText(state.editor?.friendlyShortName);
   }
+  if (els.staffEditorAppearsInTeamWebPage) {
+    els.staffEditorAppearsInTeamWebPage.checked = state.editor?.appearsInTeamWebPage !== false;
+  }
 
   renderLanguageChecklist();
   renderDestinationChecklist();
+  renderPositionEditor();
   renderQualificationEditor();
+  renderDescriptionEditor();
   updateEditorSaveButtonState();
 }
 
@@ -509,6 +594,56 @@ function renderQualificationEditor() {
   els.staffEditorQualification.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
 }
 
+function renderPositionEditor() {
+  if (!els.staffEditorPosition) return;
+  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
+    ? QUALIFICATION_LANGUAGE_OPTIONS
+    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const current = state.editor?.positionByLang && typeof state.editor.positionByLang === "object"
+    ? state.editor.positionByLang
+    : {};
+  const rows = options
+    .map((option) => {
+      const lang = normalizeText(option.value).toLowerCase();
+      const buttonHtml = lang === "en"
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="position">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="position" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      return `<div class="tour-localized-group__row">
+        <div class="tour-localized-group__code-cell">${buttonHtml}</div>
+        <div class="tour-localized-group__field">
+          <input id="${escapeHtml(positionInputId(lang))}" data-position-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" type="text" autocomplete="organization-title" value="${escapeHtml(normalizeText(current[lang]))}" />
+        </div>
+      </div>`;
+    })
+    .join("");
+  els.staffEditorPosition.innerHTML = `<div class="tour-localized-group">${rows}</div>`;
+}
+
+function renderDescriptionEditor() {
+  if (!els.staffEditorDescription) return;
+  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
+    ? QUALIFICATION_LANGUAGE_OPTIONS
+    : [{ value: "en", label: "EN", direction: "ltr" }];
+  const current = state.editor?.descriptionByLang && typeof state.editor.descriptionByLang === "object"
+    ? state.editor.descriptionByLang
+    : {};
+  const rows = options
+    .map((option) => {
+      const lang = normalizeText(option.value).toLowerCase();
+      const buttonHtml = lang === "en"
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="description">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="description" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+      return `<div class="tour-localized-group__row">
+        <div class="tour-localized-group__code-cell">${buttonHtml}</div>
+        <div class="tour-localized-group__field">
+          <textarea id="${escapeHtml(descriptionTextareaId(lang))}" data-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
+        </div>
+      </div>`;
+    })
+    .join("");
+  els.staffEditorDescription.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
+}
+
 function handleStaffTableClick(event) {
   const editButton = event.target.closest("[data-staff-edit]");
   if (!editButton) return;
@@ -538,8 +673,38 @@ function handleQualificationInput(event) {
   updateEditorSaveButtonState();
 }
 
+function handleDescriptionInput(event) {
+  const input = event.target.closest("[data-description-lang]");
+  if (!input) return;
+  const lang = normalizeText(input.getAttribute("data-description-lang")).toLowerCase();
+  if (!lang) return;
+  const nextValue = normalizeText(input.value);
+  if (!state.editor.descriptionByLang || typeof state.editor.descriptionByLang !== "object") {
+    state.editor.descriptionByLang = {};
+  }
+  if (nextValue) state.editor.descriptionByLang[lang] = nextValue;
+  else delete state.editor.descriptionByLang[lang];
+  clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
 function handleFullNameInput(event) {
   state.editor.fullName = normalizeText(event.target?.value);
+  clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
+function handlePositionInput(event) {
+  const input = event.target.closest("[data-position-lang]");
+  if (!input) return;
+  const lang = normalizeText(input.getAttribute("data-position-lang")).toLowerCase();
+  if (!lang) return;
+  const nextValue = normalizeText(input.value);
+  if (!state.editor.positionByLang || typeof state.editor.positionByLang !== "object") {
+    state.editor.positionByLang = {};
+  }
+  if (nextValue) state.editor.positionByLang[lang] = nextValue;
+  else delete state.editor.positionByLang[lang];
   clearEditorStatus();
   updateEditorSaveButtonState();
 }
@@ -550,12 +715,58 @@ function handleFriendlyShortNameInput(event) {
   updateEditorSaveButtonState();
 }
 
+function handleAppearsInTeamWebPageChange(event) {
+  state.editor.appearsInTeamWebPage = event.target?.checked !== false;
+  clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
 function qualificationTextareaId(lang) {
   return `staff_qualification_${normalizeText(lang).toLowerCase()}`;
 }
 
 function getQualificationTextarea(lang) {
   return document.getElementById(qualificationTextareaId(lang));
+}
+
+function descriptionTextareaId(lang) {
+  return `staff_description_${normalizeText(lang).toLowerCase()}`;
+}
+
+function getDescriptionTextarea(lang) {
+  return document.getElementById(descriptionTextareaId(lang));
+}
+
+function positionInputId(lang) {
+  return `staff_position_${normalizeText(lang).toLowerCase()}`;
+}
+
+function getPositionInput(lang) {
+  return document.getElementById(positionInputId(lang));
+}
+
+function buildPositionTranslationEntries(sourceText) {
+  const value = normalizeText(sourceText);
+  return value ? { value } : {};
+}
+
+function translatedPositionValue(entries) {
+  return normalizeText(entries?.value);
+}
+
+function setPositionValue(lang, value) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  const normalizedValue = normalizeText(value);
+  if (!state.editor.positionByLang || typeof state.editor.positionByLang !== "object") {
+    state.editor.positionByLang = {};
+  }
+  if (normalizedValue) state.editor.positionByLang[normalizedLang] = normalizedValue;
+  else delete state.editor.positionByLang[normalizedLang];
+  const input = getPositionInput(normalizedLang);
+  if (input && input.value !== normalizedValue) {
+    input.value = normalizedValue;
+  }
+  updateEditorSaveButtonState();
 }
 
 function buildQualificationTranslationEntries(sourceText) {
@@ -582,10 +793,86 @@ function setQualificationValue(lang, value) {
   updateEditorSaveButtonState();
 }
 
+function buildDescriptionTranslationEntries(sourceText) {
+  const value = normalizeText(sourceText);
+  return value ? { value } : {};
+}
+
+function translatedDescriptionValue(entries) {
+  return normalizeText(entries?.value);
+}
+
+function setDescriptionValue(lang, value) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  const normalizedValue = normalizeText(value);
+  if (!state.editor.descriptionByLang || typeof state.editor.descriptionByLang !== "object") {
+    state.editor.descriptionByLang = {};
+  }
+  if (normalizedValue) state.editor.descriptionByLang[normalizedLang] = normalizedValue;
+  else delete state.editor.descriptionByLang[normalizedLang];
+  const textarea = getDescriptionTextarea(normalizedLang);
+  if (textarea && textarea.value !== normalizedValue) {
+    textarea.value = normalizedValue;
+  }
+  updateEditorSaveButtonState();
+}
+
 async function requestQualificationTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
   const entries = buildQualificationTranslationEntries(sourceText);
+  if (!Object.keys(entries).length) return null;
+  const request = keycloakUserStaffProfileTranslateFieldsRequest({
+    baseURL: apiOrigin,
+    params: { username: user.username },
+    body: {
+      source_lang: "en",
+      target_lang: targetLang,
+      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
+    }
+  });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: request.body
+  });
+  if (!Array.isArray(payload?.entries)) return null;
+  return Object.fromEntries(
+    payload.entries
+      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+      .filter(([key, value]) => Boolean(key && value))
+  );
+}
+
+async function requestPositionTranslation(targetLang, sourceText) {
+  const user = getSelectedUser();
+  if (!user) return null;
+  const entries = buildPositionTranslationEntries(sourceText);
+  if (!Object.keys(entries).length) return null;
+  const request = keycloakUserStaffProfileTranslateFieldsRequest({
+    baseURL: apiOrigin,
+    params: { username: user.username },
+    body: {
+      source_lang: "en",
+      target_lang: targetLang,
+      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
+    }
+  });
+  const payload = await fetchApi(request.url, {
+    method: request.method,
+    body: request.body
+  });
+  if (!Array.isArray(payload?.entries)) return null;
+  return Object.fromEntries(
+    payload.entries
+      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
+      .filter(([key, value]) => Boolean(key && value))
+  );
+}
+
+async function requestDescriptionTranslation(targetLang, sourceText) {
+  const user = getSelectedUser();
+  if (!user) return null;
+  const entries = buildDescriptionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
@@ -666,6 +953,122 @@ async function translateQualificationToAll(button) {
   showEditorStatus(backendT("backend.users.translation.all_done", "All qualification translations updated."));
 }
 
+async function translatePosition(button) {
+  const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
+  const englishInput = getPositionInput("en");
+  const targetInput = getPositionInput(targetLang);
+  if (!targetLang || !englishInput || !targetInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildPositionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.position_translation.missing_source", "Add English position first."), true);
+    return;
+  }
+
+  setPositionValue(targetLang, "");
+  showEditorStatus(backendT("backend.users.position_translation.translating", "Translating position..."));
+  const translatedEntries = await requestPositionTranslation(targetLang, englishSource);
+  if (!translatedEntries) {
+    showEditorStatus(backendT("backend.users.position_translation.error", "Could not translate the position."), true);
+    return;
+  }
+
+  setPositionValue(targetLang, translatedPositionValue(translatedEntries));
+  showEditorStatus(backendT("backend.users.position_translation.done", "Position translated."));
+}
+
+async function translatePositionToAll(button) {
+  const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
+  if (field !== "position") return;
+  const englishInput = getPositionInput("en");
+  if (!englishInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildPositionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.position_translation.missing_source", "Add English position first."), true);
+    return;
+  }
+
+  const targets = QUALIFICATION_LANGUAGE_OPTIONS
+    .map((option) => normalizeText(option?.value).toLowerCase())
+    .filter((lang) => lang && lang !== "en");
+  if (!targets.length) return;
+
+  for (const targetLang of targets) {
+    setPositionValue(targetLang, "");
+  }
+  showEditorStatus(backendT("backend.users.position_translation.translating_all", "Translating all position languages..."));
+
+  for (const targetLang of targets) {
+    const translatedEntries = await requestPositionTranslation(targetLang, englishSource);
+    if (!translatedEntries) {
+      showEditorStatus(backendT("backend.users.position_translation.error", "Could not translate the position."), true);
+      return;
+    }
+    setPositionValue(targetLang, translatedPositionValue(translatedEntries));
+  }
+
+  showEditorStatus(backendT("backend.users.position_translation.all_done", "All position translations updated."));
+}
+
+async function translateDescription(button) {
+  const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
+  const englishInput = getDescriptionTextarea("en");
+  const targetInput = getDescriptionTextarea(targetLang);
+  if (!targetLang || !englishInput || !targetInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildDescriptionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.description_translation.missing_source", "Add English description first."), true);
+    return;
+  }
+
+  setDescriptionValue(targetLang, "");
+  showEditorStatus(backendT("backend.users.description_translation.translating", "Translating description..."));
+  const translatedEntries = await requestDescriptionTranslation(targetLang, englishSource);
+  if (!translatedEntries) {
+    showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
+    return;
+  }
+
+  setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries));
+  showEditorStatus(backendT("backend.users.description_translation.done", "Description translated."));
+}
+
+async function translateDescriptionToAll(button) {
+  const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
+  if (field !== "description") return;
+  const englishInput = getDescriptionTextarea("en");
+  if (!englishInput) return;
+
+  const englishSource = String(englishInput.value || "");
+  if (!Object.keys(buildDescriptionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.description_translation.missing_source", "Add English description first."), true);
+    return;
+  }
+
+  const targets = QUALIFICATION_LANGUAGE_OPTIONS
+    .map((option) => normalizeText(option?.value).toLowerCase())
+    .filter((lang) => lang && lang !== "en");
+  if (!targets.length) return;
+
+  for (const targetLang of targets) {
+    setDescriptionValue(targetLang, "");
+  }
+  showEditorStatus(backendT("backend.users.description_translation.translating_all", "Translating all description languages..."));
+
+  for (const targetLang of targets) {
+    const translatedEntries = await requestDescriptionTranslation(targetLang, englishSource);
+    if (!translatedEntries) {
+      showEditorStatus(backendT("backend.users.description_translation.error", "Could not translate the description."), true);
+      return;
+    }
+    setDescriptionValue(targetLang, translatedDescriptionValue(translatedEntries));
+  }
+
+  showEditorStatus(backendT("backend.users.description_translation.all_done", "All description translations updated."));
+}
+
 function handleDestinationToggle(event) {
   const input = event.target.closest("[data-staff-destination]");
   if (!input) return;
@@ -703,6 +1106,32 @@ function normalizeQualificationEntriesForSave() {
     .sort((left, right) => left.lang.localeCompare(right.lang));
 }
 
+function normalizePositionEntriesForSave() {
+  const source = state.editor?.positionByLang && typeof state.editor.positionByLang === "object"
+    ? state.editor.positionByLang
+    : {};
+  return Object.entries(source)
+    .map(([lang, value]) => ({
+      lang: normalizeText(lang).toLowerCase(),
+      value: normalizeText(value)
+    }))
+    .filter((entry) => Boolean(entry.lang && entry.value))
+    .sort((left, right) => left.lang.localeCompare(right.lang));
+}
+
+function normalizeDescriptionEntriesForSave() {
+  const source = state.editor?.descriptionByLang && typeof state.editor.descriptionByLang === "object"
+    ? state.editor.descriptionByLang
+    : {};
+  return Object.entries(source)
+    .map(([lang, value]) => ({
+      lang: normalizeText(lang).toLowerCase(),
+      value: normalizeText(value)
+    }))
+    .filter((entry) => Boolean(entry.lang && entry.value))
+    .sort((left, right) => left.lang.localeCompare(right.lang));
+}
+
 async function saveSelectedStaffProfile() {
   const user = getSelectedUser();
   if (!user || !state.permissions.canEditStaffProfiles) return;
@@ -719,6 +1148,8 @@ async function saveSelectedStaffProfile() {
   const destinations = Array.from(new Set((Array.isArray(state.editor?.destinations) ? state.editor.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean)));
 
   const qualificationI18n = normalizeQualificationEntriesForSave();
+  const positionI18n = normalizePositionEntriesForSave();
+  const descriptionI18n = normalizeDescriptionEntriesForSave();
   const pendingPhoto = state.editor?.pendingPhoto && typeof state.editor.pendingPhoto === "object"
     ? state.editor.pendingPhoto
     : null;
@@ -739,10 +1170,13 @@ async function saveSelectedStaffProfile() {
         method: request.method,
         body: {
           full_name: normalizeText(state.editor?.fullName),
+          position_i18n: positionI18n,
           friendly_short_name: normalizeText(state.editor?.friendlyShortName),
+          appears_in_team_web_page: state.editor?.appearsInTeamWebPage !== false,
           languages,
           destinations,
-          qualification_i18n: qualificationI18n
+          qualification_i18n: qualificationI18n,
+          description_i18n: descriptionI18n
         }
       });
       if (!payload?.user) return;

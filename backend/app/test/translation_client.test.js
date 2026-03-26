@@ -39,3 +39,43 @@ test("google fallback preserves sentence spacing between translated segments", a
     globalThis.fetch = originalFetch;
   }
 });
+
+test("google fallback maps Malay aliases to the ms target language code", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url || "");
+    return {
+      ok: true,
+      async json() {
+        return [[
+          ["Profil ATP", null, null, null]
+        ]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      googleFallbackEnabled: true
+    });
+    const translated = await client.translateEntries(
+      {
+        value: "ATP profile"
+      },
+      "Malay",
+      {
+        sourceLangCode: "English",
+        allowGoogleFallback: true
+      }
+    );
+
+    assert.equal(translated.value, "Profil ATP");
+    const requestUrl = new URL(requestedUrl);
+    assert.equal(requestUrl.searchParams.get("sl"), "en");
+    assert.equal(requestUrl.searchParams.get("tl"), "ms");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

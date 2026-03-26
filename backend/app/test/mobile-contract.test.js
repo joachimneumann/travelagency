@@ -28,6 +28,8 @@ process.env.MOBILE_LATEST_APP_VERSION = "1.0.0";
 process.env.MOBILE_FORCE_UPDATE = "false";
 process.env.BACKEND_DATA_DIR = TEST_DATA_DIR;
 process.env.STORE_FILE = STORE_PATH;
+process.env.ATP_STAFF_PROFILES_PATH = path.join(TEST_DATA_DIR, "content", "atp_staff", "staff.json");
+process.env.ATP_STAFF_PHOTOS_DIR = path.join(TEST_DATA_DIR, "content", "atp_staff", "photos");
 process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH = "";
 process.env.GOOGLE_IMPERSONATED_EMAIL = "";
 process.env.BOOKING_CONFIRMATION_TOKEN_SECRET = "booking-confirmationance-contract-test-secret";
@@ -4521,6 +4523,54 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   assert.equal(updated.staff_profile.qualification, qualificationEn);
 });
 
+test("admin can translate ATP staff profile text from English to Malay", async () => {
+  const translatePath = endpointPath("keycloak_user_staff_profile_translate_fields").replace("{username}", "joachim");
+  const previousFetch = global.fetch;
+  global.fetch = async (input, init = {}) => {
+    const url = typeof input === "string" ? input : input?.url || "";
+    if (String(url).startsWith("https://translate.googleapis.com/translate_a/single?")) {
+      const parsed = new URL(String(url));
+      assert.equal(parsed.searchParams.get("sl"), "en");
+      assert.equal(parsed.searchParams.get("tl"), "ms");
+      return new Response(JSON.stringify([[
+        ["Perancang perjalanan Asia Tenggara yang tenang", null, null, null]
+      ]]), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    return previousFetch(input, init);
+  };
+
+  try {
+    const translateResult = await requestJson(
+      translatePath,
+      apiHeaders("atp_admin", "admin", "kc-admin"),
+      {
+        method: "POST",
+        body: {
+          source_lang: "English",
+          target_lang: "Malay",
+          entries: [{
+            key: "value",
+            value: "Calm Southeast Asia trip planner"
+          }]
+        }
+      }
+    );
+
+    assert.equal(translateResult.status, 200);
+    assert.equal(translateResult.body.source_lang, "en");
+    assert.equal(translateResult.body.target_lang, "ms");
+    assert.equal(
+      translateResult.body.entries.find((entry) => entry.key === "value")?.value,
+      "Perancang perjalanan Asia Tenggara yang tenang"
+    );
+  } finally {
+    global.fetch = previousFetch;
+  }
+});
+
 test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGICK }, async () => {
   const picturePath = endpointPath("keycloak_user_staff_profile_picture_upload").replace("{username}", "joachim");
 
@@ -4539,7 +4589,7 @@ test("admin can upload and reset ATP staff profile pictures", { skip: !HAS_MAGIC
   assert.equal(uploadResult.status, 200);
   assert.match(String(uploadResult.body.user.staff_profile.picture_ref || ""), /joachim\.webp$/);
 
-  const uploadedPhotoPath = path.join(TEST_DATA_DIR, "atp_staff_photos", "joachim.webp");
+  const uploadedPhotoPath = path.join(TEST_DATA_DIR, "content", "atp_staff", "photos", "joachim.webp");
   const uploadedPhotoStat = await stat(uploadedPhotoPath);
   assert.ok(uploadedPhotoStat.size > 0);
 

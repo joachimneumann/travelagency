@@ -142,6 +142,7 @@ const services = createBackendServices({
     bookingPersonPhotosDir: RUNTIME_PATHS.bookingPersonPhotosDir,
     atpStaffProfilesPath: RUNTIME_PATHS.atpStaffProfilesPath,
     atpStaffPhotosDir: RUNTIME_PATHS.atpStaffPhotosDir,
+    keycloakUserSnapshotPath: RUNTIME_PATHS.keycloakUserSnapshotPath,
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,
     tempUploadDir: RUNTIME_PATHS.tempUploadDir,

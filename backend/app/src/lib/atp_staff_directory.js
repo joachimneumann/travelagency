@@ -51,6 +51,10 @@ function normalizeCountryCodes(items) {
   return unique((Array.isArray(items) ? items : []).map((item) => normalizeText(item).toUpperCase()));
 }
 
+function normalizeAppearsInTeamWebPage(value, fallback = true) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
 function qualificationTextFromLegacyExperiences(items) {
   return (Array.isArray(items) ? items : [])
     .map((experience) => {
@@ -88,6 +92,34 @@ function qualificationEntriesFromMap(value) {
     .filter((entry) => Boolean(entry.lang && entry.value));
 }
 
+function normalizeDescriptionMap(value) {
+  if (Array.isArray(value)) {
+    const fromEntries = qualificationMapFromEntries(value);
+    if (Object.keys(fromEntries).length) return fromEntries;
+  }
+  return normalizeLocalizedTextMap(value, "en");
+}
+
+function normalizePositionMap(value) {
+  if (Array.isArray(value)) {
+    const fromEntries = qualificationMapFromEntries(value);
+    if (Object.keys(fromEntries).length) return fromEntries;
+  }
+  return normalizeLocalizedTextMap(value, "en");
+}
+
+function descriptionEntriesFromMap(value) {
+  return Object.entries(normalizeDescriptionMap(value))
+    .map(([lang, text]) => ({ lang, value: text }))
+    .filter((entry) => Boolean(entry.lang && entry.value));
+}
+
+function positionEntriesFromMap(value) {
+  return Object.entries(normalizePositionMap(value))
+    .map(([lang, text]) => ({ lang, value: text }))
+    .filter((entry) => Boolean(entry.lang && entry.value));
+}
+
 function firstNameToken(value) {
   return normalizeText(value).split(/\s+/).filter(Boolean)[0] || "";
 }
@@ -100,6 +132,26 @@ export function resolveAtpStaffQualificationText(profile, lang = "en") {
   );
 }
 
+function defaultPictureFilenameForUsername(username) {
+  const normalizedUsername = normalizeText(username).toLowerCase();
+  return normalizedUsername ? `${normalizedUsername}.svg` : "";
+}
+
+function pictureFilenameFromStoredValue(value, username = "") {
+  const normalized = normalizeText(value);
+  if (!normalized) return defaultPictureFilenameForUsername(username);
+  const publicMatch = normalized.match(/\/public\/v1\/atp-staff-photos\/([^/?#]+)$/i);
+  const candidate = publicMatch
+    ? decodeURIComponent(publicMatch[1])
+    : path.basename(normalized);
+  return normalizeText(candidate) || defaultPictureFilenameForUsername(username);
+}
+
+function pictureRefForFilename(filename, username = "") {
+  const resolved = pictureFilenameFromStoredValue(filename, username);
+  return resolved ? `/public/v1/atp-staff-photos/${encodeURIComponent(resolved)}` : "";
+}
+
 function normalizeStoredProfile(profile) {
   const username = normalizeText(profile?.username).toLowerCase();
   if (!username) return null;
@@ -107,19 +159,26 @@ function normalizeStoredProfile(profile) {
     (Array.isArray(profile?.experiences) ? profile.experiences : []).flatMap((experience) => experience?.countries || [])
   );
   const qualification = normalizeQualificationMap(profile?.qualification ?? profile?.qualification_i18n, profile?.experiences);
+  const position = normalizePositionMap(profile?.position ?? profile?.position_i18n);
+  const description = normalizeDescriptionMap(profile?.description ?? profile?.description_i18n);
   return {
     username,
     ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
     ...(normalizeText(profile?.full_name) ? { full_name: normalizeText(profile.full_name) } : {}),
+    ...(Object.keys(position).length ? { position } : {}),
     ...(normalizeText(profile?.friendly_short_name) ? { friendly_short_name: normalizeText(profile.friendly_short_name) } : {}),
-    ...(normalizeText(profile?.picture_ref) ? { picture_ref: normalizeText(profile.picture_ref) } : {}),
+    ...(pictureFilenameFromStoredValue(profile?.picture ?? profile?.picture_ref, username)
+      ? { picture: pictureFilenameFromStoredValue(profile?.picture ?? profile?.picture_ref, username) }
+      : {}),
     languages: normalizeLanguageCodes(profile?.languages ?? profile?.spoken_languages),
     ...(normalizeCountryCodes(profile?.destinations).length
       ? { destinations: normalizeCountryCodes(profile.destinations) }
       : legacyExperienceDestinations.length
         ? { destinations: legacyExperienceDestinations }
         : {}),
-    ...(Object.keys(qualification).length ? { qualification } : {})
+    appears_in_team_web_page: normalizeAppearsInTeamWebPage(profile?.appears_in_team_web_page, true),
+    ...(Object.keys(qualification).length ? { qualification } : {}),
+    ...(Object.keys(description).length ? { description } : {})
   };
 }
 
@@ -184,10 +243,6 @@ function buildAvatarSvg(name, username) {
 `;
 }
 
-function pictureRefForUsername(username) {
-  return `/public/v1/atp-staff-photos/${encodeURIComponent(username)}.svg`;
-}
-
 function genericProfileBlueprint(user) {
   return {
     languages: ["en", "vi"],
@@ -239,7 +294,7 @@ function defaultStoredProfileForUser(user) {
     name: defaultDisplayNameForUser(user),
     full_name: defaultFullNameForUser(user),
     friendly_short_name: defaultFriendlyShortNameForUser(user),
-    picture_ref: pictureRefForUsername(username),
+    picture: defaultPictureFilenameForUsername(username),
     languages: blueprint.languages,
     destinations: blueprint.destinations,
     qualification: blueprint.qualification
@@ -275,6 +330,10 @@ function mergeStoredProfileWithUser(profile, user) {
   });
   const normalizedQualification = normalizeQualificationMap(normalizedProfile?.qualification);
   const defaultQualification = normalizeQualificationMap(defaultProfile?.qualification);
+  const normalizedPosition = normalizePositionMap(normalizedProfile?.position);
+  const defaultPosition = normalizePositionMap(defaultProfile?.position);
+  const normalizedDescription = normalizeDescriptionMap(normalizedProfile?.description);
+  const defaultDescription = normalizeDescriptionMap(defaultProfile?.description);
   const resolvedFullName = normalizeText(normalizedProfile?.full_name)
     || normalizeText(defaultProfile?.full_name)
     || normalizeText(user?.name)
@@ -288,40 +347,88 @@ function mergeStoredProfileWithUser(profile, user) {
     username,
     name: normalizeText(user?.name) || normalizeText(normalizedProfile?.name) || defaultProfile.name,
     full_name: resolvedFullName,
+    position: Object.keys(normalizedPosition).length ? normalizedPosition : defaultPosition,
     friendly_short_name: resolvedFriendlyShortName,
-    picture_ref: normalizeText(normalizedProfile?.picture_ref) || defaultProfile.picture_ref,
+    picture: pictureFilenameFromStoredValue(normalizedProfile?.picture, username) || defaultProfile.picture,
     languages: normalizeLanguageCodes(normalizedProfile?.languages).length
       ? normalizeLanguageCodes(normalizedProfile.languages)
       : defaultProfile.languages,
     destinations: normalizeCountryCodes(normalizedProfile?.destinations).length
       ? normalizeCountryCodes(normalizedProfile.destinations)
       : defaultProfile.destinations,
-    qualification: Object.keys(normalizedQualification).length ? normalizedQualification : defaultQualification
+    appears_in_team_web_page: normalizeAppearsInTeamWebPage(
+      normalizedProfile?.appears_in_team_web_page,
+      normalizeAppearsInTeamWebPage(defaultProfile?.appears_in_team_web_page, true)
+    ),
+    qualification: Object.keys(normalizedQualification).length ? normalizedQualification : defaultQualification,
+    description: Object.keys(normalizedDescription).length ? normalizedDescription : defaultDescription
   };
 }
 
 function buildResponseProfile(profile, user) {
   const merged = mergeStoredProfileWithUser(profile, user);
   if (!merged) return null;
+  const {
+    picture,
+    qualification,
+    position,
+    description,
+    ...responseBase
+  } = merged;
   return {
-    ...merged,
-    qualification: resolveLocalizedText(merged.qualification, "en", ""),
-    qualification_i18n: qualificationEntriesFromMap(merged.qualification)
+    ...responseBase,
+    picture_ref: pictureRefForFilename(picture, merged.username),
+    qualification: resolveLocalizedText(qualification, "en", ""),
+    qualification_i18n: qualificationEntriesFromMap(qualification),
+    position: resolveLocalizedText(position, "en", ""),
+    position_i18n: positionEntriesFromMap(position),
+    description: resolveLocalizedText(description, "en", ""),
+    description_i18n: descriptionEntriesFromMap(description)
   };
 }
 
 export function createAtpStaffDirectory({
   dataPath,
   photosDir,
+  keycloakUsersSnapshotPath,
   keycloakDirectory,
   writeQueueRef
 }) {
-  const keycloakUsersSnapshotPath = path.join(path.dirname(dataPath), "keycloak_users_snapshot.json");
+  function profilesDocumentFromItems(items) {
+    const staff = Object.fromEntries(
+      sortProfiles(items).map((profile) => {
+        const normalized = normalizeStoredProfile(profile);
+        if (!normalized?.username) return [null, null];
+        const {
+          username,
+          ...rest
+        } = normalized;
+        return [username, rest];
+      }).filter(([username, profile]) => Boolean(username && profile))
+    );
+    return { staff };
+  }
+
+  function profilesFromStoredDocument(document) {
+    if (Array.isArray(document?.items)) {
+      return document.items;
+    }
+    if (document?.staff && typeof document.staff === "object" && !Array.isArray(document.staff)) {
+      return Object.entries(document.staff).map(([username, profile]) => ({
+        ...(profile && typeof profile === "object" ? profile : {}),
+        username
+      }));
+    }
+    return [];
+  }
 
   async function writeAvatarIfMissing(profile) {
     const username = normalizeText(profile?.username).toLowerCase();
     if (!username) return false;
-    const outputPath = path.join(photosDir, `${username}.svg`);
+    const picture = pictureFilenameFromStoredValue(profile?.picture, username);
+    const defaultPicture = defaultPictureFilenameForUsername(username);
+    if (picture && picture !== defaultPicture) return false;
+    const outputPath = path.join(photosDir, defaultPicture);
     if (await fileExists(outputPath)) return false;
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(
@@ -335,7 +442,7 @@ export function createAtpStaffDirectory({
   async function readProfiles() {
     const raw = await readFile(dataPath, "utf8");
     const parsed = JSON.parse(raw);
-    const sourceItems = Array.isArray(parsed?.items) ? parsed.items : [];
+    const sourceItems = profilesFromStoredDocument(parsed);
     let changed = false;
     const items = sourceItems
       .map((profile) => {
@@ -353,7 +460,7 @@ export function createAtpStaffDirectory({
 
   async function persistProfiles(payload) {
     writeQueueRef.current = writeQueueRef.current.then(async () => {
-      await writeFile(dataPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+      await writeFile(dataPath, `${JSON.stringify(profilesDocumentFromItems(payload?.items || []), null, 2)}\n`, "utf8");
     });
     await writeQueueRef.current;
   }
@@ -451,14 +558,14 @@ export function createAtpStaffDirectory({
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(photosDir, { recursive: true });
     if (!(await fileExists(dataPath))) {
-      await writeFile(dataPath, `${JSON.stringify({ items: seedProfiles() }, null, 2)}\n`, "utf8");
+      await writeFile(dataPath, `${JSON.stringify(profilesDocumentFromItems(seedProfiles()), null, 2)}\n`, "utf8");
     }
     const payload = await readProfiles().catch(() => ({ items: seedProfiles(), changed: true }));
     let changed = Boolean(payload.changed);
     for (const profile of payload.items) {
       if (await writeAvatarIfMissing(profile)) changed = true;
-      if (!normalizeText(profile.picture_ref)) {
-        profile.picture_ref = pictureRefForUsername(profile.username);
+      if (!normalizeText(profile.picture)) {
+        profile.picture = defaultPictureFilenameForUsername(profile.username);
         changed = true;
       }
     }
@@ -550,15 +657,28 @@ export function createAtpStaffDirectory({
       username,
       name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
       full_name: input?.full_name !== undefined ? input.full_name : current?.full_name,
+      position: input?.position_i18n !== undefined
+        ? input.position_i18n
+        : input?.position !== undefined
+          ? input.position
+          : current?.position,
       friendly_short_name: input?.friendly_short_name !== undefined ? input.friendly_short_name : current?.friendly_short_name,
-      picture_ref: normalizeText(currentStored?.picture_ref) || normalizeText(current?.picture_ref) || pictureRefForUsername(username),
+      picture: pictureFilenameFromStoredValue(currentStored?.picture ?? current?.picture_ref, username),
       languages: Array.isArray(input?.languages) ? input.languages : current?.languages,
       destinations: Array.isArray(input?.destinations) ? input.destinations : current?.destinations,
+      appears_in_team_web_page: input?.appears_in_team_web_page !== undefined
+        ? normalizeAppearsInTeamWebPage(input.appears_in_team_web_page, true)
+        : normalizeAppearsInTeamWebPage(current?.appears_in_team_web_page, true),
       qualification: input?.qualification_i18n !== undefined
         ? input.qualification_i18n
         : input?.qualification !== undefined
           ? input.qualification
-          : current?.qualification
+          : current?.qualification,
+      description: input?.description_i18n !== undefined
+        ? input.description_i18n
+        : input?.description !== undefined
+          ? input.description
+          : current?.description
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
@@ -569,8 +689,8 @@ export function createAtpStaffDirectory({
 
   async function setPictureRefByUsername(rawUsername, pictureRef) {
     const username = normalizeText(rawUsername).toLowerCase();
-    const normalizedPictureRef = normalizeText(pictureRef);
-    if (!username || !normalizedPictureRef) return null;
+    const normalizedPicture = pictureFilenameFromStoredValue(pictureRef, username);
+    if (!username || !normalizedPicture) return null;
     const user = await findAssignableUserByUsername(username);
     if (!user) return null;
 
@@ -583,11 +703,14 @@ export function createAtpStaffDirectory({
       username,
       name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
       full_name: current?.full_name,
+      position: current?.position,
       friendly_short_name: current?.friendly_short_name,
-      picture_ref: normalizedPictureRef,
+      picture: normalizedPicture,
       languages: current?.languages,
       destinations: current?.destinations,
-      qualification: current?.qualification
+      appears_in_team_web_page: normalizeAppearsInTeamWebPage(current?.appears_in_team_web_page, true),
+      qualification: current?.qualification,
+      description: current?.description
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
@@ -603,7 +726,7 @@ export function createAtpStaffDirectory({
       username,
       name: normalizeText(user?.name) || username
     });
-    return setPictureRefByUsername(username, pictureRefForUsername(username));
+    return setPictureRefByUsername(username, defaultPictureFilenameForUsername(username));
   }
 
   async function resolveAssignedStaffProfile(keycloakUserId) {

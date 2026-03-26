@@ -24,6 +24,7 @@ export const APP_ROOT = path.resolve(__dirname, "..", "..");
 export const REPO_ROOT = path.resolve(APP_ROOT, "..", "..");
 export const DATA_ROOT = path.resolve(normalizeText(process.env.BACKEND_DATA_DIR) || path.join(APP_ROOT, "data"));
 export const DATA_PATH = path.resolve(normalizeText(process.env.STORE_FILE) || path.join(DATA_ROOT, "store.json"));
+export const CONTENT_ROOT = resolveConfigPathFromRepoRoot(normalizeText(process.env.CONTENT_ROOT || "content"));
 export const TOURS_DIR = path.join(DATA_ROOT, "tours");
 export const PDFS_ROOT = path.join(DATA_ROOT, "pdfs");
 export const INVOICES_DIR = path.join(PDFS_ROOT, "invoices");
@@ -31,8 +32,13 @@ export const GENERATED_OFFERS_DIR = path.join(PDFS_ROOT, "generated_offers");
 export const TRAVEL_PLAN_PDFS_DIR = path.join(PDFS_ROOT, "travel_plans");
 export const BOOKING_IMAGES_DIR = path.join(DATA_ROOT, "booking_images");
 export const BOOKING_PERSON_PHOTOS_DIR = path.join(DATA_ROOT, "booking_person_photos");
-export const ATP_STAFF_PROFILES_PATH = path.join(DATA_ROOT, "atp_staff_profiles.json");
-export const ATP_STAFF_PHOTOS_DIR = path.join(DATA_ROOT, "atp_staff_photos");
+export const ATP_STAFF_PROFILES_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.ATP_STAFF_PROFILES_PATH || path.join("content", "atp_staff", "staff.json"))
+);
+export const ATP_STAFF_PHOTOS_DIR = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.ATP_STAFF_PHOTOS_DIR || path.join("content", "atp_staff", "photos"))
+);
+export const KEYCLOAK_USER_SNAPSHOT_PATH = path.join(DATA_ROOT, "keycloak_users_snapshot.json");
 export const COUNTRY_REFERENCE_INFO_PATH = path.join(DATA_ROOT, "country_reference_info.json");
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
@@ -231,6 +237,7 @@ export const RUNTIME_PATHS = Object.freeze({
   appRoot: APP_ROOT,
   repoRoot: REPO_ROOT,
   dataRoot: DATA_ROOT,
+  contentRoot: CONTENT_ROOT,
   dataPath: DATA_PATH,
   pdfsRoot: PDFS_ROOT,
   toursDir: TOURS_DIR,
@@ -241,6 +248,7 @@ export const RUNTIME_PATHS = Object.freeze({
   bookingPersonPhotosDir: BOOKING_PERSON_PHOTOS_DIR,
   atpStaffProfilesPath: ATP_STAFF_PROFILES_PATH,
   atpStaffPhotosDir: ATP_STAFF_PHOTOS_DIR,
+  keycloakUserSnapshotPath: KEYCLOAK_USER_SNAPSHOT_PATH,
   countryReferenceInfoPath: COUNTRY_REFERENCE_INFO_PATH,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,

@@ -57,6 +57,7 @@ export function createBackendServices({
   const atpStaffDirectory = createAtpStaffDirectory({
     dataPath: collections.atpStaffProfilesPath,
     photosDir: collections.atpStaffPhotosDir,
+    keycloakUsersSnapshotPath: collections.keycloakUserSnapshotPath,
     keycloakDirectory,
     writeQueueRef
   });

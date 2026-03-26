@@ -298,9 +298,14 @@ import (
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
 	full_name?: string
+	position?: string
+	position_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 	friendly_short_name?: string
+	appears_in_team_web_page?: bool
 	qualification?: string
 	qualification_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
+	description?: string
+	description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 }
 
 #AtpStaffPhotoUploadRequest: #EvidenceUpload

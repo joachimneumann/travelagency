@@ -1,0 +1,226 @@
+{
+  "staff": {
+    "accountant": {
+      "name": "Accountant User",
+      "picture": "accountant.svg",
+      "languages": [
+        "en",
+        "vi"
+      ],
+      "destinations": [
+        "VN",
+        "TH",
+        "KH",
+        "LA"
+      ],
+      "qualification": {
+        "en": "Supports guests with clear pre-arrival coordination, payment follow-up, and practical next-step communication so the overall journey feels smooth and well prepared."
+      }
+    },
+    "admin": {
+      "name": "Admin User",
+      "picture": "admin.svg",
+      "languages": [
+        "en",
+        "vi"
+      ],
+      "destinations": [
+        "VN",
+        "TH",
+        "KH",
+        "LA"
+      ],
+      "qualification": {
+        "en": "Oversees ATP trip operations across Vietnam, Thailand, Cambodia, and Laos with a strong focus on realistic pacing, reliable handovers, and calm guest support when plans need to shift."
+      }
+    },
+    "joachim": {
+      "name": "Joachim Neumann",
+      "full_name": "Joachim Neumann",
+      "friendly_short_name": "Joachim",
+      "picture": "joachim.webp",
+      "languages": [
+        "de",
+        "en",
+        "es",
+        "da"
+      ],
+      "destinations": [
+        "VN",
+        "KH",
+        "LA",
+        "TH"
+      ],
+      "qualification": {
+        "ar": "متخصصون في مسارات رحلات جنوب شرق آسيا ذات الوتيرة الهادئة مع الأخذ بعين الاعتبار الراحة ووقت التعافي وتسليم المطار والتوجيه متعدد البلدان للأزواج والعائلات.",
+        "da": "Specialiseret sig i bløde rejseplaner i Sydøstasien med et stærkt øje for komfort, restitutionstid, lufthavnsoverdragelser og ruter i flere lande for par og familier.",
+        "de": "Spezialisiert auf entspannte Südostasien-Routen mit einem ausgeprägten Auge für Komfort, Erholungszeit, Flughafenübergaben und Mehrländer-Routen für Paare und Familien.",
+        "en": "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort, recovery time, airport handovers, and multi-country routing for couples and families.",
+        "es": "Se especializa en itinerarios tranquilos por el sudeste asiático con especial atención a la comodidad, el tiempo de recuperación, los traspasos de aeropuerto y las rutas entre varios países para parejas y familias.",
+        "fr": "Spécialisé dans les itinéraires au rythme doux en Asie du Sud-Est, avec un souci particulier du confort, du temps de récupération, des transferts à l'aéroport et des itinéraires multi-pays pour les couples et les familles.",
+        "it": "È specializzato in itinerari dal ritmo tranquillo nel Sud-Est asiatico con una grande attenzione al comfort, ai tempi di recupero, ai trasferimenti aeroportuali e ai percorsi multi-paese per coppie e famiglie.",
+        "ja": "カップルや家族向けの快適さ、回復時間、空港での引き継ぎ、複数の国を巡るルートを重視した、ゆっくりとしたペースの東南アジアの旅程を専門としています。",
+        "ko": "편안함, 회복 시간, 공항 인도, 커플과 가족을 위한 다국적 노선에 대한 강한 안목을 갖춘 부드러운 속도의 동남아시아 여행 일정을 전문으로 합니다.",
+        "nl": "Gespecialiseerd in rustige routes in Zuidoost-Azië met een sterk oog voor comfort, hersteltijd, luchthavenoverdrachten en routes naar meerdere landen voor stellen en gezinnen.",
+        "no": "Spesialiserer seg på reiseruter i det myke tempoet i Sørøst-Asia med et sterkt øye for komfort, restitusjonstid, flyplassoverleveringer og ruter i flere land for par og familier.",
+        "pl": "Specjalizuje się w trasach o łagodnym tempie w Azji Południowo-Wschodniej, ze szczególnym uwzględnieniem komfortu, czasu powrotu do zdrowia, przekazania na lotnisko oraz tras obejmujących wiele krajów dla par i rodzin.",
+        "ru": "Специализируется на спокойных маршрутах по Юго-Восточной Азии, уделяя особое внимание комфорту, времени на восстановление, трансферу из аэропорта и маршрутам между странами для пар и семей.",
+        "sv": "Specialiserat sig på resplaner i mjukt tempo i Sydostasien med ett starkt öga för komfort, återhämtningstid, flygplatsöverlämningar och rutt i flera länder för par och familjer.",
+        "vi": "Chuyên về các hành trình Đông Nam Á có nhịp độ nhẹ nhàng, chú trọng đến sự thoải mái, thời gian phục hồi, bàn giao sân bay và định tuyến đa quốc gia cho các cặp đôi và gia đình.",
+        "zh": "专注于节奏缓和的东南亚行程，注重舒适度、恢复时间、机场交接以及情侣和家庭的多国路线。"
+      }
+    },
+    "staff": {
+      "name": "Ngọc Nguyễn",
+      "picture": "staff.webp",
+      "languages": [
+        "vi"
+      ],
+      "destinations": [
+        "TH",
+        "VN",
+        "KH"
+      ],
+      "qualification": {
+        "en": "Experienced in shaping beach, wellness, and family-friendly routes with practical transfer timing, light daily pacing, and dependable on-trip coordination.",
+        "vi": "Có kinh nghiệm xây dựng các hành trình biển, wellness và phù hợp gia đình với thời gian di chuyển hợp lý, nhịp độ nhẹ nhàng và điều phối đáng tin cậy trong suốt chuyến đi."
+      }
+    },
+    "sang": {
+      "name": "Ngọc Sáng Dương",
+      "full_name": "Dương Ngọc Sáng",
+      "friendly_short_name": "Sáng",
+      "picture": "sang.webp",
+      "languages": [
+        "en",
+        "vi"
+      ],
+      "destinations": [
+        "VN",
+        "TH",
+        "KH",
+        "LA"
+      ],
+      "qualification": {
+        "ar": "يساعد Ngọc Sáng Dương في تشكيل طرق جنوب شرق آسيا سريعة الوتيرة من خلال نوافذ نقل واقعية ودعم وصول هادئ وتنسيق يومي عملي.",
+        "da": "Ngọc Sáng Dương hjælper med at forme ruter i Sydøstasien i godt tempo med realistiske transfervinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "de": "Ngọc Sáng Dương hilft bei der Gestaltung gut getakteter Südostasien-Routen mit realistischen Transferfenstern, ruhiger Ankunftsunterstützung und praktischer täglicher Koordination.",
+        "en": "Ngọc Sáng Dương helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.",
+        "es": "Ngọc Sáng Dương ayuda a dar forma a rutas de buen ritmo en el sudeste asiático con ventanas de transferencia realistas, apoyo tranquilo a la llegada y coordinación práctica del día a día.",
+        "fr": "Ngọc Sáng Dương contribue à façonner des itinéraires rythmés en Asie du Sud-Est avec des fenêtres de transfert réalistes, un soutien à l'arrivée calme et une coordination pratique au quotidien.",
+        "it": "Ngọc Sáng Dương aiuta a definire rotte efficienti nel sud-est asiatico con finestre di trasferimento realistiche, un supporto calmo all'arrivo e un coordinamento pratico quotidiano.",
+        "ja": "Ngọc Sáng Dương は、現実的な乗り継ぎウィンドウ、穏やかな到着サポート、実践的な日々の調整により、ペースの良い東南アジア路線の形成を支援します。",
+        "ko": "Ngọc Sáng Duan은 현실적인 환승 창구, 차분한 도착 지원, 실용적인 일상 조정을 통해 원활한 동남아시아 노선을 형성하는 데 도움을 줍니다.",
+        "nl": "Ngọc Sáng Dương helpt bij het vormgeven van snelle routes in Zuidoost-Azië met realistische transfervensters, rustige aankomstondersteuning en praktische dagelijkse coördinatie.",
+        "no": "Ngọc Sáng Dương hjelper til med å forme ruter i Sørøst-Asia med realistiske overføringsvinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "pl": "Ngọc Sáng Dương pomaga kształtować dobre trasy w Azji Południowo-Wschodniej, oferując realistyczne okna transferu, spokojną obsługę przylotów i praktyczną codzienną koordynację.",
+        "ru": "Ngọc Sáng Dương помогает формировать динамичные маршруты в Юго-Восточную Азию с реалистичными трансферными окнами, спокойной поддержкой при прибытии и практической повседневной координацией.",
+        "sv": "Ngọc Sáng Dương hjälper till att forma sydostasiens rutter med bra tempo med realistiska transferfönster, lugnt ankomststöd och praktisk daglig koordination.",
+        "vi": "Ngọc Sáng Dương giúp định hình các tuyến đường Đông Nam Á có nhịp độ tốt với thời gian chuyển nhượng thực tế, hỗ trợ khi đến nơi một cách bình tĩnh và sự phối hợp thực tế hàng ngày.",
+        "zh": "Ngọc Sáng Dương 通过现实的转机窗口、冷静的抵达支持和实用的日常协调，帮助打造节奏良好的东南亚航线。"
+      }
+    },
+    "xuan": {
+      "name": "Thị Thanh Xuân Đỗ",
+      "full_name": "Đỗ Thị Thanh Xuân",
+      "friendly_short_name": "Xuân",
+      "picture": "xuan.webp",
+      "languages": [
+        "en",
+        "vi"
+      ],
+      "destinations": [
+        "VN",
+        "TH",
+        "KH",
+        "LA"
+      ],
+      "qualification": {
+        "ar": "يساعد Thị Thanh Xuân Đỗ في تشكيل طرق جنوب شرق آسيا سريعة الوتيرة من خلال نوافذ نقل واقعية ودعم وصول هادئ وتنسيق يومي عملي.",
+        "da": "Thị Thanh Xuân Đỗ hjælper med at forme ruter i Sydøstasien i et godt tempo med realistiske transfervinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "de": "Thị Thanh",
+        "en": "Thị Thanh Xuân Đỗ helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.",
+        "es": "Thị Thanh Xuân Đỗ ayuda a dar forma a rutas de buen ritmo en el sudeste asiático con ventanas de transferencia realistas, apoyo tranquilo a la llegada y coordinación práctica del día a día.",
+        "fr": "Thị Thanh Xuân Đỗ contribue à façonner des itinéraires rythmés en Asie du Sud-Est avec des fenêtres de transfert réalistes, une assistance à l'arrivée calme et une coordination pratique au quotidien.",
+        "it": "Thị Thanh Xuân Đỗ aiuta a definire rotte ben ritmate nel sud-est asiatico con finestre di trasferimento realistiche, supporto calmo all'arrivo e coordinamento pratico quotidiano.",
+        "ja": "Thị Thanh Xuân Đỗ は、現実的な乗り継ぎウィンドウ、穏やかな到着サポート、実践的な日々の調整により、ペースの良い東南アジア路線の形成を支援します。",
+        "ko": "Thị Thanh Xuân Do는 현실적인 환승 창구, 차분한 도착 지원, 실용적인 일상 조정을 통해 원활한 동남아시아 노선을 형성하는 데 도움을 줍니다.",
+        "nl": "Thị Thanh Xuân Đỗ helpt bij het vormgeven van snelle routes in Zuidoost-Azië met realistische transfervensters, rustige aankomstondersteuning en praktische dagelijkse coördinatie.",
+        "no": "Thị Thanh Xuân Đỗ hjelper til med å forme ruter i Sørøst-Asia med realistiske overføringsvinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "pl": "Thị Thanh Xuân Đỗ pomaga kształtować dobre trasy w Azji Południowo-Wschodniej dzięki realistycznym oknom transferu, spokojnej obsłudze przylotów i praktycznej codziennej koordynacji.",
+        "ru": "Тхо Тхань Суан Ди помогает формировать динамичные маршруты в Юго-Восточной Азии с реалистичными трансферными окнами, спокойной поддержкой при прибытии и практической повседневной координацией.",
+        "sv": "Thị Thanh Xuân Đỗ hjälper till att forma sydostasiens rutter med bra tempo med realistiska transferfönster, lugnt ankomststöd och praktisk daglig koordination.",
+        "vi": "Thị Thanh Xuân Đỗ giúp định hình các tuyến đường Đông Nam Á có nhịp độ tốt với các kỳ chuyển nhượng thực tế, hỗ trợ khách đến một cách bình tĩnh và sự phối hợp thực tế hàng ngày.",
+        "zh": "Thị Thanh Xuân Đỗ 通过现实的转机窗口、冷静的抵达支持和实用的日常协调，帮助塑造节奏良好的东南亚航线。"
+      }
+    },
+    "van": {
+      "name": "Thị Vân Nguyễn",
+      "full_name": "Nguyễn Thị Vân",
+      "friendly_short_name": "Vân",
+      "picture": "van.webp",
+      "languages": [
+        "en",
+        "vi"
+      ],
+      "destinations": [
+        "VN",
+        "TH",
+        "KH",
+        "LA"
+      ],
+      "qualification": {
+        "ar": "يساعد في تشكيل مسارات جنوب شرق آسيا سريعة الوتيرة من خلال نوافذ نقل واقعية ودعم وصول هادئ وتنسيق يومي عملي.",
+        "da": "Hjælper med at forme ruter i Sydøstasien med realistiske overførselsvinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "de": "Hilft dabei, temporeiche Südostasien-Routen mit realistischen Transferfenstern, ruhiger Ankunftsunterstützung und praktischer täglicher Koordination zu gestalten.",
+        "en": "Helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.",
+        "es": "Ayuda a dar forma a rutas con buen ritmo en el Sudeste Asiático con ventanas de transferencia realistas, apoyo tranquilo a la llegada y coordinación práctica del día a día.",
+        "fr": "Aide à façonner des itinéraires rythmés en Asie du Sud-Est avec des fenêtres de transfert réalistes, une assistance à l'arrivée calme et une coordination pratique au quotidien.",
+        "it": "Aiuta a definire rotte efficienti nel sud-est asiatico con finestre di trasferimento realistiche, supporto calmo all'arrivo e coordinamento pratico quotidiano.",
+        "ja": "現実的な乗り継ぎウィンドウ、穏やかな到着サポート、実践的な日常調整により、ペースの良い東南アジア路線の形成を支援します。",
+        "ko": "현실적인 환승 창, 차분한 도착 지원, 실용적인 일상 조정을 통해 원활하게 진행되는 동남아시아 노선을 형성하는 데 도움이 됩니다.",
+        "nl": "Helpt bij het vormgeven van snelle routes in Zuidoost-Azië met realistische transfervensters, rustige aankomstondersteuning en praktische dagelijkse coördinatie.",
+        "no": "Hjelper med å forme ruter i Sørøst-Asia med realistiske overføringsvinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "pl": "Pomaga kształtować dobre trasy w Azji Południowo-Wschodniej dzięki realistycznym oknom transferu, spokojnej obsłudze przylotów i praktycznej codziennej koordynacji.",
+        "ru": "Помогает формировать динамичные маршруты в Юго-Восточной Азии с реалистичными трансферными окнами, спокойной поддержкой при прибытии и практической повседневной координацией.",
+        "sv": "Hjälper till att forma vältemperade rutter i Sydostasien med realistiska transferfönster, lugnt ankomststöd och praktisk daglig koordination.",
+        "vi": "Giúp định hình các tuyến đường Đông Nam Á có nhịp độ tốt với thời gian chuyển nhượng thực tế, hỗ trợ khi đến nơi một cách bình tĩnh và sự phối hợp thực tế hàng ngày.",
+        "zh": "通过现实的转机窗口、冷静的抵达支持和实用的日常协调，帮助塑造节奏良好的东南亚航线。"
+      }
+    },
+    "ngoc": {
+      "name": "Văn Ngọc Đào",
+      "full_name": "Đào Văn Ngọc",
+      "friendly_short_name": "Ngọc",
+      "picture": "ngoc.webp",
+      "languages": [
+        "en",
+        "vi"
+      ],
+      "destinations": [
+        "VN",
+        "TH",
+        "KH",
+        "LA"
+      ],
+      "qualification": {
+        "ar": "يساعد Văn Ngọc Đào في تشكيل طرق جنوب شرق آسيا سريعة الوتيرة من خلال نوافذ نقل واقعية ودعم الوصول الهادئ والتنسيق العملي اليومي.",
+        "da": "Văn Ngọc Đào hjælper med at forme ruter i Sydøstasien i et godt tempo med realistiske transfervinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "de": "Văn Ngọc Đào hilft bei der Gestaltung temporeicher Südostasienrouten mit realistischen Transferfenstern, ruhiger Ankunftsunterstützung und praktischer täglicher Koordination.",
+        "en": "Văn Ngọc Đào helps shape well-paced Southeast Asia routes with realistic transfer windows, calm arrival support, and practical day-to-day coordination.",
+        "es": "Văn Ngọc Đào ayuda a dar forma a rutas de buen ritmo en el Sudeste Asiático con ventanas de transferencia realistas, apoyo tranquilo a la llegada y coordinación práctica del día a día.",
+        "fr": "Văn Ngọc Đào contribue à façonner des itinéraires rythmés en Asie du Sud-Est avec des fenêtres de transfert réalistes, un soutien à l'arrivée calme et une coordination pratique au quotidien.",
+        "it": "Văn Ngọc Đào aiuta a definire rotte ben ritmate nel sud-est asiatico con finestre di trasferimento realistiche, un supporto calmo all'arrivo e un coordinamento pratico quotidiano.",
+        "ja": "Văn Ngọc Đào は、現実的な乗り継ぎウィンドウ、穏やかな到着サポート、実践的な日々の調整により、ペースの良い東南アジア路線の形成を支援します。",
+        "ko": "Văn Ngọc Dao는 현실적인 환승 창구, 차분한 도착 지원, 실용적인 일상 조정을 통해 원활한 동남아시아 노선을 형성하는 데 도움을 줍니다.",
+        "nl": "Văn Ngọc Đào helpt bij het vormgeven van snelle routes in Zuidoost-Azië met realistische transfervensters, rustige aankomstondersteuning en praktische dagelijkse coördinatie.",
+        "no": "Văn Ngọc Đào hjelper til med å forme ruter i Sørøst-Asia med realistiske overføringsvinduer, rolig ankomststøtte og praktisk koordinering fra dag til dag.",
+        "pl": "Văn Ngọc Đào pomaga kształtować dobre trasy w Azji Południowo-Wschodniej dzięki realistycznym oknom transferu, spokojnej obsłudze przylotów i praktycznej codziennej koordynacji.",
+        "ru": "Ван Нгок Дао помогает формировать динамичные маршруты в Юго-Восточной Азии с реалистичными трансферными окнами, спокойной поддержкой при прибытии и практической повседневной координацией.",
+        "sv": "Văn Ngọc Đào hjälper till att forma sydostasiens rutter med bra tempo med realistiska transferfönster, lugnt ankomststöd och praktisk daglig koordination.",
+        "vi": "Văn Ngọc Đào giúp định hình các tuyến đường Đông Nam Á có nhịp độ tốt với các kỳ chuyển nhượng thực tế, hỗ trợ khi đến nơi một cách bình tĩnh và sự phối hợp thực tế hàng ngày.",
+        "zh": "Văn Ngọc Đào 通过现实的转机窗口、冷静的抵达支持和实用的日常协调，帮助打造节奏良好的东南亚航线。"
+      }
+    }
+  }
+}
