@@ -344,6 +344,12 @@ export function createBookingTravelPlanModule(ctx) {
 
   function applyBookingPayload() {
     state.travelPlanDraft = normalizeTravelPlanDraft(state.booking?.travel_plan || createEmptyTravelPlan(), getOfferComponentsForLinks());
+    state.travelPlanCollapsedServiceIds = new Set(
+      (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
+        .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
+        .map((item) => String(item?.id || "").trim())
+        .filter(Boolean)
+    );
     state.originalTravelPlanSnapshot = getTravelPlanSnapshot(state.travelPlanDraft);
     setTravelPlanDirty(false);
     travelPlanStatus("");
@@ -511,6 +517,67 @@ export function createBookingTravelPlanModule(ctx) {
       default:
         return bookingT("booking.travel_plan.coverage.not_covered", "Not covered");
     }
+  }
+
+  function ensureTravelPlanCollapsedServiceIds() {
+    if (!(state.travelPlanCollapsedServiceIds instanceof Set)) {
+      state.travelPlanCollapsedServiceIds = new Set();
+    }
+    return state.travelPlanCollapsedServiceIds;
+  }
+
+  function syncTravelPlanCollapsedServiceIds() {
+    const activeIds = new Set(
+      (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])
+        .flatMap((day) => (Array.isArray(day?.services) ? day.services : []))
+        .map((item) => String(item?.id || "").trim())
+        .filter(Boolean)
+    );
+    const collapsedIds = ensureTravelPlanCollapsedServiceIds();
+    for (const itemId of [...collapsedIds]) {
+      if (!activeIds.has(itemId)) collapsedIds.delete(itemId);
+    }
+    return collapsedIds;
+  }
+
+  function isTravelPlanServiceCollapsed(itemId) {
+    return syncTravelPlanCollapsedServiceIds().has(String(itemId || "").trim());
+  }
+
+  function compactTravelPlanDateTime(dayDate, value) {
+    const parts = splitDateTimeValue(dayDate, value);
+    const dayValue = String(dayDate || "").trim();
+    if (parts.date && parts.time) {
+      return parts.date === dayValue ? parts.time : `${parts.date} ${parts.time}`;
+    }
+    return parts.date || parts.time || "";
+  }
+
+  function travelPlanTimingSummary(day, item) {
+    const timingKind = String(item?.timing_kind || "label").trim();
+    if (timingKind === "point") {
+      return compactTravelPlanDateTime(day?.date, item?.time_point);
+    }
+    if (timingKind === "range") {
+      const startLabel = compactTravelPlanDateTime(day?.date, item?.start_time);
+      const endLabel = compactTravelPlanDateTime(day?.date, item?.end_time);
+      if (startLabel && endLabel) return `${startLabel} - ${endLabel}`;
+      return startLabel || endLabel || "";
+    }
+    return resolveLocalizedDraftBranchText(item?.time_label_i18n ?? item?.time_label, "en", "");
+  }
+
+  function toggleTravelPlanServiceCollapsed(itemId) {
+    syncTravelPlanDraftFromDom();
+    const normalizedId = String(itemId || "").trim();
+    if (!normalizedId) return;
+    const collapsedIds = ensureTravelPlanCollapsedServiceIds();
+    if (collapsedIds.has(normalizedId)) {
+      collapsedIds.delete(normalizedId);
+    } else {
+      collapsedIds.add(normalizedId);
+    }
+    renderTravelPlanPanel();
   }
 
   function offerComponentSelectOptions(selectedId = "") {
@@ -883,6 +950,10 @@ export function createBookingTravelPlanModule(ctx) {
       .filter((link) => link.travel_plan_service_id === item.id && link.offer_component_id);
     const coverageStatus = getTravelPlanServiceCoverageStatus(item.kind, links);
     const coverageLabel = coverageBadgeLabel(coverageStatus);
+    const collapsed = isTravelPlanServiceCollapsed(item.id);
+    const englishTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, "en", "").trim();
+    const collapsedTitle = englishTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
+    const timingSummary = travelPlanTimingSummary(day, item).trim();
     const createDaysEnabled = canCreateAccommodationDays(item);
     const accommodationControls = item.kind === "accommodation"
       ? `
@@ -905,10 +976,22 @@ export function createBookingTravelPlanModule(ctx) {
       `
       : "";
     return `
-      <div class="travel-plan-service travel-plan-service--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-service="${escapeHtml(item.id)}">
+      <div class="travel-plan-service travel-plan-service--${escapeHtml(coverageStatus.replace(/_/g, "-"))}${collapsed ? " travel-plan-service--collapsed" : ""}" data-travel-plan-service="${escapeHtml(item.id)}">
+        <div class="travel-plan-service__rail">
+          <button
+            class="btn btn-ghost travel-plan-service__toggle"
+            data-travel-plan-toggle-item="${escapeHtml(item.id)}"
+            type="button"
+            aria-label="${escapeHtml(collapsed
+              ? bookingT("booking.travel_plan.expand_item", "Expand service")
+              : bookingT("booking.travel_plan.collapse_item", "Collapse service"))}"
+            aria-expanded="${collapsed ? "false" : "true"}"
+          >${collapsed ? "+" : "−"}</button>
+        </div>
         <div class="travel-plan-service__head">
           <div class="travel-plan-service__title">
-            <span class="travel-plan-service__index">${escapeHtml(bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 }))}</span>
+            ${collapsed ? `<span class="travel-plan-service__collapsed-title">${escapeHtml(collapsedTitle)}</span>` : ""}
+            ${collapsed && timingSummary ? `<span class="travel-plan-service__collapsed-timing">${escapeHtml(timingSummary)}</span>` : ""}
             <span class="travel-plan-coverage-badge travel-plan-coverage-badge--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-coverage-badge="${escapeHtml(item.id)}">${escapeHtml(coverageLabel)}</span>
           </div>
           <div class="travel-plan-service__actions">
@@ -917,6 +1000,7 @@ export function createBookingTravelPlanModule(ctx) {
             <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove service"))}">&times;</button>
           </div>
         </div>
+        <div class="travel-plan-service__body">
         <div class="travel-plan-grid travel-plan-grid--item-kind${item.kind === "accommodation" ? " travel-plan-grid--item-kind-accommodation" : ""}">
           <div class="field">
             <label for="travel_plan_kind_${escapeHtml(item.id)}">${escapeHtml(bookingT("booking.travel_plan.kind_label", "Kind"))}</label>
@@ -984,6 +1068,7 @@ export function createBookingTravelPlanModule(ctx) {
             <button class="btn btn-ghost travel-plan-link-add-btn" data-travel-plan-add-link="${escapeHtml(item.id)}" type="button">${escapeHtml(bookingT("booking.travel_plan.link_offer_component", "Add offer component"))}</button>
           </div>
           ${renderTravelPlanLinkRows(item.id)}
+        </div>
         </div>
       </div>
     `;
@@ -1679,6 +1764,10 @@ export function createBookingTravelPlanModule(ctx) {
           addDay();
           return;
         }
+        if (button.hasAttribute("data-travel-plan-toggle-item")) {
+          toggleTravelPlanServiceCollapsed(button.getAttribute("data-travel-plan-toggle-item"));
+          return;
+        }
         if (button.hasAttribute("data-travel-plan-create-pdf")) {
           openTravelPlanPdf();
           return;
@@ -1807,6 +1896,7 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
     state.travelPlanDraft = normalizeTravelPlanDraft(state.travelPlanDraft || state.booking.travel_plan, getOfferComponentsForLinks());
+    syncTravelPlanCollapsedServiceIds();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
     els.travel_plan_editor.innerHTML = `
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}

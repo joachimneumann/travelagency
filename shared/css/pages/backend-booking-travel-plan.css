@@ -315,24 +315,47 @@
 .travel-plan-service {
   position: relative;
   margin: 0;
-  margin-left: 5rem;
-  padding: 3rem 0 0 2.25rem;
+  margin-left: 5.55rem;
+  padding: 0.45rem 0 0 2.75rem;
   border: 0 !important;
   border-radius: 0;
   outline: 0;
   background: none !important;
   box-shadow: none !important;
+  min-height: 3rem;
 }
 
-.travel-plan-service::before {
-  content: "";
+.travel-plan-service__rail {
   position: absolute;
   left: 0;
-  top: 3rem;
+  top: 0;
   bottom: 0;
-  width: 28px;
-  border-radius: 14px;
+  width: 40px;
+  border-radius: 20px;
   background: var(--surface-disabled-strong);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.42rem;
+}
+
+.travel-plan-service__toggle {
+  min-width: 100%;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 2.3rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.travel-plan-service__toggle:hover,
+.travel-plan-service__toggle:focus-visible {
+  background: transparent;
+  box-shadow: none;
 }
 
 .travel-plan-service--not-covered {
@@ -355,11 +378,27 @@
   margin-bottom: 0.8rem;
 }
 
+.travel-plan-service--collapsed .travel-plan-service__head {
+  margin-bottom: 0;
+  min-height: 2.5rem;
+  align-items: center;
+}
+
+.travel-plan-service--collapsed {
+  min-height: 2.5rem;
+}
+
+.travel-plan-service--collapsed .travel-plan-service__rail {
+  align-items: center;
+  padding-top: 0;
+}
+
 .travel-plan-service__title {
   display: flex;
   align-items: center;
   gap: 0.7rem;
   flex-wrap: wrap;
+  padding-left: 0.25rem;
 }
 
 .travel-plan-service__index {
@@ -367,6 +406,17 @@
   font-weight: var(--font-weight-bold);
   text-transform: var(--text-transform-caps);
   letter-spacing: var(--tracking-wider);
+  color: var(--text-ink-soft);
+}
+
+.travel-plan-service__collapsed-title {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-strong);
+}
+
+.travel-plan-service__collapsed-timing {
+  font-size: var(--font-size-body-sm);
   color: var(--text-ink-soft);
 }
 
@@ -412,6 +462,10 @@
 .travel-plan-coverage-badge--not-applicable {
   background: var(--neutral-surface-alpha);
   color: var(--neutral-text);
+}
+
+.travel-plan-service--collapsed .travel-plan-service__body {
+  display: none;
 }
 
 .travel-plan-links {
