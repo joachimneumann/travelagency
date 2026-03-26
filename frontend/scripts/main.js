@@ -353,7 +353,7 @@ function normalizeTeamMemberProfile(profile) {
   if (!normalizedUsername || !profile || typeof profile !== "object") return null;
   const fullName = normalizeText(profile?.full_name) || normalizeText(profile?.name) || normalizedUsername;
   const role = resolveLocalizedStaticValue(profile?.position_i18n ?? profile?.position)
-    || resolveLocalizedStaticValue(profile?.qualification_i18n ?? profile?.qualification);
+    || "Team member";
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description)
     || resolveLocalizedStaticValue(profile?.qualification_i18n ?? profile?.qualification);
   return {
@@ -407,10 +407,10 @@ function setupTeamSection() {
     if (!button) return;
     handleToggle(button);
   });
-  els.teamDetail?.addEventListener("click", (event) => {
-    const button = event.target instanceof Element ? event.target.closest("[data-team-member]") : null;
-    if (!button) return;
-    handleToggle(button);
+  els.teamDetail?.addEventListener("click", () => {
+    if (!state.selectedTeamMemberUsername) return;
+    state.selectedTeamMemberUsername = "";
+    renderTeamSection();
   });
   if (els.teamSection instanceof HTMLElement && !teamSectionRevealObserved && "IntersectionObserver" in window) {
     teamSectionRevealObserved = true;
@@ -451,6 +451,7 @@ function renderTeamSection() {
     els.teamSection.hidden = true;
     els.teamGrid.innerHTML = "";
     els.teamDetail.hidden = true;
+    els.teamDetail.setAttribute("aria-hidden", "true");
     els.teamDetail.innerHTML = "";
     return;
   }
@@ -458,7 +459,7 @@ function renderTeamSection() {
   els.teamSection.hidden = false;
   els.teamGrid.innerHTML = members.map((member, memberIndex) => {
     const isActive = member.username === selectedUsername;
-    const role = member.role || frontendT("trust.team.role_fallback", "AsiaTravelPlan team");
+    const role = member.role || frontendT("trust.team.role_fallback", "Team member");
     return `
       <button
         class="team-card${isActive ? " is-active" : ""}"
@@ -478,27 +479,24 @@ function renderTeamSection() {
 
   if (!selected) {
     els.teamDetail.hidden = true;
+    els.teamDetail.setAttribute("aria-hidden", "true");
     els.teamDetail.innerHTML = "";
     return;
   }
 
-  const detailRole = selected.role || frontendT("trust.team.role_fallback", "AsiaTravelPlan team");
   const detailBody = selected.description || frontendT(
     "trust.team.description_fallback",
     "This team member supports AsiaTravelPlan guests before and during their journey."
   );
   els.teamDetail.hidden = false;
+  els.teamDetail.setAttribute("aria-hidden", "false");
   els.teamDetail.innerHTML = `
-    <div class="team-detail__content">
-      <div class="team-detail__copy">
-        <p class="team-detail__eyebrow">${escapeHTML(frontendT("trust.team.detail_label", "About"))}</p>
-        <h4 class="team-detail__name">${escapeHTML(selected.fullName)}</h4>
-        <p class="team-detail__role">${escapeHTML(detailRole)}</p>
-        <p class="team-detail__body">${escapeHTML(detailBody)}</p>
+    <div class="team-detail" role="dialog" aria-modal="true" aria-label="${escapeAttr(frontendT("trust.team.detail_label", "About"))}">
+      <div class="team-detail__content">
+        <div class="team-detail__copy">
+          <p class="team-detail__body">${escapeHTML(detailBody)}</p>
+        </div>
       </div>
-      <button class="btn btn-ghost team-detail__close" type="button" data-team-member="${escapeAttr(selected.username)}">
-        ${escapeHTML(frontendT("trust.team.close", "Hide description"))}
-      </button>
     </div>
   `;
 }
