@@ -678,12 +678,11 @@ export function createBookingCoreModule(ctx) {
     if (els.referralLabelLabel) {
       els.referralLabelLabel.textContent = referralKind === "other_customer"
         ? bookingT("booking.referral.customer_name", "Customer name")
-        : bookingT("booking.referral.partner_name", "Partner name");
+        : bookingT("booking.referral.partner_name", "B2B partner name");
     }
     if (els.referralLabelHint) {
-      els.referralLabelHint.textContent = referralKind === "other_customer"
-        ? bookingT("booking.referral.customer_hint", "Shown only when the booking was referred by another customer.")
-        : bookingT("booking.referral.partner_hint", "Shown only when the booking was referred by a B2B partner.");
+      els.referralLabelHint.textContent = "";
+      els.referralLabelHint.hidden = true;
     }
     if (els.referralLabelInput) {
       if (document.activeElement !== els.referralLabelInput) {
