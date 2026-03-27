@@ -337,6 +337,25 @@
     "ngoc": {
       "name": "Văn Ngọc Đào",
       "full_name": "Đào Văn Ngọc",
+      "position": {
+        "ar": "المؤسس المشارك وقائد الجولة",
+        "da": "Medstifter og rejseleder",
+        "de": "Mitbegründer und Reiseleiter",
+        "en": "Co-Founder & Tour Leader",
+        "es": "Cofundador y líder de gira",
+        "fr": "Co-fondateur et animateur de tournée",
+        "it": "Co-fondatore e accompagnatore turistico",
+        "ja": "共同創設者兼ツアーリーダー",
+        "ko": "공동 창립자 겸 투어 리더",
+        "ms": "Pengasas Bersama & Ketua Pelancong",
+        "nl": "Mede-oprichter en reisleider",
+        "no": "Medgründer og turleder",
+        "pl": "Współzałożyciel i lider wycieczek",
+        "ru": "Соучредитель и руководитель тура",
+        "sv": "Medgrundare & Tour Leader",
+        "vi": "Đồng sáng lập & Trưởng đoàn du lịch",
+        "zh": "联合创始人兼领队"
+      },
       "friendly_short_name": "Ngọc",
       "picture": "ngoc.webp",
       "languages": [
@@ -367,6 +386,44 @@
         "sv": "Văn Ngọc Đào hjälper till att forma sydostasiens rutter med bra tempo med realistiska transferfönster, lugnt ankomststöd och praktisk daglig koordination.",
         "vi": "Văn Ngọc Đào giúp định hình các tuyến đường Đông Nam Á có nhịp độ tốt với các kỳ chuyển nhượng thực tế, hỗ trợ khi đến nơi một cách bình tĩnh và sự phối hợp thực tế hàng ngày.",
         "zh": "Văn Ngọc Đào 通过现实的转机窗口、冷静的抵达支持和实用的日常协调，帮助打造节奏良好的东南亚航线。"
+      },
+      "description": {
+        "ar": "شاب، مفعم بالحيوية، ومدفوع بشغف الاستكشاف، اكتشف نجوك داو فيتنام بالدراجة النارية منذ سنوات دراسته.\n\nأصبح الآن قائدًا سياحيًا محترفًا، فهو يجمع بين تجربة السفر الحقيقية والمعرفة المحلية العميقة لإنشاء رحلات تتجاوز الطرق المعتادة.\n\nإنه لا يظهر لك فيتنام فحسب، بل يكشف عن جانب خام وأصيل ومختلف حقًا.",
+        "da": "Ung, energisk og drevet af en passion for udforskning, har Ngoc Dao opdaget Vietnam på motorcykel siden sine studieår.\n\nNu en professionel rejseleder, kombinerer han ægte rejseoplevelse med dyb lokalkendskab for at skabe rejser ud over de sædvanlige ruter.\n\nHan viser dig ikke kun Vietnam - han afslører en side, der er rå, autentisk og virkelig anderledes.",
+        "de": "Ngoc Dao ist jung, energisch und von einer Leidenschaft für Entdeckungen getrieben und entdeckt Vietnam seit seiner Studienzeit mit dem Motorrad.\n\nAls professioneller Reiseleiter kombiniert er echte Reiseerfahrung mit fundierten Ortskenntnissen, um Reisen abseits der üblichen Routen zu gestalten.\n\nEr zeigt Ihnen nicht nur Vietnam – er zeigt Ihnen eine Seite, die roh, authentisch und wirklich anders ist.",
+        "en": "Young, energetic, and driven by a passion for exploration, Ngoc Dao has been discovering Vietnam by motorbike since his student years.\n\nNow a professional tour leader, he combines real travel experience with deep local knowledge to create journeys beyond the usual routes.\n\nHe doesn’t just show you Vietnam — he reveals a side that is raw, authentic, and truly different.",
+        "es": "Joven, enérgico y apasionado por la exploración, Ngoc Dao descubre Vietnam en moto desde sus años de estudiante.\n\nAhora es un guía turístico profesional y combina la experiencia de viajes real con un profundo conocimiento local para crear viajes más allá de las rutas habituales.\n\nNo solo te muestra Vietnam: revela un lado crudo, auténtico y verdaderamente diferente.",
+        "fr": "Jeune, énergique et animé par une passion pour l'exploration, Ngoc Dao découvre le Vietnam à moto depuis ses années d'étudiant.\n\nAujourd'hui accompagnateur professionnel, il combine une véritable expérience de voyage avec une connaissance approfondie de la région pour créer des voyages au-delà des itinéraires habituels.\n\nIl ne se contente pas de vous montrer le Vietnam, il révèle un côté brut, authentique et vraiment différent.",
+        "it": "Giovane, energico e guidato dalla passione per l'esplorazione, Ngoc Dao ha scoperto il Vietnam in moto sin dai suoi anni da studente.\n\nOra un tour leader professionista, combina una reale esperienza di viaggio con una profonda conoscenza locale per creare viaggi oltre i soliti percorsi.\n\nNon ti mostra solo il Vietnam, ma rivela un lato crudo, autentico e veramente diverso.",
+        "ja": "若くてエネルギッシュで、探検への情熱に突き動かされているゴック・ダオは、学生時代からバイクでベトナムを発見し続けています。\n\n現在、プロのツアー リーダーである彼は、実際の旅行経験と地元の深い知識を組み合わせて、通常のルートを超えた旅を作り出しています。\n\n彼はベトナムを見せるだけではなく、生々しく、本物で、真に異なる側面を明らかにします。",
+        "ko": "젊고 활력이 넘치며 탐험에 대한 열정으로 움직이는 Ngoc Dao는 학생 시절부터 오토바이를 타고 베트남을 발견해 왔습니다.\n\n이제 전문 투어 리더가 된 그는 실제 여행 경험과 깊은 현지 지식을 결합하여 일반적인 경로를 뛰어넘는 여행을 만들어냅니다.\n\n그는 단지 베트남만을 보여주는 것이 아닙니다. 그는 생생하고 진실하며 진정으로 다른 면을 보여줍니다.",
+        "ms": "Muda, bertenaga dan didorong oleh minat untuk meneroka, Ngoc Dao telah menemui Vietnam dengan motosikal sejak tahun pelajarnya.\n\nKini seorang pemimpin pelancongan profesional, beliau menggabungkan pengalaman perjalanan sebenar dengan pengetahuan tempatan yang mendalam untuk mencipta perjalanan di luar laluan biasa.\n\nDia bukan sahaja menunjukkan kepada anda Vietnam — dia mendedahkan sisi yang mentah, tulen dan benar-benar berbeza.",
+        "nl": "Jong, energiek en gedreven door een passie voor ontdekkingen, ontdekt Ngoc Dao sinds zijn studententijd Vietnam per motor.\n\nNu hij een professionele reisleider is, combineert hij echte reiservaring met diepgaande lokale kennis om reizen te creëren die verder gaan dan de gebruikelijke routes.\n\nHij laat je niet alleen Vietnam zien, hij onthult een kant die rauw, authentiek en echt anders is.",
+        "no": "Ung, energisk og drevet av en lidenskap for utforskning, har Ngoc Dao oppdaget Vietnam på motorsykkel siden studieårene.\n\nNå en profesjonell turleder, kombinerer han ekte reiseopplevelse med dyp lokalkunnskap for å skape reiser utover de vanlige rutene.\n\nHan viser deg ikke bare Vietnam – han avslører en side som er rå, autentisk og virkelig annerledes.",
+        "pl": "Młody, energiczny i napędzany pasją eksploracji, Ngoc Dao odkrywa Wietnam na motocyklu od czasów studenckich.\n\nObecnie jako profesjonalny pilot wycieczek łączy prawdziwe doświadczenie podróżnicze z głęboką wiedzą lokalną, aby tworzyć podróże poza zwykłymi trasami.\n\nPokazuje nie tylko Wietnam – odkrywa jego surową, autentyczną i naprawdę inną stronę.",
+        "ru": "Молодой, энергичный и движимый страстью к исследованиям, Нгок Дао со студенческих лет открывает для себя Вьетнам на мотоцикле.\n\nТеперь, будучи профессиональным тур-лидером, он сочетает реальный опыт путешествий с глубоким знанием местных условий, чтобы создавать путешествия, выходящие за рамки обычных маршрутов.\n\nОн не просто показывает вам Вьетнам — он раскрывает его грубую, аутентичную и действительно необычную сторону.",
+        "sv": "Ngoc Dao är ung, energisk och driven av en passion för utforskning och har upptäckt Vietnam på motorcykel sedan studentåren.\n\nNu en professionell reseledare, kombinerar han verklig reseupplevelse med djup lokalkännedom för att skapa resor bortom de vanliga rutterna.\n\nHan visar dig inte bara Vietnam – han avslöjar en sida som är rå, autentisk och verkligen annorlunda.",
+        "vi": "Trẻ trung, năng động và có niềm đam mê khám phá, Ngọc Dao đã khám phá Việt Nam bằng xe máy từ những năm sinh viên.\n\nHiện là một nhà lãnh đạo tour du lịch chuyên nghiệp, anh kết hợp kinh nghiệm du lịch thực tế với kiến ​​thức địa phương sâu sắc để tạo ra những hành trình vượt ra ngoài những tuyến đường thông thường.\n\nAnh ấy không chỉ cho bạn thấy Việt Nam - anh ấy còn tiết lộ một khía cạnh nguyên sơ, chân thực và thực sự khác biệt.",
+        "zh": "年轻、充满活力、充满探索热情的 Ngoc Dao 从学生时代起就一直骑着摩托车探索越南。\n\n现在，他是一名专业导游，他将真实的旅行经验与深厚的当地知识相结合，创造出超出常规路线的旅程。\n\n他不仅向您展示了越南，还展示了越南原始、真实且真正与众不同的一面。"
+      },
+      "mobile_description": {
+        "ar": "شاب وحيوي وشغوف بالاستكشاف، اكتشف نجوك داو فيتنام بالدراجة النارية منذ سنوات دراسته وهو الآن يجلب تلك الخبرة المباشرة إلى عمله كقائد سياحي، مما يخلق رحلات تتجاوز الطرق المعتادة لتكشف عن جانب خام وأصيل ومختلف حقًا من البلاد.",
+        "da": "Ngoc Dao er ung, energisk og passioneret omkring udforskning, og Ngoc Dao har opdaget Vietnam på motorcykel siden sine studieår og bringer nu denne førstehåndserfaring ind i sit arbejde som rejseleder og skaber rejser, der går ud over de sædvanlige ruter for at afsløre en rå, autentisk og virkelig anderledes side af landet.",
+        "de": "Ngoc Dao ist jung, energisch und leidenschaftlich für Entdeckungen. Seit seiner Studienzeit entdeckt er Vietnam mit dem Motorrad und bringt nun diese Erfahrungen aus erster Hand in seine Arbeit als Reiseleiter ein, indem er Reisen kreiert, die über die üblichen Routen hinausgehen und eine raue, authentische und wirklich andere Seite des Landes zeigen.",
+        "en": "Young, energetic, and passionate about exploration, Ngoc Dao has been discovering Vietnam by motorbike since his student years and now brings that firsthand experience into his work as a tour leader, creating journeys that go beyond the usual routes to reveal a raw, authentic, and genuinely different side of the country.",
+        "es": "Joven, enérgico y apasionado por la exploración, Ngoc Dao ha descubierto Vietnam en moto desde sus años de estudiante y ahora aporta esa experiencia de primera mano a su trabajo como guía turístico, creando viajes que van más allá de las rutas habituales para revelar un lado crudo, auténtico y genuinamente diferente del país.",
+        "fr": "Jeune, énergique et passionné d'exploration, Ngoc Dao découvre le Vietnam à moto depuis ses années d'étudiant et apporte désormais cette expérience directe dans son travail de guide touristique, créant des voyages qui vont au-delà des itinéraires habituels pour révéler une facette brute, authentique et véritablement différente du pays.",
+        "it": "Giovane, energico e appassionato di esplorazione, Ngoc Dao ha scoperto il Vietnam in moto fin dai suoi anni da studente e ora porta quell'esperienza diretta nel suo lavoro di accompagnatore turistico, creando viaggi che vanno oltre i soliti percorsi per rivelare un lato crudo, autentico e genuinamente diverso del paese.",
+        "ja": "若く、エネルギッシュで、探検に情熱を持っているゴック・ダオは、学生時代からバイクでベトナムを発見しており、現在はその直接の経験をツアーリーダーとしての仕事に活かし、通常のルートを超えて、生の、本物の、真に異なるこの国の側面を明らかにする旅を作り出しています。",
+        "ko": "젊고 활력이 넘치며 탐험에 열정적인 Ngoc Dao는 학생 시절부터 오토바이를 타고 베트남을 발견해 왔으며 이제 투어 리더로서의 직접적인 경험을 자신의 작업에 접목하여 일반적인 경로를 뛰어넘는 여행을 만들어 베트남의 생생하고 진실하며 진정으로 다른 면을 드러내고 있습니다.",
+        "ms": "Muda, bertenaga dan bersemangat tentang penerokaan, Ngoc Dao telah menemui Vietnam dengan motosikal sejak zaman pelajarnya dan kini membawa pengalaman langsung itu ke dalam kerjanya sebagai ketua pelancongan, mencipta perjalanan yang melangkaui laluan biasa untuk mendedahkan bahagian negara yang mentah, tulen dan benar-benar berbeza.",
+        "nl": "Jong, energiek en gepassioneerd door ontdekkingstochten, ontdekt Ngoc Dao sinds zijn studententijd Vietnam per motor en brengt die ervaring uit de eerste hand nu in zijn werk als reisleider, waarbij hij reizen creëert die verder gaan dan de gebruikelijke routes om een ​​rauwe, authentieke en echt andere kant van het land te onthullen.",
+        "no": "Ngoc Dao er ung, energisk og lidenskapelig opptatt av utforskning. Ngoc Dao har oppdaget Vietnam med motorsykkel siden studieårene og tar nå med seg den førstehåndserfaringen i arbeidet sitt som turleder, og skaper reiser som går utover de vanlige rutene for å avsløre en rå, autentisk og genuint annerledes side av landet.",
+        "pl": "Młody, energiczny i pełen pasji do eksploracji, Ngoc Dao odkrywa Wietnam na motocyklu od lat studenckich, a teraz wnosi to doświadczenie z pierwszej ręki do swojej pracy jako pilot wycieczek, tworząc podróże wykraczające poza zwykłe trasy, ukazując surową, autentyczną i naprawdę inną stronę kraju.",
+        "ru": "Молодой, энергичный и увлеченный исследованиями, Нгок Дао со студенческих лет открывает для себя Вьетнам на мотоцикле и теперь привносит этот непосредственный опыт в свою работу в качестве тур-лидера, создавая путешествия, выходящие за рамки обычных маршрутов, чтобы раскрыть необузданную, аутентичную и по-настоящему другую сторону страны.",
+        "sv": "Ngoc Dao, ung, energisk och passionerad när det gäller utforskning, har upptäckt Vietnam med motorcykel sedan studentåren och tar nu med sig den förstahandsupplevelsen i sitt arbete som reseledare, och skapar resor som går utöver de vanliga vägarna för att avslöja en rå, autentisk och genuint annorlunda sida av landet.",
+        "vi": "Trẻ trung, năng động và đam mê khám phá, Ngọc Dao đã khám phá Việt Nam bằng xe máy từ những năm sinh viên và giờ đây anh đã mang trải nghiệm trực tiếp đó vào công việc của mình với tư cách là người hướng dẫn du lịch, tạo ra những hành trình vượt ra ngoài những tuyến đường thông thường để khám phá một khía cạnh nguyên sơ, chân thực và thực sự khác biệt của đất nước.",
+        "zh": "年轻、充满活力、热衷于探索的 Ngoc Dao 从学生时代就开始骑摩托车探索越南，现在将这些第一手经验带入他作为领队的工作中，创造超越常规路线的旅程，揭示这个国家原始、真实和真正不同的一面。"
       }
     }
   }
