@@ -62,6 +62,15 @@ import (
 	actor?:                  string
 }
 
+#BookingSourceUpdateRequest: {
+	expected_core_revision?:  >=0 & int
+	source_channel:           enums.#BookingSourceChannel
+	referral_kind:            enums.#BookingReferralKind
+	referral_label?:          string
+	referral_staff_user_id?:  common.#Identifier
+	actor?:                   string
+}
+
 #BookingImageUploadRequest: #EvidenceUpload & {
 	expected_core_revision?: >=0 & int
 	actor?:                  string

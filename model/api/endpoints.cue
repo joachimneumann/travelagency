@@ -280,6 +280,21 @@ package api
 		}]
 	},
 	{
+		key:           "booking_source"
+		path:          "/api/v1/bookings/{booking_id}/source"
+		method:        "PATCH"
+		tag:           "Bookings"
+		authenticated: true
+		requestType:   "BookingSourceUpdateRequest"
+		responseType:  "BookingDetail"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}]
+	},
+	{
 		key:           "booking_image"
 		path:          "/api/v1/bookings/{booking_id}/image"
 		method:        "POST"

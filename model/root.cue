@@ -48,6 +48,8 @@ import (
 		CurrencyMeta:                        enumModel.#CurrencyMeta
 		ATPStaffRole:                        enumModel.#ATPStaffRole
 		BookingStage:                        enumModel.#BookingStage
+		BookingSourceChannel:                enumModel.#BookingSourceChannel
+		BookingReferralKind:                 enumModel.#BookingReferralKind
 		BookingPersonRole:                   enumModel.#BookingPersonRole
 		TravelPlanTimingKind:                enumModel.#TravelPlanTimingKind
 		TravelPlanServiceKind:                  enumModel.#TravelPlanServiceKind
@@ -129,6 +131,7 @@ import (
 		PublicGeneratedOfferAcceptResponse:               apiModel.#PublicGeneratedOfferAcceptResponse
 		BookingDeleteRequest:                             apiModel.#BookingDeleteRequest
 		BookingNameUpdateRequest:                         apiModel.#BookingNameUpdateRequest
+		BookingSourceUpdateRequest:                       apiModel.#BookingSourceUpdateRequest
 		BookingImageUploadRequest:                        apiModel.#BookingImageUploadRequest
 		BookingMilestoneActionRequest:                    apiModel.#BookingMilestoneActionRequest
 		BookingOwnerUpdateRequest:                        apiModel.#BookingOwnerUpdateRequest

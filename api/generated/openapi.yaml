@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-27T11:18:42Z
+# 2026-03-27T13:57:57Z
 
 ---
 openapi: 3.1.0
@@ -372,6 +372,72 @@ components:
         label: TRIP_COMPLETED
       - value: LOST
         label: LOST
+    BookingSourceChannel:
+      type: string
+      enum:
+      - other
+      - website
+      - email
+      - whatsapp
+      - facebook_messenger
+      - google_maps
+      - instagram
+      - phone_call
+      - walk_in
+      - zalo
+      x-enum-catalog:
+      - code: other
+      - code: website
+      - code: email
+      - code: whatsapp
+      - code: facebook_messenger
+      - code: google_maps
+      - code: instagram
+      - code: phone_call
+      - code: walk_in
+      - code: zalo
+      x-enum-options:
+      - value: other
+        label: other
+      - value: website
+        label: website
+      - value: email
+        label: email
+      - value: whatsapp
+        label: whatsapp
+      - value: facebook_messenger
+        label: facebook_messenger
+      - value: google_maps
+        label: google_maps
+      - value: instagram
+        label: instagram
+      - value: phone_call
+        label: phone_call
+      - value: walk_in
+        label: walk_in
+      - value: zalo
+        label: zalo
+    BookingReferralKind:
+      type: string
+      enum:
+      - none
+      - other_customer
+      - b2b_partner
+      - atp_staff
+      x-enum-catalog:
+      - code: none
+      - code: other_customer
+      - code: b2b_partner
+      - code: atp_staff
+      x-enum-options:
+      - value: none
+        label: none
+      - value: other_customer
+        label: other_customer
+      - value: b2b_partner
+        label: b2b_partner
+      - value: atp_staff
+        label: atp_staff
     BookingPersonRole:
       type: string
       enum:
@@ -5372,6 +5438,18 @@ components:
         assigned_keycloak_user_id:
           type: string
           nullable: true
+        source_channel:
+          "$ref": "#/components/schemas/BookingSourceChannel"
+          nullable: true
+        referral_kind:
+          "$ref": "#/components/schemas/BookingReferralKind"
+          nullable: true
+        referral_label:
+          type: string
+          nullable: true
+        referral_staff_user_id:
+          type: string
+          nullable: true
         assigned_keycloak_user_label:
           type: string
           nullable: true
@@ -5844,6 +5922,18 @@ components:
           format: date-time
           nullable: true
         assigned_keycloak_user_id:
+          type: string
+          nullable: true
+        source_channel:
+          "$ref": "#/components/schemas/BookingSourceChannel"
+          nullable: true
+        referral_kind:
+          "$ref": "#/components/schemas/BookingReferralKind"
+          nullable: true
+        referral_label:
+          type: string
+          nullable: true
+        referral_staff_user_id:
           type: string
           nullable: true
         assigned_keycloak_user_label:
@@ -6741,6 +6831,28 @@ components:
           nullable: true
         customer_language:
           "$ref": "#/components/schemas/LanguageCode"
+        actor:
+          type: string
+          nullable: true
+    BookingSourceUpdateRequest:
+      type: object
+      required:
+      - source_channel
+      - referral_kind
+      properties:
+        expected_core_revision:
+          type: integer
+          nullable: true
+        source_channel:
+          "$ref": "#/components/schemas/BookingSourceChannel"
+        referral_kind:
+          "$ref": "#/components/schemas/BookingReferralKind"
+        referral_label:
+          type: string
+          nullable: true
+        referral_staff_user_id:
+          type: string
+          nullable: true
         actor:
           type: string
           nullable: true
@@ -7854,6 +7966,45 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/BookingCustomerLanguageUpdateRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BookingDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/bookings/{booking_id}/source":
+    patch:
+      operationId: booking_source
+      summary: Booking Source
+      tags:
+      - Bookings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookingSourceUpdateRequest"
       responses:
         '200':
           description: Success

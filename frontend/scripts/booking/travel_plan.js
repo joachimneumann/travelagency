@@ -85,6 +85,15 @@ export function createBookingTravelPlanModule(ctx) {
     return bookingT("booking.travel_plan.day_title", "Day title");
   }
 
+  function currentInternalOfferDetailLevel() {
+    const explicit = String(state.offerDraft?.offer_detail_level_internal || state.booking?.offer?.offer_detail_level_internal || "").trim().toLowerCase();
+    if (explicit === "component" || explicit === "day" || explicit === "trip") return explicit;
+    if (Array.isArray(state.offerDraft?.components) && state.offerDraft.components.length) return "component";
+    if (Array.isArray(state.offerDraft?.days_internal) && state.offerDraft.days_internal.length) return "day";
+    if (state.offerDraft?.trip_price_internal && typeof state.offerDraft.trip_price_internal === "object") return "trip";
+    return "trip";
+  }
+
   function syncTravelPlanRequiredTitleStates({ focusFirst = false } = {}) {
     if (!els.travel_plan_editor) return true;
     const serviceTitleInputs = Array.from(
@@ -1038,6 +1047,7 @@ export function createBookingTravelPlanModule(ctx) {
     const hasLinkedOfferComponents = links.length > 0;
     const noFinancialCoverageNeeded = item.financial_coverage_needed === false;
     const coverageStatus = getTravelPlanServiceCoverageStatus(item.kind, links, item.financial_coverage_needed);
+    const showFinancialCoverage = currentInternalOfferDetailLevel() === "component";
     const coverageLabel = coverageBadgeLabel(coverageStatus);
     const collapsed = isTravelPlanServiceCollapsed(item.id);
     const englishTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, "en", "").trim();
@@ -1155,7 +1165,7 @@ export function createBookingTravelPlanModule(ctx) {
           </div>
         </div>
         ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item)}
-        <div class="travel-plan-links">
+        ${showFinancialCoverage ? `<div class="travel-plan-links">
           <div class="travel-plan-links__head">
             <h4>${escapeHtml(bookingT("booking.travel_plan.financial_coverage", "Financial coverage"))}</h4>
             <div class="travel-plan-links__actions">
@@ -1164,7 +1174,7 @@ export function createBookingTravelPlanModule(ctx) {
             </div>
           </div>
           ${renderTravelPlanLinkRows(item.id, day.day_number)}
-        </div>
+        </div>` : ""}
         </div>
       </div>
     `;

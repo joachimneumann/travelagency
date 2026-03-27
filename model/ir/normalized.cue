@@ -43,6 +43,8 @@ IR: {
 		CurrencyCode: {catalog: "currencies"}
 		ATPStaffRole: {catalog: "roles"}
 		BookingStage: {catalog: "stages"}
+		BookingSourceChannel: {catalog: "bookingSourceChannels"}
+		BookingReferralKind: {catalog: "bookingReferralKinds"}
 		BookingPersonRole: {catalog: "bookingPersonRoles"}
 		TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
 		TravelPlanServiceKind: {catalog: "travelPlanServiceKinds"}
@@ -855,6 +857,10 @@ IR: {
 				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
 				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: false},
+				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: false},
+				{name: "referral_label", kind: "scalar", typeName: "string", required: false},
+				{name: "referral_staff_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "assigned_keycloak_user_label", kind: "scalar", typeName: "string", required: false},
 				{name: "core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "notes_revision", kind: "scalar", typeName: "int", required: false},
@@ -1097,6 +1103,10 @@ IR: {
 				{name: "last_action", kind: "enum", typeName: "BookingMilestoneAction", required: false},
 				{name: "last_action_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: false},
+				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: false},
+				{name: "referral_label", kind: "scalar", typeName: "string", required: false},
+				{name: "referral_staff_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "assigned_keycloak_user_label", kind: "scalar", typeName: "string", required: false},
 				{name: "assigned_atp_staff", kind: "entity", typeName: "AtpStaffProfile", required: false},
 				{name: "core_revision", kind: "scalar", typeName: "int", required: false},
@@ -1657,6 +1667,20 @@ IR: {
 			fields: [
 				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "customer_language", kind: "enum", typeName: "LanguageCode", required: true},
+				{name: "actor", kind: "scalar", typeName: "string", required: false},
+			]
+		},
+		{
+			name:       "BookingSourceUpdateRequest"
+			domain:     "api"
+			module:     "api"
+			sourceType: "api.#BookingSourceUpdateRequest"
+			fields: [
+				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
+				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: true},
+				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: true},
+				{name: "referral_label", kind: "scalar", typeName: "string", required: false},
+				{name: "referral_staff_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

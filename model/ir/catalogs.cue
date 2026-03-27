@@ -8,6 +8,8 @@ IR: {
 		months: [for month in enumModel.MonthCatalog {{code: month}}]
 		roles: [for role in enumModel.ATPStaffRoleCatalog {{code: role}}]
 		stages: [for stage in enumModel.BookingStageCatalog {{code: stage}}]
+		bookingSourceChannels: [for channel in enumModel.BookingSourceChannelCatalog {{code: channel}}]
+		bookingReferralKinds: [for kind in enumModel.BookingReferralKindCatalog {{code: kind}}]
 		bookingPersonRoles: [for role in enumModel.BookingPersonRoleCatalog {{code: role}}]
 		travelPlanTimingKinds: [for kind in enumModel.TravelPlanTimingKindCatalog {{code: kind}}]
 		travelPlanServiceKinds: [for kind in enumModel.TravelPlanServiceKindCatalog {{code: kind}}]

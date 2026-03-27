@@ -301,6 +301,23 @@ export function bookingCustomerLanguageRequest({ baseURL = '', params = {}, quer
   };
 }
 
+export function bookingSourcePath(params = {}) {
+  return buildPath("/api/v1/bookings/{booking_id}/source", params);
+}
+
+export function bookingSourceRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = bookingSourcePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "booking_source",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingImagePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/image", params);
 }

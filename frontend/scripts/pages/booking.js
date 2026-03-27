@@ -235,11 +235,23 @@ const els = {
   personModalCountryCode: document.getElementById("booking_person_modal_country_code"),
   personModalNotes: document.getElementById("booking_person_modal_notes"),
   ownerSelect: document.getElementById("booking_owner_select"),
+  sourceChannelSelect: document.getElementById("booking_source_channel_select"),
+  referralKindSelect: document.getElementById("booking_referral_kind_select"),
+  referralDetailRow: document.getElementById("booking_referral_detail_row"),
+  referralLabelField: document.getElementById("booking_referral_label_field"),
+  referralLabelLabel: document.getElementById("booking_referral_label_label"),
+  referralLabelInput: document.getElementById("booking_referral_label_input"),
+  referralLabelHint: document.getElementById("booking_referral_label_hint"),
+  referralStaffField: document.getElementById("booking_referral_staff_field"),
+  referralStaffSelect: document.getElementById("booking_referral_staff_select"),
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
   contentLanguageSelect: document.getElementById("booking_content_language_select"),
   lastActionDetail: document.getElementById("booking_last_action_detail"),
-  milestoneActions: document.getElementById("booking_milestone_actions"),
+  milestoneActionsBefore: document.getElementById("booking_milestone_actions_before"),
+  milestoneActionsAfter: document.getElementById("booking_milestone_actions_after"),
+  bookingStatusPhaseBefore: document.getElementById("booking_status_phase_before"),
+  bookingStatusPhaseAfter: document.getElementById("booking_status_phase_after"),
   noteInput: document.getElementById("booking_note_input"),
   actionStatus: document.getElementById("booking_action_status"),
   travel_plan_panel: document.getElementById("travel_plan_panel"),
@@ -566,18 +578,22 @@ async function init() {
     els.titleInput.addEventListener("keydown", handleBookingTitleInputKeydown);
   }
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", updateCoreDirtyState);
+  if (els.sourceChannelSelect) els.sourceChannelSelect.addEventListener("change", updateCoreDirtyState);
+  if (els.referralKindSelect) els.referralKindSelect.addEventListener("change", updateCoreDirtyState);
+  if (els.referralLabelInput) els.referralLabelInput.addEventListener("input", updateCoreDirtyState);
+  if (els.referralStaffSelect) els.referralStaffSelect.addEventListener("change", updateCoreDirtyState);
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
     void handleContentLanguageChange();
   });
-  if (els.milestoneActions) {
-    els.milestoneActions.addEventListener("click", (event) => {
+  [els.milestoneActionsBefore, els.milestoneActionsAfter].filter(Boolean).forEach((mount) => {
+    mount.addEventListener("click", (event) => {
       const actionButton = event.target instanceof Element
         ? event.target.closest("[data-booking-milestone-action]")
         : null;
       if (!(actionButton instanceof HTMLButtonElement)) return;
       void recordBookingMilestoneAction(actionButton.dataset.bookingMilestoneAction);
     });
-  }
+  });
   if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);

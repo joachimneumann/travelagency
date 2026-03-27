@@ -6,6 +6,7 @@ import {
   bookingNameRequest,
   bookingNotesRequest,
   bookingOwnerRequest,
+  bookingSourceRequest,
   tourDetailRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
@@ -42,28 +43,28 @@ const BOOKING_MILESTONE_ACTIONS = Object.freeze([
     field: "travel_plan_sent_at",
     stage: "TRAVEL_PLAN_SENT",
     labelKey: "booking.milestone.action.travel_plan_sent",
-    labelFallback: "Travel plan sent to customer"
+    labelFallback: "Travel plan sent"
   }),
   Object.freeze({
     key: "OFFER_SENT",
     field: "offer_sent_at",
     stage: "OFFER_SENT",
     labelKey: "booking.milestone.action.offer_sent",
-    labelFallback: "Offer sent to customer"
+    labelFallback: "Offer sent"
   }),
   Object.freeze({
     key: "NEGOTIATION_STARTED",
     field: "negotiation_started_at",
     stage: "NEGOTIATION_STARTED",
     labelKey: "booking.milestone.action.negotiation_started",
-    labelFallback: "Negotiation started"
+    labelFallback: "Negotiation"
   }),
   Object.freeze({
     key: "DEPOSIT_REQUEST_SENT",
     field: "deposit_request_sent_at",
     stage: "DEPOSIT_REQUEST_SENT",
     labelKey: "booking.milestone.action.deposit_request_sent",
-    labelFallback: "Deposit request sent"
+    labelFallback: "Deposit requested"
   }),
   Object.freeze({
     key: "DEPOSIT_RECEIVED",
@@ -127,6 +128,26 @@ const BOOKING_STAGE_FALLBACKS = Object.freeze({
   })
 });
 
+const BOOKING_SOURCE_CHANNEL_OPTIONS = Object.freeze([
+  ["other", "Other"],
+  ["website", "Website"],
+  ["email", "Email"],
+  ["whatsapp", "WhatsApp"],
+  ["facebook_messenger", "Facebook Messenger"],
+  ["google_maps", "Google Maps"],
+  ["instagram", "Instagram"],
+  ["phone_call", "Phone call"],
+  ["walk_in", "Walk-in"],
+  ["zalo", "Zalo"]
+]);
+
+const BOOKING_REFERRAL_KIND_OPTIONS = Object.freeze([
+  ["none", "No referral"],
+  ["other_customer", "Other customer"],
+  ["b2b_partner", "B2B partner"],
+  ["atp_staff", "ATP staff"]
+]);
+
 export function createBookingCoreModule(ctx) {
   const {
     state,
@@ -188,6 +209,10 @@ export function createBookingCoreModule(ctx) {
         name: "",
         assigned_keycloak_user_id: "",
         customer_language: "en",
+        source_channel: "other",
+        referral_kind: "none",
+        referral_label: "",
+        referral_staff_user_id: "",
         milestone_action_key: "",
         notes: ""
       };
@@ -214,6 +239,10 @@ export function createBookingCoreModule(ctx) {
       draft.name = normalizeText(state.booking.name) || "";
       draft.assigned_keycloak_user_id = normalizeText(state.booking.assigned_keycloak_user_id) || "";
       draft.customer_language = savedCustomerLanguage(state.booking);
+      draft.source_channel = normalizeText(state.booking.source_channel).toLowerCase() || "other";
+      draft.referral_kind = normalizeText(state.booking.referral_kind).toLowerCase() || "none";
+      draft.referral_label = normalizeText(state.booking.referral_label) || "";
+      draft.referral_staff_user_id = normalizeText(state.booking.referral_staff_user_id) || "";
       draft.milestone_action_key = savedMilestoneActionKey(state.booking);
     }
     if (force || !state.dirty.note) {
@@ -228,6 +257,10 @@ export function createBookingCoreModule(ctx) {
       normalizeText(state.booking?.name) || "",
       normalizeText(state.booking?.assigned_keycloak_user_id) || "",
       savedCustomerLanguage(state.booking),
+      normalizeText(state.booking?.source_channel).toLowerCase() || "other",
+      normalizeText(state.booking?.referral_kind).toLowerCase() || "none",
+      normalizeText(state.booking?.referral_label) || "",
+      normalizeText(state.booking?.referral_staff_user_id) || "",
       savedMilestoneActionKey(state.booking)
     ]);
   }
@@ -238,6 +271,10 @@ export function createBookingCoreModule(ctx) {
       normalizeText(draft.name) || "",
       normalizeText(draft.assigned_keycloak_user_id) || "",
       normalizeBookingContentLang(draft.customer_language || "en"),
+      normalizeText(draft.source_channel).toLowerCase() || "other",
+      normalizeText(draft.referral_kind).toLowerCase() || "none",
+      normalizeText(draft.referral_label) || "",
+      normalizeText(draft.referral_staff_user_id) || "",
       normalizeText(draft.milestone_action_key).toUpperCase()
     ]);
   }
@@ -250,6 +287,18 @@ export function createBookingCoreModule(ctx) {
     const draft = ensureCoreDraft();
     if (els.titleInput) draft.name = normalizeText(els.titleInput.value) || "";
     if (els.ownerSelect) draft.assigned_keycloak_user_id = normalizeText(els.ownerSelect.value) || "";
+    if (els.sourceChannelSelect) draft.source_channel = normalizeText(els.sourceChannelSelect.value).toLowerCase() || "other";
+    if (els.referralKindSelect) draft.referral_kind = normalizeText(els.referralKindSelect.value).toLowerCase() || "none";
+    if (els.referralLabelInput) draft.referral_label = normalizeText(els.referralLabelInput.value) || "";
+    if (els.referralStaffSelect) draft.referral_staff_user_id = normalizeText(els.referralStaffSelect.value) || "";
+    if (draft.referral_kind === "none") {
+      draft.referral_label = "";
+      draft.referral_staff_user_id = "";
+    } else if (draft.referral_kind === "b2b_partner" || draft.referral_kind === "other_customer") {
+      draft.referral_staff_user_id = "";
+    } else if (draft.referral_kind === "atp_staff") {
+      draft.referral_label = "";
+    }
     draft.customer_language = normalizeBookingContentLang(draft.customer_language || savedCustomerLanguage(state.booking));
     draft.milestone_action_key = normalizeText(draft.milestone_action_key || savedMilestoneActionKey(state.booking)).toUpperCase();
     const isDirty = state.booking ? coreSnapshotFromDraft() !== coreSnapshotFromBooking() : false;
@@ -312,6 +361,29 @@ export function createBookingCoreModule(ctx) {
     };
   }
 
+  function formatRelativeActionTime(value) {
+    const text = normalizeText(value);
+    if (!text) return "";
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) return "";
+    const deltaMs = Date.now() - date.getTime();
+    if (!Number.isFinite(deltaMs)) return "";
+    if (deltaMs < 60_000) return bookingT("booking.last_updated.just_now", "just now");
+    const minutes = Math.floor(deltaMs / 60_000);
+    if (minutes < 60) {
+      return bookingT("booking.last_updated.minutes_ago", "{count} min ago", { count: minutes });
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return bookingT("booking.last_updated.hours_ago", "{count} h ago", { count: hours });
+    }
+    const days = Math.floor(hours / 24);
+    if (days < 7) {
+      return bookingT("booking.last_updated.days_ago", "{count} d ago", { count: days });
+    }
+    return formatDateTime(text);
+  }
+
   function blockPersistedAction() {
     if (!hasUnsavedBookingChanges?.()) return false;
     reportPersistedActionBlocked?.();
@@ -344,7 +416,21 @@ export function createBookingCoreModule(ctx) {
     if (els.subtitle) {
       const bookingId = normalizeText(state.booking.id);
       const shortId = bookingId ? bookingId.slice(-6) : "-";
-      els.subtitle.textContent = `${bookingT("booking.id_short", "ID")}: ${shortId}`;
+      const lastActionAt = normalizeText(state.booking?.last_action_at)
+        || normalizeText(state.booking?.updated_at);
+      const relativeLastAction = formatRelativeActionTime(lastActionAt);
+      const idNode = document.getElementById("detail_sub_title_id");
+      const updatedNode = document.getElementById("detail_sub_title_updated");
+      if (idNode && updatedNode) {
+        idNode.textContent = `${bookingT("booking.id_short", "ID")}: ${shortId}`;
+        updatedNode.textContent = relativeLastAction
+          ? `· ${bookingT("booking.last_updated", "last updated")} ${relativeLastAction}`
+          : "";
+      } else {
+        els.subtitle.textContent = relativeLastAction
+          ? `${bookingT("booking.id_short", "ID")}: ${shortId} · ${bookingT("booking.last_updated", "last updated")} ${relativeLastAction}`
+          : `${bookingT("booking.id_short", "ID")}: ${shortId}`;
+      }
       els.subtitle.hidden = false;
     }
     if (heroCopiedValue && heroCopiedValue !== getCurrentBookingIdentifier()) {
@@ -567,6 +653,55 @@ export function createBookingCoreModule(ctx) {
       els.ownerSelect.disabled = !state.permissions.canChangeAssignment;
     }
 
+    if (els.sourceChannelSelect) {
+      els.sourceChannelSelect.innerHTML = BOOKING_SOURCE_CHANNEL_OPTIONS
+        .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+        .join("");
+      els.sourceChannelSelect.value = normalizeText(draft.source_channel).toLowerCase() || "other";
+      els.sourceChannelSelect.disabled = !state.permissions.canEditBooking;
+    }
+
+    if (els.referralKindSelect) {
+      els.referralKindSelect.innerHTML = BOOKING_REFERRAL_KIND_OPTIONS
+        .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+        .join("");
+      els.referralKindSelect.value = normalizeText(draft.referral_kind).toLowerCase() || "none";
+      els.referralKindSelect.disabled = !state.permissions.canEditBooking;
+    }
+
+    const referralKind = normalizeText(draft.referral_kind).toLowerCase() || "none";
+    const showReferralLabel = referralKind === "b2b_partner" || referralKind === "other_customer";
+    const showReferralStaff = referralKind === "atp_staff";
+    if (els.referralDetailRow) els.referralDetailRow.hidden = !(showReferralLabel || showReferralStaff);
+    if (els.referralLabelField) els.referralLabelField.hidden = !showReferralLabel;
+    if (els.referralStaffField) els.referralStaffField.hidden = !showReferralStaff;
+    if (els.referralLabelLabel) {
+      els.referralLabelLabel.textContent = referralKind === "other_customer"
+        ? bookingT("booking.referral.customer_name", "Customer name")
+        : bookingT("booking.referral.partner_name", "Partner name");
+    }
+    if (els.referralLabelHint) {
+      els.referralLabelHint.textContent = referralKind === "other_customer"
+        ? bookingT("booking.referral.customer_hint", "Shown only when the booking was referred by another customer.")
+        : bookingT("booking.referral.partner_hint", "Shown only when the booking was referred by a B2B partner.");
+    }
+    if (els.referralLabelInput) {
+      if (document.activeElement !== els.referralLabelInput) {
+        els.referralLabelInput.value = normalizeText(draft.referral_label) || "";
+      }
+      els.referralLabelInput.disabled = !state.permissions.canEditBooking || !showReferralLabel;
+    }
+    if (els.referralStaffSelect) {
+      const staffOptions = [`<option value="">${escapeHtml(bookingT("booking.referral.staff_placeholder", "Select ATP staff"))}</option>`]
+        .concat((state.keycloakUsers || []).map((user) => (
+          `<option value="${escapeHtml(user.id)}">${escapeHtml(resolveAtpStaffDisplayName(user) || user.id)}</option>`
+        )))
+        .join("");
+      els.referralStaffSelect.innerHTML = staffOptions;
+      els.referralStaffSelect.value = normalizeText(draft.referral_staff_user_id) || "";
+      els.referralStaffSelect.disabled = !state.permissions.canEditBooking || !showReferralStaff;
+    }
+
     if (els.lastActionDetail) {
       const text = hasPendingMilestoneChange
         ? bookingT("booking.milestone.pending_action", "Unsaved status: {action}", {
@@ -576,40 +711,24 @@ export function createBookingCoreModule(ctx) {
       els.lastActionDetail.textContent = text;
       els.lastActionDetail.hidden = !text;
     }
-    if (els.milestoneActions) {
+    if (els.milestoneActionsBefore || els.milestoneActionsAfter) {
       const hasRecordedDeposit = Boolean(
         normalizeText(state.booking?.deposit_received_at)
         || normalizeText(state.booking?.milestones?.deposit_received_at)
       );
-      const actionRows = [
-        {
-          className: "booking-milestone-actions__row",
-          actions: ["NEW_BOOKING", "TRAVEL_PLAN_SENT", "OFFER_SENT", "NEGOTIATION_STARTED", "DEPOSIT_REQUEST_SENT"],
-          isEnabled: !hasRecordedDeposit
-        },
-        {
-          className: "booking-milestone-actions__row",
-          actions: ["IN_PROGRESS", "TRIP_COMPLETED"],
-          isEnabled: hasRecordedDeposit
-        },
-        {
-          className: "booking-milestone-actions__row booking-milestone-actions__row--terminal",
-          actions: ["BOOKING_LOST"],
-          isEnabled: true
-        }
-      ];
-      const buttons = actionRows.map((row) => {
+      const renderActionRows = (actionRows) => actionRows.map((row) => {
         const rowButtons = row.actions.map((actionKey) => {
           const action = BOOKING_MILESTONE_ACTION_BY_KEY[actionKey];
           if (!action) return "";
-          const isCurrent = draftMilestoneActionKey === action.key;
+          const disabled = !state.permissions.canChangeStage || !row.isEnabled;
+          const isCurrent = draftMilestoneActionKey === action.key && !disabled;
           const classes = [
             "btn",
             "btn-ghost",
             "booking-milestone-actions__btn",
-            isCurrent ? "booking-milestone-actions__btn--current" : ""
+            isCurrent ? "booking-milestone-actions__btn--current" : "",
+            action.key === "BOOKING_LOST" ? "booking-milestone-actions__btn--lost" : ""
           ].filter(Boolean).join(" ");
-          const disabled = !state.permissions.canChangeStage || !row.isEnabled;
           return `<button
             class="${classes}"
             type="button"
@@ -620,7 +739,36 @@ export function createBookingCoreModule(ctx) {
         }).join("");
         return `<div class="${row.className}">${rowButtons}</div>`;
       }).join("");
-      els.milestoneActions.innerHTML = buttons;
+      if (els.milestoneActionsBefore) {
+        els.milestoneActionsBefore.innerHTML = renderActionRows([
+          {
+            className: "booking-milestone-actions__row",
+            actions: ["NEW_BOOKING", "TRAVEL_PLAN_SENT", "OFFER_SENT", "NEGOTIATION_STARTED", "DEPOSIT_REQUEST_SENT"],
+            isEnabled: !hasRecordedDeposit
+          },
+          {
+            className: "booking-milestone-actions__row booking-milestone-actions__row--terminal",
+            actions: ["BOOKING_LOST"],
+            isEnabled: !hasRecordedDeposit
+          }
+        ]);
+      }
+      if (els.milestoneActionsAfter) {
+        els.milestoneActionsAfter.innerHTML = renderActionRows([
+          {
+            className: "booking-milestone-actions__row",
+            actions: ["IN_PROGRESS", "TRIP_COMPLETED"],
+            isEnabled: hasRecordedDeposit
+          },
+          {
+            className: "booking-milestone-actions__row booking-milestone-actions__row--terminal",
+            actions: ["BOOKING_LOST"],
+            isEnabled: hasRecordedDeposit
+          }
+        ]);
+      }
+      els.bookingStatusPhaseBefore?.classList.toggle("booking-status-panel__phase--inactive", hasRecordedDeposit);
+      els.bookingStatusPhaseAfter?.classList.toggle("booking-status-panel__phase--inactive", !hasRecordedDeposit);
     }
     if (els.noteInput) {
       els.noteInput.disabled = !state.permissions.canEditBooking;
@@ -798,6 +946,37 @@ export function createBookingCoreModule(ctx) {
       state.booking = latestBooking;
       setPendingSavedCustomerLanguage?.(nextCustomerLanguage);
       updateContentLangInUrl?.(nextCustomerLanguage);
+    }
+
+    const nextSourceChannel = normalizeText(draft.source_channel).toLowerCase() || "other";
+    const nextReferralKind = normalizeText(draft.referral_kind).toLowerCase() || "none";
+    const nextReferralLabel = nextReferralKind === "b2b_partner" || nextReferralKind === "other_customer"
+      ? normalizeText(draft.referral_label) || null
+      : null;
+    const nextReferralStaffUserId = nextReferralKind === "atp_staff"
+      ? normalizeText(draft.referral_staff_user_id) || null
+      : null;
+    if (
+      nextSourceChannel !== (normalizeText(latestBooking.source_channel).toLowerCase() || "other")
+      || nextReferralKind !== (normalizeText(latestBooking.referral_kind).toLowerCase() || "none")
+      || nextReferralLabel !== (normalizeText(latestBooking.referral_label) || null)
+      || nextReferralStaffUserId !== (normalizeText(latestBooking.referral_staff_user_id) || null)
+    ) {
+      const request = bookingSourceRequest({ baseURL: apiOrigin, params: { booking_id: latestBooking.id } });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: {
+          expected_core_revision: Number(latestBooking.core_revision || 0),
+          source_channel: nextSourceChannel,
+          referral_kind: nextReferralKind,
+          referral_label: nextReferralLabel,
+          referral_staff_user_id: nextReferralStaffUserId,
+          actor: state.user
+        }
+      });
+      if (!result?.booking) return false;
+      latestBooking = result.booking;
+      state.booking = latestBooking;
     }
 
     const nextMilestoneActionKey = normalizeText(draft.milestone_action_key).toUpperCase();

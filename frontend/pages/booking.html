@@ -132,61 +132,92 @@
       <section class="section">
         <div class="container">
           <div class="booking-detail-page__bar-top-gap" aria-hidden="true"></div>
-          <div class="booking-dirty-bar" id="booking_dirty_bar" hidden>
-            <div class="booking-dirty-bar__panel">
-              <div class="booking-dirty-bar__copy">
-                <strong id="booking_dirty_bar_title">Unsaved edits</strong>
-                <span class="micro booking-dirty-bar__summary" id="booking_dirty_bar_summary"></span>
-              </div>
-              <div class="booking-dirty-bar__actions">
-                <button class="btn btn-ghost" id="booking_discard_edits_btn" type="button">Discard edits</button>
-                <button class="btn btn-primary" id="booking_save_edits_btn" type="button">Save</button>
-                <span class="micro booking-dirty-bar__action-error" id="booking_save_error_hint" aria-live="polite"></span>
+          <div class="booking-dirty-bar-row">
+            <div class="booking-dirty-bar" id="booking_dirty_bar" hidden>
+              <div class="booking-dirty-bar__panel">
+                <div class="booking-dirty-bar__copy">
+                  <strong id="booking_dirty_bar_title">Unsaved edits</strong>
+                  <span class="micro booking-dirty-bar__summary" id="booking_dirty_bar_summary"></span>
+                </div>
+                <div class="booking-dirty-bar__actions">
+                  <button class="btn btn-ghost" id="booking_discard_edits_btn" type="button">Discard</button>
+                  <button class="btn btn-primary" id="booking_save_edits_btn" type="button">Save</button>
+                  <span class="micro booking-dirty-bar__action-error" id="booking_save_error_hint" aria-live="polite"></span>
+                </div>
               </div>
             </div>
-            <div class="booking-dirty-bar__close-shell">
-              <button class="btn btn-ghost booking-detail-page__close-btn booking-dirty-bar__close" id="backToBackend" type="button" aria-label="Close booking detail" data-i18n-aria-label-id="booking.close_detail">&times;</button>
-            </div>
+            <button class="booking-dirty-bar-row__back" id="backToBackend" type="button" aria-label="Close booking detail" data-i18n-aria-label-id="booking.close_detail">Back</button>
           </div>
           <div class="booking-detail-page__bar-gap" aria-hidden="true"></div>
           <div class="booking-detail-page__scroll">
-          <div class="booking-hero">
-            <button class="booking-hero__photo" id="booking_hero_photo_btn" type="button" aria-label="Change booking picture" data-i18n-aria-label-id="booking.change_picture" data-requires-clean-state>
-              <img class="booking-hero__photo-image" id="booking_hero_image" src="assets/img/profile_person.png" alt="" />
-              <span class="booking-hero__photo-initials" id="booking_hero_initials" hidden>P</span>
-            </button>
-            <input id="booking_hero_photo_input" type="file" accept="image/*" hidden />
-            <div class="booking-hero__copy">
-              <div class="booking-hero__title-row">
-                <h1 class="booking-hero__name" id="detail_title" data-i18n-id="booking.title">Booking</h1>
-                <input class="booking-hero__name-input" id="detail_title_input" type="text" hidden />
-                <button class="booking-hero__title-edit" id="detail_title_edit_btn" type="button" aria-label="Edit booking title" data-i18n-aria-label-id="booking.edit_title">&#9998;</button>
-              </div>
-              <div class="booking-hero__id-row">
-                <p class="booking-hero__id" id="detail_sub_title">ID: -</p>
-                <button class="booking-hero__id-copy" id="booking_hero_copy_btn" type="button" data-i18n-id="booking.copy">copy</button>
-                <span class="booking-hero__id-copy-status" id="booking_hero_copy_status" aria-live="polite"></span>
-              </div>
-            </div>
-          </div>
+            <div class="booking-page-shell">
+              <article id="booking_actions_panel" class="booking-control-deck" style="margin-bottom: 1rem;">
+                <div class="booking-control-deck__fields">
+                </div>
+                <div class="booking-status-panel">
+                  <div class="booking-status-panel__head">
+                    <h2 class="booking-status-panel__title" hidden>Booking status</h2>
+                    <div id="booking_milestone_actions" hidden></div>
+                    <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
+                  </div>
+                  <div class="booking-status-panel__phase booking-status-panel__phase--before" id="booking_status_phase_before">
+                    <div class="booking-status-panel__phase-copy">
+                      <div class="booking-status-panel__phase-label">Before deposit received</div>
+                    </div>
+                    <div class="booking-milestone-actions" id="booking_milestone_actions_before"></div>
+                  </div>
+                  <div class="booking-status-panel__divider">
+                    <div class="booking-status-panel__divider-line"></div>
+                    <div class="booking-status-panel__divider-badge">Deposit Received</div>
+                    <div class="booking-status-panel__divider-line"></div>
+                  </div>
+                  <div class="booking-status-panel__phase booking-status-panel__phase--after" id="booking_status_phase_after">
+                    <div class="booking-status-panel__phase-copy">
+                      <div class="booking-status-panel__phase-label">After deposit received</div>
+                    </div>
+                    <div class="booking-milestone-actions" id="booking_milestone_actions_after"></div>
+                  </div>
+                </div>
+              </article>
+              <section class="booking-top-card">
+                <div class="booking-hero">
+                  <div class="booking-hero__main">
+                    <div class="booking-hero__copy">
+                      <div class="booking-hero__title-row">
+                        <h1 class="booking-hero__name" id="detail_title" data-i18n-id="booking.title">Booking</h1>
+                        <input class="booking-hero__name-input" id="detail_title_input" type="text" hidden />
+                        <button class="booking-hero__title-edit" id="detail_title_edit_btn" type="button" aria-label="Edit booking title" data-i18n-aria-label-id="booking.edit_title">&#9998;</button>
+                      </div>
+                      <div class="booking-hero__id-row">
+                        <p class="booking-hero__id" id="detail_sub_title"><span id="detail_sub_title_id">ID: -</span></p>
+                        <button class="booking-hero__id-copy" id="booking_hero_copy_btn" type="button" data-i18n-id="booking.copy">copy</button>
+                        <p class="booking-hero__id booking-hero__id-updated" id="detail_sub_title_updated"></p>
+                        <span class="booking-hero__id-copy-status" id="booking_hero_copy_status" aria-live="polite"></span>
+                      </div>
+                    </div>
+                    <div class="booking-top-card__fields">
+                      <div class="field booking-top-card__field">
+                        <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP staff:</label>
+                        <select id="booking_owner_select"></select>
+                      </div>
+                      <div class="field booking-content-language-field booking-top-card__field" id="booking_content_language_field">
+                        <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
+                        <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
+                        <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="booking-hero__side">
+                    <button class="booking-hero__photo" id="booking_hero_photo_btn" type="button" aria-label="Change booking picture" data-i18n-aria-label-id="booking.change_picture" data-requires-clean-state>
+                      <img class="booking-hero__photo-image" id="booking_hero_image" src="assets/img/profile_person.png" alt="" />
+                      <span class="booking-hero__photo-initials" id="booking_hero_initials" hidden>P</span>
+                    </button>
+                    <input id="booking_hero_photo_input" type="file" accept="image/*" hidden />
+                  </div>
+                </div>
+              </section>
 
-          <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
-
-          <article id="booking_actions_panel" style="margin-bottom: 1rem;">
-            <div class="backend-controls">
-              <div class="field">
-                <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP staff:</label>
-                <select id="booking_owner_select"></select>
-              </div>
-              <div class="field booking-content-language-field" id="booking_content_language_field">
-                <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
-                <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
-                <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-              </div>
-            </div>
-            <div class="booking-milestone-actions" id="booking_milestone_actions"></div>
-            <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
-          </article>
+              <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <article id="booking_note_panel" style="margin-bottom: 1rem;">
             <div class="field">
@@ -197,6 +228,31 @@
               </div>
             </div>
           </article>
+
+          <article class="booking-source-panel" style="margin-bottom: 1rem;">
+            <div class="booking-control-deck__fields booking-source-panel__fields">
+              <div class="field">
+                <label for="booking_source_channel_select">Source channel</label>
+                <select id="booking_source_channel_select"></select>
+              </div>
+              <div class="field">
+                <label for="booking_referral_kind_select">Referred by</label>
+                <select id="booking_referral_kind_select"></select>
+              </div>
+            </div>
+            <div class="booking-control-deck__conditional booking-source-panel__conditional" id="booking_referral_detail_row" hidden>
+              <div class="field booking-control-deck__detail-field" id="booking_referral_label_field" hidden>
+                <label for="booking_referral_label_input" id="booking_referral_label_label">Partner name</label>
+                <input id="booking_referral_label_input" type="text" />
+                <span class="micro" id="booking_referral_label_hint"></span>
+              </div>
+              <div class="field booking-control-deck__detail-field" id="booking_referral_staff_field" hidden>
+                <label for="booking_referral_staff_select">Referral staff</label>
+                <select id="booking_referral_staff_select"></select>
+              </div>
+            </div>
+          </article>
+            </div>
 
           <div
             class="modal booking-person-modal"

@@ -1,5 +1,6 @@
 import {
   validateBookingCustomerLanguageUpdateRequest,
+  validateBookingSourceUpdateRequest,
   validateTranslationEntriesRequest
 } from "../../../Generated/API/generated_APIModels.js";
 import {
@@ -192,6 +193,100 @@ export function createBookingCoreHandlers(deps) {
       "BOOKING_UPDATED",
       actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
       `Customer language set to ${nextCustomerLanguage}`
+    );
+    await persistStore(store);
+
+    sendJson(res, 200, await buildBookingDetailResponse(booking, req));
+  }
+
+  async function handlePatchBookingSource(req, res, [bookingId]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+      validateBookingSourceUpdateRequest(payload);
+    } catch (error) {
+      sendJson(res, 400, { error: String(error?.message || "Invalid JSON payload") });
+      return;
+    }
+
+    const principal = getPrincipal(req);
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" });
+      return;
+    }
+    if (!canEditBooking(principal, booking)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
+
+    const nextSourceChannel = normalizeText(payload?.source_channel).toLowerCase();
+    const nextReferralKind = normalizeText(payload?.referral_kind).toLowerCase();
+    let nextReferralLabel = normalizeText(payload?.referral_label) || null;
+    let nextReferralStaffUserId = normalizeText(payload?.referral_staff_user_id) || null;
+
+    if (nextReferralKind === "none") {
+      nextReferralLabel = null;
+      nextReferralStaffUserId = null;
+    } else if (nextReferralKind === "b2b_partner") {
+      if (!nextReferralLabel) {
+        sendJson(res, 422, { error: "referral_label is required when referral_kind is b2b_partner" });
+        return;
+      }
+      nextReferralStaffUserId = null;
+    } else if (nextReferralKind === "other_customer") {
+      nextReferralStaffUserId = null;
+    } else if (nextReferralKind === "atp_staff") {
+      if (!nextReferralStaffUserId) {
+        sendJson(res, 422, { error: "referral_staff_user_id is required when referral_kind is atp_staff" });
+        return;
+      }
+      const assignableUsers = await listAssignableKeycloakUsers().catch(() => []);
+      const referredStaff = assignableUsers.find((user) => user.id === nextReferralStaffUserId && user.active !== false);
+      if (!referredStaff) {
+        sendJson(res, 422, { error: "Referral ATP staff user not found or inactive" });
+        return;
+      }
+      nextReferralLabel = null;
+    }
+
+    const currentSourceChannel = normalizeText(booking?.source_channel).toLowerCase() || null;
+    const currentReferralKind = normalizeText(booking?.referral_kind).toLowerCase() || null;
+    const currentReferralLabel = normalizeText(booking?.referral_label) || null;
+    const currentReferralStaffUserId = normalizeText(booking?.referral_staff_user_id) || null;
+
+    if (
+      nextSourceChannel === currentSourceChannel
+      && nextReferralKind === currentReferralKind
+      && nextReferralLabel === currentReferralLabel
+      && nextReferralStaffUserId === currentReferralStaffUserId
+    ) {
+      sendJson(res, 200, { ...(await buildBookingDetailResponse(booking, req)), unchanged: true });
+      return;
+    }
+
+    booking.source_channel = nextSourceChannel || null;
+    booking.referral_kind = nextReferralKind || null;
+    booking.referral_label = nextReferralLabel;
+    booking.referral_staff_user_id = nextReferralStaffUserId;
+    incrementBookingRevision(booking, "core_revision");
+    booking.updated_at = nowIso();
+
+    const activityDetail = nextReferralKind === "atp_staff"
+      ? `Booking source set to ${nextSourceChannel}; referral set to ATP staff ${nextReferralStaffUserId}`
+      : nextReferralKind === "b2b_partner"
+        ? `Booking source set to ${nextSourceChannel}; referral set to B2B partner ${nextReferralLabel}`
+        : nextReferralKind === "other_customer"
+          ? `Booking source set to ${nextSourceChannel}; referral set to other customer${nextReferralLabel ? ` ${nextReferralLabel}` : ""}`
+          : `Booking source set to ${nextSourceChannel}; referral cleared`;
+    addActivity(
+      store,
+      booking.id,
+      "BOOKING_UPDATED",
+      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
+      activityDetail
     );
     await persistStore(store);
 
@@ -417,6 +512,7 @@ export function createBookingCoreHandlers(deps) {
     handlePostBookingMilestoneAction,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
+    handlePatchBookingSource,
     handlePatchBookingOwner,
     handlePatchBookingNotes,
     handleListActivities,

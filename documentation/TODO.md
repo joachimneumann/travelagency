@@ -5,6 +5,22 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
+Customer source
+* Website Online booking
+* email
+* WhatsApp
+* Facebook messenger
+* Google Maps
+* Instagram chat
+* Phone bookings
+* In-person customers
+* Customer referral
+* Staff referrals
+* Zalo
+* Other
+
+# tour guide / ATP staff
+
 Add a new section on Booking HTML just above the travel plan with the internal offer detail level that allows the atp_staff to choose between the three internal offer detail levels (trip, day and component). Don't make this a collapsible section but rather one big pill where only one of the three can and must be active (like a 3 state toggle button). The default is trip.
 exactly one internal offer detail is active at any time and the other two are deactivated. When switching to a coarser granularity, show a modal pop-up warning that indicates that offer details will be aggregated and lost. 
 Below show another equally designed selector: customer facing offer detail level, which must be coarser than the internal one.

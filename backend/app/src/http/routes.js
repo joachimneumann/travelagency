@@ -14,6 +14,7 @@ export const CONTRACT_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", path: "/api/v1/bookings/{booking_id}/chat", handlerKey: "handleListBookingChatEvents" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/name", handlerKey: "handlePatchBookingName" },
   { method: "PATCH", path: "/api/v1/bookings/{booking_id}/customer-language", handlerKey: "handlePatchBookingCustomerLanguage" },
+  { method: "PATCH", path: "/api/v1/bookings/{booking_id}/source", handlerKey: "handlePatchBookingSource" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/milestone-actions", handlerKey: "handlePostBookingMilestoneAction" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/translate-fields", handlerKey: "handleTranslateBookingFields" },
   { method: "POST", path: "/api/v1/bookings/{booking_id}/image", handlerKey: "handleUploadBookingImage" },

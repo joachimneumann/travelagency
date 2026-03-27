@@ -46,6 +46,8 @@ case "booking_name":
   return RequestFactory.bookingNameRequest(options);
 case "booking_customer_language":
   return RequestFactory.bookingCustomerLanguageRequest(options);
+case "booking_source":
+  return RequestFactory.bookingSourceRequest(options);
 case "booking_image":
   return RequestFactory.bookingImageRequest(options);
 case "booking_owner":

@@ -115,6 +115,10 @@ import (
 	last_action?:                    enums.#BookingMilestoneAction
 	last_action_at?:                 common.#Timestamp
 	assigned_keycloak_user_id?:      common.#Identifier
+	source_channel?:                 enums.#BookingSourceChannel
+	referral_kind?:                  enums.#BookingReferralKind
+	referral_label?:                 string
+	referral_staff_user_id?:         common.#Identifier
 	service_level_agreement_due_at?: common.#Timestamp
 	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]

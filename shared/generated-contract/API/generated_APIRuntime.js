@@ -342,6 +342,17 @@
         ]
       },
       {
+        key: "booking_source",
+        path: "/api/v1/bookings/{booking_id}/source",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "BookingSourceUpdateRequest",
+        responseType: "BookingDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
+        ]
+      },
+      {
         key: "booking_image",
         path: "/api/v1/bookings/{booking_id}/image",
         method: "POST",
