@@ -5,19 +5,10 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
-Customer source
-* Website Online booking
-* email
-* WhatsApp
-* Facebook messenger
-* Google Maps
-* Instagram chat
-* Phone bookings
-* In-person customers
-* Customer referral
-* Staff referrals
-* Zalo
-* Other
+"Your ATP guide xxx" section when creating the PDF:
+- rephrase to "Assisted by our team member xxx"
+- when the Qualification is empty in the atps_staff, use the mobile description
+
 
 # tour guide / ATP staff
 

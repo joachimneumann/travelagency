@@ -1,5 +1,5 @@
 import { LANGUAGE_BY_CODE } from "../../../../shared/generated/language_catalog.js";
-import { resolveAtpStaffQualificationText } from "./atp_staff_directory.js";
+import { resolveAtpStaffShortDescriptionText } from "./atp_staff_directory.js";
 import { normalizeText } from "./text.js";
 
 function textOrNull(value) {
@@ -55,8 +55,8 @@ export async function resolveAtpGuidePdfContext({
   };
 }
 
-export function resolveAtpGuideQualificationText(guideContext, lang = "en") {
-  return resolveAtpStaffQualificationText(guideContext?.profile || null, lang);
+export function resolveAtpGuideShortDescriptionText(guideContext, lang = "en") {
+  return resolveAtpStaffShortDescriptionText(guideContext?.profile || null, lang);
 }
 
 export function resolveAtpStaffFullName(profile) {

@@ -96,8 +96,6 @@ IR: {
 				{name: "picture_ref", kind: "scalar", typeName: "string", required: false},
 				{name: "languages", kind: "enum", typeName: "LanguageCode", required: true, isArray: true},
 				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "qualification", kind: "scalar", typeName: "string", required: false},
-				{name: "qualification_i18n", kind: "entity", typeName: "AtpStaffLocalizedTextEntry", required: false, isArray: true},
 			]
 		},
 		{
@@ -2050,8 +2048,6 @@ IR: {
 				{name: "full_name", kind: "scalar", typeName: "string", required: false},
 				{name: "friendly_short_name", kind: "scalar", typeName: "string", required: false},
 				{name: "team_order", kind: "scalar", typeName: "int", required: false},
-				{name: "qualification", kind: "scalar", typeName: "string", required: false},
-				{name: "qualification_i18n", kind: "entity", typeName: "AtpStaffLocalizedTextEntry", required: false, isArray: true},
 			]
 		},
 		{

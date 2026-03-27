@@ -21,10 +21,8 @@ import (
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]
 	appears_in_team_web_page?: *true | bool
-	qualification?: string
-	qualification_i18n?: [...#AtpStaffLocalizedTextEntry]
 	description?: string
 	description_i18n?: [...#AtpStaffLocalizedTextEntry]
-	mobile_description?: string
-	mobile_description_i18n?: [...#AtpStaffLocalizedTextEntry]
+	short_description?: string
+	short_description_i18n?: [...#AtpStaffLocalizedTextEntry]
 }

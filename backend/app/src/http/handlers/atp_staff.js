@@ -180,14 +180,6 @@ export function createAtpStaffHandlers(deps) {
       ? payload.appears_in_team_web_page === true
       : undefined;
 
-    const qualification = payload?.qualification !== undefined ? normalizeText(payload.qualification) : undefined;
-    const qualificationI18n = Array.isArray(payload?.qualification_i18n)
-      ? normalizeQualificationEntries(payload.qualification_i18n)
-      : undefined;
-    if (Array.isArray(payload?.qualification_i18n) && qualificationI18n.length !== payload.qualification_i18n.filter(Boolean).length) {
-      sendJson(res, 422, { error: "Each qualification translation requires a valid language code and non-empty text" });
-      return;
-    }
     const description = payload?.description !== undefined ? normalizeText(payload.description) : undefined;
     const descriptionI18n = Array.isArray(payload?.description_i18n)
       ? normalizeQualificationEntries(payload.description_i18n)
@@ -196,13 +188,13 @@ export function createAtpStaffHandlers(deps) {
       sendJson(res, 422, { error: "Each description translation requires a valid language code and non-empty text" });
       return;
     }
-    const mobileDescription = payload?.mobile_description !== undefined ? normalizeText(payload.mobile_description) : undefined;
-    const mobileDescriptionI18n = Array.isArray(payload?.mobile_description_i18n)
-      ? normalizeQualificationEntries(payload.mobile_description_i18n)
+    const shortDescription = payload?.short_description !== undefined ? normalizeText(payload.short_description) : undefined;
+    const shortDescriptionI18n = Array.isArray(payload?.short_description_i18n)
+      ? normalizeQualificationEntries(payload.short_description_i18n)
       : undefined;
-    if (Array.isArray(payload?.mobile_description_i18n)
-      && mobileDescriptionI18n.length !== payload.mobile_description_i18n.filter(Boolean).length) {
-      sendJson(res, 422, { error: "Each mobile description translation requires a valid language code and non-empty text" });
+    if (Array.isArray(payload?.short_description_i18n)
+      && shortDescriptionI18n.length !== payload.short_description_i18n.filter(Boolean).length) {
+      sendJson(res, 422, { error: "Each short description translation requires a valid language code and non-empty text" });
       return;
     }
 
@@ -215,12 +207,10 @@ export function createAtpStaffHandlers(deps) {
       friendly_short_name: friendlyShortName,
       team_order: teamOrder,
       appears_in_team_web_page: appearsInTeamWebPage,
-      qualification,
-      qualification_i18n: qualificationI18n,
       description,
       description_i18n: descriptionI18n,
-      mobile_description: mobileDescription,
-      mobile_description_i18n: mobileDescriptionI18n
+      short_description: shortDescription,
+      short_description_i18n: shortDescriptionI18n
     });
     if (!updated) {
       sendJson(res, 404, { error: "Keycloak user not found" });

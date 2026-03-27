@@ -31,19 +31,7 @@ function normalizeTeamOrder(value) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function qualificationTextFromLegacyExperiences(items) {
-  return (Array.isArray(items) ? items : [])
-    .map((experience) => {
-      const title = normalizeText(experience?.title);
-      const summary = normalizeText(experience?.summary);
-      if (title && summary) return `${title}: ${summary}`;
-      return title || summary || "";
-    })
-    .filter(Boolean)
-    .join("\n\n");
-}
-
-function qualificationMapFromEntries(items) {
+function localizedTextMapFromEntries(items) {
   const objectValue = Object.fromEntries(
     (Array.isArray(items) ? items : [])
       .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
@@ -52,33 +40,17 @@ function qualificationMapFromEntries(items) {
   return normalizeLocalizedTextMap(objectValue, "en");
 }
 
-function normalizeQualificationMap(value, legacyExperiences = []) {
-  if (Array.isArray(value)) {
-    const fromEntries = qualificationMapFromEntries(value);
-    if (Object.keys(fromEntries).length) return fromEntries;
-  }
-  const direct = normalizeLocalizedTextMap(value, "en");
-  if (Object.keys(direct).length) return direct;
-  return normalizeLocalizedTextMap(qualificationTextFromLegacyExperiences(legacyExperiences), "en");
-}
-
-function qualificationEntriesFromMap(value) {
-  return Object.entries(normalizeQualificationMap(value))
-    .map(([lang, text]) => ({ lang, value: text }))
-    .filter((entry) => Boolean(entry.lang && entry.value));
-}
-
 function normalizeDescriptionMap(value) {
   if (Array.isArray(value)) {
-    const fromEntries = qualificationMapFromEntries(value);
+    const fromEntries = localizedTextMapFromEntries(value);
     if (Object.keys(fromEntries).length) return fromEntries;
   }
   return normalizeLocalizedTextMap(value, "en");
 }
 
-function normalizeMobileDescriptionMap(value) {
+function normalizeShortDescriptionMap(value) {
   if (Array.isArray(value)) {
-    const fromEntries = qualificationMapFromEntries(value);
+    const fromEntries = localizedTextMapFromEntries(value);
     if (Object.keys(fromEntries).length) return fromEntries;
   }
   return normalizeLocalizedTextMap(value, "en");
@@ -86,7 +58,7 @@ function normalizeMobileDescriptionMap(value) {
 
 function normalizePositionMap(value) {
   if (Array.isArray(value)) {
-    const fromEntries = qualificationMapFromEntries(value);
+    const fromEntries = localizedTextMapFromEntries(value);
     if (Object.keys(fromEntries).length) return fromEntries;
   }
   return normalizeLocalizedTextMap(value, "en");
@@ -98,8 +70,8 @@ function descriptionEntriesFromMap(value) {
     .filter((entry) => Boolean(entry.lang && entry.value));
 }
 
-function mobileDescriptionEntriesFromMap(value) {
-  return Object.entries(normalizeMobileDescriptionMap(value))
+function shortDescriptionEntriesFromMap(value) {
+  return Object.entries(normalizeShortDescriptionMap(value))
     .map(([lang, text]) => ({ lang, value: text }))
     .filter((entry) => Boolean(entry.lang && entry.value));
 }
@@ -115,10 +87,14 @@ function firstNameToken(value) {
 }
 
 export function resolveAtpStaffQualificationText(profile, lang = "en") {
+  return "";
+}
+
+export function resolveAtpStaffShortDescriptionText(profile, lang = "en") {
   return resolveLocalizedText(
-    normalizeQualificationMap(profile?.qualification_i18n ?? profile?.qualification, profile?.experiences),
+    normalizeShortDescriptionMap(profile?.short_description_i18n ?? profile?.short_description),
     lang,
-    normalizeText(profile?.qualification)
+    normalizeText(profile?.short_description)
   );
 }
 
@@ -151,10 +127,9 @@ function normalizeStoredProfile(profile) {
   const legacyExperienceDestinations = normalizeCountryCodes(
     (Array.isArray(profile?.experiences) ? profile.experiences : []).flatMap((experience) => experience?.countries || [])
   );
-  const qualification = normalizeQualificationMap(profile?.qualification ?? profile?.qualification_i18n, profile?.experiences);
   const position = normalizePositionMap(profile?.position ?? profile?.position_i18n);
   const description = normalizeDescriptionMap(profile?.description ?? profile?.description_i18n);
-  const mobileDescription = normalizeMobileDescriptionMap(profile?.mobile_description ?? profile?.mobile_description_i18n);
+  const shortDescription = normalizeShortDescriptionMap(profile?.short_description ?? profile?.short_description_i18n);
   return {
     username,
     ...(normalizeText(profile?.name) ? { name: normalizeText(profile.name) } : {}),
@@ -172,9 +147,8 @@ function normalizeStoredProfile(profile) {
         ? { destinations: legacyExperienceDestinations }
         : {}),
     appears_in_team_web_page: normalizeAppearsInTeamWebPage(profile?.appears_in_team_web_page, true),
-    ...(Object.keys(qualification).length ? { qualification } : {}),
     ...(Object.keys(description).length ? { description } : {}),
-    ...(Object.keys(mobileDescription).length ? { mobile_description: mobileDescription } : {})
+    ...(Object.keys(shortDescription).length ? { short_description: shortDescription } : {})
   };
 }
 
@@ -333,10 +307,9 @@ function mergeStoredProfileWithUser(profile, user) {
     username,
     name: defaultDisplayNameForUser(user || normalizedProfile || {})
   });
-  const normalizedQualification = normalizeQualificationMap(normalizedProfile?.qualification);
   const normalizedPosition = normalizePositionMap(normalizedProfile?.position);
   const normalizedDescription = normalizeDescriptionMap(normalizedProfile?.description);
-  const normalizedMobileDescription = normalizeMobileDescriptionMap(normalizedProfile?.mobile_description);
+  const normalizedShortDescription = normalizeShortDescriptionMap(normalizedProfile?.short_description);
   const resolvedFullName = normalizeText(normalizedProfile?.full_name)
     || normalizeText(defaultProfile?.full_name)
     || normalizeText(user?.name)
@@ -362,9 +335,8 @@ function mergeStoredProfileWithUser(profile, user) {
       normalizedProfile?.appears_in_team_web_page,
       normalizeAppearsInTeamWebPage(defaultProfile?.appears_in_team_web_page, true)
     ),
-    qualification: Object.keys(normalizedQualification).length ? normalizedQualification : {},
     description: Object.keys(normalizedDescription).length ? normalizedDescription : {},
-    mobile_description: Object.keys(normalizedMobileDescription).length ? normalizedMobileDescription : {}
+    short_description: Object.keys(normalizedShortDescription).length ? normalizedShortDescription : {}
   };
 }
 
@@ -373,23 +345,20 @@ function buildResponseProfile(profile, user) {
   if (!merged) return null;
   const {
     picture,
-    qualification,
     position,
     description,
-    mobile_description,
+    short_description,
     ...responseBase
   } = merged;
   return {
     ...responseBase,
     picture_ref: pictureRefForFilename(picture, merged.username),
-    qualification: resolveLocalizedText(qualification, "en", ""),
-    qualification_i18n: qualificationEntriesFromMap(qualification),
     position: resolveLocalizedText(position, "en", ""),
     position_i18n: positionEntriesFromMap(position),
     description: resolveLocalizedText(description, "en", ""),
     description_i18n: descriptionEntriesFromMap(description),
-    mobile_description: resolveLocalizedText(mobile_description, "en", ""),
-    mobile_description_i18n: mobileDescriptionEntriesFromMap(mobile_description)
+    short_description: resolveLocalizedText(short_description, "en", ""),
+    short_description_i18n: shortDescriptionEntriesFromMap(short_description)
   };
 }
 
@@ -700,21 +669,16 @@ export function createAtpStaffDirectory({
       appears_in_team_web_page: input?.appears_in_team_web_page !== undefined
         ? normalizeAppearsInTeamWebPage(input.appears_in_team_web_page, true)
         : normalizeAppearsInTeamWebPage(current?.appears_in_team_web_page, true),
-      qualification: input?.qualification_i18n !== undefined
-        ? input.qualification_i18n
-        : input?.qualification !== undefined
-          ? input.qualification
-          : current?.qualification,
       description: input?.description_i18n !== undefined
         ? input.description_i18n
         : input?.description !== undefined
           ? input.description
           : current?.description,
-      mobile_description: input?.mobile_description_i18n !== undefined
-        ? input.mobile_description_i18n
-        : input?.mobile_description !== undefined
-          ? input.mobile_description
-          : current?.mobile_description
+      short_description: input?.short_description_i18n !== undefined
+        ? input.short_description_i18n
+        : input?.short_description !== undefined
+          ? input.short_description
+          : current?.short_description
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);
@@ -746,9 +710,8 @@ export function createAtpStaffDirectory({
       languages: current?.languages,
       destinations: current?.destinations,
       appears_in_team_web_page: normalizeAppearsInTeamWebPage(current?.appears_in_team_web_page, true),
-      qualification: current?.qualification,
       description: current?.description,
-      mobile_description: current?.mobile_description
+      short_description: current?.short_description
     });
     if (!nextStored) return null;
     itemsByUsername.set(username, nextStored);

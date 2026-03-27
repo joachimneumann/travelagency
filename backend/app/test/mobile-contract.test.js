@@ -2534,7 +2534,7 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
   assert.doesNotMatch(decodedText, /Whoistraveling/);
 });
 
-test("booking travel plan pdf includes the assigned ATP guide section with the guide qualification", async () => {
+test("booking travel plan pdf includes the assigned ATP guide section with the guide short description", async () => {
   const createdBooking = await createSeedBooking({
     destinations: ["Vietnam", "Laos"],
     travel_style: ["Wellness", "Culture"]
@@ -2543,7 +2543,7 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   const guideProfileUpdatePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const guideFullName = "Joachim Carl Neumann";
   const guideFriendlyShortName = "Joachim";
-  const guideQualification = "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort.";
+  const guideShortDescription = "Specializes in soft-paced Southeast Asia itineraries with a strong eye for comfort.";
 
   const detailBefore = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
@@ -2560,8 +2560,8 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
         full_name: guideFullName,
         friendly_short_name: guideFriendlyShortName,
         languages: ["de", "en", "vi"],
-        qualification: guideQualification,
-        qualification_i18n: [{ lang: "en", value: guideQualification }]
+        short_description: guideShortDescription,
+        short_description_i18n: [{ lang: "en", value: guideShortDescription }]
       }
     }
   );
@@ -4732,8 +4732,8 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
 
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
   const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
-  const qualificationEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";
-  const qualificationDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
+  const shortDescriptionEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";
+  const shortDescriptionDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
   const fullName = "Joachim Carl Neumann";
   const friendlyShortName = "Joachim";
   const teamOrder = 3;
@@ -4746,7 +4746,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
       body: {
         languages: ["de", "en"],
         destinations: ["VN"],
-        qualification_i18n: [{
+        short_description_i18n: [{
           lang: "en",
           value: "This write should be rejected."
         }]
@@ -4766,14 +4766,14 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
         team_order: teamOrder,
         languages: ["de", "en", "vi"],
         destinations: ["VN", "LA"],
-        qualification_i18n: [
+        short_description_i18n: [
           {
             lang: "en",
-            value: qualificationEn
+            value: shortDescriptionEn
           },
           {
             lang: "de",
-            value: qualificationDe
+            value: shortDescriptionDe
           }
         ]
       }
@@ -4786,15 +4786,15 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   assert.equal(updateResult.body.user.staff_profile.team_order, teamOrder);
   assert.deepEqual(updateResult.body.user.staff_profile.languages, ["de", "en", "vi"]);
   assert.deepEqual(updateResult.body.user.staff_profile.destinations, ["VN", "LA"]);
-  assert.equal(updateResult.body.user.staff_profile.qualification, qualificationEn);
-  assert.ok(Array.isArray(updateResult.body.user.staff_profile.qualification_i18n));
+  assert.equal(updateResult.body.user.staff_profile.short_description, shortDescriptionEn);
+  assert.ok(Array.isArray(updateResult.body.user.staff_profile.short_description_i18n));
   assert.equal(
-    updateResult.body.user.staff_profile.qualification_i18n.find((entry) => entry.lang === "en")?.value,
-    qualificationEn
+    updateResult.body.user.staff_profile.short_description_i18n.find((entry) => entry.lang === "en")?.value,
+    shortDescriptionEn
   );
   assert.equal(
-    updateResult.body.user.staff_profile.qualification_i18n.find((entry) => entry.lang === "de")?.value,
-    qualificationDe
+    updateResult.body.user.staff_profile.short_description_i18n.find((entry) => entry.lang === "de")?.value,
+    shortDescriptionDe
   );
 
   const listResult = await requestJson(endpointPath("keycloak_users"), apiHeaders("atp_admin", "admin", "kc-admin"));

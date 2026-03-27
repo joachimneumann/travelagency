@@ -23,7 +23,7 @@ import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 import {
   resolveAtpGuideIntroName,
   resolveAtpGuidePdfContext,
-  resolveAtpGuideQualificationText,
+  resolveAtpGuideShortDescriptionText,
   resolveAtpStaffFriendlyShortName,
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
@@ -745,7 +745,7 @@ function drawClosing(doc, startY, fonts, lang, attachmentCount = 0) {
 
 function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
   const profile = guideContext?.profile || null;
-  const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
+  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
   const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
   const introName = textOrNull(resolveAtpGuideIntroName(profile));
   const guideTitle = guideFullName
@@ -797,7 +797,7 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
 
 function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   const profile = guideContext?.profile || null;
-  const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
+  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
   const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
   const introName = textOrNull(resolveAtpGuideIntroName(profile));
   const guideTitle = guideFullName
@@ -953,7 +953,7 @@ export function createTravelPlanPdfWriter({
       ]),
       textOrNull(resolveAtpStaffFullName(guideContext?.profile)),
       textOrNull(resolveAtpStaffFriendlyShortName(guideContext?.profile)),
-      textOrNull(resolveAtpGuideQualificationText(guideContext, lang)),
+      textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang)),
       textOrNull(companyProfile?.name),
       textOrNull(companyProfile?.website),
       textOrNull(companyProfile?.email),

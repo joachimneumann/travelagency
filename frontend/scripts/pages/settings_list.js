@@ -52,9 +52,8 @@ const els = {
   staffEditorAppearsInTeamWebPage: document.getElementById("staffEditorAppearsInTeamWebPage"),
   staffEditorLanguages: document.getElementById("staffEditorLanguages"),
   staffEditorDestinations: document.getElementById("staffEditorDestinations"),
-  staffEditorQualification: document.getElementById("staffEditorQualification"),
   staffEditorDescription: document.getElementById("staffEditorDescription"),
-  staffEditorMobileDescription: document.getElementById("staffEditorMobileDescription"),
+  staffEditorShortDescription: document.getElementById("staffEditorShortDescription"),
   staffEditorSaveBtn: document.getElementById("staffEditorSaveBtn")
 };
 
@@ -124,9 +123,8 @@ const state = {
     languages: [],
     destinations: [],
     positionByLang: {},
-    qualificationByLang: {},
     descriptionByLang: {},
-    mobileDescriptionByLang: {},
+    shortDescriptionByLang: {},
     pendingPhoto: null
   }
 };
@@ -261,19 +259,6 @@ function bindEvents() {
   els.staffEditorAppearsInTeamWebPage?.addEventListener("change", handleAppearsInTeamWebPageChange);
   els.staffEditorLanguages?.addEventListener("change", handleLanguageToggle);
   els.staffEditorDestinations?.addEventListener("change", handleDestinationToggle);
-  els.staffEditorQualification?.addEventListener("input", handleQualificationInput);
-  els.staffEditorQualification?.addEventListener("click", (event) => {
-    const translateAllButton = event.target.closest("[data-staff-translate-all]");
-    if (translateAllButton) {
-      event.preventDefault();
-      void translateQualificationToAll(translateAllButton);
-      return;
-    }
-    const translateButton = event.target.closest("[data-staff-translate-field]");
-    if (!translateButton) return;
-    event.preventDefault();
-    void translateQualification(translateButton);
-  });
   els.staffEditorDescription?.addEventListener("input", handleDescriptionInput);
   els.staffEditorDescription?.addEventListener("click", (event) => {
     const translateAllButton = event.target.closest("[data-staff-translate-all]");
@@ -287,18 +272,18 @@ function bindEvents() {
     event.preventDefault();
     void translateDescription(translateButton);
   });
-  els.staffEditorMobileDescription?.addEventListener("input", handleMobileDescriptionInput);
-  els.staffEditorMobileDescription?.addEventListener("click", (event) => {
+  els.staffEditorShortDescription?.addEventListener("input", handleShortDescriptionInput);
+  els.staffEditorShortDescription?.addEventListener("click", (event) => {
     const translateAllButton = event.target.closest("[data-staff-translate-all]");
     if (translateAllButton) {
       event.preventDefault();
-      void translateMobileDescriptionToAll(translateAllButton);
+      void translateShortDescriptionToAll(translateAllButton);
       return;
     }
     const translateButton = event.target.closest("[data-staff-translate-field]");
     if (!translateButton) return;
     event.preventDefault();
-    void translateMobileDescription(translateButton);
+    void translateShortDescription(translateButton);
   });
 }
 
@@ -467,14 +452,6 @@ function cloneEditorProfile(user) {
   if (!Object.keys(positionByLang).length && normalizeText(profile?.position)) {
     positionByLang.en = normalizeText(profile.position);
   }
-  const qualificationByLang = Object.fromEntries(
-    (Array.isArray(profile?.qualification_i18n) ? profile.qualification_i18n : [])
-      .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
-      .filter(([lang, value]) => Boolean(lang && value))
-  );
-  if (!Object.keys(qualificationByLang).length && normalizeText(profile?.qualification)) {
-    qualificationByLang.en = normalizeText(profile.qualification);
-  }
   const descriptionByLang = Object.fromEntries(
     (Array.isArray(profile?.description_i18n) ? profile.description_i18n : [])
       .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
@@ -483,13 +460,13 @@ function cloneEditorProfile(user) {
   if (!Object.keys(descriptionByLang).length && normalizeText(profile?.description)) {
     descriptionByLang.en = normalizeText(profile.description);
   }
-  const mobileDescriptionByLang = Object.fromEntries(
-    (Array.isArray(profile?.mobile_description_i18n) ? profile.mobile_description_i18n : [])
+  const shortDescriptionByLang = Object.fromEntries(
+    (Array.isArray(profile?.short_description_i18n) ? profile.short_description_i18n : [])
       .map((entry) => [normalizeText(entry?.lang).toLowerCase(), normalizeText(entry?.value)])
       .filter(([lang, value]) => Boolean(lang && value))
   );
-  if (!Object.keys(mobileDescriptionByLang).length && normalizeText(profile?.mobile_description)) {
-    mobileDescriptionByLang.en = normalizeText(profile.mobile_description);
+  if (!Object.keys(shortDescriptionByLang).length && normalizeText(profile?.short_description)) {
+    shortDescriptionByLang.en = normalizeText(profile.short_description);
   }
   return {
     fullName: normalizeText(profile?.full_name),
@@ -503,9 +480,8 @@ function cloneEditorProfile(user) {
       ? profile.destinations.map((code) => normalizeText(code).toUpperCase()).filter(Boolean)
       : [],
     positionByLang,
-    qualificationByLang,
     descriptionByLang,
-    mobileDescriptionByLang,
+    shortDescriptionByLang,
     pendingPhoto: null
   };
 }
@@ -518,20 +494,14 @@ function normalizeEditorProfile(profile) {
       .filter(([lang, value]) => Boolean(lang && value))
       .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
   );
-  const qualificationByLang = Object.fromEntries(
-    Object.entries(profile?.qualificationByLang && typeof profile.qualificationByLang === "object" ? profile.qualificationByLang : {})
-      .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
-      .filter(([lang, value]) => Boolean(lang && value))
-      .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
-  );
   const descriptionByLang = Object.fromEntries(
     Object.entries(profile?.descriptionByLang && typeof profile.descriptionByLang === "object" ? profile.descriptionByLang : {})
       .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
       .filter(([lang, value]) => Boolean(lang && value))
       .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
   );
-  const mobileDescriptionByLang = Object.fromEntries(
-    Object.entries(profile?.mobileDescriptionByLang && typeof profile.mobileDescriptionByLang === "object" ? profile.mobileDescriptionByLang : {})
+  const shortDescriptionByLang = Object.fromEntries(
+    Object.entries(profile?.shortDescriptionByLang && typeof profile.shortDescriptionByLang === "object" ? profile.shortDescriptionByLang : {})
       .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
       .filter(([lang, value]) => Boolean(lang && value))
       .sort(([leftLang], [rightLang]) => leftLang.localeCompare(rightLang))
@@ -544,9 +514,8 @@ function normalizeEditorProfile(profile) {
     languages: Array.from(new Set((Array.isArray(profile?.languages) ? profile.languages : []).map((code) => normalizeText(code).toLowerCase()).filter(Boolean))).sort(),
     destinations: Array.from(new Set((Array.isArray(profile?.destinations) ? profile.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean))).sort(),
     positionByLang,
-    qualificationByLang,
     descriptionByLang,
-    mobileDescriptionByLang
+    shortDescriptionByLang
   };
 }
 
@@ -593,9 +562,8 @@ function closeEditor() {
     languages: [],
     destinations: [],
     positionByLang: {},
-    qualificationByLang: {},
     descriptionByLang: {},
-    mobileDescriptionByLang: {},
+    shortDescriptionByLang: {},
     pendingPhoto: null
   };
   state.editorSaving = false;
@@ -654,9 +622,8 @@ function renderEditor() {
   renderLanguageChecklist();
   renderDestinationChecklist();
   renderPositionEditor();
-  renderQualificationEditor();
   renderDescriptionEditor();
-  renderMobileDescriptionEditor();
+  renderShortDescriptionEditor();
   updateEditorSaveButtonState();
 }
 
@@ -694,31 +661,6 @@ function renderDestinationChecklist() {
       <span>${escapeHtml(option.label)}</span>
     </label>`)
     .join("");
-}
-
-function renderQualificationEditor() {
-  if (!els.staffEditorQualification) return;
-  const options = QUALIFICATION_LANGUAGE_OPTIONS.length
-    ? QUALIFICATION_LANGUAGE_OPTIONS
-    : [{ value: "en", label: "EN", direction: "ltr" }];
-  const current = state.editor?.qualificationByLang && typeof state.editor.qualificationByLang === "object"
-    ? state.editor.qualificationByLang
-    : {};
-  const rows = options
-    .map((option) => {
-      const lang = normalizeText(option.value).toLowerCase();
-      const buttonHtml = lang === "en"
-        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="qualification">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
-        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="qualification" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
-      return `<div class="tour-localized-group__row">
-        <div class="tour-localized-group__code-cell">${buttonHtml}</div>
-        <div class="tour-localized-group__field">
-          <textarea id="${escapeHtml(qualificationTextareaId(lang))}" data-qualification-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
-        </div>
-      </div>`;
-    })
-    .join("");
-  els.staffEditorQualification.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
 }
 
 function renderPositionEditor() {
@@ -771,29 +713,29 @@ function renderDescriptionEditor() {
   els.staffEditorDescription.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
 }
 
-function renderMobileDescriptionEditor() {
-  if (!els.staffEditorMobileDescription) return;
+function renderShortDescriptionEditor() {
+  if (!els.staffEditorShortDescription) return;
   const options = QUALIFICATION_LANGUAGE_OPTIONS.length
     ? QUALIFICATION_LANGUAGE_OPTIONS
     : [{ value: "en", label: "EN", direction: "ltr" }];
-  const current = state.editor?.mobileDescriptionByLang && typeof state.editor.mobileDescriptionByLang === "object"
-    ? state.editor.mobileDescriptionByLang
+  const current = state.editor?.shortDescriptionByLang && typeof state.editor.shortDescriptionByLang === "object"
+    ? state.editor.shortDescriptionByLang
     : {};
   const rows = options
     .map((option) => {
       const lang = normalizeText(option.value).toLowerCase();
       const buttonHtml = lang === "en"
-        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="mobile-description">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
-        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="mobile-description" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
+        ? `<button type="button" class="btn btn-ghost tour-localized-group__translate-all-btn" data-staff-translate-all="short-description">${escapeHtml(backendT("backend.users.translation.translate_all", "EN → ALL"))}</button>`
+        : `<button type="button" class="btn btn-ghost tour-localized-group__translate-btn" data-staff-translate-field="short-description" data-target-lang="${escapeHtml(lang)}">EN → ${escapeHtml(option.label)}</button>`;
       return `<div class="tour-localized-group__row">
         <div class="tour-localized-group__code-cell">${buttonHtml}</div>
         <div class="tour-localized-group__field">
-          <textarea id="${escapeHtml(mobileDescriptionTextareaId(lang))}" data-mobile-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
+          <textarea id="${escapeHtml(shortDescriptionTextareaId(lang))}" data-short-description-lang="${escapeHtml(lang)}" dir="${escapeHtml(option.direction)}" rows="4" spellcheck="true">${escapeHtml(normalizeText(current[lang]))}</textarea>
         </div>
       </div>`;
     })
     .join("");
-  els.staffEditorMobileDescription.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
+  els.staffEditorShortDescription.innerHTML = `<div class="tour-localized-group tour-localized-group--multiline">${rows}</div>`;
 }
 
 function handleStaffTableClick(event) {
@@ -808,21 +750,6 @@ function handleStaffTableKeydown(event) {
   if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
   openEditorForUsername(row.getAttribute("data-staff-edit"));
-}
-
-function handleQualificationInput(event) {
-  const input = event.target.closest("[data-qualification-lang]");
-  if (!input) return;
-  const lang = normalizeText(input.getAttribute("data-qualification-lang")).toLowerCase();
-  if (!lang) return;
-  const nextValue = normalizeText(input.value);
-  if (!state.editor.qualificationByLang || typeof state.editor.qualificationByLang !== "object") {
-    state.editor.qualificationByLang = {};
-  }
-  if (nextValue) state.editor.qualificationByLang[lang] = nextValue;
-  else delete state.editor.qualificationByLang[lang];
-  clearEditorStatus();
-  updateEditorSaveButtonState();
 }
 
 function handleDescriptionInput(event) {
@@ -840,17 +767,17 @@ function handleDescriptionInput(event) {
   updateEditorSaveButtonState();
 }
 
-function handleMobileDescriptionInput(event) {
-  const input = event.target.closest("[data-mobile-description-lang]");
+function handleShortDescriptionInput(event) {
+  const input = event.target.closest("[data-short-description-lang]");
   if (!input) return;
-  const lang = normalizeText(input.getAttribute("data-mobile-description-lang")).toLowerCase();
+  const lang = normalizeText(input.getAttribute("data-short-description-lang")).toLowerCase();
   if (!lang) return;
   const nextValue = normalizeText(input.value);
-  if (!state.editor.mobileDescriptionByLang || typeof state.editor.mobileDescriptionByLang !== "object") {
-    state.editor.mobileDescriptionByLang = {};
+  if (!state.editor.shortDescriptionByLang || typeof state.editor.shortDescriptionByLang !== "object") {
+    state.editor.shortDescriptionByLang = {};
   }
-  if (nextValue) state.editor.mobileDescriptionByLang[lang] = nextValue;
-  else delete state.editor.mobileDescriptionByLang[lang];
+  if (nextValue) state.editor.shortDescriptionByLang[lang] = nextValue;
+  else delete state.editor.shortDescriptionByLang[lang];
   clearEditorStatus();
   updateEditorSaveButtonState();
 }
@@ -894,14 +821,6 @@ function handleAppearsInTeamWebPageChange(event) {
   updateEditorSaveButtonState();
 }
 
-function qualificationTextareaId(lang) {
-  return `staff_qualification_${normalizeText(lang).toLowerCase()}`;
-}
-
-function getQualificationTextarea(lang) {
-  return document.getElementById(qualificationTextareaId(lang));
-}
-
 function descriptionTextareaId(lang) {
   return `staff_description_${normalizeText(lang).toLowerCase()}`;
 }
@@ -910,12 +829,12 @@ function getDescriptionTextarea(lang) {
   return document.getElementById(descriptionTextareaId(lang));
 }
 
-function mobileDescriptionTextareaId(lang) {
-  return `staff_mobile_description_${normalizeText(lang).toLowerCase()}`;
+function shortDescriptionTextareaId(lang) {
+  return `staff_short_description_${normalizeText(lang).toLowerCase()}`;
 }
 
-function getMobileDescriptionTextarea(lang) {
-  return document.getElementById(mobileDescriptionTextareaId(lang));
+function getShortDescriptionTextarea(lang) {
+  return document.getElementById(shortDescriptionTextareaId(lang));
 }
 
 function positionInputId(lang) {
@@ -950,30 +869,6 @@ function setPositionValue(lang, value) {
   updateEditorSaveButtonState();
 }
 
-function buildQualificationTranslationEntries(sourceText) {
-  const value = normalizeText(sourceText);
-  return value ? { value } : {};
-}
-
-function translatedQualificationValue(entries) {
-  return normalizeText(entries?.value);
-}
-
-function setQualificationValue(lang, value) {
-  const normalizedLang = normalizeText(lang).toLowerCase();
-  const normalizedValue = normalizeText(value);
-  if (!state.editor.qualificationByLang || typeof state.editor.qualificationByLang !== "object") {
-    state.editor.qualificationByLang = {};
-  }
-  if (normalizedValue) state.editor.qualificationByLang[normalizedLang] = normalizedValue;
-  else delete state.editor.qualificationByLang[normalizedLang];
-  const textarea = getQualificationTextarea(normalizedLang);
-  if (textarea && textarea.value !== normalizedValue) {
-    textarea.value = normalizedValue;
-  }
-  updateEditorSaveButtonState();
-}
-
 function buildDescriptionTranslationEntries(sourceText) {
   return buildMultilineTranslationEntries(sourceText);
 }
@@ -997,11 +892,11 @@ function setDescriptionValue(lang, value) {
   updateEditorSaveButtonState();
 }
 
-function buildMobileDescriptionTranslationEntries(sourceText) {
+function buildShortDescriptionTranslationEntries(sourceText) {
   return buildMultilineTranslationEntries(sourceText);
 }
 
-function translatedMobileDescriptionValue(entries, sourceText) {
+function translatedShortDescriptionValue(entries, sourceText) {
   return mergeMultilineTranslatedValue(entries, sourceText);
 }
 
@@ -1026,45 +921,19 @@ function mergeMultilineTranslatedValue(entries, sourceText) {
     .trim();
 }
 
-function setMobileDescriptionValue(lang, value) {
+function setShortDescriptionValue(lang, value) {
   const normalizedLang = normalizeText(lang).toLowerCase();
   const normalizedValue = normalizeText(value);
-  if (!state.editor.mobileDescriptionByLang || typeof state.editor.mobileDescriptionByLang !== "object") {
-    state.editor.mobileDescriptionByLang = {};
+  if (!state.editor.shortDescriptionByLang || typeof state.editor.shortDescriptionByLang !== "object") {
+    state.editor.shortDescriptionByLang = {};
   }
-  if (normalizedValue) state.editor.mobileDescriptionByLang[normalizedLang] = normalizedValue;
-  else delete state.editor.mobileDescriptionByLang[normalizedLang];
-  const textarea = getMobileDescriptionTextarea(normalizedLang);
+  if (normalizedValue) state.editor.shortDescriptionByLang[normalizedLang] = normalizedValue;
+  else delete state.editor.shortDescriptionByLang[normalizedLang];
+  const textarea = getShortDescriptionTextarea(normalizedLang);
   if (textarea && textarea.value !== normalizedValue) {
     textarea.value = normalizedValue;
   }
   updateEditorSaveButtonState();
-}
-
-async function requestQualificationTranslation(targetLang, sourceText) {
-  const user = getSelectedUser();
-  if (!user) return null;
-  const entries = buildQualificationTranslationEntries(sourceText);
-  if (!Object.keys(entries).length) return null;
-  const request = keycloakUserStaffProfileTranslateFieldsRequest({
-    baseURL: apiOrigin,
-    params: { username: user.username },
-    body: {
-      source_lang: "en",
-      target_lang: targetLang,
-      entries: Object.entries(entries).map(([key, value]) => ({ key, value }))
-    }
-  });
-  const payload = await fetchApi(request.url, {
-    method: request.method,
-    body: request.body
-  });
-  if (!Array.isArray(payload?.entries)) return null;
-  return Object.fromEntries(
-    payload.entries
-      .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
-      .filter(([key, value]) => Boolean(key && value))
-  );
 }
 
 async function requestPositionTranslation(targetLang, sourceText) {
@@ -1119,10 +988,10 @@ async function requestDescriptionTranslation(targetLang, sourceText) {
   );
 }
 
-async function requestMobileDescriptionTranslation(targetLang, sourceText) {
+async function requestShortDescriptionTranslation(targetLang, sourceText) {
   const user = getSelectedUser();
   if (!user) return null;
-  const entries = buildMobileDescriptionTranslationEntries(sourceText);
+  const entries = buildShortDescriptionTranslationEntries(sourceText);
   if (!Object.keys(entries).length) return null;
   const request = keycloakUserStaffProfileTranslateFieldsRequest({
     baseURL: apiOrigin,
@@ -1143,64 +1012,6 @@ async function requestMobileDescriptionTranslation(targetLang, sourceText) {
       .map((entry) => [normalizeText(entry?.key), normalizeText(entry?.value)])
       .filter(([key, value]) => Boolean(key && value))
   );
-}
-
-async function translateQualification(button) {
-  const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const englishInput = getQualificationTextarea("en");
-  const targetInput = getQualificationTextarea(targetLang);
-  if (!targetLang || !englishInput || !targetInput) return;
-
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildQualificationTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.translation.missing_source", "Add English qualification first."), true);
-    return;
-  }
-
-  setQualificationValue(targetLang, "");
-  showEditorStatus(backendT("backend.users.translation.translating", "Translating qualification..."));
-  const translatedEntries = await requestQualificationTranslation(targetLang, englishSource);
-  if (!translatedEntries) {
-    showEditorStatus(backendT("backend.users.translation.error", "Could not translate the qualification."), true);
-    return;
-  }
-
-  setQualificationValue(targetLang, translatedQualificationValue(translatedEntries));
-  showEditorStatus(backendT("backend.users.translation.done", "Qualification translated."));
-}
-
-async function translateQualificationToAll(button) {
-  const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
-  if (field !== "qualification") return;
-  const englishInput = getQualificationTextarea("en");
-  if (!englishInput) return;
-
-  const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildQualificationTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.translation.missing_source", "Add English qualification first."), true);
-    return;
-  }
-
-  const targets = QUALIFICATION_LANGUAGE_OPTIONS
-    .map((option) => normalizeText(option?.value).toLowerCase())
-    .filter((lang) => lang && lang !== "en");
-  if (!targets.length) return;
-
-  for (const targetLang of targets) {
-    setQualificationValue(targetLang, "");
-  }
-  showEditorStatus(backendT("backend.users.translation.translating_all", "Translating all qualification languages..."));
-
-  for (const targetLang of targets) {
-    const translatedEntries = await requestQualificationTranslation(targetLang, englishSource);
-    if (!translatedEntries) {
-      showEditorStatus(backendT("backend.users.translation.error", "Could not translate the qualification."), true);
-      return;
-    }
-    setQualificationValue(targetLang, translatedQualificationValue(translatedEntries));
-  }
-
-  showEditorStatus(backendT("backend.users.translation.all_done", "All qualification translations updated."));
 }
 
 async function translatePosition(button) {
@@ -1319,39 +1130,39 @@ async function translateDescriptionToAll(button) {
   showEditorStatus(backendT("backend.users.description_translation.all_done", "All description translations updated."));
 }
 
-async function translateMobileDescription(button) {
+async function translateShortDescription(button) {
   const targetLang = normalizeText(button?.getAttribute("data-target-lang")).toLowerCase();
-  const englishInput = getMobileDescriptionTextarea("en");
-  const targetInput = getMobileDescriptionTextarea(targetLang);
+  const englishInput = getShortDescriptionTextarea("en");
+  const targetInput = getShortDescriptionTextarea(targetLang);
   if (!targetLang || !englishInput || !targetInput) return;
 
   const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildMobileDescriptionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.mobile_description_translation.missing_source", "Add English mobile description first."), true);
+  if (!Object.keys(buildShortDescriptionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.short_description_translation.missing_source", "Add English short description first."), true);
     return;
   }
 
-  setMobileDescriptionValue(targetLang, "");
-  showEditorStatus(backendT("backend.users.mobile_description_translation.translating", "Translating mobile description..."));
-  const translatedEntries = await requestMobileDescriptionTranslation(targetLang, englishSource);
+  setShortDescriptionValue(targetLang, "");
+  showEditorStatus(backendT("backend.users.short_description_translation.translating", "Translating short description..."));
+  const translatedEntries = await requestShortDescriptionTranslation(targetLang, englishSource);
   if (!translatedEntries) {
-    showEditorStatus(backendT("backend.users.mobile_description_translation.error", "Could not translate the mobile description."), true);
+    showEditorStatus(backendT("backend.users.short_description_translation.error", "Could not translate the short description."), true);
     return;
   }
 
-  setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries, englishSource));
-  showEditorStatus(backendT("backend.users.mobile_description_translation.done", "Mobile description translated."));
+  setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, englishSource));
+  showEditorStatus(backendT("backend.users.short_description_translation.done", "Short description translated."));
 }
 
-async function translateMobileDescriptionToAll(button) {
+async function translateShortDescriptionToAll(button) {
   const field = normalizeText(button?.getAttribute("data-staff-translate-all")).toLowerCase();
-  if (field !== "mobile-description") return;
-  const englishInput = getMobileDescriptionTextarea("en");
+  if (field !== "short-description") return;
+  const englishInput = getShortDescriptionTextarea("en");
   if (!englishInput) return;
 
   const englishSource = String(englishInput.value || "");
-  if (!Object.keys(buildMobileDescriptionTranslationEntries(englishSource)).length) {
-    showEditorStatus(backendT("backend.users.mobile_description_translation.missing_source", "Add English mobile description first."), true);
+  if (!Object.keys(buildShortDescriptionTranslationEntries(englishSource)).length) {
+    showEditorStatus(backendT("backend.users.short_description_translation.missing_source", "Add English short description first."), true);
     return;
   }
 
@@ -1361,20 +1172,20 @@ async function translateMobileDescriptionToAll(button) {
   if (!targets.length) return;
 
   for (const targetLang of targets) {
-    setMobileDescriptionValue(targetLang, "");
+    setShortDescriptionValue(targetLang, "");
   }
-  showEditorStatus(backendT("backend.users.mobile_description_translation.translating_all", "Translating all mobile description languages..."));
+  showEditorStatus(backendT("backend.users.short_description_translation.translating_all", "Translating all short description languages..."));
 
   for (const targetLang of targets) {
-    const translatedEntries = await requestMobileDescriptionTranslation(targetLang, englishSource);
+    const translatedEntries = await requestShortDescriptionTranslation(targetLang, englishSource);
     if (!translatedEntries) {
-      showEditorStatus(backendT("backend.users.mobile_description_translation.error", "Could not translate the mobile description."), true);
+      showEditorStatus(backendT("backend.users.short_description_translation.error", "Could not translate the short description."), true);
       return;
     }
-    setMobileDescriptionValue(targetLang, translatedMobileDescriptionValue(translatedEntries, englishSource));
+    setShortDescriptionValue(targetLang, translatedShortDescriptionValue(translatedEntries, englishSource));
   }
 
-  showEditorStatus(backendT("backend.users.mobile_description_translation.all_done", "All mobile description translations updated."));
+  showEditorStatus(backendT("backend.users.short_description_translation.all_done", "All short description translations updated."));
 }
 
 function handleDestinationToggle(event) {
@@ -1399,19 +1210,6 @@ function handleLanguageToggle(event) {
   state.editor.languages = Array.from(current);
   clearEditorStatus();
   updateEditorSaveButtonState();
-}
-
-function normalizeQualificationEntriesForSave() {
-  const source = state.editor?.qualificationByLang && typeof state.editor.qualificationByLang === "object"
-    ? state.editor.qualificationByLang
-    : {};
-  return Object.entries(source)
-    .map(([lang, value]) => ({
-      lang: normalizeText(lang).toLowerCase(),
-      value: normalizeText(value)
-    }))
-    .filter((entry) => Boolean(entry.lang && entry.value))
-    .sort((left, right) => left.lang.localeCompare(right.lang));
 }
 
 function normalizePositionEntriesForSave() {
@@ -1440,9 +1238,9 @@ function normalizeDescriptionEntriesForSave() {
     .sort((left, right) => left.lang.localeCompare(right.lang));
 }
 
-function normalizeMobileDescriptionEntriesForSave() {
-  const source = state.editor?.mobileDescriptionByLang && typeof state.editor.mobileDescriptionByLang === "object"
-    ? state.editor.mobileDescriptionByLang
+function normalizeShortDescriptionEntriesForSave() {
+  const source = state.editor?.shortDescriptionByLang && typeof state.editor.shortDescriptionByLang === "object"
+    ? state.editor.shortDescriptionByLang
     : {};
   return Object.entries(source)
     .map(([lang, value]) => ({
@@ -1468,10 +1266,9 @@ async function saveSelectedStaffProfile() {
   }
   const destinations = Array.from(new Set((Array.isArray(state.editor?.destinations) ? state.editor.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean)));
 
-  const qualificationI18n = normalizeQualificationEntriesForSave();
   const positionI18n = normalizePositionEntriesForSave();
   const descriptionI18n = normalizeDescriptionEntriesForSave();
-  const mobileDescriptionI18n = normalizeMobileDescriptionEntriesForSave();
+  const shortDescriptionI18n = normalizeShortDescriptionEntriesForSave();
   const teamOrder = parseTeamOrderInput(state.editor?.teamOrder);
   if (!teamOrder.valid) {
     showEditorStatus(backendT("backend.users.team_order_invalid", "Team order must be a whole number."), true);
@@ -1503,9 +1300,8 @@ async function saveSelectedStaffProfile() {
           appears_in_team_web_page: state.editor?.appearsInTeamWebPage !== false,
           languages,
           destinations,
-          qualification_i18n: qualificationI18n,
           description_i18n: descriptionI18n,
-          mobile_description_i18n: mobileDescriptionI18n
+          short_description_i18n: shortDescriptionI18n
         }
       });
       if (!payload?.user) return;

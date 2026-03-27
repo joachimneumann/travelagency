@@ -312,12 +312,10 @@ import (
 	friendly_short_name?: string
 	team_order?: int | null
 	appears_in_team_web_page?: bool
-	qualification?:              string
-	qualification_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 	description?:                string
 	description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
-	mobile_description?: string
-	mobile_description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
+	short_description?: string
+	short_description_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 }
 
 #AtpStaffPhotoUploadRequest: #EvidenceUpload

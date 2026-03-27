@@ -26,7 +26,7 @@ import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
 import {
   resolveAtpGuideIntroName,
   resolveAtpGuidePdfContext,
-  resolveAtpGuideQualificationText,
+  resolveAtpGuideShortDescriptionText,
   resolveAtpStaffFullName
 } from "./atp_staff_pdf.js";
 
@@ -704,7 +704,7 @@ function drawTravelers(doc, booking, startY, fonts, lang) {
 
 function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
   const profile = guideContext?.profile || null;
-  const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
+  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
   const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
   const introName = textOrNull(resolveAtpGuideIntroName(profile));
   const guideTitle = guideFullName
@@ -753,7 +753,7 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
 
 function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   const profile = guideContext?.profile || null;
-  const qualificationText = textOrNull(resolveAtpGuideQualificationText(guideContext, lang));
+  const qualificationText = textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang));
   const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
   const introName = textOrNull(resolveAtpGuideIntroName(profile));
   const guideTitle = guideFullName
