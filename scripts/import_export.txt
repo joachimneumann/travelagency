@@ -13,3 +13,7 @@ scp -r atp:/srv/asiatravelplan/content .
 ## copy to backup
 cd /Users/joachim/projects/travelagency
 cp -r content/atp_staff backup
+
+## restore from backup
+cd /Users/joachim/projects/travelagency
+cp -r backup content/atp_staff
