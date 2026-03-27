@@ -22,6 +22,15 @@ function normalizeAppearsInTeamWebPage(value, fallback = true) {
   return typeof value === "boolean" ? value : fallback;
 }
 
+function normalizeTeamOrder(value) {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (typeof value === "number" && Number.isInteger(value) && Number.isFinite(value)) return value;
+  const normalized = normalizeText(value);
+  if (!normalized || !/^-?\d+$/.test(normalized)) return undefined;
+  const parsed = Number.parseInt(normalized, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function qualificationTextFromLegacyExperiences(items) {
   return (Array.isArray(items) ? items : [])
     .map((experience) => {
@@ -152,6 +161,7 @@ function normalizeStoredProfile(profile) {
     ...(normalizeText(profile?.full_name) ? { full_name: normalizeText(profile.full_name) } : {}),
     ...(Object.keys(position).length ? { position } : {}),
     ...(normalizeText(profile?.friendly_short_name) ? { friendly_short_name: normalizeText(profile.friendly_short_name) } : {}),
+    ...(normalizeTeamOrder(profile?.team_order) !== undefined ? { team_order: normalizeTeamOrder(profile?.team_order) } : {}),
     ...(pictureFilenameFromStoredValue(profile?.picture ?? profile?.picture_ref, username)
       ? { picture: pictureFilenameFromStoredValue(profile?.picture ?? profile?.picture_ref, username) }
       : {}),
@@ -231,9 +241,20 @@ function buildAvatarSvg(name, username) {
 
 function sortProfiles(items) {
   return [...(Array.isArray(items) ? items : [])].sort((left, right) => {
+    const leftTeamOrder = normalizeTeamOrder(left?.team_order);
+    const rightTeamOrder = normalizeTeamOrder(right?.team_order);
+    if (leftTeamOrder !== undefined && rightTeamOrder !== undefined && leftTeamOrder !== rightTeamOrder) {
+      return leftTeamOrder - rightTeamOrder;
+    }
+    if (leftTeamOrder !== undefined) return -1;
+    if (rightTeamOrder !== undefined) return 1;
     const leftName = normalizeText(left?.name) || left?.username || "";
     const rightName = normalizeText(right?.name) || right?.username || "";
-    return leftName.localeCompare(rightName);
+    const byName = leftName.localeCompare(rightName);
+    if (byName !== 0) return byName;
+    const leftUsername = normalizeText(left?.username);
+    const rightUsername = normalizeText(right?.username);
+    return leftUsername.localeCompare(rightUsername);
   });
 }
 
@@ -331,6 +352,9 @@ function mergeStoredProfileWithUser(profile, user) {
     full_name: resolvedFullName,
     position: Object.keys(normalizedPosition).length ? normalizedPosition : {},
     friendly_short_name: resolvedFriendlyShortName,
+    ...(normalizeTeamOrder(normalizedProfile?.team_order) !== undefined
+      ? { team_order: normalizeTeamOrder(normalizedProfile?.team_order) }
+      : {}),
     picture: pictureFilenameFromStoredValue(normalizedProfile?.picture, username) || defaultProfile.picture,
     languages: normalizeLanguageCodes(normalizedProfile?.languages),
     destinations: normalizeCountryCodes(normalizedProfile?.destinations),
@@ -669,6 +693,7 @@ export function createAtpStaffDirectory({
           ? input.position
           : current?.position,
       friendly_short_name: input?.friendly_short_name !== undefined ? input.friendly_short_name : current?.friendly_short_name,
+      team_order: input?.team_order !== undefined ? input.team_order : current?.team_order,
       picture: pictureFilenameFromStoredValue(currentStored?.picture ?? current?.picture_ref, username),
       languages: Array.isArray(input?.languages) ? input.languages : current?.languages,
       destinations: Array.isArray(input?.destinations) ? input.destinations : current?.destinations,
@@ -716,6 +741,7 @@ export function createAtpStaffDirectory({
       full_name: current?.full_name,
       position: current?.position,
       friendly_short_name: current?.friendly_short_name,
+      team_order: current?.team_order,
       picture: normalizedPicture,
       languages: current?.languages,
       destinations: current?.destinations,

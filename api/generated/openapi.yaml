@@ -3868,6 +3868,8 @@ components:
         friendly_short_name:
           type: string
           nullable: true
+        team_order:
+          type: integer
         picture_ref:
           type: string
           nullable: true
@@ -6970,6 +6972,9 @@ components:
           nullable: true
         friendly_short_name:
           type: string
+          nullable: true
+        team_order:
+          type: integer
           nullable: true
         qualification:
           type: string
