@@ -1,0 +1,10 @@
+import_export.txt
+
+## import from ATP
+cd /Users/joachim/projects/travelagency
+scp -r atp:/srv/asiatravelplan/content .
+
+
+## export to from ATP
+cd /Users/joachim/projects/travelagency
+scp atp:/srv/asiatravelplan/content .
