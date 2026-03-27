@@ -3,16 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKUP_DIR="${1:-$ROOT_DIR/backup/atp_staff}"
-
-PATHS_JSON="$(
-  cd "$ROOT_DIR" && node --input-type=module - <<'EOF'
-import { ATP_STAFF_PROFILES_PATH, ATP_STAFF_PHOTOS_DIR } from "./backend/app/src/config/runtime.js";
-console.log(JSON.stringify({ profilesPath: ATP_STAFF_PROFILES_PATH, photosDir: ATP_STAFF_PHOTOS_DIR }));
-EOF
-)"
-
-PROFILES_PATH="$(printf '%s' "$PATHS_JSON" | node --input-type=module -e 'let data=""; process.stdin.on("data", (chunk) => data += chunk); process.stdin.on("end", () => { const parsed = JSON.parse(data); console.log(parsed.profilesPath || ""); });')"
-PHOTOS_DIR="$(printf '%s' "$PATHS_JSON" | node --input-type=module -e 'let data=""; process.stdin.on("data", (chunk) => data += chunk); process.stdin.on("end", () => { const parsed = JSON.parse(data); console.log(parsed.photosDir || ""); });')"
+CONTENT_DIR="$ROOT_DIR/content/atp_staff"
+PROFILES_PATH="$CONTENT_DIR/staff.json"
+PHOTOS_DIR="$CONTENT_DIR/photos"
 
 mkdir -p "$BACKUP_DIR/photos"
 

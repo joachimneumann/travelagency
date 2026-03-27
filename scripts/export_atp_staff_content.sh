@@ -4,21 +4,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE_HOST="${1:-atp}"
 REMOTE_DIR="${2:-/srv/asiatravelplan/content/atp_staff}"
+CONTENT_DIR="$ROOT_DIR/content/atp_staff"
+PROFILES_PATH="$CONTENT_DIR/staff.json"
+PHOTOS_DIR="$CONTENT_DIR/photos"
 
 if [[ -z "$REMOTE_HOST" ]]; then
   echo "Usage: ./scripts/export_atp_staff_content.sh [remote-host] [remote-dir]" >&2
   exit 1
 fi
-
-PATHS_JSON="$(
-  cd "$ROOT_DIR" && node --input-type=module - <<'EOF'
-import { ATP_STAFF_PROFILES_PATH, ATP_STAFF_PHOTOS_DIR } from "./backend/app/src/config/runtime.js";
-console.log(JSON.stringify({ profilesPath: ATP_STAFF_PROFILES_PATH, photosDir: ATP_STAFF_PHOTOS_DIR }));
-EOF
-)"
-
-PROFILES_PATH="$(printf '%s' "$PATHS_JSON" | node --input-type=module -e 'let data=""; process.stdin.on("data", (chunk) => data += chunk); process.stdin.on("end", () => { const parsed = JSON.parse(data); console.log(parsed.profilesPath || ""); });')"
-PHOTOS_DIR="$(printf '%s' "$PATHS_JSON" | node --input-type=module -e 'let data=""; process.stdin.on("data", (chunk) => data += chunk); process.stdin.on("end", () => { const parsed = JSON.parse(data); console.log(parsed.photosDir || ""); });')"
 
 ssh "$REMOTE_HOST" "mkdir -p '$REMOTE_DIR/photos'"
 
