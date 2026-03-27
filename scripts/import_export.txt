@@ -7,4 +7,9 @@ scp -r atp:/srv/asiatravelplan/content .
 
 ## export to from ATP
 cd /Users/joachim/projects/travelagency
-scp atp:/srv/asiatravelplan/content .
+scp -r atp:/srv/asiatravelplan/content .
+
+
+## copy to backup
+cd /Users/joachim/projects/travelagency
+cp -r content/atp_staff backup
