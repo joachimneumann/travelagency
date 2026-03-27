@@ -4736,6 +4736,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   const qualificationDe = "Plant ruhige Südostasien-Routen mit realistischen Transferzeiten und Erholungsphasen zwischen den Höhepunkten.";
   const fullName = "Joachim Carl Neumann";
   const friendlyShortName = "Joachim";
+  const teamOrder = 3;
 
   const forbiddenResult = await requestJson(
     profilePath,
@@ -4762,6 +4763,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
       body: {
         full_name: fullName,
         friendly_short_name: friendlyShortName,
+        team_order: teamOrder,
         languages: ["de", "en", "vi"],
         destinations: ["VN", "LA"],
         qualification_i18n: [
@@ -4781,6 +4783,7 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   assert.equal(updateResult.body.user.username, "joachim");
   assert.equal(updateResult.body.user.staff_profile.full_name, fullName);
   assert.equal(updateResult.body.user.staff_profile.friendly_short_name, friendlyShortName);
+  assert.equal(updateResult.body.user.staff_profile.team_order, teamOrder);
   assert.deepEqual(updateResult.body.user.staff_profile.languages, ["de", "en", "vi"]);
   assert.deepEqual(updateResult.body.user.staff_profile.destinations, ["VN", "LA"]);
   assert.equal(updateResult.body.user.staff_profile.qualification, qualificationEn);
@@ -4798,6 +4801,71 @@ test("admin can update ATP staff profile details while non-admin cannot", async 
   const updated = listResult.body.items.find((item) => item.username === "joachim");
   assert.equal(updated.name, "Joachim Neumann");
   assert.equal(updated.staff_profile, undefined);
+});
+
+test("public ATP staff team endpoint respects manual team order and supports clearing it", async () => {
+  const adminHeaders = apiHeaders("atp_admin", "admin", "kc-admin");
+  const joachimProfilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
+  const staffProfilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "staff");
+  const publicTeamPath = endpointPath("public_atp_staff_team");
+
+  const joachimUpdate = await requestJson(
+    joachimProfilePath,
+    adminHeaders,
+    {
+      method: "PATCH",
+      body: {
+        languages: ["de", "en"],
+        team_order: 2
+      }
+    }
+  );
+  assert.equal(joachimUpdate.status, 200);
+  assert.equal(joachimUpdate.body.user.staff_profile.team_order, 2);
+
+  const staffUpdate = await requestJson(
+    staffProfilePath,
+    adminHeaders,
+    {
+      method: "PATCH",
+      body: {
+        languages: ["en", "vi"],
+        team_order: 1
+      }
+    }
+  );
+  assert.equal(staffUpdate.status, 200);
+  assert.equal(staffUpdate.body.user.staff_profile.team_order, 1);
+
+  const orderedTeam = await requestJson(publicTeamPath);
+  assert.equal(orderedTeam.status, 200);
+  const orderedUsernames = orderedTeam.body.items.map((item) => item.username);
+  assert.ok(orderedUsernames.indexOf("staff") >= 0);
+  assert.ok(orderedUsernames.indexOf("joachim") >= 0);
+  assert.ok(orderedUsernames.indexOf("staff") < orderedUsernames.indexOf("joachim"));
+
+  const clearedStaffOrder = await requestJson(
+    staffProfilePath,
+    adminHeaders,
+    {
+      method: "PATCH",
+      body: {
+        languages: ["en", "vi"],
+        team_order: null
+      }
+    }
+  );
+  assert.equal(clearedStaffOrder.status, 200);
+  assert.equal(clearedStaffOrder.body.user.staff_profile.team_order, undefined);
+
+  const teamAfterClear = await requestJson(publicTeamPath);
+  assert.equal(teamAfterClear.status, 200);
+  const usernamesAfterClear = teamAfterClear.body.items.map((item) => item.username);
+  assert.ok(usernamesAfterClear.indexOf("joachim") >= 0);
+  assert.ok(usernamesAfterClear.indexOf("admin") >= 0);
+  assert.ok(usernamesAfterClear.indexOf("staff") >= 0);
+  assert.ok(usernamesAfterClear.indexOf("joachim") < usernamesAfterClear.indexOf("admin"));
+  assert.ok(usernamesAfterClear.indexOf("admin") < usernamesAfterClear.indexOf("staff"));
 });
 
 test("admin can translate ATP staff profile text from English to Malay", async () => {

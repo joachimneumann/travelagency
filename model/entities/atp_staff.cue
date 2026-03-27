@@ -16,6 +16,7 @@ import (
 	position?:    string
 	position_i18n?: [...#AtpStaffLocalizedTextEntry]
 	friendly_short_name?: string
+	team_order?: int
 	picture_ref?: string
 	languages: [...enums.#LanguageCode]
 	destinations?: [...enums.#CountryCode]

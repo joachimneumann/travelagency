@@ -161,6 +161,17 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
     const friendlyShortName = payload?.friendly_short_name !== undefined ? normalizeText(payload.friendly_short_name) : undefined;
+    let teamOrder;
+    if (payload?.team_order !== undefined) {
+      if (payload.team_order === null) {
+        teamOrder = null;
+      } else if (typeof payload.team_order !== "number" || !Number.isInteger(payload.team_order) || !Number.isFinite(payload.team_order)) {
+        sendJson(res, 422, { error: "team_order must be an integer" });
+        return;
+      } else {
+        teamOrder = payload.team_order;
+      }
+    }
     if (payload?.appears_in_team_web_page !== undefined && typeof payload.appears_in_team_web_page !== "boolean") {
       sendJson(res, 422, { error: "appears_in_team_web_page must be a boolean" });
       return;
@@ -202,6 +213,7 @@ export function createAtpStaffHandlers(deps) {
       position,
       position_i18n: positionI18n,
       friendly_short_name: friendlyShortName,
+      team_order: teamOrder,
       appears_in_team_web_page: appearsInTeamWebPage,
       qualification,
       qualification_i18n: qualificationI18n,

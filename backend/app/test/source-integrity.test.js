@@ -1680,8 +1680,8 @@ test("settings page staff table shows separate realm and client Keycloak roles",
   );
   assert.match(
     html,
-    /id="staffEditorFullName"[\s\S]*id="staffEditorFriendlyShortName"/,
-    "Settings page should expose editable ATP staff full-name and friendly-short-name fields"
+    /id="staffEditorFullName"[\s\S]*id="staffEditorFriendlyShortName"[\s\S]*id="staffEditorTeamOrder"/,
+    "Settings page should expose editable ATP staff full-name, friendly-short-name, and team-order fields"
   );
   assert.match(
     html,
@@ -1695,8 +1695,8 @@ test("settings page staff table shows separate realm and client Keycloak roles",
   );
   assert.match(
     source,
-    /full_name:\s*normalizeText\(state\.editor\?\.fullName\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)/,
-    "Settings page should send the ATP staff full-name and friendly-short-name fields when saving the profile"
+    /full_name:\s*normalizeText\(state\.editor\?\.fullName\)[\s\S]*friendly_short_name:\s*normalizeText\(state\.editor\?\.friendlyShortName\)[\s\S]*team_order:\s*teamOrder\.isSet \? teamOrder\.value : null/,
+    "Settings page should send the ATP staff full-name, friendly-short-name, and team-order fields when saving the profile"
   );
   assert.match(
     source,

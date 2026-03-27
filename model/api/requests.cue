@@ -301,6 +301,7 @@ import (
 	position?:                   string
 	position_i18n?: [...entities.#AtpStaffLocalizedTextEntry]
 	friendly_short_name?: string
+	team_order?: int | null
 	appears_in_team_web_page?: bool
 	qualification?:              string
 	qualification_i18n?: [...entities.#AtpStaffLocalizedTextEntry]

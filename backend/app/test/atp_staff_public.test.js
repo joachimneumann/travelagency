@@ -15,6 +15,7 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
       username: "joachim",
       name: "Joachim Neumann",
       full_name: "Joachim Neumann",
+      team_order: 1,
       appears_in_team_web_page: true,
       picture_ref: "/content/atp_staff/photos/joachim.webp",
       languages: ["en"],
@@ -45,5 +46,6 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
   assert.equal(calls[0].status, 200);
   assert.equal(calls[0].body.total, 1);
   assert.equal(calls[0].body.items[0].username, "joachim");
+  assert.equal(calls[0].body.items[0].team_order, 1);
   assert.equal(calls[0].body.items[0].position, "Founder");
 });

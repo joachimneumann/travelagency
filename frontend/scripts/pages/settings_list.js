@@ -48,6 +48,7 @@ const els = {
   staffEditorFullName: document.getElementById("staffEditorFullName"),
   staffEditorPosition: document.getElementById("staffEditorPosition"),
   staffEditorFriendlyShortName: document.getElementById("staffEditorFriendlyShortName"),
+  staffEditorTeamOrder: document.getElementById("staffEditorTeamOrder"),
   staffEditorAppearsInTeamWebPage: document.getElementById("staffEditorAppearsInTeamWebPage"),
   staffEditorLanguages: document.getElementById("staffEditorLanguages"),
   staffEditorDestinations: document.getElementById("staffEditorDestinations"),
@@ -101,6 +102,8 @@ const LANGUAGE_LABEL_BY_VALUE = new Map(
     .map((option) => [normalizeText(option?.value).toLowerCase(), normalizeText(option?.label) || normalizeText(option?.value).toUpperCase()])
 );
 
+const INVALID_TEAM_ORDER = "__invalid_team_order__";
+
 const state = {
   authUser: null,
   roles: [],
@@ -116,6 +119,7 @@ const state = {
   editor: {
     fullName: "",
     friendlyShortName: "",
+    teamOrder: "",
     appearsInTeamWebPage: true,
     languages: [],
     destinations: [],
@@ -253,6 +257,7 @@ function bindEvents() {
     void translatePosition(translateButton);
   });
   els.staffEditorFriendlyShortName?.addEventListener("input", handleFriendlyShortNameInput);
+  els.staffEditorTeamOrder?.addEventListener("input", handleTeamOrderInput);
   els.staffEditorAppearsInTeamWebPage?.addEventListener("change", handleAppearsInTeamWebPageChange);
   els.staffEditorLanguages?.addEventListener("change", handleLanguageToggle);
   els.staffEditorDestinations?.addEventListener("change", handleDestinationToggle);
@@ -331,6 +336,21 @@ function englishTextFromLocalizedEntries(entries) {
     normalizedEntries.find((entry) => entry.lang === "en")?.value
     || normalizedEntries[0]?.value
   );
+}
+
+function parseTeamOrderInput(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return { valid: true, isSet: false, value: null };
+  }
+  if (!/^-?\d+$/.test(normalized)) {
+    return { valid: false, isSet: false, value: null };
+  }
+  const parsed = Number.parseInt(normalized, 10);
+  if (!Number.isFinite(parsed)) {
+    return { valid: false, isSet: false, value: null };
+  }
+  return { valid: true, isSet: true, value: parsed };
 }
 
 function getStaffProfileForUsername(rawUsername) {
@@ -474,6 +494,7 @@ function cloneEditorProfile(user) {
   return {
     fullName: normalizeText(profile?.full_name),
     friendlyShortName: normalizeText(profile?.friendly_short_name),
+    teamOrder: profile?.team_order === null || profile?.team_order === undefined ? "" : String(profile.team_order),
     appearsInTeamWebPage: profile?.appears_in_team_web_page !== false,
     languages: Array.isArray(profile?.languages)
       ? profile.languages.map((code) => normalizeText(code).toLowerCase()).filter(Boolean)
@@ -490,6 +511,7 @@ function cloneEditorProfile(user) {
 }
 
 function normalizeEditorProfile(profile) {
+  const teamOrder = parseTeamOrderInput(profile?.teamOrder);
   const positionByLang = Object.fromEntries(
     Object.entries(profile?.positionByLang && typeof profile.positionByLang === "object" ? profile.positionByLang : {})
       .map(([lang, value]) => [normalizeText(lang).toLowerCase(), normalizeText(value)])
@@ -517,6 +539,7 @@ function normalizeEditorProfile(profile) {
   return {
     fullName: normalizeText(profile?.fullName),
     friendlyShortName: normalizeText(profile?.friendlyShortName),
+    teamOrder: teamOrder.valid ? (teamOrder.isSet ? teamOrder.value : null) : INVALID_TEAM_ORDER,
     appearsInTeamWebPage: profile?.appearsInTeamWebPage !== false,
     languages: Array.from(new Set((Array.isArray(profile?.languages) ? profile.languages : []).map((code) => normalizeText(code).toLowerCase()).filter(Boolean))).sort(),
     destinations: Array.from(new Set((Array.isArray(profile?.destinations) ? profile.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean))).sort(),
@@ -565,6 +588,7 @@ function closeEditor() {
   state.editor = {
     fullName: "",
     friendlyShortName: "",
+    teamOrder: "",
     appearsInTeamWebPage: true,
     languages: [],
     destinations: [],
@@ -619,6 +643,9 @@ function renderEditor() {
   }
   if (els.staffEditorFriendlyShortName) {
     els.staffEditorFriendlyShortName.value = normalizeText(state.editor?.friendlyShortName);
+  }
+  if (els.staffEditorTeamOrder) {
+    els.staffEditorTeamOrder.value = normalizeText(state.editor?.teamOrder);
   }
   if (els.staffEditorAppearsInTeamWebPage) {
     els.staffEditorAppearsInTeamWebPage.checked = state.editor?.appearsInTeamWebPage !== false;
@@ -851,6 +878,12 @@ function handlePositionInput(event) {
 
 function handleFriendlyShortNameInput(event) {
   state.editor.friendlyShortName = normalizeText(event.target?.value);
+  clearEditorStatus();
+  updateEditorSaveButtonState();
+}
+
+function handleTeamOrderInput(event) {
+  state.editor.teamOrder = normalizeText(event.target?.value);
   clearEditorStatus();
   updateEditorSaveButtonState();
 }
@@ -1439,6 +1472,11 @@ async function saveSelectedStaffProfile() {
   const positionI18n = normalizePositionEntriesForSave();
   const descriptionI18n = normalizeDescriptionEntriesForSave();
   const mobileDescriptionI18n = normalizeMobileDescriptionEntriesForSave();
+  const teamOrder = parseTeamOrderInput(state.editor?.teamOrder);
+  if (!teamOrder.valid) {
+    showEditorStatus(backendT("backend.users.team_order_invalid", "Team order must be a whole number."), true);
+    return;
+  }
   const pendingPhoto = state.editor?.pendingPhoto && typeof state.editor.pendingPhoto === "object"
     ? state.editor.pendingPhoto
     : null;
@@ -1461,6 +1499,7 @@ async function saveSelectedStaffProfile() {
           full_name: normalizeText(state.editor?.fullName),
           position_i18n: positionI18n,
           friendly_short_name: normalizeText(state.editor?.friendlyShortName),
+          team_order: teamOrder.isSet ? teamOrder.value : null,
           appears_in_team_web_page: state.editor?.appearsInTeamWebPage !== false,
           languages,
           destinations,
