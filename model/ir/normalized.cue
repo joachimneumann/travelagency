@@ -52,7 +52,7 @@ IR: {
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
-		OfferPricingGranularity: {catalog: "offerPricingGranularities"}
+		OfferDetailLevel: {catalog: "offerDetailLevels"}
 		OfferPaymentTermKind: {catalog: "offerPaymentTermKinds"}
 		OfferPaymentAmountMode: {catalog: "offerPaymentAmountModes"}
 		OfferPaymentDueType: {catalog: "offerPaymentDueTypes"}
@@ -705,8 +705,8 @@ IR: {
 			fields: [
 				{name: "status", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "pricing_granularity_internal", kind: "enum", typeName: "OfferPricingGranularity", required: true},
-				{name: "pricing_granularity_visible", kind: "enum", typeName: "OfferPricingGranularity", required: true},
+				{name: "offer_detail_level_internal", kind: "enum", typeName: "OfferDetailLevel", required: true},
+				{name: "offer_detail_level_visible", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "trip_price_internal", kind: "entity", typeName: "BookingOfferTripPriceInternal", required: false},
@@ -1003,7 +1003,7 @@ IR: {
 			module:     "api"
 			sourceType: "api.#BookingOfferVisiblePricingReadModel"
 			fields: [
-				{name: "granularity", kind: "enum", typeName: "OfferPricingGranularity", required: true},
+				{name: "detail_level", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "derivable", kind: "scalar", typeName: "bool", required: true},
 				{name: "trip_price", kind: "transport", typeName: "BookingOfferVisibleTripPriceReadModel", required: false},
 				{name: "days", kind: "transport", typeName: "BookingOfferVisibleDayPriceReadModel", required: true, isArray: true},
@@ -1019,8 +1019,8 @@ IR: {
 			fields: [
 				{name: "status", kind: "scalar", typeName: "string", required: false},
 				{name: "currency", kind: "enum", typeName: "CurrencyCode", required: true},
-				{name: "pricing_granularity_internal", kind: "enum", typeName: "OfferPricingGranularity", required: true},
-				{name: "pricing_granularity_visible", kind: "enum", typeName: "OfferPricingGranularity", required: true},
+				{name: "offer_detail_level_internal", kind: "enum", typeName: "OfferDetailLevel", required: true},
+				{name: "offer_detail_level_visible", kind: "enum", typeName: "OfferDetailLevel", required: true},
 				{name: "category_rules", kind: "entity", typeName: "BookingOfferCategoryRule", required: true, isArray: true},
 				{name: "components", kind: "entity", typeName: "BookingOfferComponent", required: true, isArray: true},
 				{name: "trip_price_internal", kind: "entity", typeName: "BookingOfferTripPriceInternal", required: false},

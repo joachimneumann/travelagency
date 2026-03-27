@@ -354,13 +354,13 @@ function assertBookingShape(booking) {
   assert.ok(Array.isArray(booking.destinations));
   assert.ok(Array.isArray(booking.travel_styles));
   assert.equal(typeof booking.offer, "object");
-  assert.equal(typeof booking.offer.pricing_granularity_internal, "string");
-  assert.equal(typeof booking.offer.pricing_granularity_visible, "string");
+  assert.equal(typeof booking.offer.offer_detail_level_internal, "string");
+  assert.equal(typeof booking.offer.offer_detail_level_visible, "string");
   assert.ok(Array.isArray(booking.offer.components));
   assert.ok(Array.isArray(booking.offer.days_internal));
   assert.ok(Array.isArray(booking.offer.additional_items));
   assert.equal(typeof booking.offer.visible_pricing, "object");
-  assert.equal(typeof booking.offer.visible_pricing.granularity, "string");
+  assert.equal(typeof booking.offer.visible_pricing.detail_level, "string");
   assert.equal(typeof booking.offer.visible_pricing.derivable, "boolean");
   assert.ok(Array.isArray(booking.offer.visible_pricing.days));
   assert.ok(Array.isArray(booking.offer.visible_pricing.components));
@@ -603,7 +603,7 @@ test("booking offer patch persists added offer components", async () => {
   assert.equal(detailAfter.body.booking.offer.components[0].details, "Hotel room");
 });
 
-test("booking offer patch persists internal trip granularity with additional items", async () => {
+test("booking offer patch persists internal trip detail level with additional items", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -621,8 +621,8 @@ test("booking offer patch persists internal trip granularity with additional ite
         offer: {
           ...booking.offer,
           currency: booking.preferred_currency,
-          pricing_granularity_internal: "trip",
-          pricing_granularity_visible: "trip",
+          offer_detail_level_internal: "trip",
+          offer_detail_level_visible: "trip",
           components: [],
           trip_price_internal: {
             label: "Trip total",
@@ -650,20 +650,20 @@ test("booking offer patch persists internal trip granularity with additional ite
   );
 
   assert.equal(patchResult.status, 200);
-  assert.equal(patchResult.body.booking.offer.pricing_granularity_internal, "trip");
-  assert.equal(patchResult.body.booking.offer.pricing_granularity_visible, "trip");
+  assert.equal(patchResult.body.booking.offer.offer_detail_level_internal, "trip");
+  assert.equal(patchResult.body.booking.offer.offer_detail_level_visible, "trip");
   assert.equal(patchResult.body.booking.offer.components.length, 0);
   assert.equal(patchResult.body.booking.offer.days_internal.length, 0);
   assert.equal(patchResult.body.booking.offer.additional_items.length, 1);
   assert.equal(patchResult.body.booking.offer.trip_price_internal.amount_cents, 50000);
   assert.equal(patchResult.body.booking.offer.total_price_cents, 66000);
-  assert.equal(patchResult.body.booking.offer.visible_pricing.granularity, "trip");
+  assert.equal(patchResult.body.booking.offer.visible_pricing.detail_level, "trip");
   assert.equal(patchResult.body.booking.offer.visible_pricing.derivable, true);
   assert.equal(patchResult.body.booking.offer.visible_pricing.trip_price.amount_cents, 50000);
   assert.equal(patchResult.body.booking.offer.visible_pricing.additional_items.length, 1);
 });
 
-test("booking offer patch rejects visible granularity finer than internal granularity", async () => {
+test("booking offer patch rejects visible detail level more specific than internal detail level", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -681,8 +681,8 @@ test("booking offer patch rejects visible granularity finer than internal granul
         offer: {
           ...booking.offer,
           currency: booking.preferred_currency,
-          pricing_granularity_internal: "day",
-          pricing_granularity_visible: "component",
+          offer_detail_level_internal: "day",
+          offer_detail_level_visible: "component",
           components: [],
           days_internal: [
             {
@@ -701,7 +701,7 @@ test("booking offer patch rejects visible granularity finer than internal granul
   );
 
   assert.equal(patchResult.status, 422);
-  assert.match(String(patchResult.body.error || ""), /visible pricing granularity/i);
+  assert.match(String(patchResult.body.error || ""), /visible offer detail level/i);
 });
 
 test("booking offer read model derives visible day projection from internal components", async () => {
@@ -722,8 +722,8 @@ test("booking offer read model derives visible day projection from internal comp
         offer: {
           ...booking.offer,
           currency: booking.preferred_currency,
-          pricing_granularity_internal: "component",
-          pricing_granularity_visible: "day",
+          offer_detail_level_internal: "component",
+          offer_detail_level_visible: "day",
           components: [
             {
               id: "offer_component_day_1",
@@ -767,7 +767,7 @@ test("booking offer read model derives visible day projection from internal comp
   );
 
   assert.equal(patchResult.status, 200);
-  assert.equal(patchResult.body.booking.offer.visible_pricing.granularity, "day");
+  assert.equal(patchResult.body.booking.offer.visible_pricing.detail_level, "day");
   assert.equal(patchResult.body.booking.offer.visible_pricing.derivable, true);
   assert.equal(patchResult.body.booking.offer.visible_pricing.days.length, 2);
   assert.equal(patchResult.body.booking.offer.visible_pricing.days[0].day_number, 1);
@@ -2669,8 +2669,8 @@ test("booking generated offer pdf renders customer-visible day pricing while kee
         offer: {
           ...createdBooking.offer,
           currency: createdBooking.preferred_currency,
-          pricing_granularity_internal: "component",
-          pricing_granularity_visible: "day",
+          offer_detail_level_internal: "component",
+          offer_detail_level_visible: "day",
           components: [
             {
               id: "offer_component_hidden_day_1",
@@ -2714,7 +2714,7 @@ test("booking generated offer pdf renders customer-visible day pricing while kee
     }
   );
   assert.equal(offerPatchResult.status, 200);
-  assert.equal(offerPatchResult.body.booking.offer.visible_pricing.granularity, "day");
+  assert.equal(offerPatchResult.body.booking.offer.visible_pricing.detail_level, "day");
 
   const generateResult = await requestJson(
     endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
@@ -2739,7 +2739,7 @@ test("booking generated offer pdf renders customer-visible day pricing while kee
   assert.equal(pdfResult.status, 200);
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(pdfResult.body, /%PDF-/);
-  assert.equal(generatedOffer.offer.visible_pricing.granularity, "day");
+  assert.equal(generatedOffer.offer.visible_pricing.detail_level, "day");
   assert.equal(generatedOffer.offer.visible_pricing.derivable, true);
   assert.equal(generatedOffer.offer.visible_pricing.days.length, 2);
   assert.equal(generatedOffer.offer.visible_pricing.additional_items.length, 1);

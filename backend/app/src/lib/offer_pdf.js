@@ -293,7 +293,7 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
   }));
 
   let mainRows = componentRows;
-  if (visiblePricing?.granularity === "trip" && visiblePricing?.trip_price) {
+  if (visiblePricing?.detail_level === "trip" && visiblePricing?.trip_price) {
     const tripPrice = visiblePricing.trip_price;
     mainRows = [{
       category: pdfT(lang, "offer.trip_label", "Trip"),
@@ -306,7 +306,7 @@ function buildOfferTableRows(generatedOffer, formatMoneyValue, lang) {
         currency
       )
     }];
-  } else if (visiblePricing?.granularity === "day" && visiblePricing?.derivable !== false && safeArray(visiblePricing?.days).length) {
+  } else if (visiblePricing?.detail_level === "day" && visiblePricing?.derivable !== false && safeArray(visiblePricing?.days).length) {
     mainRows = safeArray(visiblePricing.days).map((dayPrice) => ({
       category: formatVisiblePricingLabel(dayPrice, lang),
       categoryTax: textOrNull(dayPrice?.label) || pdfT(lang, "offer.daily_total", "Daily total"),
@@ -358,10 +358,10 @@ function deriveOfferQuotationSummary(offer) {
     : null;
   if (provided) return provided;
 
-  const internalGranularity = normalizeText(source?.pricing_granularity_internal).toLowerCase() || "component";
-  const components = internalGranularity === "component" ? safeArray(source.components) : [];
-  const dayPrices = internalGranularity === "day" ? safeArray(source.days_internal) : [];
-  const tripPrice = internalGranularity === "trip" && source?.trip_price_internal ? source.trip_price_internal : null;
+  const internalDetailLevel = normalizeText(source?.offer_detail_level_internal).toLowerCase() || "trip";
+  const components = internalDetailLevel === "component" ? safeArray(source.components) : [];
+  const dayPrices = internalDetailLevel === "day" ? safeArray(source.days_internal) : [];
+  const tripPrice = internalDetailLevel === "trip" && source?.trip_price_internal ? source.trip_price_internal : null;
   const additionalItems = safeArray(source.additional_items);
   const discount = source.discount && typeof source.discount === "object" ? source.discount : null;
   const buckets = new Map();

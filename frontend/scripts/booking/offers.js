@@ -16,12 +16,12 @@ import {
 } from "./localized_editor.js";
 
 const DEFAULT_OFFER_TAX_RATE_BASIS_POINTS = 1000;
-const OFFER_PRICING_GRANULARITY_ORDER = Object.freeze({
+const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
   trip: 1,
   day: 2,
   component: 3
 });
-const OFFER_PRICING_GRANULARITY_OPTIONS = Object.freeze([
+const OFFER_DETAIL_LEVEL_OPTIONS = Object.freeze([
   { value: "component", label: "Per component" },
   { value: "day", label: "Per day" },
   { value: "trip", label: "Per trip" }
@@ -48,19 +48,38 @@ export function createBookingOfferModule(ctx) {
   } = ctx;
 
   let offerSaveController = null;
+  let pendingInternalDetailLevelSelection = null;
 
   function normalizeOfferStatus(value) {
     const normalized = String(value || "").trim().toUpperCase();
     return ["DRAFT", "APPROVED", "OFFER_SENT"].includes(normalized) ? normalized : "DRAFT";
   }
 
-  function normalizeOfferPricingGranularity(value, fallback = "component") {
+  function normalizeOfferDetailLevel(value, fallback = "trip") {
     const normalized = String(value || "").trim().toLowerCase();
-    return Object.prototype.hasOwnProperty.call(OFFER_PRICING_GRANULARITY_ORDER, normalized) ? normalized : fallback;
+    return Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, normalized) ? normalized : fallback;
   }
 
-  function isVisibleGranularityFinerThanInternal(visible, internal) {
-    return (OFFER_PRICING_GRANULARITY_ORDER[visible] || 0) > (OFFER_PRICING_GRANULARITY_ORDER[internal] || 0);
+  function isVisibleDetailLevelFinerThanInternal(visible, internal) {
+    return (OFFER_DETAIL_LEVEL_ORDER[visible] || 0) > (OFFER_DETAIL_LEVEL_ORDER[internal] || 0);
+  }
+
+  function inferInternalOfferDetailLevel(source, fallback = "trip") {
+    const explicit = String(source?.offer_detail_level_internal || "").trim().toLowerCase();
+    if (Array.isArray(source?.components) && source.components.length) return "component";
+    if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
+    if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
+    if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
+    return fallback;
+  }
+
+  function isCoarserDetailLevel(nextValue, currentValue) {
+    return (OFFER_DETAIL_LEVEL_ORDER[nextValue] || 0) < (OFFER_DETAIL_LEVEL_ORDER[currentValue] || 0);
+  }
+
+  function formatOfferDetailLevelLabel(value) {
+    const normalized = normalizeOfferDetailLevel(value, "trip");
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
   function isOfferCurrencyEditable() {
@@ -97,6 +116,89 @@ export function createBookingOfferModule(ctx) {
 
   function clearOfferStatus() {
     setOfferStatus("");
+  }
+
+  function applyOfferDetailLevelSelection(select, nextValue) {
+    if (!(select instanceof HTMLSelectElement)) return;
+    const normalized = normalizeOfferDetailLevel(nextValue, select.value || "trip");
+    if (select.value === normalized) return;
+    select.value = normalized;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function openInternalDetailLevelConfirm(nextValue) {
+    if (!els.offer_detail_level_confirm_modal || !els.offer_detail_level_confirm_message) return Promise.resolve(true);
+    const currentValue = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
+    const normalizedNextValue = normalizeOfferDetailLevel(nextValue, currentValue);
+    pendingInternalDetailLevelSelection = { nextValue: normalizedNextValue, resolver: null };
+    els.offer_detail_level_confirm_message.textContent = bookingT(
+      "booking.offer.internal_detail_level_warning",
+      "Changing the internal offer detail level from {from} to {to} will aggregate offer details. More detailed breakdown data will be lost. If needed, the customer-facing offer detail level will also switch to stay at the same or a more coarse level.",
+      {
+        from: formatOfferDetailLevelLabel(currentValue).toLowerCase(),
+        to: formatOfferDetailLevelLabel(normalizedNextValue).toLowerCase()
+      }
+    );
+    els.offer_detail_level_confirm_modal.hidden = false;
+    return new Promise((resolve) => {
+      pendingInternalDetailLevelSelection.resolver = resolve;
+      els.offer_detail_level_confirm_accept_btn?.focus();
+    });
+  }
+
+  function closeInternalDetailLevelConfirm(confirmed) {
+    if (!pendingInternalDetailLevelSelection) return;
+    const pending = pendingInternalDetailLevelSelection;
+    pendingInternalDetailLevelSelection = null;
+    if (els.offer_detail_level_confirm_modal) {
+      els.offer_detail_level_confirm_modal.hidden = true;
+    }
+    pending.resolver?.(Boolean(confirmed));
+  }
+
+  function ensureOfferDetailLevelEventsBound() {
+    if (els.offer_detail_level_panel && els.offer_detail_level_panel.dataset.detailLevelBound !== "true") {
+      els.offer_detail_level_panel.addEventListener("click", async (event) => {
+        const button = event.target instanceof Element
+          ? event.target.closest("[data-offer-detail-level-target][data-offer-detail-level-value]")
+          : null;
+        if (!(button instanceof HTMLButtonElement) || button.disabled || !state.permissions.canEditBooking) return;
+        const target = String(button.dataset.offerDetailLevelTarget || "");
+        const nextValue = String(button.dataset.offerDetailLevelValue || "");
+        if (target === "internal") {
+          const currentValue = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
+          if (normalizeOfferDetailLevel(nextValue, currentValue) === currentValue) return;
+          if (isCoarserDetailLevel(nextValue, currentValue)) {
+            const confirmed = await openInternalDetailLevelConfirm(nextValue);
+            if (!confirmed) {
+              syncOfferDetailLevelControls();
+              return;
+            }
+          }
+          applyOfferDetailLevelSelection(els.offer_detail_level_internal_input, nextValue);
+          return;
+        }
+        if (target === "visible") {
+          applyOfferDetailLevelSelection(els.offer_detail_level_visible_input, nextValue);
+        }
+      });
+      els.offer_detail_level_panel.dataset.detailLevelBound = "true";
+    }
+    if (els.offer_detail_level_confirm_modal && els.offer_detail_level_confirm_modal.dataset.detailLevelBound !== "true") {
+      els.offer_detail_level_confirm_modal.addEventListener("click", (event) => {
+        if (event.target === els.offer_detail_level_confirm_modal) closeInternalDetailLevelConfirm(false);
+      });
+      els.offer_detail_level_confirm_modal.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeInternalDetailLevelConfirm(false);
+        }
+      });
+      els.offer_detail_level_confirm_close_btn?.addEventListener("click", () => closeInternalDetailLevelConfirm(false));
+      els.offer_detail_level_confirm_cancel_btn?.addEventListener("click", () => closeInternalDetailLevelConfirm(false));
+      els.offer_detail_level_confirm_accept_btn?.addEventListener("click", () => closeInternalDetailLevelConfirm(true));
+      els.offer_detail_level_confirm_modal.dataset.detailLevelBound = "true";
+    }
   }
 
   function countMissingOfferPdfTranslations(booking, lang) {
@@ -187,8 +289,8 @@ export function createBookingOfferModule(ctx) {
     setOfferStatus,
     getCountMissingOfferPdfTranslations: countMissingOfferPdfTranslations,
     normalizeOfferCategory,
-    normalizeOfferPricingGranularity,
-    isVisibleGranularityFinerThanInternal,
+    normalizeOfferDetailLevel,
+    isVisibleDetailLevelFinerThanInternal,
     cloneOfferPaymentTerms,
     updateOfferPanelSummary
   });
@@ -286,17 +388,17 @@ export function createBookingOfferModule(ctx) {
     const sourceComponents = Array.isArray(source.components) ? source.components : [];
     const sourceDaysInternal = Array.isArray(source.days_internal) ? source.days_internal : [];
     const sourceAdditionalItems = Array.isArray(source.additional_items) ? source.additional_items : [];
-    const pricingGranularityInternal = normalizeOfferPricingGranularity(source.pricing_granularity_internal, "component");
-    const requestedVisibleGranularity = normalizeOfferPricingGranularity(source.pricing_granularity_visible, pricingGranularityInternal);
-    const pricingGranularityVisible = isVisibleGranularityFinerThanInternal(requestedVisibleGranularity, pricingGranularityInternal)
-      ? pricingGranularityInternal
-      : requestedVisibleGranularity;
+    const internalDetailLevel = inferInternalOfferDetailLevel(source, "trip");
+    const requestedVisibleDetailLevel = normalizeOfferDetailLevel(source.offer_detail_level_visible, internalDetailLevel);
+    const visibleDetailLevel = isVisibleDetailLevelFinerThanInternal(requestedVisibleDetailLevel, internalDetailLevel)
+      ? internalDetailLevel
+      : requestedVisibleDetailLevel;
 
     return {
       status: normalizeOfferStatus(source.status),
       currency: normalizeCurrencyCode(source.currency || state.booking?.preferred_currency || "USD"),
-      pricing_granularity_internal: pricingGranularityInternal,
-      pricing_granularity_visible: pricingGranularityVisible,
+      offer_detail_level_internal: internalDetailLevel,
+      offer_detail_level_visible: visibleDetailLevel,
       category_rules,
       ...(discount ? { discount } : {}),
       ...(paymentTerms ? { payment_terms: paymentTerms } : {}),
@@ -371,12 +473,12 @@ export function createBookingOfferModule(ctx) {
     };
   }
 
-  function populateOfferGranularitySelect(select, selectedValue, { disableFinerThan = null } = {}) {
+  function populateOfferDetailLevelSelect(select, selectedValue, { disableFinerThan = null } = {}) {
     if (!(select instanceof HTMLSelectElement)) return;
-    const normalizedSelected = normalizeOfferPricingGranularity(selectedValue);
-    const html = OFFER_PRICING_GRANULARITY_OPTIONS.map((option) => {
+    const normalizedSelected = normalizeOfferDetailLevel(selectedValue);
+    const html = OFFER_DETAIL_LEVEL_OPTIONS.map((option) => {
       const disabled = disableFinerThan
-        ? isVisibleGranularityFinerThanInternal(option.value, disableFinerThan)
+        ? isVisibleDetailLevelFinerThanInternal(option.value, disableFinerThan)
         : false;
       return `<option value="${option.value}"${option.value === normalizedSelected ? " selected" : ""}${disabled ? " disabled" : ""}>${option.label}</option>`;
     }).join("");
@@ -386,13 +488,26 @@ export function createBookingOfferModule(ctx) {
     }
   }
 
+  function renderOfferDetailLevelPillGroup(container, target, selectedValue, { disableFinerThan = null } = {}) {
+    if (!(container instanceof HTMLElement)) return;
+    const normalizedSelected = normalizeOfferDetailLevel(selectedValue, "trip");
+    const canEdit = Boolean(state.permissions.canEditBooking);
+    container.innerHTML = OFFER_DETAIL_LEVEL_OPTIONS.map((option) => {
+      const disabled = !canEdit || (disableFinerThan
+        ? isVisibleDetailLevelFinerThanInternal(option.value, disableFinerThan)
+        : false);
+      const isActive = option.value === normalizedSelected;
+      return `<button class="offer-detail-level-pill__button${isActive ? " is-active" : ""}" type="button" data-offer-detail-level-target="${target}" data-offer-detail-level-value="${option.value}" aria-pressed="${isActive ? "true" : "false"}"${disabled ? " disabled" : ""}>${escapeHtml(formatOfferDetailLevelLabel(option.value))}</button>`;
+    }).join("");
+  }
+
   function updateOfferVisiblePricingHint() {
     if (!els.offer_visible_pricing_hint) return;
-    const internalGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_internal, "component");
-    const visibleGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_visible, internalGranularity);
+    const internalDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
+    const visibleDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_visible, internalDetailLevel);
     const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    const missingDayAssignments = internalGranularity === "component"
-      && visibleGranularity === "day"
+    const missingDayAssignments = internalDetailLevel === "component"
+      && visibleDetailLevel === "day"
       && components.some((component) => !Number.isInteger(Number(component?.day_number)) || Number(component?.day_number) < 1);
     if (missingDayAssignments) {
       els.offer_visible_pricing_hint.textContent = bookingT(
@@ -405,27 +520,31 @@ export function createBookingOfferModule(ctx) {
     }
     els.offer_visible_pricing_hint.textContent = bookingT(
       "booking.offer.visible_pricing_hint",
-      "Customer documents will show {granularity} pricing. Additional items stay visible as separate lines.",
+      "Customer documents will show {detailLevel} pricing. Additional items stay visible as separate lines.",
       {
-        granularity: OFFER_PRICING_GRANULARITY_OPTIONS.find((option) => option.value === visibleGranularity)?.label.toLowerCase() || visibleGranularity
+        detailLevel: OFFER_DETAIL_LEVEL_OPTIONS.find((option) => option.value === visibleDetailLevel)?.label.toLowerCase() || visibleDetailLevel
       }
     );
     els.offer_visible_pricing_hint.classList.remove("booking-inline-status--error");
     els.offer_visible_pricing_hint.classList.add("booking-inline-status--success");
   }
 
-  function syncOfferGranularityControls() {
-    const internalGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_internal, "component");
-    const visibleGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_visible, internalGranularity);
-    populateOfferGranularitySelect(els.offer_pricing_granularity_internal_input, internalGranularity);
-    populateOfferGranularitySelect(els.offer_pricing_granularity_visible_input, visibleGranularity, {
-      disableFinerThan: internalGranularity
+  function syncOfferDetailLevelControls() {
+    const internalDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
+    const visibleDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_visible, internalDetailLevel);
+    populateOfferDetailLevelSelect(els.offer_detail_level_internal_input, internalDetailLevel);
+    populateOfferDetailLevelSelect(els.offer_detail_level_visible_input, visibleDetailLevel, {
+      disableFinerThan: internalDetailLevel
     });
-    if (els.offer_pricing_granularity_internal_input) {
-      els.offer_pricing_granularity_internal_input.disabled = !state.permissions.canEditBooking;
+    renderOfferDetailLevelPillGroup(els.offer_detail_level_internal_pill, "internal", internalDetailLevel);
+    renderOfferDetailLevelPillGroup(els.offer_detail_level_visible_pill, "visible", visibleDetailLevel, {
+      disableFinerThan: internalDetailLevel
+    });
+    if (els.offer_detail_level_internal_input) {
+      els.offer_detail_level_internal_input.disabled = !state.permissions.canEditBooking;
     }
-    if (els.offer_pricing_granularity_visible_input) {
-      els.offer_pricing_granularity_visible_input.disabled = !state.permissions.canEditBooking;
+    if (els.offer_detail_level_visible_input) {
+      els.offer_detail_level_visible_input.disabled = !state.permissions.canEditBooking;
     }
     updateOfferVisiblePricingHint();
   }
@@ -499,7 +618,8 @@ export function createBookingOfferModule(ctx) {
       setSelectValue(els.offer_currency_input, currency);
       els.offer_currency_input.disabled = !isOfferCurrencyEditable();
     }
-    syncOfferGranularityControls();
+    ensureOfferDetailLevelEventsBound();
+    syncOfferDetailLevelControls();
     offerComponentsModule.updateOfferCurrencyHint(currency);
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     generatedOffersModule.updateBookingConfirmationPanelSummary();
@@ -518,15 +638,15 @@ export function createBookingOfferModule(ctx) {
     renderOfferPanel,
     addOfferComponent,
     handleOfferCurrencyChange: () => offerComponentsModule.handleOfferCurrencyChange(),
-    handleOfferInternalGranularityChange: () => {
-      const nextValue = els.offer_pricing_granularity_internal_input?.value;
-      offerComponentsModule.handleOfferInternalGranularityChange(nextValue);
-      syncOfferGranularityControls();
+    handleOfferInternalDetailLevelChange: () => {
+      const nextValue = els.offer_detail_level_internal_input?.value;
+      offerComponentsModule.handleOfferInternalDetailLevelChange(nextValue);
+      syncOfferDetailLevelControls();
     },
-    handleOfferVisibleGranularityChange: () => {
-      const nextValue = els.offer_pricing_granularity_visible_input?.value;
-      offerComponentsModule.handleOfferVisibleGranularityChange(nextValue);
-      syncOfferGranularityControls();
+    handleOfferVisibleDetailLevelChange: () => {
+      const nextValue = els.offer_detail_level_visible_input?.value;
+      offerComponentsModule.handleOfferVisibleDetailLevelChange(nextValue);
+      syncOfferDetailLevelControls();
     },
     saveOffer
   };

@@ -26,7 +26,7 @@ export function createPricingHelpers({
   invoicesDir,
   generatedOffersDir
 }) {
-  const OFFER_PRICING_GRANULARITY_ORDER = Object.freeze({
+  const OFFER_DETAIL_LEVEL_ORDER = Object.freeze({
     trip: 1,
     day: 2,
     component: 3
@@ -43,13 +43,22 @@ export function createPricingHelpers({
     return offerCategoryOrder.includes(category) ? category : offerCategories.OTHER;
   }
 
-  function normalizeOfferPricingGranularity(value, fallback = "component") {
+  function normalizeOfferDetailLevel(value, fallback = "trip") {
     const normalized = normalizeText(value).toLowerCase();
-    return Object.prototype.hasOwnProperty.call(OFFER_PRICING_GRANULARITY_ORDER, normalized) ? normalized : fallback;
+    return Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, normalized) ? normalized : fallback;
   }
 
-  function isVisibleGranularityFinerThanInternal(visible, internal) {
-    return (OFFER_PRICING_GRANULARITY_ORDER[visible] || 0) > (OFFER_PRICING_GRANULARITY_ORDER[internal] || 0);
+  function isVisibleDetailLevelFinerThanInternal(visible, internal) {
+    return (OFFER_DETAIL_LEVEL_ORDER[visible] || 0) > (OFFER_DETAIL_LEVEL_ORDER[internal] || 0);
+  }
+
+  function inferInternalOfferDetailLevel(source, fallback = "trip") {
+    const explicit = normalizeText(source?.offer_detail_level_internal).toLowerCase();
+    if (Array.isArray(source?.components) && source.components.length) return "component";
+    if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
+    if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
+    if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
+    return fallback;
   }
 
   function offerCategorySign(category) {
@@ -157,13 +166,13 @@ export function createPricingHelpers({
   }
 
   function buildOfferChargeLines(offer) {
-    const internalGranularity = normalizeOfferPricingGranularity(offer?.pricing_granularity_internal);
+    const internalDetailLevel = normalizeOfferDetailLevel(offer?.offer_detail_level_internal);
     const lines = [];
-    if (internalGranularity === "component") {
+    if (internalDetailLevel === "component") {
       lines.push(...(Array.isArray(offer?.components) ? offer.components : []));
-    } else if (internalGranularity === "day") {
+    } else if (internalDetailLevel === "day") {
       lines.push(...(Array.isArray(offer?.days_internal) ? offer.days_internal : []));
-    } else if (internalGranularity === "trip" && offer?.trip_price_internal) {
+    } else if (internalDetailLevel === "trip" && offer?.trip_price_internal) {
       lines.push(offer.trip_price_internal);
     }
     lines.push(...(Array.isArray(offer?.additional_items) ? offer.additional_items : []));
@@ -209,10 +218,10 @@ export function createPricingHelpers({
   }
 
   function computeBookingOfferTotals(offer) {
-    const internalGranularity = normalizeOfferPricingGranularity(offer?.pricing_granularity_internal);
-    const mainItemsCount = internalGranularity === "trip"
+    const internalDetailLevel = normalizeOfferDetailLevel(offer?.offer_detail_level_internal);
+    const mainItemsCount = internalDetailLevel === "trip"
       ? (offer?.trip_price_internal ? 1 : 0)
-      : internalGranularity === "day"
+      : internalDetailLevel === "day"
         ? (Array.isArray(offer?.days_internal) ? offer.days_internal.length : 0)
         : (Array.isArray(offer?.components) ? offer.components.length : 0);
     const additionalItemsCount = Array.isArray(offer?.additional_items) ? offer.additional_items.length : 0;
@@ -282,20 +291,20 @@ export function createPricingHelpers({
 
   function buildVisiblePricingProjection(offer) {
     const normalizedOffer = normalizeBookingOffer(offer, getOfferCurrencyForStorage(offer));
-    const visibleGranularity = normalizeOfferPricingGranularity(normalizedOffer?.pricing_granularity_visible);
-    const internalGranularity = normalizeOfferPricingGranularity(normalizedOffer?.pricing_granularity_internal);
+    const visibleDetailLevel = normalizeOfferDetailLevel(normalizedOffer?.offer_detail_level_visible);
+    const internalDetailLevel = normalizeOfferDetailLevel(normalizedOffer?.offer_detail_level_internal);
     const currency = safeCurrency(normalizedOffer?.currency || baseCurrency);
     const additionalItems = Array.isArray(normalizedOffer?.additional_items) ? normalizedOffer.additional_items : [];
     const projection = {
-      granularity: visibleGranularity,
+      detail_level: visibleDetailLevel,
       derivable: true,
       days: [],
       components: [],
       additional_items: additionalItems
     };
 
-    if (visibleGranularity === "trip") {
-      if (internalGranularity === "trip" && normalizedOffer?.trip_price_internal) {
+    if (visibleDetailLevel === "trip") {
+      if (internalDetailLevel === "trip" && normalizedOffer?.trip_price_internal) {
         projection.trip_price = createVisibleProjectionLine({
           label: normalizedOffer.trip_price_internal?.label || "Trip total",
           currency,
@@ -303,7 +312,7 @@ export function createPricingHelpers({
         });
         return projection;
       }
-      if (internalGranularity === "day") {
+      if (internalDetailLevel === "day") {
         projection.trip_price = createVisibleProjectionLine({
           label: "Trip total",
           currency,
@@ -319,8 +328,8 @@ export function createPricingHelpers({
       return projection;
     }
 
-    if (visibleGranularity === "day") {
-      if (internalGranularity === "day") {
+    if (visibleDetailLevel === "day") {
+      if (internalDetailLevel === "day") {
         projection.days = (Array.isArray(normalizedOffer.days_internal) ? normalizedOffer.days_internal : []).map((dayPrice) =>
           createVisibleProjectionLine({
             label: dayPrice?.label || `Day ${dayPrice?.day_number || ""}`.trim(),
@@ -654,8 +663,8 @@ export function createPricingHelpers({
     return {
       status: "DRAFT",
       currency: safeCurrency(preferredCurrency),
-      pricing_granularity_internal: "component",
-      pricing_granularity_visible: "component",
+      offer_detail_level_internal: "trip",
+      offer_detail_level_visible: "trip",
       category_rules: offerCategoryOrder.map((category) => ({
         category,
         tax_rate_basis_points: defaultOfferTaxRateBasisPoints
@@ -672,17 +681,17 @@ export function createPricingHelpers({
     const source = rawOffer && typeof rawOffer === "object" ? rawOffer : {};
     const currency = safeCurrency(source.currency || preferredCurrency);
     const status = normalizeOfferStatus(source.status);
-    const pricingGranularityInternal = normalizeOfferPricingGranularity(source.pricing_granularity_internal, "component");
-    const requestedVisibleGranularity = normalizeOfferPricingGranularity(
-      source.pricing_granularity_visible,
-      pricingGranularityInternal
+    const internalDetailLevel = inferInternalOfferDetailLevel(source, "trip");
+    const requestedVisibleDetailLevel = normalizeOfferDetailLevel(
+      source.offer_detail_level_visible,
+      internalDetailLevel
     );
-    const pricingGranularityVisible = isVisibleGranularityFinerThanInternal(
-      requestedVisibleGranularity,
-      pricingGranularityInternal
+    const visibleDetailLevel = isVisibleDetailLevelFinerThanInternal(
+      requestedVisibleDetailLevel,
+      internalDetailLevel
     )
-      ? pricingGranularityInternal
-      : requestedVisibleGranularity;
+      ? internalDetailLevel
+      : requestedVisibleDetailLevel;
     const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
     const flatLang = normalizeBookingContentLang(options?.flatLang || options?.lang || "en");
     const sourceComponents = Array.isArray(source.components) ? source.components : [];
@@ -726,11 +735,11 @@ export function createPricingHelpers({
           line_total_amount_cents: computedAmounts.line_total_amount_cents
         };
       });
-    const components = pricingGranularityInternal === "component" ? normalizedComponents : [];
-    const tripPriceInternal = pricingGranularityInternal === "trip"
+    const components = internalDetailLevel === "component" ? normalizedComponents : [];
+    const tripPriceInternal = internalDetailLevel === "trip"
       ? normalizeBookingOfferTripPriceInternal(source.trip_price_internal, currency)
       : null;
-    const daysInternal = pricingGranularityInternal === "day"
+    const daysInternal = internalDetailLevel === "day"
       ? normalizeBookingOfferDayPricesInternal(source.days_internal, currency)
       : [];
     const additionalItems = normalizeBookingOfferAdditionalItems(source.additional_items, currency);
@@ -760,8 +769,8 @@ export function createPricingHelpers({
     const normalizedBase = {
       status,
       currency,
-      pricing_granularity_internal: pricingGranularityInternal,
-      pricing_granularity_visible: pricingGranularityVisible,
+      offer_detail_level_internal: internalDetailLevel,
+      offer_detail_level_visible: visibleDetailLevel,
       category_rules: offerCategoryOrder.map((category) => ({
         category,
         tax_rate_basis_points: categoryRulesByCode.has(category)
@@ -1468,18 +1477,23 @@ export function createPricingHelpers({
     if (!rawOffer || typeof rawOffer !== "object") {
       return { ok: false, error: "Offer is required." };
     }
-    const requestedInternalGranularity = normalizeOfferPricingGranularity(
-      rawOffer?.pricing_granularity_internal || booking?.offer?.pricing_granularity_internal,
-      "component"
+    const requestedInternalDetailLevel = inferInternalOfferDetailLevel(
+      rawOffer?.offer_detail_level_internal
+        ? rawOffer
+        : ({
+            ...booking?.offer,
+            ...rawOffer
+          }),
+      "trip"
     );
-    const requestedVisibleGranularity = normalizeOfferPricingGranularity(
-      rawOffer?.pricing_granularity_visible || booking?.offer?.pricing_granularity_visible,
-      requestedInternalGranularity
+    const requestedVisibleDetailLevel = normalizeOfferDetailLevel(
+      rawOffer?.offer_detail_level_visible || booking?.offer?.offer_detail_level_visible,
+      requestedInternalDetailLevel
     );
-    if (isVisibleGranularityFinerThanInternal(requestedVisibleGranularity, requestedInternalGranularity)) {
+    if (isVisibleDetailLevelFinerThanInternal(requestedVisibleDetailLevel, requestedInternalDetailLevel)) {
       return {
         ok: false,
-        error: "Visible pricing granularity cannot be finer than internal pricing granularity."
+        error: "Visible offer detail level cannot be more specific than internal offer detail level."
       };
     }
     const inputComponents = Array.isArray(rawOffer.components) ? rawOffer.components : [];

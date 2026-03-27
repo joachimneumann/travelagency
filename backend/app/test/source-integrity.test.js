@@ -225,7 +225,7 @@ test("backend startup backfills missing booking persons and the frontend reads o
   );
 });
 
-test("backend startup writes back legacy offers with explicit pricing granularity fields", async () => {
+test("backend startup writes back legacy offers with explicit offer detail level fields", async () => {
   const serverPath = path.resolve(__dirname, "..", "src", "server.js");
   const storeUtilsPath = path.resolve(__dirname, "..", "src", "lib", "store_utils.js");
   const serverSource = await readFile(serverPath, "utf8");
@@ -234,7 +234,7 @@ test("backend startup writes back legacy offers with explicit pricing granularit
   assert.match(
     storeUtilsSource,
     /let bookingOfferWritebackNeeded = false;[\s\S]*const rawOffer = booking\?\.offer && typeof booking\.offer === "object" \? booking\.offer : null;[\s\S]*const normalizedOffer = normalizeBookingOffer\(normalizedBooking\.offer, getBookingPreferredCurrency\(normalizedBooking\)\);[\s\S]*if \(rawOffer && JSON\.stringify\(rawOffer\) !== JSON\.stringify\(normalizedOffer\)\) \{[\s\S]*bookingOfferWritebackNeeded = true;[\s\S]*\}[\s\S]*__bookingOfferWritebackNeeded/,
-    "Store reads should mark legacy offers for a one-time writeback when normalization adds the explicit pricing granularity shape"
+    "Store reads should mark legacy offers for a one-time writeback when normalization adds the explicit offer detail level shape"
   );
   assert.match(
     serverSource,
@@ -1225,19 +1225,19 @@ test("offer component editor does not expose discounts_credits as a selectable c
   );
 });
 
-test("offer granularity select uses literal granularity values instead of currency normalization", async () => {
+test("offer detail level select uses literal detail level values instead of currency normalization", async () => {
   const offersModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "offers.js");
   const offersSource = await readFile(offersModulePath, "utf8");
 
   assert.match(
     offersSource,
-    /function populateOfferGranularitySelect\(select, selectedValue, \{ disableFinerThan = null \} = \{\}\) \{[\s\S]*select\.innerHTML = html;[\s\S]*select\.value = normalizedSelected;/,
-    "Offer granularity selects should keep the literal component/day/trip value after rendering options"
+    /function populateOfferDetailLevelSelect\(select, selectedValue, \{ disableFinerThan = null \} = \{\}\) \{[\s\S]*select\.innerHTML = html;[\s\S]*select\.value = normalizedSelected;/,
+    "Offer detail level selects should keep the literal component/day/trip value after rendering options"
   );
   assert.doesNotMatch(
     offersSource,
-    /function populateOfferGranularitySelect[\s\S]*setSelectValue\(select, normalizedSelected\)/,
-    "Offer granularity selects must not use the currency-only select helper because it injects USD for unknown values"
+    /function populateOfferDetailLevelSelect[\s\S]*setSelectValue\(select, normalizedSelected\)/,
+    "Offer detail level selects must not use the currency-only select helper because it injects USD for unknown values"
   );
 });
 

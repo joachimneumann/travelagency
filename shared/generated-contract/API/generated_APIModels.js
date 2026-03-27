@@ -1592,8 +1592,8 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"status","required":false,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"pricing_granularity_internal","required":true,"wireName":"pricing_granularity_internal"}, SHARED_FIELD_DEFS.FIELD_29),
-    schemaField({"name":"pricing_granularity_visible","required":true,"wireName":"pricing_granularity_visible"}, SHARED_FIELD_DEFS.FIELD_29),
+    schemaField({"name":"offer_detail_level_internal","required":true,"wireName":"offer_detail_level_internal"}, SHARED_FIELD_DEFS.FIELD_29),
+    schemaField({"name":"offer_detail_level_visible","required":true,"wireName":"offer_detail_level_visible"}, SHARED_FIELD_DEFS.FIELD_29),
     schemaField({"name":"category_rules","required":false,"wireName":"category_rules"}, SHARED_FIELD_DEFS.FIELD_109),
     schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_77),
     schemaField({"name":"trip_price_internal","required":false,"wireName":"trip_price_internal"}, SHARED_FIELD_DEFS.FIELD_110),
@@ -1928,7 +1928,7 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingOfferVisiblePricingReadModel",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"granularity","required":true,"wireName":"granularity"}, SHARED_FIELD_DEFS.FIELD_29),
+    schemaField({"name":"detail_level","required":true,"wireName":"detail_level"}, SHARED_FIELD_DEFS.FIELD_29),
     schemaField({"name":"derivable","required":true,"wireName":"derivable"}, SHARED_FIELD_DEFS.FIELD_8),
     schemaField({"name":"trip_price","required":false,"wireName":"trip_price"}, SHARED_FIELD_DEFS.FIELD_126),
     schemaField({"name":"days","required":false,"wireName":"days"}, SHARED_FIELD_DEFS.FIELD_127),
@@ -2243,3 +2243,4 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
       export function validateBookingTravelPlanServiceImageFocalPoint(value) {
         return validateShape(value, BOOKING_TRAVEL_PLAN_SERVICE_IMAGE_FOCAL_POINT_SCHEMA);
       }
+

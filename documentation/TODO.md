@@ -5,15 +5,11 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # TODO
 
-* change the web page (index.html):
+Add a new section on Booking HTML just above the travel plan with the internal offer detail level that allows the atp_staff to choose between the three internal offer detail levels (trip, day and component). Don't make this a collapsible section but rather one big pill where only one of the three can and must be active (like a 3 state toggle button). The default is trip.
+exactly one internal offer detail is active at any time and the other two are deactivated. When switching to a coarser granularity, show a modal pop-up warning that indicates that offer details will be aggregated and lost. 
+Below show another equally designed selector: customer facing offer detail level, which must be coarser than the internal one.
 
-* atp_staff model: add a boolean: appears in team on web page (default: yes)
 
-Trust -> About us
-Add a section shing the team, showing the atp staff pictures and descriptions (if missing show "descrition missing)
-
-* change the offer detail level.
-As default, have only one price per day.
 
 * request passport/ID card (vietnamese only) picture
 

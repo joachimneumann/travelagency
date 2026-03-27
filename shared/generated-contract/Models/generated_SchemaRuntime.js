@@ -3086,7 +3086,7 @@
 },
   FIELD_29: {
   "kind": "enum",
-  "typeName": "OfferPricingGranularity",
+  "typeName": "OfferDetailLevel",
   "isArray": false,
   "enumValues": [
     "trip",

@@ -28,8 +28,8 @@ export function createBookingOfferComponentsModule(ctx) {
     setOfferStatus,
     getCountMissingOfferPdfTranslations,
     normalizeOfferCategory,
-    normalizeOfferPricingGranularity,
-    isVisibleGranularityFinerThanInternal,
+    normalizeOfferDetailLevel,
+    isVisibleDetailLevelFinerThanInternal,
     cloneOfferPaymentTerms,
     updateOfferPanelSummary
   } = ctx;
@@ -53,25 +53,25 @@ export function createBookingOfferComponentsModule(ctx) {
     offerTotalPending = false;
   }
 
-  function currentOfferInternalGranularity() {
-    return normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_internal, "component");
+  function currentOfferInternalDetailLevel() {
+    return normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
   }
 
-  function currentOfferVisibleGranularity() {
-    const internalGranularity = currentOfferInternalGranularity();
-    const visibleGranularity = normalizeOfferPricingGranularity(state.offerDraft?.pricing_granularity_visible, internalGranularity);
-    return isVisibleGranularityFinerThanInternal(visibleGranularity, internalGranularity)
-      ? internalGranularity
-      : visibleGranularity;
+  function currentOfferVisibleDetailLevel() {
+    const internalDetailLevel = currentOfferInternalDetailLevel();
+    const visibleDetailLevel = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_visible, internalDetailLevel);
+    return isVisibleDetailLevelFinerThanInternal(visibleDetailLevel, internalDetailLevel)
+      ? internalDetailLevel
+      : visibleDetailLevel;
   }
 
   function updateOfferVisiblePricingHintState() {
     if (!els.offer_visible_pricing_hint) return;
-    const internalGranularity = currentOfferInternalGranularity();
-    const visibleGranularity = currentOfferVisibleGranularity();
+    const internalDetailLevel = currentOfferInternalDetailLevel();
+    const visibleDetailLevel = currentOfferVisibleDetailLevel();
     const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
-    const missingDayAssignments = internalGranularity === "component"
-      && visibleGranularity === "day"
+    const missingDayAssignments = internalDetailLevel === "component"
+      && visibleDetailLevel === "day"
       && components.some((component) => !Number.isInteger(Number(component?.day_number)) || Number(component?.day_number) < 1);
     if (missingDayAssignments) {
       els.offer_visible_pricing_hint.textContent = bookingT(
@@ -84,8 +84,8 @@ export function createBookingOfferComponentsModule(ctx) {
     }
     els.offer_visible_pricing_hint.textContent = bookingT(
       "booking.offer.visible_pricing_hint",
-      "Customer documents will show {granularity} pricing. Additional items stay visible as separate lines.",
-      { granularity: visibleGranularity }
+      "Customer documents will show {detailLevel} pricing. Additional items stay visible as separate lines.",
+      { detailLevel: visibleDetailLevel }
     );
     els.offer_visible_pricing_hint.classList.remove("booking-inline-status--error");
     els.offer_visible_pricing_hint.classList.add("booking-inline-status--success");
@@ -253,21 +253,21 @@ export function createBookingOfferComponentsModule(ctx) {
   }
 
   function buildOfferMainChargeLines(offerDraft = state.offerDraft) {
-    const internalGranularity = normalizeOfferPricingGranularity(offerDraft?.pricing_granularity_internal, "component");
-    if (internalGranularity === "trip") {
+    const internalDetailLevel = normalizeOfferDetailLevel(offerDraft?.offer_detail_level_internal, "trip");
+    if (internalDetailLevel === "trip") {
       return offerDraft?.trip_price_internal ? [offerDraft.trip_price_internal] : [];
     }
-    if (internalGranularity === "day") {
+    if (internalDetailLevel === "day") {
       return Array.isArray(offerDraft?.days_internal) ? offerDraft.days_internal : [];
     }
     return Array.isArray(offerDraft?.components) ? offerDraft.components : [];
   }
 
   function buildOfferChargeLines(offerDraft = state.offerDraft) {
-    const internalGranularity = normalizeOfferPricingGranularity(offerDraft?.pricing_granularity_internal, "component");
+    const internalDetailLevel = normalizeOfferDetailLevel(offerDraft?.offer_detail_level_internal, "trip");
     const mainLines = buildOfferMainChargeLines(offerDraft).map((line) => {
-      if (internalGranularity === "trip") return computeOfferTripPriceLineTotals(line);
-      if (internalGranularity === "day") return computeOfferDayInternalLineTotals(line);
+      if (internalDetailLevel === "trip") return computeOfferTripPriceLineTotals(line);
+      if (internalDetailLevel === "day") return computeOfferDayInternalLineTotals(line);
       return computeOfferComponentLineTotals(line);
     });
     const additionalLines = (Array.isArray(offerDraft?.additional_items) ? offerDraft.additional_items : [])
@@ -288,10 +288,10 @@ export function createBookingOfferComponentsModule(ctx) {
       tax_amount_cents += line.tax_amount_cents;
     }
     const currency = normalizeCurrencyCode(offerDraft?.currency || state.booking?.preferred_currency || "USD");
-    const internalGranularity = normalizeOfferPricingGranularity(offerDraft?.pricing_granularity_internal, "component");
-    const mainCount = internalGranularity === "trip"
+    const internalDetailLevel = normalizeOfferDetailLevel(offerDraft?.offer_detail_level_internal, "trip");
+    const mainCount = internalDetailLevel === "trip"
       ? (offerDraft?.trip_price_internal ? 1 : 0)
-      : internalGranularity === "day"
+      : internalDetailLevel === "day"
         ? (Array.isArray(offerDraft?.days_internal) ? offerDraft.days_internal.length : 0)
         : (Array.isArray(offerDraft?.components) ? offerDraft.components.length : 0);
     const additionalCount = Array.isArray(offerDraft?.additional_items) ? offerDraft.additional_items.length : 0;
@@ -309,10 +309,10 @@ export function createBookingOfferComponentsModule(ctx) {
     const totals = computeOfferDraftTotals(offerDraft);
     const buckets = new Map();
     buildOfferMainChargeLines(offerDraft).forEach((lineSource) => {
-      const internalGranularity = normalizeOfferPricingGranularity(offerDraft?.pricing_granularity_internal, "component");
-      const line = internalGranularity === "trip"
+      const internalDetailLevel = normalizeOfferDetailLevel(offerDraft?.offer_detail_level_internal, "trip");
+      const line = internalDetailLevel === "trip"
         ? computeOfferTripPriceLineTotals(lineSource)
-        : internalGranularity === "day"
+        : internalDetailLevel === "day"
           ? computeOfferDayInternalLineTotals(lineSource)
           : computeOfferComponentLineTotals(lineSource);
       if (!line.net_amount_cents && !line.tax_amount_cents && !line.gross_amount_cents) return;
@@ -680,15 +680,15 @@ export function createBookingOfferComponentsModule(ctx) {
     };
   }
 
-  function ensureOfferStructureForGranularity(internalGranularity) {
-    const normalizedGranularity = normalizeOfferPricingGranularity(internalGranularity, "component");
-    if (normalizedGranularity === "trip") {
+  function ensureOfferStructureForDetailLevel(internalDetailLevel) {
+    const normalizedDetailLevel = normalizeOfferDetailLevel(internalDetailLevel, "trip");
+    if (normalizedDetailLevel === "trip") {
       if (!state.offerDraft.trip_price_internal) {
         state.offerDraft.trip_price_internal = createEmptyTripPriceInternal();
       }
       return;
     }
-    if (normalizedGranularity === "day") {
+    if (normalizedDetailLevel === "day") {
       const currentDays = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
       if (currentDays.length) return;
       const travelPlanDayCount = Array.isArray(state.travelPlanDraft?.days)
@@ -700,12 +700,12 @@ export function createBookingOfferComponentsModule(ctx) {
   }
 
   function syncOfferMainDraftFromDom() {
-    const internalGranularity = currentOfferInternalGranularity();
-    if (internalGranularity === "trip") {
+    const internalDetailLevel = currentOfferInternalDetailLevel();
+    if (internalDetailLevel === "trip") {
       state.offerDraft.trip_price_internal = readOfferDraftTripPriceForRender();
       return;
     }
-    if (internalGranularity === "day") {
+    if (internalDetailLevel === "day") {
       state.offerDraft.days_internal = readOfferDraftDaysInternalForRender();
       return;
     }
@@ -800,7 +800,7 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function addOfferComponent() {
     if (!state.permissions.canEditBooking || !state.offerDraft) return;
-    state.offerDraft.pricing_granularity_internal = "component";
+    state.offerDraft.offer_detail_level_internal = "component";
     const category = normalizeOfferCategory("OTHER");
     const nextIndex = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components.length : 0;
     state.offerDraft.components.push({
@@ -1302,12 +1302,12 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function renderOfferComponentsTable() {
     if (!els.offer_components_table) return;
-    ensureOfferStructureForGranularity(currentOfferInternalGranularity());
-    const internalGranularity = currentOfferInternalGranularity();
+    ensureOfferStructureForDetailLevel(currentOfferInternalDetailLevel());
+    const internalDetailLevel = currentOfferInternalDetailLevel();
     const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
-    if (internalGranularity === "trip") {
+    if (internalDetailLevel === "trip") {
       els.offer_components_table.innerHTML = renderOfferTripMainTable();
-    } else if (internalGranularity === "day") {
+    } else if (internalDetailLevel === "day") {
       els.offer_components_table.innerHTML = renderOfferDayMainTable();
     } else {
       els.offer_components_table.innerHTML = renderOfferComponentMainTable();
@@ -1319,9 +1319,9 @@ export function createBookingOfferComponentsModule(ctx) {
     renderOfferQuotationSummary();
     paymentTermsModule.renderOfferPaymentTerms();
 
-    if (internalGranularity === "trip") {
+    if (internalDetailLevel === "trip") {
       bindOfferTripEvents();
-    } else if (internalGranularity === "day") {
+    } else if (internalDetailLevel === "day") {
       bindOfferDayEvents();
     } else {
       bindOfferComponentEvents();
@@ -1332,8 +1332,8 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function updateOfferTotalsInDom() {
     const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
-    const internalGranularity = currentOfferInternalGranularity();
-    if (internalGranularity === "component") {
+    const internalDetailLevel = currentOfferInternalDetailLevel();
+    if (internalDetailLevel === "component") {
       const components = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
       components.forEach((component, index) => {
         const totalNode = document.querySelector(`[data-offer-component-total="${index}"]`);
@@ -1345,7 +1345,7 @@ export function createBookingOfferComponentsModule(ctx) {
         const total = computeOfferComponentLineTotals(component).gross_amount_cents;
         totalNode.textContent = formatMoneyDisplay(Math.round(total), currency);
       });
-    } else if (internalGranularity === "day") {
+    } else if (internalDetailLevel === "day") {
       const dayPrices = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
       dayPrices.forEach((dayPrice, index) => {
         const totalNode = document.querySelector(`[data-offer-main-total="${index}"]`);
@@ -1566,12 +1566,12 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function collectOfferPayload() {
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
-    const pricingGranularityInternal = currentOfferInternalGranularity();
-    const pricingGranularityVisible = currentOfferVisibleGranularity();
+    const internalDetailLevel = currentOfferInternalDetailLevel();
+    const visibleDetailLevel = currentOfferVisibleDetailLevel();
     const category_rules = collectOfferCategoryRules();
-    const components = pricingGranularityInternal === "component" ? collectOfferComponents() : [];
-    const daysInternal = pricingGranularityInternal === "day" ? collectOfferDaysInternal() : [];
-    const tripPriceInternal = pricingGranularityInternal === "trip" ? collectOfferTripPriceInternal() : null;
+    const components = internalDetailLevel === "component" ? collectOfferComponents() : [];
+    const daysInternal = internalDetailLevel === "day" ? collectOfferDaysInternal() : [];
+    const tripPriceInternal = internalDetailLevel === "trip" ? collectOfferTripPriceInternal() : null;
     const additionalItems = collectOfferAdditionalItems();
     const discount = collectOfferDiscount();
     const paymentTermsDraft = paymentTermsModule.normalizeOfferPaymentTermsDraft(
@@ -1602,12 +1602,12 @@ export function createBookingOfferComponentsModule(ctx) {
     return {
       status: String(state.offerDraft?.status || "DRAFT").trim().toUpperCase(),
       currency,
-      pricing_granularity_internal: pricingGranularityInternal,
-      pricing_granularity_visible: pricingGranularityVisible,
+      offer_detail_level_internal: internalDetailLevel,
+      offer_detail_level_visible: visibleDetailLevel,
       category_rules,
       components,
-      ...(pricingGranularityInternal === "day" ? { days_internal: daysInternal } : {}),
-      ...(pricingGranularityInternal === "trip" && tripPriceInternal ? { trip_price_internal: tripPriceInternal } : {}),
+      ...(internalDetailLevel === "day" ? { days_internal: daysInternal } : {}),
+      ...(internalDetailLevel === "trip" && tripPriceInternal ? { trip_price_internal: tripPriceInternal } : {}),
       additional_items: additionalItems,
       ...(discount ? { discount } : {}),
       ...(paymentTermsDraft && (paymentTermsDraft.lines.length || paymentTermsNotes)
@@ -1757,7 +1757,7 @@ export function createBookingOfferComponentsModule(ctx) {
     const nextCurrency = normalizeCurrencyCode(els.offer_currency_input.value);
     const currentCurrency = normalizeCurrencyCode(state.offerDraft.currency || state.booking.preferred_currency || "USD");
     const currentOfferTotalCents = Math.max(0, Math.round(resolveOfferTotalCents()));
-    const internalGranularity = currentOfferInternalGranularity();
+    const internalDetailLevel = currentOfferInternalDetailLevel();
     if (!nextCurrency || nextCurrency === currentCurrency) {
       els.offer_currency_input.value = currentCurrency;
       return;
@@ -1768,9 +1768,9 @@ export function createBookingOfferComponentsModule(ctx) {
     let additionalItems = [];
     let discount;
     try {
-      if (internalGranularity === "component") {
+      if (internalDetailLevel === "component") {
         components = collectOfferComponents({ throwOnError: true });
-      } else if (internalGranularity === "day") {
+      } else if (internalDetailLevel === "day") {
         daysInternal = collectOfferDaysInternal({ throwOnError: true });
       } else {
         tripPriceInternal = collectOfferTripPriceInternal({ throwOnError: true });
@@ -1791,10 +1791,10 @@ export function createBookingOfferComponentsModule(ctx) {
     setOfferStatus(bookingT("booking.offer.converting_prices", "Converting prices..."));
     try {
       const [convertedComponents, convertedDays, convertedTrip, convertedAdditionalItems, convertedDiscount] = await Promise.all([
-        internalGranularity === "component"
+        internalDetailLevel === "component"
           ? convertOfferComponentsInBackend(currentCurrency, nextCurrency, components)
           : Promise.resolve(null),
-        internalGranularity === "day"
+        internalDetailLevel === "day"
           ? convertOfferPricingLinesInBackend(currentCurrency, nextCurrency, daysInternal.map((dayPrice, index) => ({
               id: dayPrice.id || `offer_day_internal_${index}`,
               unit_amount_cents: Number(dayPrice.amount_cents || 0),
@@ -1802,7 +1802,7 @@ export function createBookingOfferComponentsModule(ctx) {
               tax_rate_basis_points: Number(dayPrice.tax_rate_basis_points || 0)
             })))
           : Promise.resolve([]),
-        internalGranularity === "trip" && tripPriceInternal
+        internalDetailLevel === "trip" && tripPriceInternal
           ? convertOfferPricingLinesInBackend(currentCurrency, nextCurrency, [{
               id: "offer_trip_internal",
               unit_amount_cents: Number(tripPriceInternal.amount_cents || 0),
@@ -1820,7 +1820,7 @@ export function createBookingOfferComponentsModule(ctx) {
         convertOfferDiscountInBackend(currentCurrency, nextCurrency, discount)
       ]);
       state.offerDraft.currency = nextCurrency;
-      if (internalGranularity === "component") {
+      if (internalDetailLevel === "component") {
         const convertedRows = convertedComponents?.convertedComponents || [];
         state.offerDraft.components = components.map((component, index) => {
           const convertedComponent = convertedRows[index] || {};
@@ -1836,7 +1836,7 @@ export function createBookingOfferComponentsModule(ctx) {
             currency: nextCurrency
           };
         });
-      } else if (internalGranularity === "day") {
+      } else if (internalDetailLevel === "day") {
         state.offerDraft.days_internal = daysInternal.map((dayPrice, index) => ({
           ...dayPrice,
           amount_cents: Number.isFinite(convertedDays[index]?.unit_amount_cents)
@@ -1908,28 +1908,28 @@ export function createBookingOfferComponentsModule(ctx) {
     renderOfferComponentsTable();
   }
 
-  function handleOfferInternalGranularityChange(nextValue) {
+  function handleOfferInternalDetailLevelChange(nextValue) {
     if (!state.offerDraft || !state.permissions.canEditBooking) return;
     syncOfferDraftFromDom();
     resetComponentUiState();
-    const internalGranularity = normalizeOfferPricingGranularity(nextValue, currentOfferInternalGranularity());
-    state.offerDraft.pricing_granularity_internal = internalGranularity;
-    ensureOfferStructureForGranularity(internalGranularity);
-    if (isVisibleGranularityFinerThanInternal(currentOfferVisibleGranularity(), internalGranularity)) {
-      state.offerDraft.pricing_granularity_visible = internalGranularity;
+    const internalDetailLevel = normalizeOfferDetailLevel(nextValue, currentOfferInternalDetailLevel());
+    state.offerDraft.offer_detail_level_internal = internalDetailLevel;
+    ensureOfferStructureForDetailLevel(internalDetailLevel);
+    if (isVisibleDetailLevelFinerThanInternal(currentOfferVisibleDetailLevel(), internalDetailLevel)) {
+      state.offerDraft.offer_detail_level_visible = internalDetailLevel;
     }
     setOfferSaveEnabled(true);
     renderOfferComponentsTable();
   }
 
-  function handleOfferVisibleGranularityChange(nextValue) {
+  function handleOfferVisibleDetailLevelChange(nextValue) {
     if (!state.offerDraft || !state.permissions.canEditBooking) return;
     syncOfferDraftFromDom();
-    const internalGranularity = currentOfferInternalGranularity();
-    const requestedVisibleGranularity = normalizeOfferPricingGranularity(nextValue, internalGranularity);
-    state.offerDraft.pricing_granularity_visible = isVisibleGranularityFinerThanInternal(requestedVisibleGranularity, internalGranularity)
-      ? internalGranularity
-      : requestedVisibleGranularity;
+    const internalDetailLevel = currentOfferInternalDetailLevel();
+    const requestedVisibleDetailLevel = normalizeOfferDetailLevel(nextValue, internalDetailLevel);
+    state.offerDraft.offer_detail_level_visible = isVisibleDetailLevelFinerThanInternal(requestedVisibleDetailLevel, internalDetailLevel)
+      ? internalDetailLevel
+      : requestedVisibleDetailLevel;
     setOfferSaveEnabled(true);
     updateOfferVisiblePricingHintState();
     renderOfferQuotationSummary();
@@ -1940,8 +1940,8 @@ export function createBookingOfferComponentsModule(ctx) {
     clearPendingTotals,
     collectOfferPayload,
     handleOfferCurrencyChange,
-    handleOfferInternalGranularityChange,
-    handleOfferVisibleGranularityChange,
+    handleOfferInternalDetailLevelChange,
+    handleOfferVisibleDetailLevelChange,
     renderOfferComponentsTable,
     resetComponentUiState,
     resolveOfferTotalCents,

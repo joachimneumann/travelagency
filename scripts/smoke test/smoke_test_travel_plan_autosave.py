@@ -31,7 +31,7 @@ def fail(message, exit_code=1):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Local Safari smoke test for booking page save flows, including travel-plan and offer pricing granularity."
+        description="Local Safari smoke test for booking page save flows, including travel-plan and offer detail level."
     )
     parser.add_argument("--backend-port", type=int, default=DEFAULT_BACKEND_PORT)
     parser.add_argument("--frontend-port", type=int, default=DEFAULT_FRONTEND_PORT)
@@ -441,13 +441,13 @@ def browser_wait_for_offer_editor(driver):
         lambda: driver.execute(
             """
             return Boolean(
-              document.querySelector('#offer_pricing_granularity_internal_input')
-              && document.querySelector('#offer_pricing_granularity_visible_input')
+              document.querySelector('#offer_detail_level_internal_input')
+              && document.querySelector('#offer_detail_level_visible_input')
               && document.querySelector('#offer_components_table')
             );
             """
         ),
-        description="offer granularity controls"
+        description="offer detail level controls"
     )
 
 
@@ -600,10 +600,10 @@ def click_page_save(driver):
         fail("Could not click the page save button.")
 
 
-def visible_granularity_option_disabled(driver, value):
+def visible_detail_level_option_disabled(driver, value):
     return driver.execute(
         """
-        const select = document.querySelector('#offer_pricing_granularity_visible_input');
+        const select = document.querySelector('#offer_detail_level_visible_input');
         if (!select) return null;
         const option = select.querySelector(`option[value="${arguments[0]}"]`);
         return option ? Boolean(option.disabled) : null;
@@ -741,12 +741,12 @@ def main():
         log(f"Verified: travel-plan edits persist through the page-level save. Status: {status_text}")
 
         browser_wait_for_offer_editor(driver)
-        set_select_value(driver, "#offer_pricing_granularity_internal_input", "day")
+        set_select_value(driver, "#offer_detail_level_internal_input", "day")
         wait_until(
-            lambda: visible_granularity_option_disabled(driver, "component") is True,
-            description="component visible granularity to disable for internal day pricing"
+            lambda: visible_detail_level_option_disabled(driver, "component") is True,
+            description="component visible detail level to disable for internal day pricing"
         )
-        set_select_value(driver, "#offer_pricing_granularity_visible_input", "trip")
+        set_select_value(driver, "#offer_detail_level_visible_input", "trip")
         set_offer_day_price_row(
             driver,
             0,
@@ -779,10 +779,10 @@ def main():
         saved_offer = booking_after_offer_save.get("offer") or {}
         saved_days = saved_offer.get("days_internal") or []
         saved_additional_items = saved_offer.get("additional_items") or []
-        if saved_offer.get("pricing_granularity_internal") != "day":
-            fail("Saved offer internal pricing granularity did not persist as day.")
-        if saved_offer.get("pricing_granularity_visible") != "trip":
-            fail("Saved offer visible pricing granularity did not persist as trip.")
+        if saved_offer.get("offer_detail_level_internal") != "day":
+            fail("Saved offer internal offer detail level did not persist as day.")
+        if saved_offer.get("offer_detail_level_visible") != "trip":
+            fail("Saved offer visible offer detail level did not persist as trip.")
         if len(saved_days) != 1:
             fail("Saved offer did not persist one internal day price row.")
         if (saved_days[0] or {}).get("day_number") != 1 or (saved_days[0] or {}).get("amount_cents") != 125000:
@@ -794,7 +794,7 @@ def main():
         if (saved_additional_items[0] or {}).get("unit_amount_cents") != 15000:
             fail("Saved offer additional item amount did not persist correctly.")
 
-        log("Verified: offer pricing granularity, internal day pricing, and additional items persist through the page-level save.")
+        log("Verified: offer detail level, internal day pricing, and additional items persist through the page-level save.")
         log(f"Smoke test passed for booking {booking_id}.")
     finally:
         driver.quit()

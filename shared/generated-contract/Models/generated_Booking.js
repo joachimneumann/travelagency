@@ -407,8 +407,8 @@ export const GENERATED_OFFER_CATEGORIES = Object.freeze([
         fields: [
     schemaField({"name":"status","required":false,"wireName":"status"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"currency","required":true,"wireName":"currency"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"pricing_granularity_internal","required":true,"wireName":"pricing_granularity_internal"}, SHARED_FIELD_DEFS.FIELD_29),
-    schemaField({"name":"pricing_granularity_visible","required":true,"wireName":"pricing_granularity_visible"}, SHARED_FIELD_DEFS.FIELD_29),
+    schemaField({"name":"offer_detail_level_internal","required":true,"wireName":"offer_detail_level_internal"}, SHARED_FIELD_DEFS.FIELD_29),
+    schemaField({"name":"offer_detail_level_visible","required":true,"wireName":"offer_detail_level_visible"}, SHARED_FIELD_DEFS.FIELD_29),
     schemaField({"name":"category_rules","required":false,"wireName":"category_rules"}, SHARED_FIELD_DEFS.FIELD_30),
     schemaField({"name":"components","required":false,"wireName":"components"}, SHARED_FIELD_DEFS.FIELD_31),
     schemaField({"name":"trip_price_internal","required":false,"wireName":"trip_price_internal"}, SHARED_FIELD_DEFS.FIELD_32),

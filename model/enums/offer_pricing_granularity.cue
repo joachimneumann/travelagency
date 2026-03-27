@@ -1,9 +1,9 @@
 package enums
 
-OfferPricingGranularityCatalog: [
+OfferDetailLevelCatalog: [
 	"trip",
 	"day",
 	"component",
 ]
 
-#OfferPricingGranularity: or(OfferPricingGranularityCatalog)
+#OfferDetailLevel: or(OfferDetailLevelCatalog)

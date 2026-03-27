@@ -126,8 +126,8 @@ const state = {
   },
   offerDraft: {
     currency: "USD",
-    pricing_granularity_internal: "component",
-    pricing_granularity_visible: "component",
+    offer_detail_level_internal: "trip",
+    offer_detail_level_visible: "trip",
     category_rules: [],
     components: [],
     days_internal: [],
@@ -273,10 +273,18 @@ const els = {
   offerPaymentTermsPanelSummary: document.getElementById("offer_payment_terms_panel_summary"),
   booking_confirmation_panel: document.getElementById("booking_confirmation_panel"),
   bookingConfirmationPanelSummary: document.getElementById("booking_confirmation_panel_summary"),
+  offer_detail_level_panel: document.getElementById("offer_detail_level_panel"),
   offer_currency_input: document.getElementById("offer_currency_input"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
-  offer_pricing_granularity_internal_input: document.getElementById("offer_pricing_granularity_internal_input"),
-  offer_pricing_granularity_visible_input: document.getElementById("offer_pricing_granularity_visible_input"),
+  offer_detail_level_internal_input: document.getElementById("offer_detail_level_internal_input"),
+  offer_detail_level_visible_input: document.getElementById("offer_detail_level_visible_input"),
+  offer_detail_level_internal_pill: document.getElementById("offer_detail_level_internal_pill"),
+  offer_detail_level_visible_pill: document.getElementById("offer_detail_level_visible_pill"),
+  offer_detail_level_confirm_modal: document.getElementById("offer_detail_level_confirm_modal"),
+  offer_detail_level_confirm_message: document.getElementById("offer_detail_level_confirm_message"),
+  offer_detail_level_confirm_close_btn: document.getElementById("offer_detail_level_confirm_close_btn"),
+  offer_detail_level_confirm_cancel_btn: document.getElementById("offer_detail_level_confirm_cancel_btn"),
+  offer_detail_level_confirm_accept_btn: document.getElementById("offer_detail_level_confirm_accept_btn"),
   offer_visible_pricing_hint: document.getElementById("offer_visible_pricing_hint"),
   offer_components_table: document.getElementById("offer_components_table"),
   offer_additional_items_table: document.getElementById("offer_additional_items_table"),
@@ -637,13 +645,13 @@ async function init() {
     els.offer_currency_input.addEventListener("change", () => {
       void handleOfferCurrencyChange();
     });
-  if (els.offer_pricing_granularity_internal_input)
-    els.offer_pricing_granularity_internal_input.addEventListener("change", () => {
-      void handleOfferInternalGranularityChange();
+  if (els.offer_detail_level_internal_input)
+    els.offer_detail_level_internal_input.addEventListener("change", () => {
+      void handleOfferInternalDetailLevelChange();
     });
-  if (els.offer_pricing_granularity_visible_input)
-    els.offer_pricing_granularity_visible_input.addEventListener("change", () => {
-      void handleOfferVisibleGranularityChange();
+  if (els.offer_detail_level_visible_input)
+    els.offer_detail_level_visible_input.addEventListener("change", () => {
+      void handleOfferVisibleDetailLevelChange();
     });
   personsModule.bindEvents();
   travelPlanModule.bindEvents();
@@ -1148,12 +1156,12 @@ function handleOfferCurrencyChange() {
   return offerModule.handleOfferCurrencyChange();
 }
 
-function handleOfferInternalGranularityChange() {
-  return offerModule.handleOfferInternalGranularityChange();
+function handleOfferInternalDetailLevelChange() {
+  return offerModule.handleOfferInternalDetailLevelChange();
 }
 
-function handleOfferVisibleGranularityChange() {
-  return offerModule.handleOfferVisibleGranularityChange();
+function handleOfferVisibleDetailLevelChange() {
+  return offerModule.handleOfferVisibleDetailLevelChange();
 }
 
 function saveOffer() {

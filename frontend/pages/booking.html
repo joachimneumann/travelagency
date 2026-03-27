@@ -12,6 +12,110 @@
       }
     </script>
     <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .offer-detail-level-panel {
+        margin-bottom: 1rem;
+        padding: 1.25rem;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 22px;
+        background:
+          linear-gradient(135deg, rgba(255, 248, 237, 0.98), rgba(255, 255, 255, 0.98)),
+          #fff;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+      }
+
+      .offer-detail-level-panel__layout {
+        display: flex;
+        justify-content: center;
+      }
+
+      .offer-detail-level-panel__stack {
+        display: grid;
+        gap: 1rem;
+        width: 400px;
+      }
+
+      .offer-detail-level-field {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .offer-detail-level-field__label {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .offer-detail-level-pill {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
+        padding: 0.45rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.06);
+      }
+
+      .offer-detail-level-pill__button {
+        min-height: 3rem;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(15, 23, 42, 0.72);
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      .offer-detail-level-pill__button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .offer-detail-level-pill__button.is-active {
+        background: #0f172a;
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+      }
+
+      .offer-detail-level-pill__button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .offer-detail-level-panel__hint {
+        margin-top: 0.15rem;
+      }
+
+      .offer-detail-level-confirm__panel {
+        max-width: 34rem;
+      }
+
+      .offer-detail-level-confirm__copy {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .offer-detail-level-confirm__copy h2,
+      .offer-detail-level-confirm__copy p {
+        margin: 0;
+      }
+
+      .offer-detail-level-confirm__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.65rem;
+        margin-top: 1rem;
+      }
+
+      @media (max-width: 720px) {
+        .offer-detail-level-panel__stack {
+          width: 100%;
+        }
+
+        .offer-detail-level-pill {
+          grid-template-columns: 1fr;
+          border-radius: 22px;
+        }
+      }
+    </style>
   </head>
   <body class="booking-detail-page">
     <header class="header" id="top">
@@ -519,6 +623,24 @@
           <input id="travel_plan_service_image_input" type="file" accept="image/*" multiple hidden />
           <input id="travel_plan_attachment_input" type="file" accept="application/pdf,.pdf" multiple hidden />
 
+          <article id="offer_detail_level_panel" class="offer-detail-level-panel">
+            <div class="offer-detail-level-panel__layout">
+              <div class="offer-detail-level-panel__stack">
+                <div class="offer-detail-level-field">
+                  <label class="offer-detail-level-field__label" for="offer_detail_level_internal_input">Internal offer detail level</label>
+                  <select id="offer_detail_level_internal_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                  <div id="offer_detail_level_internal_pill" class="offer-detail-level-pill" role="group" aria-label="Internal offer detail level"></div>
+                </div>
+                <div class="offer-detail-level-field">
+                  <label class="offer-detail-level-field__label" for="offer_detail_level_visible_input">Customer-facing offer detail level</label>
+                  <select id="offer_detail_level_visible_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                  <div id="offer_detail_level_visible_pill" class="offer-detail-level-pill" role="group" aria-label="Customer-facing offer detail level"></div>
+                </div>
+                <span id="offer_visible_pricing_hint" class="micro booking-inline-status offer-detail-level-panel__hint"></span>
+              </div>
+            </div>
+          </article>
+
           <article id="travel_plan_panel" class="booking-section">
             <div class="booking-section__head">
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
@@ -556,18 +678,9 @@
                   </label>
                   <select id="offer_currency_input"></select>
                 </div>
-                <div class="field">
-                  <label for="offer_pricing_granularity_internal_input">Internal pricing granularity</label>
-                  <select id="offer_pricing_granularity_internal_input"></select>
-                </div>
-                <div class="field">
-                  <label for="offer_pricing_granularity_visible_input">Customer-visible pricing granularity</label>
-                  <select id="offer_pricing_granularity_visible_input"></select>
-                </div>
               </div>
               <div class="backend-controls booking-offer-editor-head">
                 <h3 class="booking-offer-editor-head__title">Internal pricing</h3>
-                <span id="offer_visible_pricing_hint" class="micro booking-inline-status"></span>
               </div>
               <div class="backend-table-wrap" style="margin-bottom: 1rem;">
                 <table class="backend-table" id="offer_components_table"></table>
@@ -769,6 +882,24 @@
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
         <span class="booking-page-overlay__text" id="travel_plan_translate_overlay_text">Translating... Please wait.</span>
+      </div>
+    </div>
+
+    <div class="modal offer-detail-level-confirm" id="offer_detail_level_confirm_modal" hidden role="dialog" aria-modal="true" aria-labelledby="offer_detail_level_confirm_title">
+      <div class="modal-panel offer-detail-level-confirm__panel" role="document">
+        <div class="modal-head">
+          <h2 id="offer_detail_level_confirm_title">Change internal offer detail level?</h2>
+          <button class="btn btn-ghost" id="offer_detail_level_confirm_close_btn" type="button" aria-label="Close offer detail level warning">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="offer-detail-level-confirm__copy">
+            <p id="offer_detail_level_confirm_message">Changing to a less detailed internal offer structure will aggregate existing offer details and remove detailed breakdown data.</p>
+          </div>
+          <div class="offer-detail-level-confirm__actions">
+            <button class="btn btn-ghost" id="offer_detail_level_confirm_cancel_btn" type="button">Cancel</button>
+            <button class="btn btn-primary" id="offer_detail_level_confirm_accept_btn" type="button">Continue</button>
+          </div>
+        </div>
       </div>
     </div>
 

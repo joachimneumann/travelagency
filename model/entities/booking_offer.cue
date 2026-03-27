@@ -169,8 +169,8 @@ import (
 #BookingOffer: {
 	currency: enums.#CurrencyCode
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
-	pricing_granularity_internal: enums.#OfferPricingGranularity
-	pricing_granularity_visible:  enums.#OfferPricingGranularity
+	offer_detail_level_internal: enums.#OfferDetailLevel
+	offer_detail_level_visible:  enums.#OfferDetailLevel
 	category_rules: [...#BookingOfferCategoryRule]
 	components: [...#BookingOfferComponent]
 	trip_price_internal?: #BookingOfferTripPriceInternal

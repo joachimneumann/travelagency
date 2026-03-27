@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-26T13:02:02Z
+# 2026-03-27T11:18:42Z
 
 ---
 openapi: 3.1.0
@@ -589,7 +589,7 @@ components:
         label: DISCOUNTS_CREDITS
       - value: OTHER
         label: OTHER
-    OfferPricingGranularity:
+    OfferDetailLevel:
       type: string
       enum:
       - trip
@@ -3887,6 +3887,7 @@ components:
           nullable: true
         team_order:
           type: integer
+          nullable: true
         picture_ref:
           type: string
           nullable: true
@@ -5004,8 +5005,8 @@ components:
       type: object
       required:
       - currency
-      - pricing_granularity_internal
-      - pricing_granularity_visible
+      - offer_detail_level_internal
+      - offer_detail_level_visible
       - totals
       - total_price_cents
       properties:
@@ -5014,10 +5015,10 @@ components:
           nullable: true
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        pricing_granularity_internal:
-          "$ref": "#/components/schemas/OfferPricingGranularity"
-        pricing_granularity_visible:
-          "$ref": "#/components/schemas/OfferPricingGranularity"
+        offer_detail_level_internal:
+          "$ref": "#/components/schemas/OfferDetailLevel"
+        offer_detail_level_visible:
+          "$ref": "#/components/schemas/OfferDetailLevel"
         category_rules:
           type: array
           items:
@@ -5643,11 +5644,11 @@ components:
     BookingOfferVisiblePricingReadModel:
       type: object
       required:
-      - granularity
+      - detail_level
       - derivable
       properties:
-        granularity:
-          "$ref": "#/components/schemas/OfferPricingGranularity"
+        detail_level:
+          "$ref": "#/components/schemas/OfferDetailLevel"
         derivable:
           type: boolean
         trip_price:
@@ -5669,8 +5670,8 @@ components:
       type: object
       required:
       - currency
-      - pricing_granularity_internal
-      - pricing_granularity_visible
+      - offer_detail_level_internal
+      - offer_detail_level_visible
       - totals
       - visible_pricing
       - total_price_cents
@@ -5680,10 +5681,10 @@ components:
           nullable: true
         currency:
           "$ref": "#/components/schemas/ATPCurrencyCode"
-        pricing_granularity_internal:
-          "$ref": "#/components/schemas/OfferPricingGranularity"
-        pricing_granularity_visible:
-          "$ref": "#/components/schemas/OfferPricingGranularity"
+        offer_detail_level_internal:
+          "$ref": "#/components/schemas/OfferDetailLevel"
+        offer_detail_level_visible:
+          "$ref": "#/components/schemas/OfferDetailLevel"
         category_rules:
           type: array
           items:

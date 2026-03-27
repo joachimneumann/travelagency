@@ -1,11 +1,11 @@
-# Offer Granularity
+# Offer Detail Level
 
 ## Goal
 
 Separate:
 
-- internal pricing granularity
-- customer-visible pricing granularity
+- internal offer detail level
+- customer-visible offer detail level
 
 ATP often needs to calculate with detailed commercial structure while presenting a simpler customer-facing offer.
 
@@ -21,26 +21,26 @@ This is better than forcing one field to do both jobs.
 
 Use two explicit fields:
 
-- `pricing_granularity_internal`
-- `pricing_granularity_visible`
+- `offer_detail_level_internal`
+- `offer_detail_level_visible`
 
-Internal granularity is canonical for calculation.
+Internal detail level is canonical for calculation.
 
-Visible granularity is canonical for customer rendering.
+Visible detail level is canonical for customer rendering.
 
-## Granularity Order
+## Detail Level Order
 
 Use this partial order:
 
-- `component` = finest
+- `component` = most specific
 - `day` = medium
-- `trip` = coarsest
+- `trip` = least specific
 
 ## Validity Rule
 
-Visible granularity may be equal to or coarser than internal granularity.
+Visible detail level may be equal to or less specific than internal detail level.
 
-Visible granularity must never be finer than internal granularity.
+Visible detail level must never be more specific than internal detail level.
 
 Allowed:
 
@@ -80,8 +80,8 @@ With two fields:
 
 ### Core fields
 
-- `pricing_granularity_internal: "trip" | "day" | "component"`
-- `pricing_granularity_visible: "trip" | "day" | "component"`
+- `offer_detail_level_internal: "trip" | "day" | "component"`
+- `offer_detail_level_visible: "trip" | "day" | "component"`
 - `currency`
 - `discounts[]`
 - `taxes[]`
@@ -89,7 +89,7 @@ With two fields:
 
 ### Canonical internal pricing blocks
 
-Exactly one internal pricing block is canonical, depending on `pricing_granularity_internal`.
+Exactly one internal pricing block is canonical, depending on `offer_detail_level_internal`.
 
 #### Internal trip pricing
 
@@ -179,11 +179,11 @@ Recommended pipeline:
 
 ### Main subtotal logic
 
-- if `pricing_granularity_internal = trip`
+- if `offer_detail_level_internal = trip`
   - `main_subtotal = trip_price_internal.amount`
-- if `pricing_granularity_internal = day`
+- if `offer_detail_level_internal = day`
   - `main_subtotal = sum(days_internal[].amount)`
-- if `pricing_granularity_internal = component`
+- if `offer_detail_level_internal = component`
   - `main_subtotal = sum(component totals)`
 
 ### Additional items subtotal
@@ -200,7 +200,7 @@ Recommended pipeline:
 The backend should enforce:
 
 1. exactly one canonical internal pricing block is active
-2. `pricing_granularity_visible` is not finer than `pricing_granularity_internal`
+2. `offer_detail_level_visible` is not more specific than `offer_detail_level_internal`
 3. visible projections can be derived from the internal structure
 4. presentation metadata cannot override calculation totals directly
 
@@ -220,8 +220,8 @@ Then validate:
 
 Expose two separate controls:
 
-- internal pricing granularity
-- customer-visible pricing granularity
+- internal offer detail level
+- customer-visible offer detail level
 
 The UI must make the distinction explicit:
 
@@ -230,7 +230,7 @@ The UI must make the distinction explicit:
 
 ### Internal editor sections
 
-Show exactly one canonical internal editor based on `pricing_granularity_internal`.
+Show exactly one canonical internal editor based on `offer_detail_level_internal`.
 
 #### Internal `trip`
 
@@ -264,7 +264,7 @@ Visible:
 
 ### Visible preview sections
 
-The customer preview and PDF preview should reflect `pricing_granularity_visible`.
+The customer preview and PDF preview should reflect `offer_detail_level_visible`.
 
 Examples:
 
@@ -277,7 +277,7 @@ Examples:
 
 ## PDF Behavior
 
-Customer documents should always render using the visible granularity.
+Customer documents should always render using the visible detail level.
 
 ### Visible `trip`
 
@@ -345,7 +345,7 @@ That wording is clearer because it describes linkage state, not an abstract acco
 
 ## Invoices
 
-Invoices do not need a separate granularity model.
+Invoices do not need a separate detail level model.
 
 They should consume:
 
@@ -355,7 +355,7 @@ They should consume:
 
 The key principle is:
 
-- offer granularity affects commercial editing and customer presentation
+- offer detail level affects commercial editing and customer presentation
 - it should not distort downstream accounting logic
 
 ## Biggest Design Consequence
@@ -367,7 +367,7 @@ The biggest shift is this:
 
 That is a good thing.
 
-It means ATP can keep fine internal detail while still showing coarse pricing externally.
+It means ATP can keep fine internal detail while still showing simpler pricing externally.
 
 ## Recommended Next Step Before Implementation
 
@@ -385,12 +385,12 @@ Before coding, define these precisely:
 Use:
 
 - one offer domain model
-- two explicit granularity fields
+- two explicit offer detail level fields
 - one canonical internal pricing structure
 - one derived or configured visible structure
-- one invariant: visible granularity cannot be finer than internal
+- one invariant: visible detail level cannot be more specific than internal
 
-This is cleaner than a single granularity field because it preserves:
+This is cleaner than a single detail level field because it preserves:
 
 - pricing control
 - internal explainability
