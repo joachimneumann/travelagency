@@ -396,29 +396,34 @@
 
 .booking-detail-page .booking-source-panel {
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 200px) minmax(0, 200px) minmax(0, 1fr);
   gap: 0.9rem 1.2rem;
-  align-items: start;
+  align-items: end;
 }
 
 .booking-detail-page .booking-source-panel__fields {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  display: grid;
-  gap: 0.9rem;
+  display: contents;
 }
 
 .booking-detail-page .booking-source-panel__source-field {
+  grid-column: 1;
+  grid-row: 1;
   max-width: none;
+  width: 100%;
+  padding-left: 0;
 }
 
 .booking-detail-page .booking-source-panel__referral-field {
+  grid-column: 2;
+  grid-row: 1;
   max-width: none;
+  width: 100%;
+  padding-left: 0;
 }
 
 .booking-detail-page .booking-source-panel__conditional {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 3;
+  grid-row: 1;
   display: grid;
   align-content: start;
 }
@@ -427,7 +432,7 @@
   display: none;
 }
 
-.booking-detail-page .booking-source-panel__conditional .booking-control-deck__detail-field {
+.booking-detail-page .booking-source-panel__conditional {
   display: grid;
   gap: 0.55rem;
   align-content: start;
@@ -438,11 +443,17 @@
   background: transparent;
 }
 
-.booking-detail-page .booking-source-panel__conditional .booking-control-deck__detail-field label {
+.booking-detail-page .booking-source-panel__fields select,
+.booking-detail-page .booking-source-panel__conditional input,
+.booking-detail-page .booking-source-panel__conditional select {
+  width: 100%;
+}
+
+.booking-detail-page .booking-source-panel__conditional label {
   display: block;
 }
 
-.booking-detail-page .booking-source-panel__conditional .booking-control-deck__detail-field .micro {
+.booking-detail-page .booking-source-panel__conditional .micro {
   display: none;
 }
 
@@ -813,14 +824,24 @@
   }
 
   .booking-detail-page .booking-source-panel {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 200px) minmax(0, 200px) minmax(0, 1fr);
+  }
+
+  .booking-detail-page .booking-source-panel__fields {
+    display: contents;
   }
 
   .booking-detail-page .booking-source-panel__source-field,
-  .booking-detail-page .booking-source-panel__referral-field,
-  .booking-detail-page .booking-source-panel__conditional .booking-control-deck__detail-field {
-    grid-column: auto;
-    grid-row: auto;
+  .booking-detail-page .booking-source-panel__referral-field {
+    max-width: none;
+  }
+
+  .booking-detail-page .booking-source-panel__conditional {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .booking-detail-page .booking-source-panel__conditional {
     max-width: none;
   }
 
@@ -1728,5 +1749,23 @@
 
   .booking-person-modal__footer-actions {
     justify-content: stretch;
+  }
+}
+
+@media (max-width: 620px) {
+  .booking-detail-page .booking-source-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-detail-page .booking-source-panel__source-field,
+  .booking-detail-page .booking-source-panel__referral-field,
+  .booking-detail-page .booking-source-panel__conditional {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .booking-detail-page .booking-source-panel__source-field,
+  .booking-detail-page .booking-source-panel__referral-field {
+    padding-left: 0;
   }
 }

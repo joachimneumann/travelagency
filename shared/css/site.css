@@ -4241,6 +4241,10 @@ textarea:focus-visible {
   font: inherit;
 }
 
+.field select {
+  padding-right: 2.4rem;
+}
+
 .booking-text-field--customer {
   background: var(--surface);
 }

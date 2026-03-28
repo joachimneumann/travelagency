@@ -148,6 +148,27 @@ const BOOKING_REFERRAL_KIND_OPTIONS = Object.freeze([
   ["atp_staff", "ATP staff"]
 ]);
 
+const REFERRAL_MODE_CONFIG = Object.freeze({
+  other_customer: Object.freeze({
+    kind: "text",
+    labelKey: "booking.referral.customer_name",
+    labelFallback: "Customer name",
+    controlId: "booking_referral_label_input"
+  }),
+  b2b_partner: Object.freeze({
+    kind: "text",
+    labelKey: "booking.referral.partner_name",
+    labelFallback: "B2B partner name",
+    controlId: "booking_referral_label_input"
+  }),
+  atp_staff: Object.freeze({
+    kind: "select",
+    labelKey: "booking.referral.staff_label",
+    labelFallback: "ATP staff",
+    controlId: "booking_referral_staff_select"
+  })
+});
+
 export function createBookingCoreModule(ctx) {
   const {
     state,
@@ -310,6 +331,10 @@ export function createBookingCoreModule(ctx) {
     const meta = BOOKING_MILESTONE_ACTION_BY_KEY[normalizeText(actionKey).toUpperCase()];
     if (!meta) return "";
     return bookingT(meta.labelKey, meta.labelFallback);
+  }
+
+  function referralModeConfig(referralKind) {
+    return REFERRAL_MODE_CONFIG[normalizeText(referralKind).toLowerCase()] || null;
   }
 
   function resolveAtpStaffDisplayName(user, fallbackProfile = null) {
@@ -671,15 +696,17 @@ export function createBookingCoreModule(ctx) {
     }
 
     const referralKind = normalizeText(draft.referral_kind).toLowerCase() || "none";
-    const showReferralLabel = referralKind === "b2b_partner" || referralKind === "other_customer";
-    const showReferralStaff = referralKind === "atp_staff";
-    if (els.referralDetailRow) els.referralDetailRow.hidden = !(showReferralLabel || showReferralStaff);
-    if (els.referralLabelField) els.referralLabelField.hidden = !showReferralLabel;
-    if (els.referralStaffField) els.referralStaffField.hidden = !showReferralStaff;
+    const referralConfig = referralModeConfig(referralKind);
+    const showReferralDetail = Boolean(referralConfig);
+    const showReferralLabel = referralConfig?.kind === "text";
+    const showReferralStaff = referralConfig?.kind === "select";
+    if (els.referralLabelField) els.referralLabelField.hidden = !showReferralDetail;
     if (els.referralLabelLabel) {
-      els.referralLabelLabel.textContent = referralKind === "other_customer"
-        ? bookingT("booking.referral.customer_name", "Customer name")
-        : bookingT("booking.referral.partner_name", "B2B partner name");
+      els.referralLabelLabel.textContent = bookingT(
+        referralConfig?.labelKey || "booking.referral.partner_name",
+        referralConfig?.labelFallback || "B2B partner name"
+      );
+      els.referralLabelLabel.htmlFor = referralConfig?.controlId || "booking_referral_label_input";
     }
     if (els.referralLabelHint) {
       els.referralLabelHint.textContent = "";
@@ -689,6 +716,7 @@ export function createBookingCoreModule(ctx) {
       if (document.activeElement !== els.referralLabelInput) {
         els.referralLabelInput.value = normalizeText(draft.referral_label) || "";
       }
+      els.referralLabelInput.hidden = !showReferralLabel;
       els.referralLabelInput.disabled = !state.permissions.canEditBooking || !showReferralLabel;
     }
     if (els.referralStaffSelect) {
@@ -699,6 +727,7 @@ export function createBookingCoreModule(ctx) {
         .join("");
       els.referralStaffSelect.innerHTML = staffOptions;
       els.referralStaffSelect.value = normalizeText(draft.referral_staff_user_id) || "";
+      els.referralStaffSelect.hidden = !showReferralStaff;
       els.referralStaffSelect.disabled = !state.permissions.canEditBooking || !showReferralStaff;
     }
 

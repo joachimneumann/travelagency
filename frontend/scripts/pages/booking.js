@@ -237,12 +237,10 @@ const els = {
   ownerSelect: document.getElementById("booking_owner_select"),
   sourceChannelSelect: document.getElementById("booking_source_channel_select"),
   referralKindSelect: document.getElementById("booking_referral_kind_select"),
-  referralDetailRow: document.getElementById("booking_referral_detail_row"),
   referralLabelField: document.getElementById("booking_referral_label_field"),
   referralLabelLabel: document.getElementById("booking_referral_label_label"),
   referralLabelInput: document.getElementById("booking_referral_label_input"),
   referralLabelHint: document.getElementById("booking_referral_label_hint"),
-  referralStaffField: document.getElementById("booking_referral_staff_field"),
   referralStaffSelect: document.getElementById("booking_referral_staff_select"),
   contentLanguageField: document.getElementById("booking_content_language_field"),
   contentLanguageMenuMount: document.getElementById("booking_content_language_menu_mount"),
@@ -579,7 +577,12 @@ async function init() {
   }
   if (els.ownerSelect) els.ownerSelect.addEventListener("change", updateCoreDirtyState);
   if (els.sourceChannelSelect) els.sourceChannelSelect.addEventListener("change", updateCoreDirtyState);
-  if (els.referralKindSelect) els.referralKindSelect.addEventListener("change", updateCoreDirtyState);
+  if (els.referralKindSelect) {
+    els.referralKindSelect.addEventListener("change", () => {
+      updateCoreDirtyState();
+      renderActionControls();
+    });
+  }
   if (els.referralLabelInput) els.referralLabelInput.addEventListener("input", updateCoreDirtyState);
   if (els.referralStaffSelect) els.referralStaffSelect.addEventListener("change", updateCoreDirtyState);
   if (els.contentLanguageSelect) els.contentLanguageSelect.addEventListener("change", () => {
