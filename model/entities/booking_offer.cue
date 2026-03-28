@@ -169,12 +169,18 @@ import (
 #BookingOffer: {
 	currency: enums.#CurrencyCode
 	status?:  "DRAFT" | "APPROVED" | "OFFER_SENT"
+	// Internal detail level is canonical and destructive:
+	// only the rows for the selected internal mode remain active.
 	offer_detail_level_internal: enums.#OfferDetailLevel
 	offer_detail_level_visible:  enums.#OfferDetailLevel
 	category_rules: [...#BookingOfferCategoryRule]
+	// Components are active only when offer_detail_level_internal == "component".
 	components: [...#BookingOfferComponent]
+	// Trip price is active only when offer_detail_level_internal == "trip".
 	trip_price_internal?: #BookingOfferTripPriceInternal
+	// Day prices are active only when offer_detail_level_internal == "day".
 	days_internal?: [...#BookingOfferDayPriceInternal]
+	// Additional items and discount survive internal detail level transitions.
 	additional_items?: [...#BookingOfferAdditionalItem]
 	discount?:          #BookingOfferDiscount
 	totals:             #BookingOfferTotals

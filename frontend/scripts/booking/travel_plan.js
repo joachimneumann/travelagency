@@ -1053,7 +1053,7 @@ export function createBookingTravelPlanModule(ctx) {
     const englishTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, "en", "").trim();
     const collapsedTitle = englishTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: itemIndex + 1 });
     const timingSummary = travelPlanTimingSummary(day, item).trim();
-    const shouldShowCoverageBadge = coverageStatus !== "not_applicable";
+    const shouldShowCoverageBadge = showFinancialCoverage && coverageStatus !== "not_applicable";
     const coverageBadge = !shouldShowCoverageBadge
       ? ""
       : `<span class="travel-plan-coverage-badge travel-plan-coverage-badge--${escapeHtml(coverageStatus.replace(/_/g, "-"))}" data-travel-plan-coverage-badge="${escapeHtml(item.id)}">${escapeHtml(coverageLabel)}</span>`;

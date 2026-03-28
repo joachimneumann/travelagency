@@ -13,6 +13,20 @@ Then Automatically derive the stage and write a description of the stage and las
 
 # tour guide / ATP staff
 
+
+Nguyen Thi Ngoan
+Travel Consultant | Asia Travel Plan
+
+Ngoan’s journey began at the front desk of a hotel, where she discovered a genuine passion for caring for people—not just serving guests, but truly listening and understanding their needs.
+
+Her transition into online sales and inbound tourism allowed her to deepen both her experience and her love for travel. For Ngoan, every journey is more than just a product—it is a story, where emotions, experiences, and meaningful connections come together.
+
+Known for her gentle approach, attention to detail, and sincere dedication, Ngoan ensures that every client feels cared for from the very first interaction. Each itinerary is thoughtfully crafted, every detail carefully considered, creating travel experiences that are both seamless and memorable.
+
+As part of Asia Travel Plan, Ngoan brings not only professional expertise, but also a heartfelt commitment to delivering journeys that go beyond destinations—leaving lasting impressions through every step of the experience.
+
+
+
 * in traveler-details.html:
 - after "Send traveler details to Asia Travel Plan" the confirmation should be "Your details have been transmitted to AsiaTravePlan".
 - If nationality is VI: keep the cice between Passport and ID card.

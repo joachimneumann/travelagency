@@ -1,4 +1,5 @@
 import path from "node:path";
+import { stat } from "node:fs/promises";
 import { validateTranslationEntriesRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../lib/text.js";
 import { enumValueSetFor } from "../../lib/generated_catalogs.js";
@@ -61,6 +62,16 @@ function buildUserResponse(user) {
   return { user };
 }
 
+async function fileExists(filePath) {
+  if (!filePath) return false;
+  try {
+    const fileStats = await stat(filePath);
+    return fileStats.isFile();
+  } catch {
+    return false;
+  }
+}
+
 export function createAtpStaffHandlers(deps) {
   const {
     getPrincipal,
@@ -116,12 +127,29 @@ export function createAtpStaffHandlers(deps) {
   }
 
   async function handlePublicAtpStaffPhoto(req, res, [rawRelativePath]) {
-    const absolutePath = resolveAtpStaffPhotoDiskPath(rawRelativePath);
-    if (!absolutePath) {
+    const normalizedRelativePath = normalizeText(rawRelativePath).replace(/^\/+/, "");
+    const resolvedPath = resolveAtpStaffPhotoDiskPath(normalizedRelativePath);
+    const basenamePath = normalizedRelativePath ? path.basename(normalizedRelativePath) : "";
+    const directPath = basenamePath ? path.resolve(ATP_STAFF_PHOTOS_DIR, basenamePath) : "";
+    const candidatePaths = Array.from(new Set([resolvedPath, directPath].filter(Boolean)));
+    const existingPath = (await Promise.all(candidatePaths.map(async (candidatePath) => (
+      (await fileExists(candidatePath)) ? candidatePath : null
+    )))).find(Boolean);
+
+    if (!existingPath) {
+      console.warn("[backend-atp-staff] Staff photo not found.", {
+        request_url: req?.url || "",
+        raw_relative_path: rawRelativePath,
+        normalized_relative_path: normalizedRelativePath,
+        resolved_path: resolvedPath,
+        direct_path: directPath,
+        photos_dir: ATP_STAFF_PHOTOS_DIR
+      });
       sendJson(res, 404, { error: "Not found" });
       return;
     }
-    await sendFileWithCache(req, res, absolutePath, "public, max-age=31536000, immutable");
+
+    await sendFileWithCache(req, res, existingPath, "public, max-age=31536000, immutable");
   }
 
   async function handlePatchAtpStaffProfile(req, res, [rawUsername]) {

@@ -2192,6 +2192,12 @@ textarea:focus-visible {
   box-sizing: border-box;
 }
 
+.backend-table .offer-col-day.offer-col-day--day-mode {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+}
+
 .backend-table th.offer-col-qty {
   text-align: center;
 }
@@ -2280,11 +2286,21 @@ textarea:focus-visible {
   box-sizing: border-box;
 }
 
+.backend-table input[data-offer-day-note],
+.backend-table input[data-offer-additional-details],
+.backend-table input[data-offer-discount-reason] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .backend-table .offer-col-category select,
 .backend-table .offer-col-day select,
 .backend-table .offer-col-qty input,
 .backend-table .offer-col-price-single input,
 .backend-table .offer-col-price-total input,
+.backend-table input[data-offer-day-note],
+.backend-table input[data-offer-additional-details],
+.backend-table input[data-offer-discount-reason],
 .backend-table textarea[data-offer-component-details],
 .backend-table textarea[data-offer-discount-reason] {
   border: 1px solid var(--line-soft-strong);
@@ -2300,6 +2316,9 @@ textarea:focus-visible {
 .backend-table .offer-col-qty input:focus-visible,
 .backend-table .offer-col-price-single input:focus-visible,
 .backend-table .offer-col-price-total input:focus-visible,
+.backend-table input[data-offer-day-note]:focus-visible,
+.backend-table input[data-offer-additional-details]:focus-visible,
+.backend-table input[data-offer-discount-reason]:focus-visible,
 .backend-table textarea[data-offer-component-details]:focus-visible,
 .backend-table textarea[data-offer-discount-reason]:focus-visible {
   outline: 3px solid var(--secondary-surface);

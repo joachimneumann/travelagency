@@ -54,10 +54,10 @@ export function createPricingHelpers({
 
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = normalizeText(source?.offer_detail_level_internal).toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
     if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
-    if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
     return fallback;
   }
 

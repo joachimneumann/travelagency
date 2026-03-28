@@ -373,12 +373,12 @@ export function createBookingOfferComponentsModule(ctx) {
   }
 
   function resolveOfferTotalCents() {
-    const explicitTotal = Number(state.offerDraft?.total_price_cents);
-    if (Number.isFinite(explicitTotal)) {
-      return Math.round(explicitTotal);
-    }
     const offerTotals = computeOfferDraftTotals(state.offerDraft);
-    return offerTotals?.gross_amount_cents || 0;
+    if (Number.isFinite(Number(offerTotals?.gross_amount_cents))) {
+      return Math.round(Number(offerTotals.gross_amount_cents));
+    }
+    const explicitTotal = Number(state.offerDraft?.total_price_cents);
+    return Number.isFinite(explicitTotal) ? Math.round(explicitTotal) : 0;
   }
 
   function formatTaxRateLabel(basisPoints) {
@@ -680,6 +680,192 @@ export function createBookingOfferComponentsModule(ctx) {
     };
   }
 
+  function createSurchargeAdditionalItem(amountCents, details = "") {
+    return {
+      id: "",
+      label: bookingT("booking.offer.additional_item", "Additional item"),
+      details: String(details || "").trim() || bookingT("booking.offer.carry_over_surcharge", "Carry-over surcharge"),
+      day_number: null,
+      quantity: 1,
+      unit_amount_cents: Math.max(0, Math.round(Number(amountCents || 0))),
+      tax_rate_basis_points: 0,
+      currency: normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD"),
+      category: "OTHER",
+      notes: "",
+      sort_order: 0
+    };
+  }
+
+  function createEmptyComponentForDay(dayNumber, amountCents = 0) {
+    return {
+      id: "",
+      category: normalizeOfferCategory("OTHER"),
+      label: bookingT("booking.offer.day_number.day", "Day {day}", { day: dayNumber }),
+      details: "",
+      details_i18n: {},
+      day_number: dayNumber,
+      quantity: 1,
+      unit_amount_cents: Math.max(0, Math.round(Number(amountCents || 0))),
+      tax_rate_basis_points: 0,
+      currency: normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD"),
+      notes: "",
+      sort_order: dayNumber - 1
+    };
+  }
+
+  function hasMeaningfulAdditionalItem(item) {
+    if (!item || typeof item !== "object") return false;
+    return Boolean(
+      String(item.label || "").trim()
+      || String(item.details || "").trim()
+      || Number(item.unit_amount_cents || 0) > 0
+      || Number(item.quantity || 0) > 1
+      || String(item.id || "").trim()
+    );
+  }
+
+  function currentTravelPlanDayCount() {
+    return Array.isArray(state.travelPlanDraft?.days)
+      ? state.travelPlanDraft.days.length
+      : (Array.isArray(state.booking?.travel_plan?.days) ? state.booking.travel_plan.days.length : 0);
+  }
+
+  function clearInactiveMainOfferStructures(internalDetailLevel) {
+    if (!state.offerDraft || typeof state.offerDraft !== "object") return;
+    const normalizedDetailLevel = normalizeOfferDetailLevel(internalDetailLevel, "trip");
+    if (normalizedDetailLevel === "trip") {
+      state.offerDraft.components = [];
+      state.offerDraft.days_internal = [];
+      return;
+    }
+    if (normalizedDetailLevel === "day") {
+      state.offerDraft.components = [];
+      state.offerDraft.trip_price_internal = null;
+      return;
+    }
+    state.offerDraft.days_internal = [];
+    state.offerDraft.trip_price_internal = null;
+  }
+
+  function computeMainStructureGrossByDetailLevel(detailLevel) {
+    const normalizedDetailLevel = normalizeOfferDetailLevel(detailLevel, "trip");
+    if (normalizedDetailLevel === "trip") {
+      return Math.max(0, Math.round(computeOfferTripPriceLineTotals(state.offerDraft?.trip_price_internal).line_gross_amount_cents || 0));
+    }
+    if (normalizedDetailLevel === "day") {
+      return (Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [])
+        .reduce((sum, dayPrice) => sum + Math.max(0, Math.round(computeOfferDayInternalLineTotals(dayPrice).line_gross_amount_cents || 0)), 0);
+    }
+    return (Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [])
+      .reduce((sum, component) => sum + Math.max(0, Math.round(computeOfferComponentLineTotals(component).gross_amount_cents || 0)), 0);
+  }
+
+  function cloneAdditionalItems(items = state.offerDraft?.additional_items) {
+    return (Array.isArray(items) ? items : []).map((item, index) => ({
+      ...item,
+      sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index
+    }));
+  }
+
+  function appendSurchargeAdditionalItem(items, amountCents, details = "") {
+    const normalizedItems = cloneAdditionalItems(items);
+    const normalizedAmount = Math.max(0, Math.round(Number(amountCents || 0)));
+    if (normalizedAmount <= 0) return normalizedItems;
+    return [
+      ...normalizedItems,
+      {
+        ...createSurchargeAdditionalItem(normalizedAmount, details),
+        sort_order: normalizedItems.length
+      }
+    ];
+  }
+
+  function applyDestructiveInternalDetailLevelTransition(fromDetailLevel, toDetailLevel) {
+    if (!state.offerDraft || fromDetailLevel === toDetailLevel) return;
+    const travelPlanDayCount = Math.max(1, currentTravelPlanDayCount());
+    const currentMainGross = computeMainStructureGrossByDetailLevel(fromDetailLevel);
+    const existingComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
+    const existingDays = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
+    const existingAdditionalItems = cloneAdditionalItems();
+    const existingDiscount = state.offerDraft?.discount && typeof state.offerDraft.discount === "object"
+      ? { ...state.offerDraft.discount }
+      : null;
+
+    if (toDetailLevel === "trip") {
+      state.offerDraft.trip_price_internal = {
+        ...createEmptyTripPriceInternal(),
+        label: bookingT("booking.offer.trip_total", "Trip total"),
+        amount_cents: currentMainGross,
+        tax_rate_basis_points: 0
+      };
+      state.offerDraft.components = [];
+      state.offerDraft.days_internal = [];
+      state.offerDraft.additional_items = existingAdditionalItems;
+      state.offerDraft.discount = existingDiscount;
+      return;
+    }
+
+    if (toDetailLevel === "day") {
+      if (fromDetailLevel === "component") {
+        const dayGrossByNumber = new Map();
+        let unassignedGross = 0;
+        existingComponents.forEach((component) => {
+          const gross = Math.max(0, Math.round(computeOfferComponentLineTotals(component).gross_amount_cents || 0));
+          const dayNumber = Number.parseInt(String(component?.day_number || "").trim(), 10);
+          if (Number.isInteger(dayNumber) && dayNumber >= 1) {
+            dayGrossByNumber.set(dayNumber, (dayGrossByNumber.get(dayNumber) || 0) + gross);
+          } else {
+            unassignedGross += gross;
+          }
+        });
+        state.offerDraft.days_internal = Array.from({ length: travelPlanDayCount }, (_, index) => ({
+          ...createEmptyDayPriceInternal(index + 1),
+          day_number: index + 1,
+          amount_cents: dayGrossByNumber.get(index + 1) || 0,
+          tax_rate_basis_points: 0,
+          sort_order: index
+        }));
+        state.offerDraft.additional_items = appendSurchargeAdditionalItem(existingAdditionalItems, unassignedGross);
+      } else {
+        state.offerDraft.days_internal = Array.from({ length: travelPlanDayCount }, (_, index) => ({
+          ...createEmptyDayPriceInternal(index + 1),
+          day_number: index + 1,
+          amount_cents: 0,
+          tax_rate_basis_points: 0,
+          sort_order: index
+        }));
+        state.offerDraft.additional_items = appendSurchargeAdditionalItem(existingAdditionalItems, currentMainGross);
+      }
+      state.offerDraft.components = [];
+      state.offerDraft.trip_price_internal = null;
+      state.offerDraft.discount = existingDiscount;
+      return;
+    }
+
+    if (toDetailLevel === "component") {
+      if (fromDetailLevel === "day") {
+        const dayAmountByNumber = new Map(
+          existingDays.map((dayPrice, index) => [
+            index + 1,
+            Math.max(0, Math.round(computeOfferDayInternalLineTotals(dayPrice).line_gross_amount_cents || 0))
+          ])
+        );
+        state.offerDraft.components = Array.from({ length: travelPlanDayCount }, (_, index) =>
+          createEmptyComponentForDay(index + 1, dayAmountByNumber.get(index + 1) || 0)
+        );
+        state.offerDraft.additional_items = existingAdditionalItems;
+      } else {
+        state.offerDraft.components = Array.from({ length: travelPlanDayCount }, (_, index) =>
+          createEmptyComponentForDay(index + 1, 0)
+        );
+        state.offerDraft.additional_items = appendSurchargeAdditionalItem(existingAdditionalItems, currentMainGross);
+      }
+      state.offerDraft.days_internal = [];
+      state.offerDraft.trip_price_internal = null;
+      state.offerDraft.discount = existingDiscount;
+    }
+  }
+
   function ensureOfferStructureForDetailLevel(internalDetailLevel) {
     const normalizedDetailLevel = normalizeOfferDetailLevel(internalDetailLevel, "trip");
     if (normalizedDetailLevel === "trip") {
@@ -690,12 +876,17 @@ export function createBookingOfferComponentsModule(ctx) {
     }
     if (normalizedDetailLevel === "day") {
       const currentDays = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
-      if (currentDays.length) return;
-      const travelPlanDayCount = Array.isArray(state.travelPlanDraft?.days)
-        ? state.travelPlanDraft.days.length
-        : (Array.isArray(state.booking?.travel_plan?.days) ? state.booking.travel_plan.days.length : 0);
-      const seedCount = Math.max(1, travelPlanDayCount);
-      state.offerDraft.days_internal = Array.from({ length: seedCount }, (_, index) => createEmptyDayPriceInternal(index + 1));
+      const seedCount = Math.max(1, currentTravelPlanDayCount());
+      state.offerDraft.days_internal = Array.from({ length: seedCount }, (_, index) => {
+        const existing = currentDays.find((dayPrice) => Number(dayPrice?.day_number) === index + 1) || currentDays[index];
+        return {
+          ...createEmptyDayPriceInternal(index + 1),
+          ...(existing && typeof existing === "object" ? existing : {}),
+          day_number: index + 1,
+          label: bookingT("booking.offer.day_number.day", "Day {day}", { day: index + 1 }),
+          sort_order: index
+        };
+      });
     }
   }
 
@@ -748,20 +939,24 @@ export function createBookingOfferComponentsModule(ctx) {
     return rows.map((row, index) => {
       const fallback = fallbackDays[index] || createEmptyDayPriceInternal(index + 1);
       const dayNumberInput = row.querySelector("[data-offer-day-number]");
-      const labelInput = row.querySelector("[data-offer-day-label]");
-      const amountInput = row.querySelector("[data-offer-day-amount]");
+      const noteInput = row.querySelector("[data-offer-day-note]");
+      const amountInput = row.querySelector("[data-offer-day-price-incl-tax]") || row.querySelector("[data-offer-day-amount]");
       const taxInput = row.querySelector("[data-offer-day-tax-rate]");
-      const parsedAmount = parseMoneyInputValue(amountInput?.value ?? "", currency);
+      const parsedGrossAmount = parseMoneyInputValue(amountInput?.value ?? "", currency);
       const parsedDayNumber = Number.parseInt(String(dayNumberInput?.value || "").trim(), 10);
+      const taxRateBasisPoints = Number.isFinite(Number(taxInput?.value))
+        ? Math.max(0, Math.round(Number(taxInput.value) * 100))
+        : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints));
       return {
         ...fallback,
         day_number: Number.isInteger(parsedDayNumber) && parsedDayNumber >= 1 ? parsedDayNumber : index + 1,
-        label: String(labelInput?.value ?? fallback.label ?? "").trim(),
-        amount_cents: Number.isFinite(parsedAmount) ? Math.max(0, Math.round(parsedAmount)) : Math.max(0, Number(fallback.amount_cents || 0)),
-        tax_rate_basis_points: Number.isFinite(Number(taxInput?.value))
-          ? Math.max(0, Math.round(Number(taxInput.value) * 100))
-          : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints)),
+        label: String(fallback.label || "").trim(),
+        amount_cents: Number.isFinite(parsedGrossAmount)
+          ? Math.max(0, Math.round(deriveUnitNetAmountFromGross(parsedGrossAmount, taxRateBasisPoints)))
+          : Math.max(0, Number(fallback.amount_cents || 0)),
+        tax_rate_basis_points: taxRateBasisPoints,
         currency,
+        notes: String(noteInput?.value ?? fallback.notes ?? "").trim(),
         sort_order: index
       };
     });
@@ -772,6 +967,7 @@ export function createBookingOfferComponentsModule(ctx) {
     const rows = Array.from(document.querySelectorAll("[data-offer-additional-item-row]"));
     if (!rows.length) return fallbackItems;
     const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
+    const isDayDetailLevel = currentOfferInternalDetailLevel() === "day";
     return rows.map((row, index) => {
       const fallback = fallbackItems[index] || createEmptyAdditionalItem();
       const labelInput = row.querySelector("[data-offer-additional-label]");
@@ -788,7 +984,16 @@ export function createBookingOfferComponentsModule(ctx) {
         details: String(detailsInput?.value ?? fallback.details ?? "").trim(),
         day_number: Number.isInteger(parsedDayNumber) && parsedDayNumber >= 1 ? parsedDayNumber : null,
         quantity: Math.max(1, Math.round(Number(quantityInput?.value || fallback.quantity || 1))),
-        unit_amount_cents: Number.isFinite(parsedAmount) ? Math.max(0, Math.round(parsedAmount)) : Math.max(0, Number(fallback.unit_amount_cents || 0)),
+        unit_amount_cents: Number.isFinite(parsedAmount)
+          ? (isDayDetailLevel
+              ? deriveUnitNetAmountFromGross(
+                  Math.round(parsedAmount / Math.max(1, Math.round(Number(quantityInput?.value || fallback.quantity || 1)))),
+                  Number.isFinite(Number(taxInput?.value))
+                    ? Math.max(0, Math.round(Number(taxInput.value) * 100))
+                    : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints))
+                )
+              : Math.max(0, Math.round(parsedAmount)))
+          : Math.max(0, Number(fallback.unit_amount_cents || 0)),
         tax_rate_basis_points: Number.isFinite(Number(taxInput?.value))
           ? Math.max(0, Math.round(Number(taxInput.value) * 100))
           : Math.max(0, Number(fallback.tax_rate_basis_points || defaultOfferTaxRateBasisPoints)),
@@ -964,22 +1169,79 @@ export function createBookingOfferComponentsModule(ctx) {
     const showActionsCol = !readOnly;
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
     const dayPrices = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
-    const header = `<thead><tr><th>${escapeHtml(bookingT("booking.offer.day_number", "Day"))}</th><th>${escapeHtml(bookingT("booking.offer.label", "Label"))}</th><th>${escapeHtml(bookingT("booking.offer.tax", "Tax"))}</th><th>${escapeHtml(bookingT("booking.offer.unit", "Unit"))}</th><th>${escapeHtml(bookingT("booking.offer.total", "Total"))}</th>${showActionsCol ? '<th class="offer-col-actions"></th>' : ""}</tr></thead>`;
-    const rows = dayPrices.map((dayPrice, index) => {
+    const additionalItems = (Array.isArray(state.offerDraft?.additional_items) ? state.offerDraft.additional_items : [])
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => hasMeaningfulAdditionalItem(item));
+    const discount = state.offerDraft?.discount && typeof state.offerDraft.discount === "object"
+      ? state.offerDraft.discount
+      : null;
+    const header = `<thead><tr><th class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.day_number", "Day"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.note", "Note"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.price_including_tax", "Price (incl. tax)"))}</th>${showActionsCol ? '<th class="offer-col-actions"></th>' : ""}</tr></thead>`;
+    const dayRows = dayPrices.map((dayPrice, index) => {
       const totals = computeOfferDayInternalLineTotals(dayPrice);
+      const grossAmountCents = totals.line_gross_amount_cents;
       return `<tr data-offer-day-price-row="${index}">
-        <td><input data-offer-day-number type="number" min="1" step="1" value="${escapeHtml(String(dayPrice?.day_number || index + 1))}" ${readOnly ? "disabled" : ""} /></td>
-        <td><input data-offer-day-label type="text" value="${escapeHtml(String(dayPrice?.label || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.day_number.day", "Day {day}", { day: index + 1 }))}" ${readOnly ? "disabled" : ""} /></td>
-        <td><input data-offer-day-tax-rate type="number" min="0" step="0.01" value="${escapeHtml(formatTaxRateInputValue(dayPrice?.tax_rate_basis_points))}" ${readOnly ? "disabled" : ""} /></td>
-        <td><input data-offer-day-amount type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(dayPrice?.amount_cents || 0, currency))}" ${readOnly ? "disabled" : ""} /></td>
-        <td class="offer-col-price-total"><div class="offer-total-cell"><span class="offer-price-value" data-offer-main-total="${index}">${escapeHtml(formatMoneyDisplay(totals.line_gross_amount_cents, currency))}</span></div></td>
-        ${showActionsCol ? `<td class="offer-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-day="${index}">×</button></td>` : ""}
+        <td class="offer-col-day offer-col-day--day-mode">
+          <input data-offer-day-number type="hidden" value="${escapeHtml(String(dayPrice?.day_number || index + 1))}" />
+          <span>${escapeHtml(bookingT("booking.offer.day_number.day", "Day {day}", { day: dayPrice?.day_number || index + 1 }))}</span>
+        </td>
+        <td class="offer-col-details">
+          ${readOnly
+            ? escapeHtml(String(dayPrice?.notes || ""))
+            : `<input data-offer-day-note type="text" value="${escapeHtml(String(dayPrice?.notes || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.day_note_placeholder", "Note for the offer for this day"))}" />`}
+          <input data-offer-day-tax-rate type="hidden" value="${escapeHtml(formatTaxRateInputValue(dayPrice?.tax_rate_basis_points))}" />
+        </td>
+        <td class="offer-col-price-total">
+          <div class="offer-total-cell">
+            ${readOnly
+              ? `<span class="offer-price-value" data-offer-main-total="${index}">${escapeHtml(formatMoneyDisplay(grossAmountCents, currency))}</span>`
+              : `<input data-offer-day-price-incl-tax data-offer-main-total-input="${index}" type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(grossAmountCents, currency))}" />`}
+          </div>
+        </td>
+        ${showActionsCol ? `<td class="offer-col-actions"></td>` : ""}
       </tr>`;
     }).join("");
+    const adjustmentRows = [
+      ...additionalItems.map(({ item, index }) => {
+        const totals = computeOfferAdditionalItemLineTotals(item);
+        const noteValue = String(item?.details || item?.label || "").trim();
+        return `<tr data-offer-additional-item-row="${index}">
+          <td class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.pricing_adjustment_surcharge", "Surcharge"))}</td>
+          <td class="offer-col-details">${readOnly
+            ? escapeHtml(noteValue)
+            : `<input data-offer-additional-details type="text" value="${escapeHtml(noteValue)}" placeholder="${escapeHtml(bookingT("booking.offer.adjustment_note_placeholder", "Adjustment note"))}" />
+               <input data-offer-additional-label type="hidden" value="${escapeHtml(String(item?.label || "").trim())}" />
+               <input data-offer-additional-day-number type="hidden" value="${escapeHtml(String(item?.day_number || ""))}" />
+               <input data-offer-additional-quantity type="hidden" value="${escapeHtml(String(Math.max(1, Number(item?.quantity || 1))))}" />
+               <input data-offer-additional-tax-rate type="hidden" value="${escapeHtml(formatTaxRateInputValue(item?.tax_rate_basis_points))}" />`}</td>
+          <td class="offer-col-price-total"><div class="offer-total-cell">${readOnly
+            ? `<span class="offer-price-value" data-offer-additional-total="${index}">${escapeHtml(formatMoneyDisplay(totals.line_gross_amount_cents, currency))}</span>`
+            : `<input data-offer-additional-unit type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(totals.line_gross_amount_cents, currency))}" />`}</div></td>
+          ${showActionsCol ? `<td class="offer-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-additional="${index}">×</button></td>` : ""}
+        </tr>`;
+      }),
+      ...(discount
+        ? [(() => {
+            const totals = computeOfferDiscountLineTotals(discount);
+            return `<tr>
+              <td class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.pricing_adjustment_discount", "Discount"))}</td>
+              <td class="offer-col-details">${readOnly
+                ? escapeHtml(String(discount.reason || ""))
+                : `<input data-offer-discount-reason type="text" value="${escapeHtml(String(discount.reason || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}" />`}</td>
+              <td class="offer-col-price-total"><div class="offer-total-cell">${readOnly
+                ? `<span class="offer-price-value" data-offer-discount-total>${escapeHtml(formatMoneyDisplay(totals.line_gross_amount_cents, currency))}</span>`
+                : `<input data-offer-discount-amount type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(discount.amount_cents || 0, currency))}" />`}</div></td>
+              ${showActionsCol ? `<td class="offer-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-discount>${escapeHtml(bookingT("booking.offer.remove_discount", "Remove discount"))}</button></td>` : ""}
+            </tr>`;
+          })()]
+        : [])
+    ].join("");
+    const offerTotalValue = formatMoneyDisplay(resolveOfferTotalCents(), currency);
+    updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     const addRow = readOnly
       ? ""
-      : `<tr class="offer-total-row"><td colspan="5" class="offer-add-cell"><div class="offer-add-actions"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-day>${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</button></div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
-    return `${header}<tbody>${rows}${addRow}</tbody>`;
+      : `<tr class="offer-total-row"><td colspan="3" class="offer-add-cell"><div class="offer-add-actions"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-additional>${escapeHtml(bookingT("booking.offer.add_surcharge", "Add surcharge"))}</button>${discount ? "" : `<button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-discount>${escapeHtml(bookingT("booking.offer.add_discount", "Add discount"))}</button>`}</div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
+    const totalRow = `<tr class="offer-total-row"><td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.offer.total_including_tax", "Total (including tax)"))}:</strong></div></td><td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
+    return `${header}<tbody>${dayRows}${adjustmentRows}${totalRow}${addRow}</tbody>`;
   }
 
   function renderOfferTripMainTable() {
@@ -1000,6 +1262,10 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function renderAdditionalItemsTable() {
     if (!els.offer_additional_items_table) return;
+    if (currentOfferInternalDetailLevel() === "day") {
+      els.offer_additional_items_table.innerHTML = "";
+      return;
+    }
     const readOnly = !state.permissions.canEditBooking;
     const showActionsCol = !readOnly;
     const currency = normalizeCurrencyCode(state.offerDraft.currency || state.booking?.preferred_currency || "USD");
@@ -1026,6 +1292,11 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function renderDiscountEditor() {
     if (!els.offer_discount_editor) return;
+    if (currentOfferInternalDetailLevel() === "day") {
+      els.offer_discount_editor.hidden = true;
+      els.offer_discount_editor.innerHTML = "";
+      return;
+    }
     const readOnly = !state.permissions.canEditBooking;
     const currency = normalizeCurrencyCode(state.offerDraft?.currency || state.booking?.preferred_currency || "USD");
     const discount = state.offerDraft?.discount && typeof state.offerDraft.discount === "object"
@@ -1211,21 +1482,34 @@ export function createBookingOfferComponentsModule(ctx) {
     if (!els.offer_components_table || !state.permissions.canEditBooking) return;
     const syncOfferDayTotals = () => {
       state.offerDraft.days_internal = readOfferDraftDaysInternalForRender();
+      state.offerDraft.additional_items = readOfferDraftAdditionalItemsForRender();
+      state.offerDraft.discount = readOfferDraftDiscountForRender();
       state.offerDraft.total_price_cents = null;
       setOfferSaveEnabled(true);
       updateOfferTotalsInDom();
     };
-    els.offer_components_table.querySelectorAll("[data-offer-day-number], [data-offer-day-label], [data-offer-day-amount], [data-offer-day-tax-rate]").forEach((input) => {
+    els.offer_components_table.querySelectorAll("[data-offer-day-number], [data-offer-day-note], [data-offer-day-price-incl-tax], [data-offer-day-tax-rate], [data-offer-additional-details], [data-offer-additional-unit], [data-offer-discount-reason], [data-offer-discount-amount]").forEach((input) => {
       input.addEventListener("input", syncOfferDayTotals);
       input.addEventListener("change", syncOfferDayTotals);
     });
-    els.offer_components_table.querySelectorAll("[data-offer-add-day]").forEach((button) => {
-      button.addEventListener("click", addOfferDayInternal);
+    els.offer_components_table.querySelectorAll("[data-offer-add-additional]").forEach((button) => {
+      button.addEventListener("click", addOfferAdditionalItem);
     });
-    els.offer_components_table.querySelectorAll("[data-offer-remove-day]").forEach((button) => {
+    els.offer_components_table.querySelectorAll("[data-offer-remove-additional]").forEach((button) => {
       button.addEventListener("click", () => {
-        const index = Number(button.getAttribute("data-offer-remove-day"));
-        state.offerDraft.days_internal.splice(index, 1);
+        const index = Number(button.getAttribute("data-offer-remove-additional"));
+        state.offerDraft.additional_items.splice(index, 1);
+        setOfferSaveEnabled(true);
+        renderOfferComponentsTable();
+      });
+    });
+    els.offer_components_table.querySelectorAll("[data-offer-add-discount]").forEach((button) => {
+      button.addEventListener("click", addOfferDiscount);
+    });
+    els.offer_components_table.querySelectorAll("[data-offer-remove-discount]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!window.confirm(bookingT("booking.offer.remove_discount_confirm", "Remove this discount?"))) return;
+        state.offerDraft.discount = null;
         setOfferSaveEnabled(true);
         renderOfferComponentsTable();
       });
@@ -1912,8 +2196,12 @@ export function createBookingOfferComponentsModule(ctx) {
     if (!state.offerDraft || !state.permissions.canEditBooking) return;
     syncOfferDraftFromDom();
     resetComponentUiState();
-    const internalDetailLevel = normalizeOfferDetailLevel(nextValue, currentOfferInternalDetailLevel());
+    const previousDetailLevel = currentOfferInternalDetailLevel();
+    const internalDetailLevel = normalizeOfferDetailLevel(nextValue, previousDetailLevel);
+    applyDestructiveInternalDetailLevelTransition(previousDetailLevel, internalDetailLevel);
     state.offerDraft.offer_detail_level_internal = internalDetailLevel;
+    clearInactiveMainOfferStructures(internalDetailLevel);
+    state.offerDraft.total_price_cents = null;
     ensureOfferStructureForDetailLevel(internalDetailLevel);
     if (isVisibleDetailLevelFinerThanInternal(currentOfferVisibleDetailLevel(), internalDetailLevel)) {
       state.offerDraft.offer_detail_level_visible = internalDetailLevel;

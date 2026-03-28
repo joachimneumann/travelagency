@@ -356,13 +356,24 @@ function normalizeTeamMemberProfile(profile) {
     || "Team member";
   const description = resolveLocalizedStaticValue(profile?.description_i18n ?? profile?.description);
   const shortDescription = resolveLocalizedStaticValue(profile?.short_description_i18n ?? profile?.short_description);
+  const configuredPictureRef = resolveFrontendAssetUrl(profile?.picture_ref);
+  const fallbackPictureRef = `${API_BASE_ORIGIN}/public/v1/atp-staff-photos/${encodeURIComponent(`${normalizedUsername}.svg`)}`;
+  if (!configuredPictureRef) {
+    console.warn("[frontend-home] Team member picture_ref missing; using fallback staff photo URL.", {
+      username: normalizedUsername,
+      full_name: fullName,
+      fallback_picture_ref: fallbackPictureRef,
+      team_api_url: ATP_STAFF_TEAM_URL,
+      page_url: window.location.href
+    });
+  }
   return {
     username: normalizedUsername,
     fullName,
     role,
     description,
     shortDescription,
-    pictureRef: resolveFrontendAssetUrl(profile?.picture_ref) || `${API_BASE_ORIGIN}/public/v1/atp-staff-photos/${encodeURIComponent(`${normalizedUsername}.svg`)}`,
+    pictureRef: configuredPictureRef || fallbackPictureRef,
     appearsInTeamWebPage: profile?.appears_in_team_web_page !== false
   };
 }
@@ -460,13 +471,29 @@ function renderTeamSection() {
         style="--team-card-index:${memberIndex};"
       >
         <span class="team-card__photo-wrap">
-          <img class="team-card__photo" src="${escapeAttr(member.pictureRef)}" alt="${escapeAttr(member.fullName)}" loading="lazy" />
+          <img class="team-card__photo" src="${escapeAttr(member.pictureRef)}" alt="${escapeAttr(member.fullName)}" loading="lazy" data-team-member-photo="${escapeAttr(member.username)}" />
         </span>
         <span class="team-card__name">${escapeHTML(member.fullName)}</span>
         <span class="team-card__role">${escapeHTML(role)}</span>
       </button>
     `;
   }).join("");
+
+  els.teamGrid.querySelectorAll("[data-team-member-photo]").forEach((image) => {
+    if (!(image instanceof HTMLImageElement) || image.dataset.teamPhotoBound === "1") return;
+    image.dataset.teamPhotoBound = "1";
+    image.addEventListener("error", () => {
+      const username = normalizeText(image.getAttribute("data-team-member-photo")).toLowerCase();
+      const member = members.find((entry) => entry.username === username) || null;
+      console.warn("[frontend-home] Team member photo failed to load.", {
+        username,
+        full_name: member?.fullName || "",
+        image_src: image.currentSrc || image.src || "",
+        team_api_url: ATP_STAFF_TEAM_URL,
+        page_url: window.location.href
+      });
+    });
+  });
 
   if (!selected) {
     els.teamDetail.hidden = true;

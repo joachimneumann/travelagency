@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { access, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -98,14 +99,22 @@ export function resolveAtpStaffShortDescriptionText(profile, lang = "en") {
   );
 }
 
-function defaultPictureFilenameForUsername(username) {
+function avatarPictureFilenameForUsername(username) {
   const normalizedUsername = normalizeText(username).toLowerCase();
   return normalizedUsername ? `${normalizedUsername}.svg` : "";
 }
 
-function pictureFilenameFromStoredValue(value, username = "") {
+function preferredPictureFilenameForUsername(username, photosDir = "") {
+  const normalizedUsername = normalizeText(username).toLowerCase();
+  if (!normalizedUsername) return "";
+  const webpFilename = `${normalizedUsername}.webp`;
+  if (photosDir && existsSync(path.join(photosDir, webpFilename))) return webpFilename;
+  return avatarPictureFilenameForUsername(normalizedUsername);
+}
+
+function pictureFilenameFromStoredValue(value, username = "", photosDir = "") {
   const normalized = normalizeText(value);
-  if (!normalized) return defaultPictureFilenameForUsername(username);
+  if (!normalized) return preferredPictureFilenameForUsername(username, photosDir);
   const staticMatch = normalized.match(/\/content\/atp_staff\/photos\/([^/?#]+)$/i);
   const legacyPublicMatch = normalized.match(/\/public\/v1\/atp-staff-photos\/([^/?#]+)$/i);
   const candidate = staticMatch
@@ -113,11 +122,15 @@ function pictureFilenameFromStoredValue(value, username = "") {
     : legacyPublicMatch
       ? decodeURIComponent(legacyPublicMatch[1])
       : path.basename(normalized);
-  return normalizeText(candidate) || defaultPictureFilenameForUsername(username);
+  const normalizedCandidate = normalizeText(candidate);
+  const preferredFilename = preferredPictureFilenameForUsername(username, photosDir);
+  if (!normalizedCandidate) return preferredFilename;
+  if (normalizedCandidate === avatarPictureFilenameForUsername(username)) return preferredFilename;
+  return normalizedCandidate;
 }
 
-function pictureRefForFilename(filename, username = "") {
-  const resolved = pictureFilenameFromStoredValue(filename, username);
+function pictureRefForFilename(filename, username = "", photosDir = "") {
+  const resolved = pictureFilenameFromStoredValue(filename, username, photosDir);
   return resolved ? `/public/v1/atp-staff-photos/${encodeURIComponent(resolved)}` : "";
 }
 
@@ -275,14 +288,14 @@ function isEligibleStaffUser(user, allowedStaffRoleNames) {
   return collectRoleNames(user).some((role) => allowed.has(role));
 }
 
-function defaultStoredProfileForUser(user) {
+function defaultStoredProfileForUser(user, photosDir = "") {
   const username = normalizeText(user?.username).toLowerCase();
   return normalizeStoredProfile({
     username,
     name: defaultDisplayNameForUser(user),
     full_name: defaultFullNameForUser(user),
     friendly_short_name: defaultFriendlyShortNameForUser(user),
-    picture: defaultPictureFilenameForUsername(username),
+    picture: preferredPictureFilenameForUsername(username, photosDir),
     languages: [],
     destinations: [],
     appears_in_team_web_page: true
@@ -299,14 +312,14 @@ async function fileExists(filePath) {
   }
 }
 
-function mergeStoredProfileWithUser(profile, user) {
+function mergeStoredProfileWithUser(profile, user, photosDir = "") {
   const normalizedProfile = normalizeStoredProfile(profile);
   const username = normalizeText(user?.username || normalizedProfile?.username).toLowerCase();
   if (!username) return null;
   const defaultProfile = defaultStoredProfileForUser({
     username,
     name: defaultDisplayNameForUser(user || normalizedProfile || {})
-  });
+  }, photosDir);
   const normalizedPosition = normalizePositionMap(normalizedProfile?.position);
   const normalizedDescription = normalizeDescriptionMap(normalizedProfile?.description);
   const normalizedShortDescription = normalizeShortDescriptionMap(normalizedProfile?.short_description);
@@ -328,7 +341,7 @@ function mergeStoredProfileWithUser(profile, user) {
     ...(normalizeTeamOrder(normalizedProfile?.team_order) !== undefined
       ? { team_order: normalizeTeamOrder(normalizedProfile?.team_order) }
       : {}),
-    picture: pictureFilenameFromStoredValue(normalizedProfile?.picture, username) || defaultProfile.picture,
+    picture: pictureFilenameFromStoredValue(normalizedProfile?.picture, username, photosDir) || defaultProfile.picture,
     languages: normalizeLanguageCodes(normalizedProfile?.languages),
     destinations: normalizeCountryCodes(normalizedProfile?.destinations),
     appears_in_team_web_page: normalizeAppearsInTeamWebPage(
@@ -340,8 +353,8 @@ function mergeStoredProfileWithUser(profile, user) {
   };
 }
 
-function buildResponseProfile(profile, user) {
-  const merged = mergeStoredProfileWithUser(profile, user);
+function buildResponseProfile(profile, user, photosDir = "") {
+  const merged = mergeStoredProfileWithUser(profile, user, photosDir);
   if (!merged) return null;
   const {
     picture,
@@ -352,7 +365,7 @@ function buildResponseProfile(profile, user) {
   } = merged;
   return {
     ...responseBase,
-    picture_ref: pictureRefForFilename(picture, merged.username),
+    picture_ref: pictureRefForFilename(picture, merged.username, photosDir),
     position: resolveLocalizedText(position, "en", ""),
     position_i18n: positionEntriesFromMap(position),
     description: resolveLocalizedText(description, "en", ""),
@@ -405,8 +418,8 @@ export function createAtpStaffDirectory({
   async function writeAvatarIfMissing(profile) {
     const username = normalizeText(profile?.username).toLowerCase();
     if (!username) return false;
-    const picture = pictureFilenameFromStoredValue(profile?.picture, username);
-    const defaultPicture = defaultPictureFilenameForUsername(username);
+    const picture = pictureFilenameFromStoredValue(profile?.picture, username, photosDir);
+    const defaultPicture = avatarPictureFilenameForUsername(username);
     if (picture && picture !== defaultPicture) return false;
     const outputPath = path.join(photosDir, defaultPicture);
     if (await fileExists(outputPath)) return false;
@@ -560,7 +573,7 @@ export function createAtpStaffDirectory({
     for (const profile of payload.items) {
       if (await writeAvatarIfMissing(profile)) changed = true;
       if (!normalizeText(profile.picture)) {
-        profile.picture = defaultPictureFilenameForUsername(profile.username);
+        profile.picture = preferredPictureFilenameForUsername(profile.username, photosDir);
         changed = true;
       }
     }
@@ -638,7 +651,7 @@ export function createAtpStaffDirectory({
     await writeAvatarIfMissing({
       username: profile.username,
       name: normalizeText(profile?.full_name) || normalizeText(profile?.name) || profile.username,
-      picture: pictureFilenameFromStoredValue(profile?.picture_ref, profile.username)
+      picture: pictureFilenameFromStoredValue(profile?.picture_ref, profile.username, photosDir)
     }).catch(() => {});
   }
 
@@ -651,7 +664,7 @@ export function createAtpStaffDirectory({
       .find((item) => normalizeText(item?.username).toLowerCase() === username) || null;
     if (!user) return null;
     const stored = await readStoredProfileByUsername(username);
-    const staffProfile = buildResponseProfile(stored, user);
+    const staffProfile = buildResponseProfile(stored, user, photosDir);
     await ensureAvatarForResponseProfile(staffProfile);
     return {
       ...user,
@@ -671,7 +684,7 @@ export function createAtpStaffDirectory({
     const stored = await readProfiles();
     const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
     const currentStored = itemsByUsername.get(username) || null;
-    const current = mergeStoredProfileWithUser(currentStored, user);
+    const current = mergeStoredProfileWithUser(currentStored, user, photosDir);
     const nextStored = normalizeStoredProfile({
       username,
       name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
@@ -683,7 +696,7 @@ export function createAtpStaffDirectory({
           : current?.position,
       friendly_short_name: input?.friendly_short_name !== undefined ? input.friendly_short_name : current?.friendly_short_name,
       team_order: input?.team_order !== undefined ? input.team_order : current?.team_order,
-      picture: pictureFilenameFromStoredValue(currentStored?.picture ?? current?.picture_ref, username),
+      picture: pictureFilenameFromStoredValue(currentStored?.picture ?? current?.picture_ref, username, photosDir),
       languages: Array.isArray(input?.languages) ? input.languages : current?.languages,
       destinations: Array.isArray(input?.destinations) ? input.destinations : current?.destinations,
       appears_in_team_web_page: input?.appears_in_team_web_page !== undefined
@@ -709,7 +722,7 @@ export function createAtpStaffDirectory({
 
   async function setPictureRefByUsername(rawUsername, pictureRef) {
     const username = normalizeText(rawUsername).toLowerCase();
-    const normalizedPicture = pictureFilenameFromStoredValue(pictureRef, username);
+    const normalizedPicture = pictureFilenameFromStoredValue(pictureRef, username, photosDir);
     if (!username || !normalizedPicture) return null;
     const users = await listAllAtpUsers().catch(() => []);
     const user = (Array.isArray(users) ? users : [])
@@ -720,7 +733,7 @@ export function createAtpStaffDirectory({
     const stored = await readProfiles();
     const itemsByUsername = new Map(stored.items.map((profile) => [profile.username, profile]));
     const currentStored = itemsByUsername.get(username) || null;
-    const current = mergeStoredProfileWithUser(currentStored, user);
+    const current = mergeStoredProfileWithUser(currentStored, user, photosDir);
     const nextStored = normalizeStoredProfile({
       username,
       name: normalizeText(currentStored?.name) || normalizeText(current?.name) || defaultDisplayNameForUser(user),
@@ -749,7 +762,7 @@ export function createAtpStaffDirectory({
       username,
       name: normalizeText(user?.name) || username
     });
-    return setPictureRefByUsername(username, defaultPictureFilenameForUsername(username));
+    return setPictureRefByUsername(username, preferredPictureFilenameForUsername(username, photosDir));
   }
 
   async function resolveAssignedStaffProfile(keycloakUserId) {
@@ -762,7 +775,7 @@ export function createAtpStaffDirectory({
     if (!isEligibleStaffUser(user, allowedStaffRoleNames)) return null;
     const username = normalizeText(user?.username).toLowerCase();
     const stored = username ? await readStoredProfileByUsername(username) : null;
-    const profile = buildResponseProfile(stored, user);
+    const profile = buildResponseProfile(stored, user, photosDir);
     await ensureAvatarForResponseProfile(profile);
     return profile;
   }
@@ -781,7 +794,7 @@ export function createAtpStaffDirectory({
     for (const user of users) {
       const username = normalizeText(user?.username).toLowerCase();
       if (!username) continue;
-      const profile = buildResponseProfile(storedByUsername.get(username) || null, user);
+      const profile = buildResponseProfile(storedByUsername.get(username) || null, user, photosDir);
       if (!profile || profile.appears_in_team_web_page !== true) continue;
       await ensureAvatarForResponseProfile(profile);
       items.push(profile);
@@ -802,7 +815,7 @@ export function createAtpStaffDirectory({
     for (const user of users) {
       const username = normalizeText(user?.username).toLowerCase();
       if (!username) continue;
-      const staffProfile = buildResponseProfile(storedByUsername.get(username) || null, user);
+      const staffProfile = buildResponseProfile(storedByUsername.get(username) || null, user, photosDir);
       await ensureAvatarForResponseProfile(staffProfile);
       items.push({
         ...user,

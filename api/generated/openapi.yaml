@@ -5076,6 +5076,7 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         offer_detail_level_internal:
           "$ref": "#/components/schemas/OfferDetailLevel"
+          description: Canonical internal pricing structure. Only the rows for the selected internal detail level remain active after normalization.
         offer_detail_level_visible:
           "$ref": "#/components/schemas/OfferDetailLevel"
         category_rules:
@@ -5086,20 +5087,25 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+          description: Active only when offer_detail_level_internal is component.
         trip_price_internal:
           "$ref": "#/components/schemas/BookingOfferTripPriceInternal"
           nullable: true
+          description: Active only when offer_detail_level_internal is trip.
         days_internal:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferDayPriceInternal"
+          description: Active only when offer_detail_level_internal is day.
         additional_items:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferAdditionalItem"
+          description: Additional surcharge items that survive internal detail level transitions.
         discount:
           "$ref": "#/components/schemas/BookingOfferDiscount"
           nullable: true
+          description: Discount that survives internal detail level transitions.
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
         quotation_summary:
@@ -5754,6 +5760,7 @@ components:
           "$ref": "#/components/schemas/ATPCurrencyCode"
         offer_detail_level_internal:
           "$ref": "#/components/schemas/OfferDetailLevel"
+          description: Canonical internal pricing structure. Only the rows for the selected internal detail level remain active after normalization.
         offer_detail_level_visible:
           "$ref": "#/components/schemas/OfferDetailLevel"
         category_rules:
@@ -5764,20 +5771,25 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferComponent"
+          description: Active only when offer_detail_level_internal is component.
         trip_price_internal:
           "$ref": "#/components/schemas/BookingOfferTripPriceInternal"
           nullable: true
+          description: Active only when offer_detail_level_internal is trip.
         days_internal:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferDayPriceInternal"
+          description: Active only when offer_detail_level_internal is day.
         additional_items:
           type: array
           items:
             "$ref": "#/components/schemas/BookingOfferAdditionalItem"
+          description: Additional surcharge items that survive internal detail level transitions.
         discount:
           "$ref": "#/components/schemas/BookingOfferDiscount"
           nullable: true
+          description: Discount that survives internal detail level transitions.
         totals:
           "$ref": "#/components/schemas/BookingOfferTotals"
         quotation_summary:

@@ -66,10 +66,10 @@ export function createBookingOfferModule(ctx) {
 
   function inferInternalOfferDetailLevel(source, fallback = "trip") {
     const explicit = String(source?.offer_detail_level_internal || "").trim().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
     if (Array.isArray(source?.components) && source.components.length) return "component";
     if (Array.isArray(source?.days_internal) && source.days_internal.length) return "day";
     if (source?.trip_price_internal && typeof source.trip_price_internal === "object") return "trip";
-    if (Object.prototype.hasOwnProperty.call(OFFER_DETAIL_LEVEL_ORDER, explicit)) return explicit;
     return fallback;
   }
 
@@ -131,12 +131,27 @@ export function createBookingOfferModule(ctx) {
     const currentValue = normalizeOfferDetailLevel(state.offerDraft?.offer_detail_level_internal, "trip");
     const normalizedNextValue = normalizeOfferDetailLevel(nextValue, currentValue);
     pendingInternalDetailLevelSelection = { nextValue: normalizedNextValue, resolver: null };
+    const detailLevelEffects = {
+      trip: bookingT(
+        "booking.offer.internal_detail_level_warning_effect_trip",
+        "The offer will keep one trip total only. Day rows, component rows, surcharges, and discounts will be deleted."
+      ),
+      day: bookingT(
+        "booking.offer.internal_detail_level_warning_effect_day",
+        "The offer will keep day rows only. If you switch from trip, every day starts at 0 and the previous total becomes one surcharge. If you switch from component, components are deleted and summed into days, with undated components moved into one surcharge."
+      ),
+      component: bookingT(
+        "booking.offer.internal_detail_level_warning_effect_component",
+        "The offer will keep component rows only. If you switch from trip, one component row per travel-plan day starts at 0 and the previous total becomes one surcharge. If you switch from day, one component row per travel-plan day is created from the day totals."
+      )
+    };
     els.offer_detail_level_confirm_message.textContent = bookingT(
       "booking.offer.internal_detail_level_warning",
-      "Changing the internal offer detail level from {from} to {to} will aggregate offer details. More detailed breakdown data will be lost. If needed, the customer-facing offer detail level will also switch to stay at the same or a more coarse level.",
+      "Changing the internal offer detail level from {from} to {to} is destructive. Existing internal pricing rows will be deleted and rebuilt for the new structure. {effect} If needed, the customer-facing offer detail level will also switch to stay at the same or a more coarse level.",
       {
         from: formatOfferDetailLevelLabel(currentValue).toLowerCase(),
-        to: formatOfferDetailLevelLabel(normalizedNextValue).toLowerCase()
+        to: formatOfferDetailLevelLabel(normalizedNextValue).toLowerCase(),
+        effect: detailLevelEffects[normalizedNextValue] || ""
       }
     );
     els.offer_detail_level_confirm_modal.hidden = false;

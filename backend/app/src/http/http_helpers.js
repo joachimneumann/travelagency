@@ -141,6 +141,7 @@ export function createHttpHelpers({ corsOrigin }) {
   function getMimeTypeFromExt(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     if (ext === ".pdf") return "application/pdf";
+    if (ext === ".svg") return "image/svg+xml";
     if (ext === ".webp") return "image/webp";
     if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
     if (ext === ".png") return "image/png";
