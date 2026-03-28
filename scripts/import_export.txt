@@ -15,4 +15,4 @@ scp -r atp:/srv/asiatravelplan/content .
 cp -r content/atp_staff backup
 
 ## restore from backup
-cp -r backup content/atp_staff
+cp -r backup/* content
