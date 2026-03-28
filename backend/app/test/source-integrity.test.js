@@ -360,13 +360,28 @@ test("booking person modal exposes traveler-details link actions and the public 
   );
   assert.match(
     travelerDetailsScript,
-    /<select id="traveler_preferred_language"[\s\S]*renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*<select id="traveler_nationality"[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)[\s\S]*booking-person-modal__document-switch[\s\S]*data-document-switch="passport"[\s\S]*data-document-switch="national_id"/,
-    "Public traveler-details form should render dropdowns for preferred language and nationality plus the same document switch pattern as the backend person modal"
+    /renderTravelerLanguageOptions\(traveler\.preferred_language\)[\s\S]*renderCountryOptions\(traveler\.nationality, "Select nationality"\)/,
+    "Public traveler-details form should render dropdowns for preferred language and nationality"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /const supportsNationalId = travelerSupportsNationalId\(traveler\);[\s\S]*traveler-details-document__section[\s\S]*supportsNationalId \? `[\s\S]*data-document-switch="passport"[\s\S]*data-document-switch="national_id"[\s\S]*` : ""/,
+    "Public traveler-details form should only expose the ID-card switch for Vietnamese travelers"
   );
   assert.match(
     travelerDetailsScript,
     /const supportsNoExpirationDate = documentType === "national_id";[\s\S]*supportsNoExpirationDate && document\.no_expiration_date[\s\S]*supportsNoExpirationDate \? `[\s\S]*No expiration date[\s\S]*traveler-details-document__checkbox--placeholder/,
     "Public traveler-details form should only expose the no-expiration control for ID cards while reserving the same layout slot for passports"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /const documentSectionLabel = supportsNationalId \? "Travel document" : "Passport";[\s\S]*<label>\$\{escapeHtml\(documentSectionLabel\)\}<\/label>/,
+    "Public traveler-details form should relabel the document section to Passport for non-Vietnamese travelers"
+  );
+  assert.match(
+    travelerDetailsScript,
+    /requestJson\(`\/documents\/\$\{encodeURIComponent\(documentType\)\}\/picture`, \{[\s\S]*method: "POST"[\s\S]*data_base64: await fileToBase64\(file\)/,
+    "Public traveler-details page should upload the active passport or ID image through the public document-picture endpoint"
   );
   assert.match(
     travelerDetailsScript,

@@ -9,26 +9,17 @@ Then Automatically derive the stage and write a description of the stage and las
 - rephrase to "Assisted by our team member xxx"
 - when the Qualification is empty in the atps_staff, use the mobile description
 
+* atp_admin can not be assigned to a booking, only atp_staff
 
 # tour guide / ATP staff
 
-Add a new section on Booking HTML just above the travel plan with the internal offer detail level that allows the atp_staff to choose between the three internal offer detail levels (trip, day and component). Don't make this a collapsible section but rather one big pill where only one of the three can and must be active (like a 3 state toggle button). The default is trip.
-exactly one internal offer detail is active at any time and the other two are deactivated. When switching to a coarser granularity, show a modal pop-up warning that indicates that offer details will be aggregated and lost. 
-Below show another equally designed selector: customer facing offer detail level, which must be coarser than the internal one.
-
-
-
-* request passport/ID card (vietnamese only) picture
-
-* in traveler-details.html, after "Send traveler details to Asia Travel Plan" the confirmation should be "your data has been sent to AsiaTravePlan".
-
-* In the traveler details, show ID card only when the nationality of the traveler is Vietnamese. Otherwise, remove the pill that allows you to switch between passport and ID, and just replace the title "travel document" with "passport". 
+* in traveler-details.html:
+- after "Send traveler details to Asia Travel Plan" the confirmation should be "Your details have been transmitted to AsiaTravePlan".
+- If nationality is VI: keep the cice between Passport and ID card.
+- If the nationality is different: change the title "Travel document" to "Passport" and remove the ID card option
+- Allow uploading a picture of the passport or ID card
 
 * in booking.html when clicking on the traveler, load the data from the backend. THe traveler might have submitted his data.
-
-* add food preferences and allergies to persons
-
-* add hotel room preference: Single Double
 
 * Create model and storage space for practical tips and emergency numbers for each country. This information is not used at this point in time.
 

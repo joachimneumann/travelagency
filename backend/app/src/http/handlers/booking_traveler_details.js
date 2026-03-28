@@ -137,7 +137,8 @@ function buildPublicVisiblePerson(bookingId, person) {
         ...(String(document.issuing_country || "").trim() ? { issuing_country: document.issuing_country } : {}),
         ...(String(document.issued_on || "").trim() ? { issued_on: document.issued_on } : {}),
         ...(document.no_expiration_date === true ? { no_expiration_date: true } : {}),
-        ...(String(document.expires_on || "").trim() ? { expires_on: document.expires_on } : {})
+        ...(String(document.expires_on || "").trim() ? { expires_on: document.expires_on } : {}),
+        ...(String(document.document_picture_ref || "").trim() ? { document_picture_ref: document.document_picture_ref } : {})
       }))
     } : {})
   };
@@ -271,7 +272,15 @@ export function createBookingTravelerDetailsHandlers(deps) {
     incrementBookingRevision,
     travelerDetailsTokenConfig,
     getPrincipal,
-    canEditBooking
+    canEditBooking,
+    path,
+    randomUUID,
+    TEMP_UPLOAD_DIR,
+    BOOKING_PERSON_PHOTOS_DIR,
+    writeFile,
+    rm,
+    processBookingPersonImageToWebp,
+    getBookingPersons
   } = deps;
 
   const travelerDetailsTokenSecret = normalizeText(travelerDetailsTokenConfig?.secret);
@@ -283,6 +292,38 @@ export function createBookingTravelerDetailsHandlers(deps) {
       secret: travelerDetailsTokenSecret,
       now: nowIso()
     });
+  }
+
+  function upsertPersonDocumentPicture(person, documentType, pictureRef, timestamp) {
+    const normalizedDocumentType = String(documentType || "").trim().toLowerCase();
+    const personId = String(person?.id || "").trim() || "person";
+    const documents = Array.isArray(person?.documents) ? person.documents : [];
+    let found = false;
+    const nextDocuments = documents.map((document, index) => {
+      if (String(document?.document_type || "").trim().toLowerCase() !== normalizedDocumentType) return document;
+      found = true;
+      return {
+        ...document,
+        id: String(document?.id || `${personId}_${normalizedDocumentType}_${index + 1}`).trim(),
+        document_type: normalizedDocumentType,
+        document_picture_ref: pictureRef,
+        created_at: String(document?.created_at || "").trim() || timestamp,
+        updated_at: timestamp
+      };
+    });
+    if (!found) {
+      nextDocuments.push({
+        id: `${personId}_${normalizedDocumentType}`,
+        document_type: normalizedDocumentType,
+        document_picture_ref: pictureRef,
+        created_at: timestamp,
+        updated_at: timestamp
+      });
+    }
+    return {
+      ...person,
+      documents: nextDocuments
+    };
   }
 
   async function handlePostBookingPersonTravelerDetailsLink(req, res, [bookingId, personId]) {
@@ -416,9 +457,94 @@ export function createBookingTravelerDetailsHandlers(deps) {
     }, PRIVATE_CACHE_HEADERS);
   }
 
+  async function handleUploadPublicTravelerDocumentPicture(req, res, [bookingId, personId, rawDocumentType]) {
+    let payload;
+    try {
+      payload = await readBodyJson(req);
+    } catch (error) {
+      sendJson(res, 400, { error: error?.message || "Invalid JSON payload" }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const documentType = String(rawDocumentType || "").trim().toLowerCase();
+    if (!PUBLIC_TRAVELER_DOCUMENT_TYPES.has(documentType)) {
+      sendJson(res, 404, { error: "Document type not found" }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const store = await readStore();
+    const booking = store.bookings.find((item) => item.id === bookingId);
+    if (!booking) {
+      sendJson(res, 404, { error: "Booking not found" }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const tokenCheck = verifyPublicTravelerDetailsToken({ req, bookingId, personId });
+    if (!tokenCheck.ok) {
+      const status = tokenCheck.code === "TOKEN_EXPIRED" ? 410 : 401;
+      sendJson(res, status, { error: tokenCheck.error }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const persons = getBookingPersons(booking);
+    const personIndex = persons.findIndex((person) => String(person?.id || "").trim() === String(personId || "").trim());
+    if (personIndex < 0) {
+      sendJson(res, 404, { error: "Person not found" }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const filename = String(payload?.filename || "").trim() || `${personId}-${documentType}.upload`;
+    const base64 = String(payload?.data_base64 || "").trim();
+    if (!base64) {
+      sendJson(res, 422, { error: "data_base64 is required" }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const sourceBuffer = Buffer.from(base64, "base64");
+    if (!sourceBuffer.length) {
+      sendJson(res, 422, { error: "Invalid base64 image payload" }, PRIVATE_CACHE_HEADERS);
+      return;
+    }
+
+    const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${personId}-${documentType}-${randomUUID()}${path.extname(filename) || ".upload"}`);
+    const outputName = `${personId}-${documentType}-${Date.now()}.webp`;
+    const outputRelativePath = `${bookingId}/${outputName}`;
+    const outputPath = path.join(BOOKING_PERSON_PHOTOS_DIR, outputRelativePath);
+
+    try {
+      await writeFile(tempInputPath, sourceBuffer);
+      await processBookingPersonImageToWebp(tempInputPath, outputPath);
+    } catch (error) {
+      sendJson(res, 500, { error: "Image conversion failed", detail: String(error?.message || error) }, PRIVATE_CACHE_HEADERS);
+      return;
+    } finally {
+      await rm(tempInputPath, { force: true });
+    }
+
+    const timestamp = nowIso();
+    const pictureRef = `/public/v1/booking-person-photos/${outputRelativePath}`;
+    persons[personIndex] = upsertPersonDocumentPicture(persons[personIndex], documentType, pictureRef, timestamp);
+    booking.persons = persons;
+    incrementBookingRevision(booking, "persons_revision");
+    booking.updated_at = timestamp;
+    addActivity(store, booking.id, "BOOKING_UPDATED", "public_link", `Traveler ${documentType === "national_id" ? "ID card" : "passport"} image uploaded via public link`);
+    await persistStore(store);
+
+    sendJson(
+      res,
+      200,
+      {
+        ...buildPublicTravelerDetailsAccessResponse(booking, persons[personIndex], tokenCheck.payload?.expires_at || ""),
+        saved_at: timestamp
+      },
+      PRIVATE_CACHE_HEADERS
+    );
+  }
+
   return {
     handlePostBookingPersonTravelerDetailsLink,
     handleGetPublicTravelerDetailsAccess,
-    handlePatchPublicTravelerDetails
+    handlePatchPublicTravelerDetails,
+    handleUploadPublicTravelerDocumentPicture
   };
 }

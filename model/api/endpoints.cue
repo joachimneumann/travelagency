@@ -164,6 +164,36 @@ package api
 		}]
 	},
 	{
+		key:           "public_traveler_document_picture_upload"
+		path:          "/public/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture"
+		method:        "POST"
+		tag:           "Public"
+		authenticated: false
+		requestType:   "EvidenceUpload"
+		responseType:  "PublicTravelerDetailsUpdateResponse"
+		parameters: [{
+			name:     "booking_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "person_id"
+			location: "path"
+			required: true
+			typeName: "Identifier"
+		}, {
+			name:     "document_type"
+			location: "path"
+			required: true
+			typeName: "string"
+		}, {
+			name:     "token"
+			location: "query"
+			required: true
+			typeName: "string"
+		}]
+	},
+	{
 		key:           "booking_person_traveler_details_link"
 		path:          "/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link"
 		method:        "POST"

@@ -3517,8 +3517,57 @@ textarea:focus-visible {
   margin-top: 0;
 }
 
+.traveler-details-card__grid--address {
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+}
+
+.traveler-details-card__grid--document-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.traveler-details-card__grid--document-two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.traveler-details-document__section {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.traveler-details-card__grid--document-fields .field,
+.traveler-details-card__grid--document-two-up .field {
+  min-width: 0;
+}
+
 .traveler-details-card__grid .field {
   align-content: start;
+}
+
+.traveler-details-card__field--full {
+  grid-column: 1 / -1;
+}
+
+.traveler-details-card__field--narrow {
+  grid-column: span 1;
+  max-width: 300px;
+  width: 100%;
+}
+
+.traveler-details-card__field--wide {
+  grid-column: span 1;
+  width: 100%;
+  padding-left: 0.75rem;
+  box-sizing: border-box;
+}
+
+#traveler_country_code {
+  max-width: 300px;
+}
+
+#traveler_issued_on,
+#traveler_expires_on {
+  max-width: 200px;
+  width: 100%;
 }
 
 .traveler-details-document__switch {
@@ -3577,6 +3626,50 @@ textarea:focus-visible {
   min-height: 1.75rem;
 }
 
+.traveler-details-document__picture-field {
+  align-content: start;
+}
+
+.traveler-details-card__grid--document-fields .field {
+  justify-self: start;
+}
+
+.traveler-details-card__grid--document-fields .field:nth-child(2) {
+  justify-self: end;
+}
+
+.traveler-details-card__grid--document-fields .field:last-child {
+  justify-self: end;
+}
+
+.traveler-details-document__picture-preview {
+  margin-top: 0.6rem;
+  min-height: 180px;
+  border: 1px dashed var(--line-cool-alpha);
+  border-radius: 16px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.traveler-details-document__picture-preview img {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  object-fit: cover;
+}
+
+.traveler-details-document__picture-empty,
+.traveler-details-document__picture-status {
+  color: var(--text-muted-strong);
+}
+
+.traveler-details-document__picture-status {
+  display: block;
+  margin-top: 0.45rem;
+}
+
 .traveler-details-actions {
   display: flex;
   justify-content: flex-start;
@@ -3605,7 +3698,12 @@ textarea:focus-visible {
   .booking-confirmation-form__grid,
   .booking-confirmation-summary__row,
   .traveler-details-summary__row,
-  .traveler-details-card__grid {
+  .traveler-details-card__grid,
+  .traveler-details-card__grid--document-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .traveler-details-card__grid--document-two-up {
     grid-template-columns: 1fr;
   }
 

@@ -4011,6 +4011,7 @@ test("public traveler details access and update use a signed temporary link with
   const updatePath = endpointPath("public_traveler_details_update")
     .replace("{booking_id}", bookingId)
     .replace("{person_id}", traveler.id);
+  const publicDocumentPicturePath = `/public/v1/bookings/${encodeURIComponent(bookingId)}/persons/${encodeURIComponent(traveler.id)}/documents/{document_type}/picture`;
   const updateResult = await requestJson(
     `${updatePath}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
     {},
@@ -4145,6 +4146,24 @@ test("public traveler details access and update use a signed temporary link with
   assert.equal(accessAfterResult.body.person.documents.length, 1);
   assert.equal(accessAfterResult.body.person.documents[0].document_number, "P1234567");
   assert.equal(accessAfterResult.body.privacy_notice, undefined);
+
+  if (HAS_MAGICK) {
+    const uploadResult = await requestJson(
+      `${publicDocumentPicturePath.replace("{document_type}", "passport")}?token=${encodeURIComponent(linkResult.body.traveler_details_token)}`,
+      {},
+      {
+        method: "POST",
+        body: {
+          filename: "passport.png",
+          data_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAB3YoTpAAAAAd0SU1FB+oDCgU5NQ3qg4IAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMTBUMDU6NTc6NTMrMDA6MDCtMWFJAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTEwVDA1OjU3OjUzKzAwOjAw3GzZ9QAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0xMFQwNTo1Nzo1MyswMDowMIt5+CoAAAAKSURBVAjXY2gAAACCAIHdQ2r0AAAAAElFTkSuQmCC"
+        }
+      }
+    );
+    assert.equal(uploadResult.status, 200);
+    const uploadedPassport = uploadResult.body.person.documents.find((document) => document.document_type === "passport");
+    assert.equal(typeof uploadedPassport?.document_picture_ref, "string");
+    assert.ok(uploadedPassport.document_picture_ref.includes("/public/v1/booking-person-photos/"));
+  }
 
   const invalidAccessResult = await requestJson(`${accessPath}?token=invalid-token`, {});
   assert.equal(invalidAccessResult.status, 401);

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-03-27T13:57:57Z
+# 2026-03-28T00:38:03Z
 
 ---
 openapi: 3.1.0
@@ -3965,13 +3965,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CountryCode"
-        qualification:
-          type: string
-          nullable: true
-        qualification_i18n:
-          type: array
-          items:
-            "$ref": "#/components/schemas/AtpStaffLocalizedTextEntry"
     CountryEmergencyContact:
       type: object
       required:
@@ -7349,13 +7342,6 @@ components:
         team_order:
           type: integer
           nullable: true
-        qualification:
-          type: string
-          nullable: true
-        qualification_i18n:
-          type: array
-          items:
-            "$ref": "#/components/schemas/AtpStaffLocalizedTextEntry"
     AtpStaffPhotoUploadRequest:
       type: object
       required:
@@ -7697,6 +7683,53 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicTravelerDetailsUpdateResponse"
+  "/public/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture":
+    post:
+      operationId: public_traveler_document_picture_upload
+      summary: Public Traveler Document Picture Upload
+      tags:
+      - Public
+      security: []
+      parameters:
+      - name: booking_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: document_type
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EvidenceUpload"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PublicTravelerDetailsUpdateResponse"
+        '201':
+          description: Created
           content:
             application/json:
               schema:

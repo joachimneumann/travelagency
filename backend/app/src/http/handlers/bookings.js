@@ -651,7 +651,8 @@ export function createBookingHandlers(deps) {
   const {
     handlePostBookingPersonTravelerDetailsLink,
     handleGetPublicTravelerDetailsAccess,
-    handlePatchPublicTravelerDetails
+    handlePatchPublicTravelerDetails,
+    handleUploadPublicTravelerDocumentPicture
   } = createBookingTravelerDetailsHandlers({
     readBodyJson,
     sendJson,
@@ -663,7 +664,15 @@ export function createBookingHandlers(deps) {
     incrementBookingRevision,
     travelerDetailsTokenConfig,
     getPrincipal,
-    canEditBooking
+    canEditBooking,
+    path,
+    randomUUID,
+    TEMP_UPLOAD_DIR,
+    BOOKING_PERSON_PHOTOS_DIR,
+    writeFile,
+    rm,
+    processBookingPersonImageToWebp,
+    getBookingPersons
   });
 
   const {
@@ -931,6 +940,7 @@ export function createBookingHandlers(deps) {
     handlePostBookingPersonTravelerDetailsLink,
     handleGetPublicTravelerDetailsAccess,
     handlePatchPublicTravelerDetails,
+    handleUploadPublicTravelerDocumentPicture,
     handlePatchGeneratedBookingOffer,
     handleDeleteGeneratedBookingOffer,
     handleGetGeneratedOfferPdf,

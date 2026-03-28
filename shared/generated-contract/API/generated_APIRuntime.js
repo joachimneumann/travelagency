@@ -242,6 +242,20 @@
         ]
       },
       {
+        key: "public_traveler_document_picture_upload",
+        path: "/public/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture",
+        method: "POST",
+        authenticated: false,
+        requestType: "EvidenceUpload",
+        responseType: "PublicTravelerDetailsUpdateResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_4),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_5),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_3)
+        ]
+      },
+      {
         key: "booking_person_traveler_details_link",
         path: "/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link",
         method: "POST",

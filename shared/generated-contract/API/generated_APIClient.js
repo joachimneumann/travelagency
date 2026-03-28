@@ -28,6 +28,8 @@ case "public_traveler_details_access":
   return RequestFactory.publicTravelerDetailsAccessRequest(options);
 case "public_traveler_details_update":
   return RequestFactory.publicTravelerDetailsUpdateRequest(options);
+case "public_traveler_document_picture_upload":
+  return RequestFactory.publicTravelerDocumentPictureUploadRequest(options);
 case "booking_person_traveler_details_link":
   return RequestFactory.bookingPersonTravelerDetailsLinkRequest(options);
 case "public_tours":

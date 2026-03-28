@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-03-27T13:57:57Z",
+  "generatedAt": "2026-03-28T00:38:03Z",
   "languages": [
     "en",
     "ar",
@@ -352,6 +352,41 @@
           "location": "path",
           "required": true,
           "typeName": "Identifier"
+        },
+        {
+          "name": "token",
+          "location": "query",
+          "required": true,
+          "typeName": "string"
+        }
+      ]
+    },
+    {
+      "key": "public_traveler_document_picture_upload",
+      "path": "/public/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture",
+      "method": "POST",
+      "tag": "Public",
+      "authenticated": false,
+      "requestType": "EvidenceUpload",
+      "responseType": "PublicTravelerDetailsUpdateResponse",
+      "parameters": [
+        {
+          "name": "booking_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "person_id",
+          "location": "path",
+          "required": true,
+          "typeName": "Identifier"
+        },
+        {
+          "name": "document_type",
+          "location": "path",
+          "required": true,
+          "typeName": "string"
         },
         {
           "name": "token",

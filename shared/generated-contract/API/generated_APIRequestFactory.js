@@ -148,6 +148,23 @@ export function publicTravelerDetailsUpdateRequest({ baseURL = '', params = {}, 
   };
 }
 
+export function publicTravelerDocumentPictureUploadPath(params = {}) {
+  return buildPath("/public/v1/bookings/{booking_id}/persons/{person_id}/documents/{document_type}/picture", params);
+}
+
+export function publicTravelerDocumentPictureUploadRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = publicTravelerDocumentPictureUploadPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "public_traveler_document_picture_upload",
+    method: "POST",
+    authenticated: false,
+    url,
+    headers,
+    body
+  };
+}
+
 export function bookingPersonTravelerDetailsLinkPath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/persons/{person_id}/traveler-details-link", params);
 }
