@@ -2587,11 +2587,12 @@ test("booking travel plan pdf includes the assigned ATP guide section with the g
   );
   assert.equal(pdfResult.status, 200);
   const decodedText = normalizeExtractedPdfText(decodePdfHexText(pdfResult.body));
-  assert.match(decodedText, /YourATPguide:JoachimCarlNeumann/);
+  assert.match(decodedText, /OurteammemberJoachimCarlNeumannwillassistyou/);
   assert.match(
     decodedText,
-    /JoachimfromAsiaTravelPlanwillkeepthisroutecomfortableandwellpacedforyou\.Specializesinsoft-pacedSoutheastAsiaitineraries/
+    /Specializesinsoft-pacedSoutheastAsiaitineraries/
   );
+  assert.doesNotMatch(decodedText, /JoachimfromAsiaTravelPlanwillkeepthisroutecomfortableandwellpacedforyou/);
   assert.doesNotMatch(decodedText, /Languages:DE·EN·VI|Languages:DEENVI/);
 });
 

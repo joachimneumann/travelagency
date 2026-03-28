@@ -749,8 +749,8 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
   const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
   const introName = textOrNull(resolveAtpGuideIntroName(profile));
   const guideTitle = guideFullName
-    ? `${pdfT(lang, "guide.section_title", "Your ATP guide")}: ${guideFullName}`
-    : pdfT(lang, "guide.section_title", "Your ATP guide");
+    ? pdfT(lang, "guide.section_title_named", "Our team member {name} will assist you", { name: guideFullName })
+    : pdfT(lang, "guide.section_title_fallback", "Our team member will assist you");
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
   const textWidth = doc.page.width - PAGE_MARGIN * 2 - 30 - photoWidth;
   const titleChoices = mixedFontChoices("bold", fonts);
@@ -775,7 +775,7 @@ function estimateGuideSectionHeight(doc, guideContext, fonts, lang) {
         name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
       })
     : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
-  const bodyText = qualificationText ? `${introText} ${qualificationText}` : introText;
+  const bodyText = qualificationText || introText;
   height += 6 + (
     bodyChoices.length
       ? measureMultifontTextHeight(doc, bodyText, {
@@ -801,8 +801,8 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
   const guideFullName = textOrNull(resolveAtpStaffFullName(profile));
   const introName = textOrNull(resolveAtpGuideIntroName(profile));
   const guideTitle = guideFullName
-    ? `${pdfT(lang, "guide.section_title", "Your ATP guide")}: ${guideFullName}`
-    : pdfT(lang, "guide.section_title", "Your ATP guide");
+    ? pdfT(lang, "guide.section_title_named", "Our team member {name} will assist you", { name: guideFullName })
+    : pdfT(lang, "guide.section_title_fallback", "Our team member will assist you");
   const cardWidth = doc.page.width - PAGE_MARGIN * 2;
   const cardHeight = estimateGuideSectionHeight(doc, guideContext, fonts, lang);
   const photoWidth = profile ? GUIDE_PHOTO_SIZE + 18 : 0;
@@ -860,7 +860,7 @@ function drawGuideSection(doc, startY, fonts, lang, guideContext, guidePhoto) {
         name: introName || pdfT(lang, "guide.fallback_name", "Your ATP guide")
       })
     : pdfT(lang, "guide.intro_generic", "An ATP travel specialist will be assigned to keep this route comfortable, practical, and easy to follow.");
-  const bodyText = qualificationText ? `${introText} ${qualificationText}` : introText;
+  const bodyText = qualificationText || introText;
 
   if (bodyChoices.length) {
     drawMultifontText(doc, bodyText, textX, y, {

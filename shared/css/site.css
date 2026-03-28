@@ -3676,12 +3676,36 @@ textarea:focus-visible {
 }
 
 .settings-staff-table__username-cell {
+  min-width: 170px;
   display: grid;
   gap: 0.15rem;
 }
 
+.settings-staff-table__username-display {
+  color: var(--text);
+}
+
 .settings-staff-table__username-name {
   color: var(--text-muted-strong);
+}
+
+.settings-staff-table__status-pill {
+  display: inline-block;
+  max-width: 400px;
+  padding: 0.28rem 0.5rem;
+  border-radius: 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-staff-table__status-pill--complete {
+  background: var(--success-surface-alpha);
+  color: var(--success-text-deep);
+}
+
+.settings-staff-table__status-pill--incomplete {
+  background: var(--error-surface-alpha);
+  color: var(--error-text);
 }
 
 .settings-staff-table__row--clickable {

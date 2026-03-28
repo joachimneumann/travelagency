@@ -101,6 +101,13 @@ const LANGUAGE_LABEL_BY_VALUE = new Map(
     .map((option) => [normalizeText(option?.value).toLowerCase(), normalizeText(option?.label) || normalizeText(option?.value).toUpperCase()])
 );
 
+const TOUR_DESTINATION_TO_COUNTRY_CODE = Object.freeze({
+  vietnam: "VN",
+  thailand: "TH",
+  cambodia: "KH",
+  laos: "LA"
+});
+
 const INVALID_TEAM_ORDER = "__invalid_team_order__";
 
 const state = {
@@ -323,6 +330,11 @@ function englishTextFromLocalizedEntries(entries) {
   );
 }
 
+function firstLocalizedProfileValue(entries, fallbackValue = "") {
+  return englishTextFromLocalizedEntries(entries)
+    || normalizeText(fallbackValue);
+}
+
 function parseTeamOrderInput(value) {
   const normalized = normalizeText(value);
   if (!normalized) {
@@ -336,6 +348,14 @@ function parseTeamOrderInput(value) {
     return { valid: false, isSet: false, value: null };
   }
   return { valid: true, isSet: true, value: parsed };
+}
+
+function normalizeStaffDestinationCode(value) {
+  const normalized = normalizeText(value).trim();
+  if (!normalized) return "";
+  const upper = normalized.toUpperCase();
+  if (/^[A-Z]{2}$/.test(upper)) return upper;
+  return TOUR_DESTINATION_TO_COUNTRY_CODE[normalized.toLowerCase()] || "";
 }
 
 function getStaffProfileForUsername(rawUsername) {
@@ -396,8 +416,8 @@ function renderStaff(items) {
   const header = `<thead><tr>
     <th>${escapeHtml(backendT("backend.users.photo", "Picture"))}</th>
     <th>${escapeHtml(backendT("backend.table.username", "Username"))}</th>
-    <th>${escapeHtml(backendT("backend.users.profile", "ATP profile"))}</th>
     <th class="keycloak-roles-col">${escapeHtml(backendT("backend.table.roles", "Roles"))}</th>
+    <th>${escapeHtml(backendT("backend.table.status", "Status"))}</th>
     <th class="backend-table-align-right">${escapeHtml(backendT("backend.table.active", "Active"))}</th>
   </tr></thead>`;
 
@@ -406,8 +426,11 @@ function renderStaff(items) {
       const username = normalizeText(staff?.username);
       const profile = getStaffProfileForUsername(username) || {};
       const photoRef = resolveStaffPhotoUrl(profile?.picture_ref);
-      const languages = formatLanguageList(profile?.languages);
-      const destinations = formatDestinationList(profile?.destinations);
+      const profileStatus = formatStaffProfileStatus(profile);
+      const displayName = normalizeText(profile?.full_name) || normalizeText(staff?.name) || "-";
+      const profileStatusClass = profileStatus === backendT("backend.users.status_complete", "complete")
+        ? "settings-staff-table__status-pill settings-staff-table__status-pill--complete"
+        : "settings-staff-table__status-pill settings-staff-table__status-pill--incomplete";
       const isSelected = username && username === state.selectedUsername;
       const isClickable = Boolean(state.permissions.canEditStaffProfiles && username);
       const rowClasses = [
@@ -419,16 +442,11 @@ function renderStaff(items) {
           ? `<img class="settings-staff-table__photo" src="${escapeHtml(photoRef)}" alt="${escapeHtml(staff?.name || username || "ATP staff")}" />`
           : `<div class="settings-staff-table__photo settings-staff-table__photo--placeholder"></div>`}</td>
         <td class="settings-staff-table__username-cell">
-          <div>${escapeHtml(username || "-")}</div>
-          <div class="micro settings-staff-table__username-name">${escapeHtml(staff?.name || "-")}</div>
-        </td>
-        <td>
-          <div class="settings-staff-table__profile-summary">
-            <div>${escapeHtml(languages || backendT("backend.users.no_languages", "No languages set"))}</div>
-            <div class="micro">${escapeHtml(destinations || backendT("backend.users.no_destinations", "No destinations set"))}</div>
-          </div>
+          <div class="settings-staff-table__username-display">${escapeHtml(displayName)}</div>
+          <div class="micro settings-staff-table__username-name">username: ${escapeHtml(username || "-")}</div>
         </td>
         <td class="keycloak-roles-col">${formatKeycloakRolesCell(staff)}</td>
+        <td><span class="${profileStatusClass}">${escapeHtml(profileStatus)}</span></td>
         <td class="backend-table-align-right">${staff.active ? escapeHtml(backendT("common.yes", "Yes")) : escapeHtml(backendT("common.no", "No"))}</td>
       </tr>`;
     })
@@ -436,6 +454,23 @@ function renderStaff(items) {
 
   const colSpan = 5;
   els.staffTable.innerHTML = `${header}<tbody>${rows || `<tr><td colspan="${colSpan}">${escapeHtml(backendT("backend.users.no_results", "No Keycloak users found"))}</td></tr>`}</tbody>`;
+}
+
+function formatStaffProfileStatus(profile) {
+  const missing = [];
+  const languages = Array.isArray(profile?.languages) ? profile.languages.filter(Boolean) : [];
+  const destinations = Array.isArray(profile?.destinations) ? profile.destinations.filter(Boolean) : [];
+  const position = firstLocalizedProfileValue(profile?.position_i18n, profile?.position);
+  const description = firstLocalizedProfileValue(profile?.description_i18n, profile?.description);
+  const shortDescription = firstLocalizedProfileValue(profile?.short_description_i18n, profile?.short_description);
+
+  if (!languages.length) missing.push(backendT("backend.users.status_missing_languages", "missing languages"));
+  if (!destinations.length) missing.push(backendT("backend.users.status_missing_destinations", "missing destinations"));
+  if (!position) missing.push(backendT("backend.users.status_missing_position", "missing position"));
+  if (!description) missing.push(backendT("backend.users.status_missing_description", "missing description"));
+  if (!shortDescription) missing.push(backendT("backend.users.status_missing_short_description", "missing short description"));
+
+  return missing.join(", ") || backendT("backend.users.status_complete", "complete");
 }
 
 function getSelectedUser() {
@@ -644,10 +679,14 @@ function renderLanguageChecklist() {
 
 function renderDestinationChecklist() {
   if (!els.staffEditorDestinations) return;
-  const current = new Set((Array.isArray(state.editor?.destinations) ? state.editor.destinations : []).map((code) => normalizeText(code).toUpperCase()));
+  const current = new Set(
+    (Array.isArray(state.editor?.destinations) ? state.editor.destinations : [])
+      .map((code) => normalizeStaffDestinationCode(code))
+      .filter(Boolean)
+  );
   const options = (Array.isArray(state.destinationOptions) ? state.destinationOptions : [])
     .map((option) => ({
-      value: normalizeText(option?.code || option?.value).toUpperCase(),
+      value: normalizeStaffDestinationCode(option?.code || option?.value),
       label: normalizeText(option?.label) || normalizeText(option?.code || option?.value).toUpperCase()
     }))
     .filter((option) => option.value);
@@ -1192,7 +1231,8 @@ function handleDestinationToggle(event) {
   const input = event.target.closest("[data-staff-destination]");
   if (!input) return;
   const set = new Set(Array.isArray(state.editor.destinations) ? state.editor.destinations : []);
-  const value = normalizeText(input.getAttribute("data-staff-destination")).toUpperCase();
+  const value = normalizeStaffDestinationCode(input.getAttribute("data-staff-destination"));
+  if (!value) return;
   if (input.checked) set.add(value);
   else set.delete(value);
   state.editor.destinations = Array.from(set);
@@ -1264,7 +1304,13 @@ async function saveSelectedStaffProfile() {
     showEditorStatus(backendT("backend.users.languages_required", "Select at least one language."), true);
     return;
   }
-  const destinations = Array.from(new Set((Array.isArray(state.editor?.destinations) ? state.editor.destinations : []).map((code) => normalizeText(code).toUpperCase()).filter(Boolean)));
+  const destinations = Array.from(
+    new Set(
+      (Array.isArray(state.editor?.destinations) ? state.editor.destinations : [])
+        .map((code) => normalizeStaffDestinationCode(code))
+        .filter(Boolean)
+    )
+  );
 
   const positionI18n = normalizePositionEntriesForSave();
   const descriptionI18n = normalizeDescriptionEntriesForSave();
@@ -1417,7 +1463,8 @@ function getDisplayedKeycloakRoles(user) {
 }
 
 function formatKeycloakRolesCell(user) {
-  return escapeHtml(formatKeycloakRoleList(getDisplayedKeycloakRoles(user)));
+  const items = getDisplayedKeycloakRoles(user);
+  return items.length ? items.map((role) => escapeHtml(role)).join("<br>") : "-";
 }
 
 function fileToBase64(file) {
