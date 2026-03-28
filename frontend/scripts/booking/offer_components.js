@@ -185,6 +185,14 @@ export function createBookingOfferComponentsModule(ctx) {
     };
   }
 
+  function offerDayName(dayNumber) {
+    const normalizedDayNumber = Number(dayNumber || 0);
+    if (!Number.isFinite(normalizedDayNumber) || normalizedDayNumber < 1) return "";
+    const travelDay = (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [])[normalizedDayNumber - 1];
+    if (!travelDay) return "";
+    return resolveLocalizedEditorBranchText(travelDay.title_i18n ?? travelDay.title, "en", "").trim();
+  }
+
   function computeOfferComponentUnitGrossAmount(componentOrValues) {
     const unitAmount = Math.max(0, Number(componentOrValues?.unit_amount_cents || 0));
     const taxBasisPoints = Math.max(0, Number(componentOrValues?.tax_rate_basis_points || 0));
@@ -1199,15 +1207,18 @@ export function createBookingOfferComponentsModule(ctx) {
     const discount = state.offerDraft?.discount && typeof state.offerDraft.discount === "object"
       ? state.offerDraft.discount
       : null;
-    const header = `<thead><tr><th class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.day_number", "Day"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.note", "Note"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.price_including_tax", "Price (incl. tax)"))}</th>${showActionsCol ? '<th class="offer-col-actions"></th>' : ""}</tr></thead>`;
+    const header = `<thead><tr><th class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.day", "Day"))}</th><th class="offer-col-name">${escapeHtml(bookingT("booking.offer.name", "Name"))}</th><th class="offer-col-details">${escapeHtml(bookingT("booking.offer.note", "Note"))}</th><th class="offer-col-price-total">${escapeHtml(bookingT("booking.offer.price_including_tax", "Price (incl. tax)"))}</th>${showActionsCol ? '<th class="offer-col-actions"></th>' : ""}</tr></thead>`;
     const dayRows = dayPrices.map((dayPrice, index) => {
       const totals = computeOfferDayInternalLineTotals(dayPrice);
       const grossAmountCents = totals.line_gross_amount_cents;
+      const dayNumber = dayPrice?.day_number || index + 1;
+      const dayName = offerDayName(dayNumber);
       return `<tr data-offer-day-price-row="${index}">
         <td class="offer-col-day offer-col-day--day-mode">
-          <input data-offer-day-number type="hidden" value="${escapeHtml(String(dayPrice?.day_number || index + 1))}" />
-          <span>${escapeHtml(bookingT("booking.offer.day_number.day", "Day {day}", { day: dayPrice?.day_number || index + 1 }))}</span>
+          <input data-offer-day-number type="hidden" value="${escapeHtml(String(dayNumber))}" />
+          <span>${escapeHtml(bookingT("booking.offer.day_number.day", "Day {day}", { day: dayNumber }))}</span>
         </td>
+        <td class="offer-col-name"><span>${escapeHtml(dayName || bookingT("booking.no_details", "No details"))}</span></td>
         <td class="offer-col-details">
           ${readOnly
             ? escapeHtml(String(dayPrice?.notes || ""))
@@ -1230,6 +1241,7 @@ export function createBookingOfferComponentsModule(ctx) {
         const noteValue = String(item?.details || item?.label || "").trim();
         return `<tr data-offer-additional-item-row="${index}">
           <td class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.pricing_adjustment_surcharge", "Surcharge"))}</td>
+          <td class="offer-col-name"></td>
           <td class="offer-col-details">${readOnly
             ? escapeHtml(noteValue)
             : `<input data-offer-additional-details type="text" value="${escapeHtml(noteValue)}" placeholder="${escapeHtml(bookingT("booking.offer.adjustment_note_placeholder", "Adjustment note"))}" />
@@ -1248,13 +1260,14 @@ export function createBookingOfferComponentsModule(ctx) {
             const totals = computeOfferDiscountLineTotals(discount);
             return `<tr>
               <td class="offer-col-day offer-col-day--day-mode">${escapeHtml(bookingT("booking.offer.pricing_adjustment_discount", "Discount"))}</td>
+              <td class="offer-col-name"></td>
               <td class="offer-col-details">${readOnly
                 ? escapeHtml(String(discount.reason || ""))
                 : `<input data-offer-discount-reason type="text" value="${escapeHtml(String(discount.reason || ""))}" placeholder="${escapeHtml(bookingT("booking.offer.discount_reason_placeholder", "Reason for discount"))}" />`}</td>
               <td class="offer-col-price-total"><div class="offer-total-cell">${readOnly
                 ? `<span class="offer-price-value" data-offer-discount-total>${escapeHtml(formatMoneyDisplay(totals.line_gross_amount_cents, currency))}</span>`
                 : `<input data-offer-discount-amount type="number" min="0" step="${isWholeUnitCurrency(currency) ? "1" : "0.01"}" value="${escapeHtml(formatMoneyInputValue(discount.amount_cents || 0, currency))}" />`}</div></td>
-              ${showActionsCol ? `<td class="offer-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-discount>${escapeHtml(bookingT("booking.offer.remove_discount", "Remove discount"))}</button></td>` : ""}
+              ${showActionsCol ? `<td class="offer-col-actions"><button class="btn btn-ghost offer-remove-btn" type="button" data-offer-remove-discount title="${escapeHtml(bookingT("booking.offer.remove_discount", "Remove discount"))}" aria-label="${escapeHtml(bookingT("booking.offer.remove_discount", "Remove discount"))}">×</button></td>` : ""}
             </tr>`;
           })()]
         : [])
@@ -1263,8 +1276,8 @@ export function createBookingOfferComponentsModule(ctx) {
     updateOfferPanelSummary(resolveOfferTotalCents(), currency);
     const addRow = readOnly
       ? ""
-      : `<tr class="offer-total-row"><td colspan="3" class="offer-add-cell"><div class="offer-add-actions"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-additional>${escapeHtml(bookingT("booking.offer.add_surcharge", "Add surcharge"))}</button>${discount ? "" : `<button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-discount>${escapeHtml(bookingT("booking.offer.add_discount", "Add discount"))}</button>`}</div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
-    const totalRow = `<tr class="offer-total-row"><td colspan="2" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.offer.total_including_tax", "Total (including tax)"))}:</strong></div></td><td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
+      : `<tr class="offer-total-row"><td colspan="4" class="offer-add-cell"><div class="offer-add-actions"><button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-additional>${escapeHtml(bookingT("booking.offer.add_surcharge", "Add surcharge"))}</button>${discount ? "" : `<button class="btn btn-ghost booking-offer-add-btn" type="button" data-offer-add-discount>${escapeHtml(bookingT("booking.offer.add_discount", "Add discount"))}</button>`}</div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
+    const totalRow = `<tr class="offer-total-row"><td colspan="3" class="offer-total-merged"><div class="offer-total-sum"><strong class="offer-total-label">${escapeHtml(bookingT("booking.offer.total_including_tax", "Total (including tax)"))}:</strong></div></td><td class="offer-col-price-total offer-total-final"><div class="offer-total-cell"><strong class="offer-price-value offer-total-value">${escapeHtml(offerTotalValue)}</strong></div></td>${showActionsCol ? '<td class="offer-col-actions"></td>' : ""}</tr>`;
     return `${header}<tbody>${dayRows}${adjustmentRows}${totalRow}${addRow}</tbody>`;
   }
 

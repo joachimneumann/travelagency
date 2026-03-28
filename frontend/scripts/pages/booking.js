@@ -1523,6 +1523,7 @@ const travelPlanModule = createBookingTravelPlanModule({
   getBookingRevision,
   renderBookingHeader,
   renderBookingData,
+  renderOfferPanel,
   renderTravelPlanPanel,
   loadActivities,
   escapeHtml,

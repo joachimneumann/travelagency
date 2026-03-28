@@ -64,6 +64,7 @@ export function createBookingTravelPlanModule(ctx) {
     getBookingRevision,
     renderBookingHeader,
     renderBookingData,
+    renderOfferPanel,
     loadActivities,
     escapeHtml,
     formatDateTime,
@@ -1350,6 +1351,7 @@ export function createBookingTravelPlanModule(ctx) {
     days.push(nextDay);
     state.travelPlanDraft.days = days;
     renderTravelPlanPanel();
+    renderOfferPanel?.();
   }
 
   function removeDay(dayId) {
@@ -1362,6 +1364,7 @@ export function createBookingTravelPlanModule(ctx) {
       removeItemLinks(item.id);
     }
     renderTravelPlanPanel();
+    renderOfferPanel?.();
   }
 
   function addItem(dayId) {

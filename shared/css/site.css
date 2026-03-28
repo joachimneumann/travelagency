@@ -2187,6 +2187,10 @@ textarea:focus-visible {
   text-align: center;
 }
 
+.backend-table th.offer-col-name {
+  text-align: left;
+}
+
 .backend-table .offer-col-day select {
   width: 100%;
   box-sizing: border-box;
