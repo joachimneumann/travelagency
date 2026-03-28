@@ -1,20 +1,18 @@
-import_export.txt
+cd ~/projects/travelagency
+cd /arv/asiatravelplan
+
 
 ## export to ATP
-cd /Users/joachim/projects/travelagency
 scp -r content atp:/srv/asiatravelplan
 
 ## import from ATP
-cd /Users/joachim/projects/travelagency
 scp -r atp:/srv/asiatravelplan/content .
 
 
 
 
 ## copy to backup
-cd /Users/joachim/projects/travelagency
 cp -r content/atp_staff backup
 
 ## restore from backup
-cd /Users/joachim/projects/travelagency
 cp -r backup content/atp_staff
