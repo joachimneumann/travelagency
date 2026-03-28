@@ -37,7 +37,6 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
       chat_channel_accounts: [{ id: "acct_1", channel: "whatsapp" }],
       chat_conversations: [{ id: "conv_1", booking_id: "booking_1" }],
       chat_events: [{ id: "evt_1", conversation_id: "conv_1" }],
-      booking_confirmation_challenges: [{ id: "challenge_1", booking_id: "booking_1" }],
       extra_metadata: { keep: true }
     }, null, 2)}\n`, "utf8");
 
@@ -52,7 +51,6 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
     assert.equal(result.summary.invoices, 1);
     assert.equal(result.summary.chat_conversations, 1);
     assert.equal(result.summary.chat_events, 1);
-    assert.equal(result.summary.booking_confirmation_challenges, 1);
 
     const persisted = JSON.parse(await readFile(storePath, "utf8"));
     assert.deepEqual(persisted.bookings, []);
@@ -60,7 +58,6 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
     assert.deepEqual(persisted.invoices, []);
     assert.deepEqual(persisted.chat_conversations, []);
     assert.deepEqual(persisted.chat_events, []);
-    assert.deepEqual(persisted.booking_confirmation_challenges, []);
     assert.deepEqual(persisted.suppliers, [{ id: "supplier_1" }]);
     assert.deepEqual(persisted.chat_channel_accounts, [{ id: "acct_1", channel: "whatsapp" }]);
     assert.deepEqual(persisted.extra_metadata, { keep: true });

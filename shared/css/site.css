@@ -3184,10 +3184,8 @@ textarea:focus-visible {
 }
 
 .booking-generated-offer-route {
-  display: grid;
-  grid-template-columns: minmax(18rem, 24rem) auto;
-  gap: 0.85rem 1rem;
-  align-items: end;
+  display: flex;
+  justify-content: flex-start;
   margin: 0 0 0.9rem;
   padding: 0;
   border: 0;

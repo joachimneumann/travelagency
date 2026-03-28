@@ -228,21 +228,14 @@ import (
 	offer_snapshot_sha256:          string & =~"^[a-f0-9]{64}$"
 	ip_address?:                    string
 	user_agent?:                    string
-	otp_channel?:                   enums.#BookingConfirmationOtpChannel
-	otp_verified_at?:               common.#Timestamp
 	deposit_payment_id?:            common.#Identifier
 	accepted_payment_term_line_id?: common.#Identifier
 	accepted_payment_ids?: [...common.#Identifier]
 	accepted_amount_cents?: >=0 & int
 	accepted_currency?:     enums.#CurrencyCode
 
-	if method == "PORTAL_CLICK" || method == "PORTAL_CLICK_OTP" || method == "ESIGN" {
+	if method == "PORTAL_CLICK" || method == "ESIGN" {
 		accepted_by_name: string & !=""
-	}
-
-	if method == "PORTAL_CLICK_OTP" {
-		otp_channel:     enums.#BookingConfirmationOtpChannel
-		otp_verified_at: common.#Timestamp
 	}
 
 	if method == "DEPOSIT_PAYMENT" {

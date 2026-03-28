@@ -277,8 +277,6 @@ import (
 	accepted_by_phone?:     string
 	accepted_by_person_id?: common.#Identifier
 	language?:              enums.#LanguageCode
-	otp_channel?:           enums.#BookingConfirmationOtpChannel
-	otp_code?:              string & !=""
 }
 
 #PublicTravelerDetailsUpdateRequest: {

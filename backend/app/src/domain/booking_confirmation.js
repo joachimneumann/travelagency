@@ -1,12 +1,7 @@
-import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { normalizeGeneratedEnumValue } from "../lib/generated_catalogs.js";
 
 export const BOOKING_CONFIRMATION_TERMS_VERSION = "ATP_BOOKING_CONFIRMATION_V1";
-export const BOOKING_CONFIRMATION_OTP_TTL_MS = 10 * 60 * 1000;
-export const BOOKING_CONFIRMATION_OTP_MAX_ATTEMPTS = 5;
-export const BOOKING_CONFIRMATION_OTP_RESEND_COOLDOWN_MS = 60 * 1000;
-export const BOOKING_CONFIRMATION_OTP_MAX_SENDS_PER_WINDOW = 5;
-export const BOOKING_CONFIRMATION_OTP_SEND_WINDOW_MS = 60 * 60 * 1000;
 export const BOOKING_CONFIRMATION_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const BOOKING_CONFIRMATION_TOKEN_SCOPE = "generated_booking_confirmation";
 
@@ -49,12 +44,12 @@ export function readGeneratedOfferBookingConfirmationTokenState(generatedOffer) 
 }
 
 export function normalizeGeneratedOfferBookingConfirmationRouteMode(value) {
-  return normalizeGeneratedEnumValue("GeneratedOfferBookingConfirmationRouteMode", value, "OTP", {
+  return normalizeGeneratedEnumValue("GeneratedOfferBookingConfirmationRouteMode", value, "DEPOSIT_PAYMENT", {
     transform: (rawValue) => normalizeBookingConfirmationText(rawValue).toUpperCase()
   });
 }
 
-export function normalizeGeneratedOfferBookingConfirmationRouteStatus(value, mode = "OTP") {
+export function normalizeGeneratedOfferBookingConfirmationRouteStatus(value, mode = "DEPOSIT_PAYMENT") {
   const normalizedMode = normalizeGeneratedOfferBookingConfirmationRouteMode(mode);
   const normalized = normalizeGeneratedEnumValue("GeneratedOfferBookingConfirmationRouteStatus", value, "", {
     transform: (rawValue) => normalizeBookingConfirmationText(rawValue).toUpperCase()
@@ -153,10 +148,6 @@ export function sha256Hex(value) {
     ? Buffer.from(value)
     : Buffer.from(String(value ?? ""), "utf8");
   return createHash("sha256").update(buffer).digest("hex");
-}
-
-export function createBookingConfirmationOtpCode() {
-  return String(randomInt(0, 1000000)).padStart(6, "0");
 }
 
 export function createBookingConfirmationTokenNonce() {
@@ -468,105 +459,4 @@ export function buildGeneratedOfferSnapshotHash(generatedOffer) {
     travel_plan: generatedOffer.travel_plan || null
   };
   return sha256Hex(stableSerialize(snapshot));
-}
-
-export function maskOtpRecipient(channel, recipient) {
-  const normalizedChannel = normalizeBookingConfirmationText(channel).toUpperCase();
-  const normalizedRecipient = normalizeBookingConfirmationText(recipient);
-  if (!normalizedRecipient) return "";
-  if (normalizedChannel === "EMAIL") {
-    const [localPart, domainPart] = normalizedRecipient.split("@");
-    if (!localPart || !domainPart) return normalizedRecipient;
-    const prefix = localPart.slice(0, 2);
-    return `${prefix}${"*".repeat(Math.max(1, localPart.length - prefix.length))}@${domainPart}`;
-  }
-  const digits = normalizedRecipient.replace(/\D+/g, "");
-  if (digits.length >= 4) {
-    return `${"*".repeat(Math.max(2, digits.length - 4))}${digits.slice(-4)}`;
-  }
-  return normalizedRecipient;
-}
-
-export function getBookingConfirmationChallenges(store) {
-  if (!Array.isArray(store.booking_confirmation_challenges)) {
-    store.booking_confirmation_challenges = [];
-  }
-  return store.booking_confirmation_challenges;
-}
-
-export function findBookingConfirmationChallenge(store, bookingId, generatedOfferId, channel) {
-  return getBookingConfirmationChallenges(store).find((challenge) =>
-    normalizeBookingConfirmationText(challenge?.booking_id) === normalizeBookingConfirmationText(bookingId)
-    && normalizeBookingConfirmationText(challenge?.generated_offer_id) === normalizeBookingConfirmationText(generatedOfferId)
-    && normalizeBookingConfirmationText(challenge?.channel).toUpperCase() === normalizeBookingConfirmationText(channel).toUpperCase()
-  ) || null;
-}
-
-export function upsertBookingConfirmationChallenge(store, nextChallenge) {
-  const remaining = getBookingConfirmationChallenges(store).filter((challenge) =>
-    !(
-      normalizeBookingConfirmationText(challenge?.booking_id) === normalizeBookingConfirmationText(nextChallenge?.booking_id)
-      && normalizeBookingConfirmationText(challenge?.generated_offer_id) === normalizeBookingConfirmationText(nextChallenge?.generated_offer_id)
-      && normalizeBookingConfirmationText(challenge?.channel).toUpperCase() === normalizeBookingConfirmationText(nextChallenge?.channel).toUpperCase()
-    )
-  );
-  remaining.push(nextChallenge);
-  store.booking_confirmation_challenges = remaining;
-  return nextChallenge;
-}
-
-export function removeBookingConfirmationChallenges(store, bookingId, generatedOfferId, channel = null) {
-  const normalizedChannel = normalizeBookingConfirmationText(channel).toUpperCase();
-  store.booking_confirmation_challenges = getBookingConfirmationChallenges(store).filter((challenge) => {
-    if (normalizeBookingConfirmationText(challenge?.booking_id) !== normalizeBookingConfirmationText(bookingId)) return true;
-    if (normalizeBookingConfirmationText(challenge?.generated_offer_id) !== normalizeBookingConfirmationText(generatedOfferId)) return true;
-    if (normalizedChannel && normalizeBookingConfirmationText(challenge?.channel).toUpperCase() !== normalizedChannel) return true;
-    return false;
-  });
-}
-
-export function buildBookingConfirmationOtpThrottle(existingChallenge, issuedAt) {
-  const nowMs = parseIsoTimestamp(issuedAt) ?? Date.now();
-  const lastSentAtMs = parseIsoTimestamp(existingChallenge?.last_sent_at || existingChallenge?.issued_at);
-  const resendAvailableAtMs = parseIsoTimestamp(existingChallenge?.resend_available_at);
-  const storedWindowStartedAtMs = parseIsoTimestamp(existingChallenge?.send_window_started_at);
-  const sendWindowStartedAtMs = storedWindowStartedAtMs ?? lastSentAtMs ?? nowMs;
-  const sendCount = Number(existingChallenge?.send_count || 0);
-
-  const isWindowExpired = (nowMs - sendWindowStartedAtMs) >= BOOKING_CONFIRMATION_OTP_SEND_WINDOW_MS;
-  const normalizedWindowStartedAtMs = isWindowExpired ? nowMs : sendWindowStartedAtMs;
-  const normalizedSendCount = isWindowExpired ? 0 : sendCount;
-
-  if (
-    resendAvailableAtMs
-    && resendAvailableAtMs > nowMs
-    && lastSentAtMs
-  ) {
-    return {
-      allowed: false,
-      status: 429,
-      error: "Wait before requesting another booking confirmation code.",
-      retryAfterSeconds: Math.max(1, Math.ceil((resendAvailableAtMs - nowMs) / 1000))
-    };
-  }
-
-  if (normalizedSendCount >= BOOKING_CONFIRMATION_OTP_MAX_SENDS_PER_WINDOW) {
-    return {
-      allowed: false,
-      status: 429,
-      error: "Too many booking confirmation code requests. Try again later.",
-      retryAfterSeconds: Math.max(
-        1,
-        Math.ceil(((normalizedWindowStartedAtMs + BOOKING_CONFIRMATION_OTP_SEND_WINDOW_MS) - nowMs) / 1000)
-      )
-    };
-  }
-
-  return {
-    allowed: true,
-    sendCount: normalizedSendCount + 1,
-    sendWindowStartedAt: new Date(normalizedWindowStartedAtMs).toISOString(),
-    lastSentAt: new Date(nowMs).toISOString(),
-    resendAvailableAt: new Date(nowMs + BOOKING_CONFIRMATION_OTP_RESEND_COOLDOWN_MS).toISOString()
-  };
 }

@@ -227,14 +227,6 @@ export function createBookingPricingModule(ctx) {
     return lines.find((line) => String(line?.kind || "").trim().toUpperCase() === "DEPOSIT") || lines[0] || null;
   }
 
-  function countTravelPlanServices() {
-    const plan = state.travelPlanDraft && typeof state.travelPlanDraft === "object"
-      ? state.travelPlanDraft
-      : state.booking?.travel_plan;
-    const days = Array.isArray(plan?.days) ? plan.days : [];
-    return days.reduce((sum, day) => sum + (Array.isArray(day?.services) ? day.services.length : 0), 0);
-  }
-
   function setPricingControlsVisibility(active) {
     const pricingControls = els.pricing_currency_input?.closest(".backend-controls");
     const adjustmentsWrap = els.pricing_adjustments_table?.closest(".backend-table-wrap");
@@ -410,13 +402,6 @@ export function createBookingPricingModule(ctx) {
 
   function depositReceiptReadiness({ includeCleanState = true } = {}) {
     const missing = [];
-    if (countTravelPlanServices() <= 0) {
-      missing.push(bookingT("booking.pricing.deposit_requirement.travel_plan", "Add at least one service to the travel plan."));
-    }
-    const offerComponents = currentOfferComponents();
-    if (!offerComponents.length) {
-      missing.push(bookingT("booking.pricing.deposit_requirement.offer_item", "Add at least one offer item."));
-    }
     if (currentOfferTotalPriceCents() <= 0) {
       missing.push(bookingT("booking.pricing.deposit_requirement.offer_price", "Set the offer price above 0."));
     }
@@ -598,6 +583,13 @@ export function createBookingPricingModule(ctx) {
   function renderPricingSummaryTable(pricing) {
     if (!els.pricing_summary_table) return;
     const summary = pricing.summary || {};
+    const hiddenSummaryKeys = new Set([
+      "agreed_net_amount",
+      "adjusted_net_amount",
+      "scheduled_net_amount",
+      "scheduled_gross_amount",
+      "outstanding_gross_amount"
+    ]);
     const moneyRows = [
       ["agreed_net_amount", pricing.agreed_net_amount_cents],
       ["adjustments_delta", summary.adjustments_delta_cents],
@@ -609,6 +601,7 @@ export function createBookingPricingModule(ctx) {
       ["paid_gross_amount", summary.paid_gross_amount_cents],
       ["outstanding_gross_amount", summary.outstanding_gross_amount_cents]
     ]
+      .filter(([key]) => !hiddenSummaryKeys.has(key))
       .filter(([, value]) => Number(value || 0) !== 0)
       .map(([key, value]) => `<tr><th>${escapeHtml(pricingSummaryLabel(key))}</th><td>${escapeHtml(formatMoneyDisplay(value, pricing.currency))}</td></tr>`);
     const rows = []

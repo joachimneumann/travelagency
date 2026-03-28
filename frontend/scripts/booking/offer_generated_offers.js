@@ -52,7 +52,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   let generatedOfferRouteMode = "DEPOSIT_PAYMENT";
   let generatedOfferPaymentTermLineId = "";
-  const loggedMissingOtpBookingConfirmationLinks = new Set();
+  const loggedMissingBookingConfirmationLinks = new Set();
 
   function formatGeneratedOfferDate(value) {
     if (!value) return "-";
@@ -128,28 +128,12 @@ export function createBookingGeneratedOffersModule(ctx) {
     });
   }
 
-  function hasTravelPlanServices(travelPlan) {
-    const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
-    return days.some((day) => {
-      const services = Array.isArray(day?.services)
-        ? day.services
-        : (Array.isArray(day?.items) ? day.items : []);
-      return services.length > 0;
-    });
-  }
-
   function formatGenerateOfferError(response) {
     const detail = String(response?.detail || "").trim();
     const error = String(response?.error || "").trim();
     const message = detail || error;
     if (!message) {
       return bookingT("booking.offer.error.generate_pdf", "Could not generate offer PDF.");
-    }
-    if (/otp confirmation requires a booking contact email/i.test(message)) {
-      return bookingT(
-        "booking.offer.error.generate_missing_booking_confirmation_email",
-        "This booking cannot generate a new offer yet because OTP booking confirmation requires a customer email address."
-      );
     }
     if (/deposit payment acceptance requires at least one payment term line/i.test(message)) {
       return bookingT(
@@ -270,12 +254,12 @@ export function createBookingGeneratedOffersModule(ctx) {
     return url.toString();
   }
 
-  function logMissingOtpBookingConfirmationLink(generatedOffer) {
+  function logMissingBookingConfirmationLink(generatedOffer) {
     const generatedOfferId = String(generatedOffer?.id || "").trim();
-    if (!generatedOfferId || loggedMissingOtpBookingConfirmationLinks.has(generatedOfferId)) return;
-    loggedMissingOtpBookingConfirmationLinks.add(generatedOfferId);
+    if (!generatedOfferId || loggedMissingBookingConfirmationLinks.has(generatedOfferId)) return;
+    loggedMissingBookingConfirmationLinks.add(generatedOfferId);
     logBrowserConsoleError(
-      "[booking-confirmation] OTP route is unavailable because the generated offer has no public booking confirmation token.",
+      "[booking-confirmation] Booking confirmation route is unavailable because the generated offer has no public booking confirmation token.",
       {
         booking_id: String(state.booking?.id || "").trim() || null,
         generated_offer_id: generatedOfferId,
@@ -285,7 +269,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         has_public_booking_confirmation_token: Boolean(String(generatedOffer?.public_booking_confirmation_token || "").trim()),
         public_booking_confirmation_expires_at: String(generatedOffer?.public_booking_confirmation_expires_at || "").trim() || null,
         generated_offer_created_at: String(generatedOffer?.created_at || "").trim() || null,
-        hint: "The backend response did not include a public booking confirmation token. Likely causes: the generated offer record is stale and needs token repair, the backend was not restarted after the OTP-token fix, or BOOKING_CONFIRMATION_TOKEN_SECRET is missing in this environment."
+        hint: "The backend response did not include a public booking confirmation token. Likely causes: the generated offer record is stale, the backend was not restarted after a token-model change, or BOOKING_CONFIRMATION_TOKEN_SECRET is missing in this environment."
       }
     );
   }
@@ -368,46 +352,22 @@ export function createBookingGeneratedOffersModule(ctx) {
   }
 
   function renderOfferGenerationControls() {
-    if (!els.offer_generation_route_mode) return;
     syncOfferGenerationControlsState();
     const { lines, currency } = getBookingConfirmationPaymentTerms();
     const canEdit = state.permissions.canEditBooking;
-    const hasOtpRecipient = Boolean(getBookingConfirmationRecipientEmail());
-    if (!hasOtpRecipient && !routeUsesDepositPayment(generatedOfferRouteMode)) {
-      generatedOfferRouteMode = "DEPOSIT_PAYMENT";
-    }
     const selectedPaymentTerm = resolveSelectedBookingConfirmationPaymentTerm(lines);
-    const selectedAmount = selectedPaymentTerm
-      ? formatMoneyDisplay(Number(selectedPaymentTerm?.resolved_amount_cents || 0), currency)
-      : "";
-    const routeOptions = [
-      {
-        value: "DEPOSIT_PAYMENT",
-        label: selectedAmount
-          ? bookingT("booking.offer.route.option.deposit_payment_amount", "Deposit of {amount}", { amount: selectedAmount })
-          : bookingT("booking.offer.route.option.deposit_payment", "Deposit")
-      },
-      {
-        value: "OTP",
-        label: bookingT("booking.offer.route.option.otp", "OTP confirmation"),
-        disabled: !hasOtpRecipient
-      }
-    ];
-    els.offer_generation_route_mode.innerHTML = routeOptions.map((option) => `
-      <option value="${escapeHtml(option.value)}" ${option.value === generatedOfferRouteMode ? "selected" : ""} ${option.disabled ? "disabled" : ""}>${escapeHtml(option.label)}</option>
-    `).join("");
-    els.offer_generation_route_mode.disabled = !canEdit;
+    const selectedAmount = selectedPaymentTerm ? formatMoneyDisplay(Number(selectedPaymentTerm?.resolved_amount_cents || 0), currency) : "";
+    generatedOfferRouteMode = "DEPOSIT_PAYMENT";
 
     if (els.generate_offer_btn) {
       els.generate_offer_btn.style.display = canEdit ? "" : "none";
-      els.generate_offer_btn.disabled = routeUsesDepositPayment(generatedOfferRouteMode) && !generatedOfferPaymentTermLineId;
+      els.generate_offer_btn.disabled = false;
+      if (selectedAmount) {
+        els.generate_offer_btn.title = bookingT("booking.offer.route.option.deposit_payment_amount", "Deposit of {amount}", { amount: selectedAmount });
+      } else {
+        els.generate_offer_btn.removeAttribute("title");
+      }
     }
-
-    els.offer_generation_route_mode.onchange = canEdit ? () => {
-      generatedOfferRouteMode = normalizeGeneratedOfferRouteMode(els.offer_generation_route_mode.value || "DEPOSIT_PAYMENT");
-      syncOfferGenerationControlsState();
-      renderOfferGenerationControls();
-    } : null;
   }
 
   function renderGeneratedOffersTable() {
@@ -433,11 +393,11 @@ export function createBookingGeneratedOffersModule(ctx) {
           const offerStatus = resolveGeneratedOfferStatus(item);
           const routeMode = currentGeneratedOfferRouteMode(item);
           const generatedOfferId = String(item?.id || "").trim();
-          const otpRouteUnavailable = !routeUsesDepositPayment(routeMode) && !bookingConfirmationLink;
-          if (otpRouteUnavailable) {
-            logMissingOtpBookingConfirmationLink(item);
+          const routeUnavailable = !routeUsesDepositPayment(routeMode) && !bookingConfirmationLink;
+          if (routeUnavailable) {
+            logMissingBookingConfirmationLink(item);
           } else if (generatedOfferId) {
-            loggedMissingOtpBookingConfirmationLinks.delete(generatedOfferId);
+            loggedMissingBookingConfirmationLinks.delete(generatedOfferId);
           }
           return `<tr>
           <td class="generated-offers-col-link">${pdfUrl ? `<a href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(bookingT("booking.offer.document", "Offer"))}</a>` : "-"}</td>
@@ -446,19 +406,17 @@ export function createBookingGeneratedOffersModule(ctx) {
             : ""}
           <td class="generated-offers-col-route">${routeUsesDepositPayment(routeMode)
             ? `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode, {
-                deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
-                otp: bookingT("booking.offer.route.otp", "OTP")
+                deposit: bookingT("booking.offer.route.deposit_payment", "Deposit")
               }))}</span>`
-            : (otpRouteUnavailable
+            : (routeUnavailable
                 ? `<span class="generated-offers-route-label">${escapeHtml(bookingT("booking.offer.status.unavailable", "Unavailable"))}</span>`
                 : (canEdit && bookingConfirmationLink
                 ? `<div class="generated-offers-link-actions">
-                    <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.offer.otp_link", "OTP link"))}</button>
-                    <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}" data-requires-clean-state${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.send_otp_email", "Send OTP email"))}</button>
+                    <button class="btn btn-ghost" type="button" data-generated-offer-copy-link="${escapeHtml(item.id)}" data-requires-clean-state>${escapeHtml(bookingT("booking.offer.booking_confirmation_link", "Booking confirmation link"))}</button>
+                    <button class="btn btn-ghost" type="button" data-generated-offer-email-draft="${escapeHtml(item.id)}" data-requires-clean-state${emailActionEnabled ? "" : " disabled"}>${escapeHtml(bookingT("booking.offer.email_booking_confirmation_link", "Email booking confirmation link"))}</button>
                   </div>`
                 : `<span class="generated-offers-route-label">${escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode, {
-                    deposit: bookingT("booking.offer.route.deposit_payment", "Deposit"),
-                    otp: bookingT("booking.offer.route.otp", "OTP")
+                    deposit: bookingT("booking.offer.route.deposit_payment", "Deposit")
                   }))}</span>`))}
           </td>
           <td class="generated-offers-col-status">
@@ -627,20 +585,7 @@ export function createBookingGeneratedOffersModule(ctx) {
 
   async function handleGenerateOffer() {
     if (!state.permissions.canEditBooking || !state.booking?.id) return;
-    if (!(await ensureOfferCleanState())) return;
-    if (!hasTravelPlanServices(state.booking?.travel_plan)) {
-      setOfferStatus(
-        bookingT(
-          "booking.offer.error.generate_missing_travel_plan",
-          "Add at least one travel-plan service before generating a new offer."
-        ),
-        "error"
-      );
-      return;
-    }
-    const requestedRouteMode = normalizeGeneratedOfferRouteMode(
-      els.offer_generation_route_mode?.value || generatedOfferRouteMode || "DEPOSIT_PAYMENT"
-    );
+    const requestedRouteMode = normalizeGeneratedOfferRouteMode(generatedOfferRouteMode || "DEPOSIT_PAYMENT");
     generatedOfferRouteMode = requestedRouteMode;
     syncOfferGenerationControlsState();
     const selectedLang = bookingContentLang();
@@ -662,16 +607,14 @@ export function createBookingGeneratedOffersModule(ctx) {
     const commentInput = window.prompt(bookingT("booking.offer.comment_prompt", "Comment for this generated offer (optional):"), "");
     if (commentInput === null) return;
     const normalizedComment = String(commentInput || "").trim();
-    const bookingConfirmationRoute = routeUsesDepositPayment(requestedRouteMode)
+    const bookingConfirmationRoute = generatedOfferPaymentTermLineId
       ? {
           mode: "DEPOSIT_PAYMENT",
           deposit_rule: {
             payment_term_line_id: generatedOfferPaymentTermLineId
           }
         }
-      : {
-          mode: "OTP"
-        };
+      : null;
     setOfferStatus(bookingT("booking.offer.generating_pdf", "Generating offer PDF..."), "info");
     const response = await fetchBookingMutation(request.url, {
       method: request.method,
@@ -679,7 +622,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         expected_offer_revision: getBookingRevision("offer_revision"),
         comment: normalizedComment || null,
         lang: selectedLang,
-        booking_confirmation_route: bookingConfirmationRoute
+        ...(bookingConfirmationRoute ? { booking_confirmation_route: bookingConfirmationRoute } : {})
       }
     });
     if (await applyOfferBookingResponse(response, { reloadActivities: true })) {

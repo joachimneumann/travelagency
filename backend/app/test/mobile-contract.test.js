@@ -3211,6 +3211,7 @@ test("public generated booking confirmation finalizes the frozen offer and store
           currency: createdBooking.preferred_currency,
           payment_terms: {
             currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: 13200,
             lines: [
               {
                 id: "payment_term_acceptance_deposit",
@@ -3277,7 +3278,7 @@ test("public generated booking confirmation finalizes the frozen offer and store
   assert.equal(typeof generatedOffer.public_booking_confirmation_token, "string");
   assert.ok(generatedOffer.public_booking_confirmation_token.length > 20);
 
-  const otpRequiredResult = await requestJson(
+  const blockedResult = await requestJson(
     endpointPath("public_generated_booking_confirmation")
       .replace("{booking_id}", bookingId)
       .replace("{generated_offer_id}", generatedOfferId),
@@ -3291,8 +3292,8 @@ test("public generated booking confirmation finalizes the frozen offer and store
       }
     }
   );
-  assert.equal(otpRequiredResult.status, 422);
-  assert.match(String(otpRequiredResult.body.error || ""), /requires otp verification/i);
+  assert.equal(blockedResult.status, 409);
+  assert.match(String(blockedResult.body.error || ""), /deposit payment/i);
 
   const storeBeforeLegacyAccept = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const bookingBeforeLegacyAccept = storeBeforeLegacyAccept.bookings.find((item) => item.id === bookingId);
@@ -3373,6 +3374,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
           currency: createdBooking.preferred_currency,
           payment_terms: {
             currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: 13200,
             lines: [
               {
                 id: "payment_term_frozen_deposit",
@@ -3435,15 +3437,25 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
             {
               id: "travel_plan_day_frozen_1",
               day_number: 1,
+              date: "2026-04-10",
               title: "Arrival day",
               overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_frozen_1",
                   timing_kind: "point",
-                  time_point: "18:30",
+                  time_point: "2026-04-10T18:30",
                   kind: "transport",
                   title: "Airport pickup",
+                  financial_coverage_status: "not_covered"
+                },
+                {
+                  id: "travel_plan_service_frozen_2",
+                  timing_kind: "label",
+                  time_label: "Evening",
+                  kind: "accommodation",
+                  title: "Resort check-in",
+                  location: "Hoi An",
                   financial_coverage_status: "not_covered"
                 }
               ]
@@ -3452,7 +3464,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
           offer_component_links: [
             {
               id: "travel_plan_offer_link_frozen_1",
-              travel_plan_service_id: "travel_plan_service_frozen_1",
+              travel_plan_service_id: "travel_plan_service_frozen_2",
               offer_component_id: "offer_component_frozen_service_1",
               coverage_type: "full"
             }
@@ -3887,7 +3899,7 @@ test("booking detail persists expired generated-offer route status instead of de
   assert.equal(generatedOfferAfter?.booking_confirmation_route?.status, "EXPIRED");
 });
 
-test("booking detail repairs missing OTP booking confirmation token state for generated offers", async () => {
+test("booking detail repairs missing booking confirmation token state for generated offers", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -3898,13 +3910,13 @@ test("booking detail repairs missing OTP booking confirmation token state for ge
       method: "POST",
       body: {
         expected_offer_revision: createdBooking.offer_revision,
-        comment: "OTP token repair"
+        comment: "Booking confirmation token repair"
       }
     }
   );
   assert.equal(generateResult.status, 201);
   const generatedOfferId = generateResult.body.booking.generated_offers[0].id;
-  assert.equal(generateResult.body.booking.generated_offers[0].booking_confirmation_route.mode, "OTP");
+  assert.equal(generateResult.body.booking.generated_offers[0].booking_confirmation_route.mode, "DEPOSIT_PAYMENT");
   assert.equal(typeof generateResult.body.booking.generated_offers[0].public_booking_confirmation_token, "string");
 
   const storeBefore = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -3935,7 +3947,7 @@ test("booking detail repairs missing OTP booking confirmation token state for ge
   assertISODateLike(generatedOfferAfter?.booking_confirmation_token_expires_at, "generated offer repaired booking_confirmation_token_expires_at");
 });
 
-test("public generated offer access exposes deposit acceptance route and blocks OTP acceptance", async () => {
+test("public generated offer access exposes deposit acceptance route and blocks direct confirmation", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
@@ -4141,7 +4153,7 @@ test("public generated offer access and public pdf require a valid booking confi
   assert.match(publicPdfResult.body, /%PDF-/);
 });
 
-test("public traveler details access and update use a signed temporary link without OTP", async () => {
+test("public traveler details access and update use a signed temporary link", async () => {
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 

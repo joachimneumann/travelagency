@@ -368,9 +368,6 @@ export function createBookingHandlers(deps) {
     store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
     store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
     store.invoices = Array.isArray(store.invoices) ? store.invoices.filter((invoice) => invoice.booking_id !== bookingId) : [];
-    store.booking_confirmation_challenges = Array.isArray(store.booking_confirmation_challenges)
-      ? store.booking_confirmation_challenges.filter((challenge) => normalizeText(challenge.booking_id) !== bookingId)
-      : [];
 
     ensureMetaChatCollections(store);
     for (const conversation of store.chat_conversations) {

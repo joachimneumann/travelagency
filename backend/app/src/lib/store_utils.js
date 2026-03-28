@@ -50,8 +50,7 @@ export function createStoreUtils({
           invoices: [],
           chat_channel_accounts: [],
           chat_conversations: [],
-          chat_events: [],
-          booking_confirmation_challenges: []
+          chat_events: []
         }, null, 2)}\n`,
         "utf8"
       );
@@ -68,7 +67,6 @@ export function createStoreUtils({
     parsed.chat_channel_accounts ||= [];
     parsed.chat_conversations ||= [];
     parsed.chat_events ||= [];
-    parsed.booking_confirmation_challenges ||= [];
     let bookingPersonsWritebackNeeded = false;
     let bookingOfferWritebackNeeded = false;
     const convertedBookings = await Promise.all(parsed.bookings.map(async (booking) => {

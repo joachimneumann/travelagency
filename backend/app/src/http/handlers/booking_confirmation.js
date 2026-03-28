@@ -1,5 +1,4 @@
-import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
-import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
+import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { validatePublicGeneratedOfferAcceptRequest } from "../../../Generated/API/generated_APIModels.js";
 import {
   buildGeneratedOfferBookingConfirmationPublicSummary,
@@ -7,21 +6,11 @@ import {
   buildGeneratedOfferSnapshotHash,
   buildBookingConfirmationStatement,
   buildBookingConfirmationTermsSnapshot,
-  createBookingConfirmationOtpCode,
-  maskOtpRecipient,
-  BOOKING_CONFIRMATION_OTP_MAX_ATTEMPTS,
-  BOOKING_CONFIRMATION_OTP_RESEND_COOLDOWN_MS,
-  BOOKING_CONFIRMATION_OTP_TTL_MS,
   BOOKING_CONFIRMATION_TERMS_VERSION,
   readGeneratedOfferBookingConfirmationTokenState,
-  sha256Hex,
   verifyBookingConfirmationToken,
-  findBookingConfirmationChallenge,
-  upsertBookingConfirmationChallenge,
-    removeBookingConfirmationChallenges,
-    buildBookingConfirmationOtpThrottle,
-    synchronizeGeneratedOfferBookingConfirmationRouteStatus
-  } from "../../domain/booking_confirmation.js";
+  synchronizeGeneratedOfferBookingConfirmationRouteStatus
+} from "../../domain/booking_confirmation.js";
 
 export function createBookingConfirmationHandlers(deps) {
   const {
@@ -37,7 +26,6 @@ export function createBookingConfirmationHandlers(deps) {
     incrementBookingRevision,
     convertBookingPricingToBaseCurrency,
     randomUUID,
-    gmailDraftsConfig,
     bookingConfirmationTokenConfig,
     getBookingContactProfile,
     getRequestIpAddress,
@@ -46,53 +34,11 @@ export function createBookingConfirmationHandlers(deps) {
     sendFileWithCache
   } = deps;
 
-  let gmailDraftsClient = null;
   const bookingConfirmationTokenSecret = normalizeText(bookingConfirmationTokenConfig?.secret);
-
-  function getGmailDraftsClient() {
-    const serviceAccountJsonPath = normalizeText(gmailDraftsConfig?.serviceAccountJsonPath);
-    const impersonatedEmail = normalizeText(gmailDraftsConfig?.impersonatedEmail);
-    if (!serviceAccountJsonPath || !impersonatedEmail) {
-      throw new Error("Gmail draft creation is not configured.");
-    }
-    if (!gmailDraftsClient) {
-      gmailDraftsClient = createGmailDraftsClient({
-        serviceAccountJsonPath,
-        impersonatedEmail
-      });
-    }
-    return gmailDraftsClient;
-  }
 
   function requestUserAgent(req) {
     const raw = req?.headers?.["user-agent"];
     return normalizeText(Array.isArray(raw) ? raw[0] : raw);
-  }
-
-  function buildGeneratedOfferOtpEmailCopy(booking, generatedOfferSnapshot, acceptedByName, code) {
-    const lang = normalizePdfLang(generatedOfferSnapshot?.lang || booking?.customer_language || "en");
-    const bookingTitle = normalizeText(booking?.name || booking?.web_form_submission?.booking_name);
-    const normalizedCode = normalizeText(code);
-    return {
-      subject: pdfT(lang, "email.booking_confirmation_otp_subject", "Your Asia Travel Plan booking confirmation code"),
-      greeting: acceptedByName
-        ? pdfT(lang, "email.greeting_named", "Hello {name},", { name: acceptedByName })
-        : pdfT(lang, "email.greeting_generic", "Hello,"),
-      intro: bookingTitle
-        ? pdfT(
-          lang,
-          "email.booking_confirmation_otp_intro_named",
-          "Use this one-time code to confirm the Asia Travel Plan booking for {trip}: {code}.",
-          { trip: bookingTitle, code: normalizedCode }
-        )
-        : pdfT(
-          lang,
-          "email.booking_confirmation_otp_intro_generic",
-          "Use this one-time code to confirm your Asia Travel Plan booking: {code}.",
-          { code: normalizedCode }
-        ),
-      footer: `${pdfT(lang, "email.booking_confirmation_otp_expiry", "The code expires in 10 minutes.")}\n\n${pdfT(lang, "offer.closing_team", "The Asia Travel Plan Team")}`
-    };
   }
 
   function resolveBookingConfirmationContact(booking, payload = {}) {
@@ -115,36 +61,6 @@ export function createBookingConfirmationHandlers(deps) {
     };
   }
 
-  function normalizedEmailForComparison(value) {
-    return normalizeText(value).toLowerCase();
-  }
-
-  function resolveOtpBookingConfirmationContact(booking, payload = {}) {
-    const contactProfile = getBookingContactProfile(booking);
-    const acceptedByName = normalizeText(payload?.accepted_by_name || contactProfile?.name);
-    const acceptedByEmail = normalizeText(contactProfile?.email);
-    const acceptedByPhone = normalizeText(contactProfile?.phone_number);
-    const requestedEmail = normalizeText(payload?.accepted_by_email);
-
-    if (!acceptedByName) {
-      return { ok: false, error: "accepted_by_name is required." };
-    }
-    if (!acceptedByEmail) {
-      return { ok: false, error: "OTP verification requires a booking contact email." };
-    }
-    if (requestedEmail && normalizedEmailForComparison(requestedEmail) !== normalizedEmailForComparison(acceptedByEmail)) {
-      return { ok: false, error: "OTP verification can only be sent to the booking contact email." };
-    }
-
-    return {
-      ok: true,
-      acceptedByName,
-      acceptedByEmail,
-      acceptedByPhone: acceptedByPhone || null,
-      acceptedByPersonId: null
-    };
-  }
-
   function buildPublicGeneratedOfferAccessResponse({ booking, generatedOffer, bookingConfirmationToken }) {
     const normalizedGeneratedOffer = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
     const bookingConfirmationTokenState = readGeneratedOfferBookingConfirmationTokenState(generatedOffer);
@@ -152,11 +68,6 @@ export function createBookingConfirmationHandlers(deps) {
     const comment = normalizeText(generatedOffer?.comment);
     const bookingConfirmationRoute = buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() });
     const bookingConfirmationSummary = buildGeneratedOfferBookingConfirmationPublicSummary(generatedOffer?.booking_confirmation);
-    const otpRecipientHint = normalizeText(
-      bookingConfirmationRoute?.mode === "OTP"
-        ? maskOtpRecipient(getBookingContactProfile(booking)?.email)
-        : ""
-    );
     return {
       booking_id: booking.id,
       generated_offer_id: generatedOffer.id,
@@ -169,7 +80,6 @@ export function createBookingConfirmationHandlers(deps) {
       pdf_url: `/public/v1/bookings/${encodeURIComponent(booking.id)}/generated-offers/${encodeURIComponent(generatedOffer.id)}/pdf?token=${encodeURIComponent(bookingConfirmationToken)}`,
       ...(normalizedGeneratedOffer.payment_terms ? { payment_terms: normalizedGeneratedOffer.payment_terms } : {}),
       ...(bookingConfirmationRoute ? { booking_confirmation_route: bookingConfirmationRoute } : {}),
-      ...(otpRecipientHint ? { otp_recipient_hint: otpRecipientHint } : {}),
       ...(bookingConfirmationTokenState.expiresAt ? { public_booking_confirmation_expires_at: bookingConfirmationTokenState.expiresAt } : {}),
       confirmed: Boolean(generatedOffer?.booking_confirmation),
       ...(bookingConfirmationSummary ? { booking_confirmation: bookingConfirmationSummary } : {})
@@ -180,23 +90,15 @@ export function createBookingConfirmationHandlers(deps) {
     bookingId,
     generatedOfferId,
     generatedOffer = null,
-    bookingConfirmation = null,
-    otpChannel = null,
-    otpSentTo = "",
-    otpExpiresAt = "",
-    retryAfterSeconds = null
+    bookingConfirmation = null
   }) {
     return {
       booking_id: bookingId,
       generated_offer_id: generatedOfferId,
       confirmed: Boolean(bookingConfirmation),
-      status: bookingConfirmation ? "CONFIRMED" : "OTP_REQUIRED",
+      status: "CONFIRMED",
       ...(generatedOffer ? { booking_confirmation_route: buildPublicGeneratedOfferBookingConfirmationRouteView(generatedOffer, { now: nowIso() }) } : {}),
-      ...(bookingConfirmation ? { booking_confirmation: buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfirmation) } : {}),
-      ...(otpChannel ? { otp_channel: otpChannel } : {}),
-      ...(otpSentTo ? { otp_sent_to: otpSentTo } : {}),
-      ...(otpExpiresAt ? { otp_expires_at: otpExpiresAt } : {}),
-      ...(Number.isFinite(Number(retryAfterSeconds)) ? { retry_after_seconds: Math.max(0, Number(retryAfterSeconds)) } : {})
+      ...(bookingConfirmation ? { booking_confirmation: buildGeneratedOfferBookingConfirmationPublicSummary(bookingConfirmation) } : {})
     };
   }
 
@@ -331,9 +233,7 @@ export function createBookingConfirmationHandlers(deps) {
     acceptedByPhone = null,
     acceptedByPersonId = null,
     language,
-    method,
-    otpChannel = null,
-    otpVerifiedAt = null
+    method
   }) {
     if (normalizeText(booking?.confirmed_generated_offer_id) && normalizeText(booking.confirmed_generated_offer_id) !== generatedOffer.id) {
       return { ok: false, status: 409, error: "Another generated offer has already been confirmed for this booking." };
@@ -349,7 +249,6 @@ export function createBookingConfirmationHandlers(deps) {
       if (!normalizeText(booking?.confirmed_generated_offer_id) || generatedOffer?.booking_confirmation_route?.status === "CONFIRMED") {
         await persistStore(store);
       }
-      removeBookingConfirmationChallenges(store, booking.id, generatedOffer.id);
       return { ok: true, booking_confirmation: generatedOffer.booking_confirmation, unchanged: true };
     }
 
@@ -375,8 +274,7 @@ export function createBookingConfirmationHandlers(deps) {
       offer_pdf_sha256: normalizeText(generatedOffer?.pdf_sha256 || frozenPdf?.sha256),
       offer_snapshot_sha256: buildGeneratedOfferSnapshotHash(normalizedSnapshot),
       ip_address: normalizeText(getRequestIpAddress(req)),
-      user_agent: requestUserAgent(req),
-      ...(otpChannel ? { otp_channel: otpChannel, otp_verified_at: otpVerifiedAt || nowIso() } : {})
+      user_agent: requestUserAgent(req)
     };
 
     generatedOffer.booking_confirmation = bookingConfirmation;
@@ -389,7 +287,6 @@ export function createBookingConfirmationHandlers(deps) {
       normalizedSnapshot,
       acceptedAt: bookingConfirmation.accepted_at
     });
-    removeBookingConfirmationChallenges(store, booking.id, generatedOffer.id);
     booking.offer_revision = (Number.isInteger(Number(booking.offer_revision)) ? Number(booking.offer_revision) : 0) + 1;
     booking.updated_at = nowIso();
     addActivity(
@@ -548,175 +445,12 @@ export function createBookingConfirmationHandlers(deps) {
     }
 
     if (normalizeText(generatedOffer?.booking_confirmation_route?.mode).toUpperCase() === "DEPOSIT_PAYMENT") {
-      sendJson(res, 409, { error: "This offer is confirmed by the required deposit payment, not by OTP booking confirmation." });
+      sendJson(res, 409, { error: "This offer is confirmed by the required deposit payment, not by public booking confirmation." });
       return;
     }
 
     if (normalizeText(booking?.confirmed_generated_offer_id) && normalizeText(booking.confirmed_generated_offer_id) !== generatedOffer.id) {
       sendJson(res, 409, { error: "Another generated offer has already been confirmed for this booking." });
-      return;
-    }
-
-    const otpChannel = normalizeText(payload?.otp_channel).toUpperCase();
-    const explicitOtpRoute = normalizeText(generatedOffer?.booking_confirmation_route?.mode).toUpperCase() === "OTP";
-    if (!otpChannel && normalizeText(payload?.otp_code)) {
-      sendJson(res, 422, { error: "otp_channel is required when otp_code is provided." });
-      return;
-    }
-    if (explicitOtpRoute && !otpChannel) {
-      sendJson(res, 422, { error: "This offer requires OTP verification before it can be confirmed." });
-      return;
-    }
-
-    if (otpChannel) {
-      if (otpChannel !== "EMAIL") {
-        sendJson(res, 422, { error: "Only EMAIL OTP verification is supported right now." });
-        return;
-      }
-
-      const existingChallenge = findBookingConfirmationChallenge(store, bookingId, generatedOfferId, otpChannel);
-      if (!normalizeText(payload?.otp_code)) {
-        const contact = resolveOtpBookingConfirmationContact(booking, payload);
-        if (!contact.ok) {
-          sendJson(res, 422, { error: contact.error });
-          return;
-        }
-
-        const challengeCode = createBookingConfirmationOtpCode();
-        const issuedAt = nowIso();
-        const throttle = buildBookingConfirmationOtpThrottle(existingChallenge, issuedAt);
-        if (!throttle.allowed) {
-          sendJson(res, throttle.status, {
-            error: throttle.error,
-            retry_after_seconds: throttle.retryAfterSeconds
-          });
-          return;
-        }
-
-        const expiresAt = new Date(Date.parse(issuedAt) + BOOKING_CONFIRMATION_OTP_TTL_MS).toISOString();
-        const challenge = {
-          id: normalizeText(existingChallenge?.id) || `booking_confirmation_challenge_${randomUUID()}`,
-          booking_id: bookingId,
-          generated_offer_id: generatedOfferId,
-          channel: otpChannel,
-          recipient: contact.acceptedByEmail,
-          code_sha256: sha256Hex(challengeCode),
-          issued_at: issuedAt,
-          last_sent_at: throttle.lastSentAt,
-          resend_available_at: throttle.resendAvailableAt,
-          send_window_started_at: throttle.sendWindowStartedAt,
-          send_count: throttle.sendCount,
-          expires_at: expiresAt,
-          attempts: 0,
-          accepted_by_name: contact.acceptedByName,
-          accepted_by_email: contact.acceptedByEmail,
-          accepted_by_phone: contact.acceptedByPhone,
-          accepted_by_person_id: contact.acceptedByPersonId,
-          language: normalizePdfLang(payload?.language || generatedOffer?.lang || booking?.customer_language || "en")
-        };
-
-        upsertBookingConfirmationChallenge(store, challenge);
-        await persistStore(store);
-
-        try {
-          const generatedOfferSnapshot = normalizeGeneratedOfferSnapshot(generatedOffer, booking);
-          const otpCopy = buildGeneratedOfferOtpEmailCopy(
-            booking,
-            generatedOfferSnapshot,
-            contact.acceptedByName,
-            challengeCode
-          );
-          await getGmailDraftsClient().sendMessage({
-            to: contact.acceptedByEmail,
-            subject: otpCopy.subject,
-            greeting: otpCopy.greeting,
-            intro: otpCopy.intro,
-            footer: otpCopy.footer,
-            fromName: "Asia Travel Plan"
-          });
-        } catch (error) {
-          removeBookingConfirmationChallenges(store, bookingId, generatedOfferId, otpChannel);
-          await persistStore(store).catch(() => {});
-          const detail = String(error?.message || error);
-          const status = /not configured/i.test(detail) ? 503 : 502;
-          sendJson(res, status, {
-            error: "Could not send booking confirmation code",
-            detail
-          });
-          return;
-        }
-
-        addActivity(
-          store,
-          booking.id,
-          "BOOKING_CONFIRMATION_OTP_SENT",
-          "public_api",
-          `Booking confirmation OTP sent to ${maskOtpRecipient(otpChannel, contact.acceptedByEmail)}`
-        );
-        await persistStore(store);
-
-        sendJson(res, 202, buildPublicGeneratedOfferAcceptResponse({
-          bookingId,
-          generatedOfferId,
-          generatedOffer,
-          otpChannel,
-          otpSentTo: maskOtpRecipient(otpChannel, contact.acceptedByEmail),
-          otpExpiresAt: expiresAt,
-          retryAfterSeconds: throttle.retryAfterSeconds ?? Math.max(1, Math.ceil(BOOKING_CONFIRMATION_OTP_RESEND_COOLDOWN_MS / 1000))
-        }));
-        return;
-      }
-
-      if (!existingChallenge) {
-        sendJson(res, 422, { error: "No pending booking confirmation challenge was found." });
-        return;
-      }
-
-      const nowMs = Date.parse(nowIso());
-      if (Date.parse(existingChallenge.expires_at || "") <= (Number.isFinite(nowMs) ? nowMs : Date.now())) {
-        removeBookingConfirmationChallenges(store, bookingId, generatedOfferId, otpChannel);
-        await persistStore(store);
-        sendJson(res, 422, { error: "The booking confirmation code has expired. Request a new code." });
-        return;
-      }
-
-      const nextAttempts = Number(existingChallenge.attempts || 0) + 1;
-      if (normalizeText(existingChallenge.code_sha256) !== sha256Hex(payload.otp_code)) {
-        if (nextAttempts >= BOOKING_CONFIRMATION_OTP_MAX_ATTEMPTS) {
-          removeBookingConfirmationChallenges(store, bookingId, generatedOfferId, otpChannel);
-        } else {
-          existingChallenge.attempts = nextAttempts;
-          upsertBookingConfirmationChallenge(store, existingChallenge);
-        }
-        await persistStore(store);
-        sendJson(res, 422, { error: "The booking confirmation code is invalid." });
-        return;
-      }
-
-      const finalized = await finalizeGeneratedOfferBookingConfirmation({
-        req,
-        store,
-        booking,
-        generatedOffer,
-        acceptedByName: normalizeText(existingChallenge.accepted_by_name),
-        acceptedByEmail: normalizeText(existingChallenge.accepted_by_email),
-        acceptedByPhone: normalizeText(existingChallenge.accepted_by_phone),
-        acceptedByPersonId: normalizeText(existingChallenge.accepted_by_person_id),
-        language: normalizePdfLang(existingChallenge.language || payload?.language || generatedOffer?.lang || "en"),
-        method: "PORTAL_CLICK_OTP",
-        otpChannel,
-        otpVerifiedAt: nowIso()
-      });
-      if (!finalized.ok) {
-        sendJson(res, finalized.status || 422, { error: finalized.error || "Could not finalize booking confirmation." });
-        return;
-      }
-      sendJson(res, 200, buildPublicGeneratedOfferAcceptResponse({
-        bookingId,
-        generatedOfferId,
-        generatedOffer,
-        bookingConfirmation: finalized.booking_confirmation
-      }));
       return;
     }
 

@@ -28,7 +28,7 @@
           <article class="panel booking-confirmation-card">
             <div class="booking-confirmation-heading-spacer" aria-hidden="true"></div>
             <h1 class="section-title" id="booking_confirmation_title">Confirm your booking</h1>
-            <p class="booking-confirmation-intro" id="booking_confirmation_intro">Review the frozen PDF, request your verification code, and confirm your booking.</p>
+            <p class="booking-confirmation-intro" id="booking_confirmation_intro">Review the frozen PDF and confirm your booking.</p>
 
             <div id="booking_confirmation_error" class="backend-message" role="alert" aria-live="assertive" hidden></div>
             <p id="booking_confirmation_loading" class="booking-confirmation-loading">Loading booking confirmation…</p>
@@ -58,29 +58,9 @@
                 <p class="booking-confirmation-form__hint micro" id="booking_confirmation_contact_hint"></p>
 
                 <div class="booking-confirmation-actions">
-                  <button class="btn btn-primary" id="booking_confirmation_send_btn" type="submit">Email booking confirmation code</button>
+                  <button class="btn btn-primary" id="booking_confirmation_send_btn" type="submit">Confirm booking</button>
                 </div>
                 <div id="booking_confirmation_status" class="booking-confirmation-form__status" aria-live="polite"></div>
-
-                <div id="booking_confirmation_otp_panel" class="booking-confirmation-otp" hidden>
-                  <p class="booking-confirmation-otp__meta" id="booking_confirmation_otp_meta"></p>
-                  <div class="field">
-                    <label for="booking_confirmation_otp_code">Verification code</label>
-                    <input
-                      id="booking_confirmation_otp_code"
-                      type="text"
-                      inputmode="numeric"
-                      autocomplete="one-time-code"
-                      maxlength="6"
-                      placeholder="6-digit code"
-                    />
-                  </div>
-                  <div class="booking-confirmation-otp__actions">
-                    <button class="btn btn-primary" id="booking_confirmation_verify_btn" type="button">Verify and confirm booking</button>
-                    <button class="btn btn-ghost" id="booking_confirmation_resend_btn" type="button">Resend code</button>
-                    <span class="micro" id="booking_confirmation_retry_after"></span>
-                  </div>
-                </div>
               </form>
             </div>
           </article>

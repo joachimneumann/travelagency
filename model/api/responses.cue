@@ -392,7 +392,6 @@ import (
 	pdf_url?:                      string & !=""
 	payment_terms?:                #BookingOfferPaymentTermsReadModel
 	booking_confirmation_route?:             #PublicGeneratedOfferBookingConfirmationRouteView
-	otp_recipient_hint?:           string & !=""
 	public_booking_confirmation_expires_at?: common.#Timestamp
 	confirmed:                     bool
 	booking_confirmation?:                   #GeneratedOfferBookingConfirmationPublicSummary
@@ -402,13 +401,9 @@ import (
 	booking_id:           common.#Identifier
 	generated_offer_id:   common.#Identifier
 	confirmed:            bool
-	status:               "CONFIRMED" | "OTP_REQUIRED"
+	status:               "CONFIRMED"
 	booking_confirmation_route?:    #PublicGeneratedOfferBookingConfirmationRouteView
 	booking_confirmation?:          #GeneratedOfferBookingConfirmationPublicSummary
-	otp_channel?:         enums.#BookingConfirmationOtpChannel
-	otp_sent_to?:         string
-	otp_expires_at?:      common.#Timestamp
-	retry_after_seconds?: >=0 & int
 }
 
 #PublicTravelerDetailsAccessResponse: {

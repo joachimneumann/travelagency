@@ -26,7 +26,6 @@ IR: {
 		generatedOfferBookingConfirmationRouteModes: [for mode in enumModel.GeneratedOfferBookingConfirmationRouteModeCatalog {{code: mode}}]
 		generatedOfferBookingConfirmationRouteStatuses: [for status in enumModel.GeneratedOfferBookingConfirmationRouteStatusCatalog {{code: status}}]
 		bookingConfirmationMethods: [for method in enumModel.BookingConfirmationMethodCatalog {{code: method}}]
-		bookingConfirmationOtpChannels: [for channel in enumModel.BookingConfirmationOtpChannelCatalog {{code: channel}}]
 		tourStyles: [for style in enumModel.TourStyleCatalog {{
 			code:  style
 			label: enumModel.TourStyleNameCatalog[style]

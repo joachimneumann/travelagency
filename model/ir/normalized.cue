@@ -61,7 +61,6 @@ IR: {
 		GeneratedOfferBookingConfirmationRouteMode: {catalog: "generatedOfferBookingConfirmationRouteModes"}
 		GeneratedOfferBookingConfirmationRouteStatus: {catalog: "generatedOfferBookingConfirmationRouteStatuses"}
 		BookingConfirmationMethod: {catalog: "bookingConfirmationMethods"}
-		BookingConfirmationOtpChannel: {catalog: "bookingConfirmationOtpChannels"}
 		TourStyleCode: {catalog: "tourStyles"}
 		CountryCode: {catalog: "countries"}
 		TimezoneCode: {catalog: "timezones"}
@@ -742,8 +741,6 @@ IR: {
 				{name: "offer_snapshot_sha256", kind: "scalar", typeName: "string", required: true},
 				{name: "ip_address", kind: "scalar", typeName: "string", required: false},
 				{name: "user_agent", kind: "scalar", typeName: "string", required: false},
-				{name: "otp_channel", kind: "enum", typeName: "BookingConfirmationOtpChannel", required: false},
-				{name: "otp_verified_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "deposit_payment_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "accepted_payment_term_line_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "accepted_payment_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
@@ -1400,10 +1397,6 @@ IR: {
 				{name: "status", kind: "scalar", typeName: "string", required: true},
 				{name: "booking_confirmation_route", kind: "transport", typeName: "PublicGeneratedOfferBookingConfirmationRouteView", required: false},
 				{name: "booking_confirmation", kind: "transport", typeName: "GeneratedOfferBookingConfirmationPublicSummary", required: false},
-				{name: "otp_channel", kind: "enum", typeName: "BookingConfirmationOtpChannel", required: false},
-				{name: "otp_sent_to", kind: "scalar", typeName: "string", required: false},
-				{name: "otp_expires_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "retry_after_seconds", kind: "scalar", typeName: "int", required: false},
 			]
 		},
 		{
@@ -1633,8 +1626,6 @@ IR: {
 				{name: "accepted_by_phone", kind: "scalar", typeName: "string", required: false},
 				{name: "accepted_by_person_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "language", kind: "enum", typeName: "LanguageCode", required: false},
-				{name: "otp_channel", kind: "enum", typeName: "BookingConfirmationOtpChannel", required: false},
-				{name: "otp_code", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

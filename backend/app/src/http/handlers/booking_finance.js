@@ -7,8 +7,7 @@ import { createGmailDraftsClient } from "../../lib/gmail_drafts.js";
 import { normalizePdfLang, pdfT } from "../../lib/pdf_i18n.js";
 import {
   normalizeGeneratedOfferBookingConfirmationRouteMode,
-  ensureGeneratedOfferBookingConfirmationTokenState,
-  removeBookingConfirmationChallenges
+  ensureGeneratedOfferBookingConfirmationTokenState
 } from "../../domain/booking_confirmation.js";
 import {
   mergeEditableLocalizedTextField,
@@ -193,7 +192,11 @@ export function createBookingFinanceHandlers(deps) {
     const requestedRoute = payload?.booking_confirmation_route && typeof payload.booking_confirmation_route === "object"
       ? payload.booking_confirmation_route
       : null;
-    const mode = requestedRoute ? normalizeGeneratedOfferBookingConfirmationRouteMode(requestedRoute.mode) : "OTP";
+    const paymentTerms = offerSnapshot?.payment_terms || null;
+    const hasPaymentTermLines = Array.isArray(paymentTerms?.lines) && paymentTerms.lines.length > 0;
+    const mode = requestedRoute
+      ? normalizeGeneratedOfferBookingConfirmationRouteMode(requestedRoute.mode)
+      : (hasPaymentTermLines ? "DEPOSIT_PAYMENT" : "");
     const selectedByATPStaffId = normalizeText(
       principal?.sub
       || principal?.preferred_username
@@ -201,13 +204,14 @@ export function createBookingFinanceHandlers(deps) {
       || booking?.assigned_keycloak_user_id
       || "keycloak_user"
     ) || "keycloak_user";
-    const expiresAt = normalizeText(requestedRoute?.expires_at)
-      || (mode === "OTP" ? normalizeText(generatedOffer?.booking_confirmation_token_expires_at) : "")
-      || "";
+    const expiresAt = normalizeText(requestedRoute?.expires_at) || "";
     const customerMessageSnapshot = normalizeText(requestedRoute?.customer_message_snapshot);
 
+    if (!mode) {
+      return null;
+    }
+
     if (mode === "DEPOSIT_PAYMENT") {
-      const paymentTerms = offerSnapshot?.payment_terms || null;
       const acceptanceLine = resolveGeneratedOfferBookingConfirmationPaymentLine(
         paymentTerms,
         requestedRoute?.deposit_rule?.payment_term_line_id
@@ -229,18 +233,7 @@ export function createBookingFinanceHandlers(deps) {
       };
     }
 
-    if (!normalizeText(getBookingContactProfile(booking)?.email)) {
-      throw new Error("OTP confirmation requires a booking contact email.");
-    }
-
-    return {
-      mode: "OTP",
-      status: "OPEN",
-      selected_at: now,
-      selected_by_atp_staff_id: selectedByATPStaffId,
-      ...(expiresAt ? { expires_at: expiresAt } : {}),
-      ...(customerMessageSnapshot ? { customer_message_snapshot: customerMessageSnapshot } : {})
-    };
+    throw new Error("Invalid generated booking confirmation route.");
   }
 
   async function handlePatchBookingPricing(req, res, [bookingId]) {
@@ -674,7 +667,7 @@ export function createBookingFinanceHandlers(deps) {
     };
     ensureGeneratedOfferBookingConfirmationTokenState(generatedOffer);
     try {
-      generatedOffer.booking_confirmation_route = buildGeneratedOfferBookingConfirmationRoute({
+      const bookingConfirmationRoute = buildGeneratedOfferBookingConfirmationRoute({
         generatedOffer,
         booking,
         offerSnapshot,
@@ -682,6 +675,9 @@ export function createBookingFinanceHandlers(deps) {
         principal,
         now
       });
+      if (bookingConfirmationRoute) {
+        generatedOffer.booking_confirmation_route = bookingConfirmationRoute;
+      }
     } catch (error) {
       sendJson(res, 422, { error: String(error?.message || error || "Invalid generated booking confirmation route.") });
       return;
@@ -915,7 +911,6 @@ export function createBookingFinanceHandlers(deps) {
 
     const [removed] = generatedOffers.splice(index, 1);
     booking.generated_offers = generatedOffers;
-    removeBookingConfirmationChallenges(store, booking.id, generatedOfferId);
     incrementBookingRevision(booking, "offer_revision");
     booking.updated_at = nowIso();
     addActivity(

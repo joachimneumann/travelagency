@@ -1569,13 +1569,6 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
       }
     );
   }
-  if (routeMode === "OTP") {
-    return pdfT(
-      lang,
-      "offer.closing_body_otp",
-      "To confirm this offer, please use the secure OTP confirmation link we sent you. After the one-time verification, we will confirm the next steps with you."
-    );
-  }
   return pdfT(
     lang,
     "offer.closing_body",

@@ -24,13 +24,7 @@ const state = {
   token: String(query.get("token") || "").trim(),
   access: null,
   confirmed: false,
-  sending: false,
-  otpRequired: false,
-  retryAfterSeconds: 0,
-  retryTimer: null,
-  otpSentTo: "",
-  otpExpiresAt: "",
-  lastStatusTone: ""
+  sending: false
 };
 
 const els = {
@@ -50,13 +44,7 @@ const els = {
   name: document.getElementById("booking_confirmation_name"),
   contactHint: document.getElementById("booking_confirmation_contact_hint"),
   sendBtn: document.getElementById("booking_confirmation_send_btn"),
-  status: document.getElementById("booking_confirmation_status"),
-  otpPanel: document.getElementById("booking_confirmation_otp_panel"),
-  otpMeta: document.getElementById("booking_confirmation_otp_meta"),
-  otpCode: document.getElementById("booking_confirmation_otp_code"),
-  verifyBtn: document.getElementById("booking_confirmation_verify_btn"),
-  resendBtn: document.getElementById("booking_confirmation_resend_btn"),
-  retryAfter: document.getElementById("booking_confirmation_retry_after")
+  status: document.getElementById("booking_confirmation_status")
 };
 
 function escapeHtml(value) {
@@ -133,30 +121,23 @@ function formatPaymentDueRule(rule) {
 }
 
 function routeMode() {
-  return normalizeBookingConfirmationRouteMode(state.access?.booking_confirmation_route?.mode || "OTP");
+  return normalizeBookingConfirmationRouteMode(state.access?.booking_confirmation_route?.mode || "DEPOSIT_PAYMENT");
 }
 
 function routeUsesDepositPayment() {
   return generatedOfferRouteUsesDepositPayment(routeMode());
 }
 
-function otpRecipientHint() {
-  return normalizeText(state.access?.otp_recipient_hint);
-}
-
 function setError(message) {
   els.error.textContent = String(message || "");
   els.error.hidden = !message;
-  if (message) {
-    els.loading.hidden = true;
-  }
+  if (message) els.loading.hidden = true;
 }
 
 function setStatus(message, tone = "") {
   els.status.textContent = String(message || "");
   els.status.classList.toggle("is-error", tone === "error");
   els.status.classList.toggle("is-success", tone === "success");
-  state.lastStatusTone = tone;
 }
 
 async function requestJson(url, options = {}) {
@@ -169,28 +150,6 @@ async function requestJson(url, options = {}) {
   return { ok: response.ok, status: response.status, payload };
 }
 
-function startRetryCountdown(seconds) {
-  const normalizedSeconds = Math.max(0, Number(seconds || 0));
-  state.retryAfterSeconds = normalizedSeconds;
-  if (state.retryTimer) {
-    window.clearInterval(state.retryTimer);
-    state.retryTimer = null;
-  }
-  if (normalizedSeconds <= 0) {
-    render();
-    return;
-  }
-  state.retryTimer = window.setInterval(() => {
-    state.retryAfterSeconds = Math.max(0, state.retryAfterSeconds - 1);
-    render();
-    if (state.retryAfterSeconds <= 0 && state.retryTimer) {
-      window.clearInterval(state.retryTimer);
-      state.retryTimer = null;
-    }
-  }, 1000);
-  render();
-}
-
 function renderSummary() {
   const access = state.access;
   if (!access) {
@@ -200,10 +159,7 @@ function renderSummary() {
   const rows = [
     ["Booking", access.booking_name || access.booking_id],
     ["Offer total", `<span class="booking-confirmation-summary__value is-total">${escapeHtml(formatMoney(access.total_price_cents, access.currency))}</span>`],
-    ["Route", escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), {
-      deposit: "Deposit payment",
-      otp: "OTP confirmation"
-    }))],
+    ["Route", escapeHtml(formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), { deposit: "Deposit payment" }))],
     ["Offer language", escapeHtml(String(access.lang || "").toUpperCase() || "-")],
     ["Generated", escapeHtml(formatDateTime(access.created_at))],
     ["Link expires", escapeHtml(formatDateTime(access.public_booking_confirmation_expires_at))],
@@ -226,14 +182,10 @@ function renderRouteCard() {
     els.route.innerHTML = "";
     return;
   }
-  const mode = routeMode();
   const isDeposit = routeUsesDepositPayment();
   const routeTitle = isDeposit
     ? "Deposit payment confirms the offer"
-    : formatGeneratedOfferBookingConfirmationRouteLabel(mode, {
-        deposit: "Deposit payment",
-        otp: "OTP confirmation"
-      });
+    : formatGeneratedOfferBookingConfirmationRouteLabel(routeMode(), { deposit: "Deposit payment" });
   const defaultMessage = isDeposit
     ? (() => {
         const label = normalizeText(bookingConfirmationRoute?.deposit_rule?.payment_term_label) || "the required payment";
@@ -242,7 +194,7 @@ function renderRouteCard() {
           : formatMoney(access.total_price_cents, access.currency);
         return `This offer is confirmed once we receive ${amount} for ${label}.`;
       })()
-    : "Request a one-time code by email and enter it below to confirm your booking.";
+    : "Review the frozen offer and confirm the booking below.";
   const routeStatus = normalizeBookingConfirmationRouteStatus(
     bookingConfirmationRoute?.status,
     isDeposit ? "AWAITING_PAYMENT" : "OPEN"
@@ -357,14 +309,10 @@ function render() {
   els.title.textContent = depositRoute ? "Review your offer and payment terms" : "Confirm your booking";
   els.intro.textContent = depositRoute
     ? "Review the frozen PDF and payment terms. Your offer is confirmed once we receive the required payment."
-    : "Review the frozen PDF, request your verification code, and confirm your booking.";
+    : "Review the frozen PDF and confirm your booking.";
   if (els.contactHint) {
-    els.contactHint.textContent = depositRoute
-      ? ""
-      : (otpRecipientHint()
-        ? `Verification codes are sent to ${otpRecipientHint()}.`
-        : "OTP verification is unavailable because this booking has no contact email.");
-    els.contactHint.hidden = depositRoute;
+    els.contactHint.textContent = "";
+    els.contactHint.hidden = true;
   }
 
   renderSummary();
@@ -372,17 +320,7 @@ function render() {
   renderPaymentTerms();
   els.pdfLink.href = resolveApiUrl(apiOrigin, access.pdf_url || "#");
   els.pdfLink.hidden = !access.pdf_url;
-  const otpAvailable = depositRoute || Boolean(otpRecipientHint()) || Boolean(state.otpSentTo);
-  els.sendBtn.disabled = state.sending || !otpAvailable;
-  els.verifyBtn.disabled = state.sending || !normalizeText(els.otpCode.value) || !otpAvailable;
-  els.resendBtn.disabled = state.sending || state.retryAfterSeconds > 0 || !otpAvailable;
-  els.otpPanel.hidden = !state.otpRequired || depositRoute;
-  els.otpMeta.textContent = state.otpRequired
-    ? `Verification code sent to ${state.otpSentTo || otpRecipientHint() || "your booking contact email"}. It expires ${state.otpExpiresAt ? `at ${formatDateTime(state.otpExpiresAt)}` : "soon"}.`
-    : "";
-  els.retryAfter.textContent = state.retryAfterSeconds > 0
-    ? `Resend available in ${state.retryAfterSeconds}s`
-    : "";
+  els.sendBtn.disabled = state.sending;
   renderConfirmedState();
   els.form.hidden = depositRoute || state.confirmed;
 }
@@ -412,13 +350,11 @@ async function loadAccess() {
   render();
 }
 
-function buildAcceptRequestBody({ includeOtpCode = false } = {}) {
+function buildAcceptRequestBody() {
   return {
     booking_confirmation_token: state.token,
     accepted_by_name: normalizeText(els.name.value),
-    language: state.access?.lang || String(query.get("lang") || "en").toLowerCase(),
-    otp_channel: "EMAIL",
-    ...(includeOtpCode ? { otp_code: normalizeText(els.otpCode.value) } : {})
+    language: state.access?.lang || String(query.get("lang") || "en").toLowerCase()
   };
 }
 
@@ -428,19 +364,15 @@ function validateBaseForm() {
     els.name.focus();
     return false;
   }
-  if (!routeUsesDepositPayment() && !otpRecipientHint() && !state.otpSentTo) {
-    setStatus("OTP verification is unavailable because this booking has no contact email.", "error");
-    return false;
-  }
   return true;
 }
 
-async function sendOtpRequest() {
+async function confirmBooking() {
   if (routeUsesDepositPayment()) return;
   if (!validateBaseForm()) return;
   state.sending = true;
   render();
-  setStatus("Sending verification code...");
+  setStatus("Confirming booking...");
   const request = publicGeneratedOfferAcceptRequest({
     baseURL: apiOrigin,
     params: {
@@ -453,52 +385,8 @@ async function sendOtpRequest() {
     body: buildAcceptRequestBody()
   });
   state.sending = false;
-  if (result.status === 202 && result.payload?.status === "OTP_REQUIRED") {
-    state.otpRequired = true;
-    state.otpSentTo = String(result.payload.otp_sent_to || "").trim();
-    state.otpExpiresAt = String(result.payload.otp_expires_at || "").trim();
-    startRetryCountdown(result.payload.retry_after_seconds || 0);
-    setStatus(`Verification code sent to ${state.otpSentTo || otpRecipientHint() || "your booking contact email"}.`, "success");
-    render();
-    return;
-  }
-  if (result.status === 429) {
-    state.otpRequired = true;
-    startRetryCountdown(result.payload?.retry_after_seconds || 0);
-    setStatus(result.payload?.error || "Please wait before requesting another verification code.", "error");
-    render();
-    return;
-  }
-  setStatus(result.payload?.error || "Could not send the verification code.", "error");
-  render();
-}
-
-async function verifyOtpAndAccept() {
-  if (routeUsesDepositPayment()) return;
-  if (!validateBaseForm()) return;
-  if (!normalizeText(els.otpCode.value)) {
-    setStatus("Verification code is required.", "error");
-    els.otpCode.focus();
-    return;
-  }
-  state.sending = true;
-  render();
-  setStatus("Verifying code...");
-  const request = publicGeneratedOfferAcceptRequest({
-    baseURL: apiOrigin,
-    params: {
-      booking_id: state.bookingId,
-      generated_offer_id: state.generatedOfferId
-    }
-  });
-  const result = await requestJson(request.url, {
-    method: request.method,
-    body: buildAcceptRequestBody({ includeOtpCode: true })
-  });
-  state.sending = false;
   if (result.ok && result.payload?.confirmed) {
     state.confirmed = true;
-    state.otpRequired = false;
     state.access = {
       ...state.access,
       confirmed: true,
@@ -509,28 +397,13 @@ async function verifyOtpAndAccept() {
     render();
     return;
   }
-  if (result.status === 429) {
-    startRetryCountdown(result.payload?.retry_after_seconds || 0);
-  }
-  setStatus(result.payload?.error || "Could not verify the code.", "error");
+  setStatus(result.payload?.error || "Could not confirm the booking.", "error");
   render();
 }
 
 els.form?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  await sendOtpRequest();
-});
-
-els.verifyBtn?.addEventListener("click", async () => {
-  await verifyOtpAndAccept();
-});
-
-els.resendBtn?.addEventListener("click", async () => {
-  await sendOtpRequest();
-});
-
-els.otpCode?.addEventListener("input", () => {
-  els.verifyBtn.disabled = state.sending || !normalizeText(els.otpCode.value);
+  await confirmBooking();
 });
 
 await loadAccess();

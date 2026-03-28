@@ -108,8 +108,7 @@ function summarizeStore(store) {
     activities: Array.isArray(store.activities) ? store.activities.length : 0,
     invoices: Array.isArray(store.invoices) ? store.invoices.length : 0,
     chat_conversations: Array.isArray(store.chat_conversations) ? store.chat_conversations.length : 0,
-    chat_events: Array.isArray(store.chat_events) ? store.chat_events.length : 0,
-    booking_confirmation_challenges: Array.isArray(store.booking_confirmation_challenges) ? store.booking_confirmation_challenges.length : 0
+    chat_events: Array.isArray(store.chat_events) ? store.chat_events.length : 0
   };
 }
 
@@ -122,8 +121,7 @@ function buildWipedStore(store) {
     invoices: [],
     chat_channel_accounts: Array.isArray(store.chat_channel_accounts) ? store.chat_channel_accounts : [],
     chat_conversations: [],
-    chat_events: [],
-    booking_confirmation_challenges: []
+    chat_events: []
   };
 }
 
@@ -187,8 +185,7 @@ export async function runCli(argv = process.argv.slice(2)) {
       `activities=${result.summary.activities}`,
       `invoices=${result.summary.invoices}`,
       `chat_conversations=${result.summary.chat_conversations}`,
-      `chat_events=${result.summary.chat_events}`,
-      `booking_confirmation_challenges=${result.summary.booking_confirmation_challenges}`
+      `chat_events=${result.summary.chat_events}`
     ].join(" ")
   );
 }
