@@ -4746,6 +4746,22 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   assert.equal(staff.name, "Staff User");
 });
 
+test("staff profiles endpoint lists all keycloak users with ATP roles", async () => {
+  const result = await requestJson(endpointPath("staff_profiles"), apiHeaders("atp_admin", "admin", "kc-admin"));
+  assert.equal(result.status, 200);
+  assert.ok(Array.isArray(result.body.items));
+  assert.deepEqual(
+    result.body.items.map((item) => item.username),
+    ["accountant", "admin", "joachim", "staff", "tour-editor"]
+  );
+  const admin = result.body.items.find((item) => item.username === "admin");
+  assert.deepEqual(admin.client_roles, ["atp_admin"]);
+  const accountant = result.body.items.find((item) => item.username === "accountant");
+  assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
+  const tourEditor = result.body.items.find((item) => item.username === "tour-editor");
+  assert.deepEqual(tourEditor.client_roles, ["atp_tour_editor"]);
+});
+
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
   const profilePath = endpointPath("keycloak_user_staff_profile_update").replace("{username}", "joachim");
   const shortDescriptionEn = "Shapes calm Southeast Asia routes with realistic transfer windows and recovery time between highlights.";

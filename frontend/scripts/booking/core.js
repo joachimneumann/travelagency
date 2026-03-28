@@ -314,10 +314,11 @@ export function createBookingCoreModule(ctx) {
 
   function resolveAtpStaffDisplayName(user, fallbackProfile = null) {
     return normalizeText(fallbackProfile?.full_name)
+      || normalizeText(user?.staff_profile?.full_name)
       || normalizeText(user?.full_name)
-      || displayKeycloakUser(user)
       || normalizeText(fallbackProfile?.name)
       || normalizeText(user?.name)
+      || displayKeycloakUser(user)
       || normalizeText(user?.username)
       || normalizeText(user?.id)
       || "";

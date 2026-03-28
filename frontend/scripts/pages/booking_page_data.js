@@ -1,7 +1,8 @@
 import {
   authMeRequest,
   bookingDetailRequest,
-  keycloakUsersRequest
+  keycloakUsersRequest,
+  staffProfilesRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { validateAuthMeResponse } from "../../Generated/API/generated_APIModels.js";
 import { logBrowserConsoleError, resolveApiUrl } from "../shared/api.js";
@@ -46,6 +47,26 @@ export function createBookingPageDataController(ctx) {
 
   function hasAnyRole(...candidateRoles) {
     return candidateRoles.some((role) => state.roles.includes(role));
+  }
+
+  function mergeAssignableUsersWithStaffProfiles(assignableUsers, staffProfileEntries) {
+    const profilesByUsername = new Map(
+      (Array.isArray(staffProfileEntries) ? staffProfileEntries : [])
+        .map((entry) => {
+          const username = String(entry?.username || "").trim().toLowerCase();
+          return username ? [username, entry?.staff_profile && typeof entry.staff_profile === "object" ? entry.staff_profile : null] : null;
+        })
+        .filter(Boolean)
+    );
+    return (Array.isArray(assignableUsers) ? assignableUsers : []).map((user) => {
+      const username = String(user?.username || "").trim().toLowerCase();
+      const staffProfile = username ? profilesByUsername.get(username) || null : null;
+      return {
+        ...user,
+        staff_profile: staffProfile,
+        full_name: String(staffProfile?.full_name || user?.full_name || "").trim() || null
+      };
+    });
   }
 
   function getConflictReloadInstruction() {
@@ -189,9 +210,12 @@ export function createBookingPageDataController(ctx) {
       fetchApi(withBookingContentLang(bookingDetailRequest({ baseURL: apiOrigin, params: { booking_id: state.id } }).url)),
       state.permissions.canReadAssignmentDirectory
         ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
+        : Promise.resolve(null),
+      state.permissions.canReadAssignmentDirectory
+        ? fetchApi(staffProfilesRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
         : Promise.resolve(null)
     ];
-    const [bookingPayload, usersPayload] = await Promise.all(requests);
+    const [bookingPayload, usersPayload, staffProfilesPayload] = await Promise.all(requests);
     if (!bookingPayload) return false;
 
     const incomingBooking = bookingPayload?.booking || null;
@@ -206,7 +230,7 @@ export function createBookingPageDataController(ctx) {
       }
     }
 
-    state.keycloakUsers = Array.isArray(usersPayload?.items) ? usersPayload.items : [];
+    state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload?.items, staffProfilesPayload?.items);
     applyBookingPayload(bookingPayload, { forceDraftReset: true });
     syncContentLanguageSelector?.();
     await ensureTourImageLoaded();

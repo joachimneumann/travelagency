@@ -68,6 +68,7 @@ export function createKeycloakDirectory({
 
   let tokenCache = null;
   let assignableUserCache = null;
+  let allowedUserCache = null;
   const userByIdCache = new Map();
   let clientUuidCache = null;
 
@@ -228,6 +229,10 @@ export function createKeycloakDirectory({
     return normalizeRoles(Array.isArray(roles) ? roles : roles?.roles).includes("atp_staff");
   }
 
+  function isAllowedRoleSet(roles) {
+    return normalizeRoles(Array.isArray(roles) ? roles : roles?.roles).some((role) => cfg.keycloakAllowedRoles.has(role));
+  }
+
   async function mapWithConcurrency(items, limit, worker) {
     const source = Array.isArray(items) ? items : [];
     const size = Math.max(1, Number(limit) || 1);
@@ -281,6 +286,42 @@ export function createKeycloakDirectory({
     }
   }
 
+  async function listAllowedUsers() {
+    if (allowedUserCache && allowedUserCache.expires_at > Date.now()) {
+      return allowedUserCache.items;
+    }
+    try {
+      const users = await listUsers();
+      await getClientUuid().catch(() => null);
+      const results = await mapWithConcurrency(users, 8, async (user) => {
+        if (user?.enabled === false) return null;
+        const summary = toDirectoryUser(user);
+        if (!summary.id) return null;
+        const roleSets = await listUserRoles(summary.id);
+        if (!isAllowedRoleSet(roleSets)) return null;
+        const normalized = { ...summary, ...roleSets };
+        userByIdCache.set(normalized.id, normalized);
+        return normalized;
+      });
+      const items = results.filter(Boolean);
+      items.sort((a, b) => {
+        const left = normalizeText(a.name) || normalizeText(a.username) || normalizeText(a.id);
+        const right = normalizeText(b.name) || normalizeText(b.username) || normalizeText(b.id);
+        return left.localeCompare(right);
+      });
+      allowedUserCache = {
+        items,
+        expires_at: Date.now() + cfg.listCacheTtlMs
+      };
+      return items;
+    } catch (error) {
+      if (allowedUserCache?.items?.length) {
+        return allowedUserCache.items;
+      }
+      throw error;
+    }
+  }
+
   async function getUserById(userId) {
     const normalizedUserId = normalizeText(userId);
     if (!normalizedUserId) return null;
@@ -321,6 +362,7 @@ export function createKeycloakDirectory({
   return {
     isConfigured,
     listAssignableUsers,
+    listAllowedUsers,
     getUserById,
     resolveUsersByIds,
     toDisplayName

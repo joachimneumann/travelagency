@@ -154,7 +154,7 @@ function collectKeycloakRoleNames(user) {
 
 function isEligibleAtpStaffUser(user) {
   const roles = collectKeycloakRoleNames(user);
-  return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.STAFF);
+  return roles.some((role) => GENERATED_APP_ROLES.includes(role));
 }
 
 function resolveStaffPhotoUrl(value) {

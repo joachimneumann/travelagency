@@ -572,7 +572,7 @@ export function createAtpStaffDirectory({
 
   async function syncProfilesFromKeycloak() {
     await ensureStorage();
-    const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
+    const users = await keycloakDirectory.listAllowedUsers().catch(() => []);
     await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
     const stored = await readProfiles().catch(() => ({ items: [] }));
     return Array.isArray(stored?.items) ? stored.items : [];
@@ -594,6 +594,22 @@ export function createAtpStaffDirectory({
       return filterEligibleStaffUsers(users, { activeOnly });
     } catch {
       return listCachedEligibleStaffUsers({ activeOnly });
+    }
+  }
+
+  async function listAllAtpUsers(options = {}) {
+    const { activeOnly = false } = options;
+    try {
+      const users = await keycloakDirectory.listAllowedUsers();
+      await syncKeycloakUserSnapshotFromUsers(users).catch(() => []);
+      return sortKeycloakUserSnapshotItems(
+        (Array.isArray(users) ? users : []).filter((user) => !(activeOnly && user?.active === false))
+      );
+    } catch {
+      const cached = await listCachedAssignableUsers();
+      return sortKeycloakUserSnapshotItems(
+        (Array.isArray(cached) ? cached : []).filter((user) => !(activeOnly && user?.active === false))
+      );
     }
   }
 
@@ -630,7 +646,9 @@ export function createAtpStaffDirectory({
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
     await ensureStorage();
-    const user = await findEligibleStaffUserByUsername(username);
+    const users = await listAllAtpUsers().catch(() => []);
+    const user = (Array.isArray(users) ? users : [])
+      .find((item) => normalizeText(item?.username).toLowerCase() === username) || null;
     if (!user) return null;
     const stored = await readStoredProfileByUsername(username);
     const staffProfile = buildResponseProfile(stored, user);
@@ -644,7 +662,9 @@ export function createAtpStaffDirectory({
   async function updateProfileByUsername(rawUsername, input = {}) {
     const username = normalizeText(rawUsername).toLowerCase();
     if (!username) return null;
-    const user = await findEligibleStaffUserByUsername(username);
+    const users = await listAllAtpUsers().catch(() => []);
+    const user = (Array.isArray(users) ? users : [])
+      .find((item) => normalizeText(item?.username).toLowerCase() === username) || null;
     if (!user) return null;
 
     await ensureStorage();
@@ -691,7 +711,9 @@ export function createAtpStaffDirectory({
     const username = normalizeText(rawUsername).toLowerCase();
     const normalizedPicture = pictureFilenameFromStoredValue(pictureRef, username);
     if (!username || !normalizedPicture) return null;
-    const user = await findEligibleStaffUserByUsername(username);
+    const users = await listAllAtpUsers().catch(() => []);
+    const user = (Array.isArray(users) ? users : [])
+      .find((item) => normalizeText(item?.username).toLowerCase() === username) || null;
     if (!user) return null;
 
     await ensureStorage();
@@ -769,7 +791,7 @@ export function createAtpStaffDirectory({
 
   async function listDirectoryEntries() {
     await ensureStorage();
-    const users = await listEligibleStaffUsers();
+    const users = await listAllAtpUsers();
     const storedProfiles = await readProfiles().catch(() => ({ items: [] }));
     const storedByUsername = new Map(
       (Array.isArray(storedProfiles?.items) ? storedProfiles.items : [])
@@ -796,7 +818,7 @@ export function createAtpStaffDirectory({
 
   async function primeLocalKeycloakSnapshot() {
     await ensureStorage();
-    const users = await keycloakDirectory.listAssignableUsers().catch(() => []);
+    const users = await keycloakDirectory.listAllowedUsers().catch(() => []);
     return syncKeycloakUserSnapshotFromUsers(users);
   }
 

@@ -391,7 +391,8 @@ export function createBookingPricingModule(ctx) {
       });
     }
     const optionLabel = (user) => String(
-      user?.full_name
+      user?.staff_profile?.full_name
+      || user?.full_name
       || user?.name
       || user?.preferred_username
       || user?.username
