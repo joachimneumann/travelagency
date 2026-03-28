@@ -225,7 +225,7 @@ export function createKeycloakDirectory({
   }
 
   function isAssignableRoleSet(roles) {
-    return normalizeRoles(Array.isArray(roles) ? roles : roles?.roles).some((role) => cfg.keycloakAllowedRoles.has(role));
+    return normalizeRoles(Array.isArray(roles) ? roles : roles?.roles).includes("atp_staff");
   }
 
   async function mapWithConcurrency(items, limit, worker) {

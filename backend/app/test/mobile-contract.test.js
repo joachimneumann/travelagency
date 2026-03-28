@@ -45,7 +45,7 @@ const KEYCLOAK_USERS = [
 ];
 const KEYCLOAK_ROLE_MAP = {
   "kc-admin": { realm: [], client: ["atp_admin"] },
-  "kc-joachim": { realm: [], client: ["atp_admin"] },
+  "kc-joachim": { realm: [], client: ["atp_admin", "atp_staff"] },
   "kc-staff": { realm: [], client: ["atp_staff"] },
   "kc-tour-editor": { realm: [], client: ["atp_tour_editor"] },
   "kc-accountant": { realm: [], client: ["atp_accountant"] },
@@ -4733,21 +4733,17 @@ test("keycloak users endpoint lists assignable users from keycloak directory", a
   assert.ok(Array.isArray(result.body.items));
   assert.deepEqual(
     result.body.items.map((item) => item.username),
-    ["accountant", "admin", "joachim", "staff", "tour-editor"]
+    ["joachim", "staff"]
   );
   assert.ok(result.body.items.every((item) => item.active === true));
-  const admin = result.body.items.find((item) => item.username === "admin");
-  assert.deepEqual(admin.realm_roles, []);
-  assert.deepEqual(admin.client_roles, ["atp_admin"]);
-  assert.equal(admin.name, "Admin User");
-  const accountant = result.body.items.find((item) => item.username === "accountant");
-  assert.deepEqual(accountant.realm_roles, []);
-  assert.deepEqual(accountant.client_roles, ["atp_accountant"]);
-  assert.equal(accountant.name, "Accountant User");
-  const tourEditor = result.body.items.find((item) => item.username === "tour-editor");
-  assert.deepEqual(tourEditor.realm_roles, []);
-  assert.deepEqual(tourEditor.client_roles, ["atp_tour_editor"]);
-  assert.equal(tourEditor.username, "tour-editor");
+  const joachim = result.body.items.find((item) => item.username === "joachim");
+  assert.deepEqual(joachim.realm_roles, []);
+  assert.deepEqual(joachim.client_roles, ["atp_admin", "atp_staff"]);
+  assert.equal(joachim.name, "Joachim Neumann");
+  const staff = result.body.items.find((item) => item.username === "staff");
+  assert.deepEqual(staff.realm_roles, []);
+  assert.deepEqual(staff.client_roles, ["atp_staff"]);
+  assert.equal(staff.name, "Staff User");
 });
 
 test("admin can update ATP staff profile details while non-admin cannot", async () => {
@@ -4882,10 +4878,8 @@ test("public ATP staff team endpoint respects manual team order and supports cle
   assert.equal(teamAfterClear.status, 200);
   const usernamesAfterClear = teamAfterClear.body.items.map((item) => item.username);
   assert.ok(usernamesAfterClear.indexOf("joachim") >= 0);
-  assert.ok(usernamesAfterClear.indexOf("admin") >= 0);
   assert.ok(usernamesAfterClear.indexOf("staff") >= 0);
-  assert.ok(usernamesAfterClear.indexOf("joachim") < usernamesAfterClear.indexOf("admin"));
-  assert.ok(usernamesAfterClear.indexOf("admin") < usernamesAfterClear.indexOf("staff"));
+  assert.ok(usernamesAfterClear.indexOf("joachim") < usernamesAfterClear.indexOf("staff"));
 });
 
 test("admin can translate ATP staff profile text from English to Malay", async () => {
@@ -4990,6 +4984,24 @@ test("assigned staff only sees their own bookings while admin sees all", async (
   assert.equal(assignResult.body.booking.assigned_keycloak_user_id, "kc-staff");
   assert.equal(assignResult.body.booking.assigned_atp_staff.username, "staff");
   assert.equal(assignResult.body.booking.assigned_atp_staff.name, "Staff User");
+
+  const detailAfterAssign = await requestJson(endpointPath("booking_detail").replace("{booking_id}", booking_id), apiHeaders());
+  assert.equal(detailAfterAssign.status, 200);
+
+  const adminAssignAttempt = await requestJson(
+    endpointPath("booking_owner").replace("{booking_id}", booking_id),
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    {
+      method: "PATCH",
+      body: {
+        expected_core_revision: detailAfterAssign.body.booking.core_revision,
+        assigned_keycloak_user_id: "kc-admin",
+        actor: "admin"
+      }
+    }
+  );
+  assert.equal(adminAssignAttempt.status, 422);
+  assert.match(String(adminAssignAttempt.body.error || ""), /not found or inactive/i);
 
   const adminList = await requestJson(`${endpointPath("bookings")}?page=1&page_size=10&sort=created_at_desc`, apiHeaders("atp_admin", "admin", "kc-admin"));
   assert.equal(adminList.status, 200);
