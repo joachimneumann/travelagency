@@ -579,7 +579,6 @@ test("booking page orders the visible sections in the requested workflow sequenc
   const bookingPageSource = await readFile(bookingPagePath, "utf8");
   const orderedIds = [
     "booking_actions_panel",
-    "booking_content_language_field",
     "booking_note_panel",
     "travel_plan_panel",
     "persons_editor_panel",

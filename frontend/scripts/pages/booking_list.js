@@ -393,7 +393,7 @@ function renderBookings(items) {
     els.bookingsClearSearchBtn.hidden = !(!items.length && String(state.bookings.search || "").trim());
   }
 
-  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.booking_name", "Booking Name"))}</th><th>${escapeHtml(backendT("backend.table.stage", "Stage"))}</th><th>${escapeHtml(backendT("backend.table.staff", "ATP staff"))}</th></tr></thead>`;
+  const header = `<thead><tr><th>${escapeHtml(backendT("backend.table.id", "ID"))}</th><th>${escapeHtml(backendT("backend.table.booking_name", "Booking Name"))}</th><th class="booking-list-col-stage">${escapeHtml(backendT("backend.table.stage", "Stage"))}</th><th class="booking-list-col-staff">${escapeHtml(backendT("backend.table.staff", "ATP staff"))}</th></tr></thead>`;
   const rows = items
     .map((booking) => {
       const bookingHref = buildBookingHref(booking.id);

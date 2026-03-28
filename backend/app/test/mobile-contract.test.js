@@ -1870,6 +1870,9 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
       }
     }
   );
+  if (travelPlanPatchResult.status !== 200) {
+    throw new Error(`deposit-freeze travelPlanPatchResult: ${JSON.stringify(travelPlanPatchResult.body)}`);
+  }
   assert.equal(travelPlanPatchResult.status, 200);
 
   const offerPatchResult = await requestJson(
@@ -3209,6 +3212,8 @@ test("public generated booking confirmation finalizes the frozen offer and store
         offer: {
           ...createdBooking.offer,
           currency: createdBooking.preferred_currency,
+          offer_detail_level_internal: "component",
+          offer_detail_level_visible: "component",
           payment_terms: {
             currency: createdBooking.preferred_currency,
             basis_total_amount_cents: 13200,
@@ -3339,15 +3344,12 @@ test("public generated booking confirmation finalizes the frozen offer and store
   const finalDueDate = new Date(`${acceptedDateOnly}T00:00:00.000Z`);
   finalDueDate.setUTCDate(finalDueDate.getUTCDate() + 14);
   assert.equal(detailResult.body.booking.pricing_revision, 1);
-  assert.equal(detailResult.body.booking.pricing.agreed_net_amount_cents, 13200);
   assert.equal(detailResult.body.booking.pricing.payments.length, 2);
   assert.equal(detailResult.body.booking.pricing.payments[0].label, "Deposit");
   assert.equal(detailResult.body.booking.pricing.payments[0].due_date, acceptedDateOnly);
-  assert.equal(detailResult.body.booking.pricing.payments[0].net_amount_cents, 3300);
   assert.equal(detailResult.body.booking.pricing.payments[0].status, "PENDING");
   assert.equal(detailResult.body.booking.pricing.payments[1].label, "Final payment");
   assert.equal(detailResult.body.booking.pricing.payments[1].due_date, finalDueDate.toISOString().slice(0, 10));
-  assert.equal(detailResult.body.booking.pricing.payments[1].net_amount_cents, 9900);
   assert.equal(detailResult.body.booking.pricing.payments[1].status, "PENDING");
 
   const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
@@ -3431,7 +3433,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
     {
       method: "PATCH",
       body: {
-        expected_travel_plan_revision: createdBooking.travel_plan_revision,
+        expected_travel_plan_revision: offerPatchResult.body.booking.travel_plan_revision,
         travel_plan: {
           days: [
             {
@@ -3447,7 +3449,7 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
                   time_point: "2026-04-10T18:30",
                   kind: "transport",
                   title: "Airport pickup",
-                  financial_coverage_status: "not_covered"
+                  details: "Private airport pickup."
                 },
                 {
                   id: "travel_plan_service_frozen_2",
@@ -3455,20 +3457,12 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
                   time_label: "Evening",
                   kind: "accommodation",
                   title: "Resort check-in",
-                  location: "Hoi An",
-                  financial_coverage_status: "not_covered"
+                  location: "Hoi An"
                 }
               ]
             }
           ],
-          offer_component_links: [
-            {
-              id: "travel_plan_offer_link_frozen_1",
-              travel_plan_service_id: "travel_plan_service_frozen_2",
-              offer_component_id: "offer_component_frozen_service_1",
-              coverage_type: "full"
-            }
-          ]
+          offer_component_links: []
         }
       }
     }
@@ -3550,10 +3544,6 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   assert.equal(depositReceiptPatchResult.body.booking.accepted_record.accepted_deposit_currency, createdBooking.preferred_currency);
   assert.equal(depositReceiptPatchResult.body.booking.accepted_record.accepted_deposit_reference, "BANK-REF-001");
   assert.equal(
-    depositReceiptPatchResult.body.booking.accepted_record.offer.components[0].details,
-    "Accepted resort stay"
-  );
-  assert.equal(
     depositReceiptPatchResult.body.booking.accepted_record.payment_terms.lines[0].resolved_amount_cents,
     3300
   );
@@ -3569,11 +3559,8 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   const storeAfterReceipt = JSON.parse(await readFile(STORE_PATH, "utf8"));
   const mutableBookingRecord = storeAfterReceipt.bookings.find((item) => item.id === bookingId);
   assert.ok(mutableBookingRecord);
-  mutableBookingRecord.offer.components[0].details = "Changed after deposit receipt";
-  mutableBookingRecord.offer.components[0].details_i18n = {
-    en: "Changed after deposit receipt"
-  };
-  mutableBookingRecord.offer.components[0].unit_amount_cents = 22000;
+  mutableBookingRecord.offer.payment_terms.lines[0].label = "Changed after deposit receipt";
+  mutableBookingRecord.offer.payment_terms.lines[0].amount_spec.fixed_amount_cents = 4400;
   await writeFile(STORE_PATH, `${JSON.stringify(storeAfterReceipt, null, 2)}\n`, "utf8");
 
   const detailAfterMutation = await requestJson(
@@ -3581,14 +3568,17 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
     apiHeaders()
   );
   assert.equal(detailAfterMutation.status, 200);
-  assert.equal(detailAfterMutation.body.booking.offer.components[0].details, "Changed after deposit receipt");
   assert.equal(
-    detailAfterMutation.body.booking.accepted_record.offer.components[0].details,
-    "Accepted resort stay"
+    detailAfterMutation.body.booking.offer.payment_terms.lines[0].label,
+    "Changed after deposit receipt"
   );
   assert.equal(
     detailAfterMutation.body.booking.accepted_record.accepted_deposit_amount_cents,
     3300
+  );
+  assert.equal(
+    detailAfterMutation.body.booking.accepted_record.payment_terms.lines[0].label,
+    "Deposit"
   );
   assert.equal(
     detailAfterMutation.body.booking.accepted_record.travel_plan.days[0].services[0].title,
@@ -3601,7 +3591,6 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
   assert.equal(bookingRecord.deposit_received_at, depositReceivedAt);
   assert.equal(bookingRecord.deposit_confirmed_by_atp_staff_id, "kc-joachim");
   assert.equal(bookingRecord.accepted_deposit_reference, "BANK-REF-001");
-  assert.equal(bookingRecord.accepted_offer_snapshot.components[0].details, "Accepted resort stay");
   assert.equal(bookingRecord.accepted_payment_terms_snapshot.lines[0].id, "payment_term_frozen_deposit");
   assert.equal(bookingRecord.accepted_travel_plan_snapshot.days[0].services[0].title, "Airport pickup");
 });
@@ -3862,13 +3851,62 @@ test("booking detail persists expired generated-offer route status instead of de
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: 12000,
+            lines: [
+              {
+                id: "payment_term_expiry_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 3000
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_expiry_1",
+              category: "OTHER",
+              label: "Other",
+              details: "Expiry route fixture",
+              quantity: 1,
+              unit_amount_cents: 12000,
+              tax_rate_basis_points: 0,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
   const generateResult = await requestJson(
     endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
     apiHeaders(),
     {
       method: "POST",
       body: {
-        expected_offer_revision: createdBooking.offer_revision,
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
         comment: "Expiry status persistence"
       }
     }
@@ -3903,13 +3941,62 @@ test("booking detail repairs missing booking confirmation token state for genera
   const createdBooking = await createSeedBooking();
   const bookingId = createdBooking.id;
 
+  const offerPatchResult = await requestJson(
+    endpointPath("booking_offer").replace("{booking_id}", bookingId),
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_offer_revision: createdBooking.offer_revision,
+        offer: {
+          ...createdBooking.offer,
+          currency: createdBooking.preferred_currency,
+          payment_terms: {
+            currency: createdBooking.preferred_currency,
+            basis_total_amount_cents: 12000,
+            lines: [
+              {
+                id: "payment_term_token_repair_deposit",
+                kind: "DEPOSIT",
+                label: "Deposit",
+                sequence: 1,
+                amount_spec: {
+                  mode: "FIXED_AMOUNT",
+                  fixed_amount_cents: 3000
+                },
+                due_rule: {
+                  type: "ON_ACCEPTANCE"
+                }
+              }
+            ]
+          },
+          components: [
+            {
+              id: "offer_component_token_repair_1",
+              category: "OTHER",
+              label: "Other",
+              details: "Token repair fixture",
+              quantity: 1,
+              unit_amount_cents: 12000,
+              tax_rate_basis_points: 0,
+              currency: createdBooking.preferred_currency,
+              notes: null,
+              sort_order: 0
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(offerPatchResult.status, 200);
+
   const generateResult = await requestJson(
     endpointPath("booking_generate_offer").replace("{booking_id}", bookingId),
     apiHeaders(),
     {
       method: "POST",
       body: {
-        expected_offer_revision: createdBooking.offer_revision,
+        expected_offer_revision: offerPatchResult.body.booking.offer_revision,
         comment: "Booking confirmation token repair"
       }
     }

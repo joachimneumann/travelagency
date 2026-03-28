@@ -2122,6 +2122,11 @@ textarea:focus-visible {
   text-align: center;
 }
 
+.backend-table th.booking-list-col-stage,
+.backend-table th.booking-list-col-staff {
+  text-align: left;
+}
+
 .backend-table th.offer-col-category,
 .backend-table th.offer-col-details,
 .backend-table th.offer-col-day,

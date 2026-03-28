@@ -12,6 +12,76 @@
       }
     </script>
     <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .backend-list-page {
+        font-family: var(--font-family-sans);
+        background-color: #efe7da;
+        background-image:
+          radial-gradient(circle at top left, rgba(244, 239, 230, 0.96), transparent 42%),
+          radial-gradient(circle at bottom right, rgba(232, 239, 233, 0.92), transparent 40%),
+          linear-gradient(180deg, #f4efe6 0%, #e8efe9 100%);
+      }
+
+      .backend-list-page #main-content > .section > .container {
+        max-width: 1080px;
+        padding-top: 1rem;
+        padding-bottom: 1.5rem;
+      }
+
+      .backend-list-shell {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .backend-list-hero {
+        padding: 1.4rem 1.5rem;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 32px;
+        background:
+          linear-gradient(135deg, rgba(255, 248, 237, 0.98), rgba(255, 255, 255, 0.98)),
+          #fff;
+        box-shadow:
+          0 20px 44px rgba(24, 35, 52, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      }
+
+      .backend-list-hero__title {
+        margin: 0 0 1rem;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 0.98;
+        font-weight: 700;
+        color: #173329;
+      }
+
+      .backend-list-card {
+        padding: 1.35rem 1.5rem 1.5rem;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 22px 46px rgba(24, 35, 52, 0.08);
+      }
+
+      .backend-list-page .backend-controls {
+        margin-bottom: 1rem;
+      }
+
+      .backend-list-page .backend-message {
+        margin-bottom: 1rem;
+        border-radius: 22px;
+      }
+
+      @media (max-width: 720px) {
+        .backend-list-hero,
+        .backend-list-card {
+          border-radius: 24px;
+          padding-inline: 1rem;
+        }
+
+        .backend-list-hero__title {
+          font-size: 2.2rem;
+        }
+      }
+    </style>
   </head>
   <body class="backend-list-page">
     <header class="header" id="top">
@@ -28,22 +98,26 @@
       <section class="section">
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
-
-          <section class="backend-section" id="bookingsPanel">
-            <div class="backend-controls">
-              <div class="field">
-                <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." data-i18n-placeholder-id="backend.bookings.search_placeholder" />
+          <div class="backend-list-shell">
+            <section class="backend-list-hero" aria-label="Backend bookings search">
+              <h1 class="backend-list-hero__title" data-i18n-id="backend.bookings.title">Bookings</h1>
+              <div class="backend-controls">
+                <div class="field">
+                  <input id="bookingsSearch" type="text" placeholder="id, person, destination, assigned user, whatsapp chat..." data-i18n-placeholder-id="backend.bookings.search_placeholder" />
+                </div>
+                <button class="btn btn-ghost" id="bookingsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+                <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden data-i18n-id="backend.bookings.clear_search">Clear Search</button>
+                <span id="bookingsCountInfo" class="micro"></span>
               </div>
-              <button class="btn btn-ghost" id="bookingsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
-              <button class="btn btn-ghost" id="bookingsClearSearchBtn" type="button" hidden data-i18n-id="backend.bookings.clear_search">Clear Search</button>
-              <span id="bookingsCountInfo" class="micro"></span>
-            </div>
-            <div class="backend-table-wrap">
-              <table class="backend-table" id="bookingsTable"></table>
-            </div>
-            <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
-          </section>
+            </section>
 
+            <section class="backend-section backend-list-card" id="bookingsPanel">
+              <div class="backend-table-wrap">
+                <table class="backend-table" id="bookingsTable"></table>
+              </div>
+              <div class="backend-pagination" id="bookingsPagination" aria-label="Bookings pagination"></div>
+            </section>
+          </div>
         </div>
       </section>
     </main>
