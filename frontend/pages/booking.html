@@ -150,34 +150,6 @@
           <div class="booking-detail-page__bar-gap" aria-hidden="true"></div>
           <div class="booking-detail-page__scroll">
             <div class="booking-page-shell">
-              <article id="booking_actions_panel" class="booking-control-deck" style="margin-bottom: 1rem;">
-                <div class="booking-control-deck__fields">
-                </div>
-                <div class="booking-status-panel">
-                  <div class="booking-status-panel__head">
-                    <h2 class="booking-status-panel__title" hidden>Booking status</h2>
-                    <div id="booking_milestone_actions" hidden></div>
-                    <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
-                  </div>
-                  <div class="booking-status-panel__phase booking-status-panel__phase--before" id="booking_status_phase_before">
-                    <div class="booking-status-panel__phase-copy">
-                      <div class="booking-status-panel__phase-label">Before deposit received</div>
-                    </div>
-                    <div class="booking-milestone-actions" id="booking_milestone_actions_before"></div>
-                  </div>
-                  <div class="booking-status-panel__divider">
-                    <div class="booking-status-panel__divider-line"></div>
-                    <div class="booking-status-panel__divider-badge">Deposit Received</div>
-                    <div class="booking-status-panel__divider-line"></div>
-                  </div>
-                  <div class="booking-status-panel__phase booking-status-panel__phase--after" id="booking_status_phase_after">
-                    <div class="booking-status-panel__phase-copy">
-                      <div class="booking-status-panel__phase-label">After deposit received</div>
-                    </div>
-                    <div class="booking-milestone-actions" id="booking_milestone_actions_after"></div>
-                  </div>
-                </div>
-              </article>
               <section class="booking-top-card">
                 <div class="booking-hero">
                   <div class="booking-hero__main">
@@ -215,7 +187,34 @@
                   </div>
                 </div>
               </section>
-
+              <article id="booking_actions_panel" class="booking-control-deck" style="margin-bottom: 1rem;">
+                <div class="booking-control-deck__fields">
+                </div>
+                <div class="booking-status-panel">
+                  <div class="booking-status-panel__head">
+                    <h2 class="booking-status-panel__title" hidden>Booking status</h2>
+                    <div id="booking_milestone_actions" hidden></div>
+                    <div class="micro booking-milestone-actions__last-action" id="booking_last_action_detail" hidden></div>
+                  </div>
+                  <div class="booking-status-panel__phase booking-status-panel__phase--before" id="booking_status_phase_before">
+                    <div class="booking-status-panel__phase-copy">
+                      <div class="booking-status-panel__phase-label">Before deposit received</div>
+                    </div>
+                    <div class="booking-milestone-actions" id="booking_milestone_actions_before"></div>
+                  </div>
+                  <div class="booking-status-panel__divider">
+                    <div class="booking-status-panel__divider-line"></div>
+                    <div class="booking-status-panel__divider-badge">Deposit Received</div>
+                    <div class="booking-status-panel__divider-line"></div>
+                  </div>
+                  <div class="booking-status-panel__phase booking-status-panel__phase--after" id="booking_status_phase_after">
+                    <div class="booking-status-panel__phase-copy">
+                      <div class="booking-status-panel__phase-label">After deposit received</div>
+                    </div>
+                    <div class="booking-milestone-actions" id="booking_milestone_actions_after"></div>
+                  </div>
+                </div>
+              </article>
               <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <article id="booking_note_panel" style="margin-bottom: 1rem;">
@@ -246,7 +245,6 @@
               <span class="micro" id="booking_referral_label_hint"></span>
             </div>
           </article>
-            </div>
 
           <div
             class="modal booking-person-modal"
@@ -673,24 +671,6 @@
           <input id="travel_plan_service_image_input" type="file" accept="image/*" multiple hidden />
           <input id="travel_plan_attachment_input" type="file" accept="application/pdf,.pdf" multiple hidden />
 
-          <article id="offer_detail_level_panel" class="offer-detail-level-panel">
-            <div class="offer-detail-level-panel__layout">
-              <div class="offer-detail-level-panel__stack">
-                <div class="offer-detail-level-field">
-                  <label class="offer-detail-level-field__label" for="offer_detail_level_internal_input">Internal offer detail level</label>
-                  <select id="offer_detail_level_internal_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-                  <div id="offer_detail_level_internal_pill" class="offer-detail-level-pill" role="group" aria-label="Internal offer detail level"></div>
-                </div>
-                <div class="offer-detail-level-field">
-                  <label class="offer-detail-level-field__label" for="offer_detail_level_visible_input">Customer-facing offer detail level</label>
-                  <select id="offer_detail_level_visible_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-                  <div id="offer_detail_level_visible_pill" class="offer-detail-level-pill" role="group" aria-label="Customer-facing offer detail level"></div>
-                </div>
-                <span id="offer_visible_pricing_hint" class="micro booking-inline-status offer-detail-level-panel__hint"></span>
-              </div>
-            </div>
-          </article>
-
           <article id="travel_plan_panel" class="booking-section">
             <div class="booking-section__head">
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
@@ -712,6 +692,24 @@
               <span id="booking_persons_editor_status" class="micro booking-persons-editor-status"></span>
               <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
               <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+            </div>
+          </article>
+
+          <article id="offer_detail_level_panel" class="offer-detail-level-panel">
+            <div class="offer-detail-level-panel__layout">
+              <div class="offer-detail-level-panel__stack">
+                <div class="offer-detail-level-field">
+                  <label class="offer-detail-level-field__label" for="offer_detail_level_internal_input">Internal offer detail level</label>
+                  <select id="offer_detail_level_internal_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                  <div id="offer_detail_level_internal_pill" class="offer-detail-level-pill" role="group" aria-label="Internal offer detail level"></div>
+                </div>
+                <div class="offer-detail-level-field">
+                  <label class="offer-detail-level-field__label" for="offer_detail_level_visible_input">Customer-facing offer detail level</label>
+                  <select id="offer_detail_level_visible_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                  <div id="offer_detail_level_visible_pill" class="offer-detail-level-pill" role="group" aria-label="Customer-facing offer detail level"></div>
+                </div>
+                <span id="offer_visible_pricing_hint" class="micro booking-inline-status offer-detail-level-panel__hint"></span>
+              </div>
             </div>
           </article>
 
@@ -924,6 +922,7 @@
             <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
           </section>
           </div>
+        </div>
         </div>
       </section>
     </main>

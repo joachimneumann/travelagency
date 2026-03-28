@@ -402,7 +402,17 @@ export function createBookingOfferModule(ctx) {
 
     const sourceComponents = Array.isArray(source.components) ? source.components : [];
     const sourceDaysInternal = Array.isArray(source.days_internal) ? source.days_internal : [];
-    const sourceAdditionalItems = Array.isArray(source.additional_items) ? source.additional_items : [];
+    const sourceAdditionalItems = (Array.isArray(source.additional_items) ? source.additional_items : []).filter((item) => (
+      item
+      && typeof item === "object"
+      && (
+        String(item.label || "").trim()
+        || String(item.details || "").trim()
+        || Math.max(0, Math.round(Number(item.unit_amount_cents || 0))) > 0
+        || Math.max(1, Number(item.quantity || 1)) > 1
+        || String(item.id || "").trim()
+      )
+    ));
     const internalDetailLevel = inferInternalOfferDetailLevel(source, "trip");
     const requestedVisibleDetailLevel = normalizeOfferDetailLevel(source.offer_detail_level_visible, internalDetailLevel);
     const visibleDetailLevel = isVisibleDetailLevelFinerThanInternal(requestedVisibleDetailLevel, internalDetailLevel)

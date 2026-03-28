@@ -485,26 +485,6 @@
   box-shadow: none;
 }
 
-.booking-detail-page .booking-top-card {
-  order: 1;
-}
-
-.booking-detail-page .booking-page-shell > #detail_error {
-  order: 2;
-}
-
-.booking-detail-page .booking-control-deck {
-  order: 2;
-}
-
-.booking-detail-page .booking-page-shell > #booking_note_panel {
-  order: 3;
-}
-
-.booking-detail-page .booking-source-panel {
-  order: 4;
-}
-
 .booking-detail-page .booking-offer-controls {
   margin: 0;
   column-gap: 0.5rem;

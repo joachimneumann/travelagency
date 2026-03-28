@@ -193,10 +193,16 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function computeOfferDiscountLineTotals(discount) {
     const amount = Math.max(0, Number(discount?.amount_cents || 0));
+    const line_net_amount_cents = -amount;
+    const line_tax_amount_cents = 0;
+    const line_gross_amount_cents = -amount;
     return {
-      line_net_amount_cents: -amount,
-      line_tax_amount_cents: 0,
-      line_gross_amount_cents: -amount
+      net_amount_cents: line_net_amount_cents,
+      tax_amount_cents: line_tax_amount_cents,
+      gross_amount_cents: line_gross_amount_cents,
+      line_net_amount_cents,
+      line_tax_amount_cents,
+      line_gross_amount_cents
     };
   }
 
@@ -204,10 +210,16 @@ export function createBookingOfferComponentsModule(ctx) {
     const amount = Math.max(0, Number(tripPrice?.amount_cents || 0));
     const taxBasisPoints = Math.max(0, Number(tripPrice?.tax_rate_basis_points || 0));
     const taxAmount = Math.round((amount * taxBasisPoints) / 10000);
+    const line_net_amount_cents = amount;
+    const line_tax_amount_cents = taxAmount;
+    const line_gross_amount_cents = amount + taxAmount;
     return {
-      line_net_amount_cents: amount,
-      line_tax_amount_cents: taxAmount,
-      line_gross_amount_cents: amount + taxAmount
+      net_amount_cents: line_net_amount_cents,
+      tax_amount_cents: line_tax_amount_cents,
+      gross_amount_cents: line_gross_amount_cents,
+      line_net_amount_cents,
+      line_tax_amount_cents,
+      line_gross_amount_cents
     };
   }
 
@@ -215,10 +227,16 @@ export function createBookingOfferComponentsModule(ctx) {
     const amount = Math.max(0, Number(dayPrice?.amount_cents || 0));
     const taxBasisPoints = Math.max(0, Number(dayPrice?.tax_rate_basis_points || 0));
     const taxAmount = Math.round((amount * taxBasisPoints) / 10000);
+    const line_net_amount_cents = amount;
+    const line_tax_amount_cents = taxAmount;
+    const line_gross_amount_cents = amount + taxAmount;
     return {
-      line_net_amount_cents: amount,
-      line_tax_amount_cents: taxAmount,
-      line_gross_amount_cents: amount + taxAmount
+      net_amount_cents: line_net_amount_cents,
+      tax_amount_cents: line_tax_amount_cents,
+      gross_amount_cents: line_gross_amount_cents,
+      line_net_amount_cents,
+      line_tax_amount_cents,
+      line_gross_amount_cents
     };
   }
 
@@ -227,10 +245,16 @@ export function createBookingOfferComponentsModule(ctx) {
     const unitAmount = Math.max(0, Number(item?.unit_amount_cents || 0));
     const taxBasisPoints = Math.max(0, Number(item?.tax_rate_basis_points || 0));
     const unitTaxAmount = Math.round((unitAmount * taxBasisPoints) / 10000);
+    const line_net_amount_cents = quantity * unitAmount;
+    const line_tax_amount_cents = quantity * unitTaxAmount;
+    const line_gross_amount_cents = quantity * (unitAmount + unitTaxAmount);
     return {
-      line_net_amount_cents: quantity * unitAmount,
-      line_tax_amount_cents: quantity * unitTaxAmount,
-      line_gross_amount_cents: quantity * (unitAmount + unitTaxAmount)
+      net_amount_cents: line_net_amount_cents,
+      tax_amount_cents: line_tax_amount_cents,
+      gross_amount_cents: line_gross_amount_cents,
+      line_net_amount_cents,
+      line_tax_amount_cents,
+      line_gross_amount_cents
     };
   }
 
