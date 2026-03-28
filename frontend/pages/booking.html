@@ -167,8 +167,8 @@
                       </div>
                     </div>
                     <div class="booking-top-card__fields">
-                      <div class="field booking-top-card__field">
-                        <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP staff:</label>
+                      <div class="field booking-top-card__field booking-top-card__field--staff">
+                        <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP Staff</label>
                         <select id="booking_owner_select"></select>
                       </div>
                       <div class="field booking-content-language-field booking-top-card__field" id="booking_content_language_field">
@@ -176,7 +176,15 @@
                         <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
                         <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
                       </div>
+                      <div class="field booking-top-card__field booking-top-card__field--currency">
+                        <label for="offer_currency_input">
+                          <span>Customer Currency</span>
+                        </label>
+                        <div class="booking-currency-menu-mount" id="booking_currency_menu_mount"></div>
+                        <select id="offer_currency_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                      </div>
                     </div>
+                    <div id="offer_currency_hint" class="micro booking-inline-status booking-offer-currency-hint booking-top-card__currency-hint" hidden></div>
                   </div>
                   <div class="booking-hero__side">
                     <button class="booking-hero__photo" id="booking_hero_photo_btn" type="button" aria-label="Change booking picture" data-i18n-aria-label-id="booking.change_picture" data-requires-clean-state>
@@ -718,15 +726,6 @@
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="offer_panel_summary" type="button"></button>
             </div>
             <div class="booking-section__body">
-              <div class="backend-controls booking-offer-controls">
-                <div class="field">
-                  <label for="offer_currency_input">
-                    <span data-i18n-id="booking.currency">Currency</span>
-                    <span id="offer_currency_hint" class="booking-offer-currency-hint" hidden></span>
-                  </label>
-                  <select id="offer_currency_input"></select>
-                </div>
-              </div>
               <div class="backend-controls booking-offer-editor-head">
                 <h3 class="booking-offer-editor-head__title">Internal pricing</h3>
               </div>

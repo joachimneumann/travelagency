@@ -642,6 +642,7 @@ export function createBookingOfferModule(ctx) {
     if (els.offer_currency_input) {
       setSelectValue(els.offer_currency_input, currency);
       els.offer_currency_input.disabled = !isOfferCurrencyEditable();
+      document.dispatchEvent(new CustomEvent("booking:offer-currency-sync"));
     }
     ensureOfferDetailLevelEventsBound();
     syncOfferDetailLevelControls();

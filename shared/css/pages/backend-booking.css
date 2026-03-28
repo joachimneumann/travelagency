@@ -362,13 +362,65 @@
 
 .booking-detail-page .booking-top-card__fields {
   display: grid;
-  grid-template-columns: minmax(240px, 340px) minmax(180px, 220px);
+  grid-template-columns: 200px 150px minmax(170px, max-content);
   gap: 1.4rem 1.5rem;
   align-items: start;
+  justify-content: flex-start;
 }
 
 .booking-detail-page .booking-top-card__field {
   gap: 0.55rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-detail-page .booking-top-card__field--staff {
+  width: 200px;
+}
+
+.booking-detail-page .booking-top-card__field--staff select {
+  width: 200px;
+}
+
+.booking-detail-page .booking-content-language-field,
+.booking-detail-page .booking-top-card__field--currency {
+  width: 100%;
+  align-items: center;
+}
+
+.booking-detail-page .booking-content-language-field label,
+.booking-detail-page .booking-top-card__field--currency label {
+  text-align: center;
+}
+
+.booking-detail-page .booking-content-language-field {
+  width: 100px;
+  max-width: 100px;
+}
+
+.booking-detail-page .booking-top-card__field--currency select {
+  appearance: none;
+  min-height: 0;
+  height: auto;
+  line-height: 1;
+  padding-right: 2.1rem;
+  padding-left: 0.9rem;
+  cursor: pointer;
+  width: 100px;
+  min-width: 100px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) calc(50% - 0.1rem),
+    calc(100% - 0.72rem) calc(50% - 0.1rem);
+  background-size: 0.5rem 0.5rem, 0.5rem 0.5rem;
+  background-repeat: no-repeat;
+}
+
+.booking-detail-page .booking-top-card__field--currency select:hover,
+.booking-detail-page .booking-top-card__field--currency select:focus-visible {
+  background-color: var(--accent-soft);
 }
 
 .booking-detail-page .booking-top-card__field label {
@@ -377,20 +429,46 @@
   font-weight: 700;
 }
 
+.booking-detail-page .booking-top-card__currency-hint {
+  margin-top: 0.35rem;
+}
+
 .booking-detail-page .booking-top-card__field select,
+.booking-detail-page .booking-top-card__field .booking-currency-menu-mount,
 .booking-detail-page .booking-top-card__field .booking-content-language-menu-mount,
 .booking-detail-page .booking-top-card__field .lang-menu,
 .booking-detail-page .booking-top-card__field .lang-menu-trigger {
   min-height: 58px;
 }
 
+.booking-detail-page .booking-top-card__field .booking-currency-menu-mount,
 .booking-detail-page .booking-top-card__field .booking-content-language-menu-mount {
+  justify-content: center;
   align-items: stretch;
+  width: 100px;
+}
+
+.booking-detail-page .booking-top-card__field .lang-menu,
+.booking-detail-page .booking-top-card__field .lang-menu-trigger {
+  width: 100px;
+  min-width: 100px;
+  min-height: 58px;
 }
 
 .booking-detail-page .booking-top-card__field .lang-menu-trigger {
-  min-height: 58px;
-  padding: 0.68rem 0.95rem;
+  padding: 0.68rem 0.8rem;
+}
+
+.booking-detail-page .booking-top-card__field .booking-currency-menu-mount .lang-menu-panel {
+  left: 0;
+  right: auto;
+  min-width: 100px;
+  width: 100px;
+}
+
+.booking-detail-page .booking-top-card__field .booking-currency-menu-mount .lang-menu-item {
+  justify-content: flex-start;
+  padding: 0.55rem 0.8rem;
 }
 
 .booking-detail-page .booking-source-panel {
@@ -681,7 +759,7 @@
   color: var(--error-text-critical);
   font-size: var(--font-size-overline);
   font-weight: var(--font-weight-bold);
-  margin-left: 0.32rem;
+  margin-left: 0;
 }
 
 .booking-detail-page .booking-offer-add-btn {
@@ -863,26 +941,24 @@
 
 .booking-detail-page .booking-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 230px;
   gap: 2.2rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .booking-detail-page .booking-hero__main {
   min-width: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1.7rem;
-  align-content: start;
-  justify-self: start;
   text-align: left;
 }
 
 .booking-detail-page .booking-hero__side {
   display: flex;
   align-items: start;
-  gap: 1.2rem;
-  justify-self: end;
-  margin-left: auto;
+  justify-content: flex-end;
+  width: 230px;
 }
 
 .booking-detail-page .booking-hero__photo {

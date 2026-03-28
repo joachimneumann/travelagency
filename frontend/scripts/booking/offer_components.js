@@ -806,7 +806,7 @@ export function createBookingOfferComponentsModule(ctx) {
 
   function applyDestructiveInternalDetailLevelTransition(fromDetailLevel, toDetailLevel) {
     if (!state.offerDraft || fromDetailLevel === toDetailLevel) return;
-    const travelPlanDayCount = Math.max(1, currentTravelPlanDayCount());
+    const travelPlanDayCount = Math.max(0, currentTravelPlanDayCount());
     const currentMainGross = computeMainStructureGrossByDetailLevel(fromDetailLevel);
     const existingComponents = Array.isArray(state.offerDraft?.components) ? state.offerDraft.components : [];
     const existingDays = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
@@ -900,7 +900,7 @@ export function createBookingOfferComponentsModule(ctx) {
     }
     if (normalizedDetailLevel === "day") {
       const currentDays = Array.isArray(state.offerDraft?.days_internal) ? state.offerDraft.days_internal : [];
-      const seedCount = Math.max(1, currentTravelPlanDayCount());
+      const seedCount = Math.max(0, currentTravelPlanDayCount());
       state.offerDraft.days_internal = Array.from({ length: seedCount }, (_, index) => {
         const existing = currentDays.find((dayPrice) => Number(dayPrice?.day_number) === index + 1) || currentDays[index];
         return {
@@ -2068,6 +2068,7 @@ export function createBookingOfferComponentsModule(ctx) {
     const internalDetailLevel = currentOfferInternalDetailLevel();
     if (!nextCurrency || nextCurrency === currentCurrency) {
       els.offer_currency_input.value = currentCurrency;
+      document.dispatchEvent(new CustomEvent("booking:offer-currency-sync"));
       return;
     }
     let components = [];
@@ -2088,13 +2089,18 @@ export function createBookingOfferComponentsModule(ctx) {
     } catch (error) {
       setOfferStatus(String(error?.message || error));
       els.offer_currency_input.value = currentCurrency;
+      document.dispatchEvent(new CustomEvent("booking:offer-currency-sync"));
       return;
     }
     const restoreSelectState = () => {
-      if (els.offer_currency_input) els.offer_currency_input.disabled = false;
+      if (els.offer_currency_input) {
+        els.offer_currency_input.disabled = false;
+        document.dispatchEvent(new CustomEvent("booking:offer-currency-sync"));
+      }
     };
     if (els.offer_currency_input) {
       els.offer_currency_input.disabled = true;
+      document.dispatchEvent(new CustomEvent("booking:offer-currency-sync"));
     }
     setOfferStatus(bookingT("booking.offer.converting_prices", "Converting prices..."));
     try {
@@ -2208,6 +2214,7 @@ export function createBookingOfferComponentsModule(ctx) {
       setOfferStatus(bookingT("booking.offer.error.exchange_lookup", "Exchange rate lookup failed: {message}", { message: error?.message || error }));
       restoreSelectState();
       els.offer_currency_input.value = currentCurrency;
+      document.dispatchEvent(new CustomEvent("booking:offer-currency-sync"));
       return;
     }
     restoreSelectState();

@@ -64,6 +64,86 @@ function backendT(id, fallback, vars) {
   });
 }
 
+function renderOfferCurrencyMenu(selectEl, mount) {
+  if (!(selectEl instanceof HTMLSelectElement) || !mount) return;
+  const options = Array.from(selectEl.options)
+    .map((option) => ({
+      value: String(option.value || "").trim(),
+      label: String(option.textContent || option.value || "").trim()
+    }))
+    .filter((option) => option.value);
+  const selectedValue = String(selectEl.value || options[0]?.value || "USD").trim();
+  const active = options.find((option) => option.value === selectedValue) || { value: selectedValue, label: selectedValue };
+  let root = mount.querySelector(".lang-menu[data-offer-currency-menu='true']");
+  if (!root) {
+    root = document.createElement("div");
+    root.className = "lang-menu";
+    root.dataset.offerCurrencyMenu = "true";
+    mount.replaceChildren(root);
+  }
+
+  const disabledAttr = selectEl.disabled ? " disabled" : "";
+  root.classList.remove("is-open");
+  root.innerHTML = `
+    <button type="button" class="lang-menu-trigger" aria-haspopup="menu" aria-expanded="false"${disabledAttr}>
+      <span class="lang-menu-code">${escapeHtml(active.label)}</span>
+      <span class="lang-menu-caret" aria-hidden="true"></span>
+    </button>
+    <div class="lang-menu-panel" role="menu" hidden>
+      ${options
+        .filter((option) => option.value !== active.value)
+        .map((option) => `<button type="button" class="lang-menu-item" data-offer-currency-option="${escapeHtml(option.value)}" role="menuitem">${escapeHtml(option.label)}</button>`)
+        .join("")}
+    </div>
+  `;
+
+  const trigger = root.querySelector(".lang-menu-trigger");
+  const panel = root.querySelector(".lang-menu-panel");
+  if (!(trigger instanceof HTMLButtonElement) || !(panel instanceof HTMLDivElement)) return;
+
+  const closeMenu = () => {
+    root.classList.remove("is-open");
+    panel.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
+  const openMenu = () => {
+    if (selectEl.disabled) return;
+    root.classList.add("is-open");
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+  };
+
+  trigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (panel.hidden) {
+      openMenu();
+    } else {
+      closeMenu();
+    }
+  });
+
+  panel.addEventListener("click", (event) => {
+    const optionButton = event.target instanceof Element
+      ? event.target.closest("[data-offer-currency-option]")
+      : null;
+    if (!(optionButton instanceof HTMLButtonElement)) return;
+    const nextValue = String(optionButton.dataset.offerCurrencyOption || "").trim();
+    if (!nextValue || nextValue === selectEl.value) {
+      closeMenu();
+      return;
+    }
+    selectEl.value = nextValue;
+    selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+    closeMenu();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Node) || root.contains(event.target)) return;
+    closeMenu();
+  }, { once: true });
+}
+
 function logBookingSave(message, details = {}) {
   const payload = details && typeof details === "object" ? { ...details } : { details };
   console.info(message, payload);
@@ -285,6 +365,7 @@ const els = {
   bookingConfirmationPanelSummary: document.getElementById("booking_confirmation_panel_summary"),
   offer_detail_level_panel: document.getElementById("offer_detail_level_panel"),
   offer_currency_input: document.getElementById("offer_currency_input"),
+  offerCurrencyMenuMount: document.getElementById("booking_currency_menu_mount"),
   offer_currency_hint: document.getElementById("offer_currency_hint"),
   offer_detail_level_internal_input: document.getElementById("offer_detail_level_internal_input"),
   offer_detail_level_visible_input: document.getElementById("offer_detail_level_visible_input"),
@@ -559,6 +640,7 @@ async function init() {
   populateCurrencySelectFromModule(els.pricing_currency_input);
   populateCurrencySelectFromModule(els.offer_currency_input);
   populateCurrencySelectFromModule(els.invoice_currency_input);
+  renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
   updatePageDirtyBar();
 
@@ -662,8 +744,12 @@ async function init() {
   }
   if (els.offer_currency_input)
     els.offer_currency_input.addEventListener("change", () => {
+      renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
       void handleOfferCurrencyChange();
     });
+  document.addEventListener("booking:offer-currency-sync", () => {
+    renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
+  });
   if (els.offer_detail_level_internal_input)
     els.offer_detail_level_internal_input.addEventListener("change", () => {
       void handleOfferInternalDetailLevelChange();
