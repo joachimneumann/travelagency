@@ -237,6 +237,8 @@ const els = {
   pageBody: document.body,
   pageHeader: document.getElementById("top"),
   mainContent: document.getElementById("main-content"),
+  booking_page_overlay: document.getElementById("travel_plan_translate_overlay"),
+  booking_page_overlay_text: document.getElementById("travel_plan_translate_overlay_text"),
   homeLink: document.getElementById("backendHomeLink"),
   back: document.getElementById("backToBackend"),
   dirtyBar: document.getElementById("booking_dirty_bar"),

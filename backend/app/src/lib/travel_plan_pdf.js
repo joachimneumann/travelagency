@@ -373,6 +373,17 @@ function drawTravelPlanHero(doc, heroTitle, heroImage, startY, fonts, lang) {
   return Math.max(startY + HERO_IMAGE_HEIGHT, titleBottomY) + 18;
 }
 
+function drawTravelPlanSectionTitle(doc, y, fonts, lang) {
+  doc
+    .font(pdfFontName("bold", fonts))
+    .fontSize(18)
+    .fillColor(PDF_COLORS.textStrong)
+    .text(travelPlanSectionTitle(lang), PAGE_MARGIN, y, pdfTextOptions(lang, {
+      width: doc.page.width - PAGE_MARGIN * 2
+    }));
+  return doc.y + 10;
+}
+
 function drawRunningHeader(doc, booking, fonts, companyProfile, lang) {
   const pageWidth = doc.page.width - PAGE_MARGIN * 2;
   let y = PAGE_MARGIN;
@@ -732,6 +743,7 @@ export function createTravelPlanPdfWriter({
       y = ensureSpace(y, estimateGuideSectionHeight(doc, guideContext, fonts, lang) + 10);
       y = drawGuideSection(doc, y, fonts, lang, guideContext, guidePhoto);
 
+      y = drawTravelPlanSectionTitle(doc, y, fonts, lang);
       y = drawTravelPlanDaysSection({
         doc,
         startY: y,
@@ -749,7 +761,8 @@ export function createTravelPlanPdfWriter({
         addContinuationPage,
         sectionTitle: travelPlanSectionTitle(lang),
         emptyStateMessage: pdfT(lang, "travel_plan.empty", "No travel plan is available yet."),
-        sectionTitleFontSize: 18
+        sectionTitleFontSize: 18,
+        renderSectionTitle: false
       });
 
       y = ensureSpace(y + 8, 96);

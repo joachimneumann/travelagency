@@ -363,7 +363,8 @@ export function drawTravelPlanDaysSection({
   addContinuationPage,
   sectionTitle,
   emptyStateMessage,
-  sectionTitleFontSize = 18
+  sectionTitleFontSize = 18,
+  renderSectionTitle = true
 }) {
   const deps = {
     colors,
@@ -385,7 +386,25 @@ export function drawTravelPlanDaysSection({
   const days = safeArray(plan?.days);
 
   if (!days.length) {
-    y = ensureSpace(y, 40 + 88);
+    if (renderSectionTitle) {
+      y = ensureSpace(y, 40 + 88);
+      doc
+        .font(pdfFontName("bold", fonts))
+        .fontSize(sectionTitleFontSize)
+        .fillColor(colors.textStrong)
+        .text(sectionTitle, pageMargin, y, pdfTextOptions(lang, {
+          width: doc.page.width - pageMargin * 2
+        }));
+      y = doc.y + 10;
+    } else {
+      y = ensureSpace(y, 88);
+    }
+    y = ensureSpace(y, 88);
+    return drawEmptyState(doc, y, fonts, lang, deps);
+  }
+
+  if (renderSectionTitle) {
+    y = ensureSpace(y, 40 + 90);
     doc
       .font(pdfFontName("bold", fonts))
       .fontSize(sectionTitleFontSize)
@@ -394,19 +413,7 @@ export function drawTravelPlanDaysSection({
         width: doc.page.width - pageMargin * 2
       }));
     y = doc.y + 10;
-    y = ensureSpace(y, 88);
-    return drawEmptyState(doc, y, fonts, lang, deps);
   }
-
-  y = ensureSpace(y, 40 + 90);
-  doc
-    .font(pdfFontName("bold", fonts))
-    .fontSize(sectionTitleFontSize)
-    .fillColor(colors.textStrong)
-    .text(sectionTitle, pageMargin, y, pdfTextOptions(lang, {
-      width: doc.page.width - pageMargin * 2
-    }));
-  y = doc.y + 10;
 
   for (const day of days) {
     y = ensureSpace(y, 90);

@@ -54,6 +54,7 @@ import {
   retranslateConfirmText,
   translationBusyText
 } from "./translation_status.js";
+import { setBookingPageOverlay } from "./page_overlay.js";
 
 export function createBookingTravelPlanModule(ctx) {
   const {
@@ -259,33 +260,11 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function setTravelPlanTranslationOverlay(isVisible, message = "") {
-    if (els.travel_plan_translate_overlay_text) {
-      els.travel_plan_translate_overlay_text.textContent = String(
-        message || bookingT("booking.translation.translating_overlay", "Translating travel plan. Please wait.")
-      ).trim();
-    }
-    if (els.pageBody instanceof HTMLElement) {
-      els.pageBody.classList.toggle("booking-detail-page--translation-busy", Boolean(isVisible));
-    }
-    if (els.pageHeader instanceof HTMLElement) {
-      els.pageHeader.inert = Boolean(isVisible);
-      els.pageHeader.setAttribute("aria-busy", isVisible ? "true" : "false");
-    }
-    if (els.mainContent instanceof HTMLElement) {
-      els.mainContent.inert = Boolean(isVisible);
-      els.mainContent.setAttribute("aria-busy", isVisible ? "true" : "false");
-    }
-    if (!(els.travel_plan_translate_overlay instanceof HTMLElement)) return;
-    if (isVisible) {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      els.travel_plan_translate_overlay.hidden = false;
-      els.travel_plan_translate_overlay.setAttribute("aria-hidden", "false");
-      return;
-    }
-    els.travel_plan_translate_overlay.hidden = true;
-    els.travel_plan_translate_overlay.setAttribute("aria-hidden", "true");
+    setBookingPageOverlay(
+      els,
+      isVisible,
+      message || bookingT("booking.translation.translating_overlay", "Translating travel plan. Please wait.")
+    );
   }
 
   function travelPlanSectionLabel() {
@@ -1519,6 +1498,7 @@ export function createBookingTravelPlanModule(ctx) {
         actor: state.user
       }
     });
+    setBookingPageOverlay(els, true, bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."));
     void fetchBookingMutation(request.url, {
       method: request.method,
       body: request.body
@@ -1535,6 +1515,8 @@ export function createBookingTravelPlanModule(ctx) {
       link.rel = "noopener";
       link.click();
       travelPlanStatus(bookingT("booking.travel_plan.pdf_created", "Travel plan PDF created."), "success");
+    }).finally(() => {
+      setBookingPageOverlay(els, false);
     });
   }
 

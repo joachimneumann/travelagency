@@ -15,6 +15,7 @@ import {
   normalizeGeneratedOfferBookingConfirmationRouteStatus as normalizeGeneratedOfferRouteStatus
 } from "../shared/booking_confirmation_catalog.js";
 import { renderBookingSectionHeader } from "./sections.js";
+import { setBookingPageOverlay } from "./page_overlay.js";
 
 const GMAIL_TAB_NAME = "asiatravelplan_gmail_drafts";
 let gmailWindowHandle = null;
@@ -616,6 +617,7 @@ export function createBookingGeneratedOffersModule(ctx) {
         }
       : null;
     setOfferStatus(bookingT("booking.offer.generating_pdf", "Generating offer PDF..."), "info");
+    setBookingPageOverlay(els, true, bookingT("booking.offer.generating_pdf_overlay", "Generating offer PDF. Please wait."));
     const response = await fetchBookingMutation(request.url, {
       method: request.method,
       body: {
@@ -624,6 +626,8 @@ export function createBookingGeneratedOffersModule(ctx) {
         lang: selectedLang,
         ...(bookingConfirmationRoute ? { booking_confirmation_route: bookingConfirmationRoute } : {})
       }
+    }).finally(() => {
+      setBookingPageOverlay(els, false);
     });
     if (await applyOfferBookingResponse(response, { reloadActivities: true })) {
       setOfferStatus("");
