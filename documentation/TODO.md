@@ -21,6 +21,7 @@ all tour titles: FAKE
 
 When backend in vietnamese:
 translate VI -> all, not english to all
+as the first two languages, always have vi and en. then translate to others... 
 customer language VI and staff language VI: no translation needed
 
 When staff language changes to en? translate all???? what?
